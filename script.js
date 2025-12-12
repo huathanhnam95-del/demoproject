@@ -38,7 +38,6 @@
   let transcription = "";
   let wordRecognition = null; // For individual word pronunciation practice
   let currentWordIndex = -1; // Track which word is being practiced
-  let microphoneStream = null; // Keep microphone stream open to avoid permission prompts
 
   if (SpeechRecognition) {
     recognition = new SpeechRecognition();
@@ -101,6 +100,7 @@
 
   const STEP_INTERVAL_MS = 2400;
   let lastSteps = [];
+  let lastAnimationMode = false; // Track if last animation was in speak mode
   let animationTimer = null;
   const synth = window.speechSynthesis || null;
 
@@ -227,7 +227,7 @@
     synth.speak(utter);
   };
 
-  const renderAnimationStep = (step) => {
+  const renderAnimationStep = (step, showSkipButton = false) => {
     const words = step.words
       .map((w, idx) => {
         const display =
@@ -250,58 +250,331 @@
         return `<span class="${cls}"${dataWord}>${display}</span>`;
       })
       .join(" ");
+    
+    const skipButton = showSkipButton
+      ? `<button id="skip-word-btn" class="skip-word-btn" type="button">Skip this word</button>`
+      : "";
+    
     animationBox.innerHTML = `
-      <div class="anim-line"><strong>${step.label}</strong></div>
+      <div class="anim-line"><strong>${step.label || ""}</strong></div>
       <div class="anim-step">${words}</div>
+      ${skipButton}
     `;
+    
+    // Add event listener to skip button if it exists
+    if (showSkipButton) {
+      const skipBtn = document.getElementById("skip-word-btn");
+      if (skipBtn) {
+        skipBtn.addEventListener("click", () => {
+          skipCurrentWord();
+        });
+      }
+    }
   };
 
   const playWordAudio = (word, nextWord = "") => {
     speakWord(word, nextWord);
   };
 
-  const playAnimation = (steps, onComplete = () => {}) => {
+  let animationRecognition = null;
+  let isAnimationPaused = false;
+  let currentAnimationStep = null;
+  let currentAnimationIdx = 0;
+  let animationSteps = [];
+  let animationOnComplete = null;
+  let isSpeakModeAnimation = false;
+  let currentWaitingWord = null;
+  let currentWaitingStepIdx = -1;
+  let permissionRequested = false; // Track if we've requested permission
+
+  const skipCurrentWord = () => {
+    if (!isAnimationPaused || currentWaitingStepIdx === -1) return;
+    
+    // Stop recognition
+    if (animationRecognition) {
+      animationRecognition.stop();
+      animationRecognition = null;
+    }
+    
+    // Restore original label
+    const step = animationSteps[currentWaitingStepIdx];
+    step.label = step.originalLabel || step.label;
+    renderAnimationStep(step, false);
+    
+    // Continue animation
+    isAnimationPaused = false;
+    currentWaitingWord = null;
+    currentWaitingStepIdx = -1;
+    continueAnimation();
+  };
+
+  const waitForWordInAnimation = (expectedWord, stepIdx) => {
+    if (!SpeechRecognition) {
+      // If no speech recognition, just continue
+      continueAnimation();
+      return;
+    }
+
+    isAnimationPaused = true;
+    currentAnimationStep = stepIdx;
+    currentWaitingWord = expectedWord;
+    currentWaitingStepIdx = stepIdx;
+
+    // Show prompt message
+    const step = animationSteps[stepIdx];
+    if (!step.originalLabel) {
+      step.originalLabel = step.label;
+    }
+    step.label = `Say "${expectedWord}"`;
+    renderAnimationStep(step, true);
+
+    // Stop any ongoing recognition
+    if (animationRecognition) {
+      animationRecognition.stop();
+      animationRecognition = null;
+    }
+
+    // Stop main recording if active
+    if (isRecording && recognition) {
+      recognition.stop();
+      isRecording = false;
+      recordBtn.textContent = "Start Recording";
+      recordBtn.classList.remove("recording");
+      recordingStatus.classList.remove("active");
+    }
+
+    let isHandlingResult = false; // Flag to prevent multiple result handlers
+
+    const startListening = () => {
+      // Clean up any existing recognition first
+      if (animationRecognition) {
+        try {
+          animationRecognition.stop();
+        } catch (e) {
+          // Ignore errors when stopping
+        }
+        animationRecognition = null;
+      }
+
+      // Only start if we're still waiting for this word
+      if (!isAnimationPaused || currentAnimationStep !== stepIdx) {
+        return;
+      }
+
+      // Reuse existing instance if available, otherwise create new one
+      if (!animationRecognition) {
+        animationRecognition = new SpeechRecognition();
+        animationRecognition.continuous = false;
+        animationRecognition.interimResults = false;
+        animationRecognition.lang = "en-US";
+        animationRecognition.maxAlternatives = 1;
+      }
+
+      animationRecognition.onresult = (event) => {
+        if (isHandlingResult) return; // Prevent duplicate handling
+        isHandlingResult = true;
+
+        const spokenText = event.results[0][0].transcript.trim().toLowerCase();
+        const expected = normalize(expectedWord);
+        const match = normalize(spokenText) === expected;
+
+        // Clean up recognition before handling result
+        if (animationRecognition) {
+          try {
+            animationRecognition.stop();
+          } catch (e) {
+            // Ignore
+          }
+          animationRecognition = null;
+        }
+
+        if (match) {
+          // Correct! Continue animation
+          step.label = step.originalLabel || step.label;
+          renderAnimationStep(step, false);
+          isAnimationPaused = false;
+          currentWaitingWord = null;
+          currentWaitingStepIdx = -1;
+          // Don't null animationRecognition - reuse it
+          isHandlingResult = false;
+          continueAnimation();
+        } else {
+          // Incorrect! Show message and wait for user to speak again
+          step.label = `Please try <em>${expectedWord}</em> again`;
+          renderAnimationStep(step, true);
+          
+          // Speak the word again
+          const nextW = step.speakNext || "";
+          playWordAudio(expectedWord, nextW);
+          
+          // Reset flag and restart listening after a short delay
+          isHandlingResult = false;
+          setTimeout(() => {
+            if (isAnimationPaused && currentAnimationStep === stepIdx) {
+              startListening();
+            }
+          }, 1500);
+        }
+      };
+
+      animationRecognition.onerror = (event) => {
+        if (isHandlingResult) return; // Don't handle error if we're already handling a result
+        isHandlingResult = true;
+
+        // Clean up recognition
+        if (animationRecognition) {
+          try {
+            animationRecognition.stop();
+          } catch (e) {
+            // Ignore
+          }
+          animationRecognition = null;
+        }
+
+        if (event.error === "no-speech") {
+          // No speech detected, show message and wait for user to speak again
+          step.label = `Please try <em>${expectedWord}</em> again`;
+          renderAnimationStep(step, true);
+          const nextW = step.speakNext || "";
+          playWordAudio(expectedWord, nextW);
+          
+          // Reset flag and restart listening after a short delay
+          isHandlingResult = false;
+          setTimeout(() => {
+            if (isAnimationPaused && currentAnimationStep === stepIdx) {
+              startListening();
+            }
+          }, 1500);
+        } else {
+          // Other error - only continue if we're no longer waiting for this word
+          if (!isAnimationPaused || currentAnimationStep !== stepIdx) {
+            return;
+          }
+          // For other errors, show message but don't auto-continue
+          step.label = `Error: ${event.error}. Please try <em>${expectedWord}</em> again`;
+          renderAnimationStep(step, true);
+          isHandlingResult = false;
+          setTimeout(() => {
+            if (isAnimationPaused && currentAnimationStep === stepIdx) {
+              startListening();
+            }
+          }, 2000);
+        }
+      };
+
+      animationRecognition.onend = () => {
+        // Only restart if we're still waiting and haven't handled a result
+        if (isAnimationPaused && currentAnimationStep === stepIdx && !isHandlingResult) {
+          // Small delay before restarting to avoid immediate restart
+          setTimeout(() => {
+            if (isAnimationPaused && currentAnimationStep === stepIdx && !isHandlingResult) {
+              try {
+                startListening();
+              } catch (e) {
+                console.error("Failed to restart recognition:", e);
+                // Don't continue animation on restart failure - just wait
+              }
+            }
+          }, 500);
+        }
+      };
+
+      try {
+        isHandlingResult = false;
+        animationRecognition.start();
+      } catch (e) {
+        console.error("Failed to start animation recognition:", e);
+        isHandlingResult = false;
+        // Don't continue animation on start failure - user can skip if needed
+        step.label = `Failed to start recognition. Please try <em>${expectedWord}</em> or skip.`;
+        renderAnimationStep(step, true);
+      }
+    };
+
+    startListening();
+  };
+
+  const continueAnimation = () => {
+    if (isAnimationPaused) return;
+
+    currentAnimationIdx += 1;
+    if (currentAnimationIdx >= animationSteps.length) {
+      if (animationOnComplete) animationOnComplete();
+      return;
+    }
+
+    const step = animationSteps[currentAnimationIdx];
+    renderAnimationStep(step);
+    
+    if (step.speak) {
+      const hi = step.highlight ? step.highlight.index : null;
+      const nextW =
+        step.speakNext !== undefined
+          ? step.speakNext
+          : hi !== null && hi !== undefined
+          ? step.words[hi + 1] || ""
+          : "";
+      playWordAudio(step.speak, nextW);
+    }
+
+    // Check if this is a missing word step in speak mode
+    if (isSpeakModeAnimation && step.label && step.label.startsWith("Add \"")) {
+      // Extract the word from the label (e.g., "Add \"the\"" -> "the")
+      const wordMatch = step.label.match(/Add "([^"]+)"/);
+      if (wordMatch && wordMatch[1]) {
+        const expectedWord = wordMatch[1];
+        // Wait for user to speak the word
+        waitForWordInAnimation(expectedWord, currentAnimationIdx);
+        return; // Don't advance automatically
+      }
+    }
+
+    // Continue to next step after interval
+    animationTimer = setTimeout(continueAnimation, STEP_INTERVAL_MS);
+  };
+
+  const playAnimation = (steps, onComplete = () => {}, isSpeakMode = false) => {
     if (!steps.length) {
       onComplete();
       return;
     }
     if (animationTimer) clearTimeout(animationTimer);
     if (synth) synth.cancel();
-
-    let idx = 0;
-    renderAnimationStep(steps[idx]);
-    if (steps[idx].speak) {
-      const hi = steps[idx].highlight ? steps[idx].highlight.index : null;
-      const nextW =
-        steps[idx].speakNext !== undefined
-          ? steps[idx].speakNext
-          : hi !== null && hi !== undefined
-          ? steps[idx].words[hi + 1] || ""
-          : "";
-      playWordAudio(steps[idx].speak, nextW);
+    if (animationRecognition) {
+      animationRecognition.stop();
+      animationRecognition = null;
     }
 
-    const advance = () => {
-      idx += 1;
-      if (idx >= steps.length) {
-        onComplete();
+    animationSteps = steps;
+    animationOnComplete = onComplete;
+    isSpeakModeAnimation = isSpeakMode;
+    currentAnimationIdx = 0;
+    isAnimationPaused = false;
+    currentWaitingWord = null;
+    currentWaitingStepIdx = -1;
+
+    renderAnimationStep(steps[0]);
+    if (steps[0].speak) {
+      const hi = steps[0].highlight ? steps[0].highlight.index : null;
+      const nextW =
+        steps[0].speakNext !== undefined
+          ? steps[0].speakNext
+          : hi !== null && hi !== undefined
+          ? steps[0].words[hi + 1] || ""
+          : "";
+      playWordAudio(steps[0].speak, nextW);
+    }
+
+    // Check if first step is a missing word in speak mode
+    if (isSpeakMode && steps[0].label && steps[0].label.startsWith("Add \"")) {
+      const wordMatch = steps[0].label.match(/Add "([^"]+)"/);
+      if (wordMatch && wordMatch[1]) {
+        waitForWordInAnimation(wordMatch[1], 0);
         return;
       }
-      renderAnimationStep(steps[idx]);
-      if (steps[idx].speak) {
-        const hi = steps[idx].highlight ? steps[idx].highlight.index : null;
-        const nextW =
-          steps[idx].speakNext !== undefined
-            ? steps[idx].speakNext
-            : hi !== null && hi !== undefined
-            ? steps[idx].words[hi + 1] || ""
-            : "";
-        playWordAudio(steps[idx].speak, nextW);
-      }
-      animationTimer = setTimeout(advance, STEP_INTERVAL_MS);
-    };
+    }
 
-    animationTimer = setTimeout(advance, STEP_INTERVAL_MS);
+    animationTimer = setTimeout(continueAnimation, STEP_INTERVAL_MS);
   };
 
   const buildAnimationSteps = (userText) => {
@@ -580,6 +853,8 @@
     animationBox.innerHTML = "";
     result.innerHTML = `<div class="errors">Playing correction animation...</div>`;
 
+    const isSpeakMode = scoreElement === scoreSpeak;
+    lastAnimationMode = isSpeakMode;
     playAnimation(lastSteps, () => {
       const feedback = hasErrors
         ? `<div class="errors">Keep practicing! Differences highlighted below:</div><div>${renderDiff(diff)}</div>`
@@ -592,7 +867,7 @@
         audio.currentTime = 0;
         audio.play();
       }
-    });
+    }, isSpeakMode);
   };
 
   // Type mode
@@ -611,27 +886,13 @@
     audio.play();
   });
 
-  // Request microphone access once and keep it active
-  const requestMicrophoneAccess = async () => {
-    if (!microphoneStream) {
-      try {
-        microphoneStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        // Keep stream active but don't use it directly - just to maintain permission
-        // The Speech Recognition API will use its own access
-      } catch (error) {
-        console.error("Microphone access error:", error);
-      }
-    }
-    return microphoneStream;
-  };
-
-  // Request microphone access when page loads or when speak tab is first clicked
-  let microphoneRequested = false;
+  // Note: Speech Recognition API handles permissions automatically.
+  // The browser should remember permissions after the first grant.
+  // If you're opening this as a local file (file://), browsers don't persist
+  // permissions for security reasons - this is expected browser behavior.
   const ensureMicrophoneAccess = async () => {
-    if (!microphoneRequested) {
-      microphoneRequested = true;
-      await requestMicrophoneAccess();
-    }
+    // No-op: Let each recognition instance request permission naturally
+    // The browser will remember it after the first grant (unless file://)
   };
 
   recordBtn.addEventListener("click", async () => {
@@ -679,7 +940,7 @@
   });
 
   replayBtn.addEventListener("click", () => {
-    if (lastSteps.length) playAnimation(lastSteps);
+    if (lastSteps.length) playAnimation(lastSteps, () => {}, lastAnimationMode);
   });
 
   // Breakdown Mode functions

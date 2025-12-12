@@ -553,4 +553,22 @@ textarea {
   font-weight: 600;
 }
 
+.skip-word-btn {
+  margin-top: 12px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: 1px solid #d0d7de;
+  background: #ffffff;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.skip-word-btn:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
 

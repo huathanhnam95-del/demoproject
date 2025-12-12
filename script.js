@@ -112,6 +112,33 @@
       .join(" ");
   };
 
+  const choosePronunciation = (word, nextWord) => {
+    const w = (word || "").toLowerCase();
+    if (w === "the") {
+      const n = (nextWord || "").trim().toLowerCase();
+      const startsWithVowel = /^[aeiou]/.test(n);
+      return startsWithVowel ? "thee" : "thuh";
+    }
+    return word;
+  };
+
+  const speakWord = (word, nextWord = "") => {
+    if (!synth || !word) return;
+    const spokenText = choosePronunciation(word, nextWord);
+    synth.cancel();
+    const utter = new SpeechSynthesisUtterance(spokenText);
+    utter.lang = "en-US";
+    // Try to prefer a bright/happy US female voice by name substring if available
+    const voices = synth.getVoices();
+    const preferred = voices.find((v) =>
+      /female|samantha|allison|joanna|kimberly|ssml female|en-us/i.test(v.name)
+    );
+    if (preferred) utter.voice = preferred;
+    utter.rate = 1.05; // a bit quicker for a brighter feel
+    utter.pitch = 1.1; // slightly higher pitch
+    synth.speak(utter);
+  };
+
   const renderAnimationStep = (step) => {
     const words = step.words
       .map((w, idx) => {
@@ -131,7 +158,8 @@
               ? "anim-word anim-add"
               : "anim-word anim-remove"
             : baseClass;
-        return `<span class="${cls}">${display}</span>`;
+        const dataWord = w ? ` data-word="${w}"` : "";
+        return `<span class="${cls}"${dataWord}>${display}</span>`;
       })
       .join(" ");
     animationBox.innerHTML = `
@@ -140,13 +168,8 @@
     `;
   };
 
-  const speakWord = (word) => {
-    if (!synth || !word) return;
-    synth.cancel();
-    const utter = new SpeechSynthesisUtterance(word);
-    utter.rate = 0.95;
-    utter.pitch = 1;
-    synth.speak(utter);
+  const playWordAudio = (word, nextWord = "") => {
+    speakWord(word, nextWord);
   };
 
   const playAnimation = (steps, onComplete = () => {}) => {
@@ -159,7 +182,16 @@
 
     let idx = 0;
     renderAnimationStep(steps[idx]);
-    if (steps[idx].speak) speakWord(steps[idx].speak);
+    if (steps[idx].speak) {
+      const hi = steps[idx].highlight ? steps[idx].highlight.index : null;
+      const nextW =
+        steps[idx].speakNext !== undefined
+          ? steps[idx].speakNext
+          : hi !== null && hi !== undefined
+          ? steps[idx].words[hi + 1] || ""
+          : "";
+      playWordAudio(steps[idx].speak, nextW);
+    }
 
     const advance = () => {
       idx += 1;
@@ -168,7 +200,16 @@
         return;
       }
       renderAnimationStep(steps[idx]);
-      if (steps[idx].speak) speakWord(steps[idx].speak);
+      if (steps[idx].speak) {
+        const hi = steps[idx].highlight ? steps[idx].highlight.index : null;
+        const nextW =
+          steps[idx].speakNext !== undefined
+            ? steps[idx].speakNext
+            : hi !== null && hi !== undefined
+            ? steps[idx].words[hi + 1] || ""
+            : "";
+        playWordAudio(steps[idx].speak, nextW);
+      }
       animationTimer = setTimeout(advance, STEP_INTERVAL_MS);
     };
 
@@ -202,6 +243,7 @@
           label: `Place "${movedText}"`,
           words: [...current],
           highlight: { index: curIdx, type: "add" },
+          speakNext: current[curIdx + 1] || "",
         });
         curIdx += 1;
         corIdx += 1;
@@ -215,6 +257,7 @@
           words: [...current],
           highlight: { index: curIdx, type: "add" },
           speak: part.text,
+          speakNext: correctWordsLocal[curIdx + 1] || "",
         });
         curIdx += 1;
         corIdx += 1;
@@ -230,6 +273,7 @@
           label: `Move "${removedText}"`,
           words: snapshot,
           highlight: { index: curIdx, type: "remove", ghost: removedText },
+          speak: removedText,
         });
       } else {
         const snapshot = [...current];
@@ -280,6 +324,16 @@
 
   replayBtn.addEventListener("click", () => {
     if (lastSteps.length) playAnimation(lastSteps);
+  });
+
+  animationBox.addEventListener("click", (e) => {
+    const target = e.target;
+    if (!(target instanceof HTMLElement)) return;
+    const word = target.dataset.word;
+    if (word) {
+      const next = target.nextElementSibling?.getAttribute("data-word") || "";
+      speakWord(word, next);
+    }
   });
 })();
 

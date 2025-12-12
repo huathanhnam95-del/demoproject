@@ -134,6 +134,10 @@ textarea {
   border-radius: 4px;
 }
 
+.anim-word[data-word] {
+  cursor: pointer;
+}
+
 .anim-empty {
   min-width: 6px;
   display: inline-block;

@@ -510,13 +510,17 @@
 
   // Render pronunciation practice box
   const renderPronunciationPractice = (missedWords) => {
-    if (missedWords.length === 0) {
+    // Filter to only show content words (keywords)
+    // Double-check: ensure we're filtering properly
+    const contentWords = filterContentWords(missedWords);
+    
+    if (contentWords.length === 0) {
       pronunciationPanel.style.display = "none";
       return;
     }
 
     pronunciationPanel.style.display = "block";
-    pronunciationWords.innerHTML = missedWords
+    pronunciationWords.innerHTML = contentWords
       .map(
         (word, idx) => `
       <div class="pronunciation-item" data-word-index="${idx}">
@@ -802,12 +806,27 @@
 
   // Stop words to exclude from sentence generation
   const stopWords = new Set([
-    "a", "an", "the", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "by",
-    "from", "up", "about", "into", "through", "during", "including", "excluding", "following",
+    // Articles
+    "a", "an", "the",
+    // Conjunctions
+    "and", "or", "but", "nor", "so", "yet",
+    // Prepositions
+    "in", "on", "at", "to", "for", "of", "with", "by", "from", "up", "about", "into", "through", 
+    "during", "including", "excluding", "following", "over", "under", "above", "below", "between", 
+    "among", "within", "without", "against", "across", "around", "behind", "beside", "besides", 
+    "beyond", "near", "off", "out", "down", "upon", "toward", "towards", "until", "till",
+    // Auxiliary verbs
     "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "do", "does", "did",
-    "will", "would", "should", "could", "may", "might", "must", "can", "this", "that", "these", "those",
+    // Modal verbs
+    "will", "would", "should", "could", "may", "might", "must", "can", "shall",
+    // Demonstratives
+    "this", "that", "these", "those",
+    // Personal pronouns
     "i", "you", "he", "she", "it", "we", "they", "me", "him", "her", "us", "them",
+    // Possessive pronouns
     "my", "your", "his", "her", "its", "our", "their", "mine", "yours", "hers", "ours", "theirs",
+    // Other grammar words
+    "as", "if", "when", "where", "while", "which", "who", "whom", "whose", "what", "why", "how",
     // Contractions
     "we'll", "we're", "we've", "we'd", "they'll", "they're", "they've", "they'd", "it's", "that's", "there's",
     "don't", "doesn't", "didn't", "won't", "wouldn't", "couldn't", "shouldn't", "can't", "isn't", "aren't",
@@ -825,6 +844,59 @@
     "seem", "bring", "begin", "help", "show", "hear", "play", "run", "move", "like", "live", "believe",
     "hold", "bring", "happen", "write", "sit", "stand", "lose", "pay", "meet", "include", "continue", "learn"
   ]);
+
+  // Filter content words (exclude stop words and contractions only - keep verbs for pronunciation practice)
+  const filterContentWords = (words) => {
+    if (!words || !Array.isArray(words)) {
+      return [];
+    }
+    
+    return words.filter((word) => {
+      if (!word || typeof word !== 'string') {
+        return false;
+      }
+      
+      // Normalize: lowercase, trim whitespace (including non-breaking spaces)
+      let lowerWord = word.toLowerCase().trim();
+      // Remove all whitespace characters
+      lowerWord = lowerWord.replace(/\s+/g, '');
+      
+      // First check: Exclude contractions (any word with apostrophe) - check BEFORE removing punctuation
+      if (lowerWord.includes("'")) {
+        // Check if it's in stopWords (for contractions like "we'll")
+        if (stopWords.has(lowerWord)) {
+          return false;
+        }
+        // Exclude all other contractions
+        return false;
+      }
+      
+      // Remove all punctuation marks
+      let normalized = lowerWord.replace(/[.,!?;:"()\[\]{}]/g, '');
+      normalized = normalized.trim();
+      
+      // Exclude if empty or single character
+      if (!normalized || normalized.length <= 1) {
+        return false;
+      }
+      
+      // Explicit check for common stop words (double-check)
+      const commonStopWords = ["the", "a", "an", "on", "of", "in", "at", "to", "for", "with", "by", "from"];
+      if (commonStopWords.includes(normalized)) {
+        return false;
+      }
+      
+      // Exclude if it's a stop word (articles, prepositions, pronouns, etc.)
+      // BUT keep verbs - they are content words that should be practiced
+      if (stopWords.has(normalized)) {
+        return false;
+      }
+      
+      // Don't filter out verbs - they are content words that should be included
+      // Return true for all other words (nouns, verbs, adjectives, adverbs, etc.)
+      return true;
+    });
+  };
 
   // Extract keywords from diff (missing and misplaced words, excluding stop words and verbs)
   const extractKeywords = (diff) => {
@@ -1379,7 +1451,20 @@
         statusEl.textContent = "✓ Correct!";
         statusEl.className = "breakdown-status correct";
       } else {
-        statusEl.textContent = `Incorrect. Expected: "${expectedSegment}"`;
+        // Use diffWords to find missing words
+        const diff = diffWords(spokenText, expectedSegment);
+        const missingWords = [];
+        diff.forEach((part) => {
+          if (part.type === "missing") {
+            missingWords.push(part.text);
+          }
+        });
+        
+        if (missingWords.length > 0) {
+          statusEl.textContent = `Incorrect, you are missing these words: ${missingWords.join(", ")}; try practicing them in Pronunciation Practice first`;
+        } else {
+          statusEl.textContent = `Incorrect. Expected: "${expectedSegment}"`;
+        }
         statusEl.className = "breakdown-status incorrect";
       }
 

@@ -8,6 +8,11 @@
   const input = document.getElementById("answer-input");
   const result = document.getElementById("result");
   const score = document.getElementById("score");
+  const animationBox = document.getElementById("animation");
+  const replayBtn = document.getElementById("replay-btn");
+
+  let lastSteps = [];
+  let animationTimer = null;
 
   const normalize = (text) =>
     text
@@ -67,13 +72,27 @@
       return acc;
     }, {});
 
-    return reversed.map((part) => {
+    const mapped = reversed.map((part) => {
       if (part.type === "extra" && missingCounts[part.text] > 0) {
         missingCounts[part.text] -= 1;
         return { ...part, type: "misplaced" };
       }
       return part;
     });
+
+    // Pair misplaced with one missing instance to mark destination
+    const pendingMove = {};
+    mapped.forEach((part, idx) => {
+      if (part.type === "misplaced") {
+        pendingMove[part.text] = (pendingMove[part.text] || 0) + 1;
+      }
+      if (part.type === "missing" && pendingMove[part.text] > 0) {
+        pendingMove[part.text] -= 1;
+        mapped[idx] = { ...part, type: "move-target" };
+      }
+    });
+
+    return mapped;
   };
 
   const renderDiff = (diff) => {
@@ -89,6 +108,121 @@
         return part.text;
       })
       .join(" ");
+  };
+
+  const renderAnimationStep = (step) => {
+    const words = step.words
+      .map((w, idx) => {
+        const display =
+          step.highlight &&
+          step.highlight.index === idx &&
+          step.highlight.type === "remove" &&
+          step.highlight.ghost
+            ? step.highlight.ghost
+            : w === ""
+            ? "&nbsp;"
+            : w;
+        const baseClass = w === "" ? "anim-word anim-base anim-empty" : "anim-word anim-base";
+        const cls =
+          step.highlight && step.highlight.index === idx
+            ? step.highlight.type === "add"
+              ? "anim-word anim-add"
+              : "anim-word anim-remove"
+            : baseClass;
+        return `<span class="${cls}">${display}</span>`;
+      })
+      .join(" ");
+    animationBox.innerHTML = `
+      <div class="anim-line"><strong>${step.label}</strong></div>
+      <div class="anim-step">${words}</div>
+    `;
+  };
+
+  const playAnimation = (steps) => {
+    if (!steps.length) return;
+    if (animationTimer) clearTimeout(animationTimer);
+
+    let idx = 0;
+    renderAnimationStep(steps[idx]);
+
+    const advance = () => {
+      idx += 1;
+      if (idx >= steps.length) return;
+      renderAnimationStep(steps[idx]);
+      animationTimer = setTimeout(advance, 2400);
+    };
+
+    animationTimer = setTimeout(advance, 2400);
+  };
+
+  const buildAnimationSteps = (userText) => {
+    const userWords = normalize(userText).split(" ").filter(Boolean);
+    const correctWordsLocal = normalize(correctSentence).split(" ").filter(Boolean);
+    const diff = diffWords(userText, correctSentence);
+
+    const steps = [];
+    const current = [...userWords]; // allow positions to shift naturally
+    let curIdx = 0;
+    let corIdx = 0;
+    const moveQueue = [];
+
+    steps.push({ label: "Your attempt", words: [...current] });
+
+    diff.forEach((part) => {
+      if (part.type === "match") {
+        curIdx += 1;
+        corIdx += 1;
+        return;
+      }
+
+      if (part.type === "move-target") {
+        const movedText = moveQueue.shift() || part.text;
+        current.splice(curIdx, 0, movedText);
+        steps.push({
+          label: `Place "${movedText}"`,
+          words: [...current],
+          highlight: { index: curIdx, type: "add" },
+        });
+        curIdx += 1;
+        corIdx += 1;
+        return;
+      }
+
+      if (part.type === "missing") {
+        current.splice(curIdx, 0, part.text);
+        steps.push({
+          label: `Add "${part.text}"`,
+          words: [...current],
+          highlight: { index: curIdx, type: "add" },
+        });
+        curIdx += 1;
+        corIdx += 1;
+        return;
+      }
+
+      // extra or misplaced -> remove
+      const removedText = current[curIdx] || part.text;
+      if (part.type === "misplaced") {
+        moveQueue.push(removedText);
+        const snapshot = [...current];
+        steps.push({
+          label: `Move "${removedText}"`,
+          words: snapshot,
+          highlight: { index: curIdx, type: "remove", ghost: removedText },
+        });
+      } else {
+        const snapshot = [...current];
+        steps.push({
+          label: `Remove "${removedText}"`,
+          words: snapshot,
+          highlight: { index: curIdx, type: "remove", ghost: removedText },
+        });
+      }
+      current.splice(curIdx, 1); // remove and shift naturally
+    });
+
+    steps.push({ label: "Correct sentence", words: [...correctWordsLocal] });
+    return steps;
   };
 
   playBtn.addEventListener("click", () => {
@@ -114,6 +248,13 @@
       : `<div class="ok">Great job! Perfect match.</div>`;
 
     result.innerHTML = `${feedback}<div class="correct-sentence">Correct sentence: ${correctSentence}</div>`;
+
+    lastSteps = buildAnimationSteps(userAnswer);
+    playAnimation(lastSteps);
+  });
+
+  replayBtn.addEventListener("click", () => {
+    if (lastSteps.length) playAnimation(lastSteps);
   });
 })();
 

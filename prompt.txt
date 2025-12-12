@@ -1,0 +1,5 @@
+I want a simple dictation practice app. 
+Create index.html, style.css, and script.js. 
+The page should have a Play button, a text input, and a Check button.
+When the user clicks Play, play sentence1.mp3. 
+When they click Check, compare their answer to the correct sentence and highlight mistakes.”

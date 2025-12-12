@@ -1,0 +1,13 @@
+{
+  "name": "dictation-practice",
+  "version": "1.0.0",
+  "description": "Dictation practice app",
+  "scripts": {
+    "start": "http-server -S -p 8443 -C cert.pem -K key.pem",
+    "setup": "node setup-https.js"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
+

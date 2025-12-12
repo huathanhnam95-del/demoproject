@@ -10,6 +10,7 @@
   const score = document.getElementById("score");
   const animationBox = document.getElementById("animation");
   const replayBtn = document.getElementById("replay-btn");
+  const skipAnimationBtn = document.getElementById("skip-animation-btn");
 
   // Tab switching
   const tabType = document.getElementById("tab-type");
@@ -30,6 +31,11 @@
   const breakdownLines = document.getElementById("breakdown-lines");
   const breakdownBeginningBtn = document.getElementById("breakdown-beginning");
   const breakdownEndBtn = document.getElementById("breakdown-end");
+  const generatePanel = document.getElementById("generate-sentences");
+  const generateBtn = document.getElementById("generate-btn");
+  const showAllSentencesBtn = document.getElementById("show-all-sentences-btn");
+  const hideAllSentencesBtn = document.getElementById("hide-all-sentences-btn");
+  const generatedSentences = document.getElementById("generated-sentences");
 
   // Speech recognition
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -44,6 +50,18 @@
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = "en-US";
+
+    recognition.onstart = () => {
+      recordingStatus.textContent = "Recording... (speak now)";
+    };
+
+    recognition.onaudiostart = () => {
+      // Audio capture started - no need to log
+    };
+
+    recognition.onsoundstart = () => {
+      // Sound detected - no need to log
+    };
 
     recognition.onresult = (event) => {
       let interimTranscript = "";
@@ -64,11 +82,28 @@
     };
 
     recognition.onerror = (event) => {
+      // Ignore "aborted" errors - they happen when we stop recognition intentionally
+      if (event.error === "aborted") {
+        return;
+      }
+      
       console.error("Speech recognition error:", event.error);
       if (event.error === "no-speech") {
-        recordingStatus.textContent = "No speech detected. Try again.";
+        recordingStatus.textContent = "No speech detected. Try speaking louder or closer to the microphone.";
       } else if (event.error === "not-allowed") {
-        recordingStatus.textContent = "Microphone access denied. Please allow microphone access.";
+        recordingStatus.textContent = "Microphone access denied. Please allow microphone access in your browser settings.";
+        isRecording = false;
+        recordBtn.textContent = "Start Recording";
+        recordBtn.classList.remove("recording");
+        recordingStatus.classList.remove("active");
+      } else if (event.error === "audio-capture") {
+        recordingStatus.textContent = "No microphone found. Please connect a microphone.";
+        isRecording = false;
+        recordBtn.textContent = "Start Recording";
+        recordBtn.classList.remove("recording");
+        recordingStatus.classList.remove("active");
+      } else if (event.error === "network") {
+        recordingStatus.textContent = "Network error. Please check your internet connection.";
       } else {
         recordingStatus.textContent = `Error: ${event.error}`;
       }
@@ -77,15 +112,24 @@
     recognition.onend = () => {
       if (isRecording) {
         // Restart if still supposed to be recording
-        try {
-          recognition.start();
-        } catch (e) {
-          // Already started or error
-          isRecording = false;
-          recordBtn.textContent = "Start Recording";
-          recordBtn.classList.remove("recording");
-          recordingStatus.classList.remove("active");
-        }
+        // Add a small delay to avoid immediate restart conflicts
+        setTimeout(() => {
+          if (isRecording) {
+            try {
+              console.log("Restarting recognition...");
+              recognition.start();
+            } catch (e) {
+              // Already started or error - check if it's a real error
+              if (e.name !== "InvalidStateError" && !e.message.includes("already started")) {
+                console.error("Failed to restart recognition:", e);
+                isRecording = false;
+                recordBtn.textContent = "Start Recording";
+                recordBtn.classList.remove("recording");
+                recordingStatus.classList.remove("active");
+              }
+            }
+          }
+        }, 100);
       } else {
         recordBtn.textContent = "Start Recording";
         recordBtn.classList.remove("recording");
@@ -227,7 +271,7 @@
     synth.speak(utter);
   };
 
-  const renderAnimationStep = (step, showSkipButton = false) => {
+  const renderAnimationStep = (step) => {
     const words = step.words
       .map((w, idx) => {
         const display =
@@ -251,252 +295,23 @@
       })
       .join(" ");
     
-    const skipButton = showSkipButton
-      ? `<button id="skip-word-btn" class="skip-word-btn" type="button">Skip this word</button>`
-      : "";
-    
     animationBox.innerHTML = `
       <div class="anim-line"><strong>${step.label || ""}</strong></div>
       <div class="anim-step">${words}</div>
-      ${skipButton}
     `;
-    
-    // Add event listener to skip button if it exists
-    if (showSkipButton) {
-      const skipBtn = document.getElementById("skip-word-btn");
-      if (skipBtn) {
-        skipBtn.addEventListener("click", () => {
-          skipCurrentWord();
-        });
-      }
-    }
   };
 
   const playWordAudio = (word, nextWord = "") => {
     speakWord(word, nextWord);
   };
 
-  let animationRecognition = null;
-  let isAnimationPaused = false;
-  let currentAnimationStep = null;
   let currentAnimationIdx = 0;
   let animationSteps = [];
   let animationOnComplete = null;
   let isSpeakModeAnimation = false;
-  let currentWaitingWord = null;
-  let currentWaitingStepIdx = -1;
-  let permissionRequested = false; // Track if we've requested permission
 
-  const skipCurrentWord = () => {
-    if (!isAnimationPaused || currentWaitingStepIdx === -1) return;
-    
-    // Stop recognition
-    if (animationRecognition) {
-      animationRecognition.stop();
-      animationRecognition = null;
-    }
-    
-    // Restore original label
-    const step = animationSteps[currentWaitingStepIdx];
-    step.label = step.originalLabel || step.label;
-    renderAnimationStep(step, false);
-    
-    // Continue animation
-    isAnimationPaused = false;
-    currentWaitingWord = null;
-    currentWaitingStepIdx = -1;
-    continueAnimation();
-  };
-
-  const waitForWordInAnimation = (expectedWord, stepIdx) => {
-    if (!SpeechRecognition) {
-      // If no speech recognition, just continue
-      continueAnimation();
-      return;
-    }
-
-    isAnimationPaused = true;
-    currentAnimationStep = stepIdx;
-    currentWaitingWord = expectedWord;
-    currentWaitingStepIdx = stepIdx;
-
-    // Show prompt message
-    const step = animationSteps[stepIdx];
-    if (!step.originalLabel) {
-      step.originalLabel = step.label;
-    }
-    step.label = `Say "${expectedWord}"`;
-    renderAnimationStep(step, true);
-
-    // Stop any ongoing recognition
-    if (animationRecognition) {
-      animationRecognition.stop();
-      animationRecognition = null;
-    }
-
-    // Stop main recording if active
-    if (isRecording && recognition) {
-      recognition.stop();
-      isRecording = false;
-      recordBtn.textContent = "Start Recording";
-      recordBtn.classList.remove("recording");
-      recordingStatus.classList.remove("active");
-    }
-
-    let isHandlingResult = false; // Flag to prevent multiple result handlers
-
-    const startListening = () => {
-      // Clean up any existing recognition first
-      if (animationRecognition) {
-        try {
-          animationRecognition.stop();
-        } catch (e) {
-          // Ignore errors when stopping
-        }
-        animationRecognition = null;
-      }
-
-      // Only start if we're still waiting for this word
-      if (!isAnimationPaused || currentAnimationStep !== stepIdx) {
-        return;
-      }
-
-      // Reuse existing instance if available, otherwise create new one
-      if (!animationRecognition) {
-        animationRecognition = new SpeechRecognition();
-        animationRecognition.continuous = false;
-        animationRecognition.interimResults = false;
-        animationRecognition.lang = "en-US";
-        animationRecognition.maxAlternatives = 1;
-      }
-
-      animationRecognition.onresult = (event) => {
-        if (isHandlingResult) return; // Prevent duplicate handling
-        isHandlingResult = true;
-
-        const spokenText = event.results[0][0].transcript.trim().toLowerCase();
-        const expected = normalize(expectedWord);
-        const match = normalize(spokenText) === expected;
-
-        // Clean up recognition before handling result
-        if (animationRecognition) {
-          try {
-            animationRecognition.stop();
-          } catch (e) {
-            // Ignore
-          }
-          animationRecognition = null;
-        }
-
-        if (match) {
-          // Correct! Continue animation
-          step.label = step.originalLabel || step.label;
-          renderAnimationStep(step, false);
-          isAnimationPaused = false;
-          currentWaitingWord = null;
-          currentWaitingStepIdx = -1;
-          // Don't null animationRecognition - reuse it
-          isHandlingResult = false;
-          continueAnimation();
-        } else {
-          // Incorrect! Show message and wait for user to speak again
-          step.label = `Please try <em>${expectedWord}</em> again`;
-          renderAnimationStep(step, true);
-          
-          // Speak the word again
-          const nextW = step.speakNext || "";
-          playWordAudio(expectedWord, nextW);
-          
-          // Reset flag and restart listening after a short delay
-          isHandlingResult = false;
-          setTimeout(() => {
-            if (isAnimationPaused && currentAnimationStep === stepIdx) {
-              startListening();
-            }
-          }, 1500);
-        }
-      };
-
-      animationRecognition.onerror = (event) => {
-        if (isHandlingResult) return; // Don't handle error if we're already handling a result
-        isHandlingResult = true;
-
-        // Clean up recognition
-        if (animationRecognition) {
-          try {
-            animationRecognition.stop();
-          } catch (e) {
-            // Ignore
-          }
-          animationRecognition = null;
-        }
-
-        if (event.error === "no-speech") {
-          // No speech detected, show message and wait for user to speak again
-          step.label = `Please try <em>${expectedWord}</em> again`;
-          renderAnimationStep(step, true);
-          const nextW = step.speakNext || "";
-          playWordAudio(expectedWord, nextW);
-          
-          // Reset flag and restart listening after a short delay
-          isHandlingResult = false;
-          setTimeout(() => {
-            if (isAnimationPaused && currentAnimationStep === stepIdx) {
-              startListening();
-            }
-          }, 1500);
-        } else {
-          // Other error - only continue if we're no longer waiting for this word
-          if (!isAnimationPaused || currentAnimationStep !== stepIdx) {
-            return;
-          }
-          // For other errors, show message but don't auto-continue
-          step.label = `Error: ${event.error}. Please try <em>${expectedWord}</em> again`;
-          renderAnimationStep(step, true);
-          isHandlingResult = false;
-          setTimeout(() => {
-            if (isAnimationPaused && currentAnimationStep === stepIdx) {
-              startListening();
-            }
-          }, 2000);
-        }
-      };
-
-      animationRecognition.onend = () => {
-        // Only restart if we're still waiting and haven't handled a result
-        if (isAnimationPaused && currentAnimationStep === stepIdx && !isHandlingResult) {
-          // Small delay before restarting to avoid immediate restart
-          setTimeout(() => {
-            if (isAnimationPaused && currentAnimationStep === stepIdx && !isHandlingResult) {
-              try {
-                startListening();
-              } catch (e) {
-                console.error("Failed to restart recognition:", e);
-                // Don't continue animation on restart failure - just wait
-              }
-            }
-          }, 500);
-        }
-      };
-
-      try {
-        isHandlingResult = false;
-        animationRecognition.start();
-      } catch (e) {
-        console.error("Failed to start animation recognition:", e);
-        isHandlingResult = false;
-        // Don't continue animation on start failure - user can skip if needed
-        step.label = `Failed to start recognition. Please try <em>${expectedWord}</em> or skip.`;
-        renderAnimationStep(step, true);
-      }
-    };
-
-    startListening();
-  };
 
   const continueAnimation = () => {
-    if (isAnimationPaused) return;
-
     currentAnimationIdx += 1;
     if (currentAnimationIdx >= animationSteps.length) {
       if (animationOnComplete) animationOnComplete();
@@ -517,41 +332,49 @@
       playWordAudio(step.speak, nextW);
     }
 
-    // Check if this is a missing word step in speak mode
-    if (isSpeakModeAnimation && step.label && step.label.startsWith("Add \"")) {
-      // Extract the word from the label (e.g., "Add \"the\"" -> "the")
-      const wordMatch = step.label.match(/Add "([^"]+)"/);
-      if (wordMatch && wordMatch[1]) {
-        const expectedWord = wordMatch[1];
-        // Wait for user to speak the word
-        waitForWordInAnimation(expectedWord, currentAnimationIdx);
-        return; // Don't advance automatically
-      }
-    }
-
     // Continue to next step after interval
     animationTimer = setTimeout(continueAnimation, STEP_INTERVAL_MS);
   };
 
+  const skipAnimation = () => {
+    if (animationTimer) {
+      clearTimeout(animationTimer);
+      animationTimer = null;
+    }
+    if (synth) synth.cancel();
+    
+    // Jump to the last step
+    if (animationSteps.length > 0) {
+      currentAnimationIdx = animationSteps.length - 1;
+      const lastStep = animationSteps[currentAnimationIdx];
+      renderAnimationStep(lastStep);
+      
+      // Call the completion callback
+      if (animationOnComplete) {
+        animationOnComplete();
+      }
+    }
+  };
+
   const playAnimation = (steps, onComplete = () => {}, isSpeakMode = false) => {
-    if (!steps.length) {
-      onComplete();
+    if (!steps || !steps.length) {
+      if (onComplete) onComplete();
       return;
     }
     if (animationTimer) clearTimeout(animationTimer);
     if (synth) synth.cancel();
-    if (animationRecognition) {
-      animationRecognition.stop();
-      animationRecognition = null;
-    }
 
     animationSteps = steps;
     animationOnComplete = onComplete;
     isSpeakModeAnimation = isSpeakMode;
     currentAnimationIdx = 0;
-    isAnimationPaused = false;
-    currentWaitingWord = null;
-    currentWaitingStepIdx = -1;
+
+    // Ensure animation box exists and is visible
+    if (!animationBox) {
+      console.error("Animation box element not found");
+      if (onComplete) onComplete();
+      return;
+    }
 
     renderAnimationStep(steps[0]);
     if (steps[0].speak) {
@@ -563,15 +386,6 @@
           ? steps[0].words[hi + 1] || ""
           : "";
       playWordAudio(steps[0].speak, nextW);
-    }
-
-    // Check if first step is a missing word in speak mode
-    if (isSpeakMode && steps[0].label && steps[0].label.startsWith("Add \"")) {
-      const wordMatch = steps[0].label.match(/Add "([^"]+)"/);
-      if (wordMatch && wordMatch[1]) {
-        waitForWordInAnimation(wordMatch[1], 0);
-        return;
-      }
     }
 
     animationTimer = setTimeout(continueAnimation, STEP_INTERVAL_MS);
@@ -674,13 +488,12 @@
     }
   });
 
-  tabSpeak.addEventListener("click", async () => {
+  tabSpeak.addEventListener("click", () => {
     tabSpeak.classList.add("active");
     tabType.classList.remove("active");
     modeSpeak.classList.add("active");
     modeType.classList.remove("active");
-    // Request microphone access when switching to speak tab
-    await ensureMicrophoneAccess();
+    // Microphone access will be requested when user clicks "Start Recording"
   });
 
   // Extract missed words from diff
@@ -850,6 +663,10 @@
     }
 
     lastSteps = buildAnimationSteps(userAnswer);
+    if (!lastSteps || lastSteps.length === 0) {
+      result.innerHTML = `<div class="errors">Error: Could not generate animation steps.</div>`;
+      return;
+    }
     animationBox.innerHTML = "";
     result.innerHTML = `<div class="errors">Playing correction animation...</div>`;
 
@@ -867,8 +684,18 @@
         audio.currentTime = 0;
         audio.play();
       }
+      
+      // Store diff for sentence generation
+      lastDiff = diff;
+      
+      // Show generate panel after check
+      if (hasErrors) {
+        generatePanel.style.display = "block";
+      }
     }, isSpeakMode);
   };
+  
+  let lastDiff = [];
 
   // Type mode
   playBtn.addEventListener("click", () => {
@@ -902,28 +729,58 @@
     await ensureMicrophoneAccess();
 
     if (isRecording) {
-      recognition.stop();
+      // Stop recording
+      try {
+        recognition.stop();
+      } catch (e) {
+        // Ignore errors when stopping
+      }
       isRecording = false;
       recordBtn.textContent = "Start Recording";
       recordBtn.classList.remove("recording");
       recordingStatus.classList.remove("active");
     } else {
+      // Start recording
+      // First, make sure any previous recognition is stopped
+      try {
+        recognition.stop();
+      } catch (e) {
+        // Ignore if already stopped
+      }
+      
+      // Wait a moment before starting to avoid conflicts
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       transcription = "";
       transcriptionText.textContent = "Listening...";
       transcriptionText.classList.remove("empty");
-      recordingStatus.textContent = "Recording...";
+      recordingStatus.textContent = "Starting...";
       recordingStatus.classList.add("active");
       recordBtn.textContent = "Stop Recording";
       recordBtn.classList.add("recording");
       isRecording = true;
+      
       try {
         recognition.start();
       } catch (e) {
-        console.error("Failed to start recognition:", e);
-        isRecording = false;
-        recordBtn.textContent = "Start Recording";
-        recordBtn.classList.remove("recording");
-        recordingStatus.classList.remove("active");
+        // Handle specific error cases
+        if (e.name === "InvalidStateError" || e.message.includes("already started")) {
+          // Recognition is already running, just update UI
+          recordingStatus.textContent = "Recording...";
+        } else if (e.name === "NotAllowedError") {
+          recordingStatus.textContent = "Microphone access denied. Please allow microphone access and try again.";
+          isRecording = false;
+          recordBtn.textContent = "Start Recording";
+          recordBtn.classList.remove("recording");
+          recordingStatus.classList.remove("active");
+        } else {
+          console.error("Failed to start recognition:", e);
+          isRecording = false;
+          recordBtn.textContent = "Start Recording";
+          recordBtn.classList.remove("recording");
+          recordingStatus.classList.remove("active");
+          recordingStatus.textContent = `Error: ${e.message || "Failed to start"}`;
+        }
       }
     }
   });
@@ -942,6 +799,486 @@
   replayBtn.addEventListener("click", () => {
     if (lastSteps.length) playAnimation(lastSteps, () => {}, lastAnimationMode);
   });
+
+  // Stop words to exclude from sentence generation
+  const stopWords = new Set([
+    "a", "an", "the", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "by",
+    "from", "up", "about", "into", "through", "during", "including", "excluding", "following",
+    "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "do", "does", "did",
+    "will", "would", "should", "could", "may", "might", "must", "can", "this", "that", "these", "those",
+    "i", "you", "he", "she", "it", "we", "they", "me", "him", "her", "us", "them",
+    "my", "your", "his", "her", "its", "our", "their", "mine", "yours", "hers", "ours", "theirs",
+    // Contractions
+    "we'll", "we're", "we've", "we'd", "they'll", "they're", "they've", "they'd", "it's", "that's", "there's",
+    "don't", "doesn't", "didn't", "won't", "wouldn't", "couldn't", "shouldn't", "can't", "isn't", "aren't",
+    "wasn't", "weren't", "haven't", "hasn't", "hadn't", "i'm", "i've", "i'd", "i'll", "you're", "you've",
+    "you'd", "you'll", "he's", "she's", "here's", "where's", "what's", "who's", "how's", "let's"
+  ]);
+  
+  // Common verbs that shouldn't be used as keywords (nouns)
+  const commonVerbs = new Set([
+    "discuss", "analyze", "examine", "study", "review", "explore", "understand", "consider", "evaluate",
+    "assess", "investigate", "explain", "describe", "present", "show", "demonstrate", "highlight", "focus",
+    "address", "affect", "influence", "impact", "shape", "determine", "change", "improve", "create", "make",
+    "take", "give", "get", "go", "come", "see", "know", "think", "say", "tell", "ask", "want", "need",
+    "use", "work", "call", "try", "find", "keep", "let", "put", "mean", "set", "become", "leave", "feel",
+    "seem", "bring", "begin", "help", "show", "hear", "play", "run", "move", "like", "live", "believe",
+    "hold", "bring", "happen", "write", "sit", "stand", "lose", "pay", "meet", "include", "continue", "learn"
+  ]);
+
+  // Extract keywords from diff (missing and misplaced words, excluding stop words and verbs)
+  const extractKeywords = (diff) => {
+    const keywords = [];
+    diff.forEach((part) => {
+      const word = part.text.toLowerCase().trim();
+      // Exclude stop words, contractions, and common verbs
+      if ((part.type === "missing" || part.type === "misplaced") && 
+          !stopWords.has(word) && 
+          !commonVerbs.has(word) &&
+          word.length > 1 && // Exclude single characters
+          !word.includes("'") && // Exclude contractions
+          !word.match(/^[a-z]+'[a-z]+$/)) { // Exclude any word with apostrophe
+        keywords.push(word);
+      }
+    });
+    // Remove duplicates and return only content words (nouns, adjectives, etc.)
+    return [...new Set(keywords)];
+  };
+
+  // Generate a meaningful, grammatically correct sentence using ~20% of keywords
+  const generateSentence = (keywords, sentenceNum) => {
+    if (keywords.length === 0) return null;
+    
+    // Calculate how many keywords to use (20% of total, minimum 1, maximum 3)
+    const keywordsToUse = Math.max(1, Math.min(3, Math.ceil(keywords.length * 0.2)));
+    
+    // Filter out any remaining invalid keywords (contractions, verbs, etc.)
+    const validKeywords = keywords.filter(kw => 
+      kw && 
+      kw.length > 1 && 
+      !kw.includes("'") && 
+      !stopWords.has(kw) && 
+      !commonVerbs.has(kw) &&
+      !kw.match(/^[a-z]+'[a-z]+$/)
+    );
+    
+    if (validKeywords.length === 0) return null;
+    
+    // Shuffle and take only the needed keywords
+    const shuffled = [...validKeywords].sort(() => Math.random() - 0.5);
+    const actualKeywordsToUse = Math.min(keywordsToUse, shuffled.length);
+    const selectedKeywords = shuffled.slice(0, actualKeywordsToUse);
+    
+    // Validate keywords are valid (not contractions, verbs, or stop words)
+    const isValidKeyword = (kw) => {
+      if (!kw || kw.length <= 1) return false;
+      if (kw.includes("'")) return false;
+      if (stopWords.has(kw)) return false;
+      if (commonVerbs.has(kw)) return false;
+      if (kw.match(/^[a-z]+'[a-z]+$/)) return false;
+      return true;
+    };
+    
+    // Filter selected keywords one more time
+    const finalKeywords = selectedKeywords.filter(isValidKeyword);
+    if (finalKeywords.length === 0) return null;
+    
+    // Natural sentence templates that are grammatically correct
+    const templates = [
+      // Template 1: Subject + verb + the + keyword1 + preposition + keyword2
+      (kw1, kw2) => {
+        if (!isValidKeyword(kw1)) return null;
+        const subjects = ["We", "They", "People", "Researchers", "Experts", "Students", "Teachers"];
+        const verbs = ["discuss", "analyze", "examine", "study", "review", "explore", "understand", "consider"];
+        const preps = ["of", "in", "on", "for", "about", "with", "through"];
+        const subject = subjects[Math.floor(Math.random() * subjects.length)];
+        const verb = verbs[Math.floor(Math.random() * verbs.length)];
+        const prep = preps[Math.floor(Math.random() * preps.length)];
+        if (kw2 && isValidKeyword(kw2)) {
+          return `${subject} ${verb} the ${kw1} ${prep} ${kw2}.`;
+        }
+        return `${subject} ${verb} the ${kw1}.`;
+      },
+      
+      // Template 2: The + keyword1 + verb + the + keyword2
+      (kw1, kw2) => {
+        if (!isValidKeyword(kw1)) return null;
+        const verbs = ["affects", "influences", "impacts", "shapes", "determines", "changes", "improves"];
+        const verb = verbs[Math.floor(Math.random() * verbs.length)];
+        if (kw2 && isValidKeyword(kw2)) {
+          return `The ${kw1} ${verb} the ${kw2}.`;
+        }
+        return `The ${kw1} matters.`;
+      },
+      
+      // Template 3: This + keyword1 + helps + verb + the + keyword2
+      (kw1, kw2) => {
+        if (!isValidKeyword(kw1)) return null;
+        const verbs = ["understand", "explain", "analyze", "evaluate", "assess"];
+        const verb = verbs[Math.floor(Math.random() * verbs.length)];
+        if (kw2 && isValidKeyword(kw2)) {
+          return `This ${kw1} helps ${verb} the ${kw2}.`;
+        }
+        return `This ${kw1} is important.`;
+      },
+      
+      // Template 4: We + should + verb + the + keyword1 + preposition + keyword2
+      (kw1, kw2) => {
+        if (!isValidKeyword(kw1)) return null;
+        const modals = ["should", "must", "need to", "can", "will"];
+        const verbs = ["discuss", "analyze", "examine", "study", "review", "consider"];
+        const preps = ["of", "in", "on", "for", "about"];
+        const modal = modals[Math.floor(Math.random() * modals.length)];
+        const verb = verbs[Math.floor(Math.random() * verbs.length)];
+        const prep = preps[Math.floor(Math.random() * preps.length)];
+        if (kw2 && isValidKeyword(kw2)) {
+          return `We ${modal} ${verb} the ${kw1} ${prep} ${kw2}.`;
+        }
+        return `We ${modal} ${verb} the ${kw1}.`;
+      },
+      
+      // Template 5: The + keyword1 + shows + how + keyword2 + affects + keyword3
+      (kw1, kw2, kw3) => {
+        if (!isValidKeyword(kw1)) return null;
+        const verbs = ["shows", "explains", "demonstrates", "illustrates", "reveals"];
+        const verb = verbs[Math.floor(Math.random() * verbs.length)];
+        if (kw2 && kw3 && isValidKeyword(kw2) && isValidKeyword(kw3)) {
+          return `The ${kw1} ${verb} how ${kw2} affects ${kw3}.`;
+        } else if (kw2 && isValidKeyword(kw2)) {
+          return `The ${kw1} ${verb} the ${kw2}.`;
+        }
+        return `The ${kw1} is significant.`;
+      },
+      
+      // Template 6: People + often + verb + the + keyword1 + preposition + keyword2
+      (kw1, kw2) => {
+        if (!isValidKeyword(kw1)) return null;
+        const verbs = ["discuss", "analyze", "examine", "study", "review"];
+        const preps = ["of", "in", "on", "for", "about"];
+        const verb = verbs[Math.floor(Math.random() * verbs.length)];
+        const prep = preps[Math.floor(Math.random() * preps.length)];
+        if (kw2 && isValidKeyword(kw2)) {
+          return `People often ${verb} the ${kw1} ${prep} ${kw2}.`;
+        }
+        return `People often ${verb} the ${kw1}.`;
+      },
+      
+      // Template 7: It + is + important + to + verb + the + keyword1 + preposition + keyword2
+      (kw1, kw2) => {
+        if (!isValidKeyword(kw1)) return null;
+        const verbs = ["understand", "analyze", "examine", "study", "consider"];
+        const preps = ["of", "in", "on", "for", "about"];
+        const verb = verbs[Math.floor(Math.random() * verbs.length)];
+        const prep = preps[Math.floor(Math.random() * preps.length)];
+        if (kw2 && isValidKeyword(kw2)) {
+          return `It is important to ${verb} the ${kw1} ${prep} ${kw2}.`;
+        }
+        return `It is important to ${verb} the ${kw1}.`;
+      },
+      
+      // Template 8: Many + people + verb + the + keyword1 + preposition + keyword2
+      (kw1, kw2) => {
+        if (!isValidKeyword(kw1)) return null;
+        const verbs = ["discuss", "analyze", "examine", "study", "review"];
+        const preps = ["of", "in", "on", "for", "about"];
+        const verb = verbs[Math.floor(Math.random() * verbs.length)];
+        const prep = preps[Math.floor(Math.random() * preps.length)];
+        if (kw2 && isValidKeyword(kw2)) {
+          return `Many people ${verb} the ${kw1} ${prep} ${kw2}.`;
+        }
+        return `Many people ${verb} the ${kw1}.`;
+      }
+    ];
+    
+    // Select a template based on sentence number
+    const templateIdx = sentenceNum % templates.length;
+    const template = templates[templateIdx];
+    
+    // Generate sentence based on number of valid keywords
+    let sentence = null;
+    if (finalKeywords.length >= 3) {
+      sentence = template(finalKeywords[0], finalKeywords[1], finalKeywords[2]);
+    } else if (finalKeywords.length === 2) {
+      sentence = template(finalKeywords[0], finalKeywords[1]);
+    } else if (finalKeywords.length === 1) {
+      sentence = template(finalKeywords[0]);
+    }
+    
+    // Fallback if template doesn't work
+    if (!sentence && finalKeywords.length > 0) {
+      const kw = finalKeywords[0];
+      if (isValidKeyword(kw)) {
+        const verbs = ["discuss", "analyze", "examine", "study"];
+        const verb = verbs[Math.floor(Math.random() * verbs.length)];
+        sentence = `We ${verb} the ${kw}.`;
+        
+        if (finalKeywords.length > 1 && isValidKeyword(finalKeywords[1])) {
+          const preps = ["of", "in", "on", "for", "about"];
+          const prep = preps[Math.floor(Math.random() * preps.length)];
+          sentence = `We ${verb} the ${kw} ${prep} ${finalKeywords[1]}.`;
+        }
+      }
+    }
+    
+    if (!sentence) return null;
+    
+    // Ensure proper capitalization and formatting
+    sentence = sentence.trim();
+    sentence = sentence.charAt(0).toUpperCase() + sentence.slice(1);
+    if (!sentence.endsWith(".")) {
+      sentence += ".";
+    }
+    
+    // Clean up any double spaces
+    sentence = sentence.replace(/\s+/g, " ");
+    
+    // Determine which keywords were actually used in the sentence
+    const usedKeywords = finalKeywords.filter(kw => 
+      sentence.toLowerCase().includes(kw.toLowerCase())
+    );
+    
+    return {
+      text: sentence,
+      keywords: usedKeywords.length > 0 ? usedKeywords : finalKeywords.slice(0, Math.min(3, finalKeywords.length))
+    };
+  };
+
+  // Generate 5 sentences
+  const generateSentences = () => {
+    if (lastDiff.length === 0) {
+      generatedSentences.innerHTML = "<div class='error'>Please check your answer first to generate sentences.</div>";
+      return;
+    }
+    
+    const keywords = extractKeywords(lastDiff);
+    if (keywords.length === 0) {
+      generatedSentences.innerHTML = "<div class='error'>No keywords found. All errors are stop words.</div>";
+      return;
+    }
+    
+    const sentences = [];
+    for (let i = 0; i < 5; i++) {
+      const sentence = generateSentence(keywords, i);
+      if (sentence) {
+        sentences.push(sentence);
+      }
+    }
+    
+    if (sentences.length === 0) {
+      generatedSentences.innerHTML = "<div class='error'>Could not generate sentences.</div>";
+      return;
+    }
+    
+    // Helper function to highlight keywords in sentence text
+    const highlightKeywords = (text, keywords) => {
+      let highlighted = text;
+      keywords.forEach(keyword => {
+        // Create a regex that matches the keyword as a whole word (case insensitive)
+        const regex = new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+        highlighted = highlighted.replace(regex, (match) => {
+          return `<strong class="sentence-keyword">${match}</strong>`;
+        });
+      });
+      return highlighted;
+    };
+    
+    // Render sentences (default hidden)
+    generatedSentences.innerHTML = sentences.map((sentence, idx) => {
+      const sentenceId = `sentence-${idx}`;
+      const highlightedText = highlightKeywords(sentence.text, sentence.keywords);
+      return `
+        <div class="generated-sentence" data-sentence-id="${sentenceId}">
+          <div class="sentence-header">
+            <span class="sentence-number">Sentence ${idx + 1}</span>
+            <button class="sentence-show-btn" data-sentence="${idx}" type="button">Show</button>
+            <button class="sentence-play-btn" data-sentence="${idx}" type="button">Play</button>
+            <button class="sentence-record-btn" data-sentence="${idx}" type="button">Record</button>
+          </div>
+          <div class="sentence-text" data-sentence-text="${idx}" style="display: none;">${highlightedText}</div>
+          <div class="sentence-status" id="status-${sentenceId}"></div>
+        </div>
+      `;
+    }).join("");
+    
+    // Show Show All / Hide All buttons
+    showAllSentencesBtn.style.display = "inline-block";
+    hideAllSentencesBtn.style.display = "inline-block";
+    
+    // Store sentences data
+    window.generatedSentencesData = sentences;
+    
+    // Add event listeners for Show buttons
+    generatedSentences.querySelectorAll(".sentence-show-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const idx = parseInt(btn.dataset.sentence, 10);
+        const textEl = document.querySelector(`[data-sentence-text="${idx}"]`);
+        
+        if (textEl.style.display === "none") {
+          textEl.style.display = "block";
+          btn.textContent = "Hide";
+          btn.classList.add("sentence-hide-btn");
+          btn.classList.remove("sentence-show-btn");
+        } else {
+          textEl.style.display = "none";
+          btn.textContent = "Show";
+          btn.classList.add("sentence-show-btn");
+          btn.classList.remove("sentence-hide-btn");
+        }
+      });
+    });
+    
+    // Add event listeners for Play buttons
+    generatedSentences.querySelectorAll(".sentence-play-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const idx = parseInt(btn.dataset.sentence, 10);
+        playGeneratedSentence(idx);
+      });
+    });
+    
+    // Add event listeners for Record buttons
+    generatedSentences.querySelectorAll(".sentence-record-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const idx = parseInt(btn.dataset.sentence, 10);
+        recordGeneratedSentence(idx, btn);
+      });
+    });
+    
+    generatePanel.style.display = "block";
+  };
+
+  // Play a generated sentence
+  const playGeneratedSentence = (idx) => {
+    if (!window.generatedSentencesData || !window.generatedSentencesData[idx]) return;
+    
+    const sentence = window.generatedSentencesData[idx].text;
+    if (synth) {
+      synth.cancel();
+      const utter = new SpeechSynthesisUtterance(sentence);
+      utter.lang = "en-US";
+      const voices = synth.getVoices();
+      const preferred = voices.find((v) =>
+        /female|samantha|allison|joanna|kimberly|ssml female|en-us/i.test(v.name)
+      );
+      if (preferred) utter.voice = preferred;
+      utter.rate = 1.0;
+      utter.pitch = 1.0;
+      synth.speak(utter);
+    }
+  };
+
+  // Record and assess a generated sentence
+  let sentenceRecognition = null;
+  const recordGeneratedSentence = (idx, btn) => {
+    if (!SpeechRecognition) {
+      alert("Speech recognition not available in your browser.");
+      return;
+    }
+    
+    if (!window.generatedSentencesData || !window.generatedSentencesData[idx]) return;
+    
+    const sentence = window.generatedSentencesData[idx];
+    const statusEl = document.getElementById(`status-sentence-${idx}`);
+    
+    if (sentenceRecognition) {
+      sentenceRecognition.stop();
+      sentenceRecognition = null;
+      btn.textContent = "Record";
+      return;
+    }
+    
+    btn.textContent = "Stop";
+    statusEl.textContent = "Listening...";
+    
+    sentenceRecognition = new SpeechRecognition();
+    sentenceRecognition.continuous = false;
+    sentenceRecognition.interimResults = false;
+    sentenceRecognition.lang = "en-US";
+    
+    sentenceRecognition.onresult = (event) => {
+      const spokenText = event.results[0][0].transcript.trim().toLowerCase();
+      const spokenWords = normalize(spokenText).split(" ").filter(Boolean);
+      
+      // Check which keywords are missing
+      const missingKeywords = [];
+      sentence.keywords.forEach((keyword) => {
+        const found = spokenWords.some(word => normalize(word) === normalize(keyword));
+        if (!found) {
+          missingKeywords.push(keyword);
+        }
+      });
+      
+      if (missingKeywords.length === 0) {
+        statusEl.textContent = "✓ All keywords spoken correctly!";
+        statusEl.className = "sentence-status correct";
+      } else {
+        statusEl.textContent = `You missed these words: ${missingKeywords.join(", ")}`;
+        statusEl.className = "sentence-status incorrect";
+      }
+      
+      sentenceRecognition = null;
+      btn.textContent = "Record";
+    };
+    
+    sentenceRecognition.onerror = (event) => {
+      if (event.error !== "aborted") {
+        statusEl.textContent = `Error: ${event.error}`;
+        statusEl.className = "sentence-status error";
+      }
+      sentenceRecognition = null;
+      btn.textContent = "Record";
+    };
+    
+    sentenceRecognition.onend = () => {
+      sentenceRecognition = null;
+      btn.textContent = "Record";
+    };
+    
+    try {
+      sentenceRecognition.start();
+    } catch (e) {
+      statusEl.textContent = "Failed to start recording";
+      statusEl.className = "sentence-status error";
+      sentenceRecognition = null;
+      btn.textContent = "Record";
+    }
+  };
+
+  generateBtn.addEventListener("click", generateSentences);
+  
+  // Show All sentences
+  showAllSentencesBtn.addEventListener("click", () => {
+    const sentenceTexts = generatedSentences.querySelectorAll(".sentence-text");
+    const showBtns = generatedSentences.querySelectorAll(".sentence-show-btn, .sentence-hide-btn");
+    
+    sentenceTexts.forEach((textEl) => {
+      textEl.style.display = "block";
+    });
+    showBtns.forEach((btn) => {
+      btn.textContent = "Hide";
+      btn.classList.add("sentence-hide-btn");
+      btn.classList.remove("sentence-show-btn");
+    });
+  });
+  
+  // Hide All sentences
+  hideAllSentencesBtn.addEventListener("click", () => {
+    const sentenceTexts = generatedSentences.querySelectorAll(".sentence-text");
+    const showBtns = generatedSentences.querySelectorAll(".sentence-show-btn, .sentence-hide-btn");
+    
+    sentenceTexts.forEach((textEl) => {
+      textEl.style.display = "none";
+    });
+    showBtns.forEach((btn) => {
+      btn.textContent = "Show";
+      btn.classList.add("sentence-show-btn");
+      btn.classList.remove("sentence-hide-btn");
+    });
+  });
+  
+  // Skip Animation button
+  if (skipAnimationBtn) {
+    skipAnimationBtn.addEventListener("click", skipAnimation);
+  }
 
   // Breakdown Mode functions
   let breakdownMode = "beginning"; // "beginning" or "end"

@@ -41,14 +41,17 @@
       </div>
     </div>
 
-    <div id="result" aria-live="polite"></div>
     <section class="animation-panel">
       <div class="animation-header">
         <span>How to fix (step-by-step)</span>
-        <button id="replay-btn" type="button">Replay</button>
+        <div class="animation-controls">
+          <button id="skip-animation-btn" type="button">Skip Animation</button>
+          <button id="replay-btn" type="button">Replay</button>
+        </div>
       </div>
       <div id="animation" class="animation"></div>
     </section>
+    <div id="result" aria-live="polite"></div>
     <section id="pronunciation-practice" class="pronunciation-panel" style="display: none;">
       <div class="pronunciation-header">
         <span>Pronunciation practice</span>
@@ -70,6 +73,17 @@
       <span class="legend-item"><span class="chip extra"></span>extra (purple strikethrough)</span>
       <span class="legend-item"><span class="chip misplaced"></span>misplaced (blue strikethrough)</span>
     </div>
+    <section id="generate-sentences" class="generate-panel">
+      <div class="generate-header">
+        <span>Generate random sentence</span>
+        <div class="generate-controls">
+          <button id="show-all-sentences-btn" type="button" style="display: none;">Show All</button>
+          <button id="hide-all-sentences-btn" type="button" style="display: none;">Hide All</button>
+          <button id="generate-btn" type="button">Generate</button>
+        </div>
+      </div>
+      <div id="generated-sentences" class="generated-sentences"></div>
+    </section>
   </main>
 
   <audio id="audio" src="1.mp3" preload="auto"></audio>

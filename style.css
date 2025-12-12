@@ -571,4 +571,165 @@ textarea {
   color: #111827;
 }
 
+.anim-transcription {
+  margin-top: 8px;
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-style: italic;
+  text-align: center;
+}
+
+.generate-panel {
+  margin-top: 24px;
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.generate-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.generate-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+#show-all-sentences-btn,
+#hide-all-sentences-btn {
+  padding: 8px 16px;
+  background: #6b7280;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-size: 0.875rem;
+}
+
+#show-all-sentences-btn:hover,
+#hide-all-sentences-btn:hover {
+  background: #4b5563;
+}
+
+.generate-header span {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #1f2933;
+}
+
+#generate-btn {
+  padding: 8px 16px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+#generate-btn:hover {
+  background: #1d4ed8;
+}
+
+.generated-sentences {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.generated-sentence {
+  padding: 16px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+
+.sentence-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.sentence-number {
+  font-weight: 600;
+  color: #1f2933;
+  flex: 1;
+}
+
+.sentence-show-btn,
+.sentence-hide-btn,
+.sentence-play-btn,
+.sentence-record-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: 1px solid #d0d7de;
+  background: #ffffff;
+  color: #111827;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.sentence-show-btn:hover,
+.sentence-hide-btn:hover {
+  background: #f3f4f6;
+}
+
+.sentence-play-btn:hover {
+  background: #f3f4f6;
+}
+
+.sentence-record-btn:hover {
+  background: #f3f4f6;
+}
+
+.sentence-record-btn.recording {
+  background: #dc2626;
+  color: white;
+  border-color: #dc2626;
+}
+
+.sentence-text {
+  margin-bottom: 8px;
+  color: #374151;
+  line-height: 1.6;
+}
+
+.sentence-keyword {
+  font-weight: bold;
+  color: #dc2626;
+  background-color: #fee2e2;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.sentence-status {
+  font-size: 0.875rem;
+  min-height: 20px;
+}
+
+.sentence-status.correct {
+  color: #166534;
+  font-weight: 600;
+}
+
+.sentence-status.incorrect {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.sentence-status.error {
+  color: #dc2626;
+}
+
 

@@ -112,17 +112,21 @@ textarea {
   font-size: 1rem;
   line-height: 1.6;
   color: #111827;
+  text-align: center;
 }
 
 .anim-line {
   display: block;
   margin-bottom: 6px;
+  text-align: center;
 }
 
 .anim-step {
   display: inline-flex;
   gap: 6px;
   flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
 }
 
 .anim-word {

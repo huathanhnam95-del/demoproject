@@ -1,6 +1,6 @@
 (() => {
   const correctSentence =
-    "Next time, we'll discuss the influence of media on public policy."; // Set the exact sentence spoken in 1.mp3
+    "Next time, we'll discuss the influence of the media on public policy."; // Set the exact sentence spoken in 1.mp3
 
   const audio = document.getElementById("audio");
   const playBtn = document.getElementById("play-btn");
@@ -11,8 +11,10 @@
   const animationBox = document.getElementById("animation");
   const replayBtn = document.getElementById("replay-btn");
 
+  const STEP_INTERVAL_MS = 2400;
   let lastSteps = [];
   let animationTimer = null;
+  const synth = window.speechSynthesis || null;
 
   const normalize = (text) =>
     text
@@ -138,21 +140,39 @@
     `;
   };
 
-  const playAnimation = (steps) => {
-    if (!steps.length) return;
+  const speakWord = (word) => {
+    if (!synth || !word) return;
+    synth.cancel();
+    const utter = new SpeechSynthesisUtterance(word);
+    utter.rate = 0.95;
+    utter.pitch = 1;
+    synth.speak(utter);
+  };
+
+  const playAnimation = (steps, onComplete = () => {}) => {
+    if (!steps.length) {
+      onComplete();
+      return;
+    }
     if (animationTimer) clearTimeout(animationTimer);
+    if (synth) synth.cancel();
 
     let idx = 0;
     renderAnimationStep(steps[idx]);
+    if (steps[idx].speak) speakWord(steps[idx].speak);
 
     const advance = () => {
       idx += 1;
-      if (idx >= steps.length) return;
+      if (idx >= steps.length) {
+        onComplete();
+        return;
+      }
       renderAnimationStep(steps[idx]);
-      animationTimer = setTimeout(advance, 2400);
+      if (steps[idx].speak) speakWord(steps[idx].speak);
+      animationTimer = setTimeout(advance, STEP_INTERVAL_MS);
     };
 
-    animationTimer = setTimeout(advance, 2400);
+    animationTimer = setTimeout(advance, STEP_INTERVAL_MS);
   };
 
   const buildAnimationSteps = (userText) => {
@@ -194,6 +214,7 @@
           label: `Add "${part.text}"`,
           words: [...current],
           highlight: { index: curIdx, type: "add" },
+          speak: part.text,
         });
         curIdx += 1;
         corIdx += 1;
@@ -243,14 +264,18 @@
     }
 
     score.textContent = `Points: ${scoreValue} / ${correctWordCount}`;
-    const feedback = hasErrors
-      ? `<div class="errors">Keep practicing! Differences highlighted below:</div><div>${renderDiff(diff)}</div>`
-      : `<div class="ok">Great job! Perfect match.</div>`;
-
-    result.innerHTML = `${feedback}<div class="correct-sentence">Correct sentence: ${correctSentence}</div>`;
 
     lastSteps = buildAnimationSteps(userAnswer);
-    playAnimation(lastSteps);
+    animationBox.innerHTML = "";
+    result.innerHTML = `<div class="errors">Playing correction animation...</div>`;
+
+    playAnimation(lastSteps, () => {
+      const feedback = hasErrors
+        ? `<div class="errors">Keep practicing! Differences highlighted below:</div><div>${renderDiff(diff)}</div>`
+        : `<div class="ok">Great job! Perfect match.</div>`;
+
+      result.innerHTML = `${feedback}<div class="correct-sentence">Correct sentence: ${correctSentence}</div>`;
+    });
   });
 
   replayBtn.addEventListener("click", () => {

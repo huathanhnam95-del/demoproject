@@ -29,6 +29,12 @@ h1 {
   margin-bottom: 16px;
 }
 
+.score {
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
 button {
   border: none;
   padding: 10px 16px;
@@ -84,5 +90,79 @@ textarea {
   color: #b91c1c;
   padding: 0 4px;
   border-radius: 4px;
+}
+
+.legend {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+  font-size: 0.95rem;
+  color: #475569;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chip {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+}
+
+.missing {
+  background: #fecdd3;
+  color: #b91c1c;
+}
+
+.extra-word {
+  text-decoration: line-through;
+  color: #6b21a8;
+  background: transparent;
+  padding: 0 2px;
+}
+
+.extra {
+  background: transparent;
+  color: #6b21a8;
+  border: 2px solid #6b21a8;
+  position: relative;
+}
+
+.extra::after {
+  content: "";
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  top: 5px;
+  border-bottom: 2px solid #6b21a8;
+  transform: rotate(-12deg);
+}
+
+.misplaced {
+  background: transparent;
+  color: #1d4ed8;
+  border: 2px solid #1d4ed8;
+  position: relative;
+}
+
+.misplaced::after {
+  content: "";
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  top: 5px;
+  border-bottom: 2px solid #1d4ed8;
+  transform: rotate(-12deg);
+}
+
+.misplaced-word {
+  text-decoration: line-through;
+  color: #1d4ed8;
+  background: transparent;
+  padding: 0 2px;
 }
 

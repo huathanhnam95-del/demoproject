@@ -14,11 +14,17 @@
       <button id="play-btn" type="button">Play</button>
       <button id="check-btn" type="button">Check</button>
     </div>
+    <div id="score" class="score">Points: 0</div>
 
     <label class="input-label" for="answer-input">Type what you hear:</label>
     <textarea id="answer-input" rows="4" placeholder="Start typing..."></textarea>
 
     <div id="result" aria-live="polite"></div>
+    <div class="legend" aria-hidden="true">
+      <span class="legend-item"><span class="chip missing"></span>missed (red highlight)</span>
+      <span class="legend-item"><span class="chip extra"></span>extra (purple strikethrough)</span>
+      <span class="legend-item"><span class="chip misplaced"></span>misplaced (blue strikethrough)</span>
+    </div>
   </main>
 
   <audio id="audio" src="1.mp3" preload="auto"></audio>

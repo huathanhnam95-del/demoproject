@@ -10,14 +10,36 @@
   <main class="container">
     <h1>Write From Dictation Practice</h1>
 
-    <div class="controls">
-      <button id="play-btn" type="button">Play</button>
-      <button id="check-btn" type="button">Check</button>
+    <div class="tabs">
+      <button id="tab-type" class="tab-btn active" type="button">Type</button>
+      <button id="tab-speak" class="tab-btn" type="button">Speak</button>
     </div>
-    <div id="score" class="score">Points: 0</div>
 
-    <label class="input-label" for="answer-input">Type what you hear:</label>
-    <textarea id="answer-input" rows="4" placeholder="Start typing..."></textarea>
+    <div id="mode-type" class="mode-panel active">
+      <div class="controls">
+        <button id="play-btn" type="button">Play</button>
+        <button id="check-btn" type="button">Check</button>
+      </div>
+      <div id="score" class="score">Points: 0</div>
+
+      <label class="input-label" for="answer-input">Type what you hear:</label>
+      <textarea id="answer-input" rows="4" placeholder="Start typing..."></textarea>
+    </div>
+
+    <div id="mode-speak" class="mode-panel">
+      <div class="controls">
+        <button id="play-btn-speak" type="button">Play</button>
+        <button id="record-btn" type="button">Start Recording</button>
+        <button id="check-btn-speak" type="button">Check</button>
+      </div>
+      <div id="score-speak" class="score">Points: 0</div>
+
+      <label class="input-label">Speak what you hear:</label>
+      <div id="transcription-display" class="transcription-display">
+        <div id="transcription-text" class="transcription-text">Click "Start Recording" and speak...</div>
+        <div id="recording-status" class="recording-status"></div>
+      </div>
+    </div>
 
     <div id="result" aria-live="polite"></div>
     <section class="animation-panel">
@@ -26,6 +48,22 @@
         <button id="replay-btn" type="button">Replay</button>
       </div>
       <div id="animation" class="animation"></div>
+    </section>
+    <section id="pronunciation-practice" class="pronunciation-panel" style="display: none;">
+      <div class="pronunciation-header">
+        <span>Pronunciation practice</span>
+      </div>
+      <div id="pronunciation-words" class="pronunciation-words"></div>
+    </section>
+    <section id="breakdown-mode" class="breakdown-panel" style="display: none;">
+      <div class="breakdown-header">
+        <span>Breakdown Mode</span>
+      </div>
+      <div class="breakdown-options">
+        <button id="breakdown-beginning" class="breakdown-option-btn active" type="button">From The Beginning</button>
+        <button id="breakdown-end" class="breakdown-option-btn" type="button">From the End</button>
+      </div>
+      <div id="breakdown-lines" class="breakdown-lines"></div>
     </section>
     <div class="legend" aria-hidden="true">
       <span class="legend-item"><span class="chip missing"></span>missed (red highlight)</span>

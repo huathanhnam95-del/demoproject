@@ -16,6 +16,18 @@
     </div>
 
     <div id="mode-type" class="mode-panel active">
+      <div class="question-selector">
+        <div class="question-id-display">
+          <label for="question-select-type">Question ID:</label>
+          <span id="current-question-id-type" class="current-question-id">1</span>
+        </div>
+        <select id="question-select-type" class="question-select">
+          <option value="1">Loading...</option>
+        </select>
+        <div class="question-total">
+          <span>Total number of questions: <span id="total-questions-type">1</span></span>
+        </div>
+      </div>
       <div class="controls">
         <button id="play-btn" type="button">Play</button>
         <button id="check-btn" type="button">Check</button>
@@ -27,6 +39,18 @@
     </div>
 
     <div id="mode-speak" class="mode-panel">
+      <div class="question-selector">
+        <div class="question-id-display">
+          <label for="question-select-speak">Question ID:</label>
+          <span id="current-question-id-speak" class="current-question-id">1</span>
+        </div>
+        <select id="question-select-speak" class="question-select">
+          <option value="1">Loading...</option>
+        </select>
+        <div class="question-total">
+          <span>Total number of questions: <span id="total-questions-speak">1</span></span>
+        </div>
+      </div>
       <div class="controls">
         <button id="play-btn-speak" type="button">Play</button>
         <button id="record-btn" type="button">Start Recording</button>
@@ -52,6 +76,12 @@
       <div id="animation" class="animation"></div>
     </section>
     <div id="result" aria-live="polite" style="display: none;"></div>
+    <section id="vocabulary-practice" class="vocabulary-panel" style="display: none;">
+      <div class="vocabulary-header">
+        <span>Vocabulary Practice</span>
+      </div>
+      <div id="vocabulary-words" class="vocabulary-words"></div>
+    </section>
     <section id="pronunciation-practice" class="pronunciation-panel" style="display: none;">
       <div class="pronunciation-header">
         <span>Pronunciation practice</span>
@@ -73,6 +103,18 @@
       <span class="legend-item"><span class="chip extra"></span>extra (purple highlight)</span>
       <span class="legend-item"><span class="chip misplaced"></span>misplaced (blue highlight)</span>
     </div>
+    <section id="same-vocab-type" class="same-vocab-panel" style="display: none;">
+      <div class="same-vocab-header">
+        <span>Other questions with the same vocabulary</span>
+      </div>
+      <div id="same-vocab-sentences-type" class="same-vocab-sentences"></div>
+    </section>
+    <section id="same-vocab-speak" class="same-vocab-panel" style="display: none;">
+      <div class="same-vocab-header">
+        <span>Other questions with the same vocabulary</span>
+      </div>
+      <div id="same-vocab-sentences-speak" class="same-vocab-sentences"></div>
+    </section>
     <section id="generate-sentences-type" class="generate-panel" style="display: none;">
       <div class="generate-header">
         <span>Generate random sentence</span>
@@ -97,7 +139,7 @@
     </section>
   </main>
 
-  <audio id="audio" src="1.mp3" preload="auto"></audio>
+  <audio id="audio" preload="auto"></audio>
   <script src="script.js"></script>
 </body>
 </html>

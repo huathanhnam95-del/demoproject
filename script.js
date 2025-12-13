@@ -1,8 +1,18 @@
 (() => {
-  const correctSentence =
-    "Next time, we'll discuss the influence of the media on public policy."; // Set the exact sentence spoken in 1.mp3
+  // Database and question management
+  let typeDatabase = [];
+  let speakDatabase = [];
+  let currentTypeQuestionId = 1;
+  let currentSpeakQuestionId = 1;
+  let correctSentence = ""; // Will be loaded from database
 
   const audio = document.getElementById("audio");
+  const questionSelectType = document.getElementById("question-select-type");
+  const questionSelectSpeak = document.getElementById("question-select-speak");
+  const currentQuestionIdType = document.getElementById("current-question-id-type");
+  const currentQuestionIdSpeak = document.getElementById("current-question-id-speak");
+  const totalQuestionsType = document.getElementById("total-questions-type");
+  const totalQuestionsSpeak = document.getElementById("total-questions-speak");
   const playBtn = document.getElementById("play-btn");
   const checkBtn = document.getElementById("check-btn");
   const input = document.getElementById("answer-input");
@@ -26,12 +36,19 @@
   const transcriptionText = document.getElementById("transcription-text");
   const recordingStatus = document.getElementById("recording-status");
   const scoreSpeak = document.getElementById("score-speak");
+  const vocabularyPanel = document.getElementById("vocabulary-practice");
+  const vocabularyWords = document.getElementById("vocabulary-words");
   const pronunciationPanel = document.getElementById("pronunciation-practice");
   const pronunciationWords = document.getElementById("pronunciation-words");
   const breakdownPanel = document.getElementById("breakdown-mode");
   const breakdownLines = document.getElementById("breakdown-lines");
   const breakdownBeginningBtn = document.getElementById("breakdown-beginning");
   const breakdownEndBtn = document.getElementById("breakdown-end");
+  // Same vocabulary panels
+  const sameVocabPanelType = document.getElementById("same-vocab-type");
+  const sameVocabSentencesType = document.getElementById("same-vocab-sentences-type");
+  const sameVocabPanelSpeak = document.getElementById("same-vocab-speak");
+  const sameVocabSentencesSpeak = document.getElementById("same-vocab-sentences-speak");
   // Type mode generate panel
   const generatePanelType = document.getElementById("generate-sentences-type");
   const generateBtnType = document.getElementById("generate-type-btn");
@@ -173,8 +190,11 @@
       .trim()
       .replace(/\s+/g, " ");
 
-  const correctWords = normalize(correctSentence).split(" ").filter(Boolean);
-  const correctWordCount = correctWords.length;
+  // correctWordCount will be calculated dynamically based on current correctSentence
+  const getCorrectWordCount = () => {
+    if (!correctSentence) return 0;
+    return normalize(correctSentence).split(" ").filter(Boolean).length;
+  };
 
   const diffWords = (user, correct) => {
     const userWords = normalize(user).split(" ").filter(Boolean);
@@ -494,11 +514,13 @@
     pronunciationPanel.style.display = "none";
     breakdownPanel.style.display = "none";
     generatePanelSpeak.style.display = "none";
+    sameVocabPanelSpeak.style.display = "none";
     
     // Hide shared panels (will be shown when Check is pressed in Type mode)
     animationPanel.style.display = "none";
     result.style.display = "none";
     generatePanelType.style.display = "none";
+    vocabularyPanel.style.display = "none";
     
     if (isRecording && recognition) {
       recognition.stop();
@@ -523,6 +545,7 @@
     
     // Hide Type mode panels
     generatePanelType.style.display = "none";
+    sameVocabPanelType.style.display = "none";
     
     // Hide shared panels (will be shown when Check is pressed in Speak mode)
     animationPanel.style.display = "none";
@@ -544,14 +567,353 @@
     return [...new Set(missed)];
   };
 
+  // Store vocabulary practice words for sentence generation
+  let vocabularyPracticeWordsType = [];
+  let vocabularyPracticeWordsSpeak = [];
+
+  // Find sentences from database containing a specific word
+  const findSentencesWithWord = (word, mode, excludeQuestionId) => {
+    const database = mode === "type" ? typeDatabase : speakDatabase;
+    const lowerWord = word.toLowerCase().trim();
+    const wordRegex = new RegExp(`\\b${lowerWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+    
+    const matches = [];
+    for (const item of database) {
+      // Skip the current question
+      if (item.id === excludeQuestionId) continue;
+      
+      // Check if the sentence contains the word (case-insensitive, whole word match)
+      if (wordRegex.test(item.correctSentence)) {
+        matches.push(item);
+        // Limit to 1 match per word to avoid too many results
+        if (matches.length >= 1) break;
+      }
+    }
+    
+    return matches;
+  };
+
+  // Render "Other questions with the same vocabulary" box for Type mode
+  const renderSameVocabularyType = () => {
+    if (vocabularyPracticeWordsType.length === 0) {
+      sameVocabPanelType.style.display = "none";
+      return;
+    }
+    
+    const currentQuestionId = currentTypeQuestionId;
+    const sentencesHTML = [];
+    
+    vocabularyPracticeWordsType.forEach((word, idx) => {
+      const matches = findSentencesWithWord(word, "type", currentQuestionId);
+      
+      if (matches.length > 0) {
+        const match = matches[0]; // Use first match
+        const sentenceId = `same-vocab-type-${idx}`;
+        const targetWord = word.toLowerCase().trim();
+        
+        sentencesHTML.push(`
+          <div class="same-vocab-item" data-vocab-word="${targetWord}" data-question-id="${match.id}">
+            <div class="same-vocab-word-label">Word: <strong>${word}</strong></div>
+            <div class="same-vocab-sentence">${match.correctSentence}</div>
+            <div class="same-vocab-controls">
+              <button class="same-vocab-play-btn" data-sentence-id="${sentenceId}" data-question-id="${match.id}" data-mode="type" type="button">Play</button>
+              <input type="text" class="same-vocab-input" id="input-${sentenceId}" placeholder="Type your answer here..." />
+              <button class="same-vocab-check-btn" data-sentence-id="${sentenceId}" data-word="${targetWord}" data-correct="${match.correctSentence}" type="button">Check</button>
+            </div>
+            <div class="same-vocab-status" id="status-${sentenceId}"></div>
+          </div>
+        `);
+      }
+    });
+    
+    if (sentencesHTML.length === 0) {
+      sameVocabPanelType.style.display = "none";
+      return;
+    }
+    
+    sameVocabPanelType.style.display = "block";
+    sameVocabSentencesType.innerHTML = sentencesHTML.join("");
+    
+    // Add event listeners for Play buttons
+    sameVocabSentencesType.querySelectorAll(".same-vocab-play-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const questionId = parseInt(btn.dataset.questionId, 10);
+        const mode = btn.dataset.mode;
+        playSameVocabAudio(questionId, mode, btn);
+      });
+    });
+    
+    // Add event listeners for Check buttons
+    sameVocabSentencesType.querySelectorAll(".same-vocab-check-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const sentenceId = btn.dataset.sentenceId;
+        const targetWord = btn.dataset.word;
+        const correctSentence = btn.dataset.correct;
+        checkSameVocabAnswer(sentenceId, targetWord, correctSentence);
+      });
+    });
+  };
+
+  // Render "Other questions with the same vocabulary" box for Speak mode
+  const renderSameVocabularySpeak = () => {
+    if (vocabularyPracticeWordsSpeak.length === 0) {
+      sameVocabPanelSpeak.style.display = "none";
+      return;
+    }
+    
+    const currentQuestionId = currentSpeakQuestionId;
+    const sentencesHTML = [];
+    
+    vocabularyPracticeWordsSpeak.forEach((word, idx) => {
+      const matches = findSentencesWithWord(word, "speak", currentQuestionId);
+      
+      if (matches.length > 0) {
+        const match = matches[0]; // Use first match
+        const sentenceId = `same-vocab-speak-${idx}`;
+        const targetWord = word.toLowerCase().trim();
+        
+        sentencesHTML.push(`
+          <div class="same-vocab-item" data-vocab-word="${targetWord}" data-question-id="${match.id}">
+            <div class="same-vocab-word-label">Word: <strong>${word}</strong></div>
+            <div class="same-vocab-sentence">${match.correctSentence}</div>
+            <div class="same-vocab-controls">
+              <button class="same-vocab-play-btn" data-sentence-id="${sentenceId}" data-question-id="${match.id}" data-mode="speak" type="button">Play</button>
+              <input type="text" class="same-vocab-input" id="input-${sentenceId}" placeholder="Type your answer here..." />
+              <button class="same-vocab-check-btn" data-sentence-id="${sentenceId}" data-word="${targetWord}" data-correct="${match.correctSentence}" type="button">Check</button>
+            </div>
+            <div class="same-vocab-status" id="status-${sentenceId}"></div>
+          </div>
+        `);
+      }
+    });
+    
+    if (sentencesHTML.length === 0) {
+      sameVocabPanelSpeak.style.display = "none";
+      return;
+    }
+    
+    sameVocabPanelSpeak.style.display = "block";
+    sameVocabSentencesSpeak.innerHTML = sentencesHTML.join("");
+    
+    // Add event listeners for Play buttons
+    sameVocabSentencesSpeak.querySelectorAll(".same-vocab-play-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const questionId = parseInt(btn.dataset.questionId, 10);
+        const mode = btn.dataset.mode;
+        playSameVocabAudio(questionId, mode, btn);
+      });
+    });
+    
+    // Add event listeners for Check buttons
+    sameVocabSentencesSpeak.querySelectorAll(".same-vocab-check-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const sentenceId = btn.dataset.sentenceId;
+        const targetWord = btn.dataset.word;
+        const correctSentence = btn.dataset.correct;
+        checkSameVocabAnswer(sentenceId, targetWord, correctSentence);
+      });
+    });
+  };
+
+  // Play audio for same vocabulary question
+  const playSameVocabAudio = (questionId, mode, btn) => {
+    const database = mode === "type" ? typeDatabase : speakDatabase;
+    const question = database.find(item => item.id === questionId);
+    
+    if (!question) {
+      console.error(`Question ${questionId} not found in ${mode} database`);
+      return;
+    }
+    
+    const audioPath = `database/${mode}/audio/${question.audioFile}`;
+    const audio = document.getElementById("audio");
+    
+    audio.src = audioPath;
+    audio.play().catch(err => {
+      console.error("Error playing audio:", err);
+    });
+  };
+
+  // Check answer for same vocabulary question (only assess the specific word)
+  const checkSameVocabAnswer = (sentenceId, targetWord, correctSentence) => {
+    const inputEl = document.getElementById(`input-${sentenceId}`);
+    const statusEl = document.getElementById(`status-${sentenceId}`);
+    
+    if (!inputEl || !statusEl) return;
+    
+    const userAnswer = inputEl.value.trim().toLowerCase();
+    const correctSentenceLower = correctSentence.toLowerCase();
+    
+    // Extract the target word from the correct sentence (case-insensitive, whole word match)
+    const wordRegex = new RegExp(`\\b${targetWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+    const correctWordMatch = correctSentence.match(wordRegex);
+    
+    if (!correctWordMatch) {
+      statusEl.textContent = "Error: Target word not found in correct sentence.";
+      statusEl.className = "same-vocab-status error";
+      return;
+    }
+    
+    const correctWord = correctWordMatch[0].toLowerCase();
+    
+    // Check if user's answer contains the target word (case-insensitive, whole word match)
+    const userAnswerRegex = new RegExp(`\\b${targetWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+    const userHasWord = userAnswerRegex.test(userAnswer);
+    
+    if (userHasWord) {
+      statusEl.textContent = "Correct!";
+      statusEl.className = "same-vocab-status correct";
+      inputEl.style.borderColor = "#16a34a";
+    } else {
+      statusEl.textContent = `Incorrect. The word "${correctWord}" is missing.`;
+      statusEl.className = "same-vocab-status incorrect";
+      inputEl.style.borderColor = "#dc2626";
+    }
+  };
+
+  // Render vocabulary practice box (for Type mode)
+  const renderVocabularyPractice = (diff) => {
+    if (!diff || !Array.isArray(diff) || diff.length === 0) {
+      vocabularyPanel.style.display = "none";
+      vocabularyPracticeWordsType = [];
+      return;
+    }
+
+    // Get only missed words from the user's response
+    const missedWords = getMissedWords(diff);
+    
+    // Filter to only show content words (keywords) from missed words
+    const contentWords = filterContentWords(missedWords);
+    
+    // Store for sentence generation
+    vocabularyPracticeWordsType = contentWords.map(w => w.toLowerCase().trim());
+    
+    if (contentWords.length === 0) {
+      vocabularyPanel.style.display = "none";
+      vocabularyPracticeWordsType = [];
+      return;
+    }
+
+    vocabularyPanel.style.display = "block";
+    vocabularyWords.innerHTML = contentWords
+      .map(
+        (word, idx) => `
+      <div class="vocabulary-item" data-word-index="${idx}">
+        <span class="vocabulary-word" id="vocab-word-${idx}">${word}</span>
+        <button class="vocabulary-play-btn" data-word="${word}" data-index="${idx}" type="button">Play</button>
+        <input type="text" class="vocabulary-input" id="vocab-input-${idx}" placeholder="Type the word..." />
+        <button class="vocabulary-check-btn" data-word="${word}" data-index="${idx}" type="button">Check</button>
+        <span class="vocabulary-status" id="vocab-status-${idx}"></span>
+      </div>
+    `
+      )
+      .join("");
+
+    // Add event listeners to play buttons
+    vocabularyWords.querySelectorAll(".vocabulary-play-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const word = btn.dataset.word;
+        const index = parseInt(btn.dataset.index, 10);
+        playVocabularyWord(word, index, btn);
+      });
+    });
+
+    // Add event listeners to check buttons
+    vocabularyWords.querySelectorAll(".vocabulary-check-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const word = btn.dataset.word;
+        const index = parseInt(btn.dataset.index, 10);
+        checkVocabularyWord(word, index, btn);
+      });
+    });
+  };
+
+  // Play vocabulary word audio and hide the word
+  const playVocabularyWord = (word, index, btn) => {
+    if (!synth || !word) return;
+    
+    // Hide the word
+    const wordEl = document.getElementById(`vocab-word-${index}`);
+    if (wordEl) {
+      wordEl.style.display = "none";
+    }
+    
+    // Play audio
+    synth.cancel();
+    const utter = new SpeechSynthesisUtterance(word);
+    utter.lang = "en-US";
+    const voices = synth.getVoices();
+    const preferred = voices.find((v) =>
+      /female|samantha|allison|joanna|kimberly|ssml female|en-us/i.test(v.name)
+    );
+    if (preferred) utter.voice = preferred;
+    utter.rate = 1.0;
+    utter.pitch = 1.0;
+    synth.speak(utter);
+    
+    // Clear input and status
+    const inputEl = document.getElementById(`vocab-input-${index}`);
+    const statusEl = document.getElementById(`vocab-status-${index}`);
+    if (inputEl) {
+      inputEl.value = "";
+      inputEl.focus();
+    }
+    if (statusEl) {
+      statusEl.textContent = "";
+      statusEl.className = "vocabulary-status";
+    }
+  };
+
+  // Check typed vocabulary word
+  const checkVocabularyWord = (expectedWord, index, btn) => {
+    const inputEl = document.getElementById(`vocab-input-${index}`);
+    const statusEl = document.getElementById(`vocab-status-${index}`);
+    const wordEl = document.getElementById(`vocab-word-${index}`);
+    
+    if (!inputEl || !statusEl) return;
+    
+    const userInput = inputEl.value.trim().toLowerCase();
+    const expected = expectedWord.toLowerCase().trim();
+    
+    if (!userInput) {
+      statusEl.textContent = "Please type the word first.";
+      statusEl.className = "vocabulary-status error";
+      return;
+    }
+    
+    // Normalize for comparison
+    const normalizedUser = normalize(userInput);
+    const normalizedExpected = normalize(expected);
+    
+    if (normalizedUser === normalizedExpected) {
+      statusEl.textContent = "✓ Correct!";
+      statusEl.className = "vocabulary-status correct";
+      // Show the word again
+      if (wordEl) {
+        wordEl.style.display = "inline";
+      }
+    } else {
+      statusEl.textContent = `Incorrect. Correct: "${expectedWord}"`;
+      statusEl.className = "vocabulary-status incorrect";
+      // Show the word again
+      if (wordEl) {
+        wordEl.style.display = "inline";
+      }
+    }
+  };
+
   // Render pronunciation practice box
   const renderPronunciationPractice = (missedWords) => {
     // Filter to only show content words (keywords)
     // Double-check: ensure we're filtering properly
     const contentWords = filterContentWords(missedWords);
     
+    // Store for sentence generation (Speak mode)
+    vocabularyPracticeWordsSpeak = contentWords.map(w => w.toLowerCase().trim());
+    
     if (contentWords.length === 0) {
       pronunciationPanel.style.display = "none";
+      vocabularyPracticeWordsSpeak = [];
       return;
     }
 
@@ -686,12 +1048,15 @@
 
     if (!userAnswer.trim()) {
       result.innerHTML = `<span class="errors">Please provide your answer before checking.</span>`;
-      scoreElement.textContent = `Points: 0 / ${correctWordCount}`;
+      scoreElement.textContent = `Points: 0 / ${getCorrectWordCount()}`;
       return;
     }
 
-    scoreElement.textContent = `Points: ${scoreValue} / ${correctWordCount}`;
+    scoreElement.textContent = `Points: ${scoreValue} / ${getCorrectWordCount()}`;
 
+    // Show vocabulary practice for type mode (only missed words)
+    renderVocabularyPractice(diff);
+    
     // Hide pronunciation practice and breakdown mode for type mode
     pronunciationPanel.style.display = "none";
     breakdownPanel.style.display = "none";
@@ -699,10 +1064,12 @@
     // Store diff for sentence generation (Type mode)
     lastDiffType = diff;
     
-    // Show generate panel immediately after check (if there are errors)
+    // Show same vocabulary panel and generate panel immediately after check (if there are errors)
     if (hasErrors) {
+      renderSameVocabularyType();
       generatePanelType.style.display = "block";
     } else {
+      sameVocabPanelType.style.display = "none";
       generatePanelType.style.display = "none";
     }
 
@@ -727,7 +1094,7 @@
       result.innerHTML = `${feedback}<div class="correct-sentence">Correct sentence: ${correctSentence}</div>`;
 
       // Replay original audio if there are errors (points not max)
-      if (hasErrors && scoreValue < correctWordCount) {
+      if (hasErrors && scoreValue < getCorrectWordCount()) {
         audio.currentTime = 0;
         audio.play();
       }
@@ -742,11 +1109,11 @@
 
     if (!userAnswer.trim()) {
       result.innerHTML = `<span class="errors">Please provide your answer before checking.</span>`;
-      scoreElement.textContent = `Points: 0 / ${correctWordCount}`;
+      scoreElement.textContent = `Points: 0 / ${getCorrectWordCount()}`;
       return;
     }
 
-    scoreElement.textContent = `Points: ${scoreValue} / ${correctWordCount}`;
+    scoreElement.textContent = `Points: ${scoreValue} / ${getCorrectWordCount()}`;
 
     // Show pronunciation practice and breakdown mode for speak mode
     const missedWords = getMissedWords(diff);
@@ -756,10 +1123,12 @@
     // Store diff for sentence generation (Speak mode)
     lastDiffSpeak = diff;
     
-    // Show generate panel immediately after check (if there are errors)
+    // Show same vocabulary panel and generate panel immediately after check (if there are errors)
     if (hasErrors) {
+      renderSameVocabularySpeak();
       generatePanelSpeak.style.display = "block";
     } else {
+      sameVocabPanelSpeak.style.display = "none";
       generatePanelSpeak.style.display = "none";
     }
 
@@ -784,7 +1153,7 @@
       result.innerHTML = `${feedback}<div class="correct-sentence">Correct sentence: ${correctSentence}</div>`;
 
       // Replay original audio if there are errors (points not max)
-      if (hasErrors && scoreValue < correctWordCount) {
+      if (hasErrors && scoreValue < getCorrectWordCount()) {
         audio.currentTime = 0;
         audio.play();
       }
@@ -793,6 +1162,142 @@
   
   let lastDiffType = [];
   let lastDiffSpeak = [];
+
+  // Database loading functions
+  const loadDatabase = async (mode) => {
+    try {
+      const response = await fetch(`database/${mode}/index.json`);
+      if (!response.ok) {
+        throw new Error(`Failed to load ${mode} database: ${response.statusText}`);
+      }
+      const data = await response.json();
+      return data.items || [];
+    } catch (error) {
+      console.error(`Error loading ${mode} database:`, error);
+      // Return default item if database fails to load
+      return [{
+        id: 1,
+        audioFile: "1.mp3",
+        correctSentence: "Next time, we'll discuss the influence of the media on public policy.",
+        category: "general"
+      }];
+    }
+  };
+
+  const loadQuestion = (mode, questionId) => {
+    const database = mode === "type" ? typeDatabase : speakDatabase;
+    const question = database.find(item => item.id === questionId);
+    
+    if (!question) {
+      console.error(`Question ${questionId} not found in ${mode} database`);
+      return false;
+    }
+
+    // Update correct sentence
+    correctSentence = question.correctSentence;
+    
+    // Update audio source
+    const audioPath = `database/${mode}/audio/${question.audioFile}`;
+    audio.src = audioPath;
+    audio.load(); // Reload the audio element
+    
+    // Clear input/transcription
+    if (mode === "type") {
+      input.value = "";
+      currentTypeQuestionId = questionId;
+      currentQuestionIdType.textContent = questionId;
+    } else {
+      transcription = "";
+      transcriptionText.textContent = "Click 'Start Recording' and speak...";
+      transcriptionText.classList.add("empty");
+      currentSpeakQuestionId = questionId;
+      currentQuestionIdSpeak.textContent = questionId;
+    }
+    
+    // Reset scores and hide panels
+    if (mode === "type") {
+      score.textContent = "Points: 0";
+    } else {
+      scoreSpeak.textContent = "Points: 0";
+    }
+    animationPanel.style.display = "none";
+    result.style.display = "none";
+    generatePanelType.style.display = "none";
+    generatePanelSpeak.style.display = "none";
+    vocabularyPanel.style.display = "none";
+    pronunciationPanel.style.display = "none";
+    breakdownPanel.style.display = "none";
+    
+    return true;
+  };
+
+  const populateQuestionSelect = (mode) => {
+    const database = mode === "type" ? typeDatabase : speakDatabase;
+    const select = mode === "type" ? questionSelectType : questionSelectSpeak;
+    const currentIdDisplay = mode === "type" ? currentQuestionIdType : currentQuestionIdSpeak;
+    const totalDisplay = mode === "type" ? totalQuestionsType : totalQuestionsSpeak;
+    
+    // Clear existing options
+    select.innerHTML = "";
+    
+    // Add options - just show the ID number
+    database.forEach(item => {
+      const option = document.createElement("option");
+      option.value = item.id;
+      option.textContent = item.id.toString();
+      select.appendChild(option);
+    });
+    
+    // Update current question ID display
+    const currentId = mode === "type" ? currentTypeQuestionId : currentSpeakQuestionId;
+    currentIdDisplay.textContent = currentId;
+    
+    // Update total questions display
+    totalDisplay.textContent = database.length;
+    
+    // Set current selection
+    select.value = currentId;
+  };
+
+  // Initialize databases
+  const initializeDatabases = async () => {
+    typeDatabase = await loadDatabase("type");
+    speakDatabase = await loadDatabase("speak");
+    
+    // Populate selectors
+    populateQuestionSelect("type");
+    populateQuestionSelect("speak");
+    
+    // Load first question for each mode
+    if (typeDatabase.length > 0) {
+      currentTypeQuestionId = 1;
+      loadQuestion("type", 1);
+    }
+    if (speakDatabase.length > 0) {
+      currentSpeakQuestionId = 1;
+      loadQuestion("speak", 1);
+    }
+  };
+
+  // Question selector event listeners
+  questionSelectType.addEventListener("change", (e) => {
+    const questionId = parseInt(e.target.value, 10);
+    if (questionId && loadQuestion("type", questionId)) {
+      currentTypeQuestionId = questionId;
+      currentQuestionIdType.textContent = questionId;
+    }
+  });
+
+  questionSelectSpeak.addEventListener("change", (e) => {
+    const questionId = parseInt(e.target.value, 10);
+    if (questionId && loadQuestion("speak", questionId)) {
+      currentSpeakQuestionId = questionId;
+      currentQuestionIdSpeak.textContent = questionId;
+    }
+  });
+
+  // Initialize on page load
+  initializeDatabases();
 
   // Type mode
   playBtn.addEventListener("click", () => {
@@ -920,6 +1425,8 @@
     "my", "your", "his", "her", "its", "our", "their", "mine", "yours", "hers", "ours", "theirs",
     // Other grammar words
     "as", "if", "when", "where", "while", "which", "who", "whom", "whose", "what", "why", "how",
+    // Common temporal and general words
+    "next", "time", "now", "then", "here", "there", "more", "most", "some", "any", "many", "much",
     // Contractions
     "we'll", "we're", "we've", "we'd", "they'll", "they're", "they've", "they'd", "it's", "that's", "there's",
     "don't", "doesn't", "didn't", "won't", "wouldn't", "couldn't", "shouldn't", "can't", "isn't", "aren't",
@@ -991,60 +1498,70 @@
     });
   };
 
-  // Extract keywords from diff (missing and misplaced words, excluding stop words and verbs)
+  // Check if a word is likely a verb (past tense, -ed, -ing forms, etc.)
+  const isLikelyVerb = (word) => {
+    const lower = word.toLowerCase();
+    // Common verb endings
+    if (lower.endsWith('ed') && lower.length > 3) return true;
+    if (lower.endsWith('ing') && lower.length > 4) return true;
+    if (lower.endsWith('es') && lower.length > 3) return true;
+    if (lower.endsWith('s') && lower.length > 2 && !lower.endsWith('ss') && !lower.endsWith('us')) return true;
+    // Check against common verbs list
+    if (commonVerbs.has(lower)) return true;
+    // Check if it's a past tense form of common verbs
+    const verbStems = ['live', 'work', 'play', 'study', 'learn', 'teach', 'help', 'make', 'take', 'give', 'get', 'go', 'come', 'see', 'know', 'think', 'say', 'tell', 'ask', 'want', 'need', 'use', 'call', 'try', 'find', 'keep', 'let', 'put', 'mean', 'set', 'become', 'leave', 'feel', 'seem', 'bring', 'begin', 'help', 'hear', 'run', 'move', 'like', 'believe', 'hold', 'happen', 'write', 'sit', 'stand', 'lose', 'pay', 'meet', 'include', 'continue'];
+    if (verbStems.some(stem => lower === stem + 'd' || lower === stem + 'ed')) return true;
+    return false;
+  };
+
+  // Check if a word is likely an adjective (superlative, comparative, -est, -er, etc.)
+  const isLikelyAdjective = (word) => {
+    const lower = word.toLowerCase();
+    // Superlative and comparative forms
+    if (lower.endsWith('est') && lower.length > 4) return true;
+    if (lower.endsWith('er') && lower.length > 3 && !lower.endsWith('ter') && !lower.endsWith('der')) return true;
+    // Common adjectives that shouldn't be used as nouns
+    const commonAdjectives = ['large', 'larger', 'largest', 'small', 'smaller', 'smallest', 'big', 'bigger', 'biggest', 'good', 'better', 'best', 'bad', 'worse', 'worst', 'high', 'higher', 'highest', 'low', 'lower', 'lowest', 'new', 'newer', 'newest', 'old', 'older', 'oldest', 'young', 'younger', 'youngest', 'important', 'different', 'difficult', 'easy', 'hard', 'simple', 'complex'];
+    if (commonAdjectives.includes(lower)) return true;
+    return false;
+  };
+
+  // Extract keywords from diff (missing and misplaced words, excluding stop words, verbs, and adjectives)
   const extractKeywords = (diff) => {
     const keywords = [];
     diff.forEach((part) => {
       const word = part.text.toLowerCase().trim();
-      // Exclude stop words, contractions, and common verbs
+      // Exclude stop words, contractions, verbs, and adjectives
       if ((part.type === "missing" || part.type === "misplaced") && 
           !stopWords.has(word) && 
           !commonVerbs.has(word) &&
+          !isLikelyVerb(word) &&
+          !isLikelyAdjective(word) &&
           word.length > 1 && // Exclude single characters
           !word.includes("'") && // Exclude contractions
           !word.match(/^[a-z]+'[a-z]+$/)) { // Exclude any word with apostrophe
         keywords.push(word);
       }
     });
-    // Remove duplicates and return only content words (nouns, adjectives, etc.)
+    // Remove duplicates and return only content words (nouns, etc.)
     return [...new Set(keywords)];
   };
 
-  // Generate a meaningful, grammatically correct sentence using ~20% of keywords
-  const generateSentence = (keywords, sentenceNum) => {
-    if (keywords.length === 0) return null;
+  // Generate a meaningful, grammatically correct sentence using specific keywords
+  const generateSentence = (selectedKeywords, sentenceNum) => {
+    if (!selectedKeywords || selectedKeywords.length === 0) return null;
     
-    // Calculate how many keywords to use (20% of total, minimum 1, maximum 3)
-    const keywordsToUse = Math.max(1, Math.min(3, Math.ceil(keywords.length * 0.2)));
-    
-    // Filter out any remaining invalid keywords (contractions, verbs, etc.)
-    const validKeywords = keywords.filter(kw => 
-      kw && 
-      kw.length > 1 && 
-      !kw.includes("'") && 
-      !stopWords.has(kw) && 
-      !commonVerbs.has(kw) &&
-      !kw.match(/^[a-z]+'[a-z]+$/)
-    );
-    
-    if (validKeywords.length === 0) return null;
-    
-    // Shuffle and take only the needed keywords
-    const shuffled = [...validKeywords].sort(() => Math.random() - 0.5);
-    const actualKeywordsToUse = Math.min(keywordsToUse, shuffled.length);
-    const selectedKeywords = shuffled.slice(0, actualKeywordsToUse);
-    
-    // Validate keywords are valid (not contractions, verbs, or stop words)
+    // Validate keywords are valid (only basic checks - words are already filtered from vocabulary practice)
     const isValidKeyword = (kw) => {
       if (!kw || kw.length <= 1) return false;
       if (kw.includes("'")) return false;
-      if (stopWords.has(kw)) return false;
-      if (commonVerbs.has(kw)) return false;
+      if (stopWords.has(kw)) return false; // Still filter stop words
       if (kw.match(/^[a-z]+'[a-z]+$/)) return false;
+      // Don't filter verbs/adjectives - these come from vocabulary practice and should be used
       return true;
     };
     
-    // Filter selected keywords one more time
+    // Filter and validate the provided keywords (only basic validation)
     const finalKeywords = selectedKeywords.filter(isValidKeyword);
     if (finalKeywords.length === 0) return null;
     
@@ -1197,6 +1714,11 @@
     // Clean up any double spaces
     sentence = sentence.replace(/\s+/g, " ");
     
+    // Validate and fix grammar errors
+    sentence = validateAndFixGrammar(sentence, finalKeywords);
+    
+    if (!sentence) return null; // If validation failed, return null
+    
     // Determine which keywords were actually used in the sentence
     const usedKeywords = finalKeywords.filter(kw => 
       sentence.toLowerCase().includes(kw.toLowerCase())
@@ -1206,6 +1728,83 @@
       text: sentence,
       keywords: usedKeywords.length > 0 ? usedKeywords : finalKeywords.slice(0, Math.min(3, finalKeywords.length))
     };
+  };
+
+  // Validate and fix grammar errors in generated sentences
+  const validateAndFixGrammar = (sentence, keywords) => {
+    if (!sentence) return null;
+    
+    const lower = sentence.toLowerCase();
+    const words = sentence.split(/\s+/);
+    
+    // Check for common grammar errors
+    
+    // Error 1: "the [verb]" - verb used as noun (e.g., "the lived", "the studied")
+    for (let i = 0; i < words.length - 1; i++) {
+      const word = words[i].toLowerCase().replace(/[.,!?;:]/g, '');
+      const nextWord = words[i + 1].toLowerCase().replace(/[.,!?;:]/g, '');
+      if (word === 'the' && (isLikelyVerb(nextWord) || commonVerbs.has(nextWord))) {
+        // Replace with a valid noun or remove the problematic keyword
+        return null; // Return null to regenerate
+      }
+    }
+    
+    // Error 2: "This [verb]" - verb used as noun
+    for (let i = 0; i < words.length - 1; i++) {
+      const word = words[i].toLowerCase().replace(/[.,!?;:]/g, '');
+      const nextWord = words[i + 1].toLowerCase().replace(/[.,!?;:]/g, '');
+      if (word === 'this' && (isLikelyVerb(nextWord) || commonVerbs.has(nextWord))) {
+        return null; // Return null to regenerate
+      }
+    }
+    
+    // Error 3: "[adjective] matters" or "[adjective] is important" - adjective used as noun
+    for (let i = 0; i < words.length - 1; i++) {
+      const word = words[i].toLowerCase().replace(/[.,!?;:]/g, '');
+      const nextWord = words[i + 1].toLowerCase().replace(/[.,!?;:]/g, '');
+      if (isLikelyAdjective(word) && (nextWord === 'matters' || nextWord === 'is')) {
+        return null; // Return null to regenerate
+      }
+    }
+    
+    // Error 4: "the [adjective]" without a following noun
+    for (let i = 0; i < words.length - 1; i++) {
+      const word = words[i].toLowerCase().replace(/[.,!?;:]/g, '');
+      const nextWord = words[i + 1].toLowerCase().replace(/[.,!?;:]/g, '');
+      if (word === 'the' && isLikelyAdjective(nextWord)) {
+        // Check if there's a noun after the adjective
+        if (i + 2 >= words.length || isLikelyVerb(words[i + 2].toLowerCase().replace(/[.,!?;:]/g, ''))) {
+          return null; // Return null to regenerate
+        }
+      }
+    }
+    
+    // Error 5: Check for nonsensical patterns like "verb the verb"
+    for (let i = 0; i < words.length - 2; i++) {
+      const word1 = words[i].toLowerCase().replace(/[.,!?;:]/g, '');
+      const word2 = words[i + 1].toLowerCase().replace(/[.,!?;:]/g, '');
+      const word3 = words[i + 2].toLowerCase().replace(/[.,!?;:]/g, '');
+      if ((isLikelyVerb(word1) || commonVerbs.has(word1)) && 
+          word2 === 'the' && 
+          (isLikelyVerb(word3) || commonVerbs.has(word3))) {
+        return null; // Return null to regenerate
+      }
+    }
+    
+    // Error 6: Check for problematic patterns using regex
+    const problematicPatterns = [
+      /\bthe\s+(largest|smallest|biggest|smallest|highest|lowest|newest|oldest|youngest)\s+(matters|is|are|was|were)\b/i,
+      /\bthis\s+(largest|smallest|biggest|smallest|highest|lowest|newest|oldest|youngest)\s+(is|are|was|were)\b/i,
+      /\b(lived|worked|played|studied|learned|taught|helped|made|took|gave|got|went|came|saw|knew|thought|said|told|asked|wanted|needed|used|called|tried|found|kept|let|put|meant|set|became|left|felt|seemed|brought|began|heard|ran|moved|believed|held|happened|wrote|sat|stood|lost|paid|met|included|continued)\s+(matters|is|are|was|were)\b/i
+    ];
+    
+    for (const pattern of problematicPatterns) {
+      if (pattern.test(sentence)) {
+        return null; // Return null to regenerate
+      }
+    }
+    
+    return sentence; // Sentence passed validation
   };
 
   // Generate 5 sentences
@@ -1222,29 +1821,237 @@
     return highlighted;
   };
 
-  // Type mode: Generate sentences with text input
+    // Type mode: Generate sentences with text input
   const generateSentencesType = () => {
     if (lastDiffType.length === 0) {
       generatedSentencesType.innerHTML = "<div class='error'>Please check your answer first to generate sentences.</div>";
       return;
     }
     
-    const keywords = extractKeywords(lastDiffType);
-    if (keywords.length === 0) {
+    // Use vocabulary practice words directly (these are already filtered content words)
+    let validKeywords = vocabularyPracticeWordsType.length > 0 
+      ? [...vocabularyPracticeWordsType] 
+      : [];
+    
+    // Fallback: if no vocabulary practice words, extract from diff (but don't filter as strictly)
+    if (validKeywords.length === 0) {
+      const missedWords = getMissedWords(lastDiffType);
+      validKeywords = filterContentWords(missedWords).map(w => w.toLowerCase().trim());
+    }
+    
+    if (validKeywords.length === 0) {
       generatedSentencesType.innerHTML = "<div class='error'>No keywords found. All errors are stop words.</div>";
       return;
     }
     
+    // Remove duplicates and ensure all are valid
+    validKeywords = [...new Set(validKeywords)].filter(kw => 
+      kw && 
+      kw.length > 1 && 
+      !kw.includes("'") &&
+      !kw.match(/^[a-z]+'[a-z]+$/)
+    );
+    
+    if (validKeywords.length === 0) {
+      generatedSentencesType.innerHTML = "<div class='error'>No valid keywords found.</div>";
+      return;
+    }
+    
+    // Distribute keywords across 5 sentences to ensure all are used
+    const distributeKeywords = (keywords, numSentences) => {
+      const distributed = [];
+      const shuffled = [...keywords].sort(() => Math.random() - 0.5);
+      
+      // Distribute keywords evenly across sentences
+      // Each sentence should get at least 1 keyword, up to 3 keywords
+      // Ensure all keywords are used
+      for (let i = 0; i < numSentences; i++) {
+        distributed.push([]);
+      }
+      
+      // Round-robin distribution to ensure even spread
+      let keywordIdx = 0;
+      for (let i = 0; i < shuffled.length; i++) {
+        const sentenceIdx = keywordIdx % numSentences;
+        // Only add if the sentence doesn't already have 3 keywords
+        if (distributed[sentenceIdx].length < 3) {
+          distributed[sentenceIdx].push(shuffled[i]);
+        } else {
+          // Find next sentence with space
+          let found = false;
+          for (let j = 0; j < numSentences; j++) {
+            const checkIdx = (sentenceIdx + j + 1) % numSentences;
+            if (distributed[checkIdx].length < 3) {
+              distributed[checkIdx].push(shuffled[i]);
+              found = true;
+              break;
+            }
+          }
+          // If all sentences have 3 keywords, add to the first one
+          if (!found) {
+            distributed[0].push(shuffled[i]);
+          }
+        }
+        keywordIdx++;
+      }
+      
+      // Ensure each sentence has at least 1 keyword
+      for (let i = 0; i < numSentences; i++) {
+        if (distributed[i].length === 0) {
+          // Take from sentences with more than 1 keyword
+          for (let j = 0; j < numSentences; j++) {
+            if (distributed[j].length > 1) {
+              distributed[i].push(distributed[j].pop());
+              break;
+            }
+          }
+        }
+      }
+      
+      // Always return exactly numSentences arrays (even if some are empty)
+      // Pad with empty arrays if needed
+      while (distributed.length < numSentences) {
+        distributed.push([]);
+      }
+      
+      return distributed.slice(0, numSentences);
+    };
+    
+    const keywordDistribution = distributeKeywords(validKeywords, 5);
+    
+    // Track which keywords have been used at least once (to ensure all are used)
+    const usedKeywordsSet = new Set();
+    const allKeywords = [...validKeywords];
+    
     const sentences = [];
-    for (let i = 0; i < 5; i++) {
-      const sentence = generateSentence(keywords, i);
-      if (sentence) {
-        sentences.push(sentence);
+    let attempts = 0;
+    const maxAttempts = 500; // Increased attempts to ensure we get 5 sentences
+    
+    // Keep generating until we have 5 sentences
+    while (sentences.length < 5 && attempts < maxAttempts) {
+      attempts++;
+      const sentenceIndex = sentences.length;
+      
+      // Priority: First use unused keywords, then reuse any keywords
+      let keywordsForThisSentence = [];
+      
+      // First, try to get unused keywords from distribution
+      const unusedKeywords = allKeywords.filter(kw => !usedKeywordsSet.has(kw));
+      
+      if (unusedKeywords.length > 0) {
+        // Use unused keywords first - get 1-2 from the distribution for this sentence
+        const distIdx = sentenceIndex % keywordDistribution.length;
+        const distKeywords = keywordDistribution[distIdx] || [];
+        const unusedFromDist = distKeywords.filter(kw => !usedKeywordsSet.has(kw));
+        
+        if (unusedFromDist.length > 0) {
+          keywordsForThisSentence = unusedFromDist.slice(0, 2); // Use 1-2 unused keywords
+        } else {
+          // Get any unused keyword
+          keywordsForThisSentence = [unusedKeywords[0]];
+        }
+      } else {
+        // All keywords have been used at least once, now we can reuse them
+        // Get keywords from distribution for this sentence
+        const distIdx = sentenceIndex % keywordDistribution.length;
+        keywordsForThisSentence = keywordDistribution[distIdx] || [];
+        
+        // If still empty, use any available keyword
+        if (keywordsForThisSentence.length === 0 && allKeywords.length > 0) {
+          keywordsForThisSentence = [allKeywords[sentenceIndex % allKeywords.length]];
+        }
+      }
+      
+      // Ensure we have at least one keyword
+      if (keywordsForThisSentence.length === 0 && allKeywords.length > 0) {
+        keywordsForThisSentence = [allKeywords[0]];
+      }
+      
+      // Try multiple template variations
+      let sentence = null;
+      for (let templateOffset = 0; templateOffset < 20 && !sentence; templateOffset++) {
+        const sentenceNum = sentenceIndex * 100 + attempts + templateOffset;
+        sentence = generateSentence(keywordsForThisSentence, sentenceNum);
+        
+        if (sentence && sentence.text) {
+          // Double-check the sentence is valid
+          const validated = validateAndFixGrammar(sentence.text, sentence.keywords);
+          if (validated) {
+            sentence.text = validated;
+            // Mark keywords as used (at least once)
+            sentence.keywords.forEach(kw => usedKeywordsSet.add(kw));
+            sentences.push(sentence);
+            break; // Successfully generated a sentence
+          } else {
+            sentence = null; // Try next template
+          }
+        }
+      }
+      
+      // If we couldn't generate a sentence, try with just one keyword
+      if (!sentence && keywordsForThisSentence.length > 0) {
+        const singleKeyword = keywordsForThisSentence[0];
+        for (let templateOffset = 0; templateOffset < 20 && !sentence; templateOffset++) {
+          const sentenceNum = sentenceIndex * 100 + attempts + templateOffset + 1000;
+          sentence = generateSentence([singleKeyword], sentenceNum);
+          
+          if (sentence && sentence.text) {
+            const validated = validateAndFixGrammar(sentence.text, sentence.keywords);
+            if (validated) {
+              sentence.text = validated;
+              // Mark keyword as used
+              sentence.keywords.forEach(kw => usedKeywordsSet.add(kw));
+              sentences.push(sentence);
+              break;
+            } else {
+              sentence = null;
+            }
+          }
+        }
+      }
+      
+      // If still no sentence, try with any keyword from the list
+      if (!sentence && allKeywords.length > 0) {
+        const anyKeyword = allKeywords[sentenceIndex % allKeywords.length];
+        for (let templateOffset = 0; templateOffset < 20 && !sentence; templateOffset++) {
+          const sentenceNum = sentenceIndex * 100 + attempts + templateOffset + 2000;
+          sentence = generateSentence([anyKeyword], sentenceNum);
+          
+          if (sentence && sentence.text) {
+            const validated = validateAndFixGrammar(sentence.text, sentence.keywords);
+            if (validated) {
+              sentence.text = validated;
+              sentence.keywords.forEach(kw => usedKeywordsSet.add(kw));
+              sentences.push(sentence);
+              break;
+            } else {
+              sentence = null;
+            }
+          }
+        }
+      }
+      
+      // If we still couldn't generate a sentence after all attempts, 
+      // accept it anyway if it was generated (even if grammar validation failed)
+      // This ensures we always get 5 sentences
+      if (!sentence && allKeywords.length > 0) {
+        const anyKeyword = allKeywords[sentenceIndex % allKeywords.length];
+        sentence = generateSentence([anyKeyword], sentenceIndex * 1000 + attempts);
+        if (sentence && sentence.text) {
+          // Accept the sentence even if grammar validation fails
+          sentence.text = sentence.text.trim();
+          sentence.text = sentence.text.charAt(0).toUpperCase() + sentence.text.slice(1);
+          if (!sentence.text.endsWith(".")) {
+            sentence.text += ".";
+          }
+          sentence.keywords.forEach(kw => usedKeywordsSet.add(kw));
+          sentences.push(sentence);
+        }
       }
     }
     
     if (sentences.length === 0) {
-      generatedSentencesType.innerHTML = "<div class='error'>Could not generate sentences.</div>";
+      generatedSentencesType.innerHTML = "<div class='error'>Could not generate valid sentences. Please try again.</div>";
       return;
     }
     
@@ -1322,22 +2129,230 @@
       return;
     }
     
-    const keywords = extractKeywords(lastDiffSpeak);
-    if (keywords.length === 0) {
+    // Use pronunciation practice words directly (these are already filtered content words)
+    let validKeywords = vocabularyPracticeWordsSpeak.length > 0 
+      ? [...vocabularyPracticeWordsSpeak] 
+      : [];
+    
+    // Fallback: if no pronunciation practice words, extract from diff (but don't filter as strictly)
+    if (validKeywords.length === 0) {
+      const missedWords = getMissedWords(lastDiffSpeak);
+      validKeywords = filterContentWords(missedWords).map(w => w.toLowerCase().trim());
+    }
+    
+    if (validKeywords.length === 0) {
       generatedSentencesSpeak.innerHTML = "<div class='error'>No keywords found. All errors are stop words.</div>";
       return;
     }
     
+    // Remove duplicates and ensure all are valid
+    validKeywords = [...new Set(validKeywords)].filter(kw => 
+      kw && 
+      kw.length > 1 && 
+      !kw.includes("'") &&
+      !kw.match(/^[a-z]+'[a-z]+$/)
+    );
+    
+    if (validKeywords.length === 0) {
+      generatedSentencesSpeak.innerHTML = "<div class='error'>No valid keywords found.</div>";
+      return;
+    }
+    
+    // Distribute keywords across 5 sentences to ensure all are used
+    const distributeKeywords = (keywords, numSentences) => {
+      const distributed = [];
+      const shuffled = [...keywords].sort(() => Math.random() - 0.5);
+      
+      // Distribute keywords evenly across sentences
+      // Each sentence should get at least 1 keyword, up to 3 keywords
+      // Ensure all keywords are used
+      for (let i = 0; i < numSentences; i++) {
+        distributed.push([]);
+      }
+      
+      // Round-robin distribution to ensure even spread
+      let keywordIdx = 0;
+      for (let i = 0; i < shuffled.length; i++) {
+        const sentenceIdx = keywordIdx % numSentences;
+        // Only add if the sentence doesn't already have 3 keywords
+        if (distributed[sentenceIdx].length < 3) {
+          distributed[sentenceIdx].push(shuffled[i]);
+        } else {
+          // Find next sentence with space
+          let found = false;
+          for (let j = 0; j < numSentences; j++) {
+            const checkIdx = (sentenceIdx + j + 1) % numSentences;
+            if (distributed[checkIdx].length < 3) {
+              distributed[checkIdx].push(shuffled[i]);
+              found = true;
+              break;
+            }
+          }
+          // If all sentences have 3 keywords, add to the first one
+          if (!found) {
+            distributed[0].push(shuffled[i]);
+          }
+        }
+        keywordIdx++;
+      }
+      
+      // Ensure each sentence has at least 1 keyword
+      for (let i = 0; i < numSentences; i++) {
+        if (distributed[i].length === 0) {
+          // Take from sentences with more than 1 keyword
+          for (let j = 0; j < numSentences; j++) {
+            if (distributed[j].length > 1) {
+              distributed[i].push(distributed[j].pop());
+              break;
+            }
+          }
+        }
+      }
+      
+      // Always return exactly numSentences arrays (even if some are empty)
+      // Pad with empty arrays if needed
+      while (distributed.length < numSentences) {
+        distributed.push([]);
+      }
+      
+      return distributed.slice(0, numSentences);
+    };
+    
+    const keywordDistribution = distributeKeywords(validKeywords, 5);
+    
+    // Track which keywords have been used at least once (to ensure all are used)
+    const usedKeywordsSet = new Set();
+    const allKeywords = [...validKeywords];
+    
     const sentences = [];
-    for (let i = 0; i < 5; i++) {
-      const sentence = generateSentence(keywords, i);
-      if (sentence) {
-        sentences.push(sentence);
+    let attempts = 0;
+    const maxAttempts = 500; // Increased attempts to ensure we get 5 sentences
+    
+    // Keep generating until we have 5 sentences
+    while (sentences.length < 5 && attempts < maxAttempts) {
+      attempts++;
+      const sentenceIndex = sentences.length;
+      
+      // Priority: First use unused keywords, then reuse any keywords
+      let keywordsForThisSentence = [];
+      
+      // First, try to get unused keywords from distribution
+      const unusedKeywords = allKeywords.filter(kw => !usedKeywordsSet.has(kw));
+      
+      if (unusedKeywords.length > 0) {
+        // Use unused keywords first - get 1-2 from the distribution for this sentence
+        const distIdx = sentenceIndex % keywordDistribution.length;
+        const distKeywords = keywordDistribution[distIdx] || [];
+        const unusedFromDist = distKeywords.filter(kw => !usedKeywordsSet.has(kw));
+        
+        if (unusedFromDist.length > 0) {
+          keywordsForThisSentence = unusedFromDist.slice(0, 2); // Use 1-2 unused keywords
+        } else {
+          // Get any unused keyword
+          keywordsForThisSentence = [unusedKeywords[0]];
+        }
+      } else {
+        // All keywords have been used at least once, now we can reuse them
+        // Get keywords from distribution for this sentence
+        const distIdx = sentenceIndex % keywordDistribution.length;
+        keywordsForThisSentence = keywordDistribution[distIdx] || [];
+        
+        // If still empty, use any available keyword
+        if (keywordsForThisSentence.length === 0 && allKeywords.length > 0) {
+          keywordsForThisSentence = [allKeywords[sentenceIndex % allKeywords.length]];
+        }
+      }
+      
+      // Ensure we have at least one keyword
+      if (keywordsForThisSentence.length === 0 && allKeywords.length > 0) {
+        keywordsForThisSentence = [allKeywords[0]];
+      }
+      
+      // Try multiple template variations
+      let sentence = null;
+      for (let templateOffset = 0; templateOffset < 20 && !sentence; templateOffset++) {
+        const sentenceNum = sentenceIndex * 100 + attempts + templateOffset;
+        sentence = generateSentence(keywordsForThisSentence, sentenceNum);
+        
+        if (sentence && sentence.text) {
+          // Double-check the sentence is valid
+          const validated = validateAndFixGrammar(sentence.text, sentence.keywords);
+          if (validated) {
+            sentence.text = validated;
+            // Mark keywords as used (at least once)
+            sentence.keywords.forEach(kw => usedKeywordsSet.add(kw));
+            sentences.push(sentence);
+            break; // Successfully generated a sentence
+          } else {
+            sentence = null; // Try next template
+          }
+        }
+      }
+      
+      // If we couldn't generate a sentence, try with just one keyword
+      if (!sentence && keywordsForThisSentence.length > 0) {
+        const singleKeyword = keywordsForThisSentence[0];
+        for (let templateOffset = 0; templateOffset < 20 && !sentence; templateOffset++) {
+          const sentenceNum = sentenceIndex * 100 + attempts + templateOffset + 1000;
+          sentence = generateSentence([singleKeyword], sentenceNum);
+          
+          if (sentence && sentence.text) {
+            const validated = validateAndFixGrammar(sentence.text, sentence.keywords);
+            if (validated) {
+              sentence.text = validated;
+              // Mark keyword as used
+              sentence.keywords.forEach(kw => usedKeywordsSet.add(kw));
+              sentences.push(sentence);
+              break;
+            } else {
+              sentence = null;
+            }
+          }
+        }
+      }
+      
+      // If still no sentence, try with any keyword from the list
+      if (!sentence && allKeywords.length > 0) {
+        const anyKeyword = allKeywords[sentenceIndex % allKeywords.length];
+        for (let templateOffset = 0; templateOffset < 20 && !sentence; templateOffset++) {
+          const sentenceNum = sentenceIndex * 100 + attempts + templateOffset + 2000;
+          sentence = generateSentence([anyKeyword], sentenceNum);
+          
+          if (sentence && sentence.text) {
+            const validated = validateAndFixGrammar(sentence.text, sentence.keywords);
+            if (validated) {
+              sentence.text = validated;
+              sentence.keywords.forEach(kw => usedKeywordsSet.add(kw));
+              sentences.push(sentence);
+              break;
+            } else {
+              sentence = null;
+            }
+          }
+        }
+      }
+      
+      // If we still couldn't generate a sentence after all attempts, 
+      // accept it anyway if it was generated (even if grammar validation failed)
+      // This ensures we always get 5 sentences
+      if (!sentence && allKeywords.length > 0) {
+        const anyKeyword = allKeywords[sentenceIndex % allKeywords.length];
+        sentence = generateSentence([anyKeyword], sentenceIndex * 1000 + attempts);
+        if (sentence && sentence.text) {
+          // Accept the sentence even if grammar validation fails
+          sentence.text = sentence.text.trim();
+          sentence.text = sentence.text.charAt(0).toUpperCase() + sentence.text.slice(1);
+          if (!sentence.text.endsWith(".")) {
+            sentence.text += ".";
+          }
+          sentence.keywords.forEach(kw => usedKeywordsSet.add(kw));
+          sentences.push(sentence);
+        }
       }
     }
     
     if (sentences.length === 0) {
-      generatedSentencesSpeak.innerHTML = "<div class='error'>Could not generate sentences.</div>";
+      generatedSentencesSpeak.innerHTML = "<div class='error'>Could not generate valid sentences. Please try again.</div>";
       return;
     }
     

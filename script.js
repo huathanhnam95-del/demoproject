@@ -9,6 +9,7 @@
   const result = document.getElementById("result");
   const score = document.getElementById("score");
   const animationBox = document.getElementById("animation");
+  const animationPanel = document.querySelector(".animation-panel");
   const replayBtn = document.getElementById("replay-btn");
   const skipAnimationBtn = document.getElementById("skip-animation-btn");
 
@@ -31,11 +32,19 @@
   const breakdownLines = document.getElementById("breakdown-lines");
   const breakdownBeginningBtn = document.getElementById("breakdown-beginning");
   const breakdownEndBtn = document.getElementById("breakdown-end");
-  const generatePanel = document.getElementById("generate-sentences");
-  const generateBtn = document.getElementById("generate-btn");
-  const showAllSentencesBtn = document.getElementById("show-all-sentences-btn");
-  const hideAllSentencesBtn = document.getElementById("hide-all-sentences-btn");
-  const generatedSentences = document.getElementById("generated-sentences");
+  // Type mode generate panel
+  const generatePanelType = document.getElementById("generate-sentences-type");
+  const generateBtnType = document.getElementById("generate-type-btn");
+  const showAllSentencesBtnType = document.getElementById("show-all-sentences-type-btn");
+  const hideAllSentencesBtnType = document.getElementById("hide-all-sentences-type-btn");
+  const generatedSentencesType = document.getElementById("generated-sentences-type");
+  
+  // Speak mode generate panel
+  const generatePanelSpeak = document.getElementById("generate-sentences-speak");
+  const generateBtnSpeak = document.getElementById("generate-speak-btn");
+  const showAllSentencesBtnSpeak = document.getElementById("show-all-sentences-speak-btn");
+  const hideAllSentencesBtnSpeak = document.getElementById("hide-all-sentences-speak-btn");
+  const generatedSentencesSpeak = document.getElementById("generated-sentences-speak");
 
   // Speech recognition
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -64,21 +73,30 @@
     };
 
     recognition.onresult = (event) => {
-      let interimTranscript = "";
-      let finalTranscript = "";
+      // Build complete transcript from ALL results (not just new ones)
+      // This ensures we keep everything even after pauses/restarts
+      let newFinalText = "";
+      let interimText = "";
 
+      // Process results starting from resultIndex (new results)
       for (let i = event.resultIndex; i < event.results.length; i += 1) {
         const transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
-          finalTranscript += transcript + " ";
+          newFinalText += transcript + " ";
         } else {
-          interimTranscript += transcript;
+          interimText += transcript;
         }
       }
 
-      transcription = finalTranscript || interimTranscript;
-      transcriptionText.textContent = transcription || "Click 'Start Recording' and speak...";
-      transcriptionText.classList.toggle("empty", !transcription);
+      // If we got new final text, append it to our accumulated transcription
+      if (newFinalText.trim()) {
+        transcription = (transcription ? transcription + " " : "") + newFinalText.trim();
+      }
+
+      // Display: accumulated final transcript + current interim text
+      const displayText = transcription + (interimText ? " " + interimText : "");
+      transcriptionText.textContent = displayText || "Click 'Start Recording' and speak...";
+      transcriptionText.classList.toggle("empty", !displayText);
     };
 
     recognition.onerror = (event) => {
@@ -471,8 +489,17 @@
     tabSpeak.classList.remove("active");
     modeType.classList.add("active");
     modeSpeak.classList.remove("active");
+    
+    // Hide Speak mode panels
     pronunciationPanel.style.display = "none";
     breakdownPanel.style.display = "none";
+    generatePanelSpeak.style.display = "none";
+    
+    // Hide shared panels (will be shown when Check is pressed in Type mode)
+    animationPanel.style.display = "none";
+    result.style.display = "none";
+    generatePanelType.style.display = "none";
+    
     if (isRecording && recognition) {
       recognition.stop();
       isRecording = false;
@@ -493,6 +520,15 @@
     tabType.classList.remove("active");
     modeSpeak.classList.add("active");
     modeType.classList.remove("active");
+    
+    // Hide Type mode panels
+    generatePanelType.style.display = "none";
+    
+    // Hide shared panels (will be shown when Check is pressed in Speak mode)
+    animationPanel.style.display = "none";
+    result.style.display = "none";
+    generatePanelSpeak.style.display = "none";
+    
     // Microphone access will be requested when user clicks "Start Recording"
   });
 
@@ -642,8 +678,64 @@
     }
   };
 
-  // Shared check function
-  const performCheck = (userAnswer, scoreElement) => {
+  // Type mode check function
+  const performCheckType = (userAnswer, scoreElement) => {
+    const diff = diffWords(userAnswer, correctSentence);
+    const hasErrors = diff.some((p) => p.type !== "match");
+    const scoreValue = diff.filter((p) => p.type === "match").length;
+
+    if (!userAnswer.trim()) {
+      result.innerHTML = `<span class="errors">Please provide your answer before checking.</span>`;
+      scoreElement.textContent = `Points: 0 / ${correctWordCount}`;
+      return;
+    }
+
+    scoreElement.textContent = `Points: ${scoreValue} / ${correctWordCount}`;
+
+    // Hide pronunciation practice and breakdown mode for type mode
+    pronunciationPanel.style.display = "none";
+    breakdownPanel.style.display = "none";
+
+    // Store diff for sentence generation (Type mode)
+    lastDiffType = diff;
+    
+    // Show generate panel immediately after check (if there are errors)
+    if (hasErrors) {
+      generatePanelType.style.display = "block";
+    } else {
+      generatePanelType.style.display = "none";
+    }
+
+    // Show animation panel and result box for Type mode
+    animationPanel.style.display = "block";
+    result.style.display = "block";
+    
+    lastSteps = buildAnimationSteps(userAnswer);
+    if (!lastSteps || lastSteps.length === 0) {
+      result.innerHTML = `<div class="errors">Error: Could not generate animation steps.</div>`;
+      return;
+    }
+    animationBox.innerHTML = "";
+    result.innerHTML = `<div class="errors">Playing correction animation...</div>`;
+
+    lastAnimationMode = false; // Type mode
+    playAnimation(lastSteps, () => {
+      const feedback = hasErrors
+        ? `<div class="errors">Keep practicing! Differences highlighted below:</div><div>${renderDiff(diff)}</div>`
+        : `<div class="ok">Great job! Perfect match.</div>`;
+
+      result.innerHTML = `${feedback}<div class="correct-sentence">Correct sentence: ${correctSentence}</div>`;
+
+      // Replay original audio if there are errors (points not max)
+      if (hasErrors && scoreValue < correctWordCount) {
+        audio.currentTime = 0;
+        audio.play();
+      }
+    }, false);
+  };
+
+  // Speak mode check function
+  const performCheckSpeak = (userAnswer, scoreElement) => {
     const diff = diffWords(userAnswer, correctSentence);
     const hasErrors = diff.some((p) => p.type !== "match");
     const scoreValue = diff.filter((p) => p.type === "match").length;
@@ -657,15 +749,24 @@
     scoreElement.textContent = `Points: ${scoreValue} / ${correctWordCount}`;
 
     // Show pronunciation practice and breakdown mode for speak mode
-    if (scoreElement === scoreSpeak) {
-      const missedWords = getMissedWords(diff);
-      renderPronunciationPractice(missedWords);
-      renderBreakdownMode();
+    const missedWords = getMissedWords(diff);
+    renderPronunciationPractice(missedWords);
+    renderBreakdownMode();
+
+    // Store diff for sentence generation (Speak mode)
+    lastDiffSpeak = diff;
+    
+    // Show generate panel immediately after check (if there are errors)
+    if (hasErrors) {
+      generatePanelSpeak.style.display = "block";
     } else {
-      pronunciationPanel.style.display = "none";
-      breakdownPanel.style.display = "none";
+      generatePanelSpeak.style.display = "none";
     }
 
+    // Show animation panel and result box for Speak mode
+    animationPanel.style.display = "block";
+    result.style.display = "block";
+    
     lastSteps = buildAnimationSteps(userAnswer);
     if (!lastSteps || lastSteps.length === 0) {
       result.innerHTML = `<div class="errors">Error: Could not generate animation steps.</div>`;
@@ -674,8 +775,7 @@
     animationBox.innerHTML = "";
     result.innerHTML = `<div class="errors">Playing correction animation...</div>`;
 
-    const isSpeakMode = scoreElement === scoreSpeak;
-    lastAnimationMode = isSpeakMode;
+    lastAnimationMode = true; // Speak mode
     playAnimation(lastSteps, () => {
       const feedback = hasErrors
         ? `<div class="errors">Keep practicing! Differences highlighted below:</div><div>${renderDiff(diff)}</div>`
@@ -688,18 +788,11 @@
         audio.currentTime = 0;
         audio.play();
       }
-      
-      // Store diff for sentence generation
-      lastDiff = diff;
-      
-      // Show generate panel after check
-      if (hasErrors) {
-        generatePanel.style.display = "block";
-      }
-    }, isSpeakMode);
+    }, true);
   };
   
-  let lastDiff = [];
+  let lastDiffType = [];
+  let lastDiffSpeak = [];
 
   // Type mode
   playBtn.addEventListener("click", () => {
@@ -708,7 +801,7 @@
   });
 
   checkBtn.addEventListener("click", () => {
-    performCheck(input.value, score);
+    performCheckType(input.value, score);
   });
 
   // Speak mode
@@ -797,7 +890,7 @@
       recordBtn.classList.remove("recording");
       recordingStatus.classList.remove("active");
     }
-    performCheck(transcription.trim(), scoreSpeak);
+    performCheckSpeak(transcription.trim(), scoreSpeak);
   });
 
   replayBtn.addEventListener("click", () => {
@@ -1116,15 +1209,29 @@
   };
 
   // Generate 5 sentences
-  const generateSentences = () => {
-    if (lastDiff.length === 0) {
-      generatedSentences.innerHTML = "<div class='error'>Please check your answer first to generate sentences.</div>";
+  // Helper function to highlight keywords in sentence text
+  const highlightKeywords = (text, keywords) => {
+    let highlighted = text;
+    keywords.forEach(keyword => {
+      // Create a regex that matches the keyword as a whole word (case insensitive)
+      const regex = new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+      highlighted = highlighted.replace(regex, (match) => {
+        return `<strong class="sentence-keyword">${match}</strong>`;
+      });
+    });
+    return highlighted;
+  };
+
+  // Type mode: Generate sentences with text input
+  const generateSentencesType = () => {
+    if (lastDiffType.length === 0) {
+      generatedSentencesType.innerHTML = "<div class='error'>Please check your answer first to generate sentences.</div>";
       return;
     }
     
-    const keywords = extractKeywords(lastDiff);
+    const keywords = extractKeywords(lastDiffType);
     if (keywords.length === 0) {
-      generatedSentences.innerHTML = "<div class='error'>No keywords found. All errors are stop words.</div>";
+      generatedSentencesType.innerHTML = "<div class='error'>No keywords found. All errors are stop words.</div>";
       return;
     }
     
@@ -1137,26 +1244,13 @@
     }
     
     if (sentences.length === 0) {
-      generatedSentences.innerHTML = "<div class='error'>Could not generate sentences.</div>";
+      generatedSentencesType.innerHTML = "<div class='error'>Could not generate sentences.</div>";
       return;
     }
     
-    // Helper function to highlight keywords in sentence text
-    const highlightKeywords = (text, keywords) => {
-      let highlighted = text;
-      keywords.forEach(keyword => {
-        // Create a regex that matches the keyword as a whole word (case insensitive)
-        const regex = new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
-        highlighted = highlighted.replace(regex, (match) => {
-          return `<strong class="sentence-keyword">${match}</strong>`;
-        });
-      });
-      return highlighted;
-    };
-    
-    // Render sentences (default hidden)
-    generatedSentences.innerHTML = sentences.map((sentence, idx) => {
-      const sentenceId = `sentence-${idx}`;
+    // Render sentences (default hidden) with text input for Type mode
+    generatedSentencesType.innerHTML = sentences.map((sentence, idx) => {
+      const sentenceId = `sentence-type-${idx}`;
       const highlightedText = highlightKeywords(sentence.text, sentence.keywords);
       return `
         <div class="generated-sentence" data-sentence-id="${sentenceId}">
@@ -1164,23 +1258,26 @@
             <span class="sentence-number">Sentence ${idx + 1}</span>
             <button class="sentence-show-btn" data-sentence="${idx}" type="button">Show</button>
             <button class="sentence-play-btn" data-sentence="${idx}" type="button">Play</button>
-            <button class="sentence-record-btn" data-sentence="${idx}" type="button">Record</button>
           </div>
           <div class="sentence-text" data-sentence-text="${idx}" style="display: none;">${highlightedText}</div>
+          <div class="sentence-input-container">
+            <textarea class="sentence-input" id="input-${sentenceId}" rows="2" placeholder="Type the sentence here..."></textarea>
+            <button class="sentence-check-btn" data-sentence="${idx}" type="button">Check</button>
+          </div>
           <div class="sentence-status" id="status-${sentenceId}"></div>
         </div>
       `;
     }).join("");
     
     // Show Show All / Hide All buttons
-    showAllSentencesBtn.style.display = "inline-block";
-    hideAllSentencesBtn.style.display = "inline-block";
+    showAllSentencesBtnType.style.display = "inline-block";
+    hideAllSentencesBtnType.style.display = "inline-block";
     
     // Store sentences data
-    window.generatedSentencesData = sentences;
+    window.generatedSentencesDataType = sentences;
     
     // Add event listeners for Show buttons
-    generatedSentences.querySelectorAll(".sentence-show-btn").forEach((btn) => {
+    generatedSentencesType.querySelectorAll(".sentence-show-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
         const idx = parseInt(btn.dataset.sentence, 10);
         const textEl = document.querySelector(`[data-sentence-text="${idx}"]`);
@@ -1200,29 +1297,119 @@
     });
     
     // Add event listeners for Play buttons
-    generatedSentences.querySelectorAll(".sentence-play-btn").forEach((btn) => {
+    generatedSentencesType.querySelectorAll(".sentence-play-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
         const idx = parseInt(btn.dataset.sentence, 10);
-        playGeneratedSentence(idx);
+        playGeneratedSentenceType(idx);
+      });
+    });
+    
+    // Add event listeners for Check buttons (Type mode)
+    generatedSentencesType.querySelectorAll(".sentence-check-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const idx = parseInt(btn.dataset.sentence, 10);
+        checkGeneratedSentenceType(idx);
+      });
+    });
+    
+    generatePanelType.style.display = "block";
+  };
+
+  // Speak mode: Generate sentences with Record button
+  const generateSentencesSpeak = () => {
+    if (lastDiffSpeak.length === 0) {
+      generatedSentencesSpeak.innerHTML = "<div class='error'>Please check your answer first to generate sentences.</div>";
+      return;
+    }
+    
+    const keywords = extractKeywords(lastDiffSpeak);
+    if (keywords.length === 0) {
+      generatedSentencesSpeak.innerHTML = "<div class='error'>No keywords found. All errors are stop words.</div>";
+      return;
+    }
+    
+    const sentences = [];
+    for (let i = 0; i < 5; i++) {
+      const sentence = generateSentence(keywords, i);
+      if (sentence) {
+        sentences.push(sentence);
+      }
+    }
+    
+    if (sentences.length === 0) {
+      generatedSentencesSpeak.innerHTML = "<div class='error'>Could not generate sentences.</div>";
+      return;
+    }
+    
+    // Render sentences (default hidden) with Record button for Speak mode
+    generatedSentencesSpeak.innerHTML = sentences.map((sentence, idx) => {
+      const sentenceId = `sentence-speak-${idx}`;
+      const highlightedText = highlightKeywords(sentence.text, sentence.keywords);
+      return `
+        <div class="generated-sentence" data-sentence-id="${sentenceId}">
+          <div class="sentence-header">
+            <span class="sentence-number">Sentence ${idx + 1}</span>
+            <button class="sentence-show-btn" data-sentence="${idx}" type="button">Show</button>
+            <button class="sentence-play-btn" data-sentence="${idx}" type="button">Play</button>
+            <button class="sentence-record-btn" data-sentence="${idx}" type="button">Record</button>
+          </div>
+          <div class="sentence-text" data-sentence-text="${idx}" style="display: none;">${highlightedText}</div>
+          <div class="sentence-status" id="status-${sentenceId}"></div>
+        </div>
+      `;
+    }).join("");
+    
+    // Show Show All / Hide All buttons
+    showAllSentencesBtnSpeak.style.display = "inline-block";
+    hideAllSentencesBtnSpeak.style.display = "inline-block";
+    
+    // Store sentences data
+    window.generatedSentencesDataSpeak = sentences;
+    
+    // Add event listeners for Show buttons
+    generatedSentencesSpeak.querySelectorAll(".sentence-show-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const idx = parseInt(btn.dataset.sentence, 10);
+        const textEl = document.querySelector(`[data-sentence-text="${idx}"]`);
+        
+        if (textEl.style.display === "none") {
+          textEl.style.display = "block";
+          btn.textContent = "Hide";
+          btn.classList.add("sentence-hide-btn");
+          btn.classList.remove("sentence-show-btn");
+        } else {
+          textEl.style.display = "none";
+          btn.textContent = "Show";
+          btn.classList.add("sentence-show-btn");
+          btn.classList.remove("sentence-hide-btn");
+        }
+      });
+    });
+    
+    // Add event listeners for Play buttons
+    generatedSentencesSpeak.querySelectorAll(".sentence-play-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const idx = parseInt(btn.dataset.sentence, 10);
+        playGeneratedSentenceSpeak(idx);
       });
     });
     
     // Add event listeners for Record buttons
-    generatedSentences.querySelectorAll(".sentence-record-btn").forEach((btn) => {
+    generatedSentencesSpeak.querySelectorAll(".sentence-record-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
         const idx = parseInt(btn.dataset.sentence, 10);
         recordGeneratedSentence(idx, btn);
       });
     });
     
-    generatePanel.style.display = "block";
+    generatePanelSpeak.style.display = "block";
   };
 
-  // Play a generated sentence
-  const playGeneratedSentence = (idx) => {
-    if (!window.generatedSentencesData || !window.generatedSentencesData[idx]) return;
+  // Play a generated sentence (Type mode)
+  const playGeneratedSentenceType = (idx) => {
+    if (!window.generatedSentencesDataType || !window.generatedSentencesDataType[idx]) return;
     
-    const sentence = window.generatedSentencesData[idx].text;
+    const sentence = window.generatedSentencesDataType[idx].text;
     if (synth) {
       synth.cancel();
       const utter = new SpeechSynthesisUtterance(sentence);
@@ -1235,6 +1422,65 @@
       utter.rate = 1.0;
       utter.pitch = 1.0;
       synth.speak(utter);
+    }
+  };
+
+  // Play a generated sentence (Speak mode)
+  const playGeneratedSentenceSpeak = (idx) => {
+    if (!window.generatedSentencesDataSpeak || !window.generatedSentencesDataSpeak[idx]) return;
+    
+    const sentence = window.generatedSentencesDataSpeak[idx].text;
+    if (synth) {
+      synth.cancel();
+      const utter = new SpeechSynthesisUtterance(sentence);
+      utter.lang = "en-US";
+      const voices = synth.getVoices();
+      const preferred = voices.find((v) =>
+        /female|samantha|allison|joanna|kimberly|ssml female|en-us/i.test(v.name)
+      );
+      if (preferred) utter.voice = preferred;
+      utter.rate = 1.0;
+      utter.pitch = 1.0;
+      synth.speak(utter);
+    }
+  };
+
+  // Check typed input for Type mode generated sentences
+  const checkGeneratedSentenceType = (idx) => {
+    if (!window.generatedSentencesDataType || !window.generatedSentencesDataType[idx]) return;
+    
+    const sentence = window.generatedSentencesDataType[idx];
+    const sentenceId = `sentence-type-${idx}`;
+    const inputEl = document.getElementById(`input-${sentenceId}`);
+    const statusEl = document.getElementById(`status-${sentenceId}`);
+    
+    if (!inputEl || !statusEl) return;
+    
+    const userInput = inputEl.value.trim();
+    if (!userInput) {
+      statusEl.textContent = "Please type your answer first.";
+      statusEl.className = "sentence-status error";
+      return;
+    }
+    
+    const userWords = normalize(userInput).split(" ").filter(Boolean);
+    const expectedWords = normalize(sentence.text).split(" ").filter(Boolean);
+    
+    // Check which keywords are missing
+    const missingKeywords = [];
+    sentence.keywords.forEach((keyword) => {
+      const found = userWords.some(word => normalize(word) === normalize(keyword));
+      if (!found) {
+        missingKeywords.push(keyword);
+      }
+    });
+    
+    if (missingKeywords.length === 0) {
+      statusEl.textContent = "✓ All keywords typed correctly!";
+      statusEl.className = "sentence-status correct";
+    } else {
+      statusEl.textContent = `You missed these words: ${missingKeywords.join(", ")}`;
+      statusEl.className = "sentence-status incorrect";
     }
   };
 
@@ -1315,12 +1561,13 @@
     }
   };
 
-  generateBtn.addEventListener("click", generateSentences);
+  // Type mode event listeners
+  generateBtnType.addEventListener("click", generateSentencesType);
   
-  // Show All sentences
-  showAllSentencesBtn.addEventListener("click", () => {
-    const sentenceTexts = generatedSentences.querySelectorAll(".sentence-text");
-    const showBtns = generatedSentences.querySelectorAll(".sentence-show-btn, .sentence-hide-btn");
+  // Show All sentences (Type mode)
+  showAllSentencesBtnType.addEventListener("click", () => {
+    const sentenceTexts = generatedSentencesType.querySelectorAll(".sentence-text");
+    const showBtns = generatedSentencesType.querySelectorAll(".sentence-show-btn, .sentence-hide-btn");
     
     sentenceTexts.forEach((textEl) => {
       textEl.style.display = "block";
@@ -1332,10 +1579,43 @@
     });
   });
   
-  // Hide All sentences
-  hideAllSentencesBtn.addEventListener("click", () => {
-    const sentenceTexts = generatedSentences.querySelectorAll(".sentence-text");
-    const showBtns = generatedSentences.querySelectorAll(".sentence-show-btn, .sentence-hide-btn");
+  // Hide All sentences (Type mode)
+  hideAllSentencesBtnType.addEventListener("click", () => {
+    const sentenceTexts = generatedSentencesType.querySelectorAll(".sentence-text");
+    const showBtns = generatedSentencesType.querySelectorAll(".sentence-show-btn, .sentence-hide-btn");
+    
+    sentenceTexts.forEach((textEl) => {
+      textEl.style.display = "none";
+    });
+    showBtns.forEach((btn) => {
+      btn.textContent = "Show";
+      btn.classList.add("sentence-show-btn");
+      btn.classList.remove("sentence-hide-btn");
+    });
+  });
+
+  // Speak mode event listeners
+  generateBtnSpeak.addEventListener("click", generateSentencesSpeak);
+  
+  // Show All sentences (Speak mode)
+  showAllSentencesBtnSpeak.addEventListener("click", () => {
+    const sentenceTexts = generatedSentencesSpeak.querySelectorAll(".sentence-text");
+    const showBtns = generatedSentencesSpeak.querySelectorAll(".sentence-show-btn, .sentence-hide-btn");
+    
+    sentenceTexts.forEach((textEl) => {
+      textEl.style.display = "block";
+    });
+    showBtns.forEach((btn) => {
+      btn.textContent = "Hide";
+      btn.classList.add("sentence-hide-btn");
+      btn.classList.remove("sentence-show-btn");
+    });
+  });
+  
+  // Hide All sentences (Speak mode)
+  hideAllSentencesBtnSpeak.addEventListener("click", () => {
+    const sentenceTexts = generatedSentencesSpeak.querySelectorAll(".sentence-text");
+    const showBtns = generatedSentencesSpeak.querySelectorAll(".sentence-show-btn, .sentence-hide-btn");
     
     sentenceTexts.forEach((textEl) => {
       textEl.style.display = "none";
@@ -1578,4 +1858,5 @@
     }
   });
 })();
+
 

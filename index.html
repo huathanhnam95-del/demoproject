@@ -41,7 +41,7 @@
       </div>
     </div>
 
-    <section class="animation-panel">
+    <section class="animation-panel" style="display: none;">
       <div class="animation-header">
         <span>How to fix (step-by-step)</span>
         <div class="animation-controls">
@@ -51,7 +51,7 @@
       </div>
       <div id="animation" class="animation"></div>
     </section>
-    <div id="result" aria-live="polite"></div>
+    <div id="result" aria-live="polite" style="display: none;"></div>
     <section id="pronunciation-practice" class="pronunciation-panel" style="display: none;">
       <div class="pronunciation-header">
         <span>Pronunciation practice</span>
@@ -70,19 +70,30 @@
     </section>
     <div class="legend" aria-hidden="true">
       <span class="legend-item"><span class="chip missing"></span>missed (red highlight)</span>
-      <span class="legend-item"><span class="chip extra"></span>extra (purple strikethrough)</span>
-      <span class="legend-item"><span class="chip misplaced"></span>misplaced (blue strikethrough)</span>
+      <span class="legend-item"><span class="chip extra"></span>extra (purple highlight)</span>
+      <span class="legend-item"><span class="chip misplaced"></span>misplaced (blue highlight)</span>
     </div>
-    <section id="generate-sentences" class="generate-panel">
+    <section id="generate-sentences-type" class="generate-panel" style="display: none;">
       <div class="generate-header">
         <span>Generate random sentence</span>
         <div class="generate-controls">
-          <button id="show-all-sentences-btn" type="button" style="display: none;">Show All</button>
-          <button id="hide-all-sentences-btn" type="button" style="display: none;">Hide All</button>
-          <button id="generate-btn" type="button">Generate</button>
+          <button id="show-all-sentences-type-btn" type="button" style="display: none;">Show All</button>
+          <button id="hide-all-sentences-type-btn" type="button" style="display: none;">Hide All</button>
+          <button id="generate-type-btn" type="button">Generate</button>
         </div>
       </div>
-      <div id="generated-sentences" class="generated-sentences"></div>
+      <div id="generated-sentences-type" class="generated-sentences"></div>
+    </section>
+    <section id="generate-sentences-speak" class="generate-panel" style="display: none;">
+      <div class="generate-header">
+        <span>Generate random sentence</span>
+        <div class="generate-controls">
+          <button id="show-all-sentences-speak-btn" type="button" style="display: none;">Show All</button>
+          <button id="hide-all-sentences-speak-btn" type="button" style="display: none;">Hide All</button>
+          <button id="generate-speak-btn" type="button">Generate</button>
+        </div>
+      </div>
+      <div id="generated-sentences-speak" class="generated-sentences"></div>
     </section>
   </main>
 

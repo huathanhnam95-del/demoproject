@@ -8,7 +8,7 @@
 </head>
 <body>
   <main class="container">
-    <h1>Write From Dictation Practice</h1>
+    <h1>Listening Practice</h1>
 
     <div class="tabs">
       <button id="tab-type" class="tab-btn active" type="button">Type</button>
@@ -75,16 +75,28 @@
       </div>
       <div id="animation" class="animation"></div>
     </section>
-    <div id="result" aria-live="polite" style="display: none;"></div>
+    <div id="result" aria-live="polite" style="display: none;">
+      <div class="legend" aria-hidden="true">
+        <span class="legend-item"><span class="chip missing"></span>missed (red highlight)</span>
+        <span class="legend-item"><span class="chip extra"></span>extra (purple highlight)</span>
+        <span class="legend-item"><span class="chip misplaced"></span>misplaced (blue highlight)</span>
+      </div>
+    </div>
     <section id="vocabulary-practice" class="vocabulary-panel" style="display: none;">
       <div class="vocabulary-header">
         <span>Vocabulary Practice</span>
+      </div>
+      <div class="vocabulary-subheader">
+        <span>These are the key content words that you missed, try producing them again</span>
       </div>
       <div id="vocabulary-words" class="vocabulary-words"></div>
     </section>
     <section id="pronunciation-practice" class="pronunciation-panel" style="display: none;">
       <div class="pronunciation-header">
         <span>Pronunciation practice</span>
+      </div>
+      <div class="pronunciation-subheader">
+        <span>These are the key content words that you missed, try producing them again</span>
       </div>
       <div id="pronunciation-words" class="pronunciation-words"></div>
     </section>
@@ -94,24 +106,25 @@
       </div>
       <div class="breakdown-options">
         <button id="breakdown-beginning" class="breakdown-option-btn active" type="button">From The Beginning</button>
-        <button id="breakdown-end" class="breakdown-option-btn" type="button">From the End</button>
+        <button id="breakdown-end" class="breakdown-option-btn" type="button">From The End</button>
       </div>
       <div id="breakdown-lines" class="breakdown-lines"></div>
     </section>
-    <div class="legend" aria-hidden="true">
-      <span class="legend-item"><span class="chip missing"></span>missed (red highlight)</span>
-      <span class="legend-item"><span class="chip extra"></span>extra (purple highlight)</span>
-      <span class="legend-item"><span class="chip misplaced"></span>misplaced (blue highlight)</span>
-    </div>
     <section id="same-vocab-type" class="same-vocab-panel" style="display: none;">
       <div class="same-vocab-header">
         <span>Other questions with the same vocabulary</span>
+      </div>
+      <div class="same-vocab-subheader">
+        <span>Focus on the words that you missed from this question</span>
       </div>
       <div id="same-vocab-sentences-type" class="same-vocab-sentences"></div>
     </section>
     <section id="same-vocab-speak" class="same-vocab-panel" style="display: none;">
       <div class="same-vocab-header">
         <span>Other questions with the same vocabulary</span>
+      </div>
+      <div class="same-vocab-subheader">
+        <span>Focus on the words that you missed from this question</span>
       </div>
       <div id="same-vocab-sentences-speak" class="same-vocab-sentences"></div>
     </section>

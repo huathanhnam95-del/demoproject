@@ -4,7 +4,8 @@
   let speakDatabase = [];
   let currentTypeQuestionId = 1;
   let currentSpeakQuestionId = 1;
-  let correctSentence = ""; // Will be loaded from database
+  let correctSentenceType = ""; // Will be loaded from database for Type mode
+  let correctSentenceSpeak = ""; // Will be loaded from database for Speak mode
 
   const audio = document.getElementById("audio");
   const questionSelectType = document.getElementById("question-select-type");
@@ -70,6 +71,8 @@
   let transcription = "";
   let wordRecognition = null; // For individual word pronunciation practice
   let currentWordIndex = -1; // Track which word is being practiced
+  let sameVocabRecognitions = {}; // Store recognition instances for same vocab items (Speak mode)
+  let sameVocabTranscriptions = {}; // Store transcriptions for each same vocab item (Speak mode)
 
   if (SpeechRecognition) {
     recognition = new SpeechRecognition();
@@ -191,7 +194,12 @@
       .replace(/\s+/g, " ");
 
   // correctWordCount will be calculated dynamically based on current correctSentence
-  const getCorrectWordCount = () => {
+  const getCorrectWordCount = (mode = null) => {
+    // Determine mode from active tab if not provided
+    if (!mode) {
+      mode = document.getElementById("tab-type").classList.contains("active") ? "type" : "speak";
+    }
+    const correctSentence = mode === "type" ? correctSentenceType : correctSentenceSpeak;
     if (!correctSentence) return 0;
     return normalize(correctSentence).split(" ").filter(Boolean).length;
   };
@@ -272,11 +280,11 @@
       .map((part) => {
         if (part.type === "match") return part.text;
         if (part.type === "missing")
-          return `<span class="highlight-miss missing">${part.text}</span>`;
+          return `<span class="word missing">${part.text}</span>`;
         if (part.type === "extra")
-          return `<span class="extra-word">${part.text}</span>`;
+          return `<span class="word extra">${part.text}</span>`;
         if (part.type === "misplaced")
-          return `<span class="misplaced-word">${part.text}</span>`;
+          return `<span class="word misplaced">${part.text}</span>`;
         return part.text;
       })
       .join(" ");
@@ -429,7 +437,12 @@
     animationTimer = setTimeout(continueAnimation, STEP_INTERVAL_MS);
   };
 
-  const buildAnimationSteps = (userText) => {
+  const buildAnimationSteps = (userText, mode = null) => {
+    // Determine mode from active tab if not provided
+    if (!mode) {
+      mode = document.getElementById("tab-type").classList.contains("active") ? "type" : "speak";
+    }
+    const correctSentence = mode === "type" ? correctSentenceType : correctSentenceSpeak;
     const userWords = normalize(userText).split(" ").filter(Boolean);
     const correctWordsLocal = normalize(correctSentence).split(" ").filter(Boolean);
     const diff = diffWords(userText, correctSentence);
@@ -522,6 +535,11 @@
     generatePanelType.style.display = "none";
     vocabularyPanel.style.display = "none";
     
+    // Reload the correct audio for Type mode
+    if (typeDatabase.length > 0 && currentTypeQuestionId) {
+      loadQuestion("type", currentTypeQuestionId);
+    }
+    
     if (isRecording && recognition) {
       recognition.stop();
       isRecording = false;
@@ -552,6 +570,11 @@
     result.style.display = "none";
     generatePanelSpeak.style.display = "none";
     
+    // Reload the correct audio for Speak mode
+    if (speakDatabase.length > 0 && currentSpeakQuestionId) {
+      loadQuestion("speak", currentSpeakQuestionId);
+    }
+    
     // Microphone access will be requested when user clicks "Start Recording"
   });
 
@@ -572,25 +595,109 @@
   let vocabularyPracticeWordsSpeak = [];
 
   // Find sentences from database containing a specific word
-  const findSentencesWithWord = (word, mode, excludeQuestionId) => {
+  const findSentencesWithWord = (word, mode, excludeQuestionId, excludeQuestionIds = []) => {
     const database = mode === "type" ? typeDatabase : speakDatabase;
     const lowerWord = word.toLowerCase().trim();
     const wordRegex = new RegExp(`\\b${lowerWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
     
+    // Combine all excluded IDs
+    const allExcluded = [excludeQuestionId, ...excludeQuestionIds].filter(id => id !== undefined && id !== null);
+    
     const matches = [];
     for (const item of database) {
-      // Skip the current question
-      if (item.id === excludeQuestionId) continue;
+      // Skip excluded questions
+      if (allExcluded.includes(item.id)) continue;
       
       // Check if the sentence contains the word (case-insensitive, whole word match)
       if (wordRegex.test(item.correctSentence)) {
         matches.push(item);
-        // Limit to 1 match per word to avoid too many results
-        if (matches.length >= 1) break;
       }
     }
     
     return matches;
+  };
+  
+  // Function to pick another sentence with the same word
+  const pickAnotherSentence = (sentenceId, targetWord, mode) => {
+    const itemEl = document.querySelector(`.same-vocab-item [data-sentence-id="${sentenceId}"]`)?.closest('.same-vocab-item');
+    if (!itemEl) return;
+    
+    const currentQuestionId = parseInt(itemEl.dataset.questionId, 10);
+    const currentQuestionIds = [currentQuestionId];
+    
+    // Get all previously used question IDs for this word (stored in data attribute)
+    const usedIdsStr = itemEl.dataset.usedQuestionIds || '';
+    if (usedIdsStr) {
+      const usedIds = usedIdsStr.split(',').map(id => parseInt(id, 10)).filter(id => !isNaN(id));
+      currentQuestionIds.push(...usedIds);
+    }
+    
+    // Find another sentence with the same word, excluding all used ones
+    const currentMainQuestionId = mode === "type" ? currentTypeQuestionId : currentSpeakQuestionId;
+    const matches = findSentencesWithWord(targetWord, mode, currentMainQuestionId, currentQuestionIds);
+    
+    if (matches.length === 0) {
+      alert("No more sentences found with this word.");
+      return;
+    }
+    
+    // Pick a random match
+    const newMatch = matches[Math.floor(Math.random() * matches.length)];
+    
+    // Update the item's question ID
+    itemEl.dataset.questionId = newMatch.id;
+    
+    // Add current question ID to used list
+    const updatedUsedIds = [...currentQuestionIds, newMatch.id].join(',');
+    itemEl.dataset.usedQuestionIds = updatedUsedIds;
+    
+    // Update sentence display
+    const sentenceEl = document.getElementById(`sentence-${sentenceId}`);
+    if (sentenceEl) {
+      sentenceEl.textContent = newMatch.correctSentence;
+    }
+    
+    // Update Check button data attributes
+    const checkBtn = document.querySelector(`.same-vocab-check-btn[data-sentence-id="${sentenceId}"]`);
+    if (checkBtn) {
+      checkBtn.dataset.correct = newMatch.correctSentence;
+      checkBtn.dataset.questionId = newMatch.id;
+    }
+    
+    // Update Play button data attributes
+    const playBtn = document.querySelector(`.same-vocab-play-btn[data-sentence-id="${sentenceId}"]`);
+    if (playBtn) {
+      playBtn.dataset.questionId = newMatch.id;
+    }
+    
+    // Reset input/transcription
+    if (mode === "type") {
+      const inputEl = document.getElementById(`input-${sentenceId}`);
+      if (inputEl) inputEl.value = "";
+    } else {
+      const transcriptionEl = document.getElementById(`transcription-${sentenceId}`);
+      if (transcriptionEl) {
+        transcriptionEl.textContent = "Click \"Start Recording\" and speak...";
+        transcriptionEl.classList.add("empty");
+      }
+      sameVocabTranscriptions[sentenceId] = "";
+    }
+    
+    // Reset status
+    const statusEl = document.getElementById(`status-${sentenceId}`);
+    if (statusEl) {
+      statusEl.textContent = "";
+      statusEl.className = "";
+    }
+    
+    // Hide "Pick another" button again
+    const pickAnotherBtn = document.querySelector(`.same-vocab-pick-another-btn[data-sentence-id="${sentenceId}"]`);
+    if (pickAnotherBtn) pickAnotherBtn.style.display = "none";
+    
+    // Hide word label and sentence again
+    const wordLabelEl = document.getElementById(`word-label-${sentenceId}`);
+    if (wordLabelEl) wordLabelEl.style.display = "none";
+    if (sentenceEl) sentenceEl.style.display = "none";
   };
 
   // Render "Other questions with the same vocabulary" box for Type mode
@@ -613,12 +720,13 @@
         
         sentencesHTML.push(`
           <div class="same-vocab-item" data-vocab-word="${targetWord}" data-question-id="${match.id}">
-            <div class="same-vocab-word-label">Word: <strong>${word}</strong></div>
-            <div class="same-vocab-sentence">${match.correctSentence}</div>
+            <div class="same-vocab-word-label" id="word-label-${sentenceId}" style="display: none;">Word to focus on: <strong>${word}</strong></div>
+            <div class="same-vocab-sentence" id="sentence-${sentenceId}" style="display: none;">${match.correctSentence}</div>
             <div class="same-vocab-controls">
               <button class="same-vocab-play-btn" data-sentence-id="${sentenceId}" data-question-id="${match.id}" data-mode="type" type="button">Play</button>
               <input type="text" class="same-vocab-input" id="input-${sentenceId}" placeholder="Type your answer here..." />
-              <button class="same-vocab-check-btn" data-sentence-id="${sentenceId}" data-word="${targetWord}" data-correct="${match.correctSentence}" type="button">Check</button>
+              <button class="same-vocab-check-btn" data-sentence-id="${sentenceId}" data-word="${targetWord}" data-correct="${match.correctSentence}" data-question-id="${match.id}" data-mode="type" type="button">Check</button>
+              <button class="same-vocab-pick-another-btn" data-sentence-id="${sentenceId}" data-word="${targetWord}" data-mode="type" type="button" style="display: none;">Pick another</button>
             </div>
             <div class="same-vocab-status" id="status-${sentenceId}"></div>
           </div>
@@ -652,6 +760,16 @@
         checkSameVocabAnswer(sentenceId, targetWord, correctSentence);
       });
     });
+    
+    // Add event listeners for "Pick another" buttons
+    sameVocabSentencesType.querySelectorAll(".same-vocab-pick-another-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const sentenceId = btn.dataset.sentenceId;
+        const targetWord = btn.dataset.word;
+        const mode = btn.dataset.mode;
+        pickAnotherSentence(sentenceId, targetWord, mode);
+      });
+    });
   };
 
   // Render "Other questions with the same vocabulary" box for Speak mode
@@ -674,13 +792,15 @@
         
         sentencesHTML.push(`
           <div class="same-vocab-item" data-vocab-word="${targetWord}" data-question-id="${match.id}">
-            <div class="same-vocab-word-label">Word: <strong>${word}</strong></div>
-            <div class="same-vocab-sentence">${match.correctSentence}</div>
+            <div class="same-vocab-word-label" id="word-label-${sentenceId}" style="display: none;">Word to focus on: <strong>${word}</strong></div>
+            <div class="same-vocab-sentence" id="sentence-${sentenceId}" style="display: none;">${match.correctSentence}</div>
             <div class="same-vocab-controls">
               <button class="same-vocab-play-btn" data-sentence-id="${sentenceId}" data-question-id="${match.id}" data-mode="speak" type="button">Play</button>
-              <input type="text" class="same-vocab-input" id="input-${sentenceId}" placeholder="Type your answer here..." />
-              <button class="same-vocab-check-btn" data-sentence-id="${sentenceId}" data-word="${targetWord}" data-correct="${match.correctSentence}" type="button">Check</button>
+              <button class="same-vocab-record-btn" data-sentence-id="${sentenceId}" type="button">Start Recording</button>
+              <button class="same-vocab-check-btn" data-sentence-id="${sentenceId}" data-word="${targetWord}" data-correct="${match.correctSentence}" data-question-id="${match.id}" data-mode="speak" type="button">Check</button>
+              <button class="same-vocab-pick-another-btn" data-sentence-id="${sentenceId}" data-word="${targetWord}" data-mode="speak" type="button" style="display: none;">Pick another</button>
             </div>
+            <div class="same-vocab-transcription" id="transcription-${sentenceId}">Click "Start Recording" and speak...</div>
             <div class="same-vocab-status" id="status-${sentenceId}"></div>
           </div>
         `);
@@ -704,42 +824,333 @@
       });
     });
     
+    // Add event listeners for Record buttons
+    sameVocabSentencesSpeak.querySelectorAll(".same-vocab-record-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const sentenceId = btn.dataset.sentenceId;
+        startSameVocabRecording(sentenceId, btn);
+      });
+    });
+    
     // Add event listeners for Check buttons
     sameVocabSentencesSpeak.querySelectorAll(".same-vocab-check-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
         const sentenceId = btn.dataset.sentenceId;
         const targetWord = btn.dataset.word;
         const correctSentence = btn.dataset.correct;
-        checkSameVocabAnswer(sentenceId, targetWord, correctSentence);
+        checkSameVocabAnswerSpeak(sentenceId, targetWord, correctSentence);
+      });
+    });
+    
+    // Add event listeners for "Pick another" buttons
+    sameVocabSentencesSpeak.querySelectorAll(".same-vocab-pick-another-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const sentenceId = btn.dataset.sentenceId;
+        const targetWord = btn.dataset.word;
+        const mode = btn.dataset.mode;
+        pickAnotherSentence(sentenceId, targetWord, mode);
       });
     });
   };
 
+  // Helper function to check if a file exists
+  const checkFileExists = async (url) => {
+    try {
+      const response = await fetch(url, { method: 'HEAD' });
+      return response.ok;
+    } catch (e) {
+      return false;
+    }
+  };
+
   // Play audio for same vocabulary question
-  const playSameVocabAudio = (questionId, mode, btn) => {
+  const playSameVocabAudio = async (questionId, mode, btn) => {
+    console.log(`playSameVocabAudio called: questionId=${questionId}, mode=${mode}`);
+    
     const database = mode === "type" ? typeDatabase : speakDatabase;
     const question = database.find(item => item.id === questionId);
     
     if (!question) {
       console.error(`Question ${questionId} not found in ${mode} database`);
+      console.log(`Database length: ${database.length}`);
+      console.log(`First 10 IDs in ${mode} database:`, database.slice(0, 10).map(q => q.id));
+      alert(`Question ${questionId} not found in ${mode} database`);
       return;
     }
     
-    const audioPath = `database/${mode}/audio/${question.audioFile}`;
+    // Determine MIME type based on file extension
+    const getAudioMimeType = (filename) => {
+      const ext = filename.toLowerCase().split('.').pop();
+      const mimeTypes = {
+        'mp3': 'audio/mpeg',
+        'wav': 'audio/wav',
+        'm4a': 'audio/mp4',
+        'aac': 'audio/aac',
+        'ogg': 'audio/ogg',
+        'oga': 'audio/ogg'
+      };
+      return mimeTypes[ext] || 'audio/mpeg';
+    };
+    
+    // Get the base filename (without extension)
+    const baseFilename = question.audioFile 
+      ? question.audioFile.replace(/\.[^.]+$/, '') 
+      : questionId.toString();
+    
+    // Try extensions in order
+    const tryExtensions = ['m4a', 'wav', 'mp3', 'aac', 'ogg'];
+    
+    // Find starting index - try database extension first
+    let startIndex = 0;
+    if (question.audioFile) {
+      const currentExt = question.audioFile.toLowerCase().split('.').pop();
+      const extIndex = tryExtensions.indexOf(currentExt);
+      if (extIndex !== -1) {
+        startIndex = extIndex;
+      }
+    }
+    
+    // Try to find the file by checking each extension
+    let foundFile = null;
+    let foundIndex = startIndex;
+    
+    // Check starting from database extension, then wrap around
+    for (let i = 0; i < tryExtensions.length; i++) {
+      const checkIndex = (startIndex + i) % tryExtensions.length;
+      const ext = tryExtensions[checkIndex];
+      const testFile = `${baseFilename}.${ext}`;
+      const testPath = `database/${mode}/audio/${testFile}`;
+      
+      console.log(`Checking if file exists: ${testFile}`);
+      const exists = await checkFileExists(testPath);
+      
+      if (exists) {
+        foundFile = testFile;
+        foundIndex = checkIndex;
+        console.log(`Found file: ${foundFile}`);
+        break;
+      }
+    }
+    
+    if (!foundFile) {
+      console.warn(`No audio file found for question ${questionId}. Tried all extensions.`);
+      return;
+    }
+    
+    const audioPath = `database/${mode}/audio/${foundFile}?t=${Date.now()}`;
+    const mimeType = getAudioMimeType(foundFile);
+    
+    console.log(`Playing audio: ${audioPath} (MIME type: ${mimeType})`);
+    
     const audio = document.getElementById("audio");
     
-    audio.src = audioPath;
+    if (!audio) {
+      console.error("Audio element not found");
+      return;
+    }
+    
+    // Stop any currently playing audio and reset
+    audio.pause();
+    audio.currentTime = 0;
+    
+    // Clear any existing source elements
+    while (audio.firstChild) {
+      audio.removeChild(audio.firstChild);
+    }
+    
+    // Create source element with proper type
+    const source = document.createElement('source');
+    source.src = audioPath;
+    source.type = mimeType;
+    audio.appendChild(source);
+    
+    // Load and play
+    audio.load();
     audio.play().catch(err => {
       console.error("Error playing audio:", err);
     });
+  };
+
+  // Start recording for same vocabulary question (Speak mode)
+  const startSameVocabRecording = (sentenceId, btn) => {
+    console.log("startSameVocabRecording called:", { sentenceId, btnText: btn.textContent });
+    
+    if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in your browser.");
+      return;
+    }
+    
+    const transcriptionEl = document.getElementById(`transcription-${sentenceId}`);
+    if (!transcriptionEl) {
+      console.error(`Transcription element not found: transcription-${sentenceId}`);
+      return;
+    }
+    
+    // Stop main recognition if it's running to avoid conflicts
+    if (recognition && isRecording) {
+      try {
+        recognition.stop();
+        isRecording = false;
+        if (recordBtn) {
+          recordBtn.textContent = "Start Recording";
+          recordBtn.classList.remove("recording");
+        }
+      } catch (e) {
+        console.log("Error stopping main recognition:", e);
+      }
+    }
+    
+    // Stop any existing recognition for this item
+    if (sameVocabRecognitions[sentenceId]) {
+      try {
+        sameVocabRecognitions[sentenceId].stop();
+        delete sameVocabRecognitions[sentenceId];
+      } catch (e) {
+        console.log("Error stopping existing recognition:", e);
+      }
+    }
+    
+    // Initialize transcription if not exists
+    if (!sameVocabTranscriptions[sentenceId]) {
+      sameVocabTranscriptions[sentenceId] = "";
+    }
+    
+    if (btn.textContent === "Start Recording") {
+      // Clear previous transcription when starting a new recording
+      sameVocabTranscriptions[sentenceId] = "";
+      transcriptionEl.textContent = "Listening...";
+      transcriptionEl.classList.remove("empty");
+      transcriptionEl.style.borderColor = ""; // Clear any previous border color
+      
+      // Clear any previous status messages
+      const statusEl = document.getElementById(`status-${sentenceId}`);
+      if (statusEl) {
+        statusEl.textContent = "";
+        statusEl.className = "";
+      }
+      
+      // Create new recognition instance for this item
+      const itemRecognition = new SpeechRecognition();
+      itemRecognition.continuous = true;
+      itemRecognition.interimResults = true;
+      itemRecognition.lang = "en-US";
+      
+      // Start recording
+      btn.textContent = "Stop Recording";
+      btn.classList.add("recording");
+      
+      itemRecognition.onstart = () => {
+        console.log(`Recognition started for ${sentenceId}`);
+        transcriptionEl.textContent = "Listening...";
+      };
+      
+      itemRecognition.onresult = (event) => {
+        let interimText = "";
+        let finalText = "";
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalText += transcript + " ";
+          } else {
+            interimText += transcript;
+          }
+        }
+        
+        // Accumulate final transcript
+        if (finalText) {
+          sameVocabTranscriptions[sentenceId] += finalText;
+        }
+        
+        // Display: accumulated final transcript + current interim text
+        const displayText = sameVocabTranscriptions[sentenceId] + (interimText ? " " + interimText : "");
+        transcriptionEl.textContent = displayText || "Listening...";
+        transcriptionEl.classList.remove("empty");
+      };
+      
+      itemRecognition.onerror = (event) => {
+        console.error(`Recognition error for ${sentenceId}:`, event.error);
+        if (event.error === "no-speech") {
+          transcriptionEl.textContent = "No speech detected. Try again.";
+        } else if (event.error === "aborted") {
+          // Ignore aborted errors - they happen when we stop manually
+          return;
+        } else {
+          transcriptionEl.textContent = `Error: ${event.error}`;
+          btn.textContent = "Start Recording";
+          btn.classList.remove("recording");
+        }
+      };
+      
+      itemRecognition.onend = () => {
+        console.log(`Recognition ended for ${sentenceId}`);
+        // Auto-restart if still in recording state
+        if (btn.textContent === "Stop Recording") {
+          try {
+            console.log(`Auto-restarting recognition for ${sentenceId}`);
+            itemRecognition.start();
+          } catch (e) {
+            console.error("Failed to auto-restart recognition:", e);
+            // Recognition might have been stopped manually
+            btn.textContent = "Start Recording";
+            btn.classList.remove("recording");
+            if (!sameVocabTranscriptions[sentenceId] || sameVocabTranscriptions[sentenceId].trim() === "") {
+              transcriptionEl.textContent = "Click 'Start Recording' and speak...";
+              transcriptionEl.classList.add("empty");
+            }
+          }
+        }
+      };
+      
+      sameVocabRecognitions[sentenceId] = itemRecognition;
+      
+      try {
+        console.log(`Starting recognition for ${sentenceId}`);
+        itemRecognition.start();
+      } catch (e) {
+        console.error("Failed to start recognition:", e);
+        btn.textContent = "Start Recording";
+        btn.classList.remove("recording");
+        transcriptionEl.textContent = `Error: ${e.message}. Click 'Start Recording' and speak...`;
+        transcriptionEl.classList.add("empty");
+        delete sameVocabRecognitions[sentenceId];
+      }
+    } else {
+      // Stop recording
+      const itemRecognition = sameVocabRecognitions[sentenceId];
+      if (itemRecognition) {
+        try {
+          itemRecognition.stop();
+        } catch (e) {
+          console.log("Error stopping recognition:", e);
+        }
+        delete sameVocabRecognitions[sentenceId];
+      }
+      btn.textContent = "Start Recording";
+      btn.classList.remove("recording");
+      if (!sameVocabTranscriptions[sentenceId] || sameVocabTranscriptions[sentenceId].trim() === "") {
+        transcriptionEl.textContent = "Click 'Start Recording' and speak...";
+        transcriptionEl.classList.add("empty");
+      }
+    }
   };
 
   // Check answer for same vocabulary question (only assess the specific word)
   const checkSameVocabAnswer = (sentenceId, targetWord, correctSentence) => {
     const inputEl = document.getElementById(`input-${sentenceId}`);
     const statusEl = document.getElementById(`status-${sentenceId}`);
+    const wordLabelEl = document.getElementById(`word-label-${sentenceId}`);
+    const sentenceEl = document.getElementById(`sentence-${sentenceId}`);
+    const pickAnotherBtn = document.querySelector(`.same-vocab-pick-another-btn[data-sentence-id="${sentenceId}"]`);
     
     if (!inputEl || !statusEl) return;
+    
+    // Show the word label and sentence when Check is pressed
+    if (wordLabelEl) wordLabelEl.style.display = "block";
+    if (sentenceEl) sentenceEl.style.display = "block";
+    
+    // Show "Pick another" button
+    if (pickAnotherBtn) pickAnotherBtn.style.display = "inline-block";
     
     const userAnswer = inputEl.value.trim().toLowerCase();
     const correctSentenceLower = correctSentence.toLowerCase();
@@ -768,6 +1179,72 @@
       statusEl.textContent = `Incorrect. The word "${correctWord}" is missing.`;
       statusEl.className = "same-vocab-status incorrect";
       inputEl.style.borderColor = "#dc2626";
+    }
+  };
+
+  // Check answer for same vocabulary question (Speak mode - uses speech transcription)
+  const checkSameVocabAnswerSpeak = (sentenceId, targetWord, correctSentence) => {
+    const statusEl = document.getElementById(`status-${sentenceId}`);
+    const wordLabelEl = document.getElementById(`word-label-${sentenceId}`);
+    const sentenceEl = document.getElementById(`sentence-${sentenceId}`);
+    const transcriptionEl = document.getElementById(`transcription-${sentenceId}`);
+    const recordBtn = document.querySelector(`[data-sentence-id="${sentenceId}"].same-vocab-record-btn`);
+    const pickAnotherBtn = document.querySelector(`.same-vocab-pick-another-btn[data-sentence-id="${sentenceId}"]`);
+    
+    if (!statusEl || !transcriptionEl) return;
+    
+    // Stop recording if active
+    if (recordBtn && recordBtn.textContent === "Stop Recording") {
+      if (sameVocabRecognitions[sentenceId]) {
+        try {
+          sameVocabRecognitions[sentenceId].stop();
+        } catch (e) {
+          // Ignore errors
+        }
+      }
+      recordBtn.textContent = "Start Recording";
+      recordBtn.classList.remove("recording");
+    }
+    
+    // Show the word label and sentence when Check is pressed
+    if (wordLabelEl) wordLabelEl.style.display = "block";
+    if (sentenceEl) sentenceEl.style.display = "block";
+    
+    // Show "Pick another" button
+    if (pickAnotherBtn) pickAnotherBtn.style.display = "inline-block";
+    
+    const userAnswer = (sameVocabTranscriptions[sentenceId] || "").trim().toLowerCase();
+    
+    if (!userAnswer) {
+      statusEl.textContent = "Please record your answer first.";
+      statusEl.className = "same-vocab-status error";
+      return;
+    }
+    
+    // Extract the target word from the correct sentence (case-insensitive, whole word match)
+    const wordRegex = new RegExp(`\\b${targetWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+    const correctWordMatch = correctSentence.match(wordRegex);
+    
+    if (!correctWordMatch) {
+      statusEl.textContent = "Error: Target word not found in correct sentence.";
+      statusEl.className = "same-vocab-status error";
+      return;
+    }
+    
+    const correctWord = correctWordMatch[0].toLowerCase();
+    
+    // Check if user's answer contains the target word (case-insensitive, whole word match)
+    const userAnswerRegex = new RegExp(`\\b${targetWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+    const userHasWord = userAnswerRegex.test(userAnswer);
+    
+    if (userHasWord) {
+      statusEl.textContent = "Correct!";
+      statusEl.className = "same-vocab-status correct";
+      transcriptionEl.style.borderColor = "#16a34a";
+    } else {
+      statusEl.textContent = `Incorrect. The word "${correctWord}" is missing.`;
+      statusEl.className = "same-vocab-status incorrect";
+      transcriptionEl.style.borderColor = "#dc2626";
     }
   };
 
@@ -801,7 +1278,7 @@
       <div class="vocabulary-item" data-word-index="${idx}">
         <span class="vocabulary-word" id="vocab-word-${idx}">${word}</span>
         <button class="vocabulary-play-btn" data-word="${word}" data-index="${idx}" type="button">Play</button>
-        <input type="text" class="vocabulary-input" id="vocab-input-${idx}" placeholder="Type the word..." />
+        <input type="text" class="vocabulary-input" id="vocab-input-${idx}" placeholder="Press Play to listen to the word before typing" disabled />
         <button class="vocabulary-check-btn" data-word="${word}" data-index="${idx}" type="button">Check</button>
         <span class="vocabulary-status" id="vocab-status-${idx}"></span>
       </div>
@@ -851,10 +1328,12 @@
     utter.pitch = 1.0;
     synth.speak(utter);
     
-    // Clear input and status
+    // Enable input and clear status
     const inputEl = document.getElementById(`vocab-input-${index}`);
     const statusEl = document.getElementById(`vocab-status-${index}`);
     if (inputEl) {
+      inputEl.disabled = false;
+      inputEl.placeholder = "Type the word...";
       inputEl.value = "";
       inputEl.focus();
     }
@@ -880,6 +1359,10 @@
       statusEl.className = "vocabulary-status error";
       return;
     }
+    
+    // Disable input after check
+    inputEl.disabled = true;
+    inputEl.placeholder = "Press Play to listen to the word before typing";
     
     // Normalize for comparison
     const normalizedUser = normalize(userInput);
@@ -1042,7 +1525,7 @@
 
   // Type mode check function
   const performCheckType = (userAnswer, scoreElement) => {
-    const diff = diffWords(userAnswer, correctSentence);
+    const diff = diffWords(userAnswer, correctSentenceType);
     const hasErrors = diff.some((p) => p.type !== "match");
     const scoreValue = diff.filter((p) => p.type === "match").length;
 
@@ -1077,7 +1560,7 @@
     animationPanel.style.display = "block";
     result.style.display = "block";
     
-    lastSteps = buildAnimationSteps(userAnswer);
+    lastSteps = buildAnimationSteps(userAnswer, "type");
     if (!lastSteps || lastSteps.length === 0) {
       result.innerHTML = `<div class="errors">Error: Could not generate animation steps.</div>`;
       return;
@@ -1088,13 +1571,13 @@
     lastAnimationMode = false; // Type mode
     playAnimation(lastSteps, () => {
       const feedback = hasErrors
-        ? `<div class="errors">Keep practicing! Differences highlighted below:</div><div>${renderDiff(diff)}</div>`
+        ? `<div class="errors">Keep practicing! Differences highlighted below:</div><div class="result-text">${renderDiff(diff)}</div>`
         : `<div class="ok">Great job! Perfect match.</div>`;
 
-      result.innerHTML = `${feedback}<div class="correct-sentence">Correct sentence: ${correctSentence}</div>`;
+      result.innerHTML = `${feedback}<div class="correct-sentence">Correct sentence: ${correctSentenceType}</div>`;
 
       // Replay original audio if there are errors (points not max)
-      if (hasErrors && scoreValue < getCorrectWordCount()) {
+      if (hasErrors && scoreValue < getCorrectWordCount("type")) {
         audio.currentTime = 0;
         audio.play();
       }
@@ -1103,7 +1586,7 @@
 
   // Speak mode check function
   const performCheckSpeak = (userAnswer, scoreElement) => {
-    const diff = diffWords(userAnswer, correctSentence);
+    const diff = diffWords(userAnswer, correctSentenceSpeak);
     const hasErrors = diff.some((p) => p.type !== "match");
     const scoreValue = diff.filter((p) => p.type === "match").length;
 
@@ -1136,7 +1619,7 @@
     animationPanel.style.display = "block";
     result.style.display = "block";
     
-    lastSteps = buildAnimationSteps(userAnswer);
+    lastSteps = buildAnimationSteps(userAnswer, "speak");
     if (!lastSteps || lastSteps.length === 0) {
       result.innerHTML = `<div class="errors">Error: Could not generate animation steps.</div>`;
       return;
@@ -1147,13 +1630,13 @@
     lastAnimationMode = true; // Speak mode
     playAnimation(lastSteps, () => {
       const feedback = hasErrors
-        ? `<div class="errors">Keep practicing! Differences highlighted below:</div><div>${renderDiff(diff)}</div>`
+        ? `<div class="errors">Keep practicing! Differences highlighted below:</div><div class="result-text">${renderDiff(diff)}</div>`
         : `<div class="ok">Great job! Perfect match.</div>`;
 
-      result.innerHTML = `${feedback}<div class="correct-sentence">Correct sentence: ${correctSentence}</div>`;
+      result.innerHTML = `${feedback}<div class="correct-sentence">Correct sentence: ${correctSentenceSpeak}</div>`;
 
       // Replay original audio if there are errors (points not max)
-      if (hasErrors && scoreValue < getCorrectWordCount()) {
+      if (hasErrors && scoreValue < getCorrectWordCount("speak")) {
         audio.currentTime = 0;
         audio.play();
       }
@@ -1184,7 +1667,7 @@
     }
   };
 
-  const loadQuestion = (mode, questionId) => {
+  const loadQuestion = async (mode, questionId) => {
     const database = mode === "type" ? typeDatabase : speakDatabase;
     const question = database.find(item => item.id === questionId);
     
@@ -1193,12 +1676,84 @@
       return false;
     }
 
-    // Update correct sentence
-    correctSentence = question.correctSentence;
+    // Update correct sentence based on mode
+    if (mode === "type") {
+      correctSentenceType = question.correctSentence;
+    } else {
+      correctSentenceSpeak = question.correctSentence;
+    }
     
-    // Update audio source
-    const audioPath = `database/${mode}/audio/${question.audioFile}`;
-    audio.src = audioPath;
+    // Determine MIME type based on file extension
+    const getAudioMimeType = (filename) => {
+      const ext = filename.toLowerCase().split('.').pop();
+      const mimeTypes = {
+        'mp3': 'audio/mpeg',
+        'wav': 'audio/wav',
+        'm4a': 'audio/mp4',
+        'aac': 'audio/aac',
+        'ogg': 'audio/ogg',
+        'oga': 'audio/ogg'
+      };
+      return mimeTypes[ext] || 'audio/mpeg';
+    };
+    
+    // Get base filename (without extension)
+    const baseFilename = question.audioFile 
+      ? question.audioFile.replace(/\.[^.]+$/, '') 
+      : questionId.toString();
+    
+    // Try extensions in order
+    const tryExtensions = ['m4a', 'wav', 'mp3', 'aac', 'ogg'];
+    
+    // Find starting index - try database extension first
+    let startIndex = 0;
+    if (question.audioFile) {
+      const currentExt = question.audioFile.toLowerCase().split('.').pop();
+      const extIndex = tryExtensions.indexOf(currentExt);
+      if (extIndex !== -1) {
+        startIndex = extIndex;
+      }
+    }
+    
+    // Try to find the file by checking each extension
+    let foundFile = null;
+    
+    // Check starting from database extension, then wrap around
+    for (let i = 0; i < tryExtensions.length; i++) {
+      const checkIndex = (startIndex + i) % tryExtensions.length;
+      const ext = tryExtensions[checkIndex];
+      const testFile = `${baseFilename}.${ext}`;
+      const testPath = `database/${mode}/audio/${testFile}`;
+      
+      const exists = await checkFileExists(testPath);
+      
+      if (exists) {
+        foundFile = testFile;
+        console.log(`[loadQuestion] Found file: ${foundFile} (database said: ${question.audioFile})`);
+        break;
+      }
+    }
+    
+    if (!foundFile) {
+      console.warn(`[loadQuestion] No audio file found for question ${questionId}. Tried all extensions.`);
+      // Still try to load with database filename as fallback
+      foundFile = question.audioFile || `${baseFilename}.mp3`;
+    }
+    
+    const audioPath = `database/${mode}/audio/${foundFile}?t=${Date.now()}`;
+    const mimeType = getAudioMimeType(foundFile);
+    
+    // Clear any existing source elements
+    while (audio.firstChild) {
+      audio.removeChild(audio.firstChild);
+    }
+    
+    // Create source element with proper type
+    const source = document.createElement('source');
+    source.src = audioPath;
+    source.type = mimeType;
+    audio.appendChild(source);
+    
     audio.load(); // Reload the audio element
     
     // Clear input/transcription
@@ -1269,13 +1824,14 @@
     populateQuestionSelect("speak");
     
     // Load first question for each mode
-    if (typeDatabase.length > 0) {
-      currentTypeQuestionId = 1;
-      loadQuestion("type", 1);
-    }
+    // Load Speak first (since Type tab is active by default, Type should load last to set the correct audio)
     if (speakDatabase.length > 0) {
       currentSpeakQuestionId = 1;
       loadQuestion("speak", 1);
+    }
+    if (typeDatabase.length > 0) {
+      currentTypeQuestionId = 1;
+      loadQuestion("type", 1);
     }
   };
 
@@ -2652,6 +3208,9 @@
   let breakdownRecognition = null;
 
   const getWordSegment = (percentage, fromEnd = false) => {
+    // Determine mode from active tab
+    const mode = document.getElementById("tab-type").classList.contains("active") ? "type" : "speak";
+    const correctSentence = mode === "type" ? correctSentenceType : correctSentenceSpeak;
     const words = normalize(correctSentence).split(" ").filter(Boolean);
     const totalWords = words.length;
     const wordCount = Math.ceil((totalWords * percentage) / 100);
@@ -2756,7 +3315,7 @@
         });
         
         if (missingWords.length > 0) {
-          statusEl.textContent = `Incorrect, you are missing these words: ${missingWords.join(", ")}; try practicing them in Pronunciation Practice first`;
+          statusEl.textContent = `Incorrect, you are missing these words: ${missingWords.join(", ")}`;
         } else {
           statusEl.textContent = `Incorrect. Expected: "${expectedSegment}"`;
         }
@@ -2873,5 +3432,6 @@
     }
   });
 })();
+
 
 

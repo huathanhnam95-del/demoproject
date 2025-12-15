@@ -250,14 +250,16 @@ h1 {
 
 textarea {
   width: 100%;
-  min-height: 120px;
+  height: 120px;
+  overflow-y: auto;
   padding: 12px;
-  border: 2px solid #d0d7de;
-  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
   font-size: 1rem;
   font-family: inherit;
-  resize: vertical;
-  margin-bottom: 12px;
+  resize: none;
+  margin-bottom: 0;
+  box-sizing: border-box;
 }
 
 textarea:focus {
@@ -268,13 +270,14 @@ textarea:focus {
 
 .textarea {
   width: 100%;
-  min-height: 120px;
+  height: 120px;
+  overflow-y: auto;
   padding: 12px;
   border: 2px solid #d0d7de;
   border-radius: 6px;
   font-size: 1rem;
   font-family: inherit;
-  resize: vertical;
+  resize: none;
   margin-bottom: 12px;
 }
 
@@ -429,6 +432,29 @@ textarea:focus {
   color: #991b1b;
 }
 
+.anim-word {
+  display: inline-block;
+  margin: 0 4px;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.anim-empty {
+  opacity: 0.3;
+}
+
+.anim-add {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+  font-weight: 600;
+}
+
+.anim-remove {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  font-weight: 600;
+}
+
 #result {
   margin-top: 24px;
   padding: 20px;
@@ -464,7 +490,7 @@ textarea:focus {
 .word.extra {
   background: #f3e8ff;
   color: #6b21a8;
-  text-decoration: none;
+  text-decoration: line-through;
 }
 
 .word.misplaced {
@@ -482,9 +508,16 @@ textarea:focus {
 }
 
 .pronunciation-header {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   font-weight: 600;
   color: #0f172a;
+}
+
+.pronunciation-subheader {
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-style: italic;
 }
 
 .pronunciation-words {
@@ -548,9 +581,16 @@ textarea:focus {
 }
 
 .vocabulary-header {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   font-weight: 600;
   color: #0f172a;
+}
+
+.vocabulary-subheader {
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-style: italic;
 }
 
 .vocabulary-words {
@@ -616,6 +656,12 @@ textarea:focus {
   outline: none;
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.vocabulary-input:disabled {
+  background-color: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
 }
 
 .vocabulary-status {
@@ -925,7 +971,7 @@ textarea:focus {
   border-radius: 6px;
   font-size: 0.875rem;
   font-family: inherit;
-  resize: vertical;
+  resize: none;
   min-height: 60px;
 }
 
@@ -986,10 +1032,17 @@ textarea:focus {
 }
 
 .same-vocab-header {
-  margin-bottom: 16px;
+  margin-bottom: 8px;
   font-weight: 600;
   font-size: 1.1rem;
   color: #1f2933;
+}
+
+.same-vocab-subheader {
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-style: italic;
 }
 
 .same-vocab-sentences {
@@ -1066,6 +1119,47 @@ textarea:focus {
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
+.same-vocab-record-btn {
+  padding: 8px 16px;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.same-vocab-record-btn:hover {
+  background: #b91c1c;
+}
+
+.same-vocab-record-btn.recording {
+  background: #b91c1c;
+  animation: pulse 1.5s infinite;
+}
+
+.same-vocab-transcription {
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  min-height: 40px;
+  background: #f8fafc;
+  color: #6b7280;
+  font-style: italic;
+  box-sizing: border-box;
+  word-wrap: break-word;
+}
+
+.same-vocab-transcription.empty {
+  color: #9ca3af;
+}
+
 .same-vocab-check-btn {
   padding: 8px 16px;
   background: #16a34a;
@@ -1080,6 +1174,22 @@ textarea:focus {
 
 .same-vocab-check-btn:hover {
   background: #15803d;
+}
+
+.same-vocab-pick-another-btn {
+  padding: 8px 16px;
+  background: #7c3aed;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.same-vocab-pick-another-btn:hover {
+  background: #6d28d9;
 }
 
 .same-vocab-status {
@@ -1113,6 +1223,11 @@ textarea:focus {
   gap: 16px;
   flex-wrap: wrap;
   font-size: 0.875rem;
+}
+
+#result .legend {
+  margin-top: 16px;
+  margin-bottom: 0;
 }
 
 .legend-item {

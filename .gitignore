@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+
+# Database audio files (too large for git)
+database/type/audio/
+database/speak/audio/
+
+# Backup files
+*.backup.*
+
+# Excel files
+*.xlsx
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment variables
+.env
+.env.local
+
+# Certificates (if any)
+*.pem
+*.key
+*.crt
+
+# Temporary files
+*.tmp
+*.temp
+

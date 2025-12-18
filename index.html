@@ -13,6 +13,7 @@
     <div class="tabs">
       <button id="tab-type" class="tab-btn active" type="button">Type</button>
       <button id="tab-speak" class="tab-btn" type="button">Speak</button>
+      <button id="tab-extended" class="tab-btn" type="button">Extended Listening</button>
     </div>
 
     <div id="mode-type" class="mode-panel active">
@@ -62,6 +63,84 @@
       <div id="transcription-display" class="transcription-display">
         <div id="transcription-text" class="transcription-text">Click "Start Recording" and speak...</div>
         <div id="recording-status" class="recording-status"></div>
+      </div>
+    </div>
+
+    <div id="mode-extended" class="mode-panel">
+      <div class="question-selector">
+        <div class="question-id-display">
+          <label for="question-select-extended">Question ID:</label>
+          <span id="current-question-id-extended" class="current-question-id">1</span>
+        </div>
+        <select id="question-select-extended" class="question-select">
+          <option value="1">Loading...</option>
+        </select>
+        <div class="question-total">
+          <span>Total number of questions: <span id="total-questions-extended">1</span></span>
+        </div>
+      </div>
+      
+      <div id="reading-phase" class="reading-phase">
+        <div class="reading-timer">
+          <span>Reading time: <span id="reading-timer-display">30</span> seconds</span>
+        </div>
+        <button id="skip-reading-btn" type="button" class="skip-reading-btn">Skip reading time</button>
+        <div id="full-transcript" class="full-transcript"></div>
+      </div>
+      
+      <div id="listening-phase" class="listening-phase" style="display: none;">
+        <div class="extended-audio-controls">
+          <div class="audio-controls-row">
+            <button id="play-pause-extended-btn" type="button" class="play-pause-btn">Play</button>
+            <div class="time-display">
+              <span id="current-time-extended">0:00</span> / <span id="total-time-extended">0:00</span>
+            </div>
+            <div class="speed-control">
+              <label for="speed-select-extended">Speed:</label>
+              <select id="speed-select-extended" class="speed-select">
+                <option value="0.5">0.5x</option>
+                <option value="0.75">0.75x</option>
+                <option value="1" selected>1x</option>
+                <option value="1.25">1.25x</option>
+                <option value="1.5">1.5x</option>
+                <option value="1.75">1.75x</option>
+                <option value="2">2x</option>
+              </select>
+            </div>
+          </div>
+          <div class="audio-slider-container">
+            <input type="range" id="audio-slider-extended" class="audio-slider" min="0" max="100" value="0" step="0.1">
+          </div>
+        </div>
+        <div class="controls">
+          <button id="check-extended-btn" type="button">Check</button>
+          <button id="redo-extended-btn" type="button" style="display: none;">Retry</button>
+          <button id="randomize-blanks-btn" type="button" style="display: none;">Try New Blanks</button>
+        </div>
+        <div id="check-result-extended" class="check-result-box" style="display: none;"></div>
+        <div id="gapped-transcript" class="gapped-transcript"></div>
+        
+        <div id="fill-phrases-section" class="fill-phrases-section" style="display: none;">
+          <div class="fill-phrases-header">
+            <h3>Fill phrases</h3>
+            <div class="phrase-options">
+              <label>
+                <input type="radio" name="phrase-length" value="2" checked>
+                <span>2 words</span>
+              </label>
+              <label>
+                <input type="radio" name="phrase-length" value="3">
+                <span>3 words</span>
+              </label>
+            </div>
+          </div>
+          <div id="phrases-transcript" class="phrases-transcript"></div>
+          <div class="phrase-controls">
+            <button id="check-phrases-btn" type="button">Check Phrases</button>
+            <button id="redo-phrases-btn" type="button" style="display: none;">Retry Phrases</button>
+          </div>
+          <div id="check-result-phrases" class="check-result-box" style="display: none;"></div>
+        </div>
       </div>
     </div>
 
@@ -153,6 +232,7 @@
   </main>
 
   <audio id="audio" preload="auto"></audio>
+  <audio id="audio-extended" preload="auto"></audio>
   <script src="script.js"></script>
 </body>
 </html>

@@ -27,8 +27,10 @@
   // Tab switching
   const tabType = document.getElementById("tab-type");
   const tabSpeak = document.getElementById("tab-speak");
+  const tabExtended = document.getElementById("tab-extended");
   const modeType = document.getElementById("mode-type");
   const modeSpeak = document.getElementById("mode-speak");
+  const modeExtended = document.getElementById("mode-extended");
 
   // Speak mode elements
   const playBtnSpeak = document.getElementById("play-btn-speak");
@@ -520,8 +522,10 @@
   tabType.addEventListener("click", () => {
     tabType.classList.add("active");
     tabSpeak.classList.remove("active");
+    tabExtended.classList.remove("active");
     modeType.classList.add("active");
     modeSpeak.classList.remove("active");
+    modeExtended.classList.remove("active");
     
     // Hide Speak mode panels
     pronunciationPanel.style.display = "none";
@@ -558,8 +562,10 @@
   tabSpeak.addEventListener("click", () => {
     tabSpeak.classList.add("active");
     tabType.classList.remove("active");
+    tabExtended.classList.remove("active");
     modeSpeak.classList.add("active");
     modeType.classList.remove("active");
+    modeExtended.classList.remove("active");
     
     // Hide Type mode panels
     generatePanelType.style.display = "none";
@@ -577,6 +583,1143 @@
     
     // Microphone access will be requested when user clicks "Start Recording"
   });
+
+  tabExtended.addEventListener("click", () => {
+    tabExtended.classList.add("active");
+    tabType.classList.remove("active");
+    tabSpeak.classList.remove("active");
+    modeExtended.classList.add("active");
+    modeType.classList.remove("active");
+    modeSpeak.classList.remove("active");
+    
+    // Hide all other mode panels
+    animationPanel.style.display = "none";
+    result.style.display = "none";
+    generatePanelType.style.display = "none";
+    generatePanelSpeak.style.display = "none";
+    sameVocabPanelType.style.display = "none";
+    sameVocabPanelSpeak.style.display = "none";
+    vocabularyPanel.style.display = "none";
+    pronunciationPanel.style.display = "none";
+    breakdownPanel.style.display = "none";
+    
+    // Stop any active recordings
+    if (isRecording && recognition) {
+      recognition.stop();
+      isRecording = false;
+    }
+    if (wordRecognition) {
+      wordRecognition.stop();
+      wordRecognition = null;
+      currentWordIndex = -1;
+    }
+    if (breakdownRecognition) {
+      breakdownRecognition.stop();
+      breakdownRecognition = null;
+    }
+  });
+
+  // Extended Listening mode elements
+  let extendedDatabase = [];
+  let currentExtendedQuestionId = 1;
+  let extendedCorrectTranscript = "";
+  let extendedGappedTranscript = "";
+  let extendedGapAnswers = {}; // Store user answers for gaps
+  let readingTimer = null;
+  let readingTimeLeft = 30;
+  
+  const questionSelectExtended = document.getElementById("question-select-extended");
+  const currentQuestionIdExtended = document.getElementById("current-question-id-extended");
+  const totalQuestionsExtended = document.getElementById("total-questions-extended");
+  const playPauseExtendedBtn = document.getElementById("play-pause-extended-btn");
+  const checkExtendedBtn = document.getElementById("check-extended-btn");
+  const redoExtendedBtn = document.getElementById("redo-extended-btn");
+  const randomizeBlanksBtn = document.getElementById("randomize-blanks-btn");
+  const skipReadingBtn = document.getElementById("skip-reading-btn");
+  const readingTimerDisplay = document.getElementById("reading-timer-display");
+  const readingPhase = document.getElementById("reading-phase");
+  const listeningPhase = document.getElementById("listening-phase");
+  const fullTranscript = document.getElementById("full-transcript");
+  const gappedTranscript = document.getElementById("gapped-transcript");
+  const checkResultExtended = document.getElementById("check-result-extended");
+  const fillPhrasesSection = document.getElementById("fill-phrases-section");
+  const phrasesTranscript = document.getElementById("phrases-transcript");
+  const phraseLengthRadios = document.querySelectorAll('input[name="phrase-length"]');
+  const checkPhrasesBtn = document.getElementById("check-phrases-btn");
+  const redoPhrasesBtn = document.getElementById("redo-phrases-btn");
+  const checkResultPhrases = document.getElementById("check-result-phrases");
+  const audioExtended = document.getElementById("audio-extended");
+  const audioSliderExtended = document.getElementById("audio-slider-extended");
+
+  // Speech synthesis for word pronunciation in Extended Listening
+  // Uses the same voice settings as Type mode
+  const speakWordExtended = (word) => {
+    // Clean the word (remove punctuation)
+    const cleanWord = word.replace(/[.,!?;:()\[\]{}'"]/g, '').trim();
+    if (!cleanWord) return;
+    
+    // Cancel any ongoing speech
+    if (speechSynthesis.speaking) {
+      speechSynthesis.cancel();
+    }
+    
+    const utterance = new SpeechSynthesisUtterance(cleanWord);
+    utterance.lang = 'en-US';
+    
+    // Use the same voice selection and settings as Type mode
+    const setVoice = () => {
+      const voices = speechSynthesis.getVoices();
+      // Try to prefer a bright/happy US female voice by name substring if available
+      const preferred = voices.find((v) =>
+        /female|samantha|allison|joanna|kimberly|ssml female|en-us/i.test(v.name)
+      );
+      if (preferred) utterance.voice = preferred;
+      
+      // Use the same rate and pitch as Type mode
+      utterance.rate = 1.05; // a bit quicker for a brighter feel
+      utterance.pitch = 1.1; // slightly higher pitch
+      utterance.volume = 1;
+      
+      speechSynthesis.speak(utterance);
+    };
+    
+    // Ensure voices are loaded
+    if (speechSynthesis.getVoices().length === 0) {
+      speechSynthesis.onvoiceschanged = () => {
+        setVoice();
+      };
+    } else {
+      setVoice();
+    }
+  };
+
+  // Make words in full transcript clickable
+  const makeWordsClickable = (container, text) => {
+    // Split text into words and punctuation, preserving spaces
+    const words = text.split(/(\s+)/);
+    const html = words.map(word => {
+      const trimmed = word.trim();
+      if (!trimmed || /^\s+$/.test(word)) {
+        return word; // Return spaces as-is
+      }
+      // Check if it's punctuation only
+      if (/^[.,!?;:()\[\]{}'"]+$/.test(trimmed)) {
+        return word; // Return punctuation as-is
+      }
+      // Make word clickable
+      const cleanWord = trimmed.replace(/[.,!?;:()\[\]{}'"]/g, '');
+      if (cleanWord) {
+        return `<span class="clickable-word" data-word="${cleanWord}">${word}</span>`;
+      }
+      return word;
+    }).join('');
+    
+    container.innerHTML = html;
+    
+    // Add click listeners
+    container.querySelectorAll('.clickable-word').forEach(span => {
+      span.addEventListener('click', (e) => {
+        const word = e.target.dataset.word || e.target.textContent.trim();
+        speakWordExtended(word);
+        
+        // Visual feedback - highlight briefly
+        e.target.classList.add('word-speaking');
+        setTimeout(() => {
+          e.target.classList.remove('word-speaking');
+        }, 500);
+      });
+    });
+  };
+
+  // Make words in gapped transcript clickable (excluding gap inputs)
+  const makeWordsInGappedTranscriptClickable = (container) => {
+    // Get all text nodes and wrap words
+    const walker = document.createTreeWalker(
+      container,
+      NodeFilter.SHOW_TEXT,
+      null,
+      false
+    );
+    
+    const textNodes = [];
+    let node;
+    while (node = walker.nextNode()) {
+      // Skip if parent is an input element
+      if (node.parentElement && node.parentElement.classList.contains('gap-input')) {
+        continue;
+      }
+      textNodes.push(node);
+    }
+    
+    textNodes.forEach(textNode => {
+      const text = textNode.textContent;
+      const words = text.split(/(\s+)/);
+      const fragment = document.createDocumentFragment();
+      
+      words.forEach(word => {
+        const trimmed = word.trim();
+        if (!trimmed || /^\s+$/.test(word)) {
+          fragment.appendChild(document.createTextNode(word));
+          return;
+        }
+        // Check if it's punctuation only
+        if (/^[.,!?;:()\[\]{}'"]+$/.test(trimmed)) {
+          fragment.appendChild(document.createTextNode(word));
+          return;
+        }
+        // Make word clickable
+        const cleanWord = trimmed.replace(/[.,!?;:()\[\]{}'"]/g, '');
+        if (cleanWord) {
+          const span = document.createElement('span');
+          span.className = 'clickable-word';
+          span.textContent = word;
+          span.dataset.word = cleanWord;
+          span.addEventListener('click', (e) => {
+            const word = e.target.dataset.word || e.target.textContent.trim();
+            speakWordExtended(word);
+            
+            // Visual feedback - highlight briefly
+            e.target.classList.add('word-speaking');
+            setTimeout(() => {
+              e.target.classList.remove('word-speaking');
+            }, 500);
+          });
+          fragment.appendChild(span);
+        } else {
+          fragment.appendChild(document.createTextNode(word));
+        }
+      });
+      
+      textNode.parentNode.replaceChild(fragment, textNode);
+    });
+  };
+  const speedSelectExtended = document.getElementById("speed-select-extended");
+  const currentTimeExtended = document.getElementById("current-time-extended");
+  const totalTimeExtended = document.getElementById("total-time-extended");
+
+  // Identify key content words (nouns, verbs, adjectives, adverbs - excluding common function words)
+  // Excludes: names (capitalized words), words with "-", and function words
+  const isContentWord = (word, originalWord, isSentenceStart = false) => {
+    // Exclude words with hyphen (e.g., "over-saturated")
+    if (originalWord.includes('-')) {
+      return false;
+    }
+    
+    // Exclude names (proper nouns) - words that are capitalized in the middle of sentences
+    // Allow capitalized words at sentence start (they might be regular words)
+    const cleanOriginal = originalWord.replace(/[.,!?;:]/g, '');
+    if (!isSentenceStart && cleanOriginal.length > 0) {
+      const firstChar = cleanOriginal[0];
+      // If word starts with uppercase and is not at sentence start, it's likely a name
+      if (firstChar === firstChar.toUpperCase() && firstChar !== firstChar.toLowerCase()) {
+        // Check if the rest of the word is lowercase (e.g., "John", "Mary")
+        // or if it's all uppercase (e.g., "USA", "NASA")
+        const restOfWord = cleanOriginal.slice(1);
+        if (restOfWord === restOfWord.toLowerCase() || cleanOriginal === cleanOriginal.toUpperCase()) {
+          // It's likely a name - exclude it
+          return false;
+        }
+      }
+    }
+    
+    const functionWords = new Set([
+      'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
+      'from', 'up', 'about', 'into', 'through', 'during', 'including', 'until', 'against', 'among',
+      'throughout', 'despite', 'towards', 'upon', 'concerning', 'is', 'are', 'was', 'were', 'be',
+      'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'will',
+      'would', 'could', 'should', 'may', 'might', 'can', 'must', 'shall', 'this', 'that', 'these',
+      'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them',
+      'my', 'your', 'his', 'her', 'its', 'our', 'their', 'mine', 'yours', 'hers', 'ours', 'theirs'
+    ]);
+    const cleanWord = word.toLowerCase().replace(/[.,!?;:]/g, '');
+    return !functionWords.has(cleanWord) && cleanWord.length > 2;
+  };
+
+  // Generate gaps in transcript (max 1 per sentence, minimum 10 words between gaps)
+  // Randomizes gap selection for variety
+  const generateGaps = (transcript) => {
+    const sentences = transcript.split(/([.!?]+\s*)/).filter(s => s.trim().length > 0);
+    const gappedSentences = [];
+    let lastGapPosition = -20;
+    let totalWordCount = 0;
+    
+    sentences.forEach((sentence) => {
+      const words = sentence.trim().split(/\s+/);
+      if (words.length === 0) {
+        gappedSentences.push(sentence);
+        return;
+      }
+      
+      const contentWordIndices = [];
+      words.forEach((word, idx) => {
+        // Check if this is the first word of the sentence (after punctuation)
+        const isSentenceStart = idx === 0;
+        if (isContentWord(word.toLowerCase(), word, isSentenceStart)) {
+          contentWordIndices.push(idx);
+        }
+      });
+      
+      if (contentWordIndices.length === 0) {
+        gappedSentences.push(sentence);
+        totalWordCount += words.length;
+        return;
+      }
+      
+      // Filter indices that meet the minimum distance requirement
+      const validIndices = contentWordIndices.filter(idx => {
+        const positionFromLastGap = totalWordCount + idx - lastGapPosition;
+        return positionFromLastGap >= 10;
+      });
+      
+      if (validIndices.length === 0) {
+        gappedSentences.push(sentence);
+        totalWordCount += words.length;
+        return;
+      }
+      
+      // Randomly select one of the valid indices
+      const randomIndex = Math.floor(Math.random() * validIndices.length);
+      const gapIndex = validIndices[randomIndex];
+      
+      const gappedWords = [...words];
+      const gapWord = gappedWords[gapIndex];
+      const cleanGapWord = gapWord.replace(/[.,!?;:]/g, '');
+      gappedWords[gapIndex] = `<input type="text" class="gap-input" data-gap-id="${totalWordCount + gapIndex}" data-correct="${cleanGapWord}" placeholder="" /><span class="gap-speaker-icon" data-word="${cleanGapWord}" aria-label="Pronounce ${cleanGapWord}" role="button" tabindex="0" style="display: none;">🔊</span>`;
+      
+      gappedSentences.push(gappedWords.join(' '));
+      lastGapPosition = totalWordCount + gapIndex;
+      totalWordCount += words.length;
+    });
+    
+    return gappedSentences.join(' ');
+  };
+
+  // Check if a word is a function word (preposition, determiner, etc.)
+  const isFunctionWord = (word) => {
+    const functionWords = new Set([
+      'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
+      'from', 'up', 'about', 'into', 'through', 'during', 'including', 'until', 'against', 'among',
+      'throughout', 'despite', 'towards', 'upon', 'concerning', 'is', 'are', 'was', 'were', 'be',
+      'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'will',
+      'would', 'could', 'should', 'may', 'might', 'can', 'must', 'shall', 'this', 'that', 'these',
+      'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them',
+      'my', 'your', 'his', 'her', 'its', 'our', 'their', 'mine', 'yours', 'hers', 'ours', 'theirs',
+      'very', 'quite', 'pretty', 'much', 'more', 'most', 'other', 'some', 'any', 'all', 'each', 'every'
+    ]);
+    const cleanWord = word.toLowerCase().replace(/[.,!?;:]/g, '');
+    return functionWords.has(cleanWord);
+  };
+
+  // Check if a phrase is meaningful (has at least one content word and forms a coherent unit)
+  const isMeaningfulPhrase = (words, startIndex) => {
+    // Must have at least one content word
+    let hasContentWord = false;
+    let contentWordIndices = [];
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      const isSentenceStart = (startIndex + i) === 0;
+      if (isContentWord(word.toLowerCase(), word, isSentenceStart)) {
+        hasContentWord = true;
+        contentWordIndices.push(i);
+      }
+    }
+    if (!hasContentWord) return false;
+    
+    const firstWord = words[0].toLowerCase().replace(/[.,!?;:]/g, '');
+    const lastWord = words[words.length - 1].toLowerCase().replace(/[.,!?;:]/g, '');
+    
+    // Prefer phrases that end with a content word (noun, verb, etc.)
+    const lastIsContent = contentWordIndices.includes(words.length - 1);
+    
+    // If phrase starts with a preposition, it should include the object (noun)
+    const prepositions = ['in', 'on', 'at', 'for', 'of', 'with', 'by', 'from', 'to', 'into', 'onto'];
+    if (prepositions.includes(firstWord)) {
+      // Must end with a content word (the object of the preposition)
+      return lastIsContent;
+    }
+    
+    // If phrase starts with a determiner or intensifier, it should include the noun/adjective
+    const determiners = ['the', 'a', 'an', 'this', 'that', 'these', 'those', 'other', 'some', 'any', 'all'];
+    const intensifiers = ['very', 'quite', 'pretty', 'much', 'more', 'most'];
+    if (determiners.includes(firstWord) || intensifiers.includes(firstWord)) {
+      // Must end with a content word
+      return lastIsContent;
+    }
+    
+    // If all words are content words, it's meaningful
+    let allContent = true;
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      const isSentenceStart = (startIndex + i) === 0;
+      if (!isContentWord(word.toLowerCase(), word, isSentenceStart)) {
+        allContent = false;
+        break;
+      }
+    }
+    if (allContent) {
+      // Prefer phrases that end with content words
+      return lastIsContent;
+    }
+    
+    return false;
+  };
+
+  // Generate local fallback phrases (used when LLM returns insufficient phrases)
+  const generateLocalFallbackPhrases = (sentence, phraseLength) => {
+    const words = sentence.trim().split(/\s+/);
+    const phrases = [];
+    
+    if (words.length < phraseLength) {
+      return [];
+    }
+    
+    // Generate all possible phrases (simple approach)
+    for (let i = 0; i <= words.length - phraseLength; i++) {
+      const phraseWords = words.slice(i, i + phraseLength);
+      let hasPunctuationBetween = false;
+      
+      // Check for punctuation between words
+      for (let j = 0; j < phraseLength - 1; j++) {
+        const word = phraseWords[j];
+        const wordWithPunct = word.replace(/[.,!?;:]/g, '');
+        if (word.length > wordWithPunct.length) {
+          const punct = word.slice(wordWithPunct.length);
+          if (punct.includes(',') || punct.includes(';')) {
+            hasPunctuationBetween = true;
+            break;
+          }
+        }
+      }
+      
+      if (!hasPunctuationBetween) {
+        phrases.push(phraseWords.join(' '));
+      }
+    }
+    
+    return phrases;
+  };
+
+  // Generate phrase gaps using LLM to identify meaningful phrases
+  const generatePhraseGaps = async (transcript, phraseLength) => {
+    // Split transcript into sentences
+    const sentenceParts = transcript.split(/([.!?]+\s*)/);
+    const sentences = [];
+    const sentencePunctuation = [];
+    
+    for (let i = 0; i < sentenceParts.length; i += 2) {
+      if (sentenceParts[i] && sentenceParts[i].trim()) {
+        sentences.push(sentenceParts[i].trim());
+        sentencePunctuation.push(sentenceParts[i + 1] || '');
+      }
+    }
+    
+    if (sentences.length === 0) {
+      return transcript;
+    }
+    
+    try {
+      // Call LLM API to analyze phrases
+      // Use relative URL to match current protocol (http/https)
+      const apiUrl = '/api/analyze-phrases';
+      
+      console.log('Calling phrase analysis API with', sentences.length, 'sentences');
+      
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          sentences: sentences,
+          phraseLength: phraseLength
+        })
+      });
+      
+      if (!response.ok) {
+        console.warn(`API returned status ${response.status}, using fallback`);
+        return generatePhraseGapsFallback(transcript, phraseLength);
+      }
+      
+      const data = await response.json();
+      const llmPhrases = data.phrases || [];
+      
+      console.log('LLM returned phrases:', llmPhrases);
+      
+      // If no phrases returned, use fallback
+      if (!llmPhrases || llmPhrases.length === 0) {
+        console.warn('No phrases returned from LLM, using fallback');
+        return generatePhraseGapsFallback(transcript, phraseLength);
+      }
+      
+      // Process each sentence with LLM-identified phrases
+      const gappedSentences = [];
+      let lastGapEndPosition = -20;
+      let totalWordCount = 0;
+      
+      sentences.forEach((sentence, sentenceIdx) => {
+        const words = sentence.split(/\s+/);
+        let validPhrases = llmPhrases[sentenceIdx] || [];
+        
+        // Ensure we have at least 5 phrases (should be guaranteed by backend, but double-check)
+        if (validPhrases.length < 5 && words.length >= phraseLength) {
+          console.warn(`Sentence ${sentenceIdx + 1} has fewer than 5 phrases, generating fallback`);
+          // Generate additional fallback phrases
+          const fallbackPhrases = generateLocalFallbackPhrases(sentence, phraseLength);
+          // Filter out phrases ending in function words
+          const functionWordEndings = ['the', 'a', 'an', 'they', 'that', 'this', 'these', 'those', 'it', 'he', 'she', 'we', 'you', 'i'];
+          const filteredFallback = fallbackPhrases.filter(phrase => {
+            const words = phrase.trim().toLowerCase().split(/\s+/);
+            const lastWord = words[words.length - 1].replace(/[.,!?;:]/g, '');
+            return !functionWordEndings.includes(lastWord);
+          });
+          validPhrases = [...new Set([...validPhrases, ...filteredFallback])];
+        }
+        
+        if (validPhrases.length === 0 || words.length < phraseLength) {
+          gappedSentences.push(sentence + sentencePunctuation[sentenceIdx]);
+          totalWordCount += words.length;
+          return;
+        }
+        
+        // Find phrases in the sentence that match LLM suggestions
+        const phraseCandidates = [];
+        
+        console.log(`Processing sentence ${sentenceIdx + 1}: "${sentence}"`);
+        console.log(`Valid phrases from LLM:`, validPhrases);
+        
+        validPhrases.forEach(phraseText => {
+          // Clean the phrase (remove punctuation for matching)
+          const cleanPhrase = phraseText.replace(/[.,!?;:]/g, '').toLowerCase().trim();
+          const phraseWords = cleanPhrase.split(/\s+/).filter(w => w.length > 0);
+          
+          if (phraseWords.length !== phraseLength) {
+            console.log(`Skipping phrase "${phraseText}" - length mismatch (${phraseWords.length} vs ${phraseLength})`);
+            return; // Skip if length doesn't match
+          }
+          
+          // Find the phrase in the sentence
+          for (let i = 0; i <= words.length - phraseLength; i++) {
+            const candidateWords = words.slice(i, i + phraseLength);
+            const candidateText = candidateWords
+              .map(w => w.replace(/[.,!?;:]/g, '').toLowerCase().trim())
+              .join(' ')
+              .trim();
+            
+            if (candidateText === cleanPhrase) {
+              // Check minimum distance from last gap
+              const phraseStartPosition = totalWordCount + i;
+              const positionFromLastGap = phraseStartPosition - lastGapEndPosition;
+              
+              console.log(`Found phrase "${phraseText}" at position ${i}, distance from last gap: ${positionFromLastGap}`);
+              
+              // Relaxed minimum distance to 5 words for phrases (was 10)
+              if (positionFromLastGap >= 5) {
+                phraseCandidates.push({
+                  startIndex: i,
+                  words: candidateWords,
+                  startPosition: phraseStartPosition,
+                  originalPhrase: phraseText
+                });
+                break; // Found this phrase, move to next
+              } else {
+                console.log(`Phrase "${phraseText}" too close to last gap (${positionFromLastGap} < 5)`);
+              }
+            }
+          }
+        });
+        
+        console.log(`Found ${phraseCandidates.length} valid phrase candidates for sentence ${sentenceIdx + 1}`);
+        
+        if (phraseCandidates.length === 0) {
+          console.warn(`No valid phrases found for sentence ${sentenceIdx + 1}, skipping gap`);
+          gappedSentences.push(sentence + sentencePunctuation[sentenceIdx]);
+          totalWordCount += words.length;
+          return;
+        }
+        
+        // Randomly select one phrase candidate
+        const randomIndex = Math.floor(Math.random() * phraseCandidates.length);
+        const selectedPhrase = phraseCandidates[randomIndex];
+        
+        // Replace the phrase with a gap input
+        const cleanPhrase = selectedPhrase.words.join(' ').replace(/[.,!?;:]/g, '');
+        
+        // Build the sentence with gap
+        const resultWords = [];
+        for (let i = 0; i < words.length; i++) {
+          if (i === selectedPhrase.startIndex) {
+            // Insert gap input at the start of the phrase
+            resultWords.push(`<input type="text" class="phrase-input" data-phrase-id="${selectedPhrase.startPosition}" data-correct="${cleanPhrase}" placeholder="" />`);
+            // Skip the remaining words in the phrase
+            i += phraseLength - 1;
+          } else {
+            resultWords.push(words[i]);
+          }
+        }
+        
+        gappedSentences.push(resultWords.join(' ') + sentencePunctuation[sentenceIdx]);
+        lastGapEndPosition = totalWordCount + selectedPhrase.startIndex + phraseLength - 1;
+        totalWordCount += words.length;
+      });
+      
+      return gappedSentences.join(' ');
+      
+    } catch (error) {
+      console.error('Error calling LLM API for phrase analysis:', error);
+      // Fallback: use rule-based phrase generation
+      console.warn('Falling back to rule-based phrase generation');
+      return generatePhraseGapsFallback(transcript, phraseLength);
+    }
+  };
+
+  // Fallback phrase generation (rule-based, ensures at least 3 phrases)
+  const generatePhraseGapsFallback = (transcript, phraseLength) => {
+    const sentenceParts = transcript.split(/([.!?]+\s*)/);
+    const sentences = [];
+    const sentencePunctuation = [];
+    
+    for (let i = 0; i < sentenceParts.length; i += 2) {
+      if (sentenceParts[i] && sentenceParts[i].trim()) {
+        sentences.push(sentenceParts[i].trim());
+        sentencePunctuation.push(sentenceParts[i + 1] || '');
+      }
+    }
+    
+    const gappedSentences = [];
+    let lastGapEndPosition = -20;
+    let totalWordCount = 0;
+    
+    sentences.forEach((sentence, sentenceIdx) => {
+      const words = sentence.split(/\s+/);
+      
+      if (words.length < phraseLength) {
+        gappedSentences.push(sentence + sentencePunctuation[sentenceIdx]);
+        totalWordCount += words.length;
+        return;
+      }
+      
+      // Generate all possible phrases
+      const phraseCandidates = [];
+      for (let i = 0; i <= words.length - phraseLength; i++) {
+        const phraseWords = words.slice(i, i + phraseLength);
+        let hasPunctuationBetween = false;
+        
+        // Check for punctuation between words
+        for (let j = 0; j < phraseLength - 1; j++) {
+          const word = phraseWords[j];
+          const wordWithPunct = word.replace(/[.,!?;:]/g, '');
+          if (word.length > wordWithPunct.length) {
+            const punct = word.slice(wordWithPunct.length);
+            if (punct.includes(',') || punct.includes(';')) {
+              hasPunctuationBetween = true;
+              break;
+            }
+          }
+        }
+        
+        if (!hasPunctuationBetween) {
+          // Check minimum distance from last gap
+          const phraseStartPosition = totalWordCount + i;
+          const positionFromLastGap = phraseStartPosition - lastGapEndPosition;
+          
+          // Relaxed minimum distance to 5 words for fallback phrases
+          if (positionFromLastGap >= 5) {
+            phraseCandidates.push({
+              startIndex: i,
+              words: phraseWords,
+              startPosition: phraseStartPosition
+            });
+          }
+        }
+      }
+      
+      if (phraseCandidates.length === 0) {
+        gappedSentences.push(sentence + sentencePunctuation[sentenceIdx]);
+        totalWordCount += words.length;
+        return;
+      }
+      
+      // Randomly select one phrase candidate
+      const randomIndex = Math.floor(Math.random() * phraseCandidates.length);
+      const selectedPhrase = phraseCandidates[randomIndex];
+      
+      // Replace the phrase with a gap input
+      const cleanPhrase = selectedPhrase.words.join(' ').replace(/[.,!?;:]/g, '');
+      
+      // Build the sentence with gap
+      const resultWords = [];
+      for (let i = 0; i < words.length; i++) {
+        if (i === selectedPhrase.startIndex) {
+          // Insert gap input at the start of the phrase
+          resultWords.push(`<input type="text" class="phrase-input" data-phrase-id="${selectedPhrase.startPosition}" data-correct="${cleanPhrase}" placeholder="" />`);
+          // Skip the remaining words in the phrase
+          i += phraseLength - 1;
+        } else {
+          resultWords.push(words[i]);
+        }
+      }
+      
+      gappedSentences.push(resultWords.join(' ') + sentencePunctuation[sentenceIdx]);
+      lastGapEndPosition = totalWordCount + selectedPhrase.startIndex + phraseLength - 1;
+      totalWordCount += words.length;
+    });
+    
+    return gappedSentences.join(' ');
+  };
+
+  // State for phrases
+  let extendedPhraseAnswers = {};
+  let extendedPhraseTranscript = '';
+
+  // Load Extended Listening question
+  const loadExtendedQuestion = async (questionId) => {
+    const question = extendedDatabase.find(q => q.id === questionId);
+    if (!question) {
+      console.error(`Question ${questionId} not found`);
+      return;
+    }
+    
+    currentExtendedQuestionId = questionId;
+    // Get transcript and clean it (remove existing gap markers like __word__)
+    let rawTranscript = question.transcript || question.correctSentence || "";
+    // Remove gap markers (double underscores) and keep the word
+    extendedCorrectTranscript = rawTranscript.replace(/__([^_]+)__/g, '$1').trim();
+    extendedGapAnswers = {};
+    
+    readingPhase.style.display = "block";
+    listeningPhase.style.display = "none";
+    readingTimeLeft = 30;
+    
+    // Hide Redo and Randomize Blanks buttons and result message
+    redoExtendedBtn.style.display = 'none';
+    randomizeBlanksBtn.style.display = 'none';
+    checkResultExtended.style.display = 'none';
+    fillPhrasesSection.style.display = 'none';
+    checkResultPhrases.style.display = 'none';
+    
+    // Set transcript with clickable words
+    makeWordsClickable(fullTranscript, extendedCorrectTranscript);
+    
+    if (readingTimer) {
+      clearInterval(readingTimer);
+      readingTimer = null;
+    }
+    
+    startReadingTimer();
+    await loadExtendedAudio(question.audioFile);
+  };
+
+  // Load Extended Listening audio
+  const loadExtendedAudio = async (audioFile) => {
+    // Determine MIME type based on file extension
+    const getAudioMimeType = (filename) => {
+      const ext = filename.toLowerCase().split('.').pop();
+      const mimeTypes = {
+        'mp3': 'audio/mpeg',
+        'wav': 'audio/wav',
+        'm4a': 'audio/mp4'
+      };
+      return mimeTypes[ext] || 'audio/mpeg';
+    };
+    
+    // Get base filename (without extension) - use question ID
+    const baseFilename = currentExtendedQuestionId.toString();
+    
+    // Try extensions in order: mp3, wav, m4a
+    const tryExtensions = ['mp3', 'wav', 'm4a'];
+    
+    // Try to find the file by checking each extension in order
+    let foundFile = null;
+    
+    for (let i = 0; i < tryExtensions.length; i++) {
+      const ext = tryExtensions[i];
+      const testFile = `${baseFilename}.${ext}`;
+      const testPath = `database/extended/audio/${testFile}`;
+      
+      const exists = await checkFileExists(testPath);
+      console.log(`[loadExtendedAudio] Checking ${testPath}: ${exists ? 'EXISTS' : 'NOT FOUND'}`);
+      
+      if (exists) {
+        foundFile = testFile;
+        console.log(`[loadExtendedAudio] ✓ Found file: ${foundFile} (tried ${i + 1} of ${tryExtensions.length} extensions)`);
+        break;
+      }
+    }
+    
+    if (!foundFile) {
+      const errorMsg = `No audio file found for question ${currentExtendedQuestionId}. Tried: ${tryExtensions.map(ext => `${baseFilename}.${ext}`).join(', ')}`;
+      console.error(`[loadExtendedAudio] ${errorMsg}`);
+      alert(errorMsg);
+      return;
+    }
+    
+    const audioPath = `database/extended/audio/${foundFile}?t=${Date.now()}`;
+    const mimeType = getAudioMimeType(foundFile);
+    
+    // Clear any existing source elements
+    while (audioExtended.firstChild) {
+      audioExtended.removeChild(audioExtended.firstChild);
+    }
+    
+    // Create source element with proper type
+    const source = document.createElement('source');
+    source.src = audioPath;
+    source.type = mimeType;
+    audioExtended.appendChild(source);
+    
+    // Reset controls
+    audioExtended.load(); // Reload the audio element
+    audioExtended.currentTime = 0;
+    audioSliderExtended.value = 0;
+    currentTimeExtended.textContent = "0:00";
+    totalTimeExtended.textContent = "0:00";
+    playPauseExtendedBtn.textContent = "Play";
+  };
+
+  // Start reading timer (30 seconds)
+  const startReadingTimer = () => {
+    readingTimerDisplay.textContent = readingTimeLeft;
+    
+    readingTimer = setInterval(() => {
+      readingTimeLeft--;
+      readingTimerDisplay.textContent = readingTimeLeft;
+      
+      if (readingTimeLeft <= 0) {
+        clearInterval(readingTimer);
+        readingTimer = null;
+        startListeningPhase();
+      }
+    }, 1000);
+  };
+
+  // Skip reading time
+  skipReadingBtn.addEventListener("click", () => {
+    if (readingTimer) {
+      clearInterval(readingTimer);
+      readingTimer = null;
+    }
+    startListeningPhase();
+  });
+
+  // Start listening phase with gapped transcript
+  const startListeningPhase = () => {
+    readingPhase.style.display = "none";
+    listeningPhase.style.display = "block";
+    
+    extendedGappedTranscript = generateGaps(extendedCorrectTranscript);
+    gappedTranscript.innerHTML = extendedGappedTranscript;
+    
+    // Make words in gapped transcript clickable (excluding gap inputs)
+    makeWordsInGappedTranscriptClickable(gappedTranscript);
+    
+    gappedTranscript.querySelectorAll('.gap-input').forEach(input => {
+      input.addEventListener('input', (e) => {
+        const gapId = e.target.dataset.gapId;
+        extendedGapAnswers[gapId] = e.target.value.trim().toLowerCase();
+      });
+    });
+    
+    // Generate and show phrase gaps (async)
+    const selectedPhraseLength = parseInt(document.querySelector('input[name="phrase-length"]:checked').value, 10);
+    phrasesTranscript.innerHTML = '<p>Analyzing phrases...</p>';
+    fillPhrasesSection.style.display = 'block';
+    
+    generatePhraseGaps(extendedCorrectTranscript, selectedPhraseLength).then(result => {
+      extendedPhraseTranscript = result;
+      phrasesTranscript.innerHTML = extendedPhraseTranscript;
+      extendedPhraseAnswers = {};
+      
+      // Add event listeners to phrase inputs
+      phrasesTranscript.querySelectorAll('.phrase-input').forEach(input => {
+        input.addEventListener('input', (e) => {
+          const phraseId = e.target.dataset.phraseId;
+          extendedPhraseAnswers[phraseId] = e.target.value.trim().toLowerCase();
+        });
+      });
+    }).catch(error => {
+      console.error('Error generating phrase gaps:', error);
+      phrasesTranscript.innerHTML = '<p>Error generating phrases. Please try again.</p>';
+    });
+  };
+
+  // Format time as MM:SS
+  const formatTime = (seconds) => {
+    if (isNaN(seconds) || !isFinite(seconds)) return "0:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Update audio slider and time display
+  const updateAudioControls = () => {
+    if (!audioExtended.duration || !isFinite(audioExtended.duration)) return;
+    
+    const current = audioExtended.currentTime;
+    const duration = audioExtended.duration;
+    const percent = (current / duration) * 100;
+    
+    audioSliderExtended.value = percent;
+    currentTimeExtended.textContent = formatTime(current);
+    totalTimeExtended.textContent = formatTime(duration);
+  };
+
+  // Update play/pause button text
+  const updatePlayPauseButton = () => {
+    if (audioExtended.paused) {
+      playPauseExtendedBtn.textContent = "Play";
+    } else {
+      playPauseExtendedBtn.textContent = "Pause";
+    }
+  };
+
+  // Play/Pause Extended Listening audio
+  playPauseExtendedBtn.addEventListener("click", () => {
+    if (audioExtended.paused) {
+      audioExtended.play().catch(error => {
+        console.error("Error playing audio:", error);
+      });
+    } else {
+      audioExtended.pause();
+    }
+    updatePlayPauseButton();
+  });
+
+  // Handle playback speed change
+  speedSelectExtended.addEventListener("change", (e) => {
+    audioExtended.playbackRate = parseFloat(e.target.value);
+  });
+
+  // Handle time slider (seek)
+  let isDragging = false;
+  audioSliderExtended.addEventListener("input", () => {
+    isDragging = true;
+    if (audioExtended.duration && isFinite(audioExtended.duration)) {
+      const seekTime = (audioSliderExtended.value / 100) * audioExtended.duration;
+      audioExtended.currentTime = seekTime;
+    }
+  });
+
+  audioSliderExtended.addEventListener("change", () => {
+    isDragging = false;
+  });
+
+  // Update controls as audio plays
+  audioExtended.addEventListener("timeupdate", () => {
+    if (!isDragging) {
+      updateAudioControls();
+    }
+  });
+
+  audioExtended.addEventListener("loadedmetadata", () => {
+    updateAudioControls();
+    totalTimeExtended.textContent = formatTime(audioExtended.duration);
+  });
+
+  audioExtended.addEventListener("play", () => {
+    updatePlayPauseButton();
+  });
+
+  audioExtended.addEventListener("pause", () => {
+    updatePlayPauseButton();
+  });
+
+  audioExtended.addEventListener("ended", () => {
+    updatePlayPauseButton();
+    audioExtended.currentTime = 0;
+    updateAudioControls();
+  });
+
+  // Check Extended Listening answers
+  checkExtendedBtn.addEventListener("click", () => {
+    const gapInputs = gappedTranscript.querySelectorAll('.gap-input');
+    let correctCount = 0;
+    let totalGaps = gapInputs.length;
+    
+    gapInputs.forEach(input => {
+      const userAnswer = input.value.trim().toLowerCase();
+      const correctAnswer = input.dataset.correct.toLowerCase();
+      
+      if (userAnswer === correctAnswer) {
+        input.style.backgroundColor = '#dcfce7';
+        input.style.color = '#166534';
+        correctCount++;
+      } else {
+        input.style.backgroundColor = '#fee2e2';
+        input.style.color = '#991b1b';
+        input.placeholder = correctAnswer;
+      }
+      input.disabled = true;
+      
+      // Show speaker icon and add click handler
+      const speakerIcon = input.nextElementSibling;
+      if (speakerIcon && speakerIcon.classList.contains('gap-speaker-icon')) {
+        speakerIcon.style.display = 'inline-block';
+        speakerIcon.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          // Get the span element (not the text node inside it)
+          const iconElement = e.currentTarget || e.target.closest('.gap-speaker-icon') || e.target;
+          const correctWord = iconElement.dataset.word;
+          if (correctWord) {
+            speakWordExtended(correctWord);
+            
+            // Visual feedback - highlight icon briefly
+            iconElement.classList.add('icon-speaking');
+            setTimeout(() => {
+              iconElement.classList.remove('icon-speaking');
+            }, 500);
+          }
+        });
+      }
+    });
+    
+    // Show Redo and Randomize Blanks buttons
+    redoExtendedBtn.style.display = 'inline-block';
+    randomizeBlanksBtn.style.display = 'inline-block';
+    
+    // Show result message in custom box
+    checkResultExtended.textContent = `You got ${correctCount} out of ${totalGaps} gaps correct!`;
+    checkResultExtended.style.display = 'block';
+  });
+
+  // Redo button - clear all input boxes
+  redoExtendedBtn.addEventListener("click", () => {
+    const gapInputs = gappedTranscript.querySelectorAll('.gap-input');
+    gapInputs.forEach(input => {
+      input.value = '';
+      input.style.backgroundColor = '';
+      input.style.color = '';
+      input.placeholder = '';
+      input.disabled = false;
+      
+      // Hide speaker icon
+      const speakerIcon = input.nextElementSibling;
+      if (speakerIcon && speakerIcon.classList.contains('gap-speaker-icon')) {
+        speakerIcon.style.display = 'none';
+      }
+      
+      // Remove click handler (back to typing mode)
+      // Clone the input to remove all event listeners
+      const newInput = input.cloneNode(true);
+      input.parentNode.replaceChild(newInput, input);
+      
+      // Re-add only the input event listener
+      newInput.addEventListener('input', (e) => {
+        const gapId = e.target.dataset.gapId;
+        extendedGapAnswers[gapId] = e.target.value.trim().toLowerCase();
+      });
+    });
+    
+    // Hide buttons and result message
+    redoExtendedBtn.style.display = 'none';
+    randomizeBlanksBtn.style.display = 'none';
+    checkResultExtended.style.display = 'none';
+  });
+
+  // Randomize Blanks button - regenerate gaps
+  randomizeBlanksBtn.addEventListener("click", () => {
+    // Regenerate gaps with new randomization
+    extendedGappedTranscript = generateGaps(extendedCorrectTranscript);
+    gappedTranscript.innerHTML = extendedGappedTranscript;
+    
+    // Clear gap answers
+    extendedGapAnswers = {};
+    
+    // Add event listeners to new gap inputs (typing mode only, no pronunciation)
+    gappedTranscript.querySelectorAll('.gap-input').forEach(input => {
+      input.addEventListener('input', (e) => {
+        const gapId = e.target.dataset.gapId;
+        extendedGapAnswers[gapId] = e.target.value.trim().toLowerCase();
+      });
+    });
+    
+    // Hide buttons and result message (user needs to check again)
+    redoExtendedBtn.style.display = 'none';
+    randomizeBlanksBtn.style.display = 'none';
+    checkResultExtended.style.display = 'none';
+  });
+
+  // Question selector for Extended Listening
+  questionSelectExtended.addEventListener("change", (e) => {
+    const questionId = parseInt(e.target.value, 10);
+    if (questionId && questionId !== currentExtendedQuestionId) {
+      loadExtendedQuestion(questionId);
+    }
+  });
+
+  // Phrase length radio buttons - regenerate phrases when changed
+  phraseLengthRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+      if (fillPhrasesSection.style.display !== 'none') {
+        const selectedPhraseLength = parseInt(radio.value, 10);
+        phrasesTranscript.innerHTML = '<p>Analyzing phrases...</p>';
+        
+        generatePhraseGaps(extendedCorrectTranscript, selectedPhraseLength).then(result => {
+          extendedPhraseTranscript = result;
+          phrasesTranscript.innerHTML = extendedPhraseTranscript;
+          extendedPhraseAnswers = {};
+          
+          // Add event listeners to new phrase inputs
+          phrasesTranscript.querySelectorAll('.phrase-input').forEach(input => {
+            input.addEventListener('input', (e) => {
+              const phraseId = e.target.dataset.phraseId;
+              extendedPhraseAnswers[phraseId] = e.target.value.trim().toLowerCase();
+            });
+          });
+        }).catch(error => {
+          console.error('Error generating phrase gaps:', error);
+          phrasesTranscript.innerHTML = '<p>Error generating phrases. Please try again.</p>';
+        });
+      }
+    });
+  });
+
+  // Check Phrases button
+  checkPhrasesBtn.addEventListener("click", () => {
+    const phraseInputs = phrasesTranscript.querySelectorAll('.phrase-input');
+    let correctCount = 0;
+    let totalPhrases = phraseInputs.length;
+    
+    phraseInputs.forEach(input => {
+      const userAnswer = input.value.trim().toLowerCase();
+      const correctAnswer = input.dataset.correct.toLowerCase();
+      
+      if (userAnswer === correctAnswer) {
+        input.style.backgroundColor = '#dcfce7';
+        input.style.color = '#166534';
+        correctCount++;
+      } else {
+        input.style.backgroundColor = '#fee2e2';
+        input.style.color = '#991b1b';
+        input.placeholder = correctAnswer;
+      }
+      input.disabled = true;
+    });
+    
+    // Show Redo button
+    redoPhrasesBtn.style.display = 'inline-block';
+    
+    // Show result message
+    checkResultPhrases.textContent = `You got ${correctCount} out of ${totalPhrases} phrases correct!`;
+    checkResultPhrases.style.display = 'block';
+  });
+
+  // Redo Phrases button
+  redoPhrasesBtn.addEventListener("click", () => {
+    const phraseInputs = phrasesTranscript.querySelectorAll('.phrase-input');
+    phraseInputs.forEach(input => {
+      input.value = '';
+      input.style.backgroundColor = '';
+      input.style.color = '';
+      input.placeholder = '';
+      input.disabled = false;
+    });
+    
+    // Hide buttons and result message
+    redoPhrasesBtn.style.display = 'none';
+    checkResultPhrases.style.display = 'none';
+  });
+
 
   // Extract missed words from diff
   const getMissedWords = (diff) => {
@@ -856,9 +1999,31 @@
   // Helper function to check if a file exists
   const checkFileExists = async (url) => {
     try {
-      const response = await fetch(url, { method: 'HEAD' });
-      return response.ok;
+      // Use HEAD method to check if file exists
+      const response = await fetch(url, { 
+        method: 'HEAD',
+        cache: 'no-cache' 
+      });
+      
+      const status = response.status;
+      const contentType = response.headers.get('content-type');
+      
+      // Check if it's a successful response (200 OK)
+      if (response.ok && status === 200) {
+        // Must have audio content-type to be valid
+        if (contentType && contentType.startsWith('audio/')) {
+          console.log(`[checkFileExists] ✓ Valid audio file: ${url} (Content-Type: ${contentType})`);
+          return true;
+        } else {
+          console.log(`[checkFileExists] ✗ Not an audio file: ${url} (Status: ${status}, Content-Type: ${contentType || 'none'})`);
+          return false;
+        }
+      } else {
+        console.log(`[checkFileExists] ✗ Request failed: ${url} (Status: ${status})`);
+        return false;
+      }
     } catch (e) {
+      console.log(`[checkFileExists] ✗ Error checking ${url}:`, e.message);
       return false;
     }
   };
@@ -1787,41 +2952,54 @@
   };
 
   const populateQuestionSelect = (mode) => {
-    const database = mode === "type" ? typeDatabase : speakDatabase;
-    const select = mode === "type" ? questionSelectType : questionSelectSpeak;
-    const currentIdDisplay = mode === "type" ? currentQuestionIdType : currentQuestionIdSpeak;
-    const totalDisplay = mode === "type" ? totalQuestionsType : totalQuestionsSpeak;
-    
-    // Clear existing options
-    select.innerHTML = "";
-    
-    // Add options - just show the ID number
-    database.forEach(item => {
-      const option = document.createElement("option");
-      option.value = item.id;
-      option.textContent = item.id.toString();
-      select.appendChild(option);
-    });
-    
-    // Update current question ID display
-    const currentId = mode === "type" ? currentTypeQuestionId : currentSpeakQuestionId;
-    currentIdDisplay.textContent = currentId;
-    
-    // Update total questions display
-    totalDisplay.textContent = database.length;
-    
-    // Set current selection
-    select.value = currentId;
+    if (mode === "extended") {
+      const database = extendedDatabase;
+      const select = questionSelectExtended;
+      const currentIdDisplay = currentQuestionIdExtended;
+      const totalDisplay = totalQuestionsExtended;
+      
+      select.innerHTML = "";
+      database.forEach(item => {
+        const option = document.createElement("option");
+        option.value = item.id;
+        option.textContent = item.id.toString();
+        select.appendChild(option);
+      });
+      
+      currentIdDisplay.textContent = currentExtendedQuestionId;
+      totalDisplay.textContent = database.length;
+      select.value = currentExtendedQuestionId;
+    } else {
+      const database = mode === "type" ? typeDatabase : speakDatabase;
+      const select = mode === "type" ? questionSelectType : questionSelectSpeak;
+      const currentIdDisplay = mode === "type" ? currentQuestionIdType : currentQuestionIdSpeak;
+      const totalDisplay = mode === "type" ? totalQuestionsType : totalQuestionsSpeak;
+      
+      select.innerHTML = "";
+      database.forEach(item => {
+        const option = document.createElement("option");
+        option.value = item.id;
+        option.textContent = item.id.toString();
+        select.appendChild(option);
+      });
+      
+      const currentId = mode === "type" ? currentTypeQuestionId : currentSpeakQuestionId;
+      currentIdDisplay.textContent = currentId;
+      totalDisplay.textContent = database.length;
+      select.value = currentId;
+    }
   };
 
   // Initialize databases
   const initializeDatabases = async () => {
     typeDatabase = await loadDatabase("type");
     speakDatabase = await loadDatabase("speak");
+    extendedDatabase = await loadDatabase("extended");
     
     // Populate selectors
     populateQuestionSelect("type");
     populateQuestionSelect("speak");
+    populateQuestionSelect("extended");
     
     // Load first question for each mode
     // Load Speak first (since Type tab is active by default, Type should load last to set the correct audio)
@@ -1832,6 +3010,10 @@
     if (typeDatabase.length > 0) {
       currentTypeQuestionId = 1;
       loadQuestion("type", 1);
+    }
+    if (extendedDatabase.length > 0) {
+      currentExtendedQuestionId = 1;
+      loadExtendedQuestion(1);
     }
   };
 

@@ -3,12 +3,16 @@
   "version": "1.0.0",
   "description": "Dictation practice app",
   "scripts": {
-    "start": "http-server -S -p 8443 -C cert.pem -K key.pem",
+    "start": "node server.js",
     "setup": "node setup-https.js",
     "update-db": "node update-database.js"
   },
   "dependencies": {
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "youtube-transcript": "^1.2.1",
+    "openai": "^4.20.0"
   },
   "devDependencies": {
     "http-server": "^14.1.1"

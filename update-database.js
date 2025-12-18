@@ -7,6 +7,7 @@
  * Examples:
  *   node update-database.js questions.xlsx type
  *   node update-database.js questions.xlsx speak
+ *   node update-database.js questions.xlsx extended
  *   node update-database.js questions.xlsx type 100  (starts from ID 100)
  */
 
@@ -20,7 +21,7 @@ const args = process.argv.slice(2);
 if (args.length < 2) {
   console.error('Usage: node update-database.js <excel-file> <mode> [start-id]');
   console.error('  excel-file: Path to Excel file (.xlsx)');
-  console.error('  mode: "type" or "speak"');
+  console.error('  mode: "type", "speak", or "extended"');
   console.error('  start-id: (optional) Starting ID number (default: 1)');
   process.exit(1);
 }
@@ -29,8 +30,8 @@ const excelFile = args[0];
 const mode = args[1].toLowerCase();
 const startId = args[2] ? parseInt(args[2], 10) : 1;
 
-if (mode !== 'type' && mode !== 'speak') {
-  console.error('Error: mode must be "type" or "speak"');
+if (mode !== 'type' && mode !== 'speak' && mode !== 'extended') {
+  console.error('Error: mode must be "type", "speak", or "extended"');
   process.exit(1);
 }
 
@@ -100,11 +101,17 @@ try {
     // Check if item with this ID already exists
     const existingIndex = existingItems.findIndex(item => item.id === rowId);
     
-    const item = {
+    // For extended mode, use "transcript" field; for type/speak, use "correctSentence"
+    const item = mode === 'extended' ? {
+      id: rowId,
+      audioFile: `${rowId}.mp3`,
+      transcript: sentence,
+      category: row[1] ? String(row[1]).trim() : 'general'
+    } : {
       id: rowId,
       audioFile: `${rowId}.mp3`,
       correctSentence: sentence,
-      category: row[1] ? String(row[1]).trim() : 'general' // Column 2 (index 1) as category if available
+      category: row[1] ? String(row[1]).trim() : 'general'
     };
     
     if (existingIndex >= 0) {

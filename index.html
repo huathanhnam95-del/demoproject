@@ -114,6 +114,7 @@
         </div>
         <div class="controls">
           <button id="check-extended-btn" type="button">Check</button>
+          <button id="support-mode-btn" type="button">Show Hints</button>
           <button id="redo-extended-btn" type="button" style="display: none;">Retry</button>
           <button id="randomize-blanks-btn" type="button" style="display: none;">Try New Blanks</button>
         </div>
@@ -136,7 +137,9 @@
           </div>
           <div id="phrases-transcript" class="phrases-transcript"></div>
           <div class="phrase-controls">
+            <button id="play-phrases-btn" type="button" class="play-pause-btn">Play</button>
             <button id="check-phrases-btn" type="button">Check Phrases</button>
+            <button id="support-phrases-btn" type="button">Show Hints</button>
             <button id="redo-phrases-btn" type="button" style="display: none;">Retry Phrases</button>
           </div>
           <div id="check-result-phrases" class="check-result-box" style="display: none;"></div>
@@ -234,6 +237,22 @@
   <audio id="audio" preload="auto"></audio>
   <audio id="audio-extended" preload="auto"></audio>
   <script src="https://cdn.jsdelivr.net/npm/compromise@14.10.0/builds/compromise.min.js"></script>
+  <script>
+    // Configure API URL for paraphrase backend
+    // For local development: 'http://localhost:5000'
+    // For production: Set to your deployed backend URL (e.g., 'https://your-app.onrender.com')
+    // Leave undefined to auto-detect (localhost for local, or set via environment)
+    if (typeof window.PARAPHRASE_API_URL === 'undefined') {
+      // Auto-detect: use localhost for local development, or set production URL
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        window.PARAPHRASE_API_URL = 'http://localhost:5000';
+      } else {
+        // Production: Set your deployed backend URL here
+        // window.PARAPHRASE_API_URL = 'https://your-backend-url.onrender.com';
+        // Or leave undefined to show error message when backend isn't available
+      }
+    }
+  </script>
   <script>
     // Verify compromise loaded and expose it globally
     (function() {

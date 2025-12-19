@@ -633,8 +633,11 @@
   const totalQuestionsExtended = document.getElementById("total-questions-extended");
   const playPauseExtendedBtn = document.getElementById("play-pause-extended-btn");
   const checkExtendedBtn = document.getElementById("check-extended-btn");
+  const supportModeBtn = document.getElementById("support-mode-btn");
   const redoExtendedBtn = document.getElementById("redo-extended-btn");
   const randomizeBlanksBtn = document.getElementById("randomize-blanks-btn");
+  const supportPhrasesBtn = document.getElementById("support-phrases-btn");
+  const playPhrasesBtn = document.getElementById("play-phrases-btn");
   const skipReadingBtn = document.getElementById("skip-reading-btn");
   const readingTimerDisplay = document.getElementById("reading-timer-display");
   const readingPhase = document.getElementById("reading-phase");
@@ -650,7 +653,7 @@
   const checkResultPhrases = document.getElementById("check-result-phrases");
   const audioExtended = document.getElementById("audio-extended");
   const audioSliderExtended = document.getElementById("audio-slider-extended");
-
+  
   // Speech synthesis for word pronunciation in Extended Listening
   // Uses the same voice settings as Type mode
   const speakWordExtended = (word) => {
@@ -1143,7 +1146,9 @@
         for (let i = 0; i < words.length; i++) {
           if (i === foundIndex) {
             // Insert gap input at the start of the phrase
-            resultWords.push(`<input type="text" class="phrase-input" data-phrase-id="${totalWordCount + foundIndex}" data-correct="${cleanPhraseText}" placeholder="" />`);
+            // Calculate width based on phrase length (approximately 8px per character + padding)
+            const phraseWidth = Math.max(150, cleanPhraseText.length * 8 + 40);
+            resultWords.push(`<input type="text" class="phrase-input" data-phrase-id="${totalWordCount + foundIndex}" data-correct="${cleanPhraseText}" placeholder="" style="width: ${phraseWidth}px; min-width: ${phraseWidth}px;" />`);
             // Skip the remaining words in the phrase
             i += phraseLength - 1;
           } else {
@@ -1245,7 +1250,9 @@
       for (let i = 0; i < words.length; i++) {
         if (i === selectedPhrase.startIndex) {
           // Insert gap input at the start of the phrase
-          resultWords.push(`<input type="text" class="phrase-input" data-phrase-id="${selectedPhrase.startPosition}" data-correct="${cleanPhrase}" placeholder="" />`);
+          // Calculate width based on phrase length (approximately 8px per character + padding)
+          const phraseWidth = Math.max(150, cleanPhrase.length * 8 + 40);
+          resultWords.push(`<input type="text" class="phrase-input" data-phrase-id="${selectedPhrase.startPosition}" data-correct="${cleanPhrase}" placeholder="" style="width: ${phraseWidth}px; min-width: ${phraseWidth}px;" />`);
           // Skip the remaining words in the phrase
           i += phraseLength - 1;
         } else {
@@ -1291,8 +1298,31 @@
     fillPhrasesSection.style.display = 'none';
     checkResultPhrases.style.display = 'none';
     
+    // Reset support mode
+    supportModeActive = false;
+    if (supportModeBtn) {
+      supportModeBtn.textContent = 'Show Hints';
+      supportModeBtn.style.backgroundColor = '';
+      supportModeBtn.style.color = '';
+    }
+    
+    // Reset phrases support mode
+    supportPhrasesActive = false;
+    if (supportPhrasesBtn) {
+      supportPhrasesBtn.textContent = 'Show Hints';
+      supportPhrasesBtn.style.backgroundColor = '';
+      supportPhrasesBtn.style.color = '';
+    }
+    
     // Set transcript with clickable words
-    makeWordsClickable(fullTranscript, extendedCorrectTranscript);
+    if (fullTranscript && extendedCorrectTranscript) {
+      makeWordsClickable(fullTranscript, extendedCorrectTranscript);
+    } else {
+      console.warn('Cannot display transcript:', { 
+        fullTranscript: !!fullTranscript, 
+        transcriptText: extendedCorrectTranscript ? extendedCorrectTranscript.substring(0, 50) + '...' : 'empty' 
+      });
+    }
     
     if (readingTimer) {
       clearInterval(readingTimer);
@@ -1368,6 +1398,9 @@
     currentTimeExtended.textContent = "0:00";
     totalTimeExtended.textContent = "0:00";
     playPauseExtendedBtn.textContent = "Play";
+    if (playPhrasesBtn) {
+      playPhrasesBtn.textContent = "Play";
+    }
   };
 
   // Start reading timer (30 seconds)
@@ -1523,6 +1556,161 @@
     updateAudioControls();
   });
 
+  // Support mode: Show first and last letters with underscores (for single-word gaps)
+  let supportModeActive = false;
+  
+  supportModeBtn.addEventListener("click", () => {
+    const gapInputs = gappedTranscript.querySelectorAll('.gap-input');
+    
+    if (!supportModeActive) {
+      // Activate support mode
+      supportModeActive = true;
+      supportModeBtn.textContent = 'Hide Hints';
+      supportModeBtn.style.backgroundColor = '#4caf50';
+      supportModeBtn.style.color = 'white';
+      
+      gapInputs.forEach(input => {
+        const correctAnswer = input.dataset.correct;
+        if (!correctAnswer || correctAnswer.length < 2) {
+          // Skip single-letter words or empty answers
+          return;
+        }
+        
+        // Generate hint pattern: first letter + underscores + last letter
+        const firstLetter = correctAnswer[0];
+        const lastLetter = correctAnswer[correctAnswer.length - 1];
+        const middleUnderscores = '_ '.repeat(Math.max(0, correctAnswer.length - 2)).trim();
+        const hintPattern = `${firstLetter} ${middleUnderscores} ${lastLetter}`.replace(/\s+/g, ' ');
+        
+        // Store original placeholder if not already stored
+        if (!input.dataset.originalPlaceholder) {
+          input.dataset.originalPlaceholder = input.placeholder || '';
+        }
+        
+        // Set placeholder to show hint
+        input.placeholder = hintPattern;
+        
+        // Add visual indicator
+        input.classList.add('support-mode-active');
+      });
+    } else {
+      // Deactivate support mode
+      supportModeActive = false;
+      supportModeBtn.textContent = 'Show Hints';
+      supportModeBtn.style.backgroundColor = '';
+      supportModeBtn.style.color = '';
+      
+      gapInputs.forEach(input => {
+        // Restore original placeholder
+        const originalPlaceholder = input.dataset.originalPlaceholder || '';
+        input.placeholder = originalPlaceholder;
+        input.classList.remove('support-mode-active');
+      });
+    }
+  });
+
+  // Play button for phrases section
+  const updatePlayPhrasesButton = () => {
+    if (audioExtended.paused) {
+      playPhrasesBtn.textContent = "Play";
+    } else {
+      playPhrasesBtn.textContent = "Pause";
+    }
+  };
+
+  playPhrasesBtn.addEventListener("click", () => {
+    if (audioExtended.paused) {
+      audioExtended.play().catch(error => {
+        console.error("Error playing audio:", error);
+      });
+    } else {
+      audioExtended.pause();
+    }
+    updatePlayPhrasesButton();
+  });
+
+  // Update phrases play button when audio state changes
+  audioExtended.addEventListener("play", () => {
+    updatePlayPhrasesButton();
+  });
+
+  audioExtended.addEventListener("pause", () => {
+    updatePlayPhrasesButton();
+  });
+
+  // Support mode for phrases: Show first and last letters with underscores
+  let supportPhrasesActive = false;
+  
+  supportPhrasesBtn.addEventListener("click", () => {
+    const phraseInputs = phrasesTranscript.querySelectorAll('.phrase-input');
+    
+    if (!supportPhrasesActive) {
+      // Activate support mode
+      supportPhrasesActive = true;
+      supportPhrasesBtn.textContent = 'Hide Hints';
+      supportPhrasesBtn.style.backgroundColor = '#4caf50';
+      supportPhrasesBtn.style.color = 'white';
+      
+      phraseInputs.forEach(input => {
+        const correctAnswer = input.dataset.correct;
+        if (!correctAnswer || correctAnswer.length < 2) {
+          // Skip single-character phrases or empty answers
+          return;
+        }
+        
+        // For phrases, show first and last letter of EACH word
+        const words = correctAnswer.trim().split(/\s+/);
+        if (words.length === 0) {
+          return;
+        }
+        
+        // Build hint pattern: for each word, show first letter + underscores + last letter
+        const hintParts = words.map(word => {
+          if (word.length < 2) {
+            return word; // Single character word, return as is
+          }
+          const firstLetter = word[0];
+          const lastLetter = word[word.length - 1];
+          const middleUnderscores = '_ '.repeat(Math.max(0, word.length - 2)).trim();
+          return `${firstLetter} ${middleUnderscores} ${lastLetter}`.replace(/\s+/g, ' ');
+        });
+        
+        // Join words with spaces
+        const hintPattern = hintParts.join(' ');
+        
+        // Store original placeholder if not already stored
+        if (!input.dataset.originalPlaceholder) {
+          input.dataset.originalPlaceholder = input.placeholder || '';
+        }
+        
+        // Set placeholder to show hint
+        input.placeholder = hintPattern;
+        
+        // Set input width based on phrase length to ensure hint is visible
+        // Calculate width: hint pattern length * 8px per character + padding
+        const estimatedWidth = Math.max(150, hintPattern.length * 8 + 40);
+        input.style.width = `${estimatedWidth}px`;
+        input.style.minWidth = `${estimatedWidth}px`;
+        
+        // Add visual indicator
+        input.classList.add('support-mode-active');
+      });
+    } else {
+      // Deactivate support mode
+      supportPhrasesActive = false;
+      supportPhrasesBtn.textContent = 'Show Hints';
+      supportPhrasesBtn.style.backgroundColor = '';
+      supportPhrasesBtn.style.color = '';
+      
+      phraseInputs.forEach(input => {
+        // Restore original placeholder
+        const originalPlaceholder = input.dataset.originalPlaceholder || '';
+        input.placeholder = originalPlaceholder;
+        input.classList.remove('support-mode-active');
+      });
+    }
+  });
+
   // Check Extended Listening answers
   checkExtendedBtn.addEventListener("click", () => {
     const gapInputs = gappedTranscript.querySelectorAll('.gap-input');
@@ -1578,13 +1766,20 @@
 
   // Redo button - clear all input boxes
   redoExtendedBtn.addEventListener("click", () => {
+    // Reset support mode
+    supportModeActive = false;
+    supportModeBtn.textContent = 'Show Hints';
+    supportModeBtn.style.backgroundColor = '';
+    supportModeBtn.style.color = '';
+    
     const gapInputs = gappedTranscript.querySelectorAll('.gap-input');
     gapInputs.forEach(input => {
       input.value = '';
       input.style.backgroundColor = '';
       input.style.color = '';
-      input.placeholder = '';
+      input.placeholder = input.dataset.originalPlaceholder || '';
       input.disabled = false;
+      input.classList.remove('support-mode-active');
       
       // Hide speaker icon
       const speakerIcon = input.nextElementSibling;
@@ -1612,6 +1807,12 @@
 
   // Randomize Blanks button - regenerate gaps
   randomizeBlanksBtn.addEventListener("click", () => {
+    // Reset support mode
+    supportModeActive = false;
+    supportModeBtn.textContent = 'Show Hints';
+    supportModeBtn.style.backgroundColor = '';
+    supportModeBtn.style.color = '';
+    
     // Regenerate gaps with new randomization
     extendedGappedTranscript = generateGaps(extendedCorrectTranscript);
     gappedTranscript.innerHTML = extendedGappedTranscript;
@@ -1700,13 +1901,22 @@
 
   // Redo Phrases button
   redoPhrasesBtn.addEventListener("click", () => {
+    // Reset phrases support mode
+    supportPhrasesActive = false;
+    if (supportPhrasesBtn) {
+      supportPhrasesBtn.textContent = 'Show Hints';
+      supportPhrasesBtn.style.backgroundColor = '';
+      supportPhrasesBtn.style.color = '';
+    }
+    
     const phraseInputs = phrasesTranscript.querySelectorAll('.phrase-input');
     phraseInputs.forEach(input => {
       input.value = '';
       input.style.backgroundColor = '';
       input.style.color = '';
-      input.placeholder = '';
+      input.placeholder = input.dataset.originalPlaceholder || '';
       input.disabled = false;
+      input.classList.remove('support-mode-active');
     });
     
     // Hide buttons and result message

@@ -233,6 +233,33 @@
 
   <audio id="audio" preload="auto"></audio>
   <audio id="audio-extended" preload="auto"></audio>
+  <script src="https://cdn.jsdelivr.net/npm/compromise@14.10.0/builds/compromise.min.js"></script>
+  <script>
+    // Verify compromise loaded and expose it globally
+    (function() {
+      function checkCompromise() {
+        if (typeof nlp !== 'undefined') {
+          console.log('✓ compromise library loaded successfully');
+          window.compromiseLoaded = true;
+        } else if (typeof window.compromise !== 'undefined') {
+          // Some versions expose it as window.compromise
+          window.nlp = window.compromise;
+          console.log('✓ compromise library loaded (via window.compromise)');
+          window.compromiseLoaded = true;
+        } else {
+          console.error('✗ compromise library not found');
+          console.log('Available window properties:', Object.keys(window).filter(k => k.toLowerCase().includes('nlp') || k.toLowerCase().includes('compromise')));
+        }
+      }
+      
+      // Check immediately and after page load
+      checkCompromise();
+      window.addEventListener('load', checkCompromise);
+      
+      // Also check after a short delay in case of async loading
+      setTimeout(checkCompromise, 1000);
+    })();
+  </script>
   <script src="script.js"></script>
 </body>
 </html>

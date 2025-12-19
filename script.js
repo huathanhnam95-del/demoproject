@@ -964,42 +964,98 @@
     return false;
   };
 
-  // Generate local fallback phrases (used when LLM returns insufficient phrases)
-  const generateLocalFallbackPhrases = (sentence, phraseLength) => {
-    const words = sentence.trim().split(/\s+/);
-    const phrases = [];
+
+  // Extract meaningful 2- or 3-word noun phrase CORES using compromise
+  const extractNounPhrases = (sentence, phraseLength) => {
+    // Check if compromise is loaded (try both window.nlp and global nlp)
+    const nlpFunction = typeof nlp !== 'undefined' ? nlp : (typeof window !== 'undefined' && window.nlp ? window.nlp : null);
     
-    if (words.length < phraseLength) {
+    if (!nlpFunction) {
+      console.error('compromise library not loaded. Available globals:', Object.keys(window).filter(k => k.includes('nlp') || k.includes('compromise')));
       return [];
     }
-    
-    // Generate all possible phrases (simple approach)
-    for (let i = 0; i <= words.length - phraseLength; i++) {
-      const phraseWords = words.slice(i, i + phraseLength);
-      let hasPunctuationBetween = false;
-      
-      // Check for punctuation between words
-      for (let j = 0; j < phraseLength - 1; j++) {
-        const word = phraseWords[j];
-        const wordWithPunct = word.replace(/[.,!?;:]/g, '');
-        if (word.length > wordWithPunct.length) {
-          const punct = word.slice(wordWithPunct.length);
-          if (punct.includes(',') || punct.includes(';')) {
-            hasPunctuationBetween = true;
-            break;
-          }
+
+    const doc = nlpFunction(sentence);
+    const rawNounPhrases = doc.nouns().out('array');
+
+    console.log(`[extractNounPhrases] Sentence: "${sentence}"`);
+    console.log(`[extractNounPhrases] Raw noun phrases from compromise:`, rawNounPhrases);
+    console.log(`[extractNounPhrases] Requested phrase length:`, phraseLength);
+
+    const results = [];
+
+    rawNounPhrases.forEach((np, npIdx) => {
+      // Remove punctuation
+      const clean = np.replace(/[.,!?;:]/g, '').trim();
+      const words = clean.split(/\s+/).filter(w => w && w.length > 0);
+
+      console.log(`[extractNounPhrases] NP ${npIdx + 1}: "${np}" -> "${clean}" (${words.length} words)`);
+
+      // Skip if NP too short
+      if (words.length < phraseLength) {
+        console.log(`[extractNounPhrases] NP ${npIdx + 1} too short, skipping`);
+        return;
+      }
+
+      /*
+        Strategy:
+        - Compromise returns long noun phrases (e.g. "a very adaptable nocturnal predator")
+        - We must extract the RIGHTMOST meaningful core
+        - This avoids determiners and keeps the head noun
+      */
+
+      let foundCore = false;
+      for (let i = words.length - phraseLength; i >= 0; i--) {
+        const candidate = words.slice(i, i + phraseLength);
+
+        // Check if any word in candidate contains hyphens or punctuation
+        const hasHyphenOrPunctuation = candidate.some(word => {
+          // Remove all letters and numbers, check if anything remains (punctuation/hyphens)
+          const cleaned = word.replace(/[a-zA-Z0-9]/g, '');
+          return cleaned.length > 0;
+        });
+
+        if (hasHyphenOrPunctuation) {
+          console.log(`[extractNounPhrases] Rejected: contains hyphen or punctuation "${candidate.join(' ')}"`);
+          continue;
         }
+
+        const firstWord = candidate[0].toLowerCase();
+        const lastWord = candidate[candidate.length - 1].toLowerCase();
+
+        console.log(`[extractNounPhrases] Testing candidate: "${candidate.join(' ')}" (first: "${firstWord}", last: "${lastWord}")`);
+
+        // Reject determiners at start
+        if (['the','a','an','this','that','these','those'].includes(firstWord)) {
+          console.log(`[extractNounPhrases] Rejected: starts with determiner "${firstWord}"`);
+          continue;
+        }
+
+        // Reject function words at end
+        if (['the','a','an','that','which','they','it'].includes(lastWord)) {
+          console.log(`[extractNounPhrases] Rejected: ends with function word "${lastWord}"`);
+          continue;
+        }
+
+        const core = candidate.join(' ');
+        console.log(`[extractNounPhrases] ✓ Accepted core: "${core}"`);
+        results.push(core);
+        foundCore = true;
+        break; // only one core per noun phrase
       }
-      
-      if (!hasPunctuationBetween) {
-        phrases.push(phraseWords.join(' '));
+
+      if (!foundCore) {
+        console.log(`[extractNounPhrases] No valid core found for NP ${npIdx + 1}`);
       }
-    }
-    
-    return phrases;
+    });
+
+    // Remove duplicates
+    const uniqueResults = [...new Set(results)];
+    console.log(`[extractNounPhrases] Final results (${uniqueResults.length} unique):`, uniqueResults);
+    return uniqueResults;
   };
 
-  // Generate phrase gaps using LLM to identify meaningful phrases
+  // Generate phrase gaps using deterministic noun phrase extraction
   const generatePhraseGaps = async (transcript, phraseLength) => {
     // Split transcript into sentences
     const sentenceParts = transcript.split(/([.!?]+\s*)/);
@@ -1017,139 +1073,77 @@
       return transcript;
     }
     
-    try {
-      // Call LLM API to analyze phrases
-      // Use relative URL to match current protocol (http/https)
-      const apiUrl = '/api/analyze-phrases';
+    // Process each sentence with deterministic noun phrase extraction
+    const gappedSentences = [];
+    let lastGapEndPosition = -20;
+    let totalWordCount = 0;
+    
+    sentences.forEach((sentence, sentenceIdx) => {
+      const words = sentence.split(/\s+/).filter(w => w && w.length > 0);
       
-      console.log('Calling phrase analysis API with', sentences.length, 'sentences');
+      // Extract noun phrases using compromise
+      const nounPhrases = extractNounPhrases(sentence, phraseLength);
       
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          sentences: sentences,
-          phraseLength: phraseLength
-        })
-      });
+      console.log(`Sentence ${sentenceIdx + 1}: "${sentence}"`);
+      console.log(`Extracted noun phrases:`, nounPhrases);
       
-      if (!response.ok) {
-        console.warn(`API returned status ${response.status}, using fallback`);
-        return generatePhraseGapsFallback(transcript, phraseLength);
+      // If array is empty → NO BLANK
+      if (nounPhrases.length === 0 || words.length < phraseLength) {
+        console.log(`Sentence ${sentenceIdx + 1} has no valid noun phrases, rendering without blank`);
+        gappedSentences.push(sentence + sentencePunctuation[sentenceIdx]);
+        totalWordCount += words.length;
+        return;
       }
       
-      const data = await response.json();
-      const llmPhrases = data.phrases || [];
+      // Randomly select ONE noun phrase
+      const randomIndex = Math.floor(Math.random() * nounPhrases.length);
+      const selectedPhrase = nounPhrases[randomIndex];
+      const cleanPhrase = selectedPhrase.toLowerCase().trim();
+      const phraseWords = cleanPhrase.split(/\s+/);
       
-      console.log('LLM returned phrases:', llmPhrases);
+      // Find the phrase in the sentence
+      console.log(`[generatePhraseGaps] Looking for phrase: "${selectedPhrase}" (cleaned: "${cleanPhrase}")`);
+      console.log(`[generatePhraseGaps] Sentence words:`, words);
       
-      // If no phrases returned, use fallback
-      if (!llmPhrases || llmPhrases.length === 0) {
-        console.warn('No phrases returned from LLM, using fallback');
-        return generatePhraseGapsFallback(transcript, phraseLength);
+      let foundIndex = -1;
+      for (let i = 0; i <= words.length - phraseLength; i++) {
+        const candidateWords = words.slice(i, i + phraseLength);
+        const candidateText = candidateWords
+          .map(w => w.replace(/[.,!?;:]/g, '').toLowerCase().trim())
+          .join(' ')
+          .trim();
+        
+        console.log(`[generatePhraseGaps] Position ${i}: candidate "${candidateText}" vs target "${cleanPhrase}"`);
+        
+        if (candidateText === cleanPhrase) {
+          // Check minimum distance from last gap
+          const phraseStartPosition = totalWordCount + i;
+          const positionFromLastGap = phraseStartPosition - lastGapEndPosition;
+          
+          console.log(`[generatePhraseGaps] Match found at position ${i}, distance from last gap: ${positionFromLastGap}`);
+          
+          if (positionFromLastGap >= 5) {
+            foundIndex = i;
+            console.log(`[generatePhraseGaps] ✓ Valid match at position ${i}`);
+            break;
+          } else {
+            console.log(`[generatePhraseGaps] ✗ Too close to last gap (${positionFromLastGap} < 5)`);
+          }
+        }
       }
       
-      // Process each sentence with LLM-identified phrases
-      const gappedSentences = [];
-      let lastGapEndPosition = -20;
-      let totalWordCount = 0;
+      if (foundIndex === -1) {
+        console.log(`[generatePhraseGaps] ✗ Phrase "${selectedPhrase}" not found in sentence or too close to last gap`);
+      }
       
-      sentences.forEach((sentence, sentenceIdx) => {
-        const words = sentence.split(/\s+/);
-        let validPhrases = llmPhrases[sentenceIdx] || [];
-        
-        // Ensure we have at least 5 phrases (should be guaranteed by backend, but double-check)
-        if (validPhrases.length < 5 && words.length >= phraseLength) {
-          console.warn(`Sentence ${sentenceIdx + 1} has fewer than 5 phrases, generating fallback`);
-          // Generate additional fallback phrases
-          const fallbackPhrases = generateLocalFallbackPhrases(sentence, phraseLength);
-          // Filter out phrases ending in function words
-          const functionWordEndings = ['the', 'a', 'an', 'they', 'that', 'this', 'these', 'those', 'it', 'he', 'she', 'we', 'you', 'i'];
-          const filteredFallback = fallbackPhrases.filter(phrase => {
-            const words = phrase.trim().toLowerCase().split(/\s+/);
-            const lastWord = words[words.length - 1].replace(/[.,!?;:]/g, '');
-            return !functionWordEndings.includes(lastWord);
-          });
-          validPhrases = [...new Set([...validPhrases, ...filteredFallback])];
-        }
-        
-        if (validPhrases.length === 0 || words.length < phraseLength) {
-          gappedSentences.push(sentence + sentencePunctuation[sentenceIdx]);
-          totalWordCount += words.length;
-          return;
-        }
-        
-        // Find phrases in the sentence that match LLM suggestions
-        const phraseCandidates = [];
-        
-        console.log(`Processing sentence ${sentenceIdx + 1}: "${sentence}"`);
-        console.log(`Valid phrases from LLM:`, validPhrases);
-        
-        validPhrases.forEach(phraseText => {
-          // Clean the phrase (remove punctuation for matching)
-          const cleanPhrase = phraseText.replace(/[.,!?;:]/g, '').toLowerCase().trim();
-          const phraseWords = cleanPhrase.split(/\s+/).filter(w => w.length > 0);
-          
-          if (phraseWords.length !== phraseLength) {
-            console.log(`Skipping phrase "${phraseText}" - length mismatch (${phraseWords.length} vs ${phraseLength})`);
-            return; // Skip if length doesn't match
-          }
-          
-          // Find the phrase in the sentence
-          for (let i = 0; i <= words.length - phraseLength; i++) {
-            const candidateWords = words.slice(i, i + phraseLength);
-            const candidateText = candidateWords
-              .map(w => w.replace(/[.,!?;:]/g, '').toLowerCase().trim())
-              .join(' ')
-              .trim();
-            
-            if (candidateText === cleanPhrase) {
-              // Check minimum distance from last gap
-              const phraseStartPosition = totalWordCount + i;
-              const positionFromLastGap = phraseStartPosition - lastGapEndPosition;
-              
-              console.log(`Found phrase "${phraseText}" at position ${i}, distance from last gap: ${positionFromLastGap}`);
-              
-              // Relaxed minimum distance to 5 words for phrases (was 10)
-              if (positionFromLastGap >= 5) {
-                phraseCandidates.push({
-                  startIndex: i,
-                  words: candidateWords,
-                  startPosition: phraseStartPosition,
-                  originalPhrase: phraseText
-                });
-                break; // Found this phrase, move to next
-              } else {
-                console.log(`Phrase "${phraseText}" too close to last gap (${positionFromLastGap} < 5)`);
-              }
-            }
-          }
-        });
-        
-        console.log(`Found ${phraseCandidates.length} valid phrase candidates for sentence ${sentenceIdx + 1}`);
-        
-        if (phraseCandidates.length === 0) {
-          console.warn(`No valid phrases found for sentence ${sentenceIdx + 1}, skipping gap`);
-          gappedSentences.push(sentence + sentencePunctuation[sentenceIdx]);
-          totalWordCount += words.length;
-          return;
-        }
-        
-        // Randomly select one phrase candidate
-        const randomIndex = Math.floor(Math.random() * phraseCandidates.length);
-        const selectedPhrase = phraseCandidates[randomIndex];
-        
+      if (foundIndex >= 0) {
         // Replace the phrase with a gap input
-        const cleanPhrase = selectedPhrase.words.join(' ').replace(/[.,!?;:]/g, '');
-        
-        // Build the sentence with gap
+        const cleanPhraseText = words.slice(foundIndex, foundIndex + phraseLength).join(' ').replace(/[.,!?;:]/g, '');
         const resultWords = [];
         for (let i = 0; i < words.length; i++) {
-          if (i === selectedPhrase.startIndex) {
+          if (i === foundIndex) {
             // Insert gap input at the start of the phrase
-            resultWords.push(`<input type="text" class="phrase-input" data-phrase-id="${selectedPhrase.startPosition}" data-correct="${cleanPhrase}" placeholder="" />`);
+            resultWords.push(`<input type="text" class="phrase-input" data-phrase-id="${totalWordCount + foundIndex}" data-correct="${cleanPhraseText}" placeholder="" />`);
             // Skip the remaining words in the phrase
             i += phraseLength - 1;
           } else {
@@ -1158,22 +1152,22 @@
         }
         
         gappedSentences.push(resultWords.join(' ') + sentencePunctuation[sentenceIdx]);
-        lastGapEndPosition = totalWordCount + selectedPhrase.startIndex + phraseLength - 1;
+        lastGapEndPosition = totalWordCount + foundIndex + phraseLength - 1;
         totalWordCount += words.length;
-      });
-      
-      return gappedSentences.join(' ');
-      
-    } catch (error) {
-      console.error('Error calling LLM API for phrase analysis:', error);
-      // Fallback: use rule-based phrase generation
-      console.warn('Falling back to rule-based phrase generation');
-      return generatePhraseGapsFallback(transcript, phraseLength);
-    }
+      } else {
+        // Phrase not found or too close to last gap, render sentence normally
+        console.log(`Selected phrase "${selectedPhrase}" not found or too close to last gap, rendering without blank`);
+        gappedSentences.push(sentence + sentencePunctuation[sentenceIdx]);
+        totalWordCount += words.length;
+      }
+    });
+    
+    return gappedSentences.join(' ');
   };
 
-  // Fallback phrase generation (rule-based, ensures at least 3 phrases)
-  const generatePhraseGapsFallback = (transcript, phraseLength) => {
+  // REMOVED: Fallback phrase generation - no longer used
+  // Using deterministic compromise-based noun phrase extraction only
+  const _generatePhraseGapsFallback_DISABLED = (transcript, phraseLength) => {
     const sentenceParts = transcript.split(/([.!?]+\s*)/);
     const sentences = [];
     const sentencePunctuation = [];

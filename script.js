@@ -637,7 +637,7 @@
   const redoExtendedBtn = document.getElementById("redo-extended-btn");
   const randomizeBlanksBtn = document.getElementById("randomize-blanks-btn");
   const supportPhrasesBtn = document.getElementById("support-phrases-btn");
-  const playPhrasesBtn = document.getElementById("play-phrases-btn");
+  const playPausePhrasesBtn = document.getElementById("play-pause-phrases-btn");
   const skipReadingBtn = document.getElementById("skip-reading-btn");
   const readingTimerDisplay = document.getElementById("reading-timer-display");
   const readingPhase = document.getElementById("reading-phase");
@@ -645,6 +645,7 @@
   const fullTranscript = document.getElementById("full-transcript");
   const gappedTranscript = document.getElementById("gapped-transcript");
   const checkResultExtended = document.getElementById("check-result-extended");
+  const fillSingleWordsSection = document.getElementById("fill-single-words-section");
   const fillPhrasesSection = document.getElementById("fill-phrases-section");
   const phrasesTranscript = document.getElementById("phrases-transcript");
   const phraseLengthRadios = document.querySelectorAll('input[name="phrase-length"]');
@@ -652,7 +653,17 @@
   const redoPhrasesBtn = document.getElementById("redo-phrases-btn");
   const checkResultPhrases = document.getElementById("check-result-phrases");
   const audioExtended = document.getElementById("audio-extended");
+  const audioPhrases = document.getElementById("audio-phrases");
   const audioSliderExtended = document.getElementById("audio-slider-extended");
+  const speedSelectExtended = document.getElementById("speed-select-extended");
+  const currentTimeExtended = document.getElementById("current-time-extended");
+  const totalTimeExtended = document.getElementById("total-time-extended");
+  
+  // Phrases audio player controls
+  const audioSliderPhrases = document.getElementById("audio-slider-phrases");
+  const speedSelectPhrases = document.getElementById("speed-select-phrases");
+  const currentTimePhrases = document.getElementById("current-time-phrases");
+  const totalTimePhrases = document.getElementById("total-time-phrases");
   
   // Speech synthesis for word pronunciation in Extended Listening
   // Uses the same voice settings as Type mode
@@ -796,9 +807,6 @@
       textNode.parentNode.replaceChild(fragment, textNode);
     });
   };
-  const speedSelectExtended = document.getElementById("speed-select-extended");
-  const currentTimeExtended = document.getElementById("current-time-extended");
-  const totalTimeExtended = document.getElementById("total-time-extended");
 
   // Identify key content words (nouns, verbs, adjectives, adverbs - excluding common function words)
   // Excludes: names (capitalized words), words with "-", and function words
@@ -1295,6 +1303,7 @@
     redoExtendedBtn.style.display = 'none';
     randomizeBlanksBtn.style.display = 'none';
     checkResultExtended.style.display = 'none';
+    fillSingleWordsSection.style.display = 'none';
     fillPhrasesSection.style.display = 'none';
     checkResultPhrases.style.display = 'none';
     
@@ -1398,9 +1407,23 @@
     currentTimeExtended.textContent = "0:00";
     totalTimeExtended.textContent = "0:00";
     playPauseExtendedBtn.textContent = "Play";
-    if (playPhrasesBtn) {
-      playPhrasesBtn.textContent = "Play";
+    
+    // Also set up phrases audio with the same file (independent control)
+    // Clear any existing source elements
+    while (audioPhrases.firstChild) {
+      audioPhrases.removeChild(audioPhrases.firstChild);
     }
+    
+    const phrasesSource = document.createElement('source');
+    phrasesSource.src = audioPath;
+    phrasesSource.type = mimeType;
+    audioPhrases.appendChild(phrasesSource);
+    audioPhrases.load();
+    audioPhrases.currentTime = 0;
+    audioSliderPhrases.value = 0;
+    currentTimePhrases.textContent = "0:00";
+    totalTimePhrases.textContent = "0:00";
+    playPausePhrasesBtn.textContent = "Play";
   };
 
   // Start reading timer (30 seconds)
@@ -1432,6 +1455,9 @@
   const startListeningPhase = () => {
     readingPhase.style.display = "none";
     listeningPhase.style.display = "block";
+    
+    // Show Fill single words section
+    fillSingleWordsSection.style.display = 'block';
     
     extendedGappedTranscript = generateGaps(extendedCorrectTranscript);
     gappedTranscript.innerHTML = extendedGappedTranscript;
@@ -1609,33 +1635,84 @@
     }
   });
 
-  // Play button for phrases section
-  const updatePlayPhrasesButton = () => {
-    if (audioExtended.paused) {
-      playPhrasesBtn.textContent = "Play";
+  // Phrases audio player controls
+  // Update phrases audio slider and time display
+  const updatePhrasesAudioControls = () => {
+    if (!audioPhrases.duration || !isFinite(audioPhrases.duration)) return;
+    
+    const current = audioPhrases.currentTime;
+    const duration = audioPhrases.duration;
+    const percent = (current / duration) * 100;
+    
+    audioSliderPhrases.value = percent;
+    currentTimePhrases.textContent = formatTime(current);
+    totalTimePhrases.textContent = formatTime(duration);
+  };
+
+  // Update phrases play/pause button text
+  const updatePlayPausePhrasesButton = () => {
+    if (audioPhrases.paused) {
+      playPausePhrasesBtn.textContent = "Play";
     } else {
-      playPhrasesBtn.textContent = "Pause";
+      playPausePhrasesBtn.textContent = "Pause";
     }
   };
 
-  playPhrasesBtn.addEventListener("click", () => {
-    if (audioExtended.paused) {
-      audioExtended.play().catch(error => {
-        console.error("Error playing audio:", error);
+  // Play/Pause Phrases audio (independent from main audio)
+  playPausePhrasesBtn.addEventListener("click", () => {
+    if (audioPhrases.paused) {
+      audioPhrases.play().catch(error => {
+        console.error("Error playing phrases audio:", error);
       });
     } else {
-      audioExtended.pause();
+      audioPhrases.pause();
     }
-    updatePlayPhrasesButton();
+    updatePlayPausePhrasesButton();
   });
 
-  // Update phrases play button when audio state changes
-  audioExtended.addEventListener("play", () => {
-    updatePlayPhrasesButton();
+  // Handle phrases playback speed change
+  speedSelectPhrases.addEventListener("change", (e) => {
+    audioPhrases.playbackRate = parseFloat(e.target.value);
   });
 
-  audioExtended.addEventListener("pause", () => {
-    updatePlayPhrasesButton();
+  // Handle phrases time slider (seek)
+  let isDraggingPhrases = false;
+  audioSliderPhrases.addEventListener("input", () => {
+    isDraggingPhrases = true;
+    if (audioPhrases.duration && isFinite(audioPhrases.duration)) {
+      const seekTime = (audioSliderPhrases.value / 100) * audioPhrases.duration;
+      audioPhrases.currentTime = seekTime;
+    }
+  });
+
+  audioSliderPhrases.addEventListener("change", () => {
+    isDraggingPhrases = false;
+  });
+
+  // Update phrases controls as audio plays
+  audioPhrases.addEventListener("timeupdate", () => {
+    if (!isDraggingPhrases) {
+      updatePhrasesAudioControls();
+    }
+  });
+
+  audioPhrases.addEventListener("loadedmetadata", () => {
+    updatePhrasesAudioControls();
+    totalTimePhrases.textContent = formatTime(audioPhrases.duration);
+  });
+
+  audioPhrases.addEventListener("play", () => {
+    updatePlayPausePhrasesButton();
+  });
+
+  audioPhrases.addEventListener("pause", () => {
+    updatePlayPausePhrasesButton();
+  });
+
+  audioPhrases.addEventListener("ended", () => {
+    updatePlayPausePhrasesButton();
+    audioPhrases.currentTime = 0;
+    updatePhrasesAudioControls();
   });
 
   // Support mode for phrases: Show first and last letters with underscores
@@ -1720,21 +1797,51 @@
     gapInputs.forEach(input => {
       const userAnswer = input.value.trim().toLowerCase();
       const correctAnswer = input.dataset.correct.toLowerCase();
+      const correctAnswerDisplay = input.dataset.correct; // Keep original case for display
+      const userAnswerDisplay = input.value.trim(); // Keep original case for display
+      
+      // Get the speaker icon (next sibling)
+      const speakerIcon = input.nextElementSibling;
+      
+      // Create a replacement span that looks like an input but can contain HTML
+      const replacementSpan = document.createElement('span');
+      replacementSpan.className = 'gap-result';
+      replacementSpan.style.display = 'inline-block';
+      replacementSpan.style.padding = '2px 6px';
+      replacementSpan.style.minWidth = '60px';
+      replacementSpan.style.border = '2px solid';
+      replacementSpan.style.borderRadius = '4px';
+      replacementSpan.style.fontSize = 'inherit';
+      replacementSpan.style.fontFamily = 'inherit';
+      replacementSpan.style.verticalAlign = 'baseline';
+      replacementSpan.style.textAlign = 'center';
       
       if (userAnswer === correctAnswer) {
-        input.style.backgroundColor = '#dcfce7';
-        input.style.color = '#166534';
+        // Correct: green color, bold, green box highlight
+        replacementSpan.style.backgroundColor = '#dcfce7';
+        replacementSpan.style.color = '#166534';
+        replacementSpan.style.fontWeight = 'bold';
+        replacementSpan.style.borderColor = '#16a34a';
+        replacementSpan.textContent = correctAnswerDisplay;
         correctCount++;
+      } else if (userAnswer === '') {
+        // Empty: red box highlight, show correct word in green and bold
+        replacementSpan.style.backgroundColor = '#fee2e2';
+        replacementSpan.style.borderColor = '#dc2626';
+        replacementSpan.innerHTML = `<span style="color: #16a34a; font-weight: bold;">${correctAnswerDisplay}</span>`;
       } else {
-        input.style.backgroundColor = '#fee2e2';
-        input.style.color = '#991b1b';
-        input.placeholder = correctAnswer;
+        // Incorrect: red color, show "typedword / correctword" with correct word in green
+        replacementSpan.style.backgroundColor = '#fee2e2';
+        replacementSpan.style.borderColor = '#dc2626';
+        replacementSpan.innerHTML = `<span style="color: #991b1b;">${userAnswerDisplay}</span> / <span style="color: #16a34a; font-weight: bold;">${correctAnswerDisplay}</span>`;
       }
-      input.disabled = true;
       
-      // Show speaker icon and add click handler
-      const speakerIcon = input.nextElementSibling;
+      // Replace the input with the span
+      input.parentNode.replaceChild(replacementSpan, input);
+      
+      // Move the speaker icon after the replacement span if it exists
       if (speakerIcon && speakerIcon.classList.contains('gap-speaker-icon')) {
+        replacementSpan.parentNode.insertBefore(speakerIcon, replacementSpan.nextSibling);
         speakerIcon.style.display = 'inline-block';
         speakerIcon.addEventListener('click', (e) => {
           e.preventDefault();
@@ -1772,32 +1879,23 @@
     supportModeBtn.style.backgroundColor = '';
     supportModeBtn.style.color = '';
     
-    const gapInputs = gappedTranscript.querySelectorAll('.gap-input');
-    gapInputs.forEach(input => {
-      input.value = '';
-      input.style.backgroundColor = '';
-      input.style.color = '';
-      input.placeholder = input.dataset.originalPlaceholder || '';
-      input.disabled = false;
-      input.classList.remove('support-mode-active');
-      
-      // Hide speaker icon
-      const speakerIcon = input.nextElementSibling;
-      if (speakerIcon && speakerIcon.classList.contains('gap-speaker-icon')) {
-        speakerIcon.style.display = 'none';
-      }
-      
-      // Remove click handler (back to typing mode)
-      // Clone the input to remove all event listeners
-      const newInput = input.cloneNode(true);
-      input.parentNode.replaceChild(newInput, input);
-      
-      // Re-add only the input event listener
-      newInput.addEventListener('input', (e) => {
+    // Regenerate the transcript to restore inputs (since they were replaced with spans after checking)
+    extendedGappedTranscript = generateGaps(extendedCorrectTranscript);
+    gappedTranscript.innerHTML = extendedGappedTranscript;
+    
+    // Clear gap answers
+    extendedGapAnswers = {};
+    
+    // Add event listeners to new gap inputs
+    gappedTranscript.querySelectorAll('.gap-input').forEach(input => {
+      input.addEventListener('input', (e) => {
         const gapId = e.target.dataset.gapId;
         extendedGapAnswers[gapId] = e.target.value.trim().toLowerCase();
       });
     });
+    
+    // Make words in gapped transcript clickable (excluding gap inputs)
+    makeWordsInGappedTranscriptClickable(gappedTranscript);
     
     // Hide buttons and result message
     redoExtendedBtn.style.display = 'none';
@@ -1878,17 +1976,92 @@
     phraseInputs.forEach(input => {
       const userAnswer = input.value.trim().toLowerCase();
       const correctAnswer = input.dataset.correct.toLowerCase();
+      const correctAnswerDisplay = input.dataset.correct; // Keep original case for display
+      const userAnswerDisplay = input.value.trim(); // Keep original case for display
+      
+      // Split into words for comparison
+      const userWords = userAnswer.split(/\s+/).filter(w => w.length > 0);
+      const correctWords = correctAnswer.split(/\s+/).filter(w => w.length > 0);
+      const correctWordsDisplay = correctAnswerDisplay.split(/\s+/).filter(w => w.length > 0);
+      
+      // Create a replacement span that looks like an input but can contain HTML
+      const replacementSpan = document.createElement('span');
+      replacementSpan.className = 'phrase-result';
+      replacementSpan.style.display = 'inline-block';
+      replacementSpan.style.padding = '2px 6px';
+      replacementSpan.style.minWidth = '60px';
+      replacementSpan.style.border = '2px solid';
+      replacementSpan.style.borderRadius = '4px';
+      replacementSpan.style.fontSize = 'inherit';
+      replacementSpan.style.fontFamily = 'inherit';
+      replacementSpan.style.verticalAlign = 'baseline';
+      replacementSpan.style.textAlign = 'center';
       
       if (userAnswer === correctAnswer) {
-        input.style.backgroundColor = '#dcfce7';
-        input.style.color = '#166534';
+        // All words correct: green color, bold, green box highlight
+        replacementSpan.style.backgroundColor = '#dcfce7';
+        replacementSpan.style.color = '#166534';
+        replacementSpan.style.fontWeight = 'bold';
+        replacementSpan.style.borderColor = '#16a34a';
+        replacementSpan.textContent = correctAnswerDisplay;
         correctCount++;
+      } else if (userAnswer === '') {
+        // Empty: red box highlight, show all correct words in green and bold
+        replacementSpan.style.backgroundColor = '#fee2e2';
+        replacementSpan.style.borderColor = '#dc2626';
+        replacementSpan.innerHTML = correctWordsDisplay.map(word => 
+          `<span style="color: #16a34a; font-weight: bold;">${word}</span>`
+        ).join(' ');
       } else {
-        input.style.backgroundColor = '#fee2e2';
-        input.style.color = '#991b1b';
-        input.placeholder = correctAnswer;
+        // Compare word by word
+        const userWordsDisplayArray = userAnswerDisplay.split(/\s+/).filter(w => w.length > 0);
+        const typedParts = [];
+        const correctParts = [];
+        let allIncorrect = true;
+        
+        // Build correct parts (always show all correct words after slash)
+        correctWordsDisplay.forEach(word => {
+          correctParts.push(`<span style="color: #16a34a; font-weight: bold;">${word}</span>`);
+        });
+        
+        // Compare each word
+        for (let i = 0; i < Math.max(userWords.length, correctWords.length); i++) {
+          const userWord = userWords[i];
+          const correctWord = correctWords[i];
+          const userWordDisplay = userWordsDisplayArray[i] || '';
+          const correctWordDisplay = correctWordsDisplay[i] || '';
+          
+          if (userWord && correctWord) {
+            if (userWord === correctWord) {
+              // Word is correct - show in green
+              typedParts.push(`<span style="color: #16a34a; font-weight: bold;">${correctWordDisplay}</span>`);
+              allIncorrect = false;
+            } else {
+              // Word is incorrect - show in red and bold
+              typedParts.push(`<span style="color: #991b1b; font-weight: bold;">${userWordDisplay}</span>`);
+            }
+          } else if (userWord) {
+            // Extra word typed - show in red and bold
+            typedParts.push(`<span style="color: #991b1b; font-weight: bold;">${userWordDisplay}</span>`);
+          }
+          // If correctWord exists but userWord doesn't, we don't add to typedParts (missing word)
+        }
+        
+        // Build the display
+        replacementSpan.style.backgroundColor = '#fee2e2';
+        replacementSpan.style.borderColor = '#dc2626';
+        
+        if (allIncorrect && typedParts.length > 0) {
+          // All words incorrect: show all typed words in red and bold, then slash, then all correct words in green
+          replacementSpan.innerHTML = `<span style="color: #991b1b; font-weight: bold;">${userAnswerDisplay}</span> / ${correctParts.join(' ')}`;
+        } else {
+          // Some words correct, some incorrect: show typed words (red for incorrect, green for correct), then slash, then all correct words
+          replacementSpan.innerHTML = `${typedParts.join(' ')} / ${correctParts.join(' ')}`;
+        }
       }
-      input.disabled = true;
+      
+      // Replace the input with the span
+      input.parentNode.replaceChild(replacementSpan, input);
     });
     
     // Show Redo button
@@ -1909,14 +2082,25 @@
       supportPhrasesBtn.style.color = '';
     }
     
-    const phraseInputs = phrasesTranscript.querySelectorAll('.phrase-input');
-    phraseInputs.forEach(input => {
-      input.value = '';
-      input.style.backgroundColor = '';
-      input.style.color = '';
-      input.placeholder = input.dataset.originalPlaceholder || '';
-      input.disabled = false;
-      input.classList.remove('support-mode-active');
+    // Regenerate the phrases transcript to restore inputs (since they were replaced with spans after checking)
+    const selectedPhraseLength = parseInt(document.querySelector('input[name="phrase-length"]:checked').value, 10);
+    phrasesTranscript.innerHTML = '<p>Analyzing phrases...</p>';
+    
+    generatePhraseGaps(extendedCorrectTranscript, selectedPhraseLength).then(result => {
+      extendedPhraseTranscript = result;
+      phrasesTranscript.innerHTML = extendedPhraseTranscript;
+      extendedPhraseAnswers = {};
+      
+      // Add event listeners to new phrase inputs
+      phrasesTranscript.querySelectorAll('.phrase-input').forEach(input => {
+        input.addEventListener('input', (e) => {
+          const phraseId = e.target.dataset.phraseId;
+          extendedPhraseAnswers[phraseId] = e.target.value.trim().toLowerCase();
+        });
+      });
+    }).catch(error => {
+      console.error('Error regenerating phrase gaps:', error);
+      phrasesTranscript.innerHTML = '<p>Error regenerating phrases. Please try again.</p>';
     });
     
     // Hide buttons and result message

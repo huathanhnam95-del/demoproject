@@ -89,37 +89,42 @@
       </div>
       
       <div id="listening-phase" class="listening-phase" style="display: none;">
-        <div class="extended-audio-controls">
-          <div class="audio-controls-row">
-            <button id="play-pause-extended-btn" type="button" class="play-pause-btn">Play</button>
-            <div class="time-display">
-              <span id="current-time-extended">0:00</span> / <span id="total-time-extended">0:00</span>
+        <div id="fill-single-words-section" class="fill-phrases-section" style="display: block;">
+          <div class="fill-phrases-header">
+            <h3>Fill single words</h3>
+          </div>
+          <div id="gapped-transcript" class="gapped-transcript"></div>
+          <div class="extended-audio-controls">
+            <div class="audio-controls-row">
+              <button id="play-pause-extended-btn" type="button" class="play-pause-btn">Play</button>
+              <div class="time-display">
+                <span id="current-time-extended">0:00</span> / <span id="total-time-extended">0:00</span>
+              </div>
+              <div class="speed-control">
+                <label for="speed-select-extended">Speed:</label>
+                <select id="speed-select-extended" class="speed-select">
+                  <option value="0.5">0.5x</option>
+                  <option value="0.75">0.75x</option>
+                  <option value="1" selected>1x</option>
+                  <option value="1.25">1.25x</option>
+                  <option value="1.5">1.5x</option>
+                  <option value="1.75">1.75x</option>
+                  <option value="2">2x</option>
+                </select>
+              </div>
             </div>
-            <div class="speed-control">
-              <label for="speed-select-extended">Speed:</label>
-              <select id="speed-select-extended" class="speed-select">
-                <option value="0.5">0.5x</option>
-                <option value="0.75">0.75x</option>
-                <option value="1" selected>1x</option>
-                <option value="1.25">1.25x</option>
-                <option value="1.5">1.5x</option>
-                <option value="1.75">1.75x</option>
-                <option value="2">2x</option>
-              </select>
+            <div class="audio-slider-container">
+              <input type="range" id="audio-slider-extended" class="audio-slider" min="0" max="100" value="0" step="0.1">
             </div>
           </div>
-          <div class="audio-slider-container">
-            <input type="range" id="audio-slider-extended" class="audio-slider" min="0" max="100" value="0" step="0.1">
+          <div class="phrase-controls">
+            <button id="check-extended-btn" type="button">Check</button>
+            <button id="support-mode-btn" type="button">Show Hints</button>
+            <button id="redo-extended-btn" type="button" style="display: none;">Retry</button>
+            <button id="randomize-blanks-btn" type="button" style="display: none;">Try New Blanks</button>
           </div>
+          <div id="check-result-extended" class="check-result-box" style="display: none;"></div>
         </div>
-        <div class="controls">
-          <button id="check-extended-btn" type="button">Check</button>
-          <button id="support-mode-btn" type="button">Show Hints</button>
-          <button id="redo-extended-btn" type="button" style="display: none;">Retry</button>
-          <button id="randomize-blanks-btn" type="button" style="display: none;">Try New Blanks</button>
-        </div>
-        <div id="check-result-extended" class="check-result-box" style="display: none;"></div>
-        <div id="gapped-transcript" class="gapped-transcript"></div>
         
         <div id="fill-phrases-section" class="fill-phrases-section" style="display: none;">
           <div class="fill-phrases-header">
@@ -136,8 +141,30 @@
             </div>
           </div>
           <div id="phrases-transcript" class="phrases-transcript"></div>
+          <div class="extended-audio-controls">
+            <div class="audio-controls-row">
+              <button id="play-pause-phrases-btn" type="button" class="play-pause-btn">Play</button>
+              <div class="time-display">
+                <span id="current-time-phrases">0:00</span> / <span id="total-time-phrases">0:00</span>
+              </div>
+              <div class="speed-control">
+                <label for="speed-select-phrases">Speed:</label>
+                <select id="speed-select-phrases" class="speed-select">
+                  <option value="0.5">0.5x</option>
+                  <option value="0.75">0.75x</option>
+                  <option value="1" selected>1x</option>
+                  <option value="1.25">1.25x</option>
+                  <option value="1.5">1.5x</option>
+                  <option value="1.75">1.75x</option>
+                  <option value="2">2x</option>
+                </select>
+              </div>
+            </div>
+            <div class="audio-slider-container">
+              <input type="range" id="audio-slider-phrases" class="audio-slider" min="0" max="100" value="0" step="0.1">
+            </div>
+          </div>
           <div class="phrase-controls">
-            <button id="play-phrases-btn" type="button" class="play-pause-btn">Play</button>
             <button id="check-phrases-btn" type="button">Check Phrases</button>
             <button id="support-phrases-btn" type="button">Show Hints</button>
             <button id="redo-phrases-btn" type="button" style="display: none;">Retry Phrases</button>
@@ -236,6 +263,7 @@
 
   <audio id="audio" preload="auto"></audio>
   <audio id="audio-extended" preload="auto"></audio>
+  <audio id="audio-phrases" preload="auto"></audio>
   <script src="https://cdn.jsdelivr.net/npm/compromise@14.10.0/builds/compromise.min.js"></script>
   <script>
     // Configure API URL for paraphrase backend

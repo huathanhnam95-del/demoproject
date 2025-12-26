@@ -4,8 +4,329 @@
   let speakDatabase = [];
   let currentTypeQuestionId = 1;
   let currentSpeakQuestionId = 1;
+  
+  // Mastery cache: stores mastery status for all questions per mode
+  // Structure: { mode: { questionId: { mastered: boolean, ... } } }
+  // This cache is used to avoid excessive Firestore reads when rendering dropdown
+  let masteryCache = {
+    type: {},
+    speak: {}
+  };
   let correctSentenceType = ""; // Will be loaded from database for Type mode
   let correctSentenceSpeak = ""; // Will be loaded from database for Speak mode
+  
+  /**
+   * Load mastery data for all questions in a mode
+   * Caches the results to avoid excessive Firestore reads
+   * Called when mode changes or on initial load
+   * 
+   * @param {string} mode - 'type' or 'speak'
+   * @returns {Promise<void>}
+   */
+  async function loadAllMasteryForMode(mode) {
+    // Guest mode: Do NOT load mastery data
+    if (window.authUI && window.authUI.isGuestMode && window.authUI.isGuestMode()) {
+      masteryCache[mode] = {};
+      return;
+    }
+    
+    // Check if Firebase functions are available and user is logged in
+    if (!window.firebaseFirestoreFunctions || !window.authUI) {
+      masteryCache[mode] = {};
+      return;
+    }
+    
+    const userId = window.authUI.getCurrentUserId();
+    if (!userId) {
+      masteryCache[mode] = {};
+      return;
+    }
+    
+    // Validate mode
+    if (mode !== 'type' && mode !== 'speak') {
+      return;
+    }
+    
+    try {
+      // Get the database for this mode to know which questions exist
+      const database = mode === 'type' ? typeDatabase : speakDatabase;
+      
+      // Clear cache for this mode
+      masteryCache[mode] = {};
+      
+      // Load mastery status for all questions in parallel (batch requests)
+      const masteryPromises = database.map(async (item) => {
+        const questionId = item.id;
+        try {
+          const result = await window.firebaseFirestoreFunctions.getMasteryStatus(userId, questionId, mode);
+          if (result.success && result.mastery && result.mastery.mastered) {
+            masteryCache[mode][questionId] = {
+              mastered: true,
+              masteredAt: result.mastery.masteredAt
+            };
+          } else {
+            masteryCache[mode][questionId] = {
+              mastered: false
+            };
+          }
+        } catch (error) {
+          console.error(`Error loading mastery for question ${questionId} in ${mode} mode:`, error);
+          masteryCache[mode][questionId] = {
+            mastered: false
+          };
+        }
+      });
+      
+      // Wait for all mastery data to load
+      await Promise.all(masteryPromises);
+      
+      console.log(`✓ Loaded mastery data for ${mode} mode:`, masteryCache[mode]);
+    } catch (error) {
+      console.error(`Error loading all mastery for ${mode} mode:`, error);
+      masteryCache[mode] = {};
+    }
+  }
+  
+  /**
+   * Update mastery cache for a specific question
+   * Called when mastery status changes (gained or removed)
+   * 
+   * @param {string|number} questionId - Question ID
+   * @param {string} mode - 'type' or 'speak'
+   * @param {boolean} mastered - Whether the question is mastered
+   */
+  function updateMasteryCache(questionId, mode, mastered) {
+    if (!masteryCache[mode]) {
+      masteryCache[mode] = {};
+    }
+    
+    masteryCache[mode][questionId] = {
+      mastered: mastered
+    };
+    
+    // Refresh the dropdown to reflect the change
+    populateQuestionSelect(mode);
+  }
+  
+  /**
+   * Load and display mastery status for a question in a specific mode
+   * Guest mode: No mastery status is shown (returns early)
+   * Authenticated mode: Loads mastery from Firestore and displays UI
+   * 
+   * Type and Speak modes are INDEPENDENT - each mode has its own mastery status
+   * When switching tabs, mastery status is loaded separately for each mode
+   * 
+   * @param {string|number} questionId - Question ID
+   * @param {string} mode - 'type' or 'speak' - the mode to check mastery for
+   */
+  async function loadMasteryStatus(questionId, mode) {
+    // Guest mode: Do NOT show mastery status
+    if (window.authUI && window.authUI.isGuestMode && window.authUI.isGuestMode()) {
+      hideMasteryStatus('type');
+      hideMasteryStatus('speak');
+      return;
+    }
+    
+    // Check if Firebase functions are available and user is logged in
+    if (!window.firebaseFirestoreFunctions || !window.authUI) {
+      hideMasteryStatus('type');
+      hideMasteryStatus('speak');
+      return;
+    }
+    
+    const userId = window.authUI.getCurrentUserId();
+    if (!userId) {
+      hideMasteryStatus('type');
+      hideMasteryStatus('speak');
+      return;
+    }
+    
+    // Validate mode
+    if (!mode || (mode !== 'type' && mode !== 'speak')) {
+      console.error('Invalid mode for loadMasteryStatus:', mode);
+      return;
+    }
+    
+    try {
+      // Get mastery status for this specific mode and question
+      const result = await window.firebaseFirestoreFunctions.getMasteryStatus(userId, questionId, mode);
+      
+      if (result.success && result.mastery && result.mastery.mastered) {
+        // Question is mastered in this mode - show indicator and remove button
+        showMasteryStatus(mode, true);
+        // Update cache
+        updateMasteryCache(questionId, mode, true);
+      } else {
+        // Question is not mastered in this mode - hide indicator
+        hideMasteryStatus(mode);
+        // Update cache
+        updateMasteryCache(questionId, mode, false);
+      }
+      
+      // Refresh dropdown to show updated mastery status
+      populateQuestionSelect(mode);
+      
+      // Note: We don't touch the other mode's UI - each mode is independent
+    } catch (error) {
+      console.error('Error loading mastery status:', error);
+      hideMasteryStatus(mode);
+    }
+  }
+  
+  /**
+   * Show mastery status UI for a mode
+   * @param {string} mode - 'type' or 'speak'
+   * @param {boolean} showRemoveButton - Whether to show the remove button
+   */
+  function showMasteryStatus(mode, showRemoveButton = true) {
+    const masteryStatusEl = document.getElementById(`mastery-status-${mode}`);
+    const removeBtn = document.getElementById(`remove-mastery-${mode}-btn`);
+    
+    if (masteryStatusEl) {
+      masteryStatusEl.style.display = 'flex';
+    }
+    
+    if (removeBtn) {
+      removeBtn.style.display = showRemoveButton ? 'inline-block' : 'none';
+    }
+  }
+  
+  /**
+   * Hide mastery status UI for a mode
+   * @param {string} mode - 'type' or 'speak'
+   */
+  function hideMasteryStatus(mode) {
+    const masteryStatusEl = document.getElementById(`mastery-status-${mode}`);
+    if (masteryStatusEl) {
+      masteryStatusEl.style.display = 'none';
+    }
+  }
+  
+  /**
+   * Handle remove mastered status button click
+   * Removes mastery status for the current mode only
+   * Type and Speak modes are independent - removing one does NOT affect the other
+   * 
+   * @param {string} mode - 'type' or 'speak'
+   * @param {string|number} questionId - Question ID
+   */
+  async function handleRemoveMastery(mode, questionId) {
+    // Guest mode: Cannot remove mastery (doesn't exist)
+    if (window.authUI && window.authUI.isGuestMode && window.authUI.isGuestMode()) {
+      return;
+    }
+    
+    // Check if Firebase functions are available and user is logged in
+    if (!window.firebaseFirestoreFunctions || !window.authUI) {
+      alert('Error: Firebase not initialized');
+      return;
+    }
+    
+    const userId = window.authUI.getCurrentUserId();
+    if (!userId) {
+      alert('Error: Must be logged in to remove mastery status');
+      return;
+    }
+    
+    // Validate mode
+    if (!mode || (mode !== 'type' && mode !== 'speak')) {
+      alert('Error: Invalid mode');
+      return;
+    }
+    
+    // Confirm action
+    const modeName = mode === 'type' ? 'Type' : 'Speak';
+    if (!confirm(`Are you sure you want to remove the mastered status for this question in ${modeName} mode?`)) {
+      return;
+    }
+    
+    try {
+      // Remove mastery for this specific mode only
+      const result = await window.firebaseFirestoreFunctions.removeMasteryStatus(userId, questionId, mode);
+      
+      if (result.success) {
+        // Update cache
+        updateMasteryCache(questionId, mode, false);
+        // Reload mastery status for this mode to update UI
+        await loadMasteryStatus(questionId, mode);
+        // Reload all mastery data to update dropdown
+        await loadAllMasteryForMode(mode);
+      } else {
+        alert('Error removing mastery status: ' + (result.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error removing mastery status:', error);
+      alert('Error removing mastery status. Please try again.');
+    }
+  }
+  
+  /**
+   * Record practice attempt to Firestore
+   * Guest mode: No data is recorded (returns early)
+   * Authenticated mode: Records attempt to Firestore
+   * 
+   * Also updates mastery status if user achieves 100% correctness:
+   * - Type mode: Marks question as mastered in Type mode only
+   * - Speak mode: Marks question as mastered in Speak mode only
+   * - Type and Speak modes are INDEPENDENT - mastery in one does NOT affect the other
+   * 
+   * @param {string|number} questionId - Question ID or text
+   * @param {boolean} isCorrect - Whether the answer was correct (100% correct = true)
+   * @param {string} mode - Practice mode ('type', 'speak', 'extended', 'phrases')
+   */
+  async function recordPracticeAttempt(questionId, isCorrect, mode = 'type') {
+    // Guest mode: Do NOT write any personal data to Firestore
+    if (window.authUI && window.authUI.isGuestMode && window.authUI.isGuestMode()) {
+      return; // Silently skip tracking in guest mode
+    }
+    
+    // Check if Firebase functions are available and user is logged in
+    if (!window.firebaseFirestoreFunctions || !window.authUI) {
+      return; // Silently fail if Firebase not initialized
+    }
+    
+    const userId = window.authUI.getCurrentUserId();
+    if (!userId) {
+      return; // User not logged in and not guest mode, skip tracking
+    }
+    
+    try {
+      // Record the practice attempt
+      await window.firebaseFirestoreFunctions.recordPracticeAttempt(userId, questionId, isCorrect, mode);
+      
+      // Update mastery status if 100% correct in Type or Speak mode
+      // Only Type and Speak modes have mastery tracking (not extended or phrases)
+      // Each mode is independent - mastery in one mode does NOT affect the other
+      if (isCorrect && (mode === 'type' || mode === 'speak')) {
+        // Mark as mastered in this specific mode only
+        await window.firebaseFirestoreFunctions.updateMasteryStatus(
+          userId, 
+          questionId, 
+          mode,
+          true  // isMastered = true (100% correct)
+        );
+        
+        // Update cache immediately
+        updateMasteryCache(questionId, mode, true);
+        // Reload mastery UI for this mode to show updated status
+        await loadMasteryStatus(questionId, mode);
+        // Reload all mastery data to update dropdown (in case this was a new mastery)
+        await loadAllMasteryForMode(mode);
+      } else if (!isCorrect && (mode === 'type' || mode === 'speak')) {
+        // If not 100% correct, ensure mastery is false for this mode
+        // (in case user previously mastered it and wants to practice again)
+        await window.firebaseFirestoreFunctions.updateMasteryStatus(
+          userId, 
+          questionId, 
+          mode,
+          false  // isMastered = false
+        );
+      }
+    } catch (error) {
+      console.error('Error recording practice attempt:', error);
+      // Don't show error to user, just log it
+    }
+  }
 
   const audio = document.getElementById("audio");
   const questionSelectType = document.getElementById("question-select-type");
@@ -36,6 +357,23 @@
   const playBtnSpeak = document.getElementById("play-btn-speak");
   const recordBtn = document.getElementById("record-btn");
   const checkBtnSpeak = document.getElementById("check-btn-speak");
+  
+  // Mastery status remove buttons
+  const removeMasteryTypeBtn = document.getElementById("remove-mastery-type-btn");
+  const removeMasterySpeakBtn = document.getElementById("remove-mastery-speak-btn");
+  
+  // Event listeners for remove mastery buttons
+  if (removeMasteryTypeBtn) {
+    removeMasteryTypeBtn.addEventListener("click", async () => {
+      await handleRemoveMastery('type', currentTypeQuestionId);
+    });
+  }
+  
+  if (removeMasterySpeakBtn) {
+    removeMasterySpeakBtn.addEventListener("click", async () => {
+      await handleRemoveMastery('speak', currentSpeakQuestionId);
+    });
+  }
   const transcriptionText = document.getElementById("transcription-text");
   const recordingStatus = document.getElementById("recording-status");
   const scoreSpeak = document.getElementById("score-speak");
@@ -519,7 +857,7 @@
   };
 
   // Tab switching
-  tabType.addEventListener("click", () => {
+  tabType.addEventListener("click", async () => {
     tabType.classList.add("active");
     tabSpeak.classList.remove("active");
     tabExtended.classList.remove("active");
@@ -541,7 +879,11 @@
     
     // Reload the correct audio for Type mode
     if (typeDatabase.length > 0 && currentTypeQuestionId) {
-      loadQuestion("type", currentTypeQuestionId);
+      // Load all mastery data for Type mode (to update dropdown)
+      await loadAllMasteryForMode("type");
+      await loadQuestion("type", currentTypeQuestionId);
+      // Load mastery status for Type mode (independent from Speak mode)
+      await loadMasteryStatus(currentTypeQuestionId, "type");
     }
     
     if (isRecording && recognition) {
@@ -559,7 +901,7 @@
     }
   });
 
-  tabSpeak.addEventListener("click", () => {
+  tabSpeak.addEventListener("click", async () => {
     tabSpeak.classList.add("active");
     tabType.classList.remove("active");
     tabExtended.classList.remove("active");
@@ -578,7 +920,11 @@
     
     // Reload the correct audio for Speak mode
     if (speakDatabase.length > 0 && currentSpeakQuestionId) {
-      loadQuestion("speak", currentSpeakQuestionId);
+      // Load all mastery data for Speak mode (to update dropdown)
+      await loadAllMasteryForMode("speak");
+      await loadQuestion("speak", currentSpeakQuestionId);
+      // Load mastery status for Speak mode (independent from Type mode)
+      await loadMasteryStatus(currentSpeakQuestionId, "speak");
     }
     
     // Microphone access will be requested when user clicks "Start Recording"
@@ -1869,6 +2215,11 @@
     // Show result message in custom box
     checkResultExtended.textContent = `You got ${correctCount} out of ${totalGaps} gaps correct!`;
     checkResultExtended.style.display = 'block';
+    
+    // Record practice attempt for extended listening (single words)
+    // Consider correct if all gaps are correct
+    const isFullyCorrect = correctCount === totalGaps && totalGaps > 0;
+    recordPracticeAttempt(currentExtendedQuestionId || 'extended', isFullyCorrect, 'extended');
   });
 
   // Redo button - clear all input boxes
@@ -2070,6 +2421,11 @@
     // Show result message
     checkResultPhrases.textContent = `You got ${correctCount} out of ${totalPhrases} phrases correct!`;
     checkResultPhrases.style.display = 'block';
+    
+    // Record practice attempt for phrases
+    // Consider correct if all phrases are correct
+    const isFullyCorrect = correctCount === totalPhrases && totalPhrases > 0;
+    recordPracticeAttempt(currentExtendedQuestionId || 'extended', isFullyCorrect, 'phrases');
   });
 
   // Redo Phrases button
@@ -3087,6 +3443,9 @@
       scoreElement.textContent = `Points: 0 / ${getCorrectWordCount()}`;
       return;
     }
+    
+    // Record practice attempt (correct if no errors)
+    recordPracticeAttempt(currentTypeQuestionId, !hasErrors, 'type');
 
     scoreElement.textContent = `Points: ${scoreValue} / ${getCorrectWordCount()}`;
 
@@ -3148,6 +3507,9 @@
       scoreElement.textContent = `Points: 0 / ${getCorrectWordCount()}`;
       return;
     }
+    
+    // Record practice attempt (correct if no errors)
+    recordPracticeAttempt(currentSpeakQuestionId, !hasErrors, 'speak');
 
     scoreElement.textContent = `Points: ${scoreValue} / ${getCorrectWordCount()}`;
 
@@ -3336,9 +3698,29 @@
     pronunciationPanel.style.display = "none";
     breakdownPanel.style.display = "none";
     
+    // Load mastery status for this question (logged-in users only)
+    // Pass the mode so mastery status is shown for the correct mode
+    await loadMasteryStatus(questionId, mode);
+    
     return true;
   };
 
+  /**
+   * Populate the question select dropdown for a mode
+   * Shows mastery status indicators and filters based on "Hide Mastered" checkbox
+   * 
+   * How mastery data is merged:
+   * - Reads from masteryCache[mode] to check if each question is mastered
+   * - Adds "✅ Mastered" text and applies mastered class to options
+   * 
+   * How filtering works:
+   * - Checks the "Hide Mastered" checkbox state for the current mode
+   * - If checked, excludes mastered questions from the dropdown
+   * - If unchecked, shows all questions (mastered ones are still marked)
+   * - Currently selected question is always shown, even if it would be filtered
+   * 
+   * @param {string} mode - 'type', 'speak', or 'extended'
+   */
   const populateQuestionSelect = (mode) => {
     if (mode === "extended") {
       const database = extendedDatabase;
@@ -3362,19 +3744,68 @@
       const select = mode === "type" ? questionSelectType : questionSelectSpeak;
       const currentIdDisplay = mode === "type" ? currentQuestionIdType : currentQuestionIdSpeak;
       const totalDisplay = mode === "type" ? totalQuestionsType : totalQuestionsSpeak;
+      const hideMasteredCheckbox = document.getElementById(`hide-mastered-${mode}`);
+      
+      // Get current selected question ID (to ensure it's always shown even if filtered)
+      const currentId = mode === "type" ? currentTypeQuestionId : currentSpeakQuestionId;
+      
+      // Check if "Hide Mastered" filter is enabled
+      const hideMastered = hideMasteredCheckbox ? hideMasteredCheckbox.checked : false;
+      
+      // Get mastery cache for this mode
+      const modeMasteryCache = masteryCache[mode] || {};
       
       select.innerHTML = "";
+      let visibleCount = 0;
+      
+      // Filter and render questions
       database.forEach(item => {
+        const questionId = item.id;
+        const isMastered = modeMasteryCache[questionId]?.mastered === true;
+        
+        // Apply filter: hide mastered questions if checkbox is checked
+        // BUT always show the currently selected question
+        if (hideMastered && isMastered && questionId !== currentId) {
+          return; // Skip this question (it's mastered and not currently selected)
+        }
+        
+        // Create option element
         const option = document.createElement("option");
-        option.value = item.id;
-        option.textContent = item.id.toString();
+        option.value = questionId;
+        
+        // Add mastery indicator if mastered
+        if (isMastered) {
+          option.textContent = `${questionId} ✅ (Mastered)`;
+          option.classList.add("mastered");
+        } else {
+          option.textContent = questionId.toString();
+        }
+        
         select.appendChild(option);
+        visibleCount++;
       });
       
-      const currentId = mode === "type" ? currentTypeQuestionId : currentSpeakQuestionId;
+      // Update display
       currentIdDisplay.textContent = currentId;
-      totalDisplay.textContent = database.length;
+      totalDisplay.textContent = hideMastered ? `${visibleCount} (${database.length} total)` : database.length;
+      
+      // Set selected value (ensure current question is selected even if it was filtered)
       select.value = currentId;
+      
+      // If current question was filtered out, make sure it's still in the dropdown
+      if (hideMastered && modeMasteryCache[currentId]?.mastered === true) {
+        // Current question is mastered and filter is on - ensure it's visible
+        const existingOption = select.querySelector(`option[value="${currentId}"]`);
+        if (!existingOption) {
+          // Add it back if it was filtered out
+          const option = document.createElement("option");
+          option.value = currentId;
+          option.textContent = `${currentId} ✅ (Mastered)`;
+          option.classList.add("mastered");
+          select.appendChild(option);
+          select.value = currentId;
+        }
+      }
     }
   };
 
@@ -3384,7 +3815,11 @@
     speakDatabase = await loadDatabase("speak");
     extendedDatabase = await loadDatabase("extended");
     
-    // Populate selectors
+    // Load mastery data for Type and Speak modes (cached for dropdown rendering)
+    await loadAllMasteryForMode("type");
+    await loadAllMasteryForMode("speak");
+    
+    // Populate selectors (will use mastery cache to show indicators)
     populateQuestionSelect("type");
     populateQuestionSelect("speak");
     populateQuestionSelect("extended");
@@ -3393,11 +3828,11 @@
     // Load Speak first (since Type tab is active by default, Type should load last to set the correct audio)
     if (speakDatabase.length > 0) {
       currentSpeakQuestionId = 1;
-      loadQuestion("speak", 1);
+      await loadQuestion("speak", 1);
     }
     if (typeDatabase.length > 0) {
       currentTypeQuestionId = 1;
-      loadQuestion("type", 1);
+      await loadQuestion("type", 1);
     }
     if (extendedDatabase.length > 0) {
       currentExtendedQuestionId = 1;
@@ -3421,6 +3856,24 @@
       currentQuestionIdSpeak.textContent = questionId;
     }
   });
+  
+  // "Hide Mastered Questions" checkbox event listeners
+  const hideMasteredTypeCheckbox = document.getElementById("hide-mastered-type");
+  const hideMasteredSpeakCheckbox = document.getElementById("hide-mastered-speak");
+  
+  if (hideMasteredTypeCheckbox) {
+    hideMasteredTypeCheckbox.addEventListener("change", () => {
+      // Update dropdown when filter checkbox toggles
+      populateQuestionSelect("type");
+    });
+  }
+  
+  if (hideMasteredSpeakCheckbox) {
+    hideMasteredSpeakCheckbox.addEventListener("change", () => {
+      // Update dropdown when filter checkbox toggles
+      populateQuestionSelect("speak");
+    });
+  }
 
   // Initialize on page load
   initializeDatabases();

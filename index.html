@@ -7,6 +7,162 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- Authentication UI -->
+  <div id="auth-overlay" class="auth-overlay" style="display: none;">
+    <div class="auth-container">
+      <!-- Login Form -->
+      <div id="login-form" class="auth-form">
+        <h2>Login</h2>
+        <div id="login-error" class="auth-error" style="display: none;"></div>
+        <form id="login-form-element">
+          <div class="form-group">
+            <label for="login-email">Email:</label>
+            <input type="email" id="login-email" required>
+          </div>
+          <div class="form-group">
+            <label for="login-password">Password:</label>
+            <input type="password" id="login-password" required>
+          </div>
+          <button type="submit" class="auth-btn">Login</button>
+        </form>
+        <p class="auth-switch">
+          Don't have an account? <a href="#" id="switch-to-signup">Sign up</a>
+        </p>
+      </div>
+
+      <!-- Signup Form -->
+      <div id="signup-form" class="auth-form" style="display: none;">
+        <h2>Sign Up</h2>
+        <div id="signup-error" class="auth-error" style="display: none;"></div>
+        <div id="signup-success" class="auth-success" style="display: none;"></div>
+        <form id="signup-form-element">
+          <div class="form-group">
+            <label for="signup-email">Email:</label>
+            <input type="email" id="signup-email" required>
+          </div>
+          <div class="form-group">
+            <label for="signup-password">Password:</label>
+            <input type="password" id="signup-password" required minlength="6">
+          </div>
+          <div class="form-group">
+            <label for="signup-password-confirm">Confirm Password:</label>
+            <input type="password" id="signup-password-confirm" required minlength="6">
+          </div>
+          <button type="submit" class="auth-btn">Sign Up</button>
+        </form>
+        <p class="auth-switch">
+          Already have an account? <a href="#" id="switch-to-login">Login</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Account/Profile UI (Full Details Modal - Optional, can be opened from side panel) -->
+  <div id="account-details-modal" class="account-details-modal" style="display: none;">
+    <div class="account-details-content">
+      <div class="details-header">
+        <h2>Account Details</h2>
+        <button id="close-details-btn" class="close-btn">×</button>
+      </div>
+      <div class="account-info">
+        <div class="info-item">
+          <label>Email:</label>
+          <span id="account-email" class="read-only">-</span>
+        </div>
+        <div class="info-item">
+          <label>Account Created:</label>
+          <span id="account-created" class="read-only">-</span>
+        </div>
+        <div class="info-item">
+          <label>Last Login:</label>
+          <span id="account-last-login" class="read-only">-</span>
+        </div>
+        <div class="info-item">
+          <label>Total Active Time:</label>
+          <span id="account-total-time" class="read-only">-</span>
+        </div>
+      </div>
+      <div class="account-actions">
+        <button id="change-password-btn" class="account-btn">Change Password</button>
+        <button id="logout-btn" class="account-btn logout-btn">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Entry Choice Modal (shown on first visit when no auth session) -->
+  <div id="entry-modal" class="entry-modal" style="display: none;">
+    <div class="entry-modal-content">
+      <h2>Welcome to Listening Practice</h2>
+      <p>Choose how you'd like to use the app:</p>
+      <div class="entry-options">
+        <button id="guest-mode-btn" class="entry-btn guest-btn">
+          <span class="entry-icon">👤</span>
+          <span class="entry-label">View as Guest</span>
+          <span class="entry-desc">No account needed</span>
+        </button>
+        <button id="login-choice-btn" class="entry-btn login-choice-btn">
+          <span class="entry-icon">🔐</span>
+          <span class="entry-label">Log In</span>
+          <span class="entry-desc">Save your progress</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Guest Mode Notification Toast -->
+  <div id="guest-toast" class="guest-toast" style="display: none;">
+    <span class="toast-icon">ℹ️</span>
+    <span class="toast-message">No personal data will be recorded while viewing as guest.</span>
+    <button id="toast-close" class="toast-close">×</button>
+  </div>
+
+  <!-- Right-Side Collapsible Account Panel -->
+  <div id="account-panel-side" class="account-panel-side">
+    <!-- Collapsed State: Toggle Button -->
+    <button id="account-panel-toggle" class="account-panel-toggle" title="Account">
+      <span class="toggle-icon">👤</span>
+    </button>
+    
+    <!-- Expanded State: Panel Content -->
+    <div id="account-panel-content" class="account-panel-content">
+      <div class="panel-header">
+        <h3>Account</h3>
+        <button id="panel-close-btn" class="panel-close-btn" title="Close">×</button>
+      </div>
+      
+      <!-- Logged Out State -->
+      <div id="panel-logged-out" class="panel-section">
+        <p class="panel-status">Not logged in</p>
+        <div class="panel-actions">
+          <button id="panel-login-btn" class="panel-btn primary">Log In</button>
+          <button id="panel-register-btn" class="panel-btn secondary">Register</button>
+        </div>
+        <p class="panel-guest-info">Or continue as guest</p>
+      </div>
+      
+      <!-- Logged In State -->
+      <div id="panel-logged-in" class="panel-section" style="display: none;">
+        <div class="panel-user-info">
+          <p class="panel-email-label">Email:</p>
+          <p id="panel-email" class="panel-email">-</p>
+        </div>
+        <div class="panel-actions">
+          <button id="panel-change-password-btn" class="panel-btn secondary">Change Password</button>
+          <button id="panel-logout-btn" class="panel-btn danger">Logout</button>
+        </div>
+      </div>
+      
+      <!-- Guest Mode State -->
+      <div id="panel-guest-mode" class="panel-section" style="display: none;">
+        <p class="panel-status">Viewing as Guest</p>
+        <p class="panel-guest-note">No data will be saved. Log in to track your progress.</p>
+        <div class="panel-actions">
+          <button id="panel-guest-login-btn" class="panel-btn primary">Log In</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <main class="container">
     <h1>Listening Practice</h1>
 
@@ -21,10 +177,21 @@
         <div class="question-id-display">
           <label for="question-select-type">Question ID:</label>
           <span id="current-question-id-type" class="current-question-id">1</span>
+          <!-- Mastery Status Indicator (logged-in users only) -->
+          <div id="mastery-status-type" class="mastery-status" style="display: none;">
+            <span class="mastery-indicator">✅ Mastered</span>
+            <button id="remove-mastery-type-btn" class="remove-mastery-btn" style="display: none;">Remove Mastered Status</button>
+          </div>
         </div>
-        <select id="question-select-type" class="question-select">
-          <option value="1">Loading...</option>
-        </select>
+        <div class="question-select-wrapper">
+          <select id="question-select-type" class="question-select">
+            <option value="1">Loading...</option>
+          </select>
+          <label class="hide-mastered-checkbox">
+            <input type="checkbox" id="hide-mastered-type" class="hide-mastered-input">
+            <span>Hide Mastered questions</span>
+          </label>
+        </div>
         <div class="question-total">
           <span>Total number of questions: <span id="total-questions-type">1</span></span>
         </div>
@@ -44,10 +211,21 @@
         <div class="question-id-display">
           <label for="question-select-speak">Question ID:</label>
           <span id="current-question-id-speak" class="current-question-id">1</span>
+          <!-- Mastery Status Indicator (logged-in users only) -->
+          <div id="mastery-status-speak" class="mastery-status" style="display: none;">
+            <span class="mastery-indicator">✅ Mastered</span>
+            <button id="remove-mastery-speak-btn" class="remove-mastery-btn" style="display: none;">Remove Mastered Status</button>
+          </div>
         </div>
-        <select id="question-select-speak" class="question-select">
-          <option value="1">Loading...</option>
-        </select>
+        <div class="question-select-wrapper">
+          <select id="question-select-speak" class="question-select">
+            <option value="1">Loading...</option>
+          </select>
+          <label class="hide-mastered-checkbox">
+            <input type="checkbox" id="hide-mastered-speak" class="hide-mastered-input">
+            <span>Hide Mastered questions</span>
+          </label>
+        </div>
         <div class="question-total">
           <span>Total number of questions: <span id="total-questions-speak">1</span></span>
         </div>
@@ -264,6 +442,38 @@
   <audio id="audio" preload="auto"></audio>
   <audio id="audio-extended" preload="auto"></audio>
   <audio id="audio-phrases" preload="auto"></audio>
+  
+  <!-- Firebase SDK v9+ (modular) -->
+  <script type="module">
+    // Import Firebase modules
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyB0vXX7NwOvME_XoaGiJlYaiLRcaHJtrIQ",
+      authDomain: "listening-tasks-3ae34.firebaseapp.com",
+      projectId: "listening-tasks-3ae34",
+      storageBucket: "listening-tasks-3ae34.firebasestorage.app",
+      messagingSenderId: "737872673808",
+      appId: "1:737872673808:web:4db57599aa22b4830fde95",
+      measurementId: "G-1891MSSLXT"
+    };
+    
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    
+    // Make available globally
+    window.firebaseApp = app;
+    window.firebaseAuth = auth;
+    window.firebaseDb = db;
+    
+    console.log('✓ Firebase initialized successfully');
+  </script>
+  
   <script src="https://cdn.jsdelivr.net/npm/compromise@14.10.0/builds/compromise.min.js"></script>
   <script>
     // Configure API URL for paraphrase backend
@@ -307,6 +517,9 @@
       setTimeout(checkCompromise, 1000);
     })();
   </script>
+  <script type="module" src="firebase-auth-module.js"></script>
+  <script type="module" src="firebase-firestore-module.js"></script>
+  <script type="module" src="auth-ui.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

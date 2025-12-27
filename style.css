@@ -9,6 +9,93 @@ body {
   color: #1f2933;
 }
 
+/* ============================================
+   Demo Feedback Banner
+   ============================================ */
+
+.feedback-banner {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-bottom: 2px solid #f59e0b;
+  padding: 12px 20px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 16px;
+  position: relative;
+}
+
+.feedback-banner-content {
+  max-width: 900px;
+  text-align: center;
+}
+
+.feedback-text-en,
+.feedback-text-vi {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #78350f;
+}
+
+.feedback-text-en {
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.feedback-text-vi {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.feedback-banner a {
+  color: #b45309;
+  text-decoration: underline;
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.feedback-banner a:hover {
+  color: #92400e;
+}
+
+.feedback-banner-close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #92400e;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.feedback-banner-close:hover {
+  opacity: 1;
+}
+
+.feedback-banner.hidden {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .feedback-banner {
+    padding: 10px 40px 10px 16px;
+  }
+  
+  .feedback-text-en,
+  .feedback-text-vi {
+    font-size: 0.8rem;
+  }
+  
+  .feedback-text-vi {
+    font-size: 0.75rem;
+  }
+}
+
 .container {
   max-width: 640px;
   margin: 56px auto;
@@ -1780,13 +1867,12 @@ textarea:focus {
 
 .account-panel-side {
   position: fixed;
-  top: 0;
+  top: 50%;
   right: 0;
-  height: 100vh;
+  transform: translateY(-50%);
   z-index: 999;
   display: flex;
-  align-items: flex-start;
-  padding-top: 20px;
+  align-items: center;
 }
 
 /* Responsive: Adjust panels on small screens */

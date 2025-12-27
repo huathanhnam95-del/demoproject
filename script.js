@@ -874,6 +874,28 @@
   const modeSpeak = document.getElementById("mode-speak");
   const modeExtended = document.getElementById("mode-extended");
 
+  // ============================================
+  // Feedback Banner
+  // Users can close the banner; choice is saved in sessionStorage
+  // ============================================
+  const feedbackBanner = document.querySelector('.feedback-banner');
+  const feedbackBannerClose = document.querySelector('.feedback-banner-close');
+  
+  // Check if user already closed the banner this session
+  if (feedbackBanner && sessionStorage.getItem('feedbackBannerClosed') === 'true') {
+    feedbackBanner.classList.add('hidden');
+  }
+  
+  // Handle banner close
+  if (feedbackBannerClose) {
+    feedbackBannerClose.addEventListener('click', () => {
+      if (feedbackBanner) {
+        feedbackBanner.classList.add('hidden');
+        sessionStorage.setItem('feedbackBannerClosed', 'true');
+      }
+    });
+  }
+
   // Speak mode elements
   const playBtnSpeak = document.getElementById("play-btn-speak");
   const recordBtn = document.getElementById("record-btn");

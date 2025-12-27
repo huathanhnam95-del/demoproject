@@ -6,8 +6,13 @@ service cloud.firestore {
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
       
-      // Users can read/write their own mastery data
+      // Users can read/write their own mastery data (legacy)
       match /mastery/{masteryId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      // Users can read/write their own progress data (tiered progression)
+      match /progress/{progressId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
     }

@@ -5,40 +5,49 @@
   let currentTypeQuestionId = 1;
   let currentSpeakQuestionId = 1;
   
-  // Mastery cache: stores mastery status for all questions per mode
-  // Structure: { mode: { questionId: { mastered: boolean, ... } } }
+  // Progress cache: stores progress status for all questions per mode
+  // Structure: { mode: { questionId: { perfectCount, tier, lastCompletedAt } } }
   // This cache is used to avoid excessive Firestore reads when rendering dropdown
-  let masteryCache = {
+  // 
+  // Tier Calculation:
+  //   - 'none': 0 perfect completions
+  //   - 'completed': 1 perfect completion
+  //   - 'consolidated': 2 perfect completions
+  //   - 'mastered': 3+ perfect completions
+  let progressCache = {
     type: {},
     speak: {}
   };
+  
+  // Legacy alias for backward compatibility
+  let masteryCache = progressCache;
   let correctSentenceType = ""; // Will be loaded from database for Type mode
   let correctSentenceSpeak = ""; // Will be loaded from database for Speak mode
   
   /**
-   * Load mastery data for all questions in a mode
-   * Caches the results to avoid excessive Firestore reads
+   * Load progress data for all questions in a mode
+   * Uses Firestore's getAllProgressForMode for efficient batch loading
    * Called when mode changes or on initial load
    * 
    * @param {string} mode - 'type' or 'speak'
    * @returns {Promise<void>}
    */
-  async function loadAllMasteryForMode(mode) {
-    // Guest mode: Do NOT load mastery data
+  async function loadAllProgressForMode(mode) {
+    // Guest mode: Do NOT load progress data
     if (window.authUI && window.authUI.isGuestMode && window.authUI.isGuestMode()) {
-      masteryCache[mode] = {};
+      progressCache[mode] = {};
       return;
     }
     
     // Check if Firebase functions are available and user is logged in
     if (!window.firebaseFirestoreFunctions || !window.authUI) {
-      masteryCache[mode] = {};
+      progressCache[mode] = {};
       return;
     }
     
     const userId = window.authUI.getCurrentUserId();
     if (!userId) {
-      masteryCache[mode] = {};
+      progressCache[mode] = {};
       return;
     }
     
@@ -48,64 +57,528 @@
     }
     
     try {
-      // Get the database for this mode to know which questions exist
-      const database = mode === 'type' ? typeDatabase : speakDatabase;
+      // Use batch loading function from Firestore module
+      const result = await window.firebaseFirestoreFunctions.getAllProgressForMode(userId, mode);
       
-      // Clear cache for this mode
-      masteryCache[mode] = {};
-      
-      // Load mastery status for all questions in parallel (batch requests)
-      const masteryPromises = database.map(async (item) => {
-        const questionId = item.id;
-        try {
-          const result = await window.firebaseFirestoreFunctions.getMasteryStatus(userId, questionId, mode);
-          if (result.success && result.mastery && result.mastery.mastered) {
-            masteryCache[mode][questionId] = {
-              mastered: true,
-              masteredAt: result.mastery.masteredAt
-            };
-          } else {
-            masteryCache[mode][questionId] = {
-              mastered: false
-            };
-          }
-        } catch (error) {
-          console.error(`Error loading mastery for question ${questionId} in ${mode} mode:`, error);
-          masteryCache[mode][questionId] = {
-            mastered: false
-          };
-        }
-      });
-      
-      // Wait for all mastery data to load
-      await Promise.all(masteryPromises);
-      
-      console.log(`✓ Loaded mastery data for ${mode} mode:`, masteryCache[mode]);
+      if (result.success) {
+        // Store the progress map in cache
+        progressCache[mode] = result.progressMap || {};
+        console.log(`✓ Loaded progress data for ${mode} mode:`, progressCache[mode]);
+      } else {
+        console.error(`Error loading progress for ${mode} mode:`, result.error);
+        progressCache[mode] = {};
+      }
     } catch (error) {
-      console.error(`Error loading all mastery for ${mode} mode:`, error);
-      masteryCache[mode] = {};
+      console.error(`Error loading all progress for ${mode} mode:`, error);
+      progressCache[mode] = {};
+    }
+  }
+  
+  // Legacy function alias for backward compatibility
+  const loadAllMasteryForMode = loadAllProgressForMode;
+  
+  /**
+   * Update progress cache for a specific question
+   * Called when progress changes (perfect completion or reset)
+   * 
+   * @param {string|number} questionId - Question ID
+   * @param {string} mode - 'type' or 'speak'
+   * @param {Object} progressData - { perfectCount, tier, lastCompletedAt }
+   */
+  function updateProgressCache(questionId, mode, progressData) {
+    if (!progressCache[mode]) {
+      progressCache[mode] = {};
+    }
+    
+    progressCache[mode][questionId] = progressData;
+    
+    // Refresh the dropdown to reflect the change
+    populateQuestionSelect(mode);
+    
+    // Update progress bar UI
+    updateProgressBarUI(questionId, mode, progressData);
+    
+    // Update left panel
+    updateProgressPanel(mode);
+  }
+  
+  // Legacy function for backward compatibility
+  function updateMasteryCache(questionId, mode, mastered) {
+    const existingData = progressCache[mode]?.[questionId] || { perfectCount: 0, tier: 'none' };
+    if (mastered) {
+      // Increment is handled elsewhere, this is just for cache update
+      updateProgressCache(questionId, mode, {
+        ...existingData,
+        tier: existingData.tier === 'none' ? 'completed' : existingData.tier
+      });
+    } else {
+      updateProgressCache(questionId, mode, { perfectCount: 0, tier: 'none', lastCompletedAt: null });
     }
   }
   
   /**
-   * Update mastery cache for a specific question
-   * Called when mastery status changes (gained or removed)
+   * Calculate state from attempt status and perfect count
+   * 
+   * State definitions:
+   *   - 'not-started': User has never pressed Check (no attempts)
+   *   - 'in-progress': User has attempted but perfectCount < 3
+   *   - 'completed': perfectCount 3-5
+   *   - 'consolidated': perfectCount 6-8
+   *   - 'mastered': perfectCount >= 9
+   * 
+   * @param {boolean} hasAttempted - Whether user has attempted at least once
+   * @param {number} perfectCount - Number of perfect completions
+   * @returns {string}
+   */
+  function calculateState(hasAttempted, perfectCount) {
+    if (perfectCount >= 9) return 'mastered';
+    if (perfectCount >= 6) return 'consolidated';
+    if (perfectCount >= 3) return 'completed';
+    if (hasAttempted) return 'in-progress';
+    return 'not-started';
+  }
+  
+  /**
+   * Calculate tier from perfect count (legacy, for backward compatibility)
+   * 
+   * @param {number} perfectCount
+   * @returns {string}
+   */
+  function calculateTier(perfectCount) {
+    if (perfectCount >= 9) return 'mastered';
+    if (perfectCount >= 6) return 'consolidated';
+    if (perfectCount >= 3) return 'completed';
+    return 'none';
+  }
+  
+  /**
+   * Get progress bar percentage from perfect count
+   * Shows progress WITHIN the current tier, not across all tiers.
+   * 
+   * Uses perfectCount % 3 to calculate tier progress:
+   *   - 0 within tier → 0%
+   *   - 1 within tier → 33%
+   *   - 2 within tier → 66%
+   *   - 3 within tier → 100% (tier complete, advances to next)
+   * 
+   * For mastered tier (9+), always shows 100%.
+   * 
+   * @param {number} perfectCount
+   * @returns {number}
+   */
+  function getProgressPercentage(perfectCount) {
+    // Mastered tier (9+) always shows 100%
+    if (perfectCount >= 9) return 100;
+    
+    // Calculate progress within current tier
+    const progressWithinTier = perfectCount % 3;
+    
+    switch (progressWithinTier) {
+      case 0: return 0;
+      case 1: return 33;
+      case 2: return 66;
+      default: return 0;
+    }
+  }
+  
+  /**
+   * Get the next state target label
+   * Used for progress bar display
+   * 
+   * @param {string} currentState
+   * @returns {string}
+   */
+  function getNextStateLabel(currentState) {
+    switch (currentState) {
+      case 'not-started': return 'Completed';
+      case 'in-progress': return 'Completed';
+      case 'completed': return 'Consolidated';
+      case 'consolidated': return 'Mastered';
+      case 'mastered': return 'Mastered ★';
+      default: return 'Completed';
+    }
+  }
+  
+  // Legacy alias
+  const getNextTierLabel = getNextStateLabel;
+  
+  /**
+   * Get progress description showing X/3 completions toward next state
+   * 
+   * @param {boolean} hasAttempted - Whether user has attempted
+   * @param {number} perfectCount - Number of perfect completions
+   * @returns {string}
+   */
+  function getProgressDescription(hasAttempted, perfectCount) {
+    if (perfectCount >= 9) return '★ Fully Mastered';
+    
+    const progressWithinTier = perfectCount % 3;
+    const currentState = calculateState(hasAttempted, perfectCount);
+    const nextState = getNextStateLabel(currentState);
+    
+    if (!hasAttempted) {
+      return 'Not started';
+    }
+    
+    return `${progressWithinTier}/3 to ${nextState}`;
+  }
+  
+  /**
+   * Update progress bar UI for a question
    * 
    * @param {string|number} questionId - Question ID
    * @param {string} mode - 'type' or 'speak'
-   * @param {boolean} mastered - Whether the question is mastered
+   * @param {Object} progressData - { perfectCount, tier }
    */
-  function updateMasteryCache(questionId, mode, mastered) {
-    if (!masteryCache[mode]) {
-      masteryCache[mode] = {};
+  function updateProgressBarUI(questionId, mode, progressData) {
+    const progressBar = document.getElementById(`progress-bar-${mode}`);
+    const progressFill = document.getElementById(`progress-bar-fill-${mode}`);
+    const progressTarget = document.getElementById(`progress-target-${mode}`);
+    const progressTierBadge = document.getElementById(`progress-tier-${mode}`);
+    const resetBtn = document.getElementById(`reset-progress-${mode}-btn`);
+    
+    if (!progressBar) return;
+    
+    // Show progress bar for logged-in users
+    const isLoggedIn = window.authUI && !window.authUI.isGuestMode?.() && window.authUI.getCurrentUserId?.();
+    progressBar.style.display = isLoggedIn ? 'block' : 'none';
+    
+    if (!isLoggedIn) return;
+    
+    const perfectCount = progressData?.perfectCount || 0;
+    const hasAttempted = progressData?.hasAttempted || false;
+    const state = calculateState(hasAttempted, perfectCount);
+    const percentage = getProgressPercentage(perfectCount);
+    
+    // Update progress fill
+    if (progressFill) {
+      progressFill.style.width = `${percentage}%`;
+      progressFill.className = `progress-bar-fill state-${state}`;
     }
     
-    masteryCache[mode][questionId] = {
-      mastered: mastered
+    // Update target label with progress description
+    if (progressTarget) {
+      progressTarget.textContent = getProgressDescription(hasAttempted, perfectCount);
+    }
+    
+    // Update state badge
+    if (progressTierBadge) {
+      const stateLabels = {
+        'not-started': 'Not Started',
+        'in-progress': `In Progress (${perfectCount}/3)`,
+        'completed': `✓ Completed (${perfectCount} total)`,
+        'consolidated': `✓✓ Consolidated (${perfectCount} total)`,
+        'mastered': `★ Mastered (${perfectCount} total)`
+      };
+      progressTierBadge.textContent = stateLabels[state] || 'Not Started';
+      progressTierBadge.className = `progress-tier-badge state-${state}`;
+    }
+    
+    // Show/hide reset button (show if any progress or attempts)
+    if (resetBtn) {
+      resetBtn.style.display = (perfectCount > 0 || hasAttempted) ? 'inline-block' : 'none';
+    }
+  }
+  
+  /**
+   * Update the left-side progress panel
+   * Shows overall progress summary, distribution bar, pie chart, next goal, and recent progress
+   * 
+   * @param {string} mode - 'type' or 'speak'
+   */
+  async function updateProgressPanel(mode) {
+    // Only show for logged-in users
+    const isLoggedIn = window.authUI && !window.authUI.isGuestMode?.() && window.authUI.getCurrentUserId?.();
+    const guestNotice = document.getElementById('progress-guest-notice');
+    const progressSummary = document.getElementById('progress-summary');
+    
+    if (guestNotice) {
+      guestNotice.style.display = isLoggedIn ? 'none' : 'block';
+    }
+    
+    // Get total questions for this mode
+    const database = mode === 'type' ? typeDatabase : speakDatabase;
+    const totalQuestions = database.length;
+    
+    if (!isLoggedIn) {
+      // Reset counts for guests - all questions are "not started"
+      updateTierCounts(0, 0, 0);
+      updateDistribution({ notStarted: totalQuestions, inProgress: 0, completed: 0, consolidated: 0, mastered: 0 }, totalQuestions);
+      return;
+    }
+    
+    // Update mode label
+    const modeLabel = document.getElementById('progress-mode-label');
+    if (modeLabel) {
+      modeLabel.textContent = mode === 'type' ? 'Type Mode' : 'Speak Mode';
+    }
+    
+    // Count all states from cache
+    const cache = progressCache[mode] || {};
+    let notStartedCount = 0;
+    let inProgressCount = 0;
+    let completedCount = 0;
+    let consolidatedCount = 0;
+    let masteredCount = 0;
+    
+    // Count questions with cached progress
+    const cachedQuestionIds = new Set(Object.keys(cache));
+    
+    // For each question in the database, determine its state
+    database.forEach(item => {
+      const questionId = String(item.id);
+      const progress = cache[questionId];
+      
+      if (!progress) {
+        notStartedCount++;
+      } else {
+        const hasAttempted = progress.hasAttempted || false;
+        const perfectCount = progress.perfectCount || 0;
+        const state = calculateState(hasAttempted, perfectCount);
+        
+        if (state === 'not-started') notStartedCount++;
+        else if (state === 'in-progress') inProgressCount++;
+        else if (state === 'completed') completedCount++;
+        else if (state === 'consolidated') consolidatedCount++;
+        else if (state === 'mastered') masteredCount++;
+      }
+    });
+    
+    // Update UI
+    updateTierCounts(completedCount, consolidatedCount, masteredCount);
+    
+    // Update distribution bar and pie chart
+    const stateCounts = {
+      notStarted: notStartedCount,
+      inProgress: inProgressCount,
+      completed: completedCount,
+      consolidated: consolidatedCount,
+      mastered: masteredCount
+    };
+    updateDistribution(stateCounts, totalQuestions);
+    updateNextGoalHint(completedCount, consolidatedCount, masteredCount, totalQuestions);
+    
+    // Load and display recent progress
+    await updateRecentProgress(mode);
+  }
+  
+  /**
+   * Update tier count display
+   */
+  function updateTierCounts(completed, consolidated, mastered) {
+    const completedEl = document.getElementById('completed-count');
+    const consolidatedEl = document.getElementById('consolidated-count');
+    const masteredEl = document.getElementById('mastered-count');
+    
+    if (completedEl) completedEl.textContent = completed;
+    if (consolidatedEl) consolidatedEl.textContent = consolidated;
+    if (masteredEl) masteredEl.textContent = mastered;
+  }
+  
+  /**
+   * Update distribution UI (bar and pie chart)
+   * 
+   * @param {Object} stateCounts - { notStarted, inProgress, completed, consolidated, mastered }
+   * @param {number} total - Total number of questions
+   */
+  function updateDistribution(stateCounts, total) {
+    updateTierDistributionBar(stateCounts, total);
+    updateDistributionPieChart(stateCounts, total);
+  }
+  
+  /**
+   * Update tier distribution bar
+   * Width is proportional to counts for all 5 states
+   * 
+   * @param {Object} stateCounts - { notStarted, inProgress, completed, consolidated, mastered }
+   * @param {number} total - Total number of questions
+   */
+  function updateTierDistributionBar(stateCounts, total) {
+    const barNotStarted = document.getElementById('tier-bar-not-started');
+    const barInProgress = document.getElementById('tier-bar-in-progress');
+    const barCompleted = document.getElementById('tier-bar-completed');
+    const barConsolidated = document.getElementById('tier-bar-consolidated');
+    const barMastered = document.getElementById('tier-bar-mastered');
+    
+    if (total === 0) total = 1; // Prevent division by zero
+    
+    const notStartedPct = (stateCounts.notStarted / total) * 100;
+    const inProgressPct = (stateCounts.inProgress / total) * 100;
+    const completedPct = (stateCounts.completed / total) * 100;
+    const consolidatedPct = (stateCounts.consolidated / total) * 100;
+    const masteredPct = (stateCounts.mastered / total) * 100;
+    
+    if (barNotStarted) barNotStarted.style.width = `${notStartedPct}%`;
+    if (barInProgress) barInProgress.style.width = `${inProgressPct}%`;
+    if (barCompleted) barCompleted.style.width = `${completedPct}%`;
+    if (barConsolidated) barConsolidated.style.width = `${consolidatedPct}%`;
+    if (barMastered) barMastered.style.width = `${masteredPct}%`;
+  }
+  
+  /**
+   * Update distribution pie chart
+   * Renders SVG pie chart with all 5 states
+   * 
+   * @param {Object} stateCounts - { notStarted, inProgress, completed, consolidated, mastered }
+   * @param {number} total - Total number of questions
+   */
+  function updateDistributionPieChart(stateCounts, total) {
+    const pieSvg = document.getElementById('distribution-pie');
+    const pieTotalCount = document.getElementById('pie-total-count');
+    
+    if (!pieSvg) return;
+    
+    // Update total count in center
+    if (pieTotalCount) {
+      pieTotalCount.textContent = total;
+    }
+    
+    // Define colors for each state
+    const stateColors = {
+      notStarted: '#6b7280',
+      inProgress: '#7c3aed',
+      completed: '#f59e0b',
+      consolidated: '#3b82f6',
+      mastered: '#22c55e'
     };
     
-    // Refresh the dropdown to reflect the change
-    populateQuestionSelect(mode);
+    // State order for rendering (reversed so mastered is on top visually)
+    const stateOrder = ['notStarted', 'inProgress', 'completed', 'consolidated', 'mastered'];
+    
+    // Calculate percentages and update legend
+    const percentages = {};
+    stateOrder.forEach(state => {
+      const count = stateCounts[state] || 0;
+      const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+      percentages[state] = pct;
+      
+      // Update legend
+      const legendEl = document.getElementById(`pie-legend-${state.replace(/([A-Z])/g, '-$1').toLowerCase()}`);
+      if (legendEl) {
+        legendEl.textContent = `${pct}% (${count})`;
+      }
+    });
+    
+    // Generate SVG paths for pie chart
+    // Using stroke-dasharray technique for donut chart
+    const radius = 40;
+    const circumference = 2 * Math.PI * radius;
+    
+    // Clear existing paths
+    pieSvg.innerHTML = '';
+    
+    // Add background circle
+    const bgCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    bgCircle.setAttribute('cx', '50');
+    bgCircle.setAttribute('cy', '50');
+    bgCircle.setAttribute('r', String(radius));
+    bgCircle.setAttribute('fill', 'none');
+    bgCircle.setAttribute('stroke', '#e5e7eb');
+    bgCircle.setAttribute('stroke-width', '20');
+    pieSvg.appendChild(bgCircle);
+    
+    // Calculate cumulative offset for each segment
+    let cumulativePercent = 0;
+    
+    // Render segments in order
+    stateOrder.forEach(state => {
+      const count = stateCounts[state] || 0;
+      if (count === 0) return;
+      
+      const percent = (count / total) * 100;
+      const dashLength = (percent / 100) * circumference;
+      const dashOffset = (cumulativePercent / 100) * circumference;
+      
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', '50');
+      circle.setAttribute('cy', '50');
+      circle.setAttribute('r', String(radius));
+      circle.setAttribute('fill', 'none');
+      circle.setAttribute('stroke', stateColors[state]);
+      circle.setAttribute('stroke-width', '20');
+      circle.setAttribute('stroke-dasharray', `${dashLength} ${circumference}`);
+      circle.setAttribute('stroke-dashoffset', String(-dashOffset));
+      circle.style.transition = 'stroke-dasharray 0.4s ease, stroke-dashoffset 0.4s ease';
+      
+      pieSvg.appendChild(circle);
+      
+      cumulativePercent += percent;
+    });
+    
+    // Add center circle (white) to create donut effect
+    const centerCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    centerCircle.setAttribute('cx', '50');
+    centerCircle.setAttribute('cy', '50');
+    centerCircle.setAttribute('r', '30');
+    centerCircle.setAttribute('fill', '#ffffff');
+    pieSvg.appendChild(centerCircle);
+  }
+  
+  /**
+   * Update next goal hint message
+   */
+  function updateNextGoalHint(completed, consolidated, mastered, total) {
+    const goalText = document.getElementById('next-goal-text');
+    if (!goalText) return;
+    
+    const totalProgress = completed + consolidated + mastered;
+    
+    if (totalProgress === 0) {
+      goalText.textContent = 'Complete a question to start tracking!';
+    } else if (mastered >= total) {
+      goalText.textContent = '🎉 All questions mastered! Amazing work!';
+    } else if (completed > 0 && consolidated < total) {
+      goalText.textContent = `Practice ${completed} question(s) again to reach Consolidated.`;
+    } else if (consolidated > 0 && mastered < total) {
+      goalText.textContent = `Practice ${consolidated} question(s) more to reach Mastered.`;
+    } else {
+      const remaining = total - totalProgress;
+      goalText.textContent = `${remaining} question(s) remaining to complete.`;
+    }
+  }
+  
+  /**
+   * Update recent progress list
+   */
+  async function updateRecentProgress(mode) {
+    const recentList = document.getElementById('recent-progress-list');
+    if (!recentList) return;
+    
+    const userId = window.authUI?.getCurrentUserId?.();
+    if (!userId) {
+      recentList.innerHTML = '<li class="no-progress">Log in to track progress</li>';
+      return;
+    }
+    
+    try {
+      const result = await window.firebaseFirestoreFunctions.getRecentProgress(userId, mode, 5);
+      
+      if (result.success && result.recentProgress.length > 0) {
+        recentList.innerHTML = result.recentProgress.map(item => `
+          <li>
+            <span>Question ${item.questionId}</span>
+            <span class="recent-tier-badge ${item.tier}">${getTierLabel(item.tier)}</span>
+          </li>
+        `).join('');
+      } else {
+        recentList.innerHTML = '<li class="no-progress">No recent progress</li>';
+      }
+    } catch (error) {
+      console.error('Error loading recent progress:', error);
+      recentList.innerHTML = '<li class="no-progress">Unable to load</li>';
+    }
+  }
+  
+  /**
+   * Get display label for tier
+   */
+  function getTierLabel(tier) {
+    switch (tier) {
+      case 'completed': return '✓ Completed';
+      case 'consolidated': return '✓✓ Consolidated';
+      case 'mastered': return '★ Mastered';
+      default: return 'Not Started';
+    }
   }
   
   /**
@@ -119,57 +592,87 @@
    * @param {string|number} questionId - Question ID
    * @param {string} mode - 'type' or 'speak' - the mode to check mastery for
    */
-  async function loadMasteryStatus(questionId, mode) {
-    // Guest mode: Do NOT show mastery status
+  /**
+   * Load and display progress status for a question in a specific mode
+   * Guest mode: No progress status is shown (returns early)
+   * Authenticated mode: Loads progress from Firestore and displays UI
+   * 
+   * Type and Speak modes are INDEPENDENT - each mode has its own progress status
+   * When switching tabs, progress status is loaded separately for each mode
+   * 
+   * @param {string|number} questionId - Question ID
+   * @param {string} mode - 'type' or 'speak' - the mode to check progress for
+   */
+  async function loadProgressStatus(questionId, mode) {
+    // Guest mode: Do NOT show progress status
     if (window.authUI && window.authUI.isGuestMode && window.authUI.isGuestMode()) {
-      hideMasteryStatus('type');
-      hideMasteryStatus('speak');
+      hideProgressBar('type');
+      hideProgressBar('speak');
       return;
     }
     
     // Check if Firebase functions are available and user is logged in
     if (!window.firebaseFirestoreFunctions || !window.authUI) {
-      hideMasteryStatus('type');
-      hideMasteryStatus('speak');
+      hideProgressBar('type');
+      hideProgressBar('speak');
       return;
     }
     
     const userId = window.authUI.getCurrentUserId();
     if (!userId) {
-      hideMasteryStatus('type');
-      hideMasteryStatus('speak');
+      hideProgressBar('type');
+      hideProgressBar('speak');
       return;
     }
     
     // Validate mode
     if (!mode || (mode !== 'type' && mode !== 'speak')) {
-      console.error('Invalid mode for loadMasteryStatus:', mode);
+      console.error('Invalid mode for loadProgressStatus:', mode);
       return;
     }
     
     try {
-      // Get mastery status for this specific mode and question
-      const result = await window.firebaseFirestoreFunctions.getMasteryStatus(userId, questionId, mode);
+      // Get progress status for this specific mode and question
+      const result = await window.firebaseFirestoreFunctions.getProgressStatus(userId, questionId, mode);
       
-      if (result.success && result.mastery && result.mastery.mastered) {
-        // Question is mastered in this mode - show indicator and remove button
-        showMasteryStatus(mode, true);
+      if (result.success && result.progress) {
+        const progress = result.progress;
+        
         // Update cache
-        updateMasteryCache(questionId, mode, true);
+        if (!progressCache[mode]) progressCache[mode] = {};
+        progressCache[mode][questionId] = progress;
+        
+        // Update progress bar UI
+        updateProgressBarUI(questionId, mode, progress);
       } else {
-        // Question is not mastered in this mode - hide indicator
-        hideMasteryStatus(mode);
-        // Update cache
-        updateMasteryCache(questionId, mode, false);
+        // No progress - show empty state
+        updateProgressBarUI(questionId, mode, { perfectCount: 0, tier: 'none' });
       }
       
-      // Refresh dropdown to show updated mastery status
+      // Refresh dropdown to show updated progress status
       populateQuestionSelect(mode);
+      
+      // Update left panel
+      await updateProgressPanel(mode);
       
       // Note: We don't touch the other mode's UI - each mode is independent
     } catch (error) {
-      console.error('Error loading mastery status:', error);
-      hideMasteryStatus(mode);
+      console.error('Error loading progress status:', error);
+      hideProgressBar(mode);
+    }
+  }
+  
+  // Legacy alias for backward compatibility
+  const loadMasteryStatus = loadProgressStatus;
+  
+  /**
+   * Hide progress bar for a mode
+   * @param {string} mode - 'type' or 'speak'
+   */
+  function hideProgressBar(mode) {
+    const progressBar = document.getElementById(`progress-bar-${mode}`);
+    if (progressBar) {
+      progressBar.style.display = 'none';
     }
   }
   
@@ -294,34 +797,52 @@
       // Record the practice attempt
       await window.firebaseFirestoreFunctions.recordPracticeAttempt(userId, questionId, isCorrect, mode);
       
-      // Update mastery status if 100% correct in Type or Speak mode
-      // Only Type and Speak modes have mastery tracking (not extended or phrases)
-      // Each mode is independent - mastery in one mode does NOT affect the other
-      if (isCorrect && (mode === 'type' || mode === 'speak')) {
-        // Mark as mastered in this specific mode only
-        await window.firebaseFirestoreFunctions.updateMasteryStatus(
-          userId, 
-          questionId, 
-          mode,
-          true  // isMastered = true (100% correct)
+      // For Type and Speak modes, track attempts and progress
+      if (mode === 'type' || mode === 'speak') {
+        // ALWAYS record that user attempted (pressed Check), regardless of correctness
+        // This moves the question from "Not Started" to "In Progress"
+        const attemptResult = await window.firebaseFirestoreFunctions.recordAttempt(
+          userId,
+          questionId,
+          mode
         );
         
-        // Update cache immediately
-        updateMasteryCache(questionId, mode, true);
-        // Reload mastery UI for this mode to show updated status
-        await loadMasteryStatus(questionId, mode);
-        // Reload all mastery data to update dropdown (in case this was a new mastery)
-        await loadAllMasteryForMode(mode);
-      } else if (!isCorrect && (mode === 'type' || mode === 'speak')) {
-        // If not 100% correct, ensure mastery is false for this mode
-        // (in case user previously mastered it and wants to practice again)
-        await window.firebaseFirestoreFunctions.updateMasteryStatus(
-          userId, 
-          questionId, 
-          mode,
-          false  // isMastered = false
-        );
+        // Update progress if 100% correct
+        // State Progression (3 perfect completions per tier):
+        //   - 0-2 perfect → In Progress
+        //   - 3-5 perfect → Completed
+        //   - 6-8 perfect → Consolidated
+        //   - 9+ perfect → Mastered
+        if (isCorrect) {
+          // Increment perfect count and update state
+          const result = await window.firebaseFirestoreFunctions.incrementProgress(
+            userId, 
+            questionId, 
+            mode
+          );
+          
+          if (result.success && result.progress) {
+            // Update cache immediately with new progress data
+            updateProgressCache(questionId, mode, result.progress);
+            
+            // Reload progress UI for this mode to show updated status
+            await loadProgressStatus(questionId, mode);
+            
+            // Reload all progress data to update dropdown
+            await loadAllProgressForMode(mode);
+          }
+        } else if (attemptResult.success && attemptResult.progress) {
+          // Update cache with attempt (now In Progress if was Not Started)
+          updateProgressCache(questionId, mode, attemptResult.progress);
+          
+          // Reload progress UI
+          await loadProgressStatus(questionId, mode);
+          
+          // Reload all progress data to update dropdown
+          await loadAllProgressForMode(mode);
+        }
       }
+      // Note: Non-perfect attempts do NOT reset progress - progress only increases
     } catch (error) {
       console.error('Error recording practice attempt:', error);
       // Don't show error to user, just log it
@@ -879,11 +1400,13 @@
     
     // Reload the correct audio for Type mode
     if (typeDatabase.length > 0 && currentTypeQuestionId) {
-      // Load all mastery data for Type mode (to update dropdown)
-      await loadAllMasteryForMode("type");
+      // Load all progress data for Type mode (to update dropdown)
+      await loadAllProgressForMode("type");
       await loadQuestion("type", currentTypeQuestionId);
-      // Load mastery status for Type mode (independent from Speak mode)
-      await loadMasteryStatus(currentTypeQuestionId, "type");
+      // Load progress status for Type mode (independent from Speak mode)
+      await loadProgressStatus(currentTypeQuestionId, "type");
+      // Update progress panel for Type mode
+      await updateProgressPanel("type");
     }
     
     if (isRecording && recognition) {
@@ -920,11 +1443,13 @@
     
     // Reload the correct audio for Speak mode
     if (speakDatabase.length > 0 && currentSpeakQuestionId) {
-      // Load all mastery data for Speak mode (to update dropdown)
-      await loadAllMasteryForMode("speak");
+      // Load all progress data for Speak mode (to update dropdown)
+      await loadAllProgressForMode("speak");
       await loadQuestion("speak", currentSpeakQuestionId);
-      // Load mastery status for Speak mode (independent from Type mode)
-      await loadMasteryStatus(currentSpeakQuestionId, "speak");
+      // Load progress status for Speak mode (independent from Type mode)
+      await loadProgressStatus(currentSpeakQuestionId, "speak");
+      // Update progress panel for Speak mode
+      await updateProgressPanel("speak");
     }
     
     // Microphone access will be requested when user clicks "Start Recording"
@@ -3707,16 +4232,15 @@
 
   /**
    * Populate the question select dropdown for a mode
-   * Shows mastery status indicators and filters based on "Hide Mastered" checkbox
+   * Shows tier status indicators and filters based on multi-select tier filter
    * 
-   * How mastery data is merged:
-   * - Reads from masteryCache[mode] to check if each question is mastered
-   * - Adds "✅ Mastered" text and applies mastered class to options
+   * How progress data is merged:
+   * - Reads from progressCache[mode] to get tier for each question
+   * - Adds tier indicators (✓/✓✓/★) and applies tier class to options
    * 
    * How filtering works:
-   * - Checks the "Hide Mastered" checkbox state for the current mode
-   * - If checked, excludes mastered questions from the dropdown
-   * - If unchecked, shows all questions (mastered ones are still marked)
+   * - Checks the tier filter checkboxes state for the current mode
+   * - Each tier (completed, consolidated, mastered, none) can be shown/hidden
    * - Currently selected question is always shown, even if it would be filtered
    * 
    * @param {string} mode - 'type', 'speak', or 'extended'
@@ -3744,42 +4268,61 @@
       const select = mode === "type" ? questionSelectType : questionSelectSpeak;
       const currentIdDisplay = mode === "type" ? currentQuestionIdType : currentQuestionIdSpeak;
       const totalDisplay = mode === "type" ? totalQuestionsType : totalQuestionsSpeak;
-      const hideMasteredCheckbox = document.getElementById(`hide-mastered-${mode}`);
       
       // Get current selected question ID (to ensure it's always shown even if filtered)
       const currentId = mode === "type" ? currentTypeQuestionId : currentSpeakQuestionId;
       
-      // Check if "Hide Mastered" filter is enabled
-      const hideMastered = hideMasteredCheckbox ? hideMasteredCheckbox.checked : false;
+      // Get state filter checkbox states
+      const filterNotStarted = document.getElementById(`filter-not-started-${mode}`)?.checked ?? true;
+      const filterInProgress = document.getElementById(`filter-in-progress-${mode}`)?.checked ?? true;
+      const filterCompleted = document.getElementById(`filter-completed-${mode}`)?.checked ?? true;
+      const filterConsolidated = document.getElementById(`filter-consolidated-${mode}`)?.checked ?? true;
+      const filterMastered = document.getElementById(`filter-mastered-${mode}`)?.checked ?? true;
       
-      // Get mastery cache for this mode
-      const modeMasteryCache = masteryCache[mode] || {};
+      // Get progress cache for this mode
+      const modeProgressCache = progressCache[mode] || {};
       
       select.innerHTML = "";
       let visibleCount = 0;
       
-      // Filter and render questions
+      // Filter and render questions based on state filter
       database.forEach(item => {
         const questionId = item.id;
-        const isMastered = modeMasteryCache[questionId]?.mastered === true;
+        const progress = modeProgressCache[questionId] || { perfectCount: 0, hasAttempted: false };
+        const hasAttempted = progress.hasAttempted || false;
+        const perfectCount = progress.perfectCount || 0;
+        const state = calculateState(hasAttempted, perfectCount);
         
-        // Apply filter: hide mastered questions if checkbox is checked
-        // BUT always show the currently selected question
-        if (hideMastered && isMastered && questionId !== currentId) {
-          return; // Skip this question (it's mastered and not currently selected)
+        // Check if this state should be shown based on filter
+        let shouldShow = false;
+        if (state === 'not-started' && filterNotStarted) shouldShow = true;
+        else if (state === 'in-progress' && filterInProgress) shouldShow = true;
+        else if (state === 'completed' && filterCompleted) shouldShow = true;
+        else if (state === 'consolidated' && filterConsolidated) shouldShow = true;
+        else if (state === 'mastered' && filterMastered) shouldShow = true;
+        
+        // Always show currently selected question
+        if (questionId === currentId) shouldShow = true;
+        
+        if (!shouldShow) {
+          return; // Skip this question based on filter
         }
         
         // Create option element
         const option = document.createElement("option");
         option.value = questionId;
         
-        // Add mastery indicator if mastered
-        if (isMastered) {
-          option.textContent = `${questionId} ✅ (Mastered)`;
-          option.classList.add("mastered");
-        } else {
-          option.textContent = questionId.toString();
-        }
+        // Add state indicator
+        const stateIndicators = {
+          'not-started': '',
+          'in-progress': ' ◐ (In Progress)',
+          'completed': ' ✓ (Completed)',
+          'consolidated': ' ✓✓ (Consolidated)',
+          'mastered': ' ★ (Mastered)'
+        };
+        
+        option.textContent = `${questionId}${stateIndicators[state] || ''}`;
+        option.classList.add(`state-${state}`);
         
         select.appendChild(option);
         visibleCount++;
@@ -3787,24 +4330,34 @@
       
       // Update display
       currentIdDisplay.textContent = currentId;
-      totalDisplay.textContent = hideMastered ? `${visibleCount} (${database.length} total)` : database.length;
+      const hasFilters = !filterNotStarted || !filterInProgress || !filterCompleted || !filterConsolidated || !filterMastered;
+      totalDisplay.textContent = hasFilters ? `${visibleCount} (${database.length} total)` : database.length;
       
-      // Set selected value (ensure current question is selected even if it was filtered)
+      // Set selected value (ensure current question is selected)
       select.value = currentId;
       
-      // If current question was filtered out, make sure it's still in the dropdown
-      if (hideMastered && modeMasteryCache[currentId]?.mastered === true) {
-        // Current question is mastered and filter is on - ensure it's visible
-        const existingOption = select.querySelector(`option[value="${currentId}"]`);
-        if (!existingOption) {
-          // Add it back if it was filtered out
-          const option = document.createElement("option");
-          option.value = currentId;
-          option.textContent = `${currentId} ✅ (Mastered)`;
-          option.classList.add("mastered");
-          select.appendChild(option);
-          select.value = currentId;
-        }
+      // Make sure selected question exists in dropdown
+      const existingOption = select.querySelector(`option[value="${currentId}"]`);
+      if (!existingOption) {
+        // Add current question if it was filtered out
+        const progress = modeProgressCache[currentId] || { perfectCount: 0, hasAttempted: false };
+        const hasAttempted = progress.hasAttempted || false;
+        const perfectCount = progress.perfectCount || 0;
+        const state = calculateState(hasAttempted, perfectCount);
+        const stateIndicators = {
+          'not-started': '',
+          'in-progress': ' ◐ (In Progress)',
+          'completed': ' ✓ (Completed)',
+          'consolidated': ' ✓✓ (Consolidated)',
+          'mastered': ' ★ (Mastered)'
+        };
+        
+        const option = document.createElement("option");
+        option.value = currentId;
+        option.textContent = `${currentId}${stateIndicators[state] || ''}`;
+        option.classList.add(`state-${state}`);
+        select.appendChild(option);
+        select.value = currentId;
       }
     }
   };
@@ -3815,11 +4368,11 @@
     speakDatabase = await loadDatabase("speak");
     extendedDatabase = await loadDatabase("extended");
     
-    // Load mastery data for Type and Speak modes (cached for dropdown rendering)
-    await loadAllMasteryForMode("type");
-    await loadAllMasteryForMode("speak");
+    // Load progress data for Type and Speak modes (cached for dropdown rendering)
+    await loadAllProgressForMode("type");
+    await loadAllProgressForMode("speak");
     
-    // Populate selectors (will use mastery cache to show indicators)
+    // Populate selectors (will use progress cache to show tier indicators)
     populateQuestionSelect("type");
     populateQuestionSelect("speak");
     populateQuestionSelect("extended");
@@ -3838,6 +4391,13 @@
       currentExtendedQuestionId = 1;
       loadExtendedQuestion(1);
     }
+    
+    // Update progress bar for initial question
+    const typeProgress = progressCache.type?.[1] || { perfectCount: 0, tier: 'none' };
+    updateProgressBarUI(1, 'type', typeProgress);
+    
+    // Update left panel for Type mode (default active tab)
+    await updateProgressPanel('type');
   };
 
   // Question selector event listeners
@@ -3857,26 +4417,224 @@
     }
   });
   
-  // "Hide Mastered Questions" checkbox event listeners
-  const hideMasteredTypeCheckbox = document.getElementById("hide-mastered-type");
-  const hideMasteredSpeakCheckbox = document.getElementById("hide-mastered-speak");
+  // Tier filter dropdown event listeners
+  const setupTierFilterDropdown = (mode) => {
+    const filterBtn = document.getElementById(`tier-filter-btn-${mode}`);
+    const filterMenu = document.getElementById(`tier-filter-menu-${mode}`);
+    const filterDropdown = filterBtn?.closest('.tier-filter-dropdown');
+    
+    if (!filterBtn || !filterMenu) return;
+    
+    // Toggle dropdown visibility
+    filterBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = filterMenu.style.display !== 'none';
+      filterMenu.style.display = isOpen ? 'none' : 'block';
+      filterDropdown?.classList.toggle('open', !isOpen);
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!filterDropdown?.contains(e.target)) {
+        filterMenu.style.display = 'none';
+        filterDropdown?.classList.remove('open');
+      }
+    });
+    
+    // Update dropdown when filter checkboxes change
+    ['not-started', 'in-progress', 'completed', 'consolidated', 'mastered'].forEach(state => {
+      const checkbox = document.getElementById(`filter-${state}-${mode}`);
+      if (checkbox) {
+        checkbox.addEventListener('change', () => {
+          populateQuestionSelect(mode);
+        });
+      }
+    });
+  };
   
-  if (hideMasteredTypeCheckbox) {
-    hideMasteredTypeCheckbox.addEventListener("change", () => {
-      // Update dropdown when filter checkbox toggles
-      populateQuestionSelect("type");
+  setupTierFilterDropdown('type');
+  setupTierFilterDropdown('speak');
+  
+  // Progress panel toggle event listeners
+  const progressPanelToggle = document.getElementById('progress-panel-toggle');
+  const progressPanelCloseBtn = document.getElementById('progress-panel-close-btn');
+  const progressPanelSide = document.getElementById('progress-panel-side');
+  const progressPanelOverlay = document.getElementById('progress-panel-overlay');
+  
+  /**
+   * Open the progress panel
+   */
+  function openProgressPanel() {
+    if (progressPanelSide) {
+      progressPanelSide.classList.add('expanded');
+    }
+    if (progressPanelOverlay) {
+      progressPanelOverlay.classList.add('active');
+    }
+  }
+  
+  /**
+   * Close the progress panel
+   */
+  function closeProgressPanel() {
+    if (progressPanelSide) {
+      progressPanelSide.classList.remove('expanded');
+    }
+    if (progressPanelOverlay) {
+      progressPanelOverlay.classList.remove('active');
+    }
+  }
+  
+  // Toggle button opens/closes panel
+  if (progressPanelToggle) {
+    progressPanelToggle.addEventListener('click', () => {
+      const isExpanded = progressPanelSide?.classList.contains('expanded');
+      if (isExpanded) {
+        closeProgressPanel();
+      } else {
+        openProgressPanel();
+      }
     });
   }
   
-  if (hideMasteredSpeakCheckbox) {
-    hideMasteredSpeakCheckbox.addEventListener("change", () => {
-      // Update dropdown when filter checkbox toggles
-      populateQuestionSelect("speak");
-    });
+  // Close button closes panel
+  if (progressPanelCloseBtn) {
+    progressPanelCloseBtn.addEventListener('click', closeProgressPanel);
   }
+  
+  // Clicking overlay closes panel
+  if (progressPanelOverlay) {
+    progressPanelOverlay.addEventListener('click', closeProgressPanel);
+  }
+  
+  // Reset progress button event listeners
+  const setupResetProgressBtn = (mode) => {
+    const resetBtn = document.getElementById(`reset-progress-${mode}-btn`);
+    if (!resetBtn) return;
+    
+    resetBtn.addEventListener('click', async () => {
+      const questionId = mode === 'type' ? currentTypeQuestionId : currentSpeakQuestionId;
+      
+      if (!confirm(`Reset progress for Question ${questionId} in ${mode === 'type' ? 'Type' : 'Speak'} mode?`)) {
+        return;
+      }
+      
+      const userId = window.authUI?.getCurrentUserId?.();
+      if (!userId) {
+        alert('Must be logged in to reset progress');
+        return;
+      }
+      
+      try {
+        const result = await window.firebaseFirestoreFunctions.resetProgress(userId, questionId, mode);
+        if (result.success) {
+          // Update cache and UI
+          updateProgressCache(questionId, mode, { perfectCount: 0, tier: 'none', lastCompletedAt: null });
+          console.log(`✓ Progress reset for question ${questionId} in ${mode} mode`);
+        } else {
+          alert('Error resetting progress: ' + (result.error || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Error resetting progress:', error);
+        alert('Error resetting progress');
+      }
+    });
+  };
+  
+  setupResetProgressBtn('type');
+  setupResetProgressBtn('speak');
 
   // Initialize on page load
   initializeDatabases();
+  
+  // ============================================
+  // AUTH STATE CHANGE LISTENER
+  // ============================================
+  // When user logs in or out, we need to reload progress data
+  // This ensures the progress UI updates immediately without
+  // requiring the user to change questions or reload the page.
+  // 
+  // This callback is triggered by auth-ui.js when:
+  // - User transitions from guest → logged-in
+  // - User logs in fresh
+  // - User logs out
+  /**
+   * Handle auth state changes and reload progress UI
+   * 
+   * @param {string} eventType - 'login' or 'logout'
+   * @param {string|null} userId - User ID (null on logout)
+   */
+  async function handleAuthStateChange(eventType, userId) {
+    console.log(`✓ Progress UI: Handling auth state change - ${eventType}`);
+    
+    if (eventType === 'login' && userId) {
+      // ============================================
+      // RELOAD PROGRESS DATA AFTER LOGIN
+      // ============================================
+      // User just logged in - reload all progress data for current mode
+      // This updates: progress bar, question status label, filter dropdown,
+      // and progress side panel immediately.
+      
+      // Determine current mode based on active tab
+      const isTypeActive = document.getElementById('tab-type')?.classList.contains('active');
+      const isSpeakActive = document.getElementById('tab-speak')?.classList.contains('active');
+      const currentMode = isTypeActive ? 'type' : (isSpeakActive ? 'speak' : 'type');
+      const currentQuestionId = currentMode === 'type' ? currentTypeQuestionId : currentSpeakQuestionId;
+      
+      console.log(`✓ Progress UI: Reloading progress for ${currentMode} mode, question ${currentQuestionId}`);
+      
+      // 1. Reload all progress data for current mode (for dropdown/filter)
+      await loadAllProgressForMode(currentMode);
+      
+      // 2. Reload progress status for current question (for progress bar)
+      await loadProgressStatus(currentQuestionId, currentMode);
+      
+      // 3. Re-render the question dropdown with updated progress indicators
+      populateQuestionSelect(currentMode);
+      
+      // 4. Update the progress side panel
+      await updateProgressPanel(currentMode);
+      
+      console.log('✓ Progress UI: Reload complete after login');
+    } else if (eventType === 'logout') {
+      // ============================================
+      // CLEAR PROGRESS UI AFTER LOGOUT
+      // ============================================
+      // User logged out - clear progress cache and hide progress UI elements
+      
+      // Clear progress cache
+      progressCache.type = {};
+      progressCache.speak = {};
+      
+      // Hide progress bars
+      const progressBarType = document.getElementById('progress-bar-type');
+      const progressBarSpeak = document.getElementById('progress-bar-speak');
+      if (progressBarType) progressBarType.style.display = 'none';
+      if (progressBarSpeak) progressBarSpeak.style.display = 'none';
+      
+      // Re-render dropdowns without progress indicators
+      populateQuestionSelect('type');
+      populateQuestionSelect('speak');
+      
+      // Update progress panel to show guest notice
+      await updateProgressPanel('type');
+      
+      console.log('✓ Progress UI: Cleared after logout');
+    }
+  }
+  
+  // Register the callback with auth-ui.js
+  // This will be called whenever auth state changes
+  const registerAuthCallback = () => {
+    if (window.authUI && window.authUI.onAuthStateChange) {
+      window.authUI.onAuthStateChange(handleAuthStateChange);
+      console.log('✓ Progress UI: Auth state callback registered');
+    } else {
+      // Retry if auth-ui.js isn't ready yet
+      setTimeout(registerAuthCallback, 100);
+    }
+  };
+  registerAuthCallback();
 
   // Type mode
   playBtn.addEventListener("click", () => {

@@ -289,42 +289,86 @@ async function getPracticeStats(userId) {
 
 /**
  * ============================================
- * Mastery Status Operations
+ * Tiered Progress Operations
  * ============================================
  * 
- * Mastery is tracked per user, per mode, per question.
- * Type mode and Speak mode are INDEPENDENT - mastery in one mode
- * does NOT affect mastery in the other mode.
+ * Progress is tracked per user, per mode, per question.
+ * Type mode and Speak mode are INDEPENDENT - progress in one mode
+ * does NOT affect progress in the other mode.
  * 
- * A question is "Mastered" when the user achieves 100% correctness
- * in the CURRENT mode only (Type OR Speak, not both).
+ * Tier Calculation:
+ *   - Completed: 1 perfect completion (100% correct)
+ *   - Consolidated: 2 perfect completions
+ *   - Mastered: 3+ perfect completions
  * 
  * Data Model:
- *   users/{uid}/mastery/{mode}_{questionId}
+ *   users/{uid}/progress/{mode}_{questionId}
  *   {
  *     mode: "type" | "speak",
  *     questionId: number | string,
- *     mastered: boolean,
- *     masteredAt: timestamp  // when mastery was achieved
+ *     perfectCount: number,           // Number of 100% correct attempts
+ *     tier: "none" | "completed" | "consolidated" | "mastered",
+ *     lastCompletedAt: timestamp      // When last perfect completion happened
  *   }
  * 
  * Note: This feature is for logged-in users only.
- * Guests do NOT store mastery status.
+ * Guests do NOT store progress status.
  */
 
 /**
- * Get mastery status for a specific question in a specific mode
- * Type and Speak modes are independent - each has its own mastery status
+ * Calculate state based on attempt status and perfect completion count
+ * 
+ * State definitions:
+ *   - 'not-started': User has never pressed Check (no attempts)
+ *   - 'in-progress': User has attempted but perfectCount < 3
+ *   - 'completed': perfectCount 3-5
+ *   - 'consolidated': perfectCount 6-8
+ *   - 'mastered': perfectCount >= 9
+ * 
+ * @param {boolean} hasAttempted - Whether user has attempted at least once
+ * @param {number} perfectCount - Number of perfect completions
+ * @returns {string} State name
+ */
+function calculateState(hasAttempted, perfectCount) {
+  if (perfectCount >= 9) return 'mastered';
+  if (perfectCount >= 6) return 'consolidated';
+  if (perfectCount >= 3) return 'completed';
+  if (hasAttempted) return 'in-progress';
+  return 'not-started';
+}
+
+/**
+ * Calculate tier based on perfect completion count (legacy compatibility)
+ * 
+ * Tier thresholds (3 perfect completions per tier):
+ *   - 0-2 completions → 'none' (not completed) or 'in-progress' if attempted
+ *   - 3-5 completions → 'completed'
+ *   - 6-8 completions → 'consolidated'
+ *   - 9+ completions → 'mastered'
+ * 
+ * @param {number} perfectCount - Number of perfect completions
+ * @returns {string} Tier name
+ */
+function calculateTier(perfectCount) {
+  if (perfectCount >= 9) return 'mastered';
+  if (perfectCount >= 6) return 'consolidated';
+  if (perfectCount >= 3) return 'completed';
+  return 'none';
+}
+
+/**
+ * Get progress status for a specific question in a specific mode
+ * Type and Speak modes are independent - each has its own progress status
  * 
  * @param {string} userId - User ID (must be logged in)
  * @param {string|number} questionId - Question ID
  * @param {string} mode - Practice mode ('type' or 'speak')
- * @returns {Promise<Object>} Mastery status or null if not mastered
+ * @returns {Promise<Object>} Progress status or null if no progress
  */
-async function getMasteryStatus(userId, questionId, mode) {
+async function getProgressStatus(userId, questionId, mode) {
   try {
     if (!userId) {
-      return { success: true, mastery: null }; // Guest mode - no mastery
+      return { success: true, progress: null }; // Guest mode - no progress
     }
     
     if (!mode || (mode !== 'type' && mode !== 'speak')) {
@@ -333,43 +377,74 @@ async function getMasteryStatus(userId, questionId, mode) {
     
     // Document ID format: {mode}_{questionId}
     const docId = `${mode}_${questionId}`;
-    const masteryRef = doc(db, 'users', userId, 'mastery', docId);
-    const masteryDoc = await getDoc(masteryRef);
+    const progressRef = doc(db, 'users', userId, 'progress', docId);
+    const progressDoc = await getDoc(progressRef);
     
-    if (masteryDoc.exists()) {
+    if (progressDoc.exists()) {
+      const data = progressDoc.data();
+      // Ensure state is calculated correctly
+      const hasAttempted = data.hasAttempted || false;
+      const perfectCount = data.perfectCount || 0;
+      const state = calculateState(hasAttempted, perfectCount);
+      
       return {
         success: true,
-        mastery: masteryDoc.data()
+        progress: {
+          ...data,
+          hasAttempted: hasAttempted,
+          state: state
+        }
       };
     }
     
-    return { success: true, mastery: null };
+    // Return default progress for questions with no progress (not started)
+    return { 
+      success: true, 
+      progress: {
+        mode: mode,
+        questionId: String(questionId),
+        perfectCount: 0,
+        hasAttempted: false,
+        attemptCount: 0,
+        tier: 'none',
+        state: 'not-started',
+        lastCompletedAt: null
+      }
+    };
   } catch (error) {
-    console.error('Error getting mastery status:', error);
+    console.error('Error getting progress status:', error);
     return {
       success: false,
       error: error.message,
-      mastery: null
+      progress: null
     };
   }
 }
 
 /**
- * Update mastery status for a question in a specific mode
+ * Increment perfect count and update tier for a question
  * Called automatically when user achieves 100% correctness in Type or Speak mode
  * Type and Speak modes are independent - updating one does NOT affect the other
  * 
  * @param {string} userId - User ID (must be logged in)
  * @param {string|number} questionId - Question ID
  * @param {string} mode - Practice mode ('type' or 'speak')
- * @param {boolean} isMastered - Whether the question is mastered (100% correct) in this mode
- * @returns {Promise<Object>} Success or error
+ * @returns {Promise<Object>} Updated progress or error
  */
-async function updateMasteryStatus(userId, questionId, mode, isMastered) {
+/**
+ * Record an attempt (user pressed Check button)
+ * Called regardless of correctness - marks the question as attempted
+ * 
+ * @param {string} userId - User ID (must be logged in)
+ * @param {string|number} questionId - Question ID
+ * @param {string} mode - Practice mode ('type' or 'speak')
+ * @returns {Promise<Object>} Updated progress or error
+ */
+async function recordAttempt(userId, questionId, mode) {
   try {
-    // Guest mode: Do NOT store mastery status
+    // Guest mode: Do NOT store progress
     if (!userId) {
-      return { success: true, message: 'Guest mode - mastery not stored' };
+      return { success: true, message: 'Guest mode - attempt not stored' };
     }
     
     if (!mode || (mode !== 'type' && mode !== 'speak')) {
@@ -378,40 +453,51 @@ async function updateMasteryStatus(userId, questionId, mode, isMastered) {
     
     // Document ID format: {mode}_{questionId}
     const docId = `${mode}_${questionId}`;
-    const masteryRef = doc(db, 'users', userId, 'mastery', docId);
+    const progressRef = doc(db, 'users', userId, 'progress', docId);
     
-    if (isMastered) {
-      // Mark as mastered - set mastered = true and save timestamp
-      await setDoc(masteryRef, {
-        mode: mode,
-        questionId: String(questionId),
-        mastered: true,
-        masteredAt: serverTimestamp()
-      }, { merge: true });
-      
-      console.log('✓ Mastery status updated (mastered):', { userId, questionId, mode });
-    } else {
-      // Not mastered - ensure mastered is false
-      await setDoc(masteryRef, {
-        mode: mode,
-        questionId: String(questionId),
-        mastered: false,
-        masteredAt: null
-      }, { merge: true });
-      
-      console.log('✓ Mastery status updated (not mastered):', { userId, questionId, mode });
+    // Get current progress
+    const progressDoc = await getDoc(progressRef);
+    let currentData = {
+      mode: mode,
+      questionId: String(questionId),
+      perfectCount: 0,
+      hasAttempted: false,
+      attemptCount: 0
+    };
+    
+    if (progressDoc.exists()) {
+      currentData = { ...currentData, ...progressDoc.data() };
     }
+    
+    // Increment attempt count and mark as attempted
+    const newAttemptCount = (currentData.attemptCount || 0) + 1;
+    const state = calculateState(true, currentData.perfectCount || 0);
+    
+    // Update progress document
+    await setDoc(progressRef, {
+      mode: mode,
+      questionId: String(questionId),
+      hasAttempted: true,
+      attemptCount: newAttemptCount,
+      state: state,
+      lastAttemptAt: serverTimestamp()
+    }, { merge: true });
+    
+    console.log('✓ Attempt recorded:', { userId, questionId, mode, attemptCount: newAttemptCount });
     
     return {
       success: true,
-      mastery: {
+      progress: {
         mode: mode,
         questionId: String(questionId),
-        mastered: isMastered
+        perfectCount: currentData.perfectCount || 0,
+        hasAttempted: true,
+        attemptCount: newAttemptCount,
+        state: state
       }
     };
   } catch (error) {
-    console.error('Error updating mastery status:', error);
+    console.error('Error recording attempt:', error);
     return {
       success: false,
       error: error.message
@@ -420,20 +506,20 @@ async function updateMasteryStatus(userId, questionId, mode, isMastered) {
 }
 
 /**
- * Remove mastered status for a question in a specific mode
- * Called when user clicks "Remove Mastered Status" button
- * Only removes mastery for the current mode - does NOT affect the other mode
+ * Increment perfect count and update tier for a question
+ * Called automatically when user achieves 100% correctness in Type or Speak mode
+ * Also marks the question as attempted
  * 
  * @param {string} userId - User ID (must be logged in)
  * @param {string|number} questionId - Question ID
  * @param {string} mode - Practice mode ('type' or 'speak')
- * @returns {Promise<Object>} Success or error
+ * @returns {Promise<Object>} Updated progress or error
  */
-async function removeMasteryStatus(userId, questionId, mode) {
+async function incrementProgress(userId, questionId, mode) {
   try {
-    // Guest mode: Cannot remove mastery (doesn't exist)
+    // Guest mode: Do NOT store progress
     if (!userId) {
-      return { success: false, error: 'Must be logged in to remove mastery' };
+      return { success: true, message: 'Guest mode - progress not stored' };
     }
     
     if (!mode || (mode !== 'type' && mode !== 'speak')) {
@@ -442,28 +528,239 @@ async function removeMasteryStatus(userId, questionId, mode) {
     
     // Document ID format: {mode}_{questionId}
     const docId = `${mode}_${questionId}`;
-    const masteryRef = doc(db, 'users', userId, 'mastery', docId);
+    const progressRef = doc(db, 'users', userId, 'progress', docId);
     
-    // Reset mastery fields to false for this mode only
-    await setDoc(masteryRef, {
+    // Get current progress
+    const progressDoc = await getDoc(progressRef);
+    let currentCount = 0;
+    let attemptCount = 0;
+    
+    if (progressDoc.exists()) {
+      currentCount = progressDoc.data().perfectCount || 0;
+      attemptCount = progressDoc.data().attemptCount || 0;
+    }
+    
+    // Increment count and calculate new state
+    const newCount = currentCount + 1;
+    const newState = calculateState(true, newCount);
+    const newTier = calculateTier(newCount); // For backward compatibility
+    
+    // Update progress document
+    await setDoc(progressRef, {
       mode: mode,
       questionId: String(questionId),
-      mastered: false,
-      masteredAt: null
+      perfectCount: newCount,
+      hasAttempted: true,
+      attemptCount: attemptCount,
+      tier: newTier,
+      state: newState,
+      lastCompletedAt: serverTimestamp()
     }, { merge: true });
     
-    console.log('✓ Mastery status removed:', { userId, questionId, mode });
+    console.log('✓ Progress incremented:', { userId, questionId, mode, newCount, newState });
     
     return {
-      success: true
+      success: true,
+      progress: {
+        mode: mode,
+        questionId: String(questionId),
+        perfectCount: newCount,
+        hasAttempted: true,
+        attemptCount: attemptCount,
+        tier: newTier,
+        state: newState
+      }
     };
   } catch (error) {
-    console.error('Error removing mastery status:', error);
+    console.error('Error incrementing progress:', error);
     return {
       success: false,
       error: error.message
     };
   }
+}
+
+/**
+ * Reset progress for a question in a specific mode
+ * Called when user wants to reset their progress
+ * 
+ * @param {string} userId - User ID (must be logged in)
+ * @param {string|number} questionId - Question ID
+ * @param {string} mode - Practice mode ('type' or 'speak')
+ * @returns {Promise<Object>} Success or error
+ */
+async function resetProgress(userId, questionId, mode) {
+  try {
+    if (!userId) {
+      return { success: false, error: 'Must be logged in to reset progress' };
+    }
+    
+    if (!mode || (mode !== 'type' && mode !== 'speak')) {
+      return { success: false, error: 'Invalid mode. Must be "type" or "speak"' };
+    }
+    
+    // Document ID format: {mode}_{questionId}
+    const docId = `${mode}_${questionId}`;
+    const progressRef = doc(db, 'users', userId, 'progress', docId);
+    
+    // Reset to zero
+    await setDoc(progressRef, {
+      mode: mode,
+      questionId: String(questionId),
+      perfectCount: 0,
+      tier: 'none',
+      lastCompletedAt: null
+    }, { merge: true });
+    
+    console.log('✓ Progress reset:', { userId, questionId, mode });
+    
+    return {
+      success: true
+    };
+  } catch (error) {
+    console.error('Error resetting progress:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+/**
+ * Get all progress data for a mode (for caching)
+ * Returns progress for all questions the user has attempted
+ * 
+ * @param {string} userId - User ID (must be logged in)
+ * @param {string} mode - Practice mode ('type' or 'speak')
+ * @returns {Promise<Object>} Map of questionId -> progress data
+ */
+async function getAllProgressForMode(userId, mode) {
+  try {
+    if (!userId) {
+      return { success: true, progressMap: {} }; // Guest mode
+    }
+    
+    if (!mode || (mode !== 'type' && mode !== 'speak')) {
+      return { success: false, error: 'Invalid mode. Must be "type" or "speak"' };
+    }
+    
+    // Query all progress documents for this mode
+    const progressQuery = query(
+      collection(db, 'users', userId, 'progress'),
+      where('mode', '==', mode)
+    );
+    
+    const progressSnapshot = await getDocs(progressQuery);
+    const progressMap = {};
+    
+    progressSnapshot.forEach(doc => {
+      const data = doc.data();
+      progressMap[data.questionId] = data;
+    });
+    
+    console.log(`✓ Loaded ${Object.keys(progressMap).length} progress entries for ${mode} mode`);
+    
+    return {
+      success: true,
+      progressMap: progressMap
+    };
+  } catch (error) {
+    console.error('Error getting all progress for mode:', error);
+    return {
+      success: false,
+      error: error.message,
+      progressMap: {}
+    };
+  }
+}
+
+/**
+ * Get recently progressed questions for a mode
+ * Returns last N questions where tier increased
+ * 
+ * @param {string} userId - User ID (must be logged in)
+ * @param {string} mode - Practice mode ('type' or 'speak')
+ * @param {number} limit - Maximum number of results (default 5)
+ * @returns {Promise<Object>} Array of recent progress entries
+ */
+async function getRecentProgress(userId, mode, limitCount = 5) {
+  try {
+    if (!userId) {
+      return { success: true, recentProgress: [] };
+    }
+    
+    if (!mode || (mode !== 'type' && mode !== 'speak')) {
+      return { success: false, error: 'Invalid mode. Must be "type" or "speak"' };
+    }
+    
+    // Query recent progress documents for this mode, ordered by lastCompletedAt
+    const progressQuery = query(
+      collection(db, 'users', userId, 'progress'),
+      where('mode', '==', mode),
+      where('tier', '!=', 'none'),
+      limit(limitCount * 3) // Get more than needed since we filter client-side
+    );
+    
+    const progressSnapshot = await getDocs(progressQuery);
+    const recentProgress = [];
+    
+    progressSnapshot.forEach(doc => {
+      const data = doc.data();
+      if (data.lastCompletedAt && data.tier !== 'none') {
+        recentProgress.push({
+          questionId: data.questionId,
+          tier: data.tier,
+          perfectCount: data.perfectCount,
+          lastCompletedAt: data.lastCompletedAt
+        });
+      }
+    });
+    
+    // Sort by lastCompletedAt descending and take top N
+    recentProgress.sort((a, b) => {
+      const timeA = a.lastCompletedAt?.toMillis?.() || 0;
+      const timeB = b.lastCompletedAt?.toMillis?.() || 0;
+      return timeB - timeA;
+    });
+    
+    return {
+      success: true,
+      recentProgress: recentProgress.slice(0, limitCount)
+    };
+  } catch (error) {
+    console.error('Error getting recent progress:', error);
+    return {
+      success: false,
+      error: error.message,
+      recentProgress: []
+    };
+  }
+}
+
+// Legacy mastery functions (redirected to progress functions)
+async function getMasteryStatus(userId, questionId, mode) {
+  const result = await getProgressStatus(userId, questionId, mode);
+  if (result.success && result.progress) {
+    return {
+      success: true,
+      mastery: {
+        ...result.progress,
+        mastered: result.progress.tier === 'mastered'
+      }
+    };
+  }
+  return { success: result.success, mastery: null, error: result.error };
+}
+
+async function updateMasteryStatus(userId, questionId, mode, isMastered) {
+  if (isMastered) {
+    return await incrementProgress(userId, questionId, mode);
+  }
+  return { success: true, message: 'No action taken for non-mastered status' };
+}
+
+async function removeMasteryStatus(userId, questionId, mode) {
+  return await resetProgress(userId, questionId, mode);
 }
 
 // Export functions for use in other modules
@@ -475,8 +772,18 @@ window.firebaseFirestoreFunctions = {
   getActiveSessionId,
   recordPracticeAttempt,
   getPracticeStats,
+  // Legacy mastery functions (now redirect to progress)
   getMasteryStatus,
   updateMasteryStatus,
-  removeMasteryStatus
+  removeMasteryStatus,
+  // New tiered progress functions
+  calculateTier,
+  calculateState,
+  getProgressStatus,
+  recordAttempt,
+  incrementProgress,
+  resetProgress,
+  getAllProgressForMode,
+  getRecentProgress
 };
 

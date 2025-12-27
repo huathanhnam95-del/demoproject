@@ -19,6 +19,13 @@ let currentUserId = null;
 // This is stored in sessionStorage to persist during the session
 let isGuestMode = false;
 
+// ============================================
+// Auth State Change Callbacks
+// ============================================
+// These callbacks are called when auth state changes (login/logout)
+// Used to trigger UI updates in other modules (e.g., progress reload)
+let authStateCallbacks = [];
+
 // Initialize when Firebase is ready
 function initializeAuthUI() {
   // Wait for Firebase functions to be available
@@ -539,10 +546,17 @@ async function loadUserProfile() {
  * Setup auth state listener
  * This is where Firebase auth hooks into the UI
  * Updates panel state and handles session tracking
+ * 
+ * IMPORTANT: When a user logs in, this triggers:
+ * 1. Account panel update
+ * 2. Session tracking start
+ * 3. Auth state callbacks (for progress UI reload)
  */
 function setupAuthStateListener() {
   authFunctions.onAuthStateChanged(async (user) => {
     const authOverlay = document.getElementById('auth-overlay');
+    const wasGuestMode = isGuestMode;
+    const previousUserId = currentUserId;
     
     if (user) {
       // User is signed in
@@ -567,6 +581,20 @@ function setupAuthStateListener() {
       
       // Update panel to show logged in state
       updateAccountPanelState();
+      
+      // ============================================
+      // PROGRESS UI RELOAD AFTER LOGIN
+      // ============================================
+      // When user transitions from guest → logged-in, or logs in fresh,
+      // trigger all registered callbacks to reload progress data.
+      // This ensures progress bar, question status, filter dropdown,
+      // and progress side panel are updated immediately without
+      // requiring the user to change questions or reload the page.
+      const isNewLogin = wasGuestMode || !previousUserId;
+      if (isNewLogin) {
+        console.log('✓ Auth state change detected: User logged in. Triggering progress UI reload...');
+        triggerAuthStateCallbacks('login', user.uid);
+      }
     } else {
       // User is signed out
       // End session if it exists
@@ -575,10 +603,52 @@ function setupAuthStateListener() {
         currentSessionId = null;
       }
       
+      const hadUser = currentUserId !== null;
       currentUserId = null;
       
       // Update panel to show logged out or guest state
       updateAccountPanelState();
+      
+      // ============================================
+      // PROGRESS UI CLEAR AFTER LOGOUT
+      // ============================================
+      // When user logs out, trigger callbacks to clear/hide progress UI
+      if (hadUser) {
+        console.log('✓ Auth state change detected: User logged out. Triggering progress UI clear...');
+        triggerAuthStateCallbacks('logout', null);
+      }
+    }
+  });
+}
+
+/**
+ * Register a callback to be called when auth state changes
+ * 
+ * Callbacks receive: (eventType: 'login' | 'logout', userId: string | null)
+ * 
+ * Used by script.js to reload progress data when user logs in
+ * 
+ * @param {Function} callback - Function to call on auth state change
+ */
+function onAuthStateChange(callback) {
+  if (typeof callback === 'function') {
+    authStateCallbacks.push(callback);
+    console.log('✓ Auth state callback registered');
+  }
+}
+
+/**
+ * Trigger all registered auth state callbacks
+ * 
+ * @param {string} eventType - 'login' or 'logout'
+ * @param {string|null} userId - User ID (null on logout)
+ */
+function triggerAuthStateCallbacks(eventType, userId) {
+  authStateCallbacks.forEach(callback => {
+    try {
+      callback(eventType, userId);
+    } catch (error) {
+      console.error('Error in auth state callback:', error);
     }
   });
 }
@@ -696,9 +766,12 @@ if (document.readyState === 'loading') {
   setTimeout(checkFirstVisit, 1000);
 }
 
-// Export for use in practice tracking
+// Export for use in practice tracking and progress UI reload
 window.authUI = {
   getCurrentUserId: () => currentUserId,
-  isGuestMode: () => isGuestMode
+  isGuestMode: () => isGuestMode,
+  // Register callback to be notified when auth state changes
+  // Used by script.js to reload progress data on login
+  onAuthStateChange: onAuthStateChange
 };
 

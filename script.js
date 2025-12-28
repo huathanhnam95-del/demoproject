@@ -4,7 +4,7 @@
   let speakDatabase = [];
   let currentTypeQuestionId = 1;
   let currentSpeakQuestionId = 1;
-  
+
   // Progress cache: stores progress status for all questions per mode
   // Structure: { mode: { questionId: { perfectCount, tier, lastCompletedAt } } }
   // This cache is used to avoid excessive Firestore reads when rendering dropdown
@@ -18,12 +18,12 @@
     type: {},
     speak: {}
   };
-  
+
   // Legacy alias for backward compatibility
   let masteryCache = progressCache;
   let correctSentenceType = ""; // Will be loaded from database for Type mode
   let correctSentenceSpeak = ""; // Will be loaded from database for Speak mode
-  
+
   /**
    * Load progress data for all questions in a mode
    * Uses Firestore's getAllProgressForMode for efficient batch loading
@@ -38,28 +38,28 @@
       progressCache[mode] = {};
       return;
     }
-    
+
     // Check if Firebase functions are available and user is logged in
     if (!window.firebaseFirestoreFunctions || !window.authUI) {
       progressCache[mode] = {};
       return;
     }
-    
+
     const userId = window.authUI.getCurrentUserId();
     if (!userId) {
       progressCache[mode] = {};
       return;
     }
-    
+
     // Validate mode
     if (mode !== 'type' && mode !== 'speak') {
       return;
     }
-    
+
     try {
       // Use batch loading function from Firestore module
       const result = await window.firebaseFirestoreFunctions.getAllProgressForMode(userId, mode);
-      
+
       if (result.success) {
         // Store the progress map in cache
         progressCache[mode] = result.progressMap || {};
@@ -73,10 +73,10 @@
       progressCache[mode] = {};
     }
   }
-  
+
   // Legacy function alias for backward compatibility
   const loadAllMasteryForMode = loadAllProgressForMode;
-  
+
   /**
    * Update progress cache for a specific question
    * Called when progress changes (perfect completion or reset)
@@ -89,19 +89,19 @@
     if (!progressCache[mode]) {
       progressCache[mode] = {};
     }
-    
+
     progressCache[mode][questionId] = progressData;
-    
+
     // Refresh the dropdown to reflect the change
     populateQuestionSelect(mode);
-    
+
     // Update progress bar UI
     updateProgressBarUI(questionId, mode, progressData);
-    
+
     // Update left panel
     updateProgressPanel(mode);
   }
-  
+
   // Legacy function for backward compatibility
   function updateMasteryCache(questionId, mode, mastered) {
     const existingData = progressCache[mode]?.[questionId] || { perfectCount: 0, tier: 'none' };
@@ -115,7 +115,7 @@
       updateProgressCache(questionId, mode, { perfectCount: 0, tier: 'none', lastCompletedAt: null });
     }
   }
-  
+
   /**
    * Calculate state from attempt status and perfect count
    * 
@@ -137,7 +137,7 @@
     if (hasAttempted) return 'in-progress';
     return 'not-started';
   }
-  
+
   /**
    * Calculate tier from perfect count (legacy, for backward compatibility)
    * 
@@ -150,7 +150,7 @@
     if (perfectCount >= 3) return 'completed';
     return 'none';
   }
-  
+
   /**
    * Get progress bar percentage from perfect count
    * Shows progress WITHIN the current tier, not across all tiers.
@@ -169,10 +169,10 @@
   function getProgressPercentage(perfectCount) {
     // Mastered tier (9+) always shows 100%
     if (perfectCount >= 9) return 100;
-    
+
     // Calculate progress within current tier
     const progressWithinTier = perfectCount % 3;
-    
+
     switch (progressWithinTier) {
       case 0: return 0;
       case 1: return 33;
@@ -180,7 +180,7 @@
       default: return 0;
     }
   }
-  
+
   /**
    * Get the next state target label
    * Used for progress bar display
@@ -198,10 +198,10 @@
       default: return 'Completed';
     }
   }
-  
+
   // Legacy alias
   const getNextTierLabel = getNextStateLabel;
-  
+
   /**
    * Get progress description showing X/3 completions toward next state
    * 
@@ -211,18 +211,18 @@
    */
   function getProgressDescription(hasAttempted, perfectCount) {
     if (perfectCount >= 9) return '★ Fully Mastered';
-    
+
     const progressWithinTier = perfectCount % 3;
     const currentState = calculateState(hasAttempted, perfectCount);
     const nextState = getNextStateLabel(currentState);
-    
+
     if (!hasAttempted) {
       return 'Not started';
     }
-    
+
     return `${progressWithinTier}/3 to ${nextState}`;
   }
-  
+
   /**
    * Update progress bar UI for a question
    * 
@@ -236,31 +236,31 @@
     const progressTarget = document.getElementById(`progress-target-${mode}`);
     const progressTierBadge = document.getElementById(`progress-tier-${mode}`);
     const resetBtn = document.getElementById(`reset-progress-${mode}-btn`);
-    
+
     if (!progressBar) return;
-    
+
     // Show progress bar for logged-in users
     const isLoggedIn = window.authUI && !window.authUI.isGuestMode?.() && window.authUI.getCurrentUserId?.();
     progressBar.style.display = isLoggedIn ? 'block' : 'none';
-    
+
     if (!isLoggedIn) return;
-    
+
     const perfectCount = progressData?.perfectCount || 0;
     const hasAttempted = progressData?.hasAttempted || false;
     const state = calculateState(hasAttempted, perfectCount);
     const percentage = getProgressPercentage(perfectCount);
-    
+
     // Update progress fill
     if (progressFill) {
       progressFill.style.width = `${percentage}%`;
       progressFill.className = `progress-bar-fill state-${state}`;
     }
-    
+
     // Update target label with progress description
     if (progressTarget) {
       progressTarget.textContent = getProgressDescription(hasAttempted, perfectCount);
     }
-    
+
     // Update state badge
     if (progressTierBadge) {
       const stateLabels = {
@@ -273,13 +273,13 @@
       progressTierBadge.textContent = stateLabels[state] || 'Not Started';
       progressTierBadge.className = `progress-tier-badge state-${state}`;
     }
-    
+
     // Show/hide reset button (show if any progress or attempts)
     if (resetBtn) {
       resetBtn.style.display = (perfectCount > 0 || hasAttempted) ? 'inline-block' : 'none';
     }
   }
-  
+
   /**
    * Update the left-side progress panel
    * Shows overall progress summary, distribution bar, pie chart, next goal, and recent progress
@@ -290,29 +290,34 @@
     // Only show for logged-in users
     const isLoggedIn = window.authUI && !window.authUI.isGuestMode?.() && window.authUI.getCurrentUserId?.();
     const guestNotice = document.getElementById('progress-guest-notice');
-    const progressSummary = document.getElementById('progress-summary');
-    
+    const progressPanelContent = document.getElementById('progress-panel-content');
+
+    // Toggle guest mode class for blur effect
+    if (progressPanelContent) {
+      progressPanelContent.classList.toggle('guest-mode', !isLoggedIn);
+    }
+
     if (guestNotice) {
       guestNotice.style.display = isLoggedIn ? 'none' : 'block';
     }
-    
+
     // Get total questions for this mode
     const database = mode === 'type' ? typeDatabase : speakDatabase;
     const totalQuestions = database.length;
-    
+
     if (!isLoggedIn) {
       // Reset counts for guests - all questions are "not started"
       updateTierCounts(0, 0, 0);
       updateDistribution({ notStarted: totalQuestions, inProgress: 0, completed: 0, consolidated: 0, mastered: 0 }, totalQuestions);
       return;
     }
-    
+
     // Update mode label
     const modeLabel = document.getElementById('progress-mode-label');
     if (modeLabel) {
       modeLabel.textContent = mode === 'type' ? 'Type Mode' : 'Speak Mode';
     }
-    
+
     // Count all states from cache
     const cache = progressCache[mode] || {};
     let notStartedCount = 0;
@@ -320,22 +325,22 @@
     let completedCount = 0;
     let consolidatedCount = 0;
     let masteredCount = 0;
-    
+
     // Count questions with cached progress
     const cachedQuestionIds = new Set(Object.keys(cache));
-    
+
     // For each question in the database, determine its state
     database.forEach(item => {
       const questionId = String(item.id);
       const progress = cache[questionId];
-      
+
       if (!progress) {
         notStartedCount++;
       } else {
         const hasAttempted = progress.hasAttempted || false;
         const perfectCount = progress.perfectCount || 0;
         const state = calculateState(hasAttempted, perfectCount);
-        
+
         if (state === 'not-started') notStartedCount++;
         else if (state === 'in-progress') inProgressCount++;
         else if (state === 'completed') completedCount++;
@@ -343,10 +348,10 @@
         else if (state === 'mastered') masteredCount++;
       }
     });
-    
+
     // Update UI
     updateTierCounts(completedCount, consolidatedCount, masteredCount);
-    
+
     // Update distribution bar and pie chart
     const stateCounts = {
       notStarted: notStartedCount,
@@ -357,11 +362,11 @@
     };
     updateDistribution(stateCounts, totalQuestions);
     updateNextGoalHint(completedCount, consolidatedCount, masteredCount, totalQuestions);
-    
+
     // Load and display recent progress
     await updateRecentProgress(mode);
   }
-  
+
   /**
    * Update tier count display
    */
@@ -369,12 +374,12 @@
     const completedEl = document.getElementById('completed-count');
     const consolidatedEl = document.getElementById('consolidated-count');
     const masteredEl = document.getElementById('mastered-count');
-    
+
     if (completedEl) completedEl.textContent = completed;
     if (consolidatedEl) consolidatedEl.textContent = consolidated;
     if (masteredEl) masteredEl.textContent = mastered;
   }
-  
+
   /**
    * Update distribution UI (bar and pie chart)
    * 
@@ -385,7 +390,7 @@
     updateTierDistributionBar(stateCounts, total);
     updateDistributionPieChart(stateCounts, total);
   }
-  
+
   /**
    * Update tier distribution bar
    * Width is proportional to counts for all 5 states
@@ -399,22 +404,22 @@
     const barCompleted = document.getElementById('tier-bar-completed');
     const barConsolidated = document.getElementById('tier-bar-consolidated');
     const barMastered = document.getElementById('tier-bar-mastered');
-    
+
     if (total === 0) total = 1; // Prevent division by zero
-    
+
     const notStartedPct = (stateCounts.notStarted / total) * 100;
     const inProgressPct = (stateCounts.inProgress / total) * 100;
     const completedPct = (stateCounts.completed / total) * 100;
     const consolidatedPct = (stateCounts.consolidated / total) * 100;
     const masteredPct = (stateCounts.mastered / total) * 100;
-    
+
     if (barNotStarted) barNotStarted.style.width = `${notStartedPct}%`;
     if (barInProgress) barInProgress.style.width = `${inProgressPct}%`;
     if (barCompleted) barCompleted.style.width = `${completedPct}%`;
     if (barConsolidated) barConsolidated.style.width = `${consolidatedPct}%`;
     if (barMastered) barMastered.style.width = `${masteredPct}%`;
   }
-  
+
   /**
    * Update distribution pie chart
    * Renders SVG pie chart with all 5 states
@@ -425,14 +430,14 @@
   function updateDistributionPieChart(stateCounts, total) {
     const pieSvg = document.getElementById('distribution-pie');
     const pieTotalCount = document.getElementById('pie-total-count');
-    
+
     if (!pieSvg) return;
-    
+
     // Update total count in center
     if (pieTotalCount) {
       pieTotalCount.textContent = total;
     }
-    
+
     // Define colors for each state
     const stateColors = {
       notStarted: '#6b7280',
@@ -441,32 +446,32 @@
       consolidated: '#3b82f6',
       mastered: '#22c55e'
     };
-    
+
     // State order for rendering (reversed so mastered is on top visually)
     const stateOrder = ['notStarted', 'inProgress', 'completed', 'consolidated', 'mastered'];
-    
+
     // Calculate percentages and update legend
     const percentages = {};
     stateOrder.forEach(state => {
       const count = stateCounts[state] || 0;
       const pct = total > 0 ? Math.round((count / total) * 100) : 0;
       percentages[state] = pct;
-      
+
       // Update legend
       const legendEl = document.getElementById(`pie-legend-${state.replace(/([A-Z])/g, '-$1').toLowerCase()}`);
       if (legendEl) {
         legendEl.textContent = `${pct}% (${count})`;
       }
     });
-    
+
     // Generate SVG paths for pie chart
     // Using stroke-dasharray technique for donut chart
     const radius = 40;
     const circumference = 2 * Math.PI * radius;
-    
+
     // Clear existing paths
     pieSvg.innerHTML = '';
-    
+
     // Add background circle
     const bgCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     bgCircle.setAttribute('cx', '50');
@@ -476,19 +481,19 @@
     bgCircle.setAttribute('stroke', '#e5e7eb');
     bgCircle.setAttribute('stroke-width', '20');
     pieSvg.appendChild(bgCircle);
-    
+
     // Calculate cumulative offset for each segment
     let cumulativePercent = 0;
-    
+
     // Render segments in order
     stateOrder.forEach(state => {
       const count = stateCounts[state] || 0;
       if (count === 0) return;
-      
+
       const percent = (count / total) * 100;
       const dashLength = (percent / 100) * circumference;
       const dashOffset = (cumulativePercent / 100) * circumference;
-      
+
       const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
       circle.setAttribute('cx', '50');
       circle.setAttribute('cy', '50');
@@ -499,12 +504,12 @@
       circle.setAttribute('stroke-dasharray', `${dashLength} ${circumference}`);
       circle.setAttribute('stroke-dashoffset', String(-dashOffset));
       circle.style.transition = 'stroke-dasharray 0.4s ease, stroke-dashoffset 0.4s ease';
-      
+
       pieSvg.appendChild(circle);
-      
+
       cumulativePercent += percent;
     });
-    
+
     // Add center circle (white) to create donut effect
     const centerCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     centerCircle.setAttribute('cx', '50');
@@ -513,16 +518,16 @@
     centerCircle.setAttribute('fill', '#ffffff');
     pieSvg.appendChild(centerCircle);
   }
-  
+
   /**
    * Update next goal hint message
    */
   function updateNextGoalHint(completed, consolidated, mastered, total) {
     const goalText = document.getElementById('next-goal-text');
     if (!goalText) return;
-    
+
     const totalProgress = completed + consolidated + mastered;
-    
+
     if (totalProgress === 0) {
       goalText.textContent = 'Complete a question to start tracking!';
     } else if (mastered >= total) {
@@ -536,23 +541,23 @@
       goalText.textContent = `${remaining} question(s) remaining to complete.`;
     }
   }
-  
+
   /**
    * Update recent progress list
    */
   async function updateRecentProgress(mode) {
     const recentList = document.getElementById('recent-progress-list');
     if (!recentList) return;
-    
+
     const userId = window.authUI?.getCurrentUserId?.();
     if (!userId) {
       recentList.innerHTML = '<li class="no-progress">Log in to track progress</li>';
       return;
     }
-    
+
     try {
       const result = await window.firebaseFirestoreFunctions.getRecentProgress(userId, mode, 5);
-      
+
       if (result.success && result.recentProgress.length > 0) {
         recentList.innerHTML = result.recentProgress.map(item => `
           <li>
@@ -568,7 +573,7 @@
       recentList.innerHTML = '<li class="no-progress">Unable to load</li>';
     }
   }
-  
+
   /**
    * Get display label for tier
    */
@@ -580,7 +585,7 @@
       default: return 'Not Started';
     }
   }
-  
+
   /**
    * Load and display mastery status for a question in a specific mode
    * Guest mode: No mastery status is shown (returns early)
@@ -610,61 +615,61 @@
       hideProgressBar('speak');
       return;
     }
-    
+
     // Check if Firebase functions are available and user is logged in
     if (!window.firebaseFirestoreFunctions || !window.authUI) {
       hideProgressBar('type');
       hideProgressBar('speak');
       return;
     }
-    
+
     const userId = window.authUI.getCurrentUserId();
     if (!userId) {
       hideProgressBar('type');
       hideProgressBar('speak');
       return;
     }
-    
+
     // Validate mode
     if (!mode || (mode !== 'type' && mode !== 'speak')) {
       console.error('Invalid mode for loadProgressStatus:', mode);
       return;
     }
-    
+
     try {
       // Get progress status for this specific mode and question
       const result = await window.firebaseFirestoreFunctions.getProgressStatus(userId, questionId, mode);
-      
+
       if (result.success && result.progress) {
         const progress = result.progress;
-        
+
         // Update cache
         if (!progressCache[mode]) progressCache[mode] = {};
         progressCache[mode][questionId] = progress;
-        
+
         // Update progress bar UI
         updateProgressBarUI(questionId, mode, progress);
       } else {
         // No progress - show empty state
         updateProgressBarUI(questionId, mode, { perfectCount: 0, tier: 'none' });
       }
-      
+
       // Refresh dropdown to show updated progress status
       populateQuestionSelect(mode);
-      
+
       // Update left panel
       await updateProgressPanel(mode);
-      
+
       // Note: We don't touch the other mode's UI - each mode is independent
     } catch (error) {
       console.error('Error loading progress status:', error);
       hideProgressBar(mode);
     }
   }
-  
+
   // Legacy alias for backward compatibility
   const loadMasteryStatus = loadProgressStatus;
-  
+
   /**
    * Hide progress bar for a mode
    * @param {string} mode - 'type' or 'speak'
@@ -675,7 +680,7 @@
       progressBar.style.display = 'none';
     }
   }
-  
+
   /**
    * Show mastery status UI for a mode
    * @param {string} mode - 'type' or 'speak'
@@ -684,16 +689,16 @@
   function showMasteryStatus(mode, showRemoveButton = true) {
     const masteryStatusEl = document.getElementById(`mastery-status-${mode}`);
     const removeBtn = document.getElementById(`remove-mastery-${mode}-btn`);
-    
+
     if (masteryStatusEl) {
       masteryStatusEl.style.display = 'flex';
     }
-    
+
     if (removeBtn) {
       removeBtn.style.display = showRemoveButton ? 'inline-block' : 'none';
     }
   }
-  
+
   /**
    * Hide mastery status UI for a mode
    * @param {string} mode - 'type' or 'speak'
@@ -704,7 +709,7 @@
       masteryStatusEl.style.display = 'none';
     }
   }
-  
+
   /**
    * Handle remove mastered status button click
    * Removes mastery status for the current mode only
@@ -718,35 +723,35 @@
     if (window.authUI && window.authUI.isGuestMode && window.authUI.isGuestMode()) {
       return;
     }
-    
+
     // Check if Firebase functions are available and user is logged in
     if (!window.firebaseFirestoreFunctions || !window.authUI) {
       alert('Error: Firebase not initialized');
       return;
     }
-    
+
     const userId = window.authUI.getCurrentUserId();
     if (!userId) {
       alert('Error: Must be logged in to remove mastery status');
       return;
     }
-    
+
     // Validate mode
     if (!mode || (mode !== 'type' && mode !== 'speak')) {
       alert('Error: Invalid mode');
       return;
     }
-    
+
     // Confirm action
     const modeName = mode === 'type' ? 'Type' : 'Speak';
     if (!confirm(`Are you sure you want to remove the mastered status for this question in ${modeName} mode?`)) {
       return;
     }
-    
+
     try {
       // Remove mastery for this specific mode only
       const result = await window.firebaseFirestoreFunctions.removeMasteryStatus(userId, questionId, mode);
-      
+
       if (result.success) {
         // Update cache
         updateMasteryCache(questionId, mode, false);
@@ -762,7 +767,7 @@
       alert('Error removing mastery status. Please try again.');
     }
   }
-  
+
   /**
    * Record practice attempt to Firestore
    * Guest mode: No data is recorded (returns early)
@@ -782,21 +787,21 @@
     if (window.authUI && window.authUI.isGuestMode && window.authUI.isGuestMode()) {
       return; // Silently skip tracking in guest mode
     }
-    
+
     // Check if Firebase functions are available and user is logged in
     if (!window.firebaseFirestoreFunctions || !window.authUI) {
       return; // Silently fail if Firebase not initialized
     }
-    
+
     const userId = window.authUI.getCurrentUserId();
     if (!userId) {
       return; // User not logged in and not guest mode, skip tracking
     }
-    
+
     try {
       // Record the practice attempt
       await window.firebaseFirestoreFunctions.recordPracticeAttempt(userId, questionId, isCorrect, mode);
-      
+
       // For Type and Speak modes, track attempts and progress
       if (mode === 'type' || mode === 'speak') {
         // ALWAYS record that user attempted (pressed Check), regardless of correctness
@@ -806,7 +811,7 @@
           questionId,
           mode
         );
-        
+
         // Update progress if 100% correct
         // State Progression (3 perfect completions per tier):
         //   - 0-2 perfect → In Progress
@@ -816,28 +821,28 @@
         if (isCorrect) {
           // Increment perfect count and update state
           const result = await window.firebaseFirestoreFunctions.incrementProgress(
-            userId, 
-            questionId, 
+            userId,
+            questionId,
             mode
           );
-          
+
           if (result.success && result.progress) {
             // Update cache immediately with new progress data
             updateProgressCache(questionId, mode, result.progress);
-            
+
             // Reload progress UI for this mode to show updated status
             await loadProgressStatus(questionId, mode);
-            
+
             // Reload all progress data to update dropdown
             await loadAllProgressForMode(mode);
           }
         } else if (attemptResult.success && attemptResult.progress) {
           // Update cache with attempt (now In Progress if was Not Started)
           updateProgressCache(questionId, mode, attemptResult.progress);
-          
+
           // Reload progress UI
           await loadProgressStatus(questionId, mode);
-          
+
           // Reload all progress data to update dropdown
           await loadAllProgressForMode(mode);
         }
@@ -880,12 +885,12 @@
   // ============================================
   const feedbackBanner = document.querySelector('.feedback-banner');
   const feedbackBannerClose = document.querySelector('.feedback-banner-close');
-  
+
   // Check if user already closed the banner this session
   if (feedbackBanner && sessionStorage.getItem('feedbackBannerClosed') === 'true') {
     feedbackBanner.classList.add('hidden');
   }
-  
+
   // Handle banner close
   if (feedbackBannerClose) {
     feedbackBannerClose.addEventListener('click', () => {
@@ -900,18 +905,18 @@
   const playBtnSpeak = document.getElementById("play-btn-speak");
   const recordBtn = document.getElementById("record-btn");
   const checkBtnSpeak = document.getElementById("check-btn-speak");
-  
+
   // Mastery status remove buttons
   const removeMasteryTypeBtn = document.getElementById("remove-mastery-type-btn");
   const removeMasterySpeakBtn = document.getElementById("remove-mastery-speak-btn");
-  
+
   // Event listeners for remove mastery buttons
   if (removeMasteryTypeBtn) {
     removeMasteryTypeBtn.addEventListener("click", async () => {
       await handleRemoveMastery('type', currentTypeQuestionId);
     });
   }
-  
+
   if (removeMasterySpeakBtn) {
     removeMasterySpeakBtn.addEventListener("click", async () => {
       await handleRemoveMastery('speak', currentSpeakQuestionId);
@@ -939,7 +944,7 @@
   const showAllSentencesBtnType = document.getElementById("show-all-sentences-type-btn");
   const hideAllSentencesBtnType = document.getElementById("hide-all-sentences-type-btn");
   const generatedSentencesType = document.getElementById("generated-sentences-type");
-  
+
   // Speak mode generate panel
   const generatePanelSpeak = document.getElementById("generate-sentences-speak");
   const generateBtnSpeak = document.getElementById("generate-speak-btn");
@@ -1007,7 +1012,7 @@
       if (event.error === "aborted") {
         return;
       }
-      
+
       console.error("Speech recognition error:", event.error);
       if (event.error === "no-speech") {
         recordingStatus.textContent = "No speech detected. Try speaking louder or closer to the microphone.";
@@ -1205,13 +1210,13 @@
       .map((w, idx) => {
         const display =
           step.highlight &&
-          step.highlight.index === idx &&
-          step.highlight.type === "remove" &&
-          step.highlight.ghost
+            step.highlight.index === idx &&
+            step.highlight.type === "remove" &&
+            step.highlight.ghost
             ? step.highlight.ghost
             : w === ""
-            ? "&nbsp;"
-            : w;
+              ? "&nbsp;"
+              : w;
         const baseClass = w === "" ? "anim-word anim-base anim-empty" : "anim-word anim-base";
         const cls =
           step.highlight && step.highlight.index === idx
@@ -1223,7 +1228,7 @@
         return `<span class="${cls}"${dataWord}>${display}</span>`;
       })
       .join(" ");
-    
+
     animationBox.innerHTML = `
       <div class="anim-line"><strong>${step.label || ""}</strong></div>
       <div class="anim-step">${words}</div>
@@ -1249,15 +1254,15 @@
 
     const step = animationSteps[currentAnimationIdx];
     renderAnimationStep(step);
-    
+
     if (step.speak) {
       const hi = step.highlight ? step.highlight.index : null;
       const nextW =
         step.speakNext !== undefined
           ? step.speakNext
           : hi !== null && hi !== undefined
-          ? step.words[hi + 1] || ""
-          : "";
+            ? step.words[hi + 1] || ""
+            : "";
       playWordAudio(step.speak, nextW);
     }
 
@@ -1271,13 +1276,13 @@
       animationTimer = null;
     }
     if (synth) synth.cancel();
-    
+
     // Jump to the last step
     if (animationSteps.length > 0) {
       currentAnimationIdx = animationSteps.length - 1;
       const lastStep = animationSteps[currentAnimationIdx];
       renderAnimationStep(lastStep);
-      
+
       // Call the completion callback
       if (animationOnComplete) {
         animationOnComplete();
@@ -1285,7 +1290,7 @@
     }
   };
 
-  const playAnimation = (steps, onComplete = () => {}, isSpeakMode = false) => {
+  const playAnimation = (steps, onComplete = () => { }, isSpeakMode = false) => {
     if (!steps || !steps.length) {
       if (onComplete) onComplete();
       return;
@@ -1312,8 +1317,8 @@
         steps[0].speakNext !== undefined
           ? steps[0].speakNext
           : hi !== null && hi !== undefined
-          ? steps[0].words[hi + 1] || ""
-          : "";
+            ? steps[0].words[hi + 1] || ""
+            : "";
       playWordAudio(steps[0].speak, nextW);
     }
 
@@ -1407,19 +1412,19 @@
     modeType.classList.add("active");
     modeSpeak.classList.remove("active");
     modeExtended.classList.remove("active");
-    
+
     // Hide Speak mode panels
     pronunciationPanel.style.display = "none";
     breakdownPanel.style.display = "none";
     generatePanelSpeak.style.display = "none";
     sameVocabPanelSpeak.style.display = "none";
-    
+
     // Hide shared panels (will be shown when Check is pressed in Type mode)
     animationPanel.style.display = "none";
     result.style.display = "none";
     generatePanelType.style.display = "none";
     vocabularyPanel.style.display = "none";
-    
+
     // Reload the correct audio for Type mode
     if (typeDatabase.length > 0 && currentTypeQuestionId) {
       // Load all progress data for Type mode (to update dropdown)
@@ -1430,7 +1435,7 @@
       // Update progress panel for Type mode
       await updateProgressPanel("type");
     }
-    
+
     if (isRecording && recognition) {
       recognition.stop();
       isRecording = false;
@@ -1453,16 +1458,16 @@
     modeSpeak.classList.add("active");
     modeType.classList.remove("active");
     modeExtended.classList.remove("active");
-    
+
     // Hide Type mode panels
     generatePanelType.style.display = "none";
     sameVocabPanelType.style.display = "none";
-    
+
     // Hide shared panels (will be shown when Check is pressed in Speak mode)
     animationPanel.style.display = "none";
     result.style.display = "none";
     generatePanelSpeak.style.display = "none";
-    
+
     // Reload the correct audio for Speak mode
     if (speakDatabase.length > 0 && currentSpeakQuestionId) {
       // Load all progress data for Speak mode (to update dropdown)
@@ -1473,7 +1478,7 @@
       // Update progress panel for Speak mode
       await updateProgressPanel("speak");
     }
-    
+
     // Microphone access will be requested when user clicks "Start Recording"
   });
 
@@ -1484,7 +1489,7 @@
     modeExtended.classList.add("active");
     modeType.classList.remove("active");
     modeSpeak.classList.remove("active");
-    
+
     // Hide all other mode panels
     animationPanel.style.display = "none";
     result.style.display = "none";
@@ -1495,7 +1500,7 @@
     vocabularyPanel.style.display = "none";
     pronunciationPanel.style.display = "none";
     breakdownPanel.style.display = "none";
-    
+
     // Stop any active recordings
     if (isRecording && recognition) {
       recognition.stop();
@@ -1520,7 +1525,7 @@
   let extendedGapAnswers = {}; // Store user answers for gaps
   let readingTimer = null;
   let readingTimeLeft = 30;
-  
+
   const questionSelectExtended = document.getElementById("question-select-extended");
   const currentQuestionIdExtended = document.getElementById("current-question-id-extended");
   const totalQuestionsExtended = document.getElementById("total-questions-extended");
@@ -1551,28 +1556,28 @@
   const speedSelectExtended = document.getElementById("speed-select-extended");
   const currentTimeExtended = document.getElementById("current-time-extended");
   const totalTimeExtended = document.getElementById("total-time-extended");
-  
+
   // Phrases audio player controls
   const audioSliderPhrases = document.getElementById("audio-slider-phrases");
   const speedSelectPhrases = document.getElementById("speed-select-phrases");
   const currentTimePhrases = document.getElementById("current-time-phrases");
   const totalTimePhrases = document.getElementById("total-time-phrases");
-  
+
   // Speech synthesis for word pronunciation in Extended Listening
   // Uses the same voice settings as Type mode
   const speakWordExtended = (word) => {
     // Clean the word (remove punctuation)
     const cleanWord = word.replace(/[.,!?;:()\[\]{}'"]/g, '').trim();
     if (!cleanWord) return;
-    
+
     // Cancel any ongoing speech
     if (speechSynthesis.speaking) {
       speechSynthesis.cancel();
     }
-    
+
     const utterance = new SpeechSynthesisUtterance(cleanWord);
     utterance.lang = 'en-US';
-    
+
     // Use the same voice selection and settings as Type mode
     const setVoice = () => {
       const voices = speechSynthesis.getVoices();
@@ -1581,15 +1586,15 @@
         /female|samantha|allison|joanna|kimberly|ssml female|en-us/i.test(v.name)
       );
       if (preferred) utterance.voice = preferred;
-      
+
       // Use the same rate and pitch as Type mode
       utterance.rate = 1.05; // a bit quicker for a brighter feel
       utterance.pitch = 1.1; // slightly higher pitch
       utterance.volume = 1;
-      
+
       speechSynthesis.speak(utterance);
     };
-    
+
     // Ensure voices are loaded
     if (speechSynthesis.getVoices().length === 0) {
       speechSynthesis.onvoiceschanged = () => {
@@ -1620,15 +1625,15 @@
       }
       return word;
     }).join('');
-    
+
     container.innerHTML = html;
-    
+
     // Add click listeners
     container.querySelectorAll('.clickable-word').forEach(span => {
       span.addEventListener('click', (e) => {
         const word = e.target.dataset.word || e.target.textContent.trim();
         speakWordExtended(word);
-        
+
         // Visual feedback - highlight briefly
         e.target.classList.add('word-speaking');
         setTimeout(() => {
@@ -1647,7 +1652,7 @@
       null,
       false
     );
-    
+
     const textNodes = [];
     let node;
     while (node = walker.nextNode()) {
@@ -1657,12 +1662,12 @@
       }
       textNodes.push(node);
     }
-    
+
     textNodes.forEach(textNode => {
       const text = textNode.textContent;
       const words = text.split(/(\s+)/);
       const fragment = document.createDocumentFragment();
-      
+
       words.forEach(word => {
         const trimmed = word.trim();
         if (!trimmed || /^\s+$/.test(word)) {
@@ -1684,7 +1689,7 @@
           span.addEventListener('click', (e) => {
             const word = e.target.dataset.word || e.target.textContent.trim();
             speakWordExtended(word);
-            
+
             // Visual feedback - highlight briefly
             e.target.classList.add('word-speaking');
             setTimeout(() => {
@@ -1696,7 +1701,7 @@
           fragment.appendChild(document.createTextNode(word));
         }
       });
-      
+
       textNode.parentNode.replaceChild(fragment, textNode);
     });
   };
@@ -1708,7 +1713,7 @@
     if (originalWord.includes('-')) {
       return false;
     }
-    
+
     // Exclude names (proper nouns) - words that are capitalized in the middle of sentences
     // Allow capitalized words at sentence start (they might be regular words)
     const cleanOriginal = originalWord.replace(/[.,!?;:]/g, '');
@@ -1725,7 +1730,7 @@
         }
       }
     }
-    
+
     const functionWords = new Set([
       'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
       'from', 'up', 'about', 'into', 'through', 'during', 'including', 'until', 'against', 'among',
@@ -1746,14 +1751,14 @@
     const gappedSentences = [];
     let lastGapPosition = -20;
     let totalWordCount = 0;
-    
+
     sentences.forEach((sentence) => {
       const words = sentence.trim().split(/\s+/);
       if (words.length === 0) {
         gappedSentences.push(sentence);
         return;
       }
-      
+
       const contentWordIndices = [];
       words.forEach((word, idx) => {
         // Check if this is the first word of the sentence (after punctuation)
@@ -1762,39 +1767,39 @@
           contentWordIndices.push(idx);
         }
       });
-      
+
       if (contentWordIndices.length === 0) {
         gappedSentences.push(sentence);
         totalWordCount += words.length;
         return;
       }
-      
+
       // Filter indices that meet the minimum distance requirement
       const validIndices = contentWordIndices.filter(idx => {
         const positionFromLastGap = totalWordCount + idx - lastGapPosition;
         return positionFromLastGap >= 10;
       });
-      
+
       if (validIndices.length === 0) {
         gappedSentences.push(sentence);
         totalWordCount += words.length;
         return;
       }
-      
+
       // Randomly select one of the valid indices
       const randomIndex = Math.floor(Math.random() * validIndices.length);
       const gapIndex = validIndices[randomIndex];
-      
+
       const gappedWords = [...words];
       const gapWord = gappedWords[gapIndex];
       const cleanGapWord = gapWord.replace(/[.,!?;:]/g, '');
       gappedWords[gapIndex] = `<input type="text" class="gap-input" data-gap-id="${totalWordCount + gapIndex}" data-correct="${cleanGapWord}" placeholder="" /><span class="gap-speaker-icon" data-word="${cleanGapWord}" aria-label="Pronounce ${cleanGapWord}" role="button" tabindex="0" style="display: none;">🔊</span>`;
-      
+
       gappedSentences.push(gappedWords.join(' '));
       lastGapPosition = totalWordCount + gapIndex;
       totalWordCount += words.length;
     });
-    
+
     return gappedSentences.join(' ');
   };
 
@@ -1828,20 +1833,20 @@
       }
     }
     if (!hasContentWord) return false;
-    
+
     const firstWord = words[0].toLowerCase().replace(/[.,!?;:]/g, '');
     const lastWord = words[words.length - 1].toLowerCase().replace(/[.,!?;:]/g, '');
-    
+
     // Prefer phrases that end with a content word (noun, verb, etc.)
     const lastIsContent = contentWordIndices.includes(words.length - 1);
-    
+
     // If phrase starts with a preposition, it should include the object (noun)
     const prepositions = ['in', 'on', 'at', 'for', 'of', 'with', 'by', 'from', 'to', 'into', 'onto'];
     if (prepositions.includes(firstWord)) {
       // Must end with a content word (the object of the preposition)
       return lastIsContent;
     }
-    
+
     // If phrase starts with a determiner or intensifier, it should include the noun/adjective
     const determiners = ['the', 'a', 'an', 'this', 'that', 'these', 'those', 'other', 'some', 'any', 'all'];
     const intensifiers = ['very', 'quite', 'pretty', 'much', 'more', 'most'];
@@ -1849,7 +1854,7 @@
       // Must end with a content word
       return lastIsContent;
     }
-    
+
     // If all words are content words, it's meaningful
     let allContent = true;
     for (let i = 0; i < words.length; i++) {
@@ -1864,7 +1869,7 @@
       // Prefer phrases that end with content words
       return lastIsContent;
     }
-    
+
     return false;
   };
 
@@ -1873,7 +1878,7 @@
   const extractNounPhrases = (sentence, phraseLength) => {
     // Check if compromise is loaded (try both window.nlp and global nlp)
     const nlpFunction = typeof nlp !== 'undefined' ? nlp : (typeof window !== 'undefined' && window.nlp ? window.nlp : null);
-    
+
     if (!nlpFunction) {
       console.error('compromise library not loaded. Available globals:', Object.keys(window).filter(k => k.includes('nlp') || k.includes('compromise')));
       return [];
@@ -1930,13 +1935,13 @@
         console.log(`[extractNounPhrases] Testing candidate: "${candidate.join(' ')}" (first: "${firstWord}", last: "${lastWord}")`);
 
         // Reject determiners at start
-        if (['the','a','an','this','that','these','those'].includes(firstWord)) {
+        if (['the', 'a', 'an', 'this', 'that', 'these', 'those'].includes(firstWord)) {
           console.log(`[extractNounPhrases] Rejected: starts with determiner "${firstWord}"`);
           continue;
         }
 
         // Reject function words at end
-        if (['the','a','an','that','which','they','it'].includes(lastWord)) {
+        if (['the', 'a', 'an', 'that', 'which', 'they', 'it'].includes(lastWord)) {
           console.log(`[extractNounPhrases] Rejected: ends with function word "${lastWord}"`);
           continue;
         }
@@ -1965,32 +1970,32 @@
     const sentenceParts = transcript.split(/([.!?]+\s*)/);
     const sentences = [];
     const sentencePunctuation = [];
-    
+
     for (let i = 0; i < sentenceParts.length; i += 2) {
       if (sentenceParts[i] && sentenceParts[i].trim()) {
         sentences.push(sentenceParts[i].trim());
         sentencePunctuation.push(sentenceParts[i + 1] || '');
       }
     }
-    
+
     if (sentences.length === 0) {
       return transcript;
     }
-    
+
     // Process each sentence with deterministic noun phrase extraction
     const gappedSentences = [];
     let lastGapEndPosition = -20;
     let totalWordCount = 0;
-    
+
     sentences.forEach((sentence, sentenceIdx) => {
       const words = sentence.split(/\s+/).filter(w => w && w.length > 0);
-      
+
       // Extract noun phrases using compromise
       const nounPhrases = extractNounPhrases(sentence, phraseLength);
-      
+
       console.log(`Sentence ${sentenceIdx + 1}: "${sentence}"`);
       console.log(`Extracted noun phrases:`, nounPhrases);
-      
+
       // If array is empty → NO BLANK
       if (nounPhrases.length === 0 || words.length < phraseLength) {
         console.log(`Sentence ${sentenceIdx + 1} has no valid noun phrases, rendering without blank`);
@@ -1998,17 +2003,17 @@
         totalWordCount += words.length;
         return;
       }
-      
+
       // Randomly select ONE noun phrase
       const randomIndex = Math.floor(Math.random() * nounPhrases.length);
       const selectedPhrase = nounPhrases[randomIndex];
       const cleanPhrase = selectedPhrase.toLowerCase().trim();
       const phraseWords = cleanPhrase.split(/\s+/);
-      
+
       // Find the phrase in the sentence
       console.log(`[generatePhraseGaps] Looking for phrase: "${selectedPhrase}" (cleaned: "${cleanPhrase}")`);
       console.log(`[generatePhraseGaps] Sentence words:`, words);
-      
+
       let foundIndex = -1;
       for (let i = 0; i <= words.length - phraseLength; i++) {
         const candidateWords = words.slice(i, i + phraseLength);
@@ -2016,16 +2021,16 @@
           .map(w => w.replace(/[.,!?;:]/g, '').toLowerCase().trim())
           .join(' ')
           .trim();
-        
+
         console.log(`[generatePhraseGaps] Position ${i}: candidate "${candidateText}" vs target "${cleanPhrase}"`);
-        
+
         if (candidateText === cleanPhrase) {
           // Check minimum distance from last gap
           const phraseStartPosition = totalWordCount + i;
           const positionFromLastGap = phraseStartPosition - lastGapEndPosition;
-          
+
           console.log(`[generatePhraseGaps] Match found at position ${i}, distance from last gap: ${positionFromLastGap}`);
-          
+
           if (positionFromLastGap >= 5) {
             foundIndex = i;
             console.log(`[generatePhraseGaps] ✓ Valid match at position ${i}`);
@@ -2035,11 +2040,11 @@
           }
         }
       }
-      
+
       if (foundIndex === -1) {
         console.log(`[generatePhraseGaps] ✗ Phrase "${selectedPhrase}" not found in sentence or too close to last gap`);
       }
-      
+
       if (foundIndex >= 0) {
         // Replace the phrase with a gap input
         const cleanPhraseText = words.slice(foundIndex, foundIndex + phraseLength).join(' ').replace(/[.,!?;:]/g, '');
@@ -2056,7 +2061,7 @@
             resultWords.push(words[i]);
           }
         }
-        
+
         gappedSentences.push(resultWords.join(' ') + sentencePunctuation[sentenceIdx]);
         lastGapEndPosition = totalWordCount + foundIndex + phraseLength - 1;
         totalWordCount += words.length;
@@ -2067,7 +2072,7 @@
         totalWordCount += words.length;
       }
     });
-    
+
     return gappedSentences.join(' ');
   };
 
@@ -2077,33 +2082,33 @@
     const sentenceParts = transcript.split(/([.!?]+\s*)/);
     const sentences = [];
     const sentencePunctuation = [];
-    
+
     for (let i = 0; i < sentenceParts.length; i += 2) {
       if (sentenceParts[i] && sentenceParts[i].trim()) {
         sentences.push(sentenceParts[i].trim());
         sentencePunctuation.push(sentenceParts[i + 1] || '');
       }
     }
-    
+
     const gappedSentences = [];
     let lastGapEndPosition = -20;
     let totalWordCount = 0;
-    
+
     sentences.forEach((sentence, sentenceIdx) => {
       const words = sentence.split(/\s+/);
-      
+
       if (words.length < phraseLength) {
         gappedSentences.push(sentence + sentencePunctuation[sentenceIdx]);
         totalWordCount += words.length;
         return;
       }
-      
+
       // Generate all possible phrases
       const phraseCandidates = [];
       for (let i = 0; i <= words.length - phraseLength; i++) {
         const phraseWords = words.slice(i, i + phraseLength);
         let hasPunctuationBetween = false;
-        
+
         // Check for punctuation between words
         for (let j = 0; j < phraseLength - 1; j++) {
           const word = phraseWords[j];
@@ -2116,12 +2121,12 @@
             }
           }
         }
-        
+
         if (!hasPunctuationBetween) {
           // Check minimum distance from last gap
           const phraseStartPosition = totalWordCount + i;
           const positionFromLastGap = phraseStartPosition - lastGapEndPosition;
-          
+
           // Relaxed minimum distance to 5 words for fallback phrases
           if (positionFromLastGap >= 5) {
             phraseCandidates.push({
@@ -2132,20 +2137,20 @@
           }
         }
       }
-      
+
       if (phraseCandidates.length === 0) {
         gappedSentences.push(sentence + sentencePunctuation[sentenceIdx]);
         totalWordCount += words.length;
         return;
       }
-      
+
       // Randomly select one phrase candidate
       const randomIndex = Math.floor(Math.random() * phraseCandidates.length);
       const selectedPhrase = phraseCandidates[randomIndex];
-      
+
       // Replace the phrase with a gap input
       const cleanPhrase = selectedPhrase.words.join(' ').replace(/[.,!?;:]/g, '');
-      
+
       // Build the sentence with gap
       const resultWords = [];
       for (let i = 0; i < words.length; i++) {
@@ -2160,12 +2165,12 @@
           resultWords.push(words[i]);
         }
       }
-      
+
       gappedSentences.push(resultWords.join(' ') + sentencePunctuation[sentenceIdx]);
       lastGapEndPosition = totalWordCount + selectedPhrase.startIndex + phraseLength - 1;
       totalWordCount += words.length;
     });
-    
+
     return gappedSentences.join(' ');
   };
 
@@ -2180,18 +2185,18 @@
       console.error(`Question ${questionId} not found`);
       return;
     }
-    
+
     currentExtendedQuestionId = questionId;
     // Get transcript and clean it (remove existing gap markers like __word__)
     let rawTranscript = question.transcript || question.correctSentence || "";
     // Remove gap markers (double underscores) and keep the word
     extendedCorrectTranscript = rawTranscript.replace(/__([^_]+)__/g, '$1').trim();
     extendedGapAnswers = {};
-    
+
     readingPhase.style.display = "block";
     listeningPhase.style.display = "none";
     readingTimeLeft = 30;
-    
+
     // Hide Redo and Randomize Blanks buttons and result message
     redoExtendedBtn.style.display = 'none';
     randomizeBlanksBtn.style.display = 'none';
@@ -2199,7 +2204,7 @@
     fillSingleWordsSection.style.display = 'none';
     fillPhrasesSection.style.display = 'none';
     checkResultPhrases.style.display = 'none';
-    
+
     // Reset support mode
     supportModeActive = false;
     if (supportModeBtn) {
@@ -2207,7 +2212,7 @@
       supportModeBtn.style.backgroundColor = '';
       supportModeBtn.style.color = '';
     }
-    
+
     // Reset phrases support mode
     supportPhrasesActive = false;
     if (supportPhrasesBtn) {
@@ -2215,22 +2220,22 @@
       supportPhrasesBtn.style.backgroundColor = '';
       supportPhrasesBtn.style.color = '';
     }
-    
+
     // Set transcript with clickable words
     if (fullTranscript && extendedCorrectTranscript) {
       makeWordsClickable(fullTranscript, extendedCorrectTranscript);
     } else {
-      console.warn('Cannot display transcript:', { 
-        fullTranscript: !!fullTranscript, 
-        transcriptText: extendedCorrectTranscript ? extendedCorrectTranscript.substring(0, 50) + '...' : 'empty' 
+      console.warn('Cannot display transcript:', {
+        fullTranscript: !!fullTranscript,
+        transcriptText: extendedCorrectTranscript ? extendedCorrectTranscript.substring(0, 50) + '...' : 'empty'
       });
     }
-    
+
     if (readingTimer) {
       clearInterval(readingTimer);
       readingTimer = null;
     }
-    
+
     startReadingTimer();
     await loadExtendedAudio(question.audioFile);
   };
@@ -2247,52 +2252,52 @@
       };
       return mimeTypes[ext] || 'audio/mpeg';
     };
-    
+
     // Get base filename (without extension) - use question ID
     const baseFilename = currentExtendedQuestionId.toString();
-    
+
     // Try extensions in order: mp3, wav, m4a
     const tryExtensions = ['mp3', 'wav', 'm4a'];
-    
+
     // Try to find the file by checking each extension in order
     let foundFile = null;
-    
+
     for (let i = 0; i < tryExtensions.length; i++) {
       const ext = tryExtensions[i];
       const testFile = `${baseFilename}.${ext}`;
       const testPath = `database/extended/audio/${testFile}`;
-      
+
       const exists = await checkFileExists(testPath);
       console.log(`[loadExtendedAudio] Checking ${testPath}: ${exists ? 'EXISTS' : 'NOT FOUND'}`);
-      
+
       if (exists) {
         foundFile = testFile;
         console.log(`[loadExtendedAudio] ✓ Found file: ${foundFile} (tried ${i + 1} of ${tryExtensions.length} extensions)`);
         break;
       }
     }
-    
+
     if (!foundFile) {
       const errorMsg = `No audio file found for question ${currentExtendedQuestionId}. Tried: ${tryExtensions.map(ext => `${baseFilename}.${ext}`).join(', ')}`;
       console.error(`[loadExtendedAudio] ${errorMsg}`);
       alert(errorMsg);
       return;
     }
-    
+
     const audioPath = `database/extended/audio/${foundFile}?t=${Date.now()}`;
     const mimeType = getAudioMimeType(foundFile);
-    
+
     // Clear any existing source elements
     while (audioExtended.firstChild) {
       audioExtended.removeChild(audioExtended.firstChild);
     }
-    
+
     // Create source element with proper type
     const source = document.createElement('source');
     source.src = audioPath;
     source.type = mimeType;
     audioExtended.appendChild(source);
-    
+
     // Reset controls
     audioExtended.load(); // Reload the audio element
     audioExtended.currentTime = 0;
@@ -2300,13 +2305,13 @@
     currentTimeExtended.textContent = "0:00";
     totalTimeExtended.textContent = "0:00";
     playPauseExtendedBtn.textContent = "Play";
-    
+
     // Also set up phrases audio with the same file (independent control)
     // Clear any existing source elements
     while (audioPhrases.firstChild) {
       audioPhrases.removeChild(audioPhrases.firstChild);
     }
-    
+
     const phrasesSource = document.createElement('source');
     phrasesSource.src = audioPath;
     phrasesSource.type = mimeType;
@@ -2322,11 +2327,11 @@
   // Start reading timer (30 seconds)
   const startReadingTimer = () => {
     readingTimerDisplay.textContent = readingTimeLeft;
-    
+
     readingTimer = setInterval(() => {
       readingTimeLeft--;
       readingTimerDisplay.textContent = readingTimeLeft;
-      
+
       if (readingTimeLeft <= 0) {
         clearInterval(readingTimer);
         readingTimer = null;
@@ -2348,33 +2353,33 @@
   const startListeningPhase = () => {
     readingPhase.style.display = "none";
     listeningPhase.style.display = "block";
-    
+
     // Show Fill single words section
     fillSingleWordsSection.style.display = 'block';
-    
+
     extendedGappedTranscript = generateGaps(extendedCorrectTranscript);
     gappedTranscript.innerHTML = extendedGappedTranscript;
-    
+
     // Make words in gapped transcript clickable (excluding gap inputs)
     makeWordsInGappedTranscriptClickable(gappedTranscript);
-    
+
     gappedTranscript.querySelectorAll('.gap-input').forEach(input => {
       input.addEventListener('input', (e) => {
         const gapId = e.target.dataset.gapId;
         extendedGapAnswers[gapId] = e.target.value.trim().toLowerCase();
       });
     });
-    
+
     // Generate and show phrase gaps (async)
     const selectedPhraseLength = parseInt(document.querySelector('input[name="phrase-length"]:checked').value, 10);
     phrasesTranscript.innerHTML = '<p>Analyzing phrases...</p>';
     fillPhrasesSection.style.display = 'block';
-    
+
     generatePhraseGaps(extendedCorrectTranscript, selectedPhraseLength).then(result => {
       extendedPhraseTranscript = result;
       phrasesTranscript.innerHTML = extendedPhraseTranscript;
       extendedPhraseAnswers = {};
-      
+
       // Add event listeners to phrase inputs
       phrasesTranscript.querySelectorAll('.phrase-input').forEach(input => {
         input.addEventListener('input', (e) => {
@@ -2399,11 +2404,11 @@
   // Update audio slider and time display
   const updateAudioControls = () => {
     if (!audioExtended.duration || !isFinite(audioExtended.duration)) return;
-    
+
     const current = audioExtended.currentTime;
     const duration = audioExtended.duration;
     const percent = (current / duration) * 100;
-    
+
     audioSliderExtended.value = percent;
     currentTimeExtended.textContent = formatTime(current);
     totalTimeExtended.textContent = formatTime(duration);
@@ -2477,38 +2482,38 @@
 
   // Support mode: Show first and last letters with underscores (for single-word gaps)
   let supportModeActive = false;
-  
+
   supportModeBtn.addEventListener("click", () => {
     const gapInputs = gappedTranscript.querySelectorAll('.gap-input');
-    
+
     if (!supportModeActive) {
       // Activate support mode
       supportModeActive = true;
       supportModeBtn.textContent = 'Hide Hints';
       supportModeBtn.style.backgroundColor = '#4caf50';
       supportModeBtn.style.color = 'white';
-      
+
       gapInputs.forEach(input => {
         const correctAnswer = input.dataset.correct;
         if (!correctAnswer || correctAnswer.length < 2) {
           // Skip single-letter words or empty answers
           return;
         }
-        
+
         // Generate hint pattern: first letter + underscores + last letter
         const firstLetter = correctAnswer[0];
         const lastLetter = correctAnswer[correctAnswer.length - 1];
         const middleUnderscores = '_ '.repeat(Math.max(0, correctAnswer.length - 2)).trim();
         const hintPattern = `${firstLetter} ${middleUnderscores} ${lastLetter}`.replace(/\s+/g, ' ');
-        
+
         // Store original placeholder if not already stored
         if (!input.dataset.originalPlaceholder) {
           input.dataset.originalPlaceholder = input.placeholder || '';
         }
-        
+
         // Set placeholder to show hint
         input.placeholder = hintPattern;
-        
+
         // Add visual indicator
         input.classList.add('support-mode-active');
       });
@@ -2518,7 +2523,7 @@
       supportModeBtn.textContent = 'Show Hints';
       supportModeBtn.style.backgroundColor = '';
       supportModeBtn.style.color = '';
-      
+
       gapInputs.forEach(input => {
         // Restore original placeholder
         const originalPlaceholder = input.dataset.originalPlaceholder || '';
@@ -2532,11 +2537,11 @@
   // Update phrases audio slider and time display
   const updatePhrasesAudioControls = () => {
     if (!audioPhrases.duration || !isFinite(audioPhrases.duration)) return;
-    
+
     const current = audioPhrases.currentTime;
     const duration = audioPhrases.duration;
     const percent = (current / duration) * 100;
-    
+
     audioSliderPhrases.value = percent;
     currentTimePhrases.textContent = formatTime(current);
     totalTimePhrases.textContent = formatTime(duration);
@@ -2610,30 +2615,30 @@
 
   // Support mode for phrases: Show first and last letters with underscores
   let supportPhrasesActive = false;
-  
+
   supportPhrasesBtn.addEventListener("click", () => {
     const phraseInputs = phrasesTranscript.querySelectorAll('.phrase-input');
-    
+
     if (!supportPhrasesActive) {
       // Activate support mode
       supportPhrasesActive = true;
       supportPhrasesBtn.textContent = 'Hide Hints';
       supportPhrasesBtn.style.backgroundColor = '#4caf50';
       supportPhrasesBtn.style.color = 'white';
-      
+
       phraseInputs.forEach(input => {
         const correctAnswer = input.dataset.correct;
         if (!correctAnswer || correctAnswer.length < 2) {
           // Skip single-character phrases or empty answers
           return;
         }
-        
+
         // For phrases, show first and last letter of EACH word
         const words = correctAnswer.trim().split(/\s+/);
         if (words.length === 0) {
           return;
         }
-        
+
         // Build hint pattern: for each word, show first letter + underscores + last letter
         const hintParts = words.map(word => {
           if (word.length < 2) {
@@ -2644,24 +2649,24 @@
           const middleUnderscores = '_ '.repeat(Math.max(0, word.length - 2)).trim();
           return `${firstLetter} ${middleUnderscores} ${lastLetter}`.replace(/\s+/g, ' ');
         });
-        
+
         // Join words with spaces
         const hintPattern = hintParts.join(' ');
-        
+
         // Store original placeholder if not already stored
         if (!input.dataset.originalPlaceholder) {
           input.dataset.originalPlaceholder = input.placeholder || '';
         }
-        
+
         // Set placeholder to show hint
         input.placeholder = hintPattern;
-        
+
         // Set input width based on phrase length to ensure hint is visible
         // Calculate width: hint pattern length * 8px per character + padding
         const estimatedWidth = Math.max(150, hintPattern.length * 8 + 40);
         input.style.width = `${estimatedWidth}px`;
         input.style.minWidth = `${estimatedWidth}px`;
-        
+
         // Add visual indicator
         input.classList.add('support-mode-active');
       });
@@ -2671,7 +2676,7 @@
       supportPhrasesBtn.textContent = 'Show Hints';
       supportPhrasesBtn.style.backgroundColor = '';
       supportPhrasesBtn.style.color = '';
-      
+
       phraseInputs.forEach(input => {
         // Restore original placeholder
         const originalPlaceholder = input.dataset.originalPlaceholder || '';
@@ -2686,16 +2691,16 @@
     const gapInputs = gappedTranscript.querySelectorAll('.gap-input');
     let correctCount = 0;
     let totalGaps = gapInputs.length;
-    
+
     gapInputs.forEach(input => {
       const userAnswer = input.value.trim().toLowerCase();
       const correctAnswer = input.dataset.correct.toLowerCase();
       const correctAnswerDisplay = input.dataset.correct; // Keep original case for display
       const userAnswerDisplay = input.value.trim(); // Keep original case for display
-      
+
       // Get the speaker icon (next sibling)
       const speakerIcon = input.nextElementSibling;
-      
+
       // Create a replacement span that looks like an input but can contain HTML
       const replacementSpan = document.createElement('span');
       replacementSpan.className = 'gap-result';
@@ -2708,7 +2713,7 @@
       replacementSpan.style.fontFamily = 'inherit';
       replacementSpan.style.verticalAlign = 'baseline';
       replacementSpan.style.textAlign = 'center';
-      
+
       if (userAnswer === correctAnswer) {
         // Correct: green color, bold, green box highlight
         replacementSpan.style.backgroundColor = '#dcfce7';
@@ -2728,10 +2733,10 @@
         replacementSpan.style.borderColor = '#dc2626';
         replacementSpan.innerHTML = `<span style="color: #991b1b;">${userAnswerDisplay}</span> / <span style="color: #16a34a; font-weight: bold;">${correctAnswerDisplay}</span>`;
       }
-      
+
       // Replace the input with the span
       input.parentNode.replaceChild(replacementSpan, input);
-      
+
       // Move the speaker icon after the replacement span if it exists
       if (speakerIcon && speakerIcon.classList.contains('gap-speaker-icon')) {
         replacementSpan.parentNode.insertBefore(speakerIcon, replacementSpan.nextSibling);
@@ -2744,7 +2749,7 @@
           const correctWord = iconElement.dataset.word;
           if (correctWord) {
             speakWordExtended(correctWord);
-            
+
             // Visual feedback - highlight icon briefly
             iconElement.classList.add('icon-speaking');
             setTimeout(() => {
@@ -2754,15 +2759,15 @@
         });
       }
     });
-    
+
     // Show Redo and Randomize Blanks buttons
     redoExtendedBtn.style.display = 'inline-block';
     randomizeBlanksBtn.style.display = 'inline-block';
-    
+
     // Show result message in custom box
     checkResultExtended.textContent = `You got ${correctCount} out of ${totalGaps} gaps correct!`;
     checkResultExtended.style.display = 'block';
-    
+
     // Record practice attempt for extended listening (single words)
     // Consider correct if all gaps are correct
     const isFullyCorrect = correctCount === totalGaps && totalGaps > 0;
@@ -2776,14 +2781,14 @@
     supportModeBtn.textContent = 'Show Hints';
     supportModeBtn.style.backgroundColor = '';
     supportModeBtn.style.color = '';
-    
+
     // Regenerate the transcript to restore inputs (since they were replaced with spans after checking)
     extendedGappedTranscript = generateGaps(extendedCorrectTranscript);
     gappedTranscript.innerHTML = extendedGappedTranscript;
-    
+
     // Clear gap answers
     extendedGapAnswers = {};
-    
+
     // Add event listeners to new gap inputs
     gappedTranscript.querySelectorAll('.gap-input').forEach(input => {
       input.addEventListener('input', (e) => {
@@ -2791,10 +2796,10 @@
         extendedGapAnswers[gapId] = e.target.value.trim().toLowerCase();
       });
     });
-    
+
     // Make words in gapped transcript clickable (excluding gap inputs)
     makeWordsInGappedTranscriptClickable(gappedTranscript);
-    
+
     // Hide buttons and result message
     redoExtendedBtn.style.display = 'none';
     randomizeBlanksBtn.style.display = 'none';
@@ -2808,14 +2813,14 @@
     supportModeBtn.textContent = 'Show Hints';
     supportModeBtn.style.backgroundColor = '';
     supportModeBtn.style.color = '';
-    
+
     // Regenerate gaps with new randomization
     extendedGappedTranscript = generateGaps(extendedCorrectTranscript);
     gappedTranscript.innerHTML = extendedGappedTranscript;
-    
+
     // Clear gap answers
     extendedGapAnswers = {};
-    
+
     // Add event listeners to new gap inputs (typing mode only, no pronunciation)
     gappedTranscript.querySelectorAll('.gap-input').forEach(input => {
       input.addEventListener('input', (e) => {
@@ -2823,7 +2828,7 @@
         extendedGapAnswers[gapId] = e.target.value.trim().toLowerCase();
       });
     });
-    
+
     // Hide buttons and result message (user needs to check again)
     redoExtendedBtn.style.display = 'none';
     randomizeBlanksBtn.style.display = 'none';
@@ -2844,12 +2849,12 @@
       if (fillPhrasesSection.style.display !== 'none') {
         const selectedPhraseLength = parseInt(radio.value, 10);
         phrasesTranscript.innerHTML = '<p>Analyzing phrases...</p>';
-        
+
         generatePhraseGaps(extendedCorrectTranscript, selectedPhraseLength).then(result => {
           extendedPhraseTranscript = result;
           phrasesTranscript.innerHTML = extendedPhraseTranscript;
           extendedPhraseAnswers = {};
-          
+
           // Add event listeners to new phrase inputs
           phrasesTranscript.querySelectorAll('.phrase-input').forEach(input => {
             input.addEventListener('input', (e) => {
@@ -2870,18 +2875,18 @@
     const phraseInputs = phrasesTranscript.querySelectorAll('.phrase-input');
     let correctCount = 0;
     let totalPhrases = phraseInputs.length;
-    
+
     phraseInputs.forEach(input => {
       const userAnswer = input.value.trim().toLowerCase();
       const correctAnswer = input.dataset.correct.toLowerCase();
       const correctAnswerDisplay = input.dataset.correct; // Keep original case for display
       const userAnswerDisplay = input.value.trim(); // Keep original case for display
-      
+
       // Split into words for comparison
       const userWords = userAnswer.split(/\s+/).filter(w => w.length > 0);
       const correctWords = correctAnswer.split(/\s+/).filter(w => w.length > 0);
       const correctWordsDisplay = correctAnswerDisplay.split(/\s+/).filter(w => w.length > 0);
-      
+
       // Create a replacement span that looks like an input but can contain HTML
       const replacementSpan = document.createElement('span');
       replacementSpan.className = 'phrase-result';
@@ -2894,7 +2899,7 @@
       replacementSpan.style.fontFamily = 'inherit';
       replacementSpan.style.verticalAlign = 'baseline';
       replacementSpan.style.textAlign = 'center';
-      
+
       if (userAnswer === correctAnswer) {
         // All words correct: green color, bold, green box highlight
         replacementSpan.style.backgroundColor = '#dcfce7';
@@ -2907,7 +2912,7 @@
         // Empty: red box highlight, show all correct words in green and bold
         replacementSpan.style.backgroundColor = '#fee2e2';
         replacementSpan.style.borderColor = '#dc2626';
-        replacementSpan.innerHTML = correctWordsDisplay.map(word => 
+        replacementSpan.innerHTML = correctWordsDisplay.map(word =>
           `<span style="color: #16a34a; font-weight: bold;">${word}</span>`
         ).join(' ');
       } else {
@@ -2916,19 +2921,19 @@
         const typedParts = [];
         const correctParts = [];
         let allIncorrect = true;
-        
+
         // Build correct parts (always show all correct words after slash)
         correctWordsDisplay.forEach(word => {
           correctParts.push(`<span style="color: #16a34a; font-weight: bold;">${word}</span>`);
         });
-        
+
         // Compare each word
         for (let i = 0; i < Math.max(userWords.length, correctWords.length); i++) {
           const userWord = userWords[i];
           const correctWord = correctWords[i];
           const userWordDisplay = userWordsDisplayArray[i] || '';
           const correctWordDisplay = correctWordsDisplay[i] || '';
-          
+
           if (userWord && correctWord) {
             if (userWord === correctWord) {
               // Word is correct - show in green
@@ -2944,11 +2949,11 @@
           }
           // If correctWord exists but userWord doesn't, we don't add to typedParts (missing word)
         }
-        
+
         // Build the display
         replacementSpan.style.backgroundColor = '#fee2e2';
         replacementSpan.style.borderColor = '#dc2626';
-        
+
         if (allIncorrect && typedParts.length > 0) {
           // All words incorrect: show all typed words in red and bold, then slash, then all correct words in green
           replacementSpan.innerHTML = `<span style="color: #991b1b; font-weight: bold;">${userAnswerDisplay}</span> / ${correctParts.join(' ')}`;
@@ -2957,18 +2962,18 @@
           replacementSpan.innerHTML = `${typedParts.join(' ')} / ${correctParts.join(' ')}`;
         }
       }
-      
+
       // Replace the input with the span
       input.parentNode.replaceChild(replacementSpan, input);
     });
-    
+
     // Show Redo button
     redoPhrasesBtn.style.display = 'inline-block';
-    
+
     // Show result message
     checkResultPhrases.textContent = `You got ${correctCount} out of ${totalPhrases} phrases correct!`;
     checkResultPhrases.style.display = 'block';
-    
+
     // Record practice attempt for phrases
     // Consider correct if all phrases are correct
     const isFullyCorrect = correctCount === totalPhrases && totalPhrases > 0;
@@ -2984,16 +2989,16 @@
       supportPhrasesBtn.style.backgroundColor = '';
       supportPhrasesBtn.style.color = '';
     }
-    
+
     // Regenerate the phrases transcript to restore inputs (since they were replaced with spans after checking)
     const selectedPhraseLength = parseInt(document.querySelector('input[name="phrase-length"]:checked').value, 10);
     phrasesTranscript.innerHTML = '<p>Analyzing phrases...</p>';
-    
+
     generatePhraseGaps(extendedCorrectTranscript, selectedPhraseLength).then(result => {
       extendedPhraseTranscript = result;
       phrasesTranscript.innerHTML = extendedPhraseTranscript;
       extendedPhraseAnswers = {};
-      
+
       // Add event listeners to new phrase inputs
       phrasesTranscript.querySelectorAll('.phrase-input').forEach(input => {
         input.addEventListener('input', (e) => {
@@ -3005,7 +3010,7 @@
       console.error('Error regenerating phrase gaps:', error);
       phrasesTranscript.innerHTML = '<p>Error regenerating phrases. Please try again.</p>';
     });
-    
+
     // Hide buttons and result message
     redoPhrasesBtn.style.display = 'none';
     checkResultPhrases.style.display = 'none';
@@ -3033,77 +3038,77 @@
     const database = mode === "type" ? typeDatabase : speakDatabase;
     const lowerWord = word.toLowerCase().trim();
     const wordRegex = new RegExp(`\\b${lowerWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-    
+
     // Combine all excluded IDs
     const allExcluded = [excludeQuestionId, ...excludeQuestionIds].filter(id => id !== undefined && id !== null);
-    
+
     const matches = [];
     for (const item of database) {
       // Skip excluded questions
       if (allExcluded.includes(item.id)) continue;
-      
+
       // Check if the sentence contains the word (case-insensitive, whole word match)
       if (wordRegex.test(item.correctSentence)) {
         matches.push(item);
       }
     }
-    
+
     return matches;
   };
-  
+
   // Function to pick another sentence with the same word
   const pickAnotherSentence = (sentenceId, targetWord, mode) => {
     const itemEl = document.querySelector(`.same-vocab-item [data-sentence-id="${sentenceId}"]`)?.closest('.same-vocab-item');
     if (!itemEl) return;
-    
+
     const currentQuestionId = parseInt(itemEl.dataset.questionId, 10);
     const currentQuestionIds = [currentQuestionId];
-    
+
     // Get all previously used question IDs for this word (stored in data attribute)
     const usedIdsStr = itemEl.dataset.usedQuestionIds || '';
     if (usedIdsStr) {
       const usedIds = usedIdsStr.split(',').map(id => parseInt(id, 10)).filter(id => !isNaN(id));
       currentQuestionIds.push(...usedIds);
     }
-    
+
     // Find another sentence with the same word, excluding all used ones
     const currentMainQuestionId = mode === "type" ? currentTypeQuestionId : currentSpeakQuestionId;
     const matches = findSentencesWithWord(targetWord, mode, currentMainQuestionId, currentQuestionIds);
-    
+
     if (matches.length === 0) {
       alert("No more sentences found with this word.");
       return;
     }
-    
+
     // Pick a random match
     const newMatch = matches[Math.floor(Math.random() * matches.length)];
-    
+
     // Update the item's question ID
     itemEl.dataset.questionId = newMatch.id;
-    
+
     // Add current question ID to used list
     const updatedUsedIds = [...currentQuestionIds, newMatch.id].join(',');
     itemEl.dataset.usedQuestionIds = updatedUsedIds;
-    
+
     // Update sentence display
     const sentenceEl = document.getElementById(`sentence-${sentenceId}`);
     if (sentenceEl) {
       sentenceEl.textContent = newMatch.correctSentence;
     }
-    
+
     // Update Check button data attributes
     const checkBtn = document.querySelector(`.same-vocab-check-btn[data-sentence-id="${sentenceId}"]`);
     if (checkBtn) {
       checkBtn.dataset.correct = newMatch.correctSentence;
       checkBtn.dataset.questionId = newMatch.id;
     }
-    
+
     // Update Play button data attributes
     const playBtn = document.querySelector(`.same-vocab-play-btn[data-sentence-id="${sentenceId}"]`);
     if (playBtn) {
       playBtn.dataset.questionId = newMatch.id;
     }
-    
+
     // Reset input/transcription
     if (mode === "type") {
       const inputEl = document.getElementById(`input-${sentenceId}`);
@@ -3116,18 +3121,18 @@
       }
       sameVocabTranscriptions[sentenceId] = "";
     }
-    
+
     // Reset status
     const statusEl = document.getElementById(`status-${sentenceId}`);
     if (statusEl) {
       statusEl.textContent = "";
       statusEl.className = "";
     }
-    
+
     // Hide "Pick another" button again
     const pickAnotherBtn = document.querySelector(`.same-vocab-pick-another-btn[data-sentence-id="${sentenceId}"]`);
     if (pickAnotherBtn) pickAnotherBtn.style.display = "none";
-    
+
     // Hide word label and sentence again
     const wordLabelEl = document.getElementById(`word-label-${sentenceId}`);
     if (wordLabelEl) wordLabelEl.style.display = "none";
@@ -3140,18 +3145,18 @@
       sameVocabPanelType.style.display = "none";
       return;
     }
-    
+
     const currentQuestionId = currentTypeQuestionId;
     const sentencesHTML = [];
-    
+
     vocabularyPracticeWordsType.forEach((word, idx) => {
       const matches = findSentencesWithWord(word, "type", currentQuestionId);
-      
+
       if (matches.length > 0) {
         const match = matches[0]; // Use first match
         const sentenceId = `same-vocab-type-${idx}`;
         const targetWord = word.toLowerCase().trim();
-        
+
         sentencesHTML.push(`
           <div class="same-vocab-item" data-vocab-word="${targetWord}" data-question-id="${match.id}">
             <div class="same-vocab-word-label" id="word-label-${sentenceId}" style="display: none;">Word to focus on: <strong>${word}</strong></div>
@@ -3167,15 +3172,15 @@
         `);
       }
     });
-    
+
     if (sentencesHTML.length === 0) {
       sameVocabPanelType.style.display = "none";
       return;
     }
-    
+
     sameVocabPanelType.style.display = "block";
     sameVocabSentencesType.innerHTML = sentencesHTML.join("");
-    
+
     // Add event listeners for Play buttons
     sameVocabSentencesType.querySelectorAll(".same-vocab-play-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -3184,7 +3189,7 @@
         playSameVocabAudio(questionId, mode, btn);
       });
     });
-    
+
     // Add event listeners for Check buttons
     sameVocabSentencesType.querySelectorAll(".same-vocab-check-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -3194,7 +3199,7 @@
         checkSameVocabAnswer(sentenceId, targetWord, correctSentence);
       });
     });
-    
+
     // Add event listeners for "Pick another" buttons
     sameVocabSentencesType.querySelectorAll(".same-vocab-pick-another-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -3212,18 +3217,18 @@
       sameVocabPanelSpeak.style.display = "none";
       return;
     }
-    
+
     const currentQuestionId = currentSpeakQuestionId;
     const sentencesHTML = [];
-    
+
     vocabularyPracticeWordsSpeak.forEach((word, idx) => {
       const matches = findSentencesWithWord(word, "speak", currentQuestionId);
-      
+
       if (matches.length > 0) {
         const match = matches[0]; // Use first match
         const sentenceId = `same-vocab-speak-${idx}`;
         const targetWord = word.toLowerCase().trim();
-        
+
         sentencesHTML.push(`
           <div class="same-vocab-item" data-vocab-word="${targetWord}" data-question-id="${match.id}">
             <div class="same-vocab-word-label" id="word-label-${sentenceId}" style="display: none;">Word to focus on: <strong>${word}</strong></div>
@@ -3240,15 +3245,15 @@
         `);
       }
     });
-    
+
     if (sentencesHTML.length === 0) {
       sameVocabPanelSpeak.style.display = "none";
       return;
     }
-    
+
     sameVocabPanelSpeak.style.display = "block";
     sameVocabSentencesSpeak.innerHTML = sentencesHTML.join("");
-    
+
     // Add event listeners for Play buttons
     sameVocabSentencesSpeak.querySelectorAll(".same-vocab-play-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -3257,7 +3262,7 @@
         playSameVocabAudio(questionId, mode, btn);
       });
     });
-    
+
     // Add event listeners for Record buttons
     sameVocabSentencesSpeak.querySelectorAll(".same-vocab-record-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -3265,7 +3270,7 @@
         startSameVocabRecording(sentenceId, btn);
       });
     });
-    
+
     // Add event listeners for Check buttons
     sameVocabSentencesSpeak.querySelectorAll(".same-vocab-check-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -3275,7 +3280,7 @@
         checkSameVocabAnswerSpeak(sentenceId, targetWord, correctSentence);
       });
     });
-    
+
     // Add event listeners for "Pick another" buttons
     sameVocabSentencesSpeak.querySelectorAll(".same-vocab-pick-another-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -3291,14 +3296,14 @@
   const checkFileExists = async (url) => {
     try {
       // Use HEAD method to check if file exists
-      const response = await fetch(url, { 
+      const response = await fetch(url, {
         method: 'HEAD',
-        cache: 'no-cache' 
+        cache: 'no-cache'
       });
-      
+
       const status = response.status;
       const contentType = response.headers.get('content-type');
-      
+
       // Check if it's a successful response (200 OK)
       if (response.ok && status === 200) {
         // Must have audio content-type to be valid
@@ -3322,10 +3327,10 @@
   // Play audio for same vocabulary question
   const playSameVocabAudio = async (questionId, mode, btn) => {
     console.log(`playSameVocabAudio called: questionId=${questionId}, mode=${mode}`);
-    
+
     const database = mode === "type" ? typeDatabase : speakDatabase;
     const question = database.find(item => item.id === questionId);
-    
+
     if (!question) {
       console.error(`Question ${questionId} not found in ${mode} database`);
       console.log(`Database length: ${database.length}`);
@@ -3333,7 +3338,7 @@
       alert(`Question ${questionId} not found in ${mode} database`);
       return;
     }
-    
+
     // Determine MIME type based on file extension
     const getAudioMimeType = (filename) => {
       const ext = filename.toLowerCase().split('.').pop();
@@ -3347,15 +3352,15 @@
       };
       return mimeTypes[ext] || 'audio/mpeg';
     };
-    
+
     // Get the base filename (without extension)
-    const baseFilename = question.audioFile 
-      ? question.audioFile.replace(/\.[^.]+$/, '') 
+    const baseFilename = question.audioFile
+      ? question.audioFile.replace(/\.[^.]+$/, '')
       : questionId.toString();
-    
+
     // Try extensions in order
     const tryExtensions = ['m4a', 'wav', 'mp3', 'aac', 'ogg'];
-    
+
     // Find starting index - try database extension first
     let startIndex = 0;
     if (question.audioFile) {
@@ -3365,21 +3370,21 @@
         startIndex = extIndex;
       }
     }
-    
+
     // Try to find the file by checking each extension
     let foundFile = null;
     let foundIndex = startIndex;
-    
+
     // Check starting from database extension, then wrap around
     for (let i = 0; i < tryExtensions.length; i++) {
       const checkIndex = (startIndex + i) % tryExtensions.length;
       const ext = tryExtensions[checkIndex];
       const testFile = `${baseFilename}.${ext}`;
       const testPath = `database/${mode}/audio/${testFile}`;
-      
+
       console.log(`Checking if file exists: ${testFile}`);
       const exists = await checkFileExists(testPath);
-      
+
       if (exists) {
         foundFile = testFile;
         foundIndex = checkIndex;
@@ -3387,39 +3392,39 @@
         break;
       }
     }
-    
+
     if (!foundFile) {
       console.warn(`No audio file found for question ${questionId}. Tried all extensions.`);
       return;
     }
-    
+
     const audioPath = `database/${mode}/audio/${foundFile}?t=${Date.now()}`;
     const mimeType = getAudioMimeType(foundFile);
-    
+
     console.log(`Playing audio: ${audioPath} (MIME type: ${mimeType})`);
-    
+
     const audio = document.getElementById("audio");
-    
+
     if (!audio) {
       console.error("Audio element not found");
       return;
     }
-    
+
     // Stop any currently playing audio and reset
     audio.pause();
     audio.currentTime = 0;
-    
+
     // Clear any existing source elements
     while (audio.firstChild) {
       audio.removeChild(audio.firstChild);
     }
-    
+
     // Create source element with proper type
     const source = document.createElement('source');
     source.src = audioPath;
     source.type = mimeType;
     audio.appendChild(source);
-    
+
     // Load and play
     audio.load();
     audio.play().catch(err => {
@@ -3430,18 +3435,18 @@
   // Start recording for same vocabulary question (Speak mode)
   const startSameVocabRecording = (sentenceId, btn) => {
     console.log("startSameVocabRecording called:", { sentenceId, btnText: btn.textContent });
-    
+
     if (!SpeechRecognition) {
       alert("Speech recognition is not supported in your browser.");
       return;
     }
-    
+
     const transcriptionEl = document.getElementById(`transcription-${sentenceId}`);
     if (!transcriptionEl) {
       console.error(`Transcription element not found: transcription-${sentenceId}`);
       return;
     }
-    
+
     // Stop main recognition if it's running to avoid conflicts
     if (recognition && isRecording) {
       try {
@@ -3455,7 +3460,7 @@
         console.log("Error stopping main recognition:", e);
       }
     }
-    
+
     // Stop any existing recognition for this item
     if (sameVocabRecognitions[sentenceId]) {
       try {
@@ -3465,45 +3470,45 @@
         console.log("Error stopping existing recognition:", e);
       }
     }
-    
+
     // Initialize transcription if not exists
     if (!sameVocabTranscriptions[sentenceId]) {
       sameVocabTranscriptions[sentenceId] = "";
     }
-    
+
     if (btn.textContent === "Start Recording") {
       // Clear previous transcription when starting a new recording
       sameVocabTranscriptions[sentenceId] = "";
       transcriptionEl.textContent = "Listening...";
       transcriptionEl.classList.remove("empty");
       transcriptionEl.style.borderColor = ""; // Clear any previous border color
-      
+
       // Clear any previous status messages
       const statusEl = document.getElementById(`status-${sentenceId}`);
       if (statusEl) {
         statusEl.textContent = "";
         statusEl.className = "";
       }
-      
+
       // Create new recognition instance for this item
       const itemRecognition = new SpeechRecognition();
       itemRecognition.continuous = true;
       itemRecognition.interimResults = true;
       itemRecognition.lang = "en-US";
-      
+
       // Start recording
       btn.textContent = "Stop Recording";
       btn.classList.add("recording");
-      
+
       itemRecognition.onstart = () => {
         console.log(`Recognition started for ${sentenceId}`);
         transcriptionEl.textContent = "Listening...";
       };
-      
+
       itemRecognition.onresult = (event) => {
         let interimText = "";
         let finalText = "";
-        
+
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
@@ -3512,18 +3517,18 @@
             interimText += transcript;
           }
         }
-        
+
         // Accumulate final transcript
         if (finalText) {
           sameVocabTranscriptions[sentenceId] += finalText;
         }
-        
+
         // Display: accumulated final transcript + current interim text
         const displayText = sameVocabTranscriptions[sentenceId] + (interimText ? " " + interimText : "");
         transcriptionEl.textContent = displayText || "Listening...";
         transcriptionEl.classList.remove("empty");
       };
-      
+
       itemRecognition.onerror = (event) => {
         console.error(`Recognition error for ${sentenceId}:`, event.error);
         if (event.error === "no-speech") {
@@ -3537,7 +3542,7 @@
           btn.classList.remove("recording");
         }
       };
-      
+
       itemRecognition.onend = () => {
         console.log(`Recognition ended for ${sentenceId}`);
         // Auto-restart if still in recording state
@@ -3557,9 +3562,9 @@
           }
         }
       };
-      
+
       sameVocabRecognitions[sentenceId] = itemRecognition;
-      
+
       try {
         console.log(`Starting recognition for ${sentenceId}`);
         itemRecognition.start();
@@ -3598,35 +3603,35 @@
     const wordLabelEl = document.getElementById(`word-label-${sentenceId}`);
     const sentenceEl = document.getElementById(`sentence-${sentenceId}`);
     const pickAnotherBtn = document.querySelector(`.same-vocab-pick-another-btn[data-sentence-id="${sentenceId}"]`);
-    
+
     if (!inputEl || !statusEl) return;
-    
+
     // Show the word label and sentence when Check is pressed
     if (wordLabelEl) wordLabelEl.style.display = "block";
     if (sentenceEl) sentenceEl.style.display = "block";
-    
+
     // Show "Pick another" button
     if (pickAnotherBtn) pickAnotherBtn.style.display = "inline-block";
-    
+
     const userAnswer = inputEl.value.trim().toLowerCase();
     const correctSentenceLower = correctSentence.toLowerCase();
-    
+
     // Extract the target word from the correct sentence (case-insensitive, whole word match)
     const wordRegex = new RegExp(`\\b${targetWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
     const correctWordMatch = correctSentence.match(wordRegex);
-    
+
     if (!correctWordMatch) {
       statusEl.textContent = "Error: Target word not found in correct sentence.";
       statusEl.className = "same-vocab-status error";
       return;
     }
-    
+
     const correctWord = correctWordMatch[0].toLowerCase();
-    
+
     // Check if user's answer contains the target word (case-insensitive, whole word match)
     const userAnswerRegex = new RegExp(`\\b${targetWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
     const userHasWord = userAnswerRegex.test(userAnswer);
-    
+
     if (userHasWord) {
       statusEl.textContent = "Correct!";
       statusEl.className = "same-vocab-status correct";
@@ -3646,9 +3651,9 @@
     const transcriptionEl = document.getElementById(`transcription-${sentenceId}`);
     const recordBtn = document.querySelector(`[data-sentence-id="${sentenceId}"].same-vocab-record-btn`);
     const pickAnotherBtn = document.querySelector(`.same-vocab-pick-another-btn[data-sentence-id="${sentenceId}"]`);
-    
+
     if (!statusEl || !transcriptionEl) return;
-    
+
     // Stop recording if active
     if (recordBtn && recordBtn.textContent === "Stop Recording") {
       if (sameVocabRecognitions[sentenceId]) {
@@ -3661,38 +3666,38 @@
       recordBtn.textContent = "Start Recording";
       recordBtn.classList.remove("recording");
     }
-    
+
     // Show the word label and sentence when Check is pressed
     if (wordLabelEl) wordLabelEl.style.display = "block";
     if (sentenceEl) sentenceEl.style.display = "block";
-    
+
     // Show "Pick another" button
     if (pickAnotherBtn) pickAnotherBtn.style.display = "inline-block";
-    
+
     const userAnswer = (sameVocabTranscriptions[sentenceId] || "").trim().toLowerCase();
-    
+
     if (!userAnswer) {
       statusEl.textContent = "Please record your answer first.";
       statusEl.className = "same-vocab-status error";
       return;
     }
-    
+
     // Extract the target word from the correct sentence (case-insensitive, whole word match)
     const wordRegex = new RegExp(`\\b${targetWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
     const correctWordMatch = correctSentence.match(wordRegex);
-    
+
     if (!correctWordMatch) {
       statusEl.textContent = "Error: Target word not found in correct sentence.";
       statusEl.className = "same-vocab-status error";
       return;
     }
-    
+
     const correctWord = correctWordMatch[0].toLowerCase();
-    
+
     // Check if user's answer contains the target word (case-insensitive, whole word match)
     const userAnswerRegex = new RegExp(`\\b${targetWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
     const userHasWord = userAnswerRegex.test(userAnswer);
-    
+
     if (userHasWord) {
       statusEl.textContent = "Correct!";
       statusEl.className = "same-vocab-status correct";
@@ -3714,13 +3719,13 @@
 
     // Get only missed words from the user's response
     const missedWords = getMissedWords(diff);
-    
+
     // Filter to only show content words (keywords) from missed words
     const contentWords = filterContentWords(missedWords);
-    
+
     // Store for sentence generation
     vocabularyPracticeWordsType = contentWords.map(w => w.toLowerCase().trim());
-    
+
     if (contentWords.length === 0) {
       vocabularyPanel.style.display = "none";
       vocabularyPracticeWordsType = [];
@@ -3764,13 +3769,13 @@
   // Play vocabulary word audio and hide the word
   const playVocabularyWord = (word, index, btn) => {
     if (!synth || !word) return;
-    
+
     // Hide the word
     const wordEl = document.getElementById(`vocab-word-${index}`);
     if (wordEl) {
       wordEl.style.display = "none";
     }
-    
+
     // Play audio
     synth.cancel();
     const utter = new SpeechSynthesisUtterance(word);
@@ -3783,7 +3788,7 @@
     utter.rate = 1.0;
     utter.pitch = 1.0;
     synth.speak(utter);
-    
+
     // Enable input and clear status
     const inputEl = document.getElementById(`vocab-input-${index}`);
     const statusEl = document.getElementById(`vocab-status-${index}`);
@@ -3804,26 +3809,26 @@
     const inputEl = document.getElementById(`vocab-input-${index}`);
     const statusEl = document.getElementById(`vocab-status-${index}`);
     const wordEl = document.getElementById(`vocab-word-${index}`);
-    
+
     if (!inputEl || !statusEl) return;
-    
+
     const userInput = inputEl.value.trim().toLowerCase();
     const expected = expectedWord.toLowerCase().trim();
-    
+
     if (!userInput) {
       statusEl.textContent = "Please type the word first.";
       statusEl.className = "vocabulary-status error";
       return;
     }
-    
+
     // Disable input after check
     inputEl.disabled = true;
     inputEl.placeholder = "Press Play to listen to the word before typing";
-    
+
     // Normalize for comparison
     const normalizedUser = normalize(userInput);
     const normalizedExpected = normalize(expected);
-    
+
     if (normalizedUser === normalizedExpected) {
       statusEl.textContent = "✓ Correct!";
       statusEl.className = "vocabulary-status correct";
@@ -3846,10 +3851,10 @@
     // Filter to only show content words (keywords)
     // Double-check: ensure we're filtering properly
     const contentWords = filterContentWords(missedWords);
-    
+
     // Store for sentence generation (Speak mode)
     vocabularyPracticeWordsSpeak = contentWords.map(w => w.toLowerCase().trim());
-    
+
     if (contentWords.length === 0) {
       pronunciationPanel.style.display = "none";
       vocabularyPracticeWordsSpeak = [];
@@ -3990,7 +3995,7 @@
       scoreElement.textContent = `Points: 0 / ${getCorrectWordCount()}`;
       return;
     }
-    
+
     // Record practice attempt (correct if no errors)
     recordPracticeAttempt(currentTypeQuestionId, !hasErrors, 'type');
 
@@ -3998,14 +4003,14 @@
 
     // Show vocabulary practice for type mode (only missed words)
     renderVocabularyPractice(diff);
-    
+
     // Hide pronunciation practice and breakdown mode for type mode
     pronunciationPanel.style.display = "none";
     breakdownPanel.style.display = "none";
 
     // Store diff for sentence generation (Type mode)
     lastDiffType = diff;
-    
+
     // Show same vocabulary panel and generate panel immediately after check (if there are errors)
     if (hasErrors) {
       renderSameVocabularyType();
@@ -4018,7 +4023,7 @@
     // Show animation panel and result box for Type mode
     animationPanel.style.display = "block";
     result.style.display = "block";
-    
+
     lastSteps = buildAnimationSteps(userAnswer, "type");
     if (!lastSteps || lastSteps.length === 0) {
       result.innerHTML = `<div class="errors">Error: Could not generate animation steps.</div>`;
@@ -4054,7 +4059,7 @@
       scoreElement.textContent = `Points: 0 / ${getCorrectWordCount()}`;
       return;
     }
-    
+
     // Record practice attempt (correct if no errors)
     recordPracticeAttempt(currentSpeakQuestionId, !hasErrors, 'speak');
 
@@ -4067,7 +4072,7 @@
 
     // Store diff for sentence generation (Speak mode)
     lastDiffSpeak = diff;
-    
+
     // Show same vocabulary panel and generate panel immediately after check (if there are errors)
     if (hasErrors) {
       renderSameVocabularySpeak();
@@ -4080,7 +4085,7 @@
     // Show animation panel and result box for Speak mode
     animationPanel.style.display = "block";
     result.style.display = "block";
-    
+
     lastSteps = buildAnimationSteps(userAnswer, "speak");
     if (!lastSteps || lastSteps.length === 0) {
       result.innerHTML = `<div class="errors">Error: Could not generate animation steps.</div>`;
@@ -4104,7 +4109,7 @@
       }
     }, true);
   };
-  
+
   let lastDiffType = [];
   let lastDiffSpeak = [];
 
@@ -4132,7 +4137,7 @@
   const loadQuestion = async (mode, questionId) => {
     const database = mode === "type" ? typeDatabase : speakDatabase;
     const question = database.find(item => item.id === questionId);
-    
+
     if (!question) {
       console.error(`Question ${questionId} not found in ${mode} database`);
       return false;
@@ -4144,7 +4149,7 @@
     } else {
       correctSentenceSpeak = question.correctSentence;
     }
-    
+
     // Determine MIME type based on file extension
     const getAudioMimeType = (filename) => {
       const ext = filename.toLowerCase().split('.').pop();
@@ -4158,15 +4163,15 @@
       };
       return mimeTypes[ext] || 'audio/mpeg';
     };
-    
+
     // Get base filename (without extension)
-    const baseFilename = question.audioFile 
-      ? question.audioFile.replace(/\.[^.]+$/, '') 
+    const baseFilename = question.audioFile
+      ? question.audioFile.replace(/\.[^.]+$/, '')
       : questionId.toString();
-    
+
     // Try extensions in order
     const tryExtensions = ['m4a', 'wav', 'mp3', 'aac', 'ogg'];
-    
+
     // Find starting index - try database extension first
     let startIndex = 0;
     if (question.audioFile) {
@@ -4176,48 +4181,48 @@
         startIndex = extIndex;
       }
     }
-    
+
     // Try to find the file by checking each extension
     let foundFile = null;
-    
+
     // Check starting from database extension, then wrap around
     for (let i = 0; i < tryExtensions.length; i++) {
       const checkIndex = (startIndex + i) % tryExtensions.length;
       const ext = tryExtensions[checkIndex];
       const testFile = `${baseFilename}.${ext}`;
       const testPath = `database/${mode}/audio/${testFile}`;
-      
+
       const exists = await checkFileExists(testPath);
-      
+
       if (exists) {
         foundFile = testFile;
         console.log(`[loadQuestion] Found file: ${foundFile} (database said: ${question.audioFile})`);
         break;
       }
     }
-    
+
     if (!foundFile) {
       console.warn(`[loadQuestion] No audio file found for question ${questionId}. Tried all extensions.`);
       // Still try to load with database filename as fallback
       foundFile = question.audioFile || `${baseFilename}.mp3`;
     }
-    
+
     const audioPath = `database/${mode}/audio/${foundFile}?t=${Date.now()}`;
     const mimeType = getAudioMimeType(foundFile);
-    
+
     // Clear any existing source elements
     while (audio.firstChild) {
       audio.removeChild(audio.firstChild);
     }
-    
+
     // Create source element with proper type
     const source = document.createElement('source');
     source.src = audioPath;
     source.type = mimeType;
     audio.appendChild(source);
-    
+
     audio.load(); // Reload the audio element
-    
+
     // Clear input/transcription
     if (mode === "type") {
       input.value = "";
@@ -4230,7 +4235,7 @@
       currentSpeakQuestionId = questionId;
       currentQuestionIdSpeak.textContent = questionId;
     }
-    
+
     // Reset scores and hide panels
     if (mode === "type") {
       score.textContent = "Points: 0";
@@ -4244,11 +4249,11 @@
     vocabularyPanel.style.display = "none";
     pronunciationPanel.style.display = "none";
     breakdownPanel.style.display = "none";
-    
+
     // Load mastery status for this question (logged-in users only)
     // Pass the mode so mastery status is shown for the correct mode
     await loadMasteryStatus(questionId, mode);
-    
+
     return true;
   };
 
@@ -4273,7 +4278,7 @@
       const select = questionSelectExtended;
       const currentIdDisplay = currentQuestionIdExtended;
       const totalDisplay = totalQuestionsExtended;
-      
+
       select.innerHTML = "";
       database.forEach(item => {
         const option = document.createElement("option");
@@ -4281,7 +4286,7 @@
         option.textContent = item.id.toString();
         select.appendChild(option);
       });
-      
+
       currentIdDisplay.textContent = currentExtendedQuestionId;
       totalDisplay.textContent = database.length;
       select.value = currentExtendedQuestionId;
@@ -4290,23 +4295,23 @@
       const select = mode === "type" ? questionSelectType : questionSelectSpeak;
       const currentIdDisplay = mode === "type" ? currentQuestionIdType : currentQuestionIdSpeak;
       const totalDisplay = mode === "type" ? totalQuestionsType : totalQuestionsSpeak;
-      
+
       // Get current selected question ID (to ensure it's always shown even if filtered)
       const currentId = mode === "type" ? currentTypeQuestionId : currentSpeakQuestionId;
-      
+
       // Get state filter checkbox states
       const filterNotStarted = document.getElementById(`filter-not-started-${mode}`)?.checked ?? true;
       const filterInProgress = document.getElementById(`filter-in-progress-${mode}`)?.checked ?? true;
       const filterCompleted = document.getElementById(`filter-completed-${mode}`)?.checked ?? true;
       const filterConsolidated = document.getElementById(`filter-consolidated-${mode}`)?.checked ?? true;
       const filterMastered = document.getElementById(`filter-mastered-${mode}`)?.checked ?? true;
-      
+
       // Get progress cache for this mode
       const modeProgressCache = progressCache[mode] || {};
-      
+
       select.innerHTML = "";
       let visibleCount = 0;
-      
+
       // Filter and render questions based on state filter
       database.forEach(item => {
         const questionId = item.id;
@@ -4314,7 +4319,7 @@
         const hasAttempted = progress.hasAttempted || false;
         const perfectCount = progress.perfectCount || 0;
         const state = calculateState(hasAttempted, perfectCount);
-        
+
         // Check if this state should be shown based on filter
         let shouldShow = false;
         if (state === 'not-started' && filterNotStarted) shouldShow = true;
@@ -4322,18 +4327,18 @@
         else if (state === 'completed' && filterCompleted) shouldShow = true;
         else if (state === 'consolidated' && filterConsolidated) shouldShow = true;
         else if (state === 'mastered' && filterMastered) shouldShow = true;
-        
+
         // Always show currently selected question
         if (questionId === currentId) shouldShow = true;
-        
+
         if (!shouldShow) {
           return; // Skip this question based on filter
         }
-        
+
         // Create option element
         const option = document.createElement("option");
         option.value = questionId;
-        
+
         // Add state indicator
         const stateIndicators = {
           'not-started': '',
@@ -4342,22 +4347,22 @@
           'consolidated': ' ✓✓ (Consolidated)',
           'mastered': ' ★ (Mastered)'
         };
-        
+
         option.textContent = `${questionId}${stateIndicators[state] || ''}`;
         option.classList.add(`state-${state}`);
-        
+
         select.appendChild(option);
         visibleCount++;
       });
-      
+
       // Update display
       currentIdDisplay.textContent = currentId;
       const hasFilters = !filterNotStarted || !filterInProgress || !filterCompleted || !filterConsolidated || !filterMastered;
       totalDisplay.textContent = hasFilters ? `${visibleCount} (${database.length} total)` : database.length;
-      
+
       // Set selected value (ensure current question is selected)
       select.value = currentId;
-      
+
       // Make sure selected question exists in dropdown
       const existingOption = select.querySelector(`option[value="${currentId}"]`);
       if (!existingOption) {
@@ -4373,7 +4378,7 @@
           'consolidated': ' ✓✓ (Consolidated)',
           'mastered': ' ★ (Mastered)'
         };
-        
+
         const option = document.createElement("option");
         option.value = currentId;
         option.textContent = `${currentId}${stateIndicators[state] || ''}`;
@@ -4389,16 +4394,16 @@
     typeDatabase = await loadDatabase("type");
     speakDatabase = await loadDatabase("speak");
     extendedDatabase = await loadDatabase("extended");
-    
+
     // Load progress data for Type and Speak modes (cached for dropdown rendering)
     await loadAllProgressForMode("type");
     await loadAllProgressForMode("speak");
-    
+
     // Populate selectors (will use progress cache to show tier indicators)
     populateQuestionSelect("type");
     populateQuestionSelect("speak");
     populateQuestionSelect("extended");
-    
+
     // Load first question for each mode
     // Load Speak first (since Type tab is active by default, Type should load last to set the correct audio)
     if (speakDatabase.length > 0) {
@@ -4413,11 +4418,11 @@
       currentExtendedQuestionId = 1;
       loadExtendedQuestion(1);
     }
-    
+
     // Update progress bar for initial question
     const typeProgress = progressCache.type?.[1] || { perfectCount: 0, tier: 'none' };
     updateProgressBarUI(1, 'type', typeProgress);
-    
+
     // Update left panel for Type mode (default active tab)
     await updateProgressPanel('type');
   };
@@ -4438,15 +4443,15 @@
       currentQuestionIdSpeak.textContent = questionId;
     }
   });
-  
+
   // Tier filter dropdown event listeners
   const setupTierFilterDropdown = (mode) => {
     const filterBtn = document.getElementById(`tier-filter-btn-${mode}`);
     const filterMenu = document.getElementById(`tier-filter-menu-${mode}`);
     const filterDropdown = filterBtn?.closest('.tier-filter-dropdown');
-    
+
     if (!filterBtn || !filterMenu) return;
-    
+
     // Toggle dropdown visibility
     filterBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -4454,7 +4459,7 @@
       filterMenu.style.display = isOpen ? 'none' : 'block';
       filterDropdown?.classList.toggle('open', !isOpen);
     });
-    
+
     // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {
       if (!filterDropdown?.contains(e.target)) {
@@ -4462,7 +4467,7 @@
         filterDropdown?.classList.remove('open');
       }
     });
-    
+
     // Update dropdown when filter checkboxes change
     ['not-started', 'in-progress', 'completed', 'consolidated', 'mastered'].forEach(state => {
       const checkbox = document.getElementById(`filter-${state}-${mode}`);
@@ -4473,16 +4478,16 @@
       }
     });
   };
-  
+
   setupTierFilterDropdown('type');
   setupTierFilterDropdown('speak');
-  
+
   // Progress panel toggle event listeners
   const progressPanelToggle = document.getElementById('progress-panel-toggle');
   const progressPanelCloseBtn = document.getElementById('progress-panel-close-btn');
   const progressPanelSide = document.getElementById('progress-panel-side');
   const progressPanelOverlay = document.getElementById('progress-panel-overlay');
-  
+
   /**
    * Open the progress panel
    */
@@ -4494,7 +4499,7 @@
       progressPanelOverlay.classList.add('active');
     }
   }
-  
+
   /**
    * Close the progress panel
    */
@@ -4506,7 +4511,7 @@
       progressPanelOverlay.classList.remove('active');
     }
   }
-  
+
   // Toggle button opens/closes panel
   if (progressPanelToggle) {
     progressPanelToggle.addEventListener('click', () => {
@@ -4518,35 +4523,35 @@
       }
     });
   }
-  
+
   // Close button closes panel
   if (progressPanelCloseBtn) {
     progressPanelCloseBtn.addEventListener('click', closeProgressPanel);
   }
-  
+
   // Clicking overlay closes panel
   if (progressPanelOverlay) {
     progressPanelOverlay.addEventListener('click', closeProgressPanel);
   }
-  
+
   // Reset progress button event listeners
   const setupResetProgressBtn = (mode) => {
     const resetBtn = document.getElementById(`reset-progress-${mode}-btn`);
     if (!resetBtn) return;
-    
+
     resetBtn.addEventListener('click', async () => {
       const questionId = mode === 'type' ? currentTypeQuestionId : currentSpeakQuestionId;
-      
+
       if (!confirm(`Reset progress for Question ${questionId} in ${mode === 'type' ? 'Type' : 'Speak'} mode?`)) {
         return;
       }
-      
+
       const userId = window.authUI?.getCurrentUserId?.();
       if (!userId) {
         alert('Must be logged in to reset progress');
         return;
       }
-      
+
       try {
         const result = await window.firebaseFirestoreFunctions.resetProgress(userId, questionId, mode);
         if (result.success) {
@@ -4562,13 +4567,13 @@
       }
     });
   };
-  
+
   setupResetProgressBtn('type');
   setupResetProgressBtn('speak');
 
   // Initialize on page load
   initializeDatabases();
-  
+
   // ============================================
   // AUTH STATE CHANGE LISTENER
   // ============================================
@@ -4588,7 +4593,7 @@
    */
   async function handleAuthStateChange(eventType, userId) {
     console.log(`✓ Progress UI: Handling auth state change - ${eventType}`);
-    
+
     if (eventType === 'login' && userId) {
       // ============================================
       // RELOAD PROGRESS DATA AFTER LOGIN
@@ -4596,55 +4601,55 @@
       // User just logged in - reload all progress data for current mode
       // This updates: progress bar, question status label, filter dropdown,
       // and progress side panel immediately.
-      
+
       // Determine current mode based on active tab
       const isTypeActive = document.getElementById('tab-type')?.classList.contains('active');
       const isSpeakActive = document.getElementById('tab-speak')?.classList.contains('active');
       const currentMode = isTypeActive ? 'type' : (isSpeakActive ? 'speak' : 'type');
       const currentQuestionId = currentMode === 'type' ? currentTypeQuestionId : currentSpeakQuestionId;
-      
+
       console.log(`✓ Progress UI: Reloading progress for ${currentMode} mode, question ${currentQuestionId}`);
-      
+
       // 1. Reload all progress data for current mode (for dropdown/filter)
       await loadAllProgressForMode(currentMode);
-      
+
       // 2. Reload progress status for current question (for progress bar)
       await loadProgressStatus(currentQuestionId, currentMode);
-      
+
       // 3. Re-render the question dropdown with updated progress indicators
       populateQuestionSelect(currentMode);
-      
+
       // 4. Update the progress side panel
       await updateProgressPanel(currentMode);
-      
+
       console.log('✓ Progress UI: Reload complete after login');
     } else if (eventType === 'logout') {
       // ============================================
       // CLEAR PROGRESS UI AFTER LOGOUT
       // ============================================
       // User logged out - clear progress cache and hide progress UI elements
-      
+
       // Clear progress cache
       progressCache.type = {};
       progressCache.speak = {};
-      
+
       // Hide progress bars
       const progressBarType = document.getElementById('progress-bar-type');
       const progressBarSpeak = document.getElementById('progress-bar-speak');
       if (progressBarType) progressBarType.style.display = 'none';
       if (progressBarSpeak) progressBarSpeak.style.display = 'none';
-      
+
       // Re-render dropdowns without progress indicators
       populateQuestionSelect('type');
       populateQuestionSelect('speak');
-      
+
       // Update progress panel to show guest notice
       await updateProgressPanel('type');
-      
+
       console.log('✓ Progress UI: Cleared after logout');
     }
   }
-  
+
   // Register the callback with auth-ui.js
   // This will be called whenever auth state changes
   const registerAuthCallback = () => {
@@ -4708,10 +4713,10 @@
       } catch (e) {
         // Ignore if already stopped
       }
-      
+
       // Wait a moment before starting to avoid conflicts
       await new Promise(resolve => setTimeout(resolve, 100));
-      
+
       transcription = "";
       transcriptionText.textContent = "Listening...";
       transcriptionText.classList.remove("empty");
@@ -4720,7 +4725,7 @@
       recordBtn.textContent = "Stop Recording";
       recordBtn.classList.add("recording");
       isRecording = true;
-      
+
       try {
         recognition.start();
       } catch (e) {
@@ -4758,7 +4763,7 @@
   });
 
   replayBtn.addEventListener("click", () => {
-    if (lastSteps.length) playAnimation(lastSteps, () => {}, lastAnimationMode);
+    if (lastSteps.length) playAnimation(lastSteps, () => { }, lastAnimationMode);
   });
 
   // Stop words to exclude from sentence generation
@@ -4768,9 +4773,9 @@
     // Conjunctions
     "and", "or", "but", "nor", "so", "yet",
     // Prepositions
-    "in", "on", "at", "to", "for", "of", "with", "by", "from", "up", "about", "into", "through", 
-    "during", "including", "excluding", "following", "over", "under", "above", "below", "between", 
-    "among", "within", "without", "against", "across", "around", "behind", "beside", "besides", 
+    "in", "on", "at", "to", "for", "of", "with", "by", "from", "up", "about", "into", "through",
+    "during", "including", "excluding", "following", "over", "under", "above", "below", "between",
+    "among", "within", "without", "against", "across", "around", "behind", "beside", "besides",
     "beyond", "near", "off", "out", "down", "upon", "toward", "towards", "until", "till",
     // Auxiliary verbs
     "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "do", "does", "did",
@@ -4792,7 +4797,7 @@
     "wasn't", "weren't", "haven't", "hasn't", "hadn't", "i'm", "i've", "i'd", "i'll", "you're", "you've",
     "you'd", "you'll", "he's", "she's", "here's", "where's", "what's", "who's", "how's", "let's"
   ]);
-  
+
   // Common verbs that shouldn't be used as keywords (nouns)
   const commonVerbs = new Set([
     "discuss", "analyze", "examine", "study", "review", "explore", "understand", "consider", "evaluate",
@@ -4809,17 +4814,17 @@
     if (!words || !Array.isArray(words)) {
       return [];
     }
-    
+
     return words.filter((word) => {
       if (!word || typeof word !== 'string') {
         return false;
       }
-      
+
       // Normalize: lowercase, trim whitespace (including non-breaking spaces)
       let lowerWord = word.toLowerCase().trim();
       // Remove all whitespace characters
       lowerWord = lowerWord.replace(/\s+/g, '');
-      
+
       // First check: Exclude contractions (any word with apostrophe) - check BEFORE removing punctuation
       if (lowerWord.includes("'")) {
         // Check if it's in stopWords (for contractions like "we'll")
@@ -4829,28 +4834,28 @@
         // Exclude all other contractions
         return false;
       }
-      
+
       // Remove all punctuation marks
       let normalized = lowerWord.replace(/[.,!?;:"()\[\]{}]/g, '');
       normalized = normalized.trim();
-      
+
       // Exclude if empty or single character
       if (!normalized || normalized.length <= 1) {
         return false;
       }
-      
+
       // Explicit check for common stop words (double-check)
       const commonStopWords = ["the", "a", "an", "on", "of", "in", "at", "to", "for", "with", "by", "from"];
       if (commonStopWords.includes(normalized)) {
         return false;
       }
-      
+
       // Exclude if it's a stop word (articles, prepositions, pronouns, etc.)
       // BUT keep verbs - they are content words that should be practiced
       if (stopWords.has(normalized)) {
         return false;
       }
-      
+
       // Don't filter out verbs - they are content words that should be included
       // Return true for all other words (nouns, verbs, adjectives, adverbs, etc.)
       return true;
@@ -4891,14 +4896,14 @@
     diff.forEach((part) => {
       const word = part.text.toLowerCase().trim();
       // Exclude stop words, contractions, verbs, and adjectives
-      if ((part.type === "missing" || part.type === "misplaced") && 
-          !stopWords.has(word) && 
-          !commonVerbs.has(word) &&
-          !isLikelyVerb(word) &&
-          !isLikelyAdjective(word) &&
-          word.length > 1 && // Exclude single characters
-          !word.includes("'") && // Exclude contractions
-          !word.match(/^[a-z]+'[a-z]+$/)) { // Exclude any word with apostrophe
+      if ((part.type === "missing" || part.type === "misplaced") &&
+        !stopWords.has(word) &&
+        !commonVerbs.has(word) &&
+        !isLikelyVerb(word) &&
+        !isLikelyAdjective(word) &&
+        word.length > 1 && // Exclude single characters
+        !word.includes("'") && // Exclude contractions
+        !word.match(/^[a-z]+'[a-z]+$/)) { // Exclude any word with apostrophe
         keywords.push(word);
       }
     });
@@ -4909,7 +4914,7 @@
   // Generate a meaningful, grammatically correct sentence using specific keywords
   const generateSentence = (selectedKeywords, sentenceNum) => {
     if (!selectedKeywords || selectedKeywords.length === 0) return null;
-    
+
     // Validate keywords are valid (only basic checks - words are already filtered from vocabulary practice)
     const isValidKeyword = (kw) => {
       if (!kw || kw.length <= 1) return false;
@@ -4919,11 +4924,11 @@
       // Don't filter verbs/adjectives - these come from vocabulary practice and should be used
       return true;
     };
-    
+
     // Filter and validate the provided keywords (only basic validation)
     const finalKeywords = selectedKeywords.filter(isValidKeyword);
     if (finalKeywords.length === 0) return null;
-    
+
     // Natural sentence templates that are grammatically correct
     const templates = [
       // Template 1: Subject + verb + the + keyword1 + preposition + keyword2
@@ -4940,7 +4945,7 @@
         }
         return `${subject} ${verb} the ${kw1}.`;
       },
-      
+
       // Template 2: The + keyword1 + verb + the + keyword2
       (kw1, kw2) => {
         if (!isValidKeyword(kw1)) return null;
@@ -4951,7 +4956,7 @@
         }
         return `The ${kw1} matters.`;
       },
-      
+
       // Template 3: This + keyword1 + helps + verb + the + keyword2
       (kw1, kw2) => {
         if (!isValidKeyword(kw1)) return null;
@@ -4962,7 +4967,7 @@
         }
         return `This ${kw1} is important.`;
       },
-      
+
       // Template 4: We + should + verb + the + keyword1 + preposition + keyword2
       (kw1, kw2) => {
         if (!isValidKeyword(kw1)) return null;
@@ -4977,7 +4982,7 @@
         }
         return `We ${modal} ${verb} the ${kw1}.`;
       },
-      
+
       // Template 5: The + keyword1 + shows + how + keyword2 + affects + keyword3
       (kw1, kw2, kw3) => {
         if (!isValidKeyword(kw1)) return null;
@@ -4990,7 +4995,7 @@
         }
         return `The ${kw1} is significant.`;
       },
-      
+
       // Template 6: People + often + verb + the + keyword1 + preposition + keyword2
       (kw1, kw2) => {
         if (!isValidKeyword(kw1)) return null;
@@ -5003,7 +5008,7 @@
         }
         return `People often ${verb} the ${kw1}.`;
       },
-      
+
       // Template 7: It + is + important + to + verb + the + keyword1 + preposition + keyword2
       (kw1, kw2) => {
         if (!isValidKeyword(kw1)) return null;
@@ -5016,7 +5021,7 @@
         }
         return `It is important to ${verb} the ${kw1}.`;
       },
-      
+
       // Template 8: Many + people + verb + the + keyword1 + preposition + keyword2
       (kw1, kw2) => {
         if (!isValidKeyword(kw1)) return null;
@@ -5030,11 +5035,11 @@
         return `Many people ${verb} the ${kw1}.`;
       }
     ];
-    
+
     // Select a template based on sentence number
     const templateIdx = sentenceNum % templates.length;
     const template = templates[templateIdx];
-    
+
     // Generate sentence based on number of valid keywords
     let sentence = null;
     if (finalKeywords.length >= 3) {
@@ -5044,7 +5049,7 @@
     } else if (finalKeywords.length === 1) {
       sentence = template(finalKeywords[0]);
     }
-    
+
     // Fallback if template doesn't work
     if (!sentence && finalKeywords.length > 0) {
       const kw = finalKeywords[0];
@@ -5052,7 +5057,7 @@
         const verbs = ["discuss", "analyze", "examine", "study"];
         const verb = verbs[Math.floor(Math.random() * verbs.length)];
         sentence = `We ${verb} the ${kw}.`;
-        
+
         if (finalKeywords.length > 1 && isValidKeyword(finalKeywords[1])) {
           const preps = ["of", "in", "on", "for", "about"];
           const prep = preps[Math.floor(Math.random() * preps.length)];
@@ -5060,29 +5065,29 @@
         }
       }
     }
-    
+
     if (!sentence) return null;
-    
+
     // Ensure proper capitalization and formatting
     sentence = sentence.trim();
     sentence = sentence.charAt(0).toUpperCase() + sentence.slice(1);
     if (!sentence.endsWith(".")) {
       sentence += ".";
     }
-    
+
     // Clean up any double spaces
     sentence = sentence.replace(/\s+/g, " ");
-    
+
     // Validate and fix grammar errors
     sentence = validateAndFixGrammar(sentence, finalKeywords);
-    
+
     if (!sentence) return null; // If validation failed, return null
-    
+
     // Determine which keywords were actually used in the sentence
-    const usedKeywords = finalKeywords.filter(kw => 
+    const usedKeywords = finalKeywords.filter(kw =>
       sentence.toLowerCase().includes(kw.toLowerCase())
     );
-    
+
     return {
       text: sentence,
       keywords: usedKeywords.length > 0 ? usedKeywords : finalKeywords.slice(0, Math.min(3, finalKeywords.length))
@@ -5092,12 +5097,12 @@
   // Validate and fix grammar errors in generated sentences
   const validateAndFixGrammar = (sentence, keywords) => {
     if (!sentence) return null;
-    
+
     const lower = sentence.toLowerCase();
     const words = sentence.split(/\s+/);
-    
+
     // Check for common grammar errors
-    
+
     // Error 1: "the [verb]" - verb used as noun (e.g., "the lived", "the studied")
     for (let i = 0; i < words.length - 1; i++) {
       const word = words[i].toLowerCase().replace(/[.,!?;:]/g, '');
@@ -5107,7 +5112,7 @@
         return null; // Return null to regenerate
       }
     }
-    
+
     // Error 2: "This [verb]" - verb used as noun
     for (let i = 0; i < words.length - 1; i++) {
       const word = words[i].toLowerCase().replace(/[.,!?;:]/g, '');
@@ -5116,7 +5121,7 @@
         return null; // Return null to regenerate
       }
     }
-    
+
     // Error 3: "[adjective] matters" or "[adjective] is important" - adjective used as noun
     for (let i = 0; i < words.length - 1; i++) {
       const word = words[i].toLowerCase().replace(/[.,!?;:]/g, '');
@@ -5125,7 +5130,7 @@
         return null; // Return null to regenerate
       }
     }
-    
+
     // Error 4: "the [adjective]" without a following noun
     for (let i = 0; i < words.length - 1; i++) {
       const word = words[i].toLowerCase().replace(/[.,!?;:]/g, '');
@@ -5137,32 +5142,32 @@
         }
       }
     }
-    
+
     // Error 5: Check for nonsensical patterns like "verb the verb"
     for (let i = 0; i < words.length - 2; i++) {
       const word1 = words[i].toLowerCase().replace(/[.,!?;:]/g, '');
       const word2 = words[i + 1].toLowerCase().replace(/[.,!?;:]/g, '');
       const word3 = words[i + 2].toLowerCase().replace(/[.,!?;:]/g, '');
-      if ((isLikelyVerb(word1) || commonVerbs.has(word1)) && 
-          word2 === 'the' && 
-          (isLikelyVerb(word3) || commonVerbs.has(word3))) {
+      if ((isLikelyVerb(word1) || commonVerbs.has(word1)) &&
+        word2 === 'the' &&
+        (isLikelyVerb(word3) || commonVerbs.has(word3))) {
         return null; // Return null to regenerate
       }
     }
-    
+
     // Error 6: Check for problematic patterns using regex
     const problematicPatterns = [
       /\bthe\s+(largest|smallest|biggest|smallest|highest|lowest|newest|oldest|youngest)\s+(matters|is|are|was|were)\b/i,
       /\bthis\s+(largest|smallest|biggest|smallest|highest|lowest|newest|oldest|youngest)\s+(is|are|was|were)\b/i,
       /\b(lived|worked|played|studied|learned|taught|helped|made|took|gave|got|went|came|saw|knew|thought|said|told|asked|wanted|needed|used|called|tried|found|kept|let|put|meant|set|became|left|felt|seemed|brought|began|heard|ran|moved|believed|held|happened|wrote|sat|stood|lost|paid|met|included|continued)\s+(matters|is|are|was|were)\b/i
     ];
-    
+
     for (const pattern of problematicPatterns) {
       if (pattern.test(sentence)) {
         return null; // Return null to regenerate
       }
     }
-    
+
     return sentence; // Sentence passed validation
   };
 
@@ -5180,54 +5185,54 @@
     return highlighted;
   };
 
-    // Type mode: Generate sentences with text input
+  // Type mode: Generate sentences with text input
   const generateSentencesType = () => {
     if (lastDiffType.length === 0) {
       generatedSentencesType.innerHTML = "<div class='error'>Please check your answer first to generate sentences.</div>";
       return;
     }
-    
+
     // Use vocabulary practice words directly (these are already filtered content words)
-    let validKeywords = vocabularyPracticeWordsType.length > 0 
-      ? [...vocabularyPracticeWordsType] 
+    let validKeywords = vocabularyPracticeWordsType.length > 0
+      ? [...vocabularyPracticeWordsType]
       : [];
-    
+
     // Fallback: if no vocabulary practice words, extract from diff (but don't filter as strictly)
     if (validKeywords.length === 0) {
       const missedWords = getMissedWords(lastDiffType);
       validKeywords = filterContentWords(missedWords).map(w => w.toLowerCase().trim());
     }
-    
+
     if (validKeywords.length === 0) {
       generatedSentencesType.innerHTML = "<div class='error'>No keywords found. All errors are stop words.</div>";
       return;
     }
-    
+
     // Remove duplicates and ensure all are valid
-    validKeywords = [...new Set(validKeywords)].filter(kw => 
-      kw && 
-      kw.length > 1 && 
+    validKeywords = [...new Set(validKeywords)].filter(kw =>
+      kw &&
+      kw.length > 1 &&
       !kw.includes("'") &&
       !kw.match(/^[a-z]+'[a-z]+$/)
     );
-    
+
     if (validKeywords.length === 0) {
       generatedSentencesType.innerHTML = "<div class='error'>No valid keywords found.</div>";
       return;
     }
-    
+
     // Distribute keywords across 5 sentences to ensure all are used
     const distributeKeywords = (keywords, numSentences) => {
       const distributed = [];
       const shuffled = [...keywords].sort(() => Math.random() - 0.5);
-      
+
       // Distribute keywords evenly across sentences
       // Each sentence should get at least 1 keyword, up to 3 keywords
       // Ensure all keywords are used
       for (let i = 0; i < numSentences; i++) {
         distributed.push([]);
       }
-      
+
       // Round-robin distribution to ensure even spread
       let keywordIdx = 0;
       for (let i = 0; i < shuffled.length; i++) {
@@ -5253,7 +5258,7 @@
         }
         keywordIdx++;
       }
-      
+
       // Ensure each sentence has at least 1 keyword
       for (let i = 0; i < numSentences; i++) {
         if (distributed[i].length === 0) {
@@ -5266,43 +5271,43 @@
           }
         }
       }
-      
+
       // Always return exactly numSentences arrays (even if some are empty)
       // Pad with empty arrays if needed
       while (distributed.length < numSentences) {
         distributed.push([]);
       }
-      
+
       return distributed.slice(0, numSentences);
     };
-    
+
     const keywordDistribution = distributeKeywords(validKeywords, 5);
-    
+
     // Track which keywords have been used at least once (to ensure all are used)
     const usedKeywordsSet = new Set();
     const allKeywords = [...validKeywords];
-    
+
     const sentences = [];
     let attempts = 0;
     const maxAttempts = 500; // Increased attempts to ensure we get 5 sentences
-    
+
     // Keep generating until we have 5 sentences
     while (sentences.length < 5 && attempts < maxAttempts) {
       attempts++;
       const sentenceIndex = sentences.length;
-      
+
       // Priority: First use unused keywords, then reuse any keywords
       let keywordsForThisSentence = [];
-      
+
       // First, try to get unused keywords from distribution
       const unusedKeywords = allKeywords.filter(kw => !usedKeywordsSet.has(kw));
-      
+
       if (unusedKeywords.length > 0) {
         // Use unused keywords first - get 1-2 from the distribution for this sentence
         const distIdx = sentenceIndex % keywordDistribution.length;
         const distKeywords = keywordDistribution[distIdx] || [];
         const unusedFromDist = distKeywords.filter(kw => !usedKeywordsSet.has(kw));
-        
+
         if (unusedFromDist.length > 0) {
           keywordsForThisSentence = unusedFromDist.slice(0, 2); // Use 1-2 unused keywords
         } else {
@@ -5314,24 +5319,24 @@
         // Get keywords from distribution for this sentence
         const distIdx = sentenceIndex % keywordDistribution.length;
         keywordsForThisSentence = keywordDistribution[distIdx] || [];
-        
+
         // If still empty, use any available keyword
         if (keywordsForThisSentence.length === 0 && allKeywords.length > 0) {
           keywordsForThisSentence = [allKeywords[sentenceIndex % allKeywords.length]];
         }
       }
-      
+
       // Ensure we have at least one keyword
       if (keywordsForThisSentence.length === 0 && allKeywords.length > 0) {
         keywordsForThisSentence = [allKeywords[0]];
       }
-      
+
       // Try multiple template variations
       let sentence = null;
       for (let templateOffset = 0; templateOffset < 20 && !sentence; templateOffset++) {
         const sentenceNum = sentenceIndex * 100 + attempts + templateOffset;
         sentence = generateSentence(keywordsForThisSentence, sentenceNum);
-        
+
         if (sentence && sentence.text) {
           // Double-check the sentence is valid
           const validated = validateAndFixGrammar(sentence.text, sentence.keywords);
@@ -5346,14 +5351,14 @@
           }
         }
       }
-      
+
       // If we couldn't generate a sentence, try with just one keyword
       if (!sentence && keywordsForThisSentence.length > 0) {
         const singleKeyword = keywordsForThisSentence[0];
         for (let templateOffset = 0; templateOffset < 20 && !sentence; templateOffset++) {
           const sentenceNum = sentenceIndex * 100 + attempts + templateOffset + 1000;
           sentence = generateSentence([singleKeyword], sentenceNum);
-          
+
           if (sentence && sentence.text) {
             const validated = validateAndFixGrammar(sentence.text, sentence.keywords);
             if (validated) {
@@ -5368,14 +5373,14 @@
           }
         }
       }
-      
+
       // If still no sentence, try with any keyword from the list
       if (!sentence && allKeywords.length > 0) {
         const anyKeyword = allKeywords[sentenceIndex % allKeywords.length];
         for (let templateOffset = 0; templateOffset < 20 && !sentence; templateOffset++) {
           const sentenceNum = sentenceIndex * 100 + attempts + templateOffset + 2000;
           sentence = generateSentence([anyKeyword], sentenceNum);
-          
+
           if (sentence && sentence.text) {
             const validated = validateAndFixGrammar(sentence.text, sentence.keywords);
             if (validated) {
@@ -5389,7 +5394,7 @@
           }
         }
       }
-      
+
       // If we still couldn't generate a sentence after all attempts, 
       // accept it anyway if it was generated (even if grammar validation failed)
       // This ensures we always get 5 sentences
@@ -5408,12 +5413,12 @@
         }
       }
     }
-    
+
     if (sentences.length === 0) {
       generatedSentencesType.innerHTML = "<div class='error'>Could not generate valid sentences. Please try again.</div>";
       return;
     }
-    
+
     // Render sentences (default hidden) with text input for Type mode
     generatedSentencesType.innerHTML = sentences.map((sentence, idx) => {
       const sentenceId = `sentence-type-${idx}`;
@@ -5434,20 +5439,20 @@
         </div>
       `;
     }).join("");
-    
+
     // Show Show All / Hide All buttons
     showAllSentencesBtnType.style.display = "inline-block";
     hideAllSentencesBtnType.style.display = "inline-block";
-    
+
     // Store sentences data
     window.generatedSentencesDataType = sentences;
-    
+
     // Add event listeners for Show buttons
     generatedSentencesType.querySelectorAll(".sentence-show-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
         const idx = parseInt(btn.dataset.sentence, 10);
         const textEl = document.querySelector(`[data-sentence-text="${idx}"]`);
-        
+
         if (textEl.style.display === "none") {
           textEl.style.display = "block";
           btn.textContent = "Hide";
@@ -5461,7 +5466,7 @@
         }
       });
     });
-    
+
     // Add event listeners for Play buttons
     generatedSentencesType.querySelectorAll(".sentence-play-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -5469,7 +5474,7 @@
         playGeneratedSentenceType(idx);
       });
     });
-    
+
     // Add event listeners for Check buttons (Type mode)
     generatedSentencesType.querySelectorAll(".sentence-check-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -5477,7 +5482,7 @@
         checkGeneratedSentenceType(idx);
       });
     });
-    
+
     generatePanelType.style.display = "block";
   };
 
@@ -5487,48 +5492,48 @@
       generatedSentencesSpeak.innerHTML = "<div class='error'>Please check your answer first to generate sentences.</div>";
       return;
     }
-    
+
     // Use pronunciation practice words directly (these are already filtered content words)
-    let validKeywords = vocabularyPracticeWordsSpeak.length > 0 
-      ? [...vocabularyPracticeWordsSpeak] 
+    let validKeywords = vocabularyPracticeWordsSpeak.length > 0
+      ? [...vocabularyPracticeWordsSpeak]
       : [];
-    
+
     // Fallback: if no pronunciation practice words, extract from diff (but don't filter as strictly)
     if (validKeywords.length === 0) {
       const missedWords = getMissedWords(lastDiffSpeak);
       validKeywords = filterContentWords(missedWords).map(w => w.toLowerCase().trim());
     }
-    
+
     if (validKeywords.length === 0) {
       generatedSentencesSpeak.innerHTML = "<div class='error'>No keywords found. All errors are stop words.</div>";
       return;
     }
-    
+
     // Remove duplicates and ensure all are valid
-    validKeywords = [...new Set(validKeywords)].filter(kw => 
-      kw && 
-      kw.length > 1 && 
+    validKeywords = [...new Set(validKeywords)].filter(kw =>
+      kw &&
+      kw.length > 1 &&
       !kw.includes("'") &&
       !kw.match(/^[a-z]+'[a-z]+$/)
     );
-    
+
     if (validKeywords.length === 0) {
       generatedSentencesSpeak.innerHTML = "<div class='error'>No valid keywords found.</div>";
       return;
     }
-    
+
     // Distribute keywords across 5 sentences to ensure all are used
     const distributeKeywords = (keywords, numSentences) => {
       const distributed = [];
       const shuffled = [...keywords].sort(() => Math.random() - 0.5);
-      
+
       // Distribute keywords evenly across sentences
       // Each sentence should get at least 1 keyword, up to 3 keywords
       // Ensure all keywords are used
       for (let i = 0; i < numSentences; i++) {
         distributed.push([]);
       }
-      
+
       // Round-robin distribution to ensure even spread
       let keywordIdx = 0;
       for (let i = 0; i < shuffled.length; i++) {
@@ -5554,7 +5559,7 @@
         }
         keywordIdx++;
       }
-      
+
       // Ensure each sentence has at least 1 keyword
       for (let i = 0; i < numSentences; i++) {
         if (distributed[i].length === 0) {
@@ -5567,43 +5572,43 @@
           }
         }
       }
-      
+
       // Always return exactly numSentences arrays (even if some are empty)
       // Pad with empty arrays if needed
       while (distributed.length < numSentences) {
         distributed.push([]);
       }
-      
+
       return distributed.slice(0, numSentences);
     };
-    
+
     const keywordDistribution = distributeKeywords(validKeywords, 5);
-    
+
     // Track which keywords have been used at least once (to ensure all are used)
     const usedKeywordsSet = new Set();
     const allKeywords = [...validKeywords];
-    
+
     const sentences = [];
     let attempts = 0;
     const maxAttempts = 500; // Increased attempts to ensure we get 5 sentences
-    
+
     // Keep generating until we have 5 sentences
     while (sentences.length < 5 && attempts < maxAttempts) {
       attempts++;
       const sentenceIndex = sentences.length;
-      
+
       // Priority: First use unused keywords, then reuse any keywords
       let keywordsForThisSentence = [];
-      
+
       // First, try to get unused keywords from distribution
       const unusedKeywords = allKeywords.filter(kw => !usedKeywordsSet.has(kw));
-      
+
       if (unusedKeywords.length > 0) {
         // Use unused keywords first - get 1-2 from the distribution for this sentence
         const distIdx = sentenceIndex % keywordDistribution.length;
         const distKeywords = keywordDistribution[distIdx] || [];
         const unusedFromDist = distKeywords.filter(kw => !usedKeywordsSet.has(kw));
-        
+
         if (unusedFromDist.length > 0) {
           keywordsForThisSentence = unusedFromDist.slice(0, 2); // Use 1-2 unused keywords
         } else {
@@ -5615,24 +5620,24 @@
         // Get keywords from distribution for this sentence
         const distIdx = sentenceIndex % keywordDistribution.length;
         keywordsForThisSentence = keywordDistribution[distIdx] || [];
-        
+
         // If still empty, use any available keyword
         if (keywordsForThisSentence.length === 0 && allKeywords.length > 0) {
           keywordsForThisSentence = [allKeywords[sentenceIndex % allKeywords.length]];
         }
       }
-      
+
       // Ensure we have at least one keyword
       if (keywordsForThisSentence.length === 0 && allKeywords.length > 0) {
         keywordsForThisSentence = [allKeywords[0]];
       }
-      
+
       // Try multiple template variations
       let sentence = null;
       for (let templateOffset = 0; templateOffset < 20 && !sentence; templateOffset++) {
         const sentenceNum = sentenceIndex * 100 + attempts + templateOffset;
         sentence = generateSentence(keywordsForThisSentence, sentenceNum);
-        
+
         if (sentence && sentence.text) {
           // Double-check the sentence is valid
           const validated = validateAndFixGrammar(sentence.text, sentence.keywords);
@@ -5647,14 +5652,14 @@
           }
         }
       }
-      
+
       // If we couldn't generate a sentence, try with just one keyword
       if (!sentence && keywordsForThisSentence.length > 0) {
         const singleKeyword = keywordsForThisSentence[0];
         for (let templateOffset = 0; templateOffset < 20 && !sentence; templateOffset++) {
           const sentenceNum = sentenceIndex * 100 + attempts + templateOffset + 1000;
           sentence = generateSentence([singleKeyword], sentenceNum);
-          
+
           if (sentence && sentence.text) {
             const validated = validateAndFixGrammar(sentence.text, sentence.keywords);
             if (validated) {
@@ -5669,14 +5674,14 @@
           }
         }
       }
-      
+
       // If still no sentence, try with any keyword from the list
       if (!sentence && allKeywords.length > 0) {
         const anyKeyword = allKeywords[sentenceIndex % allKeywords.length];
         for (let templateOffset = 0; templateOffset < 20 && !sentence; templateOffset++) {
           const sentenceNum = sentenceIndex * 100 + attempts + templateOffset + 2000;
           sentence = generateSentence([anyKeyword], sentenceNum);
-          
+
           if (sentence && sentence.text) {
             const validated = validateAndFixGrammar(sentence.text, sentence.keywords);
             if (validated) {
@@ -5690,7 +5695,7 @@
           }
         }
       }
-      
+
       // If we still couldn't generate a sentence after all attempts, 
       // accept it anyway if it was generated (even if grammar validation failed)
       // This ensures we always get 5 sentences
@@ -5709,12 +5714,12 @@
         }
       }
     }
-    
+
     if (sentences.length === 0) {
       generatedSentencesSpeak.innerHTML = "<div class='error'>Could not generate valid sentences. Please try again.</div>";
       return;
     }
-    
+
     // Render sentences (default hidden) with Record button for Speak mode
     generatedSentencesSpeak.innerHTML = sentences.map((sentence, idx) => {
       const sentenceId = `sentence-speak-${idx}`;
@@ -5732,20 +5737,20 @@
         </div>
       `;
     }).join("");
-    
+
     // Show Show All / Hide All buttons
     showAllSentencesBtnSpeak.style.display = "inline-block";
     hideAllSentencesBtnSpeak.style.display = "inline-block";
-    
+
     // Store sentences data
     window.generatedSentencesDataSpeak = sentences;
-    
+
     // Add event listeners for Show buttons
     generatedSentencesSpeak.querySelectorAll(".sentence-show-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
         const idx = parseInt(btn.dataset.sentence, 10);
         const textEl = document.querySelector(`[data-sentence-text="${idx}"]`);
-        
+
         if (textEl.style.display === "none") {
           textEl.style.display = "block";
           btn.textContent = "Hide";
@@ -5759,7 +5764,7 @@
         }
       });
     });
-    
+
     // Add event listeners for Play buttons
     generatedSentencesSpeak.querySelectorAll(".sentence-play-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -5767,7 +5772,7 @@
         playGeneratedSentenceSpeak(idx);
       });
     });
-    
+
     // Add event listeners for Record buttons
     generatedSentencesSpeak.querySelectorAll(".sentence-record-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -5775,14 +5780,14 @@
         recordGeneratedSentence(idx, btn);
       });
     });
-    
+
     generatePanelSpeak.style.display = "block";
   };
 
   // Play a generated sentence (Type mode)
   const playGeneratedSentenceType = (idx) => {
     if (!window.generatedSentencesDataType || !window.generatedSentencesDataType[idx]) return;
-    
+
     const sentence = window.generatedSentencesDataType[idx].text;
     if (synth) {
       synth.cancel();
@@ -5802,7 +5807,7 @@
   // Play a generated sentence (Speak mode)
   const playGeneratedSentenceSpeak = (idx) => {
     if (!window.generatedSentencesDataSpeak || !window.generatedSentencesDataSpeak[idx]) return;
-    
+
     const sentence = window.generatedSentencesDataSpeak[idx].text;
     if (synth) {
       synth.cancel();
@@ -5822,24 +5827,24 @@
   // Check typed input for Type mode generated sentences
   const checkGeneratedSentenceType = (idx) => {
     if (!window.generatedSentencesDataType || !window.generatedSentencesDataType[idx]) return;
-    
+
     const sentence = window.generatedSentencesDataType[idx];
     const sentenceId = `sentence-type-${idx}`;
     const inputEl = document.getElementById(`input-${sentenceId}`);
     const statusEl = document.getElementById(`status-${sentenceId}`);
-    
+
     if (!inputEl || !statusEl) return;
-    
+
     const userInput = inputEl.value.trim();
     if (!userInput) {
       statusEl.textContent = "Please type your answer first.";
       statusEl.className = "sentence-status error";
       return;
     }
-    
+
     const userWords = normalize(userInput).split(" ").filter(Boolean);
     const expectedWords = normalize(sentence.text).split(" ").filter(Boolean);
-    
+
     // Check which keywords are missing
     const missingKeywords = [];
     sentence.keywords.forEach((keyword) => {
@@ -5848,7 +5853,7 @@
         missingKeywords.push(keyword);
       }
     });
-    
+
     if (missingKeywords.length === 0) {
       statusEl.textContent = "✓ All keywords typed correctly!";
       statusEl.className = "sentence-status correct";
@@ -5865,31 +5870,31 @@
       alert("Speech recognition not available in your browser.");
       return;
     }
-    
+
     if (!window.generatedSentencesData || !window.generatedSentencesData[idx]) return;
-    
+
     const sentence = window.generatedSentencesData[idx];
     const statusEl = document.getElementById(`status-sentence-${idx}`);
-    
+
     if (sentenceRecognition) {
       sentenceRecognition.stop();
       sentenceRecognition = null;
       btn.textContent = "Record";
       return;
     }
-    
+
     btn.textContent = "Stop";
     statusEl.textContent = "Listening...";
-    
+
     sentenceRecognition = new SpeechRecognition();
     sentenceRecognition.continuous = false;
     sentenceRecognition.interimResults = false;
     sentenceRecognition.lang = "en-US";
-    
+
     sentenceRecognition.onresult = (event) => {
       const spokenText = event.results[0][0].transcript.trim().toLowerCase();
       const spokenWords = normalize(spokenText).split(" ").filter(Boolean);
-      
+
       // Check which keywords are missing
       const missingKeywords = [];
       sentence.keywords.forEach((keyword) => {
@@ -5898,7 +5903,7 @@
           missingKeywords.push(keyword);
         }
       });
-      
+
       if (missingKeywords.length === 0) {
         statusEl.textContent = "✓ All keywords spoken correctly!";
         statusEl.className = "sentence-status correct";
@@ -5906,11 +5911,11 @@
         statusEl.textContent = `You missed these words: ${missingKeywords.join(", ")}`;
         statusEl.className = "sentence-status incorrect";
       }
-      
+
       sentenceRecognition = null;
       btn.textContent = "Record";
     };
-    
+
     sentenceRecognition.onerror = (event) => {
       if (event.error !== "aborted") {
         statusEl.textContent = `Error: ${event.error}`;
@@ -5919,12 +5924,12 @@
       sentenceRecognition = null;
       btn.textContent = "Record";
     };
-    
+
     sentenceRecognition.onend = () => {
       sentenceRecognition = null;
       btn.textContent = "Record";
     };
-    
+
     try {
       sentenceRecognition.start();
     } catch (e) {
@@ -5937,12 +5942,12 @@
 
   // Type mode event listeners
   generateBtnType.addEventListener("click", generateSentencesType);
-  
+
   // Show All sentences (Type mode)
   showAllSentencesBtnType.addEventListener("click", () => {
     const sentenceTexts = generatedSentencesType.querySelectorAll(".sentence-text");
     const showBtns = generatedSentencesType.querySelectorAll(".sentence-show-btn, .sentence-hide-btn");
-    
+
     sentenceTexts.forEach((textEl) => {
       textEl.style.display = "block";
     });
@@ -5952,12 +5957,12 @@
       btn.classList.remove("sentence-show-btn");
     });
   });
-  
+
   // Hide All sentences (Type mode)
   hideAllSentencesBtnType.addEventListener("click", () => {
     const sentenceTexts = generatedSentencesType.querySelectorAll(".sentence-text");
     const showBtns = generatedSentencesType.querySelectorAll(".sentence-show-btn, .sentence-hide-btn");
-    
+
     sentenceTexts.forEach((textEl) => {
       textEl.style.display = "none";
     });
@@ -5970,12 +5975,12 @@
 
   // Speak mode event listeners
   generateBtnSpeak.addEventListener("click", generateSentencesSpeak);
-  
+
   // Show All sentences (Speak mode)
   showAllSentencesBtnSpeak.addEventListener("click", () => {
     const sentenceTexts = generatedSentencesSpeak.querySelectorAll(".sentence-text");
     const showBtns = generatedSentencesSpeak.querySelectorAll(".sentence-show-btn, .sentence-hide-btn");
-    
+
     sentenceTexts.forEach((textEl) => {
       textEl.style.display = "block";
     });
@@ -5985,12 +5990,12 @@
       btn.classList.remove("sentence-show-btn");
     });
   });
-  
+
   // Hide All sentences (Speak mode)
   hideAllSentencesBtnSpeak.addEventListener("click", () => {
     const sentenceTexts = generatedSentencesSpeak.querySelectorAll(".sentence-text");
     const showBtns = generatedSentencesSpeak.querySelectorAll(".sentence-show-btn, .sentence-hide-btn");
-    
+
     sentenceTexts.forEach((textEl) => {
       textEl.style.display = "none";
     });
@@ -6000,7 +6005,7 @@
       btn.classList.remove("sentence-hide-btn");
     });
   });
-  
+
   // Skip Animation button
   if (skipAnimationBtn) {
     skipAnimationBtn.addEventListener("click", skipAnimation);
@@ -6037,7 +6042,7 @@
 
   const playBreakdownSegment = (percentage) => {
     const segment = getWordSegment(percentage, breakdownMode === "end");
-    
+
     // Cancel any ongoing speech
     if (synth) synth.cancel();
 
@@ -6047,7 +6052,7 @@
     // Speak the entire phrase as one natural utterance
     const utter = new SpeechSynthesisUtterance(processedPhrase);
     utter.lang = "en-US";
-    
+
     // Try to prefer a bright/happy US female voice by name substring if available
     const voices = synth.getVoices();
     const preferred = voices.find((v) =>
@@ -6056,7 +6061,7 @@
     if (preferred) utter.voice = preferred;
     utter.rate = 1.0; // Natural speaking rate
     utter.pitch = 1.0; // Natural pitch
-    
+
     synth.speak(utter);
   };
 
@@ -6116,7 +6121,7 @@
             missingWords.push(part.text);
           }
         });
-        
+
         if (missingWords.length > 0) {
           statusEl.textContent = `Incorrect, you are missing these words: ${missingWords.join(", ")}`;
         } else {

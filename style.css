@@ -85,12 +85,12 @@ body {
   .feedback-banner {
     padding: 10px 40px 10px 16px;
   }
-  
+
   .feedback-text-en,
   .feedback-text-vi {
     font-size: 0.8rem;
   }
-  
+
   .feedback-text-vi {
     font-size: 0.75rem;
   }
@@ -310,9 +310,12 @@ h1 {
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.7;
   }
@@ -1792,7 +1795,8 @@ textarea:focus {
 
 .youtube-player {
   position: relative;
-  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  padding-bottom: 56.25%;
+  /* 16:9 aspect ratio */
   height: 0;
   overflow: hidden;
   border-radius: 8px;
@@ -1880,55 +1884,55 @@ textarea:focus {
   .account-panel-content {
     width: 280px;
   }
-  
+
   .progress-panel-content {
     width: 320px;
   }
-  
+
   .progress-panel-side.expanded .progress-panel-toggle {
     left: 320px;
   }
-  
+
   .tier-counts {
     gap: 6px;
   }
-  
+
   .tier-count {
     padding: 10px 6px;
   }
-  
+
   .tier-count-number {
     font-size: 1.3rem;
   }
-  
+
   .tier-count-label {
     font-size: 0.65rem;
   }
-  
+
   .entry-modal-content {
     padding: 24px;
   }
-  
+
   .entry-btn {
     padding: 20px;
   }
-  
+
   /* Pie chart responsive adjustments */
   .distribution-pie-chart {
     flex-direction: column;
     align-items: center;
     gap: 16px;
   }
-  
+
   .pie-chart-container {
     width: 100px;
     height: 100px;
   }
-  
+
   .pie-total-number {
     font-size: 1.1rem;
   }
-  
+
   .pie-chart-legend {
     width: 100%;
   }
@@ -1938,20 +1942,20 @@ textarea:focus {
   .progress-panel-content {
     width: 100vw;
   }
-  
+
   .progress-panel-side.expanded .progress-panel-toggle {
     display: none;
   }
-  
+
   .pie-chart-container {
     width: 90px;
     height: 90px;
   }
-  
+
   .pie-legend-item {
     font-size: 0.75rem;
   }
-  
+
   .pie-legend-value {
     font-size: 0.7rem;
   }
@@ -2153,7 +2157,7 @@ textarea:focus {
   color: #1f2933;
 }
 
-.entry-modal-content > p {
+.entry-modal-content>p {
   margin: 0 0 32px 0;
   font-size: 1rem;
   color: #6b7280;
@@ -2235,6 +2239,7 @@ textarea:focus {
     opacity: 0;
     transform: translateX(-50%) translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
@@ -2789,18 +2794,57 @@ textarea:focus {
   color: #166534;
 }
 
-/* Guest Notice */
+/* Guest Notice - NEW PROMINENT OVERLAY STYLE */
 .progress-guest-notice {
-  padding: 16px 24px;
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  margin: 0;
+  display: none;
+  position: absolute;
+  top: 60px;
+  /* Below header */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(2px);
+}
+
+.progress-guest-notice .guest-notice-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  padding: 32px 24px;
+  max-width: 280px;
+}
+
+.progress-guest-notice .guest-notice-icon {
+  display: block;
+  font-size: 3rem;
+  margin-bottom: 16px;
+  line-height: 1;
 }
 
 .progress-guest-notice p {
   margin: 0;
-  font-size: 0.9rem;
-  color: #92400e;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #1f2933;
   line-height: 1.5;
+}
+
+/* Progress Content Wrapper - Blurred when guest */
+.progress-content-wrapper {
+  position: relative;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* When guest notice is shown, blur the content wrapper */
+.progress-panel-content.guest-mode .progress-content-wrapper {
+  filter: blur(4px);
+  pointer-events: none;
+  user-select: none;
 }
 
 /* Click-outside overlay when panel is open */

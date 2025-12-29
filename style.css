@@ -2458,9 +2458,6 @@ textarea:focus {
 }
 
 /* Container div - just for grouping, no styles needed */
-.progress-panel-side {
-  /* No positioning - children are fixed independently */
-}
 
 /* Progress Panel Sections */
 .progress-panel-content .panel-section {
@@ -3676,4 +3673,32 @@ textarea:focus {
     opacity: 1;
     transform: translateX(0);
   }
+}
+
+/* ============================================
+   Shopping Modal
+   ============================================ */
+
+.shopping-modal-content {
+  text-align: center;
+  padding: 40px !important;
+  max-width: 400px;
+  border-top: 6px solid #fbbf24;
+}
+
+.shopping-popup-icon {
+  font-size: 4rem;
+  margin-bottom: 16px;
+}
+
+.shopping-modal-content h2 {
+  margin-top: 0;
+  color: #1f2933;
+}
+
+.shopping-modal-content p {
+  color: #4b5563;
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-bottom: 24px;
 }

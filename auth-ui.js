@@ -119,6 +119,14 @@ function setupEventListeners() {
     panelGuestLoginBtn.addEventListener('click', showLoginForm);
   }
 
+  // Shopping Placeholder
+  const shoppingCard = document.getElementById('panel-shopping-card');
+  if (shoppingCard) {
+    shoppingCard.addEventListener('click', () => {
+      showShoppingModal();
+    });
+  }
+
   // ============================================
   // Account Details Modal (Full Details)
   // ============================================
@@ -961,6 +969,29 @@ async function showExplanationPopup(ruleTitle, points) {
     console.error("Error fetching rule explanation:", e);
     textEl.textContent = "Could not load explanation.";
   }
+}
+
+/**
+ * Show the Shopping "Coming Soon" modal
+ */
+function showShoppingModal() {
+  const modal = document.getElementById('shopping-modal');
+  const okBtn = document.getElementById('shopping-ok-btn');
+  const closeBtn = document.getElementById('shopping-close-btn');
+
+  if (!modal) return;
+
+  modal.style.display = 'flex';
+
+  const closeModal = () => {
+    modal.style.display = 'none';
+  };
+
+  if (okBtn) okBtn.onclick = closeModal;
+  if (closeBtn) closeBtn.onclick = closeModal;
+  modal.onclick = (e) => {
+    if (e.target === modal) closeModal();
+  };
 }
 
 // Export functions to window

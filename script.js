@@ -3555,31 +3555,32 @@
 
     console.log(`Playing audio: ${audioPath} (MIME type: ${mimeType})`);
 
-    const audio = document.getElementById("audio");
+    // Use dedicated vocab-audio element to avoid overwriting main question audio
+    const vocabAudio = document.getElementById("vocab-audio");
 
-    if (!audio) {
-      console.error("Audio element not found");
+    if (!vocabAudio) {
+      console.error("Vocab audio element not found");
       return;
     }
 
     // Stop any currently playing audio and reset
-    audio.pause();
-    audio.currentTime = 0;
+    vocabAudio.pause();
+    vocabAudio.currentTime = 0;
 
     // Clear any existing source elements
-    while (audio.firstChild) {
-      audio.removeChild(audio.firstChild);
+    while (vocabAudio.firstChild) {
+      vocabAudio.removeChild(vocabAudio.firstChild);
     }
 
     // Create source element with proper type
     const source = document.createElement('source');
     source.src = audioPath;
     source.type = mimeType;
-    audio.appendChild(source);
+    vocabAudio.appendChild(source);
 
     // Load and play
-    audio.load();
-    audio.play().catch(err => {
+    vocabAudio.load();
+    vocabAudio.play().catch(err => {
       console.error("Error playing audio:", err);
     });
   };

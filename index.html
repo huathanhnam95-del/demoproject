@@ -407,9 +407,9 @@
         </div>
       </div>
       <div class="controls">
-        <button id="play-btn" type="button">Play</button>
-        <button id="check-btn" type="button" style="display: none;">Check</button>
-        <button id="retry-btn" type="button" style="display: none;">Retry</button>
+        <button id="play-btn" class="modern-btn modern-btn--play" type="button">Play</button>
+        <button id="check-btn" class="modern-btn modern-btn--check" type="button" style="display: none;">Check</button>
+        <button id="retry-btn" class="modern-btn modern-btn--retry" type="button" style="display: none;">Retry</button>
       </div>
       <div id="score" class="score">Points: 0</div>
 
@@ -481,10 +481,12 @@
         </div>
       </div>
       <div class="controls">
-        <button id="play-btn-speak" type="button">Play</button>
-        <button id="record-btn" type="button">Start Recording</button>
-        <button id="check-btn-speak" type="button" style="display: none;">Check</button>
-        <button id="retry-btn-speak" type="button" style="display: none;">Retry</button>
+        <button id="play-btn-speak" class="modern-btn modern-btn--play" type="button">Play</button>
+        <button id="record-btn" class="modern-btn modern-btn--record" type="button">Start Recording</button>
+        <button id="check-btn-speak" class="modern-btn modern-btn--check" type="button"
+          style="display: none;">Check</button>
+        <button id="retry-btn-speak" class="modern-btn modern-btn--retry" type="button"
+          style="display: none;">Retry</button>
       </div>
       <div id="score-speak" class="score">Points: 0</div>
 
@@ -525,7 +527,8 @@
           <div id="gapped-transcript" class="gapped-transcript"></div>
           <div class="extended-audio-controls">
             <div class="audio-controls-row">
-              <button id="play-pause-extended-btn" type="button" class="play-pause-btn">Play</button>
+              <button id="play-pause-extended-btn" class="modern-btn modern-btn--play play-pause-btn"
+                type="button">Play</button>
               <div class="time-display">
                 <span id="current-time-extended">0:00</span> / <span id="total-time-extended">0:00</span>
               </div>
@@ -548,10 +551,12 @@
             </div>
           </div>
           <div class="phrase-controls">
-            <button id="check-extended-btn" type="button">Check</button>
-            <button id="support-mode-btn" type="button">Show Hints</button>
-            <button id="redo-extended-btn" type="button" style="display: none;">Retry</button>
-            <button id="randomize-blanks-btn" type="button" style="display: none;">Try New Blanks</button>
+            <button id="check-extended-btn" class="modern-btn modern-btn--check" type="button">Check</button>
+            <button id="support-mode-btn" class="modern-btn modern-btn--hint" type="button">Show Hints</button>
+            <button id="redo-extended-btn" class="modern-btn modern-btn--retry" type="button"
+              style="display: none;">Retry</button>
+            <button id="randomize-blanks-btn" class="modern-btn modern-btn--hint" type="button"
+              style="display: none;">Try New Blanks</button>
           </div>
           <div id="check-result-extended" class="check-result-box" style="display: none;"></div>
         </div>
@@ -573,7 +578,8 @@
           <div id="phrases-transcript" class="phrases-transcript"></div>
           <div class="extended-audio-controls">
             <div class="audio-controls-row">
-              <button id="play-pause-phrases-btn" type="button" class="play-pause-btn">Play</button>
+              <button id="play-pause-phrases-btn" class="modern-btn modern-btn--play play-pause-btn"
+                type="button">Play</button>
               <div class="time-display">
                 <span id="current-time-phrases">0:00</span> / <span id="total-time-phrases">0:00</span>
               </div>
@@ -595,9 +601,10 @@
             </div>
           </div>
           <div class="phrase-controls">
-            <button id="check-phrases-btn" type="button">Check Phrases</button>
-            <button id="support-phrases-btn" type="button">Show Hints</button>
-            <button id="redo-phrases-btn" type="button" style="display: none;">Retry Phrases</button>
+            <button id="check-phrases-btn" class="modern-btn modern-btn--check" type="button">Check Phrases</button>
+            <button id="support-phrases-btn" class="modern-btn modern-btn--hint" type="button">Show Hints</button>
+            <button id="redo-phrases-btn" class="modern-btn modern-btn--retry" type="button"
+              style="display: none;">Retry Phrases</button>
           </div>
           <div id="check-result-phrases" class="check-result-box" style="display: none;"></div>
         </div>
@@ -608,8 +615,8 @@
       <div class="animation-header">
         <span>How to fix (step-by-step)</span>
         <div class="animation-controls">
-          <button id="skip-animation-btn" type="button">Skip Animation</button>
-          <button id="replay-btn" type="button">Replay</button>
+          <button id="skip-animation-btn" class="modern-btn modern-btn--hint" type="button">Skip Animation</button>
+          <button id="replay-btn" class="modern-btn modern-btn--play" type="button">Replay</button>
         </div>
       </div>
       <div id="animation" class="animation"></div>
@@ -694,6 +701,7 @@
   <audio id="audio" preload="auto"></audio>
   <audio id="audio-extended" preload="auto"></audio>
   <audio id="audio-phrases" preload="auto"></audio>
+  <audio id="vocab-audio" preload="auto"></audio>
 
   <!-- Firebase SDK v9+ (modular) -->
   <script type="module">

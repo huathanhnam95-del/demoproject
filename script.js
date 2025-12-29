@@ -1104,6 +1104,38 @@
     vocabularyPracticeWordsSpeak = [];
   }
 
+  /**
+   * Show grammar warning popup
+   * @param {string[]} warnings - Array of warning messages to display
+   */
+  function showGrammarWarning(warnings) {
+    const modal = document.getElementById("grammar-warning-modal");
+    const warningList = document.getElementById("grammar-warning-list");
+    const okBtn = document.getElementById("grammar-warning-ok-btn");
+    const closeBtn = document.getElementById("grammar-warning-close-btn");
+
+    if (!modal || !warningList) return;
+
+    // Populate warning list
+    warningList.innerHTML = warnings
+      .map(msg => `<li><span class="warning-bullet">•</span>${msg}</li>`)
+      .join("");
+
+    // Show modal
+    modal.style.display = "flex";
+
+    // Close handlers
+    const closeModal = () => {
+      modal.style.display = "none";
+    };
+
+    if (okBtn) okBtn.onclick = closeModal;
+    if (closeBtn) closeBtn.onclick = closeModal;
+    modal.onclick = (e) => {
+      if (e.target === modal) closeModal();
+    };
+  }
+
   // Speech recognition
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   let recognition = null;
@@ -4835,6 +4867,31 @@
     if (input) input.disabled = true;
     if (checkBtn) checkBtn.style.display = "none";
     if (retryBtn) retryBtn.style.display = "inline-block";
+
+    // Grammar check: capitalization and period
+    const userInput = (input.value || "").trim();
+    const grammarWarnings = [];
+
+    if (userInput.length > 0) {
+      // Check if first letter is capitalized
+      const firstChar = userInput.charAt(0);
+      if (firstChar !== firstChar.toUpperCase() || !/[A-Za-z]/.test(firstChar)) {
+        if (/[a-z]/.test(firstChar)) {
+          grammarWarnings.push("Start your sentence with a capital letter.");
+        }
+      }
+
+      // Check if ends with a period
+      const lastChar = userInput.charAt(userInput.length - 1);
+      if (lastChar !== ".") {
+        grammarWarnings.push("End your sentence with a period.");
+      }
+    }
+
+    // Show grammar warning if any issues
+    if (grammarWarnings.length > 0) {
+      showGrammarWarning(grammarWarnings);
+    }
 
     performCheckType(input.value, score);
   });

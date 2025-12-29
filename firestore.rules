@@ -15,6 +15,11 @@ service cloud.firestore {
       match /progress/{progressId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
+      
+      // Users can create and read their own points history
+      match /pointsHistory/{historyId} {
+        allow read, create: if request.auth != null && request.auth.uid == userId;
+      }
     }
     
     // Users can create practice attempts (read their own)
@@ -27,6 +32,12 @@ service cloud.firestore {
     match /sessions/{sessionId} {
       allow read: if request.auth != null && resource.data.userId == request.auth.uid;
       allow create, update: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+    
+    // Points rules - any logged-in user can read
+    // Write access is via Admin SDK only (sync-points-rules.js script)
+    match /pointsRules/{ruleId} {
+      allow read: if request.auth != null;
     }
   }
 }

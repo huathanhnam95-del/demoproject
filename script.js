@@ -802,6 +802,25 @@
       // Record the practice attempt
       await window.firebaseFirestoreFunctions.recordPracticeAttempt(userId, questionId, isCorrect, mode);
 
+      // -----------------------------------------------------
+      // POINTS SYSTEM INTEGRATION
+      // -----------------------------------------------------
+
+      // 1. First Light (Daily Practice) - Awarded on FIRST attempt of the day
+      // Uses "daily" deduplication to ensure it only happens once per day
+      const firstLightResult = await window.firebaseFirestoreFunctions.awardPoints('First Light', {
+        preventDuplicate: 'daily',
+        customDescription: 'First practice of the day!'
+      });
+      if (firstLightResult && firstLightResult.pointsAwarded) {
+        window.authUI.showPointsToast(firstLightResult.ruleTitle, firstLightResult.pointsAwarded);
+      }
+
+      // 2. Perfect Score Points
+      // 2. Perfect Score Points - NOW HANDLED IN PROGRESS UPDATE (below)
+      // to ensure it only awards on the FIRST time 100% accuracy is reached.
+      // -----------------------------------------------------
+
       // For Type and Speak modes, track attempts and progress
       if (mode === 'type' || mode === 'speak') {
         // ALWAYS record that user attempted (pressed Check), regardless of correctness
@@ -835,6 +854,68 @@
 
             // Reload all progress data to update dropdown
             await loadAllProgressForMode(mode);
+
+            // Check for Level Up Bonuses (Tier Reached)
+            const pc = result.progress.perfectCount;
+
+            // 1. First Time Perfect Score (Reach 1 perfect)
+            if (pc === 1) {
+              if (mode === 'type') {
+                const typeResult = await window.firebaseFirestoreFunctions.awardPoints('Perfect Dictation', {
+                  preventDuplicate: 'once',
+                  context: `q${questionId}_perfect_v2`, // v2 to reset history for this new logic if needed, or just standard unique key
+                  customDescription: `First perfect dictation on Q${questionId}`
+                });
+                if (typeResult && typeResult.pointsAwarded) {
+                  window.authUI.showPointsToast(typeResult.ruleTitle, typeResult.pointsAwarded);
+                }
+              } else if (mode === 'speak') {
+                const speakResult = await window.firebaseFirestoreFunctions.awardPoints('Perfect Repetition', {
+                  preventDuplicate: 'once',
+                  context: `q${questionId}_perfect_v2`,
+                  customDescription: `First perfect repetition on Q${questionId}`
+                });
+                if (speakResult && speakResult.pointsAwarded) {
+                  window.authUI.showPointsToast(speakResult.ruleTitle, speakResult.pointsAwarded);
+                }
+              }
+            }
+
+            // Level Up: Completed (Reach 3 perfects)
+            if (pc === 3) {
+              const luResult = await window.firebaseFirestoreFunctions.awardPoints('Level Up: Completed', {
+                preventDuplicate: 'once',
+                context: `${mode}_${questionId}_completed`, // Unique per question per mode
+                customDescription: `Reached Completed tier on Q${questionId}`
+              });
+              if (luResult && luResult.pointsAwarded) {
+                window.authUI.showPointsToast(luResult.ruleTitle, luResult.pointsAwarded);
+              }
+            }
+
+            // Level Up: Consolidated (Reach 6 perfects)
+            else if (pc === 6) {
+              const luResult = await window.firebaseFirestoreFunctions.awardPoints('Level Up: Consolidated', {
+                preventDuplicate: 'once',
+                context: `${mode}_${questionId}_consolidated`,
+                customDescription: `Reached Consolidated tier on Q${questionId}`
+              });
+              if (luResult && luResult.pointsAwarded) {
+                window.authUI.showPointsToast(luResult.ruleTitle, luResult.pointsAwarded);
+              }
+            }
+
+            // Level Up: Mastered (Reach 9 perfects)
+            else if (pc === 9) {
+              const luResult = await window.firebaseFirestoreFunctions.awardPoints('Level Up: Mastered', {
+                preventDuplicate: 'once',
+                context: `${mode}_${questionId}_mastered`,
+                customDescription: `Mastered Q${questionId}!`
+              });
+              if (luResult && luResult.pointsAwarded) {
+                window.authUI.showPointsToast(luResult.ruleTitle, luResult.pointsAwarded);
+              }
+            }
           }
         } else if (attemptResult.success && attemptResult.progress) {
           // Update cache with attempt (now In Progress if was Not Started)
@@ -863,6 +944,7 @@
   const totalQuestionsSpeak = document.getElementById("total-questions-speak");
   const playBtn = document.getElementById("play-btn");
   const checkBtn = document.getElementById("check-btn");
+  const retryBtn = document.getElementById("retry-btn"); // NEW
   const input = document.getElementById("answer-input");
   const result = document.getElementById("result");
   const score = document.getElementById("score");
@@ -905,6 +987,7 @@
   const playBtnSpeak = document.getElementById("play-btn-speak");
   const recordBtn = document.getElementById("record-btn");
   const checkBtnSpeak = document.getElementById("check-btn-speak");
+  const retryBtnSpeak = document.getElementById("retry-btn-speak"); // NEW
 
   // Mastery status remove buttons
   const removeMasteryTypeBtn = document.getElementById("remove-mastery-type-btn");
@@ -951,6 +1034,75 @@
   const showAllSentencesBtnSpeak = document.getElementById("show-all-sentences-speak-btn");
   const hideAllSentencesBtnSpeak = document.getElementById("hide-all-sentences-speak-btn");
   const generatedSentencesSpeak = document.getElementById("generated-sentences-speak");
+
+  /**
+   * Reset all scaffolding features (below the input) for the current mode
+   * Called when a new question is selected or the Retry button is pressed
+   */
+  function resetScaffolding() {
+    console.log("Resetting scaffolding...");
+
+    // 0. Stop ongoing background processes
+    if (animationTimer) {
+      clearTimeout(animationTimer);
+      animationTimer = null;
+    }
+    animationOnComplete = null;
+
+    if (synth) {
+      synth.cancel();
+    }
+
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+
+    // 1. Clear result and score displays
+    if (result) {
+      result.innerHTML = "";
+      result.style.display = "none";
+    }
+    if (score) score.textContent = "Points: 0";
+    if (scoreSpeak) scoreSpeak.textContent = "Points: 0";
+
+    // 2. Hide animation panel
+    if (animationPanel) animationPanel.style.display = "none";
+    if (animationBox) animationBox.innerHTML = "";
+
+    // 3. Clear vocabulary practice
+    if (vocabularyPanel) vocabularyPanel.style.display = "none";
+    if (generatedSentencesType) generatedSentencesType.innerHTML = "";
+    if (generatePanelType) generatePanelType.style.display = "none";
+
+    // 4. Clear pronunciation practice
+    if (pronunciationPanel) pronunciationPanel.style.display = "none";
+    if (breakdownPanel) breakdownPanel.style.display = "none";
+    if (generatedSentencesSpeak) generatedSentencesSpeak.innerHTML = "";
+    if (generatePanelSpeak) generatePanelSpeak.style.display = "none";
+
+    // 5. Clear same vocabulary panels
+    if (sameVocabPanelType) sameVocabPanelType.style.display = "none";
+    if (sameVocabPanelSpeak) sameVocabPanelSpeak.style.display = "none";
+
+    // 6. Reset Transcription text (Speak mode)
+    if (transcriptionText) {
+      transcriptionText.textContent = "Click 'Start Recording' and speak...";
+      transcriptionText.classList.add("empty");
+    }
+
+    // 7. Clear reading timer if any (Extended Listening)
+    if (window.readingTimer) {
+      clearInterval(window.readingTimer);
+      window.readingTimer = null;
+    }
+
+    // Reset internal state variables
+    lastDiffType = [];
+    lastDiffSpeak = [];
+    vocabularyPracticeWordsType = [];
+    vocabularyPracticeWordsSpeak = [];
+  }
 
   // Speech recognition
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -4236,19 +4388,19 @@
       currentQuestionIdSpeak.textContent = questionId;
     }
 
-    // Reset scores and hide panels
+    // Reset UI state to initial
     if (mode === "type") {
-      score.textContent = "Points: 0";
+      if (checkBtn) checkBtn.style.display = "none";
+      if (retryBtn) retryBtn.style.display = "none";
+      if (input) input.disabled = true;
     } else {
-      scoreSpeak.textContent = "Points: 0";
+      if (checkBtnSpeak) checkBtnSpeak.style.display = "none";
+      if (retryBtnSpeak) retryBtnSpeak.style.display = "none";
+      if (recordBtn) recordBtn.style.display = "inline-block";
     }
-    animationPanel.style.display = "none";
-    result.style.display = "none";
-    generatePanelType.style.display = "none";
-    generatePanelSpeak.style.display = "none";
-    vocabularyPanel.style.display = "none";
-    pronunciationPanel.style.display = "none";
-    breakdownPanel.style.display = "none";
+
+    // Reset scores and hide panels
+    resetScaffolding();
 
     // Load mastery status for this question (logged-in users only)
     // Pass the mode so mastery status is shown for the correct mode
@@ -4665,13 +4817,38 @@
 
   // Type mode
   playBtn.addEventListener("click", () => {
+    // New flow: Enable input and show check button
+    if (input) {
+      input.disabled = false;
+      input.focus();
+    }
+    if (checkBtn) checkBtn.style.display = "inline-block";
+    if (retryBtn) retryBtn.style.display = "none";
+
     audio.currentTime = 0;
     audio.play();
   });
 
   checkBtn.addEventListener("click", () => {
+    // New flow: Disable input and show retry button, hide check button
+    if (input) input.disabled = true;
+    if (checkBtn) checkBtn.style.display = "none";
+    if (retryBtn) retryBtn.style.display = "inline-block";
+
     performCheckType(input.value, score);
   });
+
+  if (retryBtn) {
+    retryBtn.addEventListener("click", () => {
+      // New flow: Clear input, disable it, and reset scaffolding
+      if (input) {
+        input.value = "";
+        input.disabled = true;
+      }
+      retryBtn.style.display = "none";
+      resetScaffolding();
+    });
+  }
 
   // Speak mode
   playBtnSpeak.addEventListener("click", () => {
@@ -4705,6 +4882,9 @@
       recordBtn.textContent = "Start Recording";
       recordBtn.classList.remove("recording");
       recordingStatus.classList.remove("active");
+
+      // New flow: Show check button when recording stops
+      if (checkBtnSpeak) checkBtnSpeak.style.display = "inline-block";
     } else {
       // Start recording
       // First, make sure any previous recognition is stopped
@@ -4725,6 +4905,9 @@
       recordBtn.textContent = "Stop Recording";
       recordBtn.classList.add("recording");
       isRecording = true;
+
+      // New flow: Hide check button while recording
+      if (checkBtnSpeak) checkBtnSpeak.style.display = "none";
 
       try {
         recognition.start();
@@ -4759,8 +4942,23 @@
       recordBtn.classList.remove("recording");
       recordingStatus.classList.remove("active");
     }
+
+    // New flow: Hide record/check button and show retry button
+    if (recordBtn) recordBtn.style.display = "none";
+    if (checkBtnSpeak) checkBtnSpeak.style.display = "none";
+    if (retryBtnSpeak) retryBtnSpeak.style.display = "inline-block";
+
     performCheckSpeak(transcription.trim(), scoreSpeak);
   });
+
+  if (retryBtnSpeak) {
+    retryBtnSpeak.addEventListener("click", () => {
+      // New flow: Show record button, hide retry button, and reset scaffolding
+      if (recordBtn) recordBtn.style.display = "inline-block";
+      retryBtnSpeak.style.display = "none";
+      resetScaffolding();
+    });
+  }
 
   replayBtn.addEventListener("click", () => {
     if (lastSteps.length) playAnimation(lastSteps, () => { }, lastAnimationMode);

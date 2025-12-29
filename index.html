@@ -1,24 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dictation Practice</title>
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
   <!-- Demo Feedback Banner -->
   <div class="feedback-banner">
     <div class="feedback-banner-content">
       <p class="feedback-text-en">
-        🚧 This is a demo version, not the official release. All feedbacks are welcome! 
-        Please provide your suggestion by filling this form: 
-        <a href="https://forms.gle/DKzNkhkQ5JFzc4yM9" target="_blank" rel="noopener noreferrer">https://forms.gle/DKzNkhkQ5JFzc4yM9</a>
+        🚧 This is a demo version, not the official release. All feedbacks are welcome!
+        Please provide your suggestion by filling this form:
+        <a href="https://forms.gle/DKzNkhkQ5JFzc4yM9" target="_blank"
+          rel="noopener noreferrer">https://forms.gle/DKzNkhkQ5JFzc4yM9</a>
       </p>
       <p class="feedback-text-vi">
-        🚧 Đây là bản thử nghiệm, chưa phải bản chính thức của trang web. Mọi ý kiến đóng góp đều được mong chờ! 
-        Bạn có thể góp ý bằng cách điền vào form sau: 
-        <a href="https://forms.gle/DKzNkhkQ5JFzc4yM9" target="_blank" rel="noopener noreferrer">https://forms.gle/DKzNkhkQ5JFzc4yM9</a>
+        🚧 Đây là bản thử nghiệm, chưa phải bản chính thức của trang web. Mọi ý kiến đóng góp đều được mong chờ!
+        Bạn có thể góp ý bằng cách điền vào form sau:
+        <a href="https://forms.gle/DKzNkhkQ5JFzc4yM9" target="_blank"
+          rel="noopener noreferrer">https://forms.gle/DKzNkhkQ5JFzc4yM9</a>
       </p>
     </div>
     <button class="feedback-banner-close" aria-label="Close banner">&times;</button>
@@ -135,14 +139,14 @@
 
   <!-- Progress Panel Overlay (click to close) -->
   <div id="progress-panel-overlay" class="progress-panel-overlay"></div>
-  
+
   <!-- Left-Side Collapsible Progress Panel -->
   <div id="progress-panel-side" class="progress-panel-side">
     <!-- Toggle Button (always visible) -->
     <button id="progress-panel-toggle" class="progress-panel-toggle" title="Progress">
       <span class="toggle-icon">📊</span>
     </button>
-    
+
     <!-- Panel Content (shown when expanded) -->
     <div id="progress-panel-content" class="progress-panel-content">
       <!-- Header -->
@@ -150,7 +154,7 @@
         <h3>Progress</h3>
         <button id="progress-panel-close-btn" class="panel-close-btn" title="Close">×</button>
       </div>
-      
+
       <!-- Guest Notice Overlay (shown for guests, positioned over blurred content) -->
       <div id="progress-guest-notice" class="progress-guest-notice" style="display: none;">
         <div class="guest-notice-content">
@@ -158,14 +162,14 @@
           <p>Log in to save and track your progress across sessions.</p>
         </div>
       </div>
-      
+
       <!-- Progress Content Wrapper (will be blurred for guests) -->
       <div id="progress-content-wrapper" class="progress-content-wrapper">
         <!-- Mode Indicator -->
         <div class="progress-mode-indicator">
           <span id="progress-mode-label">Type Mode</span>
         </div>
-        
+
         <!-- Progress Summary -->
         <div class="progress-summary">
           <h4>Stats</h4>
@@ -184,7 +188,7 @@
             </div>
           </div>
         </div>
-        
+
         <!-- Distribution Bar -->
         <div class="tier-distribution">
           <h4>Distribution</h4>
@@ -195,7 +199,7 @@
             <div id="tier-bar-consolidated" class="tier-bar-segment consolidated" style="width: 0%;"></div>
             <div id="tier-bar-mastered" class="tier-bar-segment mastered" style="width: 0%;"></div>
           </div>
-          
+
           <!-- Pie Chart -->
           <div class="distribution-pie-chart">
             <div class="pie-chart-container">
@@ -237,13 +241,13 @@
             </div>
           </div>
         </div>
-        
+
         <!-- Next Goal -->
         <div class="next-goal">
           <h4>Next Goal</h4>
           <p id="next-goal-text" class="next-goal-text">Complete a question to start tracking!</p>
         </div>
-        
+
         <!-- Recent Progress -->
         <div class="recent-progress">
           <h4>Recent</h4>
@@ -261,14 +265,14 @@
     <button id="account-panel-toggle" class="account-panel-toggle" title="Account">
       <span class="toggle-icon">👤</span>
     </button>
-    
+
     <!-- Expanded State: Panel Content -->
     <div id="account-panel-content" class="account-panel-content">
       <div class="panel-header">
         <h3>Account</h3>
         <button id="panel-close-btn" class="panel-close-btn" title="Close">×</button>
       </div>
-      
+
       <!-- Logged Out State -->
       <div id="panel-logged-out" class="panel-section">
         <p class="panel-status">Not logged in</p>
@@ -278,19 +282,40 @@
         </div>
         <p class="panel-guest-info">Or continue as guest</p>
       </div>
-      
+
       <!-- Logged In State -->
       <div id="panel-logged-in" class="panel-section" style="display: none;">
         <div class="panel-user-info">
           <p class="panel-email-label">Email:</p>
           <p id="panel-email" class="panel-email">-</p>
         </div>
+
+
         <div class="panel-actions">
           <button id="panel-change-password-btn" class="panel-btn secondary">Change Password</button>
           <button id="panel-logout-btn" class="panel-btn danger">Logout</button>
         </div>
+
+        <!-- Practice Points & History -->
+        <div class="panel-points-section">
+          <div class="panel-points-header">
+            <div class="points-value-large">
+              <span class="points-icon">🪙</span>
+              <span id="panel-points-count">0</span>
+            </div>
+            <div class="points-label">Practice Points</div>
+          </div>
+
+          <div class="panel-history">
+            <h4>Recent Awards</h4>
+            <div id="points-history-list" class="points-history-list">
+              <!-- History items will be injected here -->
+              <div class="history-empty">No points earned yet</div>
+            </div>
+          </div>
+        </div>
       </div>
-      
+
       <!-- Guest Mode State -->
       <div id="panel-guest-mode" class="panel-section" style="display: none;">
         <p class="panel-status">Viewing as Guest</p>
@@ -317,7 +342,7 @@
           <label for="question-select-type">Question ID:</label>
           <span id="current-question-id-type" class="current-question-id">1</span>
         </div>
-        
+
         <!-- Progress Bar UI (logged-in users only) -->
         <div id="progress-bar-type" class="progress-bar-container" style="display: none;">
           <div class="progress-bar-track">
@@ -331,10 +356,11 @@
           </div>
           <div class="progress-tier-info">
             <span id="progress-tier-type" class="progress-tier-badge tier-none">Not Started</span>
-            <button id="reset-progress-type-btn" class="reset-progress-btn" style="display: none;">Reset Progress</button>
+            <button id="reset-progress-type-btn" class="reset-progress-btn" style="display: none;">Reset
+              Progress</button>
           </div>
         </div>
-        
+
         <div class="question-select-wrapper">
           <select id="question-select-type" class="question-select">
             <option value="1">Loading...</option>
@@ -375,12 +401,13 @@
       </div>
       <div class="controls">
         <button id="play-btn" type="button">Play</button>
-        <button id="check-btn" type="button">Check</button>
+        <button id="check-btn" type="button" style="display: none;">Check</button>
+        <button id="retry-btn" type="button" style="display: none;">Retry</button>
       </div>
       <div id="score" class="score">Points: 0</div>
 
       <label class="input-label" for="answer-input">Type what you hear:</label>
-      <textarea id="answer-input" rows="4" placeholder="Start typing..."></textarea>
+      <textarea id="answer-input" rows="4" placeholder="Start typing..." disabled></textarea>
     </div>
 
     <div id="mode-speak" class="mode-panel">
@@ -389,7 +416,7 @@
           <label for="question-select-speak">Question ID:</label>
           <span id="current-question-id-speak" class="current-question-id">1</span>
         </div>
-        
+
         <!-- Progress Bar UI (logged-in users only) -->
         <div id="progress-bar-speak" class="progress-bar-container" style="display: none;">
           <div class="progress-bar-track">
@@ -403,10 +430,11 @@
           </div>
           <div class="progress-tier-info">
             <span id="progress-tier-speak" class="progress-tier-badge tier-none">Not Started</span>
-            <button id="reset-progress-speak-btn" class="reset-progress-btn" style="display: none;">Reset Progress</button>
+            <button id="reset-progress-speak-btn" class="reset-progress-btn" style="display: none;">Reset
+              Progress</button>
           </div>
         </div>
-        
+
         <div class="question-select-wrapper">
           <select id="question-select-speak" class="question-select">
             <option value="1">Loading...</option>
@@ -448,7 +476,8 @@
       <div class="controls">
         <button id="play-btn-speak" type="button">Play</button>
         <button id="record-btn" type="button">Start Recording</button>
-        <button id="check-btn-speak" type="button">Check</button>
+        <button id="check-btn-speak" type="button" style="display: none;">Check</button>
+        <button id="retry-btn-speak" type="button" style="display: none;">Retry</button>
       </div>
       <div id="score-speak" class="score">Points: 0</div>
 
@@ -472,7 +501,7 @@
           <span>Total number of questions: <span id="total-questions-extended">1</span></span>
         </div>
       </div>
-      
+
       <div id="reading-phase" class="reading-phase">
         <div class="reading-timer">
           <span>Reading time: <span id="reading-timer-display">30</span> seconds</span>
@@ -480,7 +509,7 @@
         <button id="skip-reading-btn" type="button" class="skip-reading-btn">Skip reading time</button>
         <div id="full-transcript" class="full-transcript"></div>
       </div>
-      
+
       <div id="listening-phase" class="listening-phase" style="display: none;">
         <div id="fill-single-words-section" class="fill-phrases-section" style="display: block;">
           <div class="fill-phrases-header">
@@ -507,7 +536,8 @@
               </div>
             </div>
             <div class="audio-slider-container">
-              <input type="range" id="audio-slider-extended" class="audio-slider" min="0" max="100" value="0" step="0.1">
+              <input type="range" id="audio-slider-extended" class="audio-slider" min="0" max="100" value="0"
+                step="0.1">
             </div>
           </div>
           <div class="phrase-controls">
@@ -518,7 +548,7 @@
           </div>
           <div id="check-result-extended" class="check-result-box" style="display: none;"></div>
         </div>
-        
+
         <div id="fill-phrases-section" class="fill-phrases-section" style="display: none;">
           <div class="fill-phrases-header">
             <h3>Fill phrases</h3>
@@ -657,14 +687,14 @@
   <audio id="audio" preload="auto"></audio>
   <audio id="audio-extended" preload="auto"></audio>
   <audio id="audio-phrases" preload="auto"></audio>
-  
+
   <!-- Firebase SDK v9+ (modular) -->
   <script type="module">
     // Import Firebase modules
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
     import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
     import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-    
+
     // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyB0vXX7NwOvME_XoaGiJlYaiLRcaHJtrIQ",
@@ -675,20 +705,20 @@
       appId: "1:737872673808:web:4db57599aa22b4830fde95",
       measurementId: "G-1891MSSLXT"
     };
-    
+
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    
+
     // Make available globally
     window.firebaseApp = app;
     window.firebaseAuth = auth;
     window.firebaseDb = db;
-    
+
     console.log('✓ Firebase initialized successfully');
   </script>
-  
+
   <script src="https://cdn.jsdelivr.net/npm/compromise@14.10.0/builds/compromise.min.js"></script>
   <script>
     // Configure API URL for paraphrase backend
@@ -708,7 +738,7 @@
   </script>
   <script>
     // Verify compromise loaded and expose it globally
-    (function() {
+    (function () {
       function checkCompromise() {
         if (typeof nlp !== 'undefined') {
           console.log('✓ compromise library loaded successfully');
@@ -723,11 +753,11 @@
           console.log('Available window properties:', Object.keys(window).filter(k => k.toLowerCase().includes('nlp') || k.toLowerCase().includes('compromise')));
         }
       }
-      
+
       // Check immediately and after page load
       checkCompromise();
       window.addEventListener('load', checkCompromise);
-      
+
       // Also check after a short delay in case of async loading
       setTimeout(checkCompromise, 1000);
     })();
@@ -736,6 +766,22 @@
   <script type="module" src="firebase-firestore-module.js"></script>
   <script type="module" src="auth-ui.js"></script>
   <script src="script.js"></script>
-</body>
-</html>
+  <!-- Points Toast Notification Container -->
+  <div id="points-toast-container" class="points-toast-container"></div>
 
+  <!-- Explanation Modal -->
+  <div id="explanation-modal" class="entry-modal" style="display: none;">
+    <div class="entry-modal-content explanation-content">
+      <h2 id="explanation-title">Rule Title</h2>
+      <div class="explanation-points">
+        <span class="points-icon">🪙</span>
+        <span id="explanation-points">0</span>
+      </div>
+      <p id="explanation-text">Explanation goes here...</p>
+      <button id="explanation-close-btn" class="entry-btn secondary-btn">Close</button>
+    </div>
+  </div>
+
+</body>
+
+</html>

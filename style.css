@@ -3359,3 +3359,321 @@ textarea:focus {
   background: #f3f4f6;
   color: #1f2933;
 }
+
+/* ============================================
+   Practice Points Display (Account Panel)
+   ============================================ */
+
+.panel-points {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #fbbf24;
+  border-radius: 10px;
+  padding: 16px;
+  margin: 16px 0;
+  text-align: center;
+}
+
+.points-label {
+  font-size: 0.75rem;
+  color: #92400e;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.points-value {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.points-icon {
+  font-size: 1.5rem;
+}
+
+#panel-points-count {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #78350f;
+  line-height: 1;
+}
+
+/* ============================================
+   Points Toast Notification
+   ============================================ */
+
+.points-toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.points-toast {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #fbbf24;
+  border-left: 5px solid #f59e0b;
+  border-radius: 8px;
+  padding: 12px 16px;
+  min-width: 250px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  pointer-events: auto;
+  animation: slideInRight 0.3s ease-out forwards;
+  backdrop-filter: blur(8px);
+}
+
+.points-toast.hiding {
+  animation: fadeOutRight 0.3s ease-in forwards;
+}
+
+.toast-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.toast-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #1f2933;
+}
+
+.toast-points {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #d97706;
+}
+
+.toast-icon {
+  font-size: 1.5rem;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+/* ============================================
+   New Points & History Section (Account Panel)
+   ============================================ */
+
+.panel-points-section {
+  margin-top: 24px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 20px;
+}
+
+.panel-points-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.points-value-large {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #d97706;
+  /* Amber-600 */
+}
+
+.points-value-large .points-icon {
+  font-size: 2rem;
+}
+
+.panel-history {
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  padding: 12px;
+}
+
+.panel-history h4 {
+  margin: 0 0 10px 0;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: #6b7280;
+  letter-spacing: 0.5px;
+}
+
+.points-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.history-item:hover {
+  border-color: #fbbf24;
+  background: #fffbeb;
+  transform: translateX(2px);
+}
+
+.history-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.history-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.history-time {
+  font-size: 0.7rem;
+  color: #9ca3af;
+}
+
+.history-points {
+  font-weight: 700;
+  color: #d97706;
+  font-size: 0.9rem;
+}
+
+.history-empty {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #9ca3af;
+  padding: 10px;
+  font-style: italic;
+}
+
+/* ============================================
+   Explanation Modal
+   ============================================ */
+
+.explanation-content {
+  max-width: 400px;
+  text-align: center;
+  border-top: 6px solid #fbbf24;
+}
+
+.explanation-points {
+  font-size: 3rem;
+  color: #d97706;
+  margin: 16px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 800;
+}
+
+#explanation-text {
+  color: #4b5563;
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+/* ============================================
+   Points Toast Notification
+   ============================================ */
+
+.points-toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column-reverse;
+  /* Stack upwards */
+  gap: 12px;
+  pointer-events: none;
+}
+
+.points-toast {
+  background: white;
+  border-left: 5px solid #fbbf24;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 250px;
+  max-width: 320px;
+  animation: slideInRight 0.3s ease-out;
+  pointer-events: auto;
+  transition: all 0.3s ease;
+}
+
+.toast-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.toast-title {
+  font-weight: 700;
+  color: #1f2933;
+  font-size: 0.9rem;
+}
+
+.toast-points {
+  color: #d97706;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.toast-icon {
+  font-size: 1.5rem;
+}
+
+.points-toast.hiding {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

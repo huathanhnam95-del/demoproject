@@ -33,10 +33,10 @@ function initializeAuthUI() {
     setTimeout(initializeAuthUI, 100);
     return;
   }
-  
+
   authFunctions = window.firebaseAuthFunctions;
   firestoreFunctions = window.firebaseFirestoreFunctions;
-  
+
   setupEventListeners();
   setupAuthStateListener();
   setupSessionTracking();
@@ -53,12 +53,12 @@ function setupEventListeners() {
   if (guestModeBtn) {
     guestModeBtn.addEventListener('click', handleGuestModeChoice);
   }
-  
+
   const loginChoiceBtn = document.getElementById('login-choice-btn');
   if (loginChoiceBtn) {
     loginChoiceBtn.addEventListener('click', handleLoginChoice);
   }
-  
+
   // Close entry modal when clicking outside
   const entryModal = document.getElementById('entry-modal');
   if (entryModal) {
@@ -69,7 +69,7 @@ function setupEventListeners() {
       }
     });
   }
-  
+
   // ============================================
   // Guest Toast Notification
   // ============================================
@@ -77,7 +77,7 @@ function setupEventListeners() {
   if (toastClose) {
     toastClose.addEventListener('click', hideGuestToast);
   }
-  
+
   // ============================================
   // Right-Side Account Panel
   // ============================================
@@ -85,40 +85,40 @@ function setupEventListeners() {
   if (panelToggle) {
     panelToggle.addEventListener('click', toggleAccountPanel);
   }
-  
+
   const panelCloseBtn = document.getElementById('panel-close-btn');
   if (panelCloseBtn) {
     panelCloseBtn.addEventListener('click', closeAccountPanel);
   }
-  
+
   // Panel buttons (logged out state)
   const panelLoginBtn = document.getElementById('panel-login-btn');
   if (panelLoginBtn) {
     panelLoginBtn.addEventListener('click', showLoginForm);
   }
-  
+
   const panelRegisterBtn = document.getElementById('panel-register-btn');
   if (panelRegisterBtn) {
     panelRegisterBtn.addEventListener('click', showSignupForm);
   }
-  
+
   // Panel buttons (logged in state)
   const panelLogoutBtn = document.getElementById('panel-logout-btn');
   if (panelLogoutBtn) {
     panelLogoutBtn.addEventListener('click', handleLogout);
   }
-  
+
   const panelChangePasswordBtn = document.getElementById('panel-change-password-btn');
   if (panelChangePasswordBtn) {
     panelChangePasswordBtn.addEventListener('click', handleChangePassword);
   }
-  
+
   // Panel button (guest mode state)
   const panelGuestLoginBtn = document.getElementById('panel-guest-login-btn');
   if (panelGuestLoginBtn) {
     panelGuestLoginBtn.addEventListener('click', showLoginForm);
   }
-  
+
   // ============================================
   // Account Details Modal (Full Details)
   // ============================================
@@ -126,7 +126,7 @@ function setupEventListeners() {
   if (closeDetailsBtn) {
     closeDetailsBtn.addEventListener('click', hideAccountDetailsModal);
   }
-  
+
   // Form switches
   const switchToSignup = document.getElementById('switch-to-signup');
   if (switchToSignup) {
@@ -135,7 +135,7 @@ function setupEventListeners() {
       showSignupForm();
     });
   }
-  
+
   const switchToLogin = document.getElementById('switch-to-login');
   if (switchToLogin) {
     switchToLogin.addEventListener('click', (e) => {
@@ -143,7 +143,7 @@ function setupEventListeners() {
       showLoginForm();
     });
   }
-  
+
   // Login form submission
   const loginForm = document.getElementById('login-form-element');
   if (loginForm) {
@@ -152,7 +152,7 @@ function setupEventListeners() {
       await handleLogin();
     });
   }
-  
+
   // Signup form submission
   const signupForm = document.getElementById('signup-form-element');
   if (signupForm) {
@@ -275,9 +275,9 @@ function updateAccountPanelState() {
   const panelLoggedIn = document.getElementById('panel-logged-in');
   const panelGuestMode = document.getElementById('panel-guest-mode');
   const panelEmail = document.getElementById('panel-email');
-  
+
   const user = authFunctions ? authFunctions.getCurrentUser() : null;
-  
+
   if (user) {
     // Logged in state
     if (panelLoggedOut) panelLoggedOut.style.display = 'none';
@@ -286,6 +286,9 @@ function updateAccountPanelState() {
     if (panelEmail) panelEmail.textContent = user.email || '-';
     isGuestMode = false; // Clear guest mode when logged in
     sessionStorage.removeItem('guestMode');
+
+    // Load and display Practice Points
+    loadPracticePoints(user.uid);
   } else if (isGuestMode) {
     // Guest mode state
     if (panelLoggedOut) panelLoggedOut.style.display = 'none';
@@ -296,6 +299,42 @@ function updateAccountPanelState() {
     if (panelLoggedIn) panelLoggedIn.style.display = 'none';
     if (panelGuestMode) panelGuestMode.style.display = 'none';
     if (panelLoggedOut) panelLoggedOut.style.display = 'block';
+  }
+}
+
+/**
+ * Load and display Practice Points for logged-in user
+ * @param {string} userId - User ID
+ */
+async function loadPracticePoints(userId) {
+  const pointsCountEl = document.getElementById('panel-points-count');
+  if (!pointsCountEl) return;
+
+  try {
+    const result = await firestoreFunctions.getTotalPoints(userId);
+    if (result.success) {
+      pointsCountEl.textContent = result.totalPoints.toLocaleString();
+    } else {
+      pointsCountEl.textContent = '0';
+    }
+
+    // Load history as well
+    loadPointsHistory(userId);
+  } catch (error) {
+    console.error('Error loading practice points:', error);
+    pointsCountEl.textContent = '0';
+  }
+}
+
+/**
+ * Update the Practice Points display with a new value
+ * Called when points change (e.g., after completing a task)
+ * @param {number} points - New total points value
+ */
+function updatePracticePointsDisplay(points) {
+  const pointsCountEl = document.getElementById('panel-points-count');
+  if (pointsCountEl) {
+    pointsCountEl.textContent = points.toLocaleString();
   }
 }
 
@@ -315,10 +354,10 @@ function showLoginForm() {
   const loginError = document.getElementById('login-error');
   const signupError = document.getElementById('signup-error');
   const signupSuccess = document.getElementById('signup-success');
-  
+
   // Close account panel when opening login form
   closeAccountPanel();
-  
+
   authOverlay.style.display = 'flex';
   loginForm.style.display = 'block';
   signupForm.style.display = 'none';
@@ -337,7 +376,7 @@ function showSignupForm() {
   const loginError = document.getElementById('login-error');
   const signupError = document.getElementById('signup-error');
   const signupSuccess = document.getElementById('signup-success');
-  
+
   authOverlay.style.display = 'flex';
   loginForm.style.display = 'none';
   signupForm.style.display = 'block';
@@ -361,17 +400,17 @@ async function handleLogin() {
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
   const errorDiv = document.getElementById('login-error');
-  
+
   if (!email || !password) {
     errorDiv.textContent = 'Please fill in all fields';
     errorDiv.style.display = 'block';
     return;
   }
-  
+
   errorDiv.style.display = 'none';
-  
+
   const result = await authFunctions.signIn(email, password);
-  
+
   if (result.success) {
     hideAuthOverlay();
     // Clear form
@@ -392,29 +431,29 @@ async function handleSignup() {
   const passwordConfirm = document.getElementById('signup-password-confirm').value;
   const errorDiv = document.getElementById('signup-error');
   const successDiv = document.getElementById('signup-success');
-  
+
   if (!email || !password || !passwordConfirm) {
     errorDiv.textContent = 'Please fill in all fields';
     errorDiv.style.display = 'block';
     return;
   }
-  
+
   if (password !== passwordConfirm) {
     errorDiv.textContent = 'Passwords do not match';
     errorDiv.style.display = 'block';
     return;
   }
-  
+
   if (password.length < 6) {
     errorDiv.textContent = 'Password must be at least 6 characters';
     errorDiv.style.display = 'block';
     return;
   }
-  
+
   errorDiv.style.display = 'none';
-  
+
   const result = await authFunctions.signUp(email, password);
-  
+
   if (result.success) {
     successDiv.textContent = result.message || 'Account created! Please check your email to verify.';
     successDiv.style.display = 'block';
@@ -437,9 +476,9 @@ async function handleLogout() {
     await firestoreFunctions.recordSessionEnd(currentSessionId, currentUserId);
     currentSessionId = null;
   }
-  
+
   const result = await authFunctions.signOut();
-  
+
   if (result.success) {
     hideAccountDetailsModal();
     closeAccountPanel();
@@ -456,14 +495,14 @@ async function handleLogout() {
  */
 async function handleChangePassword() {
   const user = authFunctions.getCurrentUser();
-  
+
   if (!user || !user.email) {
     alert('User not found');
     return;
   }
-  
+
   const result = await authFunctions.sendPasswordReset(user.email);
-  
+
   if (result.success) {
     alert(result.message || 'Password reset email sent! Check your inbox.');
   } else {
@@ -503,19 +542,19 @@ function hideAccountDetailsModal() {
  */
 async function loadUserProfile() {
   const user = authFunctions.getCurrentUser();
-  
+
   if (!user) {
     return;
   }
-  
+
   const profileResult = await firestoreFunctions.getUserProfile(user.uid);
-  
+
   if (profileResult.success) {
     const data = profileResult.data;
-    
+
     // Display email
     document.getElementById('account-email').textContent = data.email || user.email || '-';
-    
+
     // Display account created time
     if (data.createdAt) {
       const createdDate = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
@@ -523,7 +562,7 @@ async function loadUserProfile() {
     } else {
       document.getElementById('account-created').textContent = '-';
     }
-    
+
     // Display last login time
     if (data.lastLoginAt) {
       const lastLoginDate = data.lastLoginAt.toDate ? data.lastLoginAt.toDate() : new Date(data.lastLoginAt);
@@ -531,13 +570,13 @@ async function loadUserProfile() {
     } else {
       document.getElementById('account-last-login').textContent = '-';
     }
-    
+
     // Display total active time
     const totalSeconds = data.totalActiveSeconds || 0;
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
-    document.getElementById('account-total-time').textContent = 
+    document.getElementById('account-total-time').textContent =
       `${hours}h ${minutes}m ${seconds}s`;
   }
 }
@@ -557,31 +596,31 @@ function setupAuthStateListener() {
     const authOverlay = document.getElementById('auth-overlay');
     const wasGuestMode = isGuestMode;
     const previousUserId = currentUserId;
-    
+
     if (user) {
       // User is signed in
       // Clear guest mode when user logs in
       isGuestMode = false;
       sessionStorage.removeItem('guestMode');
       hideGuestToast();
-      
+
       if (authOverlay) {
         authOverlay.style.display = 'none';
       }
-      
+
       currentUserId = user.uid;
-      
+
       // Create or update user profile
-      const isNewUser = !user.metadata.lastSignInTime || 
+      const isNewUser = !user.metadata.lastSignInTime ||
         (new Date(user.metadata.creationTime) > new Date(user.metadata.lastSignInTime));
       await firestoreFunctions.createOrUpdateUserProfile(user.uid, user.email, isNewUser);
-      
+
       // Start session tracking
       await startSession();
-      
+
       // Update panel to show logged in state
       updateAccountPanelState();
-      
+
       // ============================================
       // PROGRESS UI RELOAD AFTER LOGIN
       // ============================================
@@ -602,13 +641,13 @@ function setupAuthStateListener() {
         await firestoreFunctions.recordSessionEnd(currentSessionId, currentUserId);
         currentSessionId = null;
       }
-      
+
       const hadUser = currentUserId !== null;
       currentUserId = null;
-      
+
       // Update panel to show logged out or guest state
       updateAccountPanelState();
-      
+
       // ============================================
       // PROGRESS UI CLEAR AFTER LOGOUT
       // ============================================
@@ -663,13 +702,13 @@ async function startSession() {
   if (isGuestMode) {
     return;
   }
-  
+
   if (!currentUserId) return;
-  
+
   try {
     // Check if there's an active session
     const activeSessionId = await firestoreFunctions.getActiveSessionId(currentUserId);
-    
+
     if (!activeSessionId) {
       // Start new session
       currentSessionId = await firestoreFunctions.recordSessionStart(currentUserId);
@@ -693,7 +732,7 @@ function setupSessionTracking() {
     if (isGuestMode) {
       return;
     }
-    
+
     if (document.hidden) {
       // Tab is hidden - end session
       if (currentSessionId && currentUserId) {
@@ -707,19 +746,19 @@ function setupSessionTracking() {
       }
     }
   });
-  
+
   // Track page unload (tab close, refresh, navigation)
   window.addEventListener('beforeunload', async () => {
     // Guest mode: Do NOT track sessions
     if (isGuestMode) {
       return;
     }
-    
+
     if (currentSessionId && currentUserId) {
       // Use sendBeacon for reliable delivery on page unload
       const sessionId = currentSessionId;
       const userId = currentUserId;
-      
+
       // Note: sendBeacon doesn't work with async, so we'll handle this in the visibility change handler
       // This is a fallback
       navigator.sendBeacon('/api/session-end', JSON.stringify({ sessionId, userId }));
@@ -739,7 +778,7 @@ function checkFirstVisit() {
     updateAccountPanelState();
     return; // Don't show entry modal if guest mode already chosen
   }
-  
+
   // Check if user is already logged in (Firebase will handle this via auth state listener)
   // If not logged in and not guest mode, show entry modal
   const user = authFunctions ? authFunctions.getCurrentUser() : null;
@@ -772,6 +811,159 @@ window.authUI = {
   isGuestMode: () => isGuestMode,
   // Register callback to be notified when auth state changes
   // Used by script.js to reload progress data on login
-  onAuthStateChange: onAuthStateChange
+  onAuthStateChange: onAuthStateChange,
+  // Practice Points functions
+  loadPracticePoints: loadPracticePoints,
+  updatePracticePointsDisplay: updatePracticePointsDisplay
 };
 
+
+/**
+ * ============================================
+ * Points UI Functions (Toast & History)
+ * ============================================
+ */
+
+/**
+ * Show a toast notification for points awarded
+ * @param {string} title - Rule title
+ * @param {number} points - Points awarded
+ */
+function showPointsToast(title, points) {
+  const container = document.getElementById('points-toast-container');
+  if (!container) return;
+
+  // Create toast element
+  const toast = document.createElement('div');
+  toast.className = 'points-toast';
+  toast.innerHTML = `
+    <div class="toast-content">
+      <span class="toast-title">${title}</span>
+      <span class="toast-points">+${points} Points!</span>
+    </div>
+    <span class="toast-icon">🪙</span>
+  `;
+
+  // Append to container (CSS handles stacking from bottom)
+  container.appendChild(toast);
+
+  // Play sound if available (optional)
+  // const audio = new Audio('assets/point-award.mp3'); audio.play().catch(e => {});
+
+  // Remove after animation (keep visible longer for readability if multiple)
+  setTimeout(() => {
+    toast.classList.add('hiding');
+    setTimeout(() => {
+      if (toast.parentNode) toast.parentNode.removeChild(toast);
+    }, 300); // 300ms fadeOutRight duration
+  }, 4000);
+}
+
+/**
+ * Load and display points history
+ * @param {string} userId - User ID
+ */
+async function loadPointsHistory(userId) {
+  const listEl = document.getElementById('points-history-list');
+  if (!listEl) return;
+
+  listEl.innerHTML = '<div class="history-empty">Loading history...</div>';
+
+  try {
+    const result = await firestoreFunctions.getPointsHistory(userId, 5); // Limit 5
+    const history = result.success ? result.history : [];
+
+    if (!history || history.length === 0) {
+      listEl.innerHTML = '<div class="history-empty">No points earned yet</div>';
+      return;
+    }
+
+    listEl.innerHTML = '';
+    history.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'history-item';
+
+      // Format date
+      // Format date
+      const timestamp = item.createdAt || item.timestamp;
+      const date = timestamp ? new Date(timestamp.seconds * 1000) : new Date();
+      const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const dateStr = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      const isToday = (d) => {
+        const t = new Date();
+        return d.getDate() === t.getDate() && d.getMonth() === t.getMonth() && d.getFullYear() === t.getFullYear();
+      };
+      const displayDate = isToday(date) ? `Today, ${timeStr}` : `${dateStr}, ${timeStr}`;
+
+      el.innerHTML = `
+        <div class="history-info">
+          <span class="history-title">${item.title}</span>
+          <span class="history-time">${displayDate}</span>
+        </div>
+        <span class="history-points">+${item.points}</span>
+      `;
+
+      // Click to show explanation
+      el.addEventListener('click', () => {
+        showExplanationPopup(item.title, item.points);
+      });
+
+      listEl.appendChild(el);
+    });
+  } catch (error) {
+    console.error('Error loading history:', error);
+    // Show specific error to help debugging
+    listEl.innerHTML = `<div class="history-empty">Error: ${error.message}</div>`;
+  }
+}
+
+/**
+ * Show explanation popup for a rule
+ * @param {string} ruleTitle 
+ * @param {number} points 
+ */
+async function showExplanationPopup(ruleTitle, points) {
+  const modal = document.getElementById('explanation-modal');
+  const titleEl = document.getElementById('explanation-title');
+  const pointsEl = document.getElementById('explanation-points');
+  const textEl = document.getElementById('explanation-text');
+  const closeBtn = document.getElementById('explanation-close-btn');
+
+  if (!modal) return;
+
+  // Show loading state
+  modal.style.display = 'flex';
+  titleEl.textContent = ruleTitle;
+  pointsEl.textContent = points;
+  textEl.textContent = "Loading details...";
+
+  // Close handler
+  const closeModal = () => { modal.style.display = 'none'; };
+  closeBtn.onclick = closeModal;
+  modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+
+  try {
+    // Fetch rule explanation from Firestore
+    const result = await firestoreFunctions.getPointsRuleByTitle(ruleTitle);
+
+    if (result.success && result.rule) {
+      if (result.rule.explanation) {
+        textEl.textContent = result.rule.explanation;
+      } else if (result.rule.description) {
+        textEl.textContent = result.rule.description;
+      } else {
+        textEl.textContent = "No detailed explanation available for this reward.";
+      }
+    } else {
+      textEl.textContent = "Could not find details for this reward.";
+    }
+  } catch (e) {
+    console.error("Error fetching rule explanation:", e);
+    textEl.textContent = "Could not load explanation.";
+  }
+}
+
+// Export functions to window
+window.authUI = window.authUI || {};
+window.authUI.showPointsToast = showPointsToast;
+window.authUI.loadPointsHistory = loadPointsHistory;

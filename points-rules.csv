@@ -1,0 +1,8 @@
+Title,Description,Points,Explanation
+Perfect Dictation,Get 100% accuracy in Type mode,5,Awarded for the first time you achieve 100% accuracy on a dictation question.
+Perfect Repetition,Get 100% accuracy in Speak mode,5,Awarded for the first time you achieve 100% pronunciation score on a question.
+First Light,First practice attempt of the day,5,Earned by completing your first practice attempt of the day.
+"Tic Tac Toe, Three In A Row",Practice 3 days in a row,15,Awarded for practicing consecutively for 3 days.
+Level Up: Completed,Reach Completed tier for a question,20,Reached 'Completed' status (3 perfect attempts) for a single question.
+Level Up: Consolidated,Reach Consolidated tier for a question,30,Reached 'Consolidated' status (6 perfect attempts) for a single question.
+Level Up: Mastered,Reach Mastered tier for a question,50,Reached 'Mastered' status (9 perfect attempts) for a single question.

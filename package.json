@@ -5,17 +5,18 @@
   "scripts": {
     "start": "node server.js",
     "setup": "node setup-https.js",
-    "update-db": "node update-database.js"
+    "update-db": "node update-database.js",
+    "sync-rules": "node sync-points-rules.js points-rules.csv"
   },
   "dependencies": {
-    "xlsx": "^0.18.5",
-    "express": "^4.18.2",
     "cors": "^2.8.5",
-    "youtube-transcript": "^1.2.1",
-    "openai": "^4.20.0"
+    "express": "^4.18.2",
+    "firebase-admin": "^12.7.0",
+    "openai": "^4.20.0",
+    "xlsx": "^0.18.5",
+    "youtube-transcript": "^1.2.1"
   },
   "devDependencies": {
     "http-server": "^14.1.1"
   }
 }
-

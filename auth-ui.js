@@ -171,6 +171,96 @@ function setupEventListeners() {
   }
 }
 
+
+/**
+ * ============================================
+ * Level Selection Functions (First Login)
+ * ============================================
+ */
+
+/**
+ * Check if user needs to select English level
+ */
+async function checkLevelSelection(userId) {
+  if (!userId || !firestoreFunctions) return;
+
+  try {
+    const profileResult = await firestoreFunctions.getUserProfile(userId);
+    if (profileResult.success) {
+      const data = profileResult.data;
+
+      // If no englishLevel set, show modal
+      if (!data.englishLevel) {
+        const modal = document.getElementById('level-selection-modal');
+        if (modal) modal.style.display = 'flex';
+
+        // Setup listeners if not already done (idempotent check)
+        setupLevelSelectionListeners();
+      }
+    }
+  } catch (e) {
+    console.error('Error checking level selection:', e);
+  }
+}
+
+/**
+ * Setup listeners for level selection buttons
+ */
+function setupLevelSelectionListeners() {
+  const levelBtns = document.querySelectorAll('.level-btn');
+  levelBtns.forEach(btn => {
+    // Remove old listeners to avoid duplicates (cloning)
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
+
+    newBtn.addEventListener('click', (e) => {
+      const level = e.currentTarget.dataset.level;
+      handleLevelSelection(level);
+    });
+  });
+}
+
+/**
+ * Handle level selection
+ */
+async function handleLevelSelection(level) {
+  if (!currentUserId) return;
+
+  const modal = document.getElementById('level-selection-modal');
+
+  try {
+    // Update Profile
+    await firestoreFunctions.updateUserProfile(currentUserId, {
+      englishLevel: level,
+      levelSelectedAt: new Date()
+    });
+
+    // Handle Unlocking based on level
+    let shouldUnlock = false;
+    if (level === 'beginner' || level === 'intermediate') {
+      shouldUnlock = true;
+    }
+
+    if (shouldUnlock) {
+      await firestoreFunctions.updateUserProfile(currentUserId, {
+        sentenceLengthFilterUnlocked: true
+      });
+      // Local update for immediate feedback if needed
+      localStorage.setItem('unlocked_filter_length_type', 'true');
+    }
+
+    // Hide Modal
+    if (modal) modal.style.display = 'none';
+
+    // Reload page to apply new filter settings (simplest way to ensure script.js re-runs logic)
+    window.location.reload();
+
+  } catch (e) {
+    console.error('Error handling level selection:', e);
+    alert('Failed to save selection. Please try again.');
+  }
+}
+
 /**
  * ============================================
  * Entry Modal Functions (First Visit)
@@ -629,6 +719,9 @@ function setupAuthStateListener() {
       // Update panel to show logged in state
       updateAccountPanelState();
 
+      // Check for Level Selection (First Login Feature)
+      await checkLevelSelection(user.uid);
+
       // ============================================
       // PROGRESS UI RELOAD AFTER LOGIN
       // ============================================
@@ -972,22 +1065,233 @@ async function showExplanationPopup(ruleTitle, points) {
 }
 
 /**
- * Show the Shopping "Coming Soon" modal
+ * Show the Shopping modal with Points Exchange table
  */
 function showShoppingModal() {
   const modal = document.getElementById('shopping-modal');
-  const okBtn = document.getElementById('shopping-ok-btn');
   const closeBtn = document.getElementById('shopping-close-btn');
+  const pointsDisplay = document.getElementById('shopping-current-points');
+  const tableBody = document.getElementById('shopping-table-body');
+  const feedbackEl = document.getElementById('shopping-feedback');
 
   if (!modal) return;
 
-  modal.style.display = 'flex';
+  // Shopping Items Data
+  const shoppingItems = [
+    {
+      id: 'sentence_length_filter_type',
+      title: 'Filter mode: Length (Type mode)',
+      description: 'Filter Type questions by sentence length. Recommended for beginners',
+      cost: 50,
+      unlockFlag: 'sentenceLengthFilterUnlocked',
+      unlockTimestampField: 'sentenceLengthFilterUnlockedAt',
+      extraUnlockFields: { sentenceLengthFilterFullUnlock: true },
+      hasTutorial: true,
+      tutorialFunction: () => {
+        if (window.LengthFilterTutorial) {
+          window.LengthFilterTutorial.reset('type');
+          window.LengthFilterTutorial.start('type');
+        }
+      },
+      onUnlock: () => {
+        if (window.onFilterUnlocked) window.onFilterUnlocked('type');
+      }
+    },
+    {
+      id: 'sentence_length_filter_speak',
+      title: 'Filter mode: Length (Speak mode)',
+      description: 'Filter Speak questions by sentence length. Recommended for beginners',
+      cost: 50,
+      unlockFlag: 'speakLengthFilterUnlocked',
+      unlockTimestampField: 'speakLengthFilterUnlockedAt',
+      extraUnlockFields: { speakLengthFilterFullUnlock: true },
+      hasTutorial: true,
+      tutorialFunction: () => {
+        if (window.LengthFilterTutorial) {
+          window.LengthFilterTutorial.reset('speak');
+          window.LengthFilterTutorial.start('speak');
+        }
+      },
+      onUnlock: () => {
+        if (window.onFilterUnlocked) window.onFilterUnlocked('speak');
+      }
+    }
+  ];
 
+  // Helper to show feedback
+  const showFeedback = (message, type) => {
+    if (!feedbackEl) return;
+    feedbackEl.textContent = message;
+    feedbackEl.className = `shopping-feedback ${type}`;
+    feedbackEl.style.display = 'block';
+
+    // Auto-hide after 5s for success
+    if (type === 'success') {
+      setTimeout(() => { feedbackEl.style.display = 'none'; }, 5000);
+    }
+  };
+
+  const hideFeedback = () => {
+    if (feedbackEl) feedbackEl.style.display = 'none';
+  };
+
+  // Render the table
+  const renderTable = async () => {
+    if (!tableBody) return;
+    tableBody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 20px; color: #6b7280;">Loading...</td></tr>';
+
+    let currentPoints = 0;
+    let userProfile = null;
+
+    // Fetch user data
+    if (firestoreFunctions && currentUserId) {
+      const result = await firestoreFunctions.getUserProfile(currentUserId);
+      if (result && result.success) {
+        userProfile = result.data;
+        currentPoints = userProfile.totalPoints || 0; // FIX: Use totalPoints instead of points
+      }
+    }
+
+    // Update points display
+    if (pointsDisplay) {
+      pointsDisplay.textContent = currentPoints.toLocaleString();
+    }
+
+    // Clear and render rows
+    tableBody.innerHTML = '';
+
+    shoppingItems.forEach(item => {
+      const isUnlocked = userProfile && userProfile[item.unlockFlag];
+      const unlockTimestamp = userProfile && userProfile[item.unlockTimestampField];
+
+      const row = document.createElement('tr');
+
+      // Reward column
+      const rewardCell = document.createElement('td');
+      rewardCell.innerHTML = `
+        <div class="reward-info">
+          <span class="reward-title">${item.title}</span>
+          <span class="reward-description">${item.description}</span>
+        </div>
+      `;
+
+      // Cost column
+      const costCell = document.createElement('td');
+      costCell.innerHTML = `<span class="reward-cost"><span class="cost-icon">🪙</span>${item.cost}</span>`;
+
+      // Action column
+      const actionCell = document.createElement('td');
+      actionCell.style.textAlign = 'center';
+
+      const btn = document.createElement('button');
+      btn.className = 'shopping-unlock-btn';
+
+      if (isUnlocked) {
+        // Already unlocked - show timestamp
+        btn.className += ' unlocked';
+        btn.disabled = true;
+
+        let timestampStr = '';
+        if (unlockTimestamp) {
+          const date = unlockTimestamp.toDate ? unlockTimestamp.toDate() : new Date(unlockTimestamp);
+          timestampStr = date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        btn.innerHTML = `✓ UNLOCKED<span class="unlocked-timestamp">${timestampStr}</span>`;
+      } else if (currentPoints < item.cost) {
+        // Not enough points
+        btn.className += ' insufficient';
+        btn.textContent = `Need ${item.cost - currentPoints} more`;
+        btn.onclick = () => {
+          showFeedback(`You need ${item.cost - currentPoints} more points to unlock this reward.`, 'error');
+        };
+      } else {
+        // Available to unlock
+        btn.className += ' available';
+        btn.textContent = 'Unlock';
+        btn.onclick = async () => {
+          hideFeedback();
+          btn.className = 'shopping-unlock-btn processing';
+          btn.textContent = 'Processing...';
+          btn.disabled = true;
+
+          try {
+            // 1. Deduct points
+            await firestoreFunctions.addPoints(currentUserId, -item.cost, `Unlock: ${item.title}`);
+
+            // 2. Set unlock flag with timestamp
+            const updateData = {};
+            updateData[item.unlockFlag] = true;
+            updateData[item.unlockTimestampField] = new Date();
+
+            // Add extra fields if any
+            if (item.extraUnlockFields) {
+              Object.assign(updateData, item.extraUnlockFields);
+            }
+
+            await firestoreFunctions.updateUserProfile(currentUserId, updateData);
+
+            // 3. Trigger filter unlock callback (item-specific)
+            if (item.onUnlock) item.onUnlock();
+
+            // 4. Show success and re-render
+            showFeedback(`🎉 Successfully unlocked "${item.title}"!`, 'success');
+            renderTable(); // Re-render to show updated state
+
+            // 5. Update points in account panel
+            if (window.authUI && window.authUI.loadPracticePoints) {
+              window.authUI.loadPracticePoints(currentUserId);
+            }
+          } catch (err) {
+            console.error('Purchase failed:', err);
+            showFeedback('Purchase failed. Please try again.', 'error');
+            btn.className = 'shopping-unlock-btn available';
+            btn.textContent = 'Unlock';
+            btn.disabled = false;
+          }
+        };
+      }
+
+      actionCell.appendChild(btn);
+
+      // Tutorial column
+      const tutorialCell = document.createElement('td');
+      tutorialCell.style.textAlign = 'center';
+
+      if (item.hasTutorial && isUnlocked) {
+        const tutorialBtn = document.createElement('button');
+        tutorialBtn.className = 'shopping-tutorial-btn';
+        tutorialBtn.innerHTML = '<span class="btn-icon">▶</span> Play';
+        tutorialBtn.onclick = () => {
+          // Close the modal first
+          modal.style.display = 'none';
+          // Then start the tutorial
+          if (item.tutorialFunction) item.tutorialFunction();
+        };
+        tutorialCell.appendChild(tutorialBtn);
+      } else if (item.hasTutorial && !isUnlocked) {
+        tutorialCell.innerHTML = '<span style="color: #9ca3af; font-size: 0.85rem;">Unlock first</span>';
+      } else {
+        tutorialCell.innerHTML = '<span style="color: #d1d5db;">—</span>';
+      }
+
+      row.appendChild(rewardCell);
+      row.appendChild(costCell);
+      row.appendChild(actionCell);
+      row.appendChild(tutorialCell);
+      tableBody.appendChild(row);
+    });
+  };
+
+  // Show modal
+  modal.style.display = 'flex';
+  hideFeedback();
+  renderTable();
+
+  // Close handlers
   const closeModal = () => {
     modal.style.display = 'none';
   };
-
-  if (okBtn) okBtn.onclick = closeModal;
   if (closeBtn) closeBtn.onclick = closeModal;
   modal.onclick = (e) => {
     if (e.target === modal) closeModal();

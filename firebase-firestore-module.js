@@ -104,6 +104,23 @@ async function getUserProfile(userId) {
 }
 
 /**
+ * Update user profile fields
+ * @param {string} userId
+ * @param {Object} data - Fields to update
+ * @returns {Promise<Object>} Success or error
+ */
+async function updateUserProfile(userId, data) {
+  try {
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, data);
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
  * Session Tracking Operations
  */
 
@@ -1327,5 +1344,6 @@ window.firebaseFirestoreFunctions = {
   getPointsRules,
   getPointsRuleByTitle,
   awardPointsByRule,
-  awardPoints
+  awardPoints,
+  updateUserProfile
 };

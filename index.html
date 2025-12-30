@@ -5,7 +5,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dictation Practice</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20251230d">
+  <!-- XLSX Library -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 </head>
 
 <body>
@@ -125,6 +127,29 @@
           <span class="entry-icon">🔐</span>
           <span class="entry-label">Log In</span>
           <span class="entry-desc">Save your progress</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Level Selection Modal (shown on first login) -->
+  <div id="level-selection-modal" class="entry-modal" style="display: none;">
+    <div class="entry-modal-content">
+      <h2>Choose Your English Level</h2>
+      <p style="margin-bottom: 24px; color: #4b5563;">Select your current level to customize your practice experience.
+      </p>
+      <div class="entry-options">
+        <button class="entry-btn level-btn" data-level="beginner">
+          <span class="entry-icon">🌱</span>
+          <span class="entry-label">Beginner</span>
+        </button>
+        <button class="entry-btn level-btn" data-level="intermediate">
+          <span class="entry-icon">🌿</span>
+          <span class="entry-label">Intermediate</span>
+        </button>
+        <button class="entry-btn level-btn" data-level="expert">
+          <span class="entry-icon">🌳</span>
+          <span class="entry-label">Expert</span>
         </button>
       </div>
     </div>
@@ -373,48 +398,83 @@
             <option value="1">Loading...</option>
           </select>
           <!-- Multi-select state filter dropdown -->
-          <div class="tier-filter-dropdown">
-            <button id="tier-filter-btn-type" class="tier-filter-btn" type="button">
-              <span>Filter by Status</span>
+          <div class="status-filter-dropdown" id="status-filter-container-type">
+            <button id="status-filter-btn-type" class="status-filter-btn" type="button">
+              <span id="status-filter-label-type">Filter by Status</span>
               <span class="filter-arrow">▼</span>
             </button>
-            <div id="tier-filter-menu-type" class="tier-filter-menu" style="display: none;">
-              <label class="tier-filter-option">
-                <input type="checkbox" id="filter-not-started-type" checked>
-                <span class="tier-checkbox-label not-started">○ Not Started</span>
-              </label>
-              <label class="tier-filter-option">
-                <input type="checkbox" id="filter-in-progress-type" checked>
-                <span class="tier-checkbox-label in-progress">◐ In Progress</span>
-              </label>
-              <label class="tier-filter-option">
-                <input type="checkbox" id="filter-completed-type" checked>
-                <span class="tier-checkbox-label completed">✓ Completed (Correctly answered 3 times)</span>
-              </label>
-              <label class="tier-filter-option">
-                <input type="checkbox" id="filter-consolidated-type" checked>
-                <span class="tier-checkbox-label consolidated">✓✓ Consolidated (Correctly answered 6 times)</span>
-              </label>
-              <label class="tier-filter-option">
-                <input type="checkbox" id="filter-mastered-type" checked>
-                <span class="tier-checkbox-label mastered">★ Mastered (Correctly answered 9 times)</span>
-              </label>
+            <div id="status-filter-menu-type" class="status-filter-menu" style="display: none;">
+              <div class="filter-option selected" data-value="not-started" data-filter-id="filter-not-started-type">
+                <span class="filter-option-icon">○</span>
+                <span class="filter-option-text">Not Started</span>
+              </div>
+              <div class="filter-option selected" data-value="in-progress" data-filter-id="filter-in-progress-type">
+                <span class="filter-option-icon">◐</span>
+                <span class="filter-option-text">In Progress</span>
+              </div>
+              <div class="filter-option selected" data-value="completed" data-filter-id="filter-completed-type">
+                <span class="filter-option-icon">✓</span>
+                <span class="filter-option-text">Completed</span>
+              </div>
+              <div class="filter-option selected" data-value="consolidated" data-filter-id="filter-consolidated-type">
+                <span class="filter-option-icon">✓✓</span>
+                <span class="filter-option-text">Consolidated</span>
+              </div>
+              <div class="filter-option selected" data-value="mastered" data-filter-id="filter-mastered-type">
+                <span class="filter-option-icon">★</span>
+                <span class="filter-option-text">Mastered</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Unlockable Sentence Length Filter -->
+          <div id="length-filter-container-type" class="length-filter-dropdown" style="display: none;">
+            <button id="length-filter-btn-type" class="length-filter-btn" type="button">
+              <span id="length-filter-label-type">Filter by Length</span>
+              <span class="filter-arrow">▼</span>
+            </button>
+            <div id="length-filter-menu-type" class="length-filter-menu" style="display: none;">
+              <div class="filter-option selected" data-value="all">
+                <span class="filter-option-icon">📏</span>
+                <span class="filter-option-text">All Lengths</span>
+              </div>
+              <div class="filter-option" data-value="5-8">
+                <span class="filter-option-icon">📝</span>
+                <span class="filter-option-text">5-8 words <span class="length-tag short">Short</span></span>
+              </div>
+              <div class="filter-option" data-value="9">
+                <span class="filter-option-icon">📝</span>
+                <span class="filter-option-text">9 words</span>
+              </div>
+              <div class="filter-option" data-value="10">
+                <span class="filter-option-icon">📝</span>
+                <span class="filter-option-text">10 words</span>
+              </div>
+              <div class="filter-option" data-value="11">
+                <span class="filter-option-icon">📝</span>
+                <span class="filter-option-text">11 words</span>
+              </div>
+              <div class="filter-option" data-value="12-15">
+                <span class="filter-option-icon">📝</span>
+                <span class="filter-option-text">12-15 words <span class="length-tag long">Long</span></span>
+              </div>
             </div>
           </div>
         </div>
-        <div class="question-total">
-          <span>Total number of questions: <span id="total-questions-type">1</span></span>
-        </div>
       </div>
-      <div class="controls">
-        <button id="play-btn" class="modern-btn modern-btn--play" type="button">Play</button>
-        <button id="check-btn" class="modern-btn modern-btn--check" type="button" style="display: none;">Check</button>
-        <button id="retry-btn" class="modern-btn modern-btn--retry" type="button" style="display: none;">Retry</button>
+      <div class="question-total">
+        <span>Total number of questions: <span id="total-questions-type">1</span></span>
       </div>
-      <div id="score" class="score">Points: 0</div>
+    </div>
+    <div class="controls">
+      <button id="play-btn" class="modern-btn modern-btn--play" type="button">Play</button>
+      <button id="check-btn" class="modern-btn modern-btn--check" type="button" style="display: none;">Check</button>
+      <button id="retry-btn" class="modern-btn modern-btn--retry" type="button" style="display: none;">Retry</button>
+    </div>
+    <div id="score" class="score">Points: 0</div>
 
-      <label class="input-label" for="answer-input">Type what you hear:</label>
-      <textarea id="answer-input" rows="4" placeholder="Start typing..." disabled></textarea>
+    <label class="input-label" for="answer-input">Type what you hear:</label>
+    <textarea id="answer-input" rows="4" placeholder="Start typing..." disabled></textarea>
     </div>
 
     <div id="mode-speak" class="mode-panel">
@@ -447,32 +507,62 @@
             <option value="1">Loading...</option>
           </select>
           <!-- Multi-select state filter dropdown -->
-          <div class="tier-filter-dropdown">
-            <button id="tier-filter-btn-speak" class="tier-filter-btn" type="button">
-              <span>Filter by Status</span>
+          <div class="status-filter-dropdown" id="status-filter-container-speak">
+            <button id="status-filter-btn-speak" class="status-filter-btn" type="button">
+              <span id="status-filter-label-speak">Filter by Status</span>
               <span class="filter-arrow">▼</span>
             </button>
-            <div id="tier-filter-menu-speak" class="tier-filter-menu" style="display: none;">
-              <label class="tier-filter-option">
-                <input type="checkbox" id="filter-not-started-speak" checked>
-                <span class="tier-checkbox-label not-started">○ Not Started</span>
-              </label>
-              <label class="tier-filter-option">
-                <input type="checkbox" id="filter-in-progress-speak" checked>
-                <span class="tier-checkbox-label in-progress">◐ In Progress</span>
-              </label>
-              <label class="tier-filter-option">
-                <input type="checkbox" id="filter-completed-speak" checked>
-                <span class="tier-checkbox-label completed">✓ Completed (Correctly answered 3 times)</span>
-              </label>
-              <label class="tier-filter-option">
-                <input type="checkbox" id="filter-consolidated-speak" checked>
-                <span class="tier-checkbox-label consolidated">✓✓ Consolidated (Correctly answered 6 times)</span>
-              </label>
-              <label class="tier-filter-option">
-                <input type="checkbox" id="filter-mastered-speak" checked>
-                <span class="tier-checkbox-label mastered">★ Mastered (Correctly answered 9 times)</span>
-              </label>
+            <div id="status-filter-menu-speak" class="status-filter-menu" style="display: none;">
+              <div class="filter-option selected" data-value="not-started" data-filter-id="filter-not-started-speak">
+                <span class="filter-option-icon">○</span>
+                <span class="filter-option-text">Not Started</span>
+              </div>
+              <div class="filter-option selected" data-value="in-progress" data-filter-id="filter-in-progress-speak">
+                <span class="filter-option-icon">◐</span>
+                <span class="filter-option-text">In Progress</span>
+              </div>
+              <div class="filter-option selected" data-value="completed" data-filter-id="filter-completed-speak">
+                <span class="filter-option-icon">✓</span>
+                <span class="filter-option-text">Completed</span>
+              </div>
+              <div class="filter-option selected" data-value="consolidated" data-filter-id="filter-consolidated-speak">
+                <span class="filter-option-icon">✓✓</span>
+                <span class="filter-option-text">Consolidated</span>
+              </div>
+              <div class="filter-option selected" data-value="mastered" data-filter-id="filter-mastered-speak">
+                <span class="filter-option-icon">★</span>
+                <span class="filter-option-text">Mastered</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Unlockable Sentence Length Filter (Speak mode) -->
+          <div id="length-filter-container-speak" class="length-filter-dropdown" style="display: none;">
+            <button id="length-filter-btn-speak" class="length-filter-btn" type="button">
+              <span id="length-filter-label-speak">Filter by Length</span>
+              <span class="filter-arrow">▼</span>
+            </button>
+            <div id="length-filter-menu-speak" class="length-filter-menu" style="display: none;">
+              <div class="filter-option selected" data-value="all">
+                <span class="filter-option-icon">📏</span>
+                <span class="filter-option-text">All Lengths</span>
+              </div>
+              <div class="filter-option" data-value="4-7">
+                <span class="filter-option-icon">📝</span>
+                <span class="filter-option-text">4-7 words <span class="length-tag short">Short</span></span>
+              </div>
+              <div class="filter-option" data-value="8-9">
+                <span class="filter-option-icon">📝</span>
+                <span class="filter-option-text">8-9 words</span>
+              </div>
+              <div class="filter-option" data-value="10-11">
+                <span class="filter-option-icon">📝</span>
+                <span class="filter-option-text">10-11 words</span>
+              </div>
+              <div class="filter-option" data-value="12-13">
+                <span class="filter-option-icon">📝</span>
+                <span class="filter-option-text">12-13 words <span class="length-tag long">Long</span></span>
+              </div>
             </div>
           </div>
         </div>
@@ -801,10 +891,37 @@
   <div id="shopping-modal" class="entry-modal" style="display: none;">
     <div class="entry-modal-content shopping-modal-content">
       <button id="shopping-close-btn" class="close-btn">×</button>
-      <div class="shopping-popup-icon">🛒</div>
-      <h2>Shopping</h2>
-      <p>POINT EXCHANGING WILL BE AVAILABLE SOON!</p>
-      <button id="shopping-ok-btn" class="auth-btn" style="margin-top: 20px;">OK</button>
+
+      <!-- Header with Points -->
+      <div class="shopping-header">
+        <div class="shopping-icon">🛍️</div>
+        <h2>Points Exchange</h2>
+        <div class="shopping-points-display">
+          <span class="points-icon">🪙</span>
+          <span id="shopping-current-points" class="shopping-points-value">0</span>
+          <span class="shopping-points-label">Practice Points</span>
+        </div>
+      </div>
+
+      <!-- Feedback Area -->
+      <div id="shopping-feedback" class="shopping-feedback" style="display: none;"></div>
+
+      <!-- Rewards Table -->
+      <div class="shopping-table-container">
+        <table class="shopping-table">
+          <thead>
+            <tr>
+              <th>Reward</th>
+              <th>Cost</th>
+              <th>Action</th>
+              <th>Tutorial</th>
+            </tr>
+          </thead>
+          <tbody id="shopping-table-body">
+            <!-- Rows will be injected by JS -->
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -821,6 +938,29 @@
         it!</button>
     </div>
   </div>
+
+  <!-- Tutorial Overlay -->
+  <div id="tutorial-overlay" class="tutorial-overlay" style="display: none;">
+    <div id="tutorial-backdrop" class="tutorial-backdrop"></div>
+    <div id="tutorial-spotlight" class="tutorial-spotlight"></div>
+    <div id="tutorial-tooltip" class="tutorial-tooltip">
+      <div class="tutorial-header">
+        <span id="tutorial-icon" class="tutorial-icon">🎉</span>
+        <h3 id="tutorial-title">Welcome!</h3>
+      </div>
+      <p id="tutorial-text" class="tutorial-text">Tutorial step description...</p>
+      <div class="tutorial-actions">
+        <button id="tutorial-skip" class="tutorial-btn tutorial-skip-btn">Skip Tutorial</button>
+        <button id="tutorial-next" class="tutorial-btn tutorial-next-btn">Next →</button>
+      </div>
+      <div class="tutorial-progress">
+        <div class="tutorial-dots" id="tutorial-dots"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tutorial Script -->
+  <script src="tutorial.js"></script>
 
 </body>
 

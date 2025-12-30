@@ -23,6 +23,8 @@
   let masteryCache = progressCache;
   let correctSentenceType = ""; // Will be loaded from database for Type mode
   let correctSentenceSpeak = ""; // Will be loaded from database for Speak mode
+  let sentenceLengthData = null; // Map<lengthRange, Set<questionId>> for Type mode
+  let speakLengthData = null; // Map<lengthRange, Set<questionId>> for Speak mode
 
   /**
    * Load progress data for all questions in a mode
@@ -137,7 +139,163 @@
     if (hasAttempted) return 'in-progress';
     return 'not-started';
   }
+  /**
+   * Load sentence length data from Excel (2nd sheet)
+   * Format: "Length" column has "5-8 words", "9 words", etc.
+   *         "Question ID" column has comma-separated question IDs
+   */
+  async function loadSentenceLengthData() {
+    if (sentenceLengthData) return; // Already loaded
 
+    try {
+      console.log("Loading sentence length database...");
+      const response = await fetch('database/type/WFD.xlsx');
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch database file: ${response.statusText}`);
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+
+      // Use the SECOND sheet (index 1)
+      const sheetName = workbook.SheetNames[1];
+      if (!sheetName) {
+        throw new Error('Second sheet not found in Excel file');
+      }
+      const worksheet = workbook.Sheets[sheetName];
+
+      // Convert to JSON
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+      // Process data: Map<lengthRange, Set<questionId>>
+      // Data format: { "Length": "5-8 words", "Question ID": "1,2,3,4,5..." }
+      sentenceLengthData = new Map();
+
+      jsonData.forEach(row => {
+        const lengthStr = row['Length'] || '';
+        const questionIdStr = String(row['Question ID'] || '');
+
+        // Extract length range from string like "5-8 words" -> "5-8"
+        const lengthMatch = lengthStr.match(/^(\d+(?:-\d+)?)/);
+        if (!lengthMatch) return;
+
+        const lengthRange = lengthMatch[1]; // e.g., "5-8", "9", "10", "11", "12-15"
+
+        // Parse comma-separated question IDs
+        const questionIds = questionIdStr.split(',')
+          .map(id => parseInt(id.trim(), 10))
+          .filter(id => !isNaN(id) && id > 0);
+
+        if (questionIds.length > 0) {
+          sentenceLengthData.set(lengthRange, new Set(questionIds));
+        }
+      });
+
+      console.log(`✓ Loaded sentence length data: ${sentenceLengthData.size} length ranges.`);
+      sentenceLengthData.forEach((ids, range) => {
+        console.log(`  - ${range}: ${ids.size} questions`);
+      });
+
+      // Refresh list to apply any active filters
+      populateQuestionSelect('type');
+
+    } catch (error) {
+      console.error("Error loading sentence length database:", error);
+      sentenceLengthData = null; // Reset on failure
+    }
+  }
+
+  /**
+   * Load speak mode length data from Excel (RS.xlsx, 2nd sheet)
+   * Format: First column has "4-7 words", "8-9 words", etc.
+   *         Second column has comma-separated question IDs
+   */
+  async function loadSpeakLengthData() {
+    if (speakLengthData) return; // Already loaded
+
+    try {
+      console.log("Loading speak length database...");
+      const response = await fetch('database/speak/RS.xlsx');
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch speak database file: ${response.statusText}`);
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+
+      // Use the SECOND sheet (index 1)
+      const sheetName = workbook.SheetNames[1];
+      if (!sheetName) {
+        throw new Error('Second sheet not found in RS.xlsx');
+      }
+      const worksheet = workbook.Sheets[sheetName];
+
+      // Convert to JSON (no headers)  
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+      // Process data: Map<lengthRange, Set<questionId>>
+      speakLengthData = new Map();
+
+      jsonData.forEach(row => {
+        if (!row || row.length < 2) return;
+
+        const lengthStr = String(row[0] || '');
+        const questionIdStr = String(row[1] || '');
+
+        // Extract length range from string like "4-7 words" -> "4-7"
+        const lengthMatch = lengthStr.match(/^(\d+(?:-\d+)?)/);
+        if (!lengthMatch) return;
+
+        const lengthRange = lengthMatch[1]; // e.g., "4-7", "8-9", "10-11", "12-13"
+
+        // Parse comma-separated question IDs
+        const questionIds = questionIdStr.split(',')
+          .map(id => parseInt(id.trim(), 10))
+          .filter(id => !isNaN(id) && id > 0);
+
+        if (questionIds.length > 0) {
+          speakLengthData.set(lengthRange, new Set(questionIds));
+        }
+      });
+
+      console.log(`✓ Loaded speak length data: ${speakLengthData.size} length ranges.`);
+      speakLengthData.forEach((ids, range) => {
+        console.log(`  - ${range}: ${ids.size} questions`);
+      });
+
+      // Refresh list to apply any active filters
+      populateQuestionSelect('speak');
+
+    } catch (error) {
+      console.error("Error loading speak length database:", error);
+      speakLengthData = null; // Reset on failure
+    }
+  }
+
+  /**
+   * Filter question IDs by sentence length
+   * @param {string} lengthRange - e.g., "5-8", "9", "12-15"
+   * @param {string} mode - 'type' or 'speak'
+   * @returns {Set<number>|null} Set of valid Question IDs or null if no filter/data
+   */
+  function getIdsForLengthRange(lengthRange, mode = 'type') {
+    const dataSource = mode === 'speak' ? speakLengthData : sentenceLengthData;
+
+    if (!dataSource || !lengthRange || lengthRange === 'all') return null;
+
+    // Direct lookup by range key
+    const ids = dataSource.get(lengthRange);
+
+    if (ids && ids.size > 0) {
+      console.log(`Filter by length "${lengthRange}" (${mode}): ${ids.size} questions found`);
+      return ids;
+    }
+
+    console.log(`Filter by length "${lengthRange}" (${mode}): no questions found`);
+    return new Set(); // Return empty set if not found
+  }
   /**
    * Calculate tier from perfect count (legacy, for backward compatibility)
    * 
@@ -4484,12 +4642,25 @@
       // Get current selected question ID (to ensure it's always shown even if filtered)
       const currentId = mode === "type" ? currentTypeQuestionId : currentSpeakQuestionId;
 
-      // Get state filter checkbox states
-      const filterNotStarted = document.getElementById(`filter-not-started-${mode}`)?.checked ?? true;
-      const filterInProgress = document.getElementById(`filter-in-progress-${mode}`)?.checked ?? true;
-      const filterCompleted = document.getElementById(`filter-completed-${mode}`)?.checked ?? true;
-      const filterConsolidated = document.getElementById(`filter-consolidated-${mode}`)?.checked ?? true;
-      const filterMastered = document.getElementById(`filter-mastered-${mode}`)?.checked ?? true;
+      // Get state filter from new div-based options (check for .selected class)
+      const statusMenu = document.getElementById(`status-filter-menu-${mode}`);
+      const filterNotStarted = statusMenu?.querySelector('.filter-option[data-value="not-started"]')?.classList.contains('selected') ?? true;
+      const filterInProgress = statusMenu?.querySelector('.filter-option[data-value="in-progress"]')?.classList.contains('selected') ?? true;
+      const filterCompleted = statusMenu?.querySelector('.filter-option[data-value="completed"]')?.classList.contains('selected') ?? true;
+      const filterConsolidated = statusMenu?.querySelector('.filter-option[data-value="consolidated"]')?.classList.contains('selected') ?? true;
+      const filterMastered = statusMenu?.querySelector('.filter-option[data-value="mastered"]')?.classList.contains('selected') ?? true;
+
+      // Get Sentence Length Filter (Type and Speak modes)
+      let validLengthIds = null;
+      const lengthContainer = document.getElementById(`length-filter-container-${mode}`);
+      const lengthMenu = document.getElementById(`length-filter-menu-${mode}`);
+      // Read from div-based options
+      const selectedOption = lengthMenu?.querySelector('.filter-option.selected');
+      const lengthValue = selectedOption?.dataset.value || 'all';
+      // Apply filter only if visible (unlocked) and not "all"
+      if (lengthContainer && lengthContainer.style.display !== 'none' && lengthValue !== 'all') {
+        validLengthIds = getIdsForLengthRange(lengthValue, mode);
+      }
 
       // Get progress cache for this mode
       const modeProgressCache = progressCache[mode] || {};
@@ -4497,15 +4668,16 @@
       select.innerHTML = "";
       let visibleCount = 0;
 
-      // Filter and render questions based on state filter
+      // Filter and render questions based on filters
       database.forEach(item => {
         const questionId = item.id;
         const progress = modeProgressCache[questionId] || { perfectCount: 0, hasAttempted: false };
         const hasAttempted = progress.hasAttempted || false;
         const perfectCount = progress.perfectCount || 0;
+        const tier = calculateTier(perfectCount); // Using calculated tier for consistency
         const state = calculateState(hasAttempted, perfectCount);
 
-        // Check if this state should be shown based on filter
+        // 1. Status Filter
         let shouldShow = false;
         if (state === 'not-started' && filterNotStarted) shouldShow = true;
         else if (state === 'in-progress' && filterInProgress) shouldShow = true;
@@ -4513,12 +4685,23 @@
         else if (state === 'consolidated' && filterConsolidated) shouldShow = true;
         else if (state === 'mastered' && filterMastered) shouldShow = true;
 
-        // Always show currently selected question
-        if (questionId === currentId) shouldShow = true;
+        // 2. Length Filter (Type mode only)
+        if (shouldShow && lengthContainer && lengthContainer.style.display !== 'none' && lengthValue !== 'all') {
+          // If data hasn't loaded (validLengthIds is null), hide everything
+          if (validLengthIds === null) {
+            shouldShow = false;
+          } else if (!validLengthIds.has(questionId)) {
+            shouldShow = false;
+          }
+        }
+
+        // Don't force currentId to show if it doesn't match filters
 
         if (!shouldShow) {
           return; // Skip this question based on filter
         }
+
+        visibleCount++;
 
         // Create option element
         const option = document.createElement("option");
@@ -4537,12 +4720,11 @@
         option.classList.add(`state-${state}`);
 
         select.appendChild(option);
-        visibleCount++;
       });
 
       // Update display
       currentIdDisplay.textContent = currentId;
-      const hasFilters = !filterNotStarted || !filterInProgress || !filterCompleted || !filterConsolidated || !filterMastered;
+      const hasFilters = !filterNotStarted || !filterInProgress || !filterCompleted || !filterConsolidated || !filterMastered || (validLengthIds !== null);
       totalDisplay.textContent = hasFilters ? `${visibleCount} (${database.length} total)` : database.length;
 
       // Set selected value (ensure current question is selected)
@@ -4806,6 +4988,11 @@
 
       // 4. Update the progress side panel
       await updateProgressPanel(currentMode);
+
+      // 5. Check Sentence Length Filter Unlock Status
+      if (window.checkFilterUnlockStatus) {
+        window.checkFilterUnlockStatus(userId);
+      }
 
       console.log('✓ Progress UI: Reload complete after login');
     } else if (eventType === 'logout') {
@@ -6495,7 +6682,351 @@
       speakWord(word, next);
     }
   });
+  // Expose functions to window for global access (required for auth-ui.js callbacks)
+  window.populateQuestionSelect = populateQuestionSelect;
+  window.loadSentenceLengthData = loadSentenceLengthData;
+
+  // Global user profile storage
+  window.currentUserProfile = null;
+
+  /**
+   * Check if Sentence Length Filters are unlocked for the user (Type and Speak)
+   */
+  async function checkFilterUnlockStatus(userId) {
+    if (!userId || !window.firebaseFirestoreFunctions) return;
+    try {
+      const result = await window.firebaseFirestoreFunctions.getUserProfile(userId);
+      if (result && result.success && result.data) {
+        window.currentUserProfile = result.data; // Store globally
+
+        // Check Type mode filter
+        if (result.data.sentenceLengthFilterUnlocked) {
+          const containerType = document.getElementById('length-filter-container-type');
+          if (containerType) {
+            containerType.style.display = 'block';
+            loadSentenceLengthData();
+            applyLevelBasedRestrictions('type', result.data);
+          }
+        }
+        // Check Speak mode filter
+        if (result.data.speakLengthFilterUnlocked) {
+          const containerSpeak = document.getElementById('length-filter-container-speak');
+          if (containerSpeak) {
+            containerSpeak.style.display = 'block';
+            loadSpeakLengthData();
+            applyLevelBasedRestrictions('speak', result.data);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error checking filter unlock status:', e);
+    }
+  }
+
+  /**
+   * Apply filter option restrictions based on English Level
+   */
+  function applyLevelBasedRestrictions(mode, profile) {
+    const menuId = `length-filter-menu-${mode}`;
+    const menu = document.getElementById(menuId);
+    if (!menu || !profile) return;
+
+    // Determine if fully unlocked (via Shop or Expert level previously full unlocked)
+    // Note: Expert level initially DOES NOT unlock filter. If unlocked, it's likely via Shop.
+    // We check the 'FullUnlock' flag set during purchase.
+    const isFullUnlock = mode === 'type'
+      ? profile.sentenceLengthFilterFullUnlock
+      : profile.speakLengthFilterFullUnlock;
+
+    if (isFullUnlock) {
+      // Show all options
+      menu.querySelectorAll('.filter-option').forEach(el => el.style.display = 'flex');
+      return;
+    }
+
+    // Level-based Logic
+    const level = profile.englishLevel;
+    if (!level) return; // Should not happen if unlocked via level, but safety check
+
+    const options = menu.querySelectorAll('.filter-option');
+    options.forEach(opt => {
+      const val = opt.dataset.value;
+      if (val === 'all') {
+        opt.style.display = 'flex'; // Always show 'All'? Or remove it? 
+        // Request says: "Only show... 5-8 words". 'All' implies all. 
+        // Maybe hide 'All' too if restricted? 
+        // "Only show the first option: 5–8 words." -> This implies 'All' should be hidden or strictly 5-8.
+        // If I hide 'All', I must select '5-8' by default.
+        // Let's hide 'All' for Beginner/Intermediate to force specific practice.
+        opt.style.display = 'none';
+      } else {
+        let show = false;
+
+        if (level === 'beginner') {
+          // Only 5-8 (and maybe 4-7 for speak)
+          if (val === '5-8' || val === '4-7') show = true;
+        } else if (level === 'intermediate') {
+          // 5-8, 9 (Type) / 4-7, 8-9 (Speak)
+          if (val === '5-8' || val === '9') show = true;
+          if (val === '4-7' || val === '8-9') show = true;
+        } else if (level === 'expert') {
+          // Expert doesn't unlock by default. If here, it means it's unlocked but NOT fully? 
+          // Should typically be full unlock if Expert has it. 
+          // But if they somehow got here without full unlock, show all?
+          // User said: "Expert: Do not unlock".
+          // If they have it, assume full.
+          show = true;
+        }
+
+        opt.style.display = show ? 'flex' : 'none';
+      }
+    });
+
+    // Auto-select the first visible option if current selection is hidden
+    const selected = menu.querySelector('.filter-option.selected');
+    if (!selected || selected.style.display === 'none') {
+      const firstVisible = Array.from(options).find(el => el.style.display !== 'none');
+      if (firstVisible) {
+        // Simulate click or just set class
+        options.forEach(o => o.classList.remove('selected'));
+        firstVisible.classList.add('selected');
+        // Update label
+        const labelId = `length-filter-label-${mode}`;
+        const labelEl = document.getElementById(labelId);
+        if (labelEl) labelEl.textContent = firstVisible.querySelector('.filter-option-text').textContent.replace(/📏|📝/g, '').trim();
+        // Trigger populate
+        // window.populateQuestionSelect(mode); // Will be called by load data anyway
+      }
+    }
+  }
+
+  // Expose checks globally
+  window.checkFilterUnlockStatus = checkFilterUnlockStatus;
+
+  // ============================================
+  // Status Filter (Multi-select with highlighting)
+  // ============================================
+  const statusFilterBtn = document.getElementById('status-filter-btn-type');
+  const statusFilterMenu = document.getElementById('status-filter-menu-type');
+  const statusFilterContainer = document.getElementById('status-filter-container-type');
+
+  if (statusFilterBtn && statusFilterMenu) {
+    // Toggle dropdown
+    statusFilterBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = statusFilterMenu.style.display === 'block';
+      statusFilterMenu.style.display = isOpen ? 'none' : 'block';
+      statusFilterContainer.classList.toggle('open', !isOpen);
+    });
+
+    // Handle option click (multi-select toggle)
+    statusFilterMenu.querySelectorAll('.filter-option').forEach(option => {
+      option.addEventListener('click', () => {
+        option.classList.toggle('selected');
+        populateQuestionSelect('type');
+        updateStatusFilterLabel();
+      });
+    });
+
+    // Update label to show count of selected
+    function updateStatusFilterLabel() {
+      const selectedCount = statusFilterMenu.querySelectorAll('.filter-option.selected').length;
+      const totalCount = statusFilterMenu.querySelectorAll('.filter-option').length;
+      const labelEl = document.getElementById('status-filter-label-type');
+      if (labelEl) {
+        if (selectedCount === totalCount) {
+          labelEl.textContent = 'Filter by Status';
+        } else {
+          labelEl.textContent = `Status (${selectedCount}/${totalCount})`;
+        }
+      }
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!statusFilterContainer.contains(e.target)) {
+        statusFilterMenu.style.display = 'none';
+        statusFilterContainer.classList.remove('open');
+      }
+    });
+  }
+
+  // ============================================
+  // Length Filter (Single-select with highlighting)
+  // ============================================
+  const lengthFilterBtn = document.getElementById('length-filter-btn-type');
+  const lengthFilterMenu = document.getElementById('length-filter-menu-type');
+  const lengthFilterContainer = document.getElementById('length-filter-container-type');
+
+  if (lengthFilterBtn && lengthFilterMenu) {
+    // Toggle dropdown
+    lengthFilterBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = lengthFilterMenu.style.display === 'block';
+      lengthFilterMenu.style.display = isOpen ? 'none' : 'block';
+      lengthFilterContainer.classList.toggle('open', !isOpen);
+    });
+
+    // Handle option click (single-select)
+    lengthFilterMenu.querySelectorAll('.filter-option').forEach(option => {
+      option.addEventListener('click', () => {
+        // Remove selected from all
+        lengthFilterMenu.querySelectorAll('.filter-option').forEach(o => o.classList.remove('selected'));
+        // Add to clicked
+        option.classList.add('selected');
+
+        // Update label
+        const text = option.querySelector('.filter-option-text')?.textContent || 'Filter by Length';
+        const labelEl = document.getElementById('length-filter-label-type');
+        if (labelEl) labelEl.textContent = text.replace(/📏|📝/g, '').trim();
+
+        populateQuestionSelect('type');
+
+        // Close menu after selection
+        lengthFilterMenu.style.display = 'none';
+        lengthFilterContainer.classList.remove('open');
+      });
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!lengthFilterContainer.contains(e.target)) {
+        lengthFilterMenu.style.display = 'none';
+        lengthFilterContainer.classList.remove('open');
+      }
+    });
+  }
+
+  // ============================================
+  // Status Filter for Speak Mode
+  // ============================================
+  const statusFilterBtnSpeak = document.getElementById('status-filter-btn-speak');
+  const statusFilterMenuSpeak = document.getElementById('status-filter-menu-speak');
+  const statusFilterContainerSpeak = document.getElementById('status-filter-container-speak');
+
+  if (statusFilterBtnSpeak && statusFilterMenuSpeak) {
+    // Toggle dropdown
+    statusFilterBtnSpeak.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = statusFilterMenuSpeak.style.display === 'block';
+      statusFilterMenuSpeak.style.display = isOpen ? 'none' : 'block';
+      statusFilterContainerSpeak.classList.toggle('open', !isOpen);
+    });
+
+    // Handle option click (multi-select toggle)
+    statusFilterMenuSpeak.querySelectorAll('.filter-option').forEach(option => {
+      option.addEventListener('click', () => {
+        option.classList.toggle('selected');
+        populateQuestionSelect('speak');
+        updateStatusFilterLabelSpeak();
+      });
+    });
+
+    // Update label to show count of selected
+    function updateStatusFilterLabelSpeak() {
+      const selectedCount = statusFilterMenuSpeak.querySelectorAll('.filter-option.selected').length;
+      const totalCount = statusFilterMenuSpeak.querySelectorAll('.filter-option').length;
+      const labelEl = document.getElementById('status-filter-label-speak');
+      if (labelEl) {
+        if (selectedCount === totalCount) {
+          labelEl.textContent = 'Filter by Status';
+        } else {
+          labelEl.textContent = `Status (${selectedCount}/${totalCount})`;
+        }
+      }
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!statusFilterContainerSpeak.contains(e.target)) {
+        statusFilterMenuSpeak.style.display = 'none';
+        statusFilterContainerSpeak.classList.remove('open');
+      }
+    });
+  }
+
+  // ============================================
+  // Length Filter for Speak Mode
+  // ============================================
+  const lengthFilterBtnSpeak = document.getElementById('length-filter-btn-speak');
+  const lengthFilterMenuSpeak = document.getElementById('length-filter-menu-speak');
+  const lengthFilterContainerSpeak = document.getElementById('length-filter-container-speak');
+
+  if (lengthFilterBtnSpeak && lengthFilterMenuSpeak) {
+    // Toggle dropdown
+    lengthFilterBtnSpeak.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = lengthFilterMenuSpeak.style.display === 'block';
+      lengthFilterMenuSpeak.style.display = isOpen ? 'none' : 'block';
+      lengthFilterContainerSpeak.classList.toggle('open', !isOpen);
+    });
+
+    // Handle option click (single-select)
+    lengthFilterMenuSpeak.querySelectorAll('.filter-option').forEach(option => {
+      option.addEventListener('click', () => {
+        // Remove selected from all
+        lengthFilterMenuSpeak.querySelectorAll('.filter-option').forEach(o => o.classList.remove('selected'));
+        // Add to clicked
+        option.classList.add('selected');
+
+        // Update label
+        const text = option.querySelector('.filter-option-text')?.textContent || 'Filter by Length';
+        const labelEl = document.getElementById('length-filter-label-speak');
+        if (labelEl) labelEl.textContent = text.replace(/📏|📝/g, '').trim();
+
+        populateQuestionSelect('speak');
+
+        // Close menu after selection
+        lengthFilterMenuSpeak.style.display = 'none';
+        lengthFilterContainerSpeak.classList.remove('open');
+      });
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!lengthFilterContainerSpeak.contains(e.target)) {
+        lengthFilterMenuSpeak.style.display = 'none';
+        lengthFilterContainerSpeak.classList.remove('open');
+      }
+    });
+  }
+
+  // Handle unlock event from Shopping Modal (supports both modes)
+  window.onFilterUnlocked = (mode = 'type') => {
+    const container = document.getElementById(`length-filter-container-${mode}`);
+    const menu = document.getElementById(`length-filter-menu-${mode}`);
+
+    if (container) {
+      container.style.display = 'block';
+
+      // Load appropriate data
+      if (mode === 'type') {
+        loadSentenceLengthData();
+      } else if (mode === 'speak') {
+        loadSpeakLengthData();
+      }
+
+      // Reset to "All Lengths"
+      const allOption = menu?.querySelector('.filter-option[data-value="all"]');
+      if (allOption && menu) {
+        menu.querySelectorAll('.filter-option').forEach(o => o.classList.remove('selected'));
+        allOption.classList.add('selected');
+      }
+      const labelElement = document.getElementById(`length-filter-label-${mode}`);
+      if (labelElement) labelElement.textContent = 'Filter by Length';
+      populateQuestionSelect(mode);
+
+      // Start tutorial for first-time users
+      if (window.LengthFilterTutorial && !window.LengthFilterTutorial.hasCompleted(mode)) {
+        // Small delay to let the UI settle
+        setTimeout(() => {
+          window.LengthFilterTutorial.start(mode);
+        }, 500);
+      }
+    }
+  };
+
+  // Expose loadSpeakLengthData globally
+  window.loadSpeakLengthData = loadSpeakLengthData;
 })();
-
-
 

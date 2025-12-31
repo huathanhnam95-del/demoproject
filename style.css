@@ -5032,3 +5032,197 @@ textarea:focus {
 .vocab-skip-btn:hover {
   background: #d1d5db;
 }
+
+/* Vocabulary Panel Overlay */
+.vocab-panel-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  /* Below panel (1001) but above content */
+  display: none;
+  /* Hidden by default */
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  backdrop-filter: blur(2px);
+}
+
+.vocab-panel-overlay.visible {
+  display: block;
+  opacity: 1;
+}
+
+/* Ensure panel is above overlay */
+.vocab-panel-side {
+  z-index: 1001;
+}
+
+/* Ensure add modal is above everything */
+.vocab-add-modal {
+  z-index: 1002 !important;
+}
+
+/* Ensure list modal is above everything */
+.vocab-list-modal {
+  z-index: 1002 !important;
+}
+
+/* ============================================
+   Vocabulary List Modal (Full View)
+   ============================================ */
+
+.vocab-list-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 5000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.vocab-list-content-modal {
+  background: white;
+  width: 700px;
+  max-width: 95%;
+  height: 80vh;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.vocab-list-header {
+  padding: 20px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8fafc;
+}
+
+.vocab-list-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #1e293b;
+}
+
+/* Tabs */
+.vocab-tabs {
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+  background: white;
+}
+
+.vocab-tab-btn {
+  flex: 1;
+  padding: 16px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.vocab-tab-btn:hover {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.vocab-tab-btn.active {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+  background: #eff6ff;
+}
+
+/* Tab Content */
+.vocab-tab-content {
+  display: none;
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.vocab-tab-content.active {
+  display: block;
+}
+
+/* Table */
+.vocab-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.vocab-table th {
+  text-align: left;
+  padding: 12px;
+  background: #f8fafc;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border-bottom: 2px solid #e2e8f0;
+  position: sticky;
+  top: -20px;
+  /* Adjust for padding offset for scroll */
+  z-index: 10;
+}
+
+.vocab-table td {
+  padding: 12px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  font-size: 0.95rem;
+}
+
+.vocab-table tr:hover td {
+  background: #f8fafc;
+}
+
+.vocab-phonetic {
+  font-family: 'Consolas', 'Monaco', monospace;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.vocab-audio-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 4px 8px;
+  border-radius: 50%;
+  transition: background 0.2s;
+  color: #3b82f6;
+}
+
+.vocab-audio-btn:hover {
+  background: #eff6ff;
+}
+
+.btn-icon-remove {
+  color: #ef4444;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.btn-icon-remove:hover {
+  background: #fee2e2;
+}

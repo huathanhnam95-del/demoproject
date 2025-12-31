@@ -1,6 +1,6 @@
 /**
  * Vocabulary Book Module
- * Handles word tracking, bookmarking, and mastery logic
+ * Handles word tracking, bookmarking, mastery logic, and full list modal
  */
 
 import {
@@ -35,10 +35,18 @@ const VocabularyBook = (function () {
         frequentlyMissed: []
     };
 
+    // Cache for phonetics to avoid API spam
+    const phoneticCache = new Map();
+
     // DOM elements
-    let vocabPanelToggle, vocabPanelSide, vocabPanelContent, vocabPanelCloseBtn;
+    let vocabPanelToggle, vocabPanelSide, vocabPanelContent, vocabPanelCloseBtn, vocabPanelOverlay;
     let vocabBookmarkedList, vocabFrequentList;
     let vocabAddModal, vocabAddWords, vocabAddBtn, vocabSkipBtn, vocabAddClose;
+
+    // New Modal Elements
+    let vocabListModal, vocabListClose;
+    let vocabTabs, vocabTabContents;
+    let vocabTableBodyBookmarks, vocabTableBodyMissed;
 
     // Current missed words for the add modal
     let currentMissedWords = [];
@@ -59,6 +67,7 @@ const VocabularyBook = (function () {
         vocabPanelSide = document.getElementById('vocab-panel-side');
         vocabPanelContent = document.getElementById('vocab-panel-content');
         vocabPanelCloseBtn = document.getElementById('vocab-panel-close-btn');
+        vocabPanelOverlay = document.getElementById('vocab-panel-overlay'); // New overlay
         vocabBookmarkedList = document.getElementById('vocab-bookmarked-list');
         vocabFrequentList = document.getElementById('vocab-frequent-list');
         vocabAddModal = document.getElementById('vocab-add-modal');
@@ -67,11 +76,20 @@ const VocabularyBook = (function () {
         vocabSkipBtn = document.getElementById('vocab-skip-btn');
         vocabAddClose = document.getElementById('vocab-add-close');
 
+        // New Modal Elements
+        vocabListModal = document.getElementById('vocab-list-modal');
+        vocabListClose = document.getElementById('vocab-list-close');
+        vocabTabs = document.querySelectorAll('.vocab-tab-btn');
+        vocabTabContents = document.querySelectorAll('.vocab-tab-content');
+        vocabTableBodyBookmarks = document.getElementById('vocab-table-body-bookmarks');
+        vocabTableBodyMissed = document.getElementById('vocab-table-body-missed');
+
         console.log('[VocabBook] Init - Elements found:', {
             toggle: !!vocabPanelToggle,
             panel: !!vocabPanelSide,
+            overlay: !!vocabPanelOverlay,
             modal: !!vocabAddModal,
-            addBtn: !!vocabAddBtn
+            listModal: !!vocabListModal
         });
 
         // Setup event listeners
@@ -80,6 +98,9 @@ const VocabularyBook = (function () {
         }
         if (vocabPanelCloseBtn) {
             vocabPanelCloseBtn.addEventListener('click', closePanel);
+        }
+        if (vocabPanelOverlay) {
+            vocabPanelOverlay.addEventListener('click', closePanel);
         }
         if (vocabAddBtn) {
             vocabAddBtn.addEventListener('click', handleAddSelected);
@@ -90,6 +111,34 @@ const VocabularyBook = (function () {
         if (vocabAddClose) {
             vocabAddClose.addEventListener('click', hideAddModal);
         }
+        if (vocabListClose) {
+            vocabListClose.addEventListener('click', hideListModal);
+        }
+
+        // Modal Click-Outside-To-Close
+        if (vocabListModal) {
+            vocabListModal.addEventListener('click', (e) => {
+                // If clicking the backdrop (the modal wrapper itself)
+                if (e.target === vocabListModal) {
+                    hideListModal();
+                }
+            });
+        }
+        if (vocabAddModal) {
+            vocabAddModal.addEventListener('click', (e) => {
+                if (e.target === vocabAddModal) {
+                    hideAddModal();
+                }
+            });
+        }
+
+        // Tab Switching
+        vocabTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const target = tab.dataset.tab;
+                switchTab(target);
+            });
+        });
 
         // Exclusivity: Close Vocab when Progress Toggle is clicked
         const progressToggle = document.getElementById('progress-panel-toggle');
@@ -99,6 +148,182 @@ const VocabularyBook = (function () {
 
         console.log('[VocabBook] Module initialized');
     }
+
+    /**
+     * Switch Tabs in List Modal
+     */
+    function switchTab(tabName) {
+        // Update Buttons
+        vocabTabs.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === tabName);
+        });
+
+        // Update Content
+        vocabTabContents.forEach(content => {
+            content.classList.toggle('active', content.id === `tab-content-${tabName}`);
+        });
+    }
+
+    /**
+     * Show the List Modal
+     */
+    function showListModal(initialTab = 'bookmarks') {
+        if (vocabListModal) {
+            vocabListModal.style.display = 'flex';
+            switchTab(initialTab);
+            renderListTable('bookmarks');
+            renderListTable('missed');
+        }
+    }
+
+    /**
+     * Hide the List Modal
+     */
+    function hideListModal() {
+        if (vocabListModal) {
+            vocabListModal.style.display = 'none';
+        }
+    }
+
+    /**
+     * Fetch Phonetic data from DictionaryAPI
+     */
+    async function fetchPhonetics(word) {
+        const cleanWord = word.trim().toLowerCase().replace(/[^a-z]/g, '');
+        if (!cleanWord) return null;
+
+        if (phoneticCache.has(cleanWord)) {
+            return phoneticCache.get(cleanWord);
+        }
+
+        try {
+            const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${cleanWord}`);
+            if (!response.ok) throw new Error('Not found');
+            const data = await response.json();
+
+            // Extract first valid phonetic text
+            let phonetic = '';
+            if (data[0].phonetic) phonetic = data[0].phonetic;
+            else if (data[0].phonetics && data[0].phonetics.length > 0) {
+                const p = data[0].phonetics.find(x => x.text);
+                if (p) phonetic = p.text;
+            }
+
+            phoneticCache.set(cleanWord, phonetic);
+            return phonetic;
+        } catch (e) {
+            console.warn(`[VocabBook] No phonetics found for: ${cleanWord}`);
+            phoneticCache.set(cleanWord, ''); // Cache empty to avoid retry
+            return '';
+        }
+    }
+
+    /**
+     * Play Pronunciation using specific female voice if available
+     */
+    function playPronunciation(word) {
+        if ('speechSynthesis' in window) {
+            const synth = window.speechSynthesis;
+            synth.cancel(); // Stop current
+
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = 'en-US';
+
+            // Voice selection logic matching script.js
+            const voices = synth.getVoices();
+            const preferred = voices.find((v) =>
+                /female|samantha|allison|joanna|kimberly|ssml female|en-us/i.test(v.name)
+            );
+
+            if (preferred) {
+                utterance.voice = preferred;
+            }
+            // Keep rate normal/slightly slow for clarity (script.js uses 1.0, but 0.9 is often better for single words)
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+
+            synth.speak(utterance);
+        }
+    }
+
+    /**
+     * Render the Data Table for a tab
+     */
+    async function renderListTable(tabName) {
+        const tbody = tabName === 'bookmarks' ? vocabTableBodyBookmarks : vocabTableBodyMissed;
+        if (!tbody) return;
+
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;">Loading...</td></tr>';
+
+        let items = [];
+        if (tabName === 'bookmarks') {
+            items = [...vocabCache.bookmarkedWords].sort((a, b) => new Date(b.addedAt || 0) - new Date(a.addedAt || 0));
+        } else {
+            items = [...vocabCache.frequentlyMissed].sort((a, b) => b.missCount - a.missCount);
+        }
+
+        if (items.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;">No words found.</td></tr>';
+            return;
+        }
+
+        // Generate Rows
+        const rowsHtml = items.map((item, index) => {
+            const wordText = item.word || item.originalWord; // Handle both structures
+            const lemma = item.lemma;
+            const rowId = `vocab-row-${tabName}-${index}`;
+
+            // Stats column for Missed tab, Actions for Bookmarks
+            let statsCell = '';
+            if (tabName === 'missed') {
+                statsCell = `<td><span class="vocab-badge vocab-badge-miss">Missed ${item.missCount}x</span></td>`;
+            } else {
+                statsCell = `<td>
+                    <button class="btn-icon-remove" onclick="window.VocabularyBook.removeViaModal('${lemma}')" title="Remove">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </td>`;
+            }
+
+            return `
+                <tr id="${rowId}">
+                    <td><span class="vocab-word-text">${wordText}</span></td>
+                    <td class="phonetic-cell" data-word="${wordText}">...</td>
+                    <td>
+                        <button class="vocab-audio-btn" onclick="window.VocabularyBook.playAudio('${wordText}')" title="Listen">
+                            🔊
+                        </button>
+                    </td>
+                    ${statsCell}
+                </tr>
+            `;
+        }).join('');
+
+        tbody.innerHTML = rowsHtml;
+
+        // Fetch Phonetics in background
+        for (const item of items) {
+            const wordText = item.word || item.originalWord;
+            // Don't await one by one to block UI, but we should update DOM when ready
+            fetchPhonetics(wordText).then(phonetic => {
+                const cells = tbody.querySelectorAll(`.phonetic-cell[data-word="${wordText}"]`);
+                cells.forEach(cell => {
+                    cell.innerHTML = phonetic ? `<span class="vocab-phonetic">${phonetic}</span>` : '<span style="color:#cbd5e1">-</span>';
+                });
+            });
+        }
+    }
+
+    /**
+     * Remove word via Modal
+     */
+    function removeViaModal(lemma) {
+        if (confirm('Remove this word from bookmarks?')) {
+            removeBookmarkedWord(lemma);
+            renderListTable('bookmarks'); // Re-render table
+        }
+    }
+
 
     /**
      * Set Firebase references when user logs in
@@ -490,15 +715,15 @@ const VocabularyBook = (function () {
       </div>
     `).join('');
 
-        // Always show button if there are items, to allow accessing full view
-        const showButton = totalCount > displayLimit;
+        // ALWAYS show button if there are items (as requested by user)
+        const showButton = totalCount > 0;
 
         vocabBookmarkedList.innerHTML = `
             <div class="vocab-list-content">
                 ${listHtml}
             </div>
             ${showButton ? `<button class="vocab-show-all-btn" id="vocab-show-all-bookmarks">
-                <span>Show All (${totalCount})</span>
+                <span>View Full List (${totalCount})</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
             </button>` : ''}
         `;
@@ -514,8 +739,7 @@ const VocabularyBook = (function () {
         const showAllBtn = vocabBookmarkedList.querySelector('#vocab-show-all-bookmarks');
         if (showAllBtn) {
             showAllBtn.addEventListener('click', () => {
-                console.log('Show All Bookmarks clicked - Coming soon');
-                // TODO: Implement full view
+                showListModal('bookmarks');
             });
         }
     }
@@ -560,7 +784,7 @@ const VocabularyBook = (function () {
         }).join('');
 
         // Wrapper for scroll (max 5 items visible approx 260px)
-        const showButton = totalCount > displayLimit;
+        const showButton = totalCount > 0;
 
         vocabFrequentList.innerHTML = `
             <div class="vocab-scroll-list">
@@ -576,8 +800,7 @@ const VocabularyBook = (function () {
         const showAllBtn = vocabFrequentList.querySelector('#vocab-show-all-missed');
         if (showAllBtn) {
             showAllBtn.addEventListener('click', () => {
-                console.log('Show All Missed clicked - Coming soon');
-                // TODO: Implement full view
+                showListModal('missed');
             });
         }
     }
@@ -598,6 +821,13 @@ const VocabularyBook = (function () {
             vocabPanelSide.classList.toggle('expanded');
             if (vocabPanelSide.classList.contains('expanded')) {
                 loadVocabData(); // Refresh data when opening
+                if (vocabPanelOverlay) {
+                    vocabPanelOverlay.classList.add('visible');
+                }
+            } else {
+                if (vocabPanelOverlay) {
+                    vocabPanelOverlay.classList.remove('visible');
+                }
             }
         }
     }
@@ -608,6 +838,9 @@ const VocabularyBook = (function () {
     function closePanel() {
         if (vocabPanelSide) {
             vocabPanelSide.classList.remove('expanded');
+            if (vocabPanelOverlay) {
+                vocabPanelOverlay.classList.remove('visible');
+            }
         }
     }
 
@@ -639,7 +872,9 @@ const VocabularyBook = (function () {
         showAddModal: showAddModal,
         hideAddModal: hideAddModal,
         showToggle: showToggle,
-        loadData: loadVocabData
+        loadData: loadVocabData,
+        playAudio: playPronunciation,
+        removeViaModal: removeViaModal
     };
 
 })();

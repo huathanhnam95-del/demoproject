@@ -331,6 +331,53 @@
     </div>
   </div>
 
+  <!-- Vocabulary Full List Modal -->
+  <div id="vocab-list-modal" class="vocab-list-modal" style="display: none;">
+    <div class="vocab-list-content-modal">
+      <div class="vocab-list-header">
+        <h2>Vocabulary List</h2>
+        <button id="vocab-list-close" class="vocab-add-close">×</button>
+      </div>
+
+      <div class="vocab-tabs">
+        <button class="vocab-tab-btn active" data-tab="bookmarks">Bookmarked Words</button>
+        <button class="vocab-tab-btn" data-tab="missed">Frequently Missed</button>
+      </div>
+
+      <div class="vocab-tab-content active" id="tab-content-bookmarks">
+        <table class="vocab-table">
+          <thead>
+            <tr>
+              <th>Word</th>
+              <th>Phonetic</th>
+              <th>Pronunciation</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="vocab-table-body-bookmarks">
+            <!-- Rows injected by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="vocab-tab-content" id="tab-content-missed">
+        <table class="vocab-table">
+          <thead>
+            <tr>
+              <th>Word</th>
+              <th>Phonetic</th>
+              <th>Pronunciation</th>
+              <th>Stats</th>
+            </tr>
+          </thead>
+          <tbody id="vocab-table-body-missed">
+            <!-- Rows injected by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- Right-Side Collapsible Account Panel -->
   <div id="account-panel-side" class="account-panel-side">
     <!-- Collapsed State: Toggle Button -->
@@ -1004,6 +1051,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Overlay for clicking outside to close -->
+  <div id="vocab-panel-overlay" class="vocab-panel-overlay"></div>
 
   <!-- Tutorial Script -->
   <script src="tutorial.js"></script>

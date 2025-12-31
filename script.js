@@ -4733,27 +4733,45 @@
       // Make sure selected question exists in dropdown
       const existingOption = select.querySelector(`option[value="${currentId}"]`);
       if (!existingOption) {
-        // Add current question if it was filtered out
-        const progress = modeProgressCache[currentId] || { perfectCount: 0, hasAttempted: false };
-        const hasAttempted = progress.hasAttempted || false;
-        const perfectCount = progress.perfectCount || 0;
-        const state = calculateState(hasAttempted, perfectCount);
-        const stateIndicators = {
-          'not-started': '',
-          'in-progress': ' ◐ (In Progress)',
-          'completed': ' ✓ (Completed)',
-          'consolidated': ' ✓✓ (Consolidated)',
-          'mastered': ' ★ (Mastered)'
-        };
+        // Check if length filter is active - if so, don't force add a non-matching question
+        const isLengthFilterActive = lengthContainer && lengthContainer.style.display !== 'none' && lengthValue !== 'all';
+        const currentIdMatchesLengthFilter = !isLengthFilterActive || (validLengthIds && validLengthIds.has(currentId));
 
-        const option = document.createElement("option");
-        option.value = currentId;
-        option.textContent = `${currentId}${stateIndicators[state] || ''}`;
-        option.classList.add(`state-${state}`);
-        select.appendChild(option);
-        select.value = currentId;
+        if (currentIdMatchesLengthFilter) {
+          // Add current question if it was filtered out by status (but matches length filter)
+          const progress = modeProgressCache[currentId] || { perfectCount: 0, hasAttempted: false };
+          const hasAttempted = progress.hasAttempted || false;
+          const perfectCount = progress.perfectCount || 0;
+          const state = calculateState(hasAttempted, perfectCount);
+          const stateIndicators = {
+            'not-started': '',
+            'in-progress': ' ◐ (In Progress)',
+            'completed': ' ✓ (Completed)',
+            'consolidated': ' ✓✓ (Consolidated)',
+            'mastered': ' ★ (Mastered)'
+          };
+
+          const option = document.createElement("option");
+          option.value = currentId;
+          option.textContent = `${currentId}${stateIndicators[state] || ''}`;
+          option.classList.add(`state-${state}`);
+          select.appendChild(option);
+          select.value = currentId;
+        } else if (select.options.length > 0) {
+          // Length filter is active and current question doesn't match - select first available
+          select.selectedIndex = 0;
+          const firstValue = parseInt(select.options[0].value, 10);
+          if (mode === 'type') {
+            currentTypeQuestionId = firstValue;
+            loadQuestion('type', firstValue);
+          } else {
+            currentSpeakQuestionId = firstValue;
+            loadQuestion('speak', firstValue);
+          }
+        }
       }
     }
+
   };
 
   // Initialize databases
@@ -5051,8 +5069,10 @@
 
   checkBtn.addEventListener("click", () => {
     // New flow: Disable input and show retry button, hide check button
+    // Also hide Play button to prevent point farming (Play->Check->Play->Check)
     if (input) input.disabled = true;
     if (checkBtn) checkBtn.style.display = "none";
+    if (playBtn) playBtn.style.display = "none";
     if (retryBtn) retryBtn.style.display = "inline-block";
 
     // Grammar check: capitalization and period
@@ -5086,11 +5106,13 @@
   if (retryBtn) {
     retryBtn.addEventListener("click", () => {
       // New flow: Clear input, disable it, and reset scaffolding
+      // Show Play button again (was hidden after Check to prevent point farming)
       if (input) {
         input.value = "";
         input.disabled = true;
       }
       retryBtn.style.display = "none";
+      if (playBtn) playBtn.style.display = "inline-block";
       resetScaffolding();
     });
   }
@@ -5189,8 +5211,10 @@
     }
 
     // New flow: Hide record/check button and show retry button
+    // Also hide Play button to prevent point farming
     if (recordBtn) recordBtn.style.display = "none";
     if (checkBtnSpeak) checkBtnSpeak.style.display = "none";
+    if (playBtnSpeak) playBtnSpeak.style.display = "none";
     if (retryBtnSpeak) retryBtnSpeak.style.display = "inline-block";
 
     performCheckSpeak(transcription.trim(), scoreSpeak);
@@ -5199,7 +5223,9 @@
   if (retryBtnSpeak) {
     retryBtnSpeak.addEventListener("click", () => {
       // New flow: Show record button, hide retry button, and reset scaffolding
+      // Show Play button again (was hidden after Check to prevent point farming)
       if (recordBtn) recordBtn.style.display = "inline-block";
+      if (playBtnSpeak) playBtnSpeak.style.display = "inline-block";
       retryBtnSpeak.style.display = "none";
       resetScaffolding();
     });

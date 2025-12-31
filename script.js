@@ -3114,6 +3114,38 @@
     // Consider correct if all gaps are correct
     const isFullyCorrect = correctCount === totalGaps && totalGaps > 0;
     recordPracticeAttempt(currentExtendedQuestionId || 'extended', isFullyCorrect, 'extended');
+
+    // Vocabulary Book tracking for Fill mode
+    if (window.VocabularyBook) {
+      const missedWords = [];
+      const correctWords = [];
+
+      // Collect missed and correct words from gap results
+      document.querySelectorAll('.gap-result').forEach((span, index) => {
+        const bgColor = span.style.backgroundColor;
+        // Extract the correct word from the span content
+        const correctWord = span.textContent.includes('/')
+          ? span.textContent.split('/')[1].trim()
+          : span.textContent.trim();
+
+        if (bgColor.includes('dcfce7') || bgColor.includes('220, 252, 231')) {
+          // Green = correct
+          correctWords.push(correctWord);
+        } else {
+          // Red = incorrect or empty
+          missedWords.push(correctWord);
+        }
+      });
+
+      // Track words
+      missedWords.forEach(word => window.VocabularyBook.trackMissedWord(word));
+      correctWords.forEach(word => window.VocabularyBook.trackCorrectWord(word));
+
+      // Show add to vocabulary modal if there are missed words
+      if (missedWords.length > 0) {
+        window.VocabularyBook.showAddModal(missedWords, currentExtendedQuestionId || 'extended', 'fill');
+      }
+    }
   });
 
   // Redo button - clear all input boxes
@@ -4388,6 +4420,26 @@
         audio.currentTime = 0;
         audio.play();
       }
+
+      // Vocabulary Book tracking
+      if (window.VocabularyBook) {
+        const missedWords = getMissedWords(diff);
+        const matchedWords = diff.filter(p => p.type === 'match').map(p => p.text);
+
+        // Track missed words
+        missedWords.forEach(word => window.VocabularyBook.trackMissedWord(word));
+
+        // Track correct words (for mastery tracking)
+        matchedWords.forEach(word => window.VocabularyBook.trackCorrectWord(word));
+
+        // Show add to vocabulary modal if there are missed words
+        if (missedWords.length > 0) {
+          const contentWords = filterContentWords(missedWords);
+          if (contentWords.length > 0) {
+            window.VocabularyBook.showAddModal(contentWords, currentTypeQuestionId, 'type');
+          }
+        }
+      }
     }, false);
   };
 
@@ -4449,6 +4501,25 @@
       if (hasErrors && scoreValue < getCorrectWordCount("speak")) {
         audio.currentTime = 0;
         audio.play();
+      }
+
+      // Vocabulary Book tracking
+      if (window.VocabularyBook) {
+        const matchedWords = diff.filter(p => p.type === 'match').map(p => p.text);
+
+        // Track missed words
+        missedWords.forEach(word => window.VocabularyBook.trackMissedWord(word));
+
+        // Track correct words (for mastery tracking)
+        matchedWords.forEach(word => window.VocabularyBook.trackCorrectWord(word));
+
+        // Show add to vocabulary modal if there are missed words
+        if (missedWords.length > 0) {
+          const contentWords = filterContentWords(missedWords);
+          if (contentWords.length > 0) {
+            window.VocabularyBook.showAddModal(contentWords, currentSpeakQuestionId, 'speak');
+          }
+        }
       }
     }, true);
   };

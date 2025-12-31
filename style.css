@@ -4508,3 +4508,345 @@ textarea:focus {
 .tutorial-dot.completed {
   background: #22c55e;
 }
+
+/* ============================================
+   Vocabulary Book Panel
+   ============================================ */
+
+.vocab-panel-side {
+  position: fixed;
+  left: 0;
+  top: 60%;
+  /* Moved down to avoid overlap with Progress/Stat panel */
+  transform: translateY(-50%);
+  z-index: 3000;
+  /* Higher than Progress Panel to prevent button overlap issues */
+  display: flex;
+  align-items: center;
+  flex-direction: row-reverse;
+  /* Ensures button is to the right of content and slides with it */
+  pointer-events: none;
+  /* Allow clicks to pass through to elements below */
+}
+
+.vocab-panel-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+  border: none;
+  border-radius: 0 12px 12px 0;
+  cursor: pointer;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+  font-size: 1.25rem;
+  /* Ensure it stays on top of content border */
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
+  /* Re-enable clicks on this element */
+}
+
+.vocab-panel-toggle:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  transform: translateX(2px);
+}
+
+.vocab-panel-content {
+  /* Animation properties */
+  width: 0;
+  padding: 0;
+  opacity: 0;
+  /* Fade in content slightly */
+  overflow: hidden;
+
+  /* Dimensions to match Account/Stats panel */
+  min-height: 200px;
+  max-height: calc(100vh - 40px);
+  box-sizing: border-box;
+  /* Include padding in width calculation */
+
+  display: flex;
+  flex-direction: column;
+
+  background: white;
+  border-radius: 0 8px 8px 0;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+
+  /* Smooth definition for slide */
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    padding 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.2s ease;
+
+  /* Prevent content wrapping during slide */
+  white-space: nowrap;
+  pointer-events: auto;
+  /* Re-enable clicks on this element */
+}
+
+.vocab-panel-side.expanded .vocab-panel-content {
+  width: 320px;
+  padding: 16px;
+  opacity: 1;
+}
+
+/* Ensure inner content doesn't break layout during slide */
+.vocab-panel-content>* {
+  min-width: 288px;
+  /* 320px - 32px padding */
+}
+
+.vocab-panel-side.expanded .vocab-panel-toggle {
+  border-radius: 0;
+  /* Flatten left side when connected */
+  box-shadow: none;
+  /* Merge look */
+}
+
+/* Panel Exclusivity: Hide Vocab toggle when Progress panel is open */
+.progress-panel-side.expanded~.vocab-panel-side .vocab-panel-toggle {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Panel Exclusivity: Hide Progress toggle when Vocab panel is open */
+.progress-panel-side:has(~ .vocab-panel-side.expanded) .progress-panel-toggle {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.vocab-section {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.vocab-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.vocab-section h4 {
+  margin: 0 0 4px 0;
+  font-size: 0.95rem;
+  color: #1f2933;
+}
+
+.vocab-section-desc {
+  margin: 0 0 12px 0;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.vocab-word-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vocab-empty {
+  padding: 16px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.875rem;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.vocab-word-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.vocab-word-text {
+  font-weight: 600;
+  color: #1f2933;
+}
+
+.vocab-word-meta {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.vocab-word-remove {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 4px;
+  transition: color 0.2s ease;
+}
+
+.vocab-word-remove:hover {
+  color: #dc2626;
+}
+
+.vocab-word-streak {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: #16a34a;
+}
+
+.vocab-word-miss-count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: #dc2626;
+}
+
+/* ============================================
+   Add to Vocabulary Modal
+   ============================================ */
+
+.vocab-add-modal {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1100;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.vocab-add-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  padding: 16px;
+  width: 300px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.vocab-add-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.vocab-add-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: #1f2933;
+}
+
+.vocab-add-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.vocab-add-close:hover {
+  color: #6b7280;
+}
+
+.vocab-add-desc {
+  margin: 0 0 12px 0;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.vocab-add-words {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.vocab-add-word-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vocab-add-word-item:hover {
+  background: #f3f4f6;
+}
+
+.vocab-add-word-item.selected {
+  background: #ede9fe;
+  border-color: #8b5cf6;
+}
+
+.vocab-add-word-item input[type="checkbox"] {
+  accent-color: #8b5cf6;
+}
+
+.vocab-add-word-item label {
+  flex: 1;
+  font-size: 0.9rem;
+  color: #1f2933;
+  cursor: pointer;
+}
+
+.vocab-add-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.vocab-add-btn {
+  flex: 1;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vocab-add-btn:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+}
+
+.vocab-skip-btn {
+  padding: 10px 16px;
+  background: #e5e7eb;
+  color: #4b5563;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vocab-skip-btn:hover {
+  background: #d1d5db;
+}

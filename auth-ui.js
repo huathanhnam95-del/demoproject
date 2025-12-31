@@ -722,6 +722,22 @@ function setupAuthStateListener() {
       // Check for Level Selection (First Login Feature)
       await checkLevelSelection(user.uid);
 
+      // Initialize Vocabulary Book with user
+      if (window.VocabularyBook) {
+        // window.VocabularyBook is now a module that handles its own DB connection
+        window.VocabularyBook.setUser(user.uid);
+
+        // Check if unlocked and show toggle
+        const unlocked = await window.VocabularyBook.isUnlocked();
+        console.log('VocabularyBook unlock status:', unlocked);
+        if (unlocked) {
+          window.VocabularyBook.showToggle();
+        }
+      } else {
+        console.warn('VocabularyBook module not loaded yet');
+        // Add listener or retry logic if needed
+      }
+
       // ============================================
       // PROGRESS UI RELOAD AFTER LOGIN
       // ============================================
@@ -1118,6 +1134,20 @@ function showShoppingModal() {
       },
       onUnlock: () => {
         if (window.onFilterUnlocked) window.onFilterUnlocked('speak');
+      }
+    },
+    {
+      id: 'vocabulary_book',
+      title: 'Vocabulary Book',
+      description: 'Track missed words and build your personal vocabulary list',
+      cost: 10,
+      unlockFlag: 'vocabularyBookUnlocked',
+      unlockTimestampField: 'vocabularyBookUnlockedAt',
+      hasTutorial: false,
+      onUnlock: () => {
+        // Show the vocabulary book toggle button
+        const vocabToggle = document.getElementById('vocab-panel-toggle');
+        if (vocabToggle) vocabToggle.style.display = 'flex';
       }
     }
   ];

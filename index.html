@@ -284,6 +284,53 @@
     </div>
   </div>
 
+  <!-- Vocabulary Book Panel (unlockable) -->
+  <div id="vocab-panel-side" class="vocab-panel-side">
+    <button id="vocab-panel-toggle" class="vocab-panel-toggle" title="Vocabulary Book" style="display: none;">
+      <span class="toggle-icon">📖</span>
+    </button>
+    <div id="vocab-panel-content" class="vocab-panel-content">
+      <div class="panel-header">
+        <h3>Vocabulary Book</h3>
+        <button id="vocab-panel-close-btn" class="panel-close-btn" title="Close">×</button>
+      </div>
+
+      <!-- Bookmarked Words Section -->
+      <div class="vocab-section">
+        <h4>📌 Bookmarked Words</h4>
+        <p class="vocab-section-desc">Words you've manually saved</p>
+        <div id="vocab-bookmarked-list" class="vocab-word-list">
+          <div class="vocab-empty">No bookmarked words yet</div>
+        </div>
+      </div>
+
+      <!-- Frequently Missed Section -->
+      <div class="vocab-section">
+        <h4>⚠️ Frequently Missed</h4>
+        <p class="vocab-section-desc">Words missed 3+ times (auto-tracked)</p>
+        <div id="vocab-frequent-list" class="vocab-word-list">
+          <div class="vocab-empty">No frequently missed words</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add to Vocabulary Modal (shown after Check) -->
+  <div id="vocab-add-modal" class="vocab-add-modal" style="display: none;">
+    <div class="vocab-add-content">
+      <div class="vocab-add-header">
+        <h4>📖 Add to Vocabulary Book</h4>
+        <button id="vocab-add-close" class="vocab-add-close">×</button>
+      </div>
+      <p class="vocab-add-desc">Select words to save:</p>
+      <div id="vocab-add-words" class="vocab-add-words"></div>
+      <div class="vocab-add-actions">
+        <button id="vocab-add-btn" class="vocab-add-btn">Add Selected</button>
+        <button id="vocab-skip-btn" class="vocab-skip-btn">Skip</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Right-Side Collapsible Account Panel -->
   <div id="account-panel-side" class="account-panel-side">
     <!-- Collapsed State: Toggle Button -->
@@ -960,6 +1007,9 @@
 
   <!-- Tutorial Script -->
   <script src="tutorial.js"></script>
+
+  <!-- Vocabulary Book Script -->
+  <script type="module" src="vocab-book.js"></script>
 
 </body>
 

@@ -1107,6 +1107,10 @@ function showShoppingModal() {
       extraUnlockFields: { speakLengthFilterFullUnlock: true },
       hasTutorial: true,
       tutorialFunction: () => {
+        // Switch to Speak mode first so the UI matches the tutorial
+        const speakTab = document.getElementById('tab-speak');
+        if (speakTab) speakTab.click();
+
         if (window.LengthFilterTutorial) {
           window.LengthFilterTutorial.reset('speak');
           window.LengthFilterTutorial.start('speak');

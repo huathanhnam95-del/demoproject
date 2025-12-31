@@ -2125,7 +2125,28 @@ textarea:focus {
 
 /* ============================================
    Entry Choice Modal (First Visit)
-   ============================================ */
+   ============================================*/
+
+/* Vocabulary List Modal (Full View) */
+.vocab-list-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* Match stats panel overlay style */
+  background-color: rgba(255, 255, 255, 0.4);
+  z-index: 1002 !important;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  /* Animation */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
 
 .entry-modal {
   position: fixed;
@@ -4516,43 +4537,54 @@ textarea:focus {
 .vocab-panel-side {
   position: fixed;
   left: 0;
-  top: 45%;
-  /* Moved higher as requested (was 60%) */
-  transform: translateY(-50%);
+  /* Panel Container - spans full height */
+  top: 0;
+  /* Full height */
+  height: 100vh;
+  /* Full page height */
   z-index: 3000;
-  /* Higher than Progress Panel to prevent button overlap issues */
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  /* Align to top so we can manually push down */
   flex-direction: row-reverse;
-  /* Ensures button is to the right of content and slides with it */
   pointer-events: none;
-  /* Allow clicks to pass through to elements below */
 }
 
 .vocab-panel-toggle {
+  /* Reset default button styles */
+  appearance: none;
+  -webkit-appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+
+  /* Flexbox for icon centering */
   display: flex;
   align-items: center;
   justify-content: center;
+
+  /* Dimensions & Visuals */
   width: 48px;
   height: 48px;
   background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
   color: white;
-  border: none;
   border-radius: 0 12px 12px 0;
   cursor: pointer;
   box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.15);
   transition: all 0.2s ease;
   font-size: 1.25rem;
-  /* Ensure it stays on top of content border */
-  position: relative;
-  z-index: 2;
-  pointer-events: auto;
-  /* Re-enable clicks on this element */
-}
 
-.vocab-panel-toggle:hover {
-  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-  transform: translateX(2px);
+  /* Positioning */
+  position: relative;
+  /* Relative to the flex container (side panel) */
+  z-index: 3002;
+  /* Must be clickable */
+  pointer-events: auto;
+
+  /* Push down significantly to avoid middle and overlapping progress */
+  /* If Progress is centered at 50vh, let's put this at ~65vh */
+  margin-top: 65vh;
 }
 
 .vocab-panel-content {
@@ -4560,14 +4592,14 @@ textarea:focus {
   width: 0;
   padding: 0;
   opacity: 0;
-  /* Fade in content slightly */
-  overflow: hidden;
+  overflow-x: hidden;
+  /* Allow vertical scrolling */
+  overflow-y: auto;
 
   /* Dimensions to match Account/Stats panel */
-  min-height: 200px;
-  max-height: calc(100vh - 40px);
+  height: 100%;
+  /* Fill parent (100vh) */
   box-sizing: border-box;
-  /* Include padding in width calculation */
 
   display: flex;
   flex-direction: column;
@@ -4576,15 +4608,37 @@ textarea:focus {
   border-radius: 0 8px 8px 0;
   box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
 
-  /* Smooth definition for slide */
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     padding 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     opacity 0.2s ease;
 
-  /* Prevent content wrapping during slide */
   white-space: nowrap;
   pointer-events: auto;
-  /* Re-enable clicks on this element */
+}
+
+/* ... existing styles ... */
+
+.vocab-word-item {
+  background: white;
+  border: 1px solid #f1f5f9;
+  border-radius: 12px;
+  /* Increased spacing as requested */
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+/* ... existing styles ... */
+
+.vocab-scroll-list {
+  /* Increase max height since panel is now taller */
+  max-height: calc(100vh - 400px);
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .vocab-panel-side.expanded .vocab-panel-content {
@@ -5040,14 +5094,13 @@ textarea:focus {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.4);
+  /* Match Stats panel dimness (20% black) */
+  background-color: rgba(0, 0, 0, 0.2);
   z-index: 1000;
-  /* Below panel (1001) but above content */
   display: none;
-  /* Hidden by default */
   opacity: 0;
   transition: opacity 0.3s ease;
-  backdrop-filter: blur(2px);
+  /* NO blur - just dim */
 }
 
 .vocab-panel-overlay.visible {
@@ -5080,12 +5133,24 @@ textarea:focus {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 5000;
-  display: flex;
-  justify-content: center;
+  /* Dim the light - NO blur */
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1002 !important;
+  display: none;
   align-items: center;
-  animation: fadeIn 0.2s ease-out;
+  justify-content: center;
+  /* NO blur - just dim */
+  /* Animation */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+/* CRITICAL: Active state to make modal visible and clickable */
+.vocab-list-modal.active {
+  display: flex;
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .vocab-list-content-modal {
@@ -5166,11 +5231,11 @@ textarea:focus {
 
 .vocab-table th {
   text-align: left;
-  padding: 12px;
+  padding: 14px 12px;
   background: #f8fafc;
   color: #64748b;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   border-bottom: 2px solid #e2e8f0;
   position: sticky;
   top: -20px;
@@ -5179,10 +5244,10 @@ textarea:focus {
 }
 
 .vocab-table td {
-  padding: 12px;
+  padding: 14px 12px;
   border-bottom: 1px solid #f1f5f9;
   color: #334155;
-  font-size: 0.95rem;
+  font-size: 1.05rem;
 }
 
 .vocab-table tr:hover td {
@@ -5191,11 +5256,12 @@ textarea:focus {
 
 .vocab-phonetic {
   font-family: 'Consolas', 'Monaco', monospace;
-  color: #64748b;
+  color: #475569;
   background: #f1f5f9;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 0.85rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  letter-spacing: 0.5px;
 }
 
 .vocab-audio-btn {
@@ -5211,6 +5277,33 @@ textarea:focus {
 
 .vocab-audio-btn:hover {
   background: #eff6ff;
+}
+
+/* Inline audio button (next to phonetic transcription) */
+.vocab-audio-btn-inline {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 2px 6px;
+  margin-left: 8px;
+  border-radius: 4px;
+  transition: background 0.2s, transform 0.15s;
+  color: #64748b;
+  vertical-align: middle;
+}
+
+.vocab-audio-btn-inline:hover {
+  background: #e2e8f0;
+  color: #3b82f6;
+  transform: scale(1.1);
+}
+
+/* Pronunciation cell layout */
+.pronunciation-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .btn-icon-remove {

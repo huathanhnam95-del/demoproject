@@ -170,6 +170,11 @@ const VocabularyBook = (function () {
     function showListModal(initialTab = 'bookmarks') {
         if (vocabListModal) {
             vocabListModal.style.display = 'flex';
+            // Small timeout to allow display transition if needed, but primarily for class
+            setTimeout(() => {
+                vocabListModal.classList.add('active');
+            }, 10);
+
             switchTab(initialTab);
             renderListTable('bookmarks');
             renderListTable('missed');
@@ -181,27 +186,66 @@ const VocabularyBook = (function () {
      */
     function hideListModal() {
         if (vocabListModal) {
-            vocabListModal.style.display = 'none';
+            vocabListModal.classList.remove('active');
+            // Wait for transition to finish before hiding
+            setTimeout(() => {
+                vocabListModal.style.display = 'none';
+            }, 300);
         }
     }
 
+    // ... (rest of file)
+
     /**
-     * Fetch Phonetic data from DictionaryAPI
+     * Show toggle button when unlocked
+     */
+    function showToggle() {
+        if (vocabPanelToggle) {
+            vocabPanelToggle.style.display = 'flex';
+        }
+    }
+
+    // Initialize on DOM ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+        // Check unlock status immediately if possible, or wait for auth
+        // We can optimistically show toggle if we suspect it's unlocked, 
+        // but better to let auth-ui handler call it.
+        // However, we can make it visible by default in CSS if we prefer.
+    }
+
+    /**
+     * Fetch Phonetic data using the new Phonetics pipeline
+     * Uses CMU Dict → Wiktionary → espeak-ng fallback chain
      */
     async function fetchPhonetics(word) {
         const cleanWord = word.trim().toLowerCase().replace(/[^a-z]/g, '');
         if (!cleanWord) return null;
 
+        // Check local cache first
         if (phoneticCache.has(cleanWord)) {
             return phoneticCache.get(cleanWord);
         }
 
+        // Use the new Phonetics module (CMU Dict → Wiktionary → espeak-ng)
+        if (typeof Phonetics !== 'undefined' && Phonetics.getIPA) {
+            try {
+                const ipa = await Phonetics.getIPA(cleanWord);
+                phoneticCache.set(cleanWord, ipa || '');
+                return ipa || '';
+            } catch (e) {
+                console.warn(`[VocabBook] Phonetics.getIPA failed for: ${cleanWord}`, e);
+            }
+        }
+
+        // Fallback to old Dictionary API if Phonetics module not available
         try {
             const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${cleanWord}`);
             if (!response.ok) throw new Error('Not found');
             const data = await response.json();
 
-            // Extract first valid phonetic text
             let phonetic = '';
             if (data[0].phonetic) phonetic = data[0].phonetic;
             else if (data[0].phonetics && data[0].phonetics.length > 0) {
@@ -213,7 +257,7 @@ const VocabularyBook = (function () {
             return phonetic;
         } catch (e) {
             console.warn(`[VocabBook] No phonetics found for: ${cleanWord}`);
-            phoneticCache.set(cleanWord, ''); // Cache empty to avoid retry
+            phoneticCache.set(cleanWord, '');
             return '';
         }
     }
@@ -263,7 +307,7 @@ const VocabularyBook = (function () {
         }
 
         if (items.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;">No words found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;">No words found.</td></tr>';
             return;
         }
 
@@ -288,11 +332,9 @@ const VocabularyBook = (function () {
             return `
                 <tr id="${rowId}">
                     <td><span class="vocab-word-text">${wordText}</span></td>
-                    <td class="phonetic-cell" data-word="${wordText}">...</td>
-                    <td>
-                        <button class="vocab-audio-btn" onclick="window.VocabularyBook.playAudio('${wordText}')" title="Listen">
-                            🔊
-                        </button>
+                    <td class="pronunciation-cell" data-word="${wordText}">
+                        <span class="vocab-phonetic">...</span>
+                        <button class="vocab-audio-btn-inline" onclick="window.VocabularyBook.playAudio('${wordText}')" title="Listen">🔊</button>
                     </td>
                     ${statsCell}
                 </tr>
@@ -306,9 +348,10 @@ const VocabularyBook = (function () {
             const wordText = item.word || item.originalWord;
             // Don't await one by one to block UI, but we should update DOM when ready
             fetchPhonetics(wordText).then(phonetic => {
-                const cells = tbody.querySelectorAll(`.phonetic-cell[data-word="${wordText}"]`);
+                const cells = tbody.querySelectorAll(`.pronunciation-cell[data-word="${wordText}"]`);
                 cells.forEach(cell => {
-                    cell.innerHTML = phonetic ? `<span class="vocab-phonetic">${phonetic}</span>` : '<span style="color:#cbd5e1">-</span>';
+                    const phoneticText = phonetic || '-';
+                    cell.innerHTML = `<span class="vocab-phonetic">${phoneticText}</span> <button class="vocab-audio-btn-inline" onclick="window.VocabularyBook.playAudio('${wordText}')" title="Listen">🔊</button>`;
                 });
             });
         }

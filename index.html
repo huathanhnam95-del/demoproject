@@ -286,7 +286,7 @@
 
   <!-- Vocabulary Book Panel (unlockable) -->
   <div id="vocab-panel-side" class="vocab-panel-side">
-    <button id="vocab-panel-toggle" class="vocab-panel-toggle" title="Vocabulary Book" style="display: none;">
+    <button id="vocab-panel-toggle" class="vocab-panel-toggle" title="Vocabulary Book">
       <span class="toggle-icon">📖</span>
     </button>
     <div id="vocab-panel-content" class="vocab-panel-content">
@@ -349,7 +349,6 @@
           <thead>
             <tr>
               <th>Word</th>
-              <th>Phonetic</th>
               <th>Pronunciation</th>
               <th>Action</th>
             </tr>
@@ -365,7 +364,6 @@
           <thead>
             <tr>
               <th>Word</th>
-              <th>Phonetic</th>
               <th>Pronunciation</th>
               <th>Stats</th>
             </tr>
@@ -1057,6 +1055,10 @@
 
   <!-- Tutorial Script -->
   <script src="tutorial.js"></script>
+
+  <!-- Phonetics Pipeline -->
+  <script src="arpabet-ipa-map.js"></script>
+  <script src="phonetics.js"></script>
 
   <!-- Vocabulary Book Script -->
   <script type="module" src="vocab-book.js"></script>

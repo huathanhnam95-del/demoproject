@@ -307,7 +307,7 @@ const VocabularyBook = (function () {
         }
 
         if (items.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;">No words found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;">No words found.</td></tr>';
             return;
         }
 
@@ -316,6 +316,14 @@ const VocabularyBook = (function () {
             const wordText = item.word || item.originalWord; // Handle both structures
             const lemma = item.lemma;
             const rowId = `vocab-row-${tabName}-${index}`;
+
+            // Source info (mode + question ID)
+            const mode = item.mode || '-';
+            const questionId = item.questionId || '-';
+            const sourceCell = `<td>
+                <span class="vocab-badge vocab-badge-mode">${mode}</span>
+                <span class="vocab-badge vocab-badge-q">Q${questionId}</span>
+            </td>`;
 
             // Stats column for Missed tab, Actions for Bookmarks
             let statsCell = '';
@@ -336,6 +344,7 @@ const VocabularyBook = (function () {
                         <span class="vocab-phonetic">...</span>
                         <button class="vocab-audio-btn-inline" onclick="window.VocabularyBook.playAudio('${wordText}')" title="Listen">🔊</button>
                     </td>
+                    ${sourceCell}
                     ${statsCell}
                 </tr>
             `;
@@ -455,6 +464,42 @@ const VocabularyBook = (function () {
                 vocabCache.bookmarkedWords = data.bookmarkedWords || [];
                 vocabCache.wordStats = data.wordStats || {};
                 vocabCache.frequentlyMissed = data.frequentlyMissed || [];
+
+                // Backfill missing mode/questionId from wordStats for frequentlyMissed entries
+                let needsSave = false;
+                vocabCache.frequentlyMissed.forEach(entry => {
+                    const stats = vocabCache.wordStats[entry.lemma];
+                    if (stats) {
+                        if (!entry.mode && stats.mode) {
+                            entry.mode = stats.mode;
+                            needsSave = true;
+                        }
+                        if (!entry.questionId && stats.questionId) {
+                            entry.questionId = stats.questionId;
+                            needsSave = true;
+                        }
+                    }
+                });
+
+                // Also backfill bookmarkedWords if needed
+                vocabCache.bookmarkedWords.forEach(entry => {
+                    const stats = vocabCache.wordStats[entry.lemma];
+                    if (stats) {
+                        if (!entry.mode && stats.mode) {
+                            entry.mode = stats.mode;
+                            needsSave = true;
+                        }
+                        if (!entry.questionId && stats.questionId) {
+                            entry.questionId = stats.questionId;
+                            needsSave = true;
+                        }
+                    }
+                });
+
+                if (needsSave) {
+                    console.log('[VocabBook] Backfilled source info, saving...');
+                    saveVocabData();
+                }
             } else {
                 // Initialize empty if doesn't exist
                 vocabCache = {
@@ -521,8 +566,11 @@ const VocabularyBook = (function () {
 
     /**
      * Track a word that was missed
+     * @param {string} word - The word that was missed
+     * @param {string} mode - The mode (type/speak/fill)
+     * @param {number|string} questionId - The question ID
      */
-    function trackMissedWord(word) {
+    function trackMissedWord(word, mode = null, questionId = null) {
         const lemma = lemmatize(word);
         if (!lemma) return;
 
@@ -534,7 +582,11 @@ const VocabularyBook = (function () {
         vocabCache.wordStats[lemma].correctStreak = 0; // Reset streak on miss
         vocabCache.wordStats[lemma].lastMissedAt = new Date().toISOString();
 
-        console.log(`[VocabBook] Tracked miss: "${word}" (${lemma}). Count: ${vocabCache.wordStats[lemma].missCount}`);
+        // Store source info (mode + questionId)
+        if (mode) vocabCache.wordStats[lemma].mode = mode;
+        if (questionId) vocabCache.wordStats[lemma].questionId = questionId;
+
+        console.log(`[VocabBook] Tracked miss: "${word}" (${lemma}) from ${mode} Q${questionId}. Count: ${vocabCache.wordStats[lemma].missCount}`);
 
         // Check if should be added to frequently missed (3+ misses)
         if (vocabCache.wordStats[lemma].missCount >= 3) {
@@ -545,12 +597,20 @@ const VocabularyBook = (function () {
                     lemma: lemma,
                     originalWord: word,
                     missCount: vocabCache.wordStats[lemma].missCount,
+                    mode: mode || '-',
+                    questionId: questionId || '-',
                     addedAt: new Date().toISOString()
                 });
             } else {
                 console.log('[VocabBook] Updating Frequently Missed count');
                 existing.missCount = vocabCache.wordStats[lemma].missCount;
+                // Update source if provided
+                if (mode) existing.mode = mode;
+                if (questionId) existing.questionId = questionId;
             }
+
+            // Live refresh the side panel
+            renderFrequentlyMissed();
         }
 
         saveVocabData();
@@ -566,11 +626,13 @@ const VocabularyBook = (function () {
         if (!vocabCache.wordStats[lemma]) return; // Only track if was missed before
 
         vocabCache.wordStats[lemma].correctStreak++;
+        console.log(`[VocabBook] Tracked correct: "${word}" (${lemma}). Streak: ${vocabCache.wordStats[lemma].correctStreak}`);
 
         // Check if mastered (3 correct in a row)
         if (vocabCache.wordStats[lemma].correctStreak >= 3) {
             const freqIndex = vocabCache.frequentlyMissed.findIndex(w => w.lemma === lemma);
             if (freqIndex !== -1) {
+                console.log(`[VocabBook] Word "${lemma}" mastered! Removing from Frequently Missed.`);
                 // Remove from frequently missed
                 vocabCache.frequentlyMissed.splice(freqIndex, 1);
 
@@ -579,6 +641,9 @@ const VocabularyBook = (function () {
 
                 // Reset stats for this word
                 delete vocabCache.wordStats[lemma];
+
+                // Live refresh the side panel
+                renderFrequentlyMissed();
             }
         }
 

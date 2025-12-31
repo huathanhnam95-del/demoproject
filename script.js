@@ -3137,8 +3137,8 @@
         }
       });
 
-      // Track words
-      missedWords.forEach(word => window.VocabularyBook.trackMissedWord(word));
+      // Track words immediately when Check is pressed
+      missedWords.forEach(word => window.VocabularyBook.trackMissedWord(word, 'fill', currentExtendedQuestionId));
       correctWords.forEach(word => window.VocabularyBook.trackCorrectWord(word));
 
       // Show add to vocabulary modal if there are missed words
@@ -4426,8 +4426,8 @@
         const missedWords = getMissedWords(diff);
         const matchedWords = diff.filter(p => p.type === 'match').map(p => p.text);
 
-        // Track missed words
-        missedWords.forEach(word => window.VocabularyBook.trackMissedWord(word));
+        // Track missed words immediately when Check is pressed
+        missedWords.forEach(word => window.VocabularyBook.trackMissedWord(word, 'type', currentTypeQuestionId));
 
         // Track correct words (for mastery tracking)
         matchedWords.forEach(word => window.VocabularyBook.trackCorrectWord(word));
@@ -4507,8 +4507,8 @@
       if (window.VocabularyBook) {
         const matchedWords = diff.filter(p => p.type === 'match').map(p => p.text);
 
-        // Track missed words
-        missedWords.forEach(word => window.VocabularyBook.trackMissedWord(word));
+        // Track missed words immediately when Check is pressed
+        missedWords.forEach(word => window.VocabularyBook.trackMissedWord(word, 'speak', currentSpeakQuestionId));
 
         // Track correct words (for mastery tracking)
         matchedWords.forEach(word => window.VocabularyBook.trackCorrectWord(word));

@@ -725,7 +725,8 @@ function setupAuthStateListener() {
       // Initialize Vocabulary Book with user
       if (window.VocabularyBook) {
         // window.VocabularyBook is now a module that handles its own DB connection
-        window.VocabularyBook.setUser(user.uid);
+        // Explicitly pass the DB instance to ensure it's available
+        window.VocabularyBook.setUser(user.uid, window.firebaseDb);
 
         // Check if unlocked and show toggle
         const unlocked = await window.VocabularyBook.isUnlocked();

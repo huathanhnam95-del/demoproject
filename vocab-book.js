@@ -109,13 +109,18 @@ const VocabularyBook = (function () {
         db = firestore || window.firebaseDb;
 
         if (!db && window.firebaseApp) {
+            console.warn('[VocabBook] DB not passed/found, initializing new instance from app');
             db = getFirestore(window.firebaseApp);
         }
 
-        console.log('[VocabBook] setUser:', userId, 'db:', !!db);
+        console.log('[VocabBook] setUser:', userId, 'db available:', !!db);
 
         if (userId) {
-            loadVocabData();
+            if (db) {
+                loadVocabData();
+            } else {
+                console.error('[VocabBook] Critical: DB missing in setUser! Data cannot be saved.');
+            }
         }
     }
 
@@ -178,6 +183,7 @@ const VocabularyBook = (function () {
 
             if (vocabDoc.exists()) {
                 const data = vocabDoc.data();
+                console.log('[VocabBook] Loaded Data:', data);
                 vocabCache.bookmarkedWords = data.bookmarkedWords || [];
                 vocabCache.wordStats = data.wordStats || {};
                 vocabCache.frequentlyMissed = data.frequentlyMissed || [];
@@ -193,7 +199,7 @@ const VocabularyBook = (function () {
             renderBookmarkedWords();
             renderFrequentlyMissed();
         } catch (e) {
-            console.error('Error loading vocab data:', e);
+            // console.error('Error loading vocab data:', e);
         }
     }
 
@@ -201,17 +207,26 @@ const VocabularyBook = (function () {
      * Save vocabulary data to Firestore
      */
     async function saveVocabData() {
-        if (!currentUserId || !db) return;
+        if (!currentUserId || !db) {
+            console.error('[VocabBook] cannot save: missing user or db', { uid: currentUserId, db: !!db });
+            return;
+        }
 
         try {
+            console.log('[VocabBook] Saving data...', {
+                bookmarks: vocabCache.bookmarkedWords.length,
+                stats: Object.keys(vocabCache.wordStats).length,
+                missed: vocabCache.frequentlyMissed.length
+            });
             await setDoc(doc(db, 'users', currentUserId, 'vocabularyBook', 'data'), {
                 bookmarkedWords: vocabCache.bookmarkedWords,
                 wordStats: vocabCache.wordStats,
                 frequentlyMissed: vocabCache.frequentlyMissed,
-                updatedAt: serverTimestamp()
+                updatedAt: new Date().toISOString() // Use string to avoid SDK version mismatch
             }, { merge: true });
+            console.log('[VocabBook] Save success');
         } catch (e) {
-            console.error('Error saving vocab data:', e);
+            console.error('[VocabBook] Error saving vocab data:', e);
         }
     }
 
@@ -251,10 +266,13 @@ const VocabularyBook = (function () {
         vocabCache.wordStats[lemma].correctStreak = 0; // Reset streak on miss
         vocabCache.wordStats[lemma].lastMissedAt = new Date().toISOString();
 
+        console.log(`[VocabBook] Tracked miss: "${word}" (${lemma}). Count: ${vocabCache.wordStats[lemma].missCount}`);
+
         // Check if should be added to frequently missed (3+ misses)
         if (vocabCache.wordStats[lemma].missCount >= 3) {
             const existing = vocabCache.frequentlyMissed.find(w => w.lemma === lemma);
             if (!existing) {
+                console.log('[VocabBook] Adding to Frequently Missed list');
                 vocabCache.frequentlyMissed.push({
                     lemma: lemma,
                     originalWord: word,
@@ -262,6 +280,7 @@ const VocabularyBook = (function () {
                     addedAt: new Date().toISOString()
                 });
             } else {
+                console.log('[VocabBook] Updating Frequently Missed count');
                 existing.missCount = vocabCache.wordStats[lemma].missCount;
             }
         }
@@ -383,13 +402,21 @@ const VocabularyBook = (function () {
         <input type="checkbox" id="vocab-word-${index}" value="${word}">
         <label for="vocab-word-${index}">${word}</label>
       `;
-            item.addEventListener('click', (e) => {
-                if (e.target.tagName !== 'INPUT') {
-                    const checkbox = item.querySelector('input');
-                    checkbox.checked = !checkbox.checked;
-                }
-                item.classList.toggle('selected', item.querySelector('input').checked);
+
+            const checkbox = item.querySelector('input');
+            checkbox.addEventListener('change', () => {
+                item.classList.toggle('selected', checkbox.checked);
             });
+
+            item.addEventListener('click', (e) => {
+                // If clicked on the row (but not directly on input or label), toggle the checkbox
+                if (e.target !== checkbox && e.target.tagName !== 'LABEL') {
+                    e.preventDefault();
+                    checkbox.checked = !checkbox.checked;
+                    checkbox.dispatchEvent(new Event('change'));
+                }
+            });
+
             vocabAddWords.appendChild(item);
         });
 
@@ -428,9 +455,6 @@ const VocabularyBook = (function () {
         hideAddModal();
     }
 
-    /**
-     * Render bookmarked words list
-     */
     function renderBookmarkedWords() {
         if (!vocabBookmarkedList) return;
 
@@ -439,15 +463,45 @@ const VocabularyBook = (function () {
             return;
         }
 
-        vocabBookmarkedList.innerHTML = vocabCache.bookmarkedWords.map(w => `
+        // Sort by recency (addedAt desc)
+        const sorted = [...vocabCache.bookmarkedWords].sort((a, b) => {
+            return new Date(b.addedAt || 0) - new Date(a.addedAt || 0);
+        });
+
+        const totalCount = sorted.length;
+        const displayLimit = 5;
+        const displayItems = sorted.slice(0, displayLimit);
+
+        const listHtml = displayItems.map(w => `
       <div class="vocab-word-item">
-        <div>
+        <div class="vocab-word-main">
           <span class="vocab-word-text">${w.word}</span>
-          <div class="vocab-word-meta">${w.mode} • Q${w.questionId}</div>
+          <div class="vocab-word-badges">
+             <span class="vocab-badge vocab-badge-mode">${w.mode}</span>
+             <span class="vocab-badge vocab-badge-q">Q${w.questionId}</span>
+          </div>
         </div>
-        <button class="vocab-word-remove" data-lemma="${w.lemma}" title="Remove">×</button>
+        <button class="vocab-word-remove" data-lemma="${w.lemma}" title="Remove">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
       </div>
     `).join('');
+
+        // Always show button if there are items, to allow accessing full view
+        const showButton = totalCount > displayLimit;
+
+        vocabBookmarkedList.innerHTML = `
+            <div class="vocab-list-content">
+                ${listHtml}
+            </div>
+            ${showButton ? `<button class="vocab-show-all-btn" id="vocab-show-all-bookmarks">
+                <span>Show All (${totalCount})</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+            </button>` : ''}
+        `;
 
         // Add remove handlers
         vocabBookmarkedList.querySelectorAll('.vocab-word-remove').forEach(btn => {
@@ -455,6 +509,15 @@ const VocabularyBook = (function () {
                 removeBookmarkedWord(btn.dataset.lemma);
             });
         });
+
+        // Add Show All handler
+        const showAllBtn = vocabBookmarkedList.querySelector('#vocab-show-all-bookmarks');
+        if (showAllBtn) {
+            showAllBtn.addEventListener('click', () => {
+                console.log('Show All Bookmarks clicked - Coming soon');
+                // TODO: Implement full view
+            });
+        }
     }
 
     /**
@@ -468,20 +531,55 @@ const VocabularyBook = (function () {
             return;
         }
 
-        vocabFrequentList.innerHTML = vocabCache.frequentlyMissed.map(w => {
+        // Sort by missCount desc
+        const sorted = [...vocabCache.frequentlyMissed].sort((a, b) => b.missCount - a.missCount);
+
+        const totalCount = sorted.length;
+        const displayLimit = 10;
+        const displayItems = sorted.slice(0, displayLimit);
+
+        const listHtml = displayItems.map(w => {
             const stats = vocabCache.wordStats[w.lemma] || {};
+            // Determine streak color/status
+            const isMastered = (stats.correctStreak || 0) >= 3;
+            const streakClass = isMastered ? 'vocab-streak-mastered' : 'vocab-streak-progress';
+
             return `
         <div class="vocab-word-item">
-          <div>
+          <div class="vocab-word-main">
             <span class="vocab-word-text">${w.originalWord}</span>
-            <div class="vocab-word-miss-count">Missed ${w.missCount}x</div>
+            <span class="vocab-badge vocab-badge-miss">Missed ${w.missCount}x</span>
           </div>
-          <div class="vocab-word-streak">
-            ${stats.correctStreak || 0}/3 ✓
+          <div class="vocab-word-streak ${streakClass}">
+            <div class="streak-dots">
+                ${[1, 2, 3].map(i => `<span class="streak-dot ${i <= (stats.correctStreak || 0) ? 'filled' : ''}"></span>`).join('')}
+            </div>
           </div>
         </div>
       `;
         }).join('');
+
+        // Wrapper for scroll (max 5 items visible approx 260px)
+        const showButton = totalCount > displayLimit;
+
+        vocabFrequentList.innerHTML = `
+            <div class="vocab-scroll-list">
+                ${listHtml}
+            </div>
+            ${showButton ? `<button class="vocab-show-all-btn" id="vocab-show-all-missed">
+                <span>View Full List (${totalCount})</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+            </button>` : ''}
+        `;
+
+        // Add Show All handler
+        const showAllBtn = vocabFrequentList.querySelector('#vocab-show-all-missed');
+        if (showAllBtn) {
+            showAllBtn.addEventListener('click', () => {
+                console.log('Show All Missed clicked - Coming soon');
+                // TODO: Implement full view
+            });
+        }
     }
 
     /**
@@ -548,4 +646,3 @@ const VocabularyBook = (function () {
 
 // Expose to window
 window.VocabularyBook = VocabularyBook;
-

@@ -2377,6 +2377,90 @@ textarea:focus {
 }
 
 /* ============================================
+   Question Navigation Wrapper (Back/Next buttons)
+   ============================================ */
+
+/* Navigation Row: Back + Dropdown + Next */
+.question-nav-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto 12px;
+}
+
+.question-select.question-select-narrow {
+  flex: 1;
+  min-width: 120px;
+  max-width: 280px;
+}
+
+/* Filters Row: Status + Length side by side */
+.question-filters-row {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+/* Navigation Buttons */
+.nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.nav-btn-back {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: white;
+  box-shadow: 0 2px 6px rgba(75, 85, 99, 0.3);
+}
+
+.nav-btn-back:hover {
+  background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(75, 85, 99, 0.4);
+}
+
+.nav-btn-back:active {
+  transform: translateY(0);
+}
+
+.nav-btn-next {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.3);
+}
+
+.nav-btn-next:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(124, 58, 237, 0.4);
+}
+
+.nav-btn-next:active {
+  transform: translateY(0);
+}
+
+.nav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* ============================================
    Left-Side Progress Panel (Fixed Drawer)
    Uses transform for slide-in animation
    ============================================ */

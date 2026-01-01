@@ -4900,6 +4900,135 @@
     }
   });
 
+  // ============================================
+  // Back/Next Navigation Buttons
+  // ============================================
+
+  // Stop all audio and animations when navigating
+  const stopAllAudioAndAnimations = () => {
+    // Stop main audio
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+
+    // Stop extended listening audio
+    const audioExtended = document.getElementById("audio-extended");
+    if (audioExtended) {
+      audioExtended.pause();
+      audioExtended.currentTime = 0;
+    }
+
+    // Stop phrases audio
+    const audioPhrases = document.getElementById("audio-phrases");
+    if (audioPhrases) {
+      audioPhrases.pause();
+      audioPhrases.currentTime = 0;
+    }
+
+    // Stop any TTS/Speech synthesis
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+
+    // Stop/hide animations
+    if (animationBox) {
+      animationBox.innerHTML = '';
+    }
+    if (animationPanel) {
+      animationPanel.style.display = 'none';
+    }
+
+    // Cancel any scheduled audio playback (use a global flag)
+    window._navigationTriggered = true;
+    setTimeout(() => { window._navigationTriggered = false; }, 100);
+  };
+
+  // Navigate to next/previous question in filtered dropdown
+  const navigateQuestion = (mode, direction) => {
+    const selectId = mode === 'extended' ? 'question-select-extended' : `question-select-${mode}`;
+    const select = document.getElementById(selectId);
+    if (!select) return;
+
+    // Get all available options (filtered list)
+    const options = Array.from(select.options);
+    if (options.length === 0) return;
+
+    const currentValue = parseInt(select.value, 10);
+    const currentIndex = options.findIndex(opt => parseInt(opt.value, 10) === currentValue);
+
+    let newIndex;
+    if (direction === 'next') {
+      newIndex = currentIndex + 1;
+      if (newIndex >= options.length) {
+        newIndex = 0; // Wrap to first
+      }
+    } else {
+      newIndex = currentIndex - 1;
+      if (newIndex < 0) {
+        newIndex = options.length - 1; // Wrap to last
+      }
+    }
+
+    const newValue = parseInt(options[newIndex].value, 10);
+    select.value = newValue;
+    select.dispatchEvent(new Event('change'));
+  };
+
+  // Type mode navigation
+  const backBtnType = document.getElementById("back-btn-type");
+  const nextBtnType = document.getElementById("next-btn-type");
+
+  if (backBtnType) {
+    backBtnType.addEventListener("click", () => {
+      stopAllAudioAndAnimations();
+      navigateQuestion('type', 'back');
+    });
+  }
+
+  if (nextBtnType) {
+    nextBtnType.addEventListener("click", () => {
+      stopAllAudioAndAnimations();
+      navigateQuestion('type', 'next');
+    });
+  }
+
+  // Speak mode navigation
+  const backBtnSpeak = document.getElementById("back-btn-speak");
+  const nextBtnSpeak = document.getElementById("next-btn-speak");
+
+  if (backBtnSpeak) {
+    backBtnSpeak.addEventListener("click", () => {
+      stopAllAudioAndAnimations();
+      navigateQuestion('speak', 'back');
+    });
+  }
+
+  if (nextBtnSpeak) {
+    nextBtnSpeak.addEventListener("click", () => {
+      stopAllAudioAndAnimations();
+      navigateQuestion('speak', 'next');
+    });
+  }
+
+  // Fill/Extended mode navigation
+  const backBtnExtended = document.getElementById("back-btn-extended");
+  const nextBtnExtended = document.getElementById("next-btn-extended");
+
+  if (backBtnExtended) {
+    backBtnExtended.addEventListener("click", () => {
+      stopAllAudioAndAnimations();
+      navigateQuestion('extended', 'back');
+    });
+  }
+
+  if (nextBtnExtended) {
+    nextBtnExtended.addEventListener("click", () => {
+      stopAllAudioAndAnimations();
+      navigateQuestion('extended', 'next');
+    });
+  }
+
   // Tier filter dropdown event listeners
   const setupTierFilterDropdown = (mode) => {
     const filterBtn = document.getElementById(`tier-filter-btn-${mode}`);

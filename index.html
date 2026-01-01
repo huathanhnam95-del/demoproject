@@ -487,11 +487,21 @@
           </div>
         </div>
 
-        <div class="question-select-wrapper">
-          <select id="question-select-type" class="question-select">
+        <!-- Navigation Row: Back + Dropdown + Next -->
+        <div class="question-nav-row">
+          <button id="back-btn-type" class="nav-btn nav-btn-back" type="button" title="Previous Question">
+            ← Back
+          </button>
+          <select id="question-select-type" class="question-select question-select-narrow">
             <option value="1">Loading...</option>
           </select>
-          <!-- Multi-select state filter dropdown -->
+          <button id="next-btn-type" class="nav-btn nav-btn-next" type="button" title="Next Question">
+            Next →
+          </button>
+        </div>
+
+        <!-- Filters Row: Status + Length side by side -->
+        <div class="question-filters-row">
           <div class="status-filter-dropdown" id="status-filter-container-type">
             <button id="status-filter-btn-type" class="status-filter-btn" type="button">
               <span id="status-filter-label-type">Filter by Status</span>
@@ -595,11 +605,21 @@
           </div>
         </div>
 
-        <div class="question-select-wrapper">
-          <select id="question-select-speak" class="question-select">
+        <!-- Navigation Row: Back + Dropdown + Next -->
+        <div class="question-nav-row">
+          <button id="back-btn-speak" class="nav-btn nav-btn-back" type="button" title="Previous Question">
+            ← Back
+          </button>
+          <select id="question-select-speak" class="question-select question-select-narrow">
             <option value="1">Loading...</option>
           </select>
-          <!-- Multi-select state filter dropdown -->
+          <button id="next-btn-speak" class="nav-btn nav-btn-next" type="button" title="Next Question">
+            Next →
+          </button>
+        </div>
+
+        <!-- Filters Row: Status + Length side by side -->
+        <div class="question-filters-row">
           <div class="status-filter-dropdown" id="status-filter-container-speak">
             <button id="status-filter-btn-speak" class="status-filter-btn" type="button">
               <span id="status-filter-label-speak">Filter by Status</span>
@@ -659,9 +679,9 @@
             </div>
           </div>
         </div>
-        <div class="question-total">
-          <span>Total number of questions: <span id="total-questions-speak">1</span></span>
-        </div>
+      </div>
+      <div class="question-total">
+        <span>Total number of questions: <span id="total-questions-speak">1</span></span>
       </div>
       <div class="controls">
         <button id="play-btn-speak" class="modern-btn modern-btn--play" type="button">Play</button>
@@ -686,9 +706,18 @@
           <label for="question-select-extended">Question ID:</label>
           <span id="current-question-id-extended" class="current-question-id">1</span>
         </div>
-        <select id="question-select-extended" class="question-select">
-          <option value="1">Loading...</option>
-        </select>
+        <!-- Navigation Row: Back + Dropdown + Next -->
+        <div class="question-nav-row">
+          <button id="back-btn-extended" class="nav-btn nav-btn-back" type="button" title="Previous Question">
+            ← Back
+          </button>
+          <select id="question-select-extended" class="question-select question-select-narrow">
+            <option value="1">Loading...</option>
+          </select>
+          <button id="next-btn-extended" class="nav-btn nav-btn-next" type="button" title="Next Question">
+            Next →
+          </button>
+        </div>
         <div class="question-total">
           <span>Total number of questions: <span id="total-questions-extended">1</span></span>
         </div>

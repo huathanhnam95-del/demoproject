@@ -276,6 +276,10 @@ const WatchMode = (function () {
         elements.videoListView.style.display = 'none';
         elements.playerView.style.display = 'block';
 
+        // Enable side-by-side layout for question panel
+        const pageWrapper = document.getElementById('page-layout-wrapper');
+        if (pageWrapper) pageWrapper.classList.add('watch-active');
+
         // Load questions from Firestore
         await loadQuestions(videoId);
 
@@ -702,10 +706,14 @@ const WatchMode = (function () {
         elements.playerView.style.display = 'none';
         elements.videoListView.style.display = 'block';
 
-        // Hide question panel
+        // Hide question panel and reset layout
         if (elements.questionOverlay) {
             elements.questionOverlay.style.display = 'none';
         }
+
+        // Remove side-by-side layout class
+        const pageWrapper = document.getElementById('page-layout-wrapper');
+        if (pageWrapper) pageWrapper.classList.remove('watch-active');
     }
 
     /**

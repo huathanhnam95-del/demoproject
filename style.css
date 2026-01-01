@@ -5706,25 +5706,41 @@ textarea:focus {
   line-height: 1.6;
 }
 
-/* Watch Mode Question Panel - Fixed position on right side of viewport */
-.watch-question-panel-fixed {
-  position: fixed;
-  top: 80px;
-  right: 20px;
-  width: 350px;
-  max-height: calc(100vh - 100px);
-  overflow-y: auto;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
-  z-index: 100;
-  animation: slideInRight 0.3s ease;
+/* Page Layout Wrapper - Contains white card + question panel as siblings */
+.page-layout-wrapper {
+  display: block;
+  position: relative;
 }
 
-@keyframes slideInRight {
+/* When Watch Mode player is active, use flex layout for side-by-side */
+.page-layout-wrapper.watch-active {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Question Panel - sibling of white card, aligned with video player */
+.watch-question-panel {
+  width: 350px;
+  flex-shrink: 0;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  animation: slideInPanel 0.3s ease;
+  align-self: flex-start;
+  margin-top: 56px;
+  /* Align with content below header */
+}
+
+@keyframes slideInPanel {
   from {
     opacity: 0;
-    transform: translateX(30px);
+    transform: translateX(20px);
   }
 
   to {
@@ -5735,6 +5751,20 @@ textarea:focus {
 
 .watch-question-panel-content {
   padding: 20px;
+}
+
+/* Responsive: Stack on smaller screens */
+@media (max-width: 900px) {
+  .page-layout-wrapper.watch-active {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .watch-question-panel {
+    width: 100%;
+    max-width: 640px;
+    margin-top: 20px;
+  }
 }
 
 @keyframes fadeIn {

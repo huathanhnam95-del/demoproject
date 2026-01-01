@@ -458,521 +458,567 @@
     </div>
   </div>
 
-  <main class="container">
-    <h1>Listening Practice</h1>
+  <!-- Page Layout Wrapper for Watch Mode (video + question panel side by side) -->
+  <div id="page-layout-wrapper" class="page-layout-wrapper">
+    <main class="container">
+      <h1>Listening Practice</h1>
 
-    <div class="tabs">
-      <button id="tab-type" class="tab-btn active" type="button">Type</button>
-      <button id="tab-speak" class="tab-btn" type="button">Speak</button>
-      <button id="tab-extended" class="tab-btn" type="button">Fill</button>
-      <button id="tab-watch" class="tab-btn" type="button">Watch</button>
-    </div>
+      <div class="tabs">
+        <button id="tab-type" class="tab-btn active" type="button">Type</button>
+        <button id="tab-speak" class="tab-btn" type="button">Speak</button>
+        <button id="tab-extended" class="tab-btn" type="button">Fill</button>
+        <button id="tab-watch" class="tab-btn" type="button">Watch</button>
+      </div>
 
-    <div id="mode-type" class="mode-panel active">
-      <div class="question-selector">
-        <div class="question-id-display">
-          <label for="question-select-type">Question ID:</label>
-          <span id="current-question-id-type" class="current-question-id">1</span>
-        </div>
-
-        <!-- Progress Bar UI (logged-in users only) -->
-        <div id="progress-bar-type" class="progress-bar-container" style="display: none;">
-          <div class="progress-bar-track">
-            <div id="progress-bar-fill-type" class="progress-bar-fill" style="width: 0%;"></div>
+      <div id="mode-type" class="mode-panel active">
+        <div class="question-selector">
+          <div class="question-id-display">
+            <label for="question-select-type">Question ID:</label>
+            <span id="current-question-id-type" class="current-question-id">1</span>
           </div>
-          <div class="progress-bar-labels">
-            <span class="progress-label" data-step="0">0%</span>
-            <span class="progress-label" data-step="1">33%</span>
-            <span class="progress-label" data-step="2">66%</span>
-            <span id="progress-target-type" class="progress-label progress-target" data-step="3">Completed</span>
-          </div>
-          <div class="progress-tier-info">
-            <span id="progress-tier-type" class="progress-tier-badge tier-none">Not Started</span>
-            <button id="reset-progress-type-btn" class="reset-progress-btn" style="display: none;">Reset
-              Progress</button>
-          </div>
-        </div>
 
-        <!-- Navigation Row: Back + Dropdown + Next -->
-        <div class="question-nav-row">
-          <button id="back-btn-type" class="nav-btn nav-btn-back" type="button" title="Previous Question">
-            ← Back
-          </button>
-          <select id="question-select-type" class="question-select question-select-narrow">
-            <option value="1">Loading...</option>
-          </select>
-          <button id="next-btn-type" class="nav-btn nav-btn-next" type="button" title="Next Question">
-            Next →
-          </button>
-        </div>
-
-        <!-- Filters Row: Status + Length side by side -->
-        <div class="question-filters-row">
-          <div class="status-filter-dropdown" id="status-filter-container-type">
-            <button id="status-filter-btn-type" class="status-filter-btn" type="button">
-              <span id="status-filter-label-type">Filter by Status</span>
-              <span class="filter-arrow">▼</span>
-            </button>
-            <div id="status-filter-menu-type" class="status-filter-menu" style="display: none;">
-              <div class="filter-option selected" data-value="not-started" data-filter-id="filter-not-started-type">
-                <span class="filter-option-icon">○</span>
-                <span class="filter-option-text">Not Started</span>
-              </div>
-              <div class="filter-option selected" data-value="in-progress" data-filter-id="filter-in-progress-type">
-                <span class="filter-option-icon">◐</span>
-                <span class="filter-option-text">In Progress</span>
-              </div>
-              <div class="filter-option selected" data-value="completed" data-filter-id="filter-completed-type">
-                <span class="filter-option-icon">✓</span>
-                <span class="filter-option-text">Completed</span>
-              </div>
-              <div class="filter-option selected" data-value="consolidated" data-filter-id="filter-consolidated-type">
-                <span class="filter-option-icon">✓✓</span>
-                <span class="filter-option-text">Consolidated</span>
-              </div>
-              <div class="filter-option selected" data-value="mastered" data-filter-id="filter-mastered-type">
-                <span class="filter-option-icon">★</span>
-                <span class="filter-option-text">Mastered</span>
-              </div>
+          <!-- Progress Bar UI (logged-in users only) -->
+          <div id="progress-bar-type" class="progress-bar-container" style="display: none;">
+            <div class="progress-bar-track">
+              <div id="progress-bar-fill-type" class="progress-bar-fill" style="width: 0%;"></div>
+            </div>
+            <div class="progress-bar-labels">
+              <span class="progress-label" data-step="0">0%</span>
+              <span class="progress-label" data-step="1">33%</span>
+              <span class="progress-label" data-step="2">66%</span>
+              <span id="progress-target-type" class="progress-label progress-target" data-step="3">Completed</span>
+            </div>
+            <div class="progress-tier-info">
+              <span id="progress-tier-type" class="progress-tier-badge tier-none">Not Started</span>
+              <button id="reset-progress-type-btn" class="reset-progress-btn" style="display: none;">Reset
+                Progress</button>
             </div>
           </div>
 
-          <!-- Unlockable Sentence Length Filter -->
-          <div id="length-filter-container-type" class="length-filter-dropdown" style="display: none;">
-            <button id="length-filter-btn-type" class="length-filter-btn" type="button">
-              <span id="length-filter-label-type">Filter by Length</span>
-              <span class="filter-arrow">▼</span>
+          <!-- Navigation Row: Back + Dropdown + Next -->
+          <div class="question-nav-row">
+            <button id="back-btn-type" class="nav-btn nav-btn-back" type="button" title="Previous Question">
+              ← Back
             </button>
-            <div id="length-filter-menu-type" class="length-filter-menu" style="display: none;">
-              <div class="filter-option selected" data-value="all">
-                <span class="filter-option-icon">📏</span>
-                <span class="filter-option-text">All Lengths</span>
+            <select id="question-select-type" class="question-select question-select-narrow">
+              <option value="1">Loading...</option>
+            </select>
+            <button id="next-btn-type" class="nav-btn nav-btn-next" type="button" title="Next Question">
+              Next →
+            </button>
+          </div>
+
+          <!-- Filters Row: Status + Length side by side -->
+          <div class="question-filters-row">
+            <div class="status-filter-dropdown" id="status-filter-container-type">
+              <button id="status-filter-btn-type" class="status-filter-btn" type="button">
+                <span id="status-filter-label-type">Filter by Status</span>
+                <span class="filter-arrow">▼</span>
+              </button>
+              <div id="status-filter-menu-type" class="status-filter-menu" style="display: none;">
+                <div class="filter-option selected" data-value="not-started" data-filter-id="filter-not-started-type">
+                  <span class="filter-option-icon">○</span>
+                  <span class="filter-option-text">Not Started</span>
+                </div>
+                <div class="filter-option selected" data-value="in-progress" data-filter-id="filter-in-progress-type">
+                  <span class="filter-option-icon">◐</span>
+                  <span class="filter-option-text">In Progress</span>
+                </div>
+                <div class="filter-option selected" data-value="completed" data-filter-id="filter-completed-type">
+                  <span class="filter-option-icon">✓</span>
+                  <span class="filter-option-text">Completed</span>
+                </div>
+                <div class="filter-option selected" data-value="consolidated" data-filter-id="filter-consolidated-type">
+                  <span class="filter-option-icon">✓✓</span>
+                  <span class="filter-option-text">Consolidated</span>
+                </div>
+                <div class="filter-option selected" data-value="mastered" data-filter-id="filter-mastered-type">
+                  <span class="filter-option-icon">★</span>
+                  <span class="filter-option-text">Mastered</span>
+                </div>
               </div>
-              <div class="filter-option" data-value="5-8">
-                <span class="filter-option-icon">📝</span>
-                <span class="filter-option-text">5-8 words <span class="length-tag short">Short</span></span>
-              </div>
-              <div class="filter-option" data-value="9">
-                <span class="filter-option-icon">📝</span>
-                <span class="filter-option-text">9 words</span>
-              </div>
-              <div class="filter-option" data-value="10">
-                <span class="filter-option-icon">📝</span>
-                <span class="filter-option-text">10 words</span>
-              </div>
-              <div class="filter-option" data-value="11">
-                <span class="filter-option-icon">📝</span>
-                <span class="filter-option-text">11 words</span>
-              </div>
-              <div class="filter-option" data-value="12-15">
-                <span class="filter-option-icon">📝</span>
-                <span class="filter-option-text">12-15 words <span class="length-tag long">Long</span></span>
+            </div>
+
+            <!-- Unlockable Sentence Length Filter -->
+            <div id="length-filter-container-type" class="length-filter-dropdown" style="display: none;">
+              <button id="length-filter-btn-type" class="length-filter-btn" type="button">
+                <span id="length-filter-label-type">Filter by Length</span>
+                <span class="filter-arrow">▼</span>
+              </button>
+              <div id="length-filter-menu-type" class="length-filter-menu" style="display: none;">
+                <div class="filter-option selected" data-value="all">
+                  <span class="filter-option-icon">📏</span>
+                  <span class="filter-option-text">All Lengths</span>
+                </div>
+                <div class="filter-option" data-value="5-8">
+                  <span class="filter-option-icon">📝</span>
+                  <span class="filter-option-text">5-8 words <span class="length-tag short">Short</span></span>
+                </div>
+                <div class="filter-option" data-value="9">
+                  <span class="filter-option-icon">📝</span>
+                  <span class="filter-option-text">9 words</span>
+                </div>
+                <div class="filter-option" data-value="10">
+                  <span class="filter-option-icon">📝</span>
+                  <span class="filter-option-text">10 words</span>
+                </div>
+                <div class="filter-option" data-value="11">
+                  <span class="filter-option-icon">📝</span>
+                  <span class="filter-option-text">11 words</span>
+                </div>
+                <div class="filter-option" data-value="12-15">
+                  <span class="filter-option-icon">📝</span>
+                  <span class="filter-option-text">12-15 words <span class="length-tag long">Long</span></span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-      <div class="question-total">
-        <span>Total number of questions: <span id="total-questions-type">1</span></span>
-      </div>
-      <div class="controls">
-        <button id="play-btn" class="modern-btn modern-btn--play" type="button">Play</button>
-        <button id="check-btn" class="modern-btn modern-btn--check" type="button" style="display: none;">Check</button>
-        <button id="retry-btn" class="modern-btn modern-btn--retry" type="button" style="display: none;">Retry</button>
-      </div>
-      <div id="score" class="score">Points: 0</div>
-
-      <label class="input-label" for="answer-input">Type what you hear:</label>
-      <textarea id="answer-input" rows="4" placeholder="Start typing..." disabled></textarea>
-    </div>
-
-    <div id="mode-speak" class="mode-panel">
-      <div class="question-selector">
-        <div class="question-id-display">
-          <label for="question-select-speak">Question ID:</label>
-          <span id="current-question-id-speak" class="current-question-id">1</span>
-        </div>
-
-        <!-- Progress Bar UI (logged-in users only) -->
-        <div id="progress-bar-speak" class="progress-bar-container" style="display: none;">
-          <div class="progress-bar-track">
-            <div id="progress-bar-fill-speak" class="progress-bar-fill" style="width: 0%;"></div>
-          </div>
-          <div class="progress-bar-labels">
-            <span class="progress-label" data-step="0">0%</span>
-            <span class="progress-label" data-step="1">33%</span>
-            <span class="progress-label" data-step="2">66%</span>
-            <span id="progress-target-speak" class="progress-label progress-target" data-step="3">Completed</span>
-          </div>
-          <div class="progress-tier-info">
-            <span id="progress-tier-speak" class="progress-tier-badge tier-none">Not Started</span>
-            <button id="reset-progress-speak-btn" class="reset-progress-btn" style="display: none;">Reset
-              Progress</button>
-          </div>
-        </div>
-
-        <!-- Navigation Row: Back + Dropdown + Next -->
-        <div class="question-nav-row">
-          <button id="back-btn-speak" class="nav-btn nav-btn-back" type="button" title="Previous Question">
-            ← Back
-          </button>
-          <select id="question-select-speak" class="question-select question-select-narrow">
-            <option value="1">Loading...</option>
-          </select>
-          <button id="next-btn-speak" class="nav-btn nav-btn-next" type="button" title="Next Question">
-            Next →
-          </button>
-        </div>
-
-        <!-- Filters Row: Status + Length side by side -->
-        <div class="question-filters-row">
-          <div class="status-filter-dropdown" id="status-filter-container-speak">
-            <button id="status-filter-btn-speak" class="status-filter-btn" type="button">
-              <span id="status-filter-label-speak">Filter by Status</span>
-              <span class="filter-arrow">▼</span>
-            </button>
-            <div id="status-filter-menu-speak" class="status-filter-menu" style="display: none;">
-              <div class="filter-option selected" data-value="not-started" data-filter-id="filter-not-started-speak">
-                <span class="filter-option-icon">○</span>
-                <span class="filter-option-text">Not Started</span>
-              </div>
-              <div class="filter-option selected" data-value="in-progress" data-filter-id="filter-in-progress-speak">
-                <span class="filter-option-icon">◐</span>
-                <span class="filter-option-text">In Progress</span>
-              </div>
-              <div class="filter-option selected" data-value="completed" data-filter-id="filter-completed-speak">
-                <span class="filter-option-icon">✓</span>
-                <span class="filter-option-text">Completed</span>
-              </div>
-              <div class="filter-option selected" data-value="consolidated" data-filter-id="filter-consolidated-speak">
-                <span class="filter-option-icon">✓✓</span>
-                <span class="filter-option-text">Consolidated</span>
-              </div>
-              <div class="filter-option selected" data-value="mastered" data-filter-id="filter-mastered-speak">
-                <span class="filter-option-icon">★</span>
-                <span class="filter-option-text">Mastered</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Unlockable Sentence Length Filter (Speak mode) -->
-          <div id="length-filter-container-speak" class="length-filter-dropdown" style="display: none;">
-            <button id="length-filter-btn-speak" class="length-filter-btn" type="button">
-              <span id="length-filter-label-speak">Filter by Length</span>
-              <span class="filter-arrow">▼</span>
-            </button>
-            <div id="length-filter-menu-speak" class="length-filter-menu" style="display: none;">
-              <div class="filter-option selected" data-value="all">
-                <span class="filter-option-icon">📏</span>
-                <span class="filter-option-text">All Lengths</span>
-              </div>
-              <div class="filter-option" data-value="4-7">
-                <span class="filter-option-icon">📝</span>
-                <span class="filter-option-text">4-7 words <span class="length-tag short">Short</span></span>
-              </div>
-              <div class="filter-option" data-value="8-9">
-                <span class="filter-option-icon">📝</span>
-                <span class="filter-option-text">8-9 words</span>
-              </div>
-              <div class="filter-option" data-value="10-11">
-                <span class="filter-option-icon">📝</span>
-                <span class="filter-option-text">10-11 words</span>
-              </div>
-              <div class="filter-option" data-value="12-13">
-                <span class="filter-option-icon">📝</span>
-                <span class="filter-option-text">12-13 words <span class="length-tag long">Long</span></span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="question-total">
-        <span>Total number of questions: <span id="total-questions-speak">1</span></span>
-      </div>
-      <div class="controls">
-        <button id="play-btn-speak" class="modern-btn modern-btn--play" type="button">Play</button>
-        <button id="record-btn" class="modern-btn modern-btn--record" type="button">Start Recording</button>
-        <button id="check-btn-speak" class="modern-btn modern-btn--check" type="button"
-          style="display: none;">Check</button>
-        <button id="retry-btn-speak" class="modern-btn modern-btn--retry" type="button"
-          style="display: none;">Retry</button>
-      </div>
-      <div id="score-speak" class="score">Points: 0</div>
-
-      <label class="input-label">Speak what you hear:</label>
-      <div id="transcription-display" class="transcription-display">
-        <div id="transcription-text" class="transcription-text">Click "Start Recording" and speak...</div>
-        <div id="recording-status" class="recording-status"></div>
-      </div>
-    </div>
-
-    <div id="mode-extended" class="mode-panel">
-      <div class="question-selector">
-        <div class="question-id-display">
-          <label for="question-select-extended">Question ID:</label>
-          <span id="current-question-id-extended" class="current-question-id">1</span>
-        </div>
-        <!-- Navigation Row: Back + Dropdown + Next -->
-        <div class="question-nav-row">
-          <button id="back-btn-extended" class="nav-btn nav-btn-back" type="button" title="Previous Question">
-            ← Back
-          </button>
-          <select id="question-select-extended" class="question-select question-select-narrow">
-            <option value="1">Loading...</option>
-          </select>
-          <button id="next-btn-extended" class="nav-btn nav-btn-next" type="button" title="Next Question">
-            Next →
-          </button>
         </div>
         <div class="question-total">
-          <span>Total number of questions: <span id="total-questions-extended">1</span></span>
+          <span>Total number of questions: <span id="total-questions-type">1</span></span>
         </div>
+        <div class="controls">
+          <button id="play-btn" class="modern-btn modern-btn--play" type="button">Play</button>
+          <button id="check-btn" class="modern-btn modern-btn--check" type="button"
+            style="display: none;">Check</button>
+          <button id="retry-btn" class="modern-btn modern-btn--retry" type="button"
+            style="display: none;">Retry</button>
+        </div>
+        <div id="score" class="score">Points: 0</div>
+
+        <label class="input-label" for="answer-input">Type what you hear:</label>
+        <textarea id="answer-input" rows="4" placeholder="Start typing..." disabled></textarea>
       </div>
 
-      <div id="reading-phase" class="reading-phase">
-        <div class="reading-timer">
-          <span>Reading time: <span id="reading-timer-display">30</span> seconds</span>
-        </div>
-        <button id="skip-reading-btn" type="button" class="skip-reading-btn">Skip reading time</button>
-        <div id="full-transcript" class="full-transcript"></div>
-      </div>
+      <div id="mode-speak" class="mode-panel">
+        <div class="question-selector">
+          <div class="question-id-display">
+            <label for="question-select-speak">Question ID:</label>
+            <span id="current-question-id-speak" class="current-question-id">1</span>
+          </div>
 
-      <div id="listening-phase" class="listening-phase" style="display: none;">
-        <div id="fill-single-words-section" class="fill-phrases-section" style="display: block;">
-          <div class="fill-phrases-header">
-            <h3>Fill single words</h3>
-          </div>
-          <div id="gapped-transcript" class="gapped-transcript"></div>
-          <div class="extended-audio-controls">
-            <div class="audio-controls-row">
-              <button id="play-pause-extended-btn" class="modern-btn modern-btn--play play-pause-btn"
-                type="button">Play</button>
-              <div class="time-display">
-                <span id="current-time-extended">0:00</span> / <span id="total-time-extended">0:00</span>
-              </div>
-              <div class="speed-control">
-                <label for="speed-select-extended">Speed:</label>
-                <select id="speed-select-extended" class="speed-select">
-                  <option value="0.5">0.5x</option>
-                  <option value="0.75">0.75x</option>
-                  <option value="1" selected>1x</option>
-                  <option value="1.25">1.25x</option>
-                  <option value="1.5">1.5x</option>
-                  <option value="1.75">1.75x</option>
-                  <option value="2">2x</option>
-                </select>
-              </div>
+          <!-- Progress Bar UI (logged-in users only) -->
+          <div id="progress-bar-speak" class="progress-bar-container" style="display: none;">
+            <div class="progress-bar-track">
+              <div id="progress-bar-fill-speak" class="progress-bar-fill" style="width: 0%;"></div>
             </div>
-            <div class="audio-slider-container">
-              <input type="range" id="audio-slider-extended" class="audio-slider" min="0" max="100" value="0"
-                step="0.1">
+            <div class="progress-bar-labels">
+              <span class="progress-label" data-step="0">0%</span>
+              <span class="progress-label" data-step="1">33%</span>
+              <span class="progress-label" data-step="2">66%</span>
+              <span id="progress-target-speak" class="progress-label progress-target" data-step="3">Completed</span>
+            </div>
+            <div class="progress-tier-info">
+              <span id="progress-tier-speak" class="progress-tier-badge tier-none">Not Started</span>
+              <button id="reset-progress-speak-btn" class="reset-progress-btn" style="display: none;">Reset
+                Progress</button>
             </div>
           </div>
-          <div class="phrase-controls">
-            <button id="check-extended-btn" class="modern-btn modern-btn--check" type="button">Check</button>
-            <button id="support-mode-btn" class="modern-btn modern-btn--hint" type="button">Show Hints</button>
-            <button id="redo-extended-btn" class="modern-btn modern-btn--retry" type="button"
-              style="display: none;">Retry</button>
-            <button id="randomize-blanks-btn" class="modern-btn modern-btn--hint" type="button"
-              style="display: none;">Try New Blanks</button>
-          </div>
-          <div id="check-result-extended" class="check-result-box" style="display: none;"></div>
-        </div>
 
-        <div id="fill-phrases-section" class="fill-phrases-section" style="display: none;">
-          <div class="fill-phrases-header">
-            <h3>Fill phrases</h3>
-            <div class="phrase-options">
-              <label>
-                <input type="radio" name="phrase-length" value="2" checked>
-                <span>2 words</span>
-              </label>
-              <label>
-                <input type="radio" name="phrase-length" value="3">
-                <span>3 words</span>
-              </label>
-            </div>
-          </div>
-          <div id="phrases-transcript" class="phrases-transcript"></div>
-          <div class="extended-audio-controls">
-            <div class="audio-controls-row">
-              <button id="play-pause-phrases-btn" class="modern-btn modern-btn--play play-pause-btn"
-                type="button">Play</button>
-              <div class="time-display">
-                <span id="current-time-phrases">0:00</span> / <span id="total-time-phrases">0:00</span>
-              </div>
-              <div class="speed-control">
-                <label for="speed-select-phrases">Speed:</label>
-                <select id="speed-select-phrases" class="speed-select">
-                  <option value="0.5">0.5x</option>
-                  <option value="0.75">0.75x</option>
-                  <option value="1" selected>1x</option>
-                  <option value="1.25">1.25x</option>
-                  <option value="1.5">1.5x</option>
-                  <option value="1.75">1.75x</option>
-                  <option value="2">2x</option>
-                </select>
-              </div>
-            </div>
-            <div class="audio-slider-container">
-              <input type="range" id="audio-slider-phrases" class="audio-slider" min="0" max="100" value="0" step="0.1">
-            </div>
-          </div>
-          <div class="phrase-controls">
-            <button id="check-phrases-btn" class="modern-btn modern-btn--check" type="button">Check Phrases</button>
-            <button id="support-phrases-btn" class="modern-btn modern-btn--hint" type="button">Show Hints</button>
-            <button id="redo-phrases-btn" class="modern-btn modern-btn--retry" type="button"
-              style="display: none;">Retry Phrases</button>
-          </div>
-          <div id="check-result-phrases" class="check-result-box" style="display: none;"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Watch Mode Panel -->
-    <div id="mode-watch" class="mode-panel">
-      <!-- Video Selection View -->
-      <div id="watch-video-list-view" class="watch-video-list-view">
-        <div class="watch-header">
-          <h2>Video Lessons</h2>
-          <div class="watch-search">
-            <input type="text" id="watch-search-input" placeholder="Search videos..." />
-          </div>
-          <div class="watch-filter">
-            <select id="watch-level-filter">
-              <option value="">All Levels</option>
-              <option value="Beginner">Beginner</option>
-              <option value="Intermediate">Intermediate</option>
-              <option value="Advanced">Advanced</option>
+          <!-- Navigation Row: Back + Dropdown + Next -->
+          <div class="question-nav-row">
+            <button id="back-btn-speak" class="nav-btn nav-btn-back" type="button" title="Previous Question">
+              ← Back
+            </button>
+            <select id="question-select-speak" class="question-select question-select-narrow">
+              <option value="1">Loading...</option>
             </select>
-          </div>
-        </div>
-        <div id="watch-video-grid" class="watch-video-grid">
-          <!-- Video cards will be populated here -->
-          <div class="watch-loading">Loading videos...</div>
-        </div>
-      </div>
-
-      <!-- Video Player View (hidden by default) -->
-      <div id="watch-player-view" class="watch-player-view" style="display: none;">
-        <div class="watch-player-header">
-          <button id="watch-back-to-list" class="nav-btn nav-btn-back" type="button">← Back to Videos</button>
-          <h3 id="watch-current-title">Video Title</h3>
-        </div>
-
-        <div class="watch-player-container">
-          <!-- 16:9 YouTube Player -->
-          <div id="watch-player-wrapper" class="watch-player-wrapper">
-            <div id="watch-youtube-player"></div>
+            <button id="next-btn-speak" class="nav-btn nav-btn-next" type="button" title="Next Question">
+              Next →
+            </button>
           </div>
 
-          <!-- Progress indicator -->
-          <div id="watch-progress-bar" class="watch-progress-bar">
-            <div id="watch-progress-fill" class="watch-progress-fill"></div>
-            <div id="watch-question-markers" class="watch-question-markers">
-              <!-- Question markers will be added here -->
+          <!-- Filters Row: Status + Length side by side -->
+          <div class="question-filters-row">
+            <div class="status-filter-dropdown" id="status-filter-container-speak">
+              <button id="status-filter-btn-speak" class="status-filter-btn" type="button">
+                <span id="status-filter-label-speak">Filter by Status</span>
+                <span class="filter-arrow">▼</span>
+              </button>
+              <div id="status-filter-menu-speak" class="status-filter-menu" style="display: none;">
+                <div class="filter-option selected" data-value="not-started" data-filter-id="filter-not-started-speak">
+                  <span class="filter-option-icon">○</span>
+                  <span class="filter-option-text">Not Started</span>
+                </div>
+                <div class="filter-option selected" data-value="in-progress" data-filter-id="filter-in-progress-speak">
+                  <span class="filter-option-icon">◐</span>
+                  <span class="filter-option-text">In Progress</span>
+                </div>
+                <div class="filter-option selected" data-value="completed" data-filter-id="filter-completed-speak">
+                  <span class="filter-option-icon">✓</span>
+                  <span class="filter-option-text">Completed</span>
+                </div>
+                <div class="filter-option selected" data-value="consolidated"
+                  data-filter-id="filter-consolidated-speak">
+                  <span class="filter-option-icon">✓✓</span>
+                  <span class="filter-option-text">Consolidated</span>
+                </div>
+                <div class="filter-option selected" data-value="mastered" data-filter-id="filter-mastered-speak">
+                  <span class="filter-option-icon">★</span>
+                  <span class="filter-option-text">Mastered</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Unlockable Sentence Length Filter (Speak mode) -->
+            <div id="length-filter-container-speak" class="length-filter-dropdown" style="display: none;">
+              <button id="length-filter-btn-speak" class="length-filter-btn" type="button">
+                <span id="length-filter-label-speak">Filter by Length</span>
+                <span class="filter-arrow">▼</span>
+              </button>
+              <div id="length-filter-menu-speak" class="length-filter-menu" style="display: none;">
+                <div class="filter-option selected" data-value="all">
+                  <span class="filter-option-icon">📏</span>
+                  <span class="filter-option-text">All Lengths</span>
+                </div>
+                <div class="filter-option" data-value="4-7">
+                  <span class="filter-option-icon">📝</span>
+                  <span class="filter-option-text">4-7 words <span class="length-tag short">Short</span></span>
+                </div>
+                <div class="filter-option" data-value="8-9">
+                  <span class="filter-option-icon">📝</span>
+                  <span class="filter-option-text">8-9 words</span>
+                </div>
+                <div class="filter-option" data-value="10-11">
+                  <span class="filter-option-icon">📝</span>
+                  <span class="filter-option-text">10-11 words</span>
+                </div>
+                <div class="filter-option" data-value="12-13">
+                  <span class="filter-option-icon">📝</span>
+                  <span class="filter-option-text">12-13 words <span class="length-tag long">Long</span></span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
+        <div class="question-total">
+          <span>Total number of questions: <span id="total-questions-speak">1</span></span>
+        </div>
+        <div class="controls">
+          <button id="play-btn-speak" class="modern-btn modern-btn--play" type="button">Play</button>
+          <button id="record-btn" class="modern-btn modern-btn--record" type="button">Start Recording</button>
+          <button id="check-btn-speak" class="modern-btn modern-btn--check" type="button"
+            style="display: none;">Check</button>
+          <button id="retry-btn-speak" class="modern-btn modern-btn--retry" type="button"
+            style="display: none;">Retry</button>
+        </div>
+        <div id="score-speak" class="score">Points: 0</div>
 
-        <div class="watch-controls">
-          <button id="watch-play-btn" class="modern-btn modern-btn--play" type="button">Play</button>
-          <span id="watch-time-display" class="watch-time-display">0:00 / 0:00</span>
-          <div id="watch-score" class="score">Points: 0</div>
+        <label class="input-label">Speak what you hear:</label>
+        <div id="transcription-display" class="transcription-display">
+          <div id="transcription-text" class="transcription-text">Click "Start Recording" and speak...</div>
+          <div id="recording-status" class="recording-status"></div>
+        </div>
+      </div>
+
+      <div id="mode-extended" class="mode-panel">
+        <div class="question-selector">
+          <div class="question-id-display">
+            <label for="question-select-extended">Question ID:</label>
+            <span id="current-question-id-extended" class="current-question-id">1</span>
+          </div>
+          <!-- Navigation Row: Back + Dropdown + Next -->
+          <div class="question-nav-row">
+            <button id="back-btn-extended" class="nav-btn nav-btn-back" type="button" title="Previous Question">
+              ← Back
+            </button>
+            <select id="question-select-extended" class="question-select question-select-narrow">
+              <option value="1">Loading...</option>
+            </select>
+            <button id="next-btn-extended" class="nav-btn nav-btn-next" type="button" title="Next Question">
+              Next →
+            </button>
+          </div>
+          <div class="question-total">
+            <span>Total number of questions: <span id="total-questions-extended">1</span></span>
+          </div>
         </div>
 
-        <div class="watch-video-info">
-          <p id="watch-current-description">Video description will appear here.</p>
+        <div id="reading-phase" class="reading-phase">
+          <div class="reading-timer">
+            <span>Reading time: <span id="reading-timer-display">30</span> seconds</span>
+          </div>
+          <button id="skip-reading-btn" type="button" class="skip-reading-btn">Skip reading time</button>
+          <div id="full-transcript" class="full-transcript"></div>
+        </div>
+
+        <div id="listening-phase" class="listening-phase" style="display: none;">
+          <div id="fill-single-words-section" class="fill-phrases-section" style="display: block;">
+            <div class="fill-phrases-header">
+              <h3>Fill single words</h3>
+            </div>
+            <div id="gapped-transcript" class="gapped-transcript"></div>
+            <div class="extended-audio-controls">
+              <div class="audio-controls-row">
+                <button id="play-pause-extended-btn" class="modern-btn modern-btn--play play-pause-btn"
+                  type="button">Play</button>
+                <div class="time-display">
+                  <span id="current-time-extended">0:00</span> / <span id="total-time-extended">0:00</span>
+                </div>
+                <div class="speed-control">
+                  <label for="speed-select-extended">Speed:</label>
+                  <select id="speed-select-extended" class="speed-select">
+                    <option value="0.5">0.5x</option>
+                    <option value="0.75">0.75x</option>
+                    <option value="1" selected>1x</option>
+                    <option value="1.25">1.25x</option>
+                    <option value="1.5">1.5x</option>
+                    <option value="1.75">1.75x</option>
+                    <option value="2">2x</option>
+                  </select>
+                </div>
+              </div>
+              <div class="audio-slider-container">
+                <input type="range" id="audio-slider-extended" class="audio-slider" min="0" max="100" value="0"
+                  step="0.1">
+              </div>
+            </div>
+            <div class="phrase-controls">
+              <button id="check-extended-btn" class="modern-btn modern-btn--check" type="button">Check</button>
+              <button id="support-mode-btn" class="modern-btn modern-btn--hint" type="button">Show Hints</button>
+              <button id="redo-extended-btn" class="modern-btn modern-btn--retry" type="button"
+                style="display: none;">Retry</button>
+              <button id="randomize-blanks-btn" class="modern-btn modern-btn--hint" type="button"
+                style="display: none;">Try New Blanks</button>
+            </div>
+            <div id="check-result-extended" class="check-result-box" style="display: none;"></div>
+          </div>
+
+          <div id="fill-phrases-section" class="fill-phrases-section" style="display: none;">
+            <div class="fill-phrases-header">
+              <h3>Fill phrases</h3>
+              <div class="phrase-options">
+                <label>
+                  <input type="radio" name="phrase-length" value="2" checked>
+                  <span>2 words</span>
+                </label>
+                <label>
+                  <input type="radio" name="phrase-length" value="3">
+                  <span>3 words</span>
+                </label>
+              </div>
+            </div>
+            <div id="phrases-transcript" class="phrases-transcript"></div>
+            <div class="extended-audio-controls">
+              <div class="audio-controls-row">
+                <button id="play-pause-phrases-btn" class="modern-btn modern-btn--play play-pause-btn"
+                  type="button">Play</button>
+                <div class="time-display">
+                  <span id="current-time-phrases">0:00</span> / <span id="total-time-phrases">0:00</span>
+                </div>
+                <div class="speed-control">
+                  <label for="speed-select-phrases">Speed:</label>
+                  <select id="speed-select-phrases" class="speed-select">
+                    <option value="0.5">0.5x</option>
+                    <option value="0.75">0.75x</option>
+                    <option value="1" selected>1x</option>
+                    <option value="1.25">1.25x</option>
+                    <option value="1.5">1.5x</option>
+                    <option value="1.75">1.75x</option>
+                    <option value="2">2x</option>
+                  </select>
+                </div>
+              </div>
+              <div class="audio-slider-container">
+                <input type="range" id="audio-slider-phrases" class="audio-slider" min="0" max="100" value="0"
+                  step="0.1">
+              </div>
+            </div>
+            <div class="phrase-controls">
+              <button id="check-phrases-btn" class="modern-btn modern-btn--check" type="button">Check Phrases</button>
+              <button id="support-phrases-btn" class="modern-btn modern-btn--hint" type="button">Show Hints</button>
+              <button id="redo-phrases-btn" class="modern-btn modern-btn--retry" type="button"
+                style="display: none;">Retry Phrases</button>
+            </div>
+            <div id="check-result-phrases" class="check-result-box" style="display: none;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Watch Mode Panel -->
+      <div id="mode-watch" class="mode-panel">
+        <!-- Video Selection View -->
+        <div id="watch-video-list-view" class="watch-video-list-view">
+          <div class="watch-header">
+            <h2>Video Lessons</h2>
+            <div class="watch-search">
+              <input type="text" id="watch-search-input" placeholder="Search videos..." />
+            </div>
+            <div class="watch-filter">
+              <select id="watch-level-filter">
+                <option value="">All Levels</option>
+                <option value="Beginner">Beginner</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+              </select>
+            </div>
+          </div>
+          <div id="watch-video-grid" class="watch-video-grid">
+            <!-- Video cards will be populated here -->
+            <div class="watch-loading">Loading videos...</div>
+          </div>
+        </div>
+
+        <!-- Video Player View (hidden by default) -->
+        <div id="watch-player-view" class="watch-player-view" style="display: none;">
+          <div class="watch-player-header">
+            <button id="watch-back-to-list" class="nav-btn nav-btn-back" type="button">← Back to Videos</button>
+            <h3 id="watch-current-title">Video Title</h3>
+          </div>
+
+          <div class="watch-player-container">
+            <!-- 16:9 YouTube Player -->
+            <div id="watch-player-wrapper" class="watch-player-wrapper">
+              <div id="watch-youtube-player"></div>
+            </div>
+
+            <!-- Progress indicator -->
+            <div id="watch-progress-bar" class="watch-progress-bar">
+              <div id="watch-progress-fill" class="watch-progress-fill"></div>
+              <div id="watch-question-markers" class="watch-question-markers">
+                <!-- Question markers will be added here -->
+              </div>
+            </div>
+          </div>
+
+          <div class="watch-controls">
+            <button id="watch-play-btn" class="modern-btn modern-btn--play" type="button">Play</button>
+            <span id="watch-time-display" class="watch-time-display">0:00 / 0:00</span>
+            <div id="watch-score" class="score">Points: 0</div>
+          </div>
+
+          <div class="watch-video-info">
+            <p id="watch-current-description">Video description will appear here.</p>
+          </div>
+        </div>
+      </div>
+
+      <section class="animation-panel" style="display: none;">
+        <div class="animation-header">
+          <span>How to fix (step-by-step)</span>
+          <div class="animation-controls">
+            <button id="skip-animation-btn" class="modern-btn modern-btn--hint" type="button">Skip Animation</button>
+            <button id="replay-btn" class="modern-btn modern-btn--play" type="button">Replay</button>
+          </div>
+        </div>
+        <div id="animation" class="animation"></div>
+      </section>
+      <div id="result" aria-live="polite" style="display: none;">
+        <div class="legend" aria-hidden="true">
+          <span class="legend-item"><span class="chip missing"></span>missed (red highlight)</span>
+          <span class="legend-item"><span class="chip extra"></span>extra (purple highlight)</span>
+          <span class="legend-item"><span class="chip misplaced"></span>misplaced (blue highlight)</span>
+        </div>
+      </div>
+      <section id="vocabulary-practice" class="vocabulary-panel" style="display: none;">
+        <div class="vocabulary-header">
+          <span>Vocabulary Practice</span>
+        </div>
+        <div class="vocabulary-subheader">
+          <span>These are the key content words that you missed, try producing them again</span>
+        </div>
+        <div id="vocabulary-words" class="vocabulary-words"></div>
+      </section>
+      <section id="pronunciation-practice" class="pronunciation-panel" style="display: none;">
+        <div class="pronunciation-header">
+          <span>Pronunciation practice</span>
+        </div>
+        <div class="pronunciation-subheader">
+          <span>These are the key content words that you missed, try producing them again</span>
+        </div>
+        <div id="pronunciation-words" class="pronunciation-words"></div>
+      </section>
+      <section id="breakdown-mode" class="breakdown-panel" style="display: none;">
+        <div class="breakdown-header">
+          <span>Breakdown Mode</span>
+        </div>
+        <div class="breakdown-options">
+          <button id="breakdown-beginning" class="breakdown-option-btn active" type="button">From The Beginning</button>
+          <button id="breakdown-end" class="breakdown-option-btn" type="button">From The End</button>
+        </div>
+        <div id="breakdown-lines" class="breakdown-lines"></div>
+      </section>
+      <section id="same-vocab-type" class="same-vocab-panel" style="display: none;">
+        <div class="same-vocab-header">
+          <span>Other questions with the same vocabulary</span>
+        </div>
+        <div class="same-vocab-subheader">
+          <span>Focus on the words that you missed from this question</span>
+        </div>
+        <div id="same-vocab-sentences-type" class="same-vocab-sentences"></div>
+      </section>
+      <section id="same-vocab-speak" class="same-vocab-panel" style="display: none;">
+        <div class="same-vocab-header">
+          <span>Other questions with the same vocabulary</span>
+        </div>
+        <div class="same-vocab-subheader">
+          <span>Focus on the words that you missed from this question</span>
+        </div>
+        <div id="same-vocab-sentences-speak" class="same-vocab-sentences"></div>
+      </section>
+      <section id="generate-sentences-type" class="generate-panel" style="display: none;">
+        <div class="generate-header">
+          <span>Generate random sentence</span>
+          <div class="generate-controls">
+            <button id="show-all-sentences-type-btn" type="button" style="display: none;">Show All</button>
+            <button id="hide-all-sentences-type-btn" type="button" style="display: none;">Hide All</button>
+            <button id="generate-type-btn" type="button">Generate</button>
+          </div>
+        </div>
+        <div id="generated-sentences-type" class="generated-sentences"></div>
+      </section>
+      <section id="generate-sentences-speak" class="generate-panel" style="display: none;">
+        <div class="generate-header">
+          <span>Generate random sentence</span>
+          <div class="generate-controls">
+            <button id="show-all-sentences-speak-btn" type="button" style="display: none;">Show All</button>
+            <button id="hide-all-sentences-speak-btn" type="button" style="display: none;">Hide All</button>
+            <button id="generate-speak-btn" type="button">Generate</button>
+          </div>
+        </div>
+        <div id="generated-sentences-speak" class="generated-sentences"></div>
+      </section>
+    </main>
+
+    <!-- Watch Mode Question Panel (sibling of white card, NOT inside it) -->
+    <div id="watch-question-panel" class="watch-question-panel" style="display: none;">
+      <div class="watch-question-panel-content">
+        <div class="watch-question-header">
+          <span id="watch-question-number">Question 1</span>
+          <button id="watch-skip-question" class="watch-skip-btn" style="display: none;">Skip</button>
+        </div>
+
+        <div class="watch-question-content">
+          <p id="watch-question-text">Question text will appear here</p>
+          <button id="watch-play-question-audio" class="watch-audio-btn" style="display: none;">
+            🔊 Listen
+          </button>
+        </div>
+
+        <!-- Multiple Choice Options -->
+        <div id="watch-mc-options" class="watch-mc-options" style="display: none;">
+          <!-- Options will be populated dynamically -->
+        </div>
+
+        <!-- Open-ended Answer -->
+        <div id="watch-open-answer" class="watch-open-answer" style="display: none;">
+          <textarea id="watch-answer-input" rows="3" placeholder="Type your answer..."></textarea>
+        </div>
+
+        <div class="watch-question-actions">
+          <button id="watch-submit-answer" class="modern-btn modern-btn--check" type="button">Submit Answer</button>
+        </div>
+
+        <!-- Feedback Area -->
+        <div id="watch-feedback" class="watch-feedback" style="display: none;">
+          <p id="watch-feedback-text"></p>
+          <button id="watch-continue-btn" class="modern-btn modern-btn--play" type="button">Continue</button>
+          <button id="watch-replay-segment-btn" class="modern-btn modern-btn--retry" type="button"
+            style="display: none;">Replay Segment</button>
         </div>
       </div>
     </div>
-
-    <section class="animation-panel" style="display: none;">
-      <div class="animation-header">
-        <span>How to fix (step-by-step)</span>
-        <div class="animation-controls">
-          <button id="skip-animation-btn" class="modern-btn modern-btn--hint" type="button">Skip Animation</button>
-          <button id="replay-btn" class="modern-btn modern-btn--play" type="button">Replay</button>
-        </div>
-      </div>
-      <div id="animation" class="animation"></div>
-    </section>
-    <div id="result" aria-live="polite" style="display: none;">
-      <div class="legend" aria-hidden="true">
-        <span class="legend-item"><span class="chip missing"></span>missed (red highlight)</span>
-        <span class="legend-item"><span class="chip extra"></span>extra (purple highlight)</span>
-        <span class="legend-item"><span class="chip misplaced"></span>misplaced (blue highlight)</span>
-      </div>
-    </div>
-    <section id="vocabulary-practice" class="vocabulary-panel" style="display: none;">
-      <div class="vocabulary-header">
-        <span>Vocabulary Practice</span>
-      </div>
-      <div class="vocabulary-subheader">
-        <span>These are the key content words that you missed, try producing them again</span>
-      </div>
-      <div id="vocabulary-words" class="vocabulary-words"></div>
-    </section>
-    <section id="pronunciation-practice" class="pronunciation-panel" style="display: none;">
-      <div class="pronunciation-header">
-        <span>Pronunciation practice</span>
-      </div>
-      <div class="pronunciation-subheader">
-        <span>These are the key content words that you missed, try producing them again</span>
-      </div>
-      <div id="pronunciation-words" class="pronunciation-words"></div>
-    </section>
-    <section id="breakdown-mode" class="breakdown-panel" style="display: none;">
-      <div class="breakdown-header">
-        <span>Breakdown Mode</span>
-      </div>
-      <div class="breakdown-options">
-        <button id="breakdown-beginning" class="breakdown-option-btn active" type="button">From The Beginning</button>
-        <button id="breakdown-end" class="breakdown-option-btn" type="button">From The End</button>
-      </div>
-      <div id="breakdown-lines" class="breakdown-lines"></div>
-    </section>
-    <section id="same-vocab-type" class="same-vocab-panel" style="display: none;">
-      <div class="same-vocab-header">
-        <span>Other questions with the same vocabulary</span>
-      </div>
-      <div class="same-vocab-subheader">
-        <span>Focus on the words that you missed from this question</span>
-      </div>
-      <div id="same-vocab-sentences-type" class="same-vocab-sentences"></div>
-    </section>
-    <section id="same-vocab-speak" class="same-vocab-panel" style="display: none;">
-      <div class="same-vocab-header">
-        <span>Other questions with the same vocabulary</span>
-      </div>
-      <div class="same-vocab-subheader">
-        <span>Focus on the words that you missed from this question</span>
-      </div>
-      <div id="same-vocab-sentences-speak" class="same-vocab-sentences"></div>
-    </section>
-    <section id="generate-sentences-type" class="generate-panel" style="display: none;">
-      <div class="generate-header">
-        <span>Generate random sentence</span>
-        <div class="generate-controls">
-          <button id="show-all-sentences-type-btn" type="button" style="display: none;">Show All</button>
-          <button id="hide-all-sentences-type-btn" type="button" style="display: none;">Hide All</button>
-          <button id="generate-type-btn" type="button">Generate</button>
-        </div>
-      </div>
-      <div id="generated-sentences-type" class="generated-sentences"></div>
-    </section>
-    <section id="generate-sentences-speak" class="generate-panel" style="display: none;">
-      <div class="generate-header">
-        <span>Generate random sentence</span>
-        <div class="generate-controls">
-          <button id="show-all-sentences-speak-btn" type="button" style="display: none;">Show All</button>
-          <button id="hide-all-sentences-speak-btn" type="button" style="display: none;">Hide All</button>
-          <button id="generate-speak-btn" type="button">Generate</button>
-        </div>
-      </div>
-      <div id="generated-sentences-speak" class="generated-sentences"></div>
-    </section>
-  </main>
+  </div> <!-- End of page-layout-wrapper -->
 
   <audio id="audio" preload="auto"></audio>
   <audio id="audio-extended" preload="auto"></audio>
@@ -1107,45 +1153,6 @@
             <!-- Rows will be injected by JS -->
           </tbody>
         </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- Watch Mode Question Panel (Fixed position, outside container) -->
-  <div id="watch-question-panel" class="watch-question-panel-fixed" style="display: none;">
-    <div class="watch-question-panel-content">
-      <div class="watch-question-header">
-        <span id="watch-question-number">Question 1</span>
-        <button id="watch-skip-question" class="watch-skip-btn" style="display: none;">Skip</button>
-      </div>
-
-      <div class="watch-question-content">
-        <p id="watch-question-text">Question text will appear here</p>
-        <button id="watch-play-question-audio" class="watch-audio-btn" style="display: none;">
-          🔊 Listen
-        </button>
-      </div>
-
-      <!-- Multiple Choice Options -->
-      <div id="watch-mc-options" class="watch-mc-options" style="display: none;">
-        <!-- Options will be populated dynamically -->
-      </div>
-
-      <!-- Open-ended Answer -->
-      <div id="watch-open-answer" class="watch-open-answer" style="display: none;">
-        <textarea id="watch-answer-input" rows="3" placeholder="Type your answer..."></textarea>
-      </div>
-
-      <div class="watch-question-actions">
-        <button id="watch-submit-answer" class="modern-btn modern-btn--check" type="button">Submit Answer</button>
-      </div>
-
-      <!-- Feedback Area -->
-      <div id="watch-feedback" class="watch-feedback" style="display: none;">
-        <p id="watch-feedback-text"></p>
-        <button id="watch-continue-btn" class="modern-btn modern-btn--play" type="button">Continue</button>
-        <button id="watch-replay-segment-btn" class="modern-btn modern-btn--retry" type="button"
-          style="display: none;">Replay Segment</button>
       </div>
     </div>
   </div>

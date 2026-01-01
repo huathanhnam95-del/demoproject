@@ -434,7 +434,8 @@ const WatchMode = (function () {
         elements.questionText.textContent = question.questionText;
 
         // Show/hide audio button
-        elements.playQuestionAudio.style.display = question.voicedAudio ? 'inline-block' : 'none';
+        // Audio button removed - always hidden
+        elements.playQuestionAudio.style.display = 'none';
 
         // Show/hide skip button
         elements.skipBtn.style.display = question.allowSkip ? 'inline-block' : 'none';

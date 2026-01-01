@@ -103,11 +103,13 @@ const YouTubePlayer = (function () {
             width: '100%',
             playerVars: {
                 autoplay: 0,
-                controls: 1,
-                modestbranding: 1,
-                rel: 0,
-                fs: 1,
-                playsinline: 1
+                controls: 0,        // Hide YouTube controls
+                disablekb: 1,       // Disable keyboard controls
+                fs: 0,              // Hide fullscreen button
+                modestbranding: 1,  // Minimal YouTube branding
+                rel: 0,             // No related videos
+                iv_load_policy: 3,  // Hide video annotations
+                playsinline: 1      // Play inline on mobile
             },
             events: {
                 onReady: handleReady,

@@ -5419,3 +5419,491 @@ textarea:focus {
 .btn-icon-remove:hover {
   background: #fee2e2;
 }
+
+/* ============================================
+   Watch Mode Styles
+   ============================================ */
+
+/* Video List View */
+.watch-video-list-view {
+  padding: 20px;
+}
+
+.watch-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.watch-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #1f2937;
+  flex: 1;
+}
+
+.watch-search input {
+  padding: 10px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  width: 250px;
+  transition: border-color 0.2s;
+}
+
+.watch-search input:focus {
+  outline: none;
+  border-color: #8b5cf6;
+}
+
+.watch-filter select {
+  padding: 10px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: white;
+  cursor: pointer;
+}
+
+.watch-video-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.watch-loading {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+/* Video Card */
+.watch-video-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.watch-video-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.watch-video-thumbnail {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  color: white;
+}
+
+.watch-video-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.watch-video-card-info {
+  padding: 16px;
+}
+
+.watch-video-card-title {
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+  line-height: 1.4;
+}
+
+.watch-video-card-level {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.watch-video-card-level.beginner {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.watch-video-card-level.intermediate {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.watch-video-card-level.advanced {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.watch-video-card-desc {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.watch-video-card-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.watch-video-card-progress-bar {
+  flex: 1;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.watch-video-card-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #34d399);
+  border-radius: 3px;
+}
+
+.watch-video-card-progress-text {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+/* Video Player View */
+.watch-player-view {
+  padding: 20px;
+}
+
+.watch-player-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.watch-player-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #1f2937;
+  flex: 1;
+}
+
+.watch-player-container {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+/* 16:9 aspect ratio container */
+.watch-player-wrapper {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%;
+  /* 16:9 */
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.watch-player-wrapper iframe,
+.watch-player-wrapper>div {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Progress bar with markers */
+.watch-progress-bar {
+  position: relative;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  margin-top: 12px;
+  cursor: pointer;
+}
+
+.watch-progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+  border-radius: 4px;
+  width: 0%;
+  transition: width 0.25s;
+}
+
+.watch-question-markers {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+}
+
+.watch-question-marker {
+  position: absolute;
+  top: -4px;
+  width: 16px;
+  height: 16px;
+  background: #f59e0b;
+  border: 2px solid white;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  cursor: pointer;
+  z-index: 2;
+  transition: transform 0.2s;
+}
+
+.watch-question-marker:hover {
+  transform: translateX(-50%) scale(1.2);
+}
+
+.watch-question-marker.answered {
+  background: #10b981;
+}
+
+/* Controls */
+.watch-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.watch-time-display {
+  font-size: 0.95rem;
+  color: #6b7280;
+  font-family: 'Courier New', monospace;
+}
+
+.watch-video-info p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* Watch Mode Question Panel - Fixed position on right side of viewport */
+.watch-question-panel-fixed {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  width: 350px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  animation: slideInRight 0.3s ease;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.watch-question-panel-content {
+  padding: 20px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.watch-question-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.watch-question-header span {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #8b5cf6;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.watch-skip-btn {
+  padding: 6px 12px;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 6px;
+  color: #6b7280;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.watch-skip-btn:hover {
+  background: #e5e7eb;
+}
+
+.watch-question-content {
+  margin-bottom: 20px;
+}
+
+.watch-question-content p {
+  margin: 0 0 12px 0;
+  font-size: 1.1rem;
+  color: #1f2937;
+  line-height: 1.6;
+}
+
+.watch-audio-btn {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.watch-audio-btn:hover {
+  transform: scale(1.05);
+}
+
+/* Multiple Choice Options */
+.watch-mc-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.watch-mc-option {
+  padding: 14px 18px;
+  background: #f9fafb;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1rem;
+  text-align: left;
+}
+
+.watch-mc-option:hover {
+  border-color: #8b5cf6;
+  background: #f5f3ff;
+}
+
+.watch-mc-option.selected {
+  border-color: #8b5cf6;
+  background: #ede9fe;
+}
+
+.watch-mc-option.correct {
+  border-color: #10b981;
+  background: #d1fae5;
+}
+
+.watch-mc-option.incorrect {
+  border-color: #ef4444;
+  background: #fee2e2;
+}
+
+/* Open-ended Answer */
+.watch-open-answer {
+  margin-bottom: 20px;
+}
+
+.watch-open-answer textarea {
+  width: 100%;
+  padding: 14px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 1rem;
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.watch-open-answer textarea:focus {
+  outline: none;
+  border-color: #8b5cf6;
+}
+
+.watch-question-actions {
+  display: flex;
+  justify-content: center;
+}
+
+/* Feedback */
+.watch-feedback {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.watch-feedback p {
+  margin: 0 0 16px 0;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.watch-feedback.correct p {
+  color: #059669;
+}
+
+.watch-feedback.incorrect p {
+  color: #dc2626;
+}
+
+.watch-feedback button {
+  margin: 0 6px;
+}
+
+/* Empty state */
+.watch-empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+}
+
+.watch-empty-state h3 {
+  margin: 0 0 8px 0;
+  color: #374151;
+}

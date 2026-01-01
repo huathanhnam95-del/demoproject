@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watch Admin Console - Video Question Editor</title>
+    <link rel="stylesheet" href="watch-admin.css">
+    <!-- XLSX Library -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+</head>
+
+<body>
+    <div id="admin-app" class="admin-app">
+        <!-- Header -->
+        <header class="admin-header">
+            <h1>📹 Watch Admin Console</h1>
+            <div class="admin-header-actions">
+                <span id="admin-user-email" class="admin-user-email"></span>
+                <button id="admin-save-all" class="admin-btn admin-btn--primary">Save All Changes</button>
+                <a href="index.html" class="admin-btn admin-btn--secondary">← Back to App</a>
+            </div>
+        </header>
+
+        <!-- Main Content - 3 Column Layout -->
+        <main class="admin-main">
+            <!-- Left Column: Video List -->
+            <section class="admin-column admin-column--videos">
+                <div class="admin-column-header">
+                    <h2>Videos</h2>
+                    <input type="text" id="video-search" placeholder="Search videos..." class="admin-search" />
+                    <button id="sync-excel-btn" class="admin-btn admin-btn--primary admin-btn--small"
+                        title="Sync videos from Excel to Firestore">
+                        🔄 Update from Excel
+                    </button>
+                </div>
+                <div id="sync-status" class="admin-sync-status" style="display: none;"></div>
+                <div id="video-list" class="admin-video-list">
+                    <div class="admin-loading">Loading videos...</div>
+                </div>
+            </section>
+
+            <!-- Center Column: Video Player & Timeline -->
+            <section class="admin-column admin-column--player">
+                <div class="admin-column-header">
+                    <h2 id="player-video-title">Select a video</h2>
+                </div>
+
+                <div id="player-container" class="admin-player-container">
+                    <div id="admin-youtube-player" class="admin-youtube-player">
+                        <div class="admin-player-placeholder">Select a video to load the player</div>
+                    </div>
+                </div>
+
+                <div class="admin-timeline-container">
+                    <div class="admin-timeline-controls">
+                        <button id="timeline-play" class="admin-btn admin-btn--icon" title="Play/Pause">▶</button>
+                        <span id="timeline-time" class="admin-timeline-time">0:00 / 0:00</span>
+                    </div>
+
+                    <div class="admin-timeline">
+                        <div id="timeline-progress" class="admin-timeline-progress"></div>
+                        <div id="timeline-markers" class="admin-timeline-markers">
+                            <!-- Question markers will be added here -->
+                        </div>
+                    </div>
+
+                    <div class="admin-timeline-actions">
+                        <button id="add-question-btn" class="admin-btn admin-btn--primary" disabled>
+                            + Add Question at Current Time
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Column: Question Editor -->
+            <section class="admin-column admin-column--editor">
+                <div class="admin-column-header">
+                    <h2>Question Editor</h2>
+                </div>
+
+                <div id="question-editor" class="admin-question-editor">
+                    <div class="admin-editor-placeholder">
+                        <p>Select a question marker or click "Add Question" to edit</p>
+                    </div>
+
+                    <form id="question-form" class="admin-question-form" style="display: none;">
+                        <!-- Question ID (read-only) -->
+                        <div class="admin-form-group">
+                            <label>Question ID</label>
+                            <input type="text" id="q-id" readonly class="admin-input admin-input--readonly" />
+                        </div>
+
+                        <!-- Timestamp -->
+                        <div class="admin-form-group admin-form-group--row">
+                            <div class="admin-form-field">
+                                <label>Timestamp (seconds)</label>
+                                <input type="number" id="q-timestamp" readonly
+                                    class="admin-input admin-input--readonly" />
+                            </div>
+                            <button type="button" id="update-timestamp-btn" class="admin-btn admin-btn--secondary">
+                                Update to Current Time
+                            </button>
+                        </div>
+
+                        <!-- Question Text -->
+                        <div class="admin-form-group">
+                            <label>Question Text</label>
+                            <textarea id="q-text" rows="3" class="admin-input"
+                                placeholder="Enter question text..."></textarea>
+                        </div>
+
+                        <!-- Voiced Audio Toggle -->
+                        <div class="admin-form-group admin-form-group--checkbox">
+                            <input type="checkbox" id="q-voiced" />
+                            <label for="q-voiced">Enable voiced audio (TTS)</label>
+                        </div>
+
+                        <!-- Question Type -->
+                        <div class="admin-form-group">
+                            <label>Question Type</label>
+                            <select id="q-type" class="admin-input">
+                                <option value="multiple_choice">Multiple Choice</option>
+                                <option value="open_ended">Open Ended</option>
+                            </select>
+                        </div>
+
+                        <!-- Multiple Choice Options -->
+                        <div id="mc-options-section" class="admin-form-section">
+                            <label>Options</label>
+                            <div id="mc-options-list" class="admin-mc-options">
+                                <!-- Options will be added here -->
+                            </div>
+                            <button type="button" id="add-option-btn"
+                                class="admin-btn admin-btn--secondary admin-btn--small">
+                                + Add Option
+                            </button>
+
+                            <div class="admin-form-group">
+                                <label>Correct Option (A=0, B=1, etc.)</label>
+                                <input type="number" id="q-correct-answer" min="0" class="admin-input" />
+                            </div>
+                        </div>
+
+                        <!-- Open Ended Section -->
+                        <div id="open-ended-section" class="admin-form-section" style="display: none;">
+                            <div class="admin-form-group">
+                                <label>Model Answer (optional)</label>
+                                <textarea id="q-model-answer" rows="2" class="admin-input"
+                                    placeholder="Optional model answer to show after submission..."></textarea>
+                            </div>
+                            <div class="admin-form-group admin-form-group--checkbox">
+                                <input type="checkbox" id="q-case-sensitive" />
+                                <label for="q-case-sensitive">Case sensitive</label>
+                            </div>
+                        </div>
+
+                        <!-- Behavior Settings -->
+                        <div class="admin-form-section">
+                            <h4>Behavior Settings</h4>
+                            <div class="admin-form-group admin-form-group--checkbox">
+                                <input type="checkbox" id="q-answer-required" checked />
+                                <label for="q-answer-required">Answer required to continue</label>
+                            </div>
+                            <div class="admin-form-group admin-form-group--checkbox">
+                                <input type="checkbox" id="q-allow-skip" />
+                                <label for="q-allow-skip">Allow skip</label>
+                            </div>
+                            <div class="admin-form-group admin-form-group--checkbox">
+                                <input type="checkbox" id="q-replay-incorrect" />
+                                <label for="q-replay-incorrect">Replay last segment if incorrect</label>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="admin-form-actions">
+                            <button type="button" id="save-question-btn" class="admin-btn admin-btn--primary">Save
+                                Question</button>
+                            <button type="button" id="duplicate-question-btn"
+                                class="admin-btn admin-btn--secondary">Duplicate</button>
+                            <button type="button" id="delete-question-btn"
+                                class="admin-btn admin-btn--danger">Delete</button>
+                            <button type="button" id="cancel-edit-btn"
+                                class="admin-btn admin-btn--secondary">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </main>
+
+        <!-- Unsaved Changes Warning Modal -->
+        <div id="unsaved-modal" class="admin-modal" style="display: none;">
+            <div class="admin-modal-content">
+                <h3>Unsaved Changes</h3>
+                <p>You have unsaved changes. Do you want to save them before continuing?</p>
+                <div class="admin-modal-actions">
+                    <button id="modal-save-btn" class="admin-btn admin-btn--primary">Save</button>
+                    <button id="modal-discard-btn" class="admin-btn admin-btn--danger">Discard</button>
+                    <button id="modal-cancel-btn" class="admin-btn admin-btn--secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div id="delete-modal" class="admin-modal" style="display: none;">
+            <div class="admin-modal-content">
+                <h3>Confirm Delete</h3>
+                <p>Are you sure you want to delete this question? This action cannot be undone.</p>
+                <div class="admin-modal-actions">
+                    <button id="confirm-delete-btn" class="admin-btn admin-btn--danger">Delete</button>
+                    <button id="cancel-delete-btn" class="admin-btn admin-btn--secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <!-- YouTube Player API -->
+    <script src="youtube-player.js"></script>
+
+    <!-- Admin Console Script -->
+    <script src="watch-admin.js"></script>
+</body>
+
+</html>

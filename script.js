@@ -1115,9 +1115,11 @@
   const tabType = document.getElementById("tab-type");
   const tabSpeak = document.getElementById("tab-speak");
   const tabExtended = document.getElementById("tab-extended");
+  const tabWatch = document.getElementById("tab-watch");
   const modeType = document.getElementById("mode-type");
   const modeSpeak = document.getElementById("mode-speak");
   const modeExtended = document.getElementById("mode-extended");
+  const modeWatch = document.getElementById("mode-watch");
 
   // ============================================
   // Feedback Banner
@@ -1751,9 +1753,11 @@
     tabType.classList.add("active");
     tabSpeak.classList.remove("active");
     tabExtended.classList.remove("active");
+    if (tabWatch) tabWatch.classList.remove("active");
     modeType.classList.add("active");
     modeSpeak.classList.remove("active");
     modeExtended.classList.remove("active");
+    if (modeWatch) modeWatch.classList.remove("active");
 
     // Hide Speak mode panels
     pronunciationPanel.style.display = "none";
@@ -1797,9 +1801,11 @@
     tabSpeak.classList.add("active");
     tabType.classList.remove("active");
     tabExtended.classList.remove("active");
+    if (tabWatch) tabWatch.classList.remove("active");
     modeSpeak.classList.add("active");
     modeType.classList.remove("active");
     modeExtended.classList.remove("active");
+    if (modeWatch) modeWatch.classList.remove("active");
 
     // Hide Type mode panels
     generatePanelType.style.display = "none";
@@ -1828,9 +1834,11 @@
     tabExtended.classList.add("active");
     tabType.classList.remove("active");
     tabSpeak.classList.remove("active");
+    if (tabWatch) tabWatch.classList.remove("active");
     modeExtended.classList.add("active");
     modeType.classList.remove("active");
     modeSpeak.classList.remove("active");
+    if (modeWatch) modeWatch.classList.remove("active");
 
     // Hide all other mode panels
     animationPanel.style.display = "none";
@@ -1858,6 +1866,51 @@
       breakdownRecognition = null;
     }
   });
+
+  // Watch mode tab handler
+  if (tabWatch) {
+    tabWatch.addEventListener("click", () => {
+      tabWatch.classList.add("active");
+      tabType.classList.remove("active");
+      tabSpeak.classList.remove("active");
+      tabExtended.classList.remove("active");
+      if (modeWatch) modeWatch.classList.add("active");
+      modeType.classList.remove("active");
+      modeSpeak.classList.remove("active");
+      modeExtended.classList.remove("active");
+
+      // Hide all other mode panels
+      animationPanel.style.display = "none";
+      result.style.display = "none";
+      generatePanelType.style.display = "none";
+      generatePanelSpeak.style.display = "none";
+      sameVocabPanelType.style.display = "none";
+      sameVocabPanelSpeak.style.display = "none";
+      vocabularyPanel.style.display = "none";
+      pronunciationPanel.style.display = "none";
+      breakdownPanel.style.display = "none";
+
+      // Stop any active recordings
+      if (isRecording && recognition) {
+        recognition.stop();
+        isRecording = false;
+      }
+      if (wordRecognition) {
+        wordRecognition.stop();
+        wordRecognition = null;
+        currentWordIndex = -1;
+      }
+      if (breakdownRecognition) {
+        breakdownRecognition.stop();
+        breakdownRecognition = null;
+      }
+
+      // Initialize Watch mode
+      if (window.WatchMode) {
+        window.WatchMode.init();
+      }
+    });
+  }
 
   // Extended Listening mode elements
   let extendedDatabase = [];

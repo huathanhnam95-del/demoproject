@@ -385,6 +385,13 @@ function updateAccountPanelState() {
     isGuestMode = false; // Clear guest mode when logged in
     sessionStorage.removeItem('guestMode');
 
+    // Show admin link for admin users
+    const adminLink = document.getElementById('panel-admin-link');
+    if (adminLink) {
+      const isAdmin = user.email === 'huathanhnam95@gmail.com';
+      adminLink.style.display = isAdmin ? 'block' : 'none';
+    }
+
     // Load and display Practice Points
     loadPracticePoints(user.uid);
   } else if (isGuestMode) {

@@ -412,6 +412,11 @@
 
         <div class="panel-actions">
           <button id="panel-change-password-btn" class="panel-btn secondary">Change Password</button>
+          <!-- Admin Console Link (visible only for admins) -->
+          <a id="panel-admin-link" href="watch-admin.html" class="panel-btn primary"
+            style="display: none; text-decoration: none; text-align: center;">
+            🎬 Watch Admin
+          </a>
           <button id="panel-logout-btn" class="panel-btn danger">Logout</button>
         </div>
 
@@ -460,6 +465,7 @@
       <button id="tab-type" class="tab-btn active" type="button">Type</button>
       <button id="tab-speak" class="tab-btn" type="button">Speak</button>
       <button id="tab-extended" class="tab-btn" type="button">Fill</button>
+      <button id="tab-watch" class="tab-btn" type="button">Watch</button>
     </div>
 
     <div id="mode-type" class="mode-panel active">
@@ -823,6 +829,64 @@
       </div>
     </div>
 
+    <!-- Watch Mode Panel -->
+    <div id="mode-watch" class="mode-panel">
+      <!-- Video Selection View -->
+      <div id="watch-video-list-view" class="watch-video-list-view">
+        <div class="watch-header">
+          <h2>Video Lessons</h2>
+          <div class="watch-search">
+            <input type="text" id="watch-search-input" placeholder="Search videos..." />
+          </div>
+          <div class="watch-filter">
+            <select id="watch-level-filter">
+              <option value="">All Levels</option>
+              <option value="Beginner">Beginner</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Advanced">Advanced</option>
+            </select>
+          </div>
+        </div>
+        <div id="watch-video-grid" class="watch-video-grid">
+          <!-- Video cards will be populated here -->
+          <div class="watch-loading">Loading videos...</div>
+        </div>
+      </div>
+
+      <!-- Video Player View (hidden by default) -->
+      <div id="watch-player-view" class="watch-player-view" style="display: none;">
+        <div class="watch-player-header">
+          <button id="watch-back-to-list" class="nav-btn nav-btn-back" type="button">← Back to Videos</button>
+          <h3 id="watch-current-title">Video Title</h3>
+        </div>
+
+        <div class="watch-player-container">
+          <!-- 16:9 YouTube Player -->
+          <div id="watch-player-wrapper" class="watch-player-wrapper">
+            <div id="watch-youtube-player"></div>
+          </div>
+
+          <!-- Progress indicator -->
+          <div id="watch-progress-bar" class="watch-progress-bar">
+            <div id="watch-progress-fill" class="watch-progress-fill"></div>
+            <div id="watch-question-markers" class="watch-question-markers">
+              <!-- Question markers will be added here -->
+            </div>
+          </div>
+        </div>
+
+        <div class="watch-controls">
+          <button id="watch-play-btn" class="modern-btn modern-btn--play" type="button">Play</button>
+          <span id="watch-time-display" class="watch-time-display">0:00 / 0:00</span>
+          <div id="watch-score" class="score">Points: 0</div>
+        </div>
+
+        <div class="watch-video-info">
+          <p id="watch-current-description">Video description will appear here.</p>
+        </div>
+      </div>
+    </div>
+
     <section class="animation-panel" style="display: none;">
       <div class="animation-header">
         <span>How to fix (step-by-step)</span>
@@ -1047,6 +1111,45 @@
     </div>
   </div>
 
+  <!-- Watch Mode Question Panel (Fixed position, outside container) -->
+  <div id="watch-question-panel" class="watch-question-panel-fixed" style="display: none;">
+    <div class="watch-question-panel-content">
+      <div class="watch-question-header">
+        <span id="watch-question-number">Question 1</span>
+        <button id="watch-skip-question" class="watch-skip-btn" style="display: none;">Skip</button>
+      </div>
+
+      <div class="watch-question-content">
+        <p id="watch-question-text">Question text will appear here</p>
+        <button id="watch-play-question-audio" class="watch-audio-btn" style="display: none;">
+          🔊 Listen
+        </button>
+      </div>
+
+      <!-- Multiple Choice Options -->
+      <div id="watch-mc-options" class="watch-mc-options" style="display: none;">
+        <!-- Options will be populated dynamically -->
+      </div>
+
+      <!-- Open-ended Answer -->
+      <div id="watch-open-answer" class="watch-open-answer" style="display: none;">
+        <textarea id="watch-answer-input" rows="3" placeholder="Type your answer..."></textarea>
+      </div>
+
+      <div class="watch-question-actions">
+        <button id="watch-submit-answer" class="modern-btn modern-btn--check" type="button">Submit Answer</button>
+      </div>
+
+      <!-- Feedback Area -->
+      <div id="watch-feedback" class="watch-feedback" style="display: none;">
+        <p id="watch-feedback-text"></p>
+        <button id="watch-continue-btn" class="modern-btn modern-btn--play" type="button">Continue</button>
+        <button id="watch-replay-segment-btn" class="modern-btn modern-btn--retry" type="button"
+          style="display: none;">Replay Segment</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Grammar Warning Modal -->
   <div id="grammar-warning-modal" class="entry-modal" style="display: none;">
     <div class="entry-modal-content grammar-warning-content">
@@ -1090,6 +1193,29 @@
   <!-- Phonetics Pipeline -->
   <script src="arpabet-ipa-map.js"></script>
   <script src="phonetics.js"></script>
+
+  <!-- Watch Mode -->
+  <!-- Firebase Compat SDK for Watch Mode (uses compat API for simplicity) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script>
+    // Initialize Firebase compat SDK with same config for watch-mode.js
+    if (!firebase.apps.length) {
+      firebase.initializeApp({
+        apiKey: "AIzaSyB0vXX7NwOvME_XoaGiJlYaiLRcaHJtrIQ",
+        authDomain: "listening-tasks-3ae34.firebaseapp.com",
+        projectId: "listening-tasks-3ae34",
+        storageBucket: "listening-tasks-3ae34.firebasestorage.app",
+        messagingSenderId: "737872673808",
+        appId: "1:737872673808:web:4db57599aa22b4830fde95",
+        measurementId: "G-1891MSSLXT"
+      });
+    }
+    console.log('✓ Firebase compat SDK initialized for Watch mode');
+  </script>
+  <script src="youtube-player.js"></script>
+  <script src="watch-mode.js"></script>
 
   <!-- Vocabulary Book Script -->
   <script type="module" src="vocab-book.js"></script>

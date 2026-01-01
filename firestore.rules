@@ -2,6 +2,11 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'huathanhnam95@gmail.com';
+    }
+    
     // Users can read/write their own user profile
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
@@ -25,6 +30,11 @@ service cloud.firestore {
       match /vocabularyBook/{docId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
+      
+      // Watch mode progress per video
+      match /watchProgress/{videoId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
     }
     
     // Users can create practice attempts (read their own)
@@ -44,6 +54,17 @@ service cloud.firestore {
     match /pointsRules/{ruleId} {
       allow read: if request.auth != null;
     }
+    
+    // Watch mode video questions
+    // Anyone can read (including guests), only admin can write
+    match /watchVideos/{videoId} {
+      allow read: if true;
+      allow write: if isAdmin();
+      
+      match /questions/{questionId} {
+        allow read: if true;
+        allow write: if isAdmin();
+      }
+    }
   }
 }
-

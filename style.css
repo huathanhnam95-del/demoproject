@@ -1464,6 +1464,32 @@ textarea:focus {
   margin-bottom: 20px;
 }
 
+/* Notification Box */
+.notification-box {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.important-notice {
+  background-color: #fff1f2;
+  border: 1px solid #fecdd3;
+  color: #be123c;
+}
+
+.important-notice::before {
+  content: "⚠️";
+  font-size: 1.1rem;
+}
+
 .audio-controls-row {
   display: flex;
   align-items: center;

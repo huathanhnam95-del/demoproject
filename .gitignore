@@ -10,6 +10,8 @@ database/speak/audio/
 
 # Excel files
 *.xlsx
+!database/**/*.xlsx
+
 
 # OS files
 .DS_Store

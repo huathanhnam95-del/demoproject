@@ -253,7 +253,21 @@
     async function loadVideos() {
         try {
             const response = await fetch('database/watch/Videos.xlsx');
+
+            console.log('Video fetch status:', response.status);
+            console.log('Video fetch type:', response.headers.get('content-type'));
+
+            if (!response.ok) {
+                const text = await response.text();
+                console.error('Video fetch failed body (first 100 chars):', text.substring(0, 100));
+                throw new Error(`Failed to fetch database file: ${response.status} ${response.statusText}`);
+            }
+
             const arrayBuffer = await response.arrayBuffer();
+
+            // Debug file size
+            console.log('Video file size:', arrayBuffer.byteLength);
+
             const workbook = XLSX.read(arrayBuffer, { type: 'array' });
             const sheetName = workbook.SheetNames[0];
             const sheet = workbook.Sheets[sheetName];

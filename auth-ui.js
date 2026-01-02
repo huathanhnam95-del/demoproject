@@ -702,85 +702,101 @@ function setupAuthStateListener() {
     const wasGuestMode = isGuestMode;
     const previousUserId = currentUserId;
 
-    if (user) {
-      // User is signed in
-      // Clear guest mode when user logs in
-      isGuestMode = false;
-      sessionStorage.removeItem('guestMode');
-      hideGuestToast();
+    try {
+      if (user) {
+        // User is signed in
+        // Clear guest mode when user logs in
+        isGuestMode = false;
+        sessionStorage.removeItem('guestMode');
+        hideGuestToast();
 
-      if (authOverlay) {
-        authOverlay.style.display = 'none';
-      }
+        if (authOverlay) {
+          authOverlay.style.display = 'none';
+        }
 
-      currentUserId = user.uid;
+        currentUserId = user.uid;
 
-      // Create or update user profile
-      const isNewUser = !user.metadata.lastSignInTime ||
-        (new Date(user.metadata.creationTime) > new Date(user.metadata.lastSignInTime));
-      await firestoreFunctions.createOrUpdateUserProfile(user.uid, user.email, isNewUser);
+        // Create or update user profile
+        const isNewUser = !user.metadata.lastSignInTime ||
+          (new Date(user.metadata.creationTime) > new Date(user.metadata.lastSignInTime));
 
-      // Start session tracking
-      await startSession();
+        console.log('Attempting to create/update user profile for:', user.uid);
+        const profileResult = await firestoreFunctions.createOrUpdateUserProfile(user.uid, user.email, isNewUser);
 
-      // Update panel to show logged in state
-      updateAccountPanelState();
+        if (!profileResult.success) {
+          console.error('Profile update failed:', profileResult.error);
+          alert('Warning: Could not update user profile. Some features may not work.\nError: ' + profileResult.error);
+        }
 
-      // Check for Level Selection (First Login Feature)
-      await checkLevelSelection(user.uid);
+        // Start session tracking
+        await startSession();
 
-      // Initialize Vocabulary Book with user
-      if (window.VocabularyBook) {
-        // window.VocabularyBook is now a module that handles its own DB connection
-        // Explicitly pass the DB instance to ensure it's available
-        window.VocabularyBook.setUser(user.uid, window.firebaseDb);
+        // Update panel to show logged in state
+        updateAccountPanelState();
 
-        // Check if unlocked and show toggle
-        const unlocked = await window.VocabularyBook.isUnlocked();
-        console.log('VocabularyBook unlock status:', unlocked);
-        if (unlocked) {
-          window.VocabularyBook.showToggle();
+        // Check for Level Selection (First Login Feature)
+        await checkLevelSelection(user.uid);
+
+        // Initialize Vocabulary Book with user
+        if (window.VocabularyBook) {
+          // window.VocabularyBook is now a module that handles its own DB connection
+          // Explicitly pass the DB instance to ensure it's available
+          window.VocabularyBook.setUser(user.uid, window.firebaseDb);
+
+          // Check if unlocked and show toggle
+          try {
+            const unlocked = await window.VocabularyBook.isUnlocked();
+            console.log('VocabularyBook unlock status:', unlocked);
+            if (unlocked) {
+              window.VocabularyBook.showToggle();
+            }
+          } catch (vocabError) {
+            console.warn('Error checking vocab unlock:', vocabError);
+          }
+        } else {
+          console.warn('VocabularyBook module not loaded yet');
+          // Add listener or retry logic if needed
+        }
+
+        // ============================================
+        // PROGRESS UI RELOAD AFTER LOGIN
+        // ============================================
+        // When user transitions from guest → logged-in, or logs in fresh,
+        // trigger all registered callbacks to reload progress data.
+        // This ensures progress bar, question status, filter dropdown,
+        // and progress side panel are updated immediately without
+        // requiring the user to change questions or reload the page.
+        const isNewLogin = wasGuestMode || !previousUserId;
+        if (isNewLogin) {
+          console.log('✓ Auth state change detected: User logged in. Triggering progress UI reload...');
+          triggerAuthStateCallbacks('login', user.uid);
         }
       } else {
-        console.warn('VocabularyBook module not loaded yet');
-        // Add listener or retry logic if needed
-      }
+        // User is signed out
+        // End session if it exists
+        if (currentSessionId && currentUserId) {
+          await firestoreFunctions.recordSessionEnd(currentSessionId, currentUserId);
+          currentSessionId = null;
+        }
 
-      // ============================================
-      // PROGRESS UI RELOAD AFTER LOGIN
-      // ============================================
-      // When user transitions from guest → logged-in, or logs in fresh,
-      // trigger all registered callbacks to reload progress data.
-      // This ensures progress bar, question status, filter dropdown,
-      // and progress side panel are updated immediately without
-      // requiring the user to change questions or reload the page.
-      const isNewLogin = wasGuestMode || !previousUserId;
-      if (isNewLogin) {
-        console.log('✓ Auth state change detected: User logged in. Triggering progress UI reload...');
-        triggerAuthStateCallbacks('login', user.uid);
-      }
-    } else {
-      // User is signed out
-      // End session if it exists
-      if (currentSessionId && currentUserId) {
-        await firestoreFunctions.recordSessionEnd(currentSessionId, currentUserId);
-        currentSessionId = null;
-      }
+        const hadUser = currentUserId !== null;
+        currentUserId = null;
 
-      const hadUser = currentUserId !== null;
-      currentUserId = null;
+        // Update panel to show logged out or guest state
+        updateAccountPanelState();
 
-      // Update panel to show logged out or guest state
-      updateAccountPanelState();
-
-      // ============================================
-      // PROGRESS UI CLEAR AFTER LOGOUT
-      // ============================================
-      // When user logs out, trigger callbacks to clear/hide progress UI
-      if (hadUser) {
-        console.log('✓ Auth state change detected: User logged out. Triggering progress UI clear...');
-        triggerAuthStateCallbacks('logout', null);
+        // ============================================
+        // PROGRESS UI CLEAR AFTER LOGOUT
+        // ============================================
+        // When user logs out, trigger callbacks to clear/hide progress UI
+        if (hadUser) {
+          console.log('✓ Auth state change detected: User logged out. Triggering progress UI clear...');
+          triggerAuthStateCallbacks('logout', null);
+        }
       }
+    } catch (err) {
+      console.error('Error in onAuthStateChanged handler:', err);
+      alert('An error occurred during login/logout processing:\n' + err.message);
     }
   });
 }

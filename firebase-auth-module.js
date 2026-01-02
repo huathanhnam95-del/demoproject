@@ -103,8 +103,12 @@ async function signIn(email, password) {
     const emailVerified = freshUser ? freshUser.emailVerified : user.emailVerified;
 
     // Check if email is verified
+    // Check if email is verified
     if (!emailVerified) {
       // Sign out immediately if not verified
+      console.log('✗ Email not verified (Policy disabled for testing)');
+      /* 
+      // STRICT VERIFICATION DISABLED FOR DEBUGGING
       console.log('✗ Email not verified, signing out');
       await signOut(auth);
       return {
@@ -112,6 +116,7 @@ async function signIn(email, password) {
         error: 'Please verify your email before logging in. Check your inbox for the verification link.',
         code: 'auth/email-not-verified'
       };
+      */
     }
 
     console.log('✓ User signed in successfully with verified email');

@@ -3,9 +3,17 @@
  * 
  * High-accuracy IPA phonetic transcription pipeline for ESL learners.
  * 
- * Lookup Order:
- * 1. CMU Pronouncing Dictionary (ARPABET → IPA) - 126,051 words
- * 2. Wiktionary API (US IPA preferred)
+ * DATA SOURCE STRATEGY (order matters!):
+ * 
+ * 1. PRIMARY: Wiktionary API (authoritative dictionary IPA)
+ *    - Preferred US IPA, otherwise first IPA listed
+ *    - NEVER modify or recompute stress for dictionary IPA
+ *    - These are human-verified, accurate transcriptions
+ * 
+ * 2. SECONDARY FALLBACK: CMU Pronouncing Dictionary (ARPABET → IPA)
+ *    - Only used when Wiktionary has no entry
+ *    - Computed IPA, may have inaccuracies with stress/vowels
+ *    - Marked internally as approximate
  * 
  * All outputs are American English IPA.
  */
@@ -16,7 +24,8 @@ const Phonetics = (function () {
     // === CONFIGURATION ===
     const CONFIG = {
         cmuDictUrl: 'cmudict.json',
-        wiktionaryApiBase: 'https://en.wiktionary.org/api/rest_v1/page/definition/',
+        // Free Dictionary API - provides IPA from Wiktionary data
+        dictionaryApiBase: 'https://api.dictionaryapi.dev/api/v2/entries/en/',
         cacheEnabled: true,
         debug: false
     };
@@ -24,9 +33,10 @@ const Phonetics = (function () {
     // === STATE ===
     let cmuDict = null;
     let cmuDictLoading = null;
+    // Cache stores { ipa: string, source: 'dictionary'|'cmu'|null }
     const ipaCache = new Map();
 
-    // === CMU DICTIONARY ===
+    // === CMU DICTIONARY (FALLBACK) ===
 
     /**
      * Load CMU Dictionary (lazy loading)
@@ -80,88 +90,77 @@ const Phonetics = (function () {
         return null;
     }
 
-    // === WIKTIONARY FALLBACK ===
+    // === FREE DICTIONARY API (PRIMARY SOURCE) ===
 
     /**
-     * Fetch IPA from Wiktionary API
+     * Fetch IPA from Free Dictionary API (dictionaryapi.dev)
+     * This is the PRIMARY source - returns authoritative dictionary IPA
+     * Data is sourced from Wiktionary
+     * 
+     * Prefers US pronunciation when audio is available (indicates US source)
+     * 
      * @param {string} word 
      * @returns {string|null} IPA transcription or null
      */
-    async function lookupWiktionary(word) {
+    async function lookupDictionary(word) {
         const normalized = word.toLowerCase().trim();
 
         try {
             const response = await fetch(
-                `${CONFIG.wiktionaryApiBase}${encodeURIComponent(normalized)}`,
-                {
-                    headers: {
-                        'Api-User-Agent': 'DictationPractice/1.0 (ESL Learning App)'
-                    }
-                }
+                `${CONFIG.dictionaryApiBase}${encodeURIComponent(normalized)}`
             );
 
             if (!response.ok) {
+                log(`Dictionary API: ${normalized} - ${response.status}`);
                 return null;
             }
 
             const data = await response.json();
 
-            // Parse English section
-            const english = data.en;
-            if (!english || !Array.isArray(english)) {
+            // Response is an array of entries
+            if (!Array.isArray(data) || data.length === 0) {
                 return null;
             }
 
-            // Look for pronunciations
-            for (const entry of english) {
-                if (entry.pronunciations) {
-                    for (const pron of entry.pronunciations) {
-                        // Prefer US pronunciation
-                        if (pron.ipa) {
-                            // Check if it's specifically US
-                            const hasUS = pron.tags &&
-                                (pron.tags.includes('US') ||
-                                    pron.tags.includes('General American') ||
-                                    pron.tags.includes('GenAm'));
+            const entry = data[0];
 
-                            if (hasUS || !pron.tags || pron.tags.length === 0) {
-                                // Return IPA (already in /.../ format usually)
-                                let ipa = pron.ipa;
-                                if (!ipa.startsWith('/')) ipa = '/' + ipa;
-                                if (!ipa.endsWith('/')) ipa = ipa + '/';
-                                return ipa;
-                            }
-                        }
-                    }
-
-                    // If no US found, return first IPA
-                    const firstIPA = entry.pronunciations.find(p => p.ipa);
-                    if (firstIPA) {
-                        let ipa = firstIPA.ipa;
-                        if (!ipa.startsWith('/')) ipa = '/' + ipa;
-                        if (!ipa.endsWith('/')) ipa = ipa + '/';
-                        return ipa;
-                    }
+            // Look for phonetics array - prefer US pronunciation (has -us.mp3 audio)
+            if (entry.phonetics && Array.isArray(entry.phonetics)) {
+                // First, try to find US pronunciation (has audio with -us.mp3)
+                const usPhonetic = entry.phonetics.find(p =>
+                    p.text && p.audio && p.audio.includes('-us.mp3')
+                );
+                if (usPhonetic && usPhonetic.text) {
+                    return usPhonetic.text;
                 }
+
+                // Otherwise, return first phonetic with text
+                const firstWithText = entry.phonetics.find(p => p.text);
+                if (firstWithText) {
+                    return firstWithText.text;
+                }
+            }
+
+            // Fallback to top-level phonetic field
+            if (entry.phonetic) {
+                return entry.phonetic;
             }
 
             return null;
         } catch (error) {
-            log('Wiktionary lookup failed:', error.message);
+            log('Dictionary lookup failed:', error.message);
             return null;
         }
     }
-
-    // === NO ESPEAK-NG ===
-    // Decision: espeak-ng WASM adds 10-15MB and produces less accurate IPA.
-    // CMU Dict (126k words) + Wiktionary covers 99%+ of ESL vocabulary.
-    // For rare/unknown words, showing "-" is better UX than incorrect IPA.
 
     // === MAIN API ===
 
     /**
      * Get IPA transcription for a word
-     * Uses fallback chain: CMU Dict → Wiktionary
+     * 
+     * Strategy (order matters!):
+     * 1. PRIMARY: Wiktionary (authoritative dictionary IPA)
+     * 2. FALLBACK: CMU Dictionary (computed/approximate IPA)
      * 
      * @param {string} word - The word to transcribe
      * @returns {Promise<string>} IPA transcription or empty string
@@ -178,37 +177,43 @@ const Phonetics = (function () {
 
         // Check cache first
         if (CONFIG.cacheEnabled && ipaCache.has(normalized)) {
-            return ipaCache.get(normalized);
+            const cached = ipaCache.get(normalized);
+            return typeof cached === 'object' ? cached.ipa : cached;
         }
 
         let ipa = '';
+        let source = null;
 
-        // 1. Try CMU Dictionary
-        const arpabet = await lookupCMU(normalized);
-        if (arpabet) {
-            // Convert ARPABET to IPA using the mapping
-            if (typeof arpabetToIPA === 'function') {
-                ipa = arpabetToIPA(arpabet);
-                log(`CMU: "${normalized}" → ${ipa}`);
-            } else {
-                console.warn('[Phonetics] arpabetToIPA function not found');
-            }
+        // 1. PRIMARY: Try Free Dictionary API first (authoritative dictionary IPA)
+        ipa = await lookupDictionary(normalized);
+        if (ipa) {
+            source = 'dictionary';
+            log(`Dictionary (authoritative): "${normalized}" → ${ipa}`);
         }
 
-        // 2. Fallback to Wiktionary
+        // 2. FALLBACK: Try CMU Dictionary (computed/approximate IPA)
         if (!ipa) {
-            ipa = await lookupWiktionary(normalized);
-            if (ipa) {
-                log(`Wiktionary: "${normalized}" → ${ipa}`);
+            const arpabet = await lookupCMU(normalized);
+            if (arpabet) {
+                // Convert ARPABET to IPA using the mapping
+                if (typeof arpabetToIPA === 'function') {
+                    ipa = arpabetToIPA(arpabet);
+                    source = 'cmu';
+                    log(`CMU (approximate): "${normalized}" → ${ipa}`);
+                } else {
+                    console.warn('[Phonetics] arpabetToIPA function not found');
+                }
             }
         }
 
-        // Note: No espeak-ng fallback - CMU Dict + Wiktionary covers 99%+ of ESL vocabulary
-        // For rare/unknown words, returning empty is better UX than incorrect IPA
+        // Normalize IPA: replace ɹ (turned r) with regular r for easier reading
+        if (ipa) {
+            ipa = ipa.replace(/ɹ/g, 'r');
+        }
 
-        // Cache result
+        // Cache result with source metadata
         if (CONFIG.cacheEnabled) {
-            ipaCache.set(normalized, ipa || '');
+            ipaCache.set(normalized, { ipa: ipa || '', source });
         }
 
         return ipa || '';
@@ -226,6 +231,31 @@ const Phonetics = (function () {
         });
         await Promise.all(promises);
         return results;
+    }
+
+    /**
+     * Get IPA with source information
+     * Useful for debugging or showing approximate markers
+     * 
+     * @param {string} word - The word to transcribe
+     * @returns {Promise<{ipa: string, source: 'wiktionary'|'cmu'|null, isApproximate: boolean}>}
+     */
+    async function getIPAWithSource(word) {
+        // Ensure word is looked up (populates cache)
+        await getIPA(word);
+
+        const normalized = word.toLowerCase().trim().replace(/[^a-z']/g, '');
+        const cached = ipaCache.get(normalized);
+
+        if (cached && typeof cached === 'object') {
+            return {
+                ipa: cached.ipa,
+                source: cached.source,
+                isApproximate: cached.source === 'cmu'
+            };
+        }
+
+        return { ipa: '', source: null, isApproximate: false };
     }
 
     /**
@@ -255,12 +285,13 @@ const Phonetics = (function () {
     return {
         getIPA,
         getIPABatch,
+        getIPAWithSource,
         preload,
         clearCache,
 
         // For debugging
         _lookupCMU: lookupCMU,
-        _lookupWiktionary: lookupWiktionary,
+        _lookupDictionary: lookupDictionary,
         _cache: ipaCache,
 
         // Enable debug mode

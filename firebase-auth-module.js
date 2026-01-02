@@ -9,13 +9,15 @@
  * - Auth state monitoring
  */
 
-import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut, 
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
   sendPasswordResetEmail,
   sendEmailVerification,
-  onAuthStateChanged as firebaseOnAuthStateChanged
+  onAuthStateChanged as firebaseOnAuthStateChanged,
+  browserLocalPersistence,
+  setPersistence
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
 // Get auth instance
@@ -33,12 +35,12 @@ async function signUp(email, password) {
     // Create user account
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
-    
+
     // Send verification email
     await sendEmailVerification(user);
-    
+
     console.log('✓ User created and verification email sent');
-    
+
     return {
       success: true,
       user: user,
@@ -57,19 +59,53 @@ async function signUp(email, password) {
 /**
  * Sign in an existing user with email and password
  * Prevents login if email is not verified
+ * 
+ * Safari Cross-Browser Fix:
+ * - Sets explicit persistence for Safari ITP compatibility
+ * - Refreshes user token to get latest emailVerified status from server
+ * - Better error handling and logging for debugging
+ * 
  * @param {string} email - User email
  * @param {string} password - User password
  * @returns {Promise<Object>} User object or error
  */
 async function signIn(email, password) {
   try {
+    // Set explicit persistence for Safari ITP compatibility
+    // This ensures auth state persists properly across browser sessions
+    try {
+      await setPersistence(auth, browserLocalPersistence);
+      console.log('✓ Auth persistence set to browserLocalPersistence');
+    } catch (persistError) {
+      // Log but continue - persistence may already be set
+      console.warn('Persistence setting note:', persistError.message);
+    }
+
     // Sign in user
+    console.log('Attempting sign in for:', email);
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
-    
+    console.log('✓ Sign in successful, checking email verification...');
+
+    // CRITICAL: Reload user to get the latest emailVerified status from server
+    // This fixes issues where verification was done on another device/browser
+    // but the local cached user data is stale
+    try {
+      await user.reload();
+      console.log('✓ User data refreshed from server');
+    } catch (reloadError) {
+      console.warn('User reload note:', reloadError.message);
+      // Continue anyway - we'll check emailVerified with current data
+    }
+
+    // Get fresh reference after reload
+    const freshUser = auth.currentUser;
+    const emailVerified = freshUser ? freshUser.emailVerified : user.emailVerified;
+
     // Check if email is verified
-    if (!user.emailVerified) {
+    if (!emailVerified) {
       // Sign out immediately if not verified
+      console.log('✗ Email not verified, signing out');
       await signOut(auth);
       return {
         success: false,
@@ -77,18 +113,39 @@ async function signIn(email, password) {
         code: 'auth/email-not-verified'
       };
     }
-    
-    console.log('✓ User signed in successfully');
-    
+
+    console.log('✓ User signed in successfully with verified email');
+
     return {
       success: true,
-      user: user
+      user: freshUser || user
     };
   } catch (error) {
-    console.error('Signin error:', error);
+    // Enhanced error logging for debugging Safari issues
+    console.error('Signin error:', {
+      code: error.code,
+      message: error.message,
+      email: email,
+      userAgent: navigator.userAgent
+    });
+
+    // Provide user-friendly error messages
+    let userMessage = error.message;
+    if (error.code === 'auth/user-not-found') {
+      userMessage = 'No account found with this email. Please sign up first.';
+    } else if (error.code === 'auth/wrong-password') {
+      userMessage = 'Incorrect password. Please try again.';
+    } else if (error.code === 'auth/invalid-credential') {
+      userMessage = 'Invalid email or password. Please check and try again.';
+    } else if (error.code === 'auth/too-many-requests') {
+      userMessage = 'Too many failed attempts. Please wait a few minutes before trying again.';
+    } else if (error.code === 'auth/network-request-failed') {
+      userMessage = 'Network error. Please check your internet connection and try again.';
+    }
+
     return {
       success: false,
-      error: error.message,
+      error: userMessage,
       code: error.code
     };
   }
@@ -154,6 +211,54 @@ function onAuthStateChanged(callback) {
   return firebaseOnAuthStateChanged(auth, callback);
 }
 
+/**
+ * Resend verification email to current user
+ * Used when user can't find original verification email
+ * User must be signed in (even if not verified)
+ * @returns {Promise<Object>} Success or error
+ */
+async function resendVerificationEmail() {
+  try {
+    const user = auth.currentUser;
+    if (!user) {
+      return {
+        success: false,
+        error: 'No user is currently signed in. Please log in first.',
+        code: 'auth/no-current-user'
+      };
+    }
+
+    if (user.emailVerified) {
+      return {
+        success: false,
+        error: 'Your email is already verified. You can log in normally.',
+        code: 'auth/already-verified'
+      };
+    }
+
+    await sendEmailVerification(user);
+    console.log('✓ Verification email resent');
+
+    return {
+      success: true,
+      message: 'Verification email sent! Please check your inbox (and spam folder).'
+    };
+  } catch (error) {
+    console.error('Resend verification error:', error);
+
+    let userMessage = error.message;
+    if (error.code === 'auth/too-many-requests') {
+      userMessage = 'Too many requests. Please wait a few minutes before trying again.';
+    }
+
+    return {
+      success: false,
+      error: userMessage,
+      code: error.code
+    };
+  }
+}
+
 // Export functions for use in other modules
 window.firebaseAuthFunctions = {
   signUp,
@@ -161,6 +266,6 @@ window.firebaseAuthFunctions = {
   signOut: signOutUser,
   sendPasswordReset,
   getCurrentUser,
-  onAuthStateChanged
+  onAuthStateChanged,
+  resendVerificationEmail
 };
-

@@ -102,9 +102,12 @@
         elements.timelineTime = document.getElementById('timeline-time');
         elements.timelineProgress = document.getElementById('timeline-progress');
         elements.timelineMarkers = document.getElementById('timeline-markers');
+        elements.timeline = document.querySelector('.admin-timeline');
         elements.addQuestionBtn = document.getElementById('add-question-btn');
         elements.questionForm = document.getElementById('question-form');
-        elements.editorPlaceholder = document.querySelector('.admin-editor-placeholder');
+        elements.editorPlaceholder = document.getElementById('editor-placeholder');
+        elements.questionListContainer = document.getElementById('question-list-container');
+        elements.questionList = document.getElementById('question-list');
 
         // Form fields
         elements.qId = document.getElementById('q-id');
@@ -151,6 +154,11 @@
         // Timeline controls
         elements.timelinePlay.addEventListener('click', togglePlay);
         elements.addQuestionBtn.addEventListener('click', addQuestion);
+
+        // Timeline click to seek
+        if (elements.timeline) {
+            elements.timeline.addEventListener('click', handleTimelineClick);
+        }
 
         // Question type toggle
         elements.qType.addEventListener('change', toggleQuestionType);
@@ -396,13 +404,50 @@
 
     function onPlayerReady() {
         elements.timelinePlay.textContent = '▶';
+        // Poll for video duration (it's often 0 until video metadata loads)
+        waitForDuration();
+    }
+
+    /**
+     * Poll for video duration until it's available
+     * YouTube API returns 0 until video metadata is fully loaded
+     */
+    let durationPollCount = 0;
+    const MAX_DURATION_POLLS = 50; // 10 seconds max (50 * 200ms)
+
+    function waitForDuration() {
+        durationPollCount++;
+
+        if (durationPollCount > MAX_DURATION_POLLS) {
+            console.warn('[Admin] Gave up waiting for video duration after 10s');
+            return;
+        }
+
+        if (player && typeof player.getDuration === 'function') {
+            const duration = player.getDuration();
+            if (duration > 0) {
+                videoDuration = duration;
+                console.log('[Admin] Video duration loaded:', formatTime(duration));
+                updateTimelineMarkers();
+                renderQuestionList();
+                durationPollCount = 0; // Reset for next video
+                return;
+            }
+        }
+
+        // Keep polling every 200ms until duration is available or player is ready
+        setTimeout(waitForDuration, 200);
     }
 
     function onPlayerStateChange(event) {
         if (event.data === 1) {
             elements.timelinePlay.textContent = '⏸';
-            videoDuration = player.getDuration();
-            updateTimelineMarkers();
+            // Update duration when video starts playing (guaranteed to be available)
+            if (player && player.getDuration() > 0) {
+                videoDuration = player.getDuration();
+                updateTimelineMarkers();
+                renderQuestionList();
+            }
         } else {
             elements.timelinePlay.textContent = '▶';
         }
@@ -414,6 +459,24 @@
             elements.timelineProgress.style.width = `${progress}%`;
         }
         elements.timelineTime.textContent = `${formatTime(currentTime)} / ${formatTime(videoDuration)}`;
+    }
+
+    /**
+     * Handle click on timeline to seek video
+     */
+    function handleTimelineClick(event) {
+        if (!player || videoDuration <= 0) return;
+
+        const rect = elements.timeline.getBoundingClientRect();
+        const clickX = event.clientX - rect.left;
+        const percentage = clickX / rect.width;
+        const seekTime = percentage * videoDuration;
+
+        player.seekTo(seekTime);
+
+        // Update the progress bar immediately for visual feedback
+        elements.timelineProgress.style.width = `${percentage * 100}%`;
+        elements.timelineTime.textContent = `${formatTime(seekTime)} / ${formatTime(videoDuration)}`;
     }
 
     /**
@@ -446,6 +509,7 @@
             });
 
             updateTimelineMarkers();
+            renderQuestionList();
         } catch (error) {
             console.error('Error loading questions:', error);
             questions = [];
@@ -465,6 +529,36 @@
                         style="left: ${position}%"
                         title="Q${index + 1} at ${formatTime(q.timestamp)}"
                         onclick="WatchAdmin.selectQuestion('${q.id}')">${index + 1}</div>`;
+        }).join('');
+    }
+
+    /**
+     * Render question list in editor panel
+     */
+    function renderQuestionList() {
+        if (!elements.questionList || !elements.questionListContainer) return;
+
+        if (questions.length === 0) {
+            elements.questionListContainer.style.display = 'none';
+            return;
+        }
+
+        elements.questionListContainer.style.display = 'block';
+
+        elements.questionList.innerHTML = questions.map((q, index) => {
+            const isSelected = currentQuestion?.id === q.id;
+            const questionPreview = q.questionText
+                ? q.questionText.substring(0, 50) + (q.questionText.length > 50 ? '...' : '')
+                : 'No question text';
+            return `
+                <div class="admin-question-item ${isSelected ? 'selected' : ''}" 
+                     onclick="WatchAdmin.selectQuestion('${q.id}')">
+                    <span class="admin-question-number">Q${index + 1}</span>
+                    <span class="admin-question-time">${formatTime(q.timestamp)}</span>
+                    <span class="admin-question-preview">${questionPreview}</span>
+                    <span class="admin-question-type">${q.type === 'mc' ? 'MC' : 'Open'}</span>
+                </div>
+            `;
         }).join('');
     }
 
@@ -491,6 +585,7 @@
         }
 
         updateTimelineMarkers();
+        renderQuestionList();
     }
 
     /**

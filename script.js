@@ -4708,10 +4708,12 @@
       if (checkBtn) checkBtn.style.display = "none";
       if (retryBtn) retryBtn.style.display = "none";
       if (input) input.disabled = true;
+      if (playBtn) playBtn.style.display = "inline-block"; // Reset Play button
     } else {
       if (checkBtnSpeak) checkBtnSpeak.style.display = "none";
       if (retryBtnSpeak) retryBtnSpeak.style.display = "none";
       if (recordBtn) recordBtn.style.display = "inline-block";
+      if (playBtnSpeak) playBtnSpeak.style.display = "inline-block"; // Reset Play button
     }
 
     // Reset scores and hide panels

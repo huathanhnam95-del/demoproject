@@ -5937,3 +5937,168 @@ textarea:focus {
   margin: 0 0 8px 0;
   color: #374151;
 }
+
+/* ============================================
+   NOTES MODE (Take Notes Practice)
+   Uses Type/Speak mode layout with question selector
+   ============================================ */
+
+/* Practice Area */
+#notes-practice-area {
+  margin-top: 20px;
+}
+
+/* Steps */
+.notes-step {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.notes-step-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.notes-step-badge {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.notes-step-header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #1f2933;
+}
+
+/* Step 1: Video */
+.notes-video-wrapper {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%;
+  /* 16:9 aspect ratio */
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.notes-video-wrapper iframe,
+.notes-video-wrapper>div {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.notes-video-controls {
+  text-align: center;
+}
+
+/* Step 2: Audio + Notes */
+.notes-audio-player {
+  margin-bottom: 20px;
+}
+
+.notes-audio-player audio {
+  width: 100%;
+}
+
+.notes-textarea-wrapper {
+  margin-bottom: 16px;
+}
+
+.notes-textarea-wrapper label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #1f2933;
+}
+
+.notes-textarea-wrapper textarea {
+  width: 100%;
+  min-height: 150px;
+  padding: 12px;
+  border: 1px solid #d0d7de;
+  border-radius: 8px;
+  font-size: 1rem;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.notes-textarea-wrapper textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.notes-submit-controls {
+  text-align: center;
+}
+
+/* Step 3: Results */
+.notes-results-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .notes-results-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.notes-results-column h5 {
+  margin: 0 0 12px 0;
+  font-size: 1rem;
+  color: #1f2933;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.notes-transcript-display,
+.notes-user-display {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  min-height: 150px;
+  font-size: 0.95rem;
+  line-height: 1.8;
+}
+
+.notes-matched {
+  background: #dcfce7;
+  color: #166534;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-weight: 500;
+}
+
+.notes-results-stats {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #1f2933;
+  margin-bottom: 20px;
+}
+
+.notes-results-stats span {
+  font-weight: 700;
+  color: #16a34a;
+  font-size: 1.3rem;
+}
+
+.notes-results-controls {
+  text-align: center;
+}

@@ -22,8 +22,14 @@
             </div>
         </header>
 
-        <!-- Main Content - 3 Column Layout -->
-        <main class="admin-main">
+        <!-- Admin Mode Tabs -->
+        <div class="admin-tabs">
+            <button id="admin-tab-watch" class="admin-tab active" data-mode="watch">📹 Watch</button>
+            <button id="admin-tab-notes" class="admin-tab" data-mode="notes">📝 Take Notes</button>
+        </div>
+
+        <!-- Watch Mode Content -->
+        <main id="admin-content-watch" class="admin-main">
             <!-- Left Column: Video List -->
             <section class="admin-column admin-column--videos">
                 <div class="admin-column-header">
@@ -188,6 +194,93 @@
                                 class="admin-btn admin-btn--danger">Delete</button>
                             <button type="button" id="cancel-edit-btn"
                                 class="admin-btn admin-btn--secondary">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </main>
+
+        <!-- Take Notes Mode Content (hidden by default) -->
+        <main id="admin-content-notes" class="admin-main" style="display: none;">
+            <!-- Left Column: Entry List -->
+            <section class="admin-column admin-column--videos">
+                <div class="admin-column-header">
+                    <h2>Entries</h2>
+                    <input type="text" id="notes-entry-search" class="admin-search" placeholder="Search entries...">
+                </div>
+                <div class="admin-sidebar-actions">
+                    <button id="notes-sync-excel-btn" class="admin-btn admin-btn--small">🔄 Update from Excel</button>
+                </div>
+                <div id="notes-entry-list" class="admin-video-list">
+                    <div class="admin-loading">Loading entries...</div>
+                </div>
+            </section>
+
+            <!-- Center Column: Audio Preview -->
+            <section class="admin-column admin-column--player">
+                <div class="admin-column-header">
+                    <h2 id="notes-entry-title">Select an entry</h2>
+                </div>
+                <div id="notes-preview-container" class="admin-player-container">
+                    <div class="admin-player-placeholder">
+                        <p>🎧 Select an entry to preview audio/video</p>
+                    </div>
+                    <!-- Video Preview -->
+                    <div id="notes-video-wrapper" class="notes-video-wrapper" style="display: none;">
+                        <div id="notes-preview-video" class="notes-preview-video"></div>
+                    </div>
+                    <!-- Audio Preview -->
+                    <div id="notes-audio-wrapper" class="notes-audio-wrapper" style="display: none;">
+                        <audio id="notes-preview-audio" controls></audio>
+                        <div class="notes-transcript-preview">
+                            <h4>Transcript Preview</h4>
+                            <div id="notes-transcript-text" class="notes-transcript-text">
+                                Select an entry to see transcript
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Column: Entry Editor -->
+            <section class="admin-column admin-column--editor">
+                <div class="admin-column-header">
+                    <h2>Entry Editor</h2>
+                </div>
+                <div id="notes-entry-editor" class="admin-question-editor">
+                    <div id="notes-editor-placeholder" class="admin-editor-placeholder">
+                        <p>Select an entry to manage, or click "Update from Excel" to sync data</p>
+                    </div>
+                    <form id="notes-entry-form" class="admin-question-form" style="display: none;">
+                        <!-- Entry ID -->
+                        <div class="admin-form-group">
+                            <label>Entry ID</label>
+                            <input type="text" id="notes-entry-id" class="admin-input" readonly>
+                        </div>
+                        <!-- Guiding Video URL -->
+                        <div class="admin-form-group">
+                            <label>Guiding Video URL (YouTube)</label>
+                            <input type="text" id="notes-video-url" class="admin-input"
+                                placeholder="https://www.youtube.com/watch?v=...">
+                            <button type="button" id="notes-preview-video-btn"
+                                class="admin-btn admin-btn--small">Preview Video</button>
+                        </div>
+                        <!-- Audio File -->
+                        <div class="admin-form-group">
+                            <label>Audio ID (filename without extension)</label>
+                            <input type="text" id="notes-audio-id" class="admin-input" readonly>
+                            <button type="button" id="notes-play-audio-btn" class="admin-btn admin-btn--small">▶ Play
+                                Audio</button>
+                        </div>
+                        <!-- Transcript -->
+                        <div class="admin-form-group">
+                            <label>Transcript</label>
+                            <textarea id="notes-transcript" rows="6" class="admin-input" readonly></textarea>
+                        </div>
+                        <!-- Actions -->
+                        <div class="admin-form-actions">
+                            <button type="button" id="notes-save-btn" class="admin-btn admin-btn--primary">💾 Save to
+                                Firestore</button>
                         </div>
                     </form>
                 </div>

@@ -1116,10 +1116,12 @@
   const tabSpeak = document.getElementById("tab-speak");
   const tabExtended = document.getElementById("tab-extended");
   const tabWatch = document.getElementById("tab-watch");
+  const tabNotes = document.getElementById("tab-notes");
   const modeType = document.getElementById("mode-type");
   const modeSpeak = document.getElementById("mode-speak");
   const modeExtended = document.getElementById("mode-extended");
   const modeWatch = document.getElementById("mode-watch");
+  const modeNotes = document.getElementById("mode-notes");
 
   // ============================================
   // Feedback Banner
@@ -1754,10 +1756,17 @@
     tabSpeak.classList.remove("active");
     tabExtended.classList.remove("active");
     if (tabWatch) tabWatch.classList.remove("active");
+    if (tabNotes) tabNotes.classList.remove("active");
     modeType.classList.add("active");
     modeSpeak.classList.remove("active");
     modeExtended.classList.remove("active");
     if (modeWatch) modeWatch.classList.remove("active");
+    if (modeNotes) modeNotes.classList.remove("active");
+
+    // Reset Take Notes mode if it was active
+    if (window.TakeNotesMode && typeof window.TakeNotesMode.reset === 'function') {
+      window.TakeNotesMode.reset();
+    }
 
     // Hide Speak mode panels
     pronunciationPanel.style.display = "none";
@@ -1802,10 +1811,17 @@
     tabType.classList.remove("active");
     tabExtended.classList.remove("active");
     if (tabWatch) tabWatch.classList.remove("active");
+    if (tabNotes) tabNotes.classList.remove("active");
     modeSpeak.classList.add("active");
     modeType.classList.remove("active");
     modeExtended.classList.remove("active");
     if (modeWatch) modeWatch.classList.remove("active");
+    if (modeNotes) modeNotes.classList.remove("active");
+
+    // Reset Take Notes mode if it was active
+    if (window.TakeNotesMode && typeof window.TakeNotesMode.reset === 'function') {
+      window.TakeNotesMode.reset();
+    }
 
     // Hide Type mode panels
     generatePanelType.style.display = "none";
@@ -1835,10 +1851,17 @@
     tabType.classList.remove("active");
     tabSpeak.classList.remove("active");
     if (tabWatch) tabWatch.classList.remove("active");
+    if (tabNotes) tabNotes.classList.remove("active");
     modeExtended.classList.add("active");
     modeType.classList.remove("active");
     modeSpeak.classList.remove("active");
     if (modeWatch) modeWatch.classList.remove("active");
+    if (modeNotes) modeNotes.classList.remove("active");
+
+    // Reset Take Notes mode if it was active
+    if (window.TakeNotesMode && typeof window.TakeNotesMode.reset === 'function') {
+      window.TakeNotesMode.reset();
+    }
 
     // Hide all other mode panels
     animationPanel.style.display = "none";
@@ -1874,10 +1897,17 @@
       tabType.classList.remove("active");
       tabSpeak.classList.remove("active");
       tabExtended.classList.remove("active");
+      if (tabNotes) tabNotes.classList.remove("active");
       if (modeWatch) modeWatch.classList.add("active");
       modeType.classList.remove("active");
       modeSpeak.classList.remove("active");
       modeExtended.classList.remove("active");
+      if (modeNotes) modeNotes.classList.remove("active");
+
+      // Reset Take Notes mode if it was active
+      if (window.TakeNotesMode && typeof window.TakeNotesMode.reset === 'function') {
+        window.TakeNotesMode.reset();
+      }
 
       // Hide all other mode panels
       animationPanel.style.display = "none";
@@ -1908,6 +1938,44 @@
       // Initialize Watch mode
       if (window.WatchMode) {
         window.WatchMode.init();
+      }
+    });
+  }
+
+  // Notes mode tab handler
+  if (tabNotes) {
+    tabNotes.addEventListener("click", () => {
+      tabNotes.classList.add("active");
+      tabType.classList.remove("active");
+      tabSpeak.classList.remove("active");
+      tabExtended.classList.remove("active");
+      if (tabWatch) tabWatch.classList.remove("active");
+      if (modeNotes) modeNotes.classList.add("active");
+      modeType.classList.remove("active");
+      modeSpeak.classList.remove("active");
+      modeExtended.classList.remove("active");
+      if (modeWatch) modeWatch.classList.remove("active");
+
+      // Hide all other mode panels
+      animationPanel.style.display = "none";
+      result.style.display = "none";
+      generatePanelType.style.display = "none";
+      generatePanelSpeak.style.display = "none";
+      sameVocabPanelType.style.display = "none";
+      sameVocabPanelSpeak.style.display = "none";
+      vocabularyPanel.style.display = "none";
+      pronunciationPanel.style.display = "none";
+      breakdownPanel.style.display = "none";
+
+      // Stop any active recordings
+      if (isRecording && recognition) {
+        recognition.stop();
+        isRecording = false;
+      }
+
+      // Initialize Take Notes mode
+      if (window.TakeNotesMode) {
+        window.TakeNotesMode.loadEntries();
       }
     });
   }

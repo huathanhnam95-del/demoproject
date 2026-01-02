@@ -30,6 +30,11 @@
     let hasUnsavedChanges = false;
     let isNewQuestion = false;
 
+    // Take Notes State
+    let currentAdminMode = 'watch'; // 'watch' or 'notes'
+    let notesEntries = [];
+    let currentNotesEntry = null;
+
     // DOM Elements
     const elements = {};
 
@@ -139,6 +144,32 @@
         // Modals
         elements.unsavedModal = document.getElementById('unsaved-modal');
         elements.deleteModal = document.getElementById('delete-modal');
+
+        // Admin Mode Tabs
+        elements.adminTabWatch = document.getElementById('admin-tab-watch');
+        elements.adminTabNotes = document.getElementById('admin-tab-notes');
+        elements.adminContentWatch = document.getElementById('admin-content-watch');
+        elements.adminContentNotes = document.getElementById('admin-content-notes');
+
+        // Take Notes Elements
+        elements.notesEntrySearch = document.getElementById('notes-entry-search');
+        elements.notesEntryList = document.getElementById('notes-entry-list');
+        elements.notesEntryTitle = document.getElementById('notes-entry-title');
+        elements.notesAudioWrapper = document.getElementById('notes-audio-wrapper');
+        elements.notesPreviewAudio = document.getElementById('notes-preview-audio');
+        elements.notesTranscriptText = document.getElementById('notes-transcript-text');
+        elements.notesSyncExcelBtn = document.getElementById('notes-sync-excel-btn');
+        elements.notesEditorPlaceholder = document.getElementById('notes-editor-placeholder');
+        elements.notesEntryForm = document.getElementById('notes-entry-form');
+        elements.notesEntryId = document.getElementById('notes-entry-id');
+        elements.notesVideoUrl = document.getElementById('notes-video-url');
+        elements.notesAudioId = document.getElementById('notes-audio-id');
+        elements.notesTranscript = document.getElementById('notes-transcript');
+        elements.notesSaveBtn = document.getElementById('notes-save-btn');
+        elements.notesPlayAudioBtn = document.getElementById('notes-play-audio-btn');
+        elements.notesPreviewVideoBtn = document.getElementById('notes-preview-video-btn');
+        elements.notesVideoWrapper = document.getElementById('notes-video-wrapper');
+        elements.notesPreviewVideo = document.getElementById('notes-preview-video');
     }
 
     /**
@@ -189,6 +220,31 @@
                 e.returnValue = '';
             }
         });
+
+        // Admin Mode Tabs
+        if (elements.adminTabWatch) {
+            elements.adminTabWatch.addEventListener('click', () => switchAdminMode('watch'));
+        }
+        if (elements.adminTabNotes) {
+            elements.adminTabNotes.addEventListener('click', () => switchAdminMode('notes'));
+        }
+
+        // Take Notes Event Listeners
+        if (elements.notesSyncExcelBtn) {
+            elements.notesSyncExcelBtn.addEventListener('click', syncNotesExcelToFirestore);
+        }
+        if (elements.notesEntrySearch) {
+            elements.notesEntrySearch.addEventListener('input', debounce(filterNotesEntries, 300));
+        }
+        if (elements.notesSaveBtn) {
+            elements.notesSaveBtn.addEventListener('click', saveNotesEntry);
+        }
+        if (elements.notesPlayAudioBtn) {
+            elements.notesPlayAudioBtn.addEventListener('click', playNotesAudio);
+        }
+        if (elements.notesPreviewVideoBtn) {
+            elements.notesPreviewVideoBtn.addEventListener('click', previewNotesVideo);
+        }
     }
 
     /**
@@ -878,6 +934,345 @@
         };
     }
 
+    // ========================================
+    // TAKE NOTES FUNCTIONS
+    // ========================================
+
+    /**
+     * Switch between Watch and Take Notes admin modes
+     */
+    function switchAdminMode(mode) {
+        currentAdminMode = mode;
+
+        // Update tab styles
+        elements.adminTabWatch.classList.toggle('active', mode === 'watch');
+        elements.adminTabNotes.classList.toggle('active', mode === 'notes');
+
+        // Show/hide content
+        elements.adminContentWatch.style.display = mode === 'watch' ? 'grid' : 'none';
+        elements.adminContentNotes.style.display = mode === 'notes' ? 'grid' : 'none';
+
+        // Auto-load data when switching to Take Notes mode
+        if (mode === 'notes' && notesEntries.length === 0) {
+            loadNotesEntries();
+        }
+
+        console.log(`[Admin] Switched to ${mode} mode`);
+    }
+
+    /**
+     * Load Take Notes entries from Firestore (called on init)
+     */
+    async function loadNotesEntries() {
+        try {
+            elements.notesEntryList.innerHTML = '<div class="admin-loading">Loading entries...</div>';
+
+            const db = firebase.firestore();
+            const snapshot = await db.collection('takeNotesEntries').orderBy('id').get();
+
+            if (snapshot.empty) {
+                elements.notesEntryList.innerHTML = `
+                    <div class="admin-empty">
+                        <p>No entries in Firestore</p>
+                        <p>Click "Update from Excel" to import data</p>
+                    </div>
+                `;
+                notesEntries = [];
+                return;
+            }
+
+            notesEntries = snapshot.docs.map(doc => doc.data());
+            console.log(`[Admin] Loaded ${notesEntries.length} Take Notes entries from Firestore`);
+            renderNotesEntryList(notesEntries);
+
+        } catch (error) {
+            console.error('[Admin] Error loading Take Notes entries:', error);
+            elements.notesEntryList.innerHTML = `
+                <div class="admin-error">
+                    <p>Error loading entries: ${error.message}</p>
+                    <p>Try clicking "Update from Excel" to import data</p>
+                </div>
+            `;
+        }
+    }
+
+    /**
+     * Sync Take Notes entries from Excel to Firestore
+     */
+    async function syncNotesExcelToFirestore() {
+        const syncBtn = elements.notesSyncExcelBtn;
+        const originalText = syncBtn.textContent;
+
+        try {
+            syncBtn.disabled = true;
+            syncBtn.textContent = '🔄 Syncing...';
+
+            // Load from Excel - URL encode the space
+            const response = await fetch('database/Take%20Notes/RL/RL.xlsx');
+            if (!response.ok) {
+                throw new Error('Excel file not found');
+            }
+
+            const arrayBuffer = await response.arrayBuffer();
+            const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[sheetName];
+            const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+            const db = firebase.firestore();
+            const batch = db.batch();
+            let syncCount = 0;
+
+            // Parse entries: Column A = ID, Column C = Transcript, Column F = Video URL
+            for (let i = 1; i < data.length; i++) {
+                const row = data[i];
+                if (!row[0]) continue; // Skip rows without ID
+
+                const entryId = String(row[0]).trim();
+                const entryRef = db.collection('takeNotesEntries').doc(entryId);
+
+                batch.set(entryRef, {
+                    id: entryId,
+                    transcript: row[2] ? String(row[2]).trim() : '',
+                    videoUrl: row[5] ? String(row[5]).trim() : '',
+                    updatedAt: new Date(),
+                    syncedFromExcel: true
+                }, { merge: true });
+
+                syncCount++;
+            }
+
+            await batch.commit();
+            console.log(`[Admin] Synced ${syncCount} Take Notes entries to Firestore`);
+
+            // Reload entries from Firestore
+            await loadNotesEntries();
+
+            // Show success
+            syncBtn.textContent = `✅ Synced ${syncCount} entries!`;
+            setTimeout(() => {
+                syncBtn.disabled = false;
+                syncBtn.textContent = originalText;
+            }, 2000);
+
+        } catch (error) {
+            console.error('[Admin] Error syncing Take Notes entries:', error);
+            syncBtn.textContent = `❌ Error: ${error.message}`;
+            setTimeout(() => {
+                syncBtn.disabled = false;
+                syncBtn.textContent = originalText;
+            }, 3000);
+        }
+    }
+
+    /**
+     * Render Take Notes entry list
+     */
+    function renderNotesEntryList(entriesToRender) {
+        if (entriesToRender.length === 0) {
+            elements.notesEntryList.innerHTML = '<div class="admin-empty">No entries found</div>';
+            return;
+        }
+
+        elements.notesEntryList.innerHTML = entriesToRender.map(entry => `
+            <div class="admin-video-item ${currentNotesEntry && currentNotesEntry.id === entry.id ? 'selected' : ''}" 
+                 data-entry-id="${entry.id}"
+                 onclick="window.WatchAdmin.selectNotesEntry('${entry.id}')">
+                <div class="admin-video-title">${entry.id}</div>
+                <div class="admin-video-meta">
+                    ${entry.transcript ? entry.transcript.substring(0, 50) + '...' : 'No transcript'}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    /**
+     * Filter Take Notes entries
+     */
+    function filterNotesEntries() {
+        const query = elements.notesEntrySearch.value.toLowerCase().trim();
+        if (!query) {
+            renderNotesEntryList(notesEntries);
+            return;
+        }
+
+        const filtered = notesEntries.filter(entry =>
+            entry.id.toLowerCase().includes(query) ||
+            entry.transcript.toLowerCase().includes(query)
+        );
+        renderNotesEntryList(filtered);
+    }
+
+    /**
+     * Select a Take Notes entry
+     */
+    function selectNotesEntry(entryId) {
+        const entry = notesEntries.find(e => e.id === entryId);
+        if (!entry) return;
+
+        currentNotesEntry = entry;
+
+        console.log('[Admin] Selected entry:', entryId);
+        console.log('[Admin] Entry data:', entry);
+        console.log('[Admin] Entry videoUrl:', entry.videoUrl);
+
+        // Update selection in list
+        document.querySelectorAll('#notes-entry-list .admin-video-item').forEach(el => {
+            el.classList.toggle('selected', el.dataset.entryId === entryId);
+        });
+
+        // Update title
+        elements.notesEntryTitle.textContent = `Entry: ${entry.id}`;
+
+        // Show audio preview
+        elements.notesAudioWrapper.style.display = 'block';
+        document.querySelector('.admin-player-placeholder')?.style.setProperty('display', 'none');
+
+        // Update transcript preview
+        elements.notesTranscriptText.textContent = entry.transcript || 'No transcript available';
+
+        // Show editor form
+        elements.notesEditorPlaceholder.style.display = 'none';
+        elements.notesEntryForm.style.display = 'block';
+
+        // Populate form
+        elements.notesEntryId.value = entry.id;
+        elements.notesVideoUrl.value = entry.videoUrl || '';
+        elements.notesAudioId.value = entry.id;
+        elements.notesTranscript.value = entry.transcript || '';
+
+        console.log('[Admin] Video URL field value after setting:', elements.notesVideoUrl.value);
+
+        // Try to load audio
+        loadNotesAudio(entry.id);
+    }
+
+    /**
+     * Load audio file for Take Notes entry with extension fallback
+     */
+    async function loadNotesAudio(audioId) {
+        const tryExtensions = ['m4a', 'wav', 'mp3', 'aac', 'ogg'];
+        const basePath = `database/Take Notes/RL/audio/${audioId}`;
+
+        for (const ext of tryExtensions) {
+            const audioPath = `${basePath}.${ext}`;
+            const exists = await checkNotesFileExists(audioPath);
+            if (exists) {
+                elements.notesPreviewAudio.src = audioPath;
+                console.log(`[Admin] Loaded audio: ${audioPath}`);
+                return;
+            }
+        }
+
+        console.warn(`[Admin] No audio file found for ${audioId}`);
+        elements.notesPreviewAudio.src = '';
+    }
+
+    /**
+     * Check if file exists (for audio detection)
+     */
+    async function checkNotesFileExists(url) {
+        try {
+            const response = await fetch(url, { method: 'HEAD', cache: 'no-cache' });
+            const contentType = response.headers.get('content-type');
+            return response.ok && response.status === 200 && contentType && contentType.startsWith('audio/');
+        } catch (e) {
+            return false;
+        }
+    }
+
+    /**
+     * Play audio preview
+     */
+    function playNotesAudio() {
+        if (elements.notesPreviewAudio.src) {
+            elements.notesPreviewAudio.play();
+        }
+    }
+
+    /**
+     * Preview guiding video
+     */
+    function previewNotesVideo() {
+        // Try cached element first, then fall back to direct DOM query
+        const urlElement = elements.notesVideoUrl || document.getElementById('notes-video-url');
+        const url = urlElement ? urlElement.value.trim() : '';
+
+        console.log('[Admin] Preview video - URL element:', urlElement);
+        console.log('[Admin] Preview video - URL value:', url);
+
+        if (!url) {
+            alert('No video URL entered');
+            return;
+        }
+
+        const videoId = extractVideoId(url);
+        console.log('[Admin] Extracted video ID:', videoId);
+
+        if (!videoId) {
+            alert('Invalid YouTube URL');
+            return;
+        }
+
+        // Show video wrapper, hide placeholder - use direct DOM queries
+        const placeholder = document.querySelector('#notes-preview-container .admin-player-placeholder');
+        const videoWrapper = document.getElementById('notes-video-wrapper');
+        const previewVideo = document.getElementById('notes-preview-video');
+
+        console.log('[Admin] Video wrapper:', videoWrapper);
+        console.log('[Admin] Preview video container:', previewVideo);
+
+        if (placeholder) placeholder.style.display = 'none';
+        if (videoWrapper) {
+            videoWrapper.style.display = 'block';
+        }
+
+        // Embed YouTube video
+        if (previewVideo) {
+            previewVideo.innerHTML = `
+                <iframe 
+                    width="100%" 
+                    height="315" 
+                    src="https://www.youtube.com/embed/${videoId}" 
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen>
+                </iframe>
+            `;
+            console.log('[Admin] Video iframe embedded successfully');
+        } else {
+            console.error('[Admin] Preview video container not found!');
+        }
+
+        console.log('[Admin] Previewing video:', videoId);
+    }
+
+    /**
+     * Save Take Notes entry to Firestore
+     */
+    async function saveNotesEntry() {
+        if (!currentNotesEntry) return;
+
+        try {
+            const db = firebase.firestore();
+            const entryData = {
+                id: elements.notesEntryId.value,
+                videoUrl: elements.notesVideoUrl.value.trim(),
+                transcript: elements.notesTranscript.value.trim(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            await db.collection('takeNotesEntries').doc(entryData.id).set(entryData, { merge: true });
+
+            alert('Entry saved to Firestore!');
+            console.log('[Admin] Saved Take Notes entry:', entryData.id);
+
+        } catch (error) {
+            console.error('[Admin] Error saving entry:', error);
+            alert('Error saving entry: ' + error.message);
+        }
+    }
+
     // Initialize on DOM ready
     document.addEventListener('DOMContentLoaded', init);
 
@@ -885,6 +1280,7 @@
     window.WatchAdmin = {
         selectVideo,
         selectQuestion,
-        removeMCOption
+        removeMCOption,
+        selectNotesEntry
     };
 })();

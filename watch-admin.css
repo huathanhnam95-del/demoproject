@@ -63,6 +63,87 @@ body {
     font-size: 0.9rem;
 }
 
+/* Admin Mode Tabs */
+.admin-tabs {
+    display: flex;
+    gap: 0;
+    background: var(--admin-surface);
+    border-bottom: 1px solid var(--admin-border);
+    padding: 0 24px;
+}
+
+.admin-tab {
+    padding: 12px 24px;
+    border: none;
+    background: transparent;
+    color: var(--admin-text-muted);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.admin-tab:hover {
+    color: var(--admin-text);
+    background: rgba(139, 92, 246, 0.05);
+}
+
+.admin-tab.active {
+    color: var(--admin-primary);
+    border-bottom-color: var(--admin-primary);
+}
+
+/* Take Notes Specific Styles */
+#notes-preview-container {
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 20px;
+}
+
+.notes-video-wrapper {
+    width: 100%;
+    max-width: 800px;
+    padding: 0 20px;
+}
+
+.notes-video-wrapper iframe {
+    width: 100%;
+    border-radius: 8px;
+    aspect-ratio: 16/9;
+}
+
+.notes-audio-wrapper {
+    width: 100%;
+    max-width: 800px;
+    padding: 0 20px;
+}
+
+.notes-audio-wrapper audio {
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.notes-transcript-preview {
+    background: var(--admin-bg);
+    border-radius: 8px;
+    padding: 16px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.notes-transcript-preview h4 {
+    margin: 0 0 12px 0;
+    font-size: 0.9rem;
+    color: var(--admin-text-muted);
+}
+
+.notes-transcript-text {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--admin-text);
+}
+
 .admin-main {
     display: grid;
     grid-template-columns: 280px 1fr 360px;

@@ -468,6 +468,7 @@
         <button id="tab-speak" class="tab-btn" type="button">Speak</button>
         <button id="tab-extended" class="tab-btn" type="button">Fill</button>
         <button id="tab-watch" class="tab-btn" type="button">Watch</button>
+        <button id="tab-notes" class="tab-btn" type="button">Note</button>
       </div>
 
       <div id="mode-type" class="mode-panel active">
@@ -893,6 +894,129 @@
         </div>
       </div>
 
+      <!-- Notes Mode Panel (Take Notes) - Matches Type/Speak Layout -->
+      <div id="mode-notes" class="mode-panel">
+        <div class="question-selector">
+          <div class="question-id-display">
+            <label for="question-select-notes">Question ID:</label>
+            <span id="current-question-id-notes" class="current-question-id">1</span>
+          </div>
+
+          <!-- Navigation Row: Back + Dropdown + Next -->
+          <div class="question-nav-row">
+            <button id="back-btn-notes" class="nav-btn nav-btn-back" type="button" title="Previous Question">
+              ← Back
+            </button>
+            <select id="question-select-notes" class="question-select question-select-narrow">
+              <option value="1">Loading...</option>
+            </select>
+            <button id="next-btn-notes" class="nav-btn nav-btn-next" type="button" title="Next Question">
+              Next →
+            </button>
+          </div>
+
+          <!-- Filters Row: Status Filter -->
+          <div class="question-filters-row">
+            <div class="status-filter-dropdown" id="status-filter-container-notes">
+              <button id="status-filter-btn-notes" class="status-filter-btn" type="button">
+                <span id="status-filter-label-notes">Filter by Status</span>
+                <span class="filter-arrow">▼</span>
+              </button>
+              <div id="status-filter-menu-notes" class="status-filter-menu" style="display: none;">
+                <div class="filter-option selected" data-value="all" data-filter-id="filter-all-notes">
+                  <span class="filter-option-icon">📋</span>
+                  <span class="filter-option-text">All Questions</span>
+                </div>
+                <div class="filter-option" data-value="has-video" data-filter-id="filter-has-video-notes">
+                  <span class="filter-option-icon">🎬</span>
+                  <span class="filter-option-text">Guiding Video</span>
+                </div>
+                <div class="filter-option" data-value="no-video" data-filter-id="filter-no-video-notes">
+                  <span class="filter-option-icon">🔇</span>
+                  <span class="filter-option-text">No Guiding Video</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="question-total">
+          <span>Total number of questions: <span id="total-questions-notes">0</span></span>
+        </div>
+        <div class="controls">
+          <button id="play-notes-btn" class="modern-btn modern-btn--play" type="button">Play</button>
+        </div>
+        <div id="score-notes" class="score">Points: 0</div>
+
+        <!-- Practice Area (hidden until Play clicked) -->
+        <div id="notes-practice-area" style="display: none;">
+          <!-- Step 1: Guiding Video (if available) -->
+          <div id="notes-step-video" class="notes-step" style="display: none;">
+            <div class="notes-step-header">
+              <span class="notes-step-badge">Step 1</span>
+              <h4>Watch the Guiding Video</h4>
+            </div>
+            <div class="notes-video-wrapper">
+              <div id="notes-youtube-player"></div>
+            </div>
+            <div class="notes-video-controls">
+              <button id="notes-skip-video-btn" class="modern-btn modern-btn--hint" type="button">
+                Skip Guiding Video →
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 2: Audio + Note-taking -->
+          <div id="notes-step-audio" class="notes-step" style="display: none;">
+            <div class="notes-step-header">
+              <span class="notes-step-badge">Step 2</span>
+              <h4>Listen and Take Notes</h4>
+            </div>
+            <div class="notes-audio-player">
+              <audio id="notes-audio" controls></audio>
+            </div>
+            <div class="notes-textarea-wrapper">
+              <label for="notes-user-input">Your Notes:</label>
+              <textarea id="notes-user-input" rows="8" placeholder="Type your notes here as you listen..."></textarea>
+            </div>
+            <div class="notes-submit-controls">
+              <button id="notes-submit-btn" class="modern-btn modern-btn--check" type="button">
+                Submit Notes
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 3: Results -->
+          <div id="notes-step-results" class="notes-step" style="display: none;">
+            <div class="notes-step-header">
+              <span class="notes-step-badge">Results</span>
+              <h4>Review Your Results</h4>
+            </div>
+            <div class="notes-results-layout">
+              <div class="notes-results-column">
+                <h5>Transcript</h5>
+                <div id="notes-transcript-display" class="notes-transcript-display">
+                  <!-- Transcript with highlighted matches -->
+                </div>
+              </div>
+              <div class="notes-results-column">
+                <h5>Your Notes</h5>
+                <div id="notes-user-display" class="notes-user-display">
+                  <!-- User's notes -->
+                </div>
+              </div>
+            </div>
+            <div class="notes-results-stats">
+              <span id="notes-match-count">0</span> words matched
+            </div>
+            <div class="notes-results-controls">
+              <button id="notes-retry-btn" class="modern-btn modern-btn--retry" type="button">
+                Try Again
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <section class="animation-panel" style="display: none;">
         <div class="animation-header">
           <span>How to fix (step-by-step)</span>
@@ -1221,8 +1345,10 @@
     }
     console.log('✓ Firebase compat SDK initialized for Watch mode');
   </script>
+  <script src="https://unpkg.com/compromise"></script>
   <script src="youtube-player.js"></script>
   <script src="watch-mode.js"></script>
+  <script src="take-notes-mode.js"></script>
 
   <!-- Vocabulary Book Script -->
   <script type="module" src="vocab-book.js"></script>

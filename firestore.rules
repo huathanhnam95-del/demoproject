@@ -35,6 +35,11 @@ service cloud.firestore {
       match /watchProgress/{videoId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
+      
+      // Take Notes mode progress
+      match /takeNotesProgress/{entryId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
     }
     
     // Users can create practice attempts (read their own)
@@ -65,6 +70,13 @@ service cloud.firestore {
         allow read: if true;
         allow write: if isAdmin();
       }
+    }
+    
+    // Take Notes entries
+    // Anyone can read (including guests), only admin can write
+    match /takeNotesEntries/{entryId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
   }
 }

@@ -97,7 +97,7 @@ body {
 }
 
 .container {
-  max-width: 640px;
+  max-width: 1000px;
   margin: 56px auto;
   padding: 24px;
   background: #ffffff;

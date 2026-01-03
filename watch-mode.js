@@ -317,6 +317,15 @@ const WatchMode = (function () {
     function onPlayerReady() {
         console.log('[WatchMode] Player ready');
         elements.playBtn.textContent = 'Play';
+
+        // Try to get duration and show markers immediately
+        if (player && typeof player.getDuration === 'function') {
+            const duration = player.getDuration();
+            if (duration > 0) {
+                videoDuration = duration;
+                updateQuestionMarkers();
+            }
+        }
     }
 
     /**
@@ -325,7 +334,12 @@ const WatchMode = (function () {
     function onPlayerStateChange(event) {
         if (event.data === 1) { // Playing
             elements.playBtn.textContent = 'Pause';
-            videoDuration = player.getDuration();
+
+            // Update duration and markers when playing starts
+            if (player && typeof player.getDuration === 'function') {
+                videoDuration = player.getDuration();
+                updateQuestionMarkers();
+            }
         } else if (event.data === 2) { // Paused
             elements.playBtn.textContent = 'Play';
         }
@@ -681,6 +695,12 @@ const WatchMode = (function () {
         }
 
         lastCheckedTime = seekTime;
+
+        // Optimistic UI update: update progress bar immediately
+        const progressPercent = percentage * 100;
+        elements.progressFill.style.width = `${progressPercent}%`;
+        elements.timeDisplay.textContent = `${formatTime(seekTime)} / ${formatTime(videoDuration)}`;
+
         player.seekTo(seekTime);
     }
 

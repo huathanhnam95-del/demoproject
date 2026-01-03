@@ -1752,6 +1752,7 @@
 
   // Tab switching
   tabType.addEventListener("click", async () => {
+    document.getElementById('page-layout-wrapper')?.classList.remove('watch-active');
     tabType.classList.add("active");
     tabSpeak.classList.remove("active");
     tabExtended.classList.remove("active");
@@ -1807,6 +1808,7 @@
   });
 
   tabSpeak.addEventListener("click", async () => {
+    document.getElementById('page-layout-wrapper')?.classList.remove('watch-active');
     tabSpeak.classList.add("active");
     tabType.classList.remove("active");
     tabExtended.classList.remove("active");
@@ -1847,6 +1849,7 @@
   });
 
   tabExtended.addEventListener("click", () => {
+    document.getElementById('page-layout-wrapper')?.classList.remove('watch-active');
     tabExtended.classList.add("active");
     tabType.classList.remove("active");
     tabSpeak.classList.remove("active");
@@ -1945,6 +1948,7 @@
   // Notes mode tab handler
   if (tabNotes) {
     tabNotes.addEventListener("click", () => {
+      document.getElementById('page-layout-wrapper')?.classList.remove('watch-active');
       tabNotes.classList.add("active");
       tabType.classList.remove("active");
       tabSpeak.classList.remove("active");

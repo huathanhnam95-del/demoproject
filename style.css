@@ -5939,6 +5939,17 @@ textarea:focus {
 }
 
 /* Responsive: Stack on smaller screens */
+@keyframes slideUpPanel {
+  from {
+    transform: translateY(100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Responsive: Bottom Sheet Popup on smaller screens */
 @media (max-width: 900px) {
   .page-layout-wrapper.watch-active {
     flex-direction: column;
@@ -5946,9 +5957,24 @@ textarea:focus {
   }
 
   .watch-question-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
     width: 100%;
-    max-width: 640px;
-    margin-top: 20px;
+    max-width: 100%;
+    margin: 0;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.15), 0 0 0 1000px rgba(0, 0, 0, 0.4);
+    /* Overlay effect */
+    z-index: 2000;
+    animation: slideUpPanel 0.3s ease;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .watch-question-panel-content {
+    padding-bottom: 30px;
+    /* Safety padding for bottom gestures */
   }
 }
 

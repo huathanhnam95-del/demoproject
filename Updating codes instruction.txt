@@ -1,2 +1,0 @@
-node update-database.js database/extended/LFIB.xlsx extended
-    this is to update database for extended

@@ -168,6 +168,9 @@ const VocabularyBook = (function () {
      * Show the List Modal
      */
     function showListModal(initialTab = 'bookmarks') {
+        // Close the vocab side panel first to avoid stacking issues
+        closePanel();
+
         if (vocabListModal) {
             vocabListModal.style.display = 'flex';
             // Small timeout to allow display transition if needed, but primarily for class
@@ -982,7 +985,8 @@ const VocabularyBook = (function () {
         showToggle: showToggle,
         loadData: loadVocabData,
         playAudio: playPronunciation,
-        removeViaModal: removeViaModal
+        removeViaModal: removeViaModal,
+        togglePanel: togglePanel  // Exposed for mobile toolbar
     };
 
 })();

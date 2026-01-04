@@ -14,18 +14,16 @@
   <!-- Demo Feedback Banner -->
   <div class="feedback-banner">
     <div class="feedback-banner-content">
-      <p class="feedback-text-en">
-        🚧 This is a demo version, not the official release. All feedbacks are welcome!
-        Please provide your suggestion by filling this form:
-        <a href="https://forms.gle/DKzNkhkQ5JFzc4yM9" target="_blank"
-          rel="noopener noreferrer">https://forms.gle/DKzNkhkQ5JFzc4yM9</a>
-      </p>
-      <p class="feedback-text-vi">
-        🚧 Đây là bản thử nghiệm, chưa phải bản chính thức của trang web. Mọi ý kiến đóng góp đều được mong chờ!
-        Bạn có thể góp ý bằng cách điền vào form sau:
-        <a href="https://forms.gle/DKzNkhkQ5JFzc4yM9" target="_blank"
-          rel="noopener noreferrer">https://forms.gle/DKzNkhkQ5JFzc4yM9</a>
-      </p>
+      <div class="feedback-text-en">
+        🚧 Demo version — feedback is welcome!
+        <a href="https://forms.gle/DKzNkhkQ5JFzc4yM9" target="_blank" rel="noopener noreferrer"
+          class="feedback-link">Give Feedback →</a>
+      </div>
+      <div class="feedback-text-vi">
+        📝 Đây là bản thử nghiệm — mọi góp ý đều được hoan nghênh!
+        <a href="https://forms.gle/DKzNkhkQ5JFzc4yM9" target="_blank" rel="noopener noreferrer"
+          class="feedback-link">Góp ý →</a>
+      </div>
     </div>
     <button class="feedback-banner-close" aria-label="Close banner">&times;</button>
   </div>
@@ -896,8 +894,11 @@
 
       <!-- Notes Mode Panel (Take Notes) - Matches Type/Speak Layout -->
       <div id="mode-notes" class="mode-panel">
-        <div class="notification-box important-notice">
-          IMPORTANT: This section is based on PTE Academic's Retell Lecture task.
+        <div id="notes-info-box" class="notification-box important-notice">
+          <span>📌 Based on PTE Academic's Retell Lecture task</span>
+          <button class="info-box-close"
+            onclick="this.parentElement.style.display='none'; localStorage.setItem('notesInfoDismissed','1')"
+            title="Don't show again">×</button>
         </div>
         <div class="question-selector">
           <div class="question-id-display">
@@ -1281,6 +1282,9 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Close Button at Bottom -->
+      <button id="shopping-close-bottom-btn" class="modal-close-bottom-btn">Close</button>
     </div>
   </div>
 
@@ -1355,6 +1359,30 @@
 
   <!-- Vocabulary Book Script -->
   <script type="module" src="vocab-book.js"></script>
+
+  <!-- Mobile Bottom Toolbar (visible only on mobile) -->
+  <div id="mobile-toolbar" class="mobile-toolbar">
+    <button id="mobile-progress-btn" class="mobile-toolbar-btn" title="Progress">
+      <span class="mobile-toolbar-icon">📊</span>
+      <span class="mobile-toolbar-label">Stats</span>
+    </button>
+    <button id="mobile-vocab-btn" class="mobile-toolbar-btn" title="Vocabulary">
+      <span class="mobile-toolbar-icon">📖</span>
+      <span class="mobile-toolbar-label">Vocab</span>
+    </button>
+    <button id="mobile-account-btn" class="mobile-toolbar-btn" title="Account">
+      <span class="mobile-toolbar-icon">👤</span>
+      <span class="mobile-toolbar-label">Account</span>
+    </button>
+  </div>
+
+  <!-- Init: Check localStorage for dismissed notifications -->
+  <script>
+    if (localStorage.getItem('notesInfoDismissed') === '1') {
+      const notesInfoBox = document.getElementById('notes-info-box');
+      if (notesInfoBox) notesInfoBox.style.display = 'none';
+    }
+  </script>
 
 </body>
 

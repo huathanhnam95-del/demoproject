@@ -1043,15 +1043,24 @@
                 if (!row[0]) continue; // Skip rows without ID
 
                 const entryId = String(row[0]).trim();
+                const transcript = row[2] ? String(row[2]).trim() : '';
+                const videoUrl = row[5] ? String(row[5]).trim() : '';
+
+                // Debug logging for first few entries
+                if (i <= 3) {
+                    console.log(`[Admin] Entry ${entryId}: videoUrl = "${videoUrl}" (from column F)`);
+                }
+
                 const entryRef = db.collection('takeNotesEntries').doc(entryId);
 
+                // Use set without merge to ensure videoUrl is always updated
                 batch.set(entryRef, {
                     id: entryId,
-                    transcript: row[2] ? String(row[2]).trim() : '',
-                    videoUrl: row[5] ? String(row[5]).trim() : '',
+                    transcript: transcript,
+                    videoUrl: videoUrl,
                     updatedAt: new Date(),
                     syncedFromExcel: true
-                }, { merge: true });
+                });
 
                 syncCount++;
             }
@@ -1088,7 +1097,18 @@
             return;
         }
 
-        elements.notesEntryList.innerHTML = entriesToRender.map(entry => `
+        // Sort numerically by ID (parse as integer for proper numerical sorting)
+        const sortedEntries = [...entriesToRender].sort((a, b) => {
+            const numA = parseInt(a.id, 10);
+            const numB = parseInt(b.id, 10);
+            // Handle non-numeric IDs by falling back to string comparison
+            if (isNaN(numA) && isNaN(numB)) return a.id.localeCompare(b.id);
+            if (isNaN(numA)) return 1;
+            if (isNaN(numB)) return -1;
+            return numA - numB;
+        });
+
+        elements.notesEntryList.innerHTML = sortedEntries.map(entry => `
             <div class="admin-video-item ${currentNotesEntry && currentNotesEntry.id === entry.id ? 'selected' : ''}" 
                  data-entry-id="${entry.id}"
                  onclick="window.WatchAdmin.selectNotesEntry('${entry.id}')">

@@ -174,7 +174,7 @@ const WatchMode = (function () {
             elements.videoGrid.innerHTML = `
                 <div class="watch-empty-state">
                     <h3>Unable to load videos</h3>
-                    <p>Please check that Videos.xlsx exists in database/watch/</p>
+                    <p>Something went wrong. Please try again later.</p>
                 </div>
             `;
         }

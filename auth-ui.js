@@ -81,94 +81,117 @@ function setupEventListeners() {
   // ============================================
   // Right-Side Account Panel
   // ============================================
-  const panelToggle = document.getElementById('account-panel-toggle');
-  if (panelToggle) {
-    panelToggle.addEventListener('click', toggleAccountPanel);
-  }
 
-  const panelCloseBtn = document.getElementById('panel-close-btn');
-  if (panelCloseBtn) {
-    panelCloseBtn.addEventListener('click', closeAccountPanel);
-  }
-
-  // Panel buttons (logged out state)
-  const panelLoginBtn = document.getElementById('panel-login-btn');
-  if (panelLoginBtn) {
-    panelLoginBtn.addEventListener('click', showLoginForm);
-  }
-
-  const panelRegisterBtn = document.getElementById('panel-register-btn');
-  if (panelRegisterBtn) {
-    panelRegisterBtn.addEventListener('click', showSignupForm);
-  }
-
-  // Panel buttons (logged in state)
-  const panelLogoutBtn = document.getElementById('panel-logout-btn');
-  if (panelLogoutBtn) {
-    panelLogoutBtn.addEventListener('click', handleLogout);
-  }
-
-  const panelChangePasswordBtn = document.getElementById('panel-change-password-btn');
-  if (panelChangePasswordBtn) {
-    panelChangePasswordBtn.addEventListener('click', handleChangePassword);
-  }
-
-  // Panel button (guest mode state)
-  const panelGuestLoginBtn = document.getElementById('panel-guest-login-btn');
-  if (panelGuestLoginBtn) {
-    panelGuestLoginBtn.addEventListener('click', showLoginForm);
-  }
-
-  // Shopping Placeholder
-  const shoppingCard = document.getElementById('panel-shopping-card');
-  if (shoppingCard) {
-    shoppingCard.addEventListener('click', () => {
-      showShoppingModal();
-    });
-  }
 
   // ============================================
-  // Account Details Modal (Full Details)
+  // Auth UI Listeners Initialization
   // ============================================
-  const closeDetailsBtn = document.getElementById('close-details-btn');
-  if (closeDetailsBtn) {
-    closeDetailsBtn.addEventListener('click', hideAccountDetailsModal);
+
+  function initAuthListeners() {
+    console.log('Initializing Auth UI listeners...');
+
+    // --- Account Panel Toggles ---
+    const panelToggle = document.getElementById('account-panel-toggle');
+    if (panelToggle) {
+      panelToggle.addEventListener('click', toggleAccountPanel);
+    }
+
+    const panelCloseBtn = document.getElementById('panel-close-btn');
+    if (panelCloseBtn) {
+      panelCloseBtn.addEventListener('click', closeAccountPanel);
+    }
+
+    // --- Panel Buttons (Logged Out) ---
+    const panelLoginBtn = document.getElementById('panel-login-btn');
+    if (panelLoginBtn) {
+      panelLoginBtn.addEventListener('click', showLoginForm);
+    }
+
+    const panelRegisterBtn = document.getElementById('panel-register-btn');
+    if (panelRegisterBtn) {
+      panelRegisterBtn.addEventListener('click', showSignupForm);
+    }
+
+    // --- Panel Buttons (Logged In) ---
+    const panelLogoutBtn = document.getElementById('panel-logout-btn');
+    if (panelLogoutBtn) {
+      panelLogoutBtn.removeEventListener('click', handleLogout); // Safety
+      panelLogoutBtn.addEventListener('click', handleLogout);
+    }
+
+    const panelChangePasswordBtn = document.getElementById('panel-change-password-btn');
+    if (panelChangePasswordBtn) {
+      panelChangePasswordBtn.removeEventListener('click', handleChangePassword);
+      panelChangePasswordBtn.addEventListener('click', handleChangePassword);
+    }
+
+    // --- Panel Button (Guest Mode) ---
+    const panelGuestLoginBtn = document.getElementById('panel-guest-login-btn');
+    if (panelGuestLoginBtn) {
+      panelGuestLoginBtn.addEventListener('click', showLoginForm);
+    }
+
+    // --- Shopping Card ---
+    const shoppingCard = document.getElementById('panel-shopping-card');
+    if (shoppingCard) {
+      shoppingCard.addEventListener('click', () => {
+        showShoppingModal();
+      });
+    }
+
+    // --- Account Details Modal ---
+    const closeDetailsBtn = document.getElementById('close-details-btn');
+    if (closeDetailsBtn) {
+      closeDetailsBtn.addEventListener('click', hideAccountDetailsModal);
+    }
+
+    // --- Form Switches ---
+    const switchToSignup = document.getElementById('switch-to-signup');
+    if (switchToSignup) {
+      switchToSignup.addEventListener('click', (e) => {
+        e.preventDefault();
+        showSignupForm();
+      });
+    }
+
+    const switchToLogin = document.getElementById('switch-to-login');
+    if (switchToLogin) {
+      switchToLogin.addEventListener('click', (e) => {
+        e.preventDefault();
+        showLoginForm();
+      });
+    }
+
+    // --- Form Submissions ---
+    // Note: IDs might be login-form-element vs login-form (container)
+    // Checking index.html or previous context would confirm, but let's assume variables used before were correct.
+    // Previous code used 'login-form-element'.
+    const loginFormEl = document.getElementById('login-form-element');
+    if (loginFormEl) {
+      loginFormEl.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await handleLogin();
+      });
+    }
+
+    const signupFormEl = document.getElementById('signup-form-element');
+    if (signupFormEl) {
+      signupFormEl.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await handleSignup();
+      });
+    }
   }
 
-  // Form switches
-  const switchToSignup = document.getElementById('switch-to-signup');
-  if (switchToSignup) {
-    switchToSignup.addEventListener('click', (e) => {
-      e.preventDefault();
-      showSignupForm();
-    });
+  // Initialize listeners immediately if DOM is ready, otherwise wait
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAuthListeners);
+  } else {
+    initAuthListeners();
   }
 
-  const switchToLogin = document.getElementById('switch-to-login');
-  if (switchToLogin) {
-    switchToLogin.addEventListener('click', (e) => {
-      e.preventDefault();
-      showLoginForm();
-    });
-  }
-
-  // Login form submission
-  const loginForm = document.getElementById('login-form-element');
-  if (loginForm) {
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      await handleLogin();
-    });
-  }
-
-  // Signup form submission
-  const signupForm = document.getElementById('signup-form-element');
-  if (signupForm) {
-    signupForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      await handleSignup();
-    });
-  }
+  // Expose for debugging/manual re-init
+  window.initAuthListeners = initAuthListeners;
 }
 
 
@@ -481,6 +504,9 @@ function showSignupForm() {
   const loginError = document.getElementById('login-error');
   const signupError = document.getElementById('signup-error');
   const signupSuccess = document.getElementById('signup-success');
+
+  // Close account panel first for better UX
+  closeAccountPanel();
 
   authOverlay.style.display = 'flex';
   loginForm.style.display = 'none';
@@ -955,7 +981,9 @@ window.authUI = {
   onAuthStateChange: onAuthStateChange,
   // Practice Points functions
   loadPracticePoints: loadPracticePoints,
-  updatePracticePointsDisplay: updatePracticePointsDisplay
+  updatePracticePointsDisplay: updatePracticePointsDisplay,
+  // Account panel toggle (for mobile toolbar)
+  toggleAccountPanel: toggleAccountPanel
 };
 
 
@@ -1064,6 +1092,9 @@ async function loadPointsHistory(userId) {
  * @param {number} points 
  */
 async function showExplanationPopup(ruleTitle, points) {
+  // Close account panel first to avoid stacking issues
+  closeAccountPanel();
+
   const modal = document.getElementById('explanation-modal');
   const titleEl = document.getElementById('explanation-title');
   const pointsEl = document.getElementById('explanation-points');
@@ -1108,6 +1139,9 @@ async function showExplanationPopup(ruleTitle, points) {
  * Show the Shopping modal with Points Exchange table
  */
 function showShoppingModal() {
+  // Close account panel first for better UX and to avoid stacking issues
+  closeAccountPanel();
+
   const modal = document.getElementById('shopping-modal');
   const closeBtn = document.getElementById('shopping-close-btn');
   const pointsDisplay = document.getElementById('shopping-current-points');
@@ -1351,6 +1385,11 @@ function showShoppingModal() {
     modal.style.display = 'none';
   };
   if (closeBtn) closeBtn.onclick = closeModal;
+  
+  // Bottom close button
+  const closeBottomBtn = document.getElementById('shopping-close-bottom-btn');
+  if (closeBottomBtn) closeBottomBtn.onclick = closeModal;
+  
   modal.onclick = (e) => {
     if (e.target === modal) closeModal();
   };

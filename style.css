@@ -15,43 +15,61 @@ body {
 
 .feedback-banner {
   background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  border-bottom: 2px solid #f59e0b;
-  padding: 12px 20px;
+  border-bottom: 3px solid #f59e0b;
+  padding: 16px 50px 16px 24px;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 20px;
   position: relative;
 }
 
 .feedback-banner-content {
-  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
   text-align: center;
 }
 
 .feedback-text-en,
 .feedback-text-vi {
-  margin: 0;
-  font-size: 0.9rem;
-  line-height: 1.5;
+  font-size: 1.1rem;
   color: #78350f;
-}
-
-.feedback-text-en {
-  margin-bottom: 8px;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .feedback-text-vi {
-  font-size: 0.85rem;
+  font-size: 1rem;
+  color: #92400e;
   opacity: 0.9;
+}
+
+.feedback-link {
+  color: #b45309;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 8px 16px;
+  background: rgba(180, 83, 9, 0.15);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+}
+
+.feedback-link:hover {
+  background: rgba(180, 83, 9, 0.25);
+  color: #92400e;
 }
 
 .feedback-banner a {
   color: #b45309;
-  text-decoration: underline;
+  text-decoration: none;
   font-weight: 600;
-  word-break: break-all;
 }
 
 .feedback-banner a:hover {
@@ -60,14 +78,15 @@ body {
 
 .feedback-banner-close {
   position: absolute;
-  top: 8px;
+  top: 50%;
+  transform: translateY(-50%);
   right: 12px;
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   color: #92400e;
   cursor: pointer;
-  padding: 0;
+  padding: 4px;
   line-height: 1;
   opacity: 0.7;
   transition: opacity 0.2s ease;
@@ -81,17 +100,53 @@ body {
   display: none;
 }
 
+/* Notification/Info Box (dismissible) */
+.notification-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  position: relative;
+}
+
+.notification-box.important-notice {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #f59e0b;
+  color: #92400e;
+}
+
+.info-box-close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #92400e;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+  flex-shrink: 0;
+}
+
+.info-box-close:hover {
+  opacity: 1;
+}
+
 @media (max-width: 600px) {
   .feedback-banner {
-    padding: 10px 40px 10px 16px;
+    padding: 8px 36px 8px 12px;
   }
 
-  .feedback-text-en,
-  .feedback-text-vi {
+  .feedback-text {
     font-size: 0.8rem;
+    flex-wrap: wrap;
   }
 
-  .feedback-text-vi {
+  .feedback-link {
+    padding: 3px 8px;
     font-size: 0.75rem;
   }
 }
@@ -3748,6 +3803,48 @@ textarea:focus {
   padding-top: 20px;
 }
 
+/* Shopping Card in Panel */
+.panel-shopping-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #bae6fd;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.panel-shopping-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-color: #7dd3fc;
+}
+
+.panel-shopping-card:active {
+  transform: translateY(0);
+}
+
+.shopping-icon {
+  font-size: 1.5rem;
+}
+
+.shopping-label {
+  flex: 1;
+  font-weight: 600;
+  color: #0369a1;
+  font-size: 0.95rem;
+}
+
+.shopping-arrow {
+  color: #0ea5e9;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
 .panel-points-header {
   text-align: center;
   margin-bottom: 20px;
@@ -4015,6 +4112,31 @@ textarea:focus {
   background: #dbeafe;
   color: #1e40af;
   border: 1px solid #93c5fd;
+}
+
+/* Bottom Close Button for Modals */
+.modal-close-bottom-btn {
+  display: block;
+  width: 100%;
+  padding: 14px 24px;
+  margin-top: 24px;
+  background: #ffffff;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-close-bottom-btn:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.modal-close-bottom-btn:active {
+  background: #f3f4f6;
 }
 
 /* Rewards Table */
@@ -6127,4 +6249,231 @@ textarea:focus {
 
 .notes-results-controls {
   text-align: center;
+}
+
+/* ============================================
+   MOBILE LAYOUT FIXES (< 768px only)
+   Desktop layout remains unchanged
+   ============================================ */
+
+/* Mobile toolbar - hidden on desktop */
+.mobile-toolbar {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  /* ============================================
+     FIX 1: Hide floating panel toggles on mobile
+     Replace with mobile toolbar at bottom
+     ============================================ */
+
+  /* Hide floating toggle buttons */
+  .progress-panel-toggle,
+  .account-panel-toggle,
+  .vocab-panel-toggle {
+    display: none !important;
+  }
+
+  /* Hide the entire side panel containers when not expanded */
+  .progress-panel-side:not(.expanded),
+  .account-panel-side:not(.expanded),
+  .vocab-panel-side:not(.expanded) {
+    display: none !important;
+  }
+
+  /* When panels ARE expanded, show them as full-screen overlays */
+  .progress-panel-side.expanded,
+  .account-panel-side.expanded,
+  .vocab-panel-side.expanded {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    display: flex !important;
+    transform: none;
+  }
+
+  .progress-panel-side.expanded .progress-panel-content,
+  .account-panel-side.expanded .account-panel-content,
+  .vocab-panel-side.expanded .vocab-panel-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100%;
+    border-radius: 0;
+    transform: none;
+  }
+
+  /* Show mobile toolbar */
+  .mobile-toolbar {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: #ffffff;
+    border-top: 1px solid #e5e7eb;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 998;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 16px;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .mobile-toolbar-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 8px 16px;
+    min-width: 64px;
+    min-height: 44px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+  }
+
+  .mobile-toolbar-btn:hover,
+  .mobile-toolbar-btn:active {
+    background: #f3f4f6;
+  }
+
+  .mobile-toolbar-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+
+  .mobile-toolbar-label {
+    font-size: 0.7rem;
+    color: #6b7280;
+    margin-top: 2px;
+    font-weight: 500;
+  }
+
+  /* Add bottom padding to main content to prevent overlap with toolbar */
+  body {
+    padding-bottom: 70px;
+  }
+
+  .container {
+    margin-bottom: 20px;
+  }
+
+  /* ============================================
+     FIX 2: Convert shop table to vertical cards
+     ============================================ */
+
+  .shopping-modal-content {
+    padding: 20px 16px !important;
+    max-width: 100%;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .shopping-modal-content h2 {
+    font-size: 1.4rem;
+  }
+
+  .shopping-points-display {
+    padding: 12px 20px;
+    gap: 8px;
+  }
+
+  .shopping-points-value {
+    font-size: 1.75rem;
+  }
+
+  /* Hide table header on mobile */
+  .shopping-table thead {
+    display: none;
+  }
+
+  /* Convert table to card layout */
+  .shopping-table,
+  .shopping-table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .shopping-table tbody tr {
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .shopping-table tbody tr:hover {
+    background: #faf5ff;
+  }
+
+  .shopping-table td {
+    display: block;
+    padding: 8px 0;
+    text-align: left !important;
+    border: none;
+  }
+
+  /* Reward info card header */
+  .shopping-table td:first-child {
+    order: 1;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .reward-title {
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+  }
+
+  .reward-description {
+    font-size: 0.85rem;
+  }
+
+  /* Cost display */
+  .shopping-table td:nth-child(2) {
+    order: 2;
+    padding: 12px 0;
+  }
+
+  .reward-cost {
+    justify-content: flex-start;
+    font-size: 1.1rem;
+  }
+
+  .reward-cost::before {
+    content: "Cost: ";
+    font-weight: 400;
+    color: #6b7280;
+    font-size: 0.9rem;
+  }
+
+  /* Action button */
+  .shopping-table td:last-child {
+    order: 3;
+    padding-top: 12px;
+  }
+
+  .shopping-table td:last-child .reward-btn,
+  .shopping-table td:last-child .reward-btn-unlocked {
+    width: 100%;
+    min-height: 44px;
+    font-size: 1rem;
+  }
+
+  /* Guest toast positioning for mobile toolbar */
+  .guest-toast {
+    bottom: 80px !important;
+  }
 }

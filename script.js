@@ -7381,5 +7381,90 @@
 
   // Expose loadSpeakLengthData globally
   window.loadSpeakLengthData = loadSpeakLengthData;
+
+  // ============================================
+  // Mobile Toolbar Button Handlers
+  // Directly toggle panels instead of clicking hidden buttons
+  // NOTE: Must defer attachment because toolbar HTML is at end of body
+  // ============================================
+
+  // Expose progress panel toggle function globally for mobile toolbar
+  function toggleProgressPanel() {
+    const isExpanded = progressPanelSide?.classList.contains('expanded');
+    if (isExpanded) {
+      closeProgressPanel();
+    } else {
+      openProgressPanel();
+    }
+  }
+  window.toggleProgressPanel = toggleProgressPanel;
+
+  // Defer mobile toolbar event listener attachment
+  // The toolbar HTML is placed at the end of body, after script.js
+  function setupMobileToolbar() {
+    const mobileProgressBtn = document.getElementById('mobile-progress-btn');
+    const mobileVocabBtn = document.getElementById('mobile-vocab-btn');
+    const mobileAccountBtn = document.getElementById('mobile-account-btn');
+
+    // Helper to trigger a click on a hidden element (robust fallback)
+    const triggerDesktopToggle = (elementId) => {
+      const btn = document.getElementById(elementId);
+      if (btn) {
+        // Dispatch a synthetic click event (works even on hidden elements)
+        const event = new MouseEvent('click', {
+          view: window,
+          bubbles: true,
+          cancelable: true
+        });
+        btn.dispatchEvent(event);
+        return true;
+      }
+      return false;
+    };
+
+    if (mobileProgressBtn) {
+      mobileProgressBtn.addEventListener('click', () => {
+        // Progress panel is local, so direct function is best
+        toggleProgressPanel();
+      });
+    }
+
+    if (mobileVocabBtn) {
+      mobileVocabBtn.addEventListener('click', () => {
+        // First try triggering the desktop button listener (most robust)
+        if (triggerDesktopToggle('vocab-panel-toggle')) return;
+
+        // Fallback to global function
+        if (window.VocabularyBook && window.VocabularyBook.togglePanel) {
+          window.VocabularyBook.togglePanel();
+        } else {
+          console.error('Vocab panel toggle failed: Button not found and global function missing.');
+        }
+      });
+    }
+
+    if (mobileAccountBtn) {
+      mobileAccountBtn.addEventListener('click', () => {
+        // First try triggering the desktop button listener
+        if (triggerDesktopToggle('account-panel-toggle')) return;
+
+        // Fallback to global function
+        if (window.authUI && window.authUI.toggleAccountPanel) {
+          window.authUI.toggleAccountPanel();
+        } else {
+          console.error('Account panel toggle failed: Button not found and global function missing.');
+        }
+      });
+    }
+  }
+
+  // Setup immediately if DOM is already loaded, otherwise wait
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupMobileToolbar);
+  } else {
+    // DOM already loaded, but toolbar might still be parsing
+    // Use requestAnimationFrame to ensure it's in the DOM
+    requestAnimationFrame(setupMobileToolbar);
+  }
 })();
 

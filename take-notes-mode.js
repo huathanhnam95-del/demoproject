@@ -55,6 +55,12 @@
         if (elements.stepVideo) elements.stepVideo.style.display = 'none';
         if (elements.stepAudio) elements.stepAudio.style.display = 'none';
         if (elements.stepResults) elements.stepResults.style.display = 'none';
+
+        // Clear YouTube player iframe to stop video playback
+        if (elements.youtubePlayer) {
+            elements.youtubePlayer.innerHTML = '';
+        }
+
         // Stop any playing audio
         if (elements.audio) {
             elements.audio.pause();

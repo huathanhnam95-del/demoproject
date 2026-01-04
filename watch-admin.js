@@ -1031,41 +1031,45 @@
             const workbook = XLSX.read(arrayBuffer, { type: 'array' });
             const sheetName = workbook.SheetNames[0];
             const sheet = workbook.Sheets[sheetName];
-            const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+            const data = XLSX.utils.sheet_to_json(sheet); // Use header row like Watch console
 
             const db = firebase.firestore();
             const batch = db.batch();
             let syncCount = 0;
 
-            // Parse entries: Column A = ID, Column C = Transcript, Column F = Video URL
-            for (let i = 1; i < data.length; i++) {
-                const row = data[i];
-                if (!row[0]) continue; // Skip rows without ID
+            console.log('[Admin] Syncing Take Notes entries from Excel with headers:', Object.keys(data[0] || {}));
 
-                const entryId = String(row[0]).trim();
-                const transcript = row[2] ? String(row[2]).trim() : '';
-                const videoUrl = row[5] ? String(row[5]).trim() : '';
+            for (const row of data) {
+                // Use ID column from Excel
+                const entryId = row['ID'];
+                if (!entryId) continue;
 
-                // Debug logging for first few entries
-                if (i <= 3) {
-                    console.log(`[Admin] Entry ${entryId}: videoUrl = "${videoUrl}" (from column F)`);
+                const idStr = String(entryId).trim();
+                const entryRef = db.collection('takeNotesEntries').doc(idStr);
+
+                // Map columns: Transcript, Youtube URL
+                const transcript = row['Transcript'] ? String(row['Transcript']).trim() : '';
+                const videoUrl = row['Youtube URL'] ? String(row['Youtube URL']).trim() : (row['Video URL'] || ''); // Fallback just in case
+
+                // Debug specific entry 4
+                if (idStr === '4') {
+                    console.log(`[Admin] Entry 4 from Excel - URL: "${videoUrl}", Raw: "${row['Youtube URL']}"`);
                 }
 
-                const entryRef = db.collection('takeNotesEntries').doc(entryId);
-
-                // Use set without merge to ensure videoUrl is always updated
                 batch.set(entryRef, {
-                    id: entryId,
+                    id: idStr,
                     transcript: transcript,
                     videoUrl: videoUrl,
                     updatedAt: new Date(),
                     syncedFromExcel: true
-                });
+                }, { merge: true }); // Using merge: true to match Watch console pattern
 
                 syncCount++;
             }
 
             await batch.commit();
+
+            // Log success with headers info for debugging
             console.log(`[Admin] Synced ${syncCount} Take Notes entries to Firestore`);
 
             // Reload entries from Firestore

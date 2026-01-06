@@ -4,6 +4,7 @@
   let speakDatabase = [];
   let currentTypeQuestionId = 1;
   let currentSpeakQuestionId = 1;
+  let extendedQuestionLoaded = false; // Flag to lazy-load extended question only when Fill tab is clicked
 
   // Progress cache: stores progress status for all questions per mode
   // Structure: { mode: { questionId: { perfectCount, tier, lastCompletedAt } } }
@@ -1753,6 +1754,13 @@
   // Tab switching
   tabType.addEventListener("click", async () => {
     document.getElementById('page-layout-wrapper')?.classList.remove('watch-active');
+    // Hide Watch mode question panel
+    const watchQuestionPanel = document.getElementById('watch-question-panel');
+    if (watchQuestionPanel) watchQuestionPanel.style.display = 'none';
+    // Pause Watch mode video and sync state for proper rewind detection later
+    if (window.WatchMode && typeof window.WatchMode.pauseAndResetForTabSwitch === 'function') {
+      window.WatchMode.pauseAndResetForTabSwitch();
+    }
     tabType.classList.add("active");
     tabSpeak.classList.remove("active");
     tabExtended.classList.remove("active");
@@ -1809,6 +1817,13 @@
 
   tabSpeak.addEventListener("click", async () => {
     document.getElementById('page-layout-wrapper')?.classList.remove('watch-active');
+    // Hide Watch mode question panel
+    const watchQuestionPanel = document.getElementById('watch-question-panel');
+    if (watchQuestionPanel) watchQuestionPanel.style.display = 'none';
+    // Pause Watch mode video and sync state for proper rewind detection later
+    if (window.WatchMode && typeof window.WatchMode.pauseAndResetForTabSwitch === 'function') {
+      window.WatchMode.pauseAndResetForTabSwitch();
+    }
     tabSpeak.classList.add("active");
     tabType.classList.remove("active");
     tabExtended.classList.remove("active");
@@ -1850,6 +1865,13 @@
 
   tabExtended.addEventListener("click", () => {
     document.getElementById('page-layout-wrapper')?.classList.remove('watch-active');
+    // Hide Watch mode question panel
+    const watchQuestionPanel = document.getElementById('watch-question-panel');
+    if (watchQuestionPanel) watchQuestionPanel.style.display = 'none';
+    // Pause Watch mode video and sync state for proper rewind detection later
+    if (window.WatchMode && typeof window.WatchMode.pauseAndResetForTabSwitch === 'function') {
+      window.WatchMode.pauseAndResetForTabSwitch();
+    }
     tabExtended.classList.add("active");
     tabType.classList.remove("active");
     tabSpeak.classList.remove("active");
@@ -1890,6 +1912,12 @@
     if (breakdownRecognition) {
       breakdownRecognition.stop();
       breakdownRecognition = null;
+    }
+
+    // Lazy-load extended question only on first tab click
+    if (!extendedQuestionLoaded && extendedDatabase.length > 0) {
+      extendedQuestionLoaded = true;
+      loadExtendedQuestion(currentExtendedQuestionId || 1);
     }
   });
 
@@ -1949,6 +1977,13 @@
   if (tabNotes) {
     tabNotes.addEventListener("click", () => {
       document.getElementById('page-layout-wrapper')?.classList.remove('watch-active');
+      // Hide Watch mode question panel
+      const watchQuestionPanel = document.getElementById('watch-question-panel');
+      if (watchQuestionPanel) watchQuestionPanel.style.display = 'none';
+      // Pause Watch mode video and sync state for proper rewind detection later
+      if (window.WatchMode && typeof window.WatchMode.pauseAndResetForTabSwitch === 'function') {
+        window.WatchMode.pauseAndResetForTabSwitch();
+      }
       tabNotes.classList.add("active");
       tabType.classList.remove("active");
       tabSpeak.classList.remove("active");
@@ -4997,10 +5032,8 @@
       currentTypeQuestionId = 1;
       await loadQuestion("type", 1);
     }
-    if (extendedDatabase.length > 0) {
-      currentExtendedQuestionId = 1;
-      loadExtendedQuestion(1);
-    }
+    // Extended mode: Don't load on init - will be lazy-loaded when Fill tab is clicked
+    // This prevents the countdown timer from starting immediately on page load
 
     // Update progress bar for initial question
     const typeProgress = progressCache.type?.[1] || { perfectCount: 0, tier: 'none' };

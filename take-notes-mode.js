@@ -298,9 +298,11 @@
     function updateQuestionSelector() {
         if (!elements.questionSelect) return;
 
-        elements.questionSelect.innerHTML = filteredEntries.map((entry, index) =>
-            `<option value="${index}">${entry.id}</option>`
-        ).join('');
+        elements.questionSelect.innerHTML = filteredEntries.map((entry, index) => {
+            const hasVideo = entry.videoUrl && entry.videoUrl.trim().length > 0;
+            const label = hasVideo ? `${entry.id} - Video available` : entry.id;
+            return `<option value="${index}">${label}</option>`;
+        }).join('');
 
         if (elements.totalQuestions) {
             elements.totalQuestions.textContent = filteredEntries.length;

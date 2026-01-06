@@ -23,6 +23,7 @@ const WatchMode = (function () {
     let player = null;
     let videoDuration = 0;
     let lastCheckedTime = 0;
+    let skipFirstTimeUpdate = false; // Skip first time update after video switch to prevent immediate triggers
     let questionTimestamps = [];
     let isInitialized = false;
 
@@ -268,6 +269,19 @@ const WatchMode = (function () {
             return;
         }
 
+        // Reset question state BEFORE loading new video
+        currentQuestion = null;
+        questionQueue = [];
+        triggeredThisSession.clear();
+        lastCheckedTime = 0;
+        videoDuration = 0;
+        skipFirstTimeUpdate = true; // Skip first time update to prevent immediate question triggers
+
+        // Hide question panel from any previous video
+        if (elements.questionOverlay) {
+            elements.questionOverlay.style.display = 'none';
+        }
+
         // Update UI
         elements.currentTitle.textContent = currentVideo.title;
         elements.currentDescription.textContent = currentVideo.description;
@@ -284,13 +298,14 @@ const WatchMode = (function () {
         await loadQuestions(videoId);
 
         // Initialize YouTube player
-        initializePlayer(currentVideo.url);
+        await initializePlayer(currentVideo.url);
 
-        // Load user progress
+        // Load user progress (this may seek to saved position)
         await loadUserProgress(videoId);
 
-        // Reset state
-        lastCheckedTime = 0;
+        // Reset lastCheckedTime AFTER loading progress to prevent immediate triggers
+        lastCheckedTime = player ? player.getCurrentTime() : 0;
+
         updateScoreDisplay();
     }
 
@@ -357,6 +372,15 @@ const WatchMode = (function () {
 
         // Update time display
         elements.timeDisplay.textContent = `${formatTime(currentTime)} / ${formatTime(videoDuration)}`;
+
+        // Skip the first time update after video switch to sync lastCheckedTime
+        // This prevents questions from immediately triggering due to race conditions
+        if (skipFirstTimeUpdate) {
+            skipFirstTimeUpdate = false;
+            lastCheckedTime = currentTime;
+            console.log('[WatchMode] First time update, synced lastCheckedTime to:', currentTime);
+            return;
+        }
 
         // Check for question triggers
         checkQuestionTriggers(currentTime);
@@ -677,6 +701,26 @@ const WatchMode = (function () {
     }
 
     /**
+     * Pause video and reset state for tab switching
+     * Called when user switches away from Watch tab to prevent
+     * time update issues when they return and rewind
+     */
+    function pauseAndResetForTabSwitch() {
+        if (!player) return;
+
+        // Pause the video
+        player.pause();
+
+        // Sync lastCheckedTime to current position to ensure proper rewind detection later
+        const currentTime = player.getCurrentTime();
+        if (typeof currentTime === 'number' && !isNaN(currentTime)) {
+            lastCheckedTime = currentTime;
+        }
+
+        console.log('[WatchMode] Paused for tab switch, lastCheckedTime:', lastCheckedTime);
+    }
+
+    /**
      * Handle progress bar click to seek
      */
     function handleProgressBarClick(event) {
@@ -708,9 +752,13 @@ const WatchMode = (function () {
      * Show video list
      */
     function showVideoList() {
-        // Cleanup player
+        // Cleanup player - destroy it to prevent conflicts when switching videos
         if (player) {
             player.pause();
+            if (typeof player.destroy === 'function') {
+                player.destroy();
+            }
+            player = null;
         }
 
         // Reset state
@@ -821,12 +869,9 @@ const WatchMode = (function () {
                     answeredQuestions = new Set(data.answeredQuestions || []);
                     watchPoints = data.pointsEarned || 0;
 
-                    // Resume from last position
-                    if (data.currentTime && player) {
-                        setTimeout(() => {
-                            player.seekTo(data.currentTime);
-                        }, 1000);
-                    }
+                    // NOTE: Auto-resume disabled to prevent question auto-triggering
+                    // Videos now always start from the beginning
+                    // User can see their progress via question markers
 
                     updateScoreDisplay();
                     updateQuestionMarkers();
@@ -956,7 +1001,8 @@ const WatchMode = (function () {
         selectVideo,
         selectMCOption,
         seekToQuestion,
-        showVideoList
+        showVideoList,
+        pauseAndResetForTabSwitch
     };
 })();
 

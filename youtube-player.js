@@ -78,6 +78,18 @@ const YouTubePlayer = (function () {
      * @param {Object} options - Configuration options
      */
     async function init(container, options = {}) {
+        // Destroy existing player if any to prevent conflicts
+        if (player) {
+            stopTimeUpdates();
+            try {
+                player.destroy();
+            } catch (e) {
+                console.warn('[YouTubePlayer] Error destroying previous player:', e);
+            }
+            player = null;
+            isReady = false;
+        }
+
         containerElement = typeof container === 'string'
             ? document.getElementById(container)
             : container;

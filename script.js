@@ -4586,8 +4586,8 @@
         const missedWords = getMissedWords(diff);
         const matchedWords = diff.filter(p => p.type === 'match').map(p => p.text);
 
-        // Track missed words immediately when Check is pressed
-        missedWords.forEach(word => window.VocabularyBook.trackMissedWord(word, 'type', currentTypeQuestionId));
+        // Track missed words immediately when Check is pressed (pass sentence context)
+        missedWords.forEach(word => window.VocabularyBook.trackMissedWord(word, 'type', currentTypeQuestionId, correctSentenceType));
 
         // Track correct words (for mastery tracking)
         matchedWords.forEach(word => window.VocabularyBook.trackCorrectWord(word));
@@ -4596,7 +4596,7 @@
         if (missedWords.length > 0) {
           const contentWords = filterContentWords(missedWords);
           if (contentWords.length > 0) {
-            window.VocabularyBook.showAddModal(contentWords, currentTypeQuestionId, 'type');
+            window.VocabularyBook.showAddModal(contentWords, currentTypeQuestionId, 'type', correctSentenceType);
           }
         }
       }
@@ -4667,8 +4667,8 @@
       if (window.VocabularyBook) {
         const matchedWords = diff.filter(p => p.type === 'match').map(p => p.text);
 
-        // Track missed words immediately when Check is pressed
-        missedWords.forEach(word => window.VocabularyBook.trackMissedWord(word, 'speak', currentSpeakQuestionId));
+        // Track missed words immediately when Check is pressed (pass sentence context)
+        missedWords.forEach(word => window.VocabularyBook.trackMissedWord(word, 'speak', currentSpeakQuestionId, correctSentenceSpeak));
 
         // Track correct words (for mastery tracking)
         matchedWords.forEach(word => window.VocabularyBook.trackCorrectWord(word));
@@ -4677,7 +4677,7 @@
         if (missedWords.length > 0) {
           const contentWords = filterContentWords(missedWords);
           if (contentWords.length > 0) {
-            window.VocabularyBook.showAddModal(contentWords, currentSpeakQuestionId, 'speak');
+            window.VocabularyBook.showAddModal(contentWords, currentSpeakQuestionId, 'speak', correctSentenceSpeak);
           }
         }
       }

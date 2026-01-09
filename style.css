@@ -3965,6 +3965,86 @@ textarea:focus {
 
 .history-empty {
   text-align: center;
+  color: #9ca3af;
+  padding: 12px;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+#hint-starter .hint-value {
+  font-style: italic;
+  font-weight: 500;
+  color: #2563EB;
+}
+
+.srs-writing-instruction {
+  font-size: 0.95rem;
+  color: #6B7280;
+  margin-bottom: 8px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Gamification Styles */
+.srs-level-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.level-badge {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 4px 10px;
+  border-radius: 12px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.xp-progress-container {
+  width: 120px;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.xp-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  border-radius: 4px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Confetti / Reward Animations */
+@keyframes pop-scale {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.2);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.level-up-anim {
+  animation: pop-scale 0.4s ease-in-out;
+}
+
+.history-empty {
+  text-align: center;
   font-size: 0.8rem;
   color: #9ca3af;
   padding: 10px;
@@ -5442,7 +5522,12 @@ textarea:focus {
   background: white;
   width: 700px;
   max-width: 95%;
-  height: 80vh;
+  height: 650px;
+  /* Fixed height to prevent shrinking */
+  min-height: 650px;
+  /* Enforce minimum height */
+  max-height: 90vh;
+  /* Safety cap for small screens */
   border-radius: 12px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
   display: flex;
@@ -6539,4 +6624,396 @@ textarea:focus {
   .guest-toast {
     bottom: 80px !important;
   }
+}
+
+/* ============================================
+   Vocabulary List Modal Fixes & SRS
+   ============================================ */
+
+.vocab-list-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  display: none;
+  /* hidden by default */
+  align-items: center;
+  justify-content: center;
+}
+
+.vocab-list-modal.active {
+  display: flex !important;
+}
+
+.vocab-list-content-modal {
+  background: #ffffff;
+  width: 90%;
+  max-width: 900px;
+  height: auto;
+  max-height: 85vh;
+  border-radius: 16px;
+  padding: 0;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin: 0;
+}
+
+/* SRS Badge Styles */
+.vocab-badge-srs {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.vocab-badge-srs.due {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fca5a5;
+}
+
+.vocab-badge-srs.mastered {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  color: #166534;
+  border-color: #86efac;
+}
+
+.vocab-badge-srs.learning {
+  background: #eff6ff;
+  color: #1e40af;
+  border-color: #bfdbfe;
+}
+
+/* Part of Speech (Form) Badge Styles */
+.vocab-badge-pos {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+.vocab-badge-pos-noun {
+  background: #dbeafe;
+  color: #1e40af;
+  border-color: #93c5fd;
+}
+
+.vocab-badge-pos-verb {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #86efac;
+}
+
+.vocab-badge-pos-adjective {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+
+.vocab-badge-pos-adverb {
+  background: #ede9fe;
+  color: #5b21b6;
+  border-color: #c4b5fd;
+}
+
+.vocab-badge-pos-preposition {
+  background: #fce7f3;
+  color: #9d174d;
+  border-color: #f9a8d4;
+}
+
+.vocab-badge-pos-conjunction {
+  background: #ccfbf1;
+  color: #115e59;
+  border-color: #5eead4;
+}
+
+
+/* Custom Alert Modal */
+.vocab-alert-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 3000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.vocab-alert-content {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.vocab-alert-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+/* ============================================
+   Writing Challenge Styles
+   ============================================ */
+
+.srs-writing-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 11000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.srs-writing-modal.visible {
+  display: flex;
+  opacity: 1;
+}
+
+.srs-writing-content {
+  background: white;
+  width: 600px;
+  max-width: 90%;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  transform: translateY(20px);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.srs-writing-modal.visible .srs-writing-content {
+  transform: translateY(0);
+}
+
+.srs-writing-header {
+  margin-bottom: 24px;
+}
+
+.srs-writing-header h3 {
+  margin: 0 0 12px 0;
+  font-size: 1.5rem;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.srs-writing-prompt {
+  font-size: 1.15rem;
+  color: #4b5563;
+  line-height: 1.6;
+  margin: 0;
+  padding: 20px;
+  background: #f0fdf4;
+  border-radius: 12px;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  font-weight: 500;
+}
+
+/* Hints Box Styles */
+.srs-writing-hints {
+  background: #F3F4F6;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 16px 0;
+  text-align: left;
+  border: 1px solid #E5E7EB;
+}
+
+.hint-item {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 1rem;
+  line-height: 1.6;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.hint-item:last-child {
+  margin-bottom: 0;
+}
+
+.hint-label {
+  font-weight: 600;
+  color: #374151;
+  white-space: nowrap;
+  min-width: 140px;
+}
+
+.hint-value {
+  color: #4B5563;
+  flex: 1;
+}
+
+.hint-value em {
+  font-style: italic;
+  color: #374151;
+  background: #FEF3C7;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Collocation pills */
+#hint-collocations .hint-value {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.collocation-pill {
+  background: linear-gradient(135deg, #EDE9FE, #DDD6FE);
+  color: #5B21B6;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  white-space: nowrap;
+  border: 1px solid #C4B5FD;
+}
+
+#hint-starter .hint-value {
+  color: #0891B2;
+  font-style: italic;
+  background: #ECFEFF;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #A5F3FC;
+}
+
+/* Instruction text above input */
+.srs-writing-instruction {
+  font-size: 0.95rem;
+  color: #6B7280;
+  margin-bottom: 12px;
+  text-align: center;
+  font-style: italic;
+}
+
+.srs-writing-input-container {
+  margin-bottom: 24px;
+}
+
+.srs-writing-input {
+  width: 100%;
+  height: 120px;
+  padding: 16px;
+  font-size: 1.1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  resize: none;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background: #f9fafb;
+}
+
+.srs-writing-input:focus {
+  outline: none;
+  border-color: #8b5cf6;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+}
+
+.srs-writing-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.srs-writing-btn-submit {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: white;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.2s;
+  box-shadow: 0 4px 6px rgba(124, 58, 237, 0.2);
+}
+
+.srs-writing-btn-submit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(124, 58, 237, 0.3);
+}
+
+.srs-writing-btn-submit:active {
+  transform: translateY(0);
+}
+
+.srs-writing-btn-skip {
+  background: transparent;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.srs-writing-btn-skip:hover {
+  background: #f9fafb;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.srs-writing-feedback {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  display: none;
+  text-align: left;
+  white-space: pre-wrap;
+  animation: fadeIn 0.3s ease;
+}
+
+.srs-writing-feedback.success {
+  display: block;
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.srs-writing-feedback.error {
+  display: block;
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
 }

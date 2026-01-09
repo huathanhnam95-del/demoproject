@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dictation Practice</title>
   <link rel="stylesheet" href="style.css?v=20251230d">
+  <link rel="stylesheet" href="srs-review.css?v=20260106">
   <!-- XLSX Library -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 </head>
@@ -310,6 +311,8 @@
           <div class="vocab-empty">No frequently missed words</div>
         </div>
       </div>
+
+      <!-- SRS Section Removed -->
     </div>
   </div>
 
@@ -340,6 +343,7 @@
       <div class="vocab-tabs">
         <button class="vocab-tab-btn active" data-tab="bookmarks">Bookmarked Words</button>
         <button class="vocab-tab-btn" data-tab="missed">Frequently Missed</button>
+        <button class="vocab-tab-btn" data-tab="practice">Vocabulary Practice</button>
       </div>
 
       <div class="vocab-tab-content active" id="tab-content-bookmarks">
@@ -348,7 +352,9 @@
             <tr>
               <th>Word</th>
               <th>Pronunciation</th>
+              <th>Vietnamese</th>
               <th>Source</th>
+              <th>Form</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -364,8 +370,10 @@
             <tr>
               <th>Word</th>
               <th>Pronunciation</th>
+              <th>Vietnamese</th>
               <th>Source</th>
-              <th>Stats</th>
+              <th>Form</th>
+              <th>Times Missed</th>
             </tr>
           </thead>
           <tbody id="vocab-table-body-missed">
@@ -373,10 +381,154 @@
           </tbody>
         </table>
       </div>
+      <div class="vocab-tab-content" id="tab-content-practice">
+        <div class="vocab-practice-container" style="padding: 24px; text-align: center;">
+          <div class="practice-card"
+            style="background: #f8fafc; padding: 24px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #e2e8f0;">
+            <div style="font-size: 48px; margin-bottom: 16px;">🔄</div>
+            <h3>Spaced Repetition Review</h3>
+            <p style="color: #64748b; margin-bottom: 24px;">Review your vocabulary at optimal intervals to maximize
+              retention.</p>
+
+            <button id="srs-start-review-btn" class="btn-primary"
+              style="padding: 12px 32px; font-size: 1.1rem; width: 100%; max-width: 300px;"
+              onclick="if(window.SRSReview) window.SRSReview.startReviewSession()">
+              Start Review Session <span id="srs-due-badge" class="badge-count"
+                style="display:none; background: #ef4444; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; margin-left: 8px;">0</span>
+            </button>
+
+            <div id="srs-next-review-info" class="srs-next-review"
+              style="margin-top: 16px; color: #64748b; font-size: 0.9rem; display: none;">
+              Next review: <span id="srs-next-date">-</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
+  <!-- Component Alerts (Custom Modal) -->
+  <div id="vocab-alert-modal" class="vocab-alert-modal" style="display: none;">
+    <div class="vocab-alert-content">
+      <h3 id="vocab-alert-title">Notice</h3>
+      <p id="vocab-alert-message"></p>
+      <div class="vocab-alert-actions">
+        <button id="vocab-alert-ok" class="btn-primary">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SRS Review Panel (Spaced Repetition Flashcards) -->
+  <div id="srs-overlay" class="srs-overlay"></div>
+  <div id="srs-review-panel" class="srs-panel" style="display: none;">
+    <div class="srs-header">
+      <h2>📚 Vocabulary Review</h2>
+      <button id="srs-close-btn" class="srs-close-btn" title="Close">×</button>
+    </div>
+
+    <div class="srs-stats">
+      <div class="srs-level-info">
+        <div class="level-badge" id="srs-level-badge">Lvl 1</div>
+        <div class="xp-progress-container">
+          <div class="xp-progress-bar" id="srs-xp-bar" style="width: 0%"></div>
+        </div>
+      </div>
+      <span id="srs-due-count">0 words due</span>
+      <span id="srs-streak" style="display: none;">🔥 0 day streak</span>
+    </div>
+
+    <div class="srs-flashcard-container">
+      <div class="srs-flashcard" id="srs-flashcard">
+        <div class="srs-flashcard-inner">
+          <div class="srs-flashcard-front" id="srs-flashcard-front">
+            <!-- Front Content: Definition + Word displayed -->
+            <span class="srs-definition-prompt" id="srs-definition-prompt">Definition here</span>
+
+            <!-- Word Display on Front Face -->
+            <span class="srs-word-front" id="srs-word-front">word</span>
+
+            <!-- Controls (Audio/Record) -->
+            <div class="srs-front-controls">
+              <button class="srs-audio-btn" id="srs-audio-btn">🔊 Listen</button>
+              <button class="srs-record-btn" id="srs-record-btn" style="display: none;">Start Recording</button>
+            </div>
+
+            <!-- Input (Typing Mode) -->
+            <div class="srs-input-container" id="srs-input-container">
+              <input type="text" id="srs-input" class="srs-input" placeholder="Type the word..." autocomplete="off">
+            </div>
+          </div>
+          <div class="srs-flashcard-back" id="srs-flashcard-back">
+            <!-- Back Face Layout: Phonetic -> Listen -> Word -> Def -> Example -> Result -->
+            <!-- Back Face Layout: Word -> Phonetic+Audio -> Def -> Example -> Result -->
+            <span class="srs-word" id="srs-word">vocabulary</span>
+
+            <div class="srs-pronunciation-row">
+              <span class="srs-phonetic" id="srs-phonetic-back">...</span>
+              <button class="srs-audio-btn-small" id="srs-audio-btn-back" title="Listen">🔊</button>
+            </div>
+
+            <!-- Vietnamese Translation -->
+            <span class="srs-vietnamese" id="srs-vietnamese"></span>
+
+            <span class="srs-definition" id="srs-definition">Definition here</span>
+            <span class="srs-example" id="srs-example"></span>
+
+            <!-- Result Display -->
+            <div class="srs-result-container" id="srs-result-container" style="display: none;">
+              <div id="srs-result-message" class="srs-result-message"></div>
+              <div id="srs-user-input-display" class="srs-user-input-display"></div>
+            </div>
+
+            <!-- Pronunciation Practice Button -->
+            <button class="srs-practice-pronunciation-btn" id="srs-practice-pronunciation-btn" style="display: none;">
+              🎙️ Practice Saying It
+            </button>
+            <div class="srs-pronunciation-result" id="srs-pronunciation-result" style="display: none;">
+              <span id="srs-pronunciation-feedback"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="srs-controls">
+      <div class="srs-quality-btns" id="srs-quality-btns">
+        <p class="srs-quality-prompt">Practice this word again in:</p>
+        <div class="srs-quality-options">
+          <button data-quality="1" class="quality-option quality-1day">
+            <span class="quality-days">1 day</span>
+            <span class="quality-desc">This word is hard</span>
+          </button>
+          <button data-quality="3" class="quality-option quality-3days">
+            <span class="quality-days">3 days</span>
+            <span class="quality-desc">This is not so hard</span>
+          </button>
+          <button data-quality="4" class="quality-option quality-6days">
+            <span class="quality-days">6 days</span>
+            <span class="quality-desc">This is fairly easy</span>
+          </button>
+          <button data-quality="5" class="quality-option quality-14days">
+            <span class="quality-days">14 days</span>
+            <span class="quality-desc">This is very easy</span>
+          </button>
+        </div>
+        <button id="srs-skip-btn" class="srs-skip-btn">Skip this word →</button>
+      </div>
+    </div>
+
+    <div class="srs-progress">
+      <span class="srs-progress-text" id="srs-progress-text">1 of 10</span>
+      <div class="srs-progress-bar">
+        <div class="srs-progress-fill" id="srs-progress-fill"></div>
+      </div>
+    </div>
+
+    <div class="srs-summary" id="srs-summary" style="display: none;"></div>
+  </div>
+
   <!-- Right-Side Collapsible Account Panel -->
+
   <div id="account-panel-side" class="account-panel-side">
     <!-- Collapsed State: Toggle Button -->
     <button id="account-panel-toggle" class="account-panel-toggle" title="Account">
@@ -1061,7 +1213,8 @@
           <span>Breakdown Mode</span>
         </div>
         <div class="breakdown-options">
-          <button id="breakdown-beginning" class="breakdown-option-btn active" type="button">From The Beginning</button>
+          <button id="breakdown-beginning" class="breakdown-option-btn active" type="button">From The
+            Beginning</button>
           <button id="breakdown-end" class="breakdown-option-btn" type="button">From The End</button>
         </div>
         <div id="breakdown-lines" class="breakdown-lines"></div>
@@ -1357,8 +1510,55 @@
   <script src="watch-mode.js"></script>
   <script src="take-notes-mode.js"></script>
 
+  <!-- Dictionary Service (Definitions & Translations) -->
+  <script src="dictionary-service.js"></script>
+
   <!-- Vocabulary Book Script -->
   <script type="module" src="vocab-book.js"></script>
+
+  <!-- SRS Writing Challenge Modal -->
+  <div id="srs-writing-modal" class="srs-writing-modal">
+    <div class="srs-writing-content">
+      <div class="srs-writing-header">
+        <button id="srs-writing-close-btn" class="vocab-add-close"
+          style="position: absolute; right: 20px; top: 20px;">×</button>
+        <h3>✍️ Writing Challenge</h3>
+        <p id="srs-writing-prompt" class="srs-writing-prompt">Loading prompt...</p>
+      </div>
+
+      <!-- Hints Box -->
+      <div id="srs-writing-hints" class="srs-writing-hints">
+        <div class="hint-item" id="hint-definition">
+          <span class="hint-label">📖 Definition:</span>
+          <span class="hint-value" id="hint-def-value">-</span>
+        </div>
+        <div class="hint-item" id="hint-example">
+          <span class="hint-label">💡 Example:</span>
+          <span class="hint-value" id="hint-example-value">-</span>
+        </div>
+        <div class="hint-item" id="hint-collocations">
+          <span class="hint-label">🔗 Common phrases:</span>
+          <span class="hint-value" id="hint-collocations-value">-</span>
+        </div>
+        <div class="hint-item" id="hint-starter">
+          <span class="hint-label">✏️ Sentence starter:</span>
+          <span class="hint-value" id="hint-starter-value">-</span>
+        </div>
+      </div>
+
+      <div class="srs-writing-input-container">
+        <p class="srs-writing-instruction">💡 Practice using this word in your own sentence!</p>
+        <textarea id="srs-writing-input" class="srs-writing-input"
+          placeholder="Write your sentence here... (Must include the word)"></textarea>
+        <div id="srs-writing-feedback" class="srs-writing-feedback"></div>
+      </div>
+
+      <div class="srs-writing-actions">
+        <button id="srs-writing-skip" class="srs-writing-btn-skip">Skip</button>
+        <button id="srs-writing-submit" class="srs-writing-btn-submit">Check Sentence</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Mobile Bottom Toolbar (visible only on mobile) -->
   <div id="mobile-toolbar" class="mobile-toolbar">
@@ -1383,6 +1583,12 @@
       if (notesInfoBox) notesInfoBox.style.display = 'none';
     }
   </script>
+
+  <!-- Confetti Library -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <!-- SRS Review Module -->
+  <script type="module" src="srs-review.js?v=20260106"></script>
 
 </body>
 

@@ -775,6 +775,17 @@ function setupAuthStateListener() {
             console.log('VocabularyBook unlock status:', unlocked);
             if (unlocked) {
               window.VocabularyBook.showToggle();
+
+              // Initialize SRS Review module with user (part of Vocabulary Book)
+              if (window.SRSReview) {
+                window.SRSReview.setUser(user.uid, window.firebaseDb);
+                // Update due badge after data loads
+                setTimeout(() => {
+                  if (window.VocabularyBook.updateSRSDueBadge) {
+                    window.VocabularyBook.updateSRSDueBadge();
+                  }
+                }, 1000);
+              }
             }
           } catch (vocabError) {
             console.warn('Error checking vocab unlock:', vocabError);
@@ -1385,11 +1396,11 @@ function showShoppingModal() {
     modal.style.display = 'none';
   };
   if (closeBtn) closeBtn.onclick = closeModal;
-  
+
   // Bottom close button
   const closeBottomBtn = document.getElementById('shopping-close-bottom-btn');
   if (closeBottomBtn) closeBottomBtn.onclick = closeModal;
-  
+
   modal.onclick = (e) => {
     if (e.target === modal) closeModal();
   };

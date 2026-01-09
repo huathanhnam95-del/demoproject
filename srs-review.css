@@ -1,0 +1,955 @@
+/**
+ * SRS Review Styles
+ * Flashcard-based vocabulary review UI
+ */
+
+/* Overlay (Strict Mode) */
+.srs-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    /* Darker, solid backdrop */
+    backdrop-filter: blur(4px);
+    z-index: 10000;
+    /* High Z-Index */
+    pointer-events: auto;
+    /* Block interactions */
+}
+
+/* Main Panel */
+.srs-panel {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 92%;
+    max-width: 560px;
+    /* Enlarged from 448px */
+    max-height: 95vh;
+    /* Use more screen */
+    background: #FAFAFA;
+    border-radius: 24px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    z-index: 10001;
+    display: flex;
+    flex-direction: column;
+    flex-direction: column;
+    /* overflow: hidden;  <-- REMOVED to allow sidecar */
+    padding: 24px 28px;
+    /* Slightly more padding */
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+/* Desktop Sidecar Layout */
+@media (min-width: 1000px) {
+    .srs-panel {
+        overflow: visible;
+    }
+
+    .srs-controls {
+        position: absolute;
+        left: 100%;
+        top: 0;
+        margin-left: 16px;
+        /* Closer */
+        width: 260px;
+        /* Much more compact (was 340px) */
+        background: white;
+        padding: 16px;
+        /* Tighter padding */
+        border-radius: 16px;
+        /* Match scale */
+        box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.2);
+
+        /* Animation Base State */
+        opacity: 0;
+        transform: translateX(-15px) scale(0.98);
+        pointer-events: none;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+        height: auto;
+        align-items: stretch;
+    }
+
+    .srs-controls.visible {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+        pointer-events: auto;
+    }
+
+    .srs-quality-btns {
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: none !important;
+        max-height: none !important;
+        padding-top: 8px;
+        /* Reduced spacing */
+        gap: 6px;
+    }
+
+    /* Overrides for Compactness */
+    .srs-quality-options {
+        gap: 6px;
+    }
+
+    .quality-option {
+        padding: 8px 10px;
+        border-radius: 8px;
+    }
+
+    .quality-days {
+        font-size: 13px;
+    }
+
+    .quality-desc {
+        font-size: 10px;
+        line-height: 1.2;
+    }
+
+    .srs-quality-prompt {
+        font-size: 13px;
+        margin-bottom: 4px;
+    }
+}
+
+.srs-panel.active {
+    display: flex;
+    /* Ensure flex when active */
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+}
+
+/* Header */
+/* Header */
+.srs-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+    background: transparent;
+    padding: 0;
+    border: none;
+}
+
+.srs-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.srs-close-btn {
+    background: transparent;
+    border: none;
+    color: #9CA3AF;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 4px;
+    transition: color 0.2s;
+}
+
+.srs-close-btn:hover {
+    color: #111827;
+    background: transparent;
+}
+
+/* Stats Row */
+.srs-stats {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 0;
+    background: transparent;
+    border: none;
+}
+
+.srs-stats span {
+    font-size: 0.875rem;
+    color: #9CA3AF;
+    font-weight: 500;
+}
+
+#srs-streak {
+    color: #F59E0B;
+}
+
+/* Flashcard Container - NO SCROLL NEEDED */
+.srs-flashcard-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 16px;
+    margin-bottom: 32px;
+    /* Increased margin to prevent overlap */
+    flex-shrink: 0;
+    /* Prevent shrinking */
+    width: 100%;
+}
+
+/* SRS Element Box Sizing */
+.srs-panel,
+.srs-panel *,
+.srs-overlay {
+    box-sizing: border-box;
+}
+
+/* Flashcard */
+.srs-flashcard {
+    width: 100%;
+    max-width: 420px;
+    /* Consistently narrower */
+    height: 320px;
+    perspective: 1000px;
+    position: relative;
+    z-index: 10;
+}
+
+.srs-flashcard-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+}
+
+.srs-flashcard.flipped .srs-flashcard-inner {
+    transform: rotateY(180deg);
+}
+
+.srs-flashcard-front,
+.srs-flashcard-back {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 16px;
+    /* Reduced padding */
+    border-radius: 24px;
+    background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    height: 100%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    color: #1e293b;
+    overflow-y: hidden;
+    /* Prevent scroll, prioritize fitting */
+}
+
+.srs-flashcard-back {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform: rotateY(180deg);
+}
+
+/* Word Display */
+.srs-word,
+.srs-word-front {
+    font-size: 26px;
+    /* Slightly smaller */
+    font-weight: 800;
+    color: #111827 !important;
+    margin-bottom: 4px;
+    text-align: center;
+    letter-spacing: -0.5px;
+}
+
+/* Pronunciation Row */
+.srs-pronunciation-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.srs-phonetic,
+.srs-phonetic-back {
+    font-size: 15px;
+    color: #6B7280 !important;
+    font-family: 'Times New Roman', serif;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+}
+
+/* Small Audio Button */
+.srs-audio-btn-small {
+    background: #3b82f6;
+    border: none;
+    color: white;
+    width: 40px;
+    /* Increased from 28px */
+    height: 40px;
+    /* Increased from 28px */
+    border-radius: 50%;
+    font-size: 18px;
+    /* Increased icon size */
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    flex-shrink: 0;
+    /* Don't squash */
+}
+
+.srs-audio-btn-small:hover {
+    transform: scale(1.1);
+    background: #2563eb;
+}
+
+.srs-audio-btn {
+    background: linear-gradient(145deg, #3b82f6, #2563eb);
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.srs-audio-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+}
+
+.srs-audio-btn:active {
+    transform: scale(0.98);
+}
+
+/* Back of Card */
+/* Vietnamese Translation */
+.srs-vietnamese {
+    font-size: 16px;
+    font-weight: 600;
+    color: #3B82F6;
+    /* Blue accent */
+    text-align: center;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.srs-vietnamese:empty {
+    display: none;
+}
+
+/* Definition */
+.srs-definition {
+    font-size: 15px;
+    /* Slightly smaller */
+    color: #374151 !important;
+    text-align: center;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    font-weight: 400;
+
+    /* Clamp text to avoid overflow */
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+#srs-example {
+    font-size: 13px;
+    color: #6B7280 !important;
+    font-style: italic;
+    opacity: 1 !important;
+    text-align: center;
+    margin-bottom: 8px;
+
+    /* Clamp text */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.srs-example::before {
+    content: '"';
+}
+
+.srs-example::after {
+    content: '"';
+}
+
+.srs-example:empty {
+    display: none;
+}
+
+.srs-example:empty::before,
+.srs-example:empty::after {
+    content: none;
+}
+
+/* Controls - FIXED POSITION AREA */
+.srs-controls {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0 8px 0;
+    background: #FAFAFA;
+    flex-shrink: 0;
+}
+
+.srs-quality-btns {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+
+    /* Animation: Hidden by default */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    max-height: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.srs-quality-btns.visible {
+    /* Animation: Show */
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    max-height: 300px;
+    /* Allow enough space */
+    pointer-events: auto;
+}
+
+.srs-skip-btn {
+    margin-top: 8px;
+    padding: 8px 20px;
+    background: transparent;
+    border: 1px solid #d1d5db;
+    border-radius: 20px;
+    color: #6b7280;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.srs-skip-btn:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+    color: #374151;
+}
+
+.srs-quality-prompt {
+    font-size: 15px;
+    font-weight: 600;
+    color: #374151;
+    margin: 0 0 8px 0;
+    text-align: center;
+}
+
+.srs-quality-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    max-width: 360px;
+    gap: 8px;
+}
+
+.quality-option {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    background: #ffffff;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    transition: all 0.15s ease;
+}
+
+.quality-option:hover {
+    border-color: #3B82F6;
+    background: #f0f7ff;
+}
+
+.quality-option:active {
+    transform: scale(0.98);
+}
+
+.quality-days {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.quality-desc {
+    font-size: 11px;
+    font-weight: 400;
+    color: #6b7280;
+    margin-top: 1px;
+}
+
+/* Color accents for left border */
+.quality-1day {
+    border-left: 4px solid #EF4444;
+}
+
+.quality-3days {
+    border-left: 4px solid #F59E0B;
+}
+
+.quality-6days {
+    border-left: 4px solid #10B981;
+}
+
+.quality-14days {
+    border-left: 4px solid #3B82F6;
+}
+
+/* Pronunciation Practice Button */
+.srs-practice-pronunciation-btn {
+    margin-top: 12px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #10B981, #059669);
+    border: none;
+    border-radius: 20px;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.srs-practice-pronunciation-btn:hover {
+    transform: scale(1.03);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.srs-practice-pronunciation-btn.recording {
+    background: linear-gradient(135deg, #EF4444, #DC2626);
+    animation: pulse-recording 1.5s infinite;
+}
+
+@keyframes pulse-recording {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.srs-pronunciation-result {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #F0FDF4;
+    border-radius: 8px;
+    font-size: 13px;
+    text-align: center;
+}
+
+.srs-pronunciation-result.correct {
+    background: #D1FAE5;
+    color: #065F46;
+}
+
+.srs-pronunciation-result.incorrect {
+    background: #FEE2E2;
+    color: #991B1B;
+}
+
+/* Input Styling */
+.srs-input-container {
+    width: 100%;
+    margin-top: 12px;
+}
+
+.srs-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    background: #F9FAFB;
+    color: #111827;
+    font-size: 16px;
+    text-align: center;
+    outline: none;
+}
+
+.srs-input:focus {
+    border-color: #3B82F6;
+    background: #FFFFFF;
+}
+
+/* Pagination */
+.srs-progress {
+    text-align: center;
+    font-size: 14px;
+    color: #9CA3AF;
+    padding: 0;
+    border: none;
+    background: transparent;
+}
+
+.srs-progress-bar {
+    display: none;
+}
+
+/* Hide bar, show text only? User said "Pagination: 14px normal centered" */
+/* Actually keeping bar but making it subtle? User didn't design bar. Assuming text only or subtle. */
+/* I'll hide the bar for now as per "Pagination: 14px, normal, centered" usually implies text "1 / 10" */
+
+
+.srs-progress-bar {
+    height: 6px;
+    background: rgba(148, 163, 184, 0.2);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.srs-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+/* Session Summary */
+.srs-summary {
+    display: none;
+    padding: 32px 24px;
+    text-align: center;
+}
+
+.srs-summary-content h3 {
+    font-size: 1.5rem;
+    color: #f1f5f9;
+    margin-bottom: 24px;
+}
+
+.srs-summary-stats {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.srs-summary-stats .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.srs-summary-stats .stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #6366f1;
+}
+
+.srs-summary-stats .stat-label {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.srs-points-earned {
+    background: linear-gradient(145deg, rgba(34, 197, 94, 0.2), rgba(22, 163, 74, 0.1));
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+}
+
+.srs-points-earned span {
+    color: #22c55e;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.srs-points-earned .bonus {
+    display: block;
+    font-size: 0.85rem;
+    color: #86efac;
+    margin-top: 4px;
+}
+
+.srs-all-done {
+    color: #22c55e;
+    font-size: 1rem;
+    margin-bottom: 20px;
+}
+
+.srs-remaining {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+}
+
+.srs-done-btn {
+    background: linear-gradient(145deg, #6366f1, #4f46e5);
+    border: none;
+    color: white;
+    padding: 14px 48px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.srs-done-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+}
+
+/* Start Review Button (in Vocab Book) */
+.srs-start-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(145deg, #8b5cf6, #7c3aed);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 16px;
+}
+
+.srs-start-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+}
+
+.srs-start-btn:disabled {
+    background: #475569;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.srs-due-badge {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+}
+
+/* No Words Due State */
+.srs-no-due {
+    text-align: center;
+    padding: 20px;
+    color: #94a3b8;
+}
+
+.srs-next-review {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-top: 8px;
+}
+
+/* Mobile Styles */
+@media (max-width: 640px) {
+    .srs-panel {
+        width: 95%;
+        max-height: 90vh;
+        border-radius: 20px;
+    }
+
+    .srs-word {
+        font-size: 1.75rem;
+    }
+
+    .srs-quality-btns {
+        flex-wrap: wrap;
+    }
+
+    .srs-quality-btns button {
+        min-width: 45%;
+        padding: 12px 8px;
+    }
+
+    .srs-summary-stats {
+        gap: 16px;
+    }
+
+    .srs-summary-stats .stat-value {
+        font-size: 1.5rem;
+    }
+}
+
+/* Input Styling */
+.srs-input-container {
+    width: 100%;
+    margin-top: 24px;
+    padding: 0 16px;
+    box-sizing: border-box;
+}
+
+.srs-input {
+    width: 100%;
+    padding: 16px;
+    background: #ffffff;
+    border: 2px solid #cbd5e1;
+    border-radius: 12px;
+    color: #0f172a;
+    font-size: 1.2rem;
+    text-align: center;
+    transition: all 0.2s;
+    box-sizing: border-box !important;
+    /* Force fix overflow */
+    box-shadow: inner 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.srs-input:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    transform: translateY(-1px);
+}
+
+/* Record Button */
+.srs-record-btn {
+    background: linear-gradient(145deg, #ef4444, #dc2626);
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.srs-record-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+}
+
+.srs-record-btn.recording {
+    background: linear-gradient(145deg, #22c55e, #16a34a);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Result Display */
+.srs-result-container {
+    margin-top: 16px;
+    text-align: center;
+    padding: 12px 16px;
+    background: #F0FDF4;
+    /* Light green tint for correct, will be overridden by JS if needed */
+    border-radius: 12px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.srs-result-message {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #111827;
+}
+
+.srs-result-message.correct {
+    color: #10B981;
+    /* Match Good button */
+}
+
+.srs-result-message.incorrect {
+    color: #EF4444;
+    /* Match Again button */
+}
+
+.srs-user-input-display {
+    font-size: 14px;
+    color: #6B7280;
+    font-style: italic;
+}
+
+.srs-definition-prompt {
+    font-size: 16px;
+    color: #374151 !important;
+    /* Dark Gray - must be visible */
+    text-align: center;
+    line-height: 1.5;
+}
+
+/* Feedback Toast */
+.srs-feedback-toast {
+    position: absolute;
+    bottom: 80px;
+    /* Lower, above controls */
+    left: 50%;
+    transform: translateX(-50%) scale(0.9);
+    background: rgba(31, 41, 55, 0.95);
+    color: white;
+    padding: 16px 32px;
+    border-radius: 50px;
+    font-size: 18px;
+    font-weight: 600;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 2000;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.srs-feedback-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+    margin-top: 0;
+}

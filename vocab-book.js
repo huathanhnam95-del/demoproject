@@ -32,7 +32,9 @@ const VocabularyBook = (function () {
     let vocabCache = {
         bookmarkedWords: [],
         wordStats: {},
-        frequentlyMissed: []
+        frequentlyMissed: [],
+        usedToMiss: [],      // Words with 3+ consecutive correct (moved from frequentlyMissed)
+        masteredWords: []    // Words that passed 14-day SRS review
     };
 
     // Cache for phonetics to avoid API spam
@@ -116,6 +118,33 @@ const VocabularyBook = (function () {
             vocabListClose.addEventListener('click', hideListModal);
         }
 
+        // Improving Words toggle handler
+        const improvingToggle = document.getElementById('vocab-improving-toggle');
+        const improvingList = document.getElementById('vocab-improving-list');
+        if (improvingToggle && improvingList) {
+            improvingToggle.addEventListener('click', () => {
+                const isExpanded = improvingToggle.classList.toggle('expanded');
+                improvingList.style.display = isExpanded ? 'block' : 'none';
+            });
+        }
+
+        // Manual Add Listeners
+        const manualAddBtn = document.getElementById('vocab-manual-add-btn');
+        const manualAddModal = document.getElementById('vocab-manual-add-modal');
+        const manualSubmit = document.getElementById('manual-add-submit');
+        const manualCancel = document.getElementById('manual-add-cancel');
+
+        if (manualAddBtn) manualAddBtn.addEventListener('click', () => {
+            if (manualAddModal) {
+                manualAddModal.style.display = 'flex';
+                setTimeout(() => document.getElementById('manual-add-input')?.focus(), 100);
+            }
+        });
+        if (manualCancel) manualCancel.addEventListener('click', () => {
+            if (manualAddModal) manualAddModal.style.display = 'none';
+        });
+        if (manualSubmit) manualSubmit.addEventListener('click', handleManualAddSubmit);
+
         // Modal Click-Outside-To-Close
         if (vocabListModal) {
             vocabListModal.addEventListener('click', (e) => {
@@ -125,10 +154,10 @@ const VocabularyBook = (function () {
                 }
             });
         }
-        if (vocabAddModal) {
-            vocabAddModal.addEventListener('click', (e) => {
-                if (e.target === vocabAddModal) {
-                    hideAddModal();
+        if (manualAddModal) {
+            manualAddModal.addEventListener('click', (e) => {
+                if (e.target === manualAddModal) {
+                    manualAddModal.style.display = 'none';
                 }
             });
         }
@@ -148,6 +177,30 @@ const VocabularyBook = (function () {
         }
 
         console.log('[VocabBook] Module initialized');
+    }
+
+    /**
+     * Handle Manual Add Submit
+     */
+    async function handleManualAddSubmit() {
+        const input = document.getElementById('manual-add-input');
+        const word = input?.value?.trim();
+        if (!word) return;
+
+        const manualAddModal = document.getElementById('vocab-manual-add-modal');
+        if (manualAddModal) manualAddModal.style.display = 'none';
+
+        // Add to bookmarks
+        await addBookmarkedWord(word, 'manual');
+        if (input) input.value = '';
+
+        // Show brief confirmation
+        alert(`Word "${word}" added to your list!`);
+
+        // Refresh list if open
+        if (document.getElementById('vocab-panel-side').classList.contains('open')) {
+            renderBookmarkedWords();
+        }
     }
 
     /**
@@ -490,6 +543,8 @@ const VocabularyBook = (function () {
                 vocabCache.bookmarkedWords = data.bookmarkedWords || [];
                 vocabCache.wordStats = data.wordStats || {};
                 vocabCache.frequentlyMissed = data.frequentlyMissed || [];
+                vocabCache.usedToMiss = data.usedToMiss || [];
+                vocabCache.masteredWords = data.masteredWords || [];
 
                 // Backfill missing mode/questionId from wordStats for frequentlyMissed entries
                 let needsSave = false;
@@ -556,7 +611,9 @@ const VocabularyBook = (function () {
                 vocabCache = {
                     bookmarkedWords: [],
                     wordStats: {},
-                    frequentlyMissed: []
+                    frequentlyMissed: [],
+                    usedToMiss: [],
+                    masteredWords: []
                 };
             }
 
@@ -580,13 +637,17 @@ const VocabularyBook = (function () {
             console.log('[VocabBook] Saving data...', {
                 bookmarks: vocabCache.bookmarkedWords.length,
                 stats: Object.keys(vocabCache.wordStats).length,
-                missed: vocabCache.frequentlyMissed.length
+                missed: vocabCache.frequentlyMissed.length,
+                usedToMiss: vocabCache.usedToMiss.length,
+                mastered: vocabCache.masteredWords.length
             });
             await setDoc(doc(db, 'users', currentUserId, 'vocabularyBook', 'data'), {
                 bookmarkedWords: vocabCache.bookmarkedWords,
                 wordStats: vocabCache.wordStats,
                 frequentlyMissed: vocabCache.frequentlyMissed,
-                updatedAt: new Date().toISOString() // Use string to avoid SDK version mismatch
+                usedToMiss: vocabCache.usedToMiss,
+                masteredWords: vocabCache.masteredWords,
+                updatedAt: new Date().toISOString()
             }, { merge: true });
             console.log('[VocabBook] Save success');
         } catch (e) {
@@ -749,6 +810,73 @@ const VocabularyBook = (function () {
 
         console.log(`[VocabBook] Tracked miss: "${word}" (${lemma}) from ${mode} Q${questionId}. Count: ${vocabCache.wordStats[lemma].missCount}`);
 
+        // --- MASTERY REGRESSION CHECK: Is this word mastered? ---
+        const masteredIndex = vocabCache.masteredWords.findIndex(w => w.lemma === lemma);
+        if (masteredIndex !== -1) {
+            const masteredEntry = vocabCache.masteredWords[masteredIndex];
+            const currentMastery = masteredEntry.masteryPercentage || 100;
+            const newMastery = Math.max(0, currentMastery - 10); // -10% on miss
+
+            masteredEntry.masteryPercentage = newMastery;
+            vocabCache.wordStats[lemma].masteryPercentage = newMastery;
+
+            console.log(`[VocabBook] Mastered word "${lemma}" missed! Mastery: ${currentMastery}% → ${newMastery}%`);
+
+            // If mastery drops below 50%, move back to frequentlyMissed
+            if (newMastery < 50) {
+                console.log(`[VocabBook] Word "${lemma}" lost mastery! Moving back to Frequently Missed.`);
+
+                vocabCache.masteredWords.splice(masteredIndex, 1);
+                vocabCache.frequentlyMissed.push({
+                    ...masteredEntry,
+                    missCount: vocabCache.wordStats[lemma].missCount,
+                    regressedFromMastery: true,
+                    regressedAt: new Date().toISOString()
+                });
+
+                vocabCache.wordStats[lemma].isMastered = false;
+                renderFrequentlyMissed();
+            }
+
+            saveVocabData();
+            return;
+        }
+
+        // --- REGRESSION CHECK: Is this word in usedToMiss? ---
+        const usedToMissIndex = vocabCache.usedToMiss.findIndex(w => w.lemma === lemma);
+        if (usedToMissIndex !== -1) {
+            // Increment consecutive misses after move
+            const usedToMissEntry = vocabCache.usedToMiss[usedToMissIndex];
+            usedToMissEntry.consecutiveMissesAfterMove = (usedToMissEntry.consecutiveMissesAfterMove || 0) + 1;
+
+            console.log(`[VocabBook] Word "${lemma}" missed again after improvement. Consecutive misses: ${usedToMissEntry.consecutiveMissesAfterMove}`);
+
+            // If 3 consecutive misses after move, regress back to frequentlyMissed
+            if (usedToMissEntry.consecutiveMissesAfterMove >= 3) {
+                console.log(`[VocabBook] Word "${lemma}" regressed! Moving back to Frequently Missed.`);
+
+                // Remove from usedToMiss
+                vocabCache.usedToMiss.splice(usedToMissIndex, 1);
+
+                // Add back to frequentlyMissed
+                vocabCache.frequentlyMissed.push({
+                    ...usedToMissEntry,
+                    missCount: vocabCache.wordStats[lemma].missCount,
+                    regressedAt: new Date().toISOString()
+                });
+
+                // Update stats
+                vocabCache.wordStats[lemma].inUsedToMiss = false;
+
+                // Refresh UI
+                renderFrequentlyMissed();
+                renderUsedToMiss();
+            }
+
+            saveVocabData();
+            return; // Don't process further for usedToMiss words
+        }
+
         // Check if should be added to frequently missed (3+ misses)
         if (vocabCache.wordStats[lemma].missCount >= 3) {
             const existing = vocabCache.frequentlyMissed.find(w => w.lemma === lemma);
@@ -799,22 +927,49 @@ const VocabularyBook = (function () {
         vocabCache.wordStats[lemma].correctStreak++;
         console.log(`[VocabBook] Tracked correct: "${word}" (${lemma}). Streak: ${vocabCache.wordStats[lemma].correctStreak}`);
 
-        // Check if mastered (3 correct in a row)
+        // --- MASTERY BOOST: Is this word mastered? Add +5% ---
+        const masteredIndex = vocabCache.masteredWords.findIndex(w => w.lemma === lemma);
+        if (masteredIndex !== -1) {
+            const masteredEntry = vocabCache.masteredWords[masteredIndex];
+            const currentMastery = masteredEntry.masteryPercentage || 100;
+            const newMastery = Math.min(100, currentMastery + 5); // +5% on correct, cap at 100%
+
+            masteredEntry.masteryPercentage = newMastery;
+            vocabCache.wordStats[lemma].masteryPercentage = newMastery;
+
+            console.log(`[VocabBook] Mastered word "${lemma}" correct! Mastery: ${currentMastery}% → ${newMastery}%`);
+            saveVocabData();
+            return; // Mastered words don't need further processing
+        }
+
+        // Check if should move to "Used to Miss" (3 correct in a row)
         if (vocabCache.wordStats[lemma].correctStreak >= 3) {
             const freqIndex = vocabCache.frequentlyMissed.findIndex(w => w.lemma === lemma);
             if (freqIndex !== -1) {
-                console.log(`[VocabBook] Word "${lemma}" mastered! Removing from Frequently Missed.`);
+                const wordEntry = vocabCache.frequentlyMissed[freqIndex];
+
+                console.log(`[VocabBook] Word "${lemma}" improved! Moving to Used to Miss list.`);
+
                 // Remove from frequently missed
                 vocabCache.frequentlyMissed.splice(freqIndex, 1);
+
+                // Add to usedToMiss list (preserve word data)
+                vocabCache.usedToMiss.push({
+                    ...wordEntry,
+                    movedAt: new Date().toISOString(),
+                    consecutiveMissesAfterMove: 0  // Track misses after move for regression
+                });
 
                 // Award 10 points!
                 await awardMasteryPoints(lemma);
 
-                // Reset stats for this word
-                delete vocabCache.wordStats[lemma];
+                // Reset correct streak but keep wordStats for tracking regression
+                vocabCache.wordStats[lemma].correctStreak = 0;
+                vocabCache.wordStats[lemma].inUsedToMiss = true;
 
                 // Live refresh the side panel
                 renderFrequentlyMissed();
+                renderUsedToMiss();
             }
         }
 
@@ -842,6 +997,121 @@ const VocabularyBook = (function () {
         } catch (e) {
             console.error('Error awarding mastery points:', e);
         }
+    }
+
+    /**
+     * Promote a word to Mastered status (called after 14-day SRS review success)
+     * @param {string} lemma - The lemmatized word
+     */
+    function promoteToMastered(lemma) {
+        if (!lemma) return;
+
+        // Check if word is in usedToMiss
+        const usedToMissIndex = vocabCache.usedToMiss.findIndex(w => w.lemma === lemma);
+        if (usedToMissIndex !== -1) {
+            const wordEntry = vocabCache.usedToMiss[usedToMissIndex];
+
+            console.log(`[VocabBook] Word "${lemma}" MASTERED! Setting to 100% mastery.`);
+
+            // Remove from usedToMiss
+            vocabCache.usedToMiss.splice(usedToMissIndex, 1);
+
+            // Add to masteredWords with 100% mastery
+            vocabCache.masteredWords.push({
+                ...wordEntry,
+                masteredAt: new Date().toISOString(),
+                status: 'mastered',
+                masteryPercentage: 100  // NEW: Start at 100%
+            });
+
+            // Keep wordStats for tracking future performance
+            if (vocabCache.wordStats[lemma]) {
+                vocabCache.wordStats[lemma].masteryPercentage = 100;
+                vocabCache.wordStats[lemma].isMastered = true;
+            }
+
+            renderUsedToMiss();
+            saveVocabData();
+            return true;
+        }
+
+        // Also check frequentlyMissed (in case word bypassed usedToMiss)
+        const freqIndex = vocabCache.frequentlyMissed.findIndex(w => w.lemma === lemma);
+        if (freqIndex !== -1) {
+            const wordEntry = vocabCache.frequentlyMissed[freqIndex];
+
+            console.log(`[VocabBook] Word "${lemma}" MASTERED directly! Moving to Mastered list.`);
+
+            vocabCache.frequentlyMissed.splice(freqIndex, 1);
+            vocabCache.masteredWords.push({
+                ...wordEntry,
+                masteredAt: new Date().toISOString(),
+                status: 'mastered'
+            });
+
+            if (vocabCache.wordStats[lemma]) {
+                delete vocabCache.wordStats[lemma];
+            }
+
+            renderFrequentlyMissed();
+            saveVocabData();
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Render the "Improving" list (words improved but not yet mastered)
+     */
+    function renderUsedToMiss() {
+        const improvingList = document.getElementById('vocab-improving-list');
+        const improvingToggle = document.getElementById('vocab-improving-toggle');
+        const improvingCount = document.getElementById('vocab-improving-count');
+
+        // Update count badge
+        if (improvingCount) {
+            improvingCount.textContent = vocabCache.usedToMiss.length;
+        }
+
+        // Show/hide toggle based on whether there are improving words
+        if (improvingToggle) {
+            improvingToggle.style.display = vocabCache.usedToMiss.length > 0 ? 'flex' : 'none';
+        }
+
+        if (!improvingList) return;
+
+        if (vocabCache.usedToMiss.length === 0) {
+            improvingList.innerHTML = '<div class="vocab-empty">No improving words yet</div>';
+            return;
+        }
+
+        // Sort by movedAt desc (most recent first)
+        const sorted = [...vocabCache.usedToMiss].sort((a, b) => {
+            return new Date(b.movedAt || 0) - new Date(a.movedAt || 0);
+        });
+
+        const listHtml = sorted.map(w => {
+            const missesAfterMove = w.consecutiveMissesAfterMove || 0;
+
+            return `
+            <div class="vocab-word-item vocab-improved">
+              <div class="vocab-word-main">
+                <span class="vocab-word-text">${w.originalWord}</span>
+                <span class="vocab-badge vocab-badge-improved">✓ Improving</span>
+              </div>
+              <div class="vocab-word-meta">
+                <span class="vocab-meta-item" title="Misses after improvement">${missesAfterMove > 0 ? `⚠️ ${missesAfterMove}/3` : '✨ Stable'}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        improvingList.innerHTML = `
+            <div class="vocab-scroll-list">
+                ${listHtml}
+            </div>
+        `;
     }
 
     /**
@@ -1218,7 +1488,8 @@ const VocabularyBook = (function () {
         playAudio: playPronunciation,
         removeViaModal: removeViaModal,
         togglePanel: togglePanel,
-        updateSRSDueBadge: updateSRSDueBadge  // Sync SRS due count
+        updateSRSDueBadge: updateSRSDueBadge,
+        promoteToMastered: promoteToMastered  // NEW: For SRS 14-day mastery
     };
 
 })();

@@ -86,6 +86,24 @@
         <h2>Account Details</h2>
         <button id="close-details-btn" class="close-btn">×</button>
       </div>
+      <!-- Quick Action Card -->
+      <div class="dashboard-quick-action">
+        <div class="quick-action-card"
+          onclick="openVocabModal(); setTimeout(() => document.querySelector('.vocab-tab-btn[data-tab=\'practice\']').click(), 100); setTimeout(() => document.getElementById('srs-start-review-btn').click(), 300);">
+          <div class="action-icon">🚀</div>
+          <div class="action-text">
+            <h3>Start Review Session</h3>
+            <p>Practice your vocabulary words now!</p>
+          </div>
+          <div class="action-arrow">→</div>
+        </div>
+      </div>
+
+      <!-- Recent Activity Header -->
+      <div class="section-header">
+        <h2>Recent Activity</h2>
+        <button class="view-all-btn">View All</button>
+      </div>
       <div class="account-info">
         <div class="info-item">
           <label>Email:</label>
@@ -291,7 +309,20 @@
     <div id="vocab-panel-content" class="vocab-panel-content">
       <div class="panel-header">
         <h3>Vocabulary Book</h3>
+        <button id="vocab-manual-add-btn" class="panel-add-btn" title="Add New Word">+</button>
         <button id="vocab-panel-close-btn" class="panel-close-btn" title="Close">×</button>
+      </div>
+
+      <!-- Manual Add Word Modal (Nested) -->
+      <div id="vocab-manual-add-modal" class="manual-add-modal" style="display: none;">
+        <div class="manual-add-content">
+          <h4>Add New Word</h4>
+          <input type="text" id="manual-add-input" placeholder="Type a word (e.g., cat)...">
+          <div class="manual-add-actions">
+            <button id="manual-add-submit" class="manual-add-btn">Add</button>
+            <button id="manual-add-cancel" class="manual-cancel-btn">Cancel</button>
+          </div>
+        </div>
       </div>
 
       <!-- Bookmarked Words Section -->
@@ -309,6 +340,17 @@
         <p class="vocab-section-desc">Words missed 3+ times (auto-tracked)</p>
         <div id="vocab-frequent-list" class="vocab-word-list">
           <div class="vocab-empty">No frequently missed words</div>
+        </div>
+
+        <!-- Improving Words Toggle -->
+        <button id="vocab-improving-toggle" class="vocab-improving-toggle" style="display: none;">
+          <span class="improving-icon">💪</span>
+          <span class="improving-text">Improving Words</span>
+          <span id="vocab-improving-count" class="improving-count">0</span>
+          <span class="improving-chevron">▼</span>
+        </button>
+        <div id="vocab-improving-list" class="vocab-improving-list" style="display: none;">
+          <div class="vocab-empty">No improving words yet</div>
         </div>
       </div>
 
@@ -513,6 +555,13 @@
             <span class="quality-desc">This is very easy</span>
           </button>
         </div>
+
+        <!-- Auto-Assign Button (shown when autoAssignMode is enabled) -->
+        <button id="srs-auto-continue-btn" class="srs-auto-continue-btn" style="display: none;">
+          <span class="auto-continue-text">Continue →</span>
+          <span class="auto-continue-hint">Scheduling automatically based on your answer</span>
+        </button>
+
         <button id="srs-skip-btn" class="srs-skip-btn">Skip this word →</button>
       </div>
     </div>
@@ -612,6 +661,20 @@
   <div id="page-layout-wrapper" class="page-layout-wrapper">
     <main class="container">
       <h1>Listening Practice</h1>
+
+      <!-- Quick Win: Start Review CTA -->
+      <div class="dashboard-cta-card"
+        onclick="if(window.SRSReview) { SRSReview.startReviewSession(); } else { alert('System is initializing, please wait...'); }">
+        <div class="dashboard-cta-content">
+          <h3>🚀 Start Vocabulary Review</h3>
+          <p>Practice your words now to keep your streak!</p>
+          <div id="dashboard-srs-summary" class="dashboard-srs-summary" style="display: none;">
+            <span class="icon">🕒</span>
+            <span id="dashboard-srs-text">Next review: ...</span>
+          </div>
+        </div>
+        <div class="dashboard-cta-icon">→</div>
+      </div>
 
       <div class="tabs">
         <button id="tab-type" class="tab-btn active" type="button">Type</button>
@@ -1193,7 +1256,22 @@
       <section id="vocabulary-practice" class="vocabulary-panel" style="display: none;">
         <div class="vocabulary-header">
           <span>Vocabulary Practice</span>
+          <button id="vocab-feedback-toggle" class="btn-secondary" style="font-size: 0.8rem; padding: 4px 8px;">Show
+            Suggestions</button>
         </div>
+        <script>
+          document.getElementById('vocab-feedback-toggle').addEventListener('click', function () {
+            const panel = document.getElementById('vocabulary-practice');
+            // Toggle the visible class which has !important display block
+            if (panel.classList.contains('visible')) {
+              panel.classList.remove('visible');
+              this.textContent = 'Show Suggestions';
+            } else {
+              panel.classList.add('visible');
+              this.textContent = 'Hide Suggestions';
+            }
+          });
+        </script>
         <div class="vocabulary-subheader">
           <span>These are the key content words that you missed, try producing them again</span>
         </div>
@@ -1523,15 +1601,10 @@
         <button id="srs-writing-close-btn" class="vocab-add-close"
           style="position: absolute; right: 20px; top: 20px;">×</button>
         <h3>✍️ Writing Challenge</h3>
-        <p id="srs-writing-prompt" class="srs-writing-prompt">Loading prompt...</p>
       </div>
 
       <!-- Hints Box -->
       <div id="srs-writing-hints" class="srs-writing-hints">
-        <div class="hint-item" id="hint-definition">
-          <span class="hint-label">📖 Definition:</span>
-          <span class="hint-value" id="hint-def-value">-</span>
-        </div>
         <div class="hint-item" id="hint-example">
           <span class="hint-label">💡 Example:</span>
           <span class="hint-value" id="hint-example-value">-</span>
@@ -1540,14 +1613,18 @@
           <span class="hint-label">🔗 Common phrases:</span>
           <span class="hint-value" id="hint-collocations-value">-</span>
         </div>
-        <div class="hint-item" id="hint-starter">
-          <span class="hint-label">✏️ Sentence starter:</span>
-          <span class="hint-value" id="hint-starter-value">-</span>
-        </div>
       </div>
 
       <div class="srs-writing-input-container">
-        <p class="srs-writing-instruction">💡 Practice using this word in your own sentence!</p>
+        <p class="srs-writing-instruction" style="display: none;">💡 Practice using this word in your own sentence!</p>
+        <p id="srs-writing-prompt" class="srs-writing-prompt">Loading prompt...</p>
+
+        <div class="hint-item" id="hint-starter" style="justify-content: center; margin-bottom: 12px;">
+          <span class="hint-label">✏️ Starter:</span>
+          <span class="hint-value" id="hint-starter-value">-</span>
+          <button id="refresh-starter-btn" class="refresh-starter-btn" title="Get a different starter">🔄</button>
+        </div>
+
         <textarea id="srs-writing-input" class="srs-writing-input"
           placeholder="Write your sentence here... (Must include the word)"></textarea>
         <div id="srs-writing-feedback" class="srs-writing-feedback"></div>
@@ -1583,6 +1660,9 @@
       if (notesInfoBox) notesInfoBox.style.display = 'none';
     }
   </script>
+
+  <!-- NLP Library (Compromise) -->
+  <script src="https://unpkg.com/compromise"></script>
 
   <!-- Confetti Library -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>

@@ -2245,6 +2245,52 @@ textarea:focus {
    Entry Choice Modal (First Visit)
    ============================================*/
 
+/* Quick Win: Hide Vocabulary Practice suggestions by default to reduce overload */
+#vocabulary-practice {
+  display: none !important;
+  /* Force hide initially, script will toggle */
+}
+
+/* Allow script to show it if needed (but we want it collapsed) */
+.vocabulary-panel.visible {
+  display: block !important;
+}
+
+/* Add CSS for the Start Review Card */
+.dashboard-cta-card {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  padding: 24px;
+  border-radius: 16px;
+  margin: 20px 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: transform 0.2s;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-cta-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-cta-content h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+}
+
+.dashboard-cta-content p {
+  margin: 0;
+  opacity: 0.9;
+}
+
+.dashboard-cta-icon {
+  font-size: 2.5rem;
+}
+
 /* Vocabulary List Modal (Full View) */
 .vocab-list-modal {
   position: fixed;
@@ -5483,6 +5529,89 @@ textarea:focus {
   z-index: 1002 !important;
 }
 
+/* Improving Words Toggle Button */
+.vocab-improving-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  margin-top: 12px;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+  color: #065f46;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vocab-improving-toggle:hover {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border-color: #6ee7b7;
+}
+
+.vocab-improving-toggle.expanded {
+  border-radius: 8px 8px 0 0;
+  border-bottom: none;
+}
+
+.improving-icon {
+  font-size: 1.1rem;
+}
+
+.improving-text {
+  flex: 1;
+  text-align: left;
+}
+
+.improving-count {
+  background: #10b981;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
+}
+
+.improving-chevron {
+  font-size: 0.7rem;
+  transition: transform 0.2s ease;
+}
+
+.vocab-improving-toggle.expanded .improving-chevron {
+  transform: rotate(180deg);
+}
+
+/* Improving Words List Container */
+.vocab-improving-list {
+  background: #f0fdf4;
+  border: 1px solid #a7f3d0;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  padding: 12px;
+  margin-bottom: 8px;
+}
+
+.vocab-improving-list .vocab-empty {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+/* Improved word item styling */
+.vocab-word-item.vocab-improved {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border-color: #a7f3d0;
+}
+
+.vocab-badge-improved {
+  background: #10b981;
+  color: white;
+}
+
 /* Ensure list modal is above everything */
 .vocab-list-modal {
   z-index: 1002 !important;
@@ -5586,7 +5715,11 @@ textarea:focus {
   display: none;
   flex: 1;
   overflow-y: auto;
+  overflow-x: auto;
+  /* Allow horizontal scroll for wide tables */
   padding: 20px;
+  -webkit-overflow-scrolling: touch;
+  /* Smooth scroll on iOS */
 }
 
 .vocab-tab-content.active {
@@ -6778,42 +6911,91 @@ textarea:focus {
    Writing Challenge Styles
    ============================================ */
 
+/* Toast notification for Writing Challenge */
+.srs-writing-toast {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: white;
+  padding: 14px 28px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 1rem;
+  box-shadow: 0 8px 32px rgba(124, 58, 237, 0.4);
+  z-index: 11001;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.srs-writing-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.srs-writing-toast .toast-icon {
+  font-size: 1.3rem;
+  animation: bounceIcon 0.6s ease 0.2s;
+}
+
+@keyframes bounceIcon {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.3);
+  }
+}
+
 .srs-writing-modal {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.85);
+  background-color: rgba(0, 0, 0, 0);
+  backdrop-filter: blur(0px);
   display: none;
   align-items: center;
   justify-content: center;
   z-index: 11000;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.4s ease, background-color 0.4s ease, backdrop-filter 0.4s ease;
 }
 
 .srs-writing-modal.visible {
   display: flex;
   opacity: 1;
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
 }
 
 .srs-writing-content {
   background: white;
   width: 600px;
   max-width: 90%;
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 32px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
   text-align: center;
-  transform: translateY(20px);
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: scale(0.9) translateY(30px);
+  opacity: 0;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .srs-writing-modal.visible .srs-writing-content {
-  transform: translateY(0);
+  transform: scale(1) translateY(0);
+  opacity: 1;
 }
 
 .srs-writing-header {
@@ -6912,6 +7094,33 @@ textarea:focus {
   padding: 4px 10px;
   border-radius: 6px;
   border: 1px solid #A5F3FC;
+}
+
+/* Refresh Starter Button */
+.refresh-starter-btn {
+  background: transparent;
+  border: 1px solid #E5E7EB;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.refresh-starter-btn:hover {
+  background: #F3F4F6;
+  border-color: #D1D5DB;
+  transform: rotate(180deg);
+}
+
+.refresh-starter-btn:active {
+  transform: rotate(360deg);
 }
 
 /* Instruction text above input */
@@ -7016,4 +7225,50 @@ textarea:focus {
   background: #fef2f2;
   color: #991b1b;
   border: 1px solid #fecaca;
+}
+
+/* =========================================
+   Vocabulary Mobile UI
+   ========================================= */
+@media (max-width: 640px) {
+  .vocab-list-content-modal {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .vocab-list-header {
+    padding: 12px 16px;
+    flex-shrink: 0;
+  }
+
+  .vocab-tabs {
+    flex-shrink: 0;
+  }
+
+  .vocab-tab-btn {
+    padding: 12px;
+    font-size: 0.9rem;
+  }
+
+  .vocab-tab-content {
+    padding: 0;
+    /* Maximize space for table */
+  }
+
+  .vocab-table th,
+  .vocab-table td {
+    padding: 10px 8px;
+    /* Tighter cell padding */
+    font-size: 0.9rem;
+  }
+
+  .vocab-phonetic {
+    font-size: 0.9rem;
+    padding: 2px 6px;
+  }
 }

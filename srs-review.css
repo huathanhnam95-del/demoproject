@@ -208,7 +208,8 @@
     width: 100%;
     max-width: 420px;
     /* Consistently narrower */
-    height: 320px;
+    height: 380px;
+    /* Increased from 320px to fit examples + results */
     perspective: 1000px;
     position: relative;
     z-index: 10;
@@ -232,7 +233,8 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 20px 16px;
+    padding: 12px 16px;
+    /* Reduced vertical padding */
     /* Reduced padding */
     border-radius: 24px;
     background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
@@ -364,6 +366,7 @@
     /* Clamp text to avoid overflow */
     display: -webkit-box;
     -webkit-line-clamp: 4;
+    line-clamp: 4;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -374,11 +377,13 @@
     font-style: italic;
     opacity: 1 !important;
     text-align: center;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
+    /* Reduced margin */
 
     /* Clamp text */
     display: -webkit-box;
     -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -883,9 +888,11 @@
 
 /* Result Display */
 .srs-result-container {
-    margin-top: 16px;
+    margin-top: 8px;
+    /* Reduced from 16px */
     text-align: center;
-    padding: 12px 16px;
+    padding: 8px 12px;
+    /* More compact */
     background: #F0FDF4;
     /* Light green tint for correct, will be overridden by JS if needed */
     border-radius: 12px;
@@ -952,4 +959,271 @@
     opacity: 1;
     transform: translateX(-50%) scale(1);
     margin-top: 0;
+}
+
+/* Writing Prompt Styled as Info Box */
+.srs-writing-prompt {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    color: #065f46;
+    padding: 16px;
+    border-radius: 12px;
+    margin: 12px 0 16px 0;
+    text-align: center;
+    font-weight: 500;
+    font-size: 1.1rem;
+    line-height: 1.5;
+}
+
+/* Auto-Continue Button (Auto-Assign Mode) */
+.srs-auto-continue-btn {
+    width: 100%;
+    max-width: 320px;
+    padding: 16px 24px;
+    margin: 12px auto;
+    background: linear-gradient(145deg, #10B981, #059669);
+    border: none;
+    border-radius: 16px;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.srs-auto-continue-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+}
+
+.srs-auto-continue-btn:active {
+    transform: translateY(0);
+}
+
+.auto-continue-text {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.auto-continue-hint {
+    font-size: 0.75rem;
+    font-weight: 400;
+    opacity: 0.85;
+}
+
+/* =========================================
+   Dashboard SRS Summary
+   ========================================= */
+.dashboard-srs-summary {
+    margin-top: 12px;
+    padding: 8px 12px;
+    background-color: rgba(37, 99, 235, 0.1);
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #1e40af;
+    display: none;
+    /* Managed by JS */
+    align-items: center;
+    gap: 8px;
+    pointer-events: none;
+    /* Pass clicks to card */
+    transition: background-color 0.2s;
+}
+
+.dashboard-srs-summary .icon {
+    font-size: 1.1em;
+}
+
+.dashboard-cta-card:hover .dashboard-srs-summary {
+    background-color: rgba(37, 99, 235, 0.2);
+    border-color: rgba(37, 99, 235, 0.3);
+}
+
+/* =========================================
+   Mobile UI Optimizations
+   ========================================= */
+@media (max-width: 640px) {
+
+    /* Full Screen Modal */
+    .srs-panel {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
+        max-height: none !important;
+        top: 0 !important;
+        left: 0 !important;
+        transform: none !important;
+        border-radius: 0 !important;
+        padding: 16px !important;
+        justify-content: space-between;
+        /* Space out header, content, footer */
+    }
+
+    .srs-panel.active {
+        transform: none !important;
+    }
+
+    /* Compact Header */
+    .srs-header {
+        margin-bottom: 12px;
+        flex-shrink: 0;
+    }
+
+    .srs-header h2 {
+        font-size: 1.2rem;
+    }
+
+    .srs-stats {
+        margin-bottom: 16px;
+    }
+
+    /* Flexible Flashcard Container */
+    .srs-flashcard-container {
+        padding: 0;
+        margin: 0;
+        flex: 1;
+        /* Take all available vertical space */
+        justify-content: center;
+        /* Center vertically */
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        max-height: 55vh;
+        /* Don't be too tall */
+    }
+
+    .srs-flashcard {
+        width: 100%;
+        max-width: 100%;
+        height: 100%;
+        /* Fill container */
+        min-height: 300px;
+        /* Increased from 220px to fit content */
+    }
+
+    .srs-flashcard-front,
+    .srs-flashcard-back {
+        padding: 16px;
+        justify-content: center;
+        /* Center content vertically */
+    }
+
+    .srs-word,
+    .srs-word-front {
+        font-size: 2rem;
+        /* Readable size */
+        margin-bottom: 8px;
+    }
+
+    .srs-definition {
+        font-size: 14px;
+        -webkit-line-clamp: 5;
+        line-clamp: 5;
+        /* Show more text if needed */
+    }
+
+    /* Controls at Bottom - FIXED POSITION to prevent push */
+    .srs-controls {
+        width: 100%;
+        padding: 12px 16px 24px 16px;
+        flex-shrink: 0;
+        background: transparent;
+        gap: 12px;
+
+        /* Absolute positioning at bottom */
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        z-index: 20;
+    }
+
+    /* Add padding to panel bottom to reserve space for controls */
+    .srs-panel {
+        padding-bottom: 90px !important;
+        /* Reserve space for buttons */
+    }
+
+    /* When quality buttons appear, they overlay or slide up without moving card */
+    .srs-quality-btns {
+        position: absolute;
+        bottom: 0px;
+        left: 0;
+        right: 0;
+        background: #FAFAFA;
+        /* Opaque background to cover anything behind */
+        padding: 16px;
+        border-radius: 20px 20px 0 0;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+        z-index: 30;
+    }
+
+    /* Big Friendly Buttons */
+    .srs-audio-btn {
+        width: 100%;
+        padding: 14px;
+        justify-content: center;
+        font-size: 1.1rem;
+        border-radius: 12px;
+    }
+
+    .srs-record-btn {
+        width: 100%;
+        padding: 14px;
+        border-radius: 12px;
+    }
+
+    /* Quality Grid - 2x2 for buttons */
+    .srs-quality-options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .quality-option {
+        padding: 12px;
+        height: auto;
+        justify-content: center;
+        text-align: center;
+        align-items: center;
+    }
+
+    .quality-days {
+        font-size: 1.1rem;
+        margin-bottom: 2px;
+    }
+
+    .quality-desc {
+        display: none;
+        /* Hide description to keep it clean */
+    }
+
+    .srs-quality-prompt {
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+        opacity: 0.8;
+    }
+
+    /* Writing Mode Mobile */
+    .srs-writing-modal {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
+        border-radius: 0 !important;
+        top: 0 !important;
+        left: 0 !important;
+        transform: none !important;
+        padding: 16px !important;
+    }
+
+    .srs-writing-input {
+        font-size: 1.2rem;
+        /* Larger text for input */
+        padding: 12px;
+    }
 }

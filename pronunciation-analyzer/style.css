@@ -1,0 +1,248 @@
+/* Pronunciation Analyzer Styles */
+
+.pa-container {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 24px;
+    max-width: 800px;
+    width: 100%;
+}
+
+.pa-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.pa-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.pa-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.pa-btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.pa-btn-record {
+    background-color: #ef4444;
+    color: white;
+}
+
+.pa-btn-record:hover {
+    background-color: #dc2626;
+}
+
+.pa-btn-record:disabled {
+    background-color: #fca5a5;
+    cursor: not-allowed;
+}
+
+.pa-btn-stop {
+    background-color: #4b5563;
+    color: white;
+}
+
+.pa-btn-stop:hover {
+    background-color: #374151;
+}
+
+.pa-btn-stop:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+}
+
+.pa-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+
+.pa-status.recording::before {
+    content: '';
+    display: block;
+    width: 10px;
+    height: 10px;
+    background-color: #ef4444;
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 0.7;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.pa-charts-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    margin-bottom: 20px;
+}
+
+@media (min-width: 768px) {
+    .pa-charts-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.pa-chart-card {
+    background: #f9fafb;
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    height: 300px;
+    /* Fixed height to prevent infinite expansion */
+    position: relative;
+    /* Needed for Chart.js responsive sizing */
+}
+
+.pa-chart-card canvas {
+    display: block;
+    max-height: 250px;
+    /* Leave room for title */
+}
+
+.pa-chart-title {
+    font-size: 1rem;
+    color: #374151;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.pa-results {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1e40af;
+    padding: 16px;
+    border-radius: 8px;
+    margin-top: 16px;
+}
+
+.pa-spinner {
+    display: none;
+    width: 24px;
+    height: 24px;
+    border: 3px solid #e5e7eb;
+    border-top: 3px solid #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 10px auto;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.pa-input-section {
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: center;
+}
+
+.pa-word-input-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 400px;
+}
+
+#pa-word-input {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 2px solid #e5e7eb;
+    font-size: 1.1rem;
+    color: #1f2937;
+    transition: all 0.2s;
+    text-align: center;
+    font-weight: 500;
+}
+
+#pa-word-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.pa-word-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: #f0f9ff;
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 1px solid #bae6fd;
+    width: 100%;
+}
+
+.pa-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.95rem;
+}
+
+.pa-info-label {
+    color: #0369a1;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+.pa-ipa-text {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #0c4a6e;
+    font-weight: 500;
+}
+
+#pa-pattern-display {
+    color: #0c4a6e;
+    font-weight: 500;
+}
+
+.pa-btn-primary {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.pa-btn-primary:hover {
+    background-color: #2563eb;
+}

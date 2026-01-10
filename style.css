@@ -7227,6 +7227,159 @@ textarea:focus {
   border: 1px solid #fecaca;
 }
 
+/* ============================================
+   More Help! Button & Scaffolding Panel
+   ============================================ */
+
+.more-help-btn {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.more-help-btn:hover {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+.more-help-btn:active {
+  transform: translateY(0);
+}
+
+.more-help-btn.active {
+  background: linear-gradient(135deg, #b45309, #92400e);
+}
+
+/* Scaffolding Panel */
+.scaffolding-panel {
+  display: none;
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border-radius: 12px;
+  padding: 0;
+  margin-bottom: 16px;
+  border: 1px solid #fcd34d;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scaffolding-panel.visible {
+  display: block;
+  max-height: 600px;
+  opacity: 1;
+  padding: 16px 20px;
+}
+
+.scaffolding-section {
+  margin-bottom: 16px;
+}
+
+.scaffolding-section:last-child {
+  margin-bottom: 0;
+}
+
+.scaffolding-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #92400e;
+  margin: 0 0 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Example Sentences List */
+.example-sentences-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.example-sentence-item {
+  background: white;
+  padding: 12px 14px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #374151;
+  border-left: 3px solid #f59e0b;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.example-sentence-item:last-child {
+  margin-bottom: 0;
+}
+
+.example-sentence-item.loading {
+  color: #9ca3af;
+  font-style: italic;
+  text-align: center;
+  border-left-color: #d1d5db;
+}
+
+.example-sentence-item.no-examples {
+  color: #6b7280;
+  font-style: italic;
+  text-align: center;
+  border-left-color: #d1d5db;
+}
+
+.highlight-word {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  color: #92400e;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+/* YouGlish Container */
+.youglish-container {
+  background: white;
+  border-radius: 8px;
+  padding: 12px 14px;
+  border-left: 3px solid #8b5cf6;
+}
+
+.youglish-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #7c3aed;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: color 0.2s ease;
+}
+
+.youglish-link:hover {
+  color: #5b21b6;
+  text-decoration: underline;
+}
+
+.youglish-icon {
+  font-size: 1.2rem;
+}
+
+.youglish-loading {
+  color: #9ca3af;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
 /* =========================================
    Vocabulary Mobile UI
    ========================================= */

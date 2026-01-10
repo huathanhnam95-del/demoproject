@@ -7,6 +7,7 @@
   <title>Dictation Practice</title>
   <link rel="stylesheet" href="style.css?v=20251230d">
   <link rel="stylesheet" href="srs-review.css?v=20260106">
+  <link rel="stylesheet" href="pronunciation-analyzer/style.css">
   <!-- XLSX Library -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 </head>
@@ -682,6 +683,54 @@
         <button id="tab-extended" class="tab-btn" type="button">Fill</button>
         <button id="tab-watch" class="tab-btn" type="button">Watch</button>
         <button id="tab-notes" class="tab-btn" type="button">Note</button>
+        <button id="tab-pronounce" class="tab-btn" type="button">Pronounce</button>
+      </div>
+
+      <!-- Pronunciation Analyzer Component -->
+      <div id="mode-pronounce" class="mode-panel" style="display: none;">
+        <div id="pronunciation-analyzer-container" class="pa-container">
+          <div class="pa-header">
+            <div class="pa-title">Stress & Pitch Analyzer</div>
+            <div class="pa-controls">
+              <button id="pa-record-btn" class="pa-btn pa-btn-record">Record</button>
+              <button id="pa-stop-btn" class="pa-btn pa-btn-stop" disabled>Stop</button>
+              <div id="pa-status" class="pa-status">Idle</div>
+            </div>
+          </div>
+
+          <div class="pa-input-section">
+            <div class="pa-word-input-container">
+              <input type="text" id="pa-word-input" placeholder="Type a word..." value="photograph">
+              <div id="pa-word-info" class="pa-word-info">
+                <div class="pa-info-row">
+                  <span class="pa-info-label">IPA:</span>
+                  <span id="pa-ipa-display" class="pa-ipa-text">/ˈfoʊ.tə.ɡræf/</span>
+                </div>
+                <div class="pa-info-row">
+                  <span class="pa-info-label">Pattern:</span>
+                  <span id="pa-pattern-display">3 Syllables, Stress on 1</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="pa-spinner" class="pa-spinner"></div>
+
+          <div class="pa-charts-grid">
+            <div class="pa-chart-card">
+              <div class="pa-chart-title">Pitch & Intensity</div>
+              <canvas id="pa-pitch-chart"></canvas>
+            </div>
+            <div class="pa-chart-card">
+              <div class="pa-chart-title">Syllable Stress</div>
+              <canvas id="pa-stress-chart"></canvas>
+            </div>
+          </div>
+
+          <div id="pa-results-summary" class="pa-results">
+            Record and speak a word to analyze stress.
+          </div>
+        </div>
       </div>
 
       <div id="mode-type" class="mode-panel active">
@@ -1601,6 +1650,25 @@
         <button id="srs-writing-close-btn" class="vocab-add-close"
           style="position: absolute; right: 20px; top: 20px;">×</button>
         <h3>✍️ Writing Challenge</h3>
+        <button id="more-help-btn" class="more-help-btn" title="Get more context and examples">
+          💡 More Help!
+        </button>
+      </div>
+
+      <!-- Scaffolding Panel (hidden by default) -->
+      <div id="scaffolding-panel" class="scaffolding-panel">
+        <div class="scaffolding-section">
+          <h4 class="scaffolding-title">📖 Example Sentences</h4>
+          <ul id="example-sentences-list" class="example-sentences-list">
+            <li class="example-sentence-item loading">Loading examples...</li>
+          </ul>
+        </div>
+        <div class="scaffolding-section">
+          <h4 class="scaffolding-title">🎬 Video Context</h4>
+          <div id="youglish-container" class="youglish-container">
+            <span class="youglish-loading">Loading video link...</span>
+          </div>
+        </div>
       </div>
 
       <!-- Hints Box -->
@@ -1669,6 +1737,10 @@
 
   <!-- SRS Review Module -->
   <script type="module" src="srs-review.js?v=20260106"></script>
+
+  <!-- Pronunciation Analyzer -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script type="module" src="pronunciation-analyzer/main.js"></script>
 
 </body>
 

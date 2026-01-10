@@ -1,3 +1,4 @@
+# --- SRS Review JavaScript (srs-review.js) ---
 /**
  * Spaced Repetition System (SRS) Module
  * Implements SM-2 algorithm for optimal vocabulary review scheduling
@@ -49,16 +50,8 @@ const SRSReview = (function () {
         autoAssignMode: true  // NEW: When true, system auto-selects interval based on pass/fail
     };
 
-    // Definition cache to avoid API spam (Now persistent)
+    // Definition cache to avoid API spam
     const definitionCache = new Map();
-    const DEF_CACHE_KEY = 'srs_definition_cache';
-
-    // Offline support variables
-    let pendingSave = null;
-    const LOCAL_STORAGE_KEY = 'srs_pending_data';
-
-    // Save debouncing
-    let saveTimeout = null;
 
     // Collocations data cache
     let collocationsData = null;
@@ -112,17 +105,9 @@ const SRSReview = (function () {
         cacheElements();
         setupEventListeners();
         loadCollocationsData(); // Load collocations for Writing Challenge
-        loadPendingData();      // Load any unsaved local data
-        loadDefinitionCache();  // Load persistent definitions
 
         // Initial dashboard update (will update again when data loads)
         updateDashboardSummary();
-
-        // Listen for online status to retry saves
-        window.addEventListener('online', () => {
-            console.log('[SRS] Back online, syncing pending changes...');
-            debouncedSave();
-        });
 
         console.log('[SRS] Module initialized');
     }
@@ -196,8 +181,7 @@ const SRSReview = (function () {
             srsWritingFeedback: document.getElementById('srs-writing-feedback'),
             srsWritingSubmit: document.getElementById('srs-writing-submit'),
             srsWritingSkip: document.getElementById('srs-writing-skip'),
-            srsWritingCloseBtn: document.getElementById('srs-writing-close-btn'),
-            showAnswerBtn: document.getElementById('srs-show-answer-btn'), // FIX: Added missing reference
+            srsWritingCloseBtn: document.getElementById('srs-writing-close-btn'), // NEW
 
             // Hint elements
             hintDefValue: document.getElementById('hint-def-value'),
@@ -214,8 +198,8 @@ const SRSReview = (function () {
     }
 
     /**
-    * Trigger Confetti Reward
-    */
+ * Trigger Confetti Reward
+ */
     function triggerConfetti() {
         if (window.confetti) {
             window.confetti({
@@ -525,75 +509,21 @@ const SRSReview = (function () {
     async function saveSRSData() {
         if (!currentUserId || !db) return;
 
-        const dataToSave = {
-            srsData: srsCache.srsData,
-            reviewStats: srsCache.reviewStats,
-            masteredWords: srsCache.masteredWords,
-            updatedAt: new Date().toISOString()
-        };
-
-        // Always save to localStorage first (instant, reliable)
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
-            userId: currentUserId,
-            data: dataToSave,
-            timestamp: Date.now()
-        }));
-
         try {
             const vocabDocRef = doc(db, 'users', currentUserId, 'vocabularyBook', 'data');
-            await setDoc(vocabDocRef, dataToSave, { merge: true });
+            await setDoc(vocabDocRef, {
+                srsData: srsCache.srsData,
+                reviewStats: srsCache.reviewStats,
+                masteredWords: srsCache.masteredWords,
+                updatedAt: new Date().toISOString()
+            }, { merge: true });
 
-            // Clear pending save on success
-            localStorage.removeItem(LOCAL_STORAGE_KEY);
-            console.log('[SRS] Saved SRS data to Firestore');
-            updateDashboardSummary();
+
+
+            console.log('[SRS] Saved SRS data');
+            updateDashboardSummary(); // Update UI after save
         } catch (e) {
             console.error('[SRS] Error saving SRS data:', e);
-            showToast('Progress saved locally (offline). Will sync when online.', 'warning');
-            scheduleRetry();
-        }
-    }
-
-    /**
-     * Debounced save wrapper to avoid excessive Firestore writes
-     */
-    function debouncedSave() {
-        if (saveTimeout) clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(() => {
-            saveSRSData();
-        }, 2000); // 2 second delay
-    }
-
-    /**
-     * Schedule retry for failed save
-     */
-    function scheduleRetry() {
-        if (pendingSave) clearTimeout(pendingSave);
-        pendingSave = setTimeout(async () => {
-            console.log('[SRS] Attempting to sync local data...');
-            await saveSRSData();
-        }, 10000); // Retry after 10 seconds
-    }
-
-    /**
-     * Load pending data from localStorage on init
-     */
-    function loadPendingData() {
-        const pending = localStorage.getItem(LOCAL_STORAGE_KEY);
-        if (!pending) return;
-
-        try {
-            const { userId, data, timestamp } = JSON.parse(pending);
-            // Only restore if same user and data is relatively recent (< 7 days)
-            if (userId === currentUserId && Date.now() - timestamp < 7 * 24 * 60 * 60 * 1000) {
-                console.log('[SRS] Restoring pending changes from local storage');
-                srsCache.srsData = data.srsData || srsCache.srsData;
-                srsCache.reviewStats = data.reviewStats || srsCache.reviewStats;
-                srsCache.masteredWords = data.masteredWords || srsCache.masteredWords;
-                saveSRSData(); // Try to sync immediately
-            }
-        } catch (e) {
-            console.warn('[SRS] Could not parse pending data:', e);
         }
     }
 
@@ -639,7 +569,7 @@ const SRSReview = (function () {
         };
 
         console.log('[SRS] Initialized word:', lemma, 'POS:', contextData.partOfSpeech || 'unknown');
-        debouncedSave(); // Use debounced save
+        saveSRSData();
     }
 
     /**
@@ -665,16 +595,6 @@ const SRSReview = (function () {
         dueWords.sort((a, b) => new Date(a.nextReviewDate) - new Date(b.nextReviewDate));
 
         return dueWords;
-    }
-
-    /**
-     * Get SRS data for a specific word
-     * @param {string} lemma - The word to look up
-     * @returns {object|null} - SRS data for the word, or null if not found
-     */
-    function getWordData(lemma) {
-        if (!lemma) return null;
-        return srsCache.srsData[lemma] || null;
     }
 
     /**
@@ -766,8 +686,7 @@ const SRSReview = (function () {
         // Determine status
         let status = 'learning';
         if (repetitions >= 3) status = 'reviewing';
-        // Mastery: repetition count OR long interval (unified)
-        if (repetitions >= MASTERY_THRESHOLD || interval >= 21) status = 'mastered';
+        if (repetitions >= MASTERY_THRESHOLD || interval >= 14) status = 'mastered';
 
         console.log(`[SRS Auto] Result: interval=${interval}, EF=${easeFactor.toFixed(2)}, reps=${repetitions}, status=${status}`);
 
@@ -830,7 +749,7 @@ const SRSReview = (function () {
         if (repetitions >= 3) {
             status = 'reviewing';
         }
-        if (repetitions >= MASTERY_THRESHOLD || interval >= 21) {
+        if (repetitions >= MASTERY_THRESHOLD) {
             status = 'mastered';
         }
 
@@ -1009,16 +928,14 @@ const SRSReview = (function () {
             const yesterday = new Date(now);
             yesterday.setDate(yesterday.getDate() - 1);
 
-            // More forgiving: streak only breaks after 48 hours
-            const hoursSinceLastSession = (now - lastSession) / (1000 * 60 * 60);
-            if (hoursSinceLastSession <= 48) {
+            if (lastSession.toDateString() === yesterday.toDateString()) {
                 srsCache.reviewStats.streak++;
                 if (srsCache.reviewStats.streak > srsCache.reviewStats.longestStreak) {
                     srsCache.reviewStats.longestStreak = srsCache.reviewStats.streak;
                 }
             } else {
-                // Streak broken (missed more than 24h + 24h grace)
-                srsCache.reviewStats.streak = 1; // Start new
+                // Streak broken
+                srsCache.reviewStats.streak = 0;
             }
 
             srsCache.reviewStats.reviewsToday = 0;
@@ -1029,9 +946,6 @@ const SRSReview = (function () {
      * Show the review panel
      */
     function showReviewPanel() {
-        // Prevent background scroll
-        document.body.style.overflow = 'hidden';
-
         if (elements.srsPanel) {
             elements.srsPanel.style.display = 'flex';
             elements.srsPanel.classList.add('active');
@@ -1043,18 +957,12 @@ const SRSReview = (function () {
         // Update stats display
         updateStatsDisplay();
         updateGamificationUI(); // Update gamification UI when panel is shown
-
-        // Accessibility: Trap focus
-        if (elements.srsPanel) trapFocus(elements.srsPanel);
     }
 
     /**
      * Close the review panel
      */
     function closeReviewPanel() {
-        // Restore background scroll
-        document.body.style.overflow = '';
-
         if (elements.srsPanel) {
             elements.srsPanel.classList.remove('active');
             // Actually hide the panel after animation
@@ -1518,10 +1426,8 @@ const SRSReview = (function () {
             // Stop recording if active
             stopRecording();
             userSaid = (currentTranscription || "").toLowerCase().trim();
-            // Word boundary match (more robust than strict equality)
-            const wordBoundaryRegex = new RegExp(`\\b${targetWord}\\b`, 'i');
-            isCorrect = wordBoundaryRegex.test(userSaid);
-            console.log(`[SRS] Speech Check: "${userSaid}" vs "${targetWord}" -> ${isCorrect}`);
+            // Fuzzy match logic could go here
+            isCorrect = userSaid === targetWord;
         }
 
         // Display Result
@@ -1782,29 +1688,19 @@ const SRSReview = (function () {
         srsCache.reviewStats.lastReviewSession = new Date().toISOString();
 
         await awardPoints(POINTS_PER_REVIEW, 'srs_review');
-        // FIX: Removed duplicate awardPoints call
-
+        await awardPoints(POINTS_PER_REVIEW, 'srs_review');
         await saveSRSData();
-        updateDashboardSummary(); // Update dashboard \"Next review\" info
+        updateDashboardUI(); // Update dashboard "Next review" info
 
         // Reset flip animation
         if (elements.flashcard) {
             elements.flashcard.classList.remove('flipped');
         }
 
-        // Trigger Writing Challenge even in auto mode if correct
-        if (wasCorrect) {
-            showWritingChallenge(currentWord, () => {
-                reviewSession.currentIndex++;
-                showCurrentWord();
-                saveSRSData();
-            });
-        } else {
-            // Move to next word immediately if wrong
-            reviewSession.currentIndex++;
-            showCurrentWord();
-            saveSRSData();
-        }
+        // Move to next word (skip Writing Challenge for simplicity in auto mode)
+        reviewSession.lastAnswerCorrect = false;
+        reviewSession.currentIndex++;
+        showCurrentWord();
     }
 
     /**
@@ -2125,7 +2021,6 @@ const SRSReview = (function () {
 
             const result = { definition, example };
             definitionCache.set(cacheKey, result);
-            saveDefinitionCache(); // Persist to local storage
             return result;
         } catch (e) {
             console.warn('[SRS] Definition fetch failed for:', searchTerm);
@@ -2133,29 +2028,6 @@ const SRSReview = (function () {
             definitionCache.set(cacheKey, result);
             return result;
         }
-    }
-
-    /**
-     * Persistent Definition Cache Logic
-     */
-    function saveDefinitionCache() {
-        try {
-            const obj = Object.fromEntries(definitionCache);
-            localStorage.setItem(DEF_CACHE_KEY, JSON.stringify(obj));
-        } catch (e) { /* ignore */ }
-    }
-
-    function loadDefinitionCache() {
-        try {
-            const stored = localStorage.getItem(DEF_CACHE_KEY);
-            if (stored) {
-                const obj = JSON.parse(stored);
-                for (const [k, v] of Object.entries(obj)) {
-                    definitionCache.set(k, v);
-                }
-                console.log('[SRS] Loaded', definitionCache.size, 'definitions from cache');
-            }
-        } catch (e) { /* ignore */ }
     }
 
     /**
@@ -2383,20 +2255,32 @@ const SRSReview = (function () {
      * @returns {Promise<string[]>} Array of example sentences
      */
     async function fetchTatoebaSentences(word) {
-        // Tatoeba CORS blocked in browser - use stored examples instead as primary source
-        const currentWord = reviewSession.wordsToReview[reviewSession.currentIndex];
-        if (currentWord && (currentWord.example || currentWord.sentence)) {
-            console.log('[SRS] Using stored example as scaffolding context');
-            return [currentWord.example || currentWord.sentence];
-        }
-
         const cacheKey = word.toLowerCase();
-        // Check cache for cases where we might have fetched before (or from local data)
+
+        // Check cache first
         if (tatoebaCache.has(cacheKey)) {
+            console.log('[SRS] Tatoeba cache hit for:', word);
             return tatoebaCache.get(cacheKey);
         }
 
-        return [];
+        try {
+            const response = await fetch(
+                `https://tatoeba.org/en/api_v0/search?query=${encodeURIComponent(word)}&from=eng&to=none`
+            );
+            if (!response.ok) throw new Error('Tatoeba API failed');
+
+            const data = await response.json();
+            const sentences = (data.results || [])
+                .slice(0, 5)
+                .map(r => r.text);
+
+            tatoebaCache.set(cacheKey, sentences);
+            console.log('[SRS] Tatoeba fetched', sentences.length, 'sentences for:', word);
+            return sentences;
+        } catch (e) {
+            console.warn('[SRS] Tatoeba fetch failed:', e);
+            return []; // Return empty, UI will use Wiktionary fallback
+        }
     }
 
     /**
@@ -2548,8 +2432,7 @@ const SRSReview = (function () {
             // Articles and determiners that start noun-phrase collocations
             const NOUN_PHRASE_STARTERS = ['a', 'an', 'the', 'my', 'your', 'his', 'her', 'their', 'our', 'its'];
 
-            const isVerbPhrase = VERB_STARTERS.includes(firstWord) ||
-                (typeof nlp !== 'undefined' && nlp(firstWord).verbs().found);
+            const isVerbPhrase = VERB_STARTERS.includes(firstWord);
             const startsWithArticle = NOUN_PHRASE_STARTERS.includes(firstWord);
 
             // If not a verb phrase, treat as noun phrase
@@ -2685,8 +2568,8 @@ const SRSReview = (function () {
                 return;
             }
 
-            // Calculate User Level from review stats
-            const points = srsCache.reviewStats.totalReviews * POINTS_PER_REVIEW || 0;
+            // Calculate User Level
+            const points = srsCache.totalPoints || 0;
             // Assuming calculateLevel is defined elsewhere or will be added
             const currentLevel = (typeof calculateLevel !== 'undefined' ? calculateLevel(points).level : 1);
 
@@ -2771,7 +2654,7 @@ const SRSReview = (function () {
                 elements.moreHelpBtn.classList.remove('active');
             }
             if (elements.exampleSentencesList) {
-                elements.exampleSentencesList.innerHTML = '<li class="example-sentence-item">Click "More Help" to see examples.</li>';
+                elements.exampleSentencesList.innerHTML = '<li class="example-sentence-item loading">Loading examples...</li>';
             }
             if (elements.youglishContainer) {
                 elements.youglishContainer.innerHTML = '<span class="youglish-loading">Loading video link...</span>';
@@ -2783,20 +2666,12 @@ const SRSReview = (function () {
             reviewSession.currentCollocation = promptData.usedCollocation; // Store for feedback
             reviewSession.userLevelForChallenge = currentLevel; // Check valid rules later
 
-            // Prevent background scroll
-            document.body.style.overflow = 'hidden';
-
             // Show celebratory toast notification
             showWritingChallengeToast();
 
             // Show Modal with slight delay for toast to appear first
             setTimeout(() => {
-                if (elements.srsWritingModal) {
-                    elements.srsWritingModal.style.zIndex = '2200'; // Ensure it's on top
-                    elements.srsWritingModal.classList.add('visible');
-                    // Accessibility: Trap focus
-                    trapFocus(elements.srsWritingModal);
-                }
+                elements.srsWritingModal.classList.add('visible');
                 setTimeout(() => {
                     if (elements.srsWritingInput) elements.srsWritingInput.focus();
                 }, 300);
@@ -2951,11 +2826,8 @@ const SRSReview = (function () {
 
         // Proceed after delay
         setTimeout(() => {
-            // Clear callback BEFORE closing to prevent double-call
-            const cb = reviewSession.writingCallback;
-            reviewSession.writingCallback = null;
-            closeWritingChallenge(); // Closes modal (won't call callback since we cleared it)
-            if (cb) cb();
+            closeWritingChallenge(); // Closes modal
+            if (reviewSession.writingCallback) reviewSession.writingCallback();
         }, 2000); // Slightly longer to read feedback
     }
     function handleWritingSkip() {
@@ -2963,11 +2835,6 @@ const SRSReview = (function () {
     }
 
     function closeWritingChallenge() {
-        // Restore background scroll if SRS panel is not active
-        if (!elements.srsPanel || !elements.srsPanel.classList.contains('active')) {
-            document.body.style.overflow = '';
-        }
-
         if (elements.srsWritingModal) {
             elements.srsWritingModal.classList.remove('visible');
         }
@@ -2979,132 +2846,11 @@ const SRSReview = (function () {
         }
     }
 
-    /**
-     * Show a simple toast notification
-     */
-    function showToast(message, type = 'info') {
-        const toast = document.createElement('div');
-        toast.className = `srs-toast srs-toast-${type}`;
-        toast.style.cssText = `
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            background: ${type === 'warning' ? '#f59e0b' : '#1e293b'};
-            color: white;
-            padding: 12px 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 3000;
-            font-size: 0.9rem;
-            font-weight: 500;
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        `;
-
-        const icon = type === 'warning' ? '⚠️' : 'ℹ️';
-        toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
-        document.body.appendChild(toast);
-
-        // Trigger animation
-        requestAnimationFrame(() => {
-            toast.style.transform = 'translateY(0)';
-            toast.style.opacity = '1';
-        });
-
-        // Hide after 4 seconds
-        setTimeout(() => {
-            toast.style.transform = 'translateY(20px)';
-            toast.style.opacity = '0';
-            setTimeout(() => toast.remove(), 400);
-        }, 4000);
-    }
-
-    /**
-     * Accessibility (a11y) Features
-     */
-    function setupAccessibility() {
-        // Apply ARIA roles and labels to modals
-        if (elements.srsPanel) {
-            elements.srsPanel.setAttribute('role', 'dialog');
-            elements.srsPanel.setAttribute('aria-modal', 'true');
-            elements.srsPanel.setAttribute('aria-label', 'Vocabulary Review Session');
-        }
-        if (elements.srsWritingModal) {
-            elements.srsWritingModal.setAttribute('role', 'dialog');
-            elements.srsWritingModal.setAttribute('aria-modal', 'true');
-            elements.srsWritingModal.setAttribute('aria-label', 'Writing Challenge');
-        }
-
-        // Global Escape key handler
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                if (elements.srsWritingModal && elements.srsWritingModal.classList.contains('visible')) {
-                    closeWritingChallenge();
-                } else if (elements.srsPanel && elements.srsPanel.classList.contains('active')) {
-                    closeReviewPanel();
-                }
-            }
-        });
-    }
-
-    /**
-     * Focus Trapping Logic
-     */
-    function trapFocus(modal) {
-        const focusableElements = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-        if (focusableElements.length === 0) return;
-
-        const firstFocusable = focusableElements[0];
-        const lastFocusable = focusableElements[focusableElements.length - 1];
-
-        modal.addEventListener('keydown', function (e) {
-            if (e.key === 'Tab') {
-                if (e.shiftKey) { // Shift + Tab
-                    if (document.activeElement === firstFocusable) {
-                        lastFocusable.focus();
-                        e.preventDefault();
-                    }
-                } else { // Tab
-                    if (document.activeElement === lastFocusable) {
-                        firstFocusable.focus();
-                        e.preventDefault();
-                    }
-                }
-            }
-        });
-    }
-
-    /**
-     * Offline Sync Helper: Check and retry
-     */
-    function checkOfflineSync() {
-        if (navigator.onLine) {
-            const pending = localStorage.getItem(LOCAL_STORAGE_KEY);
-            if (pending) {
-                console.log('[SRS] Pending data found, attempt sync...');
-                debouncedSave();
-            }
-        }
-    }
-
-    let isInitialized = false;
-    function initModule() {
-        if (isInitialized) return;
-        init();
-        setupAccessibility(); // Add a11y on init
-        checkOfflineSync();    // Sync if online
-        isInitialized = true;
-    }
-
     // Initialize on DOM ready
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initModule);
+        document.addEventListener('DOMContentLoaded', init);
     } else {
-        initModule();
+        init();
     }
 
     // Public API
@@ -3112,9 +2858,12 @@ const SRSReview = (function () {
         setUser,
         initializeWord,
         getWordsDueForReview,
+        getDueCount,
+        getNextReviewInfo,  // NEW: Schedule visibility
         startReviewSession,
+        getStats,
         getWordData,
-        init: initModule
+        loadData: loadSRSData
     };
 
 })();
@@ -3123,3 +2872,1591 @@ const SRSReview = (function () {
 if (typeof window !== 'undefined') {
     window.SRSReview = SRSReview;
 }
+
+# --- SRS Review CSS (srs-review.css) ---
+/**
+ * SRS Review Styles
+ * Flashcard-based vocabulary review UI
+ */
+
+/* Overlay (Strict Mode) */
+.srs-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    /* Darker, solid backdrop */
+    backdrop-filter: blur(4px);
+    z-index: 10000;
+    /* High Z-Index */
+    pointer-events: auto;
+    /* Block interactions */
+}
+
+/* Main Panel */
+.srs-panel {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 92%;
+    max-width: 560px;
+    /* Enlarged from 448px */
+    max-height: 95vh;
+    /* Use more screen */
+    background: #FAFAFA;
+    border-radius: 24px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    z-index: 10001;
+    display: flex;
+    flex-direction: column;
+    flex-direction: column;
+    /* overflow: hidden;  <-- REMOVED to allow sidecar */
+    padding: 24px 28px;
+    /* Slightly more padding */
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+/* Desktop Sidecar Layout */
+@media (min-width: 1000px) {
+    .srs-panel {
+        overflow: visible;
+    }
+
+    .srs-controls {
+        position: absolute;
+        left: 100%;
+        top: 0;
+        margin-left: 16px;
+        /* Closer */
+        width: 260px;
+        /* Much more compact (was 340px) */
+        background: white;
+        padding: 16px;
+        /* Tighter padding */
+        border-radius: 16px;
+        /* Match scale */
+        box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.2);
+
+        /* Animation Base State */
+        opacity: 0;
+        transform: translateX(-15px) scale(0.98);
+        pointer-events: none;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+        height: auto;
+        align-items: stretch;
+    }
+
+    .srs-controls.visible {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+        pointer-events: auto;
+    }
+
+    .srs-quality-btns {
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: none !important;
+        max-height: none !important;
+        padding-top: 8px;
+        /* Reduced spacing */
+        gap: 6px;
+    }
+
+    /* Overrides for Compactness */
+    .srs-quality-options {
+        gap: 6px;
+    }
+
+    .quality-option {
+        padding: 8px 10px;
+        border-radius: 8px;
+    }
+
+    .quality-days {
+        font-size: 13px;
+    }
+
+    .quality-desc {
+        font-size: 10px;
+        line-height: 1.2;
+    }
+
+    .srs-quality-prompt {
+        font-size: 13px;
+        margin-bottom: 4px;
+    }
+}
+
+.srs-panel.active {
+    display: flex;
+    /* Ensure flex when active */
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+}
+
+/* Header */
+/* Header */
+.srs-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+    background: transparent;
+    padding: 0;
+    border: none;
+}
+
+.srs-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.srs-close-btn {
+    background: transparent;
+    border: none;
+    color: #9CA3AF;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 4px;
+    transition: color 0.2s;
+}
+
+.srs-close-btn:hover {
+    color: #111827;
+    background: transparent;
+}
+
+/* Stats Row */
+.srs-stats {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 0;
+    background: transparent;
+    border: none;
+}
+
+.srs-stats span {
+    font-size: 0.875rem;
+    color: #9CA3AF;
+    font-weight: 500;
+}
+
+#srs-streak {
+    color: #F59E0B;
+}
+
+/* Flashcard Container - NO SCROLL NEEDED */
+.srs-flashcard-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 16px;
+    margin-bottom: 32px;
+    /* Increased margin to prevent overlap */
+    flex-shrink: 0;
+    /* Prevent shrinking */
+    width: 100%;
+}
+
+/* SRS Element Box Sizing */
+.srs-panel,
+.srs-panel *,
+.srs-overlay {
+    box-sizing: border-box;
+}
+
+/* Flashcard */
+.srs-flashcard {
+    width: 100%;
+    max-width: 420px;
+    /* Consistently narrower */
+    height: 380px;
+    /* Increased from 320px to fit examples + results */
+    perspective: 1000px;
+    position: relative;
+    z-index: 10;
+}
+
+.srs-flashcard-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+}
+
+.srs-flashcard.flipped .srs-flashcard-inner {
+    transform: rotateY(180deg);
+}
+
+.srs-flashcard-front,
+.srs-flashcard-back {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 16px;
+    /* Reduced vertical padding */
+    /* Reduced padding */
+    border-radius: 24px;
+    background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    height: 100%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    color: #1e293b;
+    overflow-y: hidden;
+    /* Prevent scroll, prioritize fitting */
+}
+
+.srs-flashcard-back {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform: rotateY(180deg);
+}
+
+/* Word Display */
+.srs-word,
+.srs-word-front {
+    font-size: 26px;
+    /* Slightly smaller */
+    font-weight: 800;
+    color: #111827 !important;
+    margin-bottom: 4px;
+    text-align: center;
+    letter-spacing: -0.5px;
+}
+
+/* Pronunciation Row */
+.srs-pronunciation-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.srs-phonetic,
+.srs-phonetic-back {
+    font-size: 15px;
+    color: #6B7280 !important;
+    font-family: 'Times New Roman', serif;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+}
+
+/* Small Audio Button */
+.srs-audio-btn-small {
+    background: #3b82f6;
+    border: none;
+    color: white;
+    width: 40px;
+    /* Increased from 28px */
+    height: 40px;
+    /* Increased from 28px */
+    border-radius: 50%;
+    font-size: 18px;
+    /* Increased icon size */
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    flex-shrink: 0;
+    /* Don't squash */
+}
+
+.srs-audio-btn-small:hover {
+    transform: scale(1.1);
+    background: #2563eb;
+}
+
+.srs-audio-btn {
+    background: linear-gradient(145deg, #3b82f6, #2563eb);
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.srs-audio-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+}
+
+.srs-audio-btn:active {
+    transform: scale(0.98);
+}
+
+/* Back of Card */
+/* Vietnamese Translation */
+.srs-vietnamese {
+    font-size: 16px;
+    font-weight: 600;
+    color: #3B82F6;
+    /* Blue accent */
+    text-align: center;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.srs-vietnamese:empty {
+    display: none;
+}
+
+/* Definition */
+.srs-definition {
+    font-size: 15px;
+    /* Slightly smaller */
+    color: #374151 !important;
+    text-align: center;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    font-weight: 400;
+
+    /* Clamp text to avoid overflow */
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+#srs-example {
+    font-size: 13px;
+    color: #6B7280 !important;
+    font-style: italic;
+    opacity: 1 !important;
+    text-align: center;
+    margin-bottom: 4px;
+    /* Reduced margin */
+
+    /* Clamp text */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.srs-example::before {
+    content: '"';
+}
+
+.srs-example::after {
+    content: '"';
+}
+
+.srs-example:empty {
+    display: none;
+}
+
+.srs-example:empty::before,
+.srs-example:empty::after {
+    content: none;
+}
+
+/* Controls - FIXED POSITION AREA */
+.srs-controls {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0 8px 0;
+    background: #FAFAFA;
+    flex-shrink: 0;
+}
+
+.srs-quality-btns {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+
+    /* Animation: Hidden by default */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    max-height: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.srs-quality-btns.visible {
+    /* Animation: Show */
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    max-height: 300px;
+    /* Allow enough space */
+    pointer-events: auto;
+}
+
+.srs-skip-btn {
+    margin-top: 8px;
+    padding: 8px 20px;
+    background: transparent;
+    border: 1px solid #d1d5db;
+    border-radius: 20px;
+    color: #6b7280;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.srs-skip-btn:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+    color: #374151;
+}
+
+.srs-quality-prompt {
+    font-size: 15px;
+    font-weight: 600;
+    color: #374151;
+    margin: 0 0 8px 0;
+    text-align: center;
+}
+
+.srs-quality-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    max-width: 360px;
+    gap: 8px;
+}
+
+.quality-option {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    background: #ffffff;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    transition: all 0.15s ease;
+}
+
+.quality-option:hover {
+    border-color: #3B82F6;
+    background: #f0f7ff;
+}
+
+.quality-option:active {
+    transform: scale(0.98);
+}
+
+.quality-days {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.quality-desc {
+    font-size: 11px;
+    font-weight: 400;
+    color: #6b7280;
+    margin-top: 1px;
+}
+
+/* Color accents for left border */
+.quality-1day {
+    border-left: 4px solid #EF4444;
+}
+
+.quality-3days {
+    border-left: 4px solid #F59E0B;
+}
+
+.quality-6days {
+    border-left: 4px solid #10B981;
+}
+
+.quality-14days {
+    border-left: 4px solid #3B82F6;
+}
+
+/* Pronunciation Practice Button */
+.srs-practice-pronunciation-btn {
+    margin-top: 12px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #10B981, #059669);
+    border: none;
+    border-radius: 20px;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.srs-practice-pronunciation-btn:hover {
+    transform: scale(1.03);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.srs-practice-pronunciation-btn.recording {
+    background: linear-gradient(135deg, #EF4444, #DC2626);
+    animation: pulse-recording 1.5s infinite;
+}
+
+@keyframes pulse-recording {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.srs-pronunciation-result {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #F0FDF4;
+    border-radius: 8px;
+    font-size: 13px;
+    text-align: center;
+}
+
+.srs-pronunciation-result.correct {
+    background: #D1FAE5;
+    color: #065F46;
+}
+
+.srs-pronunciation-result.incorrect {
+    background: #FEE2E2;
+    color: #991B1B;
+}
+
+/* Input Styling */
+.srs-input-container {
+    width: 100%;
+    margin-top: 12px;
+}
+
+.srs-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    background: #F9FAFB;
+    color: #111827;
+    font-size: 16px;
+    text-align: center;
+    outline: none;
+}
+
+.srs-input:focus {
+    border-color: #3B82F6;
+    background: #FFFFFF;
+}
+
+/* Pagination */
+.srs-progress {
+    text-align: center;
+    font-size: 14px;
+    color: #9CA3AF;
+    padding: 0;
+    border: none;
+    background: transparent;
+}
+
+.srs-progress-bar {
+    display: none;
+}
+
+/* Hide bar, show text only? User said "Pagination: 14px normal centered" */
+/* Actually keeping bar but making it subtle? User didn't design bar. Assuming text only or subtle. */
+/* I'll hide the bar for now as per "Pagination: 14px, normal, centered" usually implies text "1 / 10" */
+
+
+.srs-progress-bar {
+    height: 6px;
+    background: rgba(148, 163, 184, 0.2);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.srs-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+/* Session Summary */
+.srs-summary {
+    display: none;
+    padding: 32px 24px;
+    text-align: center;
+}
+
+.srs-summary-content h3 {
+    font-size: 1.5rem;
+    color: #f1f5f9;
+    margin-bottom: 24px;
+}
+
+.srs-summary-stats {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.srs-summary-stats .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.srs-summary-stats .stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #6366f1;
+}
+
+.srs-summary-stats .stat-label {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.srs-points-earned {
+    background: linear-gradient(145deg, rgba(34, 197, 94, 0.2), rgba(22, 163, 74, 0.1));
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+}
+
+.srs-points-earned span {
+    color: #22c55e;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.srs-points-earned .bonus {
+    display: block;
+    font-size: 0.85rem;
+    color: #86efac;
+    margin-top: 4px;
+}
+
+.srs-all-done {
+    color: #22c55e;
+    font-size: 1rem;
+    margin-bottom: 20px;
+}
+
+.srs-remaining {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+}
+
+.srs-done-btn {
+    background: linear-gradient(145deg, #6366f1, #4f46e5);
+    border: none;
+    color: white;
+    padding: 14px 48px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.srs-done-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+}
+
+/* Start Review Button (in Vocab Book) */
+.srs-start-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(145deg, #8b5cf6, #7c3aed);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 16px;
+}
+
+.srs-start-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+}
+
+.srs-start-btn:disabled {
+    background: #475569;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.srs-due-badge {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+}
+
+/* No Words Due State */
+.srs-no-due {
+    text-align: center;
+    padding: 20px;
+    color: #94a3b8;
+}
+
+.srs-next-review {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-top: 8px;
+}
+
+/* Mobile Styles */
+@media (max-width: 640px) {
+    .srs-panel {
+        width: 95%;
+        max-height: 90vh;
+        border-radius: 20px;
+    }
+
+    .srs-word {
+        font-size: 1.75rem;
+    }
+
+    .srs-quality-btns {
+        flex-wrap: wrap;
+    }
+
+    .srs-quality-btns button {
+        min-width: 45%;
+        padding: 12px 8px;
+    }
+
+    .srs-summary-stats {
+        gap: 16px;
+    }
+
+    .srs-summary-stats .stat-value {
+        font-size: 1.5rem;
+    }
+}
+
+/* Input Styling */
+.srs-input-container {
+    width: 100%;
+    margin-top: 24px;
+    padding: 0 16px;
+    box-sizing: border-box;
+}
+
+.srs-input {
+    width: 100%;
+    padding: 16px;
+    background: #ffffff;
+    border: 2px solid #cbd5e1;
+    border-radius: 12px;
+    color: #0f172a;
+    font-size: 1.2rem;
+    text-align: center;
+    transition: all 0.2s;
+    box-sizing: border-box !important;
+    /* Force fix overflow */
+    box-shadow: inner 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.srs-input:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    transform: translateY(-1px);
+}
+
+/* Record Button */
+.srs-record-btn {
+    background: linear-gradient(145deg, #ef4444, #dc2626);
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.srs-record-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+}
+
+.srs-record-btn.recording {
+    background: linear-gradient(145deg, #22c55e, #16a34a);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Result Display */
+.srs-result-container {
+    margin-top: 8px;
+    /* Reduced from 16px */
+    text-align: center;
+    padding: 8px 12px;
+    /* More compact */
+    background: #F0FDF4;
+    /* Light green tint for correct, will be overridden by JS if needed */
+    border-radius: 12px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.srs-result-message {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #111827;
+}
+
+.srs-result-message.correct {
+    color: #10B981;
+    /* Match Good button */
+}
+
+.srs-result-message.incorrect {
+    color: #EF4444;
+    /* Match Again button */
+}
+
+.srs-user-input-display {
+    font-size: 14px;
+    color: #6B7280;
+    font-style: italic;
+}
+
+.srs-definition-prompt {
+    font-size: 16px;
+    color: #374151 !important;
+    /* Dark Gray - must be visible */
+    text-align: center;
+    line-height: 1.5;
+}
+
+/* Feedback Toast */
+.srs-feedback-toast {
+    position: absolute;
+    bottom: 80px;
+    /* Lower, above controls */
+    left: 50%;
+    transform: translateX(-50%) scale(0.9);
+    background: rgba(31, 41, 55, 0.95);
+    color: white;
+    padding: 16px 32px;
+    border-radius: 50px;
+    font-size: 18px;
+    font-weight: 600;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 2000;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.srs-feedback-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+    margin-top: 0;
+}
+
+/* Writing Prompt Styled as Info Box */
+.srs-writing-prompt {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    color: #065f46;
+    padding: 16px;
+    border-radius: 12px;
+    margin: 12px 0 16px 0;
+    text-align: center;
+    font-weight: 500;
+    font-size: 1.1rem;
+    line-height: 1.5;
+}
+
+/* Auto-Continue Button (Auto-Assign Mode) */
+.srs-auto-continue-btn {
+    width: 100%;
+    max-width: 320px;
+    padding: 16px 24px;
+    margin: 12px auto;
+    background: linear-gradient(145deg, #10B981, #059669);
+    border: none;
+    border-radius: 16px;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.srs-auto-continue-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+}
+
+.srs-auto-continue-btn:active {
+    transform: translateY(0);
+}
+
+.auto-continue-text {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.auto-continue-hint {
+    font-size: 0.75rem;
+    font-weight: 400;
+    opacity: 0.85;
+}
+
+/* =========================================
+   Dashboard SRS Summary
+   ========================================= */
+.dashboard-srs-summary {
+    margin-top: 12px;
+    padding: 8px 12px;
+    background-color: rgba(37, 99, 235, 0.1);
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #1e40af;
+    display: none;
+    /* Managed by JS */
+    align-items: center;
+    gap: 8px;
+    pointer-events: none;
+    /* Pass clicks to card */
+    transition: background-color 0.2s;
+}
+
+.dashboard-srs-summary .icon {
+    font-size: 1.1em;
+}
+
+.dashboard-cta-card:hover .dashboard-srs-summary {
+    background-color: rgba(37, 99, 235, 0.2);
+    border-color: rgba(37, 99, 235, 0.3);
+}
+
+/* =========================================
+   Mobile UI Optimizations
+   ========================================= */
+@media (max-width: 640px) {
+
+    /* Full Screen Modal */
+    .srs-panel {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
+        max-height: none !important;
+        top: 0 !important;
+        left: 0 !important;
+        transform: none !important;
+        border-radius: 0 !important;
+        padding: 16px !important;
+        justify-content: space-between;
+        /* Space out header, content, footer */
+    }
+
+    .srs-panel.active {
+        transform: none !important;
+    }
+
+    /* Compact Header */
+    .srs-header {
+        margin-bottom: 12px;
+        flex-shrink: 0;
+    }
+
+    .srs-header h2 {
+        font-size: 1.2rem;
+    }
+
+    .srs-stats {
+        margin-bottom: 16px;
+    }
+
+    /* Flexible Flashcard Container */
+    .srs-flashcard-container {
+        padding: 0;
+        margin: 0;
+        flex: 1;
+        /* Take all available vertical space */
+        justify-content: center;
+        /* Center vertically */
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        max-height: 55vh;
+        /* Don't be too tall */
+    }
+
+    .srs-flashcard {
+        width: 100%;
+        max-width: 100%;
+        height: 100%;
+        /* Fill container */
+        min-height: 300px;
+        /* Increased from 220px to fit content */
+    }
+
+    .srs-flashcard-front,
+    .srs-flashcard-back {
+        padding: 16px;
+        justify-content: center;
+        /* Center content vertically */
+    }
+
+    .srs-word,
+    .srs-word-front {
+        font-size: 2rem;
+        /* Readable size */
+        margin-bottom: 8px;
+    }
+
+    .srs-definition {
+        font-size: 14px;
+        -webkit-line-clamp: 5;
+        line-clamp: 5;
+        /* Show more text if needed */
+    }
+
+    /* Controls at Bottom - FIXED POSITION to prevent push */
+    .srs-controls {
+        width: 100%;
+        padding: 12px 16px 24px 16px;
+        flex-shrink: 0;
+        background: transparent;
+        gap: 12px;
+
+        /* Absolute positioning at bottom */
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        z-index: 20;
+    }
+
+    /* Add padding to panel bottom to reserve space for controls */
+    .srs-panel {
+        padding-bottom: 90px !important;
+        /* Reserve space for buttons */
+    }
+
+    /* When quality buttons appear, they overlay or slide up without moving card */
+    .srs-quality-btns {
+        position: absolute;
+        bottom: 0px;
+        left: 0;
+        right: 0;
+        background: #FAFAFA;
+        /* Opaque background to cover anything behind */
+        padding: 16px;
+        border-radius: 20px 20px 0 0;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+        z-index: 30;
+    }
+
+    /* Big Friendly Buttons */
+    .srs-audio-btn {
+        width: 100%;
+        padding: 14px;
+        justify-content: center;
+        font-size: 1.1rem;
+        border-radius: 12px;
+    }
+
+    .srs-record-btn {
+        width: 100%;
+        padding: 14px;
+        border-radius: 12px;
+    }
+
+    /* Quality Grid - 2x2 for buttons */
+    .srs-quality-options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .quality-option {
+        padding: 12px;
+        height: auto;
+        justify-content: center;
+        text-align: center;
+        align-items: center;
+    }
+
+    .quality-days {
+        font-size: 1.1rem;
+        margin-bottom: 2px;
+    }
+
+    .quality-desc {
+        display: none;
+        /* Hide description to keep it clean */
+    }
+
+    .srs-quality-prompt {
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+        opacity: 0.8;
+    }
+
+    /* Writing Mode Mobile */
+    .srs-writing-modal {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
+        border-radius: 0 !important;
+        top: 0 !important;
+        left: 0 !important;
+        transform: none !important;
+        padding: 16px !important;
+    }
+
+    .srs-writing-input {
+        font-size: 1.2rem;
+        /* Larger text for input */
+        padding: 12px;
+    }
+}
+
+# --- SRS Review HTML (index.html, around line 466) ---
+  <div id="srs-review-panel" class="srs-panel" style="display: none;">
+    <div class="srs-header">
+      <h2>📚 Vocabulary Review</h2>
+      <button id="srs-close-btn" class="srs-close-btn" title="Close">×</button>
+    </div>
+
+    <div class="srs-stats">
+      <div class="srs-level-info">
+        <div class="level-badge" id="srs-level-badge">Lvl 1</div>
+        <div class="xp-progress-container">
+          <div class="xp-progress-bar" id="srs-xp-bar" style="width: 0%"></div>
+        </div>
+      </div>
+      <span id="srs-due-count">0 words due</span>
+      <span id="srs-streak" style="display: none;">🔥 0 day streak</span>
+    </div>
+
+    <div class="srs-flashcard-container">
+      <div class="srs-flashcard" id="srs-flashcard">
+        <div class="srs-flashcard-inner">
+          <div class="srs-flashcard-front" id="srs-flashcard-front">
+            <!-- Front Content: Definition + Word displayed -->
+            <span class="srs-definition-prompt" id="srs-definition-prompt">Definition here</span>
+
+            <!-- Word Display on Front Face -->
+            <span class="srs-word-front" id="srs-word-front">word</span>
+
+            <!-- Controls (Audio/Record) -->
+            <div class="srs-front-controls">
+              <button class="srs-audio-btn" id="srs-audio-btn">🔊 Listen</button>
+              <button class="srs-record-btn" id="srs-record-btn" style="display: none;">Start Recording</button>
+            </div>
+
+            <!-- Input (Typing Mode) -->
+            <div class="srs-input-container" id="srs-input-container">
+              <input type="text" id="srs-input" class="srs-input" placeholder="Type the word..." autocomplete="off">
+            </div>
+          </div>
+          <div class="srs-flashcard-back" id="srs-flashcard-back">
+            <!-- Back Face Layout: Phonetic -> Listen -> Word -> Def -> Example -> Result -->
+            <!-- Back Face Layout: Word -> Phonetic+Audio -> Def -> Example -> Result -->
+            <span class="srs-word" id="srs-word">vocabulary</span>
+
+            <div class="srs-pronunciation-row">
+              <span class="srs-phonetic" id="srs-phonetic-back">...</span>
+              <button class="srs-audio-btn-small" id="srs-audio-btn-back" title="Listen">🔊</button>
+            </div>
+
+            <!-- Vietnamese Translation -->
+            <span class="srs-vietnamese" id="srs-vietnamese"></span>
+
+            <span class="srs-definition" id="srs-definition">Definition here</span>
+            <span class="srs-example" id="srs-example"></span>
+
+            <!-- Result Display -->
+            <div class="srs-result-container" id="srs-result-container" style="display: none;">
+              <div id="srs-result-message" class="srs-result-message"></div>
+              <div id="srs-user-input-display" class="srs-user-input-display"></div>
+            </div>
+
+            <!-- Pronunciation Practice Button -->
+            <button class="srs-practice-pronunciation-btn" id="srs-practice-pronunciation-btn" style="display: none;">
+              🎙️ Practice Saying It
+            </button>
+            <div class="srs-pronunciation-result" id="srs-pronunciation-result" style="display: none;">
+              <span id="srs-pronunciation-feedback"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="srs-controls">
+      <div class="srs-quality-btns" id="srs-quality-btns">
+        <p class="srs-quality-prompt">Practice this word again in:</p>
+        <div class="srs-quality-options">
+          <button data-quality="1" class="quality-option quality-1day">
+            <span class="quality-days">1 day</span>
+            <span class="quality-desc">This word is hard</span>
+          </button>
+          <button data-quality="3" class="quality-option quality-3days">
+            <span class="quality-days">3 days</span>
+            <span class="quality-desc">This is not so hard</span>
+          </button>
+          <button data-quality="4" class="quality-option quality-6days">
+            <span class="quality-days">6 days</span>
+            <span class="quality-desc">This is fairly easy</span>
+          </button>
+          <button data-quality="5" class="quality-option quality-14days">
+            <span class="quality-days">14 days</span>
+            <span class="quality-desc">This is very easy</span>
+          </button>
+        </div>
+
+        <!-- Auto-Assign Button (shown when autoAssignMode is enabled) -->
+        <button id="srs-auto-continue-btn" class="srs-auto-continue-btn" style="display: none;">
+          <span class="auto-continue-text">Continue →</span>
+          <span class="auto-continue-hint">Scheduling automatically based on your answer</span>
+        </button>
+
+        <button id="srs-skip-btn" class="srs-skip-btn">Skip this word →</button>
+      </div>
+    </div>
+
+    <div class="srs-progress">
+      <span class="srs-progress-text" id="srs-progress-text">1 of 10</span>
+      <div class="srs-progress-bar">
+        <div class="srs-progress-fill" id="srs-progress-fill"></div>
+      </div>
+    </div>
+
+    <div class="srs-summary" id="srs-summary" style="display: none;"></div>
+  </div>
+
+# --- Writing Challenge Modal HTML (index.html, around line 1647) ---
+  <div id="srs-writing-modal" class="srs-writing-modal">
+    <div class="srs-writing-content">
+      <div class="srs-writing-header">
+        <button id="srs-writing-close-btn" class="vocab-add-close"
+          style="position: absolute; right: 20px; top: 20px;">×</button>
+        <h3>✍️ Writing Challenge</h3>
+        <button id="more-help-btn" class="more-help-btn" title="Get more context and examples">
+          💡 More Help!
+        </button>
+      </div>
+
+      <!-- Scaffolding Panel (hidden by default) -->
+      <div id="scaffolding-panel" class="scaffolding-panel">
+        <div class="scaffolding-section">
+          <h4 class="scaffolding-title">📖 Example Sentences</h4>
+          <ul id="example-sentences-list" class="example-sentences-list">
+            <li class="example-sentence-item loading">Loading examples...</li>
+          </ul>
+        </div>
+        <div class="scaffolding-section">
+          <h4 class="scaffolding-title">🎬 Video Context</h4>
+          <div id="youglish-container" class="youglish-container">
+            <span class="youglish-loading">Loading video link...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hints Box -->
+      <div id="srs-writing-hints" class="srs-writing-hints">
+        <div class="hint-item" id="hint-example">
+          <span class="hint-label">💡 Example:</span>
+          <span class="hint-value" id="hint-example-value">-</span>
+        </div>
+        <div class="hint-item" id="hint-collocations">
+          <span class="hint-label">🔗 Common phrases:</span>
+          <span class="hint-value" id="hint-collocations-value">-</span>
+        </div>
+      </div>
+
+      <div class="srs-writing-input-container">
+        <p class="srs-writing-instruction" style="display: none;">💡 Practice using this word in your own sentence!</p>
+        <p id="srs-writing-prompt" class="srs-writing-prompt">Loading prompt...</p>
+
+        <div class="hint-item" id="hint-starter" style="justify-content: center; margin-bottom: 12px;">
+          <span class="hint-label">✏️ Starter:</span>
+          <span class="hint-value" id="hint-starter-value">-</span>
+          <button id="refresh-starter-btn" class="refresh-starter-btn" title="Get a different starter">🔄</button>
+        </div>
+
+        <textarea id="srs-writing-input" class="srs-writing-input"
+          placeholder="Write your sentence here... (Must include the word)"></textarea>
+        <div id="srs-writing-feedback" class="srs-writing-feedback"></div>
+      </div>
+
+      <div class="srs-writing-actions">
+        <button id="srs-writing-skip" class="srs-writing-btn-skip">Skip</button>
+        <button id="srs-writing-submit" class="srs-writing-btn-submit">Check Sentence</button>
+      </div>
+    </div>
+  </div>
+
+# --- Writing Challenge Styles (style.css, around line 7205) ---
+.srs-writing-feedback {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  display: none;
+  text-align: left;
+  white-space: pre-wrap;
+  animation: fadeIn 0.3s ease;
+}
+
+.srs-writing-feedback.success {
+  display: block;
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.srs-writing-feedback.error {
+  display: block;
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+/* ============================================
+   More Help! Button & Scaffolding Panel
+   ============================================ */
+
+.more-help-btn {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.more-help-btn:hover {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+.more-help-btn:active {
+  transform: translateY(0);
+}
+
+.more-help-btn.active {
+  background: linear-gradient(135deg, #b45309, #92400e);
+}
+
+/* Scaffolding Panel */
+.scaffolding-panel {
+  display: none;
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border-radius: 12px;
+  padding: 0;
+  margin-bottom: 16px;
+  border: 1px solid #fcd34d;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scaffolding-panel.visible {
+  display: block;
+  max-height: 600px;
+  opacity: 1;
+  padding: 16px 20px;
+}
+
+.scaffolding-section {
+  margin-bottom: 16px;
+}
+
+.scaffolding-section:last-child {
+  margin-bottom: 0;
+}
+
+.scaffolding-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #92400e;
+  margin: 0 0 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Example Sentences List */
+.example-sentences-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.example-sentence-item {
+  background: white;
+  padding: 12px 14px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #374151;
+  border-left: 3px solid #f59e0b;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.example-sentence-item:last-child {
+  margin-bottom: 0;
+}
+
+.example-sentence-item.loading {
+  color: #9ca3af;
+  font-style: italic;
+  text-align: center;
+  border-left-color: #d1d5db;
+}
+
+.example-sentence-item.no-examples {
+  color: #6b7280;
+  font-style: italic;
+  text-align: center;
+  border-left-color: #d1d5db;
+}
+
+.highlight-word {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  color: #92400e;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+/* YouGlish Container */
+.youglish-container {
+  background: white;
+  border-radius: 8px;
+  padding: 12px 14px;
+  border-left: 3px solid #8b5cf6;
+}
+
+.youglish-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #7c3aed;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: color 0.2s ease;
+}
+
+.youglish-link:hover {
+  color: #5b21b6;
+  text-decoration: underline;
+}
+
+.youglish-icon {
+  font-size: 1.2rem;
+}
+
+.youglish-loading {
+  color: #9ca3af;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+

@@ -1,22 +1,16 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 import parselmouth
 import numpy as np
 import tempfile
 import os
+import requests as http_requests  # Renamed to avoid conflict with flask.request
 
 app = Flask(__name__)
 
-# Update with your frontend URLs
-CORS(app, origins=[
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'http://localhost:8080',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:5173',
-    'https://your-firebase-app.web.app',  # UPDATE THIS
-    'https://your-frontend-domain.com'     # UPDATE THIS
-])
+# CORS configuration - allow all origins for development
+# For production, you can restrict to specific domains
+CORS(app, origins='*', methods=['GET', 'POST', 'OPTIONS'], allow_headers=['Content-Type'])
 
 @app.route('/', methods=['GET'])
 def home():
@@ -25,13 +19,218 @@ def home():
         'status': 'running',
         'endpoints': {
             '/health': 'Health check',
-            '/analyze': 'POST - Analyze audio file'
+            '/analyze': 'POST - Analyze audio file',
+            '/dictionary/<word>': 'GET - Fetch word data from Merriam-Webster',
+            '/proxy-audio': 'GET - Proxy audio from MW (CORS bypass)',
+            '/analyze-url': 'POST - Analyze audio from URL'
         }
     })
 
 @app.route('/health', methods=['GET'])
 def health():
     return jsonify({'status': 'ok'})
+
+# ============================================
+# MERRIAM-WEBSTER DICTIONARY ENDPOINTS
+# ============================================
+
+# MW API Key from environment variable (set in Cloud Run)
+MW_API_KEY = os.environ.get('MW_API_KEY', '')
+
+@app.route('/dictionary/<word>', methods=['GET'])
+def get_dictionary_word(word):
+    """
+    Fetch word data from Merriam-Webster API.
+    Returns syllables, pronunciation, audio URL, and definition.
+    """
+    if not MW_API_KEY:
+        return jsonify({'error': 'Dictionary API not configured'}), 500
+    
+    try:
+        normalized_word = word.lower().strip()
+        url = f'https://www.dictionaryapi.com/api/v3/references/collegiate/json/{normalized_word}?key={MW_API_KEY}'
+        
+        response = http_requests.get(url, timeout=10)
+        
+        if response.status_code == 403:
+            return jsonify({'error': 'Invalid API key or quota exceeded'}), 403
+        
+        if not response.ok:
+            return jsonify({'error': f'API error: {response.status_code}'}), response.status_code
+        
+        data = response.json()
+        
+        # Check if we got results or suggestions
+        if not data or not isinstance(data, list) or len(data) == 0:
+            return jsonify({'found': False, 'suggestions': []})
+        
+        # If first item is string, these are spelling suggestions
+        if isinstance(data[0], str):
+            return jsonify({'found': False, 'suggestions': data[:5]})
+        
+        # Parse the response
+        parsed = parse_mw_response(data, normalized_word)
+        if parsed:
+            return jsonify({'found': True, 'data': parsed})
+        else:
+            return jsonify({'found': False, 'suggestions': []})
+            
+    except Exception as e:
+        print(f"Dictionary API error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+def parse_mw_response(api_data, word):
+    """Parse Merriam-Webster API response into our format."""
+    # Find best matching entry
+    entry = None
+    for e in api_data:
+        if isinstance(e, dict) and e.get('meta', {}).get('id', '').lower().split(':')[0] == word:
+            entry = e
+            break
+    
+    if not entry:
+        entry = api_data[0] if isinstance(api_data[0], dict) else None
+    
+    if not entry or 'hwi' not in entry:
+        return None
+    
+    hwi = entry.get('hwi', {})
+    
+    result = {
+        'word': word,
+        'source': 'merriam-webster',
+        'syllables': parse_syllables(hwi.get('hw', '')),
+        'syllableCount': 0,
+        'stressedSyllable': 0,
+        'pronunciation': None,
+        'audioUrl': None,
+        'audioFilename': None,
+        'partOfSpeech': entry.get('fl'),
+        'definition': entry.get('shortdef', [None])[0]
+    }
+    
+    result['syllableCount'] = len(result['syllables'])
+    
+    # Get pronunciation and audio
+    prs = hwi.get('prs', [])
+    if prs:
+        pron = prs[0]
+        result['pronunciation'] = pron.get('mw')
+        result['stressedSyllable'] = find_stressed_syllable(pron.get('mw'), result['syllableCount'])
+        
+        if pron.get('sound', {}).get('audio'):
+            audio_filename = pron['sound']['audio']
+            result['audioFilename'] = audio_filename
+            result['audioUrl'] = build_audio_url(audio_filename)
+    
+    return result
+
+def parse_syllables(hw):
+    """Parse syllables from 'hw' field: 'pho·to·graph' -> ['pho', 'to', 'graph']"""
+    if not hw:
+        return []
+    cleaned = hw.lstrip('*')
+    return [s for s in cleaned.split('*') if s] if '*' in cleaned else [s for s in cleaned.split('·') if s]
+
+def find_stressed_syllable(pronunciation, syllable_count):
+    """Find stressed syllable from MW pronunciation. ˈ = primary stress."""
+    if not pronunciation:
+        return 0
+    
+    stress_pos = pronunciation.find('ˈ')
+    if stress_pos == -1:
+        return 0
+    
+    # Count breaks before stress marker
+    before_stress = pronunciation[:stress_pos]
+    breaks = before_stress.count('-') + before_stress.count('·')
+    
+    return min(breaks, syllable_count - 1) if syllable_count > 0 else 0
+
+def build_audio_url(filename):
+    """Build MW audio URL from filename."""
+    if not filename:
+        return None
+    
+    if filename.startswith('bix'):
+        subdir = 'bix'
+    elif filename.startswith('gg'):
+        subdir = 'gg'
+    elif filename.startswith('_') or filename[0].isdigit():
+        subdir = 'number'
+    else:
+        subdir = filename[0].lower()
+    
+    return f'https://media.merriam-webster.com/audio/prons/en/us/mp3/{subdir}/{filename}.mp3'
+
+@app.route('/proxy-audio', methods=['GET'])
+def proxy_audio():
+    """
+    Proxy audio from external URL to avoid CORS issues.
+    Usage: /proxy-audio?url=https://media.merriam-webster.com/...
+    """
+    audio_url = request.args.get('url')
+    
+    if not audio_url:
+        return jsonify({'error': 'No URL provided'}), 400
+    
+    # Only allow MW audio URLs for security
+    if not audio_url.startswith('https://media.merriam-webster.com/'):
+        return jsonify({'error': 'Invalid audio URL'}), 400
+    
+    try:
+        response = http_requests.get(audio_url, timeout=15)
+        if not response.ok:
+            return jsonify({'error': f'Failed to fetch audio: {response.status_code}'}), response.status_code
+        
+        return Response(
+            response.content,
+            mimetype='audio/mpeg',
+            headers={'Content-Disposition': 'inline'}
+        )
+    except Exception as e:
+        print(f"Proxy audio error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/analyze-url', methods=['POST'])
+def analyze_from_url():
+    """
+    Analyze audio from a URL (for native reference analysis).
+    Expects JSON: { "audioUrl": "https://...", "expectedSyllables": 3 }
+    """
+    data = request.get_json()
+    
+    if not data or 'audioUrl' not in data:
+        return jsonify({'error': 'No audioUrl provided'}), 400
+    
+    audio_url = data['audioUrl']
+    expected_syllables = data.get('expectedSyllables')
+    
+    # Only allow MW audio URLs
+    if not audio_url.startswith('https://media.merriam-webster.com/'):
+        return jsonify({'error': 'Invalid audio URL'}), 400
+    
+    try:
+        # Fetch audio
+        response = http_requests.get(audio_url, timeout=15)
+        if not response.ok:
+            return jsonify({'error': f'Failed to fetch audio: {response.status_code}'}), response.status_code
+        
+        # Save to temp file
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as tmp:
+            tmp.write(response.content)
+            tmp_path = tmp.name
+        
+        try:
+            result = analyze_audio(tmp_path, expected_syllables)
+            return jsonify(result)
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+                
+    except Exception as e:
+        print(f"Analyze URL error: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/analyze', methods=['POST'])
 def analyze():

@@ -246,3 +246,106 @@
 .pa-btn-primary:hover {
     background-color: #2563eb;
 }
+
+/* Native Audio Player */
+.pa-reference-audio {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 18px;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    border: 1px solid #86efac;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.pa-audio-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #166534;
+    font-weight: 500;
+}
+
+.pa-audio-icon {
+    font-size: 1.2rem;
+}
+
+.pa-reference-audio audio {
+    height: 36px;
+    border-radius: 18px;
+    flex-grow: 1;
+    min-width: 200px;
+}
+
+/* Comparison Result Styles */
+.pa-comparison-result {
+    padding: 8px;
+}
+
+/* Score Grid */
+.pa-score-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.pa-score-item {
+    text-align: center;
+    padding: 12px;
+    background: #f1f5f9;
+    border-radius: 8px;
+}
+
+.pa-score-value {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.pa-score-label {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+/* Success/Error Alerts */
+.pa-alert-success {
+    background: #dcfce7;
+    padding: 12px;
+    border-radius: 8px;
+    color: #166534;
+    margin-bottom: 12px;
+}
+
+.pa-alert-error {
+    background: #fee2e2;
+    padding: 12px;
+    border-radius: 8px;
+    color: #991b1b;
+    margin-bottom: 12px;
+}
+
+.pa-alert-warning {
+    background: #fef3c7;
+    padding: 12px;
+    border-radius: 8px;
+    color: #92400e;
+    margin-bottom: 12px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 640px) {
+    .pa-reference-audio {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .pa-reference-audio audio {
+        width: 100%;
+    }
+
+    .pa-score-grid {
+        grid-template-columns: 1fr;
+    }
+}

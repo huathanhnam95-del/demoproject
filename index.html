@@ -714,7 +714,16 @@
             </div>
           </div>
 
-          <div id="pa-spinner" class="pa-spinner"></div>
+          <!-- Native Audio Player -->
+          <div id="pa-native-audio-container" class="pa-reference-audio" style="display: none;">
+            <div class="pa-audio-info">
+              <span class="pa-audio-icon">🔊</span>
+              <span>Native Pronunciation:</span>
+            </div>
+            <audio id="pa-native-audio" controls preload="none"></audio>
+          </div>
+
+          <div id="pa-spinner" class="pa-spinner" style="display: none;"></div>
 
           <div class="pa-charts-grid">
             <div class="pa-chart-card">
@@ -722,7 +731,7 @@
               <canvas id="pa-pitch-chart"></canvas>
             </div>
             <div class="pa-chart-card">
-              <div class="pa-chart-title">Syllable Stress</div>
+              <div class="pa-chart-title">Native vs Your Pronunciation</div>
               <canvas id="pa-stress-chart"></canvas>
             </div>
           </div>

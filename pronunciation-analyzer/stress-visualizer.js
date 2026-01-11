@@ -4,6 +4,9 @@ export class StressVisualizer {
         this.stressCanvas = document.getElementById(stressCanvasId);
         this.pitchChart = null;
         this.stressChart = null;
+
+        // Store native analysis for overlay comparison after user records
+        this.nativeAnalysis = null;
     }
 
     clear() {
@@ -265,6 +268,459 @@ export class StressVisualizer {
                             });
                         });
                         ctx.restore();
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Draw native speaker's pitch contour (called when word is loaded)
+     * Shows the native pronunciation graph before user records
+     */
+    drawNativePitchContour(nativeAnalysis, syllables = []) {
+        if (!nativeAnalysis || !nativeAnalysis.pitch) {
+            console.log('No native analysis data for pitch contour');
+            return;
+        }
+
+        // Store for later overlay comparison
+        this.nativeAnalysis = nativeAnalysis;
+
+        if (this.pitchChart) {
+            this.pitchChart.destroy();
+        }
+
+        const times = nativeAnalysis.pitch.times;
+        const pitches = nativeAnalysis.pitch.values;
+        const intensities = nativeAnalysis.intensity?.values || [];
+
+        // Calculate display range based on syllables
+        let startIdx = 0;
+        let endIdx = times.length - 1;
+        const actualSyllables = syllables.length > 0 ? syllables : (nativeAnalysis.syllables || []);
+
+        if (actualSyllables.length > 0) {
+            const padding = 0.05;
+            const startT = Math.max(0, actualSyllables[0].startTime - padding);
+            const endT = actualSyllables[actualSyllables.length - 1].endTime + padding;
+
+            startIdx = times.findIndex(t => t >= startT);
+            if (startIdx === -1) startIdx = 0;
+
+            for (let i = times.length - 1; i >= 0; i--) {
+                if (times[i] <= endT) {
+                    endIdx = i;
+                    break;
+                }
+            }
+        }
+
+        // Slice data to speech region
+        const slicedTimes = times.slice(startIdx, endIdx + 1);
+        const slicedPitches = pitches.slice(startIdx, endIdx + 1);
+        const slicedIntensities = intensities.slice(startIdx, endIdx + 1);
+
+        // Normalize intensity for display
+        const maxPitch = Math.max(...slicedPitches.filter(p => p !== null)) || 200;
+        const maxIntensity = Math.max(...slicedIntensities) || 1;
+        const normalizedIntensities = slicedIntensities.map(i =>
+            (i / maxIntensity) * maxPitch * 0.6
+        );
+
+        // Syllable regions plugin
+        const syllablePlugin = {
+            id: 'nativeSyllableRegions',
+            beforeDraw: (chart) => {
+                if (actualSyllables.length === 0) return;
+
+                const { ctx, chartArea: { top, bottom }, scales: { x } } = chart;
+
+                actualSyllables.forEach((syl, i) => {
+                    const sIdx = slicedTimes.findIndex(t => t >= syl.startTime);
+                    const eIdx = slicedTimes.findIndex(t => t >= syl.endTime);
+                    if (sIdx === -1) return;
+
+                    const finalEIdx = eIdx === -1 ? slicedTimes.length - 1 : eIdx;
+                    const xStart = x.getPixelForValue(slicedTimes[sIdx].toFixed(2));
+                    const xEnd = x.getPixelForValue(slicedTimes[finalEIdx].toFixed(2));
+
+                    // Alternating background
+                    ctx.fillStyle = i % 2 === 0 ? 'rgba(34, 197, 94, 0.08)' : 'rgba(34, 197, 94, 0.03)';
+                    ctx.fillRect(xStart, top, xEnd - xStart, bottom - top);
+
+                    // Syllable label
+                    ctx.fillStyle = '#166534';
+                    ctx.font = '10px sans-serif';
+                    ctx.fillText(`Syl ${i + 1}`, xStart + 3, top + 12);
+                });
+            }
+        };
+
+        this.pitchChart = new Chart(this.pitchCanvas, {
+            type: 'line',
+            data: {
+                labels: slicedTimes.map(t => t.toFixed(2)),
+                datasets: [
+                    {
+                        label: 'Native Pitch (Hz)',
+                        data: slicedPitches,
+                        borderColor: 'rgb(34, 197, 94)',  // Green
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        borderWidth: 2.5,
+                        tension: 0.3,
+                        pointRadius: 0,
+                        spanGaps: true,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Native Intensity',
+                        data: normalizedIntensities,
+                        borderColor: 'rgba(34, 197, 94, 0.4)',
+                        backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                        fill: true,
+                        borderWidth: 1,
+                        tension: 0.3,
+                        pointRadius: 0,
+                        yAxisID: 'y'
+                    }
+                ]
+            },
+            plugins: [syllablePlugin],
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '🎯 Native Speaker - Pitch & Intensity',
+                        font: { size: 14 }
+                    },
+                    legend: {
+                        position: 'top',
+                        labels: { boxWidth: 12, padding: 8 }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Time (s)' },
+                        ticks: { maxTicksLimit: 8 }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        suggestedMax: 350,
+                        title: { display: true, text: 'Pitch (Hz)' }
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Draw user's pitch contour with native overlay (called after recording)
+     * Shows both user (blue solid) and native (green dashed) for comparison
+     */
+    drawComparisonPitchContour(userAnalysis, nativeAnalysis = null) {
+        // Use stored native analysis if not provided
+        const native = nativeAnalysis || this.nativeAnalysis;
+
+        if (this.pitchChart) {
+            this.pitchChart.destroy();
+        }
+
+        if (!userAnalysis || !userAnalysis.pitch) {
+            console.log('No user analysis data');
+            return;
+        }
+
+        const userTimes = userAnalysis.pitch.times;
+        const userPitches = userAnalysis.pitch.values;
+        const userIntensities = userAnalysis.intensity?.values || [];
+        const userSyllables = userAnalysis.syllables || [];
+
+        // Find user speech region
+        let uStartIdx = 0, uEndIdx = userTimes.length - 1;
+
+        if (userSyllables.length > 0) {
+            const padding = 0.05;
+            const startT = Math.max(0, userSyllables[0].startTime - padding);
+            const endT = userSyllables[userSyllables.length - 1].endTime + padding;
+            uStartIdx = userTimes.findIndex(t => t >= startT);
+            if (uStartIdx === -1) uStartIdx = 0;
+            for (let i = userTimes.length - 1; i >= 0; i--) {
+                if (userTimes[i] <= endT) { uEndIdx = i; break; }
+            }
+        }
+
+        const slicedUserTimes = userTimes.slice(uStartIdx, uEndIdx + 1);
+        const slicedUserPitches = userPitches.slice(uStartIdx, uEndIdx + 1);
+        const slicedUserIntensities = userIntensities.slice(uStartIdx, uEndIdx + 1);
+
+        // Normalize time to start from 0
+        const userStartTime = slicedUserTimes[0] || 0;
+        const labels = slicedUserTimes.map(t => (t - userStartTime).toFixed(2));
+
+        // Normalize intensity for display
+        const maxPitch = Math.max(...slicedUserPitches.filter(p => p !== null)) || 200;
+        const maxIntensity = Math.max(...slicedUserIntensities) || 1;
+        const normalizedUserIntensities = slicedUserIntensities.map(i =>
+            (i / maxIntensity) * maxPitch * 0.6
+        );
+
+        const datasets = [
+            {
+                label: 'Your Pitch (Hz)',
+                data: slicedUserPitches,
+                borderColor: 'rgb(59, 130, 246)',  // Blue
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                borderWidth: 2.5,
+                tension: 0.3,
+                pointRadius: 0,
+                spanGaps: true
+            },
+            {
+                label: 'Your Intensity',
+                data: normalizedUserIntensities,
+                borderColor: 'rgba(244, 114, 182, 0.4)',
+                backgroundColor: 'rgba(244, 114, 182, 0.15)',
+                fill: true,
+                borderWidth: 1,
+                tension: 0.3,
+                pointRadius: 0
+            }
+        ];
+
+        // Add native reference as dashed line if available
+        if (native && native.pitch) {
+            const nativeTimes = native.pitch.times;
+            const nativePitches = native.pitch.values;
+            const nativeSyllables = native.syllables || [];
+
+            // Find native speech region
+            let nStartIdx = 0, nEndIdx = nativeTimes.length - 1;
+            if (nativeSyllables.length > 0) {
+                const padding = 0.05;
+                const startT = Math.max(0, nativeSyllables[0].startTime - padding);
+                const endT = nativeSyllables[nativeSyllables.length - 1].endTime + padding;
+                nStartIdx = nativeTimes.findIndex(t => t >= startT);
+                if (nStartIdx === -1) nStartIdx = 0;
+                for (let i = nativeTimes.length - 1; i >= 0; i--) {
+                    if (nativeTimes[i] <= endT) { nEndIdx = i; break; }
+                }
+            }
+
+            const slicedNativePitches = nativePitches.slice(nStartIdx, nEndIdx + 1);
+
+            // Resample native to match user time scale (simple interpolation)
+            const resampledNative = [];
+            const nativeLen = slicedNativePitches.length;
+            const userLen = labels.length;
+
+            for (let i = 0; i < userLen; i++) {
+                const nativeIdx = Math.floor((i / userLen) * nativeLen);
+                resampledNative.push(slicedNativePitches[Math.min(nativeIdx, nativeLen - 1)]);
+            }
+
+            datasets.unshift({
+                label: 'Native Pitch (reference)',
+                data: resampledNative,
+                borderColor: 'rgba(34, 197, 94, 0.6)',  // Faded green
+                backgroundColor: 'transparent',
+                borderWidth: 2,
+                borderDash: [5, 5],  // Dashed line
+                tension: 0.3,
+                pointRadius: 0,
+                spanGaps: true
+            });
+        }
+
+        // Syllable plugin for user syllables
+        const syllablePlugin = {
+            id: 'userSyllableRegions',
+            beforeDraw: (chart) => {
+                if (userSyllables.length === 0) return;
+
+                const { ctx, chartArea: { top, bottom }, scales: { x } } = chart;
+
+                userSyllables.forEach((syl, i) => {
+                    const relStart = syl.startTime - userStartTime;
+                    const relEnd = syl.endTime - userStartTime;
+
+                    const xStart = x.getPixelForValue(relStart.toFixed(2));
+                    const xEnd = x.getPixelForValue(relEnd.toFixed(2));
+
+                    ctx.fillStyle = i % 2 === 0 ? 'rgba(59, 130, 246, 0.08)' : 'rgba(59, 130, 246, 0.03)';
+                    ctx.fillRect(xStart, top, xEnd - xStart, bottom - top);
+
+                    ctx.fillStyle = '#1d4ed8';
+                    ctx.font = '10px sans-serif';
+                    ctx.fillText(`Syl ${i + 1}`, xStart + 3, top + 12);
+                });
+            }
+        };
+
+        this.pitchChart = new Chart(this.pitchCanvas, {
+            type: 'line',
+            data: { labels, datasets },
+            plugins: [syllablePlugin],
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '📊 Your Recording vs Native (dashed green)',
+                        font: { size: 14 }
+                    },
+                    legend: {
+                        position: 'top',
+                        labels: { boxWidth: 12, padding: 8 }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Time (s)' },
+                        ticks: { maxTicksLimit: 8 }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        suggestedMax: 350,
+                        title: { display: true, text: 'Pitch (Hz)' }
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Draw native reference pattern only (before user records)
+     */
+    drawNativeReferenceOnly(nativePattern) {
+        if (this.stressChart) {
+            this.stressChart.destroy();
+            this.stressChart = null;
+        }
+
+        if (!nativePattern || nativePattern.length === 0) return;
+
+        const labels = nativePattern.map((_, i) => `Syllable ${i + 1}`);
+        const stressedIndex = nativePattern.findIndex(p => p.isStressed);
+
+        this.stressChart = new Chart(this.stressCanvas, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Native Reference',
+                    data: nativePattern.map(p => p.relativePitch || 0),
+                    backgroundColor: nativePattern.map((p, i) =>
+                        i === stressedIndex ? 'rgba(34, 197, 94, 0.8)' : 'rgba(156, 163, 175, 0.6)'
+                    ),
+                    borderColor: nativePattern.map((p, i) =>
+                        i === stressedIndex ? 'rgba(34, 197, 94, 1)' : 'rgba(156, 163, 175, 1)'
+                    ),
+                    borderWidth: 2,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true, position: 'top' },
+                    title: {
+                        display: true,
+                        text: 'Native Speaker Pattern (Record to compare)',
+                        font: { size: 14 }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: { display: true, text: 'Relative Stress (%)' }
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Draw comparison chart (native vs user)
+     */
+    drawComparisonChart(nativePattern, userSyllables, comparison) {
+        if (this.stressChart) {
+            this.stressChart.destroy();
+            this.stressChart = null;
+        }
+
+        if (!comparison || !comparison.syllables) return;
+
+        const labels = comparison.syllables.map((_, i) => `Syl ${i + 1}`);
+
+        // Calculate user relative values
+        const userMaxPitch = Math.max(...userSyllables.map(s => s.maxPitch || 0)) || 1;
+        const userRelativePitches = userSyllables.map(s =>
+            Math.round(((s.maxPitch || 0) / userMaxPitch) * 100)
+        );
+
+        const stressedIndex = nativePattern.findIndex(p => p.isStressed);
+        const userStressedIndex = comparison.userStressedSyllable - 1;
+
+        this.stressChart = new Chart(this.stressCanvas, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Native',
+                        data: nativePattern.map(p => p.relativePitch || 0),
+                        backgroundColor: 'rgba(156, 163, 175, 0.6)',
+                        borderColor: 'rgba(156, 163, 175, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Your Pronunciation',
+                        data: userRelativePitches,
+                        backgroundColor: userRelativePitches.map((_, i) => {
+                            if (i === stressedIndex && i === userStressedIndex) {
+                                return 'rgba(34, 197, 94, 0.8)';  // Green - correct
+                            } else if (i === userStressedIndex) {
+                                return 'rgba(239, 68, 68, 0.8)';   // Red - wrong stress
+                            }
+                            return 'rgba(59, 130, 246, 0.8)';      // Blue - normal
+                        }),
+                        borderColor: userRelativePitches.map((_, i) => {
+                            if (i === stressedIndex && i === userStressedIndex) {
+                                return 'rgba(34, 197, 94, 1)';
+                            } else if (i === userStressedIndex) {
+                                return 'rgba(239, 68, 68, 1)';
+                            }
+                            return 'rgba(59, 130, 246, 1)';
+                        }),
+                        borderWidth: 2,
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true, position: 'top' },
+                    title: {
+                        display: true,
+                        text: `Score: ${comparison.overallScore}% ${comparison.stressMatches ? '✅' : '❌ Stress mismatch'}`,
+                        font: { size: 14 },
+                        color: comparison.stressMatches ? '#22c55e' : '#ef4444'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: { display: true, text: 'Relative Stress (%)' }
                     }
                 }
             }

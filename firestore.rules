@@ -78,5 +78,12 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
+    
+    // Word References for Pronunciation Analyzer
+    // Anyone can read (cached dictionary data), authenticated users can write
+    match /word_references/{wordId} {
+      allow read: if true;
+      allow create, update: if request.auth != null;
+    }
   }
 }

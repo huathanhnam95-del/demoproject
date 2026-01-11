@@ -3,6 +3,8 @@ import { PitchAnalyzer } from './pitch-analyzer.js';
 import { SyllableDetector } from './syllable-detector.js';
 import { StressVisualizer } from './stress-visualizer.js';
 import { PraatAPI } from './praat-api.js';
+import { WordReferenceService } from './word-reference-service.js';
+import { config } from './config.js';
 
 class PronunciationApp {
     constructor() {
@@ -12,6 +14,11 @@ class PronunciationApp {
         this.praatAPI = new PraatAPI();
         this.usePraatBackend = false; // Toggle: false = local JS, true = Praat backend
         this.visualizer = null; // init after DOM load
+
+        // Native reference service
+        this.wordRefService = new WordReferenceService();
+        this.currentWordRef = null;  // Current word reference data
+        this.nativePattern = null;   // Native stress pattern for comparison
 
         this.recordBtn = document.getElementById('pa-record-btn');
         this.stopBtn = document.getElementById('pa-stop-btn');
@@ -23,6 +30,10 @@ class PronunciationApp {
         this.wordInput = document.getElementById('pa-word-input');
         this.ipaDisplay = document.getElementById('pa-ipa-display');
         this.patternDisplay = document.getElementById('pa-pattern-display');
+
+        // Native audio element
+        this.nativeAudioContainer = document.getElementById('pa-native-audio-container');
+        this.nativeAudio = document.getElementById('pa-native-audio');
 
         this.expectedData = {
             ipa: '/ˈfoʊ.tə.ɡræf/',
@@ -75,10 +86,18 @@ class PronunciationApp {
 
         if (pronounceTab) {
             pronounceTab.addEventListener('click', () => {
-                // Deactivate all
+                // Only deactivate pronounce-related elements, let other tab handlers manage their own
+                // Remove active from pronounce tab if it was active (toggling behavior)
+
+                // Hide all other panels and deactivate tabs
                 allTabs.forEach(t => t.classList.remove('active'));
-                allPanels.forEach(p => p.classList.remove('active'));
-                allPanels.forEach(p => p.style.display = 'none'); // Ensure hidden if style used
+                allPanels.forEach(p => {
+                    p.classList.remove('active');
+                    // Only set display:none if NOT the pronounce panel (let CSS handle others)
+                    if (p.id !== 'mode-pronounce') {
+                        // Don't force display:none - let the existing CSS/JS handle it
+                    }
+                });
 
                 // Activate Pronounce
                 pronounceTab.classList.add('active');
@@ -118,28 +137,109 @@ class PronunciationApp {
         if (!word) return;
 
         try {
-            this.statusIndicator.textContent = "Fetching IPA...";
-            // Access Phonetics from window as it's a global script
-            const ipa = await window.Phonetics.getIPA(word);
+            this.statusIndicator.textContent = "Loading native reference...";
+            this.spinner.style.display = 'block';
+            this.visualizer.clear();
 
-            if (ipa) {
-                const parsed = this.parseIPA(ipa);
+            // Hide native audio while loading
+            if (this.nativeAudioContainer) {
+                this.nativeAudioContainer.style.display = 'none';
+            }
+
+            // Try to get native reference from backend (MW API)
+            let wordRef = null;
+            try {
+                wordRef = await this.wordRefService.getWordReference(word);
+                this.currentWordRef = wordRef;
+            } catch (refError) {
+                console.warn('Native reference not available:', refError.message);
+                // Fall back to existing Phonetics API
+            }
+
+            if (wordRef && wordRef.found !== false) {
+                // Use MW data
                 this.expectedData = {
-                    ipa: ipa,
-                    syllables: parsed.syllableCount,
-                    primaryStress: parsed.primaryStress
+                    ipa: wordRef.pronunciation || '',
+                    syllables: wordRef.syllableCount || 1,
+                    primaryStress: wordRef.stressedSyllable || 0
                 };
 
-                this.ipaDisplay.textContent = ipa;
-                this.patternDisplay.textContent = `${parsed.syllableCount} Syllables, Stress on ${parsed.primaryStress + 1}`;
+                // Display pronunciation info
+                this.ipaDisplay.textContent = wordRef.pronunciation || 'N/A';
+                this.patternDisplay.textContent = `${wordRef.syllableCount} Syllables, Stress on ${(wordRef.stressedSyllable || 0) + 1}`;
+
+                // Show native audio player if audio available
+                if (wordRef.audioUrl && this.nativeAudio && this.nativeAudioContainer) {
+                    const proxiedUrl = this.wordRefService.getProxiedAudioUrl(wordRef.audioUrl);
+                    this.nativeAudio.src = proxiedUrl;
+                    this.nativeAudioContainer.style.display = 'flex';
+                }
+
+                // *** Draw native pitch contour graph (LEFT CHART) ***
+                console.log('=== DRAWING NATIVE PITCH CONTOUR ===');
+                console.log('Has nativeAnalysis:', !!wordRef.nativeAnalysis);
+                console.log('pitch.values length:', wordRef.nativeAnalysis?.pitch?.values?.length || 0);
+                console.log('syllables length:', wordRef.nativeAnalysis?.syllables?.length || 0);
+
+                if (wordRef.nativeAnalysis &&
+                    wordRef.nativeAnalysis.pitch?.values?.length > 0) {
+                    console.log('✅ Drawing native pitch contour...');
+                    this.visualizer.drawNativePitchContour(
+                        wordRef.nativeAnalysis,
+                        wordRef.nativeAnalysis.syllables || []
+                    );
+                } else {
+                    console.warn('⚠️ No native analysis data - left chart will be empty');
+                }
+
+                // Get and display native pattern (RIGHT CHART - bar chart)
+                this.nativePattern = this.wordRefService.getExpectedPattern(wordRef);
+                if (this.nativePattern && this.nativePattern.length > 0) {
+                    this.visualizer.drawNativeReferenceOnly(this.nativePattern);
+                }
+
+                const cacheStatus = wordRef.fromCache ? ` (${wordRef.cacheSource})` : '';
+                this.statusIndicator.textContent = `Ready${cacheStatus}`;
+
             } else {
-                this.ipaDisplay.textContent = "Not found";
-                this.patternDisplay.textContent = "-";
+                // Fallback to existing Phonetics API
+                const ipa = await window.Phonetics?.getIPA(word);
+
+                if (ipa) {
+                    const parsed = this.parseIPA(ipa);
+                    this.expectedData = {
+                        ipa: ipa,
+                        syllables: parsed.syllableCount,
+                        primaryStress: parsed.primaryStress
+                    };
+
+                    this.ipaDisplay.textContent = ipa;
+                    this.patternDisplay.textContent = `${parsed.syllableCount} Syllables, Stress on ${parsed.primaryStress + 1}`;
+
+                    // Generate theoretical pattern
+                    this.nativePattern = this.wordRefService.generateTheoreticalPattern(
+                        parsed.syllableCount,
+                        parsed.primaryStress
+                    );
+                    if (this.nativePattern) {
+                        this.visualizer.drawNativeReferenceOnly(this.nativePattern);
+                    }
+                } else {
+                    this.ipaDisplay.textContent = "Not found";
+                    this.patternDisplay.textContent = "-";
+                    this.nativePattern = null;
+                }
+                this.statusIndicator.textContent = "Idle";
             }
-            this.statusIndicator.textContent = "Idle";
+
         } catch (err) {
             console.error("Error fetching word data:", err);
+            this.ipaDisplay.textContent = "Error";
+            this.patternDisplay.textContent = err.message || "Failed to load";
             this.statusIndicator.textContent = "Error";
+            this.nativePattern = null;
+        } finally {
+            this.spinner.style.display = 'none';
         }
     }
 
@@ -215,14 +315,24 @@ class PronunciationApp {
                 const expectedCount = this.expectedData?.syllables || null;
                 const analysis = await this.praatAPI.analyze(audioBlob, expectedCount);
 
-                this.visualizer.drawPitchContour(
-                    analysis.pitch.times,
-                    analysis.pitch.values,
-                    analysis.intensity.values,
-                    analysis.syllables
+                // *** Draw comparison pitch contour (user + native overlay) ***
+                this.visualizer.drawComparisonPitchContour(
+                    analysis,
+                    this.currentWordRef?.nativeAnalysis
                 );
-                this.visualizer.drawSyllableStress(analysis.syllables);
-                this.generateSummary(analysis.syllables, 0);
+
+                // Show comparison chart if we have native pattern
+                if (this.nativePattern && analysis.syllables.length > 0) {
+                    const comparison = this.wordRefService.compareWithNative(
+                        analysis.syllables,
+                        this.nativePattern
+                    );
+                    this.visualizer.drawComparisonChart(this.nativePattern, analysis.syllables, comparison);
+                    this.generateComparisonSummary(analysis.syllables, comparison);
+                } else {
+                    this.visualizer.drawSyllableStress(analysis.syllables);
+                    this.generateSummary(analysis.syllables, 0);
+                }
             } else {
                 // Use local JS analysis
                 const audioBuffer = await this.audioCapture.stop();
@@ -339,6 +449,80 @@ class PronunciationApp {
 
         html += '</div>';
         return html;
+    }
+
+    /**
+     * Generate detailed comparison summary with native reference
+     */
+    generateComparisonSummary(userSyllables, comparison) {
+        if (!comparison) {
+            this.generateSummary(userSyllables, 0);
+            return;
+        }
+
+        const scoreColor = comparison.overallScore >= 80 ? '#22c55e' :
+            comparison.overallScore >= 60 ? '#f59e0b' : '#ef4444';
+        const scoreEmoji = comparison.overallScore >= 80 ? '🎉' :
+            comparison.overallScore >= 60 ? '👍' : '💪';
+
+        let html = `
+            <div class="pa-comparison-result">
+                <div style="text-align: center; margin-bottom: 16px;">
+                    <div style="font-size: 2rem; font-weight: bold; color: ${scoreColor};">
+                        ${scoreEmoji} ${comparison.overallScore}%
+                    </div>
+                    <div style="color: #6b7280; font-size: 0.9rem;">Overall Match Score</div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;">
+                    <div style="text-align: center; padding: 12px; background: #f1f5f9; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #3b82f6;">${comparison.pitchScore}%</div>
+                        <div style="font-size: 0.8rem; color: #6b7280;">Pitch</div>
+                    </div>
+                    <div style="text-align: center; padding: 12px; background: #f1f5f9; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #8b5cf6;">${comparison.durationScore}%</div>
+                        <div style="font-size: 0.8rem; color: #6b7280;">Timing</div>
+                    </div>
+                    <div style="text-align: center; padding: 12px; background: #f1f5f9; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #10b981;">${comparison.intensityScore}%</div>
+                        <div style="font-size: 0.8rem; color: #6b7280;">Intensity</div>
+                    </div>
+                </div>
+        `;
+
+        // Stress comparison
+        if (comparison.stressMatches) {
+            html += `
+                <div style="background: #dcfce7; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                    <div style="color: #166534; font-weight: 500;">
+                        ✅ Stress placement is correct! (Syllable ${comparison.nativeStressedSyllable})
+                    </div>
+                </div>
+            `;
+        } else {
+            html += `
+                <div style="background: #fee2e2; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                    <div style="color: #991b1b; font-weight: 500;">
+                        ❌ Stress mismatch: You stressed syllable ${comparison.userStressedSyllable}, 
+                        but native speaker stresses syllable ${comparison.nativeStressedSyllable}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Syllable count
+        if (!comparison.syllableCountMatches) {
+            html += `
+                <div style="background: #fef3c7; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                    <div style="color: #92400e; font-weight: 500;">
+                        ⚠️ You pronounced ${userSyllables.length} syllables, but native has ${this.nativePattern?.length || '?'}
+                    </div>
+                </div>
+            `;
+        }
+
+        html += '</div>';
+        this.resultsSummary.innerHTML = html;
     }
 }
 

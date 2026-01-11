@@ -44,6 +44,28 @@ export class PraatAPI {
         return response.json();
     }
 
+    /**
+     * Analyze audio from URL (for native reference)
+     * Used by WordReferenceService for MW audio analysis
+     */
+    async analyzeFromUrl(audioUrl, expectedSyllables = null) {
+        const response = await fetch(`${this.backendUrl}/analyze-url`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                audioUrl: audioUrl,
+                expectedSyllables: expectedSyllables
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({ error: 'Analysis failed' }));
+            throw new Error(error.error || 'Analysis failed');
+        }
+
+        return response.json();
+    }
+
     async ensureWav(blob) {
         // Already WAV
         if (blob.type === 'audio/wav' || blob.type === 'audio/wave') {

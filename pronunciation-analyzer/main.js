@@ -2,12 +2,15 @@ import { AudioCapture } from './audio-capture.js';
 import { PitchAnalyzer } from './pitch-analyzer.js';
 import { SyllableDetector } from './syllable-detector.js';
 import { StressVisualizer } from './stress-visualizer.js';
+import { PraatAPI } from './praat-api.js';
 
 class PronunciationApp {
     constructor() {
         this.audioCapture = new AudioCapture();
         this.pitchAnalyzer = new PitchAnalyzer();
         this.syllableDetector = new SyllableDetector();
+        this.praatAPI = new PraatAPI();
+        this.usePraatBackend = false; // Toggle: false = local JS, true = Praat backend
         this.visualizer = null; // init after DOM load
 
         this.recordBtn = document.getElementById('pa-record-btn');
@@ -33,8 +36,22 @@ class PronunciationApp {
         this.initEventListeners();
         this.visualizer = new StressVisualizer('pa-pitch-chart', 'pa-stress-chart');
 
+        // Check if Praat backend is available
+        this.checkPraatBackend();
+
         // Initial fetch for default word
         this.updateWordData();
+    }
+
+    async checkPraatBackend() {
+        const isAvailable = await this.praatAPI.checkHealth();
+        if (isAvailable) {
+            console.log('✅ Praat backend available - using server-side analysis');
+            this.usePraatBackend = true;
+        } else {
+            console.log('ℹ️ Praat backend not available - using local JS analysis');
+            this.usePraatBackend = false;
+        }
     }
 
     // Debounce utility
@@ -184,34 +201,62 @@ class PronunciationApp {
     async stopRecording() {
         this.stopBtn.disabled = true;
         this.statusIndicator.classList.remove('recording');
-        this.statusIndicator.textContent = "Processing...";
+        this.statusIndicator.textContent = this.usePraatBackend ? "Analyzing with Praat..." : "Processing...";
         this.spinner.style.display = 'block';
 
         try {
-            const audioBuffer = await this.audioCapture.stop();
-            if (!audioBuffer) return;
+            if (this.usePraatBackend) {
+                // Use Praat backend
+                const audioBlob = await this.audioCapture.stopAsBlob();
+                if (!audioBlob) {
+                    throw new Error('No audio recorded');
+                }
 
-            // Analyze
-            // Note: Re-init analyzer if sample rate changed? Usually constant
+                const expectedCount = this.expectedData?.syllables || null;
+                const analysis = await this.praatAPI.analyze(audioBlob, expectedCount);
 
-            // Execute heavy analysis in a timeout to allow UI update
-            setTimeout(() => {
-                const analysisData = this.pitchAnalyzer.analyze(audioBuffer);
-                const expectedCount = this.expectedData ? this.expectedData.syllables : null;
-                const { syllables, noiseCount } = this.syllableDetector.detect(analysisData, expectedCount);
+                this.visualizer.drawPitchContour(
+                    analysis.pitch.times,
+                    analysis.pitch.values,
+                    analysis.intensity.values,
+                    analysis.syllables
+                );
+                this.visualizer.drawSyllableStress(analysis.syllables);
+                this.generateSummary(analysis.syllables, 0);
+            } else {
+                // Use local JS analysis
+                const audioBuffer = await this.audioCapture.stop();
+                if (!audioBuffer) return;
 
-                this.visualizer.drawPitchContour(analysisData.times, analysisData.pitches, analysisData.energies, syllables);
-                this.visualizer.drawSyllableStress(syllables);
+                // Execute heavy analysis in a timeout to allow UI update
+                setTimeout(() => {
+                    const analysisData = this.pitchAnalyzer.analyze(audioBuffer);
+                    const expectedCount = this.expectedData ? this.expectedData.syllables : null;
+                    const { syllables, noiseCount } = this.syllableDetector.detect(analysisData, expectedCount);
 
-                this.generateSummary(syllables, noiseCount);
+                    this.visualizer.drawPitchContour(analysisData.times, analysisData.pitches, analysisData.energies, syllables);
+                    this.visualizer.drawSyllableStress(syllables);
+                    this.generateSummary(syllables, noiseCount);
 
-                this.spinner.style.display = 'none';
-                this.recordBtn.disabled = false;
-                this.statusIndicator.textContent = "Idle";
-            }, 100);
+                    this.spinner.style.display = 'none';
+                    this.recordBtn.disabled = false;
+                    this.statusIndicator.textContent = "Idle";
+                }, 100);
+                return; // Exit early, setTimeout handles cleanup
+            }
+
+            this.spinner.style.display = 'none';
+            this.recordBtn.disabled = false;
+            this.statusIndicator.textContent = "Idle";
 
         } catch (err) {
             console.error(err);
+            this.resultsSummary.innerHTML = `
+                <div style="color: #dc2626;">
+                    ⚠️ Analysis error: ${err.message}
+                    ${this.usePraatBackend ? '<br><br>Make sure the Python backend is running:<br><code>cd backend && python server.py</code>' : ''}
+                </div>
+            `;
             this.statusIndicator.textContent = "Error";
             this.spinner.style.display = 'none';
             this.recordBtn.disabled = false;
@@ -248,12 +293,15 @@ class PronunciationApp {
         let maxScore = -1;
 
         const detailsHtml = syllables.map((s, i) => {
-            const score = (s.maxPitch / maxP) + (s.duration / maxD) + (s.maxEnergy / maxE);
+            const energy = s.intensity || s.maxEnergy || 0;
+            const score = (s.maxPitch / maxP) + (s.duration / maxD) + (energy / maxE);
             if (score > maxScore) {
                 maxScore = score;
                 stressedIndex = i;
             }
-            return `<li>Syllable ${i + 1}: ${s.duration.toFixed(2)}s, ${Math.round(s.maxPitch)} Hz</li>`;
+
+            const pitchText = s.maxPitch > 0 ? `${Math.round(s.maxPitch)} Hz` : '<span style="color:#9ca3af">No pitch</span>';
+            return `<li>Syllable ${i + 1}: ${s.duration.toFixed(2)}s, ${pitchText}</li>`;
         }).join('');
 
         this.resultsSummary.innerHTML = `

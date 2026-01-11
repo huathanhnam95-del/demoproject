@@ -55,10 +55,10 @@ export class StressVisualizer {
         const slicedPitches = pitches.slice(startIndex, endIndex + 1);
         const slicedEnergies = energies.slice(startIndex, endIndex + 1);
 
-        // Normalize energy
+        // Normalize energy to overlay on pitch scale
+        // Handle both RMS (0-1) and dB (40-90+) scales
         const maxPitch = Math.max(...slicedPitches.filter(p => p !== null)) || 200;
-        const normalizedEnergies = slicedEnergies.map(e => e * maxPitch * 2);
-
+        const maxEnergy = Math.max(...slicedEnergies) || 1;
         // 2. Prepare background regions for syllables
         // We'll use a Chart.js plugin to draw rectangles behind the chart
         const syllableRegionsPlugin = {
@@ -68,20 +68,7 @@ export class StressVisualizer {
                 const { ctx, chartArea: { top, bottom }, scales: { x } } = chart;
 
                 syllables.forEach((s, i) => {
-                    const startX = x.getPixelForValue(s.startTime); // Ensure labels map to time or use time scale
-                    // Note: Since labels are strings, getPixelForValue might expect string index if not linear scale.
-                    // But here labels are "0.00", "0.01". Chart.js usually handles loose matching or we rely on indices.
-                    // Better approach for precision: Map time to index in 'slicedTimes', then map index to pixel.
-
-                    // Simple index mapping:
-                    // This is an approximation if x-axis is Category.
-                    // If x-axis were 'linear', we could pass raw values.
-                    // Let's use indices since labels are strings.
-
-                    // Find closest index for start/end in the *sliced* arrays
-                    // Times in 'slicedTimes' start from S, valid range.
-
-                    // Optimization: find index in slicedTimes
+                    // Start/End mapping logic
                     const sIdx = slicedTimes.findIndex(t => t >= s.startTime);
                     const eIdx = slicedTimes.findIndex(t => t >= s.endTime);
 
@@ -103,6 +90,12 @@ export class StressVisualizer {
             }
         };
 
+        // Determine if we are using dB scale (Praat) or RMS (0-1)
+        const isDbScale = maxEnergy > 10;
+
+        // If RMS, we still normalize to overlay on pitch for now, OR we could use dual axis 0-1.
+        // Let's use dual axis for both, much cleaner.
+
         this.pitchChart = new Chart(this.pitchCanvas, {
             type: 'line',
             data: {
@@ -118,12 +111,12 @@ export class StressVisualizer {
                         pointRadius: 0
                     },
                     {
-                        label: 'Intensity',
-                        data: normalizedEnergies,
+                        label: isDbScale ? 'Intensity (dB)' : 'Energy (RMS)',
+                        data: slicedEnergies,
                         backgroundColor: 'rgba(255, 99, 132, 0.2)',
                         borderColor: 'rgba(255, 99, 132, 0.5)',
                         fill: true,
-                        yAxisID: 'y',
+                        yAxisID: 'y1', // Use secondary axis
                         pointRadius: 0,
                         borderWidth: 1
                     }
@@ -138,7 +131,7 @@ export class StressVisualizer {
                     intersect: false,
                 },
                 plugins: {
-                    title: { display: true, text: 'Pitch & Intensity (Trimmed)' },
+                    title: { display: true, text: 'Pitch & Intensity' },
                     tooltip: { enabled: true }
                 },
                 scales: {
@@ -147,9 +140,23 @@ export class StressVisualizer {
                         ticks: { maxTicksLimit: 8 }
                     },
                     y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
                         beginAtZero: true,
-                        suggestedMax: 400,
-                        title: { display: true, text: 'Hz' }
+                        suggestedMax: 350,
+                        title: { display: true, text: 'Pitch (Hz)' }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        min: isDbScale ? 40 : 0,  // dB typically 40-100, RMS 0-1
+                        max: isDbScale ? 100 : 1,
+                        grid: {
+                            drawOnChartArea: false, // only want the grid lines for one axis to show up
+                        },
+                        title: { display: true, text: isDbScale ? 'Intensity (dB)' : 'Energy' }
                     }
                 }
             }
@@ -167,16 +174,18 @@ export class StressVisualizer {
         const labels = syllables.map((_, i) => `Syl ${i + 1}`);
 
         // Find maxes for normalization
+        // Support both old (maxEnergy) and new (intensity) property names
         const maxP = Math.max(...syllables.map(s => s.maxPitch)) || 1;
         const maxD = Math.max(...syllables.map(s => s.duration)) || 1;
-        const maxE = Math.max(...syllables.map(s => s.maxEnergy)) || 1;
+        const maxE = Math.max(...syllables.map(s => s.intensity || s.maxEnergy || 1)) || 1;
 
         // Determine stressed syllable (simple heuristic or use one passed in?)
         // Let's re-calculate score locally to highlight
         let stressedIndex = 0;
         let maxScore = -1;
         syllables.forEach((s, i) => {
-            const score = (s.maxPitch / maxP) + (s.duration / maxD) + (s.maxEnergy / maxE);
+            const energy = s.intensity || s.maxEnergy || 0;
+            const score = (s.maxPitch / maxP) + (s.duration / maxD) + (energy / maxE);
             if (score > maxScore) { maxScore = score; stressedIndex = i; }
         });
 
@@ -184,7 +193,7 @@ export class StressVisualizer {
         // We'll show raw values in tooltips, but bar height is relative %
         const dataPitch = syllables.map(s => (s.maxPitch / maxP) * 100);
         const dataDuration = syllables.map(s => (s.duration / maxD) * 100);
-        const dataEnergy = syllables.map(s => (s.maxEnergy / maxE) * 100);
+        const dataEnergy = syllables.map(s => ((s.intensity || s.maxEnergy || 0) / maxE) * 100);
 
         this.stressChart = new Chart(this.stressCanvas, {
             type: 'bar',

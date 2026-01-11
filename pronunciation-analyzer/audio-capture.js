@@ -62,6 +62,27 @@ export class AudioCapture {
         });
     }
 
+    /**
+     * Stops recording and returns the raw audio blob (for backend analysis)
+     */
+    stopAsBlob() {
+        return new Promise((resolve) => {
+            if (!this.mediaRecorder) {
+                resolve(null);
+                return;
+            }
+
+            this.mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+                this.stream.getTracks().forEach(track => track.stop());
+                this.isRecording = false;
+                resolve(audioBlob);
+            };
+
+            this.mediaRecorder.stop();
+        });
+    }
+
     cancel() {
         if (this.mediaRecorder && this.isRecording) {
             this.mediaRecorder.stop();

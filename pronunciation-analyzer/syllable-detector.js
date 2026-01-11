@@ -85,26 +85,26 @@ export class SyllableDetector {
             if (startIdx === -1) startIdx = 0;
             if (endIdx === -1) endIdx = times.length - 1;
 
-            // Calculate stats for this syllable
-            const sylPitches = pitches.slice(startIdx, endIdx + 1).filter(p => p !== null);
+            // Calculate pitch stats using energy-weighted method
             const sylEnergies = energies.slice(startIdx, endIdx + 1);
-
+            const pitchStats = this._calculateSyllablePitch(
+                pitches.slice(startIdx, endIdx + 1),
+                sylEnergies
+            );
             const maxEnergy = sylEnergies.length > 0 ? Math.max(...sylEnergies) : 0;
-            const avgPitch = sylPitches.length > 0
-                ? sylPitches.reduce((a, b) => a + b, 0) / sylPitches.length
-                : 0;
 
             syllables.push({
                 startTime,
                 endTime,
                 duration: endTime - startTime,
-                avgPitch: avgPitch,
-                maxPitch: sylPitches.length > 0 ? Math.max(...sylPitches) : 0,
+                avgPitch: pitchStats.avgPitch,
+                maxPitch: pitchStats.maxPitch,
                 avgEnergy: sylEnergies.length > 0
                     ? sylEnergies.reduce((a, b) => a + b, 0) / sylEnergies.length
                     : 0,
                 maxEnergy: maxEnergy,
-                pitchConfidence: sylPitches.length / (sylEnergies.length || 1)
+                pitchConfidence: pitchStats.pitchConfidence,
+                isUnvoiced: pitchStats.isUnvoiced
             });
         }
 
@@ -367,18 +367,23 @@ export class SyllableDetector {
             let eIdx = times.findIndex(t => t >= endTime);
             if (eIdx === -1) eIdx = times.length - 1;
 
-            const sylPitches = pitches.slice(sIdx, eIdx + 1).filter(p => p !== null);
+            // Calculate pitch stats using energy-weighted method
+            const pitchStats = this._calculateSyllablePitch(
+                pitches.slice(sIdx, eIdx + 1),
+                energies.slice(sIdx, eIdx + 1)
+            );
             const sylEnergies = energies.slice(sIdx, eIdx + 1);
 
             syllables.push({
                 startTime,
                 endTime,
                 duration: endTime - startTime,
-                avgPitch: sylPitches.length > 0 ? sylPitches.reduce((a, b) => a + b, 0) / sylPitches.length : 0,
-                maxPitch: sylPitches.length > 0 ? Math.max(...sylPitches) : 0,
+                avgPitch: pitchStats.avgPitch,
+                maxPitch: pitchStats.maxPitch,
                 avgEnergy: sylEnergies.reduce((a, b) => a + b, 0) / (sylEnergies.length || 1),
                 maxEnergy: Math.max(...sylEnergies) || 0,
-                pitchConfidence: sylPitches.length / (eIdx - sIdx + 1 || 1)
+                pitchConfidence: pitchStats.pitchConfidence,
+                isUnvoiced: pitchStats.isUnvoiced
             });
         }
         return syllables;
@@ -436,5 +441,47 @@ export class SyllableDetector {
         }
         const edgeIdx = Math.max(0, Math.min(times.length - 1, i - (direction * 1)));
         return times[edgeIdx];
+    }
+
+    /**
+     * Smarter pitch calculation: Uses energy-weighted averaging
+     * to give more weight to louder (more reliable) pitch frames.
+     * This prevents 0 Hz results when a syllable ends with unvoiced consonants.
+     */
+    _calculateSyllablePitch(pitches, energies) {
+        // Collect valid pitch values with their corresponding energy
+        const validPitches = [];
+        for (let i = 0; i < pitches.length; i++) {
+            if (pitches[i] !== null && pitches[i] > 0) {
+                validPitches.push({
+                    pitch: pitches[i],
+                    energy: energies[i] || 0
+                });
+            }
+        }
+
+        if (validPitches.length === 0) {
+            // No valid pitch found - this syllable is entirely unvoiced
+            return { avgPitch: 0, maxPitch: 0, pitchConfidence: 0, isUnvoiced: true };
+        }
+
+        // Energy-weighted average pitch (louder frames are more reliable)
+        let weightedSum = 0;
+        let weightTotal = 0;
+        for (const vp of validPitches) {
+            weightedSum += vp.pitch * vp.energy;
+            weightTotal += vp.energy;
+        }
+
+        const weightedAvgPitch = weightTotal > 0 ? weightedSum / weightTotal : 0;
+        const maxPitch = Math.max(...validPitches.map(vp => vp.pitch));
+        const pitchConfidence = validPitches.length / (pitches.length || 1);
+
+        return {
+            avgPitch: Math.round(weightedAvgPitch),
+            maxPitch: Math.round(maxPitch),
+            pitchConfidence: pitchConfidence,
+            isUnvoiced: false
+        };
     }
 }

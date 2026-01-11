@@ -39,6 +39,9 @@ const SRSReview = (function () {
     let isRecording = false;
     let currentTranscription = "";
 
+    // Pronunciation practice recognition instance (reused to prevent abort errors)
+    let pronunciationRecognition = null;
+
     // Current review session state
     let reviewSession = {
         active: false,
@@ -1604,12 +1607,23 @@ const SRSReview = (function () {
             return;
         }
 
+        // Stop any existing recognition to prevent 'aborted' error
+        if (pronunciationRecognition) {
+            try {
+                pronunciationRecognition.abort();
+            } catch (e) {
+                console.log('[SRS] Previous recognition already stopped');
+            }
+            pronunciationRecognition = null;
+        }
+
         // Start recording
         btn.classList.add('recording');
         btn.textContent = '🔴 Listening...';
         if (resultDiv) resultDiv.style.display = 'none';
 
-        const recognition = new SpeechRecognition();
+        pronunciationRecognition = new SpeechRecognition();
+        const recognition = pronunciationRecognition;
         recognition.lang = 'en-US';
         recognition.interimResults = false;
         recognition.maxAlternatives = 3;
@@ -2383,7 +2397,7 @@ const SRSReview = (function () {
      * @returns {Promise<string[]>} Array of example sentences
      */
     async function fetchTatoebaSentences(word) {
-        // Tatoeba CORS blocked in browser - use stored examples instead as primary source
+        // 1. Use stored examples as primary source
         const currentWord = reviewSession.wordsToReview[reviewSession.currentIndex];
         if (currentWord && (currentWord.example || currentWord.sentence)) {
             console.log('[SRS] Using stored example as scaffolding context');
@@ -2391,9 +2405,23 @@ const SRSReview = (function () {
         }
 
         const cacheKey = word.toLowerCase();
-        // Check cache for cases where we might have fetched before (or from local data)
+        // 2. Check cache
         if (tatoebaCache.has(cacheKey)) {
             return tatoebaCache.get(cacheKey);
+        }
+
+        // 3. Fallback: Fetch from DictionaryService
+        if (window.DictionaryService && typeof window.DictionaryService.getDefinition === 'function') {
+            try {
+                const data = await window.DictionaryService.getDefinition(word);
+                if (data && data.example) {
+                    console.log('[SRS] Fetched example from DictionaryService');
+                    tatoebaCache.set(cacheKey, [data.example]);
+                    return [data.example];
+                }
+            } catch (e) {
+                console.log('[SRS] DictionaryService fallback failed:', e);
+            }
         }
 
         return [];
@@ -2440,12 +2468,92 @@ const SRSReview = (function () {
         const word = reviewSession.currentWritingWord;
         if (!word) return;
 
-        // 1. Load Tatoeba sentences
+        // 1. Load example sentences
         const sentences = await fetchTatoebaSentences(word);
         displayExampleSentences(sentences, word);
 
-        // 2. Setup YouGlish link
+        // 2. Setup YouGlish video section
         setupYouGlishSection(word);
+
+        // 3. NEW: Display additional scaffolding (synonyms, POS, patterns)
+        await displayEnhancedScaffolding(word);
+    }
+
+    /**
+     * Display enhanced scaffolding: synonyms, POS, sentence patterns
+     */
+    async function displayEnhancedScaffolding(word) {
+        const currentWord = reviewSession.wordsToReview[reviewSession.currentIndex];
+        const scaffoldingExtras = document.getElementById('scaffolding-extras');
+
+        // Create scaffolding extras container if not exists
+        if (!scaffoldingExtras && elements.scaffoldingPanel) {
+            const extrasDiv = document.createElement('div');
+            extrasDiv.id = 'scaffolding-extras';
+            extrasDiv.className = 'scaffolding-extras';
+            elements.scaffoldingPanel.appendChild(extrasDiv);
+        }
+
+        const container = document.getElementById('scaffolding-extras');
+        if (!container) return;
+
+        let html = '';
+
+        // Part of Speech hint
+        if (currentWord && currentWord.partOfSpeech) {
+            html += `<div class="scaffold-item"><strong>📚 Part of Speech:</strong> <span class="pos-badge">${currentWord.partOfSpeech}</span></div>`;
+        }
+
+        // Synonyms from DictionaryService
+        if (window.DictionaryService && typeof window.DictionaryService.getDefinition === 'function') {
+            try {
+                const data = await window.DictionaryService.getDefinition(word);
+                if (data && data.synonyms && data.synonyms.length > 0) {
+                    const synList = data.synonyms.slice(0, 5).join(', ');
+                    html += `<div class="scaffold-item"><strong>🔄 Synonyms:</strong> ${synList}</div>`;
+                }
+            } catch (e) {
+                console.log('[SRS] Could not fetch synonyms');
+            }
+        }
+
+        // Common sentence patterns based on POS
+        const pos = currentWord?.partOfSpeech?.toLowerCase() || '';
+        let patterns = [];
+
+        if (pos.includes('verb')) {
+            patterns = [
+                `Subject + ${word} + object`,
+                `I ${word} when...`,
+                `She ${word}s every day...`
+            ];
+        } else if (pos.includes('noun')) {
+            patterns = [
+                `The ${word} is...`,
+                `My ${word} was...`,
+                `A great ${word}...`
+            ];
+        } else if (pos.includes('adjective')) {
+            patterns = [
+                `It was ${word}...`,
+                `A ${word} person...`,
+                `Very ${word}...`
+            ];
+        } else if (pos.includes('adverb')) {
+            patterns = [
+                `He ${word} worked...`,
+                `She speaks ${word}...`,
+                `They ${word} finished...`
+            ];
+        }
+
+        if (patterns.length > 0) {
+            html += `<div class="scaffold-item"><strong>📝 Sentence Patterns:</strong><ul class="pattern-list">`;
+            patterns.forEach(p => html += `<li>${p}</li>`);
+            html += `</ul></div>`;
+        }
+
+        container.innerHTML = html || '<em style="color:#888;">No additional hints available.</em>';
     }
 
     /**
@@ -2487,14 +2595,40 @@ const SRSReview = (function () {
         const container = elements.youglishContainer;
         if (!container) return;
 
-        const url = getYouGlishUrl(word);
+        // Try to use YouGlish Widget API if available
+        if (typeof YG !== 'undefined' && YG.Widget) {
+            container.innerHTML = `<div id="youglish-widget-${word.replace(/\s+/g, '-')}"></div>`;
+            try {
+                new YG.Widget(container.querySelector('div').id, {
+                    width: 400,
+                    components: 9, // Search bar hidden
+                    events: {
+                        onFetchDone: function (event) {
+                            console.log('[SRS] YouGlish videos found:', event.totalResult);
+                            if (event.totalResult === 0) {
+                                container.innerHTML = '<em style="color:#888;">No video examples found.</em>';
+                            }
+                        }
+                    }
+                });
+                // Auto-search the word
+                container.querySelector('div').__widget?.fetch(word, 'english');
+            } catch (e) {
+                console.log('[SRS] YouGlish widget error, falling back to link:', e);
+                showYouGlishLink(container, word);
+            }
+        } else {
+            // Fallback: Show link
+            showYouGlishLink(container, word);
+        }
+    }
 
-        // YouGlish doesn't support direct iframe embedding easily,
-        // so we provide a link that opens in new tab
+    function showYouGlishLink(container, word) {
+        const url = getYouGlishUrl(word);
         container.innerHTML = `
             <a href="${url}" target="_blank" rel="noopener noreferrer" class="youglish-link">
                 <span class="youglish-icon">🎬</span>
-                <span>Watch "<strong>${word}</strong>" used in real videos on YouGlish →</span>
+                <span>Watch "<strong>${word}</strong>" in real videos on YouGlish →</span>
             </a>
         `;
     }
@@ -2748,7 +2882,11 @@ const SRSReview = (function () {
                 }
                 if (colloRow) colloRow.style.display = 'block'; // or flex, usually hint rows are flex
             } else {
-                if (colloRow) colloRow.style.display = 'none';
+                // Show 'No collocations' message instead of hiding
+                if (elements.hintCollocationsValue) {
+                    elements.hintCollocationsValue.innerHTML = '<em style="color:#888;">No collocations available for this word.</em>';
+                }
+                if (colloRow) colloRow.style.display = 'block';
             }
 
             // Unhide Definition Hint
@@ -2792,7 +2930,7 @@ const SRSReview = (function () {
             // Show Modal with slight delay for toast to appear first
             setTimeout(() => {
                 if (elements.srsWritingModal) {
-                    elements.srsWritingModal.style.zIndex = '2200'; // Ensure it's on top
+                    elements.srsWritingModal.style.zIndex = '10000'; // Very high z-index to ensure on top
                     elements.srsWritingModal.classList.add('visible');
                     // Accessibility: Trap focus
                     trapFocus(elements.srsWritingModal);

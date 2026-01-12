@@ -11,7 +11,7 @@ class PronunciationApp {
         this.audioCapture = new AudioCapture();
         this.pitchAnalyzer = new PitchAnalyzer();
         this.syllableDetector = new SyllableDetector();
-        this.praatAPI = new PraatAPI();
+        this.praatAPI = new PraatAPI(config.backendUrl);
         this.usePraatBackend = false; // Toggle: false = local JS, true = Praat backend
         this.visualizer = null; // init after DOM load
 

@@ -5,6 +5,7 @@ WORKDIR /app
 # Install system dependencies for Parselmouth
 RUN apt-get update && apt-get install -y \
     libsndfile1 \
+    libasound2 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy and install Python dependencies

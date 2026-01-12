@@ -6,6 +6,10 @@
 import { config } from './config.js';
 import { DatabaseService } from './database-service.js';
 
+// Cache version - increment when backend algorithm changes
+// v2: Fixed stress detection for IPA strings (2026-01-12)
+const CACHE_VERSION = 2;
+
 export class WordReferenceService {
     constructor() {
         this.db = new DatabaseService();
@@ -43,11 +47,16 @@ export class WordReferenceService {
             if (dbData) {
                 console.log('=== DATABASE DATA ===');
                 console.log('Word:', dbData.word);
+                console.log('Cache version:', dbData.cacheVersion || 'none');
                 console.log('Has nativeAnalysis:', !!dbData.nativeAnalysis);
                 console.log('nativeAnalysis.pitch:', dbData.nativeAnalysis?.pitch?.values?.length || 'none');
                 console.log('nativeAnalysis.syllables:', dbData.nativeAnalysis?.syllables?.length || 'none');
 
-                if (dbData.nativeAnalysis && dbData.nativeAnalysis.pitch?.values?.length > 0) {
+                // Check cache version - if outdated, re-fetch
+                const isValidVersion = dbData.cacheVersion && dbData.cacheVersion >= CACHE_VERSION;
+                const hasValidAnalysis = dbData.nativeAnalysis && dbData.nativeAnalysis.pitch?.values?.length > 0;
+
+                if (isValidVersion && hasValidAnalysis) {
                     console.log('📚 Firestore hit with valid analysis:', normalizedWord);
                     this.sessionCache.set(normalizedWord, dbData);
                     return {
@@ -56,7 +65,8 @@ export class WordReferenceService {
                         cacheSource: 'database'
                     };
                 } else {
-                    console.log('⚠️ Database entry exists but nativeAnalysis is missing/empty, re-fetching...');
+                    const reason = !isValidVersion ? 'outdated cache version' : 'missing/empty analysis';
+                    console.log(`⚠️ Database entry exists but ${reason}, re-fetching...`);
                 }
             }
         }
@@ -78,8 +88,9 @@ export class WordReferenceService {
             wordData.nativeAnalysis = this.compressAnalysis(wordData.nativeAnalysis);
         }
 
-        // 5. Save to database for future use
+        // 5. Save to database for future use (with cache version)
         if (config.features.saveToDatabase && this.db.isAvailable()) {
+            wordData.cacheVersion = CACHE_VERSION;
             this.db.saveWord(wordData).catch(err => {
                 console.error('Error saving to database:', err);
             });
@@ -104,6 +115,8 @@ export class WordReferenceService {
 
         if (!dictResponse.ok) {
             const error = await dictResponse.json().catch(() => ({}));
+            console.error('❌ BACKEND ERROR DETAIL:', error);
+            if (error.trace) console.error('Traceback:', error.trace);
             throw new Error(error.error || 'Dictionary lookup failed');
         }
 

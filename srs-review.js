@@ -1267,750 +1267,749 @@ const SRSReview = (function () {
                 }
             }
 
+            elements.srsWord.textContent = displayText;
         }
 
-        elements.srsWord.textContent = displayText;
-    }
-    if (elements.srsWordFront) {
-        elements.srsWordFront.textContent = currentWord.originalWord || currentWord.lemma;
-    }
-
-    // --- SET MODE IMMEDIATELY (before async operations) ---
-    // Determine available modes
-    const exampleForFront = currentWord.sentence || currentWord.example || currentWord.context || '';
-    const wordToMask = currentWord.originalWord || currentWord.lemma;
-
-    let maskedSentence = '';
-    let canDoCloze = false;
-
-    if (exampleForFront && wordToMask) {
-        // Try to mask
-        maskedSentence = exampleForFront.replace(
-            new RegExp(wordToMask.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'),
-            '______'
-        );
-        // Only allow cloze if we actually masked something
-        canDoCloze = maskedSentence !== exampleForFront;
-    }
-
-    console.log(`[SRS] Word: ${wordToMask}, Context: ${!!exampleForFront}, Cloze Possible: ${canDoCloze}`);
-
-    // --- WEIGHTED SELECTION LOGIC ---
-    // Initialize weights if not present
-    if (!reviewSession.modeWeights) {
-        reviewSession.modeWeights = { listen: 1, speak: 1, cloze: 1 };
-    }
-
-    // Identify valid modes
-    const validModes = ['listen', 'speak'];
-    if (canDoCloze) validModes.push('cloze');
-
-    // Calculate total weight for VALID modes only
-    let totalWeight = 0;
-    validModes.forEach(m => totalWeight += reviewSession.modeWeights[m]);
-
-    // Weighted Random Selection
-    let r = Math.random() * totalWeight;
-    let selectedMode = validModes[0];
-    let runningSum = 0;
-
-    for (const mode of validModes) {
-        runningSum += reviewSession.modeWeights[mode];
-        if (r < runningSum) {
-            selectedMode = mode;
-            break;
-        }
-    }
-
-    reviewSession.currentMode = selectedMode;
-
-    // Update Weights: Reset chosen, increment others
-    reviewSession.modeWeights[selectedMode] = 1; // Reset
-    validModes.forEach(m => {
-        if (m !== selectedMode) {
-            // Increase weight of unpicked modes to make them more likely next time
-            reviewSession.modeWeights[m] = (reviewSession.modeWeights[m] || 1) + 2;
-        }
-    });
-
-    console.log(`[SRS] Mode Selected: ${selectedMode}. New Weights:`, JSON.stringify(reviewSession.modeWeights));
-    console.log(`[SRS] Mode selected: ${reviewSession.currentMode}`);
-
-    // Reset inputs and results
-    if (elements.srsInput) elements.srsInput.value = '';
-    if (elements.srsResultContainer) elements.srsResultContainer.style.display = 'none';
-    if (elements.srsResultMessage) elements.srsResultMessage.textContent = '';
-    if (elements.srsUserInputDisplay) elements.srsUserInputDisplay.textContent = '';
-    if (elements.srsRecordBtn) {
-        elements.srsRecordBtn.textContent = 'Start Recording';
-        elements.srsRecordBtn.classList.remove('recording');
-    }
-    // Reset pronunciation practice UI
-    if (elements.srsPracticePronunciationBtn) {
-        elements.srsPracticePronunciationBtn.style.display = 'none';
-        elements.srsPracticePronunciationBtn.classList.remove('recording');
-        elements.srsPracticePronunciationBtn.textContent = '🎙️ Practice Saying It';
-    }
-    if (elements.srsPronunciationResult) elements.srsPronunciationResult.style.display = 'none';
-
-    // Configure UI based on mode
-    let displayPrompt = 'Listen and type the word';
-
-    if (reviewSession.currentMode === 'cloze') {
-        displayPrompt = maskedSentence;
-    } else if (exampleForFront) {
-        displayPrompt = exampleForFront;
-    }
-
-    if (elements.srsDefinitionPrompt) {
-        elements.srsDefinitionPrompt.textContent = displayPrompt;
-    }
-
-    if (reviewSession.currentMode === 'listen') {
-        // Listen Mode: Show Audio/Input. Hide Record. HIDE WORD.
-        if (elements.srsWordFront) elements.srsWordFront.style.display = 'none';
-        if (elements.srsAudioBtn) {
-            elements.srsAudioBtn.style.display = 'inline-flex';
-            elements.srsAudioBtn.innerHTML = '🔊 Listen'; // Reset text
-        }
-        if (elements.srsRecordBtn) elements.srsRecordBtn.style.display = 'none';
-        if (elements.srsInputContainer) elements.srsInputContainer.style.display = 'block';
-
-        // Set prompt specifically for listen mode
-        if (elements.srsDefinitionPrompt) elements.srsDefinitionPrompt.textContent = 'Listen and type the word';
-
-        // Focus input for immediate typing
-        if (elements.srsInput) {
-            elements.srsInput.placeholder = 'Type what you hear...';
-            setTimeout(() => elements.srsInput.focus(), 100);
-        }
-    } else if (reviewSession.currentMode === 'cloze') {
-        // Cloze Mode: Show Masked Sentence. Hide Audio. Show Input. HIDE WORD.
-        if (elements.srsWordFront) elements.srsWordFront.style.display = 'none';
-
-        // Hide audio to not give it away
-        if (elements.srsAudioBtn) elements.srsAudioBtn.style.display = 'none';
-
-        if (elements.srsRecordBtn) elements.srsRecordBtn.style.display = 'none';
-        if (elements.srsInputContainer) elements.srsInputContainer.style.display = 'block';
-
-        // Focus input
-        if (elements.srsInput) {
-            elements.srsInput.placeholder = 'Type the missing word...';
-            setTimeout(() => elements.srsInput.focus(), 100);
-        }
-    } else {
-        // Speak Mode: Show Record. Show Audio (Support). SHOW WORD.
-        if (elements.srsWordFront) elements.srsWordFront.style.display = 'block';
-
-        // "Listen First" scaffolding
-        if (elements.srsAudioBtn) {
-            elements.srsAudioBtn.style.display = 'inline-flex';
-            elements.srsAudioBtn.innerHTML = '🔊 Listen First';
-            elements.srsAudioBtn.title = 'Listen to the pronunciation before speaking';
+        if (elements.srsWordFront) {
+            elements.srsWordFront.textContent = currentWord.originalWord || currentWord.lemma;
         }
 
-        if (elements.srsRecordBtn) elements.srsRecordBtn.style.display = 'inline-flex';
-        if (elements.srsInputContainer) elements.srsInputContainer.style.display = 'none';
+        // --- SET MODE IMMEDIATELY (before async operations) ---
+        // Determine available modes
+        const exampleForFront = currentWord.sentence || currentWord.example || currentWord.context || '';
+        const wordToMask = currentWord.originalWord || currentWord.lemma;
 
-        // Set prompt for speak mode
-        if (elements.srsDefinitionPrompt) elements.srsDefinitionPrompt.textContent = 'Say the word out loud';
-    }
+        let maskedSentence = '';
+        let canDoCloze = false;
 
-    // Update progress
-    updateProgress();
+        if (exampleForFront && wordToMask) {
+            // Try to mask
+            maskedSentence = exampleForFront.replace(
+                new RegExp(wordToMask.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'),
+                '______'
+            );
+            // Only allow cloze if we actually masked something
+            canDoCloze = maskedSentence !== exampleForFront;
+        }
 
-    // --- ASYNC OPERATIONS (after mode is already set) ---
-    // Fetch and display phonetics
-    if (elements.srsPhonetic) elements.srsPhonetic.textContent = '...';
-    if (elements.srsPhoneticBack) elements.srsPhoneticBack.textContent = '...';
+        console.log(`[SRS] Word: ${wordToMask}, Context: ${!!exampleForFront}, Cloze Possible: ${canDoCloze}`);
 
-    // Use stored phonetic or fetch for the specific word form displayed (NOT lemma!)
-    const phonetic = currentWord.phonetic || await fetchPhonetic(currentWord.originalWord || currentWord.lemma);
-    if (elements.srsPhonetic) elements.srsPhonetic.textContent = phonetic || '';
-    if (elements.srsPhoneticBack) elements.srsPhoneticBack.textContent = phonetic || '';
+        // --- WEIGHTED SELECTION LOGIC ---
+        // Initialize weights if not present
+        if (!reviewSession.modeWeights) {
+            reviewSession.modeWeights = { listen: 1, speak: 1, cloze: 1 };
+        }
 
-    // Fetch Vietnamese translation and definition using DictionaryService
-    const wordToLookup = currentWord.originalWord || currentWord.lemma;
+        // Identify valid modes
+        const validModes = ['listen', 'speak'];
+        if (canDoCloze) validModes.push('cloze');
 
-    // Set loading states
-    if (elements.srsVietnamese) elements.srsVietnamese.textContent = '...';
-    if (elements.srsDefinition) {
-        elements.srsDefinition.style.display = 'none'; // Force hide
-        // elements.srsDefinition.textContent = '...'; 
-    }
+        // Calculate total weight for VALID modes only
+        let totalWeight = 0;
+        validModes.forEach(m => totalWeight += reviewSession.modeWeights[m]);
 
-    // Use DictionaryService if available
-    if (typeof DictionaryService !== 'undefined') {
-        try {
-            // Use lemma for lookup
-            let lookupWord = currentWord.lemma || wordToLookup;
-            let wordData = await DictionaryService.getWordData(lookupWord, currentWord.partOfSpeech);
+        // Weighted Random Selection
+        let r = Math.random() * totalWeight;
+        let selectedMode = validModes[0];
+        let runningSum = 0;
 
-            // Check for obscure definition and retry with base form if needed
-            const OBSCURE_KEYWORDS = ['iso 639', 'language code', 'grub', 'maggot', 'symbol for'];
-            const isObscure = wordData.definition && OBSCURE_KEYWORDS.some(kw => wordData.definition.toLowerCase().includes(kw));
+        for (const mode of validModes) {
+            runningSum += reviewSession.modeWeights[mode];
+            if (r < runningSum) {
+                selectedMode = mode;
+                break;
+            }
+        }
 
-            if (isObscure) {
-                console.warn('[SRS] Obscure definition detected, trying base form...');
-                // Try common base forms (being -> be, made -> make, etc.)
-                const baseFormMap = {
-                    'being': 'be', 'been': 'be',
-                    'made': 'make', 'making': 'make',
-                    'doing': 'do', 'done': 'do', 'did': 'do',
-                    'going': 'go', 'went': 'go', 'gone': 'go'
-                };
-                const baseWord = baseFormMap[lookupWord.toLowerCase()] || lookupWord;
-                if (baseWord !== lookupWord) {
-                    wordData = await DictionaryService.getWordData(baseWord, currentWord.partOfSpeech);
+        reviewSession.currentMode = selectedMode;
+
+        // Update Weights: Reset chosen, increment others
+        reviewSession.modeWeights[selectedMode] = 1; // Reset
+        validModes.forEach(m => {
+            if (m !== selectedMode) {
+                // Increase weight of unpicked modes to make them more likely next time
+                reviewSession.modeWeights[m] = (reviewSession.modeWeights[m] || 1) + 2;
+            }
+        });
+
+        console.log(`[SRS] Mode Selected: ${selectedMode}. New Weights:`, JSON.stringify(reviewSession.modeWeights));
+        console.log(`[SRS] Mode selected: ${reviewSession.currentMode}`);
+
+        // Reset inputs and results
+        if (elements.srsInput) elements.srsInput.value = '';
+        if (elements.srsResultContainer) elements.srsResultContainer.style.display = 'none';
+        if (elements.srsResultMessage) elements.srsResultMessage.textContent = '';
+        if (elements.srsUserInputDisplay) elements.srsUserInputDisplay.textContent = '';
+        if (elements.srsRecordBtn) {
+            elements.srsRecordBtn.textContent = 'Start Recording';
+            elements.srsRecordBtn.classList.remove('recording');
+        }
+        // Reset pronunciation practice UI
+        if (elements.srsPracticePronunciationBtn) {
+            elements.srsPracticePronunciationBtn.style.display = 'none';
+            elements.srsPracticePronunciationBtn.classList.remove('recording');
+            elements.srsPracticePronunciationBtn.textContent = '🎙️ Practice Saying It';
+        }
+        if (elements.srsPronunciationResult) elements.srsPronunciationResult.style.display = 'none';
+
+        // Configure UI based on mode
+        let displayPrompt = 'Listen and type the word';
+
+        if (reviewSession.currentMode === 'cloze') {
+            displayPrompt = maskedSentence;
+        } else if (exampleForFront) {
+            displayPrompt = exampleForFront;
+        }
+
+        if (elements.srsDefinitionPrompt) {
+            elements.srsDefinitionPrompt.textContent = displayPrompt;
+        }
+
+        if (reviewSession.currentMode === 'listen') {
+            // Listen Mode: Show Audio/Input. Hide Record. HIDE WORD.
+            if (elements.srsWordFront) elements.srsWordFront.style.display = 'none';
+            if (elements.srsAudioBtn) {
+                elements.srsAudioBtn.style.display = 'inline-flex';
+                elements.srsAudioBtn.innerHTML = '🔊 Listen'; // Reset text
+            }
+            if (elements.srsRecordBtn) elements.srsRecordBtn.style.display = 'none';
+            if (elements.srsInputContainer) elements.srsInputContainer.style.display = 'block';
+
+            // Set prompt specifically for listen mode
+            if (elements.srsDefinitionPrompt) elements.srsDefinitionPrompt.textContent = 'Listen and type the word';
+
+            // Focus input for immediate typing
+            if (elements.srsInput) {
+                elements.srsInput.placeholder = 'Type what you hear...';
+                setTimeout(() => elements.srsInput.focus(), 100);
+            }
+        } else if (reviewSession.currentMode === 'cloze') {
+            // Cloze Mode: Show Masked Sentence. Hide Audio. Show Input. HIDE WORD.
+            if (elements.srsWordFront) elements.srsWordFront.style.display = 'none';
+
+            // Hide audio to not give it away
+            if (elements.srsAudioBtn) elements.srsAudioBtn.style.display = 'none';
+
+            if (elements.srsRecordBtn) elements.srsRecordBtn.style.display = 'none';
+            if (elements.srsInputContainer) elements.srsInputContainer.style.display = 'block';
+
+            // Focus input
+            if (elements.srsInput) {
+                elements.srsInput.placeholder = 'Type the missing word...';
+                setTimeout(() => elements.srsInput.focus(), 100);
+            }
+        } else {
+            // Speak Mode: Show Record. Show Audio (Support). SHOW WORD.
+            if (elements.srsWordFront) elements.srsWordFront.style.display = 'block';
+
+            // "Listen First" scaffolding
+            if (elements.srsAudioBtn) {
+                elements.srsAudioBtn.style.display = 'inline-flex';
+                elements.srsAudioBtn.innerHTML = '🔊 Listen First';
+                elements.srsAudioBtn.title = 'Listen to the pronunciation before speaking';
+            }
+
+            if (elements.srsRecordBtn) elements.srsRecordBtn.style.display = 'inline-flex';
+            if (elements.srsInputContainer) elements.srsInputContainer.style.display = 'none';
+
+            // Set prompt for speak mode
+            if (elements.srsDefinitionPrompt) elements.srsDefinitionPrompt.textContent = 'Say the word out loud';
+        }
+
+        // Update progress
+        updateProgress();
+
+        // --- ASYNC OPERATIONS (after mode is already set) ---
+        // Fetch and display phonetics
+        if (elements.srsPhonetic) elements.srsPhonetic.textContent = '...';
+        if (elements.srsPhoneticBack) elements.srsPhoneticBack.textContent = '...';
+
+        // Use stored phonetic or fetch for the specific word form displayed (NOT lemma!)
+        const phonetic = currentWord.phonetic || await fetchPhonetic(currentWord.originalWord || currentWord.lemma);
+        if (elements.srsPhonetic) elements.srsPhonetic.textContent = phonetic || '';
+        if (elements.srsPhoneticBack) elements.srsPhoneticBack.textContent = phonetic || '';
+
+        // Fetch Vietnamese translation and definition using DictionaryService
+        const wordToLookup = currentWord.originalWord || currentWord.lemma;
+
+        // Set loading states
+        if (elements.srsVietnamese) elements.srsVietnamese.textContent = '...';
+        if (elements.srsDefinition) {
+            elements.srsDefinition.style.display = 'none'; // Force hide
+            // elements.srsDefinition.textContent = '...'; 
+        }
+
+        // Use DictionaryService if available
+        if (typeof DictionaryService !== 'undefined') {
+            try {
+                // Use lemma for lookup
+                let lookupWord = currentWord.lemma || wordToLookup;
+                let wordData = await DictionaryService.getWordData(lookupWord, currentWord.partOfSpeech);
+
+                // Check for obscure definition and retry with base form if needed
+                const OBSCURE_KEYWORDS = ['iso 639', 'language code', 'grub', 'maggot', 'symbol for'];
+                const isObscure = wordData.definition && OBSCURE_KEYWORDS.some(kw => wordData.definition.toLowerCase().includes(kw));
+
+                if (isObscure) {
+                    console.warn('[SRS] Obscure definition detected, trying base form...');
+                    // Try common base forms (being -> be, made -> make, etc.)
+                    const baseFormMap = {
+                        'being': 'be', 'been': 'be',
+                        'made': 'make', 'making': 'make',
+                        'doing': 'do', 'done': 'do', 'did': 'do',
+                        'going': 'go', 'went': 'go', 'gone': 'go'
+                    };
+                    const baseWord = baseFormMap[lookupWord.toLowerCase()] || lookupWord;
+                    if (baseWord !== lookupWord) {
+                        wordData = await DictionaryService.getWordData(baseWord, currentWord.partOfSpeech);
+                    }
                 }
-            }
 
-            // Display Vietnamese translation
-            if (elements.srsVietnamese) {
-                elements.srsVietnamese.textContent = wordData.vietnameseTranslation || '';
-            }
+                // Display Vietnamese translation
+                if (elements.srsVietnamese) {
+                    elements.srsVietnamese.textContent = wordData.vietnameseTranslation || '';
+                }
 
-            // Display English definition - DISABLED PER USER REQUEST
-            if (elements.srsDefinition) {
-                elements.srsDefinition.style.display = 'none';
-                elements.srsDefinition.textContent = '';
-            }
+                // Display English definition - DISABLED PER USER REQUEST
+                if (elements.srsDefinition) {
+                    elements.srsDefinition.style.display = 'none';
+                    elements.srsDefinition.textContent = '';
+                }
 
-            // Display example sentence (prefer stored, fallback to fetched)
-            if (elements.srsExample) {
-                const example = currentWord.example || currentWord.sentence || wordData.example || '';
-                elements.srsExample.textContent = example;
-            }
+                // Display example sentence (prefer stored, fallback to fetched)
+                if (elements.srsExample) {
+                    const example = currentWord.example || currentWord.sentence || wordData.example || '';
+                    elements.srsExample.textContent = example;
+                }
 
-            console.log('[SRS] Word data loaded:', wordToLookup, wordData);
-        } catch (e) {
-            console.warn('[SRS] DictionaryService failed:', e);
-            // Fallback to stored data
+                console.log('[SRS] Word data loaded:', wordToLookup, wordData);
+            } catch (e) {
+                console.warn('[SRS] DictionaryService failed:', e);
+                // Fallback to stored data
+                if (elements.srsVietnamese) elements.srsVietnamese.textContent = '';
+                if (elements.srsDefinition) elements.srsDefinition.style.display = 'none';
+                if (elements.srsExample) elements.srsExample.textContent = currentWord.example || currentWord.sentence || '';
+            }
+        } else {
+            // DictionaryService not available, use stored data only
             if (elements.srsVietnamese) elements.srsVietnamese.textContent = '';
             if (elements.srsDefinition) elements.srsDefinition.style.display = 'none';
             if (elements.srsExample) elements.srsExample.textContent = currentWord.example || currentWord.sentence || '';
         }
-    } else {
-        // DictionaryService not available, use stored data only
-        if (elements.srsVietnamese) elements.srsVietnamese.textContent = '';
-        if (elements.srsDefinition) elements.srsDefinition.style.display = 'none';
-        if (elements.srsExample) elements.srsExample.textContent = currentWord.example || currentWord.sentence || '';
-    }
-}
-
-/**
- * Show the answer (flip card)
- */
-function showAnswer() {
-    if (elements.showAnswerBtn) elements.showAnswerBtn.style.display = 'none';
-
-    // Toggle between Auto-Assign mode and Manual mode
-    const autoContinueBtn = document.getElementById('srs-auto-continue-btn');
-    const qualityOptions = document.querySelector('.srs-quality-options');
-    const qualityPrompt = document.querySelector('.srs-quality-prompt');
-
-    if (reviewSession.autoAssignMode) {
-        // Auto-Assign Mode: Show continue button, hide quality options
-        if (autoContinueBtn) autoContinueBtn.style.display = 'flex';
-        if (qualityOptions) qualityOptions.style.display = 'none';
-        if (qualityPrompt) qualityPrompt.textContent = 'Answer recorded!';
-    } else {
-        // Manual Mode: Show quality options, hide continue button
-        if (autoContinueBtn) autoContinueBtn.style.display = 'none';
-        if (qualityOptions) qualityOptions.style.display = 'grid';
-        if (qualityPrompt) qualityPrompt.textContent = 'Practice this word again in:';
     }
 
-    // Fix: Use CSS class for visibility animation
-    if (elements.qualityBtns) {
-        elements.qualityBtns.classList.add('visible');
-        elements.qualityBtns.style.display = 'flex';
-    }
-    if (elements.srsControls) elements.srsControls.classList.add('visible');
+    /**
+     * Show the answer (flip card)
+     */
+    function showAnswer() {
+        if (elements.showAnswerBtn) elements.showAnswerBtn.style.display = 'none';
 
-    // Add flip animation
-    if (elements.flashcard) {
-        elements.flashcard.classList.add('flipped');
-    }
+        // Toggle between Auto-Assign mode and Manual mode
+        const autoContinueBtn = document.getElementById('srs-auto-continue-btn');
+        const qualityOptions = document.querySelector('.srs-quality-options');
+        const qualityPrompt = document.querySelector('.srs-quality-prompt');
 
-    // Perform Check
-    checkAnswerAndDisplay();
-}
-
-/**
- * Check the user's answer and update display
- */
-function checkAnswerAndDisplay() {
-    const currentWord = reviewSession.wordsToReview[reviewSession.currentIndex];
-    if (!currentWord) return;
-
-    const targetWord = (currentWord.originalWord || currentWord.lemma).toLowerCase().trim();
-    let userSaid = "";
-    let isCorrect = false;
-
-    if (reviewSession.currentMode === 'listen' || reviewSession.currentMode === 'cloze') {
-        // Check Typed Input
-        if (elements.srsInput) {
-            userSaid = elements.srsInput.value.toLowerCase().trim();
-            isCorrect = userSaid === targetWord;
-        }
-    } else {
-        // Check Spoken Transcript
-        // Stop recording if active
-        stopRecording();
-        userSaid = (currentTranscription || "").toLowerCase().trim();
-        // Word boundary match (more robust than strict equality)
-        const wordBoundaryRegex = new RegExp(`\\b${targetWord}\\b`, 'i');
-        isCorrect = wordBoundaryRegex.test(userSaid);
-        console.log(`[SRS] Speech Check: "${userSaid}" vs "${targetWord}" -> ${isCorrect}`);
-    }
-
-    // Display Result
-    if (elements.srsResultContainer) {
-        elements.srsResultContainer.style.display = 'block';
-        if (isCorrect) {
-            elements.srsResultMessage.textContent = '✅ Correct!';
-            elements.srsResultMessage.className = 'srs-result-message correct';
+        if (reviewSession.autoAssignMode) {
+            // Auto-Assign Mode: Show continue button, hide quality options
+            if (autoContinueBtn) autoContinueBtn.style.display = 'flex';
+            if (qualityOptions) qualityOptions.style.display = 'none';
+            if (qualityPrompt) qualityPrompt.textContent = 'Answer recorded!';
         } else {
-            elements.srsResultMessage.textContent = '❌ Incorrect';
-            elements.srsResultMessage.className = 'srs-result-message incorrect';
+            // Manual Mode: Show quality options, hide continue button
+            if (autoContinueBtn) autoContinueBtn.style.display = 'none';
+            if (qualityOptions) qualityOptions.style.display = 'grid';
+            if (qualityPrompt) qualityPrompt.textContent = 'Practice this word again in:';
         }
-        const actionVerb = reviewSession.currentMode === 'speak' ? 'said' : 'typed';
-        elements.srsUserInputDisplay.textContent = `You ${actionVerb}: "${userSaid || ''}"`;
-    }
 
-    // Store correctness for Writing Challenge trigger
-    reviewSession.lastAnswerCorrect = isCorrect;
-    console.log('[SRS DEBUG] checkAnswerAndDisplay - isCorrect:', isCorrect, 'stored to reviewSession.lastAnswerCorrect');
-
-    // Show pronunciation practice button after answer
-    if (elements.srsPracticePronunciationBtn) {
-        elements.srsPracticePronunciationBtn.style.display = 'flex';
-    }
-    // Hide previous pronunciation result
-    if (elements.srsPronunciationResult) {
-        elements.srsPronunciationResult.style.display = 'none';
-    }
-}
-
-/**
- * Toggle flashcard flip
- */
-function toggleFlip(e) {
-    // Prevent flip if clicking audio button or controls
-    if (e.target.closest('.srs-audio-btn') || e.target.closest('.srs-controls')) return;
-
-    if (elements.flashcard) {
-        elements.flashcard.classList.toggle('flipped');
-
-        // If flipped to back, ensure controls are shown (treat as Show Answer)
-        if (elements.flashcard.classList.contains('flipped')) {
-            if (elements.showAnswerBtn) elements.showAnswerBtn.style.display = 'none';
-            if (elements.qualityBtns) elements.qualityBtns.classList.add('visible');
-            if (elements.srsControls) elements.srsControls.classList.add('visible');
-
-            // Auto-check on flip
-            checkAnswerAndDisplay();
+        // Fix: Use CSS class for visibility animation
+        if (elements.qualityBtns) {
+            elements.qualityBtns.classList.add('visible');
+            elements.qualityBtns.style.display = 'flex';
         }
-    }
-}
+        if (elements.srsControls) elements.srsControls.classList.add('visible');
 
-/**
- * Start pronunciation practice with speech recognition
- */
-function startPronunciationPractice() {
-    const currentWord = reviewSession.wordsToReview[reviewSession.currentIndex];
-    if (!currentWord) return;
-
-    const targetWord = (currentWord.originalWord || currentWord.lemma).toLowerCase().trim();
-    const btn = elements.srsPracticePronunciationBtn;
-    const resultDiv = elements.srsPronunciationResult;
-    const feedbackSpan = elements.srsPronunciationFeedback;
-
-    // Check for speech recognition support
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-        if (feedbackSpan) feedbackSpan.textContent = '⚠️ Speech recognition not supported in this browser';
-        if (resultDiv) {
-            resultDiv.style.display = 'block';
-            resultDiv.className = 'srs-pronunciation-result incorrect';
+        // Add flip animation
+        if (elements.flashcard) {
+            elements.flashcard.classList.add('flipped');
         }
-        return;
+
+        // Perform Check
+        checkAnswerAndDisplay();
     }
 
-    // If already recording, stop
-    if (btn.classList.contains('recording')) {
-        btn.classList.remove('recording');
-        btn.textContent = '🎙️ Practice Saying It';
-        return;
-    }
+    /**
+     * Check the user's answer and update display
+     */
+    function checkAnswerAndDisplay() {
+        const currentWord = reviewSession.wordsToReview[reviewSession.currentIndex];
+        if (!currentWord) return;
 
-    // Stop any existing recognition to prevent 'aborted' error
-    if (pronunciationRecognition) {
-        try {
-            pronunciationRecognition.abort();
-        } catch (e) {
-            console.log('[SRS] Previous recognition already stopped');
-        }
-        pronunciationRecognition = null;
-    }
+        const targetWord = (currentWord.originalWord || currentWord.lemma).toLowerCase().trim();
+        let userSaid = "";
+        let isCorrect = false;
 
-    // Start recording
-    btn.classList.add('recording');
-    btn.textContent = '🔴 Listening...';
-    if (resultDiv) resultDiv.style.display = 'none';
-
-    pronunciationRecognition = new SpeechRecognition();
-    const recognition = pronunciationRecognition;
-    recognition.lang = 'en-US';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 3;
-
-    recognition.onresult = (event) => {
-        btn.classList.remove('recording');
-        btn.textContent = '🎙️ Try Again';
-
-        const transcript = event.results[0][0].transcript.toLowerCase().trim();
-        const confidence = event.results[0][0].confidence;
-
-        // Check all alternatives for a match
-        // Use strict matching: exact match or word appears as complete word in phrase
-        let isMatch = false;
-        for (let i = 0; i < event.results[0].length; i++) {
-            const alt = event.results[0][i].transcript.toLowerCase().trim();
-            // Exact match
-            if (alt === targetWord) {
-                isMatch = true;
-                break;
+        if (reviewSession.currentMode === 'listen' || reviewSession.currentMode === 'cloze') {
+            // Check Typed Input
+            if (elements.srsInput) {
+                userSaid = elements.srsInput.value.toLowerCase().trim();
+                isCorrect = userSaid === targetWord;
             }
-            // Word boundary match: target word appears as complete word in transcription
-            // e.g., "the quite nice" contains "quite" as a complete word
+        } else {
+            // Check Spoken Transcript
+            // Stop recording if active
+            stopRecording();
+            userSaid = (currentTranscription || "").toLowerCase().trim();
+            // Word boundary match (more robust than strict equality)
             const wordBoundaryRegex = new RegExp(`\\b${targetWord}\\b`, 'i');
-            if (wordBoundaryRegex.test(alt)) {
-                isMatch = true;
-                break;
-            }
+            isCorrect = wordBoundaryRegex.test(userSaid);
+            console.log(`[SRS] Speech Check: "${userSaid}" vs "${targetWord}" -> ${isCorrect}`);
         }
 
-        if (resultDiv && feedbackSpan) {
-            resultDiv.style.display = 'block';
-            if (isMatch) {
-                resultDiv.className = 'srs-pronunciation-result correct';
-                feedbackSpan.textContent = `✅ Great! You said: "${transcript}"`;
+        // Display Result
+        if (elements.srsResultContainer) {
+            elements.srsResultContainer.style.display = 'block';
+            if (isCorrect) {
+                elements.srsResultMessage.textContent = '✅ Correct!';
+                elements.srsResultMessage.className = 'srs-result-message correct';
             } else {
-                resultDiv.className = 'srs-pronunciation-result incorrect';
-                feedbackSpan.textContent = `❌ You said: "${transcript}" (Expected: "${targetWord}")`;
+                elements.srsResultMessage.textContent = '❌ Incorrect';
+                elements.srsResultMessage.className = 'srs-result-message incorrect';
             }
+            const actionVerb = reviewSession.currentMode === 'speak' ? 'said' : 'typed';
+            elements.srsUserInputDisplay.textContent = `You ${actionVerb}: "${userSaid || ''}"`;
         }
 
-        console.log('[SRS] Pronunciation:', { transcript, targetWord, isMatch, confidence });
-    };
+        // Store correctness for Writing Challenge trigger
+        reviewSession.lastAnswerCorrect = isCorrect;
+        console.log('[SRS DEBUG] checkAnswerAndDisplay - isCorrect:', isCorrect, 'stored to reviewSession.lastAnswerCorrect');
 
-    recognition.onerror = (event) => {
-        btn.classList.remove('recording');
-        btn.textContent = '🎙️ Practice Saying It';
-
-        if (resultDiv && feedbackSpan) {
-            resultDiv.style.display = 'block';
-            resultDiv.className = 'srs-pronunciation-result incorrect';
-
-            if (event.error === 'no-speech') {
-                feedbackSpan.textContent = '🔇 No speech detected. Try again!';
-            } else if (event.error === 'not-allowed') {
-                feedbackSpan.textContent = '🎤 Microphone access denied. Please enable it.';
-            } else {
-                feedbackSpan.textContent = `⚠️ Error: ${event.error}`;
-            }
+        // Show pronunciation practice button after answer
+        if (elements.srsPracticePronunciationBtn) {
+            elements.srsPracticePronunciationBtn.style.display = 'flex';
         }
-    };
-
-    recognition.onend = () => {
-        btn.classList.remove('recording');
-        if (btn.textContent === '🔴 Listening...') {
-            btn.textContent = '🎙️ Practice Saying It';
+        // Hide previous pronunciation result
+        if (elements.srsPronunciationResult) {
+            elements.srsPronunciationResult.style.display = 'none';
         }
-    };
-
-    recognition.start();
-}
-
-/**
- * Skip current word and move to next (without recording SRS data)
- */
-function skipCurrentWord() {
-    console.log('[SRS] Skipping current word');
-
-    // Move to next word
-    reviewSession.currentIndex++;
-
-    // Reset flashcard state
-    if (elements.flashcard) elements.flashcard.classList.remove('flipped');
-    if (elements.srsResultContainer) elements.srsResultContainer.style.display = 'none';
-    if (elements.srsInput) elements.srsInput.value = '';
-
-    // Show next word or summary
-    showCurrentWord();
-}
-
-/**
- * Show feedback toast for SRS scheduling
- */
-function showFeedbackToast(interval) {
-    let toast = document.getElementById('srs-feedback-toast');
-    if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'srs-feedback-toast';
-        toast.className = 'srs-feedback-toast';
-        // Append to container relative to flashcard
-        const container = document.querySelector('.srs-flashcard-container') || document.body;
-        container.appendChild(toast);
     }
 
-    const timeText = interval === 0 ? 'Review again soon' : `See you in ${interval} day${interval !== 1 ? 's' : ''}`;
-    toast.innerHTML = `<span>📅</span> ${timeText}`;
+    /**
+     * Toggle flashcard flip
+     */
+    function toggleFlip(e) {
+        // Prevent flip if clicking audio button or controls
+        if (e.target.closest('.srs-audio-btn') || e.target.closest('.srs-controls')) return;
 
-    // Force reflow
-    void toast.offsetWidth;
+        if (elements.flashcard) {
+            elements.flashcard.classList.toggle('flipped');
 
-    toast.classList.add('show');
+            // If flipped to back, ensure controls are shown (treat as Show Answer)
+            if (elements.flashcard.classList.contains('flipped')) {
+                if (elements.showAnswerBtn) elements.showAnswerBtn.style.display = 'none';
+                if (elements.qualityBtns) elements.qualityBtns.classList.add('visible');
+                if (elements.srsControls) elements.srsControls.classList.add('visible');
 
-    setTimeout(() => {
-        toast.classList.remove('show');
-    }, 1200);
-}
+                // Auto-check on flip
+                checkAnswerAndDisplay();
+            }
+        }
+    }
 
-/**
- * Record review result using Auto-Assign mode
- * Uses answer correctness to automatically determine next interval
- */
-async function recordAutoReview() {
-    const currentWord = reviewSession.wordsToReview[reviewSession.currentIndex];
-    const lemma = currentWord.lemma;
-    const wasCorrect = reviewSession.lastAnswerCorrect === true;
+    /**
+     * Start pronunciation practice with speech recognition
+     */
+    function startPronunciationPractice() {
+        const currentWord = reviewSession.wordsToReview[reviewSession.currentIndex];
+        if (!currentWord) return;
 
-    console.log('[SRS Auto] Recording auto-review for:', lemma, 'wasCorrect:', wasCorrect);
+        const targetWord = (currentWord.originalWord || currentWord.lemma).toLowerCase().trim();
+        const btn = elements.srsPracticePronunciationBtn;
+        const resultDiv = elements.srsPronunciationResult;
+        const feedbackSpan = elements.srsPronunciationFeedback;
 
-    // Calculate new SRS values using Auto-Assign algorithm
-    const currentData = srsCache.srsData[lemma] || currentWord;
-    const newData = calculateAutoInterval(wasCorrect, currentData);
+        // Check for speech recognition support
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            if (feedbackSpan) feedbackSpan.textContent = '⚠️ Speech recognition not supported in this browser';
+            if (resultDiv) {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'srs-pronunciation-result incorrect';
+            }
+            return;
+        }
 
-    // Show Feedback Toast
-    showFeedbackToast(newData.interval);
+        // If already recording, stop
+        if (btn.classList.contains('recording')) {
+            btn.classList.remove('recording');
+            btn.textContent = '🎙️ Practice Saying It';
+            return;
+        }
 
-    // Update cached data
-    srsCache.srsData[lemma] = {
-        ...srsCache.srsData[lemma],
-        ...newData,
-        originalWord: currentWord.originalWord || currentWord.lemma
-    };
+        // Stop any existing recognition to prevent 'aborted' error
+        if (pronunciationRecognition) {
+            try {
+                pronunciationRecognition.abort();
+            } catch (e) {
+                console.log('[SRS] Previous recognition already stopped');
+            }
+            pronunciationRecognition = null;
+        }
 
-    // Track session result
-    reviewSession.sessionResults.push({
-        lemma,
-        quality: wasCorrect ? 4 : 1, // Map to quality for stats
-        wasCorrect: wasCorrect
-    });
+        // Start recording
+        btn.classList.add('recording');
+        btn.textContent = '🔴 Listening...';
+        if (resultDiv) resultDiv.style.display = 'none';
 
-    // Check if word is now mastered
-    if (newData.status === 'mastered') {
-        console.log('[SRS Auto] Word mastered:', lemma);
-        srsCache.masteredWords.push({
+        pronunciationRecognition = new SpeechRecognition();
+        const recognition = pronunciationRecognition;
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 3;
+
+        recognition.onresult = (event) => {
+            btn.classList.remove('recording');
+            btn.textContent = '🎙️ Try Again';
+
+            const transcript = event.results[0][0].transcript.toLowerCase().trim();
+            const confidence = event.results[0][0].confidence;
+
+            // Check all alternatives for a match
+            // Use strict matching: exact match or word appears as complete word in phrase
+            let isMatch = false;
+            for (let i = 0; i < event.results[0].length; i++) {
+                const alt = event.results[0][i].transcript.toLowerCase().trim();
+                // Exact match
+                if (alt === targetWord) {
+                    isMatch = true;
+                    break;
+                }
+                // Word boundary match: target word appears as complete word in transcription
+                // e.g., "the quite nice" contains "quite" as a complete word
+                const wordBoundaryRegex = new RegExp(`\\b${targetWord}\\b`, 'i');
+                if (wordBoundaryRegex.test(alt)) {
+                    isMatch = true;
+                    break;
+                }
+            }
+
+            if (resultDiv && feedbackSpan) {
+                resultDiv.style.display = 'block';
+                if (isMatch) {
+                    resultDiv.className = 'srs-pronunciation-result correct';
+                    feedbackSpan.textContent = `✅ Great! You said: "${transcript}"`;
+                } else {
+                    resultDiv.className = 'srs-pronunciation-result incorrect';
+                    feedbackSpan.textContent = `❌ You said: "${transcript}" (Expected: "${targetWord}")`;
+                }
+            }
+
+            console.log('[SRS] Pronunciation:', { transcript, targetWord, isMatch, confidence });
+        };
+
+        recognition.onerror = (event) => {
+            btn.classList.remove('recording');
+            btn.textContent = '🎙️ Practice Saying It';
+
+            if (resultDiv && feedbackSpan) {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'srs-pronunciation-result incorrect';
+
+                if (event.error === 'no-speech') {
+                    feedbackSpan.textContent = '🔇 No speech detected. Try again!';
+                } else if (event.error === 'not-allowed') {
+                    feedbackSpan.textContent = '🎤 Microphone access denied. Please enable it.';
+                } else {
+                    feedbackSpan.textContent = `⚠️ Error: ${event.error}`;
+                }
+            }
+        };
+
+        recognition.onend = () => {
+            btn.classList.remove('recording');
+            if (btn.textContent === '🔴 Listening...') {
+                btn.textContent = '🎙️ Practice Saying It';
+            }
+        };
+
+        recognition.start();
+    }
+
+    /**
+     * Skip current word and move to next (without recording SRS data)
+     */
+    function skipCurrentWord() {
+        console.log('[SRS] Skipping current word');
+
+        // Move to next word
+        reviewSession.currentIndex++;
+
+        // Reset flashcard state
+        if (elements.flashcard) elements.flashcard.classList.remove('flipped');
+        if (elements.srsResultContainer) elements.srsResultContainer.style.display = 'none';
+        if (elements.srsInput) elements.srsInput.value = '';
+
+        // Show next word or summary
+        showCurrentWord();
+    }
+
+    /**
+     * Show feedback toast for SRS scheduling
+     */
+    function showFeedbackToast(interval) {
+        let toast = document.getElementById('srs-feedback-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'srs-feedback-toast';
+            toast.className = 'srs-feedback-toast';
+            // Append to container relative to flashcard
+            const container = document.querySelector('.srs-flashcard-container') || document.body;
+            container.appendChild(toast);
+        }
+
+        const timeText = interval === 0 ? 'Review again soon' : `See you in ${interval} day${interval !== 1 ? 's' : ''}`;
+        toast.innerHTML = `<span>📅</span> ${timeText}`;
+
+        // Force reflow
+        void toast.offsetWidth;
+
+        toast.classList.add('show');
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 1200);
+    }
+
+    /**
+     * Record review result using Auto-Assign mode
+     * Uses answer correctness to automatically determine next interval
+     */
+    async function recordAutoReview() {
+        const currentWord = reviewSession.wordsToReview[reviewSession.currentIndex];
+        const lemma = currentWord.lemma;
+        const wasCorrect = reviewSession.lastAnswerCorrect === true;
+
+        console.log('[SRS Auto] Recording auto-review for:', lemma, 'wasCorrect:', wasCorrect);
+
+        // Calculate new SRS values using Auto-Assign algorithm
+        const currentData = srsCache.srsData[lemma] || currentWord;
+        const newData = calculateAutoInterval(wasCorrect, currentData);
+
+        // Show Feedback Toast
+        showFeedbackToast(newData.interval);
+
+        // Update cached data
+        srsCache.srsData[lemma] = {
+            ...srsCache.srsData[lemma],
+            ...newData,
+            originalWord: currentWord.originalWord || currentWord.lemma
+        };
+
+        // Track session result
+        reviewSession.sessionResults.push({
             lemma,
-            masteredAt: new Date().toISOString(),
-            totalReviews: newData.repetitions
+            quality: wasCorrect ? 4 : 1, // Map to quality for stats
+            wasCorrect: wasCorrect
         });
 
-        // Promote in VocabBook if applicable
-        if (window.VocabularyBook && typeof window.VocabularyBook.promoteToMastered === 'function') {
-            window.VocabularyBook.promoteToMastered(lemma);
+        // Check if word is now mastered
+        if (newData.status === 'mastered') {
+            console.log('[SRS Auto] Word mastered:', lemma);
+            srsCache.masteredWords.push({
+                lemma,
+                masteredAt: new Date().toISOString(),
+                totalReviews: newData.repetitions
+            });
+
+            // Promote in VocabBook if applicable
+            if (window.VocabularyBook && typeof window.VocabularyBook.promoteToMastered === 'function') {
+                window.VocabularyBook.promoteToMastered(lemma);
+            }
+
+            await awardPoints(POINTS_WORD_MASTERED, 'word_mastered');
         }
 
-        await awardPoints(POINTS_WORD_MASTERED, 'word_mastered');
-    }
+        // Update stats
+        srsCache.reviewStats.totalReviews++;
+        srsCache.reviewStats.reviewsToday++;
+        srsCache.reviewStats.lastReviewSession = new Date().toISOString();
 
-    // Update stats
-    srsCache.reviewStats.totalReviews++;
-    srsCache.reviewStats.reviewsToday++;
-    srsCache.reviewStats.lastReviewSession = new Date().toISOString();
+        await awardPoints(POINTS_PER_REVIEW, 'srs_review');
+        // FIX: Removed duplicate awardPoints call
 
-    await awardPoints(POINTS_PER_REVIEW, 'srs_review');
-    // FIX: Removed duplicate awardPoints call
+        await saveSRSData();
+        updateDashboardSummary(); // Update dashboard \"Next review\" info
 
-    await saveSRSData();
-    updateDashboardSummary(); // Update dashboard \"Next review\" info
+        // Reset flip animation
+        if (elements.flashcard) {
+            elements.flashcard.classList.remove('flipped');
+        }
 
-    // Reset flip animation
-    if (elements.flashcard) {
-        elements.flashcard.classList.remove('flipped');
-    }
-
-    // Trigger Writing Challenge even in auto mode if correct
-    if (wasCorrect) {
-        showWritingChallenge(currentWord, () => {
+        // Trigger Writing Challenge even in auto mode if correct
+        if (wasCorrect) {
+            showWritingChallenge(currentWord, () => {
+                reviewSession.currentIndex++;
+                showCurrentWord();
+                saveSRSData();
+            });
+        } else {
+            // Move to next word immediately if wrong
             reviewSession.currentIndex++;
             showCurrentWord();
             saveSRSData();
-        });
-    } else {
-        // Move to next word immediately if wrong
-        reviewSession.currentIndex++;
-        showCurrentWord();
-        saveSRSData();
-    }
-}
-
-/**
- * Record the review result and move to next word
- */
-async function recordReviewResult(quality) {
-    const currentWord = reviewSession.wordsToReview[reviewSession.currentIndex];
-    const lemma = currentWord.lemma;
-
-    // Calculate new SRS values
-    const newData = calculateNextReview(quality, srsCache.srsData[lemma] || currentWord);
-
-    // Show Feedback Toast
-    showFeedbackToast(newData.interval);
-
-    // Update cached data
-    srsCache.srsData[lemma] = {
-        ...srsCache.srsData[lemma],
-        ...newData,
-        originalWord: currentWord.originalWord || currentWord.lemma
-    };
-
-    // Track session result
-    reviewSession.sessionResults.push({
-        lemma,
-        quality,
-        wasCorrect: quality >= 3
-    });
-
-    // Check if word is now mastered
-    if (newData.status === 'mastered') {
-        console.log('[SRS] Word mastered:', lemma);
-        srsCache.masteredWords.push({
-            lemma,
-            masteredAt: new Date().toISOString(),
-            totalReviews: newData.repetitions
-        });
-
-        // Award mastery points
-        await awardPoints(POINTS_WORD_MASTERED, 'word_mastered');
-    }
-
-    // Update stats
-    srsCache.reviewStats.totalReviews++;
-    srsCache.reviewStats.reviewsToday++;
-    srsCache.reviewStats.lastReviewSession = new Date().toISOString();
-
-    // Award points for review
-    await awardPoints(POINTS_PER_REVIEW, 'srs_review');
-
-    // Save to Firestore
-    await saveSRSData();
-
-    // Reset flip animation
-    if (elements.flashcard) {
-        elements.flashcard.classList.remove('flipped');
-    }
-
-    // --- TRIGGER WRITING CHALLENGE ---
-    // --- TRIGGER WRITING CHALLENGE ---
-    // Trigger if:
-    // 1. User typed correctly (lastAnswerCorrect === true)
-    // 2. OR User self-rated as Good (3), Easy (4), or Perfect (5)
-    const isSelfRatedCorrect = typeof quality === 'number' && quality >= 3;
-    const wasCorrect = reviewSession.lastAnswerCorrect === true || isSelfRatedCorrect;
-
-    // Only show Writing Challenge for nouns, verbs, adjectives, adverbs
-    const ALLOWED_POS = ['noun', 'verb', 'adjective', 'adverb', 'n', 'v', 'adj', 'adv'];
-
-    // Try multiple sources for POS: partOfSpeech, pos, or detect via nlp
-    let currentPOS = (currentWord.partOfSpeech || currentWord.pos || '').toLowerCase();
-
-    // If POS is still unknown, try to detect it using compromise library
-    if (!currentPOS || currentPOS === 'unknown' || currentPOS === '') {
-        const word = currentWord.originalWord || currentWord.lemma;
-        if (typeof nlp !== 'undefined' && word) {
-            try {
-                const doc = nlp(word);
-                if (doc.nouns().length > 0) currentPOS = 'noun';
-                else if (doc.verbs().length > 0) currentPOS = 'verb';
-                else if (doc.adjectives().length > 0) currentPOS = 'adjective';
-                else if (doc.adverbs().length > 0) currentPOS = 'adverb';
-                console.log('[SRS DEBUG] Detected POS via nlp:', currentPOS, 'for word:', word);
-            } catch (e) {
-                console.warn('[SRS] POS detection failed:', e);
-            }
         }
     }
 
-    const isAllowedPOS = ALLOWED_POS.some(pos => currentPOS.includes(pos));
+    /**
+     * Record the review result and move to next word
+     */
+    async function recordReviewResult(quality) {
+        const currentWord = reviewSession.wordsToReview[reviewSession.currentIndex];
+        const lemma = currentWord.lemma;
 
-    // Words to skip for Writing Challenge (too common/simple for meaningful practice)
-    const SKIP_WRITING_CHALLENGE_WORDS = ['be', 'a', 'an', 'the', 'is', 'are', 'was', 'were'];
-    const wordLemma = (currentWord.lemma || currentWord.originalWord || '').toLowerCase().trim();
-    const shouldSkipWritingChallenge = SKIP_WRITING_CHALLENGE_WORDS.includes(wordLemma);
+        // Calculate new SRS values
+        const newData = calculateNextReview(quality, srsCache.srsData[lemma] || currentWord);
 
-    console.log('[SRS DEBUG] recordReviewResult - wasCorrect:', wasCorrect, 'reviewSession.lastAnswerCorrect:', reviewSession.lastAnswerCorrect);
-    console.log('[SRS DEBUG] recordReviewResult - currentPOS:', currentPOS, 'isAllowedPOS:', isAllowedPOS);
-    console.log('[SRS DEBUG] recordReviewResult - Will trigger Writing Challenge?', wasCorrect && isAllowedPOS && !shouldSkipWritingChallenge);
+        // Show Feedback Toast
+        showFeedbackToast(newData.interval);
 
-    if (wasCorrect && isAllowedPOS && !shouldSkipWritingChallenge) {
-        setTimeout(() => {
-            showWritingChallenge(currentWord, () => {
-                // Reset flag AFTER challenge completes, then move to next word
+        // Update cached data
+        srsCache.srsData[lemma] = {
+            ...srsCache.srsData[lemma],
+            ...newData,
+            originalWord: currentWord.originalWord || currentWord.lemma
+        };
+
+        // Track session result
+        reviewSession.sessionResults.push({
+            lemma,
+            quality,
+            wasCorrect: quality >= 3
+        });
+
+        // Check if word is now mastered
+        if (newData.status === 'mastered') {
+            console.log('[SRS] Word mastered:', lemma);
+            srsCache.masteredWords.push({
+                lemma,
+                masteredAt: new Date().toISOString(),
+                totalReviews: newData.repetitions
+            });
+
+            // Award mastery points
+            await awardPoints(POINTS_WORD_MASTERED, 'word_mastered');
+        }
+
+        // Update stats
+        srsCache.reviewStats.totalReviews++;
+        srsCache.reviewStats.reviewsToday++;
+        srsCache.reviewStats.lastReviewSession = new Date().toISOString();
+
+        // Award points for review
+        await awardPoints(POINTS_PER_REVIEW, 'srs_review');
+
+        // Save to Firestore
+        await saveSRSData();
+
+        // Reset flip animation
+        if (elements.flashcard) {
+            elements.flashcard.classList.remove('flipped');
+        }
+
+        // --- TRIGGER WRITING CHALLENGE ---
+        // --- TRIGGER WRITING CHALLENGE ---
+        // Trigger if:
+        // 1. User typed correctly (lastAnswerCorrect === true)
+        // 2. OR User self-rated as Good (3), Easy (4), or Perfect (5)
+        const isSelfRatedCorrect = typeof quality === 'number' && quality >= 3;
+        const wasCorrect = reviewSession.lastAnswerCorrect === true || isSelfRatedCorrect;
+
+        // Only show Writing Challenge for nouns, verbs, adjectives, adverbs
+        const ALLOWED_POS = ['noun', 'verb', 'adjective', 'adverb', 'n', 'v', 'adj', 'adv'];
+
+        // Try multiple sources for POS: partOfSpeech, pos, or detect via nlp
+        let currentPOS = (currentWord.partOfSpeech || currentWord.pos || '').toLowerCase();
+
+        // If POS is still unknown, try to detect it using compromise library
+        if (!currentPOS || currentPOS === 'unknown' || currentPOS === '') {
+            const word = currentWord.originalWord || currentWord.lemma;
+            if (typeof nlp !== 'undefined' && word) {
+                try {
+                    const doc = nlp(word);
+                    if (doc.nouns().length > 0) currentPOS = 'noun';
+                    else if (doc.verbs().length > 0) currentPOS = 'verb';
+                    else if (doc.adjectives().length > 0) currentPOS = 'adjective';
+                    else if (doc.adverbs().length > 0) currentPOS = 'adverb';
+                    console.log('[SRS DEBUG] Detected POS via nlp:', currentPOS, 'for word:', word);
+                } catch (e) {
+                    console.warn('[SRS] POS detection failed:', e);
+                }
+            }
+        }
+
+        const isAllowedPOS = ALLOWED_POS.some(pos => currentPOS.includes(pos));
+
+        // Words to skip for Writing Challenge (too common/simple for meaningful practice)
+        const SKIP_WRITING_CHALLENGE_WORDS = ['be', 'a', 'an', 'the', 'is', 'are', 'was', 'were'];
+        const wordLemma = (currentWord.lemma || currentWord.originalWord || '').toLowerCase().trim();
+        const shouldSkipWritingChallenge = SKIP_WRITING_CHALLENGE_WORDS.includes(wordLemma);
+
+        console.log('[SRS DEBUG] recordReviewResult - wasCorrect:', wasCorrect, 'reviewSession.lastAnswerCorrect:', reviewSession.lastAnswerCorrect);
+        console.log('[SRS DEBUG] recordReviewResult - currentPOS:', currentPOS, 'isAllowedPOS:', isAllowedPOS);
+        console.log('[SRS DEBUG] recordReviewResult - Will trigger Writing Challenge?', wasCorrect && isAllowedPOS && !shouldSkipWritingChallenge);
+
+        if (wasCorrect && isAllowedPOS && !shouldSkipWritingChallenge) {
+            setTimeout(() => {
+                showWritingChallenge(currentWord, () => {
+                    // Reset flag AFTER challenge completes, then move to next word
+                    reviewSession.lastAnswerCorrect = false;
+                    reviewSession.currentIndex++;
+                    showCurrentWord();
+                });
+            }, 300);
+        } else {
+            // Incorrect answer, no answer check, or non-content word: Move to next word directly
+            // ERROR FIX: Wait for card to flip halfway (300ms) before updating content
+            // to prevent "flashing" the new answer on the back of the card.
+            setTimeout(() => {
                 reviewSession.lastAnswerCorrect = false;
                 reviewSession.currentIndex++;
                 showCurrentWord();
-            });
-        }, 300);
-    } else {
-        // Incorrect answer, no answer check, or non-content word: Move to next word directly
-        // ERROR FIX: Wait for card to flip halfway (300ms) before updating content
-        // to prevent "flashing" the new answer on the back of the card.
-        setTimeout(() => {
-            reviewSession.lastAnswerCorrect = false;
-            reviewSession.currentIndex++;
-            showCurrentWord();
-        }, 350);
-    }
-}
-
-/**
- * Show session summary
- */
-async function showSessionSummary() {
-    const duration = Math.round((new Date() - reviewSession.startTime) / 1000);
-    const correct = reviewSession.sessionResults.filter(r => r.wasCorrect).length;
-    const total = reviewSession.sessionResults.length;
-    const accuracy = Math.round((correct / total) * 100);
-
-    // Check for daily completion bonus
-    const dueRemaining = getWordsDueForReview().length;
-    let bonusPoints = 0;
-
-    if (dueRemaining === 0) {
-        bonusPoints += POINTS_DAILY_COMPLETE;
-        await awardPoints(POINTS_DAILY_COMPLETE, 'daily_reviews_complete');
+            }, 350);
+        }
     }
 
-    // Check for weekly streak bonus
-    if (srsCache.reviewStats.streak > 0 && srsCache.reviewStats.streak % 7 === 0) {
-        bonusPoints += POINTS_WEEKLY_STREAK;
-        await awardPoints(POINTS_WEEKLY_STREAK, 'weekly_streak');
-    }
+    /**
+     * Show session summary
+     */
+    async function showSessionSummary() {
+        const duration = Math.round((new Date() - reviewSession.startTime) / 1000);
+        const correct = reviewSession.sessionResults.filter(r => r.wasCorrect).length;
+        const total = reviewSession.sessionResults.length;
+        const accuracy = Math.round((correct / total) * 100);
 
-    // Update UI to show summary
-    if (elements.flashcard) elements.flashcard.style.display = 'none';
-    if (elements.showAnswerBtn) elements.showAnswerBtn.style.display = 'none';
-    if (elements.qualityBtns) elements.qualityBtns.style.display = 'none';
+        // Check for daily completion bonus
+        const dueRemaining = getWordsDueForReview().length;
+        let bonusPoints = 0;
 
-    if (elements.srsSummary) {
-        elements.srsSummary.style.display = 'block';
-        elements.srsSummary.innerHTML = `
+        if (dueRemaining === 0) {
+            bonusPoints += POINTS_DAILY_COMPLETE;
+            await awardPoints(POINTS_DAILY_COMPLETE, 'daily_reviews_complete');
+        }
+
+        // Check for weekly streak bonus
+        if (srsCache.reviewStats.streak > 0 && srsCache.reviewStats.streak % 7 === 0) {
+            bonusPoints += POINTS_WEEKLY_STREAK;
+            await awardPoints(POINTS_WEEKLY_STREAK, 'weekly_streak');
+        }
+
+        // Update UI to show summary
+        if (elements.flashcard) elements.flashcard.style.display = 'none';
+        if (elements.showAnswerBtn) elements.showAnswerBtn.style.display = 'none';
+        if (elements.qualityBtns) elements.qualityBtns.style.display = 'none';
+
+        if (elements.srsSummary) {
+            elements.srsSummary.style.display = 'block';
+            elements.srsSummary.innerHTML = `
                 <div class="srs-summary-content">
                     <h3>🎉 Session Complete!</h3>
                     <div class="srs-summary-stats">
@@ -2032,1145 +2031,1145 @@ async function showSessionSummary() {
                         ${bonusPoints > 0 ? `<span class="bonus">(includes ${bonusPoints} bonus!)</span>` : ''}
                     </div>
                     ${dueRemaining === 0
-                ? '<div class="srs-all-done">✅ All reviews complete for today!</div>'
-                : `<div class="srs-remaining">${dueRemaining} more words due</div>`
-            }
+                    ? '<div class="srs-all-done">✅ All reviews complete for today!</div>'
+                    : `<div class="srs-remaining">${dueRemaining} more words due</div>`
+                }
                     <button id="srs-done-btn" class="srs-done-btn">Done</button>
                 </div>
             `;
 
-        // Trigger confetti for session completion
-        triggerConfetti();
+            // Trigger confetti for session completion
+            triggerConfetti();
 
-        // Add event listener for done button
-        const doneBtn = document.getElementById('srs-done-btn');
-        if (doneBtn) {
-            doneBtn.addEventListener('click', closeReviewPanel);
-        }
-    }
-
-    reviewSession.active = false;
-}
-
-/**
- * Update progress display
- */
-function updateProgress() {
-    const current = reviewSession.currentIndex + 1;
-    const total = reviewSession.wordsToReview.length;
-    const percentage = (reviewSession.currentIndex / total) * 100;
-
-    if (elements.srsProgressText) {
-        elements.srsProgressText.textContent = `${current} of ${total}`;
-    }
-    if (elements.srsProgressFill) {
-        elements.srsProgressFill.style.width = `${percentage}%`;
-    }
-}
-
-/**
- * Update stats display in header
- */
-function updateStatsDisplay() {
-    const dueCount = getWordsDueForReview().length;
-
-    if (elements.srsDueCount) {
-        elements.srsDueCount.textContent = `${dueCount} word${dueCount !== 1 ? 's' : ''} due`;
-    }
-    if (elements.srsStreak && srsCache.reviewStats.streak > 0) {
-        elements.srsStreak.textContent = `🔥 ${srsCache.reviewStats.streak} day streak`;
-        elements.srsStreak.style.display = 'inline';
-    } else if (elements.srsStreak) {
-        elements.srsStreak.style.display = 'none';
-    }
-}
-
-/**
- * Play audio for current word
- */
-function playCurrentWordAudio() {
-    const currentWord = reviewSession.wordsToReview[reviewSession.currentIndex];
-    if (!currentWord) return;
-
-    const word = currentWord.originalWord || currentWord.lemma;
-
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(word);
-        utterance.lang = 'en-US';
-
-        // Match voice logic from Vocabulary Book (female/clear)
-        const voices = window.speechSynthesis.getVoices();
-        const preferred = voices.find((v) =>
-            /female|samantha|allison|joanna|kimberly|ssml female|en-us/i.test(v.name)
-        );
-        if (preferred) {
-            utterance.voice = preferred;
-        }
-
-        utterance.rate = 0.9; // Slightly slower for clarity
-        utterance.pitch = 1.0;
-        window.speechSynthesis.speak(utterance);
-    }
-}
-
-/**
- * Fetch phonetic transcription
- */
-async function fetchPhonetic(word) {
-    // Use Phonetics module if available
-    if (typeof Phonetics !== 'undefined' && Phonetics.getIPA) {
-        try {
-            return await Phonetics.getIPA(word);
-        } catch (e) {
-            console.warn('[SRS] Phonetics fetch failed:', e);
-        }
-    }
-    return null;
-}
-
-/**
- * Fetch definition and example from Dictionary API
- */
-async function fetchDefinition(word, preferredPOS, lemma = null) {
-    // Use lemma if available for better definition matching (e.g. 'made' -> 'make')
-    const searchTerm = lemma || word;
-    const cacheKey = `${searchTerm}:${preferredPOS || ''}`;
-    // Check cache
-    if (definitionCache.has(cacheKey)) {
-        return definitionCache.get(cacheKey);
-    }
-
-    try {
-        const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${searchTerm}`);
-        if (!response.ok) throw new Error('Not found');
-
-        const data = await response.json();
-        const entry = data[0];
-
-        let definition = '';
-        let example = '';
-
-        // Find best match for Part of Speech
-        let meaning = entry.meanings[0];
-        if (preferredPOS && entry.meanings.length > 1) {
-            const posMap = {
-                'n': 'noun', 'noun': 'noun',
-                'v': 'verb', 'verb': 'verb',
-                'adj': 'adjective', 'adjective': 'adjective',
-                'adv': 'adverb', 'adverb': 'adverb'
-            };
-            const target = posMap[preferredPOS.toLowerCase()] || preferredPOS.toLowerCase();
-
-            // Try exact match or partial match
-            const found = entry.meanings.find(m =>
-                m.partOfSpeech.toLowerCase() === target ||
-                target.startsWith(m.partOfSpeech.toLowerCase())
-            );
-
-            if (found) meaning = found;
-        }
-
-        if (meaning && meaning.definitions && meaning.definitions.length > 0) {
-            definition = meaning.definitions[0].definition;
-            example = meaning.definitions[0].example || '';
-        }
-
-        const result = { definition, example };
-        definitionCache.set(cacheKey, result);
-        saveDefinitionCache(); // Persist to local storage
-        return result;
-    } catch (e) {
-        console.warn('[SRS] Definition fetch failed for:', searchTerm);
-        const result = { definition: '', example: '' };
-        definitionCache.set(cacheKey, result);
-        return result;
-    }
-}
-
-/**
- * Persistent Definition Cache Logic
- */
-function saveDefinitionCache() {
-    try {
-        const obj = Object.fromEntries(definitionCache);
-        localStorage.setItem(DEF_CACHE_KEY, JSON.stringify(obj));
-    } catch (e) { /* ignore */ }
-}
-
-function loadDefinitionCache() {
-    try {
-        const stored = localStorage.getItem(DEF_CACHE_KEY);
-        if (stored) {
-            const obj = JSON.parse(stored);
-            for (const [k, v] of Object.entries(obj)) {
-                definitionCache.set(k, v);
+            // Add event listener for done button
+            const doneBtn = document.getElementById('srs-done-btn');
+            if (doneBtn) {
+                doneBtn.addEventListener('click', closeReviewPanel);
             }
-            console.log('[SRS] Loaded', definitionCache.size, 'definitions from cache');
-        }
-    } catch (e) { /* ignore */ }
-}
-
-/**
- * Award points to user
- */
-async function awardPoints(points, reason) {
-    if (!currentUserId || !db) return;
-
-    try {
-        const userDocRef = doc(db, 'users', currentUserId);
-        await updateDoc(userDocRef, {
-            practicePoints: increment(points)
-        });
-
-        // Show toast if available
-        if (window.showPointsToast) {
-            window.showPointsToast(points, reason);
         }
 
-        // Update local cache and UI
-        if (typeof srsCache.totalPoints === 'undefined') srsCache.totalPoints = 0;
-        srsCache.totalPoints += points;
-        updateGamificationUI();
-
-        console.log(`[SRS] Awarded ${points} points for ${reason}`);
-    } catch (e) {
-        console.error('[SRS] Error awarding points:', e);
-    }
-}
-
-/**
- * Format duration in mm:ss
- */
-function formatDuration(seconds) {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
-
-/**
- * Get count of words due for review (for external use)
- */
-function getDueCount() {
-    return getWordsDueForReview().length;
-}
-
-/**
- * Get human-readable next review info for a word
- * @param {string} lemma - The lemmatized word
- * @returns {object} - { dueNow, daysUntil, dateString, timeString, fullText }
- */
-function getNextReviewInfo(lemma) {
-    if (!lemma || !srsCache.srsData[lemma]) {
-        return { dueNow: false, daysUntil: null, dateString: 'Not scheduled', timeString: '', fullText: 'Not in SRS' };
+        reviewSession.active = false;
     }
 
-    const wordData = srsCache.srsData[lemma];
-    const nextReviewDate = new Date(wordData.nextReviewDate);
-    const now = new Date();
+    /**
+     * Update progress display
+     */
+    function updateProgress() {
+        const current = reviewSession.currentIndex + 1;
+        const total = reviewSession.wordsToReview.length;
+        const percentage = (reviewSession.currentIndex / total) * 100;
 
-    // Check if due now
-    if (nextReviewDate <= now) {
+        if (elements.srsProgressText) {
+            elements.srsProgressText.textContent = `${current} of ${total}`;
+        }
+        if (elements.srsProgressFill) {
+            elements.srsProgressFill.style.width = `${percentage}%`;
+        }
+    }
+
+    /**
+     * Update stats display in header
+     */
+    function updateStatsDisplay() {
+        const dueCount = getWordsDueForReview().length;
+
+        if (elements.srsDueCount) {
+            elements.srsDueCount.textContent = `${dueCount} word${dueCount !== 1 ? 's' : ''} due`;
+        }
+        if (elements.srsStreak && srsCache.reviewStats.streak > 0) {
+            elements.srsStreak.textContent = `🔥 ${srsCache.reviewStats.streak} day streak`;
+            elements.srsStreak.style.display = 'inline';
+        } else if (elements.srsStreak) {
+            elements.srsStreak.style.display = 'none';
+        }
+    }
+
+    /**
+     * Play audio for current word
+     */
+    function playCurrentWordAudio() {
+        const currentWord = reviewSession.wordsToReview[reviewSession.currentIndex];
+        if (!currentWord) return;
+
+        const word = currentWord.originalWord || currentWord.lemma;
+
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = 'en-US';
+
+            // Match voice logic from Vocabulary Book (female/clear)
+            const voices = window.speechSynthesis.getVoices();
+            const preferred = voices.find((v) =>
+                /female|samantha|allison|joanna|kimberly|ssml female|en-us/i.test(v.name)
+            );
+            if (preferred) {
+                utterance.voice = preferred;
+            }
+
+            utterance.rate = 0.9; // Slightly slower for clarity
+            utterance.pitch = 1.0;
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    /**
+     * Fetch phonetic transcription
+     */
+    async function fetchPhonetic(word) {
+        // Use Phonetics module if available
+        if (typeof Phonetics !== 'undefined' && Phonetics.getIPA) {
+            try {
+                return await Phonetics.getIPA(word);
+            } catch (e) {
+                console.warn('[SRS] Phonetics fetch failed:', e);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Fetch definition and example from Dictionary API
+     */
+    async function fetchDefinition(word, preferredPOS, lemma = null) {
+        // Use lemma if available for better definition matching (e.g. 'made' -> 'make')
+        const searchTerm = lemma || word;
+        const cacheKey = `${searchTerm}:${preferredPOS || ''}`;
+        // Check cache
+        if (definitionCache.has(cacheKey)) {
+            return definitionCache.get(cacheKey);
+        }
+
+        try {
+            const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${searchTerm}`);
+            if (!response.ok) throw new Error('Not found');
+
+            const data = await response.json();
+            const entry = data[0];
+
+            let definition = '';
+            let example = '';
+
+            // Find best match for Part of Speech
+            let meaning = entry.meanings[0];
+            if (preferredPOS && entry.meanings.length > 1) {
+                const posMap = {
+                    'n': 'noun', 'noun': 'noun',
+                    'v': 'verb', 'verb': 'verb',
+                    'adj': 'adjective', 'adjective': 'adjective',
+                    'adv': 'adverb', 'adverb': 'adverb'
+                };
+                const target = posMap[preferredPOS.toLowerCase()] || preferredPOS.toLowerCase();
+
+                // Try exact match or partial match
+                const found = entry.meanings.find(m =>
+                    m.partOfSpeech.toLowerCase() === target ||
+                    target.startsWith(m.partOfSpeech.toLowerCase())
+                );
+
+                if (found) meaning = found;
+            }
+
+            if (meaning && meaning.definitions && meaning.definitions.length > 0) {
+                definition = meaning.definitions[0].definition;
+                example = meaning.definitions[0].example || '';
+            }
+
+            const result = { definition, example };
+            definitionCache.set(cacheKey, result);
+            saveDefinitionCache(); // Persist to local storage
+            return result;
+        } catch (e) {
+            console.warn('[SRS] Definition fetch failed for:', searchTerm);
+            const result = { definition: '', example: '' };
+            definitionCache.set(cacheKey, result);
+            return result;
+        }
+    }
+
+    /**
+     * Persistent Definition Cache Logic
+     */
+    function saveDefinitionCache() {
+        try {
+            const obj = Object.fromEntries(definitionCache);
+            localStorage.setItem(DEF_CACHE_KEY, JSON.stringify(obj));
+        } catch (e) { /* ignore */ }
+    }
+
+    function loadDefinitionCache() {
+        try {
+            const stored = localStorage.getItem(DEF_CACHE_KEY);
+            if (stored) {
+                const obj = JSON.parse(stored);
+                for (const [k, v] of Object.entries(obj)) {
+                    definitionCache.set(k, v);
+                }
+                console.log('[SRS] Loaded', definitionCache.size, 'definitions from cache');
+            }
+        } catch (e) { /* ignore */ }
+    }
+
+    /**
+     * Award points to user
+     */
+    async function awardPoints(points, reason) {
+        if (!currentUserId || !db) return;
+
+        try {
+            const userDocRef = doc(db, 'users', currentUserId);
+            await updateDoc(userDocRef, {
+                practicePoints: increment(points)
+            });
+
+            // Show toast if available
+            if (window.showPointsToast) {
+                window.showPointsToast(points, reason);
+            }
+
+            // Update local cache and UI
+            if (typeof srsCache.totalPoints === 'undefined') srsCache.totalPoints = 0;
+            srsCache.totalPoints += points;
+            updateGamificationUI();
+
+            console.log(`[SRS] Awarded ${points} points for ${reason}`);
+        } catch (e) {
+            console.error('[SRS] Error awarding points:', e);
+        }
+    }
+
+    /**
+     * Format duration in mm:ss
+     */
+    function formatDuration(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    /**
+     * Get count of words due for review (for external use)
+     */
+    function getDueCount() {
+        return getWordsDueForReview().length;
+    }
+
+    /**
+     * Get human-readable next review info for a word
+     * @param {string} lemma - The lemmatized word
+     * @returns {object} - { dueNow, daysUntil, dateString, timeString, fullText }
+     */
+    function getNextReviewInfo(lemma) {
+        if (!lemma || !srsCache.srsData[lemma]) {
+            return { dueNow: false, daysUntil: null, dateString: 'Not scheduled', timeString: '', fullText: 'Not in SRS' };
+        }
+
+        const wordData = srsCache.srsData[lemma];
+        const nextReviewDate = new Date(wordData.nextReviewDate);
+        const now = new Date();
+
+        // Check if due now
+        if (nextReviewDate <= now) {
+            return {
+                dueNow: true,
+                daysUntil: 0,
+                dateString: 'Due now',
+                timeString: '',
+                fullText: '📍 Due now'
+            };
+        }
+
+        // Calculate days until
+        const diffMs = nextReviewDate - now;
+        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+        // Format date
+        const options = { month: 'short', day: 'numeric' };
+        const dateString = nextReviewDate.toLocaleDateString('en-US', options);
+
+        // Format time
+        const timeOptions = { hour: 'numeric', minute: '2-digit', hour12: true };
+        const timeString = nextReviewDate.toLocaleTimeString('en-US', timeOptions);
+
+        // Create full text
+        let fullText = '';
+        if (diffDays === 1) {
+            fullText = `📅 Tomorrow ${timeString}`;
+        } else if (diffDays <= 7) {
+            fullText = `📅 In ${diffDays} days (${dateString})`;
+        } else {
+            fullText = `📅 ${dateString}`;
+        }
+
         return {
-            dueNow: true,
-            daysUntil: 0,
-            dateString: 'Due now',
-            timeString: '',
-            fullText: '📍 Due now'
+            dueNow: false,
+            daysUntil: diffDays,
+            dateString: dateString,
+            timeString: timeString,
+            fullText: fullText
         };
     }
 
-    // Calculate days until
-    const diffMs = nextReviewDate - now;
-    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-
-    // Format date
-    const options = { month: 'short', day: 'numeric' };
-    const dateString = nextReviewDate.toLocaleDateString('en-US', options);
-
-    // Format time
-    const timeOptions = { hour: 'numeric', minute: '2-digit', hour12: true };
-    const timeString = nextReviewDate.toLocaleTimeString('en-US', timeOptions);
-
-    // Create full text
-    let fullText = '';
-    if (diffDays === 1) {
-        fullText = `📅 Tomorrow ${timeString}`;
-    } else if (diffDays <= 7) {
-        fullText = `📅 In ${diffDays} days (${dateString})`;
-    } else {
-        fullText = `📅 ${dateString}`;
+    /**
+     * Get review statistics
+     */
+    function getStats() {
+        return {
+            ...srsCache.reviewStats,
+            dueCount: getDueCount(),
+            totalWords: Object.keys(srsCache.srsData).length,
+            masteredCount: srsCache.masteredWords.length
+        };
     }
 
-    return {
-        dueNow: false,
-        daysUntil: diffDays,
-        dateString: dateString,
-        timeString: timeString,
-        fullText: fullText
-    };
-}
+    /**
+     * Update Dashboard UI (Next Review Date & Due Badge)
+     */
+    function updateDashboardUI() {
+        // 1. Update Due Badge
+        const dueCount = getDueCount();
+        const badge = document.getElementById('srs-due-badge');
+        if (badge) {
+            badge.textContent = dueCount;
+            badge.style.display = dueCount > 0 ? 'inline-block' : 'none';
+        }
 
-/**
- * Get review statistics
- */
-function getStats() {
-    return {
-        ...srsCache.reviewStats,
-        dueCount: getDueCount(),
-        totalWords: Object.keys(srsCache.srsData).length,
-        masteredCount: srsCache.masteredWords.length
-    };
-}
+        // 2. Update Next Review Text
+        const nextReviewEl = document.getElementById('srs-next-date');
+        const nextReviewContainer = document.getElementById('srs-next-review-info');
 
-/**
- * Update Dashboard UI (Next Review Date & Due Badge)
- */
-function updateDashboardUI() {
-    // 1. Update Due Badge
-    const dueCount = getDueCount();
-    const badge = document.getElementById('srs-due-badge');
-    if (badge) {
-        badge.textContent = dueCount;
-        badge.style.display = dueCount > 0 ? 'inline-block' : 'none';
+        if (nextReviewEl) {
+            if (dueCount > 0) {
+                nextReviewEl.textContent = 'Now!';
+                if (nextReviewContainer) nextReviewContainer.style.display = 'block';
+                return;
+            }
+
+            // Find earliest next review date
+            let earliest = null;
+            const now = new Date();
+
+            Object.values(srsCache.srsData).forEach(wordData => {
+                if (wordData.nextReviewDate) {
+                    const d = new Date(wordData.nextReviewDate);
+                    // Only consider future dates
+                    if (d > now) {
+                        if (!earliest || d < earliest) earliest = d;
+                    }
+                }
+            });
+
+            if (earliest) {
+                const diffMs = earliest - now;
+                const diffMins = Math.round(diffMs / 60000);
+                const diffHours = Math.round(diffMs / 3600000);
+                const diffDays = Math.round(diffMs / 86400000);
+
+                let text = '';
+                if (diffMins < 60) text = `In ${diffMins} min`;
+                else if (diffHours < 24) text = `In ${diffHours} hours`;
+                else if (diffDays === 1) text = `Tomorrow`;
+                else text = `In ${diffDays} days`; // e.g., "In 2 days"
+
+                nextReviewEl.textContent = text;
+                if (nextReviewContainer) nextReviewContainer.style.display = 'block';
+            } else {
+                nextReviewEl.textContent = '-';
+                // keep visible or hide? maybe visible to show "Empty" state
+            }
+        }
     }
 
-    // 2. Update Next Review Text
-    const nextReviewEl = document.getElementById('srs-next-date');
-    const nextReviewContainer = document.getElementById('srs-next-review-info');
+    /**
+     * Get SRS data for a specific word
+     * @param {string} lemma
+     */
+    function getWordData(lemma) {
+        if (!lemma) return null;
 
-    if (nextReviewEl) {
-        if (dueCount > 0) {
-            nextReviewEl.textContent = 'Now!';
-            if (nextReviewContainer) nextReviewContainer.style.display = 'block';
+        // Check if mastered
+        if (srsCache.masteredWords.includes(lemma)) {
+            return { status: 'mastered' };
+        }
+
+        // Return SRS data if exists
+        return srsCache.srsData[lemma] || null;
+    }
+
+    /**
+     * WRITING CHALLENGE LOGIC
+     * -----------------------
+     */
+
+    // Load collocations data (called once on init)
+    async function loadCollocationsData() {
+        try {
+            const response = await fetch('./collocations.json');
+            if (response.ok) {
+                collocationsData = await response.json();
+                console.log('[SRS] Collocations loaded:', Object.keys(collocationsData).length, 'words');
+            }
+        } catch (e) {
+            console.warn('[SRS] Could not load collocations.json:', e.message);
+        }
+    }
+
+    // Get collocations for a word
+    function getCollocations(word) {
+        if (!collocationsData || !word) return [];
+        const key = word.toLowerCase();
+        return collocationsData[key] || [];
+    }
+
+    // ============================================
+    // MORE HELP! SCAFFOLDING FUNCTIONS
+    // ============================================
+
+    // Tatoeba cache for example sentences
+    const tatoebaCache = new Map();
+    let scaffoldingLoaded = false; // Track if scaffolding was loaded for current word
+
+    /**
+     * Fetch example sentences from Tatoeba API
+     * @param {string} word - The word to search for
+     * @returns {Promise<string[]>} Array of example sentences
+     */
+    async function fetchTatoebaSentences(word) {
+        // 1. Use stored examples as primary source
+        // Find the word object that matches the requested word
+        const currentWord = reviewSession.wordsToReview.find(w =>
+            (w.originalWord || w.lemma).toLowerCase() === word.toLowerCase()
+        ) || reviewSession.wordsToReview[reviewSession.currentIndex];
+
+        if (currentWord && (currentWord.example || currentWord.sentence)) {
+            console.log('[SRS] Using stored example from object:', currentWord.originalWord);
+            return [currentWord.example || currentWord.sentence];
+        }
+
+        const cacheKey = word.toLowerCase();
+        // 2. Check cache
+        if (tatoebaCache.has(cacheKey)) {
+            return tatoebaCache.get(cacheKey);
+        }
+
+        // 3. Fallback: Fetch from DictionaryService
+        if (window.DictionaryService && typeof window.DictionaryService.getDefinition === 'function') {
+            try {
+                const data = await window.DictionaryService.getDefinition(word);
+                if (data && data.example) {
+                    console.log('[SRS] Fetched example from DictionaryService');
+                    tatoebaCache.set(cacheKey, [data.example]);
+                    return [data.example];
+                }
+            } catch (e) {
+                console.log('[SRS] DictionaryService fallback failed:', e);
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * Generate YouGlish URL for a word
+     * @param {string} word 
+     * @returns {string} YouGlish URL
+     */
+    function getYouGlishUrl(word) {
+        return `https://youglish.com/pronounce/${encodeURIComponent(word)}/english`;
+    }
+
+    /**
+     * Toggle scaffolding panel visibility
+     */
+    async function toggleScaffolding() {
+        const panel = elements.scaffoldingPanel;
+        const btn = elements.moreHelpBtn;
+        if (!panel) return;
+
+        const isVisible = panel.classList.contains('visible');
+
+        if (isVisible) {
+            panel.classList.remove('visible');
+            if (btn) btn.classList.remove('active');
+        } else {
+            panel.classList.add('visible');
+            if (btn) btn.classList.add('active');
+
+            // Load content if not already loaded for this word
+            if (!scaffoldingLoaded) {
+                await loadScaffoldingContent();
+                scaffoldingLoaded = true;
+            }
+        }
+    }
+
+    /**
+     * Load scaffolding content (example sentences + YouGlish)
+     */
+    async function loadScaffoldingContent() {
+        const word = reviewSession.currentWritingWord;
+        if (!word) return;
+
+        // 1. Load example sentences
+        const sentences = await fetchTatoebaSentences(word);
+        displayExampleSentences(sentences, word);
+
+        // 2. Setup YouGlish video section
+        setupYouGlishSection(word);
+
+        // 3. NEW: Display additional scaffolding (synonyms, POS, patterns)
+        await displayEnhancedScaffolding(word);
+    }
+
+    /**
+     * Display enhanced scaffolding: synonyms, POS, sentence patterns
+     */
+    async function displayEnhancedScaffolding(word) {
+        const currentWord = reviewSession.wordsToReview[reviewSession.currentIndex];
+        const scaffoldingExtras = document.getElementById('scaffolding-extras');
+
+        // Create scaffolding extras container if not exists
+        if (!scaffoldingExtras && elements.scaffoldingPanel) {
+            const extrasDiv = document.createElement('div');
+            extrasDiv.id = 'scaffolding-extras';
+            extrasDiv.className = 'scaffolding-extras';
+            elements.scaffoldingPanel.appendChild(extrasDiv);
+        }
+
+        const container = document.getElementById('scaffolding-extras');
+        if (!container) return;
+
+        let html = '';
+
+        // Part of Speech hint
+        if (currentWord && currentWord.partOfSpeech) {
+            html += `<div class="scaffold-item"><strong>📚 Part of Speech:</strong> <span class="pos-badge">${currentWord.partOfSpeech}</span></div>`;
+        }
+
+        // Synonyms from DictionaryService
+        if (window.DictionaryService && typeof window.DictionaryService.getDefinition === 'function') {
+            try {
+                const data = await window.DictionaryService.getDefinition(word);
+                if (data && data.synonyms && data.synonyms.length > 0) {
+                    const synList = data.synonyms.slice(0, 5).join(', ');
+                    html += `<div class="scaffold-item"><strong>🔄 Synonyms:</strong> ${synList}</div>`;
+                }
+            } catch (e) {
+                console.log('[SRS] Could not fetch synonyms');
+            }
+        }
+
+        // Common sentence patterns based on POS
+        const pos = currentWord?.partOfSpeech?.toLowerCase() || '';
+        let patterns = [];
+
+        if (pos.includes('verb')) {
+            patterns = [
+                `Subject + ${word} + object`,
+                `I ${word} when...`,
+                `She ${word}s every day...`
+            ];
+        } else if (pos.includes('noun')) {
+            patterns = [
+                `The ${word} is...`,
+                `My ${word} was...`,
+                `A great ${word}...`
+            ];
+        } else if (pos.includes('adjective')) {
+            patterns = [
+                `It was ${word}...`,
+                `A ${word} person...`,
+                `Very ${word}...`
+            ];
+        } else if (pos.includes('adverb')) {
+            patterns = [
+                `He ${word} worked...`,
+                `She speaks ${word}...`,
+                `They ${word} finished...`
+            ];
+        }
+
+        if (patterns.length > 0) {
+            html += `<div class="scaffold-item"><strong>📝 Sentence Patterns:</strong><ul class="pattern-list">`;
+            patterns.forEach(p => html += `<li>${p}</li>`);
+            html += `</ul></div>`;
+        }
+
+        container.innerHTML = html || '<em style="color:#888;">No additional hints available.</em>';
+    }
+
+    /**
+     * Display example sentences in the scaffolding panel
+     */
+    function displayExampleSentences(sentences, word) {
+        const list = elements.exampleSentencesList;
+        if (!list) return;
+
+        if (sentences.length === 0) {
+            // Fallback: Use Wiktionary example if available
+            const currentWord = reviewSession.wordsToReview[reviewSession.currentIndex];
+            if (currentWord && currentWord.example) {
+                list.innerHTML = `<li class="example-sentence-item">${highlightWord(currentWord.example, word)}</li>`;
+            } else {
+                list.innerHTML = '<li class="example-sentence-item no-examples">No examples available.</li>';
+            }
             return;
         }
 
-        // Find earliest next review date
-        let earliest = null;
-        const now = new Date();
-
-        Object.values(srsCache.srsData).forEach(wordData => {
-            if (wordData.nextReviewDate) {
-                const d = new Date(wordData.nextReviewDate);
-                // Only consider future dates
-                if (d > now) {
-                    if (!earliest || d < earliest) earliest = d;
-                }
-            }
-        });
-
-        if (earliest) {
-            const diffMs = earliest - now;
-            const diffMins = Math.round(diffMs / 60000);
-            const diffHours = Math.round(diffMs / 3600000);
-            const diffDays = Math.round(diffMs / 86400000);
-
-            let text = '';
-            if (diffMins < 60) text = `In ${diffMins} min`;
-            else if (diffHours < 24) text = `In ${diffHours} hours`;
-            else if (diffDays === 1) text = `Tomorrow`;
-            else text = `In ${diffDays} days`; // e.g., "In 2 days"
-
-            nextReviewEl.textContent = text;
-            if (nextReviewContainer) nextReviewContainer.style.display = 'block';
-        } else {
-            nextReviewEl.textContent = '-';
-            // keep visible or hide? maybe visible to show "Empty" state
-        }
-    }
-}
-
-/**
- * Get SRS data for a specific word
- * @param {string} lemma
- */
-function getWordData(lemma) {
-    if (!lemma) return null;
-
-    // Check if mastered
-    if (srsCache.masteredWords.includes(lemma)) {
-        return { status: 'mastered' };
+        list.innerHTML = sentences.map(s =>
+            `<li class="example-sentence-item">${highlightWord(s, word)}</li>`
+        ).join('');
     }
 
-    // Return SRS data if exists
-    return srsCache.srsData[lemma] || null;
-}
-
-/**
- * WRITING CHALLENGE LOGIC
- * -----------------------
- */
-
-// Load collocations data (called once on init)
-async function loadCollocationsData() {
-    try {
-        const response = await fetch('./collocations.json');
-        if (response.ok) {
-            collocationsData = await response.json();
-            console.log('[SRS] Collocations loaded:', Object.keys(collocationsData).length, 'words');
-        }
-    } catch (e) {
-        console.warn('[SRS] Could not load collocations.json:', e.message);
-    }
-}
-
-// Get collocations for a word
-function getCollocations(word) {
-    if (!collocationsData || !word) return [];
-    const key = word.toLowerCase();
-    return collocationsData[key] || [];
-}
-
-// ============================================
-// MORE HELP! SCAFFOLDING FUNCTIONS
-// ============================================
-
-// Tatoeba cache for example sentences
-const tatoebaCache = new Map();
-let scaffoldingLoaded = false; // Track if scaffolding was loaded for current word
-
-/**
- * Fetch example sentences from Tatoeba API
- * @param {string} word - The word to search for
- * @returns {Promise<string[]>} Array of example sentences
- */
-async function fetchTatoebaSentences(word) {
-    // 1. Use stored examples as primary source
-    // Find the word object that matches the requested word
-    const currentWord = reviewSession.wordsToReview.find(w =>
-        (w.originalWord || w.lemma).toLowerCase() === word.toLowerCase()
-    ) || reviewSession.wordsToReview[reviewSession.currentIndex];
-
-    if (currentWord && (currentWord.example || currentWord.sentence)) {
-        console.log('[SRS] Using stored example from object:', currentWord.originalWord);
-        return [currentWord.example || currentWord.sentence];
+    /**
+     * Highlight target word in a sentence
+     */
+    function highlightWord(sentence, word) {
+        // Case-insensitive highlight
+        const regex = new RegExp(`\\b(${word})\\b`, 'gi');
+        return sentence.replace(regex, '<strong class="highlight-word">$1</strong>');
     }
 
-    const cacheKey = word.toLowerCase();
-    // 2. Check cache
-    if (tatoebaCache.has(cacheKey)) {
-        return tatoebaCache.get(cacheKey);
-    }
+    /**
+     * Setup YouGlish link section
+     */
+    function setupYouGlishSection(word) {
+        const container = elements.youglishContainer;
+        if (!container) return;
 
-    // 3. Fallback: Fetch from DictionaryService
-    if (window.DictionaryService && typeof window.DictionaryService.getDefinition === 'function') {
-        try {
-            const data = await window.DictionaryService.getDefinition(word);
-            if (data && data.example) {
-                console.log('[SRS] Fetched example from DictionaryService');
-                tatoebaCache.set(cacheKey, [data.example]);
-                return [data.example];
-            }
-        } catch (e) {
-            console.log('[SRS] DictionaryService fallback failed:', e);
-        }
-    }
+        // Try to use YouGlish Widget API if available
+        if (typeof YG !== 'undefined' && YG.Widget) {
+            container.innerHTML = `<div id="youglish-widget-${word.replace(/\s+/g, '-')}"></div>`;
 
-    return [];
-}
-
-/**
- * Generate YouGlish URL for a word
- * @param {string} word 
- * @returns {string} YouGlish URL
- */
-function getYouGlishUrl(word) {
-    return `https://youglish.com/pronounce/${encodeURIComponent(word)}/english`;
-}
-
-/**
- * Toggle scaffolding panel visibility
- */
-async function toggleScaffolding() {
-    const panel = elements.scaffoldingPanel;
-    const btn = elements.moreHelpBtn;
-    if (!panel) return;
-
-    const isVisible = panel.classList.contains('visible');
-
-    if (isVisible) {
-        panel.classList.remove('visible');
-        if (btn) btn.classList.remove('active');
-    } else {
-        panel.classList.add('visible');
-        if (btn) btn.classList.add('active');
-
-        // Load content if not already loaded for this word
-        if (!scaffoldingLoaded) {
-            await loadScaffoldingContent();
-            scaffoldingLoaded = true;
-        }
-    }
-}
-
-/**
- * Load scaffolding content (example sentences + YouGlish)
- */
-async function loadScaffoldingContent() {
-    const word = reviewSession.currentWritingWord;
-    if (!word) return;
-
-    // 1. Load example sentences
-    const sentences = await fetchTatoebaSentences(word);
-    displayExampleSentences(sentences, word);
-
-    // 2. Setup YouGlish video section
-    setupYouGlishSection(word);
-
-    // 3. NEW: Display additional scaffolding (synonyms, POS, patterns)
-    await displayEnhancedScaffolding(word);
-}
-
-/**
- * Display enhanced scaffolding: synonyms, POS, sentence patterns
- */
-async function displayEnhancedScaffolding(word) {
-    const currentWord = reviewSession.wordsToReview[reviewSession.currentIndex];
-    const scaffoldingExtras = document.getElementById('scaffolding-extras');
-
-    // Create scaffolding extras container if not exists
-    if (!scaffoldingExtras && elements.scaffoldingPanel) {
-        const extrasDiv = document.createElement('div');
-        extrasDiv.id = 'scaffolding-extras';
-        extrasDiv.className = 'scaffolding-extras';
-        elements.scaffoldingPanel.appendChild(extrasDiv);
-    }
-
-    const container = document.getElementById('scaffolding-extras');
-    if (!container) return;
-
-    let html = '';
-
-    // Part of Speech hint
-    if (currentWord && currentWord.partOfSpeech) {
-        html += `<div class="scaffold-item"><strong>📚 Part of Speech:</strong> <span class="pos-badge">${currentWord.partOfSpeech}</span></div>`;
-    }
-
-    // Synonyms from DictionaryService
-    if (window.DictionaryService && typeof window.DictionaryService.getDefinition === 'function') {
-        try {
-            const data = await window.DictionaryService.getDefinition(word);
-            if (data && data.synonyms && data.synonyms.length > 0) {
-                const synList = data.synonyms.slice(0, 5).join(', ');
-                html += `<div class="scaffold-item"><strong>🔄 Synonyms:</strong> ${synList}</div>`;
-            }
-        } catch (e) {
-            console.log('[SRS] Could not fetch synonyms');
-        }
-    }
-
-    // Common sentence patterns based on POS
-    const pos = currentWord?.partOfSpeech?.toLowerCase() || '';
-    let patterns = [];
-
-    if (pos.includes('verb')) {
-        patterns = [
-            `Subject + ${word} + object`,
-            `I ${word} when...`,
-            `She ${word}s every day...`
-        ];
-    } else if (pos.includes('noun')) {
-        patterns = [
-            `The ${word} is...`,
-            `My ${word} was...`,
-            `A great ${word}...`
-        ];
-    } else if (pos.includes('adjective')) {
-        patterns = [
-            `It was ${word}...`,
-            `A ${word} person...`,
-            `Very ${word}...`
-        ];
-    } else if (pos.includes('adverb')) {
-        patterns = [
-            `He ${word} worked...`,
-            `She speaks ${word}...`,
-            `They ${word} finished...`
-        ];
-    }
-
-    if (patterns.length > 0) {
-        html += `<div class="scaffold-item"><strong>📝 Sentence Patterns:</strong><ul class="pattern-list">`;
-        patterns.forEach(p => html += `<li>${p}</li>`);
-        html += `</ul></div>`;
-    }
-
-    container.innerHTML = html || '<em style="color:#888;">No additional hints available.</em>';
-}
-
-/**
- * Display example sentences in the scaffolding panel
- */
-function displayExampleSentences(sentences, word) {
-    const list = elements.exampleSentencesList;
-    if (!list) return;
-
-    if (sentences.length === 0) {
-        // Fallback: Use Wiktionary example if available
-        const currentWord = reviewSession.wordsToReview[reviewSession.currentIndex];
-        if (currentWord && currentWord.example) {
-            list.innerHTML = `<li class="example-sentence-item">${highlightWord(currentWord.example, word)}</li>`;
-        } else {
-            list.innerHTML = '<li class="example-sentence-item no-examples">No examples available.</li>';
-        }
-        return;
-    }
-
-    list.innerHTML = sentences.map(s =>
-        `<li class="example-sentence-item">${highlightWord(s, word)}</li>`
-    ).join('');
-}
-
-/**
- * Highlight target word in a sentence
- */
-function highlightWord(sentence, word) {
-    // Case-insensitive highlight
-    const regex = new RegExp(`\\b(${word})\\b`, 'gi');
-    return sentence.replace(regex, '<strong class="highlight-word">$1</strong>');
-}
-
-/**
- * Setup YouGlish link section
- */
-function setupYouGlishSection(word) {
-    const container = elements.youglishContainer;
-    if (!container) return;
-
-    // Try to use YouGlish Widget API if available
-    if (typeof YG !== 'undefined' && YG.Widget) {
-        container.innerHTML = `<div id="youglish-widget-${word.replace(/\s+/g, '-')}"></div>`;
-
-        // Wait for modal to be fully visible/rendered to avoid 0-height issues
-        setTimeout(() => {
-            try {
-                new YG.Widget(container.querySelector('div').id, {
-                    width: 400,
-                    components: 9, // Search bar hidden
-                    events: {
-                        onFetchDone: function (event) {
-                            console.log('[SRS] YouGlish videos found:', event.totalResult);
-                            if (event.totalResult === 0) {
-                                container.innerHTML = '<em style="color:#888;">No video examples found.</em>';
+            // Wait for modal to be fully visible/rendered to avoid 0-height issues
+            setTimeout(() => {
+                try {
+                    new YG.Widget(container.querySelector('div').id, {
+                        width: 400,
+                        components: 9, // Search bar hidden
+                        events: {
+                            onFetchDone: function (event) {
+                                console.log('[SRS] YouGlish videos found:', event.totalResult);
+                                if (event.totalResult === 0) {
+                                    container.innerHTML = '<em style="color:#888;">No video examples found.</em>';
+                                }
                             }
                         }
-                    }
-                });
-                // Auto-search the word
-                container.querySelector('div').__widget?.fetch(word, 'english');
-            } catch (e) {
-                console.log('[SRS] YouGlish error:', e);
-                showYouGlishLink(container, word);
-            }
-        }, 500); // 500ms delay for modal animation
-    } else {
-        // Fallback: Show link
-        showYouGlishLink(container, word);
+                    });
+                    // Auto-search the word
+                    container.querySelector('div').__widget?.fetch(word, 'english');
+                } catch (e) {
+                    console.log('[SRS] YouGlish error:', e);
+                    showYouGlishLink(container, word);
+                }
+            }, 500); // 500ms delay for modal animation
+        } else {
+            // Fallback: Show link
+            showYouGlishLink(container, word);
+        }
     }
-}
 
-function showYouGlishLink(container, word) {
-    const url = getYouGlishUrl(word);
-    container.innerHTML = `
+    function showYouGlishLink(container, word) {
+        const url = getYouGlishUrl(word);
+        container.innerHTML = `
             <a href="${url}" target="_blank" rel="noopener noreferrer" class="youglish-link">
                 <span class="youglish-icon">🎬</span>
                 <span>Watch "<strong>${word}</strong>" in real videos on YouGlish →</span>
             </a>
         `;
-}
+    }
 
-/**
- * Generate a contextually meaningful writing prompt
- * 
- * CORE RULE: Do NOT generate prompts using only the word.
- * Use collocations and definitions to create context.
- * 
- * @param {Object} wordObj - The word object with lemma, definition, etc.
- * @param {number} userLevel - Current user level (1+)
- * @returns {Object} { prompt, starter, usedCollocation, type, showStarter }
- */
-function generateWritingPrompt(wordObj, userLevel) {
-    const lemma = wordObj.lemma || wordObj.originalWord;
-    const collocations = getCollocations(lemma);
+    /**
+     * Generate a contextually meaningful writing prompt
+     * 
+     * CORE RULE: Do NOT generate prompts using only the word.
+     * Use collocations and definitions to create context.
+     * 
+     * @param {Object} wordObj - The word object with lemma, definition, etc.
+     * @param {number} userLevel - Current user level (1+)
+     * @returns {Object} { prompt, starter, usedCollocation, type, showStarter }
+     */
+    function generateWritingPrompt(wordObj, userLevel) {
+        const lemma = wordObj.lemma || wordObj.originalWord;
+        const collocations = getCollocations(lemma);
 
-    // Helper to pick random item
-    const pickRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
+        // Helper to pick random item
+        const pickRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-    // Determine difficulty level
-    const isBeginner = userLevel < 5;
-    const isExpert = userLevel >= 15;
-
-    // ============================================
-    // STRATEGY 1: COLLOCATION-BASED (PRIMARY)
-    // ============================================
-    if (collocations && collocations.length > 0) {
-        const collocation = pickRandom(collocations);
-        let prompt = '';
-        let starter = '';
-        let showStarter = true;
+        // Determine difficulty level
+        const isBeginner = userLevel < 5;
+        const isExpert = userLevel >= 15;
 
         // ============================================
-        // COLLOCATION CLASSIFICATION
-        // Verb-phrase: starts with a verb (make, take, get, etc.)
-        // Noun-phrase: starts with article, adjective, or noun
+        // STRATEGY 1: COLLOCATION-BASED (PRIMARY)
         // ============================================
-        const firstWord = collocation.split(' ')[0].toLowerCase();
+        if (collocations && collocations.length > 0) {
+            const collocation = pickRandom(collocations);
+            let prompt = '';
+            let starter = '';
+            let showStarter = true;
 
-        // Common verbs that start verb-phrase collocations
-        const VERB_STARTERS = [
-            'make', 'take', 'get', 'give', 'do', 'have', 'keep', 'pay', 'break',
-            'catch', 'come', 'go', 'run', 'set', 'put', 'bring', 'hold', 'lose',
-            'find', 'reach', 'meet', 'face', 'draw', 'raise', 'build', 'create',
-            'develop', 'achieve', 'gain', 'maintain', 'improve', 'enhance',
-            'made', 'took', 'got', 'gave', 'did', 'had', 'kept', 'paid' // past tense
-        ];
+            // ============================================
+            // COLLOCATION CLASSIFICATION
+            // Verb-phrase: starts with a verb (make, take, get, etc.)
+            // Noun-phrase: starts with article, adjective, or noun
+            // ============================================
+            const firstWord = collocation.split(' ')[0].toLowerCase();
 
-        // Articles and determiners that start noun-phrase collocations
-        const NOUN_PHRASE_STARTERS = ['a', 'an', 'the', 'my', 'your', 'his', 'her', 'their', 'our', 'its'];
+            // Common verbs that start verb-phrase collocations
+            const VERB_STARTERS = [
+                'make', 'take', 'get', 'give', 'do', 'have', 'keep', 'pay', 'break',
+                'catch', 'come', 'go', 'run', 'set', 'put', 'bring', 'hold', 'lose',
+                'find', 'reach', 'meet', 'face', 'draw', 'raise', 'build', 'create',
+                'develop', 'achieve', 'gain', 'maintain', 'improve', 'enhance',
+                'made', 'took', 'got', 'gave', 'did', 'had', 'kept', 'paid' // past tense
+            ];
 
-        const isVerbPhrase = VERB_STARTERS.includes(firstWord) ||
-            (typeof nlp !== 'undefined' && nlp(firstWord).verbs().found);
-        const startsWithArticle = NOUN_PHRASE_STARTERS.includes(firstWord);
+            // Articles and determiners that start noun-phrase collocations
+            const NOUN_PHRASE_STARTERS = ['a', 'an', 'the', 'my', 'your', 'his', 'her', 'their', 'our', 'its'];
 
-        // If not a verb phrase, treat as noun phrase
-        const isNounPhrase = !isVerbPhrase;
+            const isVerbPhrase = VERB_STARTERS.includes(firstWord) ||
+                (typeof nlp !== 'undefined' && nlp(firstWord).verbs().found);
+            const startsWithArticle = NOUN_PHRASE_STARTERS.includes(firstWord);
 
-        // ============================================
-        // VERB-PHRASE TEMPLATES
-        // ============================================
-        const verbPhrasePromptTemplates = [
-            `Write about a time you had to ${collocation}.`,
-            `Describe a situation where someone ${collocation}.`,
-            `What happened after you ${collocation}?`,
-            `Why might someone need to ${collocation}?`,
-            `Tell a story about when you ${collocation}.`
-        ];
+            // If not a verb phrase, treat as noun phrase
+            const isNounPhrase = !isVerbPhrase;
 
-        const verbPhraseStarterTemplates = [
-            `I ${collocation} when...`,
-            `She ${collocation} because...`,
-            `I had to ${collocation} when...`,
-            `Yesterday, I ${collocation} because...`,
-            `Sometimes people ${collocation} to...`
-        ];
+            // ============================================
+            // VERB-PHRASE TEMPLATES
+            // ============================================
+            const verbPhrasePromptTemplates = [
+                `Write about a time you had to ${collocation}.`,
+                `Describe a situation where someone ${collocation}.`,
+                `What happened after you ${collocation}?`,
+                `Why might someone need to ${collocation}?`,
+                `Tell a story about when you ${collocation}.`
+            ];
 
-        // ============================================
-        // NOUN-PHRASE TEMPLATES
-        // ============================================
-        const nounPhrasePromptTemplates = [
-            `Describe a situation related to ${collocation}.`,
-            `Describe a situation that affected someone's ${collocation}.`,
-            `Why is ${collocation} important in life?`,
-            `How can ${collocation} help someone succeed?`,
-            `Tell a story about ${collocation}.`
-        ];
+            const verbPhraseStarterTemplates = [
+                `I ${collocation} when...`,
+                `She ${collocation} because...`,
+                `I had to ${collocation} when...`,
+                `Yesterday, I ${collocation} because...`,
+                `Sometimes people ${collocation} to...`
+            ];
 
-        const nounPhraseStarterTemplates = [
-            `My ${collocation} improved when...`,
-            `${collocation.charAt(0).toUpperCase() + collocation.slice(1)} is important because...`,
-            `A situation that affected my ${collocation} was...`,
-            `I learned about ${collocation} when...`,
-            `${collocation.charAt(0).toUpperCase() + collocation.slice(1)} helped me to...`
-        ];
+            // ============================================
+            // NOUN-PHRASE TEMPLATES
+            // ============================================
+            const nounPhrasePromptTemplates = [
+                `Describe a situation related to ${collocation}.`,
+                `Describe a situation that affected someone's ${collocation}.`,
+                `Why is ${collocation} important in life?`,
+                `How can ${collocation} help someone succeed?`,
+                `Tell a story about ${collocation}.`
+            ];
 
-        // Select appropriate templates based on collocation type
-        const collocationPromptTemplates = isVerbPhrase ? verbPhrasePromptTemplates : nounPhrasePromptTemplates;
-        const collocationStarterTemplates = isVerbPhrase ? verbPhraseStarterTemplates : nounPhraseStarterTemplates;
+            const nounPhraseStarterTemplates = [
+                `My ${collocation} improved when...`,
+                `${collocation.charAt(0).toUpperCase() + collocation.slice(1)} is important because...`,
+                `A situation that affected my ${collocation} was...`,
+                `I learned about ${collocation} when...`,
+                `${collocation.charAt(0).toUpperCase() + collocation.slice(1)} helped me to...`
+            ];
 
-        if (isBeginner) {
-            // Beginner: Simpler prompts
-            if (isVerbPhrase) {
-                prompt = pickRandom([
-                    `Write one sentence about "${collocation}".`,
-                    `Use "${collocation}" in a simple sentence.`
-                ]);
+            // Select appropriate templates based on collocation type
+            const collocationPromptTemplates = isVerbPhrase ? verbPhrasePromptTemplates : nounPhrasePromptTemplates;
+            const collocationStarterTemplates = isVerbPhrase ? verbPhraseStarterTemplates : nounPhraseStarterTemplates;
+
+            if (isBeginner) {
+                // Beginner: Simpler prompts
+                if (isVerbPhrase) {
+                    prompt = pickRandom([
+                        `Write one sentence about "${collocation}".`,
+                        `Use "${collocation}" in a simple sentence.`
+                    ]);
+                } else {
+                    prompt = pickRandom([
+                        `Write one sentence about ${collocation}.`,
+                        `Why is ${collocation} important?`
+                    ]);
+                }
+            } else if (isExpert) {
+                // Expert: More challenging, optional second collocation
+                if (collocations.length > 1) {
+                    let secondCollocation;
+                    do {
+                        secondCollocation = pickRandom(collocations);
+                    } while (secondCollocation === collocation);
+                    prompt = `Write a complex sentence using either "${collocation}" or "${secondCollocation}".`;
+                } else {
+                    prompt = pickRandom(collocationPromptTemplates);
+                }
             } else {
-                prompt = pickRandom([
-                    `Write one sentence about ${collocation}.`,
-                    `Why is ${collocation} important?`
-                ]);
-            }
-        } else if (isExpert) {
-            // Expert: More challenging, optional second collocation
-            if (collocations.length > 1) {
-                let secondCollocation;
-                do {
-                    secondCollocation = pickRandom(collocations);
-                } while (secondCollocation === collocation);
-                prompt = `Write a complex sentence using either "${collocation}" or "${secondCollocation}".`;
-            } else {
+                // Intermediate: Full contextual prompts
                 prompt = pickRandom(collocationPromptTemplates);
             }
-        } else {
-            // Intermediate: Full contextual prompts
-            prompt = pickRandom(collocationPromptTemplates);
-        }
 
-        return {
-            prompt,
-            starter: '',
-            usedCollocation: collocation,
-            type: isVerbPhrase ? 'verb-collocation' : 'noun-collocation',
-            showStarter: false
-        };
-    }
-
-    // ============================================
-    // STRATEGY 2: DEFINITION-BASED (FALLBACK)
-    // Only used when no collocations exist
-    // ============================================
-    if (wordObj.definition) {
-        // Definition-based templates using base verb (lemma)
-        const definitionPromptTemplates = [
-            `Describe a situation that shows what it means to "${lemma}".`,
-            `Write about an example of someone who ${lemma}s something.`,
-            `Give an example of "${lemma}" in real life.`
-        ];
-
-        const definitionStarterTemplates = [
-            `An example of ${lemma} is when...`,
-            `I once saw someone ${lemma}...`,
-            `${lemma.charAt(0).toUpperCase() + lemma.slice(1)} happened when...`
-        ];
-
-        return {
-            prompt: pickRandom(definitionPromptTemplates),
-            starter: '',
-            usedCollocation: null,
-            type: 'definition',
-            showStarter: false
-        };
-    }
-
-    // ============================================
-    // STRATEGY 3: ULTIMATE FALLBACK
-    // Should rarely happen - word has no collocations AND no definition
-    // ============================================
-    return {
-        prompt: `Write a sentence that clearly shows the meaning of "${lemma}".`,
-        starter: '',
-        usedCollocation: null,
-        type: 'generic',
-        showStarter: false
-    };
-}
-
-/**
- * Show the writing challenge modal
- */
-function showWritingChallenge(wordObj, onComplete) {
-    try {
-        if (!elements.srsWritingModal) {
-            if (onComplete) onComplete();
-            return;
-        }
-
-        // Calculate User Level from review stats
-        const points = srsCache.reviewStats.totalReviews * POINTS_PER_REVIEW || 0;
-        // Assuming calculateLevel is defined elsewhere or will be added
-        const currentLevel = (typeof calculateLevel !== 'undefined' ? calculateLevel(points).level : 1);
-
-        // Generate Prompt Data
-        let promptData;
-        try {
-            promptData = generateWritingPrompt(wordObj, currentLevel);
-        } catch (err) {
-            console.error('[SRS] Error generating prompt:', err);
-            // Fallback prompt data
-            promptData = {
-                prompt: `Write a sentence using "${wordObj.lemma || wordObj.originalWord}".`,
-                starter: `I can use ${wordObj.lemma || wordObj.originalWord} to...`,
-                showStarter: true
+            return {
+                prompt,
+                starter: '',
+                usedCollocation: collocation,
+                type: isVerbPhrase ? 'verb-collocation' : 'noun-collocation',
+                showStarter: false
             };
         }
 
-        // Update UI Elements
-        if (elements.srsWritingPrompt) {
-            elements.srsWritingPrompt.textContent = promptData.prompt;
-        } else {
-            console.warn('[SRS] Missing prompt element');
+        // ============================================
+        // STRATEGY 2: DEFINITION-BASED (FALLBACK)
+        // Only used when no collocations exist
+        // ============================================
+        if (wordObj.definition) {
+            // Definition-based templates using base verb (lemma)
+            const definitionPromptTemplates = [
+                `Describe a situation that shows what it means to "${lemma}".`,
+                `Write about an example of someone who ${lemma}s something.`,
+                `Give an example of "${lemma}" in real life.`
+            ];
+
+            const definitionStarterTemplates = [
+                `An example of ${lemma} is when...`,
+                `I once saw someone ${lemma}...`,
+                `${lemma.charAt(0).toUpperCase() + lemma.slice(1)} happened when...`
+            ];
+
+            return {
+                prompt: pickRandom(definitionPromptTemplates),
+                starter: '',
+                usedCollocation: null,
+                type: 'definition',
+                showStarter: false
+            };
         }
 
-        // Update Starter
-        const starterEl = document.getElementById('hint-starter-value');
-        if (starterEl) {
-            starterEl.textContent = promptData.starter;
-            // Show/Hide container based on level logic (parent of hint-starter-value is #hint-starter)
-            const starterContainer = document.getElementById('hint-starter'); // The one we moved to input container
-            if (starterContainer) {
-                starterContainer.style.display = promptData.showStarter ? 'flex' : 'none';
+        // ============================================
+        // STRATEGY 3: ULTIMATE FALLBACK
+        // Should rarely happen - word has no collocations AND no definition
+        // ============================================
+        return {
+            prompt: `Write a sentence that clearly shows the meaning of "${lemma}".`,
+            starter: '',
+            usedCollocation: null,
+            type: 'generic',
+            showStarter: false
+        };
+    }
+
+    /**
+     * Show the writing challenge modal
+     */
+    function showWritingChallenge(wordObj, onComplete) {
+        try {
+            if (!elements.srsWritingModal) {
+                if (onComplete) onComplete();
+                return;
             }
-        }
 
-        // Display Hints
-        if (elements.hintDefValue) {
-            elements.hintDefValue.textContent = wordObj.definition || 'No definition available.';
-        }
+            // Calculate User Level from review stats
+            const points = srsCache.reviewStats.totalReviews * POINTS_PER_REVIEW || 0;
+            // Assuming calculateLevel is defined elsewhere or will be added
+            const currentLevel = (typeof calculateLevel !== 'undefined' ? calculateLevel(points).level : 1);
 
-        // Show Example only if exists
-        const exRow = document.getElementById('hint-example');
-        if (wordObj.example) {
-            if (elements.hintExampleValue) elements.hintExampleValue.textContent = wordObj.example;
-            if (exRow) exRow.style.display = 'flex';
-        } else {
-            if (exRow) exRow.style.display = 'none';
-        }
-
-        // Display Collocations
-        const collocations = getCollocations(wordObj.lemma || wordObj.originalWord);
-        const colloRow = document.getElementById('hint-collocations');
-
-        if (collocations.length > 0) {
-            if (elements.hintCollocationsValue) {
-                elements.hintCollocationsValue.innerHTML = collocations.map(c =>
-                    c === promptData.usedCollocation ? `<b>${c}</b>` : c
-                ).join(', ');
+            // Generate Prompt Data
+            let promptData;
+            try {
+                promptData = generateWritingPrompt(wordObj, currentLevel);
+            } catch (err) {
+                console.error('[SRS] Error generating prompt:', err);
+                // Fallback prompt data
+                promptData = {
+                    prompt: `Write a sentence using "${wordObj.lemma || wordObj.originalWord}".`,
+                    starter: `I can use ${wordObj.lemma || wordObj.originalWord} to...`,
+                    showStarter: true
+                };
             }
-            if (colloRow) colloRow.style.display = 'block'; // or flex, usually hint rows are flex
-        } else {
-            // Show 'No collocations' message instead of hiding
-            if (elements.hintCollocationsValue) {
-                elements.hintCollocationsValue.innerHTML = '<em style="color:#888;">No collocations available for this word.</em>';
+
+            // Update UI Elements
+            if (elements.srsWritingPrompt) {
+                elements.srsWritingPrompt.textContent = promptData.prompt;
+            } else {
+                console.warn('[SRS] Missing prompt element');
             }
-            if (colloRow) colloRow.style.display = 'block';
-        }
 
-        // Unhide Definition Hint
-        const defHintRow = document.getElementById('hint-definition');
-        if (defHintRow) defHintRow.style.display = 'flex';
-
-        // Clear Input & Feedback
-        if (elements.srsWritingInput) elements.srsWritingInput.value = '';
-        if (elements.srsWritingFeedback) {
-            elements.srsWritingFeedback.textContent = '';
-            elements.srsWritingFeedback.className = 'srs-writing-feedback';
-        }
-
-        // Reset scaffolding panel for new word
-        scaffoldingLoaded = false;
-        if (elements.scaffoldingPanel) {
-            elements.scaffoldingPanel.classList.remove('visible');
-        }
-        if (elements.moreHelpBtn) {
-            elements.moreHelpBtn.classList.remove('active');
-        }
-        if (elements.exampleSentencesList) {
-            elements.exampleSentencesList.innerHTML = '<li class="example-sentence-item">Click "More Help" to see examples.</li>';
-        }
-        if (elements.youglishContainer) {
-            elements.youglishContainer.innerHTML = '<span class="youglish-loading">Loading video link...</span>';
-        }
-
-        // Store session context for validation
-        reviewSession.writingCallback = onComplete;
-        reviewSession.currentWritingWord = wordObj.lemma || wordObj.originalWord;
-        reviewSession.currentCollocation = promptData.usedCollocation; // Store for feedback
-        reviewSession.userLevelForChallenge = currentLevel; // Check valid rules later
-
-        // Prevent background scroll
-        document.body.style.overflow = 'hidden';
-
-        // Show celebratory toast notification
-        showWritingChallengeToast();
-
-        // Show Modal with slight delay for toast to appear first
-        setTimeout(() => {
-            if (elements.srsWritingModal) {
-                elements.srsWritingModal.style.zIndex = '10000'; // Very high z-index to ensure on top
-                elements.srsWritingModal.classList.add('visible');
-                // Accessibility: Trap focus
-                trapFocus(elements.srsWritingModal);
+            // Update Starter
+            const starterEl = document.getElementById('hint-starter-value');
+            if (starterEl) {
+                starterEl.textContent = promptData.starter;
+                // Show/Hide container based on level logic (parent of hint-starter-value is #hint-starter)
+                const starterContainer = document.getElementById('hint-starter'); // The one we moved to input container
+                if (starterContainer) {
+                    starterContainer.style.display = promptData.showStarter ? 'flex' : 'none';
+                }
             }
+
+            // Display Hints
+            if (elements.hintDefValue) {
+                elements.hintDefValue.textContent = wordObj.definition || 'No definition available.';
+            }
+
+            // Show Example only if exists
+            const exRow = document.getElementById('hint-example');
+            if (wordObj.example) {
+                if (elements.hintExampleValue) elements.hintExampleValue.textContent = wordObj.example;
+                if (exRow) exRow.style.display = 'flex';
+            } else {
+                if (exRow) exRow.style.display = 'none';
+            }
+
+            // Display Collocations
+            const collocations = getCollocations(wordObj.lemma || wordObj.originalWord);
+            const colloRow = document.getElementById('hint-collocations');
+
+            if (collocations.length > 0) {
+                if (elements.hintCollocationsValue) {
+                    elements.hintCollocationsValue.innerHTML = collocations.map(c =>
+                        c === promptData.usedCollocation ? `<b>${c}</b>` : c
+                    ).join(', ');
+                }
+                if (colloRow) colloRow.style.display = 'block'; // or flex, usually hint rows are flex
+            } else {
+                // Show 'No collocations' message instead of hiding
+                if (elements.hintCollocationsValue) {
+                    elements.hintCollocationsValue.innerHTML = '<em style="color:#888;">No collocations available for this word.</em>';
+                }
+                if (colloRow) colloRow.style.display = 'block';
+            }
+
+            // Unhide Definition Hint
+            const defHintRow = document.getElementById('hint-definition');
+            if (defHintRow) defHintRow.style.display = 'flex';
+
+            // Clear Input & Feedback
+            if (elements.srsWritingInput) elements.srsWritingInput.value = '';
+            if (elements.srsWritingFeedback) {
+                elements.srsWritingFeedback.textContent = '';
+                elements.srsWritingFeedback.className = 'srs-writing-feedback';
+            }
+
+            // Reset scaffolding panel for new word
+            scaffoldingLoaded = false;
+            if (elements.scaffoldingPanel) {
+                elements.scaffoldingPanel.classList.remove('visible');
+            }
+            if (elements.moreHelpBtn) {
+                elements.moreHelpBtn.classList.remove('active');
+            }
+            if (elements.exampleSentencesList) {
+                elements.exampleSentencesList.innerHTML = '<li class="example-sentence-item">Click "More Help" to see examples.</li>';
+            }
+            if (elements.youglishContainer) {
+                elements.youglishContainer.innerHTML = '<span class="youglish-loading">Loading video link...</span>';
+            }
+
+            // Store session context for validation
+            reviewSession.writingCallback = onComplete;
+            reviewSession.currentWritingWord = wordObj.lemma || wordObj.originalWord;
+            reviewSession.currentCollocation = promptData.usedCollocation; // Store for feedback
+            reviewSession.userLevelForChallenge = currentLevel; // Check valid rules later
+
+            // Prevent background scroll
+            document.body.style.overflow = 'hidden';
+
+            // Show celebratory toast notification
+            showWritingChallengeToast();
+
+            // Show Modal with slight delay for toast to appear first
             setTimeout(() => {
-                if (elements.srsWritingInput) elements.srsWritingInput.focus();
-            }, 300);
-        }, 150);
+                if (elements.srsWritingModal) {
+                    elements.srsWritingModal.style.zIndex = '10000'; // Very high z-index to ensure on top
+                    elements.srsWritingModal.classList.add('visible');
+                    // Accessibility: Trap focus
+                    trapFocus(elements.srsWritingModal);
+                }
+                setTimeout(() => {
+                    if (elements.srsWritingInput) elements.srsWritingInput.focus();
+                }, 300);
+            }, 150);
 
-    } catch (error) {
-        console.error('[SRS] Critical error in showWritingChallenge:', error);
-        // Ensure we don't block the user
-        if (onComplete) onComplete();
+        } catch (error) {
+            console.error('[SRS] Critical error in showWritingChallenge:', error);
+            // Ensure we don't block the user
+            if (onComplete) onComplete();
+        }
     }
-}
 
-/**
- * Regenerate just the starter sentence (called by refresh button)
- */
-function regenerateStarter() {
-    if (!reviewSession.currentWritingWord) return;
+    /**
+     * Regenerate just the starter sentence (called by refresh button)
+     */
+    function regenerateStarter() {
+        if (!reviewSession.currentWritingWord) return;
 
-    const lemma = reviewSession.currentWritingWord;
-    const userLevel = reviewSession.userLevelForChallenge || 1;
-    const collocations = getCollocations(lemma);
+        const lemma = reviewSession.currentWritingWord;
+        const userLevel = reviewSession.userLevelForChallenge || 1;
+        const collocations = getCollocations(lemma);
 
-    // Helper to pick random item
-    const pickRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
+        // Helper to pick random item
+        const pickRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-    let newStarter = '';
-    const isBeginner = userLevel < 5;
-    const isExpert = userLevel >= 15;
+        let newStarter = '';
+        const isBeginner = userLevel < 5;
+        const isExpert = userLevel >= 15;
 
-    if (collocations && collocations.length > 0) {
-        const collocation = pickRandom(collocations);
-        reviewSession.currentCollocation = collocation; // Update stored collocation
+        if (collocations && collocations.length > 0) {
+            const collocation = pickRandom(collocations);
+            reviewSession.currentCollocation = collocation; // Update stored collocation
 
-        // Collocation-based starter templates (contextually meaningful)
-        const collocationStarterTemplates = [
-            `I had to ${collocation} when...`,
-            `Yesterday, I ${collocation} because...`,
-            `My friend ${collocation} and then...`,
-            `Sometimes people ${collocation} to...`,
-            `Last week, I ${collocation}...`,
-            `It's common to ${collocation} when...`
-        ];
+            // Collocation-based starter templates (contextually meaningful)
+            const collocationStarterTemplates = [
+                `I had to ${collocation} when...`,
+                `Yesterday, I ${collocation} because...`,
+                `My friend ${collocation} and then...`,
+                `Sometimes people ${collocation} to...`,
+                `Last week, I ${collocation}...`,
+                `It's common to ${collocation} when...`
+            ];
 
-        if (isExpert) {
-            newStarter = ''; // Expert: no starter
+            if (isExpert) {
+                newStarter = ''; // Expert: no starter
+            } else {
+                newStarter = pickRandom(collocationStarterTemplates);
+            }
         } else {
-            newStarter = pickRandom(collocationStarterTemplates);
-        }
-    } else {
-        // Definition-based fallback starters
-        const definitionStarterTemplates = [
-            `An example of ${lemma} is when...`,
-            `I once saw someone ${lemma}...`,
-            `${lemma.charAt(0).toUpperCase() + lemma.slice(1)} happened when...`,
-            `${lemma.charAt(0).toUpperCase() + lemma.slice(1)} is important because...`
-        ];
-        newStarter = pickRandom(definitionStarterTemplates);
-    }
-
-    // Update UI
-    const starterEl = document.getElementById('hint-starter-value');
-    if (starterEl && newStarter) {
-        starterEl.textContent = newStarter;
-        // Add a subtle animation
-        starterEl.style.opacity = '0';
-        setTimeout(() => { starterEl.style.opacity = '1'; }, 100);
-    }
-
-    console.log('[SRS] Regenerated starter:', newStarter);
-}
-
-function handleWritingSubmit() {
-    let sentence = elements.srsWritingInput.value.trim();
-    const targetWord = reviewSession.currentWritingWord; // stored lemma
-    const userLevel = reviewSession.userLevelForChallenge || 1;
-
-    if (!sentence) return;
-
-    // Auto-fix: Append punctuation
-    if (!/[.!?]$/.test(sentence)) {
-        sentence += '.';
-        elements.srsWritingInput.value = sentence;
-    }
-
-    const issues = [];
-    const words = sentence.split(/\s+/);
-
-    // Rule 1: Minimum Length (Beginner: 6, Others: 8)
-    const minWords = userLevel < 5 ? 6 : 8;
-    if (words.length < minWords) {
-        issues.push(`Sentence is too short (min ${minWords} words). Try adding more detail.`);
-    }
-
-    // Smart Checks using NLP
-    if (typeof nlp !== 'undefined') {
-        const doc = nlp(sentence);
-
-        // Rule 2: Contain target word (lemma check)
-        // We check against targetWord (lemma).
-        const hasTarget = doc.has(targetWord) || sentence.toLowerCase().includes(targetWord.toLowerCase());
-        if (!hasTarget) {
-            issues.push(`Sentence must include the word "${targetWord}".`);
+            // Definition-based fallback starters
+            const definitionStarterTemplates = [
+                `An example of ${lemma} is when...`,
+                `I once saw someone ${lemma}...`,
+                `${lemma.charAt(0).toUpperCase() + lemma.slice(1)} happened when...`,
+                `${lemma.charAt(0).toUpperCase() + lemma.slice(1)} is important because...`
+            ];
+            newStarter = pickRandom(definitionStarterTemplates);
         }
 
-        // Rule 3: Noun + Verb presence (Quality Check)
-        if (!doc.nouns().found) issues.push("Sentence must contain at least one noun (subject/object).");
-        if (!doc.verbs().found) issues.push("Sentence must contain at least one verb (action).");
-
-    } else {
-        // Fallback if NLP missing
-        if (!sentence.toLowerCase().includes(targetWord.toLowerCase())) {
-            issues.push(`Sentence must include the word "${targetWord}".`);
+        // Update UI
+        const starterEl = document.getElementById('hint-starter-value');
+        if (starterEl && newStarter) {
+            starterEl.textContent = newStarter;
+            // Add a subtle animation
+            starterEl.style.opacity = '0';
+            setTimeout(() => { starterEl.style.opacity = '1'; }, 100);
         }
+
+        console.log('[SRS] Regenerated starter:', newStarter);
     }
 
-    // Display Validation Errors (Blocking)
-    if (issues.length > 0) {
-        elements.srsWritingFeedback.innerHTML = `<strong>❌ Not quite:</strong><br>${issues[0]}`;
-        elements.srsWritingFeedback.className = 'srs-writing-feedback error'; // Set class explicitly
+    function handleWritingSubmit() {
+        let sentence = elements.srsWritingInput.value.trim();
+        const targetWord = reviewSession.currentWritingWord; // stored lemma
+        const userLevel = reviewSession.userLevelForChallenge || 1;
+
+        if (!sentence) return;
+
+        // Auto-fix: Append punctuation
+        if (!/[.!?]$/.test(sentence)) {
+            sentence += '.';
+            elements.srsWritingInput.value = sentence;
+        }
+
+        const issues = [];
+        const words = sentence.split(/\s+/);
+
+        // Rule 1: Minimum Length (Beginner: 6, Others: 8)
+        const minWords = userLevel < 5 ? 6 : 8;
+        if (words.length < minWords) {
+            issues.push(`Sentence is too short (min ${minWords} words). Try adding more detail.`);
+        }
+
+        // Smart Checks using NLP
+        if (typeof nlp !== 'undefined') {
+            const doc = nlp(sentence);
+
+            // Rule 2: Contain target word (lemma check)
+            // We check against targetWord (lemma).
+            const hasTarget = doc.has(targetWord) || sentence.toLowerCase().includes(targetWord.toLowerCase());
+            if (!hasTarget) {
+                issues.push(`Sentence must include the word "${targetWord}".`);
+            }
+
+            // Rule 3: Noun + Verb presence (Quality Check)
+            if (!doc.nouns().found) issues.push("Sentence must contain at least one noun (subject/object).");
+            if (!doc.verbs().found) issues.push("Sentence must contain at least one verb (action).");
+
+        } else {
+            // Fallback if NLP missing
+            if (!sentence.toLowerCase().includes(targetWord.toLowerCase())) {
+                issues.push(`Sentence must include the word "${targetWord}".`);
+            }
+        }
+
+        // Display Validation Errors (Blocking)
+        if (issues.length > 0) {
+            elements.srsWritingFeedback.innerHTML = `<strong>❌ Not quite:</strong><br>${issues[0]}`;
+            elements.srsWritingFeedback.className = 'srs-writing-feedback error'; // Set class explicitly
+            elements.srsWritingFeedback.style.display = 'block';
+
+            // Shake animation
+            elements.srsWritingInput.classList.add('shake');
+            setTimeout(() => elements.srsWritingInput.classList.remove('shake'), 400);
+            return;
+        }
+
+        // --- SUCCESS FLOW ---
+
+        // Collocation Check (Non-blocking Feedback)
+        let feedbackMsg = "<strong>✅ Saved!</strong><br>Sentence recorded.";
+        const usedCollo = reviewSession.currentCollocation;
+
+        if (usedCollo && typeof nlp !== 'undefined') {
+            const lowerSentence = sentence.toLowerCase();
+            const lowerCollo = usedCollo.toLowerCase();
+
+            // Basic check if the phrase is inside
+            if (lowerSentence.includes(lowerCollo)) {
+                feedbackMsg = `<strong>✅ Excellent!</strong><br>You used the phrase "${usedCollo}" correctly.`;
+            } else {
+                feedbackMsg = `<strong>✅ Good sentence!</strong><br>Tip: Next time try using the phrase "<em>${usedCollo}</em>" to sound more natural.`;
+            }
+        }
+
+        // Show Success
+        elements.srsWritingFeedback.innerHTML = feedbackMsg;
+        elements.srsWritingFeedback.className = 'srs-writing-feedback success';
         elements.srsWritingFeedback.style.display = 'block';
 
-        // Shake animation
-        elements.srsWritingInput.classList.add('shake');
-        setTimeout(() => elements.srsWritingInput.classList.remove('shake'), 400);
-        return;
+        triggerConfetti();
+
+        // Proceed after delay
+        setTimeout(() => {
+            // Clear callback BEFORE closing to prevent double-call
+            const cb = reviewSession.writingCallback;
+            reviewSession.writingCallback = null;
+            closeWritingChallenge(); // Closes modal (won't call callback since we cleared it)
+            if (cb) cb();
+        }, 2000); // Slightly longer to read feedback
+    }
+    function handleWritingSkip() {
+        closeWritingChallenge(); // This now calls the callback
     }
 
-    // --- SUCCESS FLOW ---
+    function closeWritingChallenge() {
+        // Restore background scroll if SRS panel is not active
+        if (!elements.srsPanel || !elements.srsPanel.classList.contains('active')) {
+            document.body.style.overflow = '';
+        }
 
-    // Collocation Check (Non-blocking Feedback)
-    let feedbackMsg = "<strong>✅ Saved!</strong><br>Sentence recorded.";
-    const usedCollo = reviewSession.currentCollocation;
-
-    if (usedCollo && typeof nlp !== 'undefined') {
-        const lowerSentence = sentence.toLowerCase();
-        const lowerCollo = usedCollo.toLowerCase();
-
-        // Basic check if the phrase is inside
-        if (lowerSentence.includes(lowerCollo)) {
-            feedbackMsg = `<strong>✅ Excellent!</strong><br>You used the phrase "${usedCollo}" correctly.`;
-        } else {
-            feedbackMsg = `<strong>✅ Good sentence!</strong><br>Tip: Next time try using the phrase "<em>${usedCollo}</em>" to sound more natural.`;
+        if (elements.srsWritingModal) {
+            elements.srsWritingModal.classList.remove('visible');
+        }
+        // Call callback to proceed to next word (if not already called by submit/skip)
+        if (reviewSession.writingCallback) {
+            const cb = reviewSession.writingCallback;
+            reviewSession.writingCallback = null; // Prevent double-call
+            cb();
         }
     }
 
-    // Show Success
-    elements.srsWritingFeedback.innerHTML = feedbackMsg;
-    elements.srsWritingFeedback.className = 'srs-writing-feedback success';
-    elements.srsWritingFeedback.style.display = 'block';
-
-    triggerConfetti();
-
-    // Proceed after delay
-    setTimeout(() => {
-        // Clear callback BEFORE closing to prevent double-call
-        const cb = reviewSession.writingCallback;
-        reviewSession.writingCallback = null;
-        closeWritingChallenge(); // Closes modal (won't call callback since we cleared it)
-        if (cb) cb();
-    }, 2000); // Slightly longer to read feedback
-}
-function handleWritingSkip() {
-    closeWritingChallenge(); // This now calls the callback
-}
-
-function closeWritingChallenge() {
-    // Restore background scroll if SRS panel is not active
-    if (!elements.srsPanel || !elements.srsPanel.classList.contains('active')) {
-        document.body.style.overflow = '';
-    }
-
-    if (elements.srsWritingModal) {
-        elements.srsWritingModal.classList.remove('visible');
-    }
-    // Call callback to proceed to next word (if not already called by submit/skip)
-    if (reviewSession.writingCallback) {
-        const cb = reviewSession.writingCallback;
-        reviewSession.writingCallback = null; // Prevent double-call
-        cb();
-    }
-}
-
-/**
- * Show a simple toast notification
- */
-function showToast(message, type = 'info') {
-    const toast = document.createElement('div');
-    toast.className = `srs-toast srs-toast-${type}`;
-    toast.style.cssText = `
+    /**
+     * Show a simple toast notification
+     */
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `srs-toast srs-toast-${type}`;
+        toast.style.cssText = `
             position: fixed;
             bottom: 24px;
             right: 24px;
@@ -3190,119 +3189,119 @@ function showToast(message, type = 'info') {
             gap: 8px;
         `;
 
-    const icon = type === 'warning' ? '⚠️' : 'ℹ️';
-    toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
-    document.body.appendChild(toast);
+        const icon = type === 'warning' ? '⚠️' : 'ℹ️';
+        toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+        document.body.appendChild(toast);
 
-    // Trigger animation
-    requestAnimationFrame(() => {
-        toast.style.transform = 'translateY(0)';
-        toast.style.opacity = '1';
-    });
+        // Trigger animation
+        requestAnimationFrame(() => {
+            toast.style.transform = 'translateY(0)';
+            toast.style.opacity = '1';
+        });
 
-    // Hide after 4 seconds
-    setTimeout(() => {
-        toast.style.transform = 'translateY(20px)';
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 400);
-    }, 4000);
-}
-
-/**
- * Accessibility (a11y) Features
- */
-function setupAccessibility() {
-    // Apply ARIA roles and labels to modals
-    if (elements.srsPanel) {
-        elements.srsPanel.setAttribute('role', 'dialog');
-        elements.srsPanel.setAttribute('aria-modal', 'true');
-        elements.srsPanel.setAttribute('aria-label', 'Vocabulary Review Session');
-    }
-    if (elements.srsWritingModal) {
-        elements.srsWritingModal.setAttribute('role', 'dialog');
-        elements.srsWritingModal.setAttribute('aria-modal', 'true');
-        elements.srsWritingModal.setAttribute('aria-label', 'Writing Challenge');
+        // Hide after 4 seconds
+        setTimeout(() => {
+            toast.style.transform = 'translateY(20px)';
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 400);
+        }, 4000);
     }
 
-    // Global Escape key handler
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            if (elements.srsWritingModal && elements.srsWritingModal.classList.contains('visible')) {
-                closeWritingChallenge();
-            } else if (elements.srsPanel && elements.srsPanel.classList.contains('active')) {
-                closeReviewPanel();
-            }
+    /**
+     * Accessibility (a11y) Features
+     */
+    function setupAccessibility() {
+        // Apply ARIA roles and labels to modals
+        if (elements.srsPanel) {
+            elements.srsPanel.setAttribute('role', 'dialog');
+            elements.srsPanel.setAttribute('aria-modal', 'true');
+            elements.srsPanel.setAttribute('aria-label', 'Vocabulary Review Session');
         }
-    });
-}
+        if (elements.srsWritingModal) {
+            elements.srsWritingModal.setAttribute('role', 'dialog');
+            elements.srsWritingModal.setAttribute('aria-modal', 'true');
+            elements.srsWritingModal.setAttribute('aria-label', 'Writing Challenge');
+        }
 
-/**
- * Focus Trapping Logic
- */
-function trapFocus(modal) {
-    const focusableElements = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-    if (focusableElements.length === 0) return;
-
-    const firstFocusable = focusableElements[0];
-    const lastFocusable = focusableElements[focusableElements.length - 1];
-
-    modal.addEventListener('keydown', function (e) {
-        if (e.key === 'Tab') {
-            if (e.shiftKey) { // Shift + Tab
-                if (document.activeElement === firstFocusable) {
-                    lastFocusable.focus();
-                    e.preventDefault();
-                }
-            } else { // Tab
-                if (document.activeElement === lastFocusable) {
-                    firstFocusable.focus();
-                    e.preventDefault();
+        // Global Escape key handler
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (elements.srsWritingModal && elements.srsWritingModal.classList.contains('visible')) {
+                    closeWritingChallenge();
+                } else if (elements.srsPanel && elements.srsPanel.classList.contains('active')) {
+                    closeReviewPanel();
                 }
             }
-        }
-    });
-}
+        });
+    }
 
-/**
- * Offline Sync Helper: Check and retry
- */
-function checkOfflineSync() {
-    if (navigator.onLine) {
-        const pending = localStorage.getItem(LOCAL_STORAGE_KEY);
-        if (pending) {
-            console.log('[SRS] Pending data found, attempt sync...');
-            debouncedSave();
+    /**
+     * Focus Trapping Logic
+     */
+    function trapFocus(modal) {
+        const focusableElements = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (focusableElements.length === 0) return;
+
+        const firstFocusable = focusableElements[0];
+        const lastFocusable = focusableElements[focusableElements.length - 1];
+
+        modal.addEventListener('keydown', function (e) {
+            if (e.key === 'Tab') {
+                if (e.shiftKey) { // Shift + Tab
+                    if (document.activeElement === firstFocusable) {
+                        lastFocusable.focus();
+                        e.preventDefault();
+                    }
+                } else { // Tab
+                    if (document.activeElement === lastFocusable) {
+                        firstFocusable.focus();
+                        e.preventDefault();
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Offline Sync Helper: Check and retry
+     */
+    function checkOfflineSync() {
+        if (navigator.onLine) {
+            const pending = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (pending) {
+                console.log('[SRS] Pending data found, attempt sync...');
+                debouncedSave();
+            }
         }
     }
-}
 
-let isInitialized = false;
-function initModule() {
-    if (isInitialized) return;
-    init();
-    setupAccessibility(); // Add a11y on init
-    checkOfflineSync();    // Sync if online
-    isInitialized = true;
-}
+    let isInitialized = false;
+    function initModule() {
+        if (isInitialized) return;
+        init();
+        setupAccessibility(); // Add a11y on init
+        checkOfflineSync();    // Sync if online
+        isInitialized = true;
+    }
 
-// Initialize on DOM ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initModule);
-} else {
-    initModule();
-}
+    // Initialize on DOM ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initModule);
+    } else {
+        initModule();
+    }
 
-// Public API
-return {
-    setUser,
-    initializeWord,
-    getWordsDueForReview,
-    startReviewSession,
-    getWordData,
-    init: initModule
-};
+    // Public API
+    return {
+        setUser,
+        initializeWord,
+        getWordsDueForReview,
+        startReviewSession,
+        getWordData,
+        init: initModule
+    };
 
-}) ();
+})();
 
 // Expose to window
 if (typeof window !== 'undefined') {

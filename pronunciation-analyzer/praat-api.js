@@ -1,23 +1,16 @@
+import { config } from './config.js';
+
 /**
  * PraatAPI - Client for Parselmouth/Praat backend analysis
  * Replaces client-side pitchfinder with server-side Praat analysis
  */
 export class PraatAPI {
     constructor(backendUrl = null) {
-        this.backendUrl = backendUrl || this.detectBackendUrl();
+        this.backendUrl = backendUrl || config.backendUrl;
         console.log('PraatAPI using backend:', this.backendUrl);
     }
 
-    detectBackendUrl() {
-        // Local development
-        if (window.location.hostname === 'localhost' ||
-            window.location.hostname === '127.0.0.1') {
-            return 'http://localhost:8080';
-        }
-
-        // Production - UPDATE THIS WITH YOUR CLOUD RUN URL
-        return 'https://parselmouth-backend-1071929245506.us-central1.run.app';
-    }
+    // detectBackendUrl removed - using config.js source of truth
 
     async analyze(audioBlob, expectedSyllables = null) {
         // Convert to WAV if needed

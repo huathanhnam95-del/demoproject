@@ -5,6 +5,7 @@ import numpy as np
 import tempfile
 import os
 import requests as http_requests  # Renamed to avoid conflict with flask.request
+import re
 
 app = Flask(__name__)
 
@@ -48,17 +49,43 @@ def get_dictionary_word(word):
     
     try:
         normalized_word = word.lower().strip()
-        url = f'https://www.dictionaryapi.com/api/v3/references/collegiate/json/{normalized_word}?key={MW_API_KEY}'
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
         
-        response = http_requests.get(url, timeout=10)
+        # Try Collegiate first
+        url = f'https://www.dictionaryapi.com/api/v3/references/collegiate/json/{normalized_word}?key={MW_API_KEY}'
+        response = http_requests.get(url, headers=headers, timeout=10)
+        
+        # Fallback 1: try learners (often contains IPA)
+        if response.status_code == 200 and "Not subscribed for this reference" in response.text:
+            print(f"Key not valid for Collegiate, trying Learner's Dictionary for '{normalized_word}'...")
+            url = f'https://www.dictionaryapi.com/api/v3/references/learners/json/{normalized_word}?key={MW_API_KEY}'
+            response = http_requests.get(url, headers=headers, timeout=10)
+            
+        # Fallback 2: try school dictionary (sd4)
+        if response.status_code == 200 and "Not subscribed for this reference" in response.text:
+            print(f"Key not valid for Learners, trying School Dictionary (sd4) for '{normalized_word}'...")
+            url = f'https://www.dictionaryapi.com/api/v3/references/sd4/json/{normalized_word}?key={MW_API_KEY}'
+            response = http_requests.get(url, headers=headers, timeout=10)
         
         if response.status_code == 403:
             return jsonify({'error': 'Invalid API key or quota exceeded'}), 403
         
         if not response.ok:
-            return jsonify({'error': f'API error: {response.status_code}'}), response.status_code
+            return jsonify({'error': f'API error: {response.status_code}', 'text': response.text[:500]}), response.status_code
         
-        data = response.json()
+        try:
+            data = response.json()
+            # If we get a string back (like the error message), it's not JSON we can parse
+            if isinstance(data, str):
+                 raise ValueError(f"API returned string instead of JSON: {data[:100]}")
+        except Exception as json_err:
+            print(f"JSON DECODE ERROR. Response first 500 chars: {response.text[:500]}")
+            return jsonify({
+                'error': f'JSON decode error: {str(json_err)}',
+                'raw_response': response.text[:1000]
+            }), 500
         
         # Check if we got results or suggestions
         if not data or not isinstance(data, list) or len(data) == 0:
@@ -76,8 +103,11 @@ def get_dictionary_word(word):
             return jsonify({'found': False, 'suggestions': []})
             
     except Exception as e:
+        import traceback
         print(f"Dictionary API error: {e}")
-        return jsonify({'error': str(e)}), 500
+        trace = traceback.format_exc()
+        print(trace)
+        return jsonify({'error': str(e), 'trace': trace}), 500
 
 def parse_mw_response(api_data, word):
     """Parse Merriam-Webster API response into our format."""
@@ -111,12 +141,16 @@ def parse_mw_response(api_data, word):
     
     result['syllableCount'] = len(result['syllables'])
     
-    # Get pronunciation and audio
     prs = hwi.get('prs', [])
     if prs:
         pron = prs[0]
-        result['pronunciation'] = pron.get('mw')
-        result['stressedSyllable'] = find_stressed_syllable(pron.get('mw'), result['syllableCount'])
+        # Prioritize IPA field for display, fallback to mw
+        result['pronunciation'] = pron.get('ipa') or pron.get('mw')
+        
+        # Use MW field for stress detection if available, as it has hyphens
+        # Fallback to display pronunciation (might be IPA)
+        stress_source = pron.get('mw') or result['pronunciation']
+        result['stressedSyllable'] = find_stressed_syllable(stress_source, result['syllableCount'])
         
         if pron.get('sound', {}).get('audio'):
             audio_filename = pron['sound']['audio']
@@ -141,11 +175,19 @@ def find_stressed_syllable(pronunciation, syllable_count):
     if stress_pos == -1:
         return 0
     
-    # Count breaks before stress marker
-    before_stress = pronunciation[:stress_pos]
-    breaks = before_stress.count('-') + before_stress.count('·')
+    # If there are explicit syllable breaks (-, ·, .), count them
+    if any(c in pronunciation for c in ['-', '·', '.']):
+        before_stress = pronunciation[:stress_pos]
+        breaks = before_stress.count('-') + before_stress.count('·') + before_stress.count('.')
+        return min(breaks, syllable_count - 1) if syllable_count > 0 else 0
     
-    return min(breaks, syllable_count - 1) if syllable_count > 0 else 0
+    # Fallback for IPA without breaks: count vowels before stress marker
+    # This matches the logic used in the frontend's parseIPA
+    vowel_regex = r'(aɪ|eɪ|ɔɪ|aʊ|oʊ|ɪə|eə|ʊə|iː|uː|ɑː|ɔː|ɜː|eːɪ|[ɪieɛæəʌɑɒɔouʊaɚɝ])'
+    before_stress = pronunciation[:stress_pos]
+    matches = re.findall(vowel_regex, before_stress)
+    
+    return min(len(matches), syllable_count - 1) if syllable_count > 0 else 0
 
 def build_audio_url(filename):
     """Build MW audio URL from filename."""

@@ -14,8 +14,8 @@ export const config = {
         // For local development, set forceCloudRun to false
         if (window.location.hostname === 'localhost' ||
             window.location.hostname === '127.0.0.1') {
-            // Check if we should use local backend
-            // return 'http://localhost:8080';  // Uncomment to use local backend
+            // Use local backend for testing (uncomment for local dev)
+            // return 'http://localhost:8080';
         }
         return cloudRunUrl;
     })(),

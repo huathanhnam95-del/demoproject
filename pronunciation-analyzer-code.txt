@@ -1,360 +1,788 @@
-================================================================================
-PRONUNCIATION STRESS ANALYZER - COMPLETE CODE BUNDLE (LATEST VERSION)
-================================================================================
+==================================================
+FILE: c:\Cursor AI\backend\server.py
+==================================================
+from flask import Flask, request, jsonify, Response
+from flask_cors import CORS
+import parselmouth
+import numpy as np
+import tempfile
+import os
+import requests as http_requests  # Renamed to avoid conflict with flask.request
+import re
 
-================================================================================
-FILE: pronunciation-analyzer/audio-capture.js
-================================================================================
+app = Flask(__name__)
 
-export class AudioCapture {
-    constructor() {
-        this.mediaRecorder = null;
-        this.audioChunks = [];
-        this.audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 44100 });
-        this.stream = null;
-        this.isRecording = false;
+# CORS configuration - allow all origins for development
+# For production, you can restrict to specific domains
+CORS(app, origins='*', methods=['GET', 'POST', 'OPTIONS'], allow_headers=['Content-Type'])
+
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({
+        'service': 'Pronunciation Analyzer API',
+        'status': 'running',
+        'endpoints': {
+            '/health': 'Health check',
+            '/analyze': 'POST - Analyze audio file',
+            '/dictionary/<word>': 'GET - Fetch word data from Merriam-Webster',
+            '/proxy-audio': 'GET - Proxy audio from MW (CORS bypass)',
+            '/analyze-url': 'POST - Analyze audio from URL'
+        }
+    })
+
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({'status': 'ok'})
+
+# ============================================
+# MERRIAM-WEBSTER DICTIONARY ENDPOINTS
+# ============================================
+
+# MW API Key from environment variable (set in Cloud Run)
+MW_API_KEY = os.environ.get('MW_API_KEY', '')
+
+@app.route('/dictionary/<word>', methods=['GET'])
+def get_dictionary_word(word):
+    """
+    Fetch word data from Merriam-Webster API.
+    Returns syllables, pronunciation, audio URL, and definition.
+    """
+    if not MW_API_KEY:
+        return jsonify({'error': 'Dictionary API not configured'}), 500
+    
+    try:
+        normalized_word = word.lower().strip()
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+        
+        # Try Collegiate first
+        url = f'https://www.dictionaryapi.com/api/v3/references/collegiate/json/{normalized_word}?key={MW_API_KEY}'
+        response = http_requests.get(url, headers=headers, timeout=10)
+        
+        # Fallback 1: try learners (often contains IPA)
+        if response.status_code == 200 and "Not subscribed for this reference" in response.text:
+            print(f"Key not valid for Collegiate, trying Learner's Dictionary for '{normalized_word}'...")
+            url = f'https://www.dictionaryapi.com/api/v3/references/learners/json/{normalized_word}?key={MW_API_KEY}'
+            response = http_requests.get(url, headers=headers, timeout=10)
+            
+        # Fallback 2: try school dictionary (sd4)
+        if response.status_code == 200 and "Not subscribed for this reference" in response.text:
+            print(f"Key not valid for Learners, trying School Dictionary (sd4) for '{normalized_word}'...")
+            url = f'https://www.dictionaryapi.com/api/v3/references/sd4/json/{normalized_word}?key={MW_API_KEY}'
+            response = http_requests.get(url, headers=headers, timeout=10)
+        
+        if response.status_code == 403:
+            return jsonify({'error': 'Invalid API key or quota exceeded'}), 403
+        
+        if not response.ok:
+            return jsonify({'error': f'API error: {response.status_code}', 'text': response.text[:500]}), response.status_code
+        
+        try:
+            data = response.json()
+            # If we get a string back (like the error message), it's not JSON we can parse
+            if isinstance(data, str):
+                 raise ValueError(f"API returned string instead of JSON: {data[:100]}")
+        except Exception as json_err:
+            print(f"JSON DECODE ERROR. Response first 500 chars: {response.text[:500]}")
+            return jsonify({
+                'error': f'JSON decode error: {str(json_err)}',
+                'raw_response': response.text[:1000]
+            }), 500
+        
+        # Check if we got results or suggestions
+        if not data or not isinstance(data, list) or len(data) == 0:
+            return jsonify({'found': False, 'suggestions': []})
+        
+        # If first item is string, these are spelling suggestions
+        if isinstance(data[0], str):
+            return jsonify({'found': False, 'suggestions': data[:5]})
+        
+    # Parse the response
+        parsed = parse_mw_response(data, normalized_word)
+        if parsed:
+            return jsonify({'found': True, 'data': parsed})
+        else:
+            return jsonify({'found': False, 'suggestions': []})
+            
+    except Exception as e:
+        import traceback
+        print(f"Dictionary API error: {e}")
+        trace = traceback.format_exc()
+        print(trace)
+        return jsonify({'error': str(e), 'trace': trace}), 500
+
+def parse_mw_response(api_data, word):
+    """Parse Merriam-Webster API response into our format."""
+    # Find best matching entry
+    entry = None
+    for e in api_data:
+        if isinstance(e, dict) and e.get('meta', {}).get('id', '').lower().split(':')[0] == word:
+            entry = e
+            break
+    
+    if not entry:
+        entry = api_data[0] if isinstance(api_data[0], dict) else None
+    
+    if not entry or 'hwi' not in entry:
+        return None
+    
+    hwi = entry.get('hwi', {})
+    
+    result = {
+        'word': word,
+        'source': 'merriam-webster',
+        'syllables': parse_syllables(hwi.get('hw', '')),
+        'syllableCount': 0,
+        'stressedSyllable': 0,
+        'pronunciation': None,
+        'audioUrl': None,
+        'audioFilename': None,
+        'partOfSpeech': entry.get('fl'),
+        'definition': entry.get('shortdef', [None])[0]
+    }
+    
+    # Initial count from headword
+    result['syllableCount'] = len(result['syllables'])
+    
+    prs = hwi.get('prs', [])
+    if prs:
+        pron = prs[0]
+        # Prioritize IPA field for display, fallback to mw
+        result['pronunciation'] = pron.get('ipa') or pron.get('mw')
+        
+        # Use IPA for stress detection if available, as it's more standardized with 'ˈ'
+        # Fallback to MW field or display pronunciation
+        stress_source = pron.get('ipa') or pron.get('mw') or result['pronunciation']
+        
+        # Calculate IPA vowel count for validation/fallback
+        ipa_string = pron.get('ipa') or ""
+        ipa_count = count_ipa_syllables(ipa_string)
+        
+        # If IPA count is greater than HW count (e.g. missing separators in HW), trust IPA
+        if ipa_count > result['syllableCount']:
+            print(f"Refining syllable count from IPA: {result['syllableCount']} -> {ipa_count} (IPA: {ipa_string})")
+            result['syllableCount'] = ipa_count
+            
+        # Recalculate stress index based on new count
+        result['stressedSyllable'] = find_stressed_syllable(stress_source, result['syllableCount'])
+        
+        if pron.get('sound', {}).get('audio'):
+            audio_filename = pron['sound']['audio']
+            result['audioFilename'] = audio_filename
+            result['audioUrl'] = build_audio_url(audio_filename)
+    
+    return result
+
+def parse_syllables(hw):
+    """Parse syllables from 'hw' field: 'pho·to·graph' -> ['pho', 'to', 'graph']"""
+    if not hw:
+        return []
+    cleaned = hw.lstrip('*')
+    
+    # Try multiple common separators
+    if '*' in cleaned:
+        return [s for s in cleaned.split('*') if s]
+    if '·' in cleaned:
+        return [s for s in cleaned.split('·') if s]
+    if '-' in cleaned:
+        return [s for s in cleaned.split('-') if s]
+    if '.' in cleaned:
+        return [s for s in cleaned.split('.') if s]
+        
+    return [cleaned]
+
+def count_ipa_syllables(ipa):
+    """Count syllables using improved IPA vowel regex."""
+    if not ipa:
+        return 0
+    # Improved regex to handle diphthongs, long vowels, and syllabic consonants
+    # Order matters: longer sequences first
+    vowel_regex = r'''
+        (aɪ|eɪ|ɔɪ|aʊ|oʊ|əʊ|       # Common diphthongs
+         ɪə|eə|ʊə|ɛə|ɔə|          # Centering diphthongs
+         iː|uː|ɑː|ɔː|ɜː|ɛː|æː|    # Long vowels
+         eːɪ|                     # Legacy/Non-standard
+         [ɪieɛæəɐʌɑɒɔouʊaɚɝɨʉ]|   # Short vowels
+         [lnmŋ]̩)                  # Syllabic consonants
+    '''
+    matches = re.findall(vowel_regex, ipa, re.VERBOSE)
+    return len(matches)
+
+def find_stressed_syllable(pronunciation, syllable_count):
+    """Find stressed syllable from MW pronunciation. ˈ = primary stress."""
+    if not pronunciation:
+        return 0
+    
+    stress_pos = pronunciation.find('ˈ')
+    if stress_pos == -1:
+        return 0
+    
+    # If there are explicit syllable breaks (-, ·, .), count them
+    if any(c in pronunciation for c in ['-', '·', '.']):
+        before_stress = pronunciation[:stress_pos]
+        breaks = before_stress.count('-') + before_stress.count('·') + before_stress.count('.')
+        return min(breaks, syllable_count - 1) if syllable_count > 0 else 0
+    
+    # Fallback for IPA without breaks: count vowels before stress marker
+    # This matches the logic used in the frontend's parseIPA
+    vowel_regex = r'(aɪ|eɪ|ɔɪ|aʊ|oʊ|ɪə|eə|ʊə|iː|uː|ɑː|ɔː|ɜː|eːɪ|[ɪieɛæəʌɑɒɔouʊaɚɝ])'
+    before_stress = pronunciation[:stress_pos]
+    matches = re.findall(vowel_regex, before_stress)
+    
+    return min(len(matches), syllable_count - 1) if syllable_count > 0 else 0
+
+def build_audio_url(filename):
+    """Build MW audio URL from filename."""
+    if not filename:
+        return None
+    
+    if filename.startswith('bix'):
+        subdir = 'bix'
+    elif filename.startswith('gg'):
+        subdir = 'gg'
+    elif filename.startswith('_') or filename[0].isdigit():
+        subdir = 'number'
+    else:
+        subdir = filename[0].lower()
+    
+    return f'https://media.merriam-webster.com/audio/prons/en/us/mp3/{subdir}/{filename}.mp3'
+
+@app.route('/proxy-audio', methods=['GET'])
+def proxy_audio():
+    """
+    Proxy audio from external URL to avoid CORS issues.
+    Usage: /proxy-audio?url=https://media.merriam-webster.com/...
+    """
+    audio_url = request.args.get('url')
+    
+    if not audio_url:
+        return jsonify({'error': 'No URL provided'}), 400
+    
+    # Only allow MW audio URLs for security
+    if not audio_url.startswith('https://media.merriam-webster.com/'):
+        return jsonify({'error': 'Invalid audio URL'}), 400
+    
+    try:
+        response = http_requests.get(audio_url, timeout=15)
+        if not response.ok:
+            return jsonify({'error': f'Failed to fetch audio: {response.status_code}'}), response.status_code
+        
+        return Response(
+            response.content,
+            mimetype='audio/mpeg',
+            headers={'Content-Disposition': 'inline'}
+        )
+    except Exception as e:
+        print(f"Proxy audio error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/analyze-url', methods=['POST'])
+def analyze_from_url():
+    """
+    Analyze audio from a URL (for native reference analysis).
+    Expects JSON: { "audioUrl": "https://...", "expectedSyllables": 3 }
+    """
+    data = request.get_json()
+    
+    if not data or 'audioUrl' not in data:
+        return jsonify({'error': 'No audioUrl provided'}), 400
+    
+    audio_url = data['audioUrl']
+    expected_syllables = data.get('expectedSyllables')
+    
+    # Only allow MW audio URLs
+    if not audio_url.startswith('https://media.merriam-webster.com/'):
+        return jsonify({'error': 'Invalid audio URL'}), 400
+    
+    try:
+        # Fetch audio
+        response = http_requests.get(audio_url, timeout=15)
+        if not response.ok:
+            return jsonify({'error': f'Failed to fetch audio: {response.status_code}'}), response.status_code
+        
+        # Save to temp file
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as tmp:
+            tmp.write(response.content)
+            tmp_path = tmp.name
+        
+        try:
+            result = analyze_audio(tmp_path, expected_syllables)
+            return jsonify(result)
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+                
+    except Exception as e:
+        print(f"Analyze URL error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/analyze', methods=['POST'])
+def analyze():
+    """
+    Analyze audio for pitch, intensity, and syllables.
+    """
+    if 'audio' not in request.files:
+        return jsonify({'error': 'No audio file provided'}), 400
+    
+    audio_file = request.files['audio']
+    expected_syllables = request.form.get('expected_syllables', type=int)
+    
+    # Save to temp file
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp:
+        audio_file.save(tmp.name)
+        tmp_path = tmp.name
+    
+    try:
+        result = analyze_audio(tmp_path, expected_syllables)
+        return jsonify(result)
+    except Exception as e:
+        print(f"Analysis error: {e}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
+def analyze_audio(audio_path, expected_syllables=None):
+    """Main analysis using Parselmouth/Praat"""
+    
+    # Load sound
+    sound = parselmouth.Sound(audio_path)
+    duration = float(sound.duration)
+    
+    # Define common time grid (10ms steps)
+    time_step = 0.01
+    times = np.arange(0, duration, time_step)
+    
+    # Adaptive Pitch Analysis
+    # Standard gender-neutral ceiling is 500Hz (Praat recommendation)
+    # 600Hz reserved for child/high-pitch mode if explicitly requested
+    pitch_floor = 75
+    pitch_ceiling = 500 
+    
+    pitch = sound.to_pitch(time_step=time_step, pitch_floor=pitch_floor, pitch_ceiling=pitch_ceiling)
+    pitch_values = []
+    for t in times:
+        p = pitch.get_value_at_time(t)
+        pitch_values.append(None if np.isnan(p) or p == 0 else round(float(p), 1))
+    
+    # Extract intensity
+    # Use same minimum pitch as pitch analysis for consistency
+    intensity = sound.to_intensity(minimum_pitch=75, time_step=time_step)
+    intensity_values = []
+    for t in times:
+        val = intensity.get_value(t)
+        intensity_values.append(round(float(val), 2) if not np.isnan(val) else 0)
+    
+    # Detect syllables using the pitch and intensity objects (they handle their own grids internally)
+    syllables = detect_syllables(sound, pitch, intensity, expected_syllables)
+    
+    return {
+        'duration': round(duration, 3),
+        'sampleRate': int(sound.sampling_frequency),
+        'pitch': {
+            'times': [round(float(t), 3) for t in times],
+            'values': pitch_values
+        },
+        'intensity': {
+            'times': [round(float(t), 3) for t in times],
+            'values': intensity_values
+        },
+        'syllables': syllables
     }
 
-    async start() {
-        try {
-            // Resume AudioContext (required for iOS Safari)
-            if (this.audioContext.state === 'suspended') {
-                await this.audioContext.resume();
+def detect_syllables(sound, pitch, intensity, expected_syllables=None):
+    """Detect syllables using De Jong & Wempe (2009) method with dip detection."""
+    
+    int_times = np.array(intensity.xs())
+    int_values = np.array([intensity.get_value(t) for t in int_times])
+    int_values = np.nan_to_num(int_values, nan=0.0)
+    
+    # Filter only voiced parts for threshold calculation
+    voiced_intensities = int_values[int_values > 0]
+    
+    if len(voiced_intensities) == 0:
+        return []
+
+    # De Jong & Wempe (2009) Standard: Median - 2dB (configurable silence threshold)
+    median_intensity = np.median(voiced_intensities)
+    SILENCE_THRESHOLD_DB = 2.0 
+    
+    # Use median-based threshold
+    speech_threshold = median_intensity - SILENCE_THRESHOLD_DB
+    
+    # Sanity check: ensure threshold isn't unreasonably low (e.g. background noise level)
+    # If the recording is very quiet, median might be noise. 
+    # Enforce a minimum floor of max-25dB to avoid picking up silence as speech.
+    max_intensity = np.max(int_values)
+    min_safe_threshold = max_intensity - 25
+    speech_threshold = max(speech_threshold, min_safe_threshold)
+    
+    # Find speech region based on threshold
+    speech_indices = np.where(int_values > speech_threshold)[0]
+    if len(speech_indices) == 0:
+        return []
+    
+    speech_start_idx = max(0, speech_indices[0] - 2)
+    speech_end_idx = min(len(int_values) - 1, speech_indices[-1] + 2)
+    speech_start = float(int_times[speech_start_idx])
+    speech_end = float(int_times[speech_end_idx])
+    
+    # Find intensity peaks using Dip Detection
+    peaks = find_intensity_peaks(int_times, int_values, speech_threshold, speech_start_idx, speech_end_idx, pitch)
+    
+    # Adjust based on expected count
+    if expected_syllables:
+        peaks = adjust_peaks_to_expected(peaks, expected_syllables, int_times, int_values, speech_start, speech_end)
+    
+    # Convert to syllables
+    syllables = peaks_to_syllables(peaks, pitch, int_times, int_values, speech_start, speech_end, sound)
+    
+    return syllables
+
+def find_intensity_peaks(times, values, threshold, start_idx, end_idx, pitch_obj):
+    """Find intensity peaks that are preceded by a dip (De Jong & Wempe)."""
+    
+    # Parameters
+    MIN_DIP = 2.0  # dB drop required to start a new syllable
+    
+    candidates = []
+    # Find all local maxima > threshold using window of 2 on each side
+    for i in range(start_idx + 2, end_idx - 2):
+        val = values[i]
+        if val > threshold:
+             if (val >= values[i-1] and val >= values[i-2] and
+                 val >= values[i+1] and val >= values[i+2]):
+                 # Additional check: Voicing
+                 # Peak must be voiced to be a syllable nucleus
+                 t = times[i]
+                 p = pitch_obj.get_value_at_time(t)
+                 if not np.isnan(p) and p > 0:
+                     candidates.append((i, val, t))
+
+    if not candidates:
+        return []
+        
+    # Dip Detection Logic
+    # 1. Start with the highest intensity peak (global max) as a certain syllable
+    candidates.sort(key=lambda x: x[1], reverse=True)
+    valid_peaks = [candidates[0]]
+    
+    # 2. Iteratively add other peaks if they are separated by a dip
+    for cand in candidates[1:]:
+        cand_idx, cand_val, cand_time = cand
+        
+        # Check against all currently valid peaks
+        is_distinct = True
+        for valid in valid_peaks:
+            valid_idx, valid_val, valid_time = valid
+            
+            # Find the minimum intensity between candidate and this valid peak
+            # To determine if they are merged or distinct
+            start, end = sorted([cand_idx, valid_idx])
+            min_between = np.min(values[start:end+1])
+            
+            # We need a dip of at least MIN_DIP relative to the *smaller* of the two peaks
+            # If the dip is shallow, they belong to the same syllable
+            lower_peak_val = min(cand_val, valid_val)
+            dip_depth = lower_peak_val - min_between
+            
+            if dip_depth < MIN_DIP:
+                is_distinct = False
+                break
+        
+        if is_distinct:
+            valid_peaks.append(cand)
+            
+    # Convert back to dict format and sort by time
+    result = []
+    for p in valid_peaks:
+        result.append({
+            'index': p[0],
+            'time': float(p[2]),
+            'intensity': float(p[1])
+        })
+        
+    return sorted(result, key=lambda x: x['time'])
+
+def adjust_peaks_to_expected(peaks, expected, times, values, speech_start, speech_end):
+    """Adjust detected peaks to match expected syllable count."""
+    
+    if len(peaks) == expected:
+        return peaks
+    
+    if len(peaks) > expected:
+        # Keep strongest, well-distributed peaks
+        peaks_sorted = sorted(peaks, key=lambda p: p['intensity'], reverse=True)
+        selected = []
+        speech_duration = speech_end - speech_start
+        min_gap = speech_duration / (expected + 1) * 0.5
+        
+        for peak in peaks_sorted:
+            if len(selected) >= expected:
+                break
+            too_close = any(abs(peak['time'] - s['time']) < min_gap for s in selected)
+            if not too_close:
+                selected.append(peak)
+        
+        return sorted(selected, key=lambda p: p['time'])
+    
+    if len(peaks) < expected:
+        # Add evenly spaced points in gaps
+        while len(peaks) < expected:
+            all_times = [speech_start] + [p['time'] for p in peaks] + [speech_end]
+            all_times.sort()
+            
+            max_gap = 0
+            gap_start, gap_end = speech_start, speech_end
+            
+            for i in range(len(all_times) - 1):
+                gap = all_times[i + 1] - all_times[i]
+                if gap > max_gap:
+                    max_gap = gap
+                    gap_start = all_times[i]
+                    gap_end = all_times[i + 1]
+            
+            mid_time = (gap_start + gap_end) / 2
+            mid_idx = int(np.argmin(np.abs(times - mid_time)))
+            
+            peaks.append({
+                'index': mid_idx,
+                'time': float(times[mid_idx]),
+                'intensity': float(values[mid_idx])
+            })
+            peaks.sort(key=lambda p: p['time'])
+        
+        return peaks
+    
+    return peaks
+
+def measure_vowel_duration(sound, start_time, end_time, pitch_obj):
+    """
+    Measure duration of voiced (vowel) portion within a syllable.
+    """
+    voiced_duration = 0
+    time_step = 0.002  # 2ms resolution
+    
+    t = start_time
+    while t < end_time:
+        pitch_val = pitch_obj.get_value_at_time(t)
+        if not np.isnan(pitch_val) and pitch_val > 0:
+            voiced_duration += time_step
+        t += time_step
+        
+    return voiced_duration
+
+def peaks_to_syllables(peaks, pitch, int_times, int_values, speech_start, speech_end, sound):
+    """Convert peaks to syllable objects using intensity minima as boundaries."""
+    if not peaks:
+        return []
+        
+    syllables = []
+    
+    # 1. Find boundaries using intensity minima (dips) between peaks
+    # This is more accurate than midpoints for phonetic boundaries
+    boundaries = [speech_start]
+    for i in range(len(peaks) - 1):
+        start_idx = peaks[i]['index']
+        end_idx = peaks[i+1]['index']
+        
+        # Find the absolute minimum intensity between these two peaks
+        search_region = int_values[start_idx:end_idx+1]
+        min_idx_in_region = np.argmin(search_region)
+        min_idx = start_idx + min_idx_in_region
+        
+        boundaries.append(float(int_times[min_idx]))
+        
+    boundaries.append(speech_end)
+    
+    for i, peak in enumerate(peaks):
+        start_t = boundaries[i]
+        end_t = boundaries[i+1]
+        
+        # Extract features for this region
+        p_max = 0
+        t_indices = [j for j, t in enumerate(int_times) if start_t <= t <= end_t]
+        
+        if t_indices:
+             region_pitches = [pitch.get_value_at_time(int_times[j]) for j in t_indices]
+             valid_pitches = [p for p in region_pitches if not np.isnan(p) and p > 0]
+             if valid_pitches:
+                 p_max = max(valid_pitches)
+        
+        # NEW: Measure vowel (voiced) duration separately
+        vowel_dur = measure_vowel_duration(sound, start_t, end_t, pitch)
+        
+        syllables.append({
+            'syllable': i + 1,
+            'startTime': round(start_t, 3),
+            'endTime': round(end_t, 3),
+            'duration': round(end_t - start_t, 3),
+            'vowelDuration': round(vowel_dur, 3), # NEW
+            'maxPitch': round(float(p_max), 1),
+            'intensity': round(float(peak['intensity']), 1),
+            'isStressed': False # Placeholder
+        })
+        
+    # Determine stressed syllable
+    if syllables:
+        stressed_idx = determine_stressed_syllable(syllables)
+        for i, syl in enumerate(syllables):
+            syl['isStressed'] = (i == stressed_idx)
+            
+    return syllables
+
+def determine_stressed_syllable(syllables):
+    """
+    Determine stressed syllable using weighted acoustic cues.
+    Based on Fry (1955, 1958) hierarchy.
+    """
+    if not syllables:
+        return 0
+    
+    # Get max values for normalization
+    max_dur = max([s['duration'] for s in syllables]) or 1
+    max_pitch = max([s['maxPitch'] for s in syllables]) or 1
+    max_int = max([s['intensity'] for s in syllables]) or 1
+    
+    best_idx = 0
+    best_score = -1
+    
+    for i, s in enumerate(syllables):
+        # Updated Weights: Pitch (0.45), Duration (0.35), Intensity (0.20)
+        total_score = (p_score * 0.45) + (d_score * 0.35) + (i_score * 0.20)
+        
+        if total_score > best_score:
+            best_score = total_score
+            best_idx = i
+            
+    return best_idx
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 8080))
+    app.run(host='0.0.0.0', port=port, debug=False)
+
+==================================================
+FILE: c:\Cursor AI\pronunciation-analyzer\stress-visualizer.js
+==================================================
+import { STRESS_WEIGHTS, calculateStressScore } from './stress-utils.js';
+
+const ALIGNMENT_CONFIG = {
+    PITCH_THRESHOLD: 75,        // Minimum Hz to consider as "speech" (Praat Standard)
+    MIN_CONSECUTIVE_FRAMES: 3,  // Require consecutive frames to avoid noise
+    INTENSITY_THRESHOLD: 40     // Alternative: use intensity for onset detection
+};
+
+// Finds the index where speech actually begins based on pitch OR intensity
+function findSpeechOnsetIndex(pitchValues, intensityValues = [], config = ALIGNMENT_CONFIG) {
+    let contiguousFrames = 0;
+
+    // Check pitch first (primary indicator)
+    for (let i = 0; i < pitchValues.length; i++) {
+        // Check if pitch is valid number and above threshold
+        const hasPitch = typeof pitchValues[i] === 'number' &&
+            pitchValues[i] > config.PITCH_THRESHOLD;
+
+        // Optional: Check intensity if available
+        const hasIntensity = intensityValues.length > i &&
+            intensityValues[i] > config.INTENSITY_THRESHOLD;
+
+        if (hasPitch || (hasIntensity && i > 5)) { // Trust intensity more after start
+            contiguousFrames++;
+            if (contiguousFrames >= config.MIN_CONSECUTIVE_FRAMES) {
+                return Math.max(0, i - config.MIN_CONSECUTIVE_FRAMES);
             }
-
-            this.stream = await navigator.mediaDevices.getUserMedia({
-                audio: {
-                    echoCancellation: true,
-                    noiseSuppression: true,
-                    autoGainControl: true
-                }
-            });
-            this.mediaRecorder = new MediaRecorder(this.stream);
-            this.audioChunks = [];
-
-            this.mediaRecorder.ondataavailable = (event) => {
-                this.audioChunks.push(event.data);
-            };
-
-            this.mediaRecorder.start();
-            this.isRecording = true;
-            return true;
-        } catch (error) {
-            console.error("Error accessing microphone:", error);
-            if (error.name === 'NotAllowedError') {
-                throw new Error('Microphone permission denied. Please allow access.');
-            }
-            throw error;
-        }
-    }
-
-    stop() {
-        return new Promise((resolve) => {
-            if (!this.mediaRecorder) {
-                resolve(null);
-                return;
-            }
-
-            this.mediaRecorder.onstop = async () => {
-                const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
-                const arrayBuffer = await audioBlob.arrayBuffer();
-                const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
-
-                this.stream.getTracks().forEach(track => track.stop());
-                this.isRecording = false;
-
-                resolve(audioBuffer);
-            };
-
-            this.mediaRecorder.stop();
-        });
-    }
-
-    cancel() {
-        if (this.mediaRecorder && this.isRecording) {
-            this.mediaRecorder.stop();
-            this.stream.getTracks().forEach(track => track.stop());
-            this.isRecording = false;
-        }
-    }
-}
-
-
-================================================================================
-FILE: pronunciation-analyzer/pitch-analyzer.js
-================================================================================
-
-import { YIN } from "https://esm.sh/pitchfinder";
-
-export class PitchAnalyzer {
-    constructor(sampleRate = 44100) {
-        this.detectPitch = YIN({ sampleRate: sampleRate });
-        this.sampleRate = sampleRate;
-    }
-
-    /**
-     * Analyzes an audio buffer to extract pitch and energy over time.
-     * @param {AudioBuffer} audioBuffer 
-     * @returns {Object} { pitches: [], energies: [], times: [] }
-     */
-    analyze(audioBuffer) {
-        const float32Array = audioBuffer.getChannelData(0); // Mono
-        const bufferLength = float32Array.length;
-
-        // Configuration for "frames"
-        const windowSize = 2048; // ~46ms at 44.1kHz (Better for low-freq pitch detection)
-        const hopSize = 512;     // ~11ms overlap
-
-        const pitches = [];
-        const energies = [];
-        const times = [];
-
-        for (let i = 0; i < bufferLength - windowSize; i += hopSize) {
-            const chunk = float32Array.slice(i, i + windowSize);
-
-            // Calculate pitch
-            // pitchfinder returns null or a frequency
-            let pitch = this.detectPitch(chunk);
-
-            // Filter realistic human range (50Hz - 500Hz)
-            if (pitch && (pitch < 50 || pitch > 500)) {
-                pitch = null;
-            }
-
-            // Calculate energy (RMS)
-            let sum = 0;
-            for (let j = 0; j < chunk.length; j++) {
-                sum += chunk[j] * chunk[j];
-            }
-            const rms = Math.sqrt(sum / chunk.length);
-
-            pitches.push(pitch || null);
-            energies.push(rms);
-            times.push(i / this.sampleRate);
-        }
-
-        return { pitches, energies, times };
-    }
-}
-
-
-================================================================================
-FILE: pronunciation-analyzer/syllable-detector.js
-================================================================================
-
-export class SyllableDetector {
-    constructor(options = {}) {
-        this.minEnergyThreshold = options.minEnergyThreshold || 0.008;
-        this.minDuration = options.minDuration || 0.06;  // Reduced from 0.08
-        this.maxGap = options.maxGap || 0.06;            // Gap before splitting
-        this.valleyDropThreshold = options.valleyDropThreshold || 0.50; // Reduced from 0.65
-    }
-
-    /**
-     * Detects syllables from energy and pitch data.
-     * @param {Object} data { energies: [], pitches: [], times: [] }
-     * @returns {Array} List of syllables with start, end, maxPitch, avgEnergy, etc.
-     */
-    detect(data, expectedCount = null) {
-        const { energies, pitches, times } = data;
-
-        if (energies.length === 0) return [];
-
-        // Dynamic threshold based on audio content (top 20% average)
-        const sortedEnergies = [...energies].sort((a, b) => b - a);
-        const top20Percent = sortedEnergies.slice(0, Math.floor(sortedEnergies.length * 0.2));
-        const avgTop = top20Percent.reduce((a, b) => a + b, 0) / (top20Percent.length || 1);
-
-        // Threshold = 15% of average top energy (more sensitive)
-        const dynamicThreshold = Math.max(this.minEnergyThreshold, avgTop * 0.15);
-
-        let initialSegments = [];
-        let inSyllable = false;
-        let currentSyllable = null;
-        let gapTime = 0;
-
-        for (let i = 0; i < energies.length; i++) {
-            if (energies[i] > dynamicThreshold) {
-                if (!inSyllable) {
-                    inSyllable = true;
-                    currentSyllable = { startIndex: i, startTime: times[i], energies: [energies[i]], pitches: pitches[i] ? [pitches[i]] : [], totalFrames: 1 };
-                } else {
-                    currentSyllable.energies.push(energies[i]);
-                    if (pitches[i]) currentSyllable.pitches.push(pitches[i]);
-                    currentSyllable.totalFrames++;
-                }
-                gapTime = 0;
-            } else if (inSyllable) {
-                if (gapTime < this.maxGap) {
-                    gapTime += (times[i] - times[i - 1] || 0.01);
-                    currentSyllable.energies.push(energies[i]);
-                    if (pitches[i]) currentSyllable.pitches.push(pitches[i]);
-                    currentSyllable.totalFrames++;
-                } else {
-                    currentSyllable.endIndex = i - 1;
-                    currentSyllable.endTime = times[i - 1];
-                    initialSegments.push(currentSyllable);
-                    inSyllable = false;
-                    currentSyllable = null;
-                }
-            }
-        }
-        if (inSyllable) {
-            currentSyllable.endIndex = energies.length - 1;
-            currentSyllable.endTime = times[times.length - 1];
-            initialSegments.push(currentSyllable);
-        }
-
-        // Second pass: Valley detection splitting
-        const finalizedSyllables = [];
-        initialSegments.forEach(seg => {
-            const subSyllables = this._splitByValleys(seg, times, energies, pitches);
-            finalizedSyllables.push(...subSyllables);
-        });
-
-        const initialCount = finalizedSyllables.length;
-
-        // Filter by duration first
-        let result = finalizedSyllables.filter(s => (s.endTime - s.startTime) >= this.minDuration);
-
-        // Filter noise segments
-        result = this.filterNoiseSyllables(result, expectedCount);
-
-        return {
-            syllables: result,
-            noiseCount: initialCount - result.length
-        };
-    }
-
-    filterNoiseSyllables(syllables, expectedCount = null) {
-        // Step 1: Remove syllables with no/invalid pitch
-        let filtered = syllables.filter(s => {
-            // Must have valid pitch (human voice range: 70Hz - 400Hz)
-            if (s.avgPitch < 70 || s.avgPitch > 400) return false;
-            // Must have pitch detected in at least 40% of its frames
-            if (s.pitchConfidence < 0.4) return false;
-            return true;
-        });
-
-        // Step 2: Remove syllables with very low energy compared to max
-        if (filtered.length > 0) {
-            const maxEnergy = Math.max(...filtered.map(s => s.maxEnergy));
-            filtered = filtered.filter(s => s.maxEnergy >= maxEnergy * 0.25);
-        }
-
-        // Step 3: If still too many, keep the strongest ones (VAD pruning)
-        if (expectedCount && filtered.length > expectedCount) {
-            // Score each syllable: energy + pitch validity + duration
-            filtered.sort((a, b) => {
-                const scoreA = a.maxEnergy + (a.avgPitch > 0 ? 0.5 : 0) + a.duration;
-                const scoreB = b.maxEnergy + (b.avgPitch > 0 ? 0.5 : 0) + b.duration;
-                return scoreB - scoreA;
-            });
-            // Keep the top N scoring ones
-            filtered = filtered.slice(0, Math.max(expectedCount, 0));
-            // Re-sort by time chronologically
-            filtered.sort((a, b) => a.startTime - b.startTime);
-        }
-
-        return filtered;
-    }
-
-    _splitByValleys(seg, times, allEnergies, allPitches) {
-        const energies = allEnergies.slice(seg.startIndex, seg.endIndex + 1);
-        const splitIndices = [];
-
-        let localMax = energies[0];
-        let localMaxIdx = 0;
-
-        // A valley is defined as a point where energy drops significantly below previous peak
-        // and then rises again. Drop must be > 50% of the local peak (more sensitive).
-        const dropThreshold = this.valleyDropThreshold;
-
-        for (let i = 1; i < energies.length - 1; i++) {
-            if (energies[i] > localMax) {
-                localMax = energies[i];
-                localMaxIdx = i;
-            } else if (energies[i] < localMax * (1 - dropThreshold)) {
-                // Check if it's a local minimum (valley)
-                if (energies[i] < energies[i - 1] && energies[i] < energies[i + 1]) {
-                    // Potential split point
-                    // We only split if we have enough duration before this point
-                    const timeAtValley = times[seg.startIndex + i];
-                    const startTime = splitIndices.length === 0 ? seg.startTime : times[seg.startIndex + splitIndices[splitIndices.length - 1]];
-
-                    if (timeAtValley - startTime > this.minDuration) {
-                        splitIndices.push(i);
-                        localMax = energies[i + 1]; // Reset local peak
-                    }
-                }
-            }
-        }
-
-        if (splitIndices.length === 0) {
-            this._finalizeSyllable(seg, seg.endTime);
-            return [seg];
-        }
-
-        const result = [];
-        let lastIdx = 0;
-        [...splitIndices, energies.length].forEach(idx => {
-            const numFrames = idx - lastIdx;
-            const start = seg.startIndex + lastIdx;
-            const end = seg.startIndex + idx - 1;
-            if (start <= end) {
-                const sub = {
-                    startTime: times[start],
-                    endTime: times[end],
-                    energies: allEnergies.slice(start, end + 1),
-                    pitches: allPitches.slice(start, end + 1).filter(p => p !== null),
-                    totalFrames: numFrames
-                };
-                this._finalizeSyllable(sub, sub.endTime);
-                result.push(sub);
-            }
-            lastIdx = idx;
-        });
-
-        return result;
-    }
-
-    _finalizeSyllable(syllable, endTime) {
-        syllable.endTime = endTime;
-        syllable.duration = endTime - syllable.startTime;
-
-        // Calculate stats
-        syllable.avgEnergy = (syllable.energies.reduce((a, b) => a + b, 0) / syllable.energies.length) || 0;
-        syllable.maxEnergy = Math.max(...syllable.energies) || 0;
-
-        const totalFrames = syllable.totalFrames || syllable.energies.length || 1;
-        syllable.pitchConfidence = syllable.pitches.length / totalFrames;
-
-        if (syllable.pitches.length > 0) {
-            syllable.avgPitch = syllable.pitches.reduce((a, b) => a + b, 0) / syllable.pitches.length;
-            syllable.maxPitch = Math.max(...syllable.pitches);
         } else {
-            syllable.avgPitch = 0;
-            syllable.maxPitch = 0;
+            contiguousFrames = 0;
         }
-
-        // Cleanup raw arrays to save memory
-        delete syllable.energies;
-        delete syllable.pitches;
-        delete syllable.totalFrames;
     }
+
+    return 0; // Fallback to start
 }
 
+// Adjusts syllable start/end times based on alignment offset
+function adjustSyllableTimes(syllables, onsetTime) {
+    if (!syllables) return [];
+    return syllables.map(s => ({
+        ...s,
+        startTime: Math.max(0, s.startTime - onsetTime),
+        endTime: Math.max(0, s.endTime - onsetTime)
+    }));
+}
 
-================================================================================
-FILE: pronunciation-analyzer/stress-visualizer.js
-================================================================================
+// Aligns native and user analysis data based on speech onset
+function alignAnalysisData(nativeAnalysis, userAnalysis) {
+    // 1. Find onset indices
+    const nStartIdx = findSpeechOnsetIndex(nativeAnalysis.pitch.values, nativeAnalysis.intensity?.values);
+    const uStartIdx = findSpeechOnsetIndex(userAnalysis.pitch.values, userAnalysis.intensity?.values);
 
-export class StressVisualizer {
+    const nStartTime = nativeAnalysis.pitch.times[nStartIdx] || 0;
+    const uStartTime = userAnalysis.pitch.times[uStartIdx] || 0;
+
+    console.log(`Speech Onset Detected - Native: ${nStartTime.toFixed(3)}s, User: ${uStartTime.toFixed(3)}s`);
+
+    // 2. Create shift function
+    // We want to shift everything so speech starts at t=0 for BOTH
+    // But for the chart, we keep the Native timescale as "Reference" and shift User to match
+
+    // Actually, simpler approach: Normalize BOTH to start at 0.0s for comparison
+    const timeShift = uStartTime - nStartTime; // Difference to shift user
+
+    // Return aligned data structures (copies)
+    // We only need to shift the USER data to match Native's absolute time if we plot them together
+    // OR we shift both to 0. 
+
+    // Let's return new objects for plotting
+    return {
+        native: nativeAnalysis, // Keep native as is (or shift if needed)
+        user: {
+            ...userAnalysis,
+            alignmentOffset: timeShift, // Store for debug
+            pitch: {
+                // Shift times so user speech lines up with native speech
+                times: userAnalysis.pitch.times.map(t => t - timeShift),
+                values: userAnalysis.pitch.values
+            },
+            syllables: adjustSyllableTimes(userAnalysis.syllables, timeShift) // Simplified override
+        },
+        metadata: {
+            nativeOnset: nStartTime,
+            userOnset: uStartTime,
+            shiftApplied: timeShift
+        }
+    };
+}
+
+// Interpolates native data to match user's time points
+function prepareChartData(nativeTimes, nativeValues, targetTimes) {
+    // Linear interpolation
+    return targetTimes.map(t => {
+        // Find surrounding points
+        const idx = nativeTimes.findIndex(nt => nt >= t);
+        if (idx === -1) return null; // Past end
+        if (idx === 0) return nativeValues[0]; // Before start
+
+        const t1 = nativeTimes[idx - 1];
+        const t2 = nativeTimes[idx];
+        const v1 = nativeValues[idx - 1];
+        const v2 = nativeValues[idx];
+
+        if (typeof v1 !== 'number' || typeof v2 !== 'number') return null; // Gap
+
+        // Interpolate
+        const ratio = (t - t1) / (t2 - t1);
+        return v1 + (v2 - v1) * ratio;
+    });
+}
+
+class StressVisualizer {
     constructor(pitchCanvasId, stressCanvasId) {
         this.pitchCanvas = document.getElementById(pitchCanvasId);
         this.stressCanvas = document.getElementById(stressCanvasId);
         this.pitchChart = null;
         this.stressChart = null;
+        this.nativeAnalysis = null;
+        this.timelineContainer = document.getElementById('pa-timeline-container');
     }
 
     clear() {
@@ -406,68 +834,42 @@ export class StressVisualizer {
         const slicedPitches = pitches.slice(startIndex, endIndex + 1);
         const slicedEnergies = energies.slice(startIndex, endIndex + 1);
 
-        // Normalize energy
+        // Normalize energy to overlay on pitch scale
+        // Handle both RMS (0-1) and dB (40-90+) scales
         const maxPitch = Math.max(...slicedPitches.filter(p => p !== null)) || 200;
-        const normalizedEnergies = slicedEnergies.map(e => e * maxPitch * 2);
+        const maxEnergy = Math.max(...slicedEnergies) || 1;
 
-        // 2. Prepare background regions for syllables
-        // We'll use a Chart.js plugin to draw rectangles behind the chart
-        const syllableRegionsPlugin = {
-            id: 'syllableRegions',
-            beforeDraw: (chart) => {
-                if (syllables.length === 0) return;
-                const { ctx, chartArea: { top, bottom }, scales: { x } } = chart;
-
-                syllables.forEach((s, i) => {
-                    // Find closest index for start/end in the *sliced* arrays
-                    const sIdx = slicedTimes.findIndex(t => t >= s.startTime);
-                    const eIdx = slicedTimes.findIndex(t => t >= s.endTime);
-
-                    if (sIdx === -1) return;
-                    const finalSIdx = sIdx;
-                    const finalEIdx = eIdx === -1 ? slicedTimes.length - 1 : eIdx;
-
-                    const xStart = x.getPixelForValue(slicedTimes[finalSIdx].toFixed(2));
-                    const width = x.getPixelForValue(slicedTimes[finalEIdx].toFixed(2)) - xStart;
-
-                    ctx.fillStyle = i % 2 === 0 ? 'rgba(0, 0, 0, 0.05)' : 'rgba(0, 0, 0, 0.00)';
-                    ctx.fillRect(xStart, top, width, bottom - top);
-
-                    // Draw Label
-                    ctx.fillStyle = "#666";
-                    ctx.font = "10px sans-serif";
-                    ctx.fillText(`Syl ${i + 1}`, xStart + 2, top + 10);
-                });
-            }
-        };
+        // Determine if we are using dB scale (Praat) or RMS (0-1)
+        const isDbScale = maxEnergy > 10;
 
         this.pitchChart = new Chart(this.pitchCanvas, {
-            type: 'line',
+            type: 'scatter',
             data: {
-                labels: slicedTimes.map(t => t.toFixed(2)),
                 datasets: [
                     {
                         label: 'Pitch (Hz)',
-                        data: slicedPitches,
+                        data: slicedTimes.map((t, i) => ({ x: t, y: slicedPitches[i] })),
                         borderColor: 'rgb(54, 162, 235)',
                         yAxisID: 'y',
                         spanGaps: true,
                         tension: 0.4,
-                        pointRadius: 0
+                        pointRadius: 0,
+                        showLine: true
                     },
                     {
-                        label: 'Intensity',
-                        data: normalizedEnergies,
+                        label: isDbScale ? 'Intensity (dB)' : 'Energy (RMS)',
+                        data: slicedTimes.map((t, i) => ({ x: t, y: slicedEnergies[i] })),
                         backgroundColor: 'rgba(255, 99, 132, 0.2)',
                         borderColor: 'rgba(255, 99, 132, 0.5)',
                         fill: true,
-                        yAxisID: 'y',
+                        yAxisID: 'y1', // Use secondary axis
                         pointRadius: 0,
-                        borderWidth: 1
+                        borderWidth: 1,
+                        showLine: true
                     }
                 ]
             },
-            plugins: [syllableRegionsPlugin],
+            plugins: [],
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
@@ -476,7 +878,7 @@ export class StressVisualizer {
                     intersect: false,
                 },
                 plugins: {
-                    title: { display: true, text: 'Pitch & Intensity (Trimmed)' },
+                    title: { display: true, text: 'Pitch & Intensity' },
                     tooltip: { enabled: true }
                 },
                 scales: {
@@ -485,41 +887,75 @@ export class StressVisualizer {
                         ticks: { maxTicksLimit: 8 }
                     },
                     y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
                         beginAtZero: true,
-                        suggestedMax: 400,
-                        title: { display: true, text: 'Hz' }
+                        suggestedMax: 350,
+                        title: { display: true, text: 'Pitch (Hz)' }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        min: isDbScale ? 40 : 0,  // dB typically 40-100, RMS 0-1
+                        max: isDbScale ? 100 : 1,
+                        grid: {
+                            drawOnChartArea: false, // only want the grid lines for one axis to show up
+                        },
+                        title: { display: true, text: isDbScale ? 'Intensity (dB)' : 'Energy' }
                     }
                 }
             }
         });
     }
 
-    drawSyllableStress(syllables) {
+    /**
+     * Draw duration comparison chart (horizontal bars)
+     * Matches the reference image style: Native (Green border), User (Blue solid)
+     */
+    drawDurationChart(nativeSyllables, userSyllables) {
         if (this.stressChart) {
             this.stressChart.destroy();
             this.stressChart = null;
         }
 
-        if (syllables.length === 0) return;
+        const maxSyls = Math.max(nativeSyllables?.length || 0, userSyllables?.length || 0);
+        if (maxSyls === 0) return;
 
-        const labels = syllables.map((_, i) => `Syl ${i + 1}`);
+        const labels = Array.from({ length: maxSyls }, (_, i) => `Syl ${i + 1}`);
 
-        // Find maxes for normalization
-        const maxP = Math.max(...syllables.map(s => s.maxPitch)) || 1;
-        const maxD = Math.max(...syllables.map(s => s.duration)) || 1;
-        const maxE = Math.max(...syllables.map(s => s.maxEnergy)) || 1;
+        // Data processing - extract durations
+        const nativeData = nativeSyllables?.map(s => s.duration) || [];
+        const userData = userSyllables?.map(s => s.duration) || [];
 
-        // Determine stressed syllable (simple heuristic or use one passed in?)
-        let stressedIndex = 0;
-        let maxScore = -1;
-        syllables.forEach((s, i) => {
-            const score = (s.maxPitch / maxP) + (s.duration / maxD) + (s.maxEnergy / maxE);
-            if (score > maxScore) { maxScore = score; stressedIndex = i; }
-        });
+        // Plugin to draw value labels at the end of bars
+        const durationValuePlugin = {
+            id: 'durationValues',
+            afterDatasetsDraw: (chart) => {
+                const { ctx } = chart;
+                chart.data.datasets.forEach((dataset, i) => {
+                    const meta = chart.getDatasetMeta(i);
+                    ctx.save();
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'middle';
+                    ctx.font = 'bold 11px sans-serif';
+                    ctx.fillStyle = dataset.borderColor || '#374151';
 
-        const dataPitch = syllables.map(s => (s.maxPitch / maxP) * 100);
-        const dataDuration = syllables.map(s => (s.duration / maxD) * 100);
-        const dataEnergy = syllables.map(s => (s.maxEnergy / maxE) * 100);
+                    meta.data.forEach((bar, index) => {
+                        const value = dataset.data[index];
+                        if (value === undefined || value === null) return;
+
+                        // Reference image shows labels next to bars
+                        // Use bar.x (end of horizontal bar) + margin
+                        const x = bar.x + 5;
+                        const y = bar.y;
+                        ctx.fillText(`${value.toFixed(2)}s`, x, y);
+                    });
+                    ctx.restore();
+                });
+            }
+        };
 
         this.stressChart = new Chart(this.stressCanvas, {
             type: 'bar',
@@ -527,92 +963,1075 @@ export class StressVisualizer {
                 labels: labels,
                 datasets: [
                     {
-                        label: 'Pitch',
-                        data: dataPitch,
-                        backgroundColor: (ctx) => ctx.dataIndex === stressedIndex ? 'rgba(54, 162, 235, 1)' : 'rgba(54, 162, 235, 0.6)',
+                        label: 'Native Reference',
+                        data: nativeData,
+                        backgroundColor: 'rgba(34, 197, 94, 0.8)', // Solid green
+                        borderColor: 'rgb(34, 197, 94)',
+                        borderWidth: 2,
+                        borderRadius: 2,
+                        barPercentage: 0.4,
+                        categoryPercentage: 0.8
                     },
                     {
-                        label: 'Duration',
-                        data: dataDuration,
-                        backgroundColor: (ctx) => ctx.dataIndex === stressedIndex ? 'rgba(255, 206, 86, 1)' : 'rgba(255, 206, 86, 0.6)',
-                    },
-                    {
-                        label: 'Intensity',
-                        data: dataEnergy,
-                        backgroundColor: (ctx) => ctx.dataIndex === stressedIndex ? 'rgba(255, 99, 132, 1)' : 'rgba(255, 99, 132, 0.6)',
+                        label: 'Your Duration',
+                        data: userData,
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)', // Solid blue
+                        borderColor: 'rgb(59, 130, 246)',
+                        borderWidth: 1,
+                        borderRadius: 2,
+                        barPercentage: 0.4,
+                        categoryPercentage: 0.8
                     }
                 ]
             },
+            plugins: [durationValuePlugin],
             options: {
+                indexAxis: 'y', // Makes it horizontal
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    title: { display: true, text: 'Syllable Stress (Stressed = Darker)' },
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: { boxWidth: 12, font: { size: 11 } }
+                    },
                     tooltip: {
+                        enabled: true,
                         callbacks: {
-                            label: (context) => {
-                                const idx = context.dataIndex;
-                                const s = syllables[idx];
-                                if (context.dataset.label === 'Pitch') return `Pitch: ${Math.round(s.maxPitch)} Hz`;
-                                if (context.dataset.label === 'Duration') return `Duration: ${s.duration.toFixed(2)}s`;
-                                if (context.dataset.label === 'Intensity') return `Intensity: ${(s.maxEnergy * 100).toFixed(0)}`;
-                                return '';
-                            }
+                            label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.x.toFixed(2)}s`
                         }
                     }
                 },
                 scales: {
-                    y: {
+                    x: {
                         beginAtZero: true,
-                        max: 100,
-                        title: { display: true, text: 'Relative %' }
-                    }
-                },
-                animation: {
-                    onComplete: function (animation) {
-                        const chart = animation.chart;
-                        const ctx = chart.ctx;
-                        ctx.save();
-                        ctx.textAlign = 'center';
-                        ctx.fillStyle = '#666';
-                        ctx.font = '10px sans-serif';
-
-                        chart.data.datasets.forEach((dataset, i) => {
-                            const meta = chart.getDatasetMeta(i);
-                            meta.data.forEach((bar, index) => {
-                                const s = syllables[index];
-                                if (!s) return;
-                                let text = '';
-                                if (i === 0) text = `${Math.round(s.maxPitch)}Hz`;
-                                if (i === 1) text = `${s.duration.toFixed(2)}s`;
-
-                                if (text) ctx.fillText(text, bar.x, bar.y - 5);
-                            });
-                        });
-                        ctx.restore();
+                        title: { display: true, text: 'Duration (seconds)', font: { weight: 'bold' } },
+                        // Add some padding for the labels
+                        suggestedMax: Math.max(...nativeData, ...userData, 0.1) * 1.2
+                    },
+                    y: {
+                        ticks: { font: { weight: 'bold' } }
                     }
                 }
             }
         });
     }
+
+    /**
+     * Normalize analysis data to start from time 0.0
+     * Shifts all times so that the first syllable starts at 0
+     */
+    normalizeToZero(analysis) {
+        if (!analysis || !analysis.syllables || analysis.syllables.length === 0) {
+            return analysis;
+        }
+
+        // Find the start time of the first syllable
+        const speechStartTime = analysis.syllables[0].startTime;
+
+        if (speechStartTime === 0) {
+            return analysis; // Already normalized
+        }
+
+        console.log(`Normalizing: shifting time by -${speechStartTime.toFixed(3)}s`);
+
+        // Create a new normalized copy
+        const normalized = {
+            ...analysis,
+            duration: analysis.duration,
+
+            // Shift pitch times
+            pitch: {
+                times: analysis.pitch.times.map(t => t - speechStartTime),
+                values: [...analysis.pitch.values]
+            },
+
+            // Shift intensity times
+            intensity: {
+                times: (analysis.intensity?.times || []).map(t => t - speechStartTime),
+                values: [...(analysis.intensity?.values || [])]
+            },
+
+            // Shift syllable times
+            syllables: analysis.syllables.map(syl => ({
+                ...syl,
+                startTime: Math.max(0, syl.startTime - speechStartTime),
+                endTime: syl.endTime - speechStartTime
+            }))
+        };
+
+        return normalized;
+    }
+
+    /**
+     * Trim data to only include the speech region (removes silence before/after)
+     */
+    trimToSpeechRegion(analysis, padding = 0.02) {
+        if (!analysis || !analysis.syllables || analysis.syllables.length === 0) {
+            return analysis;
+        }
+
+        const firstSylStart = analysis.syllables[0].startTime;
+        const lastSylEnd = analysis.syllables[analysis.syllables.length - 1].endTime;
+
+        const trimStart = Math.max(0, firstSylStart - padding);
+        const trimEnd = lastSylEnd + padding;
+
+        // Find indices for trimming
+        const startIdx = analysis.pitch.times.findIndex(t => t >= trimStart);
+        let endIdx = analysis.pitch.times.findIndex(t => t > trimEnd);
+
+        const actualEndIdx = endIdx === -1 ? analysis.pitch.times.length : endIdx;
+
+        // Also trim intensity if possible (assuming similar sampling)
+        const intensityValues = analysis.intensity?.values || [];
+        const intensityTimes = analysis.intensity?.times || [];
+
+        let iStartIdx = startIdx;
+        let iEndIdx = actualEndIdx;
+
+        if (intensityTimes.length > 0) {
+            iStartIdx = intensityTimes.findIndex(t => t >= trimStart);
+            let iEnd = intensityTimes.findIndex(t => t > trimEnd);
+            iEndIdx = iEnd === -1 ? intensityTimes.length : iEnd;
+        }
+
+        return {
+            ...analysis,
+            pitch: {
+                times: analysis.pitch.times.slice(startIdx, actualEndIdx),
+                values: analysis.pitch.values.slice(startIdx, actualEndIdx)
+            },
+            intensity: {
+                times: intensityTimes.slice(iStartIdx, iEndIdx),
+                values: intensityValues.slice(iStartIdx, iEndIdx)
+            },
+            syllables: analysis.syllables // Keep syllables as-is (they define the region)
+        };
+    }
+
+    /**
+     * Draw native pitch contour only (before user records)
+     * Also normalized to start at 0
+     */
+    drawNativePitchContour(nativeAnalysis, syllables = []) {
+        if (!nativeAnalysis || !nativeAnalysis.pitch) {
+            console.log('No native analysis data for pitch contour');
+            return;
+        }
+
+        this.nativeAnalysis = nativeAnalysis;
+
+        if (this.pitchChart) {
+            this.pitchChart.destroy();
+        }
+
+        // Trim and normalize native data
+        let normalized = this.trimToSpeechRegion(nativeAnalysis);
+        normalized = this.normalizeToZero(normalized);
+
+        const times = normalized.pitch.times;
+        const pitches = normalized.pitch.values;
+        const intensities = normalized.intensity?.values || [];
+        const normalizedSyllables = normalized.syllables;
+
+        // Normalize intensity for display
+        const maxPitch = Math.max(...pitches.filter(p => typeof p === 'number')) || 200;
+        const maxIntensity = Math.max(...intensities) || 1;
+        const normalizedIntensities = intensities.map(i =>
+            (typeof i === 'number' && maxIntensity > 0) ? (i / maxIntensity) * maxPitch * 0.5 : 0
+        );
+
+        const maxTime = times[times.length - 1] || 1;
+        const chartMaxTime = Math.ceil(maxTime * 10) / 10 + 0.05;
+
+        this.pitchChart = new Chart(this.pitchCanvas, {
+            type: 'scatter',
+            data: {
+                datasets: [
+                    {
+                        label: 'Native Pitch (Hz)',
+                        data: times.map((t, i) => ({ x: t, y: pitches[i] })),
+                        borderColor: 'rgb(34, 197, 94)',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        borderWidth: 2.5,
+                        tension: 0.3,
+                        pointRadius: 0,
+                        pointHoverRadius: 4,
+                        spanGaps: true,
+                        showLine: true
+                    },
+                    {
+                        label: 'Native Volume',
+                        data: (normalized.intensity?.times || []).map((t, i) => ({
+                            x: t,
+                            y: normalizedIntensities[i]
+                        })),
+                        borderColor: 'rgba(34, 197, 94, 0.4)',
+                        backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                        fill: true,
+                        borderWidth: 1,
+                        tension: 0.1, // Low tension for intensity
+                        pointRadius: 0,
+                        showLine: true
+                    }
+                ]
+            },
+            plugins: [],
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '🎯 Native Speaker - Pitch & Volume',
+                        font: { size: 13 }
+                    },
+                    legend: {
+                        position: 'top',
+                        labels: { boxWidth: 12, padding: 8 }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => {
+                                const label = ctx.dataset.label || '';
+                                const value = ctx.parsed.y;
+                                if (value === null) return `${label}: -`;
+                                return `${label}: ${Math.round(value)} Hz`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom',
+                        title: { display: true, text: 'Time (s)' },
+                        min: 0,
+                        max: chartMaxTime,
+                        ticks: {
+                            stepSize: 0.1,
+                            callback: (value) => value.toFixed(1)
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        min: 0,
+                        suggestedMax: 350,
+                        title: { display: true, text: 'Pitch (Hz)' }
+                    }
+                }
+            }
+        });
+
+        // Draw duration reference
+        this.drawDurationChart(normalizedSyllables, []);
+    }
+
+    /**
+     * Draw comparison pitch contour with both native and user normalized to start at 0
+     * Replaces previous alignAnalysisData logic with normalizeToZero + scatter chart
+     */
+    drawComparisonPitchContour(userAnalysis, nativeAnalysis = null) {
+        const native = nativeAnalysis || this.nativeAnalysis;
+
+        if (this.pitchChart) {
+            this.pitchChart.destroy();
+        }
+
+        const datasets = [];
+        let maxTime = 0;
+        let maxIntensity = 1;
+
+        // ========================================
+        // NORMALIZE NATIVE DATA
+        // ========================================
+        let normalizedNative = null;
+        if (native && native.pitch && native.syllables?.length > 0) {
+            // Trim to speech region, then normalize to start at 0
+            normalizedNative = this.trimToSpeechRegion(native);
+            normalizedNative = this.normalizeToZero(normalizedNative);
+
+            const nativeTimes = normalizedNative.pitch.times;
+            const nativePitches = normalizedNative.pitch.values;
+
+            maxTime = Math.max(maxTime, nativeTimes[nativeTimes.length - 1] || 0);
+
+            datasets.push({
+                label: 'Native Pitch (reference)',
+                data: nativeTimes.map((t, i) => ({
+                    x: parseFloat(t.toFixed(2)),
+                    y: nativePitches[i]
+                })),
+                borderColor: 'rgba(34, 197, 94, 0.7)',
+                backgroundColor: 'rgba(34, 197, 94, 0.05)',
+                borderWidth: 2.5,
+                borderDash: [6, 4],
+                tension: 0.3,
+                pointRadius: 0, // Hidden by default
+                pointHoverRadius: 4,
+                pointStyle: 'rectRot',
+                spanGaps: true,
+                xAxisID: 'x',
+                yAxisID: 'y',
+                parsing: { xAxisKey: 'x', yAxisKey: 'y' },
+                showLine: true
+            });
+        }
+
+        // ========================================
+        // NORMALIZE USER DATA
+        // ========================================
+        let normalizedUser = null;
+        let userSyllables = [];
+
+        if (userAnalysis && userAnalysis.pitch && userAnalysis.syllables?.length > 0) {
+            // Trim to speech region, then normalize to start at 0
+            normalizedUser = this.trimToSpeechRegion(userAnalysis);
+            normalizedUser = this.normalizeToZero(normalizedUser);
+
+            userSyllables = normalizedUser.syllables;
+
+            const userTimes = normalizedUser.pitch.times;
+            const userPitches = normalizedUser.pitch.values;
+            const userIntensities = normalizedUser.intensity?.values || [];
+
+            maxTime = Math.max(maxTime, userTimes[userTimes.length - 1] || 0);
+
+            // Normalize intensity for display (Handle dB vs RMS)
+            const maxPitch = Math.max(...userPitches.filter(p => typeof p === 'number')) || 200;
+            maxIntensity = Math.max(...userIntensities) || 1;
+            const isDbScale = maxIntensity > 10; // Unified heuristic: dB values usually > 30-40, RMS < 1
+
+            const normalizedIntensities = userIntensities.map(i => {
+                if (typeof i !== 'number') return 0;
+                return i; // Pass through raw since we have a dedicated axis now
+            });
+
+            datasets.push({
+                label: 'Your Pitch (Hz)',
+                data: userTimes.map((t, i) => ({
+                    x: parseFloat(t.toFixed(2)),
+                    y: userPitches[i]
+                })),
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                borderWidth: 2.5,
+                tension: 0.3,
+                pointRadius: 0, // Hidden by default
+                pointHoverRadius: 5,
+                pointStyle: 'circle',
+                spanGaps: true,
+                xAxisID: 'x',
+                yAxisID: 'y',
+                parsing: { xAxisKey: 'x', yAxisKey: 'y' }
+            });
+
+            const userIntTimes = normalizedUser.intensity?.times || [];
+
+            datasets.push({
+                label: 'Your Volume',
+                data: userIntTimes.map((t, i) => ({
+                    x: parseFloat(t.toFixed(2)),
+                    y: normalizedIntensities[i]
+                })),
+                borderColor: 'rgba(244, 114, 182, 0.3)',
+                backgroundColor: 'rgba(244, 114, 182, 0.15)',
+                fill: true,
+                borderWidth: 1,
+                tension: 0.1, // Reduced tension
+                pointRadius: 0,
+                xAxisID: 'x',
+                yAxisID: 'y1',
+                parsing: { xAxisKey: 'x', yAxisKey: 'y' },
+                showLine: true
+            });
+        }
+
+
+        // ========================================
+        // CREATE CHART
+        // ========================================
+
+        this.pitchChart = new Chart(this.pitchCanvas, {
+            type: 'scatter',  // Correct type, declared once
+            data: { datasets },
+            plugins: [], // Plugin removed
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                showLine: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '📊 Your Recording vs Native (dashed green)',
+                        font: { size: 13 }
+                    },
+                    legend: {
+                        position: 'top',
+                        labels: { boxWidth: 15, padding: 10, font: { size: 11 } }
+                    },
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: (ctx) => {
+                                const label = ctx.dataset.label || '';
+                                const value = ctx.parsed.y;
+                                if (value === null) return `${label}: -`;
+                                if (ctx.dataset.yAxisID === 'y1') {
+                                    return `${label}: ${value.toFixed(1)}`;
+                                }
+                                return `${label}: ${Math.round(value)} Hz`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom',
+                        title: { display: true, text: 'Time (s)' },
+                        min: 0,
+                        max: Math.ceil(maxTime * 10) / 10 + 0.05,
+                        ticks: {
+                            stepSize: 0.1,
+                            callback: (value) => value.toFixed(1)
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Pitch (Hz)' },
+                        suggestedMax: 350,
+                        position: 'left'
+                    },
+                    y1: {
+                        beginAtZero: true,
+                        min: 0,
+                        title: { display: true, text: 'Volume' },
+                        position: 'right',
+                        grid: {
+                            drawOnChartArea: false // Prevent grid line overlap
+                        },
+                        suggestedMax: maxIntensity > 1 ? maxIntensity * 1.2 : 100
+                    }
+                }
+            }
+        });
+
+
+        // Generate detailed feedback
+        const feedbackNativePattern = (native && native.pitch_pattern) ? native.pitch_pattern : (native && native.syllables ? native.syllables : []);
+        const feedbackNativeSyllables = normalizedNative ? normalizedNative.syllables : [];
+        this.generateFeedback(feedbackNativePattern, userSyllables, feedbackNativeSyllables);
+
+        // Draw duration comparison chart
+        this.drawDurationChart(normalizedNative?.syllables || [], userSyllables);
+    }
+
+
+    /**
+     * Show/Hide feedback section
+     */
+    toggleFeedbackSection(show) {
+        const section = document.getElementById('pa-feedback-section');
+        if (section) section.style.display = show ? 'block' : 'none';
+        if (!show) {
+            const content = document.getElementById('pa-feedback-content');
+            if (content) content.innerHTML = '';
+            const tabs = document.getElementById('pa-syllable-tabs');
+            if (tabs) tabs.innerHTML = '';
+        }
+    }
+
+    /**
+     * Generate detailed feedback per syllable
+     */
+    generateFeedback(nativePattern, userSyllables, nativeSyllablesAligned = null) {
+        this.toggleFeedbackSection(true);
+
+        const container = document.getElementById('pa-feedback-content');
+        const tabContainer = document.getElementById('pa-syllable-tabs');
+        if (!container || !tabContainer) return;
+
+        // Clear previous
+        container.innerHTML = '';
+        tabContainer.innerHTML = '';
+
+        // Calculate relative values for scaling comparison (0-100)
+        const userMaxPitch = Math.max(...userSyllables.map(s => s.maxPitch || 0)) || 1;
+        const userMaxDur = Math.max(...userSyllables.map(s => s.vowelDuration || s.duration || 0)) || 1;
+        const userMaxInt = Math.max(...userSyllables.map(s => s.intensity || s.maxEnergy || 0)) || 1;
+
+        const nativeMaxPitch = Math.max(...nativePattern.map(s => s.maxPitch || s.pitch || 0)) || 1;
+        const nativeMaxDur = Math.max(...nativePattern.map(s => s.duration || s.vowelDuration || 0)) || 1;
+        const nativeMaxInt = Math.max(...nativePattern.map(s => s.intensity || 0)) || 1;
+
+        // Generate Tabs
+        nativePattern.forEach((_, i) => {
+            const tab = document.createElement('div');
+            tab.className = `pa-syl-tab ${i === 0 ? 'active' : ''}`;
+            tab.textContent = `Syllable ${i + 1}`;
+            tab.onclick = () => this.switchFeedbackTab(i);
+            tabContainer.appendChild(tab);
+        });
+
+        // Generate Feedback Cards (hidden by default except first)
+        nativePattern.forEach((nativeSyl, i) => {
+            const userSyl = userSyllables[i];
+            if (!userSyl) return;
+
+            const card = document.createElement('div');
+            card.className = 'pa-feedback-card';
+            card.id = `pa-feedback-syl-${i}`;
+            card.style.display = i === 0 ? 'block' : 'none';
+
+            const isStressed = nativeSyl.isStressed;
+            const stressLabel = isStressed ? `<span class="pa-highlight-syl">Primary Stress</span>` : "Unstressed";
+
+            // --- 1. Pitch Pattern ---
+            const uPitchRel = (userSyl.maxPitch / userMaxPitch) * 100;
+            const nPitchRel = nativeSyl.relativePitch || ((nativeSyl.maxPitch || nativeSyl.pitch || 0) / nativeMaxPitch) * 100;
+            const pitchMsgStat = `(You: ${Math.round(uPitchRel)}%, Target: ${Math.round(nPitchRel)}%)`;
+
+            let pitchMsg = `Good pitch matching! ${pitchMsgStat}`;
+            let pitchClass = "good";
+
+            if (uPitchRel > nPitchRel + 20) {
+                pitchMsg = `Pitch too high relative to the rest of the word. ${pitchMsgStat} Try lowering your voice for this syllable.`;
+                pitchClass = "warn";
+            } else if (uPitchRel < nPitchRel - 20) {
+                pitchMsg = `Pitch too low. ${pitchMsgStat} Try raising your pitch to match the intonation.`;
+                pitchClass = "warn";
+            }
+
+            // --- 2. Duration (Timing) ---
+            const uDurVal = userSyl.vowelDuration || userSyl.duration || 0;
+            const nDurVal = nativeSyl.vowelDuration || nativeSyl.duration || 0;
+
+            const uDurRel = (uDurVal / userMaxDur) * 100;
+            const nDurRel = nativeSyl.relativeDuration || (nDurVal / (nativeMaxDur || 1)) * 100;
+            const durMsgStat = `(You: ${uDurVal.toFixed(2)}s, Target: ${nDurVal.toFixed(2)}s)`;
+
+            let durMsg = `Timing matches well. ${durMsgStat}`;
+            let durClass = "good";
+
+            if (uDurRel > nDurRel + 20) {
+                durMsg = `Too long. ${durMsgStat} Try to shorten the vowel sound here.`;
+                durClass = "warn";
+            } else if (uDurRel < nDurRel - 20) {
+                durMsg = `Too fast. ${durMsgStat} Don't rush - give the vowel more time.`;
+                durClass = "warn";
+            }
+
+            // --- 3. Volume (Intensity) ---
+            const uIntVal = userSyl.intensity || userSyl.maxEnergy || 0;
+            const nIntVal = nativeSyl.intensity || 0;
+
+            const uIntRel = (uIntVal / userMaxInt) * 100;
+            const nIntRel = nativeSyl.relativeIntensity || (nIntVal / (nativeMaxInt || 1)) * 100;
+            const intMsgStat = `(You: ${Math.round(uIntRel)}%, Target: ${Math.round(nIntRel)}%)`;
+
+            let intMsg = `Volume is balanced. ${intMsgStat}`;
+            let intClass = "good";
+
+            if (uIntRel > nIntRel + 25) {
+                intMsg = `Too loud relative to other syllables. ${intMsgStat}`;
+                intClass = "warn";
+            } else if (uIntRel < nIntRel - 25) {
+                intMsg = `Too quiet. ${intMsgStat} This syllable needs more breath/energy.`;
+                intClass = "warn";
+            }
+
+            card.innerHTML = `
+                <div class="pa-feedback-row">
+                    <div class="pa-feedback-icon">🎵</div>
+                    <div class="pa-feedback-detail">
+                        <span class="pa-feedback-title">Pitch Analysis (${stressLabel})</span>
+                        <p class="pa-feedback-text ${pitchClass}">${pitchMsg}</p>
+                        <p class="pa-pitch-info">
+                            <i class="pa-info-icon">ℹ️</i> 
+                            Match % evaluates your <strong>intonation pattern</strong> (melody), not raw Hz frequency.
+                        </p>
+                    </div>
+                </div>
+                <div class="pa-feedback-row">
+                    <div class="pa-feedback-icon">⏱️</div>
+                    <div class="pa-feedback-detail">
+                        <span class="pa-feedback-title">Duration (Timing)</span>
+                        <p class="pa-feedback-text ${durClass}">${durMsg}</p>
+                    </div>
+                </div>
+                <div class="pa-feedback-row">
+                    <div class="pa-feedback-icon">🔊</div>
+                    <div class="pa-feedback-detail">
+                        <span class="pa-feedback-title">Volume</span>
+                        <p class="pa-feedback-text ${intClass}">${intMsg}</p>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(card);
+        });
+    }
+
+    /**
+     * Switch visible feedback tab
+     */
+    switchFeedbackTab(index) {
+        // Update Tabs
+        const tabs = document.querySelectorAll('.pa-syl-tab');
+        tabs.forEach((t, i) => {
+            if (i === index) t.classList.add('active');
+            else t.classList.remove('active');
+        });
+
+        // Update Content
+        const cards = document.querySelectorAll('.pa-feedback-card');
+        cards.forEach((c, i) => {
+            c.style.display = i === index ? 'block' : 'none';
+        });
+    }
+}
+
+export { StressVisualizer };
+
+
+==================================================
+FILE: c:\Cursor AI\pronunciation-analyzer\word-reference-service.js
+==================================================
+/**
+ * Word Reference Service
+ * Main orchestrator: Check DB → Call backend for MW data → Save to DB → Return
+ */
+
+import { config } from './config.js';
+import { DatabaseService } from './database-service.js';
+import { STRESS_WEIGHTS, calculateStressScore } from './stress-utils.js';
+
+// Cache version - increment when backend algorithm changes
+// v2: Fixed stress detection for IPA strings (2026-01-12)
+const CACHE_VERSION = 2;
+
+export class WordReferenceService {
+    constructor() {
+        this.db = new DatabaseService();
+        this.backendUrl = config.backendUrl;
+
+        // Session cache (in-memory)
+        this.sessionCache = new Map();
+    }
+
+    /**
+     * Get complete word reference data with native audio analysis
+     * Flow: Session Cache → Firestore → Backend (MW + Praat) → Save → Return
+     */
+    async getWordReference(word) {
+        const normalizedWord = word.toLowerCase().trim();
+
+        if (!normalizedWord) {
+            throw new Error('Please enter a word');
+        }
+
+        // 1. Check session cache (fastest)
+        if (config.sessionCacheEnabled && this.sessionCache.has(normalizedWord)) {
+            console.log('🚀 Session cache hit:', normalizedWord);
+            return {
+                ...this.sessionCache.get(normalizedWord),
+                fromCache: true,
+                cacheSource: 'session'
+            };
+        }
+
+        // 2. Check Firestore database
+        if (config.features.saveToDatabase && this.db.isAvailable()) {
+            const dbData = await this.db.getWord(normalizedWord);
+
+            if (dbData) {
+                console.log('=== DATABASE DATA ===');
+                console.log('Word:', dbData.word);
+                console.log('Cache version:', dbData.cacheVersion || 'none');
+                console.log('Has nativeAnalysis:', !!dbData.nativeAnalysis);
+                console.log('nativeAnalysis.pitch:', dbData.nativeAnalysis?.pitch?.values?.length || 'none');
+                console.log('nativeAnalysis.syllables:', dbData.nativeAnalysis?.syllables?.length || 'none');
+
+                // Check cache version - if outdated, re-fetch
+                const isValidVersion = dbData.cacheVersion && dbData.cacheVersion >= CACHE_VERSION;
+                const hasValidAnalysis = dbData.nativeAnalysis && dbData.nativeAnalysis.pitch?.values?.length > 0;
+
+                if (isValidVersion && hasValidAnalysis) {
+                    console.log('📚 Firestore hit with valid analysis:', normalizedWord);
+                    this.sessionCache.set(normalizedWord, dbData);
+                    return {
+                        ...dbData,
+                        fromCache: true,
+                        cacheSource: 'database'
+                    };
+                } else {
+                    const reason = !isValidVersion ? 'outdated cache version' : 'missing/empty analysis';
+                    console.log(`⚠️ Database entry exists but ${reason}, re-fetching...`);
+                }
+            }
+        }
+
+        // 3. Fetch from backend (MW API + Praat analysis)
+        console.log('🌐 Fetching from backend:', normalizedWord);
+        const wordData = await this.fetchFromBackend(normalizedWord);
+
+        // Debug: Log what we got from backend
+        console.log('=== BACKEND RESPONSE ===');
+        console.log('Has nativeAnalysis:', !!wordData.nativeAnalysis);
+        if (wordData.nativeAnalysis) {
+            console.log('Pitch values:', wordData.nativeAnalysis.pitch?.values?.length);
+            console.log('Syllables:', wordData.nativeAnalysis.syllables?.length);
+        }
+
+        // 4. Compress analysis data before saving (Firestore has size limits)
+        if (wordData.nativeAnalysis) {
+            wordData.nativeAnalysis = this.compressAnalysis(wordData.nativeAnalysis);
+        }
+
+        // 5. Save to database for future use (with cache version)
+        if (config.features.saveToDatabase && this.db.isAvailable()) {
+            wordData.cacheVersion = CACHE_VERSION;
+            this.db.saveWord(wordData).catch(err => {
+                console.error('Error saving to database:', err);
+            });
+        }
+
+        // 6. Cache in session
+        this.sessionCache.set(normalizedWord, wordData);
+
+        return {
+            ...wordData,
+            fromCache: false,
+            cacheSource: 'backend'
+        };
+    }
+
+    /**
+     * Fetch word data from backend (MW API + Praat analysis)
+     */
+    async fetchFromBackend(word) {
+        // Step 1: Get dictionary data
+        const dictResponse = await fetch(`${this.backendUrl}/dictionary/${encodeURIComponent(word)}`);
+
+        if (!dictResponse.ok) {
+            const error = await dictResponse.json().catch(() => ({}));
+            console.error('❌ BACKEND ERROR DETAIL:', error);
+            if (error.trace) console.error('Traceback:', error.trace);
+            throw new Error(error.error || 'Dictionary lookup failed');
+        }
+
+        const dictResult = await dictResponse.json();
+
+        if (!dictResult.found) {
+            if (dictResult.suggestions && dictResult.suggestions.length > 0) {
+                throw new Error(`Word not found. Did you mean: ${dictResult.suggestions.join(', ')}?`);
+            }
+            throw new Error('Word not found in dictionary');
+        }
+
+        const mwData = dictResult.data;
+
+        // Step 2: Analyze native audio with Praat (if audio URL available)
+        let nativeAnalysis = null;
+
+        if (mwData.audioUrl) {
+            try {
+                const analyzeResponse = await fetch(`${this.backendUrl}/analyze-url`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        audioUrl: mwData.audioUrl,
+                        expectedSyllables: mwData.syllableCount
+                    })
+                });
+
+                if (analyzeResponse.ok) {
+                    nativeAnalysis = await analyzeResponse.json();
+                    console.log('🎵 Native audio analyzed:', nativeAnalysis);
+                }
+            } catch (error) {
+                console.warn('Could not analyze native audio:', error);
+            }
+        }
+
+        return {
+            ...mwData,
+            nativeAnalysis,
+            source: 'merriam-webster'
+        };
+    }
+
+    /**
+     * Get proxied audio URL for playback
+     */
+    getProxiedAudioUrl(originalUrl) {
+        if (!originalUrl) return null;
+        return `${this.backendUrl}/proxy-audio?url=${encodeURIComponent(originalUrl)}`;
+    }
+
+    /**
+     * Get expected stress pattern (for comparison chart)
+     * Returns relative values (0-100) for each syllable
+     */
+    getExpectedPattern(wordReference) {
+        if (!wordReference) return null;
+
+        const { syllableCount, stressedSyllable, nativeAnalysis } = wordReference;
+
+        // If we have native analysis, use actual values
+        if (nativeAnalysis && nativeAnalysis.syllables && nativeAnalysis.syllables.length > 0) {
+            return this.normalizePattern(nativeAnalysis.syllables, stressedSyllable);
+        }
+
+        // Otherwise, generate theoretical pattern
+        return this.generateTheoreticalPattern(syllableCount, stressedSyllable);
+    }
+
+    /**
+     * Normalize native analysis to relative percentages
+     */
+    normalizePattern(syllables, stressedSyllable) {
+        const maxPitch = Math.max(...syllables.map(s => s.maxPitch || s.avgPitch || 1));
+        // Prefer vowelDuration (voiced portion) if available for better stress cue accuracy
+        const maxDuration = Math.max(...syllables.map(s => s.vowelDuration || s.duration || 1));
+        const maxIntensity = Math.max(...syllables.map(s => s.intensity || 1));
+
+        return syllables.map((syl, index) => ({
+            syllable: index + 1,
+            isStressed: index === stressedSyllable,
+
+            // Actual values
+            pitch: syl.maxPitch || syl.avgPitch || 0,
+            duration: syl.vowelDuration || syl.duration || 0,
+            intensity: syl.intensity || 0,
+
+            // Relative values (0-100)
+            relativePitch: Math.round(((syl.maxPitch || syl.avgPitch || 0) / maxPitch) * 100),
+            relativeDuration: Math.round(((syl.vowelDuration || syl.duration || 0) / maxDuration) * 100),
+            relativeIntensity: Math.round(((syl.intensity || 0) / maxIntensity) * 100)
+        }));
+    }
+
+    /**
+     * Generate theoretical pattern when native audio isn't available
+     */
+    generateTheoreticalPattern(syllableCount, stressedSyllable) {
+        const pattern = [];
+
+        for (let i = 0; i < syllableCount; i++) {
+            const isStressed = i === stressedSyllable;
+            pattern.push({
+                syllable: i + 1,
+                isStressed: isStressed,
+                pitch: isStressed ? 160 : 110,
+                duration: isStressed ? 0.28 : 0.18,
+                intensity: isStressed ? 70 : 50,
+                relativePitch: isStressed ? 100 : 65,
+                relativeDuration: isStressed ? 100 : 65,
+                relativeIntensity: isStressed ? 100 : 60
+            });
+        }
+
+        return pattern;
+    }
+
+    /**
+     * Compare user's pronunciation with native reference
+     */
+    compareWithNative(userSyllables, nativePattern) {
+        if (!userSyllables || !nativePattern) return null;
+
+        const userMaxPitch = Math.max(...userSyllables.map(s => s.maxPitch || 1));
+        const userMaxDuration = Math.max(...userSyllables.map(s => s.vowelDuration || s.duration || 1));
+        const userMaxIntensity = Math.max(...userSyllables.map(s => s.intensity || s.maxEnergy || 1));
+
+        const comparison = [];
+        const count = Math.min(userSyllables.length, nativePattern.length);
+
+        for (let i = 0; i < count; i++) {
+            const user = userSyllables[i];
+            const native = nativePattern[i];
+
+            const userRelPitch = Math.round(((user.maxPitch || 0) / userMaxPitch) * 100);
+            const userRelDur = Math.round(((user.vowelDuration || user.duration || 0) / userMaxDuration) * 100);
+            const userRelInt = Math.round(((user.intensity || user.maxEnergy || 0) / userMaxIntensity) * 100);
+
+            // Use weighted score for pitch matching accuracy if desired, 
+            // but for simple "score" we often use linear difference.
+            // Let's use the unified weights for component importance in overall score?
+            // Actually, for COMPARING, we want to know how close user is to native.
+            // Using standard deviation weights makes sense.
+
+            comparison.push({
+                syllable: i + 1,
+                isStressed: native.isStressed,
+                userPitch: userRelPitch,
+                userDuration: userRelDur,
+                userIntensity: userRelInt,
+                nativePitch: native.relativePitch,
+                nativeDuration: native.relativeDuration,
+                nativeIntensity: native.relativeIntensity,
+                // Simple difference scores (0-100)
+                pitchScore: Math.max(0, 100 - Math.abs(userRelPitch - native.relativePitch)),
+                durationScore: Math.max(0, 100 - Math.abs(userRelDur - native.relativeDuration)),
+                intensityScore: Math.max(0, 100 - Math.abs(userRelInt - native.relativeIntensity))
+            });
+        }
+
+        // Overall scores
+        const avgPitchScore = comparison.reduce((sum, c) => sum + c.pitchScore, 0) / count;
+        const avgDurationScore = comparison.reduce((sum, c) => sum + c.durationScore, 0) / count;
+        const avgIntensityScore = comparison.reduce((sum, c) => sum + c.intensityScore, 0) / count;
+
+        // Overall score: Weighted average of component scores
+        // We use the same component proportions as the stress score: 35:50:15
+        const overallScore = Math.round(
+            (avgPitchScore * STRESS_WEIGHTS.pitch) +
+            (avgDurationScore * STRESS_WEIGHTS.duration) +
+            (avgIntensityScore * STRESS_WEIGHTS.intensity)
+        );
+
+        // Find user's stressed syllable
+        const userStressedIndex = this.findUserStressedSyllable(userSyllables);
+        const nativeStressedIndex = nativePattern.findIndex(p => p.isStressed);
+        const stressMatches = userStressedIndex === nativeStressedIndex;
+
+        return {
+            syllables: comparison,
+            overallScore,
+            pitchScore: Math.round(avgPitchScore),
+            durationScore: Math.round(avgDurationScore),
+            intensityScore: Math.round(avgIntensityScore),
+            stressMatches,
+            userStressedSyllable: userStressedIndex + 1,
+            nativeStressedSyllable: nativeStressedIndex + 1,
+            syllableCountMatches: userSyllables.length === nativePattern.length
+        };
+    }
+
+    /**
+     * Find which syllable the user stressed most
+     * Uses Scientific Weighting: Duration (3) > Pitch (2) > Intensity (1)
+     */
+    findUserStressedSyllable(syllables) {
+        if (!syllables || syllables.length === 0) return 0;
+
+        const maxPitch = Math.max(...syllables.map(s => s.maxPitch || 0));
+        const maxDuration = Math.max(...syllables.map(s => s.duration || 0));
+        const maxEnergy = Math.max(...syllables.map(s => s.intensity || s.maxEnergy || 0));
+
+        let maxScore = -1;
+        let stressedIndex = 0;
+
+        syllables.forEach((s, i) => {
+            // Priority: Duration (3) > Pitch (2) > Intensity (1)
+            // Use Unified Logic from Utils
+            const pRel = ((s.maxPitch || 0) / (maxPitch || 1)) * 100;
+            const dRel = ((s.duration || 0) / (maxDuration || 1)) * 100;
+            const iRel = ((s.intensity || s.maxEnergy || 0) / (maxEnergy || 1)) * 100;
+
+            const score = calculateStressScore(pRel, dRel, iRel);
+
+            if (score > maxScore) {
+                maxScore = score;
+                stressedIndex = i;
+            }
+        });
+
+        return stressedIndex;
+    }
+
+    /**
+     * Clear session cache
+     */
+    clearCache() {
+        this.sessionCache.clear();
+    }
+
+    /**
+     * Compress analysis data for Firestore storage
+     * Uses Adaptive Sampling: Keeps ~100 points or max 30ms resolution
+     */
+    compressAnalysis(analysis) {
+        if (!analysis) return null;
+
+        // Adaptive sampling: aim for 100 points total
+        const currentPoints = analysis.pitch?.values?.length || 0;
+        const targetPoints = 100;
+
+        let sampleRate = Math.floor(currentPoints / targetPoints);
+        if (sampleRate < 1) sampleRate = 1;
+        // Cap at 3 to prevent losing too much resolution (30ms max gap)
+        if (sampleRate > 3) sampleRate = 3;
+
+        // Preserve critical points (syllable start/end times)
+        // Convert syllable times to set for O(1) lookup (approximate matching)
+        const criticalTimes = new Set();
+        (analysis.syllables || []).forEach(s => {
+            // Add start, end, and mid points
+            criticalTimes.add(Math.round(s.startTime * 100));
+            criticalTimes.add(Math.round(s.endTime * 100));
+        });
+
+        const filterWithCritical = (times, values) => {
+            // Zip times and values to prevent index mismatch
+            const zipped = times.map((t, i) => ({ t, v: values[i] }));
+
+            const filtered = zipped.filter((item, i) => {
+                const tCentis = Math.round(item.t * 100);
+                // Keep if modulo matches OR if it's near a critical time (epsilon check)
+                const isCritical = Array.from(criticalTimes).some(ct => Math.abs(ct - tCentis) <= 1);
+                return (i % sampleRate === 0) || isCritical;
+            });
+
+            return {
+                times: filtered.map(item => item.t),
+                values: filtered.map(item => item.v)
+            };
+        };
+
+        const pitchCompressed = filterWithCritical(analysis.pitch?.times || [], analysis.pitch?.values || []);
+        const intensityCompressed = filterWithCritical(analysis.intensity?.times || [], analysis.intensity?.values || []);
+
+        const compressed = {
+            duration: analysis.duration,
+            syllables: analysis.syllables,
+            pitch: pitchCompressed,
+            intensity: intensityCompressed
+        };
+
+        console.log(`📦 Compressed analysis: ${currentPoints} → ${compressed.pitch.values.length} points (rate: 1/${sampleRate})`);
+        return compressed;
+    }
 }
 
 
-================================================================================
-FILE: pronunciation-analyzer/main.js
-================================================================================
-
+==================================================
+FILE: c:\Cursor AI\pronunciation-analyzer\main.js
+==================================================
 import { AudioCapture } from './audio-capture.js';
 import { PitchAnalyzer } from './pitch-analyzer.js';
 import { SyllableDetector } from './syllable-detector.js';
 import { StressVisualizer } from './stress-visualizer.js';
+import { PraatAPI } from './praat-api.js';
+import { WordReferenceService } from './word-reference-service.js';
+import { config } from './config.js';
 
 class PronunciationApp {
     constructor() {
         this.audioCapture = new AudioCapture();
         this.pitchAnalyzer = new PitchAnalyzer();
         this.syllableDetector = new SyllableDetector();
+        this.praatAPI = new PraatAPI(config.backendUrl);
+        this.usePraatBackend = false; // Toggle: false = local JS, true = Praat backend
         this.visualizer = null; // init after DOM load
+
+        // Native reference service
+        this.wordRefService = new WordReferenceService();
+        this.currentWordRef = null;  // Current word reference data
+        this.nativePattern = null;   // Native stress pattern for comparison
 
         this.recordBtn = document.getElementById('pa-record-btn');
         this.stopBtn = document.getElementById('pa-stop-btn');
@@ -624,6 +2043,10 @@ class PronunciationApp {
         this.wordInput = document.getElementById('pa-word-input');
         this.ipaDisplay = document.getElementById('pa-ipa-display');
         this.patternDisplay = document.getElementById('pa-pattern-display');
+
+        // Native audio element
+        this.nativeAudioContainer = document.getElementById('pa-native-audio-container');
+        this.nativeAudio = document.getElementById('pa-native-audio');
 
         this.expectedData = {
             ipa: '/ˈfoʊ.tə.ɡræf/',
@@ -637,8 +2060,22 @@ class PronunciationApp {
         this.initEventListeners();
         this.visualizer = new StressVisualizer('pa-pitch-chart', 'pa-stress-chart');
 
+        // Check if Praat backend is available
+        this.checkPraatBackend();
+
         // Initial fetch for default word
         this.updateWordData();
+    }
+
+    async checkPraatBackend() {
+        const isAvailable = await this.praatAPI.checkHealth();
+        if (isAvailable) {
+            console.log('✅ Praat backend available - using server-side analysis');
+            this.usePraatBackend = true;
+        } else {
+            console.log('ℹ️ Praat backend not available - using local JS analysis');
+            this.usePraatBackend = false;
+        }
     }
 
     // Debounce utility
@@ -662,10 +2099,18 @@ class PronunciationApp {
 
         if (pronounceTab) {
             pronounceTab.addEventListener('click', () => {
-                // Deactivate all
+                // Only deactivate pronounce-related elements, let other tab handlers manage their own
+                // Remove active from pronounce tab if it was active (toggling behavior)
+
+                // Hide all other panels and deactivate tabs
                 allTabs.forEach(t => t.classList.remove('active'));
-                allPanels.forEach(p => p.classList.remove('active'));
-                allPanels.forEach(p => p.style.display = 'none'); 
+                allPanels.forEach(p => {
+                    p.classList.remove('active');
+                    // Only set display:none if NOT the pronounce panel (let CSS handle others)
+                    if (p.id !== 'mode-pronounce') {
+                        // Don't force display:none - let the existing CSS/JS handle it
+                    }
+                });
 
                 // Activate Pronounce
                 pronounceTab.classList.add('active');
@@ -675,6 +2120,7 @@ class PronunciationApp {
                 }
             });
 
+            // Listen to other tabs to hide pronounce panel and deactivate pronounce tab
             allTabs.forEach(tab => {
                 if (tab.id !== 'tab-pronounce') {
                     tab.addEventListener('click', () => {
@@ -704,43 +2150,132 @@ class PronunciationApp {
         if (!word) return;
 
         try {
-            this.statusIndicator.textContent = "Fetching IPA...";
-            const ipa = await window.Phonetics.getIPA(word);
+            this.statusIndicator.textContent = "Loading native reference...";
+            this.spinner.style.display = 'block';
+            this.visualizer.clear();
 
-            if (ipa) {
-                const parsed = this.parseIPA(ipa);
+            // Hide native audio while loading
+            if (this.nativeAudioContainer) {
+                this.nativeAudioContainer.style.display = 'none';
+            }
+
+            // Try to get native reference from backend (MW API)
+            let wordRef = null;
+            try {
+                wordRef = await this.wordRefService.getWordReference(word);
+                this.currentWordRef = wordRef;
+            } catch (refError) {
+                console.warn('Native reference not available:', refError.message);
+                // Fall back to existing Phonetics API
+            }
+
+            if (wordRef && wordRef.found !== false) {
+                // Use MW data
                 this.expectedData = {
-                    ipa: ipa,
-                    syllables: parsed.syllableCount,
-                    primaryStress: parsed.primaryStress
+                    ipa: wordRef.pronunciation || '',
+                    syllables: wordRef.syllableCount || 1,
+                    primaryStress: wordRef.stressedSyllable || 0
                 };
 
-                this.ipaDisplay.textContent = ipa;
-                this.patternDisplay.textContent = `${parsed.syllableCount} Syllables, Stress on ${parsed.primaryStress + 1}`;
+                // Display pronunciation info
+                this.ipaDisplay.textContent = wordRef.pronunciation || 'N/A';
+                this.patternDisplay.textContent = `${wordRef.syllableCount} Syllables, Stress on ${(wordRef.stressedSyllable || 0) + 1}`;
+
+                // Show native audio player if audio available
+                if (wordRef.audioUrl && this.nativeAudio && this.nativeAudioContainer) {
+                    const proxiedUrl = this.wordRefService.getProxiedAudioUrl(wordRef.audioUrl);
+                    this.nativeAudio.src = proxiedUrl;
+                    this.nativeAudioContainer.style.display = 'flex';
+                }
+
+                // *** Draw native pitch contour graph (LEFT CHART) ***
+                console.log('=== DRAWING NATIVE PITCH CONTOUR ===');
+                console.log('Has nativeAnalysis:', !!wordRef.nativeAnalysis);
+                console.log('pitch.values length:', wordRef.nativeAnalysis?.pitch?.values?.length || 0);
+                console.log('syllables length:', wordRef.nativeAnalysis?.syllables?.length || 0);
+
+                if (wordRef.nativeAnalysis &&
+                    wordRef.nativeAnalysis.pitch?.values?.length > 0) {
+                    console.log('✅ Drawing native pitch contour...');
+                    this.visualizer.drawNativePitchContour(
+                        wordRef.nativeAnalysis,
+                        wordRef.nativeAnalysis.syllables || []
+                    );
+                } else {
+                    console.warn('⚠️ No native analysis data - left chart will be empty');
+                }
+
+                // Get and display native pattern (RIGHT CHART - bar chart)
+                this.nativePattern = this.wordRefService.getExpectedPattern(wordRef);
+                if (this.nativePattern && this.nativePattern.length > 0) {
+                    this.visualizer.drawDurationChart(this.nativePattern, []);
+                }
+
+                const cacheStatus = wordRef.fromCache ? ` (${wordRef.cacheSource})` : '';
+                this.statusIndicator.textContent = `Ready${cacheStatus}`;
+
             } else {
-                this.ipaDisplay.textContent = "Not found";
-                this.patternDisplay.textContent = "-";
+                // Fallback to existing Phonetics API
+                const ipa = await window.Phonetics?.getIPA(word);
+
+                if (ipa) {
+                    const parsed = this.parseIPA(ipa);
+                    this.expectedData = {
+                        ipa: ipa,
+                        syllables: parsed.syllableCount,
+                        primaryStress: parsed.primaryStress
+                    };
+
+                    this.ipaDisplay.textContent = ipa;
+                    this.patternDisplay.textContent = `${parsed.syllableCount} Syllables, Stress on ${parsed.primaryStress + 1}`;
+
+                    // Generate theoretical pattern
+                    this.nativePattern = this.wordRefService.generateTheoreticalPattern(
+                        parsed.syllableCount,
+                        parsed.primaryStress
+                    );
+                    if (this.nativePattern) {
+                        this.visualizer.drawDurationChart(this.nativePattern, []);
+                    }
+                } else {
+                    this.ipaDisplay.textContent = "Not found";
+                    this.patternDisplay.textContent = "-";
+                    this.nativePattern = null;
+                }
+                this.statusIndicator.textContent = "Idle";
             }
-            this.statusIndicator.textContent = "Idle";
+
         } catch (err) {
             console.error("Error fetching word data:", err);
+            this.ipaDisplay.textContent = "Error";
+            this.patternDisplay.textContent = err.message || "Failed to load";
             this.statusIndicator.textContent = "Error";
+            this.nativePattern = null;
+        } finally {
+            this.spinner.style.display = 'none';
         }
     }
 
     parseIPA(ipa) {
+        // Clean IPA (remove slashes or brackets)
         const clean = ipa.replace(/[\/\[\]]/g, '');
+
+        // IPA vowels (diphthongs first, then monophthongs with optional length mark)
         const vowelRegex = /(aɪ|eɪ|ɔɪ|aʊ|oʊ|ɪə|eə|ʊə|iː|uː|ɑː|ɔː|ɜː|eːɪ|[ɪieɛæəʌɑɒɔouʊaɚɝ])/g;
+
         const matches = [...clean.matchAll(vowelRegex)];
 
         if (matches.length === 0) {
             return { syllableCount: 1, primaryStress: 0 };
         }
 
+        // Find primary stress marker position
         const stressPos = clean.indexOf('ˈ');
         let primaryStress = 0;
 
         if (stressPos !== -1) {
+            // Count how many vowels appear BEFORE the stress marker
+            // The stressed syllable is the NEXT vowel after ˈ
             let vowelsBefore = 0;
             for (const match of matches) {
                 if (match.index < stressPos) {
@@ -749,7 +2284,7 @@ class PronunciationApp {
                     break;
                 }
             }
-            primaryStress = vowelsBefore; 
+            primaryStress = vowelsBefore; // 0-indexed
         }
 
         return {
@@ -761,12 +2296,16 @@ class PronunciationApp {
     async startRecording() {
         try {
             await this.audioCapture.start();
+
             this.recordBtn.disabled = true;
             this.stopBtn.disabled = false;
             this.statusIndicator.classList.add('recording');
             this.statusIndicator.textContent = "Recording...";
             this.resultsSummary.innerHTML = "";
+
+            // Clear charts
             this.visualizer.clear();
+
         } catch (err) {
             alert("Could not start recording: " + err.message);
         }
@@ -775,30 +2314,72 @@ class PronunciationApp {
     async stopRecording() {
         this.stopBtn.disabled = true;
         this.statusIndicator.classList.remove('recording');
-        this.statusIndicator.textContent = "Processing...";
+        this.statusIndicator.textContent = this.usePraatBackend ? "Analyzing with Praat..." : "Processing...";
         this.spinner.style.display = 'block';
 
         try {
-            const audioBuffer = await this.audioCapture.stop();
-            if (!audioBuffer) return;
+            if (this.usePraatBackend) {
+                // Use Praat backend
+                const audioBlob = await this.audioCapture.stopAsBlob();
+                if (!audioBlob) {
+                    throw new Error('No audio recorded');
+                }
 
-            setTimeout(() => {
-                const analysisData = this.pitchAnalyzer.analyze(audioBuffer);
-                const expectedCount = this.expectedData ? this.expectedData.syllables : null;
-                const { syllables, noiseCount } = this.syllableDetector.detect(analysisData, expectedCount);
+                const expectedCount = this.expectedData?.syllables || null;
+                const analysis = await this.praatAPI.analyze(audioBlob, expectedCount);
 
-                this.visualizer.drawPitchContour(analysisData.times, analysisData.pitches, analysisData.energies, syllables);
-                this.visualizer.drawSyllableStress(syllables);
+                // *** Draw comparison pitch contour (user + native overlay) ***
+                this.visualizer.drawComparisonPitchContour(
+                    analysis,
+                    this.currentWordRef?.nativeAnalysis
+                );
 
-                this.generateSummary(syllables, noiseCount);
+                // Show comparison chart if we have native pattern
+                if (this.nativePattern && analysis.syllables.length > 0) {
+                    const comparison = this.wordRefService.compareWithNative(
+                        analysis.syllables,
+                        this.nativePattern
+                    );
+                    this.visualizer.drawDurationChart(this.nativePattern, analysis.syllables);
+                    this.generateComparisonSummary(analysis.syllables, comparison);
+                } else {
+                    this.visualizer.drawDurationChart([], analysis.syllables);
+                    this.generateSummary(analysis.syllables, 0);
+                }
+            } else {
+                // Use local JS analysis
+                const audioBuffer = await this.audioCapture.stop();
+                if (!audioBuffer) return;
 
-                this.spinner.style.display = 'none';
-                this.recordBtn.disabled = false;
-                this.statusIndicator.textContent = "Idle";
-            }, 100);
+                // Execute heavy analysis in a timeout to allow UI update
+                setTimeout(() => {
+                    const analysisData = this.pitchAnalyzer.analyze(audioBuffer);
+                    const expectedCount = this.expectedData ? this.expectedData.syllables : null;
+                    const { syllables, noiseCount } = this.syllableDetector.detect(analysisData, expectedCount);
+
+                    this.visualizer.drawPitchContour(analysisData.times, analysisData.pitches, analysisData.energies, syllables);
+                    this.visualizer.drawDurationChart([], syllables);
+                    this.generateSummary(syllables, noiseCount);
+
+                    this.spinner.style.display = 'none';
+                    this.recordBtn.disabled = false;
+                    this.statusIndicator.textContent = "Idle";
+                }, 100);
+                return; // Exit early, setTimeout handles cleanup
+            }
+
+            this.spinner.style.display = 'none';
+            this.recordBtn.disabled = false;
+            this.statusIndicator.textContent = "Idle";
 
         } catch (err) {
             console.error(err);
+            this.resultsSummary.innerHTML = `
+                <div style="color: #dc2626;">
+                    ⚠️ Analysis error: ${err.message}
+                    ${this.usePraatBackend ? '<br><br>Make sure the Python backend is running:<br><code>cd backend && python server.py</code>' : ''}
+                </div>
+            `;
             this.statusIndicator.textContent = "Error";
             this.spinner.style.display = 'none';
             this.recordBtn.disabled = false;
@@ -826,6 +2407,7 @@ class PronunciationApp {
             noiseHtml = `<div style="color: #6b7280; font-size: 0.85em; margin-bottom: 10px;">ℹ️ Filtered ${noiseCount} noise segments (background noise/breath).</div>`;
         }
 
+        // Find stressed syllable (simple heuristic: sum of normalized scores)
         const maxP = Math.max(...syllables.map(s => s.maxPitch)) || 1;
         const maxD = Math.max(...syllables.map(s => s.duration)) || 1;
         const maxE = Math.max(...syllables.map(s => s.maxEnergy)) || 1;
@@ -834,12 +2416,15 @@ class PronunciationApp {
         let maxScore = -1;
 
         const detailsHtml = syllables.map((s, i) => {
-            const score = (s.maxPitch / maxP) + (s.duration / maxD) + (s.maxEnergy / maxE);
+            const energy = s.intensity || s.maxEnergy || 0;
+            const score = (s.maxPitch / maxP) + (s.duration / maxD) + (energy / maxE);
             if (score > maxScore) {
                 maxScore = score;
                 stressedIndex = i;
             }
-            return `<li>Syllable ${i + 1}: ${s.duration.toFixed(2)}s, ${Math.round(s.maxPitch)} Hz</li>`;
+
+            const pitchText = s.maxPitch > 0 ? `${Math.round(s.maxPitch)} Hz` : '<span style="color:#9ca3af">No pitch</span>';
+            return `<li>Syllable ${i + 1}: ${s.duration.toFixed(2)}s, ${pitchText}</li>`;
         }).join('');
 
         this.resultsSummary.innerHTML = `
@@ -858,9 +2443,12 @@ class PronunciationApp {
 
     generateComparison(detectedCount, detectedStress) {
         if (!this.expectedData) return "";
+
         const countMatch = detectedCount === this.expectedData.syllables;
         const stressMatch = detectedStress === this.expectedData.primaryStress;
+
         let html = '<div style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #cbd5e1;">';
+
         if (countMatch && stressMatch) {
             html += `<div style="color: #059669; font-weight: 600;">✅ Excellent! Matches the dictionary pattern.</div>`;
         } else {
@@ -871,295 +2459,249 @@ class PronunciationApp {
                 html += `<div style="color: #dc2626;">❌ Stress mismatch. Dictionary suggests stress on <strong>Syllable ${this.expectedData.primaryStress + 1}</strong>.</div>`;
             }
         }
+
         html += '</div>';
         return html;
     }
+
+    /**
+     * Generate detailed comparison summary with native reference
+     */
+    generateComparisonSummary(userSyllables, comparison) {
+        if (!comparison) {
+            this.generateSummary(userSyllables, 0);
+            return;
+        }
+
+        const scoreColor = comparison.overallScore >= 80 ? '#22c55e' :
+            comparison.overallScore >= 60 ? '#f59e0b' : '#ef4444';
+        const scoreEmoji = comparison.overallScore >= 80 ? '🎉' :
+            comparison.overallScore >= 60 ? '👍' : '💪';
+
+        let html = `
+            <div class="pa-comparison-result">
+                <div style="text-align: center; margin-bottom: 16px;">
+                    <div style="font-size: 2rem; font-weight: bold; color: ${scoreColor};">
+                        ${scoreEmoji} ${comparison.overallScore}%
+                    </div>
+                    <div style="color: #6b7280; font-size: 0.9rem;">Overall Match Score</div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
+                    <div style="text-align: center; padding: 12px; background: #f1f5f9; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #3b82f6;">${comparison.pitchScore}%</div>
+                        <div style="font-size: 0.8rem; color: #6b7280;">Pitch</div>
+                    </div>
+                    <div style="text-align: center; padding: 12px; background: #f1f5f9; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #8b5cf6;">${comparison.durationScore}%</div>
+                        <div style="font-size: 0.8rem; color: #6b7280;">Duration</div>
+                    </div>
+                    <div style="text-align: center; padding: 12px; background: #f1f5f9; border-radius: 8px;">
+                        <div style="font-weight: 600; color: #10b981;">${comparison.intensityScore}%</div>
+                        <div style="font-size: 0.8rem; color: #6b7280;">Volume</div>
+                    </div>
+                </div>
+
+                <!-- Performance Summary Section -->
+                <div style="margin-bottom: 20px; padding: 16px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 10px; color: #475569;">Performance Summary:</div>
+                    
+                    <div style="display: flex; gap: 10px; margin-bottom: 8px; font-size: 0.9rem;">
+                        <span style="min-width: 80px; font-weight: 600; color: #3b82f6;">🎵 Pitch:</span>
+                        <span style="color: #64748b;">${comparison.pitchScore >= 80 ? 'Your intonation pattern matches the native melody well.' : 'Try to follow the native pitch contour (melody) more closely.'}</span>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-bottom: 8px; font-size: 0.9rem;">
+                        <span style="min-width: 80px; font-weight: 600; color: #8b5cf6;">⏱️ Duration:</span>
+                        <span style="color: #64748b;">${comparison.durationScore >= 80 ? 'Your rhythm and vowel lengths are consistent with native speech.' : 'Pay attention to vowel lengths to improve your overall rhythm.'}</span>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; font-size: 0.9rem;">
+                        <span style="min-width: 80px; font-weight: 600; color: #10b981;">🔊 Volume:</span>
+                        <span style="color: #64748b;">${comparison.intensityScore >= 80 ? 'Your stress emphasis and relative loudness are clear.' : 'Try to emphasize the stressed syllable with a bit more volume.'}</span>
+                    </div>
+                </div>
+        `;
+
+        // Stress comparison
+        if (comparison.stressMatches) {
+            html += `
+                <div style="background: #dcfce7; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                    <div style="color: #166534; font-weight: 500;">
+                        ✅ Stress placement is correct! (Syllable ${comparison.nativeStressedSyllable})
+                    </div>
+                </div>
+            `;
+        } else {
+            html += `
+                <div style="background: #fee2e2; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                    <div style="color: #991b1b; font-weight: 500;">
+                        ❌ Stress mismatch: You stressed syllable ${comparison.userStressedSyllable}, 
+                        but native speaker stresses syllable ${comparison.nativeStressedSyllable}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Syllable count
+        if (!comparison.syllableCountMatches) {
+            html += `
+                <div style="background: #fef3c7; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                    <div style="color: #92400e; font-weight: 500;">
+                        ⚠️ You pronounced ${userSyllables.length} syllables, but native has ${this.nativePattern?.length || '?'}
+                    </div>
+                </div>
+            `;
+        }
+
+        html += '</div>';
+        this.resultsSummary.innerHTML = html;
+    }
 }
 
+// Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
+    // Only init if container exists
     if (document.getElementById('pronunciation-analyzer-container')) {
         new PronunciationApp();
     }
 });
 
 
-================================================================================
-FILE: pronunciation-analyzer/style.css
-================================================================================
+==================================================
+FILE: c:\Cursor AI\pronunciation-analyzer\praat-api.js
+==================================================
+import { config } from './config.js';
 
-/* Pronunciation Analyzer Styles */
+/**
+ * PraatAPI - Client for Parselmouth/Praat backend analysis
+ * Replaces client-side pitchfinder with server-side Praat analysis
+ */
+export class PraatAPI {
+    constructor(backendUrl = null) {
+        this.backendUrl = backendUrl || config.backendUrl;
+        console.log('PraatAPI using backend:', this.backendUrl);
+    }
 
-.pa-container {
-    background: white;
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    margin-top: 24px;
-    max-width: 800px;
-    width: 100%;
+    // detectBackendUrl removed - using config.js source of truth
+
+    async analyze(audioBlob, expectedSyllables = null) {
+        // Convert to WAV if needed
+        const wavBlob = await this.ensureWav(audioBlob);
+
+        // Prepare form data
+        const formData = new FormData();
+        formData.append('audio', wavBlob, 'recording.wav');
+        if (expectedSyllables) {
+            formData.append('expected_syllables', expectedSyllables.toString());
+        }
+
+        // Send to backend
+        const response = await fetch(`${this.backendUrl}/analyze`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({ error: 'Analysis failed' }));
+            throw new Error(error.error || 'Analysis failed');
+        }
+
+        return response.json();
+    }
+
+    /**
+     * Analyze audio from URL (for native reference)
+     * Used by WordReferenceService for MW audio analysis
+     */
+    async analyzeFromUrl(audioUrl, expectedSyllables = null) {
+        const response = await fetch(`${this.backendUrl}/analyze-url`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                audioUrl: audioUrl,
+                expectedSyllables: expectedSyllables
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({ error: 'Analysis failed' }));
+            throw new Error(error.error || 'Analysis failed');
+        }
+
+        return response.json();
+    }
+
+    async ensureWav(blob) {
+        // Already WAV
+        if (blob.type === 'audio/wav' || blob.type === 'audio/wave') {
+            return blob;
+        }
+
+        // Convert to WAV using AudioContext
+        const arrayBuffer = await blob.arrayBuffer();
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+        return this.audioBufferToWav(audioBuffer);
+    }
+
+    audioBufferToWav(buffer) {
+        const numChannels = 1;
+        const sampleRate = buffer.sampleRate;
+        const format = 1; // PCM
+        const bitDepth = 16;
+
+        // Get mono channel
+        const inputData = buffer.getChannelData(0);
+        const dataLength = inputData.length;
+        const wavBuffer = new ArrayBuffer(44 + dataLength * 2);
+        const view = new DataView(wavBuffer);
+
+        // Write WAV header
+        const writeString = (offset, string) => {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        };
+
+        writeString(0, 'RIFF');
+        view.setUint32(4, 36 + dataLength * 2, true);
+        writeString(8, 'WAVE');
+        writeString(12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, format, true);
+        view.setUint16(22, numChannels, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * numChannels * bitDepth / 8, true);
+        view.setUint16(32, numChannels * bitDepth / 8, true);
+        view.setUint16(34, bitDepth, true);
+        writeString(36, 'data');
+        view.setUint32(40, dataLength * 2, true);
+
+        // Write audio data
+        let offset = 44;
+        for (let i = 0; i < dataLength; i++) {
+            const sample = Math.max(-1, Math.min(1, inputData[i]));
+            view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+            offset += 2;
+        }
+
+        return new Blob([wavBuffer], { type: 'audio/wav' });
+    }
+
+    async checkHealth() {
+        try {
+            const response = await fetch(`${this.backendUrl}/health`, {
+                method: 'GET',
+                mode: 'cors'
+            });
+            return response.ok;
+        } catch (error) {
+            console.error('Health check failed:', error);
+            return false;
+        }
+    }
 }
 
-.pa-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
 
-.pa-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #1f2937;
-}
-
-.pa-controls {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-}
-
-.pa-btn {
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    border: none;
-}
-
-.pa-btn-record {
-    background-color: #ef4444;
-    color: white;
-}
-
-.pa-btn-record:hover {
-    background-color: #dc2626;
-}
-
-.pa-btn-record:disabled {
-    background-color: #fca5a5;
-    cursor: not-allowed;
-}
-
-.pa-btn-stop {
-    background-color: #4b5563;
-    color: white;
-}
-
-.pa-btn-stop:hover {
-    background-color: #374151;
-}
-
-.pa-btn-stop:disabled {
-    background-color: #9ca3af;
-    cursor: not-allowed;
-}
-
-.pa-status {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.9rem;
-    color: #6b7280;
-}
-
-.pa-status.recording::before {
-    content: '';
-    display: block;
-    width: 10px;
-    height: 10px;
-    background-color: #ef4444;
-    border-radius: 50%;
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.2); opacity: 0.7; }
-    100% { transform: scale(1); opacity: 1; }
-}
-
-.pa-charts-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 24px;
-    margin-bottom: 20px;
-}
-
-@media (min-width: 768px) {
-    .pa-charts-grid { grid-template-columns: 1fr 1fr; }
-}
-
-.pa-chart-card {
-    background: #f9fafb;
-    border-radius: 8px;
-    padding: 16px;
-    border: 1px solid #e5e7eb;
-    height: 300px;
-    position: relative;
-}
-
-.pa-chart-card canvas {
-    display: block;
-    max-height: 250px;
-}
-
-.pa-chart-title {
-    font-size: 1rem;
-    color: #374151;
-    margin-bottom: 12px;
-    text-align: center;
-}
-
-.pa-results {
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
-    color: #1e40af;
-    padding: 16px;
-    border-radius: 8px;
-    margin-top: 16px;
-}
-
-.pa-spinner {
-    display: none;
-    width: 24px;
-    height: 24px;
-    border: 3px solid #e5e7eb;
-    border-top: 3px solid #3b82f6;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 10px auto;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.pa-input-section {
-    margin-bottom: 24px;
-    display: flex;
-    justify-content: center;
-}
-
-.pa-word-input-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    max-width: 400px;
-}
-
-#pa-word-input {
-    width: 100%;
-    padding: 12px 16px;
-    border-radius: 10px;
-    border: 2px solid #e5e7eb;
-    font-size: 1.1rem;
-    color: #1f2937;
-    transition: all 0.2s;
-    text-align: center;
-    font-weight: 500;
-}
-
-#pa-word-input:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.pa-word-info {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    background: #f0f9ff;
-    padding: 12px 16px;
-    border-radius: 10px;
-    border: 1px solid #bae6fd;
-    width: 100%;
-}
-
-.pa-info-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.95rem;
-}
-
-.pa-info-label {
-    color: #0369a1;
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    letter-spacing: 0.05em;
-}
-
-.pa-ipa-text {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: #0c4a6e;
-    font-weight: 500;
-}
-
-#pa-pattern-display {
-    color: #0c4a6e;
-    font-weight: 500;
-}
-
-.pa-btn-primary { background-color: #3b82f6; color: white; }
-.pa-btn-primary:hover { background-color: #2563eb; }
-
-
-================================================================================
-FILE: index.html (RELEVANT SECTION ONLY: #mode-pronounce)
-================================================================================
-
-      <div id="mode-pronounce" class="mode-panel" style="display: none;">
-        <div id="pronunciation-analyzer-container" class="pa-container">
-          <div class="pa-header">
-            <div class="pa-title">Stress & Pitch Analyzer</div>
-            <div class="pa-controls">
-              <button id="pa-record-btn" class="pa-btn pa-btn-record">Record</button>
-              <button id="pa-stop-btn" class="pa-btn pa-btn-stop" disabled>Stop</button>
-              <div id="pa-status" class="pa-status">Idle</div>
-            </div>
-          </div>
-
-          <div class="pa-input-section">
-            <div class="pa-word-input-container">
-              <input type="text" id="pa-word-input" placeholder="Type a word..." value="photograph">
-              <div id="pa-word-info" class="pa-word-info">
-                <div class="pa-info-row">
-                  <span class="pa-info-label">IPA:</span>
-                  <span id="pa-ipa-display" class="pa-ipa-text">/ˈfoʊ.tə.ɡræf/</span>
-                </div>
-                <div class="pa-info-row">
-                  <span class="pa-info-label">Pattern:</span>
-                  <span id="pa-pattern-display">3 Syllables, Stress on 1</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div id="pa-spinner" class="pa-spinner"></div>
-
-          <div class="pa-charts-grid">
-            <div class="pa-chart-card">
-              <div class="pa-chart-title">Pitch & Intensity</div>
-              <canvas id="pa-pitch-chart"></canvas>
-            </div>
-            <div class="pa-chart-card">
-              <div class="pa-chart-title">Syllable Stress</div>
-              <canvas id="pa-stress-chart"></canvas>
-            </div>
-          </div>
-
-          <div id="pa-results-summary" class="pa-results">
-            Record and speak a word to analyze stress.
-          </div>
-        </div>
-      </div>
-
-================================================================================
-END OF FILE
-================================================================================

@@ -104,30 +104,28 @@
 .pa-charts-grid {
     display: grid;
     grid-template-columns: 1fr;
+    /* Single column - stacked vertically */
     gap: 24px;
     margin-bottom: 20px;
 }
 
-@media (min-width: 768px) {
-    .pa-charts-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-}
+/* No longer split on larger screens - always full width */
 
 .pa-chart-card {
     background: #f9fafb;
     border-radius: 8px;
     padding: 16px;
     border: 1px solid #e5e7eb;
-    height: 300px;
-    /* Fixed height to prevent infinite expansion */
+    height: 400px;
+    /* Increased height for better readability */
     position: relative;
     /* Needed for Chart.js responsive sizing */
 }
 
 .pa-chart-card canvas {
     display: block;
-    max-height: 250px;
+    max-height: 350px;
+    /* Increased to match taller card */
     /* Leave room for title */
 }
 
@@ -348,4 +346,156 @@
     .pa-score-grid {
         grid-template-columns: 1fr;
     }
+}
+
+/* Feedback Section Styles */
+.pa-feedback-section {
+    margin-top: 24px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.pa-feedback-header {
+    background: #f8fafc;
+    padding: 16px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.pa-feedback-header h3 {
+    margin: 0 0 12px 0;
+    font-size: 1.1rem;
+    color: #334155;
+}
+
+.pa-syllable-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.pa-syl-tab {
+    padding: 8px 16px;
+    background: white;
+    border: 1px solid #cbd5e1;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #64748b;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.pa-syl-tab:hover {
+    background: #f1f5f9;
+    color: #334155;
+}
+
+.pa-syl-tab.active {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.pa-feedback-content {
+    padding: 20px;
+}
+
+.pa-feedback-card {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.pa-feedback-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 12px;
+    border-radius: 8px;
+    background: #f8fafc;
+    margin-bottom: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.pa-feedback-icon {
+    font-size: 1.2rem;
+    padding-top: 2px;
+}
+
+.pa-feedback-detail {
+    flex-grow: 1;
+}
+
+.pa-feedback-title {
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.pa-feedback-text {
+    color: #475569;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.pa-feedback-text.good {
+    color: #166534;
+}
+
+.pa-feedback-text.warn {
+    color: #b45309;
+}
+
+.pa-play-syl-btn {
+    background: #ecfdf5;
+    border: 1px solid #86efac;
+    color: #166534;
+    padding: 6px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 16px;
+    transition: all 0.2s;
+}
+
+.pa-play-syl-btn:hover {
+    background: #dcfce7;
+}
+
+.pa-highlight-syl {
+    font-weight: 700;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.pa-pitch-info {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px dashed #cbd5e1;
+    display: inline-block;
+}
+
+.pa-info-icon {
+    font-style: normal;
+    margin-right: 4px;
 }

@@ -195,7 +195,7 @@ class PronunciationApp {
                 // Get and display native pattern (RIGHT CHART - bar chart)
                 this.nativePattern = this.wordRefService.getExpectedPattern(wordRef);
                 if (this.nativePattern && this.nativePattern.length > 0) {
-                    this.visualizer.drawNativeReferenceOnly(this.nativePattern);
+                    this.visualizer.drawDurationChart(this.nativePattern, []);
                 }
 
                 const cacheStatus = wordRef.fromCache ? ` (${wordRef.cacheSource})` : '';
@@ -222,7 +222,7 @@ class PronunciationApp {
                         parsed.primaryStress
                     );
                     if (this.nativePattern) {
-                        this.visualizer.drawNativeReferenceOnly(this.nativePattern);
+                        this.visualizer.drawDurationChart(this.nativePattern, []);
                     }
                 } else {
                     this.ipaDisplay.textContent = "Not found";
@@ -327,10 +327,10 @@ class PronunciationApp {
                         analysis.syllables,
                         this.nativePattern
                     );
-                    this.visualizer.drawComparisonChart(this.nativePattern, analysis.syllables, comparison);
+                    this.visualizer.drawDurationChart(this.nativePattern, analysis.syllables);
                     this.generateComparisonSummary(analysis.syllables, comparison);
                 } else {
-                    this.visualizer.drawSyllableStress(analysis.syllables);
+                    this.visualizer.drawDurationChart([], analysis.syllables);
                     this.generateSummary(analysis.syllables, 0);
                 }
             } else {
@@ -345,7 +345,7 @@ class PronunciationApp {
                     const { syllables, noiseCount } = this.syllableDetector.detect(analysisData, expectedCount);
 
                     this.visualizer.drawPitchContour(analysisData.times, analysisData.pitches, analysisData.energies, syllables);
-                    this.visualizer.drawSyllableStress(syllables);
+                    this.visualizer.drawDurationChart([], syllables);
                     this.generateSummary(syllables, noiseCount);
 
                     this.spinner.style.display = 'none';
@@ -474,18 +474,53 @@ class PronunciationApp {
                     <div style="color: #6b7280; font-size: 0.9rem;">Overall Match Score</div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
                     <div style="text-align: center; padding: 12px; background: #f1f5f9; border-radius: 8px;">
                         <div style="font-weight: 600; color: #3b82f6;">${comparison.pitchScore}%</div>
                         <div style="font-size: 0.8rem; color: #6b7280;">Pitch</div>
                     </div>
                     <div style="text-align: center; padding: 12px; background: #f1f5f9; border-radius: 8px;">
                         <div style="font-weight: 600; color: #8b5cf6;">${comparison.durationScore}%</div>
-                        <div style="font-size: 0.8rem; color: #6b7280;">Timing</div>
+                        <div style="font-size: 0.8rem; color: #6b7280;">Duration</div>
                     </div>
                     <div style="text-align: center; padding: 12px; background: #f1f5f9; border-radius: 8px;">
                         <div style="font-weight: 600; color: #10b981;">${comparison.intensityScore}%</div>
-                        <div style="font-size: 0.8rem; color: #6b7280;">Intensity</div>
+                        <div style="font-size: 0.8rem; color: #6b7280;">Volume</div>
+                    </div>
+                </div>
+
+                <!-- Performance Summary Section -->
+                <div style="margin-bottom: 20px; padding: 16px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 12px; color: #475569;">Performance Summary:</div>
+                    
+                    <div style="display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; font-size: 0.9rem;">
+                        <div style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                            ${comparison.pitchScore >= 80 ? '✅' : comparison.pitchScore >= 60 ? '⚠️' : '❌'}
+                        </div>
+                        <div style="flex: 1;">
+                            <span style="font-weight: 600; color: #3b82f6;">🎵 Pitch:</span>
+                            <span style="color: #64748b; margin-left: 4px;">${comparison.pitchScore >= 80 ? 'Your intonation pattern matches the native melody well.' : comparison.pitchScore >= 60 ? 'Your melody is close, but some patterns could be smoother.' : 'Try to follow the native pitch contour (melody) more closely.'}</span>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; font-size: 0.9rem;">
+                        <div style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                            ${comparison.durationScore >= 80 ? '✅' : comparison.durationScore >= 60 ? '⚠️' : '❌'}
+                        </div>
+                        <div style="flex: 1;">
+                            <span style="font-weight: 600; color: #8b5cf6;">⏱️ Duration:</span>
+                            <span style="color: #64748b; margin-left: 4px;">${comparison.durationScore >= 80 ? 'Your rhythm and vowel lengths are consistent with native speech.' : comparison.durationScore >= 60 ? 'Your rhythm is okay, but some vowels are slightly off in length.' : 'Pay attention to vowel lengths to improve your overall rhythm.'}</span>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: flex-start; gap: 10px; font-size: 0.9rem;">
+                        <div style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                            ${comparison.intensityScore >= 80 ? '✅' : comparison.intensityScore >= 60 ? '⚠️' : '❌'}
+                        </div>
+                        <div style="flex: 1;">
+                            <span style="font-weight: 600; color: #10b981;">🔊 Volume:</span>
+                            <span style="color: #64748b; margin-left: 4px;">${comparison.intensityScore >= 80 ? 'Your stress emphasis and relative loudness are clear.' : comparison.intensityScore >= 60 ? 'You have some emphasis, but it could be more distinct.' : 'Try to emphasize the stressed syllable with a bit more volume.'}</span>
+                        </div>
                     </div>
                 </div>
         `;

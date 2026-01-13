@@ -1,0 +1,63 @@
+
+# Current Data Structure Analysis
+Based on the analysis of `stress-visualizer.js` and `server.py`:
+
+The application currently receives data from the backend in the following JSON structure (for both `nativeAnalysis` and `userAnalysis`):
+
+```javascript
+{
+  "pitch": {
+    "times": [0.01, 0.02, 0.03, ...],  // Array of timestamps (seconds)
+    "values": [null, 120.5, 121.0, ...] // Array of pitch values (Hz), null for unvoiced
+  },
+  "intensity": {
+    "values": [45.2, 46.1, ...]        // Array of intensity values
+  },
+  "syllables": [
+    {
+      "startTime": 0.15,
+      "endTime": 0.45,
+      "duration": 0.30,
+      "maxPitch": 180.5,
+      "intensity": 0.85, // or maxEnergy
+      "isStressed": true // (Native only)
+    },
+    // ... more syllables
+  ]
+}
+```
+
+## Comparison with Your Hypothesis
+
+Your hypothesis was:
+```javascript
+const nativePitchData = [
+    { time: 0.00, pitch: 0 },
+    ...
+];
+```
+**Actual Structure:** The implementation uses **separate parallel arrays** (`pitch.times` and `pitch.values`) rather than an array of objects.
+
+## Current Alignment Logic
+
+In `stress-visualizer.js` (`drawComparisonPitchContour`), the code attempts to align the charts by:
+1.  **Trimming to Speech Region:** It calculates `startTime` based on the first syllable minus 0.05s padding.
+2.  **Zero-Referencing:** It subtracts this `startTime` from all subsequent timestamps to effectively shift the graph to start at t=0.00s.
+
+```javascript
+// Excerpt from stress-visualizer.js
+const userStartTime = slicedUserTimes[0] || 0;
+const labels = slicedUserTimes.map(t => (t - userStartTime).toFixed(2));
+```
+
+## The Alignment Issue
+Despite this "start at zero" logic, mismatches occur because:
+1.  **Syllable Detection Latency:** The "first syllable" might be detected slightly differently between the clean native audio and the user recording (which may have background noise).
+2.  **Intra-syllable Onset:** The "start" of the syllable in terms of timing might include voiceless consonants for the native speaker but be cut differently for the user, causing the pitch curve (which only exists for voiced parts) to appear shifted.
+3.  **Recording Delay:** As you noted, pure recording delay (silence at the start) is theoretically handled by the trimming, but if `startTime` detection is jittery, the curves won't overlap perfectly.
+
+**Proposed Solution (Speech Onset Alignment):**
+Instead of relying solely on the pre-calculated syllable start times, a more robust approach would be to:
+1.  Detect the first *significant* pitch or intensity onset in both signals.
+2.  Calculate the `offset = userOnset - nativeOnset`.
+3.  Shift the native (or user) timestamps by this `offset` before plotting.

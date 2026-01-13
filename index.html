@@ -725,19 +725,33 @@
 
           <div id="pa-spinner" class="pa-spinner" style="display: none;"></div>
 
+          <div id="pa-results-summary" class="pa-results">
+            Record and speak a word to analyze stress.
+          </div>
+
           <div class="pa-charts-grid">
             <div class="pa-chart-card">
-              <div class="pa-chart-title">Pitch & Intensity</div>
+              <div class="pa-chart-title">Pitch & Volume</div>
               <canvas id="pa-pitch-chart"></canvas>
             </div>
             <div class="pa-chart-card">
-              <div class="pa-chart-title">Native vs Your Pronunciation</div>
+              <div class="pa-chart-title">Syllable Duration Comparison</div>
               <canvas id="pa-stress-chart"></canvas>
             </div>
           </div>
 
-          <div id="pa-results-summary" class="pa-results">
-            Record and speak a word to analyze stress.
+          <!-- Detailed Feedback Section -->
+          <div id="pa-feedback-section" class="pa-feedback-section" style="display: none;">
+            <div class="pa-feedback-header">
+              <h3>🔍 Detailed Analysis</h3>
+              <div id="pa-syllable-tabs" class="pa-syllable-tabs">
+                <!-- Tabs will be injected here -->
+              </div>
+            </div>
+
+            <div id="pa-feedback-content" class="pa-feedback-content">
+              <!-- Feedback content will be injected here -->
+            </div>
           </div>
         </div>
       </div>
@@ -1749,7 +1763,7 @@
 
   <!-- Pronunciation Analyzer -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script type="module" src="pronunciation-analyzer/main.js"></script>
+  <script type="module" src="pronunciation-analyzer/main.js?v=20260113"></script>
 
 </body>
 

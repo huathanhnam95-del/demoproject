@@ -95,7 +95,7 @@ def get_dictionary_word(word):
         if isinstance(data[0], str):
             return jsonify({'found': False, 'suggestions': data[:5]})
         
-        # Parse the response
+    # Parse the response
         parsed = parse_mw_response(data, normalized_word)
         if parsed:
             return jsonify({'found': True, 'data': parsed})
@@ -139,6 +139,7 @@ def parse_mw_response(api_data, word):
         'definition': entry.get('shortdef', [None])[0]
     }
     
+    # Initial count from headword
     result['syllableCount'] = len(result['syllables'])
     
     prs = hwi.get('prs', [])
@@ -147,9 +148,20 @@ def parse_mw_response(api_data, word):
         # Prioritize IPA field for display, fallback to mw
         result['pronunciation'] = pron.get('ipa') or pron.get('mw')
         
-        # Use MW field for stress detection if available, as it has hyphens
-        # Fallback to display pronunciation (might be IPA)
-        stress_source = pron.get('mw') or result['pronunciation']
+        # Use IPA for stress detection if available, as it's more standardized with 'ˈ'
+        # Fallback to MW field or display pronunciation
+        stress_source = pron.get('ipa') or pron.get('mw') or result['pronunciation']
+        
+        # Calculate IPA vowel count for validation/fallback
+        ipa_string = pron.get('ipa') or ""
+        ipa_count = count_ipa_syllables(ipa_string)
+        
+        # If IPA count is greater than HW count (e.g. missing separators in HW), trust IPA
+        if ipa_count > result['syllableCount']:
+            print(f"Refining syllable count from IPA: {result['syllableCount']} -> {ipa_count} (IPA: {ipa_string})")
+            result['syllableCount'] = ipa_count
+            
+        # Recalculate stress index based on new count
         result['stressedSyllable'] = find_stressed_syllable(stress_source, result['syllableCount'])
         
         if pron.get('sound', {}).get('audio'):
@@ -164,7 +176,35 @@ def parse_syllables(hw):
     if not hw:
         return []
     cleaned = hw.lstrip('*')
-    return [s for s in cleaned.split('*') if s] if '*' in cleaned else [s for s in cleaned.split('·') if s]
+    
+    # Try multiple common separators
+    if '*' in cleaned:
+        return [s for s in cleaned.split('*') if s]
+    if '·' in cleaned:
+        return [s for s in cleaned.split('·') if s]
+    if '-' in cleaned:
+        return [s for s in cleaned.split('-') if s]
+    if '.' in cleaned:
+        return [s for s in cleaned.split('.') if s]
+        
+    return [cleaned]
+
+def count_ipa_syllables(ipa):
+    """Count syllables using improved IPA vowel regex."""
+    if not ipa:
+        return 0
+    # Improved regex to handle diphthongs, long vowels, and syllabic consonants
+    # Order matters: longer sequences first
+    vowel_regex = r'''
+        (aɪ|eɪ|ɔɪ|aʊ|oʊ|əʊ|       # Common diphthongs
+         ɪə|eə|ʊə|ɛə|ɔə|          # Centering diphthongs
+         iː|uː|ɑː|ɔː|ɜː|ɛː|æː|    # Long vowels
+         eːɪ|                     # Legacy/Non-standard
+         [ɪieɛæəɐʌɑɒɔouʊaɚɝɨʉ]|   # Short vowels
+         [lnmŋ]̩)                  # Syllabic consonants
+    '''
+    matches = re.findall(vowel_regex, ipa, re.VERBOSE)
+    return len(matches)
 
 def find_stressed_syllable(pronunciation, syllable_count):
     """Find stressed syllable from MW pronunciation. ˈ = primary stress."""
@@ -305,54 +345,77 @@ def analyze_audio(audio_path, expected_syllables=None):
     
     # Load sound
     sound = parselmouth.Sound(audio_path)
+    duration = float(sound.duration)
     
-    # Extract pitch (50-300 Hz to cover creaky voice)
-    pitch = sound.to_pitch(time_step=0.01, pitch_floor=50, pitch_ceiling=300)
-    pitch_times = pitch.xs()
+    # Define common time grid (10ms steps)
+    time_step = 0.01
+    times = np.arange(0, duration, time_step)
+    
+    # Adaptive Pitch Analysis
+    # Standard gender-neutral ceiling is 500Hz (Praat recommendation)
+    # 600Hz reserved for child/high-pitch mode if explicitly requested
+    pitch_floor = 75
+    pitch_ceiling = 500 
+    
+    pitch = sound.to_pitch(time_step=time_step, pitch_floor=pitch_floor, pitch_ceiling=pitch_ceiling)
     pitch_values = []
-    for t in pitch_times:
+    for t in times:
         p = pitch.get_value_at_time(t)
-        pitch_values.append(None if np.isnan(p) else round(float(p), 1))
+        pitch_values.append(None if np.isnan(p) or p == 0 else round(float(p), 1))
     
     # Extract intensity
-    intensity = sound.to_intensity(minimum_pitch=50, time_step=0.01)
-    intensity_times = intensity.xs()
+    # Use same minimum pitch as pitch analysis for consistency
+    intensity = sound.to_intensity(minimum_pitch=75, time_step=time_step)
     intensity_values = []
-    for t in intensity_times:
+    for t in times:
         val = intensity.get_value(t)
         intensity_values.append(round(float(val), 2) if not np.isnan(val) else 0)
     
-    # Detect syllables
+    # Detect syllables using the pitch and intensity objects (they handle their own grids internally)
     syllables = detect_syllables(sound, pitch, intensity, expected_syllables)
     
     return {
-        'duration': round(float(sound.duration), 3),
+        'duration': round(duration, 3),
         'sampleRate': int(sound.sampling_frequency),
         'pitch': {
-            'times': [round(float(t), 3) for t in pitch_times],
+            'times': [round(float(t), 3) for t in times],
             'values': pitch_values
         },
         'intensity': {
-            'times': [round(float(t), 3) for t in intensity_times],
+            'times': [round(float(t), 3) for t in times],
             'values': intensity_values
         },
         'syllables': syllables
     }
 
 def detect_syllables(sound, pitch, intensity, expected_syllables=None):
-    """Detect syllables using Praat's intensity-based method."""
+    """Detect syllables using De Jong & Wempe (2009) method with dip detection."""
     
     int_times = np.array(intensity.xs())
     int_values = np.array([intensity.get_value(t) for t in int_times])
     int_values = np.nan_to_num(int_values, nan=0.0)
     
-    if len(int_values) == 0 or np.max(int_values) == 0:
+    # Filter only voiced parts for threshold calculation
+    voiced_intensities = int_values[int_values > 0]
+    
+    if len(voiced_intensities) == 0:
         return []
+
+    # De Jong & Wempe (2009) Standard: Median - 2dB (configurable silence threshold)
+    median_intensity = np.median(voiced_intensities)
+    SILENCE_THRESHOLD_DB = 2.0 
     
-    # Find speech region
+    # Use median-based threshold
+    speech_threshold = median_intensity - SILENCE_THRESHOLD_DB
+    
+    # Sanity check: ensure threshold isn't unreasonably low (e.g. background noise level)
+    # If the recording is very quiet, median might be noise. 
+    # Enforce a minimum floor of max-25dB to avoid picking up silence as speech.
     max_intensity = np.max(int_values)
-    speech_threshold = max_intensity - 25  # 25 dB below peak
+    min_safe_threshold = max_intensity - 25
+    speech_threshold = max(speech_threshold, min_safe_threshold)
     
+    # Find speech region based on threshold
     speech_indices = np.where(int_values > speech_threshold)[0]
     if len(speech_indices) == 0:
         return []
@@ -362,41 +425,82 @@ def detect_syllables(sound, pitch, intensity, expected_syllables=None):
     speech_start = float(int_times[speech_start_idx])
     speech_end = float(int_times[speech_end_idx])
     
-    # Find intensity peaks
-    peaks = find_intensity_peaks(int_times, int_values, speech_threshold, speech_start_idx, speech_end_idx)
+    # Find intensity peaks using Dip Detection
+    peaks = find_intensity_peaks(int_times, int_values, speech_threshold, speech_start_idx, speech_end_idx, pitch)
     
     # Adjust based on expected count
     if expected_syllables:
         peaks = adjust_peaks_to_expected(peaks, expected_syllables, int_times, int_values, speech_start, speech_end)
     
     # Convert to syllables
-    syllables = peaks_to_syllables(peaks, pitch, int_times, speech_start, speech_end)
+    syllables = peaks_to_syllables(peaks, pitch, int_times, int_values, speech_start, speech_end, sound)
     
     return syllables
 
-def find_intensity_peaks(times, values, threshold, start_idx, end_idx):
-    """Find local maxima in intensity."""
-    peaks = []
+def find_intensity_peaks(times, values, threshold, start_idx, end_idx, pitch_obj):
+    """Find intensity peaks that are preceded by a dip (De Jong & Wempe)."""
     
+    # Parameters
+    MIN_DIP = 2.0  # dB drop required to start a new syllable
+    
+    candidates = []
+    # Find all local maxima > threshold using window of 2 on each side
     for i in range(start_idx + 2, end_idx - 2):
-        if values[i] > threshold:
-            if (values[i] >= values[i-1] and values[i] >= values[i-2] and
-                values[i] >= values[i+1] and values[i] >= values[i+2]):
-                peaks.append({
-                    'index': i,
-                    'time': float(times[i]),
-                    'intensity': float(values[i])
-                })
+        val = values[i]
+        if val > threshold:
+             if (val >= values[i-1] and val >= values[i-2] and
+                 val >= values[i+1] and val >= values[i+2]):
+                 # Additional check: Voicing
+                 # Peak must be voiced to be a syllable nucleus
+                 t = times[i]
+                 p = pitch_obj.get_value_at_time(t)
+                 if not np.isnan(p) and p > 0:
+                     candidates.append((i, val, t))
+
+    if not candidates:
+        return []
+        
+    # Dip Detection Logic
+    # 1. Start with the highest intensity peak (global max) as a certain syllable
+    candidates.sort(key=lambda x: x[1], reverse=True)
+    valid_peaks = [candidates[0]]
     
-    # Merge peaks closer than 100ms
-    merged = []
-    for peak in peaks:
-        if not merged or peak['time'] - merged[-1]['time'] > 0.10:
-            merged.append(peak)
-        elif peak['intensity'] > merged[-1]['intensity']:
-            merged[-1] = peak
-    
-    return merged
+    # 2. Iteratively add other peaks if they are separated by a dip
+    for cand in candidates[1:]:
+        cand_idx, cand_val, cand_time = cand
+        
+        # Check against all currently valid peaks
+        is_distinct = True
+        for valid in valid_peaks:
+            valid_idx, valid_val, valid_time = valid
+            
+            # Find the minimum intensity between candidate and this valid peak
+            # To determine if they are merged or distinct
+            start, end = sorted([cand_idx, valid_idx])
+            min_between = np.min(values[start:end+1])
+            
+            # We need a dip of at least MIN_DIP relative to the *smaller* of the two peaks
+            # If the dip is shallow, they belong to the same syllable
+            lower_peak_val = min(cand_val, valid_val)
+            dip_depth = lower_peak_val - min_between
+            
+            if dip_depth < MIN_DIP:
+                is_distinct = False
+                break
+        
+        if is_distinct:
+            valid_peaks.append(cand)
+            
+    # Convert back to dict format and sort by time
+    result = []
+    for p in valid_peaks:
+        result.append({
+            'index': p[0],
+            'time': float(p[2]),
+            'intensity': float(p[1])
+        })
+        
+    return sorted(result, key=lambda x: x['time'])
 
 def adjust_peaks_to_expected(peaks, expected, times, values, speech_start, speech_end):
     """Adjust detected peaks to match expected syllable count."""
@@ -450,47 +554,106 @@ def adjust_peaks_to_expected(peaks, expected, times, values, speech_start, speec
     
     return peaks
 
-def peaks_to_syllables(peaks, pitch, int_times, speech_start, speech_end):
-    """Convert peaks to syllables with boundaries and pitch."""
+def measure_vowel_duration(sound, start_time, end_time, pitch_obj):
+    """
+    Measure duration of voiced (vowel) portion within a syllable.
+    """
+    voiced_duration = 0
+    time_step = 0.002  # 2ms resolution
     
+    t = start_time
+    while t < end_time:
+        pitch_val = pitch_obj.get_value_at_time(t)
+        if not np.isnan(pitch_val) and pitch_val > 0:
+            voiced_duration += time_step
+        t += time_step
+        
+    return voiced_duration
+
+def peaks_to_syllables(peaks, pitch, int_times, int_values, speech_start, speech_end, sound):
+    """Convert peaks to syllable objects using intensity minima as boundaries."""
     if not peaks:
         return []
-    
+        
     syllables = []
     
+    # 1. Find boundaries using intensity minima (dips) between peaks
+    # This is more accurate than midpoints for phonetic boundaries
+    boundaries = [speech_start]
+    for i in range(len(peaks) - 1):
+        start_idx = peaks[i]['index']
+        end_idx = peaks[i+1]['index']
+        
+        # Find the absolute minimum intensity between these two peaks
+        search_region = int_values[start_idx:end_idx+1]
+        min_idx_in_region = np.argmin(search_region)
+        min_idx = start_idx + min_idx_in_region
+        
+        boundaries.append(float(int_times[min_idx]))
+        
+    boundaries.append(speech_end)
+    
     for i, peak in enumerate(peaks):
-        if i == 0:
-            start_time = speech_start
-        else:
-            start_time = (peaks[i-1]['time'] + peak['time']) / 2
+        start_t = boundaries[i]
+        end_t = boundaries[i+1]
         
-        if i == len(peaks) - 1:
-            end_time = speech_end
-        else:
-            end_time = (peak['time'] + peaks[i+1]['time']) / 2
+        # Extract features for this region
+        p_max = 0
+        t_indices = [j for j, t in enumerate(int_times) if start_t <= t <= end_t]
         
-        # Get pitch values
-        syl_pitches = []
-        t = start_time
-        while t <= end_time:
-            p = pitch.get_value_at_time(t)
-            if not np.isnan(p) and p > 0:
-                syl_pitches.append(p)
-            t += 0.005
+        if t_indices:
+             region_pitches = [pitch.get_value_at_time(int_times[j]) for j in t_indices]
+             valid_pitches = [p for p in region_pitches if not np.isnan(p) and p > 0]
+             if valid_pitches:
+                 p_max = max(valid_pitches)
         
-        avg_pitch = round(float(np.mean(syl_pitches)), 1) if syl_pitches else 0
-        max_pitch = round(float(np.max(syl_pitches)), 1) if syl_pitches else 0
+        # NEW: Measure vowel (voiced) duration separately
+        vowel_dur = measure_vowel_duration(sound, start_t, end_t, pitch)
         
         syllables.append({
-            'startTime': round(start_time, 3),
-            'endTime': round(end_time, 3),
-            'duration': round(end_time - start_time, 3),
-            'avgPitch': avg_pitch,
-            'maxPitch': max_pitch,
-            'intensity': round(peak['intensity'], 2)
+            'syllable': i + 1,
+            'startTime': round(start_t, 3),
+            'endTime': round(end_t, 3),
+            'duration': round(end_t - start_t, 3),
+            'vowelDuration': round(vowel_dur, 3), # NEW
+            'maxPitch': round(float(p_max), 1),
+            'intensity': round(float(peak['intensity']), 1),
+            'isStressed': False # Placeholder
         })
-    
+        
+    # Determine stressed syllable
+    if syllables:
+        stressed_idx = determine_stressed_syllable(syllables)
+        for i, syl in enumerate(syllables):
+            syl['isStressed'] = (i == stressed_idx)
+            
     return syllables
+
+def determine_stressed_syllable(syllables):
+    """
+    Determine stressed syllable using weighted acoustic cues.
+    Based on Fry (1955, 1958) hierarchy.
+    """
+    if not syllables:
+        return 0
+    
+    # Get max values for normalization
+    max_dur = max([s['duration'] for s in syllables]) or 1
+    max_pitch = max([s['maxPitch'] for s in syllables]) or 1
+    max_int = max([s['intensity'] for s in syllables]) or 1
+    
+    best_idx = 0
+    best_score = -1
+    
+    for i, s in enumerate(syllables):
+        # Updated Weights: Pitch (0.45), Duration (0.35), Intensity (0.20)
+        total_score = (p_score * 0.45) + (d_score * 0.35) + (i_score * 0.20)
+        
+        if total_score > best_score:
+            best_score = total_score
+            best_idx = i
+            
+    return best_idx
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))

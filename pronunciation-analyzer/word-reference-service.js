@@ -5,6 +5,7 @@
 
 import { config } from './config.js';
 import { DatabaseService } from './database-service.js';
+import { STRESS_WEIGHTS, calculateStressScore } from './stress-utils.js';
 
 // Cache version - increment when backend algorithm changes
 // v2: Fixed stress detection for IPA strings (2026-01-12)
@@ -192,7 +193,8 @@ export class WordReferenceService {
      */
     normalizePattern(syllables, stressedSyllable) {
         const maxPitch = Math.max(...syllables.map(s => s.maxPitch || s.avgPitch || 1));
-        const maxDuration = Math.max(...syllables.map(s => s.duration || 1));
+        // Prefer vowelDuration (voiced portion) if available for better stress cue accuracy
+        const maxDuration = Math.max(...syllables.map(s => s.vowelDuration || s.duration || 1));
         const maxIntensity = Math.max(...syllables.map(s => s.intensity || 1));
 
         return syllables.map((syl, index) => ({
@@ -201,12 +203,12 @@ export class WordReferenceService {
 
             // Actual values
             pitch: syl.maxPitch || syl.avgPitch || 0,
-            duration: syl.duration || 0,
+            duration: syl.vowelDuration || syl.duration || 0,
             intensity: syl.intensity || 0,
 
             // Relative values (0-100)
             relativePitch: Math.round(((syl.maxPitch || syl.avgPitch || 0) / maxPitch) * 100),
-            relativeDuration: Math.round(((syl.duration || 0) / maxDuration) * 100),
+            relativeDuration: Math.round(((syl.vowelDuration || syl.duration || 0) / maxDuration) * 100),
             relativeIntensity: Math.round(((syl.intensity || 0) / maxIntensity) * 100)
         }));
     }
@@ -241,7 +243,7 @@ export class WordReferenceService {
         if (!userSyllables || !nativePattern) return null;
 
         const userMaxPitch = Math.max(...userSyllables.map(s => s.maxPitch || 1));
-        const userMaxDuration = Math.max(...userSyllables.map(s => s.duration || 1));
+        const userMaxDuration = Math.max(...userSyllables.map(s => s.vowelDuration || s.duration || 1));
         const userMaxIntensity = Math.max(...userSyllables.map(s => s.intensity || s.maxEnergy || 1));
 
         const comparison = [];
@@ -251,22 +253,29 @@ export class WordReferenceService {
             const user = userSyllables[i];
             const native = nativePattern[i];
 
-            const userRelativePitch = Math.round(((user.maxPitch || 0) / userMaxPitch) * 100);
-            const userRelativeDuration = Math.round(((user.duration || 0) / userMaxDuration) * 100);
-            const userRelativeIntensity = Math.round(((user.intensity || user.maxEnergy || 0) / userMaxIntensity) * 100);
+            const userRelPitch = Math.round(((user.maxPitch || 0) / userMaxPitch) * 100);
+            const userRelDur = Math.round(((user.vowelDuration || user.duration || 0) / userMaxDuration) * 100);
+            const userRelInt = Math.round(((user.intensity || user.maxEnergy || 0) / userMaxIntensity) * 100);
+
+            // Use weighted score for pitch matching accuracy if desired, 
+            // but for simple "score" we often use linear difference.
+            // Let's use the unified weights for component importance in overall score?
+            // Actually, for COMPARING, we want to know how close user is to native.
+            // Using standard deviation weights makes sense.
 
             comparison.push({
                 syllable: i + 1,
                 isStressed: native.isStressed,
-                userPitch: userRelativePitch,
-                userDuration: userRelativeDuration,
-                userIntensity: userRelativeIntensity,
+                userPitch: userRelPitch,
+                userDuration: userRelDur,
+                userIntensity: userRelInt,
                 nativePitch: native.relativePitch,
                 nativeDuration: native.relativeDuration,
                 nativeIntensity: native.relativeIntensity,
-                pitchScore: Math.max(0, 100 - Math.abs(userRelativePitch - native.relativePitch)),
-                durationScore: Math.max(0, 100 - Math.abs(userRelativeDuration - native.relativeDuration)),
-                intensityScore: Math.max(0, 100 - Math.abs(userRelativeIntensity - native.relativeIntensity))
+                // Simple difference scores (0-100)
+                pitchScore: Math.max(0, 100 - Math.abs(userRelPitch - native.relativePitch)),
+                durationScore: Math.max(0, 100 - Math.abs(userRelDur - native.relativeDuration)),
+                intensityScore: Math.max(0, 100 - Math.abs(userRelInt - native.relativeIntensity))
             });
         }
 
@@ -274,7 +283,14 @@ export class WordReferenceService {
         const avgPitchScore = comparison.reduce((sum, c) => sum + c.pitchScore, 0) / count;
         const avgDurationScore = comparison.reduce((sum, c) => sum + c.durationScore, 0) / count;
         const avgIntensityScore = comparison.reduce((sum, c) => sum + c.intensityScore, 0) / count;
-        const overallScore = Math.round((avgPitchScore + avgDurationScore + avgIntensityScore) / 3);
+
+        // Overall score: Weighted average of component scores
+        // We use the same component proportions as the stress score: 35:50:15
+        const overallScore = Math.round(
+            (avgPitchScore * STRESS_WEIGHTS.pitch) +
+            (avgDurationScore * STRESS_WEIGHTS.duration) +
+            (avgIntensityScore * STRESS_WEIGHTS.intensity)
+        );
 
         // Find user's stressed syllable
         const userStressedIndex = this.findUserStressedSyllable(userSyllables);
@@ -296,6 +312,7 @@ export class WordReferenceService {
 
     /**
      * Find which syllable the user stressed most
+     * Uses Scientific Weighting: Duration (3) > Pitch (2) > Intensity (1)
      */
     findUserStressedSyllable(syllables) {
         if (!syllables || syllables.length === 0) return 0;
@@ -308,10 +325,13 @@ export class WordReferenceService {
         let stressedIndex = 0;
 
         syllables.forEach((s, i) => {
-            const score =
-                (s.maxPitch || 0) / (maxPitch || 1) +
-                (s.duration || 0) / (maxDuration || 1) +
-                (s.intensity || s.maxEnergy || 0) / (maxEnergy || 1);
+            // Priority: Duration (3) > Pitch (2) > Intensity (1)
+            // Use Unified Logic from Utils
+            const pRel = ((s.maxPitch || 0) / (maxPitch || 1)) * 100;
+            const dRel = ((s.duration || 0) / (maxDuration || 1)) * 100;
+            const iRel = ((s.intensity || s.maxEnergy || 0) / (maxEnergy || 1)) * 100;
+
+            const score = calculateStressScore(pRel, dRel, iRel);
 
             if (score > maxScore) {
                 maxScore = score;
@@ -331,27 +351,57 @@ export class WordReferenceService {
 
     /**
      * Compress analysis data for Firestore storage
-     * Reduces pitch/intensity arrays by sampling every Nth point
+     * Uses Adaptive Sampling: Keeps ~100 points or max 30ms resolution
      */
     compressAnalysis(analysis) {
         if (!analysis) return null;
 
-        const sampleRate = 5; // Keep every 5th data point
+        // Adaptive sampling: aim for 100 points total
+        const currentPoints = analysis.pitch?.values?.length || 0;
+        const targetPoints = 100;
+
+        let sampleRate = Math.floor(currentPoints / targetPoints);
+        if (sampleRate < 1) sampleRate = 1;
+        // Cap at 3 to prevent losing too much resolution (30ms max gap)
+        if (sampleRate > 3) sampleRate = 3;
+
+        // Preserve critical points (syllable start/end times)
+        // Convert syllable times to set for O(1) lookup (approximate matching)
+        const criticalTimes = new Set();
+        (analysis.syllables || []).forEach(s => {
+            // Add start, end, and mid points
+            criticalTimes.add(Math.round(s.startTime * 100));
+            criticalTimes.add(Math.round(s.endTime * 100));
+        });
+
+        const filterWithCritical = (times, values) => {
+            // Zip times and values to prevent index mismatch
+            const zipped = times.map((t, i) => ({ t, v: values[i] }));
+
+            const filtered = zipped.filter((item, i) => {
+                const tCentis = Math.round(item.t * 100);
+                // Keep if modulo matches OR if it's near a critical time (epsilon check)
+                const isCritical = Array.from(criticalTimes).some(ct => Math.abs(ct - tCentis) <= 1);
+                return (i % sampleRate === 0) || isCritical;
+            });
+
+            return {
+                times: filtered.map(item => item.t),
+                values: filtered.map(item => item.v)
+            };
+        };
+
+        const pitchCompressed = filterWithCritical(analysis.pitch?.times || [], analysis.pitch?.values || []);
+        const intensityCompressed = filterWithCritical(analysis.intensity?.times || [], analysis.intensity?.values || []);
 
         const compressed = {
             duration: analysis.duration,
             syllables: analysis.syllables,
-            pitch: {
-                times: analysis.pitch?.times?.filter((_, i) => i % sampleRate === 0) || [],
-                values: analysis.pitch?.values?.filter((_, i) => i % sampleRate === 0) || []
-            },
-            intensity: {
-                times: analysis.intensity?.times?.filter((_, i) => i % sampleRate === 0) || [],
-                values: analysis.intensity?.values?.filter((_, i) => i % sampleRate === 0) || []
-            }
+            pitch: pitchCompressed,
+            intensity: intensityCompressed
         };
 
-        console.log(`📦 Compressed analysis: ${analysis.pitch?.values?.length || 0} → ${compressed.pitch.values.length} points`);
+        console.log(`📦 Compressed analysis: ${currentPoints} → ${compressed.pitch.values.length} points (rate: 1/${sampleRate})`);
         return compressed;
     }
 }

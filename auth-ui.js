@@ -259,8 +259,9 @@ async function handleLevelSelection(level) {
     });
 
     // Handle Unlocking based on level
+    const normalizedLevel = level ? level.toLowerCase() : '';
     let shouldUnlock = false;
-    if (level === 'beginner' || level === 'intermediate') {
+    if (normalizedLevel === 'beginner' || normalizedLevel === 'intermediate' || normalizedLevel === 'expert') {
       shouldUnlock = true;
     }
 
@@ -1166,11 +1167,11 @@ function showShoppingModal() {
     {
       id: 'sentence_length_filter_type',
       title: 'Filter mode: Length (Type mode)',
-      description: 'Filter Type questions by sentence length. Recommended for beginners',
+      description: 'Unlock "All Lengths" filter for Type questions. (Required for Beginner/Expert)',
       cost: 50,
-      unlockFlag: 'sentenceLengthFilterUnlocked',
-      unlockTimestampField: 'sentenceLengthFilterUnlockedAt',
-      extraUnlockFields: { sentenceLengthFilterFullUnlock: true },
+      unlockFlag: 'sentenceLengthFilterFullUnlock',
+      unlockTimestampField: 'sentenceLengthFilterFullUnlockedAt',
+      extraUnlockFields: { sentenceLengthFilterUnlocked: true },
       hasTutorial: true,
       tutorialFunction: () => {
         if (window.LengthFilterTutorial) {
@@ -1185,11 +1186,11 @@ function showShoppingModal() {
     {
       id: 'sentence_length_filter_speak',
       title: 'Filter mode: Length (Speak mode)',
-      description: 'Filter Speak questions by sentence length. Recommended for beginners',
+      description: 'Unlock "All Lengths" filter for Speak questions. (Required for Beginner/Expert)',
       cost: 50,
-      unlockFlag: 'speakLengthFilterUnlocked',
-      unlockTimestampField: 'speakLengthFilterUnlockedAt',
-      extraUnlockFields: { speakLengthFilterFullUnlock: true },
+      unlockFlag: 'speakLengthFilterFullUnlock',
+      unlockTimestampField: 'speakLengthFilterFullUnlockedAt',
+      extraUnlockFields: { speakLengthFilterUnlocked: true },
       hasTutorial: true,
       tutorialFunction: () => {
         // Switch to Speak mode first so the UI matches the tutorial
@@ -1212,11 +1213,27 @@ function showShoppingModal() {
       cost: 10,
       unlockFlag: 'vocabularyBookUnlocked',
       unlockTimestampField: 'vocabularyBookUnlockedAt',
-      hasTutorial: false,
+      hasTutorial: true,
+      tutorialFunction: () => {
+        // Replay the Vocab Book intro tutorial
+        if (window.VocabTutorial) {
+          window.VocabTutorial.resetTutorial('vocabBookIntro');
+          setTimeout(() => {
+            window.VocabTutorial.startVocabBookIntro();
+          }, 300);
+        }
+      },
       onUnlock: () => {
         // Show the vocabulary book toggle button
         const vocabToggle = document.getElementById('vocab-panel-toggle');
         if (vocabToggle) vocabToggle.style.display = 'flex';
+
+        // Trigger Vocab Book intro tutorial
+        if (window.VocabTutorial) {
+          setTimeout(() => {
+            window.VocabTutorial.startVocabBookIntro();
+          }, 500); // Small delay to allow modal close animation
+        }
       }
     }
   ];

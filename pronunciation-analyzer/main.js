@@ -20,6 +20,10 @@ class PronunciationApp {
         this.currentWordRef = null;  // Current word reference data
         this.nativePattern = null;   // Native stress pattern for comparison
 
+        // Syllable verification
+        this.syllableVerifier = null;
+        this.userAudioBlob = null;
+
         this.recordBtn = document.getElementById('pa-record-btn');
         this.stopBtn = document.getElementById('pa-stop-btn');
         this.statusIndicator = document.getElementById('pa-status');
@@ -45,7 +49,13 @@ class PronunciationApp {
         this.updateWordDataDebounced = this.debounce(() => this.updateWordData(), 500);
 
         this.initEventListeners();
-        this.visualizer = new StressVisualizer('pa-pitch-chart', 'pa-stress-chart');
+
+        // Initialize visualizer with playback callback
+        this.visualizer = new StressVisualizer(
+            'pa-pitch-chart',
+            'pa-stress-chart',
+            (start, end) => this.playSyllable(start, end)
+        );
 
         // Check if Praat backend is available
         this.checkPraatBackend();
@@ -124,7 +134,11 @@ class PronunciationApp {
         }
 
         if (this.wordInput) {
-            this.wordInput.addEventListener('input', () => this.updateWordDataDebounced());
+            // Search button click
+            const searchBtn = document.getElementById('pa-search-btn');
+            if (searchBtn) {
+                searchBtn.addEventListener('click', () => this.updateWordData());
+            }
             // Also on enter (immediate)
             this.wordInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') this.updateWordData();
@@ -280,6 +294,38 @@ class PronunciationApp {
         };
     }
 
+    /**
+     * Play specific syllable from native audio
+     */
+    playSyllable(startTime, endTime) {
+        if (!this.nativeAudio || !this.nativeAudio.src) {
+            console.warn('No native audio available');
+            return;
+        }
+
+        // Stop any current playback
+        this.nativeAudio.pause();
+
+        // Add small padding for clearer listening
+        const start = Math.max(0, startTime - 0.05);
+        const duration = (endTime - startTime) + 0.1;
+
+        this.nativeAudio.currentTime = start;
+
+        // Play and set timeout to stop
+        this.nativeAudio.play().catch(e => console.error("Playback failed:", e));
+
+        // Clear existing timeout if any
+        if (this.audioStopTimeout) {
+            clearTimeout(this.audioStopTimeout);
+        }
+
+        this.audioStopTimeout = setTimeout(() => {
+            this.nativeAudio.pause();
+            this.audioStopTimeout = null;
+        }, duration * 1000);
+    }
+
     async startRecording() {
         try {
             await this.audioCapture.start();
@@ -329,6 +375,9 @@ class PronunciationApp {
                     );
                     this.visualizer.drawDurationChart(this.nativePattern, analysis.syllables);
                     this.generateComparisonSummary(analysis.syllables, comparison);
+
+                    // Show syllable verification waveform
+                    this.showSyllableVerifier(audioBlob, analysis.syllables);
                 } else {
                     this.visualizer.drawDurationChart([], analysis.syllables);
                     this.generateSummary(analysis.syllables, 0);
@@ -371,6 +420,71 @@ class PronunciationApp {
             this.spinner.style.display = 'none';
             this.recordBtn.disabled = false;
         }
+    }
+
+    /**
+     * Show syllable verification waveform with click-to-play
+     */
+    showSyllableVerifier(audioBlob, syllables) {
+        console.log('Main: showSyllableVerifier called with:', {
+            audioBlobSize: audioBlob?.size,
+            syllablesCount: syllables?.length,
+            syllablesData: syllables
+        });
+        // Store audio blob for later use
+        this.userAudioBlob = audioBlob;
+
+        // Check if SyllableVerifier is available (loaded via CDN)
+        if (typeof window.SyllableVerifier === 'undefined') {
+            console.warn('SyllableVerifier not loaded');
+            return;
+        }
+
+        // Destroy previous instance
+        if (this.syllableVerifier) {
+            this.syllableVerifier.destroy();
+        }
+
+        // Get syllable labels from IPA if available
+        const syllableLabels = this.getSyllableLabels();
+
+        // Create new verifier
+        this.syllableVerifier = new window.SyllableVerifier('syllable-verifier-container');
+
+        // Check if we have native audio for comparison mode
+        if (this.nativeAudioUrl && this.nativePattern && this.nativePattern.length > 0) {
+            // Use comparison mode with A/B playback
+            this.syllableVerifier.loadComparison(
+                audioBlob,
+                syllables,
+                this.nativeAudioUrl,
+                this.nativePattern,
+                syllableLabels
+            );
+        } else {
+            // Simple mode - just user audio
+            this.syllableVerifier.loadAudio(audioBlob, syllables, syllableLabels);
+        }
+    }
+
+    /**
+     * Get syllable labels from IPA string
+     */
+    getSyllableLabels() {
+        if (!this.expectedData || !this.expectedData.ipa) {
+            return null; // Will default to "Syl 1", "Syl 2", etc.
+        }
+
+        // Try to parse syllables from IPA
+        // Common separators: . ˈ ˌ
+        const ipa = this.expectedData.ipa
+            .replace(/[\/\[\]]/g, '')  // Remove slashes/brackets
+            .replace(/ˈ|ˌ/g, '.')      // Replace stress marks with dots
+            .split('.')
+            .filter(s => s.trim().length > 0);
+
+        // Only use if count matches
+        return ipa.length === this.expectedData.syllables ? ipa : null;
     }
 
     generateSummary(syllables, noiseCount = 0) {
@@ -465,6 +579,74 @@ class PronunciationApp {
         const scoreEmoji = comparison.overallScore >= 80 ? '🎉' :
             comparison.overallScore >= 60 ? '👍' : '💪';
 
+        // 1. Generate Actionable Tips
+        const tips = [];
+
+        // Priority 1: Stress placement / Pattern Match
+        if (!comparison.stressMatches) {
+            // Use the specific feedback from pattern analysis if available
+            const feedback = comparison.stressFeedback ||
+                `Stress Pattern Mismatch: Your emphasis pattern differs from the native speaker. Try to match the highs and lows of the native pitch.`;
+            tips.push(`🎯 <strong>Stress Pattern</strong>: ${feedback}`);
+        }
+
+        // Priority 2: Syllable count
+        if (!comparison.syllableCountMatches) {
+            tips.push(`🔢 <strong>Number of Syllables</strong>: Try to pronounce exactly ${this.nativePattern?.length || '?'} syllables (you pronounced ${userSyllables.length}).`);
+        }
+
+        // Priority 3: Global Factor Issues (If Overall scores are < 80)
+        if (comparison.pitchScore < 80) {
+            tips.push(`🎵 <strong>Overall Pitch</strong>: Your melody pattern is ${comparison.pitchScore >= 60 ? 'slightly off' : 'needs adjustment'}. Follow the dashed green line on the chart.`);
+        }
+        if (comparison.durationScore < 80) {
+            tips.push(`⏱️ <strong>Overall Duration</strong>: Your rhythm is ${comparison.durationScore >= 60 ? 'fair' : 'needs work'}. Try to match the bar lengths in the Duration chart.`);
+        }
+        if (comparison.intensityScore < 80) {
+            tips.push(`🔊 <strong>Overall Volume</strong>: Your stress emphasis is ${comparison.intensityScore >= 60 ? 'a bit weak' : 'not clear'}. Try using more breath on stressed syllables.`);
+        }
+
+        // Priority 4: Specific syllable issues (find worst syllable)
+        if (comparison.syllables && comparison.syllables.length > 0) {
+            const worstSyllables = [...comparison.syllables]
+                .map(s => {
+                    const avg = (s.pitchScore + s.durationScore + s.intensityScore) / 3;
+                    return { ...s, avg };
+                })
+                .sort((a, b) => a.avg - b.avg);
+
+            const worst = worstSyllables[0];
+            // If the worst syllable is significantly below average OR if we don't have many tips yet
+            if (worst.avg < 75 || (tips.length < 2 && worst.avg < 90)) {
+                if (worst.pitchScore < worst.durationScore && worst.pitchScore < worst.intensityScore) {
+                    const action = worst.userPitch > worst.nativePitch ? 'lowering' : 'raising';
+                    tips.push(`🎵 <strong>Pitch Tip</strong>: Try ${action} your pitch for <strong>syllable ${worst.syllable}</strong>.`);
+                } else if (worst.durationScore < worst.pitchScore && worst.durationScore < worst.intensityScore) {
+                    const action = worst.userDuration > worst.nativeDuration ? 'shortening' : 'holding';
+                    const verb = action === 'shortening' ? 'shortening' : 'holding';
+                    const suffix = action === 'shortening' ? '' : ' a bit longer';
+                    tips.push(`⏱️ <strong>Duration Tip</strong>: Try ${verb} <strong>syllable ${worst.syllable}</strong>${suffix}.`);
+                } else {
+                    const action = worst.userIntensity > worst.nativeIntensity ? 'softer' : 'stronger';
+                    tips.push(`🔊 <strong>Volume Tip</strong>: Try making <strong>syllable ${worst.syllable}</strong> a bit ${action}.`);
+                }
+            }
+        }
+
+        // Limit to top 3 tips for better coverage
+        const displayTips = tips.slice(0, 3);
+        let tipsHtml = '';
+        if (displayTips.length > 0) {
+            tipsHtml = `
+                <div style="margin-bottom: 20px; padding: 16px; background: #fff7ed; border-radius: 12px; border: 1px solid #ffedd5;">
+                    <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 10px; color: #9a3412;">💡 Performance Guide (How to Improve):</div>
+                    <ul style="margin: 0; padding-left: 20px; color: #7c2d12; font-size: 0.9rem;">
+                        ${displayTips.map(tip => `<li style="margin-bottom: 8px;">${tip}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+
         let html = `
             <div class="pa-comparison-result">
                 <div style="text-align: center; margin-bottom: 16px;">
@@ -489,9 +671,27 @@ class PronunciationApp {
                     </div>
                 </div>
 
+                ${tipsHtml}
+
                 <!-- Performance Summary Section -->
                 <div style="margin-bottom: 20px; padding: 16px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
-                    <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 12px; color: #475569;">Performance Summary:</div>
+                    <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 12px; color: #475569;">Detailed Ratings:</div>
+                    
+                    <!-- Stress Pattern Row (moved here) -->
+                    <div style="display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; font-size: 0.9rem; padding: 10px; background: ${comparison.stressMatches ? '#dcfce7' : '#fef3c7'}; border-radius: 8px;">
+                        <div style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                            ${comparison.stressMatches ? '✅' : '⚠️'}
+                        </div>
+                        <div style="flex: 1;">
+                            <span style="font-weight: 600; color: ${comparison.stressMatches ? '#166534' : '#92400e'};">🎯 Stress Pattern:</span>
+                            <span style="color: ${comparison.stressMatches ? '#15803d' : '#78350f'}; margin-left: 4px;">
+                                ${comparison.stressMatches
+                ? `Matches! ${comparison.patternCorrelation ? `(${comparison.patternCorrelation}% correlation)` : ''}`
+                : `${comparison.patternCorrelation || 0}% match — ${comparison.stressFeedback || 'Try to match the emphasis pattern'}`
+            }
+                            </span>
+                        </div>
+                    </div>
                     
                     <div style="display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; font-size: 0.9rem;">
                         <div style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
@@ -525,25 +725,7 @@ class PronunciationApp {
                 </div>
         `;
 
-        // Stress comparison
-        if (comparison.stressMatches) {
-            html += `
-                <div style="background: #dcfce7; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
-                    <div style="color: #166534; font-weight: 500;">
-                        ✅ Stress placement is correct! (Syllable ${comparison.nativeStressedSyllable})
-                    </div>
-                </div>
-            `;
-        } else {
-            html += `
-                <div style="background: #fee2e2; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
-                    <div style="color: #991b1b; font-weight: 500;">
-                        ❌ Stress mismatch: You stressed syllable ${comparison.userStressedSyllable}, 
-                        but native speaker stresses syllable ${comparison.nativeStressedSyllable}
-                    </div>
-                </div>
-            `;
-        }
+        // Stress comparison - removed as it's now integrated above
 
         // Syllable count
         if (!comparison.syllableCountMatches) {

@@ -8,11 +8,24 @@
   <link rel="stylesheet" href="style.css?v=20251230d">
   <link rel="stylesheet" href="srs-review.css?v=20260106">
   <link rel="stylesheet" href="pronunciation-analyzer/style.css">
+  <link rel="stylesheet" href="pronunciation-analyzer/syllable-verifier.css">
   <!-- XLSX Library -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+  <!-- Wavesurfer.js for syllable verification -->
+  <script src="https://unpkg.com/wavesurfer.js@7"></script>
+  <script src="https://unpkg.com/wavesurfer.js@7/dist/plugins/regions.min.js"></script>
+  <script src="pronunciation-analyzer/syllable-verifier.js?v=20260114_ui_v4"></script>
 </head>
 
 <body>
+  <!-- App Preloader/Loading Screen -->
+  <div id="app-preloader" class="app-preloader">
+    <div class="preloader-content">
+      <div class="preloader-spinner"></div>
+      <p class="preloader-text">Loading Practice Data...</p>
+    </div>
+  </div>
+
   <!-- Demo Feedback Banner -->
   <div class="feedback-banner">
     <div class="feedback-banner-content">
@@ -445,6 +458,42 @@
               Next review: <span id="srs-next-date">-</span>
             </div>
           </div>
+
+          <!-- Tutorial Replay Settings -->
+          <div class="tutorial-replay-section">
+            <h4 class="tutorial-replay-header">📘 Play Tutorial Next Time</h4>
+            <p class="tutorial-replay-desc">Enable to replay the tutorial for any mode you'd like to review.</p>
+            <div class="tutorial-toggle-list">
+              <div class="tutorial-toggle-item">
+                <span class="toggle-label">🔊 Listen and Type</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="tutorial-replay-listen">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="tutorial-toggle-item">
+                <span class="toggle-label">🎙️ Listen and Repeat</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="tutorial-replay-speak">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="tutorial-toggle-item">
+                <span class="toggle-label">📝 Fill in the Blank</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="tutorial-replay-cloze">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="tutorial-toggle-item">
+                <span class="toggle-label">✍️ Writing Challenge</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="tutorial-replay-writing">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -460,6 +509,23 @@
       </div>
     </div>
   </div>
+
+  <!-- Vocabulary Tutorial Overlay (Contextual tutorials for Vocab Book & SRS) -->
+  <div id="vocab-tutorial-overlay" class="vocab-tutorial-overlay" style="display: none;">
+    <div id="vocab-tutorial-backdrop" class="vocab-tutorial-backdrop"></div>
+    <div id="vocab-tutorial-spotlight" class="vocab-tutorial-spotlight"></div>
+    <div id="vocab-tutorial-tooltip" class="vocab-tutorial-tooltip">
+      <span id="vocab-tutorial-icon" class="tutorial-icon"></span>
+      <h3 id="vocab-tutorial-title"></h3>
+      <p id="vocab-tutorial-text"></p>
+      <div id="vocab-tutorial-dots" class="tutorial-dots"></div>
+      <div class="tutorial-actions">
+        <button id="vocab-tutorial-skip" class="tutorial-skip">Skip</button>
+        <button id="vocab-tutorial-next" class="tutorial-next">Next →</button>
+      </div>
+    </div>
+  </div>
+
 
   <!-- SRS Review Panel (Spaced Repetition Flashcards) -->
   <div id="srs-overlay" class="srs-overlay"></div>
@@ -700,7 +766,12 @@
 
           <div class="pa-input-section">
             <div class="pa-word-input-container">
-              <input type="text" id="pa-word-input" placeholder="Type a word..." value="photograph">
+              <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                <input type="text" id="pa-word-input" placeholder="Type a word..." value="photograph" style="flex: 1;">
+                <button id="pa-search-btn" class="pa-btn pa-search-btn" title="Search word">
+                  🔍 Search
+                </button>
+              </div>
               <div id="pa-word-info" class="pa-word-info">
                 <div class="pa-info-row">
                   <span class="pa-info-label">IPA:</span>
@@ -739,6 +810,9 @@
               <canvas id="pa-stress-chart"></canvas>
             </div>
           </div>
+
+          <!-- Syllable Verification (Waveform) -->
+          <div id="syllable-verifier-container"></div>
 
           <!-- Detailed Feedback Section -->
           <div id="pa-feedback-section" class="pa-feedback-section" style="display: none;">
@@ -1024,6 +1098,7 @@
           <div class="reading-timer">
             <span>Reading time: <span id="reading-timer-display">30</span> seconds</span>
           </div>
+          <div class="reading-tip">Tips: Click on the words for pronunciation</div>
           <button id="skip-reading-btn" type="button" class="skip-reading-btn">Skip reading time</button>
           <div id="full-transcript" class="full-transcript"></div>
         </div>
@@ -1758,12 +1833,15 @@
   <!-- Confetti Library -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
+  <!-- Vocabulary Tutorial System -->
+  <script src="vocab-tutorial.js?v=20260113"></script>
+
   <!-- SRS Review Module -->
-  <script type="module" src="srs-review.js?v=20260106"></script>
+  <script type="module" src="srs-review.js?v=20260113"></script>
 
   <!-- Pronunciation Analyzer -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script type="module" src="pronunciation-analyzer/main.js?v=20260113"></script>
+  <script type="module" src="pronunciation-analyzer/main.js?v=20260114_debug_v3"></script>
 
 </body>
 

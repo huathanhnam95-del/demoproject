@@ -27,7 +27,7 @@
                 title: 'Step 1: Click the Button',
                 text: 'Click this purple button to open the filter menu.',
                 position: 'bottom',
-                nextLabel: null, // No next button - user must click target
+                nextLabel: null,
                 interactive: true,
                 waitForEvent: 'click',
                 beforeShow: () => {
@@ -113,6 +113,57 @@
                 nextLabel: 'Got It! ✓',
                 interactive: false
             }
+        ],
+        extended: [
+            // Placeholder steps for Fill/Extended mode
+            {
+                target: null,
+                icon: '📝',
+                title: 'Fill Mode Guide',
+                text: 'Welcome to <strong>Fill in the Blank</strong> mode! First, read the text within the time limit.',
+                position: 'center',
+                nextLabel: 'Start →',
+                interactive: false
+            },
+            {
+                target: '#reading-timer-display',
+                icon: '⏱️',
+                title: 'Reading Timer',
+                text: 'You have 30 seconds to read the text. You can skip this if you finish early.',
+                position: 'bottom',
+                nextLabel: 'Next',
+                interactive: false
+            },
+            {
+                target: '#skip-reading-btn',
+                icon: '⏩',
+                title: 'Skip Reading',
+                text: 'Click here to skip the timer and start filling in the blanks.',
+                position: 'top',
+                nextLabel: 'Got it!',
+                interactive: false
+            }
+        ],
+        writing: [
+            // Placeholder steps for Writing Challenge
+            {
+                target: null,
+                icon: '✍️',
+                title: 'Writing Challenge',
+                text: 'Time to practice your writing! You will be given a topic or question to answer.',
+                position: 'center',
+                nextLabel: 'Next →',
+                interactive: false
+            },
+            {
+                target: '#srs-writing-textarea', // Assuming ID, might need adjustment based on SRS module
+                icon: '⌨️',
+                title: 'Your Response',
+                text: 'Type your answer here. Try to use the vocabulary you\'ve learned.',
+                position: 'top',
+                nextLabel: 'Finish',
+                interactive: false
+            }
         ]
     };
 
@@ -179,7 +230,11 @@
      * Check if tutorial has been completed for a mode
      */
     function hasCompletedTutorial(mode = 'type') {
-        const key = mode === 'speak' ? 'speakLengthFilterTutorialCompleted' : 'lengthFilterTutorialCompleted';
+        let key = 'lengthFilterTutorialCompleted';
+        if (mode === 'speak') key = 'speakLengthFilterTutorialCompleted';
+        else if (mode === 'extended') key = 'extendedTutorialCompleted';
+        else if (mode === 'writing') key = 'writingTutorialCompleted';
+
         return localStorage.getItem(key) === 'true';
     }
 
@@ -187,7 +242,11 @@
      * Mark tutorial as completed for a mode
      */
     function markTutorialCompleted(mode = 'type') {
-        const key = mode === 'speak' ? 'speakLengthFilterTutorialCompleted' : 'lengthFilterTutorialCompleted';
+        let key = 'lengthFilterTutorialCompleted';
+        if (mode === 'speak') key = 'speakLengthFilterTutorialCompleted';
+        else if (mode === 'extended') key = 'extendedTutorialCompleted';
+        else if (mode === 'writing') key = 'writingTutorialCompleted';
+
         localStorage.setItem(key, 'true');
     }
 
@@ -452,19 +511,81 @@
     }
 
     /**
-     * Reset tutorial for a mode (for testing)
+     * Reset tutorial for a mode (for testing/replay)
      */
     function resetTutorial(mode = 'type') {
-        const key = mode === 'speak' ? 'speakLengthFilterTutorialCompleted' : 'lengthFilterTutorialCompleted';
+        let key = 'lengthFilterTutorialCompleted';
+        if (mode === 'speak') key = 'speakLengthFilterTutorialCompleted';
+        else if (mode === 'extended') key = 'extendedTutorialCompleted';
+        else if (mode === 'writing') key = 'writingTutorialCompleted';
+
         localStorage.removeItem(key);
-        console.log(`Tutorial for ${mode} mode reset. Will show on next unlock.`);
+        console.log(`Tutorial for ${mode} mode reset. Will show on next unlock/visit.`);
+    }
+
+    /**
+     * Mark tutorial as completed for a mode manually (for settings)
+     */
+    function forceCompleteTutorial(mode = 'type') {
+        let key = 'lengthFilterTutorialCompleted';
+        if (mode === 'speak') key = 'speakLengthFilterTutorialCompleted';
+        else if (mode === 'extended') key = 'extendedTutorialCompleted';
+        else if (mode === 'writing') key = 'writingTutorialCompleted';
+
+        localStorage.setItem(key, 'true');
+        console.log(`Tutorial for ${mode} mode marked as completed.`);
+    }
+
+    /**
+     * Initialize settings checkboxes
+     */
+    function initSettings() {
+        const settingsMap = {
+            'tutorial-replay-listen': 'type',
+            'tutorial-replay-speak': 'speak',
+            'tutorial-replay-cloze': 'extended',
+            'tutorial-replay-writing': 'writing'
+        };
+
+        for (const [id, mode] of Object.entries(settingsMap)) {
+            const toggle = document.getElementById(id);
+            if (toggle) {
+                // Set initial state: Checked if tutorial is NOT completed (replay enabled)
+                // BUT: User wants "Enable to replay next time". 
+                // So if it's completed, box is unchecked. If I check it, I reset the tutorial.
+
+                // Check if tutorial is currently "active" (not completed)
+                let isCompleted = hasCompletedTutorial(mode);
+
+                // If the key is missing or false, it means tutorial is pending -> Replay is ON
+                toggle.checked = !isCompleted;
+
+                toggle.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        // User wants to replay -> Enable it (reset completion flag)
+                        resetTutorial(mode);
+                    } else {
+                        // User wants to disable replay -> Mark as completed
+                        forceCompleteTutorial(mode);
+                    }
+                });
+            }
+        }
     }
 
     // Expose to window for external triggering
     window.LengthFilterTutorial = {
         start: startTutorial,
         reset: resetTutorial,
-        hasCompleted: hasCompletedTutorial
+        hasCompleted: hasCompletedTutorial,
+        initSettings: initSettings
     };
+
+    // Initialize settings on load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSettings);
+    } else {
+        initSettings();
+    }
 
 })();

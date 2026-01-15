@@ -109,13 +109,14 @@ function prepareChartData(nativeTimes, nativeValues, targetTimes) {
 }
 
 class StressVisualizer {
-    constructor(pitchCanvasId, stressCanvasId) {
+    constructor(pitchCanvasId, stressCanvasId, onPlaySyllable = null) {
         this.pitchCanvas = document.getElementById(pitchCanvasId);
         this.stressCanvas = document.getElementById(stressCanvasId);
         this.pitchChart = null;
         this.stressChart = null;
         this.nativeAnalysis = null;
         this.timelineContainer = document.getElementById('pa-timeline-container');
+        this.onPlaySyllable = onPlaySyllable;
     }
 
     clear() {
@@ -613,7 +614,7 @@ class StressVisualizer {
         }
 
         // ========================================
-        // NORMALIZE USER DATA
+        // NORMALIZE USER DATA & ALIGN PITCH
         // ========================================
         let normalizedUser = null;
         let userSyllables = [];
@@ -626,32 +627,60 @@ class StressVisualizer {
             userSyllables = normalizedUser.syllables;
 
             const userTimes = normalizedUser.pitch.times;
-            const userPitches = normalizedUser.pitch.values;
+            const originalUserPitches = normalizedUser.pitch.values;
             const userIntensities = normalizedUser.intensity?.values || [];
 
             maxTime = Math.max(maxTime, userTimes[userTimes.length - 1] || 0);
 
+            // --- PITCH ALIGNMENT LOGIC ---
+            // Calculate mean pitch for Native and User to align ranges
+            const getMeanPitch = (values) => {
+                const valid = values.filter(v => typeof v === 'number' && v > 0);
+                if (valid.length === 0) return 0;
+                return valid.reduce((a, b) => a + b, 0) / valid.length;
+            };
+
+            // Get valid native pitches from the dataset prepared above, or raw data
+            const nativeValidPitches = (normalizedNative?.pitch.values || []).filter(p => typeof p === 'number' && p > 0);
+            const userValidPitches = originalUserPitches.filter(p => typeof p === 'number' && p > 0);
+
+            let pitchShift = 0;
+            // Only align if we have data for both
+            if (nativeValidPitches.length > 0 && userValidPitches.length > 0) {
+                const nativeMean = getMeanPitch(normalizedNative.pitch.values);
+                const userMean = getMeanPitch(originalUserPitches);
+                pitchShift = nativeMean - userMean;
+                console.log(`[Pitch Alignment] Native Mean: ${Math.round(nativeMean)}Hz, User Mean: ${Math.round(userMean)}Hz, Shift: ${Math.round(pitchShift)}Hz`);
+            }
+
+            // Apply shift to user pitches for visualization
+            const alignedUserPitches = originalUserPitches.map(p => {
+                if (typeof p !== 'number' || p <= 0) return null;
+                return p + pitchShift;
+            });
+            // -----------------------------
+
             // Normalize intensity for display (Handle dB vs RMS)
-            const maxPitch = Math.max(...userPitches.filter(p => typeof p === 'number')) || 200;
+            const maxPitch = Math.max(...originalUserPitches.filter(p => typeof p === 'number')) || 200;
             maxIntensity = Math.max(...userIntensities) || 1;
-            const isDbScale = maxIntensity > 10; // Unified heuristic: dB values usually > 30-40, RMS < 1
+            const isDbScale = maxIntensity > 10;
 
             const normalizedIntensities = userIntensities.map(i => {
                 if (typeof i !== 'number') return 0;
-                return i; // Pass through raw since we have a dedicated axis now
+                return i;
             });
 
             datasets.push({
-                label: 'Your Pitch (Hz)',
+                label: pitchShift !== 0 ? 'Your Pitch (Aligned)' : 'Your Pitch (Hz)',
                 data: userTimes.map((t, i) => ({
                     x: parseFloat(t.toFixed(2)),
-                    y: userPitches[i]
+                    y: alignedUserPitches[i] // Use aligned values
                 })),
                 borderColor: 'rgb(59, 130, 246)',
                 backgroundColor: 'rgba(59, 130, 246, 0.1)',
                 borderWidth: 2.5,
                 tension: 0.3,
-                pointRadius: 0, // Hidden by default
+                pointRadius: 0,
                 pointHoverRadius: 5,
                 pointStyle: 'circle',
                 spanGaps: true,
@@ -672,7 +701,7 @@ class StressVisualizer {
                 backgroundColor: 'rgba(244, 114, 182, 0.15)',
                 fill: true,
                 borderWidth: 1,
-                tension: 0.1, // Reduced tension
+                tension: 0.1,
                 pointRadius: 0,
                 xAxisID: 'x',
                 yAxisID: 'y1',
@@ -876,10 +905,18 @@ class StressVisualizer {
             }
 
             card.innerHTML = `
+                <div class="pa-feedback-header">
+                    <span class="pa-feedback-title">Syllable ${i + 1} Analysis</span>
+                    ${this.onPlaySyllable && nativeSyl ?
+                    `<button class="pa-play-syl-btn" data-start="${nativeSyl.startTime}" data-end="${nativeSyl.endTime}">
+                            🔊 Play Syllable
+                        </button>` : ''}
+                </div>
+
                 <div class="pa-feedback-row">
                     <div class="pa-feedback-icon">🎵</div>
                     <div class="pa-feedback-detail">
-                        <span class="pa-feedback-title">Pitch Analysis (${stressLabel})</span>
+                        <span class="pa-feedback-subtitle">Pitch Analysis (${stressLabel})</span>
                         <p class="pa-feedback-text ${pitchClass}">${pitchMsg}</p>
                         <p class="pa-pitch-info">
                             <i class="pa-info-icon">ℹ️</i> 
@@ -890,18 +927,29 @@ class StressVisualizer {
                 <div class="pa-feedback-row">
                     <div class="pa-feedback-icon">⏱️</div>
                     <div class="pa-feedback-detail">
-                        <span class="pa-feedback-title">Duration (Timing)</span>
+                        <span class="pa-feedback-subtitle">Duration (Timing)</span>
                         <p class="pa-feedback-text ${durClass}">${durMsg}</p>
                     </div>
                 </div>
                 <div class="pa-feedback-row">
                     <div class="pa-feedback-icon">🔊</div>
                     <div class="pa-feedback-detail">
-                        <span class="pa-feedback-title">Volume</span>
+                        <span class="pa-feedback-subtitle">Volume</span>
                         <p class="pa-feedback-text ${intClass}">${intMsg}</p>
                     </div>
                 </div>
             `;
+
+            // Attach play handler
+            const playBtn = card.querySelector('.pa-play-syl-btn');
+            if (playBtn) {
+                playBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (this.onPlaySyllable) {
+                        this.onPlaySyllable(nativeSyl.startTime, nativeSyl.endTime);
+                    }
+                });
+            }
 
             container.appendChild(card);
         });

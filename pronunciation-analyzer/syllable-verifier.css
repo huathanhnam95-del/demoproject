@@ -1,0 +1,248 @@
+/* Syllable Verifier Styles */
+
+.sv-wrapper {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 12px;
+    padding: 16px;
+    margin: 16px 0;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.sv-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.sv-header h4 {
+    margin: 0;
+    color: #1e293b;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.sv-controls {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.sv-btn {
+    padding: 6px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.sv-btn:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    transform: translateY(-1px);
+}
+
+.sv-btn:active {
+    background: #e2e8f0;
+    transform: translateY(0);
+}
+
+.sv-btn-compare {
+    background: linear-gradient(135deg, #dcfce7 0%, #dbeafe 100%);
+    border-color: #86efac;
+}
+
+.sv-btn-compare:hover {
+    background: linear-gradient(135deg, #bbf7d0 0%, #bfdbfe 100%);
+}
+
+/* Speed selector dropdown */
+.sv-speed-select {
+    padding: 6px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: #1e293b;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.sv-speed-select:hover {
+    border-color: #94a3b8;
+    background: #f1f5f9;
+}
+
+.sv-speed-select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.sv-waveform-container {
+    background: white;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 8px;
+    border: 1px solid #e2e8f0;
+    min-height: 100px;
+}
+
+#sv-waveform {
+    min-height: 80px;
+}
+
+/* Syllable Label Bar */
+.sv-syllable-bar {
+    position: relative;
+    height: 44px;
+    background: #f1f5f9;
+    border-radius: 8px;
+    margin: 10px 0;
+    overflow: hidden;
+}
+
+.sv-syllable-label {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-right: 2px solid white;
+    transition: all 0.2s;
+    padding: 4px 2px;
+    box-sizing: border-box;
+    min-width: 30px;
+}
+
+.sv-syllable-label:nth-child(odd) {
+    background: rgba(59, 130, 246, 0.15);
+}
+
+.sv-syllable-label:nth-child(even) {
+    background: rgba(16, 185, 129, 0.15);
+}
+
+.sv-syllable-label:hover {
+    background: rgba(234, 179, 8, 0.3) !important;
+    transform: scaleY(1.05);
+}
+
+.sv-syllable-label.playing {
+    background: rgba(234, 179, 8, 0.5) !important;
+    transform: scaleY(1.08);
+    box-shadow: 0 0 10px rgba(234, 179, 8, 0.4);
+}
+
+.sv-syl-text {
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.sv-syl-duration {
+    font-size: 0.65rem;
+    color: #64748b;
+}
+
+/* Info Section */
+.sv-info {
+    background: white;
+    border-radius: 8px;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+}
+
+.sv-info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.sv-info-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.sv-info-label {
+    font-size: 0.7rem;
+    color: #64748b;
+}
+
+.sv-info-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.sv-hint {
+    margin: 6px 0 0 0;
+    font-size: 0.8rem;
+    color: #64748b;
+    padding: 6px 8px;
+    background: #fffbeb;
+    border-radius: 6px;
+    border-left: 3px solid #f59e0b;
+}
+
+/* Comparison Label */
+.sv-comparison-label {
+    text-align: center;
+    padding: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: 8px;
+    margin-top: 8px;
+    transition: all 0.3s;
+    min-height: 20px;
+}
+
+.sv-comparison-label.sv-native {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.sv-comparison-label.sv-user {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .sv-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .sv-controls {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .sv-btn {
+        padding: 8px 10px;
+        font-size: 0.85rem;
+    }
+
+    .sv-info-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}

@@ -10,6 +10,64 @@ body {
 }
 
 /* ============================================
+   App Preloader
+   ============================================ */
+.app-preloader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #f4f4f6;
+  /* Match background precisely */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  /* Always on top */
+  transition: opacity 0.4s ease, visibility 0.4s;
+}
+
+.app-preloader.fade-out {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.preloader-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.preloader-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(99, 102, 241, 0.1);
+  border-top: 4px solid #6366f1;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.preloader-text {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #6366f1;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================
    Demo Feedback Banner
    ============================================ */
 
@@ -98,6 +156,97 @@ body {
 
 .feedback-banner.hidden {
   display: none;
+}
+
+/* ============================================
+   Tutorial Replay Settings
+   ============================================ */
+.tutorial-replay-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 2px dashed #e5e7eb;
+}
+
+.tutorial-replay-header {
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
+  color: #1f2933;
+}
+
+.tutorial-replay-desc {
+  margin: 0 0 16px 0;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.tutorial-toggle-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.tutorial-toggle-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.toggle-label {
+  font-weight: 500;
+  color: #334155;
+  font-size: 0.9rem;
+}
+
+/* Custom Toggle Switch */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #cbd5e1;
+  transition: .4s;
+  border-radius: 24px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-switch input:checked+.toggle-slider {
+  background-color: #2563eb;
+}
+
+.toggle-switch input:checked+.toggle-slider:before {
+  transform: translateX(20px);
 }
 
 /* Notification/Info Box (dismissible) */
@@ -1481,6 +1630,14 @@ textarea:focus {
 
 .reading-timer span {
   color: #1f2933;
+}
+
+.reading-tip {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 0.95rem;
+  color: #64748b;
+  font-style: italic;
 }
 
 .skip-reading-btn {
@@ -6966,7 +7123,7 @@ textarea:focus {
   display: none;
   align-items: center;
   justify-content: center;
-  z-index: 11000;
+  z-index: 99999;
   opacity: 0;
   transition: opacity 0.4s ease, background-color 0.4s ease, backdrop-filter 0.4s ease;
 }
@@ -7488,4 +7645,371 @@ textarea:focus {
 
 .pa-timeline-block.user {
   background: rgba(59, 130, 246, 0.7);
+}
+
+/* ============================================
+   Vocabulary Tutorial Overlay
+   ============================================ */
+
+.vocab-tutorial-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10000;
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.vocab-tutorial-overlay.active {
+  opacity: 1;
+}
+
+.vocab-tutorial-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+}
+
+.vocab-tutorial-spotlight {
+  position: fixed;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.65);
+  border-radius: 8px;
+  z-index: 10001;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+.vocab-tutorial-spotlight.pulse {
+  animation: spotlight-pulse 2s ease-in-out infinite;
+}
+
+@keyframes spotlight-pulse {
+
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 9999px rgba(0, 0, 0, 0.65),
+      0 0 0 4px rgba(99, 102, 241, 0.5),
+      0 0 20px 4px rgba(99, 102, 241, 0.3);
+  }
+
+  50% {
+    box-shadow:
+      0 0 0 9999px rgba(0, 0, 0, 0.65),
+      0 0 0 6px rgba(99, 102, 241, 0.7),
+      0 0 30px 8px rgba(99, 102, 241, 0.5);
+  }
+}
+
+.vocab-tutorial-tooltip {
+  position: fixed;
+  background: linear-gradient(145deg, #1e293b, #0f172a);
+  border-radius: 16px;
+  padding: 24px;
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  z-index: 10002;
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(148, 163, 184, 0.1);
+  color: #f1f5f9;
+  animation: tooltip-entrance 0.3s ease-out;
+}
+
+@keyframes tooltip-entrance {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.vocab-tutorial-tooltip.center {
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+/* Tooltip arrow indicators */
+.vocab-tutorial-tooltip::before {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border: 10px solid transparent;
+}
+
+.vocab-tutorial-tooltip.arrow-top::before {
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-bottom-color: #1e293b;
+}
+
+.vocab-tutorial-tooltip.arrow-bottom::before {
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-top-color: #1e293b;
+}
+
+.vocab-tutorial-tooltip.arrow-left::before {
+  left: -20px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-right-color: #1e293b;
+}
+
+.vocab-tutorial-tooltip.arrow-right::before {
+  right: -20px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-left-color: #1e293b;
+}
+
+.vocab-tutorial-tooltip .tutorial-icon {
+  display: block;
+  font-size: 2.5rem;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.vocab-tutorial-tooltip h3 {
+  margin: 0 0 12px 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-align: center;
+  color: #ffffff;
+}
+
+.vocab-tutorial-tooltip p {
+  margin: 0 0 20px 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #cbd5e1;
+  text-align: center;
+}
+
+.vocab-tutorial-tooltip p strong {
+  color: #a78bfa;
+  font-weight: 600;
+}
+
+.tutorial-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.tutorial-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #475569;
+  transition: all 0.2s ease;
+}
+
+.tutorial-dot.active {
+  background: #6366f1;
+  transform: scale(1.2);
+}
+
+.tutorial-dot.completed {
+  background: #22c55e;
+}
+
+.tutorial-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tutorial-skip {
+  padding: 12px 20px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: transparent;
+  color: #94a3b8;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tutorial-skip:hover {
+  background: rgba(148, 163, 184, 0.1);
+  color: #cbd5e1;
+}
+
+.tutorial-next {
+  flex: 1;
+  padding: 12px 24px;
+  border: none;
+  background: linear-gradient(145deg, #6366f1, #4f46e5);
+  color: white;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tutorial-next:hover {
+  background: linear-gradient(145deg, #818cf8, #6366f1);
+  transform: translateY(-1px);
+}
+
+/* ============================================
+   Tutorial Replay Settings Section
+   ============================================ */
+
+.tutorial-replay-section {
+  margin-top: 24px;
+  padding: 20px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  text-align: left;
+}
+
+.tutorial-replay-header {
+  margin: 0 0 8px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.tutorial-replay-desc {
+  margin: 0 0 16px 0;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.tutorial-toggle-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tutorial-toggle-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.tutorial-toggle-item:hover {
+  border-color: #cbd5e1;
+  background: #fafbfc;
+}
+
+.tutorial-toggle-item .toggle-label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #334155;
+}
+
+/* Toggle Switch Component */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #cbd5e1;
+  transition: 0.3s;
+  border-radius: 26px;
+}
+
+.toggle-slider::before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch input:checked+.toggle-slider {
+  background-color: #6366f1;
+}
+
+.toggle-switch input:checked+.toggle-slider::before {
+  transform: translateX(22px);
+}
+
+.toggle-switch input:focus+.toggle-slider {
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+/* Mobile responsiveness for tutorial */
+@media (max-width: 480px) {
+  .vocab-tutorial-tooltip {
+    width: calc(100vw - 32px);
+    padding: 20px;
+    left: 16px !important;
+    right: 16px !important;
+  }
+
+  .vocab-tutorial-tooltip .tutorial-icon {
+    font-size: 2rem;
+  }
+
+  .vocab-tutorial-tooltip h3 {
+    font-size: 1.1rem;
+  }
+
+  .vocab-tutorial-tooltip p {
+    font-size: 0.95rem;
+  }
+
+  .tutorial-actions {
+    flex-direction: column;
+  }
+
+  .tutorial-skip,
+  .tutorial-next {
+    width: 100%;
+  }
+
+  .tutorial-toggle-item {
+    padding: 10px 12px;
+  }
+
+  .tutorial-toggle-item .toggle-label {
+    font-size: 0.9rem;
+  }
 }

@@ -127,13 +127,11 @@ const SRSReview = (function () {
             debouncedSave();
         });
 
-        // FIX 1: Force Z-Index and Body append
+        // FIX 1: Robust Z-Index and Body append
         if (elements.srsWritingModal) {
-            if (elements.srsWritingModal.parentElement !== document.body) {
-                document.body.appendChild(elements.srsWritingModal);
-            }
-            // Add important style to override any CSS
-            elements.srsWritingModal.style.setProperty('z-index', '2147483647', 'important');
+            // Ensure Writing Challenge is at the absolute top of the stacking context
+            document.body.appendChild(elements.srsWritingModal);
+            elements.srsWritingModal.style.setProperty('z-index', '99999', 'important');
         }
 
         // FIX 4: Dynamically inject YouGlish Widget script
@@ -317,15 +315,23 @@ const SRSReview = (function () {
         const summaryEl = document.getElementById('dashboard-srs-summary');
         const textEl = document.getElementById('dashboard-srs-text');
 
-        if (!summaryEl || !textEl) return;
-
         // Check for immediate due words
         const dueWords = getWordsDueForReview();
+        const hasWords = Object.keys(srsCache.srsData).length > 0;
+
+        if (!hasWords) {
+            summaryEl.style.display = 'none';
+            return;
+        }
+
         if (dueWords.length > 0) {
             summaryEl.style.display = 'flex';
+            summaryEl.classList.add('has-due');
             summaryEl.innerHTML = `<span class="icon">🔥</span><span>${dueWords.length} words due now</span>`;
             // Add pulse effect/class if desired
             return;
+        } else {
+            summaryEl.classList.remove('has-due');
         }
 
         // Find next review date
@@ -1335,6 +1341,21 @@ const SRSReview = (function () {
         console.log(`[SRS] Mode Selected: ${selectedMode}. New Weights:`, JSON.stringify(reviewSession.modeWeights));
         console.log(`[SRS] Mode selected: ${reviewSession.currentMode}`);
 
+        // ============================================
+        // SRS MODE TUTORIALS (Contextual, First-Time)
+        // ============================================
+        // Trigger tutorial for each mode on first encounter
+        if (window.VocabTutorial) {
+            if (selectedMode === 'listen' && VocabTutorial.shouldShow('srsListenType')) {
+                // Slight delay to let UI render first
+                setTimeout(() => VocabTutorial.startSRSListenTypeTutorial(), 200);
+            } else if (selectedMode === 'speak' && VocabTutorial.shouldShow('srsListenRepeat')) {
+                setTimeout(() => VocabTutorial.startSRSListenRepeatTutorial(), 200);
+            } else if (selectedMode === 'cloze' && VocabTutorial.shouldShow('srsCloze')) {
+                setTimeout(() => VocabTutorial.startSRSClozeTutorial(), 200);
+            }
+        }
+
         // Reset inputs and results
         if (elements.srsInput) elements.srsInput.value = '';
         if (elements.srsResultContainer) elements.srsResultContainer.style.display = 'none';
@@ -1603,14 +1624,13 @@ const SRSReview = (function () {
         if (elements.flashcard) {
             elements.flashcard.classList.toggle('flipped');
 
-            // If flipped to back, ensure controls are shown (treat as Show Answer)
+            // If flipped to back, call showAnswer to handle UI consistency
             if (elements.flashcard.classList.contains('flipped')) {
-                if (elements.showAnswerBtn) elements.showAnswerBtn.style.display = 'none';
-                if (elements.qualityBtns) elements.qualityBtns.classList.add('visible');
-                if (elements.srsControls) elements.srsControls.classList.add('visible');
-
-                // Auto-check on flip
-                checkAnswerAndDisplay();
+                showAnswer();
+            } else {
+                // If flipping to front, hide controls
+                if (elements.qualityBtns) elements.qualityBtns.classList.remove('visible');
+                if (elements.srsControls) elements.srsControls.classList.remove('visible');
             }
         }
     }
@@ -2865,6 +2885,14 @@ const SRSReview = (function () {
                 return;
             }
 
+            // ============================================
+            // WRITING CHALLENGE TUTORIAL (First-Time)
+            // ============================================
+            if (window.VocabTutorial && VocabTutorial.shouldShow('writingChallenge')) {
+                // Delay to let modal render first
+                setTimeout(() => VocabTutorial.startWritingChallengeTutorial(), 400);
+            }
+
             // Calculate User Level from review stats
             const points = srsCache.reviewStats.totalReviews * POINTS_PER_REVIEW || 0;
             // Assuming calculateLevel is defined elsewhere or will be added
@@ -2980,6 +3008,13 @@ const SRSReview = (function () {
                     elements.srsWritingModal.classList.add('visible');
                     // Accessibility: Trap focus
                     trapFocus(elements.srsWritingModal);
+
+                    // Trigger Tutorial if needed
+                    if (window.LengthFilterTutorial) {
+                        setTimeout(() => {
+                            window.LengthFilterTutorial.start('writing');
+                        }, 500);
+                    }
                 }
                 setTimeout(() => {
                     if (elements.srsWritingInput) elements.srsWritingInput.focus();

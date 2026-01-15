@@ -9,13 +9,13 @@ export const config = {
 
     backendUrl: (() => {
         // Always use Cloud Run if forceCloudRun is true
-        const cloudRunUrl = 'https://parselmouth-backend-1071929245506.us-central1.run.app';
+        const cloudRunUrl = 'https://praat-api-1071929245506.us-central1.run.app';
 
         // For local development, set forceCloudRun to false
         if (window.location.hostname === 'localhost' ||
             window.location.hostname === '127.0.0.1') {
-            // Use local backend for testing (uncomment for local dev)
-            // return 'http://localhost:8080';
+            // Use local backend for testing
+            return 'http://localhost:8080';
         }
         return cloudRunUrl;
     })(),

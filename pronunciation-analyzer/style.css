@@ -5,7 +5,7 @@
     border-radius: 12px;
     padding: 24px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    margin-top: 24px;
+    margin: 24px auto;
     max-width: 800px;
     width: 100%;
 }
@@ -243,6 +243,21 @@
 
 .pa-btn-primary:hover {
     background-color: #2563eb;
+}
+
+/* Search button */
+.pa-search-btn {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.pa-search-btn:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
 }
 
 /* Native Audio Player */

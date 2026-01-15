@@ -5041,6 +5041,18 @@
 
     // Update left panel for Type mode (default active tab)
     await updateProgressPanel('type');
+
+    // Global Readiness check: Wait briefly for auth-listener to trigger if user is signed in
+    // This reduces the 'pop-in' effect of filters and SRS badges
+    setTimeout(() => {
+      const preloader = document.getElementById('app-preloader');
+      if (preloader) {
+        preloader.classList.add('fade-out');
+        setTimeout(() => {
+          preloader.style.display = 'none';
+        }, 500);
+      }
+    }, 800); // 800ms buffer for auth-dependent data from Firestore
   };
 
   // Question selector event listeners
@@ -7131,22 +7143,40 @@
     }
 
     // Level-based Logic
-    const level = profile.englishLevel;
+    const level = profile.englishLevel ? profile.englishLevel.toLowerCase() : null;
     if (!level) return; // Should not happen if unlocked via level, but safety check
 
     const options = menu.querySelectorAll('.filter-option');
     options.forEach(opt => {
       const val = opt.dataset.value;
       if (val === 'all') {
-        opt.style.display = 'flex'; // Always show 'All'? Or remove it? 
-        // Request says: "Only show... 5-8 words". 'All' implies all. 
-        // Maybe hide 'All' too if restricted? 
-        // "Only show the first option: 5–8 words." -> This implies 'All' should be hidden or strictly 5-8.
-        // If I hide 'All', I must select '5-8' by default.
-        // Let's hide 'All' for Beginner/Intermediate to force specific practice.
-        opt.style.display = 'none';
+        // Always show 'All Lengths' for every level as requested
+        opt.style.display = 'flex';
+
+        // Tag as restricted for Beginner and Expert if not fully unlocked
+        const level = (profile.englishLevel || '').toLowerCase();
+        const fullUnlockKey = mode === 'speak' ? 'speakLengthFilterFullUnlock' : 'sentenceLengthFilterFullUnlock';
+        const isFullUnlocked = profile[fullUnlockKey] === true;
+
+        if ((level === 'beginner' || level === 'expert') && !isFullUnlocked) {
+          opt.dataset.locked = "true";
+          // Add visual cue for locked state if not already there
+          if (!opt.querySelector('.locked-icon')) {
+            const icon = document.createElement('span');
+            icon.className = 'locked-icon';
+            icon.textContent = '🔒';
+            icon.style.marginLeft = 'auto';
+            icon.style.fontSize = '0.9em';
+            opt.appendChild(icon);
+          }
+        } else {
+          delete opt.dataset.locked;
+          const icon = opt.querySelector('.locked-icon');
+          if (icon) icon.remove();
+        }
       } else {
         let show = false;
+        const level = (profile.englishLevel || '').toLowerCase();
 
         if (level === 'beginner') {
           // Only 5-8 (and maybe 4-7 for speak)
@@ -7155,15 +7185,11 @@
           // 5-8, 9 (Type) / 4-7, 8-9 (Speak)
           if (val === '5-8' || val === '9') show = true;
           if (val === '4-7' || val === '8-9') show = true;
-        } else if (level === 'expert') {
-          // Expert doesn't unlock by default. If here, it means it's unlocked but NOT fully? 
-          // Should typically be full unlock if Expert has it. 
-          // But if they somehow got here without full unlock, show all?
-          // User said: "Expert: Do not unlock".
-          // If they have it, assume full.
-          show = true;
+        } else if (level === 'expert' || level === 'advanced') {
+          // Expert is now restricted similarly to Beginner by default unless fully unlocked
+          // The user requested a popup for 'All lengths' for Experts too.
+          if (val === '5-8' || val === '4-7') show = true;
         }
-
         opt.style.display = show ? 'flex' : 'none';
       }
     });
@@ -7255,7 +7281,18 @@
 
     // Handle option click (single-select)
     lengthFilterMenu.querySelectorAll('.filter-option').forEach(option => {
-      option.addEventListener('click', () => {
+      option.addEventListener('click', (e) => {
+        // Restricted Filter Check
+        if (option.dataset.locked === "true") {
+          const points = (window.currentUserProfile && window.currentUserProfile.totalPoints) || 0;
+          if (points >= 50) {
+            alert("This feature is locked. Exchange it in the Shop now!");
+          } else {
+            alert("This feature is locked. Practice more to get coins and unlock it!");
+          }
+          return; // Do not apply filter
+        }
+
         // Remove selected from all
         lengthFilterMenu.querySelectorAll('.filter-option').forEach(o => o.classList.remove('selected'));
         // Add to clicked
@@ -7349,7 +7386,18 @@
 
     // Handle option click (single-select)
     lengthFilterMenuSpeak.querySelectorAll('.filter-option').forEach(option => {
-      option.addEventListener('click', () => {
+      option.addEventListener('click', (e) => {
+        // Restricted Filter Check
+        if (option.dataset.locked === "true") {
+          const points = (window.currentUserProfile && window.currentUserProfile.totalPoints) || 0;
+          if (points >= 50) {
+            alert("This feature is locked. Exchange it in the Shop now!");
+          } else {
+            alert("This feature is locked. Practice more to get coins and unlock it!");
+          }
+          return; // Do not apply filter
+        }
+
         // Remove selected from all
         lengthFilterMenuSpeak.querySelectorAll('.filter-option').forEach(o => o.classList.remove('selected'));
         // Add to clicked
@@ -7379,6 +7427,10 @@
 
   // Handle unlock event from Shopping Modal (supports both modes)
   window.onFilterUnlocked = (mode = 'type') => {
+    const userId = window.authUI?.getCurrentUserId?.();
+    if (userId) {
+      checkFilterUnlockStatus(userId);
+    }
     const container = document.getElementById(`length-filter-container-${mode}`);
     const menu = document.getElementById(`length-filter-menu-${mode}`);
 

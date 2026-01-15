@@ -9,7 +9,8 @@ import { STRESS_WEIGHTS, calculateStressScore } from './stress-utils.js';
 
 // Cache version - increment when backend algorithm changes
 // v2: Fixed stress detection for IPA strings (2026-01-12)
-const CACHE_VERSION = 2;
+// v3: Robust IPA syllable counting (2026-01-14)
+const CACHE_VERSION = 3;
 
 export class WordReferenceService {
     constructor() {
@@ -238,6 +239,7 @@ export class WordReferenceService {
 
     /**
      * Compare user's pronunciation with native reference
+     * Uses pattern correlation instead of finding "max stressed syllable"
      */
     compareWithNative(userSyllables, nativePattern) {
         if (!userSyllables || !nativePattern) return null;
@@ -257,12 +259,6 @@ export class WordReferenceService {
             const userRelDur = Math.round(((user.vowelDuration || user.duration || 0) / userMaxDuration) * 100);
             const userRelInt = Math.round(((user.intensity || user.maxEnergy || 0) / userMaxIntensity) * 100);
 
-            // Use weighted score for pitch matching accuracy if desired, 
-            // but for simple "score" we often use linear difference.
-            // Let's use the unified weights for component importance in overall score?
-            // Actually, for COMPARING, we want to know how close user is to native.
-            // Using standard deviation weights makes sense.
-
             comparison.push({
                 syllable: i + 1,
                 isStressed: native.isStressed,
@@ -272,7 +268,6 @@ export class WordReferenceService {
                 nativePitch: native.relativePitch,
                 nativeDuration: native.relativeDuration,
                 nativeIntensity: native.relativeIntensity,
-                // Simple difference scores (0-100)
                 pitchScore: Math.max(0, 100 - Math.abs(userRelPitch - native.relativePitch)),
                 durationScore: Math.max(0, 100 - Math.abs(userRelDur - native.relativeDuration)),
                 intensityScore: Math.max(0, 100 - Math.abs(userRelInt - native.relativeIntensity))
@@ -284,18 +279,15 @@ export class WordReferenceService {
         const avgDurationScore = comparison.reduce((sum, c) => sum + c.durationScore, 0) / count;
         const avgIntensityScore = comparison.reduce((sum, c) => sum + c.intensityScore, 0) / count;
 
-        // Overall score: Weighted average of component scores
-        // We use the same component proportions as the stress score: 35:50:15
         const overallScore = Math.round(
             (avgPitchScore * STRESS_WEIGHTS.pitch) +
             (avgDurationScore * STRESS_WEIGHTS.duration) +
             (avgIntensityScore * STRESS_WEIGHTS.intensity)
         );
 
-        // Find user's stressed syllable
-        const userStressedIndex = this.findUserStressedSyllable(userSyllables);
+        // === NEW: Pattern Correlation Approach ===
         const nativeStressedIndex = nativePattern.findIndex(p => p.isStressed);
-        const stressMatches = userStressedIndex === nativeStressedIndex;
+        const stressComparison = this.compareStressPattern(userSyllables, nativePattern, nativeStressedIndex);
 
         return {
             syllables: comparison,
@@ -303,8 +295,11 @@ export class WordReferenceService {
             pitchScore: Math.round(avgPitchScore),
             durationScore: Math.round(avgDurationScore),
             intensityScore: Math.round(avgIntensityScore),
-            stressMatches,
-            userStressedSyllable: userStressedIndex + 1,
+            // === CHANGED: Use pattern correlation ===
+            stressMatches: stressComparison.matches,
+            patternCorrelation: stressComparison.confidence,
+            stressFeedback: stressComparison.message,
+            // Keep native stressed for reference
             nativeStressedSyllable: nativeStressedIndex + 1,
             syllableCountMatches: userSyllables.length === nativePattern.length
         };
@@ -312,7 +307,8 @@ export class WordReferenceService {
 
     /**
      * Find which syllable the user stressed most
-     * Uses Scientific Weighting: Duration (3) > Pitch (2) > Intensity (1)
+     * Uses Scientific Weighting: Pitch (0.45), Duration (0.35), Intensity (0.20)
+     * Includes final syllable penalty to compensate for natural lengthening.
      */
     findUserStressedSyllable(syllables) {
         if (!syllables || syllables.length === 0) return 0;
@@ -325,11 +321,15 @@ export class WordReferenceService {
         let stressedIndex = 0;
 
         syllables.forEach((s, i) => {
-            // Priority: Duration (3) > Pitch (2) > Intensity (1)
             // Use Unified Logic from Utils
             const pRel = ((s.maxPitch || 0) / (maxPitch || 1)) * 100;
-            const dRel = ((s.duration || 0) / (maxDuration || 1)) * 100;
+            let dRel = ((s.duration || 0) / (maxDuration || 1)) * 100;
             const iRel = ((s.intensity || s.maxEnergy || 0) / (maxEnergy || 1)) * 100;
+
+            // Apply final syllable penalty (compensate for natural lengthening)
+            if (i === syllables.length - 1 && syllables.length > 1) {
+                dRel *= 0.85; // 15% penalty on duration
+            }
 
             const score = calculateStressScore(pRel, dRel, iRel);
 
@@ -347,6 +347,115 @@ export class WordReferenceService {
      */
     clearCache() {
         this.sessionCache.clear();
+    }
+
+    /**
+     * Compare stress pattern using Pearson correlation
+     * Asks "Does your pattern match native?" instead of "Which syllable did you stress?"
+     */
+    compareStressPattern(userSyllables, nativeSyllables, nativeStressedIndex) {
+        if (!userSyllables?.length || !nativeSyllables?.length) {
+            return { matches: true, confidence: 100, message: '' };
+        }
+
+        // Normalize to percentages for multiple features
+        const normalize = (syllables, key) => {
+            const values = syllables.map(s => s[key] || 0);
+            const max = Math.max(...values) || 1;
+            return values.map(v => v / max);
+        };
+
+        // Get user patterns
+        const userDur = normalize(userSyllables, 'duration');
+        const userPitch = normalize(userSyllables, 'maxPitch');
+        const userInt = normalize(userSyllables, 'intensity');
+
+        // Get native patterns (already have relativePitch etc as 0-100)
+        const nativeMaxDur = Math.max(...nativeSyllables.map(s => s.duration || 0)) || 1;
+        const nativeMaxPitch = Math.max(...nativeSyllables.map(s => s.maxPitch || s.pitch || 0)) || 1;
+        const nativeMaxInt = Math.max(...nativeSyllables.map(s => s.intensity || 0)) || 1;
+
+        const nativeDur = nativeSyllables.map(s => (s.duration || 0) / nativeMaxDur);
+        const nativePitch = nativeSyllables.map(s => (s.maxPitch || s.pitch || 0) / nativeMaxPitch);
+        const nativeInt = nativeSyllables.map(s => (s.intensity || 0) / nativeMaxInt);
+
+        // Calculate correlations
+        const minLen = Math.min(userSyllables.length, nativeSyllables.length);
+        const durCorr = this.pearsonCorrelation(userDur.slice(0, minLen), nativeDur.slice(0, minLen));
+        const pitchCorr = this.pearsonCorrelation(userPitch.slice(0, minLen), nativePitch.slice(0, minLen));
+        const intCorr = this.pearsonCorrelation(userInt.slice(0, minLen), nativeInt.slice(0, minLen));
+
+        // Weighted average (pitch matters most for stress perception)
+        const avgCorr = (pitchCorr * 0.45) + (durCorr * 0.35) + (intCorr * 0.20);
+
+        // Pattern matches if correlation > 0.7
+        const matches = avgCorr > 0.7;
+        const confidence = Math.round(Math.max(0, avgCorr) * 100);
+
+        return {
+            matches,
+            confidence,
+            message: matches
+                ? "Your stress pattern matches the native speaker!"
+                : this.generatePatternMismatchFeedback(userSyllables, nativeSyllables, nativeStressedIndex, userDur, nativeDur)
+        };
+    }
+
+    /**
+     * Calculate Pearson correlation coefficient
+     */
+    pearsonCorrelation(x, y) {
+        const n = Math.min(x.length, y.length);
+        if (n < 2) return 1;
+
+        let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
+
+        for (let i = 0; i < n; i++) {
+            sumX += x[i];
+            sumY += y[i];
+            sumXY += x[i] * y[i];
+            sumX2 += x[i] * x[i];
+            sumY2 += y[i] * y[i];
+        }
+
+        const num = n * sumXY - sumX * sumY;
+        const den = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+
+        return den === 0 ? 0 : num / den;
+    }
+
+    /**
+     * Generate specific feedback when patterns don't match
+     */
+    generatePatternMismatchFeedback(userSyllables, nativeSyllables, stressedIdx, userRel, nativeRel) {
+        const minLen = Math.min(userSyllables.length, nativeSyllables.length);
+
+        // Find where user deviates most
+        const deviations = [];
+        for (let i = 0; i < minLen; i++) {
+            deviations.push({
+                syllable: i + 1,
+                diff: userRel[i] - nativeRel[i],
+                isStressed: i === stressedIdx
+            });
+        }
+
+        // Check if stressed syllable is under-emphasized
+        const stressedDev = deviations.find(d => d.isStressed);
+        if (stressedDev && stressedDev.diff < -0.15) {
+            return `Syllable ${stressedIdx + 1} needs more emphasis - hold it longer and raise pitch`;
+        }
+
+        // Find over-emphasized unstressed syllables
+        const overEmph = deviations
+            .filter(d => d.diff > 0.15 && !d.isStressed)
+            .sort((a, b) => b.diff - a.diff)[0];
+
+        if (overEmph) {
+            return `Syllable ${overEmph.syllable} is too prominent - make it shorter/quieter`;
+        }
+
+        return "Adjust your rhythm to better match the native pattern";
     }
 
     /**

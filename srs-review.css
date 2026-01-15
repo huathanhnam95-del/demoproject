@@ -1020,19 +1020,27 @@
    ========================================= */
 .dashboard-srs-summary {
     margin-top: 12px;
-    padding: 8px 12px;
-    background-color: rgba(37, 99, 235, 0.1);
-    border: 1px solid rgba(37, 99, 235, 0.2);
-    border-radius: 8px;
-    font-size: 0.9rem;
-    color: #1e40af;
+    padding: 10px 16px;
+    background-color: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 12px;
+    font-size: 0.95rem;
+    color: #ffffff;
     display: none;
     /* Managed by JS */
     align-items: center;
     gap: 8px;
     pointer-events: none;
-    /* Pass clicks to card */
-    transition: background-color 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-srs-summary.has-due {
+    background-color: rgba(251, 191, 36, 0.25);
+    border-color: rgba(251, 191, 36, 0.45);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    font-weight: 600;
 }
 
 .dashboard-srs-summary .icon {
@@ -1219,6 +1227,7 @@
         left: 0 !important;
         transform: none !important;
         padding: 16px !important;
+        z-index: 99999 !important;
     }
 
     .srs-writing-input {

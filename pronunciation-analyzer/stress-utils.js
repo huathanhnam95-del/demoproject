@@ -4,9 +4,9 @@
  */
 
 export const STRESS_WEIGHTS = {
-    pitch: 0.45,      // Increased weight for perceptual salience
-    duration: 0.35,   // Still strong, but less dominant
-    intensity: 0.20   // Slightly more weight for loudness
+    pitch: 0.50,      // Kochanski et al. (2005): Pitch is primary cue
+    duration: 0.30,   // Secondary cue for stress
+    intensity: 0.20   // Tertiary cue
 };
 
 /**

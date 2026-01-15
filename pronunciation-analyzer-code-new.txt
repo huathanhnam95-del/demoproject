@@ -1,7 +1,4 @@
-﻿==================================================
-FILE: c:\Cursor AI\backend\server.py
-==================================================
-from flask import Flask, request, jsonify, Response
+﻿from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 import parselmouth
 import numpy as np
@@ -1067,10 +1064,6 @@ def find_stressed_with_corrections(syllables):
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
     app.run(host='0.0.0.0', port=port, debug=False)
-
-==================================================
-FILE: c:\Cursor AI\pronunciation-analyzer\main.js
-==================================================
 import { AudioCapture } from './audio-capture.js';
 import { PitchAnalyzer } from './pitch-analyzer.js';
 import { SyllableDetector } from './syllable-detector.js';
@@ -1789,11 +1782,6 @@ document.addEventListener('DOMContentLoaded', () => {
         new PronunciationApp();
     }
 });
-
-
-==================================================
-FILE: c:\Cursor AI\pronunciation-analyzer\stress-visualizer.js
-==================================================
 import { STRESS_WEIGHTS, calculateStressScore } from './stress-utils.js';
 
 const ALIGNMENT_CONFIG = {
@@ -2751,11 +2739,6 @@ class StressVisualizer {
 }
 
 export { StressVisualizer };
-
-
-==================================================
-FILE: c:\Cursor AI\pronunciation-analyzer\stress-utils.js
-==================================================
 /**
  * Unified stress analysis utilities
  * Based on Fry (1955, 1958) hierarchy: Duration > Pitch > Intensity
@@ -2818,11 +2801,6 @@ export function findStressedSyllable(syllables) {
 
     return bestIdx;
 }
-
-
-==================================================
-FILE: c:\Cursor AI\pronunciation-analyzer\word-reference-service.js
-==================================================
 /**
  * Word Reference Service
  * Main orchestrator: Check DB â†’ Call backend for MW data â†’ Save to DB â†’ Return
@@ -3338,11 +3316,6 @@ export class WordReferenceService {
         return compressed;
     }
 }
-
-
-==================================================
-FILE: c:\Cursor AI\pronunciation-analyzer\praat-api.js
-==================================================
 import { config } from './config.js';
 
 /**
@@ -3475,11 +3448,6 @@ export class PraatAPI {
         }
     }
 }
-
-
-==================================================
-FILE: c:\Cursor AI\pronunciation-analyzer\audio-capture.js
-==================================================
 export class AudioCapture {
     constructor() {
         this.mediaRecorder = null;
@@ -3573,11 +3541,6 @@ export class AudioCapture {
         }
     }
 }
-
-
-==================================================
-FILE: c:\Cursor AI\pronunciation-analyzer\syllable-verifier.js
-==================================================
 /**
  * SyllableVerifier - Interactive syllable boundary verification
  * Uses Wavesurfer.js for waveform display and region playback
@@ -4112,11 +4075,6 @@ if (typeof module !== 'undefined' && module.exports) {
 } else {
     window.SyllableVerifier = SyllableVerifier;
 }
-
-
-==================================================
-FILE: c:\Cursor AI\pronunciation-analyzer\config.js
-==================================================
 /**
  * Pronunciation Analyzer Configuration
  * Centralized configuration for backend URL and feature flags
@@ -4153,6 +4111,3 @@ export const config = {
     // Cache Settings
     sessionCacheEnabled: true
 };
-
-
-

@@ -48,6 +48,12 @@ class AnalysisConfig:
     
     # Pattern matching
     PATTERN_MATCH_THRESHOLD = 0.70   # Pearson correlation threshold
+    
+    # Vowel-end clamping (prevents onset cluster leakage)
+    # Based on perceptual syllable timing - boundary should be at vowel offset
+    VOWEL_END_LOOKAHEAD_FACTOR = 1.5  # Multiplier of MIN_SYLLABLE_DURATION
+    VOWEL_END_INTENSITY_DROP = 0.15   # 15% relative drop from peak (speaker-normalized)
+    VOWEL_END_FLUX_THRESHOLD = 0.4    # Normalized intensity rate-of-change for voiced clusters
 
 
 # ============================================================================
@@ -350,6 +356,115 @@ class BoundaryDetector:
             return weighted_avg
         
         return (start_time + end_time) / 2
+
+
+# ============================================================================
+# VOWEL-END CLAMPING (Prevents onset cluster leakage like /pr/ into prev syl)
+# ============================================================================
+
+def find_vowel_end(pitch, intensity_obj, int_times, int_values, peak_time, candidate_boundary, config=None):
+    """
+    Find where the vowel nucleus ends, BEFORE consonant onset.
+    
+    This prevents onset clusters (e.g., /pr/ in "improve") from leaking into
+    the previous syllable's audio playback and duration metrics.
+    
+    Uses:
+    1. Voicing break (voiced -> unvoiced transition)
+    2. Intensity drop (relative to speaker's dynamic range)
+    3. Intensity flux spike (fallback for voiced clusters like /mbr/)
+    
+    Args:
+        peak_time: Time of syllable nucleus peak
+        candidate_boundary: The boundary proposed by BoundaryDetector (search up to this)
+    
+    Returns the time of vowel offset.
+    """
+    if config is None:
+        config = AnalysisConfig()
+    
+    # Search from peak to just past candidate boundary
+    # This ensures we check the ENTIRE region where onset could be
+    max_lookahead = candidate_boundary - peak_time + 0.02  # +20ms buffer past candidate
+    max_lookahead = max(max_lookahead, 0.06)  # At least 60ms
+    max_lookahead = min(max_lookahead, 0.25)  # Cap at 250ms to avoid runaway
+    
+    # Speaker-normalized intensity drop threshold
+    median_intensity = np.median(int_values[int_values > 0]) if np.any(int_values > 0) else 50
+    drop_threshold = median_intensity * config.VOWEL_END_INTENSITY_DROP
+    
+    # Find indices
+    start_idx = int(np.searchsorted(int_times, peak_time))
+    end_limit = min(peak_time + max_lookahead, int_times[-1] if len(int_times) > 0 else peak_time)
+    end_idx = int(np.searchsorted(int_times, end_limit))
+    
+    if start_idx >= len(int_values) or end_idx <= start_idx:
+        return float(end_limit)
+    
+    peak_intensity = int_values[start_idx]
+    
+    # PASS 1: Look for voicing break (primary - most reliable)
+    prev_voiced = True
+    for i in range(start_idx + 1, min(end_idx, len(int_values))):
+        t = float(int_times[i])
+        p = pitch.get_value_at_time(t)
+        is_voiced = not np.isnan(p) and p > 0
+        
+        if prev_voiced and not is_voiced:
+            return t
+        
+        prev_voiced = is_voiced
+    
+    # PASS 2: Look for sharp intensity drop (secondary)
+    for i in range(start_idx + 1, min(end_idx, len(int_values))):
+        t = float(int_times[i])
+        curr_intensity = int_values[i]
+        
+        if curr_intensity < peak_intensity - drop_threshold:
+            return t
+    
+    # PASS 3: Flux spike (tertiary - only for voiced clusters like /mbr/)
+    # Use a high threshold to avoid false positives
+    FLUX_THRESHOLD = 1.5
+    prev_intensity = int_values[start_idx]
+    for i in range(start_idx + 1, min(end_idx, len(int_values))):
+        t = float(int_times[i])
+        curr_intensity = int_values[i]
+        dt = int_times[i] - int_times[i-1]
+        
+        if dt > 0:
+            flux = abs(curr_intensity - prev_intensity) / dt
+            normalized_flux = flux / (peak_intensity + 1e-6)
+            if normalized_flux > FLUX_THRESHOLD:
+                return t
+        
+        prev_intensity = curr_intensity
+    
+    return float(end_limit)
+
+
+def clamp_boundary_to_vowel_end(candidate_boundary, peak_time, start_time, 
+                                  pitch, intensity_obj, int_times, int_values, config=None):
+    """
+    Clamp a candidate boundary so it never crosses into the next syllable's onset.
+    
+    Also enforces minimum syllable duration constraint.
+    """
+    if config is None:
+        config = AnalysisConfig()
+    
+    # Find vowel end (search up to candidate boundary)
+    vowel_end = find_vowel_end(pitch, intensity_obj, int_times, int_values, peak_time, candidate_boundary, config)
+    
+    # Clamp: boundary cannot be later than vowel end
+    clamped = min(candidate_boundary, vowel_end)
+    
+    # Sanity check: ensure syllable doesn't become too short
+    min_end = start_time + config.MIN_SYLLABLE_DURATION
+    clamped = max(clamped, min_end)
+    
+    return clamped, vowel_end
+
 
 app = Flask(__name__)
 
@@ -1394,6 +1509,7 @@ def peaks_to_syllables(peaks, pitch, int_times, int_values, speech_start, speech
         use_multicue = False
     
     syllables = []
+    config = AnalysisConfig()
     
     # Find boundaries between each pair of peaks
     boundaries = [speech_start]
@@ -1406,7 +1522,7 @@ def peaks_to_syllables(peaks, pitch, int_times, int_values, speech_start, speech
         if use_multicue:
             # Use multi-cue detection
             result = detector.find_boundary(current_peak['time'], next_peak['time'])
-            boundary_time = result['time']
+            candidate_time = result['time']
             boundary_debug.append(result)
         else:
             # Fallback: intensity minimum only
@@ -1415,10 +1531,24 @@ def peaks_to_syllables(peaks, pitch, int_times, int_values, speech_start, speech
             search_region = int_values[start_idx:end_idx+1]
             min_idx_in_region = np.argmin(search_region)
             min_idx = start_idx + min_idx_in_region
-            boundary_time = float(int_times[min_idx])
-            boundary_debug.append({'time': boundary_time, 'cues': {'intensity_only': True}})
+            candidate_time = float(int_times[min_idx])
+            boundary_debug.append({'time': candidate_time, 'cues': {'intensity_only': True}})
         
-        boundaries.append(boundary_time)
+        # === VOWEL-END CLAMPING ===
+        # Prevent onset clusters (/pr/, /tr/, /mbr/) from leaking into previous syllable
+        syl_start = boundaries[-1] if boundaries else speech_start
+        clamped_time, vowel_end = clamp_boundary_to_vowel_end(
+            candidate_time, 
+            current_peak['time'],
+            syl_start,
+            pitch, intensity, int_times, int_values, config
+        )
+        
+        # Log if clamping was applied
+        if abs(clamped_time - candidate_time) > 0.01:
+            print(f"  [CLAMP] Boundary {i+1}: {candidate_time:.3f}s → {clamped_time:.3f}s (vowel_end: {vowel_end:.3f}s)")
+        
+        boundaries.append(clamped_time)
     
     boundaries.append(speech_end)
     

@@ -114,152 +114,86 @@
                 interactive: false
             }
         ],
-        extended: [
-            // Placeholder steps for Fill/Extended mode
-            {
-                target: null,
-                icon: '📝',
-                title: 'Fill Mode Guide',
-                text: 'Welcome to <strong>Fill in the Blank</strong> mode! First, read the text within the time limit.',
-                position: 'center',
-                nextLabel: 'Start →',
-                interactive: false
-            },
-            {
-                target: '#reading-timer-display',
-                icon: '⏱️',
-                title: 'Reading Timer',
-                text: 'You have 30 seconds to read the text. You can skip this if you finish early.',
-                position: 'bottom',
-                nextLabel: 'Next',
-                interactive: false
-            },
-            {
-                target: '#skip-reading-btn',
-                icon: '⏩',
-                title: 'Skip Reading',
-                text: 'Click here to skip the timer and start filling in the blanks.',
-                position: 'top',
-                nextLabel: 'Got it!',
-                interactive: false
-            }
-        ],
-        writing: [
-            // Placeholder steps for Writing Challenge
-            {
-                target: null,
-                icon: '✍️',
-                title: 'Writing Challenge',
-                text: 'Time to practice your writing! You will be given a topic or question to answer.',
-                position: 'center',
-                nextLabel: 'Next →',
-                interactive: false
-            },
-            {
-                target: '#srs-writing-textarea', // Assuming ID, might need adjustment based on SRS module
-                icon: '⌨️',
-                title: 'Your Response',
-                text: 'Type your answer here. Try to use the vocabulary you\'ve learned.',
-                position: 'top',
-                nextLabel: 'Finish',
-                interactive: false
-            }
-        ]
     };
 
-    let currentStep = 0;
-    let currentMode = 'type';
-    let isActive = false;
-    let interactiveListener = null;
-
-    // DOM elements (cached)
-    let overlay, backdrop, spotlight, tooltip, title, text, icon, nextBtn, skipBtn, dotsContainer;
+    // Helper functions
 
     /**
-     * Initialize tutorial DOM references
+     * Helper to get keys for a mode
      */
-    function initElements() {
-        overlay = document.getElementById('tutorial-overlay');
-        backdrop = document.getElementById('tutorial-backdrop');
-        spotlight = document.getElementById('tutorial-spotlight');
-        tooltip = document.getElementById('tutorial-tooltip');
-        title = document.getElementById('tutorial-title');
-        text = document.getElementById('tutorial-text');
-        icon = document.getElementById('tutorial-icon');
-        nextBtn = document.getElementById('tutorial-next');
-        skipBtn = document.getElementById('tutorial-skip');
-        dotsContainer = document.getElementById('tutorial-dots');
-
-        if (nextBtn) nextBtn.addEventListener('click', nextStep);
-        if (skipBtn) skipBtn.addEventListener('click', endTutorial);
-
-        // Forward clicks on overlay to the spotlighted element
-        if (overlay) {
-            overlay.addEventListener('click', (e) => {
-                if (!isActive || !spotlight || spotlight.style.display === 'none') return;
-
-                const spotlightRect = spotlight.getBoundingClientRect();
-
-                // Check if click is inside spotlight
-                if (e.clientX >= spotlightRect.left &&
-                    e.clientX <= spotlightRect.right &&
-                    e.clientY >= spotlightRect.top &&
-                    e.clientY <= spotlightRect.bottom) {
-
-                    e.stopPropagation();
-                    e.preventDefault();
-
-                    // Hide overlay momentarily to click what's underneath
-                    overlay.style.display = 'none';
-                    const target = document.elementFromPoint(e.clientX, e.clientY);
-
-                    if (target) {
-                        target.click();
-                        // Also trigger focus if it's an input/button
-                        if (target.focus) target.focus();
-                    }
-
-                    // Restore overlay
-                    overlay.style.display = 'block';
-                }
-            }, { capture: true });
-        }
+    function getKeys(mode) {
+        if (mode === 'speak') return {
+            complete: 'speakLengthFilterTutorialCompleted',
+            replay: 'speakLengthFilterTutorialReplay'
+        };
+        if (mode === 'extended') return {
+            complete: 'extendedTutorialCompleted',
+            replay: 'extendedTutorialReplay'
+        };
+        if (mode === 'writing') return {
+            complete: 'writingTutorialCompleted',
+            replay: 'writingTutorialReplay'
+        };
+        // Default 'type'
+        return {
+            complete: 'lengthFilterTutorialCompleted',
+            replay: 'lengthFilterTutorialReplay'
+        };
     }
 
     /**
-     * Check if tutorial has been completed for a mode
+     * Check if tutorial has been fully completed
      */
     function hasCompletedTutorial(mode = 'type') {
-        let key = 'lengthFilterTutorialCompleted';
-        if (mode === 'speak') key = 'speakLengthFilterTutorialCompleted';
-        else if (mode === 'extended') key = 'extendedTutorialCompleted';
-        else if (mode === 'writing') key = 'writingTutorialCompleted';
-
-        return localStorage.getItem(key) === 'true';
+        const { complete } = getKeys(mode);
+        return localStorage.getItem(complete) === 'true';
     }
 
     /**
-     * Mark tutorial as completed for a mode
+     * Check if replay is enabled
+     */
+    function isReplayEnabled(mode = 'type') {
+        const { replay } = getKeys(mode);
+        return localStorage.getItem(replay) === 'true';
+    }
+
+    /**
+     * Check if tutorial should show (Not completed OR Replay enabled)
+     */
+    function shouldShowTutorial(mode = 'type') {
+        return !hasCompletedTutorial(mode) || isReplayEnabled(mode);
+    }
+
+    /**
+     * Mark tutorial as completed
      */
     function markTutorialCompleted(mode = 'type') {
-        let key = 'lengthFilterTutorialCompleted';
-        if (mode === 'speak') key = 'speakLengthFilterTutorialCompleted';
-        else if (mode === 'extended') key = 'extendedTutorialCompleted';
-        else if (mode === 'writing') key = 'writingTutorialCompleted';
+        const { complete } = getKeys(mode);
+        localStorage.setItem(complete, 'true');
+    }
 
-        localStorage.setItem(key, 'true');
+    /**
+     * Set replay preference
+     */
+    function setReplayPreference(mode, enabled) {
+        const { replay } = getKeys(mode);
+        if (enabled) {
+            localStorage.setItem(replay, 'true');
+        } else {
+            localStorage.removeItem(replay);
+        }
     }
 
     /**
      * Start the tutorial for a specific mode
      */
     function startTutorial(mode = 'type') {
-        if (hasCompletedTutorial(mode)) {
-            console.log(`Tutorial for ${mode} mode already completed, skipping.`);
+        if (!shouldShowTutorial(mode)) {
+            console.log(`Tutorial for ${mode} mode skipped (Completed & No Replay).`);
             return;
         }
 
-        console.log(`Starting length filter tutorial for ${mode} mode...`);
+        console.log(`Starting tutorial for ${mode} mode...`);
         currentMode = mode;
         initElements();
 
@@ -316,9 +250,36 @@
     }
 
     /**
+     * Helper to safely find target with retries
+     */
+    function waitForTarget(selector, timeout = 500) {
+        return new Promise(resolve => {
+            const element = document.querySelector(selector);
+            if (element && element.offsetParent !== null) { // Check visibility
+                resolve(element);
+                return;
+            }
+
+            // Retry for a bit if not found/visible
+            let retries = 0;
+            const interval = setInterval(() => {
+                retries++;
+                const el = document.querySelector(selector);
+                if (el && el.offsetParent !== null) {
+                    clearInterval(interval);
+                    resolve(el);
+                } else if (retries * 50 > timeout) {
+                    clearInterval(interval);
+                    resolve(null);
+                }
+            }, 50);
+        });
+    }
+
+    /**
      * Show a specific step
      */
-    function showStep(index) {
+    async function showStep(index) {
         const steps = getSteps();
 
         if (index >= steps.length) {
@@ -334,8 +295,8 @@
         // Run beforeShow callback if exists
         if (step.beforeShow) step.beforeShow();
 
-        // Small delay to let UI settle after beforeShow
-        setTimeout(() => {
+        // Small delay to let UI settle, then verify target
+        setTimeout(async () => {
             // Update content
             if (icon) icon.textContent = step.icon;
             if (title) title.textContent = step.title;
@@ -356,7 +317,9 @@
 
             // Position spotlight and tooltip
             if (step.target) {
-                const targetEl = document.querySelector(step.target);
+                // Robust wait for element
+                const targetEl = await waitForTarget(step.target);
+
                 if (targetEl) {
                     positionSpotlight(targetEl);
                     positionTooltip(targetEl, step.position);
@@ -378,6 +341,7 @@
                         targetEl.style.zIndex = '10002';
                     }
                 } else {
+                    console.warn(`Tutorial target not found: ${step.target}, falling back to centered`);
                     showCenteredTooltip();
                 }
             } else {
@@ -491,7 +455,13 @@
      */
     function endTutorial() {
         isActive = false;
+
+        // Mark as completed
         markTutorialCompleted(currentMode);
+
+        // Turn OFF replay preference (standard behavior: play once then disable replay unless re-enabled)
+        setReplayPreference(currentMode, false);
+
         cleanupInteractiveListener();
 
         if (overlay) overlay.style.display = 'none';
@@ -511,29 +481,13 @@
     }
 
     /**
-     * Reset tutorial for a mode (for testing/replay)
+     * Reset tutorial for a mode (for testing)
      */
     function resetTutorial(mode = 'type') {
-        let key = 'lengthFilterTutorialCompleted';
-        if (mode === 'speak') key = 'speakLengthFilterTutorialCompleted';
-        else if (mode === 'extended') key = 'extendedTutorialCompleted';
-        else if (mode === 'writing') key = 'writingTutorialCompleted';
-
-        localStorage.removeItem(key);
-        console.log(`Tutorial for ${mode} mode reset. Will show on next unlock/visit.`);
-    }
-
-    /**
-     * Mark tutorial as completed for a mode manually (for settings)
-     */
-    function forceCompleteTutorial(mode = 'type') {
-        let key = 'lengthFilterTutorialCompleted';
-        if (mode === 'speak') key = 'speakLengthFilterTutorialCompleted';
-        else if (mode === 'extended') key = 'extendedTutorialCompleted';
-        else if (mode === 'writing') key = 'writingTutorialCompleted';
-
-        localStorage.setItem(key, 'true');
-        console.log(`Tutorial for ${mode} mode marked as completed.`);
+        const { complete, replay } = getKeys(mode);
+        localStorage.removeItem(complete);
+        localStorage.removeItem(replay);
+        console.log(`Tutorial for ${mode} mode reset.`);
     }
 
     /**
@@ -543,31 +497,22 @@
         const settingsMap = {
             'tutorial-replay-listen': 'type',
             'tutorial-replay-speak': 'speak',
-            'tutorial-replay-cloze': 'extended',
-            'tutorial-replay-writing': 'writing'
+            // Removed 'extended' and 'writing' from here as they are handled by vocab-tutorial.js
+            // to avoid conflict (double event listeners on the same checkbox)
         };
 
         for (const [id, mode] of Object.entries(settingsMap)) {
             const toggle = document.getElementById(id);
             if (toggle) {
-                // Set initial state: Checked if tutorial is NOT completed (replay enabled)
-                // BUT: User wants "Enable to replay next time". 
-                // So if it's completed, box is unchecked. If I check it, I reset the tutorial.
+                // FIXED: Checkbox logic now reflects "Replay Preference" only
+                // It does NOT change the permanent completion status
 
-                // Check if tutorial is currently "active" (not completed)
-                let isCompleted = hasCompletedTutorial(mode);
-
-                // If the key is missing or false, it means tutorial is pending -> Replay is ON
-                toggle.checked = !isCompleted;
+                // Initial state: Checked if Replay is explicitly enabled
+                toggle.checked = isReplayEnabled(mode);
 
                 toggle.addEventListener('change', (e) => {
-                    if (e.target.checked) {
-                        // User wants to replay -> Enable it (reset completion flag)
-                        resetTutorial(mode);
-                    } else {
-                        // User wants to disable replay -> Mark as completed
-                        forceCompleteTutorial(mode);
-                    }
+                    setReplayPreference(mode, e.target.checked);
+                    console.log(`Tutorial replay for ${mode}: ${e.target.checked}`);
                 });
             }
         }

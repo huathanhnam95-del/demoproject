@@ -8,8 +8,15 @@ export const config = {
     forceCloudRun: true,
 
     backendUrl: (() => {
-        // Always use Cloud Run if forceCloudRun is true
         const cloudRunUrl = 'https://praat-api-1071929245506.us-central1.run.app';
+
+        // ALWAYS use Cloud Run if forceCloudRun is true
+        // Access the forceCloudRun value from the outer scope
+        const forceCloud = true; // Must match forceCloudRun above
+
+        if (forceCloud) {
+            return cloudRunUrl;
+        }
 
         // For local development, set forceCloudRun to false
         if (window.location.hostname === 'localhost' ||

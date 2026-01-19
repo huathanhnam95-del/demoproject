@@ -51,7 +51,9 @@ async function createOrUpdateUserProfile(userId, email, isNewUser = false) {
         createdAt: serverTimestamp(),
         lastLoginAt: serverTimestamp(),
         totalActiveSeconds: 0,
-        totalPoints: 0
+        totalPoints: 0,
+        coins: 0,
+        unlockedModes: ['type'] // Start with only 'type' mode unlocked
       });
       console.log('✓ User profile created');
     } else {
@@ -90,9 +92,26 @@ async function getUserProfile(userId) {
       };
     }
 
+    const userData = userDoc.data();
+
+    // Migration for legacy users (missing unlockedModes)
+    if (!userData.unlockedModes) {
+      console.log('Legacy user detected: Migrating to unlocked modes...');
+      // Unlock all existing modes for legacy users so they don't lose access
+      const allModes = ['type', 'speak', 'extended', 'watch', 'notes', 'pronounce'];
+
+      await updateDoc(doc(db, 'users', userId), {
+        unlockedModes: allModes,
+        coins: userData.totalPoints || 0 // Sync coins with existing points
+      });
+
+      userData.unlockedModes = allModes;
+      userData.coins = userData.totalPoints || 0;
+    }
+
     return {
       success: true,
-      data: userDoc.data()
+      data: userData
     };
   } catch (error) {
     console.error('Error getting user profile:', error);
@@ -231,6 +250,53 @@ async function getActiveSessionId(userId) {
   } catch (error) {
     console.error('Error getting active session:', error);
     return null;
+  }
+}
+
+/**
+ * Purchase Operations
+ */
+
+/**
+ * Record a purchase
+ * @param {string} userId
+ * @param {Object} item - Shop item details
+ * @returns {Promise<Object>} Success or error
+ */
+async function recordPurchase(userId, item) {
+  try {
+    const purchaseRef = await addDoc(collection(db, 'users', userId, 'purchases'), {
+      itemId: item.id,
+      cost: item.cost,
+      itemTitle: item.title,
+      purchasedAt: serverTimestamp()
+    });
+    console.log('✓ Purchase recorded:', item.id);
+    return { success: true, id: purchaseRef.id };
+  } catch (error) {
+    console.error('Error recording purchase:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Get user purchase history
+ * @param {string} userId
+ * @returns {Promise<Object>} List of purchases
+ */
+async function getPurchases(userId) {
+  try {
+    const q = query(collection(db, 'users', userId, 'purchases'), orderBy('purchasedAt', 'desc'));
+    const snapshot = await getDocs(q);
+    const purchases = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      purchasedAt: doc.data().purchasedAt?.toDate() // Convert Timestamp to Date
+    }));
+    return { success: true, data: purchases };
+  } catch (error) {
+    console.error('Error getting purchases:', error);
+    return { success: false, error: error.message };
   }
 }
 
@@ -890,9 +956,10 @@ async function addPoints(userId, points, title, description = '') {
       newTotal = 0;
     }
 
-    // Update user's totalPoints
+    // Update user's totalPoints and coins
     await updateDoc(userRef, {
-      totalPoints: newTotal
+      totalPoints: newTotal,
+      coins: increment(points) // Add to spendable balance
     });
 
     // Add entry to pointsHistory subcollection
@@ -1312,6 +1379,52 @@ function recordAwardForDedup(userId, ruleTitle, mode, context) {
   } else if (mode === 'once') {
     localStorage.setItem(key, 'awarded');
   }
+
+}
+
+/**
+ * Update unlocked modes for a user
+ * @param {string} userId
+ * @param {Array<string>} modes - Array of mode strings
+ */
+async function updateUnlockedModes(userId, modes) {
+  try {
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, {
+      unlockedModes: modes
+    });
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating unlocked modes:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Deduct coins from user
+ * @param {string} userId
+ * @param {number} amount
+ */
+async function deductCoins(userId, amount) {
+  try {
+    const userRef = doc(db, 'users', userId);
+    const userDoc = await getDoc(userRef);
+    if (!userDoc.exists()) throw new Error('User not found');
+
+    const currentCoins = userDoc.data().coins || 0;
+    if (currentCoins < amount) {
+      return { success: false, error: 'Insufficient coins' };
+    }
+
+    await updateDoc(userRef, {
+      coins: increment(-amount)
+    });
+
+    return { success: true, newBalance: currentCoins - amount };
+  } catch (error) {
+    console.error('Error deducting coins:', error);
+    return { success: false, error: error.message };
+  }
 }
 
 // Export functions for use in other modules
@@ -1345,5 +1458,7 @@ window.firebaseFirestoreFunctions = {
   getPointsRuleByTitle,
   awardPointsByRule,
   awardPoints,
-  updateUserProfile
+
+  updateUnlockedModes,
+  deductCoins
 };

@@ -9,9 +9,101 @@
 (function () {
     'use strict';
 
+    // ============================================
+    // STATE VARIABLES
+    // ============================================
+    let currentMode = 'type';
+    let currentStep = 0;
+    let isActive = false;
+    let interactiveListener = null;
+
+    // DOM element references (cached)
+    let overlay, backdrop, spotlight, tooltip, icon, title, text, nextBtn, skipBtn, dotsContainer;
+
+    /**
+     * Initialize tutorial DOM references
+     */
+    function initElements() {
+        overlay = document.getElementById('tutorial-overlay');
+        backdrop = document.getElementById('tutorial-backdrop');
+        spotlight = document.getElementById('tutorial-spotlight');
+        tooltip = document.getElementById('tutorial-tooltip');
+        icon = document.getElementById('tutorial-icon');
+        title = document.getElementById('tutorial-title');
+        text = document.getElementById('tutorial-text');
+        nextBtn = document.getElementById('tutorial-next');
+        skipBtn = document.getElementById('tutorial-skip');
+        dotsContainer = document.getElementById('tutorial-dots');
+
+        // Set up next button click handler
+        if (nextBtn) {
+            nextBtn.addEventListener('click', nextStep);
+        }
+
+        // Set up skip button click handler
+        if (skipBtn) {
+            skipBtn.addEventListener('click', endTutorial);
+        }
+    }
+
     // Tutorial steps configuration for each mode
     const TUTORIAL_STEPS = {
+        // General Type Mode Tutorial (Learning Center)
         type: [
+            {
+                target: null,
+                icon: '⌨️',
+                title: 'Welcome to Type Mode!',
+                text: 'Practice your listening and typing skills by transcribing sentences you hear. Let\'s get started!',
+                position: 'center',
+                nextLabel: 'Show Me How →',
+                interactive: false,
+                beforeShow: () => {
+                    const typeTab = document.getElementById('tab-type');
+                    if (typeTab && !typeTab.classList.contains('active')) typeTab.click();
+                }
+            },
+            {
+                target: '#play-btn',
+                icon: '🔊',
+                title: 'Step 1: Listen',
+                text: 'Click this button to <strong>hear the sentence</strong>. You can replay it as many times as you need!',
+                position: 'bottom',
+                nextLabel: null,
+                interactive: true,
+                waitForEvent: 'click'
+            },
+            {
+                target: '#answer-input',
+                icon: '✍️',
+                title: 'Step 2: Type What You Hear',
+                text: 'Type the sentence you heard into this box. <strong>Spelling counts!</strong> Take your time.',
+                position: 'top',
+                nextLabel: 'Got It →',
+                interactive: false
+            },
+            {
+                target: '#check-btn',
+                icon: '✅',
+                title: 'Step 3: Check Your Answer',
+                text: 'When you\'re ready, click <strong>"Check"</strong> to see how you did. Correct words are green, mistakes are red.',
+                position: 'top',
+                nextLabel: 'Got It →',
+                interactive: false
+            },
+            {
+                target: null,
+                icon: '🎯',
+                title: 'You\'re Ready!',
+                text: 'That\'s it! Practice regularly to improve your listening and typing skills. Happy learning!',
+                position: 'center',
+                nextLabel: 'Start Practicing! ✓',
+                interactive: false
+            }
+        ],
+
+        // Length Filter Tutorial (unlocked via Shop)
+        typeLengthFilter: [
             {
                 target: null,
                 icon: '🎉',
@@ -64,9 +156,64 @@
         speak: [
             {
                 target: null,
+                icon: '🎤',
+                title: 'Welcome to Speak Mode!',
+                text: 'Improve your pronunciation by listening to native speakers and recording yourself. Let\'s practice!',
+                position: 'center',
+                nextLabel: 'Show Me How →',
+                interactive: false,
+                beforeShow: () => {
+                    const speakTab = document.getElementById('tab-speak');
+                    if (speakTab && !speakTab.classList.contains('active')) speakTab.click();
+                }
+            },
+            {
+                target: '#play-btn-speak',
+                icon: '🔊',
+                title: 'Step 1: Listen',
+                text: 'Click here to hear the native pronunciation. Listen carefully to the rhythm and intonation!',
+                position: 'bottom',
+                nextLabel: null,
+                interactive: true,
+                waitForEvent: 'click'
+            },
+            {
+                target: '#record-btn',
+                icon: '🎙️',
+                title: 'Step 2: Record',
+                text: 'Click "Start Recording" and speak the sentence clearly. Click it again to stop.',
+                position: 'top',
+                nextLabel: null,
+                interactive: true,
+                waitForEvent: 'click'
+            },
+            {
+                target: '#check-btn-speak',
+                icon: '✅',
+                title: 'Step 3: Check',
+                text: 'After recording, click "Check" to get instant feedback on your pronunciation accuracy.',
+                position: 'top',
+                nextLabel: 'Got It →',
+                interactive: false
+            },
+            {
+                target: null,
+                icon: '🎉',
+                title: 'Ready to Speak?',
+                text: 'You\'re all set! Practice daily to build your confidence and fluency.',
+                position: 'center',
+                nextLabel: 'Start Speaking! ✓',
+                interactive: false
+            }
+        ],
+
+        // Length Filter Tutorial (unlocked via Shop) for Speak Mode
+        speakLengthFilter: [
+            {
+                target: null,
                 icon: '🎉',
                 title: 'Feature Unlocked!',
-                text: 'Congratulations! You\'ve unlocked <strong>Filter by Sentence Length</strong> for Speak mode! This helps you practice with sentences of different lengths.',
+                text: 'Congratulations! You\'ve unlocked <strong>Filter by Sentence Length</strong> for Speak mode!',
                 position: 'center',
                 nextLabel: 'Show Me How →',
                 interactive: false
@@ -75,13 +222,12 @@
                 target: '#length-filter-btn-speak',
                 icon: '👆',
                 title: 'Step 1: Click the Button',
-                text: 'Click this purple button to open the filter menu.',
+                text: 'Click this purple button to limit questions by word count.',
                 position: 'bottom',
                 nextLabel: null,
                 interactive: true,
                 waitForEvent: 'click',
                 beforeShow: () => {
-                    // Switch to Speak tab first
                     const speakTab = document.getElementById('tab-speak');
                     if (speakTab) speakTab.click();
                     const container = document.getElementById('length-filter-container-speak');
@@ -92,7 +238,7 @@
                 target: '#length-filter-menu-speak .filter-option[data-value="4-7"]',
                 icon: '📝',
                 title: 'Step 2: Select a Length',
-                text: 'Now click on <strong>"4-7 words"</strong> to filter for short sentences. Great for beginners!',
+                text: 'Select <strong>"4-7 words"</strong> to start with shorter, easier sentences.',
                 position: 'right',
                 nextLabel: null,
                 interactive: true,
@@ -108,12 +254,179 @@
                 target: '#question-select-speak',
                 icon: '🎯',
                 title: 'Filtered!',
-                text: 'The questions are now filtered by sentence length. You can change the filter anytime. Happy practicing!',
+                text: 'Your question list is now updated. You can change this anytime!',
                 position: 'bottom',
                 nextLabel: 'Got It! ✓',
                 interactive: false
             }
         ],
+
+        // New Shop Tutorial Nudge
+        extended: [
+            {
+                target: null,
+                icon: '📝',
+                title: 'Fill Mode',
+                text: 'Improve your context-based listening by filling in missing words from a transcript.',
+                position: 'center',
+                nextLabel: 'Show Me! →',
+                beforeShow: () => {
+                    const tab = document.getElementById('tab-extended');
+                    if (tab) tab.click();
+                }
+            },
+            {
+                target: '#play-pause-extended-btn',
+                icon: '🔊',
+                title: 'Listen Carefully',
+                text: 'Click here to listen to the recording with missing words. Focus on the gaps!',
+                position: 'bottom',
+                interactive: true,
+                waitForEvent: 'click'
+            },
+            {
+                target: '#gapped-transcript',
+                icon: '✍️',
+                title: 'Fill in the Blanks',
+                text: 'Type the missing words you hear directly into the blanks in the transcript.',
+                position: 'top',
+                nextLabel: 'Got It →'
+            },
+            {
+                target: '#check-extended-btn',
+                icon: '✅',
+                title: 'Check Your Answer',
+                text: 'Click here to see how many you got right. Green is correct, red is wrong!',
+                position: 'top',
+                nextLabel: 'Got It →'
+            }
+        ],
+        watch: [
+            {
+                target: null,
+                icon: '📺',
+                title: 'Watch Mode',
+                text: 'Watch short video clips and answer questions to test your comprehension.',
+                position: 'center',
+                nextLabel: 'Show Me! →',
+                beforeShow: () => {
+                    const tab = document.getElementById('tab-watch');
+                    if (tab) tab.click();
+                }
+            },
+            {
+                target: '#watch-video-grid',
+                icon: '🎬',
+                title: 'Select a Video',
+                text: 'Choose a video lesson from the grid to start practicing.',
+                position: 'top',
+                nextLabel: 'Got It →'
+            },
+            {
+                target: '#watch-player-wrapper',
+                icon: '📽️',
+                title: 'Watch & Listen',
+                text: 'Watch the clip. Questions will pop up automatically at specific moments!',
+                position: 'bottom',
+                nextLabel: 'Next →'
+            },
+            {
+                target: '#watch-question-panel',
+                icon: '❓',
+                title: 'Answer Questions',
+                text: 'When a question appears, answer it here to earn points and progress!',
+                position: 'left',
+                nextLabel: 'Got It ✓'
+            }
+        ],
+        notes: [
+            {
+                target: null,
+                icon: '📓',
+                title: 'Note Mode',
+                text: 'Practice taking notes while listening — a crucial real-world skill!',
+                position: 'center',
+                nextLabel: 'Show Me! →',
+                beforeShow: () => {
+                    const tab = document.getElementById('tab-notes');
+                    if (tab) tab.click();
+                }
+            },
+            {
+                target: '#notes-step-video',
+                icon: '🔊',
+                title: 'Watch & Listen',
+                text: 'Play the clip and try to catch the main points and key details.',
+                position: 'bottom',
+                nextLabel: 'Next →'
+            },
+            {
+                target: '#notes-user-input',
+                icon: '✏️',
+                title: 'Take Notes',
+                text: 'Write down your notes or a summary of what you heard here.',
+                position: 'top',
+                nextLabel: 'Next →'
+            },
+            {
+                target: '#notes-submit-btn',
+                icon: '⚖️',
+                title: 'Compare & Learn',
+                text: 'Submit your notes to see the official transcript and evaluate your performance.',
+                position: 'top',
+                nextLabel: 'Got It ✓'
+            }
+        ],
+        pronounce: [
+            {
+                target: null,
+                icon: '🗣️',
+                title: 'Pronounce Mode',
+                text: 'Analyze your stress, pitch, and rhythm to sound more like a native speaker!',
+                position: 'center',
+                nextLabel: 'Show Me! →',
+                beforeShow: () => {
+                    const tab = document.getElementById('tab-pronounce');
+                    if (tab) tab.click();
+                }
+            },
+            {
+                target: '#pa-native-audio-container',
+                icon: '🔊',
+                title: 'Listen to Native',
+                text: 'Hear the target word pronounced correctly. Pay attention to the rising and falling pitch!',
+                position: 'bottom',
+                nextLabel: 'Next →'
+            },
+            {
+                target: '#pa-record-btn',
+                icon: '🎙️',
+                title: 'Record & Analyze',
+                text: 'Record yourself saying the word. We\'ll compare your pitch and stress to the native speaker!',
+                position: 'top',
+                nextLabel: 'Next →'
+            },
+            {
+                target: '#pa-results-summary',
+                icon: '📊',
+                title: 'Visual Feedback',
+                text: 'See detailed charts of your pronunciation. Aim for a match with the native pattern!',
+                position: 'top',
+                nextLabel: 'Got It ✓'
+            }
+        ],
+        shopUnlock: [
+            {
+                target: '#panel-shopping-card',
+                icon: '🛒',
+                title: 'You Earned Coins!',
+                text: 'You have enough coins to unlock a new practice mode! Visit the Shop to unlock it.',
+                position: 'left',
+                nextLabel: 'Go to Shop',
+                interactive: true,
+                waitForEvent: 'click'
+            }
+        ]
     };
 
     // Helper functions
@@ -123,6 +436,10 @@
      */
     function getKeys(mode) {
         if (mode === 'speak') return {
+            complete: 'speakTutorialCompleted',
+            replay: 'speakTutorialReplay'
+        };
+        if (mode === 'speakLengthFilter') return {
             complete: 'speakLengthFilterTutorialCompleted',
             replay: 'speakLengthFilterTutorialReplay'
         };
@@ -134,10 +451,31 @@
             complete: 'writingTutorialCompleted',
             replay: 'writingTutorialReplay'
         };
-        // Default 'type'
-        return {
+        if (mode === 'shopUnlock') return {
+            complete: 'shopUnlockTutorialCompleted',
+            replay: 'shopUnlockTutorialReplay'
+        };
+        if (mode === 'watch') return {
+            complete: 'watchTutorialCompleted',
+            replay: 'watchTutorialReplay'
+        };
+        if (mode === 'notes') return {
+            complete: 'notesTutorialCompleted',
+            replay: 'notesTutorialReplay'
+        };
+        if (mode === 'pronounce') return {
+            complete: 'pronounceTutorialCompleted',
+            replay: 'pronounceTutorialReplay'
+        };
+        // Type Length Filter (for shop unlock tutorial)
+        if (mode === 'typeLengthFilter') return {
             complete: 'lengthFilterTutorialCompleted',
             replay: 'lengthFilterTutorialReplay'
+        };
+        // Default 'type' (general Type mode tutorial)
+        return {
+            complete: 'typeTutorialCompleted',
+            replay: 'typeTutorialReplay'
         };
     }
 
@@ -187,8 +525,8 @@
     /**
      * Start the tutorial for a specific mode
      */
-    function startTutorial(mode = 'type') {
-        if (!shouldShowTutorial(mode)) {
+    function startTutorial(mode = 'type', force = false) {
+        if (!force && !shouldShowTutorial(mode)) {
             console.log(`Tutorial for ${mode} mode skipped (Completed & No Replay).`);
             return;
         }
@@ -391,36 +729,96 @@
     }
 
     /**
-     * Position tooltip near target element
+     * Position tooltip near target element with smart viewport detection
      */
-    function positionTooltip(targetEl, position) {
+    function positionTooltip(targetEl, preferredPosition) {
         const rect = targetEl.getBoundingClientRect();
         const gap = 16;
+        const viewport = {
+            width: window.innerWidth,
+            height: window.innerHeight
+        };
+        const tooltipRect = { width: 320, height: 200 }; // Estimated max size for calculation
 
         tooltip.style.transform = 'none';
 
-        switch (position) {
+        let top, left, arrowClass;
+
+        // Smart position calculation
+        const canFitBottom = rect.bottom + gap + tooltipRect.height < viewport.height;
+        const canFitTop = rect.top - gap - tooltipRect.height > 0;
+        const canFitRight = rect.right + gap + tooltipRect.width < viewport.width;
+        const canFitLeft = rect.left - gap - tooltipRect.width > 0;
+
+        let finalPos = preferredPosition;
+
+        // Auto-flip logic
+        if (preferredPosition === 'bottom' && !canFitBottom && canFitTop) finalPos = 'top';
+        if (preferredPosition === 'top' && !canFitTop && canFitBottom) finalPos = 'bottom';
+        if (preferredPosition === 'right' && !canFitRight && canFitLeft) finalPos = 'left';
+        if (preferredPosition === 'left' && !canFitLeft && canFitRight) finalPos = 'right';
+
+        switch (finalPos) {
             case 'bottom':
-                tooltip.style.top = (rect.bottom + gap) + 'px';
-                tooltip.style.left = Math.max(16, rect.left + rect.width / 2 - 180) + 'px';
+                top = rect.bottom + gap;
+                left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+                arrowClass = 'arrow-top';
                 break;
             case 'top':
-                tooltip.style.top = (rect.top - gap - 200) + 'px';
-                tooltip.style.left = Math.max(16, rect.left + rect.width / 2 - 180) + 'px';
+                top = rect.top - gap - tooltipRect.height; // Approximate, adjusted by transform usually but we set explicit top here
+                // We need to account for actual height after render, but for now we place it safely
+                // Better approach: use bottom positioning relative to viewport or transform
+                // Let's use flexible top:
+                tooltip.style.bottom = (viewport.height - rect.top + gap) + 'px';
+                tooltip.style.top = 'auto';
+                left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+                arrowClass = 'arrow-bottom';
                 break;
             case 'left':
-                tooltip.style.top = (rect.top + rect.height / 2 - 100) + 'px';
-                tooltip.style.left = (rect.left - gap - 380) + 'px';
+                top = rect.top + (rect.height / 2) - (tooltipRect.height / 2);
+                left = rect.left - gap - tooltipRect.width;
+                arrowClass = 'arrow-right';
+                // Use right-alignment to ensure it sits left of target
+                tooltip.style.right = (viewport.width - rect.left + gap) + 'px';
+                tooltip.style.left = 'auto';
                 break;
             case 'right':
-                tooltip.style.top = (rect.top + rect.height / 2 - 100) + 'px';
-                tooltip.style.left = (rect.right + gap) + 'px';
+                top = rect.top + (rect.height / 2) - (tooltipRect.height / 2);
+                left = rect.right + gap;
+                arrowClass = 'arrow-left';
                 break;
             default:
-                tooltip.style.top = '50%';
-                tooltip.style.left = '50%';
-                tooltip.style.transform = 'translate(-50%, -50%)';
+                top = viewport.height / 2 - 100;
+                left = viewport.width / 2 - 160;
+                arrowClass = 'center';
         }
+
+        // Clamp horizontal position to viewport
+        if (finalPos === 'top' || finalPos === 'bottom') {
+            tooltip.style.top = finalPos === 'bottom' ? `${top}px` : ''; // Top is handled by bottom-style above if 'top'
+            if (finalPos === 'top') {
+                // Reset standard top if we didn't use the bottom-style hack? 
+                // Actually, let's keep it simple:
+                tooltip.style.bottom = ''; // Reset
+                tooltip.style.top = (rect.top - gap - 180) + 'px'; // Fallback
+                if (canFitTop) tooltip.style.top = (rect.top - gap - tooltip.offsetHeight) + 'px'; // Better if we knew height
+            }
+
+            // Center horizontally but clamp
+            let leftPos = rect.left + (rect.width / 2) - 160; // 160 is half of 320 max-width
+            leftPos = Math.max(20, Math.min(leftPos, viewport.width - 340)); // 340 = 320 width + 20 padding
+            tooltip.style.left = `${leftPos}px`;
+        }
+        else if (finalPos === 'left' || finalPos === 'right') {
+            // For side positioning, just clamp vertical?
+            tooltip.style.top = `${Math.max(20, top)}px`;
+            if (finalPos === 'right') tooltip.style.left = `${left}px`;
+            // Left is handled by right-style property
+        }
+
+        // Apply styles
+        tooltip.classList.remove('arrow-top', 'arrow-bottom', 'arrow-left', 'arrow-right', 'center');
+        if (arrowClass) tooltip.classList.add(arrowClass);
     }
 
     /**
@@ -524,6 +922,53 @@
         reset: resetTutorial,
         hasCompleted: hasCompletedTutorial,
         initSettings: initSettings
+    };
+
+    // Expose startTutorial globally for Learning Center buttons
+    window.startTutorial = startTutorial;
+
+    /**
+     * Check if user should be nudged to the Shop
+     * Called after earning coins
+     */
+    window.checkShopUnlockCondition = function () {
+        if (!window.shopModule || !window.firebaseFirestoreFunctions) return;
+
+        // Don't show if shop is already open
+        if (document.getElementById('shop-modal')?.classList.contains('active')) return;
+
+        const userId = window.authUI?.getCurrentUserId?.();
+        if (!userId) return;
+
+        // Check coins
+        window.firebaseFirestoreFunctions.getUserProfile(userId).then(result => {
+            if (result.success) {
+                const coins = result.data.coins || 0;
+                const unlocked = result.data.unlockedModes || [];
+
+                // Check if can afford any LOCKED mode
+                // Simple hardcoded check for now based on ShopModule data
+                // Speak: 50, Fill: 100, Watch: 150
+                let canAffordNewMode = false;
+
+                if (!unlocked.includes('speak') && coins >= 50) canAffordNewMode = true;
+                else if (!unlocked.includes('extended') && coins >= 50) canAffordNewMode = true;
+                else if (!unlocked.includes('watch') && coins >= 50) canAffordNewMode = true;
+                else if (!unlocked.includes('notes') && coins >= 50) canAffordNewMode = true;
+                else if (!unlocked.includes('pronounce') && coins >= 50) canAffordNewMode = true;
+
+                if (canAffordNewMode) {
+                    // Check if already seen using localStorage to avoid nagging
+                    const lastSeen = localStorage.getItem('shopNudgeLastSeen');
+                    const now = Date.now();
+                    // Show at most once per hour
+                    if (!lastSeen || (now - parseInt(lastSeen) > 3600000)) {
+                        localStorage.setItem('shopNudgeLastSeen', now);
+                        window.LengthFilterTutorial.start('shopUnlock');
+                    }
+                }
+            }
+        });
     };
 
     // Initialize settings on load

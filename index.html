@@ -5,8 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dictation Practice</title>
-  <link rel="stylesheet" href="style.css?v=20251230d">
-  <link rel="stylesheet" href="srs-review.css?v=20260106">
+  <link rel="stylesheet" href="style.css?v=20260115_fix">
+  <link rel="stylesheet" href="srs-review.css?v=20260115_fix">
   <link rel="stylesheet" href="pronunciation-analyzer/style.css">
   <link rel="stylesheet" href="pronunciation-analyzer/syllable-verifier.css">
   <!-- XLSX Library -->
@@ -22,9 +22,21 @@
   <div id="app-preloader" class="app-preloader">
     <div class="preloader-content">
       <div class="preloader-spinner"></div>
-      <p class="preloader-text">Loading Practice Data...</p>
+      <p id="preloader-text" class="preloader-text">Loading Practice Data...</p>
     </div>
   </div>
+  <script>
+    // Failsafe: Allow dismissing preloader if it takes too long (e.g., script error or SSL block)
+    setTimeout(() => {
+      const preloader = document.getElementById('app-preloader');
+      if (preloader && preloader.style.display !== 'none') {
+        const text = document.getElementById('preloader-text');
+        if (text) {
+          text.innerHTML = 'Loading is taking longer than expected.<br><span style="font-size:0.9em; cursor:pointer; text-decoration:underline;" onclick="document.getElementById(\'app-preloader\').style.display=\'none\'">Dismiss loading screen</span>';
+        }
+      }
+    }, 8000);
+  </script>
 
   <!-- Demo Feedback Banner -->
   <div class="feedback-banner">
@@ -34,11 +46,7 @@
         <a href="https://forms.gle/DKzNkhkQ5JFzc4yM9" target="_blank" rel="noopener noreferrer"
           class="feedback-link">Give Feedback →</a>
       </div>
-      <div class="feedback-text-vi">
-        📝 Đây là bản thử nghiệm — mọi góp ý đều được hoan nghênh!
-        <a href="https://forms.gle/DKzNkhkQ5JFzc4yM9" target="_blank" rel="noopener noreferrer"
-          class="feedback-link">Góp ý →</a>
-      </div>
+
     </div>
     <button class="feedback-banner-close" aria-label="Close banner">&times;</button>
   </div>
@@ -696,10 +704,11 @@
             <div class="points-label">Practice Points</div>
           </div>
 
-          <!-- Shopping Placeholder -->
+          <!-- Shopping Card -->
           <div id="panel-shopping-card" class="panel-shopping-card">
             <span class="shopping-icon">🛒</span>
             <span class="shopping-label">SHOPPING</span>
+            <div class="shop-notification" style="display: none;"></div>
             <span class="shopping-arrow">›</span>
           </div>
 
@@ -730,26 +739,110 @@
       <h1>Listening Practice</h1>
 
       <!-- Quick Win: Start Review CTA -->
-      <div class="dashboard-cta-card"
-        onclick="if(window.SRSReview) { SRSReview.startReviewSession(); } else { alert('System is initializing, please wait...'); }">
-        <div class="dashboard-cta-content">
-          <h3>🚀 Start Vocabulary Review</h3>
-          <p>Practice your words now to keep your streak!</p>
-          <div id="dashboard-srs-summary" class="dashboard-srs-summary" style="display: none;">
-            <span class="icon">🕒</span>
-            <span id="dashboard-srs-text">Next review: ...</span>
+      <!-- Dashboard Slider -->
+      <!-- Dashboard Selection Menu -->
+      <!-- Modern Dashboard Segmented Control -->
+      <div class="dashboard-modern-container">
+        <!-- Pill Switcher -->
+        <div class="dashboard-segmented-control">
+          <div class="segmented-backdrop" id="segmented-backdrop"></div>
+          <button class="segmented-btn active" id="btn-panel-tutorials"
+            onclick="toggleDashboardPanel('panel-tutorials')">
+            Learning Center
+          </button>
+          <button class="segmented-btn" id="btn-panel-srs" onclick="toggleDashboardPanel('panel-srs')">
+            Daily Review
+          </button>
+        </div>
+
+        <!-- Content Area -->
+        <div class="dashboard-content-wrapper">
+          <!-- Panel 1: SRS Vocabulary Review -->
+          <div id="panel-srs" class="dashboard-panel" style="display: none;">
+            <div class="dashboard-card srs-card modern-card"
+              onclick="if(window.SRSReview) { SRSReview.startReviewSession(); } else { alert('System is initializing, please wait...'); }">
+              <div class="dashboard-cta-content">
+                <h3>Start Review Session</h3>
+                <p>Practice your words now to keep your streak!</p>
+                <div id="dashboard-srs-summary" class="dashboard-srs-summary" style="display: none;">
+                  <span class="icon">🕒</span>
+                  <span id="dashboard-srs-text">Next review: ...</span>
+                </div>
+              </div>
+              <div class="dashboard-cta-icon">→</div>
+            </div>
+
+            <!-- SRS Schedule Table -->
+            <div class="srs-schedule-container">
+              <div class="schedule-header">
+                <h4>📅 Review Schedule</h4>
+                <div class="schedule-stats">
+                  <span id="schedule-due-count">0 words due</span>
+                </div>
+              </div>
+              <div class="schedule-table-wrapper">
+                <table class="schedule-table">
+                  <thead>
+                    <tr>
+                      <th>Word</th>
+                      <th>Status</th>
+                      <th>Next Review</th>
+                    </tr>
+                  </thead>
+                  <tbody id="srs-schedule-body">
+                    <tr>
+                      <td colspan="3" class="loading-schedule">Loading schedule...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel 2: Learning Center (Tutorials) -->
+          <div id="panel-tutorials" class="dashboard-panel active">
+            <div class="tutorial-card-content modern-card-content">
+              <div class="tutorial-grid">
+                <button class="mode-switch-btn" onclick="window.switchToMode('type')">
+                  <span class="t-icon">⌨️</span> Type
+                </button>
+                <button class="mode-switch-btn" onclick="window.switchToMode('speak')">
+                  <span class="t-icon">🎤</span> Speak
+                </button>
+                <button class="mode-switch-btn" onclick="window.switchToMode('extended')">
+                  <span class="t-icon">📝</span> Fill
+                </button>
+                <button class="mode-switch-btn" onclick="window.switchToMode('watch')">
+                  <span class="t-icon">📺</span> Watch
+                </button>
+                <button class="mode-switch-btn" onclick="window.switchToMode('notes')">
+                  <span class="t-icon">📓</span> Note
+                </button>
+                <button class="mode-switch-btn" onclick="window.switchToMode('pronounce')">
+                  <span class="t-icon">🗣️</span> Pronounce
+                </button>
+              </div>
+              <!-- What's this? button - prominent placement -->
+              <div class="whats-this-container">
+                <button id="what-is-this-btn" class="what-is-this-btn orange" title="Learn how to use the current mode">
+                  <span class="icon">💡</span> What's this?
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="dashboard-cta-icon">→</div>
       </div>
 
-      <div class="tabs">
-        <button id="tab-type" class="tab-btn active" type="button">Type</button>
-        <button id="tab-speak" class="tab-btn" type="button">Speak</button>
-        <button id="tab-extended" class="tab-btn" type="button">Fill</button>
-        <button id="tab-watch" class="tab-btn" type="button">Watch</button>
-        <button id="tab-notes" class="tab-btn" type="button">Note</button>
-        <button id="tab-pronounce" class="tab-btn" type="button">Pronounce</button>
+      <!-- Lower tabs now hidden - kept for JS compatibility -->
+      <div class="tabs-header" style="display: none !important;">
+        <div class="tabs">
+          <button id="tab-type" class="tab-btn active" type="button">Type</button>
+          <button id="tab-speak" class="tab-btn" type="button">Speak</button>
+          <button id="tab-extended" class="tab-btn" type="button">Fill</button>
+          <button id="tab-watch" class="tab-btn" type="button">Watch</button>
+          <button id="tab-notes" class="tab-btn" type="button">Note</button>
+          <button id="tab-pronounce" class="tab-btn" type="button">Pronounce</button>
+        </div>
       </div>
 
       <!-- Pronunciation Analyzer Component -->
@@ -948,7 +1041,24 @@
 
         <label class="input-label" for="answer-input">Type what you hear:</label>
         <textarea id="answer-input" rows="4" placeholder="Start typing..." disabled></textarea>
+
+        <!-- Hint System Controls -->
+        <div id="hint-controls-type" class="hint-controls" style="display: none;">
+          <button id="hint-btn-type" class="modern-btn modern-btn--hint hint-btn" type="button">
+            <span class="hint-icon">💡</span>
+            <span class="hint-label">Hint</span>
+            <span id="hint-cost-badge-type" class="hint-cost-badge free">(3 free)</span>
+          </button>
+          <div id="hint-display-type" class="hint-display" style="display: none;">
+            <div class="hint-header">
+              <span class="hint-level-badge" id="hint-level-badge-type">Level 1</span>
+              <span class="hint-type-label" id="hint-type-label-type">Word Count</span>
+            </div>
+            <div class="hint-content" id="hint-content-type"></div>
+          </div>
+        </div>
       </div>
+
 
       <div id="mode-speak" class="mode-panel">
         <div class="question-selector">
@@ -1762,10 +1872,8 @@
           </ul>
         </div>
         <div class="scaffolding-section">
-          <h4 class="scaffolding-title">🎬 Video Context</h4>
-          <div id="youglish-container" class="youglish-container">
-            <span class="youglish-loading">Loading video link...</span>
-          </div>
+          <!-- JS will inject Breakdown, POS, Synonyms here -->
+          <div id="scaffolding-extras-container" class="scaffolding-extras-container"></div>
         </div>
       </div>
 
@@ -1842,6 +1950,32 @@
   <!-- Pronunciation Analyzer -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script type="module" src="pronunciation-analyzer/main.js?v=20260114_debug_v3"></script>
+
+  <!-- Shop Modal -->
+  <div id="shop-modal" class="shop-modal">
+    <div class="shop-modal-content">
+      <div class="shop-header">
+        <h2>
+          <span>🛒</span> Practice Shop
+        </h2>
+        <div class="shop-balance">
+          <span>🪙</span>
+          <span id="shop-balance-display">0</span>
+        </div>
+        <button id="shop-close-btn" class="shop-close-btn">×</button>
+      </div>
+      <div class="shop-body">
+        <div id="shop-grid" class="shop-grid">
+          <!-- Shop items injected by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="hint-system.js"></script>
+  <script src="shop-module.js"></script>
+  <script src="script.js"></script>
 
 </body>
 

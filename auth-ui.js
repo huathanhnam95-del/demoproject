@@ -134,8 +134,14 @@ function setupEventListeners() {
     // --- Shopping Card ---
     const shoppingCard = document.getElementById('panel-shopping-card');
     if (shoppingCard) {
+      // Remove old listener if any (though this function is init)
+      // Use new shop module
       shoppingCard.addEventListener('click', () => {
-        showShoppingModal();
+        if (window.shopModule) {
+          window.shopModule.openShop();
+        } else {
+          console.warn('Shop module not loaded');
+        }
       });
     }
 
@@ -808,6 +814,11 @@ function setupAuthStateListener() {
         if (isNewLogin) {
           console.log('✓ Auth state change detected: User logged in. Triggering progress UI reload...');
           triggerAuthStateCallbacks('login', user.uid);
+
+          // Refresh locked tabs based on new user data
+          if (window.refreshLockedTabs) {
+            await window.refreshLockedTabs();
+          }
         }
       } else {
         // User is signed out
@@ -830,6 +841,11 @@ function setupAuthStateListener() {
         if (hadUser) {
           console.log('✓ Auth state change detected: User logged out. Triggering progress UI clear...');
           triggerAuthStateCallbacks('logout', null);
+
+          // Refresh locked tabs (will revert to guest state)
+          if (window.refreshLockedTabs) {
+            await window.refreshLockedTabs();
+          }
         }
       }
     } catch (err) {
@@ -1175,8 +1191,8 @@ function showShoppingModal() {
       hasTutorial: true,
       tutorialFunction: () => {
         if (window.LengthFilterTutorial) {
-          window.LengthFilterTutorial.reset('type');
-          window.LengthFilterTutorial.start('type');
+          window.LengthFilterTutorial.reset('typeLengthFilter');
+          window.LengthFilterTutorial.start('typeLengthFilter');
         }
       },
       onUnlock: () => {

@@ -123,8 +123,20 @@
 
         // Status text
         const status = document.createElement('div');
-        status.style.cssText = 'margin-top: 10px; font-size: 11px; color: #858585;';
-        status.textContent = 'Scanning every 3 seconds';
+        status.style.cssText = 'margin-top: 10px; font-size: 11px; color: #858585; display: flex; justify-content: space-between;';
+
+        const scanStatus = document.createElement('span');
+        scanStatus.textContent = 'Scanning...';
+
+        const scrollStatusDiv = document.createElement('span');
+        scrollStatusDiv.textContent = 'Scrolls: ';
+        const scrollCount = document.createElement('span');
+        scrollCount.id = 'scroll-status';
+        scrollCount.textContent = '0';
+        scrollStatusDiv.appendChild(scrollCount);
+
+        status.appendChild(scanStatus);
+        status.appendChild(scrollStatusDiv);
 
         // Assemble content wrapper
         contentWrapper.appendChild(clickedDiv);
@@ -345,30 +357,62 @@
     }
 
     // ==================== SCROLL FUNCTIONS ====================
-    function scrollIframeToBottom(iframe) {
-        try {
-            if (state.targetScrollElement && state.targetIframe === iframe) {
-                const maxScroll = state.targetScrollElement.scrollHeight - state.targetScrollElement.clientHeight;
-                state.targetScrollElement.scrollTop = maxScroll;
-                state.totalScrolls++;
-                console.log(`  ✓ Scrolled targeted element to: ${state.targetScrollElement.scrollTop} (max: ${maxScroll})`);
-                return true;
-            }
+    // ==================== SCROLL FUNCTIONS ====================
+    function performAutoScroll() {
+        const autoClickEnabled = document.getElementById('auto-click-checkbox').checked;
+        if (!autoClickEnabled) return;
 
-            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-            const iframeWin = iframe.contentWindow;
+        // 1. Priority: Scroll captured element
+        if (state.targetScrollElement) {
+            try {
+                // Check if element is still valid/connected
+                const isConnected = state.targetElement && state.targetElement.isConnected;
+                // If it's in an iframe, check if iframe is still valid
+                const isIframeConnected = !state.targetIframe || (state.targetIframe.isConnected);
 
-            if (iframeWin && iframeDoc) {
-                const scrollHeight = iframeDoc.documentElement.scrollHeight;
-                iframeWin.scrollTo({ top: scrollHeight, behavior: 'smooth' });
-                state.totalScrolls++;
-                console.log(`  ⬇️  Scrolled iframe to bottom`);
-                return true;
+                if (isConnected !== false && isIframeConnected) {
+                    const maxScroll = state.targetScrollElement.scrollHeight - state.targetScrollElement.clientHeight;
+                    // Only scroll if not already at bottom
+                    if (state.targetScrollElement.scrollTop < maxScroll - 10) {
+                        state.targetScrollElement.scrollTop = maxScroll;
+                        state.totalScrolls++;
+                        updateUI();
+                        console.log(`  ✓ Scrolled targeted element`);
+                        return;
+                    }
+                } else {
+                    // Element lost, reset
+                    state.targetScrollElement = null;
+                    state.targetIframe = null;
+                    console.log('⚠️ Target element lost, resetting scroll target');
+                }
+            } catch (e) {
+                state.targetScrollElement = null;
             }
-        } catch (e) {
-            console.log(`  ❌ Cannot access iframe: ${e.message}`);
         }
-        return false;
+
+        // 2. Fallback: Scroll all iframes if no specific target
+        const iframes = document.querySelectorAll('iframe');
+        iframes.forEach(iframe => {
+            try {
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                const iframeWin = iframe.contentWindow;
+
+                if (iframeWin && iframeDoc) {
+                    const scrollHeight = iframeDoc.documentElement.scrollHeight;
+                    const clientHeight = iframeDoc.documentElement.clientHeight;
+                    const currentScroll = iframeWin.scrollY || iframeDoc.documentElement.scrollTop;
+
+                    if (scrollHeight > clientHeight && currentScroll < scrollHeight - clientHeight - 10) {
+                        iframeWin.scrollTo({ top: scrollHeight, behavior: 'smooth' });
+                        state.totalScrolls++;
+                        updateUI();
+                    }
+                }
+            } catch (e) {
+                // Cross-origin or other error, ignore
+            }
+        });
     }
 
     // ==================== BUTTON FINDER ====================
@@ -453,7 +497,11 @@
     console.log('═'.repeat(80));
 
     findAndClickButton();
-    state.interval = setInterval(findAndClickButton, 3000);
+    findAndClickButton();
+    state.interval = setInterval(() => {
+        findAndClickButton();
+        performAutoScroll();
+    }, 3000);
     window.autoClickerInterval = state.interval;
 
 })();

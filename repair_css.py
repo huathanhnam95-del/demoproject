@@ -1,0 +1,133 @@
+
+import os
+
+file_path = r'c:\Cursor AI\style.css'
+
+# The CSS that was supposed to be appended
+compact_css = """
+/* Scaffolding Extras (Compact Grid Layout) */
+.scaffolding-extras-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.scaffold-section {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 10px;
+  border: 1px solid #e2e8f0;
+  height: 100%; /* Match height in grid */
+}
+
+/* Make patterns span full width */
+.scaffold-section.full-width {
+  grid-column: 1 / -1;
+}
+
+.scaffold-section h4 {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0 0 8px 0;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Word Breakdown Visual (Compact) */
+.breakdown-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-family: 'Roboto Mono', monospace;
+  background: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.syllable-chip {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.syllable-divider {
+  color: #cbd5e1;
+  font-size: 0.8rem;
+  margin: 0 2px;
+}
+
+/* Context & POS (Compact) */
+.context-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pos-tag {
+  display: inline-block;
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  width: fit-content;
+}
+
+.synonyms-list {
+  font-size: 0.85rem;
+  color: #475569;
+  line-height: 1.3;
+}
+
+/* Compact Pattern List */
+.pattern-list-compact {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.pattern-list-compact li {
+  padding: 6px 10px;
+  border-left: 3px solid #8b5cf6;
+  background: #fdfbff;
+  font-size: 0.9rem;
+  color: #334155;
+  border-radius: 0 4px 4px 0;
+  border: 1px solid #f3f4f6;
+  border-left-width: 3px;
+}
+
+.pattern-list-compact li strong {
+  color: #7c3aed;
+  font-weight: 600;
+}
+"""
+
+with open(file_path, 'r', encoding='utf-8') as f:
+    lines = f.readlines()
+
+# Truncate at line 8319 (index 8319, which is line 8320)
+# Actually, check where the corruption starts.
+# Line 8320 in previous output was "/ *   S c a f f o l d i n g..."
+# The last clean line was 8318 .shop-item closing brace or 8319 whitespace.
+
+clean_lines = lines[:8319] # Keep up to line 8319
+
+with open(file_path, 'w', encoding='utf-8') as f:
+    f.writelines(clean_lines)
+    f.write("\n")
+    f.write(compact_css)
+
+print("Repaired style.css")

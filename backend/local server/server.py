@@ -844,6 +844,65 @@ def proxy_audio():
         print(f"Proxy audio error: {e}")
         return jsonify({'error': str(e)}), 500
 
+# ============================================
+# TATOEBA EXAMPLE SENTENCES ENDPOINT
+# ============================================
+
+# In-memory cache for sentences (consider Redis for production)
+_sentence_cache = {}
+
+@app.route('/sentences/<word>', methods=['GET'])
+def get_example_sentences(word):
+    """
+    Fetch example sentences from Tatoeba API.
+    Returns up to 5 English sentences containing the word.
+    """
+    normalized_word = word.lower().strip()
+    
+    # Check cache first
+    if normalized_word in _sentence_cache:
+        return jsonify({'word': normalized_word, 'sentences': _sentence_cache[normalized_word]})
+    
+    try:
+        # Tatoeba API endpoint for searching sentences
+        # Using their public API (no auth required)
+        url = f"https://tatoeba.org/en/api_v0/search?from=eng&query={normalized_word}&orphans=no&unapproved=no"
+        
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'application/json'
+        }
+        
+        response = http_requests.get(url, headers=headers, timeout=10)
+        
+        if not response.ok:
+            print(f"Tatoeba API error: {response.status_code}")
+            return jsonify({'word': normalized_word, 'sentences': [], 'error': f'API error: {response.status_code}'})
+        
+        data = response.json()
+        
+        # Extract sentences from response
+        sentences = []
+        results = data.get('results', [])
+        
+        for result in results[:5]:  # Limit to 5 sentences
+            text = result.get('text', '')
+            if text and normalized_word in text.lower():
+                sentences.append(text)
+        
+        # Cache the results
+        _sentence_cache[normalized_word] = sentences
+        
+        return jsonify({
+            'word': normalized_word,
+            'sentences': sentences,
+            'source': 'tatoeba'
+        })
+        
+    except Exception as e:
+        print(f"Tatoeba fetch error: {e}")
+        return jsonify({'word': normalized_word, 'sentences': [], 'error': str(e)})
+
 @app.route('/analyze-url', methods=['POST'])
 def analyze_from_url():
     """
@@ -1501,6 +1560,7 @@ def peaks_to_syllables(peaks, pitch, int_times, int_values, speech_start, speech
     intensity = sound.to_intensity(minimum_pitch=75, time_step=0.01)
     
     # Initialize boundary detector with all cues
+    detector = None
     try:
         detector = BoundaryDetector(sound, pitch, intensity)
         use_multicue = True
@@ -1576,6 +1636,7 @@ def peaks_to_syllables(peaks, pitch, int_times, int_values, speech_start, speech
         
         # Extract features for this region
         p_max = 0
+        valid_pitches = []
         t_indices = [j for j, t in enumerate(int_times) if start_t <= t <= end_t]
         
         if t_indices:

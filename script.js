@@ -27,6 +27,199 @@
   let sentenceLengthData = null; // Map<lengthRange, Set<questionId>> for Type mode
   let speakLengthData = null; // Map<lengthRange, Set<questionId>> for Speak mode
 
+  // Dashboard Panel Logic (Modern Segmented Control)
+  window.toggleDashboardPanel = function (panelId) {
+    // 1. Panel Visibility Logic
+    const panels = document.querySelectorAll('.dashboard-panel');
+    panels.forEach(p => {
+      p.classList.remove('active');
+      p.style.display = 'none';
+    });
+
+    // Deactivate all buttons
+    const buttons = document.querySelectorAll('.segmented-btn');
+    buttons.forEach(b => b.classList.remove('active'));
+
+    // Show target panel
+    const targetPanel = document.getElementById(panelId);
+    if (targetPanel) {
+      targetPanel.classList.add('active');
+      targetPanel.style.display = 'block';
+
+      // 2. Button Activation & Backdrop Animation
+      const btnId = 'btn-' + panelId;
+      const btn = document.getElementById(btnId);
+      if (btn) {
+        btn.classList.add('active');
+
+        // Animate Backdrop
+        const backdrop = document.getElementById('segmented-backdrop');
+        if (backdrop) {
+          backdrop.style.width = `${btn.offsetWidth}px`;
+          backdrop.style.transform = `translateX(${btn.offsetLeft}px)`;
+        }
+      }
+
+      // 3. Mode Panel Visibility Logic
+      // Mode switching is now handled by Learning Center buttons
+      // The tabs-header is permanently hidden in HTML
+      const modePanels = document.querySelectorAll('.mode-panel');
+
+      if (panelId === 'panel-srs') {
+        // Hide all mode panels when in Daily Review
+        modePanels.forEach(p => p.style.display = 'none');
+      } else {
+        // Restore visibility of the active mode panel when in Learning Center
+        modePanels.forEach(p => {
+          if (p.classList.contains('active')) {
+            p.style.display = 'block';
+          } else {
+            p.style.display = 'none';
+          }
+        });
+      }
+
+      // 4. Extra: Trigger schedule table render if switching to SRS panel
+      if (panelId === 'panel-srs' && window.SRSReview && typeof window.SRSReview.renderScheduleTable === 'function') {
+        window.SRSReview.renderScheduleTable();
+      }
+    }
+  };
+
+  // Initialize backdrop position on load
+  document.addEventListener('DOMContentLoaded', () => {
+    // Initialize dashboard backdrop
+    const initialBtn = document.querySelector('.segmented-btn.active');
+    const backdrop = document.getElementById('segmented-backdrop');
+    if (initialBtn && backdrop) {
+      // Small timeout to ensure layout is stable
+      setTimeout(() => {
+        backdrop.style.width = `${initialBtn.offsetWidth}px`;
+        backdrop.style.transform = `translateX(${initialBtn.offsetLeft}px)`;
+        backdrop.style.opacity = '1'; // Fade in after positioning
+      }, 100);
+    }
+
+    // Initialize mode panels visibility based on default active dashboard panel
+    const activePanel = document.querySelector('.dashboard-panel.active');
+    const modePanels = document.querySelectorAll('.mode-panel');
+
+    if (activePanel) {
+      if (activePanel.id === 'panel-srs') {
+        modePanels.forEach(p => p.style.display = 'none');
+      } else {
+        // Ensure active mode panel is visible
+        modePanels.forEach(p => {
+          if (p.classList.contains('active')) {
+            p.style.display = 'block';
+          }
+        });
+      }
+    }
+
+    // What's this? button click handler
+    const whatIsThisBtn = document.getElementById('what-is-this-btn');
+    if (whatIsThisBtn) {
+      whatIsThisBtn.addEventListener('click', () => {
+        // Find the active mode panel to determine current mode
+        const activePanel = document.querySelector('.mode-panel.active');
+        if (activePanel) {
+          const mode = activePanel.id.replace('mode-', '');
+          if (typeof window.startTutorial === 'function') {
+            window.startTutorial(mode, true); // Force replay
+          }
+        } else {
+          // Fallback to type mode if no active panel
+          if (typeof window.startTutorial === 'function') {
+            window.startTutorial('type', true);
+          }
+        }
+      });
+    }
+  });
+
+  /**
+   * Switch to a specific practice mode
+   * Called by Learning Center mode buttons
+   * @param {string} mode - 'type', 'speak', 'extended', 'watch', 'notes', 'pronounce'
+   */
+  window.switchToMode = function (mode) {
+    // Map mode names to tab IDs
+    const tabId = 'tab-' + mode;
+    const tabBtn = document.getElementById(tabId);
+
+    if (tabBtn) {
+      // Check if mode is locked
+      if (window.shopModule && !window.shopModule.isModeUnlocked(mode)) {
+        // Open shop if locked
+        window.shopModule.openShop();
+        return;
+      }
+
+      // Click the hidden tab button to trigger mode switch
+      tabBtn.click();
+
+      // Check if this is the first time using this mode
+      const firstTimeKey = `${mode}ModeFirstUse`;
+      const hasUsedBefore = localStorage.getItem(firstTimeKey);
+
+      if (!hasUsedBefore) {
+        // Mark as used
+        localStorage.setItem(firstTimeKey, 'true');
+
+        // Trigger tutorial after a short delay for UI to settle
+        setTimeout(() => {
+          if (typeof window.startTutorial === 'function') {
+            window.startTutorial(mode, false); // Not forced, but first-time
+          }
+        }, 500);
+      }
+    }
+  };
+
+  /**
+   * Refresh locked state of tabs based on user's unlocked modes
+   * Called on login and periodically
+   */
+  window.refreshLockedTabs = async function () {
+    // If shop module not loaded yet, wait a bit
+    if (!window.shopModule) {
+      setTimeout(window.refreshLockedTabs, 500);
+      return;
+    }
+
+    await window.shopModule.refreshUserData();
+
+    // List of tabs to check
+    const tabs = [
+      { id: 'speak', element: document.getElementById('tab-speak'), mode: 'speak' },
+      { id: 'extended', element: document.getElementById('tab-extended'), mode: 'extended' },
+      { id: 'watch', element: document.getElementById('tab-watch'), mode: 'watch' },
+      { id: 'notes', element: document.getElementById('tab-notes'), mode: 'notes' },
+      { id: 'pronounce', element: document.getElementById('tab-pronounce'), mode: 'pronounce' }
+    ];
+
+    tabs.forEach(tab => {
+      if (!tab.element) return;
+
+      const isUnlocked = window.shopModule.isModeUnlocked(tab.mode);
+      if (!isUnlocked) {
+        tab.element.classList.add('locked');
+      } else {
+        tab.element.classList.remove('locked');
+      }
+    });
+  };
+
+  // refresh on load
+  document.addEventListener('DOMContentLoaded', () => {
+    // Initialize shop module
+    if (window.shopModule && window.shopModule.init) {
+      window.shopModule.init();
+    }
+    window.refreshLockedTabs();
+  });
+
   /**
    * Load progress data for all questions in a mode
    * Uses Firestore's getAllProgressForMode for efficient batch loading
@@ -1816,6 +2009,24 @@
   });
 
   tabSpeak.addEventListener("click", async () => {
+    // LOCK CHECK
+    if (window.shopModule && !window.shopModule.isModeUnlocked('speak')) {
+      const userId = window.authUI?.getCurrentUserId?.();
+      if (!userId) {
+        // Guest user - prompt login
+        if (confirm("Sign in to unlock Speak Mode and earn coins!")) {
+          window.authUI.openLoginModal();
+        }
+      } else {
+        // Logged in user - open shop
+        const confirmShop = confirm("This mode is locked. Visit the Shop to unlock it with your coins!");
+        if (confirmShop) {
+          window.shopModule.openShop();
+        }
+      }
+      return;
+    }
+
     document.getElementById('page-layout-wrapper')?.classList.remove('watch-active');
     // Hide Watch mode question panel
     const watchQuestionPanel = document.getElementById('watch-question-panel');
@@ -1864,6 +2075,25 @@
   });
 
   tabExtended.addEventListener("click", () => {
+    // LOCK CHECK
+    if (window.shopModule && !window.shopModule.isModeUnlocked('extended')) {
+      const userId = window.authUI?.getCurrentUserId?.();
+      if (!userId) {
+        // Guest user - prompt login
+        if (confirm("Sign in to unlock Fill in the Blank Mode and earn coins!")) {
+          window.authUI.openLoginModal();
+        }
+      } else {
+        // Logged in user - open shop
+        // OPTIONAL: Add a toast notification here instead of alert
+        const confirmShop = confirm("This mode is locked. Visit the Shop to unlock it with your coins!");
+        if (confirmShop) {
+          window.shopModule.openShop();
+        }
+      }
+      return;
+    }
+
     document.getElementById('page-layout-wrapper')?.classList.remove('watch-active');
     // Hide Watch mode question panel
     const watchQuestionPanel = document.getElementById('watch-question-panel');
@@ -1919,11 +2149,31 @@
       extendedQuestionLoaded = true;
       loadExtendedQuestion(currentExtendedQuestionId || 1);
     }
+
+    // Start Tutorial if needed
+    if (typeof window.startTutorial === 'function') {
+      window.startTutorial('extended');
+    }
   });
 
   // Watch mode tab handler
   if (tabWatch) {
     tabWatch.addEventListener("click", () => {
+      // LOCK CHECK
+      if (window.shopModule && !window.shopModule.isModeUnlocked('watch')) {
+        const userId = window.authUI?.getCurrentUserId?.();
+        if (!userId) {
+          // Guest user - prompt login
+          if (confirm("Sign in to unlock Watch Mode and earn coins!")) {
+            window.authUI.openLoginModal();
+          }
+        } else {
+          // Logged in user - open shop
+          window.shopModule.openShop();
+        }
+        return;
+      }
+
       tabWatch.classList.add("active");
       tabType.classList.remove("active");
       tabSpeak.classList.remove("active");
@@ -1970,12 +2220,32 @@
       if (window.WatchMode) {
         window.WatchMode.init();
       }
+
+      // Start Tutorial if needed
+      if (typeof window.startTutorial === 'function') {
+        window.startTutorial('watch');
+      }
     });
   }
 
   // Notes mode tab handler
   if (tabNotes) {
     tabNotes.addEventListener("click", () => {
+      // LOCK CHECK
+      if (window.shopModule && !window.shopModule.isModeUnlocked('notes')) {
+        const userId = window.authUI?.getCurrentUserId?.();
+        if (!userId) {
+          // Guest user - prompt login
+          if (confirm("Sign in to unlock Notes Mode and earn coins!")) {
+            window.authUI.openLoginModal();
+          }
+        } else {
+          // Logged in user - open shop
+          window.shopModule.openShop();
+        }
+        return;
+      }
+
       document.getElementById('page-layout-wrapper')?.classList.remove('watch-active');
       // Hide Watch mode question panel
       const watchQuestionPanel = document.getElementById('watch-question-panel');
@@ -2015,6 +2285,89 @@
       // Initialize Take Notes mode
       if (window.TakeNotesMode) {
         window.TakeNotesMode.loadEntries();
+      }
+
+      // Start Tutorial if needed
+      if (typeof window.startTutorial === 'function') {
+        window.startTutorial('notes');
+      }
+    });
+  }
+
+  // Pronounce mode tab handler
+  const tabPronounce = document.getElementById('tab-pronounce');
+  // pronunciationPanel is already defined globally
+
+
+  if (tabPronounce) {
+    tabPronounce.addEventListener("click", () => {
+      // LOCK CHECK
+      if (window.shopModule && !window.shopModule.isModeUnlocked('pronounce')) {
+        const userId = window.authUI?.getCurrentUserId?.();
+        if (!userId) {
+          // Guest user - prompt login
+          if (confirm("Sign in to unlock Pronounce Mode and earn coins!")) {
+            window.authUI.openLoginModal();
+          }
+        } else {
+          // Logged in user - open shop
+          window.shopModule.openShop();
+        }
+        return;
+      }
+
+      document.getElementById('page-layout-wrapper')?.classList.remove('watch-active');
+      // Hide Watch mode question panel
+      const watchQuestionPanel = document.getElementById('watch-question-panel');
+      if (watchQuestionPanel) watchQuestionPanel.style.display = 'none';
+
+      // Pause Watch mode video
+      if (window.WatchMode && typeof window.WatchMode.pauseAndResetForTabSwitch === 'function') {
+        window.WatchMode.pauseAndResetForTabSwitch();
+      }
+
+      tabPronounce.classList.add("active");
+      tabType.classList.remove("active");
+      tabSpeak.classList.remove("active");
+      tabExtended.classList.remove("active");
+      if (tabWatch) tabWatch.classList.remove("active");
+      if (tabNotes) tabNotes.classList.remove("active");
+
+      modeType.classList.remove("active");
+      modeSpeak.classList.remove("active");
+      modeExtended.classList.remove("active");
+      if (modeWatch) modeWatch.classList.remove("active");
+      if (modeNotes) modeNotes.classList.remove("active");
+
+      // Hide all other mode panels
+      animationPanel.style.display = "none";
+      result.style.display = "none";
+      generatePanelType.style.display = "none";
+      generatePanelSpeak.style.display = "none";
+      sameVocabPanelType.style.display = "none";
+      sameVocabPanelSpeak.style.display = "none";
+      vocabularyPanel.style.display = "none";
+      breakdownPanel.style.display = "none";
+
+      // Show Pronunciation Panel
+      if (pronunciationPanel) {
+        pronunciationPanel.style.display = 'block';
+        pronunciationPanel.scrollIntoView({ behavior: 'smooth' });
+      }
+
+      // Stop any active recordings
+      if (isRecording && recognition) {
+        recognition.stop();
+        isRecording = false;
+      }
+      if (typeof wordRecognition !== 'undefined' && wordRecognition) {
+        wordRecognition.stop();
+        currentWordIndex = -1;
+      }
+
+      // Start Tutorial if needed
+      if (typeof window.startTutorial === 'function') {
+        window.startTutorial('pronounce');
       }
     });
   }
@@ -5435,9 +5788,42 @@
     if (checkBtn) checkBtn.style.display = "inline-block";
     if (retryBtn) retryBtn.style.display = "none";
 
+    // Show hint controls and reset hint state for new question
+    const hintControlsEl = document.getElementById('hint-controls-type');
+    const hintDisplayEl = document.getElementById('hint-display-type');
+    if (hintControlsEl) hintControlsEl.style.display = 'block';
+    if (hintDisplayEl) hintDisplayEl.style.display = 'none';
+
+    // Initialize hint system for this question
+    if (window.HintSystem) {
+      window.HintSystem.resetForNewQuestion(currentTypeQuestionId);
+
+      // Update hint cost badge directly
+      const costBadge = document.getElementById('hint-cost-badge-type');
+      const hintBtn = document.getElementById('hint-btn-type');
+      if (costBadge && window.HintSystem) {
+        const state = window.HintSystem.getState();
+        if (!state.hasMore) {
+          costBadge.textContent = '(All used)';
+          costBadge.className = 'hint-cost-badge max-reached';
+          if (hintBtn) hintBtn.disabled = true;
+        } else if (state.freeRemaining > 0) {
+          costBadge.textContent = `(${state.freeRemaining} free)`;
+          costBadge.className = 'hint-cost-badge free';
+          if (hintBtn) hintBtn.disabled = false;
+        } else {
+          costBadge.textContent = `(${state.nextCost} coins)`;
+          costBadge.className = 'hint-cost-badge paid';
+          if (hintBtn) hintBtn.disabled = false;
+        }
+      }
+    }
+
+
     audio.currentTime = 0;
     audio.play();
   });
+
 
   checkBtn.addEventListener("click", () => {
     // New flow: Disable input and show retry button, hide check button
@@ -5486,8 +5872,151 @@
       retryBtn.style.display = "none";
       if (playBtn) playBtn.style.display = "inline-block";
       resetScaffolding();
+
+      // Hide hint controls and reset hint state for new attempt
+      const hintControlsType = document.getElementById('hint-controls-type');
+      const hintDisplayType = document.getElementById('hint-display-type');
+      if (hintControlsType) hintControlsType.style.display = 'none';
+      if (hintDisplayType) hintDisplayType.style.display = 'none';
+      if (window.HintSystem) window.HintSystem.resetForNewQuestion(currentTypeQuestionId);
     });
   }
+
+  // ============================================
+  // Hint System Integration for Type Mode
+  // ============================================
+
+  const hintBtnType = document.getElementById('hint-btn-type');
+  const hintControlsType = document.getElementById('hint-controls-type');
+  const hintDisplayType = document.getElementById('hint-display-type');
+  const hintContentType = document.getElementById('hint-content-type');
+  const hintLevelBadgeType = document.getElementById('hint-level-badge-type');
+  const hintTypeLabelType = document.getElementById('hint-type-label-type');
+  const hintCostBadgeType = document.getElementById('hint-cost-badge-type');
+
+  // Function to update hint button cost badge
+  function updateHintButtonUI() {
+    if (!window.HintSystem || !hintCostBadgeType) return;
+
+    const state = window.HintSystem.getState();
+
+    if (!state.hasMore) {
+      hintCostBadgeType.textContent = '(All used)';
+      hintCostBadgeType.className = 'hint-cost-badge max-reached';
+      if (hintBtnType) hintBtnType.disabled = true;
+    } else if (state.freeRemaining > 0) {
+      hintCostBadgeType.textContent = `(${state.freeRemaining} free)`;
+      hintCostBadgeType.className = 'hint-cost-badge free';
+      if (hintBtnType) hintBtnType.disabled = false;
+    } else {
+      hintCostBadgeType.textContent = `(${state.nextCost} coins)`;
+      hintCostBadgeType.className = 'hint-cost-badge paid';
+      if (hintBtnType) hintBtnType.disabled = false;
+    }
+  }
+
+  // Function to display a hint
+  function displayHint(hint) {
+    if (!hintDisplayType || !hintContentType || !hintLevelBadgeType || !hintTypeLabelType) return;
+
+    hintLevelBadgeType.textContent = `Level ${hint.level}`;
+    hintTypeLabelType.textContent = hint.description;
+    hintContentType.innerHTML = hint.content;
+    hintDisplayType.style.display = 'block';
+  }
+
+  // Function to show insufficient coins message
+  function showInsufficientCoinsForHint(needed, have) {
+    // Create a simple alert (could be replaced with a modal later)
+    const message = `Not enough coins!\n\nHint cost: ${needed} coins\nYour balance: ${have} coins\n\nEarn more coins by practicing!`;
+    alert(message);
+  }
+
+  // Function to deduct coins for hint
+  async function deductCoinsForHint(amount) {
+    if (!window.firebaseFirestoreFunctions || !window.authUI) {
+      throw new Error('Firebase not initialized');
+    }
+
+    const userId = window.authUI.getCurrentUserId();
+    if (!userId) {
+      throw new Error('User not logged in');
+    }
+
+    // Deduct coins
+    const result = await window.firebaseFirestoreFunctions.deductCoins(userId, amount);
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to deduct coins');
+    }
+
+
+    // Refresh UI
+    if (window.authUI.loadPointsUI) {
+      await window.authUI.loadPointsUI(userId);
+    }
+    if (window.shopModule && window.shopModule.refreshUserData) {
+      await window.shopModule.refreshUserData();
+    }
+  }
+
+  // Hint button click handler
+  let hintButtonDebounce = false;
+  if (hintBtnType) {
+    hintBtnType.addEventListener('click', async (e) => {
+      // Prevent event bubbling
+      e.stopPropagation();
+
+      // Debounce to prevent double-clicks
+      if (hintButtonDebounce) {
+        console.log('Hint button debounced');
+        return;
+      }
+      hintButtonDebounce = true;
+      setTimeout(() => { hintButtonDebounce = false; }, 500);
+
+      if (!window.HintSystem || !correctSentenceType) {
+        console.warn('Hint system not available or no correct sentence loaded');
+        return;
+      }
+
+      // Guest mode check
+      if (window.authUI && window.authUI.isGuestMode && window.authUI.isGuestMode()) {
+        alert('Sign in to use hints and track your progress!');
+        return;
+      }
+
+      // Get user's coin balance
+      let userCoins = 0;
+      if (window.shopModule && window.shopModule.getCoins) {
+        userCoins = window.shopModule.getCoins();
+      } else if (window.authUI && window.authUI.getCurrentPoints) {
+        userCoins = window.authUI.getCurrentPoints();
+      }
+
+      // Use hint
+      const result = await window.HintSystem.useHint(correctSentenceType, userCoins, deductCoinsForHint);
+
+      if (result.success) {
+        displayHint(result.hint);
+        updateHintButtonUI();
+
+        // Show points toast for coin deduction if paid
+        if (result.cost > 0 && window.authUI && window.authUI.showPointsToast) {
+          // Negative toast to show deduction
+          window.authUI.showPointsToast('Hint Used', -result.cost);
+        }
+      } else if (result.maxReached) {
+        // All hints used for this question
+        updateHintButtonUI();
+      } else if (result.needed) {
+        // Not enough coins
+        showInsufficientCoinsForHint(result.needed, result.have);
+      } else {
+        console.error('Hint error:', result.error);
+      }
+    });
+  }
+
 
   // Speak mode
   playBtnSpeak.addEventListener("click", () => {
@@ -7106,6 +7635,37 @@
             applyLevelBasedRestrictions('type', result.data);
           }
         }
+        // Length filter
+        const lengthFilter = document.getElementById('length-filter');
+        if (lengthFilter) {
+          lengthFilter.addEventListener('change', () => {
+            // Check if unlocked
+            if (window.shopModule && !window.shopModule.isModeUnlocked('lengthFilter') && lengthFilter.value !== 'any') {
+              // Prevent change
+              lengthFilter.value = 'any';
+              // Trigger shop nudge or open shop
+              if (window.shopModule.openShop) {
+                // Maybe scroll to item?
+                window.shopModule.openShop();
+                alert('Unlock "Length Filter" in the Shop to use this feature!');
+              }
+              return;
+            }
+
+            // Save preference
+            localStorage.setItem('preferredLengthFilter', lengthFilter.value);
+            // Reload current question
+            loadQuestion();
+          });
+
+          // Load preference
+          const savedLength = localStorage.getItem('preferredLengthFilter');
+          if (savedLength) {
+            // Check if still unlocked (e.g. new session) - wait for auth?
+            // For now just set it, the change handler catches user interaction
+            lengthFilter.value = savedLength;
+          }
+        }
         // Check Speak mode filter
         if (result.data.speakLengthFilterUnlocked) {
           const containerSpeak = document.getElementById('length-filter-container-speak');
@@ -7455,10 +8015,12 @@
       populateQuestionSelect(mode);
 
       // Start tutorial for first-time users
-      if (window.LengthFilterTutorial && !window.LengthFilterTutorial.hasCompleted(mode)) {
+      // Map 'type' mode to 'typeLengthFilter' for Length Filter tutorial
+      const tutorialMode = mode === 'type' ? 'typeLengthFilter' : mode;
+      if (window.LengthFilterTutorial && !window.LengthFilterTutorial.hasCompleted(tutorialMode)) {
         // Small delay to let the UI settle
         setTimeout(() => {
-          window.LengthFilterTutorial.start(mode);
+          window.LengthFilterTutorial.start(tutorialMode);
         }, 500);
       }
     }

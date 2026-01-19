@@ -134,14 +134,7 @@ const SRSReview = (function () {
             elements.srsWritingModal.style.setProperty('z-index', '99999', 'important');
         }
 
-        // FIX 4: Dynamically inject YouGlish Widget script
-        if (!document.getElementById('youglish-widget-script')) {
-            const script = document.createElement('script');
-            script.id = 'youglish-widget-script';
-            script.async = true;
-            script.src = 'https://youglish.com/public/emb/widget.js';
-            document.body.appendChild(script);
-        }
+
 
         console.log('[SRS] Module initialized');
     }
@@ -228,7 +221,8 @@ const SRSReview = (function () {
             moreHelpBtn: document.getElementById('more-help-btn'),
             scaffoldingPanel: document.getElementById('scaffolding-panel'),
             exampleSentencesList: document.getElementById('example-sentences-list'),
-            youglishContainer: document.getElementById('youglish-container')
+            scaffoldingExtras: document.getElementById('scaffolding-extras-container'),
+            exampleSentencesList: document.getElementById('example-sentences-list')
         };
     }
 
@@ -552,12 +546,26 @@ const SRSReview = (function () {
     async function saveSRSData() {
         if (!currentUserId || !db) return;
 
-        const dataToSave = {
+        // SANITIZE: Recursively replace undefined with null for Firestore
+        const sanitize = (obj) => {
+            if (obj === undefined) return null;
+            if (obj === null || typeof obj !== 'object') return obj;
+            if (Array.isArray(obj)) return obj.map(sanitize);
+            const newObj = {};
+            for (const key in obj) {
+                const val = sanitize(obj[key]);
+                if (val !== undefined) newObj[key] = val;
+                else newObj[key] = null;
+            }
+            return newObj;
+        };
+
+        const dataToSave = sanitize({
             srsData: srsCache.srsData,
             reviewStats: srsCache.reviewStats,
             masteredWords: srsCache.masteredWords,
             updatedAt: new Date().toISOString()
-        };
+        });
 
         // Always save to localStorage first (instant, reliable)
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
@@ -692,6 +700,65 @@ const SRSReview = (function () {
         dueWords.sort((a, b) => new Date(a.nextReviewDate) - new Date(b.nextReviewDate));
 
         return dueWords;
+    }
+
+    /**
+     * Render the SRS schedule table in the dashboard
+     */
+    function renderScheduleTable() {
+        const tableBody = document.getElementById('srs-schedule-body');
+        const dueCountEl = document.getElementById('schedule-due-count');
+        if (!tableBody) return;
+
+        const allWords = Object.entries(srsCache.srsData)
+            .filter(([_, data]) => data.status !== 'mastered')
+            .map(([lemma, data]) => ({ lemma, ...data }));
+
+        // Sort: Urgent (due) first, then by next review date
+        const now = new Date();
+        allWords.sort((a, b) => new Date(a.nextReviewDate) - new Date(b.nextReviewDate));
+
+        if (allWords.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="3" class="empty-schedule">No words in your review list yet. Add some words from the practice modes!</td></tr>';
+            if (dueCountEl) dueCountEl.textContent = '0 words due';
+            return;
+        }
+
+        const dueWords = allWords.filter(w => new Date(w.nextReviewDate) <= now);
+        if (dueCountEl) dueCountEl.textContent = `${dueWords.length} words due`;
+
+        tableBody.innerHTML = allWords.slice(0, 15).map(word => {
+            const nextReview = new Date(word.nextReviewDate);
+            const isDue = nextReview <= now;
+            const timeDiff = nextReview - now;
+
+            let timeText = '';
+            if (isDue) {
+                timeText = 'Due now';
+            } else {
+                const diffHours = Math.floor(timeDiff / (1000 * 60 * 60));
+                const diffDays = Math.floor(diffHours / 24);
+
+                if (diffHours < 1) {
+                    timeText = 'In < 1h';
+                } else if (diffHours < 24) {
+                    timeText = `In ${diffHours}h`;
+                } else {
+                    timeText = `In ${diffDays}d`;
+                }
+            }
+
+            const statusClass = word.status === 'learning' ? 'status-learning' : 'status-review';
+            const statusLabel = word.status === 'learning' ? 'Learning' : 'Review';
+
+            return `
+                <tr>
+                    <td class="word-cell"><strong>${word.lemma}</strong></td>
+                    <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+                    <td><span class="next-review-time ${isDue ? 'due' : ''}">${timeText}</span></td>
+                </tr>
+            `;
+        }).join('');
     }
 
     /**
@@ -885,6 +952,13 @@ const SRSReview = (function () {
      * @param {boolean} forceEarly - If true, skip due check and review all words
      */
     async function startReviewSession(forceEarly = false) {
+        // FIX: Close vocab panel and list modal to prevent layering issues
+        const vocabPanelSide = document.getElementById('vocab-panel-side');
+        if (vocabPanelSide) vocabPanelSide.classList.remove('open');
+
+        const listModal = document.querySelector('.vocab-list-modal-overlay');
+        if (listModal) listModal.style.display = 'none';
+
         const dueWords = getWordsDueForReview();
         const allWords = getAllWordsForReview();
 
@@ -2447,56 +2521,7 @@ const SRSReview = (function () {
 
     // Tatoeba cache for example sentences
     const tatoebaCache = new Map();
-    let scaffoldingLoaded = false; // Track if scaffolding was loaded for current word
-
-    /**
-     * Fetch example sentences from Tatoeba API
-     * @param {string} word - The word to search for
-     * @returns {Promise<string[]>} Array of example sentences
-     */
-    async function fetchTatoebaSentences(word) {
-        // 1. Use stored examples as primary source
-        // Find the word object that matches the requested word
-        const currentWord = reviewSession.wordsToReview.find(w =>
-            (w.originalWord || w.lemma).toLowerCase() === word.toLowerCase()
-        ) || reviewSession.wordsToReview[reviewSession.currentIndex];
-
-        if (currentWord && (currentWord.example || currentWord.sentence)) {
-            console.log('[SRS] Using stored example from object:', currentWord.originalWord);
-            return [currentWord.example || currentWord.sentence];
-        }
-
-        const cacheKey = word.toLowerCase();
-        // 2. Check cache
-        if (tatoebaCache.has(cacheKey)) {
-            return tatoebaCache.get(cacheKey);
-        }
-
-        // 3. Fallback: Fetch from DictionaryService
-        if (window.DictionaryService && typeof window.DictionaryService.getDefinition === 'function') {
-            try {
-                const data = await window.DictionaryService.getDefinition(word);
-                if (data && data.example) {
-                    console.log('[SRS] Fetched example from DictionaryService');
-                    tatoebaCache.set(cacheKey, [data.example]);
-                    return [data.example];
-                }
-            } catch (e) {
-                console.log('[SRS] DictionaryService fallback failed:', e);
-            }
-        }
-
-        return [];
-    }
-
-    /**
-     * Generate YouGlish URL for a word
-     * @param {string} word 
-     * @returns {string} YouGlish URL
-     */
-    function getYouGlishUrl(word) {
-        return `https://youglish.com/pronounce/${encodeURIComponent(word)}/english`;
-    }
+    let scaffoldingLoaded = false;
 
     /**
      * Toggle scaffolding panel visibility
@@ -2515,7 +2540,6 @@ const SRSReview = (function () {
             panel.classList.add('visible');
             if (btn) btn.classList.add('active');
 
-            // Load content if not already loaded for this word
             if (!scaffoldingLoaded) {
                 await loadScaffoldingContent();
                 scaffoldingLoaded = true;
@@ -2524,115 +2548,180 @@ const SRSReview = (function () {
     }
 
     /**
-     * Load scaffolding content (example sentences + YouGlish)
+     * Load scaffolding content (example sentences + Enhanced Scaffolding)
      */
     async function loadScaffoldingContent() {
         const word = reviewSession.currentWritingWord;
         if (!word) return;
 
-        // 1. Load example sentences
         const sentences = await fetchTatoebaSentences(word);
         displayExampleSentences(sentences, word);
 
-        // 2. Setup YouGlish video section
-        setupYouGlishSection(word);
-
-        // 3. NEW: Display additional scaffolding (synonyms, POS, patterns)
         await displayEnhancedScaffolding(word);
     }
 
     /**
-     * Display enhanced scaffolding: synonyms, POS, sentence patterns
+     * Fetch example sentences with fallback
      */
-    async function displayEnhancedScaffolding(word) {
-        const currentWord = reviewSession.wordsToReview[reviewSession.currentIndex];
-        const scaffoldingExtras = document.getElementById('scaffolding-extras');
+    async function fetchTatoebaSentences(word) {
+        const currentWord = reviewSession.wordsToReview.find(w =>
+            (w.originalWord || w.lemma).toLowerCase() === word.toLowerCase()
+        ) || reviewSession.wordsToReview[reviewSession.currentIndex];
 
-        // Create scaffolding extras container if not exists
-        if (!scaffoldingExtras && elements.scaffoldingPanel) {
-            const extrasDiv = document.createElement('div');
-            extrasDiv.id = 'scaffolding-extras';
-            extrasDiv.className = 'scaffolding-extras';
-            elements.scaffoldingPanel.appendChild(extrasDiv);
+        // 1. Check if word object already has an example
+        if (currentWord && (currentWord.example || currentWord.sentence)) {
+            return [currentWord.example || currentWord.sentence];
         }
 
-        const container = document.getElementById('scaffolding-extras');
-        if (!container) return;
-
-        let html = '';
-
-        // Part of Speech hint
-        if (currentWord && currentWord.partOfSpeech) {
-            html += `<div class="scaffold-item"><strong>📚 Part of Speech:</strong> <span class="pos-badge">${currentWord.partOfSpeech}</span></div>`;
+        const cacheKey = word.toLowerCase();
+        if (tatoebaCache.has(cacheKey)) {
+            return tatoebaCache.get(cacheKey);
         }
 
-        // Synonyms from DictionaryService
-        if (window.DictionaryService && typeof window.DictionaryService.getDefinition === 'function') {
+        try {
+            let sentences = [];
+
+            // 2. Try Backend Tatoeba Proxy (Primary)
+            const backendUrl = window.PRAAT_API_URL || 'https://pronunciation-api-891173754178.asia-southeast1.run.app';
             try {
-                const data = await window.DictionaryService.getDefinition(word);
-                if (data && data.synonyms && data.synonyms.length > 0) {
-                    const synList = data.synonyms.slice(0, 5).join(', ');
-                    html += `<div class="scaffold-item"><strong>🔄 Synonyms:</strong> ${synList}</div>`;
+                const response = await fetch(`${backendUrl}/sentences/${encodeURIComponent(word)}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.sentences && data.sentences.length > 0) {
+                        sentences = data.sentences;
+                    }
                 }
-            } catch (e) {
-                console.log('[SRS] Could not fetch synonyms');
+            } catch (backendErr) {
+                console.warn('[SRS] Backend sentences fetch failed:', backendErr);
             }
+
+            // 3. Fallback to DictionaryService examples
+            if (sentences.length === 0 && window.DictionaryService) {
+                const data = await window.DictionaryService.getDefinition(word);
+                if (data && data.meanings) {
+                    for (const m of data.meanings) {
+                        if (m.definitions) {
+                            for (const d of m.definitions) {
+                                if (d.example) sentences.push(d.example);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (sentences.length > 0) {
+                tatoebaCache.set(cacheKey, sentences.slice(0, 3));
+                return sentences.slice(0, 3);
+            }
+
+            return [];
+
+        } catch (error) {
+            console.warn('[SRS] Error fetching sentences:', error);
+            return [];
         }
-
-        // Common sentence patterns based on POS
-        const pos = currentWord?.partOfSpeech?.toLowerCase() || '';
-        let patterns = [];
-
-        if (pos.includes('verb')) {
-            patterns = [
-                `Subject + ${word} + object`,
-                `I ${word} when...`,
-                `She ${word}s every day...`
-            ];
-        } else if (pos.includes('noun')) {
-            patterns = [
-                `The ${word} is...`,
-                `My ${word} was...`,
-                `A great ${word}...`
-            ];
-        } else if (pos.includes('adjective')) {
-            patterns = [
-                `It was ${word}...`,
-                `A ${word} person...`,
-                `Very ${word}...`
-            ];
-        } else if (pos.includes('adverb')) {
-            patterns = [
-                `He ${word} worked...`,
-                `She speaks ${word}...`,
-                `They ${word} finished...`
-            ];
-        }
-
-        if (patterns.length > 0) {
-            html += `<div class="scaffold-item"><strong>📝 Sentence Patterns:</strong><ul class="pattern-list">`;
-            patterns.forEach(p => html += `<li>${p}</li>`);
-            html += `</ul></div>`;
-        }
-
-        container.innerHTML = html || '<em style="color:#888;">No additional hints available.</em>';
     }
 
     /**
-     * Display example sentences in the scaffolding panel
+     * Display enhanced scaffolding: Syllable Breakdown, Synonyms, POS, Sentence Patterns
+     */
+    /**
+ * Display enhanced scaffolding: Syllable Breakdown, Synonyms, POS, Sentence Patterns
+ */
+    /**
+ * Display enhanced scaffolding: POS, Synonyms, Example phrases
+ */
+    async function displayEnhancedScaffolding(word) {
+        const currentWord = reviewSession.wordsToReview[reviewSession.currentIndex];
+        const container = elements.scaffoldingExtras;
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        // 1. Part of Speech & Synonyms
+        let pos = currentWord?.partOfSpeech?.toLowerCase() || '';
+        const posMap = { 'n': 'noun', 'v': 'verb', 'adj': 'adjective', 'adv': 'adverb' };
+        if (posMap[pos]) pos = posMap[pos];
+
+        if ((!pos || pos === 'unknown') && typeof nlp !== 'undefined') {
+            const doc = nlp(word);
+            if (doc.nouns().found) pos = 'noun';
+            else if (doc.verbs().found) pos = 'verb';
+            else if (doc.adjectives().found) pos = 'adjective';
+        }
+
+        let detailsHtml = '';
+        if (pos) {
+            detailsHtml += `<span class="pos-tag">${pos}</span>`;
+        }
+
+        if (window.DictionaryService) {
+            try {
+                const data = await window.DictionaryService.getDefinition(word);
+                if (data && data.synonyms && data.synonyms.length > 0) {
+                    detailsHtml += `<div class="synonyms-list"><strong>Syns:</strong> ${data.synonyms.slice(0, 3).join(', ')}</div>`;
+                }
+            } catch (e) { }
+        }
+
+        let html = '';
+
+        // Section: Part of Speech (formerly Context)
+        if (detailsHtml) {
+            html += `<div class="scaffold-section"><h4>📚 Part of Speech</h4><div class="context-content">${detailsHtml}</div></div>`;
+        } else {
+            html += `<div class="scaffold-section"><h4>📚 Part of Speech</h4><div class="context-content"><span class="pos-tag">word</span></div></div>`;
+        }
+
+        // 2. Example phrases (formerly Usage Frames)
+        let patterns = [];
+        const W = `<strong>${word}</strong>`;
+
+        if (pos.includes('verb')) {
+            patterns = [
+                `to ${W} something`,
+                `I ${W} because...`,
+                `Please ${W}...`
+            ];
+        } else if (pos.includes('noun')) {
+            patterns = [
+                `a big ${W}`,
+                `the ${W} of...`,
+                `my favorite ${W}`
+            ];
+        } else if (pos.includes('adjective')) {
+            patterns = [
+                `very ${W}`,
+                `feel ${W}`,
+                `looks ${W}`
+            ];
+        } else if (pos.includes('adverb')) {
+            patterns = [
+                `run ${W}`,
+                `speak ${W}`,
+                `work ${W}`
+            ];
+        } else {
+            patterns = [`use ${W} in a sentence`];
+        }
+
+        if (patterns.length > 0) {
+            // Keep full-width class for layout, rename header
+            html += `<div class="scaffold-section full-width"><h4>💡 Example Phrases</h4><ul class="pattern-list-compact">${patterns.map(p => `<li>${p}</li>`).join('')}</ul></div>`;
+        }
+
+        container.innerHTML = html;
+    }
+
+    /**
+     * Display example sentences
      */
     function displayExampleSentences(sentences, word) {
         const list = elements.exampleSentencesList;
         if (!list) return;
 
         if (sentences.length === 0) {
-            // Fallback: Use Wiktionary example if available
-            const currentWord = reviewSession.wordsToReview[reviewSession.currentIndex];
-            if (currentWord && currentWord.example) {
-                list.innerHTML = `<li class="example-sentence-item">${highlightWord(currentWord.example, word)}</li>`;
-            } else {
-                list.innerHTML = '<li class="example-sentence-item no-examples">No examples available.</li>';
-            }
+            list.innerHTML = '<li class="example-sentence-item no-examples">No examples available.</li>';
             return;
         }
 
@@ -2641,62 +2730,9 @@ const SRSReview = (function () {
         ).join('');
     }
 
-    /**
-     * Highlight target word in a sentence
-     */
     function highlightWord(sentence, word) {
-        // Case-insensitive highlight
         const regex = new RegExp(`\\b(${word})\\b`, 'gi');
         return sentence.replace(regex, '<strong class="highlight-word">$1</strong>');
-    }
-
-    /**
-     * Setup YouGlish link section
-     */
-    function setupYouGlishSection(word) {
-        const container = elements.youglishContainer;
-        if (!container) return;
-
-        // Try to use YouGlish Widget API if available
-        if (typeof YG !== 'undefined' && YG.Widget) {
-            container.innerHTML = `<div id="youglish-widget-${word.replace(/\s+/g, '-')}"></div>`;
-
-            // Wait for modal to be fully visible/rendered to avoid 0-height issues
-            setTimeout(() => {
-                try {
-                    new YG.Widget(container.querySelector('div').id, {
-                        width: 400,
-                        components: 9, // Search bar hidden
-                        events: {
-                            onFetchDone: function (event) {
-                                console.log('[SRS] YouGlish videos found:', event.totalResult);
-                                if (event.totalResult === 0) {
-                                    container.innerHTML = '<em style="color:#888;">No video examples found.</em>';
-                                }
-                            }
-                        }
-                    });
-                    // Auto-search the word
-                    container.querySelector('div').__widget?.fetch(word, 'english');
-                } catch (e) {
-                    console.log('[SRS] YouGlish error:', e);
-                    showYouGlishLink(container, word);
-                }
-            }, 500); // 500ms delay for modal animation
-        } else {
-            // Fallback: Show link
-            showYouGlishLink(container, word);
-        }
-    }
-
-    function showYouGlishLink(container, word) {
-        const url = getYouGlishUrl(word);
-        container.innerHTML = `
-            <a href="${url}" target="_blank" rel="noopener noreferrer" class="youglish-link">
-                <span class="youglish-icon">🎬</span>
-                <span>Watch "<strong>${word}</strong>" in real videos on YouGlish →</span>
-            </a>
-        `;
     }
 
     /**
@@ -2885,13 +2921,41 @@ const SRSReview = (function () {
                 return;
             }
 
-            // ============================================
-            // WRITING CHALLENGE TUTORIAL (First-Time)
-            // ============================================
-            if (window.VocabTutorial && VocabTutorial.shouldShow('writingChallenge')) {
-                // Delay to let modal render first
-                setTimeout(() => VocabTutorial.startWritingChallengeTutorial(), 400);
+            // FIX: Filter allowed Parts of Speech (Strict)
+            const allowedPOS = ['noun', 'verb', 'adjective', 'adverb', 'n', 'v', 'adj', 'adv'];
+            let currentPOS = (wordObj.partOfSpeech || '').toLowerCase();
+            const lemma = wordObj.lemma || wordObj.originalWord;
+
+            // Fallback: If unknown/empty, try to detect using nlp
+            if ((!currentPOS || currentPOS === 'unknown') && typeof nlp !== 'undefined') {
+                const doc = nlp(lemma);
+                // Check priority order
+                if (doc.verbs().found) currentPOS = 'verb';
+                else if (doc.nouns().found) currentPOS = 'noun';
+                else if (doc.adjectives().found) currentPOS = 'adjective';
+                else if (doc.adverbs().found) currentPOS = 'adverb';
+                else if (doc.prepositions().found) currentPOS = 'preposition';
+                else if (doc.conjunctions().found) currentPOS = 'conjunction';
             }
+
+            // Check if POS matches one of the allowed types
+            const isAllowed = allowedPOS.some(p => currentPOS.includes(p));
+
+            // Strict Filter: Must be explicitly allowed
+            if (!isAllowed) {
+                console.log(`[SRS] Skipping Writing Challenge for POS: "${currentPOS}" (${lemma})`);
+                if (onComplete) onComplete();
+                return;
+            }
+
+            // FIX: Ensure it is top-most
+            document.body.appendChild(elements.srsWritingModal);
+            elements.srsWritingModal.style.zIndex = '10000'; // Below tutorial overlay (20000)
+            elements.srsWritingModal.style.display = 'block'; // Force display to verify layer before anim
+            elements.srsWritingModal.style.pointerEvents = 'auto'; // Re-enable clicks (was disabled on close)
+
+
+            // NOTE: Tutorial trigger moved to after modal is visible (see below)
 
             // Calculate User Level from review stats
             const points = srsCache.reviewStats.totalReviews * POINTS_PER_REVIEW || 0;
@@ -2985,8 +3049,8 @@ const SRSReview = (function () {
             if (elements.exampleSentencesList) {
                 elements.exampleSentencesList.innerHTML = '<li class="example-sentence-item">Click "More Help" to see examples.</li>';
             }
-            if (elements.youglishContainer) {
-                elements.youglishContainer.innerHTML = '<span class="youglish-loading">Loading video link...</span>';
+            if (elements.scaffoldingExtras) {
+                elements.scaffoldingExtras.innerHTML = '';
             }
 
             // Store session context for validation
@@ -3004,18 +3068,20 @@ const SRSReview = (function () {
             // Show Modal with slight delay for toast to appear first
             setTimeout(() => {
                 if (elements.srsWritingModal) {
-                    elements.srsWritingModal.style.zIndex = '10000'; // Very high z-index to ensure on top
+                    elements.srsWritingModal.style.zIndex = '10000'; // Below tutorial overlay (20000)
                     elements.srsWritingModal.classList.add('visible');
                     // Accessibility: Trap focus
                     trapFocus(elements.srsWritingModal);
 
-                    // Trigger Tutorial if needed
-                    if (window.LengthFilterTutorial) {
-                        setTimeout(() => {
-                            window.LengthFilterTutorial.start('writing');
-                        }, 500);
+                    // ============================================
+                    // WRITING CHALLENGE TUTORIAL (Trigger AFTER modal is visible)
+                    // ============================================
+                    if (window.VocabTutorial && VocabTutorial.shouldShow('writingChallenge')) {
+                        // Delay to let modal animation complete
+                        setTimeout(() => VocabTutorial.startWritingChallengeTutorial(), 400);
                     }
                 }
+
                 setTimeout(() => {
                     if (elements.srsWritingInput) elements.srsWritingInput.focus();
                 }, 300);
@@ -3189,6 +3255,8 @@ const SRSReview = (function () {
 
         if (elements.srsWritingModal) {
             elements.srsWritingModal.classList.remove('visible');
+            // FIX: Disable pointer events so the invisible modal doesn't block clicks on flashcard
+            elements.srsWritingModal.style.pointerEvents = 'none';
         }
         // Call callback to proceed to next word (if not already called by submit/skip)
         if (reviewSession.writingCallback) {
@@ -3333,7 +3401,9 @@ const SRSReview = (function () {
         getWordsDueForReview,
         startReviewSession,
         getWordData,
-        init: initModule
+        init: initModule,
+        renderScheduleTable,
+        showWritingChallenge // Expose for testing/manual triggering
     };
 
 })();

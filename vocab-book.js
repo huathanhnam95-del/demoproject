@@ -484,46 +484,26 @@ const VocabularyBook = (function () {
      * Check if vocabulary book is unlocked for current user
      */
     async function isUnlocked() {
-        if (!currentUserId) {
-            // console.log('[VocabBook] isUnlocked: No currentUserId set');
-            return false;
+        // Primary check: Shop Module (client-side cache)
+        if (window.shopModule && typeof window.shopModule.isModeUnlocked === 'function') {
+            const unlocked = window.shopModule.isModeUnlocked('vocabBook');
+            if (unlocked) return true;
         }
 
-        if (!db) {
-            console.error('[VocabBook] isUnlocked: DB not set');
-            return false;
-        }
+        if (!currentUserId || !db) return false;
 
         try {
             const userDoc = await getDoc(doc(db, 'users', currentUserId));
             if (userDoc.exists()) {
                 const data = userDoc.data();
-                const isUnlocked = data.vocabularyBookUnlocked === true;
+                // Check both legacy flag and new array
+                const isUnlocked = data.vocabularyBookUnlocked === true ||
+                    (data.unlockedModes && data.unlockedModes.includes('vocabBook'));
 
-                // Auto-fix: If false, check history just in case
-                if (!isUnlocked) {
-                    try {
-                        const historyRef = collection(db, 'users', currentUserId, 'pointsHistory');
-                        const q = query(historyRef, where('title', '==', 'Unlock: Vocabulary Book'), limit(1));
-                        const snapshot = await getDocs(q);
-
-                        if (!snapshot.empty) {
-                            console.log('[VocabBook] Found purchase in history, auto-fixing flag...');
-                            await updateDoc(doc(db, 'users', currentUserId), {
-                                vocabularyBookUnlocked: true
-                            });
-                            return true;
-                        }
-                    } catch (err) {
-                        console.warn('Error checking history for autofix:', err);
-                    }
-                }
-
-                // console.log('[VocabBook] isUnlocked check:', isUnlocked, 'uid:', currentUserId);
-                return isUnlocked;
+                if (isUnlocked) return true;
             }
         } catch (e) {
-            console.error('[VocabBook] Error checking vocab unlock status:', e);
+            console.error('[VocabBook] Error checking checking vocab unlock status:', e);
         }
         return false;
     }
@@ -1389,7 +1369,18 @@ const VocabularyBook = (function () {
     /**
      * Toggle panel open/close
      */
-    function togglePanel() {
+    async function togglePanel() {
+        // Enforce unlock check
+        const unlocked = await isUnlocked();
+        if (!unlocked) {
+            // alert('Unlock "Vocab Book" in the Shop to use this feature!');
+            // Open shop to nudge user
+            if (window.shopModule && window.shopModule.openShop) {
+                window.shopModule.openShop();
+            }
+            return;
+        }
+
         if (vocabPanelSide) {
             // Exclusivity: Close Progress Panel if opening Vocab
             if (!vocabPanelSide.classList.contains('expanded')) {

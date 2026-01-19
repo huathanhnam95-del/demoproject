@@ -14,7 +14,7 @@ def count_ipa_syllables(ipa):
     Count syllables by counting vowel sounds in IPA or MW notation.
     """
     if not ipa:
-        return 0
+        return 0, []
     
     # Normalize Unicode
     ipa_normalized = unicodedata.normalize('NFC', ipa)

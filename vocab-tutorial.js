@@ -108,7 +108,7 @@
                     icon: '⌨️',
                     title: 'Type What You Hear',
                     text: 'Type the word you heard in this box. <strong>Spelling counts!</strong> Take your time.',
-                    position: 'top',
+                    position: 'bottom',
                     nextLabel: 'Got It →',
                     interactive: false
                 },
@@ -118,8 +118,17 @@
                     title: 'Flip to Check',
                     text: 'When you\'re ready, <strong>click the card</strong> or press Enter to flip it and see if you got it right!',
                     position: 'bottom',
-                    nextLabel: 'Ready! ✓',
-                    interactive: false
+                    nextLabel: null,
+                    interactive: true,
+                    waitForEvent: 'click',
+                    // Auto-skip if card already flipped (user typed correct answer)
+                    beforeShow: () => {
+                        const card = document.querySelector('.srs-flashcard');
+                        if (card && card.classList.contains('flipped')) {
+                            console.log('[VocabTutorial] Card already flipped, auto-advancing');
+                            return 'skip';
+                        }
+                    }
                 }
             ]
         },
@@ -154,8 +163,9 @@
                     title: 'Now You Try!',
                     text: 'Click <strong>Start Recording</strong> and say the word out loud. The system will check your pronunciation!',
                     position: 'bottom',
-                    nextLabel: 'Got It →',
-                    interactive: false
+                    nextLabel: null,
+                    interactive: true,
+                    waitForEvent: 'click'
                 },
                 {
                     target: null,
@@ -210,7 +220,7 @@
             name: 'Writing Challenge',
             steps: [
                 {
-                    target: '.wc-prompt-section',
+                    target: '#srs-writing-prompt',
                     icon: '📝',
                     title: 'Your Writing Prompt',
                     text: 'This is your challenge! Write a sentence using the <strong>target word</strong> in the given context.',
@@ -219,7 +229,7 @@
                     interactive: false
                 },
                 {
-                    target: '.wc-collocation-hint',
+                    target: '#hint-collocations',
                     icon: '💡',
                     title: 'Collocation Hints',
                     text: 'These are <strong>common word combinations</strong> (collocations) that native speakers use. Try using them in your sentence!',
@@ -229,16 +239,16 @@
                     skipIfMissing: true
                 },
                 {
-                    target: '.wc-textarea',
+                    target: null,  // Centered, no spotlight - avoids obscuring input
                     icon: '✍️',
                     title: 'Write Your Sentence',
                     text: 'Type your sentence here. Make sure to <strong>include the target word</strong> naturally!',
-                    position: 'top',
-                    nextLabel: 'Next →',
+                    position: 'center',
+                    nextLabel: 'Got It! →',
                     interactive: false
                 },
                 {
-                    target: '.wc-help-btn, .wc-more-help-btn',
+                    target: '#more-help-btn',
                     icon: '🆘',
                     title: 'Need More Help?',
                     text: 'Stuck? Click this button for <strong>example sentences</strong> and video clips to inspire you!',
@@ -403,6 +413,11 @@
     function handleOverlayClick(e) {
         if (!isActive || !spotlight || spotlight.style.display === 'none') return;
 
+        // NEVER intercept clicks on the tooltip or its children
+        if (tooltip && tooltip.contains(e.target)) {
+            return; // Let the click bubble normally to the buttons
+        }
+
         const spotlightRect = spotlight.getBoundingClientRect();
 
         // Check if click is inside spotlight
@@ -499,6 +514,12 @@
                 interactiveListener.handler,
                 interactiveListener.options
             );
+
+            // FIX: Restore original styles if they were modified
+            const targetEl = interactiveListener.target;
+            targetEl.style.zIndex = '';
+            targetEl.style.pointerEvents = '';
+
             interactiveListener = null;
         }
     }
@@ -534,7 +555,13 @@
 
         // Run beforeShow callback if exists
         if (step.beforeShow) {
-            step.beforeShow();
+            const result = step.beforeShow();
+            // If beforeShow returns 'skip', auto-advance to next step
+            if (result === 'skip') {
+                currentStep++;
+                showStep(currentStep);
+                return;
+            }
         }
 
         // Small delay to let UI settle
@@ -575,9 +602,19 @@
                         targetEl.addEventListener(step.waitForEvent, handler, { once: true });
                         interactiveListener = { target: targetEl, event: step.waitForEvent, handler };
 
-                        // Make target clickable through spotlight
+                        // FIX: Make target clickable ABOVE the tutorial overlay
+                        // Overlay z-index is 20000, spotlight is 20001, tooltip is 20002
+                        // Target needs to be ABOVE all of them to receive clicks
                         targetEl.style.position = 'relative';
-                        targetEl.style.zIndex = '10002';
+                        targetEl.style.zIndex = '30000';
+                        targetEl.style.pointerEvents = 'auto';
+
+                        // Store original styles to restore later
+                        interactiveListener.originalStyles = {
+                            position: targetEl.style.position,
+                            zIndex: targetEl.style.zIndex,
+                            pointerEvents: targetEl.style.pointerEvents
+                        };
                     }
                 } else {
                     showCenteredTooltip();
@@ -710,23 +747,33 @@
             setReplayEnabled(tutorialId, false);
         }
 
-        // Hide overlay
+        // Hide overlay immediately
         if (overlay) {
             overlay.classList.remove('active');
-            setTimeout(() => {
-                overlay.style.display = 'none';
-            }, 300);
+            overlay.style.display = 'none';
+        }
+
+        // Reset spotlight and tooltip to prevent stale state
+        if (spotlight) {
+            spotlight.style.display = 'none';
+            spotlight.classList.remove('pulse');
+        }
+        if (tooltip) {
+            tooltip.classList.remove('arrow-top', 'arrow-bottom', 'arrow-left', 'arrow-right', 'center');
         }
 
         console.log(`[VocabTutorial] Tutorial ${tutorialId} completed!`);
 
+        // Clear current tutorial BEFORE calling callback to allow new tutorials to start
+        currentTutorial = null;
+        currentStep = 0;
+
         // Call completion callback
         if (onCompleteCallback) {
-            onCompleteCallback();
+            const cb = onCompleteCallback;
             onCompleteCallback = null;
+            cb();
         }
-
-        currentTutorial = null;
     }
 
     // ============================================

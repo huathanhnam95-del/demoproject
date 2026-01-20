@@ -2,7 +2,10 @@ import requests
 import json
 
 word = "anonymous"
-key = "e25675ce-96d8-4949-a7bc-26825dedeb6e"
+import os
+from dotenv import load_dotenv
+load_dotenv()
+key = os.environ.get("MW_API_KEY")
 url = f"https://www.dictionaryapi.com/api/v3/references/learners/json/{word}?key={key}"
 
 print(f"Testing URL: {url}")

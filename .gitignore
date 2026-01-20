@@ -31,6 +31,10 @@ npm-debug.log*
 .env
 .env.local
 
+# Secret/Credential files (NEVER COMMIT)
+serviceAccountKey.json
+merriam-webster api key
+
 # Certificates (if any)
 *.pem
 *.key

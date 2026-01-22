@@ -378,33 +378,33 @@
       // Reset replay counter badge
       const replayBadge = document.getElementById('replay-counter-type');
       if (replayBadge) {
-        // Set initial text if Difficulty Manager active
-        if (window.DifficultyManager && window.DifficultyManager.isFeatureEnabled()) {
+        if (window.DifficultyManager) {
           const settings = window.DifficultyManager.getCurrentSettings('type');
           const max = settings.maxReplays || 10;
           replayBadge.textContent = `🔊 ${max} times left`;
+          replayBadge.style.display = 'inline-block';
         } else {
           replayBadge.textContent = '';
+          replayBadge.style.display = 'none';
         }
         replayBadge.classList.remove('limit-reached');
       }
 
-      // Reset hint controls visibility (unhide if hidden by Level 1 logic)
-      // Reset hint controls visibility (unhide if hidden by Level 1 logic)
+      // Reset hint controls visibility (Level 1 Scaffolding Conflict Resolution)
       const hintControls = document.getElementById('hint-controls-type');
       if (hintControls) {
-        // Check if we should initially hide strict scaffolding (Level 1)
-        if (window.DifficultyManager && window.DifficultyManager.isFeatureEnabled()) {
+        if (window.DifficultyManager) {
           const settings = window.DifficultyManager.getCurrentSettings('type');
           if (settings.autoShowFirstLetters) {
-            hintControls.style.display = 'none'; // Auto-hide for Level 1
+            hintControls.style.display = 'none'; // Level 1 (Guided) auto-hints active
           } else {
-            hintControls.style.display = 'flex'; // Default for others
+            hintControls.style.display = 'block';
           }
         } else {
-          hintControls.style.display = 'flex'; // Default
+          hintControls.style.display = 'block';
         }
       }
+
 
 
       // Clear auto hints
@@ -6269,9 +6269,11 @@
     // ============================================
     // REPLAY LIMIT CHECK (Smart Difficulty)
     // ============================================
-    if (window.DifficultyManager && window.DifficultyManager.isFeatureEnabled()) {
+    const isDifficultyActive = window.DifficultyManager && (window.DifficultyManager.isFeatureEnabled() || true); // Allow logic to run if system exists
+
+    if (isDifficultyActive) {
       const settings = window.DifficultyManager.getCurrentSettings('type');
-      const maxReplays = settings.maxReplays || 10; // Default to 10 if not set
+      const maxReplays = settings.maxReplays || 10;
 
       // Increment replay counter
       window.typeReplayCount = (window.typeReplayCount || 0) + 1;
@@ -6282,10 +6284,10 @@
       const replayBadge = document.getElementById('replay-counter-type');
       if (replayBadge) {
         replayBadge.textContent = `🔊 ${timesLeft} times left`;
+        replayBadge.style.display = 'inline-block'; // Show it
 
         if (timesLeft === 0) {
           replayBadge.classList.add('limit-reached');
-          // Hide play button immediately after this click (since this was the last allowed play)
           if (playBtn) playBtn.style.display = 'none';
         }
       }
@@ -6304,15 +6306,25 @@
       showLetterHints(correctSentenceType);
     }
 
-    // Show hint controls and reset hint state for new question
+    // Hint system visibility check (Level 1 Scaffolding Conflict Resolution)
     const hintControlsEl = document.getElementById('hint-controls-type');
     const hintDisplayEl = document.getElementById('hint-display-type');
-    if (hintControlsEl) hintControlsEl.style.display = 'block';
+
+    if (hintControlsEl) {
+      const settings = window.DifficultyManager ? window.DifficultyManager.getCurrentSettings('type') : null;
+      if (settings && settings.autoShowFirstLetters) {
+        // Level 1: Auto-hints are comprehensive, hide paid manual button
+        hintControlsEl.style.display = 'none';
+      } else {
+        hintControlsEl.style.display = 'block';
+      }
+    }
     if (hintDisplayEl) hintDisplayEl.style.display = 'none';
 
     // Initialize hint system for this question
     if (window.HintSystem) {
       window.HintSystem.resetForNewQuestion(currentTypeQuestionId, 'type');
+
 
       // Update hint cost badge directly
       const costBadge = document.getElementById('hint-cost-badge-type');

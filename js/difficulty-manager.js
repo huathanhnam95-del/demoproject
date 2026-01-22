@@ -555,10 +555,11 @@ const DifficultyManager = (() => {
         init,
         getCurrentSettings,
         adjustDifficulty,
-        getLevelSettings,
         openSettings,
-        isFeatureEnabled: () => hasUnlockedFeature
+        isFeatureEnabled: () => true, // System is active for manual levels/scaffolding
+        isAutoAdjustUnlocked: () => hasUnlockedFeature // Specific for the shop item
     };
+
 })();
 
 window.DifficultyManager = DifficultyManager;

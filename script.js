@@ -205,6 +205,20 @@
           }
         }, 500);
       }
+
+      // 6. Force Layout Re-check (Self-correction)
+      // This ensures that even if some other script tries to show a panel, we force hide it
+      setTimeout(() => {
+        document.querySelectorAll('.mode-panel').forEach(panel => {
+          if (panel.id !== panelId) {
+            panel.style.display = 'none';
+            panel.classList.remove('active');
+          } else {
+            panel.style.display = 'block';
+            panel.classList.add('active');
+          }
+        });
+      }, 50);
     }
   };
 

@@ -182,6 +182,13 @@
     height: 32px;
     margin: 0 4px;
     color: transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.letter-box.hidden:hover {
+    border-bottom-color: #7c3aed;
+    background: rgba(124, 58, 237, 0.05);
 }
 
 .letter-box.punctuation {
@@ -279,14 +286,29 @@
 /* Replay Counter Badge */
 #replay-counter-type,
 #replay-counter-speak {
-    display: inline-block;
-    font-size: 0.85rem;
-    color: #64748b;
-    margin-left: 8px;
-    padding: 2px 8px;
-    background: #f1f5f9;
-    border-radius: 12px;
-    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #4f46e5;
+    margin-left: 12px;
+    padding: 6px 14px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #e0e7ff;
+    border-radius: 20px;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
+    backdrop-filter: blur(4px);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    letter-spacing: 0.3px;
+    transform: translateY(1px);
+}
+
+#replay-counter-type:hover,
+#replay-counter-speak:hover {
+    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.15);
+    transform: translateY(0);
+    border-color: #c7d2fe;
 }
 
 #replay-counter-type.limit-reached,
@@ -391,9 +413,9 @@
 
 .hint-char.hidden {
     color: transparent;
-    border: 1px solid #94a3b8;
+    border: 2px solid #64748b;
     /* Darker gray border for visibility */
-    background-color: #e2e8f0;
+    background-color: #cbd5e1;
     /* Darker background to look like a slot */
 }
 

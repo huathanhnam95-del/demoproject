@@ -108,15 +108,11 @@
       if (activePanel.id === 'panel-srs') {
         modePanels.forEach(p => p.style.display = 'none');
       } else {
-        // Ensure active mode panel is visible
-        modePanels.forEach(p => {
-          if (p.classList.contains('active')) {
-            p.style.display = 'block';
-          }
-        });
-        // Highlight the default active mode button (Type)
+        // Initialize with Type mode by default if in Learning Center
         const typeModeBtn = document.querySelector('.mode-switch-btn[onclick*="type"]');
-        if (typeModeBtn) typeModeBtn.classList.add('active');
+        if (typeModeBtn) {
+          window.switchToMode('type');
+        }
       }
     }
 
@@ -177,10 +173,9 @@
       // 3. Update mode-switch-btn active states in Learning Center
       document.querySelectorAll('.mode-switch-btn').forEach(btn => {
         btn.classList.remove('active');
-      });
-      // Find the button that corresponds to this mode
-      document.querySelectorAll('.mode-switch-btn').forEach(btn => {
-        if (btn.onclick && btn.onclick.toString().includes(`'${mode}'`)) {
+        // More robust check for the active mode button
+        const onclickAttr = btn.getAttribute('onclick') || '';
+        if (onclickAttr.includes(`'${mode}'`)) {
           btn.classList.add('active');
         }
       });
@@ -439,16 +434,22 @@
     const totalHints = 5; // Max hints per session
     const usedHints = window.scaffoldingHintsUsed || 2; // Track across session
 
+    // Reset manual hints counter for new question
+    window.manualHintsUsedCount = 0;
+
     // Build header
     let html = `
       <div class="scaffolding-header">
         <div class="scaffolding-title">
-          <span class="icon">💡</span>
-          <span>Word Scaffolding</span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="icon">💡</span>
+            <span>Hints</span>
+          </div>
+          <div style="font-size:0.85rem; color:#64748b; font-weight:normal; margin-top:4px;">
+            Click on any <span style="border-bottom:2px solid #cbd5e1; display:inline-block; width:12px; margin:0 2px;"></span> to reveal a letter. 
+            <span id="hint-click-counter" style="color:#7c3aed; font-weight:600;">7</span> reveals left.
+          </div>
         </div>
-        <button class="reveal-hint-btn" onclick="revealNextHint()">
-          <span>✨</span> Reveal Hint
-        </button>
       </div>
     `;
 
@@ -463,7 +464,10 @@
           if (charIndex === 0) {
             html += `<span class="letter-box revealed">${char.toLowerCase()}</span>`;
           } else {
-            html += `<span class="letter-box hidden"></span>`;
+            // Interactive hidden slot
+            html += `<span class="letter-box hidden" 
+                           onclick="revealClickedLetter(this)" 
+                           data-letter="${char.toLowerCase()}"></span>`;
           }
         } else {
           html += `<span class="letter-box punctuation">${char}</span>`;
@@ -479,25 +483,16 @@
 
     html += '</div>';
 
-    // Build footer
-    const hintsRemaining = totalHints - usedHints;
-    let dotsHtml = '';
-    for (let i = 0; i < totalHints; i++) {
-      dotsHtml += `<span class="hint-dot ${i < usedHints ? 'used' : ''}"></span>`;
-    }
-
-    html += `
-      <div class="scaffolding-footer">
-        <div class="hints-balance">
-          <span>HINTS BALANCE</span>
-          <div class="hints-dots">${dotsHtml}</div>
-        </div>
-        <span class="hints-remaining">${hintsRemaining} EXTRA HINTS LEFT</span>
-      </div>
-    `;
+    // Footer removed
 
     container.innerHTML = html;
     container.style.display = 'block';
+
+    // SUPPRESS DUPLICATE LEGACY HINTS (The content below input)
+    setTimeout(() => {
+      const legacyHints = document.querySelectorAll('.auto-hints-container');
+      legacyHints.forEach(el => el.style.display = 'none');
+    }, 50);
   }
 
   /**
@@ -556,7 +551,7 @@
     if (dotsContainer) {
       let dotsHtml = '';
       for (let i = 0; i < totalHints; i++) {
-        dotsHtml += `<span class="hint-dot ${i < usedHints ? 'used' : ''}"></span>`;
+        dotsHtml += `< span class="hint-dot ${i < usedHints ? 'used' : ''}" ></span > `;
       }
       dotsContainer.innerHTML = dotsHtml;
     }
@@ -570,6 +565,47 @@
   window.showLetterHints = showLetterHints;
   window.hideLetterHints = hideLetterHints;
   window.revealNextHint = revealNextHint;
+  window.revealClickedLetter = revealClickedLetter; // Expose new function
+
+  /**
+   * Handle click on hidden letter hint
+   * @param {HTMLElement} element - The clicked letter box element
+   */
+  function revealClickedLetter(element) {
+    // Safety checks
+    if (!element || !element.classList.contains('hidden')) return;
+
+    // Check limit (7 clickables per attempt)
+    const MAX_CLICKS = 7;
+    if (window.manualHintsUsedCount >= MAX_CLICKS) {
+      // Optional: Visual feedback that limit is reached
+      element.style.transform = 'translateX(2px)';
+      setTimeout(() => element.style.transform = '', 100);
+      return;
+    }
+
+    // Reveal the letter
+    const letter = element.getAttribute('data-letter');
+    if (letter) {
+      element.textContent = letter;
+      element.classList.remove('hidden');
+      element.classList.add('revealed');
+
+      // Remove click handler logic
+      element.onclick = null;
+      element.style.cursor = 'default';
+
+      // Increment counter
+      window.manualHintsUsedCount = (window.manualHintsUsedCount || 0) + 1;
+
+      // Update UI counter
+      const counterEl = document.getElementById('hint-click-counter');
+      if (counterEl) {
+        const remaining = Math.max(0, MAX_CLICKS - window.manualHintsUsedCount);
+        counterEl.textContent = remaining;
+      }
+    }
+  }
 
   /**
    * Load progress data for all questions in a mode
@@ -610,13 +646,13 @@
       if (result.success) {
         // Store the progress map in cache
         progressCache[mode] = result.progressMap || {};
-        console.log(`✓ Loaded progress data for ${mode} mode:`, progressCache[mode]);
+        console.log(`✓ Loaded progress data for ${mode} mode: `, progressCache[mode]);
       } else {
-        console.error(`Error loading progress for ${mode} mode:`, result.error);
+        console.error(`Error loading progress for ${mode} mode: `, result.error);
         progressCache[mode] = {};
       }
     } catch (error) {
-      console.error(`Error loading all progress for ${mode} mode:`, error);
+      console.error(`Error loading all progress for ${mode} mode: `, error);
       progressCache[mode] = {};
     }
   }
@@ -697,7 +733,7 @@
       const response = await fetch('database/type/WFD.xlsx');
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch database file: ${response.statusText}`);
+        throw new Error(`Failed to fetch database file: ${response.statusText} `);
       }
 
       const arrayBuffer = await response.arrayBuffer();
@@ -764,7 +800,7 @@
       const response = await fetch('database/speak/RS.xlsx');
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch speak database file: ${response.statusText}`);
+        throw new Error(`Failed to fetch speak database file: ${response.statusText} `);
       }
 
       const arrayBuffer = await response.arrayBuffer();
@@ -834,11 +870,11 @@
     const ids = dataSource.get(lengthRange);
 
     if (ids && ids.size > 0) {
-      console.log(`Filter by length "${lengthRange}" (${mode}): ${ids.size} questions found`);
+      console.log(`Filter by length "${lengthRange}"(${mode}): ${ids.size} questions found`);
       return ids;
     }
 
-    console.log(`Filter by length "${lengthRange}" (${mode}): no questions found`);
+    console.log(`Filter by length "${lengthRange}"(${mode}): no questions found`);
     return new Set(); // Return empty set if not found
   }
   /**
@@ -6355,8 +6391,8 @@
 
       // Auto-show word count hint
       if (settings.autoShowWordCount && correctSentenceType) {
-        const wordCount = correctSentenceType.split(/\s+/).filter(Boolean).length;
-        showAutoHint('word-count', `💡 This sentence has <strong>${wordCount} words</strong>`);
+        // const wordCount = correctSentenceType.split(/\s+/).filter(Boolean).length;
+        // showAutoHint('word-count', `💡 This sentence has <strong>${wordCount} words</strong>`);
       }
 
       // Auto-show first letters hint (Level 1 only)

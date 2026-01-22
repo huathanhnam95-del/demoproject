@@ -25,6 +25,7 @@ const HintSystem = (() => {
     let hintsUsedToday = 0;
     let lastHintDate = null;
     let currentQuestionId = null;
+    let currentMode = 'type'; // Default to type
     let currentHintLevel = 0; // 0 = no hints used, 1-5 = hint levels
 
     // Common function words to exclude from "key words" hint
@@ -71,6 +72,13 @@ const HintSystem = (() => {
      * @returns {number} Coin cost (0 if free)
      */
     function getNextHintCost() {
+        // Check difficulty settings
+        if (window.DifficultyManager && currentMode) {
+            const settings = window.DifficultyManager.getCurrentSettings(currentMode);
+            if (settings && settings.hints === 'unlimited') return 0;
+            if (settings && settings.hints === 'none') return 9999; // Prohibitive cost
+        }
+
         const nextHintNumber = hintsUsedToday + 1;
         if (nextHintNumber <= FREE_HINTS_PER_DAY) return 0;
         return (nextHintNumber - FREE_HINTS_PER_DAY) * COIN_INCREMENT;
@@ -98,9 +106,10 @@ const HintSystem = (() => {
      * Reset hint level for a new question
      * @param {number|string} questionId - The new question ID
      */
-    function resetForNewQuestion(questionId) {
+    function resetForNewQuestion(questionId, mode = 'type') {
         if (currentQuestionId !== questionId) {
             currentQuestionId = questionId;
+            currentMode = mode;
             currentHintLevel = 0;
         }
     }
@@ -118,6 +127,11 @@ const HintSystem = (() => {
      * @returns {boolean}
      */
     function hasMoreHints() {
+        // Check difficulty settings
+        if (window.DifficultyManager && currentMode) {
+            const settings = window.DifficultyManager.getCurrentSettings(currentMode);
+            if (settings && settings.hints === 'none') return false;
+        }
         return currentHintLevel < MAX_HINT_LEVEL;
     }
 

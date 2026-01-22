@@ -546,7 +546,7 @@ h1 {
 }
 
 .record-btn.recording {
-  background: #b91c1c;
+  background: #0891b2;
   animation: pulse 1.5s infinite;
 }
 
@@ -892,9 +892,9 @@ textarea:focus {
 }
 
 .pronunciation-record-btn.recording {
-  background: #dc2626;
+  background: #0891b2;
   color: white;
-  border-color: #dc2626;
+  border-color: #0891b2;
 }
 
 .pronunciation-status {
@@ -1102,9 +1102,9 @@ textarea:focus {
 }
 
 .breakdown-record-btn.recording {
-  background: #dc2626;
+  background: #0891b2;
   color: white;
-  border-color: #dc2626;
+  border-color: #0891b2;
 }
 
 .breakdown-status {
@@ -1330,7 +1330,7 @@ textarea:focus {
 }
 
 .sentence-record-btn.recording {
-  background: #b91c1c;
+  background: #0891b2;
   animation: pulse 1.5s infinite;
 }
 
@@ -1467,7 +1467,7 @@ textarea:focus {
 }
 
 .same-vocab-record-btn.recording {
-  background: #b91c1c;
+  background: #0891b2;
   animation: pulse 1.5s infinite;
 }
 
@@ -4935,7 +4935,9 @@ textarea:focus {
   border-radius: 16px;
   padding: 24px;
   max-width: 360px;
-  width: 100%;
+  width: calc(100% - 40px);
+  /* Responsive width with padding */
+  box-sizing: border-box;
   box-shadow:
     0 25px 50px -12px rgba(0, 0, 0, 0.5),
     0 0 0 1px rgba(148, 163, 184, 0.1);
@@ -4947,12 +4949,10 @@ textarea:focus {
 @keyframes tooltipEntrance {
   from {
     opacity: 0;
-    transform: scale(0.95) translateY(10px);
   }
 
   to {
     opacity: 1;
-    transform: scale(1) translateY(0);
   }
 }
 
@@ -4968,13 +4968,13 @@ textarea:focus {
 
 .tutorial-tooltip.arrow-top::before {
   top: -8px;
-  left: 50%;
+  left: var(--arrow-left, 50%);
   margin-left: -8px;
 }
 
 .tutorial-tooltip.arrow-bottom::before {
   bottom: -8px;
-  left: 50%;
+  left: var(--arrow-left, 50%);
   margin-left: -8px;
 }
 
@@ -9375,6 +9375,20 @@ textarea:focus {
   font-size: 1.5rem;
 }
 
+/* Active state for selected mode */
+.mode-switch-btn.active {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-color: #059669;
+  color: white;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+  transform: translateY(-2px);
+}
+
+.mode-switch-btn.active:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  border-color: #047857;
+}
+
 /* What's this? Container */
 .whats-this-container {
   display: flex;
@@ -9569,3 +9583,77 @@ html {
   font-weight: 600;
 }
 
+/* ============================================
+   Difficulty Badge
+   ============================================ */
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.main-header h1 {
+  margin-bottom: 0;
+}
+
+.difficulty-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f0f9ff;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: help;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.difficulty-badge:hover {
+  background: #e0f2fe;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.difficulty-badge .diff-icon {
+  font-size: 1.1em;
+}
+
+.difficulty-badge.level-1 {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #a7f3d0;
+}
+
+.difficulty-badge.level-2 {
+  background: #fff7ed;
+  color: #c2410c;
+  border-color: #fed7aa;
+}
+
+.difficulty-badge.level-3 {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+
+/* Difficulty Integration: SRS */
+.srs-flashcard.diff-hide-def .srs-flashcard-back .definition,
+.srs-flashcard.diff-hide-def .srs-flashcard-back .example,
+.srs-flashcard.diff-hide-def .srs-flashcard-back .pos-tag {
+  filter: blur(4px);
+  opacity: 0.5;
+  transition: all 0.3s ease;
+}
+
+.srs-flashcard.diff-hide-def .srs-flashcard-back:hover .definition,
+.srs-flashcard.diff-hide-def .srs-flashcard-back:hover .example,
+.srs-flashcard.diff-hide-def .srs-flashcard-back:hover .pos-tag {
+  filter: none;
+  opacity: 1;
+}

@@ -148,6 +148,9 @@ const WatchMode = (function () {
      */
     async function loadVideos() {
         try {
+            if (typeof XLSX === 'undefined') {
+                throw new Error('XLSX library not loaded. Please check internet connection.');
+            }
             const response = await fetch(EXCEL_PATH);
             const arrayBuffer = await response.arrayBuffer();
             const workbook = XLSX.read(arrayBuffer, { type: 'array' });

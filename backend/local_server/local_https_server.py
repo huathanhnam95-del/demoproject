@@ -3,7 +3,15 @@ import ssl
 import os
 
 PORT = 8443
+
+# Get the project root (2 levels up from this file)
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Certificate files should be in project root
 POSSIBLE_CERTS = [
+    (os.path.join(PROJECT_ROOT, "localhost+2.pem"), os.path.join(PROJECT_ROOT, "localhost+2-key.pem")),
+    (os.path.join(PROJECT_ROOT, "localhost.pem"), os.path.join(PROJECT_ROOT, "localhost-key.pem")),
+    # Also check current directory as fallback
     ("localhost+2.pem", "localhost+2-key.pem"),
     ("localhost.pem", "localhost-key.pem")
 ]
@@ -15,6 +23,10 @@ def get_certs():
     return None, None
 
 def run_server():
+    # Change to project root to serve files from there
+    os.chdir(PROJECT_ROOT)
+    print(f"Serving files from: {PROJECT_ROOT}")
+    
     server_address = ('', PORT)
     httpd = http.server.HTTPServer(server_address, http.server.SimpleHTTPRequestHandler)
 
@@ -26,7 +38,10 @@ def run_server():
 
     print(f"Using cert: {cert_file}")
     print(f"Using key:  {key_file}")
-    print(f"Starting HTTPS server on https://localhost:{PORT}")
+    print(f"\n🚀 Starting HTTPS server on https://localhost:{PORT}")
+    print("   Open this URL in your browser")
+    print("-" * 50)
+    
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     context.load_cert_chain(certfile=cert_file, keyfile=key_file)
     httpd.socket = context.wrap_socket(httpd.socket, server_side=True)

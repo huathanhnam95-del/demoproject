@@ -61,6 +61,14 @@ const ShopModule = (() => {
             icon: '📖',
             cost: 30,
             unlocksMode: 'vocabBook'
+        },
+        {
+            id: 'autoAdjust',
+            title: 'Smart Difficulty',
+            description: 'AI keeps you in the optimal learning zone automatically.',
+            icon: '🎯',
+            cost: 100,
+            unlocksMode: 'autoAdjust'
         }
     ];
 
@@ -134,6 +142,7 @@ const ShopModule = (() => {
 
     /**
      * Refresh user data (coins, unlocked modes, purchases) from Firestore or AuthUI
+     * With localStorage fallback to preserve unlock state when Firestore fails
      */
     async function refreshUserData() {
         const userId = window.authUI?.getCurrentUserId?.();
@@ -145,21 +154,59 @@ const ShopModule = (() => {
             return;
         }
 
+        // Try to load from localStorage as fallback
+        const cachedModes = localStorage.getItem(`unlockedModes_${userId}`);
+        const cachedCoins = localStorage.getItem(`coins_${userId}`);
+
         try {
             const result = await window.firebaseFirestoreFunctions.getUserProfile(userId);
             if (result.success) {
                 userCoins = result.data.coins || 0;
                 unlockedModes = result.data.unlockedModes || ['type'];
                 updateBalanceDisplay();
+
+                // Cache to localStorage for fallback
+                localStorage.setItem(`unlockedModes_${userId}`, JSON.stringify(unlockedModes));
+                localStorage.setItem(`coins_${userId}`, String(userCoins));
+            } else {
+                // Firestore failed - use cached data if available
+                console.warn('Firestore getUserProfile failed, using localStorage fallback');
+                if (cachedModes) {
+                    try {
+                        unlockedModes = JSON.parse(cachedModes);
+                    } catch (e) {
+                        unlockedModes = ['type'];
+                    }
+                }
+                if (cachedCoins) {
+                    userCoins = parseInt(cachedCoins, 10) || 0;
+                }
+                updateBalanceDisplay();
             }
 
-            // Fetch purchase history to get dates
-            const purchasesResult = await window.firebaseFirestoreFunctions.getPurchases(userId);
-            if (purchasesResult.success) {
-                purchaseHistory = purchasesResult.data;
+            // Fetch purchase history to get dates (non-critical)
+            try {
+                const purchasesResult = await window.firebaseFirestoreFunctions.getPurchases(userId);
+                if (purchasesResult.success) {
+                    purchaseHistory = purchasesResult.data;
+                }
+            } catch (purchaseError) {
+                console.warn('Failed to load purchase history:', purchaseError);
             }
         } catch (error) {
             console.error('Error refreshing shop data:', error);
+            // Use cached data as fallback
+            if (cachedModes) {
+                try {
+                    unlockedModes = JSON.parse(cachedModes);
+                } catch (e) {
+                    unlockedModes = ['type'];
+                }
+            }
+            if (cachedCoins) {
+                userCoins = parseInt(cachedCoins, 10) || 0;
+            }
+            updateBalanceDisplay();
         }
     }
 
@@ -197,12 +244,23 @@ const ShopModule = (() => {
 
             let actionButtons = '';
             if (isOwned) {
-                actionButtons = `
-                    <div class="shop-owned-actions">
-                        <button class="shop-play-btn" data-id="${item.id}">Play ▶️</button>
-                        <button class="shop-tutorial-btn" data-id="${item.id}">Tutorial ❓</button>
-                    </div>
-                `;
+                if (item.id === 'autoAdjust') {
+                    // Smart Difficulty: Settings + What's this? (No Try Now)
+                    actionButtons = `
+                        <div class="shop-owned-actions">
+                            <button class="shop-settings-btn" data-id="${item.id}">Settings ⚙️</button>
+                            <button class="shop-tutorial-btn" data-id="${item.id}">What's this ❓</button>
+                        </div>
+                    `;
+                } else {
+                    // Standard: Try Now + What's this?
+                    actionButtons = `
+                        <div class="shop-owned-actions">
+                            <button class="shop-play-btn" data-id="${item.id}">Try Now ▶️</button>
+                            <button class="shop-tutorial-btn" data-id="${item.id}">What's this ❓</button>
+                        </div>
+                    `;
+                }
             } else {
                 actionButtons = `
                     <button class="shop-item-btn ${isOwned ? 'owned' : 'buy'}" 
@@ -228,9 +286,16 @@ const ShopModule = (() => {
             if (isOwned) {
                 const playBtn = card.querySelector('.shop-play-btn');
                 const tutorialBtn = card.querySelector('.shop-tutorial-btn');
+                const settingsBtn = card.querySelector('.shop-settings-btn');
 
                 if (playBtn) playBtn.onclick = () => activateFeature(item);
                 if (tutorialBtn) tutorialBtn.onclick = () => replayTutorial(item);
+                if (settingsBtn) settingsBtn.onclick = () => {
+                    closeShop();
+                    if (window.DifficultyManager && window.DifficultyManager.openSettings) {
+                        window.DifficultyManager.openSettings();
+                    }
+                };
             } else {
                 const btn = card.querySelector('.shop-item-btn');
                 if (canAfford) {
@@ -287,14 +352,107 @@ const ShopModule = (() => {
     /**
      * Handle item purchase
      */
+    /**
+     * Show a generic confirmation modal
+     */
+    function showConfirmModal(title, message) {
+        return new Promise((resolve) => {
+            const modalId = 'shop-confirm-modal';
+            let modal = document.getElementById(modalId);
+
+            if (modal) modal.remove();
+
+            modal = document.createElement('div');
+            modal.id = modalId;
+            modal.className = 'shop-modal active';
+            modal.style.zIndex = '11000'; // Above shop modal
+
+            modal.innerHTML = `
+                <div class="shop-modal-content" style="max-width: 400px; text-align: center; padding: 30px;">
+                    <h3 style="margin-top: 0; color: #1e293b;">${title}</h3>
+                    <p style="color: #64748b; margin-bottom: 24px; line-height: 1.5;">${message}</p>
+                    <div style="display: flex; gap: 12px; justify-content: center;">
+                        <button id="${modalId}-cancel" style="padding: 10px 20px; border: 1px solid #e2e8f0; background: white; border-radius: 8px; cursor: pointer; font-weight: 600; color: #64748b;">Cancel</button>
+                        <button id="${modalId}-confirm" style="padding: 10px 20px; border: none; background: #2563eb; color: white; border-radius: 8px; cursor: pointer; font-weight: 600;">Confirm</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            const confirmBtn = document.getElementById(`${modalId}-confirm`);
+            const cancelBtn = document.getElementById(`${modalId}-cancel`);
+
+            function cleanup() {
+                modal.remove();
+            }
+
+            confirmBtn.onclick = () => {
+                cleanup();
+                resolve(true);
+            };
+
+            cancelBtn.onclick = () => {
+                cleanup();
+                resolve(false);
+            };
+
+            // Close on click outside
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    cleanup();
+                    resolve(false);
+                }
+            };
+        });
+    }
+
+    /**
+     * Show a generic alert modal
+     */
+    function showAlertModal(message, isError = false) {
+        const modalId = 'shop-alert-modal';
+        let modal = document.getElementById(modalId);
+
+        if (modal) modal.remove();
+
+        modal = document.createElement('div');
+        modal.id = modalId;
+        modal.className = 'shop-modal active';
+        modal.style.zIndex = '11000'; // Above shop modal
+
+        modal.innerHTML = `
+            <div class="shop-modal-content" style="max-width: 400px; text-align: center; padding: 30px;">
+                <div style="font-size: 3rem; margin-bottom: 16px;">${isError ? '⚠️' : '✅'}</div>
+                <p style="color: #64748b; margin-bottom: 24px; line-height: 1.5; font-size: 1.1rem;">${message}</p>
+                <button id="${modalId}-ok" style="padding: 10px 30px; border: none; background: ${isError ? '#ef4444' : '#22c55e'}; color: white; border-radius: 8px; cursor: pointer; font-weight: 600;">OK</button>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        document.getElementById(`${modalId}-ok`).onclick = () => modal.remove();
+        modal.onclick = (e) => {
+            if (e.target === modal) modal.remove();
+        };
+    }
+
+    /**
+     * Handle item purchase
+     */
     async function purchaseItem(item) {
         const userId = window.authUI?.getCurrentUserId?.();
         if (!userId) {
-            alert('Please log in to make purchases.');
+            showAlertModal('Please log in to make purchases.', true);
             return;
         }
 
-        if (confirm(`Purchase ${item.title} for ${item.cost} coins?`)) {
+        const confirmed = await showConfirmModal(
+            'Confirm Purchase',
+            `Purchase <strong>${item.title}</strong> for <strong>${item.cost} coins</strong>?`
+        );
+
+        if (confirmed) {
             // Optimistic UI update
             const originalCoins = userCoins;
             userCoins -= item.cost;
@@ -322,21 +480,28 @@ const ShopModule = (() => {
                 // Trigger refresh in main script to unlock tabs
                 if (window.refreshLockedTabs) window.refreshLockedTabs();
 
+                // Dispatch event for other modules (e.g., DifficultyManager)
+                window.dispatchEvent(new CustomEvent('shop-unlock', {
+                    detail: { mode: item.unlocksMode }
+                }));
+
                 // Refresh full data to get correct server timestamp for UI
                 await refreshUserData();
                 renderShop();
 
-                // Show success toast instead of alert?
-                // alert(`Successfully unlocked ${item.title}!`);
+                // Show success modal
+                showAlertModal(`Successfully unlocked ${item.title}!`);
 
             } catch (error) {
                 console.error('Purchase failed:', error);
-                alert('Purchase failed. Please try again.');
+
                 // Revert
                 userCoins = originalCoins;
                 unlockedModes = unlockedModes.filter(m => m !== item.unlocksMode);
                 updateBalanceDisplay();
                 renderShop();
+
+                showAlertModal('Purchase failed. Please try again.', true);
             }
         }
     }
@@ -344,7 +509,8 @@ const ShopModule = (() => {
     /**
      * Check if a mode is unlocked (synchronous check against cached data)
      * Useful for script.js to check before switching tabs
-    */
+     * Enhanced with localStorage fallback for resilience
+     */
     function isModeUnlocked(mode) {
         // 'type' is always unlocked
         if (mode === 'type') return true;
@@ -353,7 +519,39 @@ const ShopModule = (() => {
         const userId = window.authUI?.getCurrentUserId?.();
         if (!userId) return false;
 
-        return unlockedModes.includes(mode);
+        // Check in-memory cache first
+        if (unlockedModes.includes(mode)) {
+            return true;
+        }
+
+        // Fallback: Check localStorage directly (in case Firestore failed but cache exists)
+        try {
+            // Check unlockedModes cache
+            const cachedModes = localStorage.getItem(`unlockedModes_${userId}`);
+            if (cachedModes) {
+                const modes = JSON.parse(cachedModes);
+                if (Array.isArray(modes) && modes.includes(mode)) {
+                    // Update in-memory cache for future checks
+                    unlockedModes = modes;
+                    return true;
+                }
+            }
+
+            // Check userProfile cache
+            const cachedProfile = localStorage.getItem(`userProfile_${userId}`);
+            if (cachedProfile) {
+                const profile = JSON.parse(cachedProfile);
+                if (profile.unlockedModes && Array.isArray(profile.unlockedModes) && profile.unlockedModes.includes(mode)) {
+                    // Update in-memory cache for future checks
+                    unlockedModes = profile.unlockedModes;
+                    return true;
+                }
+            }
+        } catch (e) {
+            console.warn('Error checking localStorage for unlocked modes:', e);
+        }
+
+        return false;
     }
 
     /**
@@ -396,7 +594,9 @@ const ShopModule = (() => {
         refreshUserData,
         isModeUnlocked,
         setUnlockedModes,
-        setCoins
+        setCoins,
+        showConfirmModal,
+        showAlertModal
     };
 })();
 

@@ -1,12 +1,14 @@
 """Direct test of find_vowel_end with the same data as 'improve' analysis."""
 import sys
-sys.path.insert(0, 'backend')
+import os
+
+# Add local_server directory to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'local_server'))
 
 import numpy as np
 import parselmouth
 import tempfile
 import requests
-import os
 
 # Get the audio file
 audio_url = 'https://media.merriam-webster.com/audio/prons/en/us/mp3/i/improv01.mp3'

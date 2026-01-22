@@ -56,7 +56,34 @@ const SRSReview = (function () {
     const definitionCache = new Map();
     const DEF_CACHE_KEY = 'srs_definition_cache';
 
-    // Offline support variables
+    // Difficulty & Performance State
+    let srsPerformanceTracker = null;
+    let currentDifficultySettings = null;
+
+    // Helper: Levenshtein Distance for Typo Tolerance
+    function getLevenshteinDistance(a, b) {
+        const matrix = [];
+        for (let i = 0; i <= b.length; i++) {
+            matrix[i] = [i];
+        }
+        for (let j = 0; j <= a.length; j++) {
+            matrix[0][j] = j;
+        }
+        for (let i = 1; i <= b.length; i++) {
+            for (let j = 1; j <= a.length; j++) {
+                if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                    matrix[i][j] = matrix[i - 1][j - 1];
+                } else {
+                    matrix[i][j] = Math.min(
+                        matrix[i - 1][j - 1] + 1, // substitution
+                        matrix[i][j - 1] + 1,     // insertion
+                        matrix[i - 1][j] + 1      // deletion
+                    );
+                }
+            }
+        }
+        return matrix[b.length][a.length];
+    }
     let pendingSave = null;
     const LOCAL_STORAGE_KEY = 'srs_pending_data';
 
@@ -984,6 +1011,17 @@ const SRSReview = (function () {
         // Use due words if available, otherwise all words (for early review)
         const wordsToReview = dueWords.length > 0 ? dueWords : allWords;
 
+        // Initialize Performance Tracker and Difficulty Settings
+        if (window.PerformanceTracker) {
+            srsPerformanceTracker = new window.PerformanceTracker('srs');
+        }
+        if (window.DifficultyManager) {
+            currentDifficultySettings = window.DifficultyManager.getCurrentSettings('srs');
+            console.log('[SRS] Difficulty Settings:', currentDifficultySettings);
+        } else {
+            currentDifficultySettings = {}; // Default empty
+        }
+
         // Initialize session
         reviewSession = {
             active: true,
@@ -1354,6 +1392,17 @@ const SRSReview = (function () {
             elements.srsWordFront.textContent = currentWord.originalWord || currentWord.lemma;
         }
 
+        // Difficulty Integration: Show definition if supported
+        // If hidden by difficulty, maybe blur it or hide it? 
+        // Note: Logic for hiding needs to be in toggleFlip or CSS injection.
+        // For now, let's inject a class based on difficulty
+        if (elements.flashcard) {
+            elements.flashcard.classList.remove('diff-hide-def');
+            if (currentDifficultySettings && currentDifficultySettings.showDef === false) {
+                elements.flashcard.classList.add('diff-hide-def');
+            }
+        }
+
         // --- SET MODE IMMEDIATELY (before async operations) ---
         // Determine available modes
         const exampleForFront = currentWord.sentence || currentWord.example || currentWord.context || '';
@@ -1647,7 +1696,18 @@ const SRSReview = (function () {
             // Check Typed Input
             if (elements.srsInput) {
                 userSaid = elements.srsInput.value.toLowerCase().trim();
-                isCorrect = userSaid === targetWord;
+
+                // Difficulty Integration: Typo Tolerance
+                const tolerance = (currentDifficultySettings && currentDifficultySettings.typoTolerance !== undefined)
+                    ? currentDifficultySettings.typoTolerance
+                    : 0; // Default strict
+
+                if (tolerance > 0) {
+                    const dist = getLevenshteinDistance(userSaid, targetWord);
+                    isCorrect = dist <= tolerance && userSaid.length > 0; // Prevent empty matching empty
+                } else {
+                    isCorrect = userSaid === targetWord;
+                }
             }
         } else {
             // Check Spoken Transcript
@@ -1677,6 +1737,19 @@ const SRSReview = (function () {
         // Store correctness for Writing Challenge trigger
         reviewSession.lastAnswerCorrect = isCorrect;
         console.log('[SRS DEBUG] checkAnswerAndDisplay - isCorrect:', isCorrect, 'stored to reviewSession.lastAnswerCorrect');
+
+        // Difficulty Integration: Record Attempt
+        if (srsPerformanceTracker) {
+            // Estimate time (simple diff from last check or card show?)
+            // For now, pass 0 or track it properly. 
+            // We can use a simplified tracking here since SRS is item-based.
+            srsPerformanceTracker.recordAttempt({
+                correct: isCorrect,
+                attempts: 1,
+                hintUsed: false,
+                timeTaken: 5 // Placeholder or implement timer
+            });
+        }
 
         // Show pronunciation practice button after answer
         if (elements.srsPracticePronunciationBtn) {

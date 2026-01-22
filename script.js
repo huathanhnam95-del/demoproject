@@ -114,6 +114,9 @@
             p.style.display = 'block';
           }
         });
+        // Highlight the default active mode button (Type)
+        const typeModeBtn = document.querySelector('.mode-switch-btn[onclick*="type"]');
+        if (typeModeBtn) typeModeBtn.classList.add('active');
       }
     }
 
@@ -144,22 +147,55 @@
    * @param {string} mode - 'type', 'speak', 'extended', 'watch', 'notes', 'pronounce'
    */
   window.switchToMode = function (mode) {
-    // Map mode names to tab IDs
-    const tabId = 'tab-' + mode;
-    const tabBtn = document.getElementById(tabId);
+    // Check if mode is locked
+    if (window.shopModule && !window.shopModule.isModeUnlocked(mode)) {
+      // Open shop if locked
+      window.shopModule.openShop();
+      return;
+    }
 
-    if (tabBtn) {
-      // Check if mode is locked
-      if (window.shopModule && !window.shopModule.isModeUnlocked(mode)) {
-        // Open shop if locked
-        window.shopModule.openShop();
-        return;
+    // Map mode names to tab IDs and panel IDs
+    const tabId = 'tab-' + mode;
+    const panelId = 'mode-' + mode;
+
+    const tabBtn = document.getElementById(tabId);
+    const modePanel = document.getElementById(panelId);
+
+    if (tabBtn && modePanel) {
+      // 1. Update tab button active states
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      tabBtn.classList.add('active');
+
+      // 2. Hide all mode panels and show the selected one
+      document.querySelectorAll('.mode-panel').forEach(panel => {
+        panel.classList.remove('active');
+        panel.style.display = 'none';
+      });
+      modePanel.classList.add('active');
+      modePanel.style.display = 'block';
+
+      // 3. Update mode-switch-btn active states in Learning Center
+      document.querySelectorAll('.mode-switch-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      // Find the button that corresponds to this mode
+      document.querySelectorAll('.mode-switch-btn').forEach(btn => {
+        if (btn.onclick && btn.onclick.toString().includes(`'${mode}'`)) {
+          btn.classList.add('active');
+        }
+      });
+
+      // 4. Trigger any mode-specific initialization
+      if (mode === 'extended' && typeof window.loadExtendedIfNeeded === 'function') {
+        window.loadExtendedIfNeeded();
       }
 
-      // Click the hidden tab button to trigger mode switch
-      tabBtn.click();
+      // Initialize Watch mode if needed
+      if (mode === 'watch' && window.WatchMode && typeof window.WatchMode.init === 'function') {
+        window.WatchMode.init();
+      }
 
-      // Check if this is the first time using this mode
+      // 5. Check if this is the first time using this mode - trigger tutorial
       const firstTimeKey = `${mode}ModeFirstUse`;
       const hasUsedBefore = localStorage.getItem(firstTimeKey);
 
@@ -213,12 +249,327 @@
 
   // refresh on load
   document.addEventListener('DOMContentLoaded', () => {
+    // Initialize Difficulty Manager
+    if (window.DifficultyManager) {
+      window.DifficultyManager.init();
+    }
+
+    // Initialize Performance Trackers
+    if (window.PerformanceTracker) {
+      window.typePerformanceTracker = new PerformanceTracker('type');
+      window.speakPerformanceTracker = new PerformanceTracker('speak');
+    }
+
     // Initialize shop module
     if (window.shopModule && window.shopModule.init) {
       window.shopModule.init();
     }
     window.refreshLockedTabs();
   });
+
+  // ============================================
+  // SCAFFOLDING HELPER FUNCTIONS
+  // ============================================
+
+  /**
+   * Show an auto-generated hint in the scaffolding panel
+   * @param {string} hintType - 'word-count', 'first-letters', 'word-lengths'
+   * @param {string} content - HTML content to display
+   */
+  function showAutoHint(hintType, content) {
+    let container = document.getElementById('auto-hints-type');
+
+    // Create container if it doesn't exist
+    if (!container) {
+      const hintControlsEl = document.getElementById('hint-controls-type');
+      if (hintControlsEl) {
+        container = document.createElement('div');
+        container.id = 'auto-hints-type';
+        container.className = 'auto-hints-container';
+        // Insert BEFORE the specialized hint controls
+        hintControlsEl.parentNode.insertBefore(container, hintControlsEl);
+      } else {
+        // Fallback: append after input if hint controls missing
+        const inputEl = document.getElementById('answer-input');
+        if (inputEl) {
+          container = document.createElement('div');
+          container.id = 'auto-hints-type';
+          container.className = 'auto-hints-container';
+          inputEl.parentNode.insertBefore(container, inputEl.nextSibling);
+        } else {
+          return;
+        }
+      }
+    }
+
+    // Check if this hint type already exists
+    let hintEl = container.querySelector(`[data-hint-type="${hintType}"]`);
+    if (!hintEl) {
+      hintEl = document.createElement('div');
+      hintEl.className = 'auto-hint-item';
+      hintEl.setAttribute('data-hint-type', hintType);
+      container.appendChild(hintEl);
+    }
+
+    hintEl.innerHTML = content;
+    container.style.display = 'block';
+  }
+
+  /**
+   * Clear all auto-generated hints
+   */
+  function clearAutoHints() {
+    const container = document.getElementById('auto-hints-type');
+    if (container) {
+      container.innerHTML = '';
+      container.style.display = 'none';
+    }
+  }
+
+  /**
+   * Generate first letters preview as HTML structure
+   * @param {string} sentence - The correct sentence
+   * @returns {string} - HTML string with structured character slots
+   */
+  function generateFirstLettersPreview(sentence) {
+    const words = sentence.split(/\s+/).filter(Boolean);
+
+    return `<div class="hint-sentence-container">` +
+      words.map(word => {
+        // Wrap word in container
+        return `<span class="hint-word">` +
+          word.split('').map((char, index) => {
+            // Check if character is a letter
+            if (/[a-zA-Z]/.test(char)) {
+              if (index === 0) {
+                // First letter - revealed
+                return `<span class="hint-char revealed">${char}</span>`;
+              } else {
+                // Other letters - hidden slot
+                return `<span class="hint-char hidden"></span>`;
+              }
+            } else {
+              // Punctuation - shown as is
+              return `<span class="hint-char punctuation">${char}</span>`;
+            }
+          }).join('') +
+          `</span>`;
+      }).join(' ') +
+      `</div>`;
+  }
+
+  /**
+   * Reset scaffolding state when question changes
+   * @param {string} mode - 'type' or 'speak'
+   */
+  function resetScaffoldingState(mode) {
+    if (mode === 'type') {
+      // Reset replay counter
+      window.typeReplayCount = 0;
+
+      // Reset play button state
+      const playBtn = document.getElementById('play-btn');
+      if (playBtn) {
+        playBtn.disabled = false;
+        playBtn.style.display = 'inline-block'; // Ensure it's visible
+        playBtn.title = 'Play audio';
+      }
+
+      // Reset replay counter badge
+      const replayBadge = document.getElementById('replay-counter-type');
+      if (replayBadge) {
+        // Set initial text if Difficulty Manager active
+        if (window.DifficultyManager && window.DifficultyManager.isFeatureEnabled()) {
+          const settings = window.DifficultyManager.getCurrentSettings('type');
+          const max = settings.maxReplays || 10;
+          replayBadge.textContent = `🔊 ${max} times left`;
+        } else {
+          replayBadge.textContent = '';
+        }
+        replayBadge.classList.remove('limit-reached');
+      }
+
+      // Reset hint controls visibility (unhide if hidden by Level 1 logic)
+      // Reset hint controls visibility (unhide if hidden by Level 1 logic)
+      const hintControls = document.getElementById('hint-controls-type');
+      if (hintControls) {
+        // Check if we should initially hide strict scaffolding (Level 1)
+        if (window.DifficultyManager && window.DifficultyManager.isFeatureEnabled()) {
+          const settings = window.DifficultyManager.getCurrentSettings('type');
+          if (settings.autoShowFirstLetters) {
+            hintControls.style.display = 'none'; // Auto-hide for Level 1
+          } else {
+            hintControls.style.display = 'flex'; // Default for others
+          }
+        } else {
+          hintControls.style.display = 'flex'; // Default
+        }
+      }
+
+
+      // Clear auto hints
+      clearAutoHints();
+    } else if (mode === 'speak') {
+      window.speakReplayCount = 0;
+
+      const playBtnSpeak = document.getElementById('play-btn-speak');
+      if (playBtnSpeak) {
+        playBtnSpeak.disabled = false;
+        playBtnSpeak.title = 'Play audio';
+      }
+    }
+  }
+
+  // Expose for external use
+  window.resetScaffoldingState = resetScaffoldingState;
+
+  // ============================================
+  // WORD SCAFFOLDING PANEL (Figma Design)
+  // ============================================
+
+  /**
+   * Show word scaffolding panel (Figma design)
+   * @param {string} sentence - The correct sentence to hint
+   */
+  function showLetterHints(sentence) {
+    const container = document.getElementById('scaffolding-hints-type');
+    if (!container || !sentence) return;
+
+    const words = sentence.trim().split(/\s+/);
+    const totalHints = 5; // Max hints per session
+    const usedHints = window.scaffoldingHintsUsed || 2; // Track across session
+
+    // Build header
+    let html = `
+      <div class="scaffolding-header">
+        <div class="scaffolding-title">
+          <span class="icon">💡</span>
+          <span>Word Scaffolding</span>
+        </div>
+        <button class="reveal-hint-btn" onclick="revealNextHint()">
+          <span>✨</span> Reveal Hint
+        </button>
+      </div>
+    `;
+
+    // Build letter boxes
+    html += '<div class="letter-hint-row">';
+
+    words.forEach((word, wordIndex) => {
+      html += '<div class="letter-hint-word">';
+
+      [...word].forEach((char, charIndex) => {
+        if (/[a-zA-Z]/.test(char)) {
+          if (charIndex === 0) {
+            html += `<span class="letter-box revealed">${char.toLowerCase()}</span>`;
+          } else {
+            html += `<span class="letter-box hidden"></span>`;
+          }
+        } else {
+          html += `<span class="letter-box punctuation">${char}</span>`;
+        }
+      });
+
+      html += '</div>';
+
+      if (wordIndex < words.length - 1) {
+        html += '<span class="word-separator"></span>';
+      }
+    });
+
+    html += '</div>';
+
+    // Build footer
+    const hintsRemaining = totalHints - usedHints;
+    let dotsHtml = '';
+    for (let i = 0; i < totalHints; i++) {
+      dotsHtml += `<span class="hint-dot ${i < usedHints ? 'used' : ''}"></span>`;
+    }
+
+    html += `
+      <div class="scaffolding-footer">
+        <div class="hints-balance">
+          <span>HINTS BALANCE</span>
+          <div class="hints-dots">${dotsHtml}</div>
+        </div>
+        <span class="hints-remaining">${hintsRemaining} EXTRA HINTS LEFT</span>
+      </div>
+    `;
+
+    container.innerHTML = html;
+    container.style.display = 'block';
+  }
+
+  /**
+   * Hide word scaffolding panel
+   */
+  function hideLetterHints() {
+    const container = document.getElementById('scaffolding-hints-type');
+    if (container) {
+      container.innerHTML = '';
+      container.style.display = 'none';
+    }
+  }
+
+  /**
+   * Reveal the next hidden letter hint
+   */
+  function revealNextHint() {
+    const hiddenBoxes = document.querySelectorAll('#scaffolding-hints-type .letter-box.hidden');
+    if (hiddenBoxes.length > 0) {
+      // Find the correct sentence to get the actual letter
+      if (window.correctSentenceType) {
+        const allBoxes = document.querySelectorAll('#scaffolding-hints-type .letter-box');
+        let letterIndex = 0;
+        const sentence = window.correctSentenceType.replace(/[^a-zA-Z]/g, '');
+
+        for (const box of allBoxes) {
+          if (box.classList.contains('hidden')) {
+            box.textContent = sentence[letterIndex]?.toLowerCase() || '';
+            box.classList.remove('hidden');
+            box.classList.add('revealed');
+
+            // Update hints used
+            window.scaffoldingHintsUsed = (window.scaffoldingHintsUsed || 2) + 1;
+            updateHintsDisplay();
+            break;
+          }
+          if (box.classList.contains('revealed') || box.classList.contains('hidden')) {
+            letterIndex++;
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Update the hints display in footer
+   */
+  function updateHintsDisplay() {
+    const totalHints = 5;
+    const usedHints = window.scaffoldingHintsUsed || 2;
+    const hintsRemaining = Math.max(0, totalHints - usedHints);
+
+    const dotsContainer = document.querySelector('.hints-dots');
+    const remainingText = document.querySelector('.hints-remaining');
+
+    if (dotsContainer) {
+      let dotsHtml = '';
+      for (let i = 0; i < totalHints; i++) {
+        dotsHtml += `<span class="hint-dot ${i < usedHints ? 'used' : ''}"></span>`;
+      }
+      dotsContainer.innerHTML = dotsHtml;
+    }
+
+    if (remainingText) {
+      remainingText.textContent = `${hintsRemaining} EXTRA HINTS LEFT`;
+    }
+  }
+
+  // Expose for external use
+  window.showLetterHints = showLetterHints;
+  window.hideLetterHints = hideLetterHints;
+  window.revealNextHint = revealNextHint;
 
   /**
    * Load progress data for all questions in a mode
@@ -1316,6 +1667,7 @@
   const modeExtended = document.getElementById("mode-extended");
   const modeWatch = document.getElementById("mode-watch");
   const modeNotes = document.getElementById("mode-notes");
+  const modePronounce = document.getElementById("mode-pronounce");
 
   // ============================================
   // Feedback Banner
@@ -1458,6 +1810,11 @@
     lastDiffSpeak = [];
     vocabularyPracticeWordsType = [];
     vocabularyPracticeWordsSpeak = [];
+
+    // Reset Performance Tracking Variables
+    window.questionStartTime = Date.now();
+    window.currentQuestionAttempts = 0; // Will specific to mode if needed, but simple counter works for now
+    window.hintUsedForCurrentQuestion = false;
   }
 
   /**
@@ -1959,11 +2316,21 @@
     tabExtended.classList.remove("active");
     if (tabWatch) tabWatch.classList.remove("active");
     if (tabNotes) tabNotes.classList.remove("active");
+    if (tabPronounce) tabPronounce.classList.remove("active");
     modeType.classList.add("active");
+    modeType.style.display = 'block';
     modeSpeak.classList.remove("active");
+    modeSpeak.style.display = 'none';
     modeExtended.classList.remove("active");
-    if (modeWatch) modeWatch.classList.remove("active");
-    if (modeNotes) modeNotes.classList.remove("active");
+    modeExtended.style.display = 'none';
+    if (modeWatch) { modeWatch.classList.remove("active"); modeWatch.style.display = 'none'; }
+    if (modeNotes) { modeNotes.classList.remove("active"); modeNotes.style.display = 'none'; }
+    if (modePronounce) { modePronounce.classList.remove("active"); modePronounce.style.display = 'none'; }
+
+    // Highlight active mode button
+    document.querySelectorAll('.mode-switch-btn').forEach(btn => btn.classList.remove('active'));
+    const typeModeBtn = document.querySelector('.mode-switch-btn[onclick*="type"]');
+    if (typeModeBtn) typeModeBtn.classList.add('active');
 
     // Reset Take Notes mode if it was active
     if (window.TakeNotesMode && typeof window.TakeNotesMode.reset === 'function') {
@@ -2040,11 +2407,21 @@
     tabExtended.classList.remove("active");
     if (tabWatch) tabWatch.classList.remove("active");
     if (tabNotes) tabNotes.classList.remove("active");
+    if (tabPronounce) tabPronounce.classList.remove("active");
     modeSpeak.classList.add("active");
+    modeSpeak.style.display = 'block';
     modeType.classList.remove("active");
+    modeType.style.display = 'none';
     modeExtended.classList.remove("active");
-    if (modeWatch) modeWatch.classList.remove("active");
-    if (modeNotes) modeNotes.classList.remove("active");
+    modeExtended.style.display = 'none';
+    if (modeWatch) { modeWatch.classList.remove("active"); modeWatch.style.display = 'none'; }
+    if (modeNotes) { modeNotes.classList.remove("active"); modeNotes.style.display = 'none'; }
+    if (modePronounce) { modePronounce.classList.remove("active"); modePronounce.style.display = 'none'; }
+
+    // Highlight active mode button
+    document.querySelectorAll('.mode-switch-btn').forEach(btn => btn.classList.remove('active'));
+    const speakModeBtn = document.querySelector('.mode-switch-btn[onclick*="speak"]');
+    if (speakModeBtn) speakModeBtn.classList.add('active');
 
     // Reset Take Notes mode if it was active
     if (window.TakeNotesMode && typeof window.TakeNotesMode.reset === 'function') {
@@ -2107,11 +2484,21 @@
     tabSpeak.classList.remove("active");
     if (tabWatch) tabWatch.classList.remove("active");
     if (tabNotes) tabNotes.classList.remove("active");
+    if (tabPronounce) tabPronounce.classList.remove("active");
     modeExtended.classList.add("active");
+    modeExtended.style.display = 'block';
     modeType.classList.remove("active");
+    modeType.style.display = 'none';
     modeSpeak.classList.remove("active");
-    if (modeWatch) modeWatch.classList.remove("active");
-    if (modeNotes) modeNotes.classList.remove("active");
+    modeSpeak.style.display = 'none';
+    if (modeWatch) { modeWatch.classList.remove("active"); modeWatch.style.display = 'none'; }
+    if (modeNotes) { modeNotes.classList.remove("active"); modeNotes.style.display = 'none'; }
+    if (modePronounce) { modePronounce.classList.remove("active"); modePronounce.style.display = 'none'; }
+
+    // Highlight active mode button
+    document.querySelectorAll('.mode-switch-btn').forEach(btn => btn.classList.remove('active'));
+    const extendedModeBtn = document.querySelector('.mode-switch-btn[onclick*="extended"]');
+    if (extendedModeBtn) extendedModeBtn.classList.add('active');
 
     // Reset Take Notes mode if it was active
     if (window.TakeNotesMode && typeof window.TakeNotesMode.reset === 'function') {
@@ -2156,6 +2543,15 @@
     }
   });
 
+  // Expose loadExtendedIfNeeded globally for switchToMode
+  window.loadExtendedIfNeeded = function () {
+    if (!extendedQuestionLoaded && extendedDatabase.length > 0) {
+      extendedQuestionLoaded = true;
+      loadExtendedQuestion(currentExtendedQuestionId || 1);
+    }
+  };
+
+
   // Watch mode tab handler
   if (tabWatch) {
     tabWatch.addEventListener("click", () => {
@@ -2179,11 +2575,21 @@
       tabSpeak.classList.remove("active");
       tabExtended.classList.remove("active");
       if (tabNotes) tabNotes.classList.remove("active");
-      if (modeWatch) modeWatch.classList.add("active");
+      if (tabPronounce) tabPronounce.classList.remove("active");
+      if (modeWatch) { modeWatch.classList.add("active"); modeWatch.style.display = 'block'; }
       modeType.classList.remove("active");
+      modeType.style.display = 'none';
       modeSpeak.classList.remove("active");
+      modeSpeak.style.display = 'none';
       modeExtended.classList.remove("active");
-      if (modeNotes) modeNotes.classList.remove("active");
+      modeExtended.style.display = 'none';
+      if (modeNotes) { modeNotes.classList.remove("active"); modeNotes.style.display = 'none'; }
+      if (modePronounce) { modePronounce.classList.remove("active"); modePronounce.style.display = 'none'; }
+
+      // Highlight active mode button
+      document.querySelectorAll('.mode-switch-btn').forEach(btn => btn.classList.remove('active'));
+      const watchModeBtn = document.querySelector('.mode-switch-btn[onclick*="watch"]');
+      if (watchModeBtn) watchModeBtn.classList.add('active');
 
       // Reset Take Notes mode if it was active
       if (window.TakeNotesMode && typeof window.TakeNotesMode.reset === 'function') {
@@ -2259,11 +2665,21 @@
       tabSpeak.classList.remove("active");
       tabExtended.classList.remove("active");
       if (tabWatch) tabWatch.classList.remove("active");
-      if (modeNotes) modeNotes.classList.add("active");
+      if (tabPronounce) tabPronounce.classList.remove("active");
+      if (modeNotes) { modeNotes.classList.add("active"); modeNotes.style.display = 'block'; }
       modeType.classList.remove("active");
+      modeType.style.display = 'none';
       modeSpeak.classList.remove("active");
+      modeSpeak.style.display = 'none';
       modeExtended.classList.remove("active");
-      if (modeWatch) modeWatch.classList.remove("active");
+      modeExtended.style.display = 'none';
+      if (modeWatch) { modeWatch.classList.remove("active"); modeWatch.style.display = 'none'; }
+      if (modePronounce) { modePronounce.classList.remove("active"); modePronounce.style.display = 'none'; }
+
+      // Highlight active mode button
+      document.querySelectorAll('.mode-switch-btn').forEach(btn => btn.classList.remove('active'));
+      const notesModeBtn = document.querySelector('.mode-switch-btn[onclick*="notes"]');
+      if (notesModeBtn) notesModeBtn.classList.add('active');
 
       // Hide all other mode panels
       animationPanel.style.display = "none";
@@ -2334,10 +2750,19 @@
       if (tabNotes) tabNotes.classList.remove("active");
 
       modeType.classList.remove("active");
+      modeType.style.display = 'none';
       modeSpeak.classList.remove("active");
+      modeSpeak.style.display = 'none';
       modeExtended.classList.remove("active");
-      if (modeWatch) modeWatch.classList.remove("active");
-      if (modeNotes) modeNotes.classList.remove("active");
+      modeExtended.style.display = 'none';
+      if (modeWatch) { modeWatch.classList.remove("active"); modeWatch.style.display = 'none'; }
+      if (modeNotes) { modeNotes.classList.remove("active"); modeNotes.style.display = 'none'; }
+      if (modePronounce) { modePronounce.classList.add("active"); modePronounce.style.display = 'block'; }
+
+      // Highlight active mode button
+      document.querySelectorAll('.mode-switch-btn').forEach(btn => btn.classList.remove('active'));
+      const pronounceModeBtn = document.querySelector('.mode-switch-btn[onclick*="pronounce"]');
+      if (pronounceModeBtn) pronounceModeBtn.classList.add('active');
 
       // Hide all other mode panels
       animationPanel.style.display = "none";
@@ -2352,7 +2777,7 @@
       // Show Pronunciation Panel
       if (pronunciationPanel) {
         pronunciationPanel.style.display = 'block';
-        pronunciationPanel.scrollIntoView({ behavior: 'smooth' });
+        // pronunciationPanel.scrollIntoView({ behavior: 'smooth' }); // Disable auto-scroll
       }
 
       // Stop any active recordings
@@ -4884,8 +5309,28 @@
       return;
     }
 
+    // Adaptive Difficulty Integration
+    const totalWords = getCorrectWordCount();
+    const accuracy = totalWords > 0 ? scoreValue / totalWords : 0;
+    if (window.DifficultyManager) {
+      window.DifficultyManager.adjustDifficulty('type', accuracy);
+    }
+
     // Record practice attempt (correct if no errors)
     recordPracticeAttempt(currentTypeQuestionId, !hasErrors, 'type');
+
+    // Smart Difficulty Tracking
+    if (window.typePerformanceTracker) {
+      window.currentQuestionAttempts = (window.currentQuestionAttempts || 0) + 1;
+      const timeTaken = (Date.now() - (window.questionStartTime || Date.now())) / 1000;
+
+      window.typePerformanceTracker.recordAttempt({
+        correct: !hasErrors,
+        attempts: window.currentQuestionAttempts,
+        hintUsed: window.hintUsedForCurrentQuestion || false,
+        timeTaken: timeTaken
+      });
+    }
 
     scoreElement.textContent = `Points: ${scoreValue} / ${getCorrectWordCount()}`;
 
@@ -4968,8 +5413,28 @@
       return;
     }
 
+    // Adaptive Difficulty Integration
+    const totalWords = getCorrectWordCount();
+    const accuracy = totalWords > 0 ? scoreValue / totalWords : 0;
+    if (window.DifficultyManager) {
+      window.DifficultyManager.adjustDifficulty('speak', accuracy);
+    }
+
     // Record practice attempt (correct if no errors)
     recordPracticeAttempt(currentSpeakQuestionId, !hasErrors, 'speak');
+
+    // Smart Difficulty Tracking
+    if (window.speakPerformanceTracker) {
+      window.currentQuestionAttempts = (window.currentQuestionAttempts || 0) + 1;
+      const timeTaken = (Date.now() - (window.questionStartTime || Date.now())) / 1000;
+
+      window.speakPerformanceTracker.recordAttempt({
+        correct: !hasErrors,
+        attempts: window.currentQuestionAttempts,
+        hintUsed: window.hintUsedForCurrentQuestion || false,
+        timeTaken: timeTaken
+      });
+    }
 
     scoreElement.textContent = `Points: ${scoreValue} / ${getCorrectWordCount()}`;
 
@@ -5077,6 +5542,24 @@
       correctSentenceSpeak = question.correctSentence;
     }
 
+    // Apply Smart Difficulty Settings
+    if (window.DifficultyManager) {
+      const diffSettings = window.DifficultyManager.getCurrentSettings(mode);
+      const audioToAdjust = mode === 'type' ? audio : (mode === 'speak' ? audio : null);
+
+      if (diffSettings && audioToAdjust) {
+        // Apply playback speed
+        audioToAdjust.playbackRate = diffSettings.playbackSpeed || 1.0;
+
+        // Store current settings for hint system and scoring
+        if (!window.currentDifficultySettings) window.currentDifficultySettings = {};
+        window.currentDifficultySettings[mode] = diffSettings;
+
+        // Update helper text if speed is adjusted
+        // (Optional: Add a visual indicator of speed)
+      }
+    }
+
     // Determine MIME type based on file extension
     const getAudioMimeType = (filename) => {
       const ext = filename.toLowerCase().split('.').pop();
@@ -5178,6 +5661,9 @@
 
     // Reset scores and hide panels
     resetScaffolding();
+
+    // Reset scaffolding state (replay counters, auto-hints)
+    resetScaffoldingState(mode);
 
     // Load mastery status for this question (logged-in users only)
     // Pass the mode so mastery status is shown for the correct mode
@@ -5780,6 +6266,31 @@
 
   // Type mode
   playBtn.addEventListener("click", () => {
+    // ============================================
+    // REPLAY LIMIT CHECK (Smart Difficulty)
+    // ============================================
+    if (window.DifficultyManager && window.DifficultyManager.isFeatureEnabled()) {
+      const settings = window.DifficultyManager.getCurrentSettings('type');
+      const maxReplays = settings.maxReplays || 10; // Default to 10 if not set
+
+      // Increment replay counter
+      window.typeReplayCount = (window.typeReplayCount || 0) + 1;
+
+      const timesLeft = Math.max(0, maxReplays - window.typeReplayCount);
+
+      // Update replay counter UI
+      const replayBadge = document.getElementById('replay-counter-type');
+      if (replayBadge) {
+        replayBadge.textContent = `🔊 ${timesLeft} times left`;
+
+        if (timesLeft === 0) {
+          replayBadge.classList.add('limit-reached');
+          // Hide play button immediately after this click (since this was the last allowed play)
+          if (playBtn) playBtn.style.display = 'none';
+        }
+      }
+    }
+
     // New flow: Enable input and show check button
     if (input) {
       input.disabled = false;
@@ -5787,6 +6298,11 @@
     }
     if (checkBtn) checkBtn.style.display = "inline-block";
     if (retryBtn) retryBtn.style.display = "none";
+
+    // STANDALONE LETTER HINTS: Show letter boxes immediately
+    if (correctSentenceType && typeof showLetterHints === 'function') {
+      showLetterHints(correctSentenceType);
+    }
 
     // Show hint controls and reset hint state for new question
     const hintControlsEl = document.getElementById('hint-controls-type');
@@ -5796,7 +6312,7 @@
 
     // Initialize hint system for this question
     if (window.HintSystem) {
-      window.HintSystem.resetForNewQuestion(currentTypeQuestionId);
+      window.HintSystem.resetForNewQuestion(currentTypeQuestionId, 'type');
 
       // Update hint cost badge directly
       const costBadge = document.getElementById('hint-cost-badge-type');
@@ -5819,6 +6335,28 @@
       }
     }
 
+    // ============================================
+    // AUTO-SHOW HINTS (Smart Difficulty)
+    // ============================================
+    if (window.DifficultyManager && window.DifficultyManager.isFeatureEnabled()) {
+      const settings = window.DifficultyManager.getCurrentSettings('type');
+
+      // Auto-show word count hint
+      if (settings.autoShowWordCount && correctSentenceType) {
+        const wordCount = correctSentenceType.split(/\s+/).filter(Boolean).length;
+        showAutoHint('word-count', `💡 This sentence has <strong>${wordCount} words</strong>`);
+      }
+
+      // Auto-show first letters hint (Level 1 only)
+      if (settings.autoShowFirstLetters && correctSentenceType) {
+        const firstLettersHint = generateFirstLettersPreview(correctSentenceType);
+        showAutoHint('first-letters', `💡 ${firstLettersHint}`);
+
+        // CONFLICT RESOLUTION: Hide manual hint button to prevent redundancy
+        const hintControls = document.getElementById('hint-controls-type');
+        if (hintControls) hintControls.style.display = 'none';
+      }
+    }
 
     audio.currentTime = 0;
     audio.play();
@@ -5878,7 +6416,7 @@
       const hintDisplayType = document.getElementById('hint-display-type');
       if (hintControlsType) hintControlsType.style.display = 'none';
       if (hintDisplayType) hintDisplayType.style.display = 'none';
-      if (window.HintSystem) window.HintSystem.resetForNewQuestion(currentTypeQuestionId);
+      if (window.HintSystem) window.HintSystem.resetForNewQuestion(currentTypeQuestionId, 'type');
     });
   }
 
@@ -5923,13 +6461,21 @@
     hintTypeLabelType.textContent = hint.description;
     hintContentType.innerHTML = hint.content;
     hintDisplayType.style.display = 'block';
+
+    // Track hint usage for Smart Difficulty
+    window.hintUsedForCurrentQuestion = true;
   }
 
   // Function to show insufficient coins message
   function showInsufficientCoinsForHint(needed, have) {
-    // Create a simple alert (could be replaced with a modal later)
-    const message = `Not enough coins!\n\nHint cost: ${needed} coins\nYour balance: ${have} coins\n\nEarn more coins by practicing!`;
-    alert(message);
+    const message = `Not enough coins!<br><br>Hint cost: <strong>${needed}</strong> coins<br>Your balance: <strong>${have}</strong> coins<br><br>Earn more coins by practicing!`;
+
+    if (window.shopModule && window.shopModule.showAlertModal) {
+      window.shopModule.showAlertModal(message, true);
+    } else {
+      // Fallback if shop module isn't loaded
+      alert(message.replace(/<br>/g, '\n').replace(/<strong>|<\/strong>/g, ''));
+    }
   }
 
   // Function to deduct coins for hint
@@ -6005,6 +6551,14 @@
           // Negative toast to show deduction
           window.authUI.showPointsToast('Hint Used', -result.cost);
         }
+
+        // ANALYTICS: Track hint usage
+        console.log('📊 ANALYTICS: Hint Used', {
+          questionId: correctSentenceType ? 'current' : 'unknown',
+          level: result.level,
+          cost: result.cost,
+          timestamp: new Date().toISOString()
+        });
       } else if (result.maxReached) {
         // All hints used for this question
         updateHintButtonUI();

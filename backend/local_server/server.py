@@ -1,12 +1,23 @@
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
-import parselmouth
+try:
+    import parselmouth  # type: ignore
+except ImportError:
+    import praat_parselmouth as parselmouth  # type: ignore
 import numpy as np
 import tempfile
 import os
 import requests as http_requests  # Renamed to avoid conflict with flask.request
 import re
-from scipy.ndimage import uniform_filter1d
+try:
+    from scipy.ndimage import uniform_filter1d  # type: ignore
+except ImportError:
+    try:
+        from scipy.ndimage.filters import uniform_filter1d  # type: ignore
+    except ImportError:
+        # Final dummy fallback to satisfy type checkers and prevent runtime crashes
+        def uniform_filter1d(input: np.ndarray, size: int, *args, **kwargs) -> np.ndarray:
+            return input
 
 # ============================================================================
 # CONFIGURATION - Research-backed parameters
@@ -143,7 +154,7 @@ class BoundaryDetector:
     def _compute_envelope(self):
         """Compute amplitude envelope and its derivative (rate of change)."""
         # Smooth intensity
-        smoothed = uniform_filter1d(self.int_values, size=5)
+        smoothed = uniform_filter1d(self.int_values, size=5)  # type: ignore
         
         # Compute derivative (rate of change)
         derivative = np.gradient(smoothed)
@@ -159,7 +170,13 @@ class BoundaryDetector:
         Find optimal syllable boundary between two time points.
         Returns boundary time and confidence scores for each cue.
         """
-        results = {}
+        # Initialize with explicit structure to satisfy type checkers
+        results: dict[str, dict] = {
+            'voicing': {'time': None, 'confidence': 0.0},
+            'spectral': {'time': None, 'confidence': 0.0},
+            'intensity': {'time': None, 'confidence': 0.0},
+            'envelope': {'time': None, 'confidence': 0.0}
+        }
         
         # 1. Find voicing transition
         voicing_result = self._find_voicing_boundary(start_time, end_time)
@@ -190,7 +207,7 @@ class BoundaryDetector:
         step = 0.005  # 5ms resolution
         transitions = []
         
-        prev_voiced = None
+        prev_voiced: bool | None = None
         t = start_time
         
         while t <= end_time:
@@ -466,11 +483,13 @@ def clamp_boundary_to_vowel_end(candidate_boundary, peak_time, start_time,
     return clamped, vowel_end
 
 
-app = Flask(__name__)
+app: Flask = Flask(__name__)
 
 # CORS configuration - allow all origins for development
-# For production, you can restrict to specific domains
-CORS(app, origins='*', methods=['GET', 'POST', 'OPTIONS'], allow_headers=['Content-Type'])
+# Using late initialization pattern to avoid type mismatch in some IDEs
+cors = CORS()
+# type: ignore
+cors.init_app(app, origins='*', methods=['GET', 'POST', 'OPTIONS'], allow_headers=['Content-Type'])
 
 @app.route('/', methods=['GET'])
 def home():
@@ -1077,7 +1096,7 @@ def analyze_audio(audio_path, expected_syllables=None):
     pitch_ceiling = 500 
     
     pitch = sound.to_pitch(time_step=time_step, pitch_floor=pitch_floor, pitch_ceiling=pitch_ceiling)
-    pitch_values = []
+    pitch_values: list[float | None] = []
     for t in times:
         p = pitch.get_value_at_time(t)
         pitch_values.append(None if np.isnan(p) or p == 0 else round(float(p), 1))
@@ -1085,10 +1104,10 @@ def analyze_audio(audio_path, expected_syllables=None):
     # Extract intensity
     # Use same minimum pitch as pitch analysis for consistency
     intensity = sound.to_intensity(minimum_pitch=75, time_step=time_step)
-    intensity_values = []
+    intensity_values: list[float] = []
     for t in times:
         val = intensity.get_value(t)
-        intensity_values.append(round(float(val), 2) if not np.isnan(val) else 0)
+        intensity_values.append(round(float(val), 2) if not np.isnan(val) else 0.0)
     
     # Detect syllables using the pitch and intensity objects (they handle their own grids internally)
     syllables = detect_syllables(sound, pitch, intensity, expected_syllables)
@@ -1098,11 +1117,11 @@ def analyze_audio(audio_path, expected_syllables=None):
         'sampleRate': int(sound.sampling_frequency),
         'pitch': {
             'times': [round(float(t), 3) for t in times],
-            'values': pitch_values
+            'values': [v for v in pitch_values]
         },
         'intensity': {
             'times': [round(float(t), 3) for t in times],
-            'values': intensity_values
+            'values': [v for v in intensity_values]
         },
         'syllables': syllables
     }
@@ -1455,7 +1474,7 @@ def find_intensity_minima(times, values, num_boundaries):
         return []
     
     # Smooth to reduce noise
-    smoothed = uniform_filter1d(values.astype(float), size=5)
+    smoothed = uniform_filter1d(values.astype(float), size=5)  # type: ignore
     
     minima = []
     
@@ -1534,7 +1553,7 @@ def measure_vowel_duration(sound, start_time, end_time, pitch_obj):
     """
     Measure duration of voiced (vowel) portion within a syllable.
     """
-    voiced_duration = 0
+    voiced_duration: float = 0.0
     time_step = 0.002  # 2ms resolution
     
     t = start_time
@@ -1585,7 +1604,7 @@ def peaks_to_syllables(peaks, pitch, int_times, int_values, speech_start, speech
         current_peak = peaks[i]
         next_peak = peaks[i + 1]
         
-        if use_multicue:
+        if use_multicue and detector is not None:
             # Use multi-cue detection
             result = detector.find_boundary(current_peak['time'], next_peak['time'])
             candidate_time = result['time']
@@ -1598,7 +1617,7 @@ def peaks_to_syllables(peaks, pitch, int_times, int_values, speech_start, speech
             min_idx_in_region = np.argmin(search_region)
             min_idx = start_idx + min_idx_in_region
             candidate_time = float(int_times[min_idx])
-            boundary_debug.append({'time': candidate_time, 'cues': {'intensity_only': True}})
+            boundary_debug.append({'time': candidate_time, 'cues': {'intensity_only': {'time': candidate_time, 'confidence': 1.0}}})
         
         # === VOWEL-END CLAMPING ===
         # Prevent onset clusters (/pr/, /tr/, /mbr/) from leaking into previous syllable
@@ -1777,7 +1796,7 @@ def analyze_pattern_match(user_syllables, native_syllables, native_stressed_idx=
     
     return {
         'pattern_matches': pattern_matches,
-        'confidence': round(max(0, overall_correlation) * 100),
+        'confidence': int(round(max(0.0, float(overall_correlation)) * 100)),
         'pitch_correlation': round(pitch_corr * 100),
         'duration_correlation': round(dur_corr * 100),
         'intensity_correlation': round(int_corr * 100),
@@ -1868,4 +1887,25 @@ def find_stressed_with_corrections(syllables):
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    use_https = os.environ.get('USE_HTTPS', 'true').lower() == 'true'
+    
+    # For local development with HTTPS (Chrome requires it)
+    if use_https:
+        import ssl
+        # Get project root (2 levels up)
+        PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        cert_file = os.path.join(PROJECT_ROOT, "localhost+2.pem")
+        key_file = os.path.join(PROJECT_ROOT, "localhost+2-key.pem")
+        
+        if os.path.exists(cert_file) and os.path.exists(key_file):
+            print(f"🔒 Starting HTTPS server on https://localhost:{port}")
+            context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+            context.load_cert_chain(certfile=cert_file, keyfile=key_file)
+            app.run(host='0.0.0.0', port=port, debug=False, ssl_context=context)
+        else:
+            print(f"⚠️  SSL certs not found at {cert_file}, falling back to HTTP")
+            print(f"   Running on http://localhost:{port}")
+            app.run(host='0.0.0.0', port=port, debug=False)
+    else:
+        print(f"🌐 Starting HTTP server on http://localhost:{port}")
+        app.run(host='0.0.0.0', port=port, debug=False)

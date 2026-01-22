@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="srs-review.css?v=20260115_fix">
   <link rel="stylesheet" href="pronunciation-analyzer/style.css">
   <link rel="stylesheet" href="pronunciation-analyzer/syllable-verifier.css">
+  <link rel="stylesheet" href="style-scaffolding.css">
   <!-- XLSX Library -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
   <!-- Wavesurfer.js for syllable verification -->
@@ -736,7 +737,13 @@
   <!-- Page Layout Wrapper for Watch Mode (video + question panel side by side) -->
   <div id="page-layout-wrapper" class="page-layout-wrapper">
     <main class="container">
-      <h1>Listening Practice</h1>
+      <div class="main-header">
+        <h1>Listening Practice</h1>
+        <div id="difficulty-badge" class="difficulty-badge" style="display: none;" title="Smart Difficulty Active">
+          <span class="diff-icon">🎯</span>
+          <span id="diff-level-text" class="diff-level-text">Guided</span>
+        </div>
+      </div>
 
       <!-- Quick Win: Start Review CTA -->
       <!-- Dashboard Slider -->
@@ -1032,12 +1039,16 @@
         </div>
         <div class="controls">
           <button id="play-btn" class="modern-btn modern-btn--play" type="button">Play</button>
+          <span id="replay-counter-type" class="replay-counter"></span>
           <button id="check-btn" class="modern-btn modern-btn--check" type="button"
             style="display: none;">Check</button>
           <button id="retry-btn" class="modern-btn modern-btn--retry" type="button"
             style="display: none;">Retry</button>
         </div>
         <div id="score" class="score">Points: 0</div>
+
+        <!-- Scaffolding Letter Hints (standalone, no DifficultyManager dependency) -->
+        <div id="scaffolding-hints-type" class="scaffolding-letter-hints" style="display: none;"></div>
 
         <label class="input-label" for="answer-input">Type what you hear:</label>
         <textarea id="answer-input" rows="4" placeholder="Start typing..." disabled></textarea>
@@ -1841,6 +1852,8 @@
     console.log('✓ Firebase compat SDK initialized for Watch mode');
   </script>
   <script src="https://unpkg.com/compromise"></script>
+  <!-- Excel Parser (Must be loaded before watch-mode.js) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="youtube-player.js"></script>
   <script src="watch-mode.js"></script>
   <script src="take-notes-mode.js"></script>
@@ -1974,8 +1987,10 @@
 
   <!-- Scripts -->
   <script src="hint-system.js"></script>
+  <script src="js/difficulty-manager.js"></script>
+  <script src="js/performance-tracker.js"></script>
   <script src="shop-module.js"></script>
-  <script src="script.js"></script>
+
 
 </body>
 

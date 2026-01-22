@@ -15,6 +15,7 @@
     let currentMode = 'type';
     let currentStep = 0;
     let isActive = false;
+    let spotlightLoopId = null; // Track animation frame for spotlight loop
     let interactiveListener = null;
 
     // DOM element references (cached)
@@ -40,10 +41,23 @@
             nextBtn.addEventListener('click', nextStep);
         }
 
-        // Set up skip button click handler
         if (skipBtn) {
             skipBtn.addEventListener('click', endTutorial);
         }
+
+        // Handle window resize to update positioning
+        window.addEventListener('resize', () => {
+            if (isActive && currentStep >= 0) {
+                const steps = getSteps();
+                const step = steps[currentStep];
+                if (step && step.target) {
+                    const targetEl = document.querySelector(step.target);
+                    if (targetEl) {
+                        // Loop is already running, no need to force update here
+                    }
+                }
+            }
+        });
     }
 
     // Tutorial steps configuration for each mode
@@ -188,11 +202,11 @@
                 waitForEvent: 'click'
             },
             {
-                target: '#check-btn-speak',
+                target: null,
                 icon: '✅',
                 title: 'Step 3: Check',
-                text: 'After recording, click "Check" to get instant feedback on your pronunciation accuracy.',
-                position: 'top',
+                text: 'After you stop recording, click <strong>"Check"</strong> to get instant feedback on your pronunciation accuracy.',
+                position: 'center',
                 nextLabel: 'Got It →',
                 interactive: false
             },
@@ -546,6 +560,12 @@
         // Create dots
         renderDots();
 
+        // Hide tooltip initially to prevent jump during first step's positioning
+        if (tooltip) {
+            tooltip.style.display = 'none';
+            tooltip.style.opacity = '0';
+        }
+
         // Show overlay
         overlay.style.display = 'block';
 
@@ -585,6 +605,39 @@
             interactiveListener.target.removeEventListener(interactiveListener.event, interactiveListener.handler, interactiveListener.options);
             interactiveListener = null;
         }
+    }
+    /**
+     * Stop the continuous spotlight positioning loop
+     */
+    function stopSpotlightLoop() {
+        if (spotlightLoopId) {
+            cancelAnimationFrame(spotlightLoopId);
+            spotlightLoopId = null;
+        }
+    }
+
+    /**
+     * Start continuous spotlight positioning loop
+     */
+    function startSpotlightLoop(targetEl, stepPosition) {
+        stopSpotlightLoop(); // Clear any existing loop
+
+        function loop() {
+            if (!isActive || !targetEl || !document.contains(targetEl)) {
+                return;
+            }
+
+            // Only position if visible
+            if (targetEl.offsetParent !== null) {
+                positionSpotlight(targetEl);
+                // Also continuously update tooltip position to handle scrolling/resize smoothly
+                positionTooltip(targetEl, stepPosition);
+            }
+
+            spotlightLoopId = requestAnimationFrame(loop);
+        }
+
+        loop();
     }
 
     /**
@@ -627,11 +680,23 @@
 
         const step = steps[index];
 
-        // Clean up previous listener
+        // Clean up previous listener and loop
+        cleanupInteractiveListener();
+        stopSpotlightLoop();
         cleanupInteractiveListener();
 
         // Run beforeShow callback if exists
         if (step.beforeShow) step.beforeShow();
+
+        // Hide tooltip before positioning to prevent visual jump
+        tooltip.style.opacity = '0';
+        tooltip.style.display = 'none'; // Completely hidden initially
+        tooltip.style.transition = 'none';
+        tooltip.style.animation = 'none'; // Disable CSS animation to prevent jump
+        // Set initial centered position
+        tooltip.style.top = '50%';
+        tooltip.style.left = '50%';
+        tooltip.style.transform = 'translate(-50%, -50%)';
 
         // Small delay to let UI settle, then verify target
         setTimeout(async () => {
@@ -659,25 +724,43 @@
                 const targetEl = await waitForTarget(step.target);
 
                 if (targetEl) {
-                    positionSpotlight(targetEl);
-                    positionTooltip(targetEl, step.position);
-                    spotlight.style.display = 'block';
-                    spotlight.classList.add('pulse');
-                    backdrop.style.display = 'none';
+                    // Ensure target is fully visible (auto for instant stability)
+                    targetEl.scrollIntoView({ behavior: 'auto', block: 'center' });
 
-                    // Set up interactive listener
-                    if (step.interactive && step.waitForEvent) {
-                        const handler = () => {
-                            // Small delay to let the click complete its normal action
-                            setTimeout(() => nextStep(), 100);
-                        };
-                        targetEl.addEventListener(step.waitForEvent, handler, { once: true });
-                        interactiveListener = { target: targetEl, event: step.waitForEvent, handler };
+                    // Wait for scroll to apply before positioning
+                    requestAnimationFrame(() => {
+                        // Show element for measurement but keep it invisible
+                        tooltip.style.display = 'block';
+                        tooltip.style.opacity = '0';
+                        tooltip.style.transition = 'none'; // Disable transition during positioning
 
-                        // Make target clickable through spotlight
-                        targetEl.style.position = 'relative';
-                        targetEl.style.zIndex = '10002';
-                    }
+                        spotlight.style.display = 'block';
+                        spotlight.classList.add('pulse');
+                        backdrop.style.display = 'none';
+
+                        // Start continuous loop to handle animations/layout shifts
+                        startSpotlightLoop(targetEl, step.position);
+
+                        // Set up interactive listener
+                        if (step.interactive && step.waitForEvent) {
+                            const handler = () => {
+                                // Small delay to let the click complete its normal action
+                                setTimeout(() => nextStep(), 100);
+                            };
+                            targetEl.addEventListener(step.waitForEvent, handler, { once: true });
+                            interactiveListener = { target: targetEl, event: step.waitForEvent, handler };
+
+                            // Make target clickable through spotlight
+                            targetEl.style.position = 'relative';
+                            targetEl.style.zIndex = '10002';
+                        }
+
+                        // Delay fade-in to allow scroll and positioning loop to stabilize
+                        setTimeout(() => {
+                            tooltip.style.transition = 'opacity 0.25s ease-out';
+                            tooltip.style.opacity = '1';
+                        }, 150); // Wait 150ms for layout to stabilize
+                    });
                 } else {
                     console.warn(`Tutorial target not found: ${step.target}, falling back to centered`);
                     showCenteredTooltip();
@@ -690,14 +773,19 @@
             tooltip.classList.remove('arrow-top', 'arrow-bottom', 'arrow-left', 'arrow-right', 'center');
             if (step.position === 'center') {
                 tooltip.classList.add('center');
-            } else if (step.position === 'bottom') {
-                tooltip.classList.add('arrow-top');
-            } else if (step.position === 'top') {
-                tooltip.classList.add('arrow-bottom');
-            } else if (step.position === 'left') {
-                tooltip.classList.add('arrow-right');
-            } else if (step.position === 'right') {
-                tooltip.classList.add('arrow-left');
+                // For center (non-target), show immediately
+                tooltip.style.display = 'block';
+                tooltip.style.transition = 'opacity 0.2s ease-out';
+                requestAnimationFrame(() => {
+                    tooltip.style.opacity = '1';
+                    tooltip.style.animation = '';
+                });
+            } else if (step.target) {
+                // Class update is handled in positionTooltip for target steps, 
+                // but we can double check here or just rely on positionTooltip logic.
+                // However, we moved positioning inside RAF above, so we shouldn't run this block synchronously for targets.
+            } else {
+                // Non-target fallback (rare)
             }
         }, 100);
     }
@@ -738,88 +826,102 @@
             width: window.innerWidth,
             height: window.innerHeight
         };
-        const tooltipRect = { width: 320, height: 200 }; // Estimated max size for calculation
+
+        // Get actual tooltip dimensions if stable, otherwise estimate
+        const tooltipWidth = tooltip.offsetWidth || 360;
+        const tooltipHeight = tooltip.offsetHeight || 200;
 
         tooltip.style.transform = 'none';
+        tooltip.style.bottom = ''; // Reset potential bottom override
+        tooltip.style.right = '';  // Reset potential right override
 
         let top, left, arrowClass;
-
-        // Smart position calculation
-        const canFitBottom = rect.bottom + gap + tooltipRect.height < viewport.height;
-        const canFitTop = rect.top - gap - tooltipRect.height > 0;
-        const canFitRight = rect.right + gap + tooltipRect.width < viewport.width;
-        const canFitLeft = rect.left - gap - tooltipRect.width > 0;
-
         let finalPos = preferredPosition;
 
-        // Auto-flip logic
-        if (preferredPosition === 'bottom' && !canFitBottom && canFitTop) finalPos = 'top';
-        if (preferredPosition === 'top' && !canFitTop && canFitBottom) finalPos = 'bottom';
-        if (preferredPosition === 'right' && !canFitRight && canFitLeft) finalPos = 'left';
-        if (preferredPosition === 'left' && !canFitLeft && canFitRight) finalPos = 'right';
+        // --- Space Checking ---
+        const spaceBelow = viewport.height - rect.bottom;
+        const spaceAbove = rect.top;
+        const spaceRight = viewport.width - rect.right;
+        const spaceLeft = rect.left;
 
+        // --- Auto-Flip Logic ---
+        // If preferred is bottom but no space, and there is space above -> flip to top
+        if (preferredPosition === 'bottom' && spaceBelow < (tooltipHeight + gap) && spaceAbove > (tooltipHeight + gap)) {
+            finalPos = 'top';
+        }
+        // If preferred is top but no space, and there is space below -> flip to bottom
+        if (preferredPosition === 'top' && spaceAbove < (tooltipHeight + gap) && spaceBelow > (tooltipHeight + gap)) {
+            finalPos = 'bottom';
+        }
+        // Horizontal flips
+        if (preferredPosition === 'right' && spaceRight < (tooltipWidth + gap) && spaceLeft > (tooltipWidth + gap)) {
+            finalPos = 'left';
+        }
+        if (preferredPosition === 'left' && spaceLeft < (tooltipWidth + gap) && spaceRight > (tooltipWidth + gap)) {
+            finalPos = 'right';
+        }
+
+        // --- Calculate Coordinates ---
         switch (finalPos) {
             case 'bottom':
                 top = rect.bottom + gap;
-                left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+                left = rect.left + (rect.width / 2) - (tooltipWidth / 2);
                 arrowClass = 'arrow-top';
                 break;
             case 'top':
-                top = rect.top - gap - tooltipRect.height; // Approximate, adjusted by transform usually but we set explicit top here
-                // We need to account for actual height after render, but for now we place it safely
-                // Better approach: use bottom positioning relative to viewport or transform
-                // Let's use flexible top:
-                tooltip.style.bottom = (viewport.height - rect.top + gap) + 'px';
-                tooltip.style.top = 'auto';
-                left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+                top = rect.top - tooltipHeight - gap;
+                left = rect.left + (rect.width / 2) - (tooltipWidth / 2);
                 arrowClass = 'arrow-bottom';
                 break;
             case 'left':
-                top = rect.top + (rect.height / 2) - (tooltipRect.height / 2);
-                left = rect.left - gap - tooltipRect.width;
+                top = rect.top + (rect.height / 2) - (tooltipHeight / 2);
+                left = rect.left - tooltipWidth - gap;
                 arrowClass = 'arrow-right';
-                // Use right-alignment to ensure it sits left of target
-                tooltip.style.right = (viewport.width - rect.left + gap) + 'px';
-                tooltip.style.left = 'auto';
+                // Clamp top to be visible
+                top = Math.max(10, Math.min(top, viewport.height - tooltipHeight - 10));
                 break;
             case 'right':
-                top = rect.top + (rect.height / 2) - (tooltipRect.height / 2);
+                top = rect.top + (rect.height / 2) - (tooltipHeight / 2);
                 left = rect.right + gap;
                 arrowClass = 'arrow-left';
+                // Clamp top to be visible
+                top = Math.max(10, Math.min(top, viewport.height - tooltipHeight - 10));
                 break;
-            default:
-                top = viewport.height / 2 - 100;
-                left = viewport.width / 2 - 160;
+            default: // center
+                top = (viewport.height / 2) - (tooltipHeight / 2);
+                left = (viewport.width / 2) - (tooltipWidth / 2);
                 arrowClass = 'center';
         }
 
-        // Clamp horizontal position to viewport
+        // --- Viewport Clamping (Global) ---
+        // Ensure it doesn't go off the left/right screen edges
         if (finalPos === 'top' || finalPos === 'bottom') {
-            tooltip.style.top = finalPos === 'bottom' ? `${top}px` : ''; // Top is handled by bottom-style above if 'top'
-            if (finalPos === 'top') {
-                // Reset standard top if we didn't use the bottom-style hack? 
-                // Actually, let's keep it simple:
-                tooltip.style.bottom = ''; // Reset
-                tooltip.style.top = (rect.top - gap - 180) + 'px'; // Fallback
-                if (canFitTop) tooltip.style.top = (rect.top - gap - tooltip.offsetHeight) + 'px'; // Better if we knew height
-            }
-
-            // Center horizontally but clamp
-            let leftPos = rect.left + (rect.width / 2) - 160; // 160 is half of 320 max-width
-            leftPos = Math.max(20, Math.min(leftPos, viewport.width - 340)); // 340 = 320 width + 20 padding
-            tooltip.style.left = `${leftPos}px`;
-        }
-        else if (finalPos === 'left' || finalPos === 'right') {
-            // For side positioning, just clamp vertical?
-            tooltip.style.top = `${Math.max(20, top)}px`;
-            if (finalPos === 'right') tooltip.style.left = `${left}px`;
-            // Left is handled by right-style property
+            left = Math.max(10, Math.min(left, viewport.width - tooltipWidth - 10));
         }
 
         // Apply styles
+        tooltip.style.top = `${top}px`;
+        tooltip.style.left = `${left}px`;
+
+        // Reset arrow classes
         tooltip.classList.remove('arrow-top', 'arrow-bottom', 'arrow-left', 'arrow-right', 'center');
-        if (arrowClass) tooltip.classList.add(arrowClass);
+        tooltip.classList.add(arrowClass);
+
+        // Dynamic Arrow Adjustment (if tooltip shifted horizontally from center)
+        // This moves the CSS arrow to point to the target even if the box is clamped
+        if (finalPos === 'top' || finalPos === 'bottom') {
+            // Find relative center of target within the tooltip's coordinate space
+            const targetCenter = rect.left + (rect.width / 2);
+            const tooltipStart = left;
+            // Arrow position percentage (0 to 100%)
+            let arrowPercent = ((targetCenter - tooltipStart) / tooltipWidth) * 100;
+            arrowPercent = Math.max(10, Math.min(90, arrowPercent)); // Clamp arrow between 10% and 90%
+            tooltip.style.setProperty('--arrow-left', `${arrowPercent}%`);
+        } else {
+            tooltip.style.removeProperty('--arrow-left');
+        }
     }
+
 
     /**
      * Go to next step
@@ -853,6 +955,7 @@
      */
     function endTutorial() {
         isActive = false;
+        stopSpotlightLoop(); // Stop the loop
 
         // Mark as completed
         markTutorialCompleted(currentMode);

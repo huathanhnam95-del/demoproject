@@ -1,5 +1,5 @@
 @echo off
-:: Ensure we are in the script's directory
+:: Ensure we are in the script's directory (project root)
 cd /d "%~dp0"
 
 echo ===================================================
@@ -17,8 +17,8 @@ if not exist "localhost.pem" (
     powershell -ExecutionPolicy Bypass -File "generate_cert.ps1"
 )
 
-:: Run the server
-python local_https_server.py
+:: Run the HTTPS server from project root
+python backend\local_server\local_https_server.py
 
 :: If python crashes or stops, pause so user can see why
 echo.

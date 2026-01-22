@@ -1,0 +1,17 @@
+[tool.pyrefly]
+# Use the project's virtual environment Python
+python_interpreter = ".venv/Scripts/python.exe"
+
+# Exclude folders that may cause analysis issues or are not needed
+exclude = [
+    "**/node_modules/**",
+    "**/__pycache__/**",
+    "**/antigravity-logicware/**",
+    "**/backend/ver0.0/**",
+    "**/.git/**",
+    "**/venv/**"
+]
+
+# Increase limits for complex files
+[tool.pyrefly.analysis]
+max_recursion_depth = 50

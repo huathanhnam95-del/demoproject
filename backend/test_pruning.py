@@ -1,5 +1,10 @@
 
 import unittest
+import sys
+import os
+
+# Add local_server directory to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'local_server'))
 from server import prune_syllables_to_expected
 
 class TestPruning(unittest.TestCase):

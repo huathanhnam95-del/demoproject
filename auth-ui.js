@@ -420,6 +420,33 @@ function updateAccountPanelState() {
     if (adminLink) {
       const isAdmin = user.email === 'huathanhnam95@gmail.com';
       adminLink.style.display = isAdmin ? 'block' : 'none';
+
+      // Seed cache for admin user to ensure full access even when Firestore fails
+      if (isAdmin) {
+        const allModes = ['type', 'speak', 'extended', 'watch', 'notes', 'pronounce', 'lengthFilter', 'vocabBook', 'autoAdjust'];
+        const cacheKey = `userProfile_${user.uid}`;
+        const modesKey = `unlockedModes_${user.uid}`;
+
+        // Only seed if not already cached
+        if (!localStorage.getItem(cacheKey)) {
+          console.log('⚡ Seeding admin cache for', user.email);
+          localStorage.setItem(cacheKey, JSON.stringify({
+            email: user.email,
+            coins: 9999,
+            totalPoints: 9999,
+            unlockedModes: allModes,
+            cachedAt: Date.now()
+          }));
+        }
+        if (!localStorage.getItem(modesKey)) {
+          localStorage.setItem(modesKey, JSON.stringify(allModes));
+        }
+
+        // Also update shop module if available
+        if (window.shopModule && window.shopModule.setUnlockedModes) {
+          window.shopModule.setUnlockedModes(allModes);
+        }
+      }
     }
 
     // Load and display Practice Points

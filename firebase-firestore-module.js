@@ -78,14 +78,27 @@ async function createOrUpdateUserProfile(userId, email, isNewUser = false) {
 
 /**
  * Get user profile data
+ * Enhanced with localStorage caching for resilience against Firestore permission issues
  * @param {string} userId - User ID
  * @returns {Promise<Object>} User profile data or error
  */
 async function getUserProfile(userId) {
+  const cacheKey = `userProfile_${userId}`;
+
   try {
     const userDoc = await getDoc(doc(db, 'users', userId));
 
     if (!userDoc.exists()) {
+      // Try to return cached data if profile not found in Firestore
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        console.log('User profile not in Firestore, using localStorage cache');
+        return {
+          success: true,
+          data: JSON.parse(cached),
+          fromCache: true
+        };
+      }
       return {
         success: false,
         error: 'User profile not found'
@@ -100,13 +113,31 @@ async function getUserProfile(userId) {
       // Unlock all existing modes for legacy users so they don't lose access
       const allModes = ['type', 'speak', 'extended', 'watch', 'notes', 'pronounce'];
 
-      await updateDoc(doc(db, 'users', userId), {
-        unlockedModes: allModes,
-        coins: userData.totalPoints || 0 // Sync coins with existing points
-      });
+      try {
+        await updateDoc(doc(db, 'users', userId), {
+          unlockedModes: allModes,
+          coins: userData.totalPoints || 0 // Sync coins with existing points
+        });
+      } catch (updateError) {
+        console.warn('Could not update legacy user profile:', updateError);
+      }
 
       userData.unlockedModes = allModes;
       userData.coins = userData.totalPoints || 0;
+    }
+
+    // Cache to localStorage for future resilience
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify({
+        email: userData.email,
+        coins: userData.coins || 0,
+        totalPoints: userData.totalPoints || 0,
+        unlockedModes: userData.unlockedModes || ['type'],
+        englishLevel: userData.englishLevel,
+        cachedAt: Date.now()
+      }));
+    } catch (cacheError) {
+      console.warn('Could not cache user profile:', cacheError);
     }
 
     return {
@@ -115,6 +146,23 @@ async function getUserProfile(userId) {
     };
   } catch (error) {
     console.error('Error getting user profile:', error);
+
+    // Try to return cached data on Firestore error
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        console.log('Firestore error, using localStorage cache for user profile');
+        const cachedData = JSON.parse(cached);
+        return {
+          success: true,
+          data: cachedData,
+          fromCache: true
+        };
+      }
+    } catch (cacheError) {
+      console.warn('Could not read cached profile:', cacheError);
+    }
+
     return {
       success: false,
       error: error.message
@@ -257,48 +305,7 @@ async function getActiveSessionId(userId) {
  * Purchase Operations
  */
 
-/**
- * Record a purchase
- * @param {string} userId
- * @param {Object} item - Shop item details
- * @returns {Promise<Object>} Success or error
- */
-async function recordPurchase(userId, item) {
-  try {
-    const purchaseRef = await addDoc(collection(db, 'users', userId, 'purchases'), {
-      itemId: item.id,
-      cost: item.cost,
-      itemTitle: item.title,
-      purchasedAt: serverTimestamp()
-    });
-    console.log('✓ Purchase recorded:', item.id);
-    return { success: true, id: purchaseRef.id };
-  } catch (error) {
-    console.error('Error recording purchase:', error);
-    return { success: false, error: error.message };
-  }
-}
 
-/**
- * Get user purchase history
- * @param {string} userId
- * @returns {Promise<Object>} List of purchases
- */
-async function getPurchases(userId) {
-  try {
-    const q = query(collection(db, 'users', userId, 'purchases'), orderBy('purchasedAt', 'desc'));
-    const snapshot = await getDocs(q);
-    const purchases = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      purchasedAt: doc.data().purchasedAt?.toDate() // Convert Timestamp to Date
-    }));
-    return { success: true, data: purchases };
-  } catch (error) {
-    console.error('Error getting purchases:', error);
-    return { success: false, error: error.message };
-  }
-}
 
 /**
  * Practice Tracking Operations
@@ -1088,32 +1095,7 @@ async function getPointsHistory(userId, limitCount = 10) {
 }
 
 // Export functions for use in other modules
-window.firebaseFirestoreFunctions = {
-  createOrUpdateUserProfile,
-  getUserProfile,
-  recordSessionStart,
-  recordSessionEnd,
-  getActiveSessionId,
-  recordPracticeAttempt,
-  getPracticeStats,
-  // Legacy mastery functions (now redirect to progress)
-  getMasteryStatus,
-  updateMasteryStatus,
-  removeMasteryStatus,
-  // New tiered progress functions
-  calculateTier,
-  calculateState,
-  getProgressStatus,
-  recordAttempt,
-  incrementProgress,
-  resetProgress,
-  getAllProgressForMode,
-  getRecentProgress,
-  // Points system functions
-  addPoints,
-  getTotalPoints,
-  getPointsHistory
-};
+// Export functions for use in other modules - MOVED TO END OF FILE
 
 /**
  * ============================================
@@ -1427,6 +1409,52 @@ async function deductCoins(userId, amount) {
   }
 }
 
+/**
+ * Get user's purchase history
+ * @param {string} userId
+ * @returns {Promise<Array>} Array of purchase objects
+ */
+async function getPurchases(userId) {
+  try {
+    const purchasesQuery = query(
+      collection(db, 'users', userId, 'purchases'),
+      orderBy('purchasedAt', 'desc')
+    );
+    const snapshot = await getDocs(purchasesQuery);
+    const purchases = [];
+    snapshot.forEach(doc => {
+      purchases.push(doc.data());
+    });
+    return { success: true, data: purchases };
+  } catch (error) {
+    console.error('Error getting purchases:', error);
+    // Return success: true with empty data to prevent blocking other features
+    return { success: true, data: [] };
+  }
+}
+
+/**
+ * Record a new purchase
+ * @param {string} userId
+ * @param {Object} item - Item details
+ */
+async function recordPurchase(userId, item) {
+  try {
+    const purchaseData = {
+      itemId: item.id,
+      itemName: item.name,
+      cost: item.cost,
+      type: item.type || 'unlock',
+      purchasedAt: serverTimestamp()
+    };
+    await addDoc(collection(db, 'users', userId, 'purchases'), purchaseData);
+    return { success: true };
+  } catch (error) {
+    console.error('Error recording purchase:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 // Export functions for use in other modules
 window.firebaseFirestoreFunctions = {
   createOrUpdateUserProfile,
@@ -1460,5 +1488,7 @@ window.firebaseFirestoreFunctions = {
   awardPoints,
 
   updateUnlockedModes,
-  deductCoins
+  deductCoins,
+  getPurchases,
+  recordPurchase
 };

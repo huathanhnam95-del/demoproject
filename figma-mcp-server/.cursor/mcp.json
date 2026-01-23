@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "Figma": {
+      "url": "http://127.0.0.1:38450/mcp"
+    },
+    "Figma NPM": {
+      "command": "npx",
+      "args": ["@antonytm/figma-mcp-server@latest"]
+    },
+    "Figma NPM cmd": {
+      "command": "cmd",
+      "args": ["/c", "npx", "@antonytm/figma-mcp-server@latest"]
+    },
+    "Figma bundle": {
+      "command": "node",
+      "args": ["C:\\source\\figma-mcp-server\\mcp\\dist\\bundle.js"]
+    },
+    "Server everything": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-everything"]
+    }
+  }
+}

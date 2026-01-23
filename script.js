@@ -171,14 +171,11 @@
       modePanel.style.display = 'block';
 
       // 3. Update mode-switch-btn active states in Learning Center
-      document.querySelectorAll('.mode-switch-btn').forEach(btn => {
-        btn.classList.remove('active');
-        // More robust check for the active mode button
-        const onclickAttr = btn.getAttribute('onclick') || '';
-        if (onclickAttr.includes(`'${mode}'`)) {
-          btn.classList.add('active');
-        }
-      });
+      document.querySelectorAll('.mode-switch-btn').forEach(btn => btn.classList.remove('active'));
+      const modeSwitchBtn = document.getElementById('mode-btn-' + mode);
+      if (modeSwitchBtn) {
+        modeSwitchBtn.classList.add('active');
+      }
 
       // 4. Trigger any mode-specific initialization
       if (mode === 'extended' && typeof window.loadExtendedIfNeeded === 'function') {

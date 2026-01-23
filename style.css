@@ -388,11 +388,11 @@ h1 {
 }
 
 .mode-panel {
-  display: none;
+  display: none !important;
 }
 
 .mode-panel.active {
-  display: block;
+  display: block !important;
 }
 
 .question-selector {

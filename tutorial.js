@@ -753,6 +753,11 @@
         // Show overlay
         overlay.style.display = 'block';
 
+        // Small delay to trigger transition
+        requestAnimationFrame(() => {
+            overlay.classList.add('active');
+        });
+
         // Set global flag for other scripts
         window.isTutorialActive = true;
 
@@ -1179,7 +1184,17 @@
 
         cleanupInteractiveListener();
 
-        if (overlay) overlay.style.display = 'none';
+        // Remove active class for fade out
+        if (overlay) {
+            overlay.classList.remove('active');
+
+            // Wait for transition (1s) before display: none
+            setTimeout(() => {
+                if (!isActive) { // Re-check in case tutorial started again
+                    overlay.style.display = 'none';
+                }
+            }, 1000);
+        }
 
         // Clean up any open menus
         const menuType = document.getElementById('length-filter-menu-type');

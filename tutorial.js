@@ -17,6 +17,7 @@
     let isActive = false;
     let spotlightLoopId = null; // Track animation frame for spotlight loop
     let interactiveListener = null;
+    let nextStepTimer = null;
 
     // DOM element references (cached)
     let overlay, backdrop, spotlight, tooltip, icon, title, text, nextBtn, skipBtn, dotsContainer;
@@ -81,7 +82,7 @@
                 target: '#play-btn',
                 icon: '🔊',
                 title: 'Step 1: Listen',
-                text: 'Click this button to <strong>hear the sentence</strong>. You can replay it as many times as you need!',
+                text: '<span class="tutorial-action-text">Click this button</span> to hear the sentence. You can replay it as many times as you need!',
                 position: 'bottom',
                 nextLabel: null,
                 interactive: true,
@@ -91,28 +92,95 @@
                 target: '#answer-input',
                 icon: '✍️',
                 title: 'Step 2: Type What You Hear',
-                text: 'Type the sentence you heard into this box. <strong>Spelling counts!</strong> Take your time.',
+                text: `
+                    <span class="tutorial-action-text">Type a valid sentence</span>. 
+                    <div class="tutorial-checklist">
+                        <div class="checklist-item" id="check-cap">
+                            <span class="checklist-icon">⬜</span> 
+                            <span>Start with a Capital letter</span>
+                        </div>
+                        <div class="checklist-item" id="check-period">
+                            <span class="checklist-icon">⬜</span> 
+                            <span>End with a period (.)</span>
+                        </div>
+                    </div>
+                `,
                 position: 'top',
-                nextLabel: 'Got It →',
-                interactive: false
+                nextLabel: null,
+                interactive: true,
+                waitForEvent: 'input',
+                onInput: (e) => {
+                    const val = (e.target.value || '').trim();
+                    const hasCap = /^[A-Z]/.test(val);
+                    const hasPeriod = /\.$/.test(val);
+
+                    const capItem = document.getElementById('check-cap');
+                    const periodItem = document.getElementById('check-period');
+
+                    if (capItem) {
+                        capItem.classList.toggle('done', hasCap);
+                        capItem.querySelector('.checklist-icon').textContent = hasCap ? '✅' : '⬜';
+                    }
+                    if (periodItem) {
+                        periodItem.classList.toggle('done', hasPeriod);
+                        periodItem.querySelector('.checklist-icon').textContent = hasPeriod ? '✅' : '⬜';
+                    }
+                },
+                validate: (e) => {
+                    const val = (e.target.value || '').trim();
+                    return val.length >= 3 && /^[A-Z]/.test(val) && /\.$/.test(val);
+                },
+                beforeShow: () => {
+                    const input = document.getElementById('answer-input');
+                    if (input) {
+                        input.disabled = false;
+                        input.placeholder = 'Type here...';
+                        input.focus();
+                    }
+                }
             },
             {
                 target: '#check-btn',
                 icon: '✅',
                 title: 'Step 3: Check Your Answer',
-                text: 'When you\'re ready, click <strong>"Check"</strong> to see how you did. Correct words are green, mistakes are red.',
+                text: 'When you\'re ready, <span class="tutorial-action-text">Click "Check"</span> to see how you did.',
                 position: 'top',
-                nextLabel: 'Got It →',
-                interactive: false
+                nextLabel: null,
+                interactive: true,
+                waitForEvent: 'click',
+                beforeShow: () => {
+                    const checkBtn = document.getElementById('check-btn');
+                    if (checkBtn) checkBtn.style.display = 'inline-block';
+                }
             },
             {
-                target: null,
-                icon: '🎯',
-                title: 'You\'re Ready!',
-                text: 'That\'s it! Practice regularly to improve your listening and typing skills. Happy learning!',
-                position: 'center',
+                target: '.animation-panel',
+                icon: '📊',
+                title: 'Step 4: Feedback',
+                text: 'Correct words/letters will turn <strong style="color: #4ade80">green</strong>, and mistakes will be <strong style="color: #f87171">red</strong>. Review your errors to learn!',
+                position: 'top',
+                nextLabel: 'Got It →',
+                interactive: false,
+                beforeShow: () => {
+                    // Ensure animation panel is visible
+                    const animationPanel = document.querySelector('.animation-panel');
+                    if (animationPanel) {
+                        animationPanel.style.display = 'block';
+                    }
+                }
+            },
+            {
+                target: '#progress-bar-type',
+                icon: '🪙',
+                title: 'Step 5: Earn Coins',
+                text: 'Earn <strong>Coins</strong> for your 1st practice of the day and reaching new <strong>Milestones</strong> (3, 6, or 9 perfect scores).',
+                position: 'bottom',
                 nextLabel: 'Start Practicing! ✓',
-                interactive: false
+                interactive: false,
+                beforeShow: () => {
+                    const progressBar = document.getElementById('progress-bar-type');
+                    if (progressBar) progressBar.style.display = 'block';
+                }
             }
         ],
 
@@ -260,6 +328,112 @@
                 beforeShow: () => {
                     const menu = document.getElementById('length-filter-menu-speak');
                     const dropdown = document.getElementById('length-filter-container-speak');
+                    if (menu) menu.style.display = 'block';
+                    if (dropdown) dropdown.classList.add('open');
+                }
+            },
+            {
+                target: '#question-select-speak',
+                icon: '🎯',
+                title: 'Filtered!',
+                text: 'Your question list is now updated. You can change this anytime!',
+                position: 'bottom',
+                nextLabel: 'Got It! ✓',
+                interactive: false
+            }
+        ],
+
+        // Difficulty Filter Tutorial (unlocked via Shop) for Type Mode
+        typeDifficultyFilter: [
+            {
+                target: null,
+                icon: '🎉',
+                title: 'Feature Unlocked!',
+                text: 'Congratulations! You\'ve unlocked <strong>Filter by Difficulty</strong>! This helps you practice at your preferred CEFR level.',
+                position: 'center',
+                nextLabel: 'Show Me How →',
+                interactive: false
+            },
+            {
+                target: '#difficulty-filter-btn-type',
+                icon: '👆',
+                title: 'Step 1: Click the Button',
+                text: 'Click this teal button to open the difficulty filter menu.',
+                position: 'bottom',
+                nextLabel: null,
+                interactive: true,
+                waitForEvent: 'click',
+                beforeShow: () => {
+                    const container = document.getElementById('difficulty-filter-container-type');
+                    if (container) container.style.display = 'block';
+                }
+            },
+            {
+                target: '#difficulty-filter-menu-type .filter-option[data-value="1"]',
+                icon: '🥉',
+                title: 'Step 2: Select a Level',
+                text: 'Select <strong>"Level 1 (Easy)"</strong> to start with simpler sentences. Great for beginners!',
+                position: 'right',
+                nextLabel: null,
+                interactive: true,
+                waitForEvent: 'click',
+                beforeShow: () => {
+                    const menu = document.getElementById('difficulty-filter-menu-type');
+                    const dropdown = document.getElementById('difficulty-filter-container-type');
+                    if (menu) menu.style.display = 'block';
+                    if (dropdown) dropdown.classList.add('open');
+                }
+            },
+            {
+                target: '#question-select-type',
+                icon: '🎯',
+                title: 'Filtered!',
+                text: 'Your question list now shows only easier sentences. You can change this anytime!',
+                position: 'bottom',
+                nextLabel: 'Got It! ✓',
+                interactive: false
+            }
+        ],
+
+        // Difficulty Filter Tutorial (unlocked via Shop) for Speak Mode
+        speakDifficultyFilter: [
+            {
+                target: null,
+                icon: '🎉',
+                title: 'Feature Unlocked!',
+                text: 'Congratulations! You\'ve unlocked <strong>Filter by Difficulty</strong> for Speak mode!',
+                position: 'center',
+                nextLabel: 'Show Me How →',
+                interactive: false
+            },
+            {
+                target: '#difficulty-filter-btn-speak',
+                icon: '👆',
+                title: 'Step 1: Click the Button',
+                text: 'Click this teal button to filter questions by difficulty.',
+                position: 'bottom',
+                nextLabel: null,
+                interactive: true,
+                waitForEvent: 'click',
+                beforeShow: () => {
+                    const speakTab = document.getElementById('tab-speak');
+                    if (speakTab) speakTab.click();
+                    const container = document.getElementById('difficulty-filter-container-speak');
+                    if (container) container.style.display = 'block';
+                }
+            },
+            {
+                target: '#difficulty-filter-menu-speak .filter-option[data-value="1"]',
+                icon: '🥉',
+                title: 'Step 2: Select a Level',
+                text: 'Select <strong>"Level 1 (Easy)"</strong> for simpler pronunciation practice.',
+                position: 'right',
+                nextLabel: null,
+                interactive: true,
+                waitForEvent: 'click',
+                beforeShow: () => {
+                    const menu = document.getElementById('difficulty-filter-menu-speak');
+                    const dropdown = document.getElementById('difficulty-filter-container-speak');
                     if (menu) menu.style.display = 'block';
                     if (dropdown) dropdown.classList.add('open');
                 }
@@ -486,6 +660,16 @@
             complete: 'lengthFilterTutorialCompleted',
             replay: 'lengthFilterTutorialReplay'
         };
+        // Type Difficulty Filter (for shop unlock tutorial)
+        if (mode === 'typeDifficultyFilter') return {
+            complete: 'typeDifficultyFilterTutorialCompleted',
+            replay: 'typeDifficultyFilterTutorialReplay'
+        };
+        // Speak Difficulty Filter (for shop unlock tutorial)
+        if (mode === 'speakDifficultyFilter') return {
+            complete: 'speakDifficultyFilterTutorialCompleted',
+            replay: 'speakDifficultyFilterTutorialReplay'
+        };
         // Default 'type' (general Type mode tutorial)
         return {
             complete: 'typeTutorialCompleted',
@@ -569,6 +753,9 @@
         // Show overlay
         overlay.style.display = 'block';
 
+        // Set global flag for other scripts
+        window.isTutorialActive = true;
+
         // Show first step
         showStep(currentStep);
     }
@@ -601,6 +788,10 @@
      * Clean up interactive listener
      */
     function cleanupInteractiveListener() {
+        if (nextStepTimer) {
+            clearTimeout(nextStepTimer);
+            nextStepTimer = null;
+        }
         if (interactiveListener && interactiveListener.target && interactiveListener.handler) {
             interactiveListener.target.removeEventListener(interactiveListener.event, interactiveListener.handler, interactiveListener.options);
             interactiveListener = null;
@@ -743,12 +934,32 @@
 
                         // Set up interactive listener
                         if (step.interactive && step.waitForEvent) {
-                            const handler = () => {
+                            const handler = (e) => {
+                                // optional real-time feedback
+                                if (step.onInput && e.type === 'input') {
+                                    step.onInput(e);
+                                }
+
+                                // optional validation
+                                if (step.validate && !step.validate(e)) {
+                                    return;
+                                }
+
+                                // Avoid double-firing
+                                if (nextStepTimer) return;
+
                                 // Small delay to let the click complete its normal action
-                                setTimeout(() => nextStep(), 100);
+                                nextStepTimer = setTimeout(() => {
+                                    nextStepTimer = null;
+                                    nextStep();
+                                }, 100);
                             };
-                            targetEl.addEventListener(step.waitForEvent, handler, { once: true });
-                            interactiveListener = { target: targetEl, event: step.waitForEvent, handler };
+
+                            // For 'input', we don't want {once: true} because they might type < 3 chars first
+                            const options = (step.waitForEvent === 'input') ? {} : { once: true };
+
+                            targetEl.addEventListener(step.waitForEvent, handler, options);
+                            interactiveListener = { target: targetEl, event: step.waitForEvent, handler, options };
 
                             // Make target clickable through spotlight
                             targetEl.style.position = 'relative';
@@ -955,7 +1166,10 @@
      */
     function endTutorial() {
         isActive = false;
+        window.isTutorialActive = false;
         stopSpotlightLoop(); // Stop the loop
+
+        window.isTutorialActive = false;
 
         // Mark as completed
         markTutorialCompleted(currentMode);

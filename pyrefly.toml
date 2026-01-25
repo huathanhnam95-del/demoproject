@@ -1,6 +1,5 @@
-[tool.pyrefly]
 # Use the project's virtual environment Python
-python_interpreter = ".venv/Scripts/python.exe"
+python-interpreter-path = ".venv/Scripts/python.exe"
 
 # Exclude folders that may cause analysis issues or are not needed
 exclude = [
@@ -9,9 +8,9 @@ exclude = [
     "**/antigravity-logicware/**",
     "**/backend/ver0.0/**",
     "**/.git/**",
-    "**/venv/**"
+    "**/venv/**",
+    "**/.venv/**"
 ]
 
-# Increase limits for complex files
-[tool.pyrefly.analysis]
-max_recursion_depth = 50
+# Very conservative limit to prevent stack overflow
+max-recursion-depth = 16

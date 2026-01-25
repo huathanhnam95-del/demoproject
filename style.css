@@ -12,6 +12,13 @@ body {
 /* ============================================
    App Preloader
    ============================================ */
+.tutorial-action-text {
+  font-weight: 700;
+  color: #fbbf24;
+  /* Amber-400 for high contrast on dark background */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
 .app-preloader {
   position: fixed;
   top: 0;
@@ -4883,6 +4890,85 @@ textarea:focus {
 /* ============================================
    Interactive Tutorial Overlay
    ============================================ */
+
+/* ============================================
+   Difficulty Filter Dropdown (matches Length Filter)
+   ============================================ */
+
+.difficulty-filter-dropdown {
+  position: relative;
+  margin-left: 10px;
+}
+
+.difficulty-filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(6, 182, 212, 0.25);
+}
+
+.difficulty-filter-btn:hover {
+  background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.35);
+}
+
+.difficulty-filter-btn .filter-arrow {
+  font-size: 0.7rem;
+  transition: transform 0.2s ease;
+}
+
+.difficulty-filter-dropdown.open .difficulty-filter-btn .filter-arrow {
+  transform: rotate(180deg);
+}
+
+.difficulty-filter-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  min-width: 220px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 100;
+  margin-top: 6px;
+  padding: 8px;
+  animation: dropdownFadeIn 0.2s ease-out;
+}
+
+.difficulty-tag {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.difficulty-tag.easy {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.difficulty-tag.medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.difficulty-tag.hard {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
 
 .tutorial-overlay {
   position: fixed;

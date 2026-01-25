@@ -21,7 +21,17 @@ def clear_word_cache(word):
     
     for coll_name in collections:
         doc_ref = db.collection(coll_name).document(word)
-        doc = doc_ref.get()
+        doc_result = doc_ref.get()
+        # Handle both sync and async client results
+        import inspect
+        if inspect.isawaitable(doc_result):
+            import asyncio
+            async def wrap_awaitable(aw):
+                return await aw
+            doc = asyncio.run(wrap_awaitable(doc_result))
+        else:
+            doc = doc_result
+            
         if doc.exists:
             print(f"Deleting '{word}' from collection '{coll_name}'...")
             doc_ref.delete()

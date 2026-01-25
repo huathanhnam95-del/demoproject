@@ -1,0 +1,54 @@
+(() => {
+    let retryCount = 0;
+    let isProcessing = false;
+    function clickRetry() {
+        if (isProcessing) return;
+        isProcessing = true;
+        try {
+            const iframe = document.querySelector('iframe');
+            if (!iframe) {
+                isProcessing = false;
+                return;
+            }
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            if (!iframeDoc) {
+                isProcessing = false;
+                return;
+            }
+            const buttons = iframeDoc.querySelectorAll('button');
+            for (const btn of buttons) {
+                if (btn.textContent.trim() === 'Retry') {
+                    btn.click();
+                    retryCount++;
+                    console.log(`[Auto Retry] Clicked! (${retryCount})`);
+                    break;
+                }
+            }
+        } catch (e) {
+            // Ignore errors silently
+        }
+        isProcessing = false;
+    }
+    function observeIframe() {
+        const iframe = document.querySelector('iframe');
+        if (!iframe) {
+            setTimeout(observeIframe, 1000);
+            return;
+        }
+        try {
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            new MutationObserver(clickRetry).observe(iframeDoc.body, {
+                childList: true,
+                subtree: true
+            });
+            console.log('[Auto Retry] ✓ Observer started!');
+        } catch (e) {
+            setTimeout(observeIframe, 1000);
+        }
+    }
+    // Check every 3 seconds as backup
+    setInterval(clickRetry, 3000);
+    // Start observing DOM changes
+    observeIframe();
+    console.log('[Auto Retry] ✓ Loaded!');
+})();

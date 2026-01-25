@@ -1,0 +1,39 @@
+# Dictation Question Categorization Logic
+
+This document outlines the advanced scoring system used to classify questions into difficulty levels (1, 2, or 3).
+
+## 1. Lexical Score (Vocabulary Rarity)
+Calculated using the **Zipf frequency** of the rarest content word (non-function words).
+- **Score 2 (Hard)**: Rarest word Zipf < 3.0 (e.g., technical, academic, or infrequent terms).
+- **Score 1 (Medium)**: Rarest word Zipf < 3.5.
+- **Score 0 (Easy)**: Rarest word Zipf >= 3.5 (common everyday vocabulary).
+
+## 2. Grammar Score (Complexity)
+Detects advanced linguistic patterns. Points are capped at 3.
+- **Subordinators (+1)**: Use of complex conjunctions like "although", "unless", "whereas", "provided", "whenever".
+- **Passive Voice (+1)**: Detection of [be] + [past participle] (e.g., "The study was conducted").
+- **Perfect Aspect (+1)**: Detection of [have/has/had] + [past participle] (e.g., "Students have submitted").
+- **Modal Perfect (+1)**: Detection of [modal] + [have] + [past participle] (e.g., "could have been", "must have seen").
+
+## 3. Dictation Score (Skill-specific)
+Focuses on elements that make dictation/transcription harder. Points are capped at 2.
+- **Contractions (+1)**: Words like "don't", "can't", "it's" which require listening for subtle phonetic cues.
+- **Numbers (+1)**: Numerical digits which require a mode switch for the brain during transcription.
+
+## 4. Final Level Assignment
+The levels are assigned using the following hierarchy:
+
+### Level 3 (🥇 Hard / Hardest)
+Assigned if **any** of the following are true:
+- Lexical Score = 2 (contains very rare/academic words)
+- Grammar Score >= 2 (contains multiple complex structures)
+- Total Score (Lexical + Grammar + Dictation) >= 4
+
+### Level 2 (🥈 Medium)
+Assigned if:
+- Total Score >= 2
+- (And it does not meet Level 3 criteria)
+
+### Level 1 (🥉 Easy)
+Assigned if:
+- Total Score < 2 (simple sentences with common vocabulary)

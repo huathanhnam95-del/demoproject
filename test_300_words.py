@@ -90,7 +90,7 @@ test_words = unique_words[:300]  # Limit to 300
 print(f"Testing {len(test_words)} words on local backend...")
 print("-" * 90)
 
-results = []
+results: list[dict] = []
 mismatches = []
 
 for i, word in enumerate(test_words):

@@ -58,15 +58,15 @@ try {
   const workbook = XLSX.readFile(excelFile);
   const sheetName = workbook.SheetNames[0]; // Use first sheet
   const worksheet = workbook.Sheets[sheetName];
-  
+
   // Convert to JSON (array of arrays)
   const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
-  
+
   if (data.length < 2) {
     console.error('Error: Excel file must have at least a header row and one data row');
     process.exit(1);
   }
-  
+
   // Load existing index.json
   let existingItems = [];
   if (fs.existsSync(indexFile)) {
@@ -74,46 +74,50 @@ try {
     existingItems = existingData.items || [];
     console.log(`Found ${existingItems.length} existing items in database`);
   }
-  
+
   // Process rows (skip header row)
   const newItems = [];
   let currentId = startId;
-  
+
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
-    
+
     // Skip empty rows
     if (!row || row.length === 0 || (!row[0] && !row[2])) {
       continue;
     }
-    
+
     // Get ID from column 1 (index 0) or use currentId
     const rowId = row[0] ? parseInt(row[0], 10) : currentId;
-    
+
     // Get sentence from column 3 (index 2)
     const sentence = row[2] ? String(row[2]).trim() : '';
-    
+
     if (!sentence) {
       console.warn(`Warning: Row ${i + 1} has no sentence, skipping...`);
       continue;
     }
-    
+
     // Check if item with this ID already exists
     const existingIndex = existingItems.findIndex(item => item.id === rowId);
-    
+
     // For extended mode, use "transcript" field; for type/speak, use "correctSentence"
+    const level = row[3] ? parseInt(row[3], 10) : 1; // Column 4 (index 3) is Level, default 1
     const item = mode === 'extended' ? {
       id: rowId,
       audioFile: `${rowId}.mp3`,
       transcript: sentence,
-      category: row[1] ? String(row[1]).trim() : 'general'
+      category: row[1] ? String(row[1]).trim() : 'general',
+      level: level
     } : {
       id: rowId,
       audioFile: `${rowId}.mp3`,
       correctSentence: sentence,
-      category: row[1] ? String(row[1]).trim() : 'general'
+      category: row[1] ? String(row[1]).trim() : 'general',
+      level: level
     };
-    
+
+
     if (existingIndex >= 0) {
       // Update existing item
       console.log(`Updating item ID ${rowId}: "${sentence.substring(0, 50)}..."`);
@@ -123,30 +127,30 @@ try {
       console.log(`Adding item ID ${rowId}: "${sentence.substring(0, 50)}..."`);
       existingItems.push(item);
     }
-    
+
     currentId = rowId + 1;
   }
-  
+
   // Sort items by ID
   existingItems.sort((a, b) => a.id - b.id);
-  
+
   // Create updated index.json
   const updatedData = {
     version: "1.0",
     totalItems: existingItems.length,
     items: existingItems
   };
-  
+
   // Backup existing file
   if (fs.existsSync(indexFile)) {
     const backupFile = indexFile + '.backup.' + Date.now();
     fs.copyFileSync(indexFile, backupFile);
     console.log(`Backup created: ${backupFile}`);
   }
-  
+
   // Write updated index.json
   fs.writeFileSync(indexFile, JSON.stringify(updatedData, null, 2), 'utf8');
-  
+
   console.log(`\n✅ Successfully updated ${indexFile}`);
   console.log(`   Total items: ${existingItems.length}`);
   console.log(`   Items processed: ${newItems.length + (existingItems.length - newItems.length)}`);
@@ -154,7 +158,7 @@ try {
   console.log(`   1. Make sure audio files are in: ${path.join(databaseDir, 'audio')}`);
   console.log(`   2. Audio files should be named: 1.mp3, 2.mp3, etc.`);
   console.log(`   3. Refresh your browser to see the updated questions`);
-  
+
 } catch (error) {
   console.error('Error processing Excel file:', error.message);
   console.error(error.stack);

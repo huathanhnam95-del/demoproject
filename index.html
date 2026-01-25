@@ -1032,6 +1032,32 @@
                 </div>
               </div>
             </div>
+
+            <!-- Unlockable Difficulty Filter (Type mode) -->
+            <div id="difficulty-filter-container-type" class="difficulty-filter-dropdown" style="display: none;">
+              <button id="difficulty-filter-btn-type" class="difficulty-filter-btn" type="button">
+                <span id="difficulty-filter-label-type">Filter by Difficulty</span>
+                <span class="filter-arrow">▼</span>
+              </button>
+              <div id="difficulty-filter-menu-type" class="difficulty-filter-menu" style="display: none;">
+                <div class="filter-option selected" data-value="all">
+                  <span class="filter-option-icon">🎚️</span>
+                  <span class="filter-option-text">All Levels</span>
+                </div>
+                <div class="filter-option" data-value="1">
+                  <span class="filter-option-icon">🥉</span>
+                  <span class="filter-option-text">Level 1 <span class="difficulty-tag easy">Easy</span></span>
+                </div>
+                <div class="filter-option" data-value="2">
+                  <span class="filter-option-icon">🥈</span>
+                  <span class="filter-option-text">Level 2 <span class="difficulty-tag medium">Medium</span></span>
+                </div>
+                <div class="filter-option" data-value="3">
+                  <span class="filter-option-icon">🥇</span>
+                  <span class="filter-option-text">Level 3 <span class="difficulty-tag hard">Hard</span></span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="question-total">
@@ -1167,6 +1193,32 @@
                 <div class="filter-option" data-value="12-13">
                   <span class="filter-option-icon">📝</span>
                   <span class="filter-option-text">12-13 words <span class="length-tag long">Long</span></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Unlockable Difficulty Filter (Speak mode) -->
+            <div id="difficulty-filter-container-speak" class="difficulty-filter-dropdown" style="display: none;">
+              <button id="difficulty-filter-btn-speak" class="difficulty-filter-btn" type="button">
+                <span id="difficulty-filter-label-speak">Filter by Difficulty</span>
+                <span class="filter-arrow">▼</span>
+              </button>
+              <div id="difficulty-filter-menu-speak" class="difficulty-filter-menu" style="display: none;">
+                <div class="filter-option selected" data-value="all">
+                  <span class="filter-option-icon">🎚️</span>
+                  <span class="filter-option-text">All Levels</span>
+                </div>
+                <div class="filter-option" data-value="1">
+                  <span class="filter-option-icon">🥉</span>
+                  <span class="filter-option-text">Level 1 <span class="difficulty-tag easy">Easy</span></span>
+                </div>
+                <div class="filter-option" data-value="2">
+                  <span class="filter-option-icon">🥈</span>
+                  <span class="filter-option-text">Level 2 <span class="difficulty-tag medium">Medium</span></span>
+                </div>
+                <div class="filter-option" data-value="3">
+                  <span class="filter-option-icon">🥇</span>
+                  <span class="filter-option-text">Level 3 <span class="difficulty-tag hard">Hard</span></span>
                 </div>
               </div>
             </div>
@@ -1990,6 +2042,7 @@
   <script src="js/difficulty-manager.js"></script>
   <script src="js/performance-tracker.js"></script>
   <script src="shop-module.js"></script>
+  <script src="difficulty-filter.js"></script>
 
 
 </body>

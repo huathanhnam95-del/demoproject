@@ -6,9 +6,17 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'local_server'))
 
 import numpy as np
-import parselmouth
+try:
+    import parselmouth  # type: ignore
+except ImportError:
+    import praat_parselmouth as parselmouth  # type: ignore
 import tempfile
 import requests
+
+# Fix shadowing by being more explicit or checking path
+# We want 'server' from 'local_server' folder
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'local_server'))
+import server
 
 # Get the audio file
 audio_url = 'https://media.merriam-webster.com/audio/prons/en/us/mp3/i/improv01.mp3'
@@ -34,7 +42,7 @@ try:
     # But what does the ACTUAL peaks_to_syllables pass as peak_time?
     # Let's check what peaks are detected
     
-    from server import find_intensity_peaks, AnalysisConfig
+    from server import find_intensity_peaks, AnalysisConfig  # type: ignore
     
     config = AnalysisConfig()
     
@@ -78,7 +86,7 @@ try:
         print(f"Candidate boundary (intensity min): t={candidate_boundary:.3f}s")
         
         # Now call find_vowel_end
-        from server import find_vowel_end
+        from server import find_vowel_end  # type: ignore
         
         print(f"\n=== CALLING find_vowel_end ===")
         vowel_end = find_vowel_end(

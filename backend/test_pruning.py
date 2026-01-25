@@ -5,7 +5,8 @@ import os
 
 # Add local_server directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'local_server'))
-from server import prune_syllables_to_expected
+import server
+from server import prune_syllables_to_expected  # type: ignore
 
 class TestPruning(unittest.TestCase):
     def test_pruning_removes_weakest(self):

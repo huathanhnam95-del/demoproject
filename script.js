@@ -67,14 +67,15 @@
 
       if (panelId === 'panel-srs') {
         // Hide all mode panels when in Daily Review
-        modePanels.forEach(p => p.style.display = 'none');
+        modePanels.forEach(p => p.style.setProperty('display', 'none', 'important'));
       } else {
         // Restore visibility of the active mode panel when in Learning Center
         modePanels.forEach(p => {
           if (p.classList.contains('active')) {
-            p.style.display = 'block';
+            p.style.removeProperty('display'); // Remove inline override to let CSS rule take over
+            p.style.display = 'block'; // Fallback
           } else {
-            p.style.display = 'none';
+            p.style.setProperty('display', 'none', 'important');
           }
         });
       }
@@ -177,6 +178,12 @@
         modeSwitchBtn.classList.add('active');
       }
 
+      // NEW: Clear any existing results/animations from previous sessions/modes
+      // This ensures switching from Type to Speak (or vice versa) cleans up the UI
+      if (typeof resetScaffolding === 'function') {
+        resetScaffolding();
+      }
+
       // 4. Trigger any mode-specific initialization
       if (mode === 'extended' && typeof window.loadExtendedIfNeeded === 'function') {
         window.loadExtendedIfNeeded();
@@ -271,6 +278,54 @@
       window.shopModule.init();
     }
     window.refreshLockedTabs();
+    window.refreshLengthFilterLocks();
+  });
+
+  /**
+   * Refresh locked state of Length Filter dropdown options
+   * Removes lock icons if feature is unlocked
+   */
+  window.refreshLengthFilterLocks = function () {
+    // If shop module not loaded yet, retry shortly
+    if (!window.shopModule) {
+      setTimeout(window.refreshLengthFilterLocks, 500);
+      return;
+    }
+
+    const isUnlocked = window.shopModule.isModeUnlocked('lengthFilter');
+
+    // Select all length filter menus (Type and Speak modes)
+    const menus = document.querySelectorAll('#length-filter-menu-type, #length-filter-menu-speak');
+
+    menus.forEach(menu => {
+      const lockOptions = menu.querySelectorAll('.filter-option[data-locked="true"]');
+      lockOptions.forEach(option => {
+        if (isUnlocked) {
+          // Unlock visual state
+          option.removeAttribute('data-locked');
+          option.classList.remove('locked');
+
+          // Remove lock icon if present (assumes icon is inside option text or appended)
+          // Based on user image, it might be a specific element or CSS class
+          const lockIcon = option.querySelector('.lock-icon') || option.querySelector('span[role="img"][aria-label="locked"]'); // Adjust selector as needed based on actual HTML
+          if (lockIcon) lockIcon.remove();
+
+          // Fallback: Remove unicode lock if direct text content
+          // This is safer if structure is unknown; ideally we toggle a class
+          option.classList.add('unlocked-feature');
+        } else {
+          // Ensure locked state is present if locked (re-locking usually irrelevant but good for correctness)
+          option.setAttribute('data-locked', 'true');
+        }
+      });
+    });
+  };
+
+  // Listen for shop unlock events to update UI immediately
+  window.addEventListener('shop-unlock', (e) => {
+    if (e.detail && e.detail.mode === 'lengthFilter') {
+      window.refreshLengthFilterLocks();
+    }
   });
 
   // ============================================
@@ -1852,6 +1907,26 @@
       window.readingTimer = null;
     }
 
+    // 8. Reset Take Notes mode if it exists
+    if (window.TakeNotesMode && typeof window.TakeNotesMode.reset === 'function') {
+      window.TakeNotesMode.reset();
+    }
+
+    // 9. Stop Speech Recognition
+    if (typeof isRecording !== 'undefined' && isRecording && typeof recognition !== 'undefined' && recognition) {
+      recognition.stop();
+      isRecording = false;
+    }
+    if (typeof wordRecognition !== 'undefined' && wordRecognition) {
+      wordRecognition.stop();
+      wordRecognition = null;
+      if (typeof currentWordIndex !== 'undefined') currentWordIndex = -1;
+    }
+    if (typeof breakdownRecognition !== 'undefined' && breakdownRecognition) {
+      breakdownRecognition.stop();
+      breakdownRecognition = null;
+    }
+
     // Reset internal state variables
     lastDiffType = [];
     lastDiffSpeak = [];
@@ -2374,27 +2449,13 @@
     if (modeNotes) { modeNotes.classList.remove("active"); modeNotes.style.display = 'none'; }
     if (modePronounce) { modePronounce.classList.remove("active"); modePronounce.style.display = 'none'; }
 
-    // Highlight active mode button
+    // Rest active states
     document.querySelectorAll('.mode-switch-btn').forEach(btn => btn.classList.remove('active'));
     const typeModeBtn = document.querySelector('.mode-switch-btn[onclick*="type"]');
     if (typeModeBtn) typeModeBtn.classList.add('active');
 
-    // Reset Take Notes mode if it was active
-    if (window.TakeNotesMode && typeof window.TakeNotesMode.reset === 'function') {
-      window.TakeNotesMode.reset();
-    }
-
-    // Hide Speak mode panels
-    pronunciationPanel.style.display = "none";
-    breakdownPanel.style.display = "none";
-    generatePanelSpeak.style.display = "none";
-    sameVocabPanelSpeak.style.display = "none";
-
-    // Hide shared panels (will be shown when Check is pressed in Type mode)
-    animationPanel.style.display = "none";
-    result.style.display = "none";
-    generatePanelType.style.display = "none";
-    vocabularyPanel.style.display = "none";
+    // Reset results and UI state
+    resetScaffolding();
 
     // Reload the correct audio for Type mode
     if (typeDatabase.length > 0 && currentTypeQuestionId) {
@@ -2405,20 +2466,6 @@
       await loadProgressStatus(currentTypeQuestionId, "type");
       // Update progress panel for Type mode
       await updateProgressPanel("type");
-    }
-
-    if (isRecording && recognition) {
-      recognition.stop();
-      isRecording = false;
-    }
-    if (wordRecognition) {
-      wordRecognition.stop();
-      wordRecognition = null;
-      currentWordIndex = -1;
-    }
-    if (breakdownRecognition) {
-      breakdownRecognition.stop();
-      breakdownRecognition = null;
     }
   });
 
@@ -2465,24 +2512,13 @@
     if (modeNotes) { modeNotes.classList.remove("active"); modeNotes.style.display = 'none'; }
     if (modePronounce) { modePronounce.classList.remove("active"); modePronounce.style.display = 'none'; }
 
-    // Highlight active mode button
+    // Rest active states
     document.querySelectorAll('.mode-switch-btn').forEach(btn => btn.classList.remove('active'));
     const speakModeBtn = document.querySelector('.mode-switch-btn[onclick*="speak"]');
     if (speakModeBtn) speakModeBtn.classList.add('active');
 
-    // Reset Take Notes mode if it was active
-    if (window.TakeNotesMode && typeof window.TakeNotesMode.reset === 'function') {
-      window.TakeNotesMode.reset();
-    }
-
-    // Hide Type mode panels
-    generatePanelType.style.display = "none";
-    sameVocabPanelType.style.display = "none";
-
-    // Hide shared panels (will be shown when Check is pressed in Speak mode)
-    animationPanel.style.display = "none";
-    result.style.display = "none";
-    generatePanelSpeak.style.display = "none";
+    // Reset results and UI state
+    resetScaffolding();
 
     // Reload the correct audio for Speak mode
     if (speakDatabase.length > 0 && currentSpeakQuestionId) {
@@ -2542,41 +2578,13 @@
     if (modeNotes) { modeNotes.classList.remove("active"); modeNotes.style.display = 'none'; }
     if (modePronounce) { modePronounce.classList.remove("active"); modePronounce.style.display = 'none'; }
 
-    // Highlight active mode button
+    // Rest active states
     document.querySelectorAll('.mode-switch-btn').forEach(btn => btn.classList.remove('active'));
     const extendedModeBtn = document.querySelector('.mode-switch-btn[onclick*="extended"]');
     if (extendedModeBtn) extendedModeBtn.classList.add('active');
 
-    // Reset Take Notes mode if it was active
-    if (window.TakeNotesMode && typeof window.TakeNotesMode.reset === 'function') {
-      window.TakeNotesMode.reset();
-    }
-
-    // Hide all other mode panels
-    animationPanel.style.display = "none";
-    result.style.display = "none";
-    generatePanelType.style.display = "none";
-    generatePanelSpeak.style.display = "none";
-    sameVocabPanelType.style.display = "none";
-    sameVocabPanelSpeak.style.display = "none";
-    vocabularyPanel.style.display = "none";
-    pronunciationPanel.style.display = "none";
-    breakdownPanel.style.display = "none";
-
-    // Stop any active recordings
-    if (isRecording && recognition) {
-      recognition.stop();
-      isRecording = false;
-    }
-    if (wordRecognition) {
-      wordRecognition.stop();
-      wordRecognition = null;
-      currentWordIndex = -1;
-    }
-    if (breakdownRecognition) {
-      breakdownRecognition.stop();
-      breakdownRecognition = null;
-    }
+    // Reset results and UI state
+    resetScaffolding();
 
     // Lazy-load extended question only on first tab click
     if (!extendedQuestionLoaded && extendedDatabase.length > 0) {
@@ -5555,7 +5563,7 @@
   // Database loading functions
   const loadDatabase = async (mode) => {
     try {
-      const response = await fetch(`database/${mode}/index.json`);
+      const response = await fetch(`database/${mode}/index.json?v=${Date.now()}`);
       if (!response.ok) {
         throw new Error(`Failed to load ${mode} database: ${response.statusText}`);
       }
@@ -5781,6 +5789,13 @@
         validLengthIds = getIdsForLengthRange(lengthValue, mode);
       }
 
+      // Get Difficulty Filter (Type and Speak modes)
+      const difficultyContainer = document.getElementById(`difficulty-filter-container-${mode}`);
+      const difficultyMenu = document.getElementById(`difficulty-filter-menu-${mode}`);
+      const selectedDifficultyOption = difficultyMenu?.querySelector('.filter-option.selected');
+      const difficultyValue = selectedDifficultyOption?.dataset.value || 'all';
+      const difficultyLevel = difficultyValue !== 'all' ? parseInt(difficultyValue, 10) : null;
+
       // Get progress cache for this mode
       const modeProgressCache = progressCache[mode] || {};
 
@@ -5804,12 +5819,19 @@
         else if (state === 'consolidated' && filterConsolidated) shouldShow = true;
         else if (state === 'mastered' && filterMastered) shouldShow = true;
 
-        // 2. Length Filter (Type mode only)
+        // 2. Length Filter
         if (shouldShow && lengthContainer && lengthContainer.style.display !== 'none' && lengthValue !== 'all') {
           // If data hasn't loaded (validLengthIds is null), hide everything
           if (validLengthIds === null) {
             shouldShow = false;
           } else if (!validLengthIds.has(questionId)) {
+            shouldShow = false;
+          }
+        }
+
+        // 3. Difficulty Filter
+        if (shouldShow && difficultyContainer && difficultyContainer.style.display !== 'none' && difficultyLevel !== null) {
+          if (item.level !== difficultyLevel) {
             shouldShow = false;
           }
         }
@@ -5843,7 +5865,7 @@
 
       // Update display
       currentIdDisplay.textContent = currentId;
-      const hasFilters = !filterNotStarted || !filterInProgress || !filterCompleted || !filterConsolidated || !filterMastered || (validLengthIds !== null);
+      const hasFilters = !filterNotStarted || !filterInProgress || !filterCompleted || !filterConsolidated || !filterMastered || (validLengthIds !== null) || (difficultyLevel !== null);
       totalDisplay.textContent = hasFilters ? `${visibleCount} (${database.length} total)` : database.length;
 
       // Set selected value (ensure current question is selected)
@@ -6451,7 +6473,7 @@
     }
 
     // Show grammar warning if any issues
-    if (grammarWarnings.length > 0) {
+    if (grammarWarnings.length > 0 && !window.isTutorialActive) {
       showGrammarWarning(grammarWarnings);
     }
 
@@ -8309,9 +8331,19 @@
       ? profile.sentenceLengthFilterFullUnlock
       : profile.speakLengthFilterFullUnlock;
 
-    if (isFullUnlock) {
-      // Show all options
-      menu.querySelectorAll('.filter-option').forEach(el => el.style.display = 'flex');
+    // PRIORITY OVERRIDE: Check Shop Module directly
+    // This fixes the issue where Beginner users are restricted even after purchase
+    const isShopUnlocked = window.shopModule && window.shopModule.isModeUnlocked('lengthFilter');
+
+    if (isFullUnlock || isShopUnlocked) {
+      // Show all options and unlock them
+      menu.querySelectorAll('.filter-option').forEach(el => {
+        el.style.display = 'flex';
+        delete el.dataset.locked;
+        el.classList.remove('locked');
+        const icon = el.querySelector('.locked-icon');
+        if (icon) icon.remove();
+      });
       return;
     }
 
@@ -8456,12 +8488,15 @@
     lengthFilterMenu.querySelectorAll('.filter-option').forEach(option => {
       option.addEventListener('click', (e) => {
         // Restricted Filter Check
-        if (option.dataset.locked === "true") {
+        // Priority check: Is it unlocked via shop?
+        const isUnlocked = window.shopModule && window.shopModule.isModeUnlocked('lengthFilter');
+
+        if (option.dataset.locked === "true" && !isUnlocked) {
           const points = (window.currentUserProfile && window.currentUserProfile.totalPoints) || 0;
           if (points >= 50) {
-            alert("This feature is locked. Exchange it in the Shop now!");
+            window.shopModule.showAlertModal("This feature is locked. Exchange it in the Shop now!", true);
           } else {
-            alert("This feature is locked. Practice more to get coins and unlock it!");
+            window.shopModule.showAlertModal("This feature is locked. Practice more to get coins and unlock it!", true);
           }
           return; // Do not apply filter
         }
@@ -8561,12 +8596,15 @@
     lengthFilterMenuSpeak.querySelectorAll('.filter-option').forEach(option => {
       option.addEventListener('click', (e) => {
         // Restricted Filter Check
-        if (option.dataset.locked === "true") {
+        // Priority check: Is it unlocked via shop?
+        const isUnlocked = window.shopModule && window.shopModule.isModeUnlocked('lengthFilter');
+
+        if (option.dataset.locked === "true" && !isUnlocked) {
           const points = (window.currentUserProfile && window.currentUserProfile.totalPoints) || 0;
           if (points >= 50) {
-            alert("This feature is locked. Exchange it in the Shop now!");
+            window.shopModule.showAlertModal("This feature is locked. Exchange it in the Shop now!", true);
           } else {
-            alert("This feature is locked. Practice more to get coins and unlock it!");
+            window.shopModule.showAlertModal("This feature is locked. Practice more to get coins and unlock it!", true);
           }
           return; // Do not apply filter
         }

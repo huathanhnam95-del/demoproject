@@ -55,6 +55,14 @@ const ShopModule = (() => {
             unlocksMode: 'lengthFilter'
         },
         {
+            id: 'difficultyFilter',
+            title: 'Difficulty Filter',
+            description: 'Filter questions by CEFR-aligned difficulty (Easy, Medium, Hard).',
+            icon: '🎚️',
+            cost: 30,
+            unlocksMode: 'difficultyFilter'
+        },
+        {
             id: 'vocabBook',
             title: 'Vocab Book',
             description: 'Save difficult words and review them later.',
@@ -73,7 +81,7 @@ const ShopModule = (() => {
     ];
 
     let userCoins = 0;
-    let unlockedModes = ['type']; // default
+    let unlockedModes = ['type', 'difficultyFilter']; // default
     let purchaseHistory = []; // Cache for purchase dates
     let isInitialized = false;
 
@@ -112,8 +120,11 @@ const ShopModule = (() => {
             // We can expose a refresh method.
         }
 
-        isInitialized = true;
-        console.log('🛒 Shop Module Initialized');
+        // Initialize data
+        refreshUserData().then(() => {
+            isInitialized = true;
+            console.log('🛒 Shop Module Initialized and data refreshed');
+        });
     }
 
     /**
@@ -187,23 +198,26 @@ const ShopModule = (() => {
             // Fetch purchase history to get dates (non-critical)
             try {
                 const purchasesResult = await window.firebaseFirestoreFunctions.getPurchases(userId);
-                if (purchasesResult.success) {
+                if (purchasesResult && purchasesResult.success) {
                     purchaseHistory = purchasesResult.data;
                 }
             } catch (purchaseError) {
-                console.warn('Failed to load purchase history:', purchaseError);
+                console.warn('Failed to load purchase history (permissions):', purchaseError);
+                // Non-critical, continue with what we have
             }
         } catch (error) {
             console.error('Error refreshing shop data:', error);
-            // Use cached data as fallback
-            if (cachedModes) {
-                try {
-                    unlockedModes = JSON.parse(cachedModes);
-                } catch (e) {
-                    unlockedModes = ['type'];
+            // Ensure we have some data from cache
+            if (!unlockedModes || unlockedModes.length <= 1) {
+                if (cachedModes) {
+                    try {
+                        unlockedModes = JSON.parse(cachedModes);
+                    } catch (e) {
+                        unlockedModes = unlockedModes || ['type'];
+                    }
                 }
             }
-            if (cachedCoins) {
+            if (userCoins === 0 && cachedCoins) {
                 userCoins = parseInt(cachedCoins, 10) || 0;
             }
             updateBalanceDisplay();

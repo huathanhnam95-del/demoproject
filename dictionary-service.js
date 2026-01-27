@@ -231,6 +231,10 @@ const DictionaryService = (function () {
     // Cache expiry (7 days in milliseconds)
     const CACHE_EXPIRY = 7 * 24 * 60 * 60 * 1000;
 
+    // Tracau API Configuration
+    const TRACAU_API_KEY = 'WBBcwnwQpV89'; // Default key for non-profit use
+    const TRACAU_BASE_URL = 'https://api.tracau.vn';
+
     // In-memory cache for current session
     let definitionCache = {};
     let translationCache = {};
@@ -503,6 +507,51 @@ const DictionaryService = (function () {
     }
 
     /**
+     * Fetch translation and examples from Tracau.vn API
+     * @param {string} word - The word to look up
+     * @returns {Promise<Object>} Data from Tracau
+     */
+    async function fetchFromTracau(word) {
+        // Use local proxy to bypass CORS
+        const url = `/api/tracau?word=${encodeURIComponent(word.toLowerCase())}`;
+
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Tracau API failed');
+
+        const data = await response.json();
+
+        let translation = '';
+        let sentences = [];
+
+        // Extract translation from 'sentences' or 'tratu'
+        if (data.sentences && data.sentences.length > 0) {
+            // Take the first Vietnamese translation part from the first sentence if it's short
+            // Usually data.sentences are bilingual pairs
+            sentences = data.sentences.map(s => ({
+                en: s.fields.en.replace(/<\/?em>/g, ''),
+                vi: s.fields.vi.replace(/<\/?em>/g, '')
+            }));
+
+            // Try to find a short translation in tratu if available
+            if (data.tratu && data.tratu.length > 0) {
+                // Tratu fulltext contains HTML, we might just use the first sentence vi for now 
+                // if it looks like a direct translation
+                const firstVi = sentences[0].vi;
+                if (firstVi.length < 50) {
+                    translation = firstVi;
+                }
+            }
+        }
+
+        // Fallback: Use sentence-based translation if direct translation not found
+        if (!translation && sentences.length > 0) {
+            translation = sentences[0].vi;
+        }
+
+        return { translation, sentences };
+    }
+
+    /**
      * Strip HTML tags from text
      * @param {string} html - HTML string
      * @returns {string} Plain text
@@ -576,15 +625,28 @@ const DictionaryService = (function () {
 
         let translation = '';
 
-        // 1. Try Wiktionary first (structured dictionary data)
+        // 1. Try Tracau.vn first (high quality English-Vietnamese)
         try {
-            const viTranslation = await fetchVietnameseFromWiktionary(word);
-            if (viTranslation) {
-                translation = viTranslation;
-                console.log('[DictionaryService] Wiktionary VI success:', word, '->', translation);
+            const tracauData = await fetchFromTracau(word);
+            if (tracauData && tracauData.translation) {
+                translation = tracauData.translation;
+                console.log('[DictionaryService] Tracau success:', word, '->', translation);
             }
         } catch (e) {
-            console.log('[DictionaryService] Wiktionary VI failed:', e.message);
+            console.log('[DictionaryService] Tracau failed:', e.message);
+        }
+
+        // 2. Try Wiktionary next (structured dictionary data)
+        if (!translation) {
+            try {
+                const viTranslation = await fetchVietnameseFromWiktionary(word);
+                if (viTranslation) {
+                    translation = viTranslation;
+                    console.log('[DictionaryService] Wiktionary VI success:', word, '->', translation);
+                }
+            } catch (e) {
+                console.log('[DictionaryService] Wiktionary VI failed:', e.message);
+            }
         }
 
         // 2. Fallback to local dictionary (for common words Wiktionary missed)
@@ -626,18 +688,21 @@ const DictionaryService = (function () {
      * @param {string} partOfSpeech - Optional POS filter
      * @returns {Promise<Object>} { definition, example, partOfSpeech, vietnameseTranslation }
      */
-    async function getWordData(word, partOfSpeech = null) {
-        const [defResult, translation] = await Promise.all([
-            getDefinition(word, partOfSpeech),
-            getVietnameseTranslation(word)
+    async function getWordData(word, preferredPOS = null) {
+        // Fetch everything in parallel
+        const [defResult, translation, tracauData] = await Promise.all([
+            getDefinition(word, preferredPOS),
+            getVietnameseTranslation(word),
+            fetchFromTracau(word).catch(() => ({ sentences: [] }))
         ]);
 
         return {
             definition: defResult.definition,
-            example: defResult.example,
+            example: defResult.example || (tracauData.sentences.length > 0 ? tracauData.sentences[0].en : ''),
             partOfSpeech: defResult.partOfSpeech,
             vietnameseTranslation: translation,
-            source: defResult.source
+            source: defResult.source,
+            sentences: tracauData.sentences // Include all bilingual sentences
         };
     }
 

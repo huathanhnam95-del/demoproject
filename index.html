@@ -6,7 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dictation Practice</title>
   <link rel="stylesheet" href="style.css?v=20260123_mode_fix">
-  <link rel="stylesheet" href="srs-review.css?v=20260123_mode_fix">
+  <link rel="stylesheet" href="srs-review.css?v=20260127_srs_upgrade">
+  <link rel="stylesheet" href="srs-onboarding.css?v=20260127_srs_upgrade">
   <link rel="stylesheet" href="pronunciation-analyzer/style.css">
   <link rel="stylesheet" href="pronunciation-analyzer/syllable-verifier.css">
   <link rel="stylesheet" href="style-scaffolding.css?v=20260123_mode_fix">
@@ -575,6 +576,11 @@
             <div class="srs-input-container" id="srs-input-container">
               <input type="text" id="srs-input" class="srs-input" placeholder="Type the word..." autocomplete="off">
             </div>
+
+            <!-- Click Hint -->
+            <div class="srs-flip-hint" id="srs-flip-hint">
+              <span>💡 Click the card or press Space to flip</span>
+            </div>
           </div>
           <div class="srs-flashcard-back" id="srs-flashcard-back">
             <!-- Back Face Layout: Phonetic -> Listen -> Word -> Def -> Example -> Result -->
@@ -612,23 +618,27 @@
 
     <div class="srs-controls">
       <div class="srs-quality-btns" id="srs-quality-btns">
-        <p class="srs-quality-prompt">Practice this word again in:</p>
+        <p class="srs-quality-prompt">How well did you remember?</p>
         <div class="srs-quality-options">
-          <button data-quality="1" class="quality-option quality-1day">
-            <span class="quality-days">1 day</span>
-            <span class="quality-desc">This word is hard</span>
+          <button data-quality="1" class="quality-option quality-again" title="Press 1">
+            <span class="quality-kbd">1</span>
+            <span class="quality-label">Again</span>
+            <span class="quality-interval" id="interval-again">1m</span>
           </button>
-          <button data-quality="3" class="quality-option quality-3days">
-            <span class="quality-days">3 days</span>
-            <span class="quality-desc">This is not so hard</span>
+          <button data-quality="2" class="quality-option quality-hard" title="Press 2">
+            <span class="quality-kbd">2</span>
+            <span class="quality-label">Hard</span>
+            <span class="quality-interval" id="interval-hard">6m</span>
           </button>
-          <button data-quality="4" class="quality-option quality-6days">
-            <span class="quality-days">6 days</span>
-            <span class="quality-desc">This is fairly easy</span>
+          <button data-quality="3" class="quality-option quality-good" title="Press 3">
+            <span class="quality-kbd">3</span>
+            <span class="quality-label">Good</span>
+            <span class="quality-interval" id="interval-good">10m</span>
           </button>
-          <button data-quality="5" class="quality-option quality-14days">
-            <span class="quality-days">14 days</span>
-            <span class="quality-desc">This is very easy</span>
+          <button data-quality="4" class="quality-option quality-easy" title="Press 4">
+            <span class="quality-kbd">4</span>
+            <span class="quality-label">Easy</span>
+            <span class="quality-interval" id="interval-easy">4d</span>
           </button>
         </div>
 
@@ -1573,30 +1583,7 @@
           <span class="legend-item"><span class="chip misplaced"></span>misplaced (blue highlight)</span>
         </div>
       </div>
-      <section id="vocabulary-practice" class="vocabulary-panel" style="display: none;">
-        <div class="vocabulary-header">
-          <span>Vocabulary Practice</span>
-          <button id="vocab-feedback-toggle" class="btn-secondary" style="font-size: 0.8rem; padding: 4px 8px;">Show
-            Suggestions</button>
-        </div>
-        <script>
-          document.getElementById('vocab-feedback-toggle').addEventListener('click', function () {
-            const panel = document.getElementById('vocabulary-practice');
-            // Toggle the visible class which has !important display block
-            if (panel.classList.contains('visible')) {
-              panel.classList.remove('visible');
-              this.textContent = 'Show Suggestions';
-            } else {
-              panel.classList.add('visible');
-              this.textContent = 'Hide Suggestions';
-            }
-          });
-        </script>
-        <div class="vocabulary-subheader">
-          <span>These are the key content words that you missed, try producing them again</span>
-        </div>
-        <div id="vocabulary-words" class="vocabulary-words"></div>
-      </section>
+
       <section id="pronunciation-practice" class="pronunciation-panel" style="display: none;">
         <div class="pronunciation-header">
           <span>Pronunciation practice</span>
@@ -1635,28 +1622,7 @@
         </div>
         <div id="same-vocab-sentences-speak" class="same-vocab-sentences"></div>
       </section>
-      <section id="generate-sentences-type" class="generate-panel" style="display: none;">
-        <div class="generate-header">
-          <span>Generate random sentence</span>
-          <div class="generate-controls">
-            <button id="show-all-sentences-type-btn" type="button" style="display: none;">Show All</button>
-            <button id="hide-all-sentences-type-btn" type="button" style="display: none;">Hide All</button>
-            <button id="generate-type-btn" type="button">Generate</button>
-          </div>
-        </div>
-        <div id="generated-sentences-type" class="generated-sentences"></div>
-      </section>
-      <section id="generate-sentences-speak" class="generate-panel" style="display: none;">
-        <div class="generate-header">
-          <span>Generate random sentence</span>
-          <div class="generate-controls">
-            <button id="show-all-sentences-speak-btn" type="button" style="display: none;">Show All</button>
-            <button id="hide-all-sentences-speak-btn" type="button" style="display: none;">Hide All</button>
-            <button id="generate-speak-btn" type="button">Generate</button>
-          </div>
-        </div>
-        <div id="generated-sentences-speak" class="generated-sentences"></div>
-      </section>
+
     </main>
 
     <!-- Watch Mode Question Panel (sibling of white card, NOT inside it) -->
@@ -1923,7 +1889,9 @@
         <button id="srs-writing-close-btn" class="vocab-add-close"
           style="position: absolute; right: 20px; top: 20px;">×</button>
         <h3>✍️ Writing Challenge</h3>
+        <p class="srs-writing-subtitle">Practice using the word in your own context</p>
         <button id="more-help-btn" class="more-help-btn" title="Get more context and examples">
+          <span class="pulse-ring"></span>
           💡 More Help!
         </button>
       </div>
@@ -2009,8 +1977,11 @@
   <!-- Vocabulary Tutorial System -->
   <script src="vocab-tutorial.js?v=20260113"></script>
 
+  <!-- SRS Scheduler & Onboarding -->
+  <script src="srs-onboarding.js?v=20260127_srs_upgrade"></script>
+
   <!-- SRS Review Module -->
-  <script type="module" src="srs-review.js?v=20260113"></script>
+  <script type="module" src="srs-review.js?v=20260127_srs_upgrade"></script>
 
   <!-- Pronunciation Analyzer -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

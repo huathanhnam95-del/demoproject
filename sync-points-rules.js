@@ -1,21 +1,21 @@
 /**
  * Points Rules Sync Script
- * 
+ *
  * Syncs point rules from a CSV/Excel file to Firebase Firestore.
- * 
+ *
  * Update Logic:
- *   - Title exists in file and Firebase → Update existing rule
- *   - Title exists in file but not Firebase → Add new rule
- *   - Title exists in Firebase but not file → Mark active = false
- * 
+ *   - Title exists in file and Firebase -> Update existing rule
+ *   - Title exists in file but not Firebase -> Add new rule
+ *   - Title exists in Firebase but not file -> Mark active = false
+ *
  * Usage:
  *   node sync-points-rules.js points-rules.csv
- * 
+ *
  * Setup:
  *   1. Download service account key from Firebase Console
  *   2. Save as "serviceAccountKey.json" in project root
  *   3. Install firebase-admin: npm install firebase-admin
- * 
+ *
  * CSV Format:
  *   Title,Description,Points
  *   Perfect Type,Get 100% accuracy in Type mode,10
@@ -23,6 +23,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const Excel = require('exceljs');
 
 // Check for firebase-admin
 let admin;
@@ -31,16 +32,6 @@ try {
 } catch (e) {
     console.error('❌ Error: firebase-admin not installed.');
     console.log('   Run: npm install firebase-admin');
-    process.exit(1);
-}
-
-// Check for xlsx (for Excel support)
-let XLSX;
-try {
-    XLSX = require('xlsx');
-} catch (e) {
-    console.error('❌ Error: xlsx not installed.');
-    console.log('   Run: npm install xlsx');
     process.exit(1);
 }
 
@@ -56,7 +47,7 @@ function initializeFirebase() {
         console.error('❌ Error: Service account key not found.');
         console.log('');
         console.log('   To get your service account key:');
-        console.log('   1. Go to Firebase Console → Project Settings → Service Accounts');
+        console.log('   1. Go to Firebase Console -> Project Settings -> Service Accounts');
         console.log('   2. Click "Generate new private key"');
         console.log('   3. Save the file as "serviceAccountKey.json" in the project root');
         console.log('');
@@ -69,7 +60,7 @@ function initializeFirebase() {
         credential: admin.credential.cert(serviceAccount)
     });
 
-    console.log('✓ Firebase Admin SDK initialized');
+    console.log('✅ Firebase Admin SDK initialized');
     return admin.firestore();
 }
 
@@ -78,42 +69,46 @@ function initializeFirebase() {
  * @param {string} filePath - Path to the file
  * @returns {Array} Array of rule objects
  */
-function parseFile(filePath) {
+async function parseFile(filePath) {
     if (!fs.existsSync(filePath)) {
         console.error(`❌ Error: File not found: ${filePath}`);
         process.exit(1);
     }
 
     const ext = path.extname(filePath).toLowerCase();
+    const workbook = new Excel.Workbook();
     let rules = [];
 
     if (ext === '.csv') {
         // Parse CSV
-        const workbook = XLSX.readFile(filePath, { type: 'file' });
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-        const data = XLSX.utils.sheet_to_json(sheet);
-
-        rules = data.map(row => ({
-            title: (row.Title || row.title || '').toString().trim(),
-            description: (row.Description || row.description || '').toString().trim(),
-            explanation: (row.Explanation || row.explanation || '').toString().trim(),
-            points: parseInt(row.Points || row.points || 0, 10)
-        })).filter(rule => rule.title); // Filter out empty rows
+        const worksheet = await workbook.csv.readFile(filePath);
+        worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+            if (rowNumber > 1) { // Skip header row
+                const rule = {
+                    title: (row.values[1] || '').toString().trim(),
+                    description: (row.values[2] || '').toString().trim(),
+                    explanation: (row.values[3] || '').toString().trim(),
+                    points: parseInt(row.values[4] || 0, 10)
+                };
+                if(rule.title) rules.push(rule);
+            }
+        });
 
     } else if (ext === '.xlsx' || ext === '.xls') {
         // Parse Excel
-        const workbook = XLSX.readFile(filePath);
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-        const data = XLSX.utils.sheet_to_json(sheet);
-
-        rules = data.map(row => ({
-            title: (row.Title || row.title || '').toString().trim(),
-            description: (row.Description || row.description || '').toString().trim(),
-            explanation: (row.Explanation || row.explanation || '').toString().trim(),
-            points: parseInt(row.Points || row.points || 0, 10)
-        })).filter(rule => rule.title);
+        await workbook.xlsx.readFile(filePath);
+        const worksheet = workbook.getWorksheet(1);
+        worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+            if (rowNumber > 1) { // Skip header row
+                const rule = {
+                    title: (row.values[1] || '').toString().trim(),
+                    description: (row.values[2] || '').toString().trim(),
+                    explanation: (row.values[3] || '').toString().trim(),
+                    points: parseInt(row.values[4] || 0, 10)
+                };
+                if(rule.title) rules.push(rule);
+            }
+        });
 
     } else {
         console.error(`❌ Error: Unsupported file format: ${ext}`);
@@ -121,14 +116,14 @@ function parseFile(filePath) {
         process.exit(1);
     }
 
-    console.log(`✓ Parsed ${rules.length} rules from file`);
+    console.log(`✅ Parsed ${rules.length} rules from file`);
     return rules;
 }
 
 /**
  * Get existing rules from Firestore
  * @param {Firestore} db - Firestore instance
- * @returns {Map} Map of title → document data
+ * @returns {Map} Map of title -> document data
  */
 async function getExistingRules(db) {
     const snapshot = await db.collection(COLLECTION_NAME).get();
@@ -143,7 +138,7 @@ async function getExistingRules(db) {
         });
     });
 
-    console.log(`✓ Found ${existingRules.size} existing rules in Firebase`);
+    console.log(`✅ Found ${existingRules.size} existing rules in Firebase`);
     return existingRules;
 }
 
@@ -182,7 +177,7 @@ async function syncRules(db, fileRules, existingRules) {
                 active: true,
                 updatedAt: now
             });
-            console.log(`  ↻ Update: "${rule.title}" (${rule.points} points)`);
+            console.log(`  🔄 Update: "${rule.title}" (${rule.points} points)`);
             updated++;
         } else {
             // Add new rule
@@ -218,12 +213,12 @@ async function syncRules(db, fileRules, existingRules) {
     await batch.commit();
 
     console.log('');
-    console.log('═══════════════════════════════════════');
-    console.log(`✓ Sync complete!`);
+    console.log('••••••••••••••••••••••••••••••••••••••••••');
+    console.log(`✅ Sync complete!`);
     console.log(`  Updated:     ${updated}`);
     console.log(`  Added:       ${added}`);
     console.log(`  Deactivated: ${deactivated}`);
-    console.log('═══════════════════════════════════════');
+    console.log('••••••••••••••••••••••••••••••••••••••••••');
 }
 
 /**
@@ -231,9 +226,9 @@ async function syncRules(db, fileRules, existingRules) {
  */
 async function main() {
     console.log('');
-    console.log('═══════════════════════════════════════');
+    console.log('••••••••••••••••••••••••••••••••••••••••••');
     console.log('   Points Rules Sync Script');
-    console.log('═══════════════════════════════════════');
+    console.log('••••••••••••••••••••••••••••••••••••••••••');
     console.log('');
 
     // Get file path from command line
@@ -253,7 +248,7 @@ async function main() {
         const db = initializeFirebase();
 
         // Parse file
-        const fileRules = parseFile(filePath);
+        const fileRules = await parseFile(filePath);
 
         if (fileRules.length === 0) {
             console.error('❌ Error: No valid rules found in file.');

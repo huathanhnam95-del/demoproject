@@ -1,6 +1,6 @@
 /**
  * Spaced Repetition System (SRS) Module
- * Implements SM-2 algorithm for optimal vocabulary review scheduling
+ * Implements SM-2 and FSRS algorithms for optimal vocabulary review scheduling
  * Uses modular Firebase v9+ API
  */
 
@@ -13,6 +13,9 @@ import {
     increment
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
+// Import new SRS Scheduler
+import { SRSScheduler, ALGORITHM, CARD_STATE, RATING } from './srs-scheduler.js';
+
 const SRSReview = (function () {
     'use strict';
 
@@ -20,18 +23,38 @@ const SRSReview = (function () {
     let db = null;
     let currentUserId = null;
 
+    // Current Algorithm Preference (SM2 or FSRS)
+    let currentAlgorithm = 'SM2'; // Default, loaded from SRSOnboarding
+
     // SRS Data Cache
     let srsCache = {
         srsData: {},        // Per-word SRS tracking
         reviewStats: {
             totalReviews: 0,
-            reviewsToday: 0,
-            lastReviewSession: null,
+            dailyReviews: 0,
             streak: 0,
-            longestStreak: 0
-        },
-        masteredWords: []   // Archive of mastered words
+            lastReviewDate: null,
+            xp: 0,
+            masteredCount: 0,
+            sessionsCompleted: 0
+        }
     };
+
+    // Current review session
+    let reviewSession = {
+        active: false,
+        wordsToReview: [],
+        currentIndex: 0,
+        sessionResults: []
+    };
+
+    // Definition Cache
+    const definitionCache = new Map();
+    const DEF_CACHE_KEY = 'srs_definition_cache';
+
+    // Difficulty & Performance State
+    let srsPerformanceTracker = null;
+    let currentDifficultySettings = null;
 
     // Speech Recognition
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -41,24 +64,6 @@ const SRSReview = (function () {
 
     // Pronunciation practice recognition instance (reused to prevent abort errors)
     let pronunciationRecognition = null;
-
-    // Current review session state
-    let reviewSession = {
-        active: false,
-        wordsToReview: [],
-        currentIndex: 0,
-        sessionResults: [],  // Track results for session summary
-        startTime: null,
-        autoAssignMode: true  // NEW: When true, system auto-selects interval based on pass/fail
-    };
-
-    // Definition cache to avoid API spam (Now persistent)
-    const definitionCache = new Map();
-    const DEF_CACHE_KEY = 'srs_definition_cache';
-
-    // Difficulty & Performance State
-    let srsPerformanceTracker = null;
-    let currentDifficultySettings = null;
 
     // Helper: Levenshtein Distance for Typo Tolerance
     function getLevenshteinDistance(a, b) {
@@ -145,6 +150,12 @@ const SRSReview = (function () {
         loadPendingData();      // Load any unsaved local data
         loadDefinitionCache();  // Load persistent definitions
 
+        // Load algorithm preference from SRSOnboarding
+        if (window.SRSOnboarding) {
+            currentAlgorithm = window.SRSOnboarding.getPreferredAlgorithm();
+            console.log('[SRS] Algorithm preference loaded:', currentAlgorithm);
+        }
+
         // Initial dashboard update (will update again when data loads)
         updateDashboardSummary();
 
@@ -160,8 +171,6 @@ const SRSReview = (function () {
             document.body.appendChild(elements.srsWritingModal);
             elements.srsWritingModal.style.setProperty('z-index', '99999', 'important');
         }
-
-
 
         console.log('[SRS] Module initialized');
     }
@@ -507,6 +516,72 @@ const SRSReview = (function () {
         // More Help! Button
         if (elements.moreHelpBtn) {
             elements.moreHelpBtn.addEventListener('click', toggleScaffolding);
+        }
+
+        // Keyboard Shortcuts for SRS Review
+        document.addEventListener('keydown', handleSRSKeyboardShortcuts);
+    }
+
+    /**
+     * Handle keyboard shortcuts for SRS Review
+     * @param {KeyboardEvent} e
+     */
+    function handleSRSKeyboardShortcuts(e) {
+        // Only handle when SRS panel is active
+        if (!reviewSession.active) return;
+
+        // Don't handle if user is typing in an input
+        const activeElement = document.activeElement;
+        if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+            return;
+        }
+
+        switch (e.key) {
+            case ' ': // Space - Flip card
+                e.preventDefault();
+                if (elements.flashcard) {
+                    toggleFlip();
+                }
+                break;
+
+            case '1': // Again
+                e.preventDefault();
+                if (elements.qualityBtns && elements.qualityBtns.classList.contains('visible')) {
+                    recordReviewResult(1);
+                }
+                break;
+
+            case '2': // Hard
+                e.preventDefault();
+                if (elements.qualityBtns && elements.qualityBtns.classList.contains('visible')) {
+                    recordReviewResult(2);
+                }
+                break;
+
+            case '3': // Good
+                e.preventDefault();
+                if (elements.qualityBtns && elements.qualityBtns.classList.contains('visible')) {
+                    recordReviewResult(3);
+                }
+                break;
+
+            case '4': // Easy
+                e.preventDefault();
+                if (elements.qualityBtns && elements.qualityBtns.classList.contains('visible')) {
+                    recordReviewResult(4);
+                }
+                break;
+
+            case 'Escape': // Close panel
+                e.preventDefault();
+                closeReviewPanel();
+                break;
+
+            case 'p': // Play audio
+            case 'P':
+                e.preventDefault();
+                playCurrentWordAudio();
+                break;
         }
     }
 
@@ -904,59 +979,38 @@ const SRSReview = (function () {
     }
 
     /**
-     * Calculate next review using SM-2 algorithm
-     * @param {number} quality - User rating (0-5, we use 1-5)
+     * Calculate next review using the selected algorithm (SM-2 or FSRS)
+     * Delegates to the new SRSScheduler module
+     * @param {number} quality - User rating (1=Again, 2=Hard, 3=Good, 4=Easy)
      * @param {object} currentData - Current SRS data for the word
      * @returns {object} - New interval, ease factor, and next review date
      */
     function calculateNextReview(quality, currentData) {
-        let { interval, easeFactor, repetitions } = currentData;
+        // Map quality to RATING enum
+        const ratingMap = {
+            1: RATING.AGAIN,
+            2: RATING.HARD,
+            3: RATING.GOOD,
+            4: RATING.EASY
+        };
+        const rating = ratingMap[quality] || RATING.GOOD;
 
-        // SM-2 Algorithm
-        // Quality: 1=Again, 3=Hard, 4=Good, 5=Easy
+        // Prepare card data for scheduler
+        const card = {
+            state: currentData.state || CARD_STATE.NEW,
+            interval: currentData.interval || 0,
+            easeFactor: currentData.easeFactor || 2.5,
+            repetitions: currentData.repetitions || 0,
+            stepIndex: currentData.stepIndex || 0,
+            lastReviewDate: currentData.lastReviewDate,
+            fsrs: currentData.fsrs || null
+        };
 
-        if (quality < 3) {
-            // Failed - reset to beginning
-            repetitions = 0;
-            interval = 1;
-        } else {
-            // Passed
-            if (repetitions === 0) {
-                // Initial grading: Map specific qualities to start intervals
-                if (quality === 3) interval = 3;
-                else if (quality === 4) interval = 6;
-                else if (quality === 5) interval = 14;
-                else interval = 1;
-            } else if (repetitions === 1) {
-                // Second review: Standard SM-2 jumps to 6, but if we started higher, multiply
-                if (interval < 6) interval = 6;
-                else interval = Math.round(interval * easeFactor);
-            } else {
-                interval = Math.round(interval * easeFactor);
-            }
-            repetitions++;
-        }
-
-        // Update ease factor
-        // EF' = EF + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02))
-        const efChange = 0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02);
-        easeFactor = Math.max(SM2_MIN_EASE, easeFactor + efChange);
-
-        // Calculate next review date
-        const now = new Date();
-        const nextDate = new Date(now.getTime() + interval * 24 * 60 * 60 * 1000);
-
-        // Determine status
-        let status = 'learning';
-        if (repetitions >= 3) {
-            status = 'reviewing';
-        }
-        if (repetitions >= MASTERY_THRESHOLD || interval >= 21) {
-            status = 'mastered';
-        }
+        // Use SRSScheduler with current algorithm preference
+        const result = SRSScheduler.calculate(currentAlgorithm, rating, card);
 
         // NEW: If interval was >= 14 days and user succeeded, promote to Mastered in VocabBook
-        if (quality >= 4 && currentData.interval >= 14) {
+        if (quality >= 3 && currentData.interval >= 14) {
             const lemma = currentData.lemma || currentData.originalWord;
             if (window.VocabularyBook && typeof window.VocabularyBook.promoteToMastered === 'function') {
                 console.log('[SRS] Promoting to Mastered after 14-day review:', lemma);
@@ -964,14 +1018,42 @@ const SRSReview = (function () {
             }
         }
 
-        return {
-            interval,
-            easeFactor: Math.round(easeFactor * 100) / 100,
-            repetitions,
-            nextReviewDate: nextDate.toISOString(),
-            lastReviewDate: now.toISOString(),
-            status
+        return result;
+    }
+
+    /**
+     * Get interval previews for current word to display on buttons
+     * @param {object} currentData - Current SRS data
+     * @returns {object} - Previews for each rating
+     */
+    function getIntervalPreviews(currentData) {
+        const card = {
+            state: currentData.state || CARD_STATE.NEW,
+            interval: currentData.interval || 0,
+            easeFactor: currentData.easeFactor || 2.5,
+            repetitions: currentData.repetitions || 0,
+            stepIndex: currentData.stepIndex || 0,
+            lastReviewDate: currentData.lastReviewDate,
+            fsrs: currentData.fsrs || null
         };
+
+        return SRSScheduler.getIntervalPreviews(currentAlgorithm, card);
+    }
+
+    /**
+     * Update interval preview labels on the rating buttons
+     * @param {object} previews - Interval previews from getIntervalPreviews
+     */
+    function updateIntervalLabels(previews) {
+        const againEl = document.getElementById('interval-again');
+        const hardEl = document.getElementById('interval-hard');
+        const goodEl = document.getElementById('interval-good');
+        const easyEl = document.getElementById('interval-easy');
+
+        if (againEl) againEl.textContent = previews[RATING.AGAIN]?.label || '1m';
+        if (hardEl) hardEl.textContent = previews[RATING.HARD]?.label || '6m';
+        if (goodEl) goodEl.textContent = previews[RATING.GOOD]?.label || '10m';
+        if (easyEl) easyEl.textContent = previews[RATING.EASY]?.label || '4d';
     }
 
     /**
@@ -979,6 +1061,16 @@ const SRSReview = (function () {
      * @param {boolean} forceEarly - If true, skip due check and review all words
      */
     async function startReviewSession(forceEarly = false) {
+        // Check if SRS Onboarding needs to be shown (first-time user)
+        if (window.SRSOnboarding && !window.SRSOnboarding.isOnboardingComplete()) {
+            console.log('[SRS] First-time user, showing algorithm selection...');
+            const selectedAlgorithm = await window.SRSOnboarding.init((algo) => {
+                currentAlgorithm = algo;
+                console.log('[SRS] User selected algorithm:', algo);
+            });
+            currentAlgorithm = selectedAlgorithm;
+        }
+
         // FIX: Close vocab panel and list modal to prevent layering issues
         const vocabPanelSide = document.getElementById('vocab-panel-side');
         if (vocabPanelSide) vocabPanelSide.classList.remove('open');
@@ -1038,6 +1130,14 @@ const SRSReview = (function () {
         // Show review panel
         showReviewPanel();
         showCurrentWord();
+
+        // Trigger Tutorial if not seen
+        if (window.SRSOnboarding && !window.SRSOnboarding.hasSeenTutorial()) {
+            // Delay tutorial slightly to let UI render
+            setTimeout(() => {
+                window.SRSOnboarding.startRatingButtonsTutorial();
+            }, 800);
+        }
     }
 
     /**
@@ -1353,6 +1453,10 @@ const SRSReview = (function () {
         // Show Answer button deprecated, but ensure hidden just in case
         if (elements.showAnswerBtn) elements.showAnswerBtn.style.display = 'none';
 
+        // Show flip hint
+        const flipHint = document.getElementById('srs-flip-hint');
+        if (flipHint) flipHint.style.opacity = '1';
+
         // Set word text (both front and back)
         if (elements.srsWord) {
             let displayText = currentWord.originalWord || currentWord.lemma;
@@ -1627,6 +1731,14 @@ const SRSReview = (function () {
                 }
 
                 console.log('[SRS] Word data loaded:', wordToLookup, wordData);
+
+                // Update interval preview labels on rating buttons
+                try {
+                    const previews = getIntervalPreviews(currentWord);
+                    updateIntervalLabels(previews);
+                } catch (e) {
+                    console.warn('[SRS] Could not update interval labels:', e);
+                }
             } catch (e) {
                 console.warn('[SRS] DictionaryService failed:', e);
                 // Fallback to stored data
@@ -1645,7 +1757,14 @@ const SRSReview = (function () {
     /**
      * Show the answer (flip card)
      */
+    /**
+     * Show the answer (flip card)
+     */
     function showAnswer() {
+        // Hide flip hint
+        const flipHint = document.getElementById('srs-flip-hint');
+        if (flipHint) flipHint.style.opacity = '0';
+
         if (elements.showAnswerBtn) elements.showAnswerBtn.style.display = 'none';
 
         // Toggle between Auto-Assign mode and Manual mode
@@ -1662,7 +1781,7 @@ const SRSReview = (function () {
             // Manual Mode: Show quality options, hide continue button
             if (autoContinueBtn) autoContinueBtn.style.display = 'none';
             if (qualityOptions) qualityOptions.style.display = 'grid';
-            if (qualityPrompt) qualityPrompt.textContent = 'Practice this word again in:';
+            if (qualityPrompt) qualityPrompt.textContent = 'How well did you remember?';
         }
 
         // Fix: Use CSS class for visibility animation
@@ -2606,12 +2725,22 @@ const SRSReview = (function () {
 
         const isVisible = panel.classList.contains('visible');
 
+        // Hide pulse ring on first interaction
+        const pulseRing = btn ? btn.querySelector('.pulse-ring') : null;
+        if (pulseRing) pulseRing.style.display = 'none';
+
         if (isVisible) {
             panel.classList.remove('visible');
-            if (btn) btn.classList.remove('active');
+            if (btn) {
+                btn.classList.remove('active');
+                btn.innerHTML = btn.innerHTML.replace('✖️ Close Help', '💡 More Help!');
+            }
         } else {
             panel.classList.add('visible');
-            if (btn) btn.classList.add('active');
+            if (btn) {
+                btn.classList.add('active');
+                btn.innerHTML = btn.innerHTML.replace('💡 More Help!', '✖️ Close Help');
+            }
 
             if (!scaffoldingLoaded) {
                 await loadScaffoldingContent();
@@ -2654,21 +2783,38 @@ const SRSReview = (function () {
         try {
             let sentences = [];
 
-            // 2. Try Backend Tatoeba Proxy (Primary)
-            const backendUrl = window.PRAAT_API_URL || 'https://pronunciation-api-891173754178.asia-southeast1.run.app';
-            try {
-                const response = await fetch(`${backendUrl}/sentences/${encodeURIComponent(word)}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.sentences && data.sentences.length > 0) {
-                        sentences = data.sentences;
+            // 2. Try DictionaryService (Tracau.vn) FIRST as requested
+            if (window.DictionaryService && window.DictionaryService.getWordData) {
+                try {
+                    const data = await window.DictionaryService.getWordData(word);
+                    // Use Tracau sentences if available
+                    if (data && data.sentences && data.sentences.length > 0) {
+                        // Map to extract just the English sentence if it's an object, or use string
+                        sentences = data.sentences.map(s => typeof s === 'string' ? s : s.en);
+                        console.log('[SRS] Loaded sentences from DictionaryService (Tracau):', sentences.length);
                     }
+                } catch (e) {
+                    console.warn('[SRS] DictionaryService sentence fetch failed:', e);
                 }
-            } catch (backendErr) {
-                console.warn('[SRS] Backend sentences fetch failed:', backendErr);
             }
 
-            // 3. Fallback to DictionaryService examples
+            // 3. Fallback to Backend Tatoeba Proxy if needed
+            if (sentences.length === 0) {
+                const backendUrl = window.PRAAT_API_URL || 'https://pronunciation-api-891173754178.asia-southeast1.run.app';
+                try {
+                    const response = await fetch(`${backendUrl}/sentences/${encodeURIComponent(word)}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.sentences && data.sentences.length > 0) {
+                            sentences = data.sentences;
+                        }
+                    }
+                } catch (backendErr) {
+                    console.warn('[SRS] Backend sentences fetch failed:', backendErr);
+                }
+            }
+
+            // 4. Final Fallback to DictionaryService definitions
             if (sentences.length === 0 && window.DictionaryService) {
                 const data = await window.DictionaryService.getDefinition(word);
                 if (data && data.meanings) {
@@ -2683,8 +2829,10 @@ const SRSReview = (function () {
             }
 
             if (sentences.length > 0) {
-                tatoebaCache.set(cacheKey, sentences.slice(0, 3));
-                return sentences.slice(0, 3);
+                // Return up to 5 sentences to give variety
+                const result = sentences.slice(0, 5);
+                tatoebaCache.set(cacheKey, result);
+                return result;
             }
 
             return [];
@@ -2699,11 +2847,11 @@ const SRSReview = (function () {
      * Display enhanced scaffolding: Syllable Breakdown, Synonyms, POS, Sentence Patterns
      */
     /**
- * Display enhanced scaffolding: Syllable Breakdown, Synonyms, POS, Sentence Patterns
- */
+    * Display enhanced scaffolding: Syllable Breakdown, Synonyms, POS, Sentence Patterns
+    */
     /**
- * Display enhanced scaffolding: POS, Synonyms, Example phrases
- */
+    * Display enhanced scaffolding: POS, Synonyms, Example phrases
+    */
     async function displayEnhancedScaffolding(word) {
         const currentWord = reviewSession.wordsToReview[reviewSession.currentIndex];
         const container = elements.scaffoldingExtras;

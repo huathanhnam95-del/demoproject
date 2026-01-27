@@ -20,9 +20,9 @@ app.use(express.static('.'));
 app.get('/api/transcript', async (req, res) => {
   try {
     const videoId = req.query.videoId;
-    
+
     if (!videoId) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Missing videoId parameter',
         message: 'Please provide a videoId query parameter (e.g., /api/transcript?videoId=VIDEO_ID)'
       });
@@ -32,7 +32,7 @@ app.get('/api/transcript', async (req, res) => {
 
     // Fetch transcript using youtube-transcript library
     const transcriptData = await YoutubeTranscript.fetchTranscript(videoId);
-    
+
     // Transform the data to include start, end, and text
     const captions = transcriptData.map(item => ({
       start: item.offset / 1000, // Convert milliseconds to seconds
@@ -51,7 +51,7 @@ app.get('/api/transcript', async (req, res) => {
 
   } catch (error) {
     console.error('Error fetching transcript:', error.message);
-    
+
     // Handle specific error cases
     if (error.message.includes('Transcript is disabled')) {
       return res.status(404).json({
@@ -60,7 +60,7 @@ app.get('/api/transcript', async (req, res) => {
         message: 'This video does not have captions enabled.'
       });
     }
-    
+
     if (error.message.includes('Could not retrieve a transcript')) {
       return res.status(404).json({
         success: false,
@@ -78,6 +78,29 @@ app.get('/api/transcript', async (req, res) => {
 });
 
 
+// API endpoint to fetch Tracau dictionary data
+app.get('/api/tracau', async (req, res) => {
+  try {
+    const { word, lang } = req.query;
+    if (!word) {
+      return res.status(400).json({ error: 'Missing word parameter' });
+    }
+
+    const apiKey = 'WBBcwnwQpV89';
+    const targetLang = lang || 'en';
+    const url = `https://api.tracau.vn/${apiKey}/s/${encodeURIComponent(word.toLowerCase())}/${targetLang}`;
+
+    console.log(`Proxying Tracau request for: ${word}`);
+    const response = await fetch(url);
+    const data = await response.json();
+
+    res.json(data);
+  } catch (error) {
+    console.error('Error proxying Tracau:', error.message);
+    res.status(500).json({ error: 'Failed to fetch from Tracau', message: error.message });
+  }
+});
+
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -85,7 +108,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Fallback: serve index.html for all other routes (for SPA routing)
-app.get('*', (req, res) => {
+app.get(/^(?!\/api).*$/, (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 

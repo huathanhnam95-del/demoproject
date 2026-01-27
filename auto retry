@@ -1,54 +1,139 @@
-(() => {
-    let retryCount = 0;
-    let isProcessing = false;
-    function clickRetry() {
-        if (isProcessing) return;
-        isProcessing = true;
+(function () {
+    'use strict';
+
+    // ==================== STATE MANAGEMENT ====================
+    const state = {
+        retryCount: 0,
+        isProcessing: false,
+        observers: new Map(), // Store observers per iframe
+        lastScannedAt: 0
+    };
+
+    /**
+     * Locate and click "Retry" buttons across all accessible iframes
+     */
+    function findAndClickRetry() {
+        if (state.isProcessing) return;
+
+        // Prevent excessive calls if multiple observers fire rapidly
+        const now = Date.now();
+        if (now - state.lastScannedAt < 500) return;
+        state.lastScannedAt = now;
+
+        state.isProcessing = true;
+
         try {
-            const iframe = document.querySelector('iframe');
-            if (!iframe) {
-                isProcessing = false;
-                return;
-            }
-            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-            if (!iframeDoc) {
-                isProcessing = false;
-                return;
-            }
-            const buttons = iframeDoc.querySelectorAll('button');
-            for (const btn of buttons) {
-                if (btn.textContent.trim() === 'Retry') {
-                    btn.click();
-                    retryCount++;
-                    console.log(`[Auto Retry] Clicked! (${retryCount})`);
-                    break;
+            const iframes = document.querySelectorAll('iframe');
+            let foundCount = 0;
+
+            iframes.forEach((iframe, idx) => {
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    if (!iframeDoc || !iframeDoc.body) return;
+
+                    // Search for buttons
+                    const buttons = iframeDoc.querySelectorAll('button');
+                    for (const btn of buttons) {
+                        const text = btn.textContent.trim().toLowerCase();
+
+                        // Robust matching: "Retry", "Try Again", etc.
+                        if ((text === 'retry' || text === 'try again') &&
+                            btn.offsetWidth > 0 &&
+                            btn.offsetHeight > 0 &&
+                            !btn.disabled) {
+
+                            btn.click();
+                            state.retryCount++;
+                            foundCount++;
+                            console.log(`[Auto Retry] 🎯 Clicked button in iframe[${idx}]! (Total: ${state.retryCount})`);
+
+                            // Re-sync observers for this iframe as content likely changed
+                            setupIframeObserver(iframe, idx);
+                            break;
+                        }
+                    }
+
+                    // Also check if we need to re-attach observer (if iframe reloaded)
+                    if (!state.observers.has(iframe)) {
+                        setupIframeObserver(iframe, idx);
+                    }
+                } catch (e) {
+                    // Cross-origin or inaccessible iframe
+                    if (state.observers.has(iframe)) {
+                        state.observers.get(iframe).disconnect();
+                        state.observers.delete(iframe);
+                    }
                 }
+            });
+
+            if (foundCount === 0) {
+                // Periodically log status if nothing found for a while (debug)
             }
-        } catch (e) {
-            // Ignore errors silently
+        } catch (err) {
+            console.error('[Auto Retry] Error during scan:', err);
+        } finally {
+            state.isProcessing = false;
         }
-        isProcessing = false;
     }
-    function observeIframe() {
-        const iframe = document.querySelector('iframe');
-        if (!iframe) {
-            setTimeout(observeIframe, 1000);
-            return;
-        }
+
+    /**
+     * Setup MutationObserver for an iframe to detect dynamic "Retry" buttons
+     */
+    function setupIframeObserver(iframe, index) {
         try {
             const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-            new MutationObserver(clickRetry).observe(iframeDoc.body, {
+            if (!iframeDoc || !iframeDoc.body) return;
+
+            // Cleanup old observer if exists
+            if (state.observers.has(iframe)) {
+                state.observers.get(iframe).disconnect();
+            }
+
+            const observer = new MutationObserver(() => findAndClickRetry());
+            observer.observe(iframeDoc.body, {
                 childList: true,
                 subtree: true
             });
-            console.log('[Auto Retry] ✓ Observer started!');
+
+            state.observers.set(iframe, observer);
+            console.log(`[Auto Retry] 🔍 Observer attached to iframe[${index}]`);
         } catch (e) {
-            setTimeout(observeIframe, 1000);
+            // Likely cross-origin
         }
     }
-    // Check every 3 seconds as backup
-    setInterval(clickRetry, 3000);
-    // Start observing DOM changes
-    observeIframe();
-    console.log('[Auto Retry] ✓ Loaded!');
+
+    /**
+     * Continuous monitoring for new iframes
+     */
+    function monitorIframes() {
+        const iframes = document.querySelectorAll('iframe');
+        iframes.forEach((iframe, idx) => {
+            if (!state.observers.has(iframe)) {
+                setupIframeObserver(iframe, idx);
+            }
+        });
+    }
+
+    // ==================== INITIALIZATION ====================
+
+    // 1. Initial scan
+    findAndClickRetry();
+
+    // 2. Main interval (backup scan)
+    setInterval(findAndClickRetry, 3000);
+
+    // 3. Iframe monitoring interval
+    setInterval(monitorIframes, 5000);
+
+    // 4. Global observer for top-level DOM changes (new iframes)
+    const globalObserver = new MutationObserver(() => {
+        monitorIframes();
+        findAndClickRetry();
+    });
+    globalObserver.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+
+    console.log('[Auto Retry] 🚀 Enhanced version loaded and monitoring...');
 })();

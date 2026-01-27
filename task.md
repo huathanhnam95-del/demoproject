@@ -1,0 +1,23 @@
+# SRS System Upgrade Tasks
+
+- [x] Planning & Design (Initial)
+  - [x] Analyze existing `srs-review.js`
+  - [x] Create Implementation Plan (Dual-Engine)
+  - [x] Create User Guide
+- [x] Implementation: Core System
+  - [x] Create `srs-scheduler.js`, `srs-onboarding.js`, `srs-onboarding.css`
+  - [x] Integrate into `index.html` and `srs-review.js`
+  - [x] Fix syntax and integration errors
+- [x] UI/UX & Learning Design Audit
+  - [x] Perform expert browser audit of UI/UX
+  - [x] Refine UI/UX based on audit findings
+    - [x] Move rating buttons to card bottom (centralize focus)
+    - [x] Update button design (Again/Hard/Good/Easy)
+    - [x] Simplify prompts and descriptions ("How well did you remember?")
+    - [x] Redesign Writing Challenge help panel (Accordion)
+    - [x] Add "Click to flip" hint element
+    - [x] Simplify onboarding language (Classic vs Smart AI)
+- [/] Final Verification
+  - [/] Browser testing of refined UI
+  - [ ] Verify onboarding flow and algorithm switching
+  - [ ] Test keyboard shortcuts in new layout

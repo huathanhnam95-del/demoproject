@@ -253,7 +253,7 @@
                 target: '#play-btn-speak',
                 icon: '🔊',
                 title: 'Step 1: Listen',
-                text: 'Click here to hear the native pronunciation. Listen carefully to the rhythm and intonation!',
+                text: 'Click here to hear the native pronunciation. Pay attention to the rhythm and intonation!',
                 position: 'bottom',
                 nextLabel: null,
                 interactive: true,
@@ -262,18 +262,145 @@
             {
                 target: '#record-btn',
                 icon: '🎙️',
-                title: 'Step 2: Record',
-                text: 'Click "Start Recording" and speak the sentence clearly. Click it again to stop.',
+                title: 'Step 2: Start Recording',
+                text: 'Click <strong>"Start Recording"</strong> and say the sentence clearly. Take a deep breath!',
                 position: 'top',
                 nextLabel: null,
                 interactive: true,
                 waitForEvent: 'click'
             },
             {
-                target: null,
+                target: '#record-btn',
+                icon: '🛑',
+                title: 'Step 3: Stop Recording',
+                text: 'Great job! Now click <strong>"Stop Recording"</strong> to finish your take.',
+                position: 'top',
+                nextLabel: null,
+                interactive: true,
+                waitForEvent: 'click',
+                beforeShow: () => {
+                    const btn = document.getElementById('record-btn');
+                    if (btn && btn.textContent !== "Stop Recording") {
+                        btn.click();
+                    }
+                },
+                // Ultra-resilient validation: Always pass on the second click to prevent blockage
+                validate: function () {
+                    this.failCount = (this.failCount || 0) + 1;
+                    console.log(`Tutorial Step 3 click ${this.failCount}`);
+
+                    const transcriptionText = document.getElementById('transcription-text');
+                    const text = transcriptionText ? transcriptionText.textContent.trim() : "";
+                    const invalidStates = ["Listening...", "Starting...", "Click 'Start Recording' and speak...", "Please say something to continue...", ""];
+                    // Check if text is valid AND not one of the default states
+                    const hasSpeech = !invalidStates.includes(text) && text.length > 0;
+
+                    if (hasSpeech) {
+                        return true;
+                    }
+
+                    // On failure, shake and show warning (controlled by script.js now too)
+                    const btn = document.getElementById('record-btn');
+                    if (btn) {
+                        btn.classList.add('shake-horizontal');
+                        setTimeout(() => btn.classList.remove('shake-horizontal'), 500);
+                    }
+
+                    // Note: The alert is now handled by script.js to be consistent
+                    return false;
+                }
+            },
+            {
+                target: '#check-btn-speak',
                 icon: '✅',
-                title: 'Step 3: Check',
-                text: 'After you stop recording, click <strong>"Check"</strong> to get instant feedback on your pronunciation accuracy.',
+                title: 'Step 4: Check',
+                text: 'Now click <strong>"Check"</strong> to get instant feedback on your pronunciation accuracy.',
+                position: 'top',
+                nextLabel: null,
+                interactive: true,
+                waitForEvent: 'click'
+            },
+            {
+                target: '.animation-panel',
+                icon: '🛠️',
+                title: 'Step 5: Review Corrections',
+                text: 'See <strong>How to Fix</strong> your mistakes. We compare your speech with the correct pronunciation to help you improve.',
+                position: 'top',
+                nextLabel: 'Next →',
+                interactive: false,
+                beforeShow: () => {
+                    const panel = document.querySelector('.animation-panel');
+                    const score = document.getElementById('score-speak');
+                    if (panel) panel.style.display = 'block';
+                    if (score) score.style.display = 'block';
+                }
+            },
+            {
+                target: '#pronunciation-practice',
+                icon: '🧩',
+                title: 'Step 6: Syllable Breakdown',
+                text: 'Review the <strong>Syllable Breakdown</strong> to see exactly which parts of the word you nailed and where you can improve.',
+                position: 'top',
+                nextLabel: 'Next →',
+                interactive: false,
+                beforeShow: () => {
+                    const p = document.getElementById('pronunciation-practice');
+                    if (p) {
+                        p.style.display = 'block';
+                        p.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            },
+            {
+                target: '#breakdown-mode',
+                icon: '✂️',
+                title: 'Step 7: Breakdown Mode',
+                text: 'Listen to parts of the sentence from the beginning or the end. Great for mastering tricky intonation!',
+                position: 'top',
+                nextLabel: 'Next →',
+                interactive: false,
+                beforeShow: () => {
+                    const el = document.getElementById('breakdown-mode');
+                    if (el) {
+                        el.style.display = 'block';
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            },
+            {
+                target: '#same-vocab-speak',
+                icon: '🔄',
+                title: 'Step 8: Other Questions',
+                text: 'Practice with other sentences that use the same vocabulary to build deeper connections.',
+                position: 'top',
+                nextLabel: 'Next →',
+                interactive: false,
+                beforeShow: () => {
+                    const el = document.getElementById('same-vocab-speak');
+                    if (el) {
+                        el.style.display = 'block';
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            },
+            {
+                target: '#retry-btn-speak',
+                icon: '⚡',
+                title: 'Step 9: Retry & Improve',
+                text: 'Not satisfied? Click <strong>Retry</strong> to try again immediately. Every attempt helps you improve!',
+                position: 'top',
+                nextLabel: 'Next →',
+                interactive: false
+            },
+            {
+                target: null,
+                icon: '🪙',
+                title: 'Earning Coins',
+                text: '<ul style="text-align: left; margin: 0; padding-left: 20px;">' +
+                    '<li><strong>+5 Coins</strong>: 1st practice attempt of the day.</li>' +
+                    '<li><strong>+5 Coins</strong>: Getting a perfect (100%) score.</li>' +
+                    '<li><strong>Bonus!</strong> Earn even more for hitting milestones (3, 6, 9 perfect scores).</li>' +
+                    '</ul>',
                 position: 'center',
                 nextLabel: 'Got It →',
                 interactive: false
@@ -281,8 +408,8 @@
             {
                 target: null,
                 icon: '🎉',
-                title: 'Ready to Speak?',
-                text: 'You\'re all set! Practice daily to build your confidence and fluency.',
+                title: 'Tutorial Completed!',
+                text: 'You\'re all set to master your pronunciation. Practice daily to build confidence and fluency!',
                 position: 'center',
                 nextLabel: 'Start Speaking! ✓',
                 interactive: false
@@ -454,8 +581,8 @@
             {
                 target: null,
                 icon: '📝',
-                title: 'Fill Mode',
-                text: 'Improve your context-based listening by filling in missing words from a transcript.',
+                title: 'Fill Mode (Extended)',
+                text: 'Master your listening by filling in gaps in a full transcript. This mode has two phases: <strong>Reading</strong> and <strong>Listening</strong>.',
                 position: 'center',
                 nextLabel: 'Show Me! →',
                 beforeShow: () => {
@@ -464,29 +591,96 @@
                 }
             },
             {
-                target: '#play-pause-extended-btn',
-                icon: '🔊',
-                title: 'Listen Carefully',
-                text: 'Click here to listen to the recording with missing words. Focus on the gaps!',
+                target: '.reading-timer',
+                icon: '⏱️',
+                title: 'Phase 1: Reading',
+                text: 'You have 30 seconds to read the transcript and understand the context before the audio starts.',
                 position: 'bottom',
+                nextLabel: 'Next →'
+            },
+            {
+                target: '#full-transcript',
+                icon: '💡',
+                title: 'Clickable Words',
+                text: 'Any word in the transcript can be clicked to hear its <strong>pronunciation</strong>. Try it now!',
+                position: 'top',
+                nextLabel: 'Next →',
+                interactive: true
+            },
+            {
+                target: '#skip-reading-btn',
+                icon: '⏭️',
+                title: 'Skip to Listening',
+                text: 'Ready to start? <span class="tutorial-action-text">Click "Skip reading time"</span> to jump straight to the Listening Phase!',
+                position: 'top',
                 interactive: true,
                 waitForEvent: 'click'
             },
             {
+                target: '#play-pause-extended-btn',
+                icon: '▶️',
+                title: 'Step 1: Play Audio',
+                text: 'Click <strong>Play</strong> to start the recording. You should listen to the whole sentence first.',
+                position: 'top',
+                interactive: true,
+                waitForEvent: 'click',
+                beforeShow: () => {
+                    // Ensure we are in listening phase
+                    const lPhase = document.getElementById('listening-phase');
+                    if (lPhase && lPhase.style.display === 'none') {
+                        const skipBtn = document.getElementById('skip-reading-btn');
+                        if (skipBtn) skipBtn.click();
+                    }
+                }
+            },
+            {
+                target: '.speed-control',
+                icon: '🏃',
+                title: 'Step 2: Adjust Speed',
+                text: 'Too fast? Use the <strong>Speed</strong> menu to slow down the audio (0.5x or 0.75x) to hear tricky parts clearly.',
+                position: 'top',
+                nextLabel: 'Next →'
+            },
+            {
+                target: '.audio-slider-container',
+                icon: '⏪',
+                title: 'Step 3: Use Seekbar',
+                text: 'Use the <strong>Seekbar</strong> to jump back and replay specific sections as many times as you need.',
+                position: 'top',
+                nextLabel: 'Next →'
+            },
+            {
                 target: '#gapped-transcript',
                 icon: '✍️',
-                title: 'Fill in the Blanks',
-                text: 'Type the missing words you hear directly into the blanks in the transcript.',
+                title: 'Step 4: Fill the Blanks',
+                text: 'Type the missing words you hear into these gaps. Use the context to help you!',
                 position: 'top',
-                nextLabel: 'Got It →'
+                nextLabel: 'Next →'
             },
             {
                 target: '#check-extended-btn',
                 icon: '✅',
-                title: 'Check Your Answer',
-                text: 'Click here to see how many you got right. Green is correct, red is wrong!',
+                title: 'Step 5: Check',
+                text: 'When you\'re finished, click <strong>"Check"</strong> to see your results. Correct words turn green!',
                 position: 'top',
-                nextLabel: 'Got It →'
+                nextLabel: 'Next →'
+            },
+            {
+                target: '#support-mode-btn',
+                icon: '💡',
+                title: 'Step 6: Show Hints',
+                text: 'Stuck? Click <strong>"Show Hints"</strong> to reveal the first letter of each missing word!',
+                position: 'top',
+                interactive: true,
+                waitForEvent: 'click'
+            },
+            {
+                target: '.phrase-controls',
+                icon: '🔄',
+                title: 'Try Variations',
+                text: 'Once you finish, you can often click <strong>"Try New Blanks"</strong> to practice different parts of the same transcript!',
+                position: 'top',
+                nextLabel: 'Start Practicing! ✓'
             }
         ],
         watch: [
@@ -938,37 +1132,42 @@
                         startSpotlightLoop(targetEl, step.position);
 
                         // Set up interactive listener
-                        if (step.interactive && step.waitForEvent) {
-                            const handler = (e) => {
-                                // optional real-time feedback
-                                if (step.onInput && e.type === 'input') {
-                                    step.onInput(e);
-                                }
-
-                                // optional validation
-                                if (step.validate && !step.validate(e)) {
-                                    return;
-                                }
-
-                                // Avoid double-firing
-                                if (nextStepTimer) return;
-
-                                // Small delay to let the click complete its normal action
-                                nextStepTimer = setTimeout(() => {
-                                    nextStepTimer = null;
-                                    nextStep();
-                                }, 100);
-                            };
-
-                            // For 'input', we don't want {once: true} because they might type < 3 chars first
-                            const options = (step.waitForEvent === 'input') ? {} : { once: true };
-
-                            targetEl.addEventListener(step.waitForEvent, handler, options);
-                            interactiveListener = { target: targetEl, event: step.waitForEvent, handler, options };
-
+                        if (step.interactive) {
                             // Make target clickable through spotlight
                             targetEl.style.position = 'relative';
                             targetEl.style.zIndex = '10002';
+
+                            if (step.waitForEvent) {
+                                const handler = (e) => {
+                                    // optional real-time feedback
+                                    if (step.onInput && e.type === 'input') {
+                                        step.onInput(e);
+                                    }
+
+                                    // optional validation
+                                    if (step.validate && !step.validate.call(step, e)) {
+                                        return;
+                                    }
+
+                                    // Avoid double-firing
+                                    if (nextStepTimer) return;
+
+                                    // Small delay to let the click complete its normal action
+                                    nextStepTimer = setTimeout(() => {
+                                        nextStepTimer = null;
+                                        nextStep();
+                                    }, 100);
+                                };
+
+                                // For 'input' or steps with validation, we MUST use {once: false} 
+                                // because they might fail validation and need to be clicked again.
+                                const useOnce = !(step.waitForEvent === 'input' || step.validate);
+                                const options = { once: useOnce };
+                                console.log(`Tutorial Step ${currentStep}: target=${step.target}, once=${useOnce}`);
+
+                                targetEl.addEventListener(step.waitForEvent, handler, options);
+                                interactiveListener = { target: targetEl, event: step.waitForEvent, handler, options };
+                            }
                         }
 
                         // Delay fade-in to allow scroll and positioning loop to stabilize
@@ -1173,8 +1372,6 @@
         isActive = false;
         window.isTutorialActive = false;
         stopSpotlightLoop(); // Stop the loop
-
-        window.isTutorialActive = false;
 
         // Mark as completed
         markTutorialCompleted(currentMode);

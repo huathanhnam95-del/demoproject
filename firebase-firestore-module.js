@@ -1427,7 +1427,18 @@ async function getPurchases(userId) {
     });
     return { success: true, data: purchases };
   } catch (error) {
-    console.error('Error getting purchases:', error);
+    // Firebase error codes can be lowercase or uppercase depending on SDK version
+    const errorCode = (error.code || '').toLowerCase();
+    const isPermissionError =
+      errorCode === 'permission-denied' ||
+      errorCode === 'failed-precondition' ||
+      (error.message && error.message.includes('Missing or insufficient permissions'));
+
+    if (isPermissionError) {
+      console.warn('[Shop] Purchases not loaded: User may not have purchase permissions. This is expected for new or restricted users.');
+    } else {
+      console.error('Error getting purchases:', error);
+    }
     // Return success: true with empty data to prevent blocking other features
     return { success: true, data: [] };
   }

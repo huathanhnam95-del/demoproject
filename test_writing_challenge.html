@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Test Writing Challenge Integration</title>
+</head>
+
+<body>
+    <h1>Writing Challenge Integration Test</h1>
+    <p>Open console to see details.</p>
+    <div id="output">Initialize...</div>
+
+    <!-- Mocks for Firebase and dependencies -->
+    <script>
+        window.firebaseDb = {};
+        window.PRAAT_API_URL = 'https://mock-api.com'; 
+    </script>
+
+    <!-- Load Dictionary Service (Real) -->
+    <script src="dictionary-service.js"></script>
+
+    <!-- Load SRS Review (Real) -->
+    <!-- Note: SRSReview is an IIFE designated 'type="module"' in actual app, 
+         but here we just need to access the function. 
+         Wait, SRSReview is an IIFE but written as `const SRSReview = ...`. 
+         If it's in a module file, we need type="module". 
+         However, the file has imports at the top which means it MUST be type="module".
+    -->
+    <script type="module">
+        import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // We need to expose SRSReview to window to test it, 
+        // but srs-review.js is not exported as a module in the standard way for this test.
+        // It assigns `window.SRSReview` at the end.
+        // Let's load it dynamically.
+
+        import './srs-review.js';
+
+        async function runTest() {
+            const output = document.getElementById('output');
+            output.innerHTML += '<br>Loaded scripts.';
+
+            const word = 'success';
+            output.innerHTML += `<br>Testing word: <b>${word}</b>`;
+
+            // We need to access a private function 'fetchTatoebaSentences' or check the public 'showWritingChallenge'
+            // 'fetchTatoebaSentences' is private in the closure. 
+            // However, 'loadScaffoldingContent' calls it.
+            // And 'toggleScaffolding' calls 'loadScaffoldingContent'.
+            // But we can't easily inspect the private Tatoeba cache or return value.
+
+            // Alternative: Spy on DictionaryService.getWordData
+            const originalGetWordData = window.DictionaryService.getWordData;
+            window.DictionaryService.getWordData = async (w) => {
+                output.innerHTML += `<br>✅ DictionaryService.getWordData called for "${w}"`;
+                const result = await originalGetWordData(w);
+                output.innerHTML += `<br>✅ Tracau data received. Sentences count: ${result.sentences ? result.sentences.length : 0}`;
+                return result;
+            };
+
+            // Trigger the internal logic
+            // Since we can't call private functions, we might need to rely on the fact that 
+            // `showWritingChallenge` sets up state? No, that's for the modal.
+
+            // Wait, we need to trigger `fetchTatoebaSentences`.
+            // There IS NO public method that exposes the sentences directly.
+            // BUT, `showWritingChallenge` does NOT call `fetchTatoebaSentences`.
+            // `toggleScaffolding` -> `loadScaffoldingContent` -> `fetchTatoebaSentences` -> `displayExampleSentences`
+
+            // So if we mock `elements.exampleSentencesList` we can see the result.
+
+            // MOCK DOM
+            const list = document.createElement('ul');
+            list.id = 'example-sentences-list';
+            document.body.appendChild(list);
+
+            // Mock SRSReview internal elements cache?
+            // SRSReview.init() caches elements. We need to call that.
+            // But init() does a lot of other stuff.
+
+            // Let's just create the element and hope init picks it up or we can re-init.
+            // srs-review.js: cacheElements() is called in init().
+
+            // Check if SRSReview is available
+            if (!window.SRSReview) {
+                output.innerHTML += '<br>❌ SRSReview not found on window.';
+                return;
+            }
+
+            // We need to trick SRSReview into thinking we are in a session to set 'reviewSession.currentWritingWord'
+            // But those are private variables.
+            // Wait, `showWritingChallenge` sets `reviewSession.currentWritingWord`.
+
+            // 1. Call public init to cache elements
+            // We need to mock document.getElementById for all the elements init looks for to avoid errors?
+            // Or just the ones we care about.
+            const mockIds = ['srs-writing-modal', 'more-help-btn', 'scaffolding-panel', 'example-sentences-list', 'scaffolding-extras-container'];
+            mockIds.forEach(id => {
+                if (!document.getElementById(id)) {
+                    const el = document.createElement('div');
+                    el.id = id;
+                    document.body.appendChild(el);
+                }
+            });
+
+            // Re-init to pickup our elements
+            window.SRSReview.init();
+
+            output.innerHTML += '<br>SRSReview initialized.';
+
+            // 2. Call showWritingChallenge to set the current word context
+            // Mock word object
+            const wordObj = { lemma: 'success', originalWord: 'success', partOfSpeech: 'noun' };
+
+            // We need to mock `getCollocations` inside `showWritingChallenge`? 
+            // It fetches valid json. It should be fine.
+
+            window.SRSReview.showWritingChallenge(wordObj, () => { });
+            output.innerHTML += '<br>Called showWritingChallenge to set context.';
+
+            // 3. Trigger toggleScaffolding logic
+            // We can click the button we mocked
+            const btn = document.getElementById('more-help-btn');
+            btn.click();
+            output.innerHTML += '<br>Clicked "More Help" button.';
+
+            // Wait for async operations
+            setTimeout(() => {
+                const listItems = document.querySelectorAll('#example-sentences-list li');
+                output.innerHTML += `<br>Found ${listItems.length} list items.`;
+
+                let foundContent = false;
+                listItems.forEach(li => {
+                    output.innerHTML += `<br>Item: ${li.textContent}`;
+                    if (li.textContent.includes('Success')) foundContent = true;
+                });
+
+                if (foundContent) {
+                    output.innerHTML += '<br><b>✅ VERIFICATION SUCCESSFUL: Tracau sentences displayed!</b>';
+                    document.body.style.backgroundColor = '#e6fffa'; // Visual success
+                } else {
+                    output.innerHTML += '<br><b>❌ FAILURE: No Tracau sentences found.</b>';
+                    document.body.style.backgroundColor = '#ffe6e6'; // Visual failure
+                }
+
+            }, 3000); // 3 sec wait for API
+        }
+
+        // Wait a bit for modules to load
+        setTimeout(runTest, 1000);
+    </script>
+</body>
+
+</html>

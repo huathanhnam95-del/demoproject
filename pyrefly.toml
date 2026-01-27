@@ -1,16 +1,18 @@
 # Use the project's virtual environment Python
 python-interpreter-path = ".venv/Scripts/python.exe"
 
+# Include project Python files
+project-includes = [
+    "**/*.py",
+    "**/*.ipynb"
+]
+
 # Exclude folders that may cause analysis issues or are not needed
-exclude = [
+project-excludes = [
     "**/node_modules/**",
     "**/__pycache__/**",
     "**/antigravity-logicware/**",
     "**/backend/ver0.0/**",
     "**/.git/**",
-    "**/venv/**",
-    "**/.venv/**"
+    "**/venv/**"
 ]
-
-# Very conservative limit to prevent stack overflow
-max-recursion-depth = 16

@@ -10,7 +10,10 @@ import {
     getDoc,
     setDoc,
     updateDoc,
-    increment
+    increment,
+    collection,
+    addDoc,
+    serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 // Import new SRS Scheduler
@@ -165,6 +168,9 @@ const SRSReview = (function () {
             debouncedSave();
         });
 
+        // Periodic Cleanup
+        setTimeout(cleanupDrafts, 5000); // Run 5s after load to not block init
+
         // FIX 1: Robust Z-Index and Body append
         if (elements.srsWritingModal) {
             // Ensure Writing Challenge is at the absolute top of the stacking context
@@ -241,6 +247,7 @@ const SRSReview = (function () {
             srsWritingModal: document.getElementById('srs-writing-modal'),
             srsWritingPrompt: document.getElementById('srs-writing-prompt'),
             srsWritingInput: document.getElementById('srs-writing-input'),
+            skipAiToggle: document.getElementById('srs-skip-ai-toggle'), // NEW
             srsWritingFeedback: document.getElementById('srs-writing-feedback'),
             srsWritingSubmit: document.getElementById('srs-writing-submit'),
             srsWritingSkip: document.getElementById('srs-writing-skip'),
@@ -258,7 +265,14 @@ const SRSReview = (function () {
             scaffoldingPanel: document.getElementById('scaffolding-panel'),
             exampleSentencesList: document.getElementById('example-sentences-list'),
             scaffoldingExtras: document.getElementById('scaffolding-extras-container'),
-            exampleSentencesList: document.getElementById('example-sentences-list')
+            exampleSentencesList: document.getElementById('example-sentences-list'),
+
+            // Settings
+            srsSettingsModal: document.getElementById('srs-settings-modal'),
+            srsSettingsBtn: document.getElementById('srs-settings-btn'),
+            srsSettingsClose: document.getElementById('srs-settings-close'),
+            saveSettingsBtn: document.getElementById('save-settings-btn'),
+            retentionChart: document.getElementById('retention-chart')
         };
     }
 
@@ -507,6 +521,18 @@ const SRSReview = (function () {
             elements.srsWritingCloseBtn.addEventListener('click', closeWritingChallenge);
         }
 
+        // Skip AI Toggle
+        if (elements.skipAiToggle) {
+            // Init from local storage
+            const savedSkip = localStorage.getItem('SRS_SKIP_AI') === 'true';
+            elements.skipAiToggle.checked = savedSkip;
+
+            elements.skipAiToggle.addEventListener('change', (e) => {
+                localStorage.setItem('SRS_SKIP_AI', e.target.checked);
+                console.log('[SRS] Skip AI set to:', e.target.checked);
+            });
+        }
+
         // Refresh Starter Button
         const refreshStarterBtn = document.getElementById('refresh-starter-btn');
         if (refreshStarterBtn) {
@@ -520,6 +546,22 @@ const SRSReview = (function () {
 
         // Keyboard Shortcuts for SRS Review
         document.addEventListener('keydown', handleSRSKeyboardShortcuts);
+
+        // Settings Listeners
+        if (elements.srsSettingsBtn) {
+            elements.srsSettingsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openSettings();
+            });
+        }
+        if (elements.srsSettingsClose) {
+            elements.srsSettingsClose.addEventListener('click', () => {
+                if (elements.srsSettingsModal) elements.srsSettingsModal.style.display = 'none';
+            });
+        }
+        if (elements.saveSettingsBtn) {
+            elements.saveSettingsBtn.addEventListener('click', saveSettings);
+        }
     }
 
     /**
@@ -586,6 +628,171 @@ const SRSReview = (function () {
     }
 
     /**
+     * Open Scheduler Settings Modal
+     */
+    function openSettings() {
+        if (!elements.srsSettingsModal) return;
+
+        elements.srsSettingsModal.style.display = 'flex';
+
+        // Set current radio value
+        const radios = document.getElementsByName('srs-algo');
+        radios.forEach(radio => {
+            if (radio.value === currentAlgorithm) {
+                radio.checked = true;
+                radio.closest('.algo-option').style.borderColor = '#2563eb';
+                radio.closest('.algo-option').style.background = '#f0f7ff';
+            } else {
+                radio.closest('.algo-option').style.borderColor = '#e5e7eb';
+                radio.closest('.algo-option').style.background = 'white';
+            }
+
+            // Add click listener to the parent label for better UX
+            const label = radio.closest('.algo-option');
+            if (label) {
+                label.onclick = () => {
+                    radios.forEach(r => {
+                        const l = r.closest('.algo-option');
+                        if (l) {
+                            l.style.borderColor = '#e5e7eb';
+                            l.style.background = 'white';
+                        }
+                    });
+                    radio.checked = true;
+                    label.style.borderColor = '#2563eb';
+                    label.style.background = '#f0f7ff';
+                };
+            }
+        });
+
+        renderRetentionGraph();
+    }
+
+    /**
+     * Save Scheduler Settings
+     */
+    function saveSettings() {
+        const checkedInput = document.querySelector('input[name="srs-algo"]:checked');
+        if (!checkedInput) return;
+
+        const selectedAlgo = checkedInput.value;
+        const oldAlgo = currentAlgorithm;
+        currentAlgorithm = selectedAlgo;
+
+        // Persist setting
+        if (currentUserId && db) {
+            updateDoc(doc(db, 'users', currentUserId), {
+                'srsSettings.algorithm': selectedAlgo
+            }).catch(err => console.error('[SRS] Error saving setting:', err));
+        }
+        localStorage.setItem('srs_preferred_algorithm', selectedAlgo);
+
+        // Notify user if changed
+        if (oldAlgo !== selectedAlgo) {
+            console.log(`[SRS] Algorithm changed from ${oldAlgo} to ${selectedAlgo}`);
+            // Refresh previews if card is active
+            if (reviewSession.active) {
+                const currentData = reviewSession.wordsToReview[reviewSession.currentIndex];
+                if (currentData) {
+                    const previews = getIntervalPreviews(currentData);
+                    updateIntervalLabels(previews);
+                }
+            }
+        }
+
+        if (elements.srsSettingsModal) elements.srsSettingsModal.style.display = 'none';
+    }
+
+    /**
+     * Render Memory Retention Distribution Graph
+     * Uses memoization to prevent expensive recalculation on every open
+     */
+    let retentionChartInstance = null;
+    let cachedStats = null;
+    let lastStatsHash = "";
+
+    function renderRetentionGraph() {
+        // Simple hash based on collection size and last review time
+        const dataSize = srsCache.srsData ? Object.keys(srsCache.srsData).length : 0;
+        const currentHash = `${dataSize}_${srsCache.reviewStats.lastReviewSession || ''}`;
+
+        console.log(`[SRS] Render Graph. Data Size: ${dataSize}, Hash: ${currentHash}`);
+
+        try {
+            if (!cachedStats || lastStatsHash !== currentHash) {
+                console.log('[SRS] Calculating collection stats (cache miss)...');
+                cachedStats = SRSScheduler.getCollectionStats(srsCache.srsData);
+                lastStatsHash = currentHash;
+            } else {
+                console.log('[SRS] Using cached stats');
+            }
+        } catch (err) {
+            console.error('[SRS] Stats calculation failed:', err);
+            cachedStats = { avgStability: 0, avgRetention: 0, distribution: [0, 0, 0, 0, 0], total: 0 };
+        }
+
+        const stats = cachedStats;
+
+        // Update text labels
+        const avgStabilityEl = document.getElementById('avg-stability');
+        const avgRetentionEl = document.getElementById('avg-retention');
+        if (avgStabilityEl) avgStabilityEl.textContent = `${stats.avgStability}d`;
+        if (avgRetentionEl) avgRetentionEl.textContent = `${stats.avgRetention}%`;
+
+        const ctx = document.getElementById('retention-chart');
+        const loadingEl = document.getElementById('graph-loading');
+        if (!ctx) return;
+        if (loadingEl) loadingEl.style.display = 'none';
+
+        if (typeof Chart === 'undefined') {
+            if (loadingEl) {
+                loadingEl.textContent = 'Chart.js failed to load.';
+                loadingEl.style.display = 'block';
+            }
+            return;
+        }
+
+        if (retentionChartInstance) {
+            retentionChartInstance.destroy();
+        }
+
+        retentionChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['<70%', '70-80%', '80-90%', '90-95%', '95-100%'],
+                datasets: [{
+                    label: 'Word Count',
+                    data: stats.distribution,
+                    backgroundColor: [
+                        '#ef4444', // red
+                        '#f59e0b', // amber
+                        '#3b82f6', // blue
+                        '#10b981', // green
+                        '#059669'  // emerald
+                    ],
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: true }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { display: false },
+                        ticks: { stepSize: 1, precision: 0 }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    /**
      * Set Firebase user reference
      */
     function setUser(userId, firestore) {
@@ -631,6 +838,19 @@ const SRSReview = (function () {
             if (userDoc.exists()) {
                 const userData = userDoc.data();
                 srsCache.totalPoints = userData.practicePoints || 0;
+
+                // Load Algorithm Preference
+                if (userData.srsSettings && userData.srsSettings.algorithm) {
+                    currentAlgorithm = userData.srsSettings.algorithm;
+                    console.log('[SRS] Algorithm preference loaded from Firestore:', currentAlgorithm);
+                } else {
+                    const localAlgo = localStorage.getItem('srs_preferred_algorithm');
+                    if (localAlgo) {
+                        currentAlgorithm = localAlgo;
+                        console.log('[SRS] Algorithm preference loaded from LocalStorage:', currentAlgorithm);
+                    }
+                }
+
                 updateGamificationUI();
                 updateDashboardUI(); // Update "Next review" text on load
             }
@@ -1007,7 +1227,7 @@ const SRSReview = (function () {
         };
 
         // Use SRSScheduler with current algorithm preference
-        const result = SRSScheduler.calculate(currentAlgorithm, rating, card);
+        const result = SRSScheduler.calculate(card, rating, currentAlgorithm);
 
         // NEW: If interval was >= 14 days and user succeeded, promote to Mastered in VocabBook
         if (quality >= 3 && currentData.interval >= 14) {
@@ -1037,7 +1257,7 @@ const SRSReview = (function () {
             fsrs: currentData.fsrs || null
         };
 
-        return SRSScheduler.getIntervalPreviews(currentAlgorithm, card);
+        return SRSScheduler.getIntervalPreviews(card, currentAlgorithm);
     }
 
     /**
@@ -1050,10 +1270,12 @@ const SRSReview = (function () {
         const goodEl = document.getElementById('interval-good');
         const easyEl = document.getElementById('interval-easy');
 
-        if (againEl) againEl.textContent = previews[RATING.AGAIN]?.label || '1m';
-        if (hardEl) hardEl.textContent = previews[RATING.HARD]?.label || '6m';
-        if (goodEl) goodEl.textContent = previews[RATING.GOOD]?.label || '10m';
-        if (easyEl) easyEl.textContent = previews[RATING.EASY]?.label || '4d';
+        // Note: SRSScheduler.getIntervalPreviews returns { again: '1m', hard: '6m', ... }
+        // Keys are lowercase strings, values are display strings (not objects)
+        if (againEl) againEl.textContent = previews.again || '1m';
+        if (hardEl) hardEl.textContent = previews.hard || '6m';
+        if (goodEl) goodEl.textContent = previews.good || '10m';
+        if (easyEl) easyEl.textContent = previews.easy || '4d';
     }
 
     /**
@@ -2784,25 +3006,30 @@ const SRSReview = (function () {
             let sentences = [];
 
             // 2. Try DictionaryService (Tracau.vn) FIRST as requested
+            // This provides high-quality bilingual sentences
             if (window.DictionaryService && window.DictionaryService.getWordData) {
                 try {
                     const data = await window.DictionaryService.getWordData(word);
                     // Use Tracau sentences if available
                     if (data && data.sentences && data.sentences.length > 0) {
-                        // Map to extract just the English sentence if it's an object, or use string
-                        sentences = data.sentences.map(s => typeof s === 'string' ? s : s.en);
+                        // Map to extract just the English sentence if it's an object {en, vi}, or use string
+                        sentences = data.sentences
+                            .filter(s => s && (typeof s === 'string' || s.en)) // Filter invalid entries
+                            .map(s => typeof s === 'string' ? s : s.en);
+
                         console.log('[SRS] Loaded sentences from DictionaryService (Tracau):', sentences.length);
                     }
                 } catch (e) {
                     console.warn('[SRS] DictionaryService sentence fetch failed:', e);
+                    // Continue to fallbacks
                 }
             }
 
             // 3. Fallback to Backend Tatoeba Proxy if needed
             if (sentences.length === 0) {
-                const backendUrl = window.PRAAT_API_URL || 'https://pronunciation-api-891173754178.asia-southeast1.run.app';
+                // Use local proxy to avoid CORS
                 try {
-                    const response = await fetch(`${backendUrl}/sentences/${encodeURIComponent(word)}`);
+                    const response = await fetch(`/api/tatoeba?word=${encodeURIComponent(word)}`);
                     if (response.ok) {
                         const data = await response.json();
                         if (data.sentences && data.sentences.length > 0) {
@@ -2814,7 +3041,7 @@ const SRSReview = (function () {
                 }
             }
 
-            // 4. Final Fallback to DictionaryService definitions
+            // 4. Fallback to DictionaryService definitions
             if (sentences.length === 0 && window.DictionaryService) {
                 const data = await window.DictionaryService.getDefinition(word);
                 if (data && data.meanings) {
@@ -2829,10 +3056,8 @@ const SRSReview = (function () {
             }
 
             if (sentences.length > 0) {
-                // Return up to 5 sentences to give variety
-                const result = sentences.slice(0, 5);
-                tatoebaCache.set(cacheKey, result);
-                return result;
+                tatoebaCache.set(cacheKey, sentences.slice(0, 3));
+                return sentences.slice(0, 3);
             }
 
             return [];
@@ -2854,12 +3079,9 @@ const SRSReview = (function () {
     */
     async function displayEnhancedScaffolding(word) {
         const currentWord = reviewSession.wordsToReview[reviewSession.currentIndex];
-        const container = elements.scaffoldingExtras;
-        if (!container) return;
 
-        container.innerHTML = '';
-
-        // 1. Part of Speech & Synonyms
+        // 1. Update Compact Header POS (Moved from body to header)
+        const posTag = document.getElementById('writing-pos-tag');
         let pos = currentWord?.partOfSpeech?.toLowerCase() || '';
         const posMap = { 'n': 'noun', 'v': 'verb', 'adj': 'adjective', 'adv': 'adverb' };
         if (posMap[pos]) pos = posMap[pos];
@@ -2871,67 +3093,38 @@ const SRSReview = (function () {
             else if (doc.adjectives().found) pos = 'adjective';
         }
 
-        let detailsHtml = '';
-        if (pos) {
-            detailsHtml += `<span class="pos-tag">${pos}</span>`;
+        if (posTag) {
+            if (pos) {
+                posTag.textContent = pos;
+                posTag.style.display = 'inline-block';
+                // Color coding based on POS
+                if (pos === 'verb') posTag.style.color = '#d97706'; // amber
+                else if (pos === 'noun') posTag.style.color = '#0284c7'; // blue
+                else if (pos === 'adjective') posTag.style.color = '#059669'; // green
+                else posTag.style.color = '#7c3aed'; // purple
+                posTag.style.backgroundColor = posTag.style.color + '15'; // 10% opacity
+            } else {
+                posTag.style.display = 'none';
+            }
         }
 
+        const container = elements.scaffoldingExtras;
+        if (!container) return;
+        container.innerHTML = '';
+
+        // 2. Synonyms (Only real data, no fake examples)
         if (window.DictionaryService) {
             try {
                 const data = await window.DictionaryService.getDefinition(word);
                 if (data && data.synonyms && data.synonyms.length > 0) {
-                    detailsHtml += `<div class="synonyms-list"><strong>Syns:</strong> ${data.synonyms.slice(0, 3).join(', ')}</div>`;
+                    const synonymsHtml = `<div class="scaffold-section"><h4>📚 Synonyms</h4><div class="context-content">${data.synonyms.slice(0, 5).join(', ')}</div></div>`;
+                    container.innerHTML = synonymsHtml;
                 }
             } catch (e) { }
         }
 
-        let html = '';
-
-        // Section: Part of Speech (formerly Context)
-        if (detailsHtml) {
-            html += `<div class="scaffold-section"><h4>📚 Part of Speech</h4><div class="context-content">${detailsHtml}</div></div>`;
-        } else {
-            html += `<div class="scaffold-section"><h4>📚 Part of Speech</h4><div class="context-content"><span class="pos-tag">word</span></div></div>`;
-        }
-
-        // 2. Example phrases (formerly Usage Frames)
-        let patterns = [];
-        const W = `<strong>${word}</strong>`;
-
-        if (pos.includes('verb')) {
-            patterns = [
-                `to ${W} something`,
-                `I ${W} because...`,
-                `Please ${W}...`
-            ];
-        } else if (pos.includes('noun')) {
-            patterns = [
-                `a big ${W}`,
-                `the ${W} of...`,
-                `my favorite ${W}`
-            ];
-        } else if (pos.includes('adjective')) {
-            patterns = [
-                `very ${W}`,
-                `feel ${W}`,
-                `looks ${W}`
-            ];
-        } else if (pos.includes('adverb')) {
-            patterns = [
-                `run ${W}`,
-                `speak ${W}`,
-                `work ${W}`
-            ];
-        } else {
-            patterns = [`use ${W} in a sentence`];
-        }
-
-        if (patterns.length > 0) {
-            // Keep full-width class for layout, rename header
-            html += `<div class="scaffold-section full-width"><h4>💡 Example Phrases</h4><ul class="pattern-list-compact">${patterns.map(p => `<li>${p}</li>`).join('')}</ul></div>`;
-        }
-
-        container.innerHTML = html;
+        // NOTE: "Example Phrases" (fake patterns) have been removed as per user feedback ("unmeaningful").
+        // We now rely on Tracau "Example Sentences" which are high quality.
     }
 
     /**
@@ -2957,6 +3150,220 @@ const SRSReview = (function () {
     }
 
     /**
+     * Save user sentence to Firestore Subcollection
+     */
+    async function saveUserSentence(uid, word, sentence, feedback) {
+        if (!uid || !db) return;
+        try {
+            const historyRef = collection(db, 'users', uid, 'writingHistory');
+            await addDoc(historyRef, {
+                word,
+                sentence,
+                feedback,
+                timestamp: serverTimestamp(),
+                algorithm: currentAlgorithm // Track which algo was active
+            });
+            console.log('[SRS] Saved writing history for:', word);
+        } catch (e) {
+            console.error('[SRS] Failed to save writing history:', e);
+        }
+    }
+
+    /**
+     * Save draft to localStorage with Timestamp
+     */
+    function saveDraft(word, text) {
+        try {
+            const key = `srs_draft_${word}`;
+            if (text.trim()) {
+                const payload = JSON.stringify({
+                    text: text,
+                    time: Date.now()
+                });
+                localStorage.setItem(key, payload);
+            } else {
+                localStorage.removeItem(key);
+            }
+        } catch (e) { console.warn('Draft save failed', e); }
+    }
+
+    /**
+     * Load draft from localStorage
+     */
+    function loadDraft(word) {
+        try {
+            const val = localStorage.getItem(`srs_draft_${word}`);
+            if (!val) return '';
+
+            // Try parse as JSON (new format)
+            try {
+                const parsed = JSON.parse(val);
+                return parsed.text || '';
+            } catch (jsonErr) {
+                // Fallback: it's likely old plain text
+                return val;
+            }
+        } catch (e) { return ''; }
+    }
+
+    /**
+     * Cleanup old drafts (> 7 days)
+     */
+    function cleanupDrafts() {
+        try {
+            console.log('[SRS] Running draft cleanup...');
+            const now = Date.now();
+            const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+            let removedCount = 0;
+
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('srs_draft_')) {
+                    const val = localStorage.getItem(key);
+                    try {
+                        const parsed = JSON.parse(val);
+                        if (parsed.time && (now - parsed.time > SEVEN_DAYS)) {
+                            localStorage.removeItem(key);
+                            removedCount++;
+                        }
+                    } catch (e) {
+                        // Ignore non-JSON or old format for now, or expire them?
+                        // Let's keep old format until user overwrites
+                    }
+                }
+            }
+            if (removedCount > 0) console.log(`[SRS] Cleaned up ${removedCount} old drafts.`);
+        } catch (e) { console.warn('[SRS] Cleanup failed:', e); }
+    }
+
+    /**
+     * Clear draft
+     */
+    function clearDraft(word) {
+        try {
+            localStorage.removeItem(`srs_draft_${word}`);
+        } catch (e) { }
+    }
+
+    /**
+     * Generate AI Prompt via Backend Proxy
+     */
+    async function generateAiPrompt(wordObj, userLevel) {
+        try {
+            const lemma = wordObj.lemma || wordObj.originalWord;
+            const pos = wordObj.partOfSpeech || 'word';
+            // Get theme from vocab book if available (placeholder logic for now)
+            const theme = wordObj.theme || 'general context';
+
+            const aiPrompt = `Role: English Teacher for Vietnamese speakers.
+            Task: Generate a creative, single-sentence composition prompt for the English word "${lemma}" (${pos}).
+            Target User: Level ${userLevel}/20 learner.
+            Context/Theme: ${theme !== 'general context' ? theme : 'Daily life, work, or social situations relevant to Vietnam'}.
+            
+            Instructions:
+            1. The prompt should ask the user to describing a situation or opinion.
+            2. Do NOT use the target word "${lemma}" in the prompt itself.
+            3. Do NOT provide the answer or example sentence.
+            4. Keep the prompt short (under 15 words) and encouraging.
+
+            Output: Just the prompt text.`;
+
+            const response = await fetch('/api/ai-proxy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    prompt: aiPrompt,
+                    model: 'meta-llama/Llama-3.1-8B-Instruct',
+                    max_tokens: 100
+                })
+            });
+
+            const data = await response.json();
+
+            // If fallback flag is true or error, throw to trigger template fallback
+            if (data.fallback || data.error) {
+                console.warn('[SRS] AI Prompt Fallback triggered:', data.error);
+                throw new Error('AI Fallback');
+            }
+
+            let generatedText = data.generated_text || '';
+            // Cleanup: Mistral sometimes outputs the prompt instructions again
+            // Simple heuristic to strip instruction repetition if needed
+            generatedText = generatedText.replace(/Generate a creative.*/s, '').trim();
+
+            if (!generatedText) throw new Error('Empty AI response');
+
+            return {
+                prompt: generatedText,
+                starter: '',
+                usedCollocation: null,
+                type: 'ai-generated',
+                showStarter: false
+            };
+        } catch (error) {
+            console.warn('[SRS] AI Prompt Generation failed:', error);
+            return null; // Signals to use template fallback
+        }
+    }
+
+    /**
+     * Assess Sentence via Backend Proxy
+     */
+    async function assessSentence(sentence, word) {
+        if (!navigator.onLine) return null;
+        try {
+            const aiPrompt = `Evaluate this English sentence written by a learner: "${sentence}".
+            Target word to use: "${word}".
+            Task: Rate 1-5 and provide brief, constructive feedback on grammar and naturalness. 
+            Output format: HTML string starting with <strong class="ai-score">Score: X/5</strong><br>. Keep it encouraging.`;
+
+            const response = await fetch('/api/ai-feedback-stream', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    prompt: aiPrompt,
+                    model: 'meta-llama/Llama-3.1-8B-Instruct',
+                    max_tokens: 200
+                })
+            });
+
+            if (!response.ok) throw new Error(`Stream error: ${response.status}`);
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let fullText = '';
+
+            // Get the feedback feedback container if it exists to stream directly (optional)
+            // For now, we'll accumulate and return, but the infrastructure is ready for UI streaming
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n');
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(line.slice(6));
+                            if (data.choices && data.choices[0].delta && data.choices[0].delta.content) {
+                                fullText += data.choices[0].delta.content;
+                            }
+                        } catch (e) {
+                            // Ignore parse errors for partial chunks
+                        }
+                    }
+                }
+            }
+
+            return fullText.replace(/Evaluate this.*/s, '').trim();
+        } catch (e) {
+            console.warn('[SRS] AI Assessment failed:', e);
+            return null;
+        }
+    }
+
+    /**
      * Generate a contextually meaningful writing prompt
      * 
      * CORE RULE: Do NOT generate prompts using only the word.
@@ -2966,7 +3373,11 @@ const SRSReview = (function () {
      * @param {number} userLevel - Current user level (1+)
      * @returns {Object} { prompt, starter, usedCollocation, type, showStarter }
      */
-    function generateWritingPrompt(wordObj, userLevel) {
+    /**
+     * Template-based Prompt Generator (Original Logic)
+     * Renamed from generateWritingPrompt
+     */
+    function generateTemplatePrompt(wordObj, userLevel) {
         const lemma = wordObj.lemma || wordObj.originalWord;
         const collocations = getCollocations(lemma);
 
@@ -3015,39 +3426,34 @@ const SRSReview = (function () {
             // ============================================
             // VERB-PHRASE TEMPLATES
             // ============================================
+            // ============================================
+            // GENERIC PHRASE TEMPLATES (Simpler & Safer)
+            // ============================================
             const verbPhrasePromptTemplates = [
-                `Write about a time you had to ${collocation}.`,
-                `Describe a situation where someone ${collocation}.`,
-                `What happened after you ${collocation}?`,
-                `Why might someone need to ${collocation}?`,
-                `Tell a story about when you ${collocation}.`
+                `Write a sentence using the phrase "${collocation}".`,
+                `Describe a situation involving "${collocation}".`,
+                `Use "${collocation}" in a sentence.`
             ];
 
             const verbPhraseStarterTemplates = [
                 `I ${collocation} when...`,
-                `She ${collocation} because...`,
-                `I had to ${collocation} when...`,
-                `Yesterday, I ${collocation} because...`,
-                `Sometimes people ${collocation} to...`
+                `I had to ${collocation} because...`,
+                `It is important to ${collocation} because...`
             ];
 
             // ============================================
             // NOUN-PHRASE TEMPLATES
             // ============================================
             const nounPhrasePromptTemplates = [
-                `Describe a situation related to ${collocation}.`,
-                `Describe a situation that affected someone's ${collocation}.`,
-                `Why is ${collocation} important in life?`,
-                `How can ${collocation} help someone succeed?`,
-                `Tell a story about ${collocation}.`
+                `Write a sentence about "${collocation}".`,
+                `Describe a situation involving "${collocation}".`,
+                `Use "${collocation}" in a sentence.`
             ];
 
             const nounPhraseStarterTemplates = [
-                `My ${collocation} improved when...`,
-                `${collocation.charAt(0).toUpperCase() + collocation.slice(1)} is important because...`,
-                `A situation that affected my ${collocation} was...`,
-                `I learned about ${collocation} when...`,
-                `${collocation.charAt(0).toUpperCase() + collocation.slice(1)} helped me to...`
+                `My ${collocation} is...`,
+                `The ${collocation} helps to...`,
+                `I learned about ${collocation} when...`
             ];
 
             // Select appropriate templates based on collocation type
@@ -3099,9 +3505,9 @@ const SRSReview = (function () {
         if (wordObj.definition) {
             // Definition-based templates using base verb (lemma)
             const definitionPromptTemplates = [
-                `Describe a situation that shows what it means to "${lemma}".`,
-                `Write about an example of someone who ${lemma}s something.`,
-                `Give an example of "${lemma}" in real life.`
+                `Write a sentence using the word "${lemma}".`,
+                `Describe a situation where you might use "${lemma}".`,
+                `Write a valid sentence containing "${lemma}".`
             ];
 
             const definitionStarterTemplates = [
@@ -3133,9 +3539,26 @@ const SRSReview = (function () {
     }
 
     /**
+     * Main Prompt Generator (Hybrid AI + Template)
+     */
+    async function generateWritingPrompt(wordObj, userLevel) {
+        // 1. Try AI Generation
+        if (navigator.onLine) {
+            const aiResult = await generateAiPrompt(wordObj, userLevel);
+            if (aiResult) return aiResult;
+        }
+
+        // 2. Fallback to Templates
+        return generateTemplatePrompt(wordObj, userLevel);
+    }
+
+    /**
      * Show the writing challenge modal
      */
-    function showWritingChallenge(wordObj, onComplete) {
+    /**
+     * Show the writing challenge modal
+     */
+    async function showWritingChallenge(wordObj, onComplete) {
         try {
             if (!elements.srsWritingModal) {
                 if (onComplete) onComplete();
@@ -3169,10 +3592,15 @@ const SRSReview = (function () {
                 return;
             }
 
+            // Populate POS tag in header
+            const headerPosTag = document.getElementById('writing-pos-tag');
+            if (headerPosTag) {
+                headerPosTag.textContent = currentPOS;
+                headerPosTag.style.display = 'inline-block';
+            }
+
             // FIX: Ensure it is top-most
             document.body.appendChild(elements.srsWritingModal);
-            elements.srsWritingModal.style.zIndex = '10000'; // Below tutorial overlay (20000)
-            elements.srsWritingModal.style.display = 'block'; // Force display to verify layer before anim
             elements.srsWritingModal.style.pointerEvents = 'auto'; // Re-enable clicks (was disabled on close)
 
 
@@ -3186,7 +3614,15 @@ const SRSReview = (function () {
             // Generate Prompt Data
             let promptData;
             try {
-                promptData = generateWritingPrompt(wordObj, currentLevel);
+                // Show loading state if needed, or just await (AI usually takes 1-2s)
+                if (elements.srsWritingPrompt) elements.srsWritingPrompt.textContent = 'Thinking of a prompt...';
+
+                promptData = await generateWritingPrompt(wordObj, currentLevel);
+
+                // If AI was used, show a subtle indicator (optional)
+                if (promptData.type === 'ai-generated') {
+                    console.log('[SRS] Using AI Prompt');
+                }
             } catch (err) {
                 console.error('[SRS] Error generating prompt:', err);
                 // Fallback prompt data
@@ -3252,8 +3688,16 @@ const SRSReview = (function () {
             const defHintRow = document.getElementById('hint-definition');
             if (defHintRow) defHintRow.style.display = 'flex';
 
-            // Clear Input & Feedback
-            if (elements.srsWritingInput) elements.srsWritingInput.value = '';
+            // Clear Input & Feedback (or Load Draft)
+            const draftText = loadDraft(lemma);
+            if (elements.srsWritingInput) {
+                elements.srsWritingInput.value = draftText;
+                // Auto-save draft on input
+                elements.srsWritingInput.oninput = (e) => {
+                    saveDraft(lemma, e.target.value);
+                };
+            }
+
             if (elements.srsWritingFeedback) {
                 elements.srsWritingFeedback.textContent = '';
                 elements.srsWritingFeedback.className = 'srs-writing-feedback';
@@ -3289,7 +3733,6 @@ const SRSReview = (function () {
             // Show Modal with slight delay for toast to appear first
             setTimeout(() => {
                 if (elements.srsWritingModal) {
-                    elements.srsWritingModal.style.zIndex = '10000'; // Below tutorial overlay (20000)
                     elements.srsWritingModal.classList.add('visible');
                     // Accessibility: Trap focus
                     trapFocus(elements.srsWritingModal);
@@ -3374,7 +3817,67 @@ const SRSReview = (function () {
         console.log('[SRS] Regenerated starter:', newStarter);
     }
 
-    function handleWritingSubmit() {
+
+    /**
+     * Apply AI Score (1-5) to SRS Interval/Stability
+     * Retroactively modifies the just-scheduled interval based on writing quality.
+     */
+    function applyAIScoreToSRS(lemma, score) {
+        const item = srsCache.srsData[lemma];
+        if (!item) return;
+
+        // Skip adjustment for brand new items (learning step < 1 day) to avoid messing up learning phase
+        if (item.interval < 1 && item.state !== 'mastered') return;
+
+        let modifier = 1.0;
+        let msg = "";
+        let type = "info";
+
+        if (score === 5) {
+            modifier = 1.25; // +25% Boost
+            msg = "Perfect! Interval boosted +25%";
+            type = "success";
+        } else if (score === 4) {
+            modifier = 1.1; // +10% Boost
+            msg = "Good job! Interval boosted +10%";
+            type = "success";
+        } else if (score === 3) {
+            // Neutral / Slight refinement needed
+            return;
+        } else if (score <= 2) {
+            modifier = 0.75; // -25% Penalty
+            msg = "Review context. Interval tightened.";
+            type = "warning";
+        }
+
+        const oldInterval = item.interval;
+        // Apply modifier, ensuring at least 1 day if it was >= 1
+        let newInterval = Math.round(oldInterval * modifier);
+        if (oldInterval >= 1) newInterval = Math.max(1, newInterval);
+
+        if (newInterval !== oldInterval) {
+            console.log(`[SRS AI] Adjusting ${lemma} interval: ${oldInterval}d -> ${newInterval}d (Score: ${score})`);
+
+            item.interval = newInterval;
+
+            // Recalculate next date based on LAST review date (which was just set moments ago in recordReviewResult)
+            // If lastReviewDate is missing, use now.
+            const lastReview = item.lastReviewDate ? new Date(item.lastReviewDate) : new Date();
+            const nextDate = new Date(lastReview);
+            nextDate.setDate(nextDate.getDate() + newInterval);
+
+            item.nextReviewDate = nextDate.toISOString();
+
+            // Persist
+            srsCache.srsData[lemma] = item;
+            saveSRSData();
+
+            // Show Toast
+            showToast(msg, type);
+        }
+    }
+
+    async function handleWritingSubmit() {
         let sentence = elements.srsWritingInput.value.trim();
         const targetWord = reviewSession.currentWritingWord; // stored lemma
         const userLevel = reviewSession.userLevelForChallenge || 1;
@@ -3432,28 +3935,70 @@ const SRSReview = (function () {
 
         // --- SUCCESS FLOW ---
 
-        // Collocation Check (Non-blocking Feedback)
-        let feedbackMsg = "<strong>✅ Saved!</strong><br>Sentence recorded.";
-        const usedCollo = reviewSession.currentCollocation;
+        // Show Success (Temporary while assessing)
+        elements.srsWritingFeedback.innerHTML = '<strong>Using AI...</strong><div class="srs-loading-dots"></div>';
+        elements.srsWritingFeedback.className = 'srs-writing-feedback';
+        elements.srsWritingFeedback.style.display = 'block';
 
-        if (usedCollo && typeof nlp !== 'undefined') {
-            const lowerSentence = sentence.toLowerCase();
-            const lowerCollo = usedCollo.toLowerCase();
+        // Check Setting
+        const skipAi = elements.skipAiToggle && elements.skipAiToggle.checked;
 
-            // Basic check if the phrase is inside
-            if (lowerSentence.includes(lowerCollo)) {
-                feedbackMsg = `<strong>✅ Excellent!</strong><br>You used the phrase "${usedCollo}" correctly.`;
-            } else {
-                feedbackMsg = `<strong>✅ Good sentence!</strong><br>Tip: Next time try using the phrase "<em>${usedCollo}</em>" to sound more natural.`;
+        // AI Assessment
+        let feedbackMsg = "";
+        let aiFeedback = null;
+        let aiScore = 0;
+
+        if (!skipAi) {
+            try {
+                aiFeedback = await assessSentence(sentence, targetWord);
+            } catch (e) {
+                console.error("AI failed", e);
             }
         }
 
-        // Show Success
+        if (aiFeedback) {
+            feedbackMsg = `<strong>✅ AI Assessment:</strong><br>${aiFeedback}`;
+
+            // Extract Score (Format: "Score: 5/5")
+            const scoreMatch = aiFeedback.match(/Score:\s*(\d)\/5/);
+            if (scoreMatch) {
+                aiScore = parseInt(scoreMatch[1], 10);
+            }
+        } else {
+            // Fallback (Original Logic)
+            feedbackMsg = "<strong>✅ Saved!</strong><br>Sentence recorded.";
+            const usedCollo = reviewSession.currentCollocation;
+
+            if (usedCollo && typeof nlp !== 'undefined') {
+                const lowerSentence = sentence.toLowerCase();
+                const lowerCollo = usedCollo.toLowerCase();
+
+                if (lowerSentence.includes(lowerCollo)) {
+                    feedbackMsg = `<strong>✅ Excellent!</strong><br>You used the phrase "${usedCollo}" correctly.`;
+                } else {
+                    feedbackMsg = `<strong>✅ Good sentence!</strong><br>Tip: Next time try using the phrase "<em>${usedCollo}</em>" to sound more natural.`;
+                }
+            }
+        }
+
+        // Final Display
         elements.srsWritingFeedback.innerHTML = feedbackMsg;
         elements.srsWritingFeedback.className = 'srs-writing-feedback success';
-        elements.srsWritingFeedback.style.display = 'block';
 
         triggerConfetti();
+
+        // Clear draft on success
+        clearDraft(targetWord);
+
+        // Save to History (Fire & Forget)
+        if (currentUserId) {
+            saveUserSentence(currentUserId, targetWord, sentence, feedbackMsg);
+        }
+
+        // Apply SRS Adjustment based on AI Quality
+        if (aiScore > 0) {
+            applyAIScoreToSRS(targetWord, aiScore);
+        }
 
         // Proceed after delay
         setTimeout(() => {

@@ -564,6 +564,15 @@ def get_dictionary_word(word):
             # If we get a string back (like the error message), it's not JSON we can parse
             if isinstance(data, str):
                  raise ValueError(f"API returned string instead of JSON: {data[:100]}")
+
+            # DEBUG
+            if isinstance(data, list):
+                print(f"DEBUG MW RESPONSE: Found {len(data)} entries.")
+                for i, e in enumerate(data):
+                    if isinstance(e, dict):
+                         print(f"  Entry {i}: {e.get('meta', {}).get('id', 'NO_ID')}")
+            else:
+                 print(f"DEBUG MW RESPONSE: Not a list? Type: {type(data)}")
         except Exception as json_err:
             print(f"JSON DECODE ERROR. Response first 500 chars: {response.text[:500]}")
             return jsonify({
@@ -579,10 +588,10 @@ def get_dictionary_word(word):
         if isinstance(data[0], str):
             return jsonify({'found': False, 'suggestions': data[:5]})
         
-    # Parse the response
+        # Parse the response
         parsed = parse_mw_response(data, normalized_word)
-        if parsed:
-            return jsonify({'found': True, 'data': parsed})
+        if parsed and parsed.get('found'):
+            return jsonify(parsed)
         else:
             return jsonify({'found': False, 'suggestions': []})
             
@@ -595,16 +604,51 @@ def get_dictionary_word(word):
 
 def parse_mw_response(api_data, word):
     """Parse Merriam-Webster API response into our format."""
-    # Find best matching entry
-    entry = None
-    for e in api_data:
-        if isinstance(e, dict) and e.get('meta', {}).get('id', '').lower().split(':')[0] == word:
-            entry = e
-            break
+    # Parse all matching entries, not just the first one
+    all_parsed_entries = []
     
-    if not entry:
-        entry = api_data[0] if isinstance(api_data[0], dict) else None
+    # Filter for exact matches first
+    exact_matches = [e for e in api_data if isinstance(e, dict) and e.get('meta', {}).get('id', '').lower().split(':')[0] == word]
     
+    # If no exact matches found by ID, use all entries provided they have an ID (loose matching)
+    if not exact_matches:
+        exact_matches = [e for e in api_data if isinstance(e, dict) and 'meta' in e]
+        
+    for entry in exact_matches:
+        parsed = parse_single_mw_entry(entry, word)
+        if parsed:
+            all_parsed_entries.append(parsed)
+            
+    if all_parsed_entries:
+        # The primary result is the first one (usually the most common)
+        primary = all_parsed_entries[0]
+        
+        # Inherit missing fields for alternatives
+        for alt in all_parsed_entries[1:]:
+            needs_inheritance = not alt.get('pronunciation') or not alt.get('audioUrl')
+            if needs_inheritance:
+                print(f"DEBUG: Form '{alt.get('partOfSpeech')}' for '{word}' is inheriting data from primary.")
+                
+            if not alt.get('pronunciation'):
+                alt['pronunciation'] = primary.get('pronunciation')
+                alt['inheritedPronunciation'] = True
+            if not alt.get('audioUrl'):
+                alt['audioUrl'] = primary.get('audioUrl')
+            if alt.get('syllableCount', 0) == 0 and primary.get('syllableCount', 0) > 0:
+                alt['syllables'] = primary.get('syllables')
+                alt['syllableCount'] = primary.get('syllableCount')
+
+        # Alternatives are all valid entries (including the primary one, to make switching easy)
+        return {
+            'found': True, 
+            'data': primary, 
+            'alternatives': all_parsed_entries
+        }
+    else:
+        return {'found': False, 'suggestions': []}
+
+def parse_single_mw_entry(entry, word):
+    """Parse a single Merriam-Webster API entry int our format."""
     if not entry or 'hwi' not in entry:
         return None
     
@@ -620,7 +664,7 @@ def parse_mw_response(api_data, word):
         'audioUrl': None,
         'audioFilename': None,
         'partOfSpeech': entry.get('fl'),
-        'definition': entry.get('shortdef', [None])[0]
+        'definition': entry.get('shortdef', [None])[0] if entry.get('shortdef') else None
     }
     
     # Initial count from headword
@@ -651,10 +695,13 @@ def parse_mw_response(api_data, word):
         stress_source = ipa_string or result['pronunciation']
         result['stressedSyllable'] = find_stressed_syllable(stress_source, result['syllableCount'])
         
-        if pron.get('sound', {}).get('audio'):
-            audio_filename = pron['sound']['audio']
-            result['audioFilename'] = audio_filename
-            result['audioUrl'] = build_audio_url(audio_filename)
+        # Audio extraction - search all prs entries for a sound object
+        for p in prs:
+            if p.get('sound', {}).get('audio'):
+                audio_filename = p['sound']['audio']
+                result['audioFilename'] = audio_filename
+                result['audioUrl'] = build_audio_url(audio_filename)
+                break
     
     return result
 
@@ -700,7 +747,9 @@ def count_ipa_syllables(ipa):
         # Diphthongs
         'aɪ', 'eɪ', 'ɔɪ', 'aʊ', 'oʊ', 'əʊ',
         'ɪə', 'eə', 'ʊə', 'ɛə', 'ɔə',
+        # Rhotic diphthongs (common in American English)
         'aɪə', 'aʊə', # Triphthongs
+        'oɚ', 'ɔɚ', 'aɚ', 'ɪɚ', 'eɚ', 'ʊɚ', 'ɛɚ', 'uɚ',
         # Long vowels
         'iː', 'uː', 'ɑː', 'ɔː', 'ɜː', 'eː', 'oː', 'æː', 'aː', 'ɛː', 'œː',
         # MW Long vowels
@@ -1886,25 +1935,43 @@ def find_stressed_with_corrections(syllables):
     return best_idx
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 8080))
+    # Use 8081 to match config.js default
+    port = int(os.environ.get('PORT', 8081))
     use_https = os.environ.get('USE_HTTPS', 'true').lower() == 'true'
     
     # For local development with HTTPS (Chrome requires it)
     if use_https:
         import ssl
-        # Get project root (2 levels up)
-        PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        cert_file = os.path.join(PROJECT_ROOT, "localhost+2.pem")
-        key_file = os.path.join(PROJECT_ROOT, "localhost+2-key.pem")
+        # Get project root - find the directory containing 'server.js' or '.git'
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        PROJECT_ROOT = current_dir
+        # Go up until we find root (max 4 levels)
+        for _ in range(4):
+            if os.path.exists(os.path.join(PROJECT_ROOT, "server.js")) or \
+               os.path.exists(os.path.join(PROJECT_ROOT, "mkcert.exe")):
+                break
+            PROJECT_ROOT = os.path.dirname(PROJECT_ROOT)
+            
+        print(f"Debug: Project root detected at {PROJECT_ROOT}")
         
+        # Try mkcert filenames first (as generated by setup-trusted-certs.bat)
+        cert_file = os.path.join(PROJECT_ROOT, "localhost.pem")
+        key_file = os.path.join(PROJECT_ROOT, "localhost-key.pem")
+        
+        # Fallback to older filenames
+        if not os.path.exists(cert_file):
+            cert_file = os.path.join(PROJECT_ROOT, "cert.pem")
+            key_file = os.path.join(PROJECT_ROOT, "key.pem")
+
         if os.path.exists(cert_file) and os.path.exists(key_file):
             print(f"🔒 Starting HTTPS server on https://localhost:{port}")
+            print(f"   Using certificates from: {cert_file}")
             context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
             context.load_cert_chain(certfile=cert_file, keyfile=key_file)
             app.run(host='0.0.0.0', port=port, debug=False, ssl_context=context)
         else:
-            print(f"⚠️  SSL certs not found at {cert_file}, falling back to HTTP")
-            print(f"   Running on http://localhost:{port}")
+            print(f"⚠️  SSL certs not found! (Looked in {PROJECT_ROOT})")
+            print(f"   Falling back to HTTP on http://localhost:{port}")
             app.run(host='0.0.0.0', port=port, debug=False)
     else:
         print(f"🌐 Starting HTTP server on http://localhost:{port}")

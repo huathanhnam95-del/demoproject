@@ -4,6 +4,8 @@ echo Opening %URL% in Dev Mode (Ignoring SSL Errors)...
 
 :: Try Chrome
 if exist "C:\Program Files\Google\Chrome\Application\chrome.exe" (
+    taskkill /F /IM chrome.exe /T >nul 2>&1
+    timeout /t 1 /nobreak >nul
     start "" "C:\Program Files\Google\Chrome\Application\chrome.exe" --ignore-certificate-errors --allow-insecure-localhost "%URL%"
     exit
 )

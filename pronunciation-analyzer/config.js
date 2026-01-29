@@ -5,14 +5,14 @@
 
 export const config = {
     // Backend URL - Cloud Run (set to false to use localhost for local dev)
-    forceCloudRun: true,
+    forceCloudRun: false,
 
     backendUrl: (() => {
         const cloudRunUrl = 'https://praat-api-1071929245506.us-central1.run.app';
 
         // ALWAYS use Cloud Run if forceCloudRun is true
         // Access the forceCloudRun value from the outer scope
-        const forceCloud = true; // Must match forceCloudRun above
+        const forceCloud = false; // Must match forceCloudRun above
 
         if (forceCloud) {
             return cloudRunUrl;
@@ -21,8 +21,8 @@ export const config = {
         // For local development, set forceCloudRun to false
         if (window.location.hostname === 'localhost' ||
             window.location.hostname === '127.0.0.1') {
-            // Use local backend for testing
-            return 'http://localhost:8080';
+            // Use local backend for testing on the SAME origin
+            return `${window.location.protocol}//${window.location.hostname}:8081`;
         }
         return cloudRunUrl;
     })(),

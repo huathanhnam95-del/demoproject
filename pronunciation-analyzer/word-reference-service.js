@@ -8,9 +8,8 @@ import { DatabaseService } from './database-service.js';
 import { STRESS_WEIGHTS, calculateStressScore } from './stress-utils.js';
 
 // Cache version - increment when backend algorithm changes
-// v2: Fixed stress detection for IPA strings (2026-01-12)
-// v3: Robust IPA syllable counting (2026-01-14)
-const CACHE_VERSION = 3;
+// v7: Pronunciation inheritance for multi-form search (2026-01-29)
+const CACHE_VERSION = 7;
 
 export class WordReferenceService {
     constructor() {
@@ -50,16 +49,16 @@ export class WordReferenceService {
                 console.log('=== DATABASE DATA ===');
                 console.log('Word:', dbData.word);
                 console.log('Cache version:', dbData.cacheVersion || 'none');
-                console.log('Has nativeAnalysis:', !!dbData.nativeAnalysis);
-                console.log('nativeAnalysis.pitch:', dbData.nativeAnalysis?.pitch?.values?.length || 'none');
-                console.log('nativeAnalysis.syllables:', dbData.nativeAnalysis?.syllables?.length || 'none');
-
-                // Check cache version - if outdated, re-fetch
+                // VALIDATION:
+                // - Version must be current
+                // - Analysis must exist
+                // - Alternatives must exist (new version requirement)
                 const isValidVersion = dbData.cacheVersion && dbData.cacheVersion >= CACHE_VERSION;
                 const hasValidAnalysis = dbData.nativeAnalysis && dbData.nativeAnalysis.pitch?.values?.length > 0;
+                const hasAlternatives = Array.isArray(dbData.alternatives);
 
-                if (isValidVersion && hasValidAnalysis) {
-                    console.log('📚 Firestore hit with valid analysis:', normalizedWord);
+                if (isValidVersion && hasValidAnalysis && hasAlternatives) {
+                    console.log('📚 Firestore hit with complete data:', normalizedWord);
                     this.sessionCache.set(normalizedWord, dbData);
                     return {
                         ...dbData,
@@ -67,7 +66,11 @@ export class WordReferenceService {
                         cacheSource: 'database'
                     };
                 } else {
-                    const reason = !isValidVersion ? 'outdated cache version' : 'missing/empty analysis';
+                    let reason = '';
+                    if (!isValidVersion) reason = 'outdated cache version';
+                    else if (!hasValidAnalysis) reason = 'missing/empty analysis';
+                    else if (!hasAlternatives) reason = 'missing multi-form data';
+
                     console.log(`⚠️ Database entry exists but ${reason}, re-fetching...`);
                 }
             }
@@ -79,6 +82,7 @@ export class WordReferenceService {
 
         // Debug: Log what we got from backend
         console.log('=== BACKEND RESPONSE ===');
+        console.log('Alternatives found:', wordData.alternatives?.length || 0);
         console.log('Has nativeAnalysis:', !!wordData.nativeAnalysis);
         if (wordData.nativeAnalysis) {
             console.log('Pitch values:', wordData.nativeAnalysis.pitch?.values?.length);
@@ -86,9 +90,10 @@ export class WordReferenceService {
         }
 
         // 4. Compress analysis data before saving (Firestore has size limits)
-        if (wordData.nativeAnalysis) {
-            wordData.nativeAnalysis = this.compressAnalysis(wordData.nativeAnalysis);
-        }
+        // This step is now handled within fetchFromBackend for each alternative
+        // if (wordData.nativeAnalysis) {
+        //     wordData.nativeAnalysis = this.compressAnalysis(wordData.nativeAnalysis);
+        // }
 
         // 5. Save to database for future use (with cache version)
         if (config.features.saveToDatabase && this.db.isAvailable()) {
@@ -131,34 +136,70 @@ export class WordReferenceService {
             throw new Error('Word not found in dictionary');
         }
 
-        const mwData = dictResult.data;
+        // All forms should now have data due to backend inheritance
+        const alternatives = dictResult.alternatives || [];
 
-        // Step 2: Analyze native audio with Praat (if audio URL available)
-        let nativeAnalysis = null;
+        if (alternatives.length === 0) {
+            throw new Error('No pronunciation data found for this word');
+        }
 
-        if (mwData.audioUrl) {
-            try {
-                const analyzeResponse = await fetch(`${this.backendUrl}/analyze-url`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        audioUrl: mwData.audioUrl,
-                        expectedSyllables: mwData.syllableCount
-                    })
-                });
+        // The primary result is now the first valid alternative
+        const mwData = alternatives[0];
 
-                if (analyzeResponse.ok) {
-                    nativeAnalysis = await analyzeResponse.json();
-                    console.log('🎵 Native audio analyzed:', nativeAnalysis);
+        // Step 2: Analyze ALL valid alternatives concurrently
+        console.log(`🎵 Analyzing ${alternatives.length} valid word forms...`);
+
+        // OPTIMIZATION: Track analysis by audio URL to avoid redundant processing
+        const analysisCache = new Map();
+
+        const analysisPromises = alternatives.map(async (alt) => {
+            if (alt.audioUrl) {
+                // If we already have analysis for this specific audio URL, reuse it
+                if (analysisCache.has(alt.audioUrl)) {
+                    console.log(`♻️ Reusing analysis for inherited audio: ${alt.partOfSpeech}`);
+                    alt.nativeAnalysis = await analysisCache.get(alt.audioUrl);
+                    return alt;
                 }
-            } catch (error) {
-                console.warn('Could not analyze native audio:', error);
+
+                // Create the promise for this analysis and cache it
+                const analysisPromise = (async () => {
+                    try {
+                        const analyzeResponse = await fetch(`${this.backendUrl}/analyze-url`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                audioUrl: alt.audioUrl,
+                                expectedSyllables: alt.syllableCount
+                            })
+                        });
+
+                        if (analyzeResponse.ok) {
+                            const analysis = await analyzeResponse.json();
+                            return this.compressAnalysis(analysis);
+                        }
+                    } catch (error) {
+                        console.warn(`Could not analyze audio for form ${alt.partOfSpeech}:`, error);
+                    }
+                    return null;
+                })();
+
+                analysisCache.set(alt.audioUrl, analysisPromise);
+                alt.nativeAnalysis = await analysisPromise;
             }
+            return alt;
+        });
+
+        await Promise.all(analysisPromises);
+
+        // Update primary data with its analysis if it's the first in alternatives
+        if (alternatives.length > 0 && alternatives[0].nativeAnalysis) {
+            mwData.nativeAnalysis = alternatives[0].nativeAnalysis;
         }
 
         return {
             ...mwData,
-            nativeAnalysis,
+            alternatives,
+            nativeAnalysis: mwData.nativeAnalysis,
             source: 'merriam-webster'
         };
     }

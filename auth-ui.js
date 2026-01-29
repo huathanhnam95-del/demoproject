@@ -28,18 +28,24 @@ let authStateCallbacks = [];
 
 // Initialize when Firebase is ready
 function initializeAuthUI() {
-  // Wait for Firebase functions to be available
-  if (!window.firebaseAuthFunctions || !window.firebaseFirestoreFunctions) {
-    setTimeout(initializeAuthUI, 100);
-    return;
-  }
-
-  authFunctions = window.firebaseAuthFunctions;
-  firestoreFunctions = window.firebaseFirestoreFunctions;
-
+  // Try to set up listeners immediately so buttons are responsive
   setupEventListeners();
-  setupAuthStateListener();
-  setupSessionTracking();
+
+  // Wait for Firebase functions to be available for actual login operations
+  const checkFirebase = () => {
+    if (window.firebaseAuthFunctions && window.firebaseFirestoreFunctions) {
+      console.log('✓ Firebase module functions found, linking to UI...');
+      authFunctions = window.firebaseAuthFunctions;
+      firestoreFunctions = window.firebaseFirestoreFunctions;
+      setupAuthStateListener();
+      setupSessionTracking();
+    } else {
+      console.warn('Waiting for Firebase modules... (Check console for ERR_CERT_AUTHORITY_INVALID)');
+      setTimeout(checkFirebase, 1000);
+    }
+  };
+
+  checkFirebase();
 }
 
 /**
@@ -572,6 +578,12 @@ async function handleLogin() {
     return;
   }
 
+  if (!authFunctions) {
+    errorDiv.textContent = 'Auth system not ready. Check if scripts are blocked by certificate error.';
+    errorDiv.style.display = 'block';
+    return;
+  }
+
   errorDiv.style.display = 'none';
 
   const result = await authFunctions.signIn(email, password);
@@ -611,6 +623,12 @@ async function handleSignup() {
 
   if (password.length < 6) {
     errorDiv.textContent = 'Password must be at least 6 characters';
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  if (!authFunctions) {
+    errorDiv.textContent = 'Auth system not ready. Check if scripts are blocked by certificate error.';
     errorDiv.style.display = 'block';
     return;
   }
@@ -1470,3 +1488,9 @@ function showShoppingModal() {
 window.authUI = window.authUI || {};
 window.authUI.showPointsToast = showPointsToast;
 window.authUI.loadPointsHistory = loadPointsHistory;
+window.authUI.initializeAuthUI = initializeAuthUI;
+window.authUI.onAuthStateChange = onAuthStateChanged;
+
+// Initialize automatically
+initializeAuthUI();
+console.log('✓ auth-ui.js: Module loaded and initialized');

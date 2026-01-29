@@ -171,49 +171,11 @@ class PronunciationApp {
             }
 
             if (wordRef && wordRef.found !== false) {
-                // Use MW data
-                this.expectedData = {
-                    ipa: wordRef.pronunciation || '',
-                    syllables: wordRef.syllableCount || 1,
-                    primaryStress: wordRef.stressedSyllable || 0
-                };
+                // Render word form selector (if multiple forms exist)
+                this.renderWordFormSelector(wordRef.alternatives || []);
 
-                // Display pronunciation info
-                this.ipaDisplay.textContent = wordRef.pronunciation || 'N/A';
-                this.patternDisplay.textContent = `${wordRef.syllableCount} Syllables, Stress on ${(wordRef.stressedSyllable || 0) + 1}`;
-
-                // Show native audio player if audio available
-                if (wordRef.audioUrl && this.nativeAudio && this.nativeAudioContainer) {
-                    const proxiedUrl = this.wordRefService.getProxiedAudioUrl(wordRef.audioUrl);
-                    this.nativeAudio.src = proxiedUrl;
-                    this.nativeAudioContainer.style.display = 'flex';
-                }
-
-                // *** Draw native pitch contour graph (LEFT CHART) ***
-                console.log('=== DRAWING NATIVE PITCH CONTOUR ===');
-                console.log('Has nativeAnalysis:', !!wordRef.nativeAnalysis);
-                console.log('pitch.values length:', wordRef.nativeAnalysis?.pitch?.values?.length || 0);
-                console.log('syllables length:', wordRef.nativeAnalysis?.syllables?.length || 0);
-
-                if (wordRef.nativeAnalysis &&
-                    wordRef.nativeAnalysis.pitch?.values?.length > 0) {
-                    console.log('✅ Drawing native pitch contour...');
-                    this.visualizer.drawNativePitchContour(
-                        wordRef.nativeAnalysis,
-                        wordRef.nativeAnalysis.syllables || []
-                    );
-                } else {
-                    console.warn('⚠️ No native analysis data - left chart will be empty');
-                }
-
-                // Get and display native pattern (RIGHT CHART - bar chart)
-                this.nativePattern = this.wordRefService.getExpectedPattern(wordRef);
-                if (this.nativePattern && this.nativePattern.length > 0) {
-                    this.visualizer.drawDurationChart(this.nativePattern, []);
-                }
-
-                const cacheStatus = wordRef.fromCache ? ` (${wordRef.cacheSource})` : '';
-                this.statusIndicator.textContent = `Ready${cacheStatus}`;
+                // Display the primary (first) result
+                this.displayWordData(wordRef);
 
             } else {
                 // Fallback to existing Phonetics API
@@ -584,10 +546,11 @@ class PronunciationApp {
 
         // Priority 1: Stress placement / Pattern Match
         if (!comparison.stressMatches) {
-            // Use the specific feedback from pattern analysis if available
             const feedback = comparison.stressFeedback ||
-                `Stress Pattern Mismatch: Your emphasis pattern differs from the native speaker. Try to match the highs and lows of the native pitch.`;
+                `Stress Pattern Mismatch: Your emphasis pattern differs from the native speaker. Try to match the highs and lows of the native pitch and duration pattern.`;
             tips.push(`🎯 <strong>Stress Pattern</strong>: ${feedback}`);
+        } else if (comparison.stressScore < 80) {
+            tips.push(`🎯 <strong>Stress Balance</strong>: Good placement, but try to make the difference between stressed and unstressed syllables more distinct.`);
         }
 
         // Priority 2: Syllable count
@@ -740,6 +703,146 @@ class PronunciationApp {
 
         html += '</div>';
         this.resultsSummary.innerHTML = html;
+    }
+
+    /**
+     * Display word data (IPA, charts, audio)
+     * Extracted from updateWordData to allow switching between forms
+     */
+    displayWordData(wordRef) {
+        if (!wordRef) return;
+
+        this.currentWordRef = wordRef;
+
+        // Use MW data
+        this.expectedData = {
+            ipa: wordRef.pronunciation || '',
+            syllables: wordRef.syllableCount || 1,
+            primaryStress: wordRef.stressedSyllable || 0
+        };
+
+        // Display pronunciation info
+        if (this.ipaDisplay) this.ipaDisplay.textContent = wordRef.pronunciation || 'N/A';
+        if (this.patternDisplay) this.patternDisplay.textContent = `${wordRef.syllableCount} Syllables, Stress on ${(wordRef.stressedSyllable || 0) + 1}`;
+
+        // Show native audio player if audio available
+        if (this.nativeAudio && this.nativeAudioContainer) {
+            if (wordRef.audioUrl) {
+                const proxiedUrl = this.wordRefService.getProxiedAudioUrl(wordRef.audioUrl);
+                this.nativeAudio.src = proxiedUrl;
+                this.nativeAudioContainer.style.display = 'flex';
+
+                // Play audio automatically when switching forms (optional but nice)
+                // this.nativeAudio.play().catch(() => {}); 
+            } else {
+                this.nativeAudioContainer.style.display = 'none';
+            }
+        }
+
+        // *** Draw native pitch contour graph (LEFT CHART) ***
+        if (this.visualizer) {
+            this.visualizer.clear();
+
+            if (wordRef.nativeAnalysis && wordRef.nativeAnalysis.pitch?.values?.length > 0) {
+                this.visualizer.drawNativePitchContour(
+                    wordRef.nativeAnalysis,
+                    wordRef.nativeAnalysis.syllables || []
+                );
+            }
+
+            // Get and display native pattern (RIGHT CHART - bar chart)
+            this.nativePattern = this.wordRefService.getExpectedPattern(wordRef);
+            if (this.nativePattern && this.nativePattern.length > 0) {
+                this.visualizer.drawDurationChart(this.nativePattern, []);
+            }
+        }
+
+        if (this.statusIndicator) this.statusIndicator.textContent = "Ready";
+
+        // Update SyllableVerifier (Waveform) if it exists
+        if (window.syllableVerifier && wordRef.audioUrl) {
+            // We need to re-initialize verifier with new audio
+            // This might require a method on SyllableVerifier to load new URL without full init
+            // For now, assuming user will interact with main UI
+        }
+    }
+
+    /**
+     * Render buttons to switch between word forms (Noun, Verb, etc.)
+     */
+    renderWordFormSelector(alternatives) {
+        const container = document.getElementById('pa-word-forms');
+        if (!container) return;
+
+        container.innerHTML = '';
+        container.style.display = 'none';
+
+        // Filter valid alternatives (must have definitions or audio)
+        const validAlts = (alternatives || []).filter(a => a.definition || a.audioUrl);
+
+        if (validAlts.length <= 1) {
+            return;
+        }
+
+        container.style.display = 'flex';
+
+        validAlts.forEach((alt, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'pa-word-form-btn';
+
+            // Inline styles for pill appearance (move to CSS later if needed)
+            btn.style.padding = '6px 14px';
+            btn.style.fontSize = '0.9rem';
+            btn.style.borderRadius = '20px';
+            btn.style.border = '1px solid #e5e7eb';
+            btn.style.background = '#f3f4f6';
+            btn.style.color = '#374151';
+            btn.style.cursor = 'pointer';
+            btn.style.transition = 'all 0.2s';
+            btn.style.fontWeight = '500';
+
+            // Text: Part of Speech + IPA
+            const pos = alt.partOfSpeech || 'Word';
+            // Capitalize first letter
+            const posFormatted = pos.charAt(0).toUpperCase() + pos.slice(1);
+            const ipa = alt.pronunciation ? ` /${alt.pronunciation}/` : '';
+
+            // Add indicator for inherited pronunciation
+            if (alt.inheritedPronunciation) {
+                btn.innerHTML = `${posFormatted}${ipa} <span style="font-size: 0.75em; opacity: 0.7; font-weight: normal;">(Shared)</span>`;
+            } else {
+                btn.textContent = `${posFormatted}${ipa}`;
+            }
+
+            // Highlight the first one initially
+            if (index === 0) {
+                this.highlightSelectedForm(btn);
+            }
+
+            btn.onclick = () => {
+                this.displayWordData(alt);
+                this.highlightSelectedForm(btn);
+            };
+
+            container.appendChild(btn);
+        });
+    }
+
+    highlightSelectedForm(selectedBtn) {
+        const container = document.getElementById('pa-word-forms');
+        const buttons = container.querySelectorAll('button');
+        buttons.forEach(btn => {
+            btn.style.background = '#f3f4f6';
+            btn.style.color = '#374151';
+            btn.style.borderColor = '#e5e7eb';
+            btn.style.boxShadow = 'none';
+        });
+
+        // Active styles (Blue)
+        selectedBtn.style.background = '#3b82f6';
+        selectedBtn.style.color = 'white';
+        selectedBtn.style.borderColor = '#2563eb';
+        selectedBtn.style.boxShadow = '0 2px 4px rgba(37, 99, 235, 0.2)';
     }
 }
 

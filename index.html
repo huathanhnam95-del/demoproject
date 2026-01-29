@@ -6,8 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dictation Practice</title>
   <link rel="stylesheet" href="style.css?v=20260123_mode_fix">
-  <link rel="stylesheet" href="srs-review.css?v=20260127_srs_upgrade">
-  <link rel="stylesheet" href="srs-onboarding.css?v=20260127_srs_upgrade">
+  <link rel="stylesheet" href="srs-review.css">
+  <link rel="stylesheet" href="srs-onboarding.css">
   <link rel="stylesheet" href="pronunciation-analyzer/style.css">
   <link rel="stylesheet" href="pronunciation-analyzer/syllable-verifier.css">
   <link rel="stylesheet" href="style-scaffolding.css?v=20260123_mode_fix">
@@ -17,6 +17,16 @@
   <script src="https://unpkg.com/wavesurfer.js@7"></script>
   <script src="https://unpkg.com/wavesurfer.js@7/dist/plugins/regions.min.js"></script>
   <script src="pronunciation-analyzer/syllable-verifier.js?v=20260114_ui_v4"></script>
+  <!-- Import Map for NPM Packages (FSRS) -->
+  <script type="importmap">
+    {
+      "imports": {
+        "ts-fsrs": "./node_modules/ts-fsrs/dist/index.mjs"
+      }
+    }
+  </script>
+  <!-- Load SRS Scheduler as Module for FSRS support -->
+  <script type="module" src="srs-scheduler.js"></script>
 </head>
 
 <body>
@@ -33,11 +43,18 @@
       const preloader = document.getElementById('app-preloader');
       if (preloader && preloader.style.display !== 'none') {
         const text = document.getElementById('preloader-text');
+        console.warn('Preloader timeout: Checking module status...');
+        const modulesLoaded = window.firebaseAuthFunctions && window.firebaseFirestoreFunctions;
+
         if (text) {
-          text.innerHTML = 'Loading is taking longer than expected.<br><span style="font-size:0.9em; cursor:pointer; text-decoration:underline;" onclick="document.getElementById(\'app-preloader\').style.display=\'none\'">Dismiss loading screen</span>';
+          if (!modulesLoaded) {
+            text.innerHTML = '<span style="color:#ff6b6b;">⚠ Security/Certificate Block detected.</span><br>Some scripts failed to load. Please click below to bypass and see details in console (F12).<br><span style="font-size:0.9em; color:#4dabf7; cursor:pointer; text-decoration:underline;" onclick="document.getElementById(\'app-preloader\').style.display=\'none\'">Enter App Anyway</span>';
+          } else {
+            text.innerHTML = 'Loading is taking longer than expected.<br><span style="font-size:0.9em; cursor:pointer; text-decoration:underline;" onclick="document.getElementById(\'app-preloader\').style.display=\'none\'">Dismiss loading screen</span>';
+          }
         }
       }
-    }, 8000);
+    }, 5000); // Reduced to 5s for faster feedback
   </script>
 
   <!-- Demo Feedback Banner -->
@@ -542,7 +559,12 @@
   <div id="srs-review-panel" class="srs-panel" style="display: none;">
     <div class="srs-header">
       <h2>📚 Vocabulary Review</h2>
-      <button id="srs-close-btn" class="srs-close-btn" title="Close">×</button>
+      <div class="srs-header-actions" style="display: flex; gap: 8px; align-items: center;">
+        <button id="srs-settings-btn" class="srs-settings-btn" title="Scheduler Settings"
+          style="background: none; border: none; font-size: 1.5rem; cursor: pointer; padding: 4px;">⚙️</button>
+        <button id="srs-close-btn" class="srs-close-btn" title="Close"
+          style="position: static; font-size: 2rem;">×</button>
+      </div>
     </div>
 
     <div class="srs-stats">
@@ -660,6 +682,63 @@
     </div>
 
     <div class="srs-summary" id="srs-summary" style="display: none;"></div>
+  </div>
+
+  <!-- SRS Settings & Visualization Modal -->
+  <div id="srs-settings-modal" class="srs-settings-modal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; align-items: center; justify-content: center;">
+    <div class="srs-settings-content"
+      style="background: white; width: 90%; max-width: 600px; border-radius: 16px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
+      <div class="settings-header"
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 12px;">
+        <h2 style="margin: 0;">⚙️ Scheduler Settings</h2>
+        <button id="srs-settings-close"
+          style="background: none; border: none; font-size: 24px; cursor: pointer;">×</button>
+      </div>
+
+      <div class="settings-section" style="margin-bottom: 24px;">
+        <h3 style="margin-bottom: 12px; font-size: 1.1rem; color: #374151;">Algorithm Selection</h3>
+        <p style="font-size: 0.9rem; color: #6b7280; margin-bottom: 16px;">Choose the algorithm that best fits your
+          learning style.</p>
+
+        <div class="algorithm-options" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <label class="algo-option"
+            style="border: 2px solid #e5e7eb; border-radius: 12px; padding: 16px; cursor: pointer; transition: all 0.2s;">
+            <input type="radio" name="srs-algo" value="SM2" style="display: none;">
+            <div style="font-weight: 600; margin-bottom: 4px;">SM-2 (Classic)</div>
+            <div style="font-size: 0.8rem; color: #6b7280;">Tried and true. Similar to standard Anki experience.</div>
+          </label>
+          <label class="algo-option"
+            style="border: 2px solid #e5e7eb; border-radius: 12px; padding: 16px; cursor: pointer; transition: all 0.2s;">
+            <input type="radio" name="srs-algo" value="FSRS" style="display: none;">
+            <div style="font-weight: 600; margin-bottom: 4px;">FSRS (Advanced)</div>
+            <div style="font-size: 0.8rem; color: #6b7280;">High-efficiency scheduling using modern research.</div>
+          </label>
+        </div>
+      </div>
+
+      <div class="settings-section" style="margin-bottom: 24px;">
+        <h3 style="margin-bottom: 12px; font-size: 1.1rem; color: #374151;">📈 Retention Forecast</h3>
+        <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 12px;">The health of your vocabulary memory across
+          all words.</p>
+        <div class="graph-container"
+          style="background: #f9fafb; border-radius: 12px; padding: 16px; height: 200px; display: flex; align-items: center; justify-content: center; position: relative;">
+          <canvas id="retention-chart"></canvas>
+          <div id="graph-loading" style="position: absolute; color: #9ca3af;">Loading visual data...</div>
+        </div>
+        <div id="retention-stats"
+          style="margin-top: 12px; font-size: 0.9rem; color: #4b5563; display: flex; justify-content: space-around; background: #eff6ff; padding: 10px; border-radius: 8px;">
+          <div>Avg Stability: <span id="avg-stability" style="font-weight: 600;">-</span></div>
+          <div>Avg Retention: <span id="avg-retention" style="font-weight: 600;">-</span></div>
+        </div>
+      </div>
+
+      <div class="settings-actions" style="display: flex; gap: 12px; margin-top: 12px;">
+        <button id="save-settings-btn"
+          style="flex: 1; background: #2563eb; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 600; cursor: pointer;">Save
+          Settings</button>
+      </div>
+    </div>
   </div>
 
   <!-- Right-Side Collapsible Account Panel -->
@@ -882,6 +961,10 @@
                   🔍 Search
                 </button>
               </div>
+
+              <!-- Word Form Selector (hidden by default) -->
+              <div id="pa-word-forms" class="pa-word-forms"
+                style="display: none; margin-bottom: 15px; display: flex; gap: 8px; flex-wrap: wrap;"></div>
               <div id="pa-word-info" class="pa-word-info">
                 <div class="pa-info-row">
                   <span class="pa-info-label">IPA:</span>
@@ -1885,61 +1968,83 @@
   <!-- SRS Writing Challenge Modal -->
   <div id="srs-writing-modal" class="srs-writing-modal">
     <div class="srs-writing-content">
+      <button id="srs-writing-close-btn" class="vocab-add-close">×</button>
+
       <div class="srs-writing-header">
-        <button id="srs-writing-close-btn" class="vocab-add-close"
-          style="position: absolute; right: 20px; top: 20px;">×</button>
-        <h3>✍️ Writing Challenge</h3>
+        <h3>✍️ Writing Challenge <span id="writing-pos-tag" class="writing-pos-tag" style="display:none;"></span></h3>
         <p class="srs-writing-subtitle">Practice using the word in your own context</p>
-        <button id="more-help-btn" class="more-help-btn" title="Get more context and examples">
-          <span class="pulse-ring"></span>
-          💡 More Help!
-        </button>
       </div>
 
-      <!-- Scaffolding Panel (hidden by default) -->
-      <div id="scaffolding-panel" class="scaffolding-panel">
-        <div class="scaffolding-section">
-          <h4 class="scaffolding-title">📖 Example Sentences</h4>
-          <ul id="example-sentences-list" class="example-sentences-list">
-            <li class="example-sentence-item loading">Loading examples...</li>
-          </ul>
-        </div>
-        <div class="scaffolding-section">
-          <!-- JS will inject Breakdown, POS, Synonyms here -->
-          <div id="scaffolding-extras-container" class="scaffolding-extras-container"></div>
-        </div>
-      </div>
+      <div class="srs-writing-body">
+        <!-- Left Column: Reference & Help -->
+        <div class="srs-writing-left">
+          <!-- Hints Box -->
+          <div id="srs-writing-hints" class="srs-writing-hints">
+            <div class="hint-item" id="hint-definition" style="display: none;">
+              <span class="hint-label">📚 Definition:</span>
+              <span class="hint-value" id="hint-definition-value">-</span>
+            </div>
+            <div class="hint-item" id="hint-example" style="display: none;">
+              <span class="hint-label">💡 Example:</span>
+              <span class="hint-value" id="hint-example-value">-</span>
+            </div>
+            <div class="hint-item" id="hint-collocations">
+              <span class="hint-label">🔗 Common phrases:</span>
+              <span class="hint-value" id="hint-collocations-value">-</span>
+            </div>
+          </div>
 
-      <!-- Hints Box -->
-      <div id="srs-writing-hints" class="srs-writing-hints">
-        <div class="hint-item" id="hint-example">
-          <span class="hint-label">💡 Example:</span>
-          <span class="hint-value" id="hint-example-value">-</span>
+          <div class="help-action-wrapper">
+            <button id="more-help-btn" class="more-help-btn" title="Get more context and examples">
+              <span class="pulse-ring"></span>
+              💡 Need more help?
+            </button>
+          </div>
+
+          <!-- Scaffolding Panel (hidden by default) -->
+          <div id="scaffolding-panel" class="scaffolding-panel">
+            <div class="scaffolding-section">
+              <h4 class="scaffolding-title">📖 Example Sentences</h4>
+              <ul id="example-sentences-list" class="example-sentences-list">
+                <li class="example-sentence-item loading">Loading examples...</li>
+              </ul>
+            </div>
+            <div class="scaffolding-section">
+              <div id="scaffolding-extras-container" class="scaffolding-extras-container"></div>
+            </div>
+          </div>
         </div>
-        <div class="hint-item" id="hint-collocations">
-          <span class="hint-label">🔗 Common phrases:</span>
-          <span class="hint-value" id="hint-collocations-value">-</span>
+
+        <!-- Right Column: Input Area -->
+        <div class="srs-writing-right">
+          <div class="srs-writing-input-container">
+            <p id="srs-writing-prompt" class="srs-writing-prompt">Loading prompt...</p>
+
+            <div class="hint-item" id="hint-starter">
+              <span class="hint-label">✏️ Starter:</span>
+              <span class="hint-value" id="hint-starter-value">-</span>
+              <button id="refresh-starter-btn" class="refresh-starter-btn" title="Get a different starter">🔄</button>
+            </div>
+
+            <textarea id="srs-writing-input" class="srs-writing-input"
+              placeholder="Write your sentence here... (Must include the word)"></textarea>
+
+            <div class="srs-writing-tools" style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
+              <label class="srs-ai-toggle"
+                style="font-size: 0.85rem; color: #64748b; display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none;">
+                <input type="checkbox" id="srs-skip-ai-toggle" style="accent-color: #3b82f6;">
+                <span>Skip AI (Offline Mode)</span>
+              </label>
+            </div>
+
+            <div id="srs-writing-feedback" class="srs-writing-feedback"></div>
+          </div>
+
+          <div class="srs-writing-actions">
+            <button id="srs-writing-skip" class="srs-writing-btn-skip">Skip Challenge</button>
+            <button id="srs-writing-submit" class="srs-writing-btn-submit">Check Sentence</button>
+          </div>
         </div>
-      </div>
-
-      <div class="srs-writing-input-container">
-        <p class="srs-writing-instruction" style="display: none;">💡 Practice using this word in your own sentence!</p>
-        <p id="srs-writing-prompt" class="srs-writing-prompt">Loading prompt...</p>
-
-        <div class="hint-item" id="hint-starter" style="justify-content: center; margin-bottom: 12px;">
-          <span class="hint-label">✏️ Starter:</span>
-          <span class="hint-value" id="hint-starter-value">-</span>
-          <button id="refresh-starter-btn" class="refresh-starter-btn" title="Get a different starter">🔄</button>
-        </div>
-
-        <textarea id="srs-writing-input" class="srs-writing-input"
-          placeholder="Write your sentence here... (Must include the word)"></textarea>
-        <div id="srs-writing-feedback" class="srs-writing-feedback"></div>
-      </div>
-
-      <div class="srs-writing-actions">
-        <button id="srs-writing-skip" class="srs-writing-btn-skip">Skip</button>
-        <button id="srs-writing-submit" class="srs-writing-btn-submit">Check Sentence</button>
       </div>
     </div>
   </div>
@@ -1985,7 +2090,7 @@
 
   <!-- Pronunciation Analyzer -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script type="module" src="pronunciation-analyzer/main.js?v=20260114_debug_v3"></script>
+  <script type="module" src="pronunciation-analyzer/main.js?v=20260128_forms"></script>
 
   <!-- Shop Modal -->
   <div id="shop-modal" class="shop-modal">

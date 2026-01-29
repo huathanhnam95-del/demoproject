@@ -9,13 +9,19 @@
     "sync-rules": "node sync-points-rules.js points-rules.csv"
   },
   "dependencies": {
+    "@huggingface/inference": "^4.13.10",
+    "axios": "^1.13.4",
     "chart.js": "^4.5.1",
     "cors": "^2.8.6",
+    "dotenv": "^17.2.3",
     "exceljs": "^4.4.0",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.2.1",
     "firebase-admin": "^13.6.0",
     "openai": "^6.16.0",
     "pitchfinder": "^2.3.4",
+    "retry-axios": "^4.0.1",
+    "ts-fsrs": "^5.2.3",
     "youtube-transcript": "^1.2.1"
   },
   "devDependencies": {

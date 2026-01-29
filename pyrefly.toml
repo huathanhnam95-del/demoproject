@@ -14,5 +14,6 @@ project-excludes = [
     "**/antigravity-logicware/**",
     "**/backend/ver0.0/**",
     "**/.git/**",
-    "**/venv/**"
+    "**/venv/**",
+    "**/backend/**"
 ]

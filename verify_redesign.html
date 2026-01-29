@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Verify Writing Challenge Redesign</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="srs-review.css">
+    <style>
+        body {
+            background: #f1f5f9;
+            font-family: 'Inter', sans-serif;
+            padding: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        button:hover {
+            background: #4f46e5;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="controls">
+        <button onclick="triggerChallenge()">Trigger Writing Challenge</button>
+    </div>
+
+    <!-- SRS Writing Challenge Modal (Copied from index.html) -->
+    <div id="srs-writing-modal" class="srs-writing-modal">
+        <div class="srs-writing-content">
+            <button id="srs-writing-close-btn" class="vocab-add-close">×</button>
+
+            <div class="srs-writing-header">
+                <h3>✍️ Writing Challenge <span id="writing-pos-tag" class="writing-pos-tag"
+                        style="display:none;"></span></h3>
+                <p class="srs-writing-subtitle">Practice using the word in your own context</p>
+            </div>
+
+            <div class="srs-writing-body">
+                <!-- Left Column: Reference & Help -->
+                <div class="srs-writing-left">
+                    <div id="srs-writing-hints" class="srs-writing-hints">
+                        <div class="hint-item" id="hint-definition" style="display: none;">
+                            <span class="hint-label">📚 Definition:</span>
+                            <span class="hint-value" id="hint-definition-value">-</span>
+                        </div>
+                        <div class="hint-item" id="hint-example" style="display: none;">
+                            <span class="hint-label">💡 Example:</span>
+                            <span class="hint-value" id="hint-example-value">-</span>
+                        </div>
+                        <div class="hint-item" id="hint-collocations">
+                            <span class="hint-label">🔗 Common phrases:</span>
+                            <span class="hint-value" id="hint-collocations-value">-</span>
+                        </div>
+                    </div>
+
+                    <div class="help-action-wrapper">
+                        <button id="more-help-btn" class="more-help-btn" title="Get more context and examples">
+                            <span class="pulse-ring"></span>
+                            💡 Need more help?
+                        </button>
+                    </div>
+
+                    <div id="scaffolding-panel" class="scaffolding-panel">
+                        <div class="scaffolding-section">
+                            <h4 class="scaffolding-title">📖 Example Sentences</h4>
+                            <ul id="example-sentences-list" class="example-sentences-list">
+                                <li class="example-sentence-item loading">Loading examples...</li>
+                            </ul>
+                        </div>
+                        <div class="scaffolding-section">
+                            <div id="scaffolding-extras-container" class="scaffolding-extras-container"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Input Area -->
+                <div class="srs-writing-right">
+                    <div class="srs-writing-input-container">
+                        <p id="srs-writing-prompt" class="srs-writing-prompt">Loading prompt...</p>
+
+                        <div class="hint-item" id="hint-starter">
+                            <span class="hint-label">✏️ Starter:</span>
+                            <span class="hint-value" id="hint-starter-value">-</span>
+                            <button id="refresh-starter-btn" class="refresh-starter-btn">🔄</button>
+                        </div>
+
+                        <textarea id="srs-writing-input" class="srs-writing-input"
+                            placeholder="Write your sentence here... (Must include the word)"></textarea>
+                        <div id="srs-writing-feedback" class="srs-writing-feedback"></div>
+                    </div>
+
+                    <div class="srs-writing-actions">
+                        <button id="srs-writing-skip" class="srs-writing-btn-skip">Skip Challenge</button>
+                        <button id="srs-writing-submit" class="srs-writing-btn-submit">Check Sentence</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mocks and Scripts -->
+    <script>
+        // Mock dependencies
+        window.firebaseDb = {};
+        window.srsCache = { reviewStats: { totalReviews: 50 } };
+        window.POINTS_PER_REVIEW = 10;
+
+        // Mock getCollocations
+        window.getCollocations = (word) => ['make an effort', 'successful career', 'highly successful'];
+
+        // Mock triggerConfetti
+        window.triggerConfetti = () => console.log('Confetti!');
+    </script>
+
+    <script src="https://unpkg.com/compromise"></script>
+    <script src="dictionary-service.js"></script>
+    <script type="module">
+        import './srs-review.js';
+
+        window.triggerChallenge = () => {
+            const wordObj = {
+                lemma: 'success',
+                originalWord: 'success',
+                partOfSpeech: 'noun',
+                definition: 'The accomplishment of an aim or purpose.',
+                example: 'There is a thin line between success and failure.'
+            };
+
+            if (window.SRSReview) {
+                window.SRSReview.showWritingChallenge(wordObj, () => {
+                    console.log('Challenge completed/skipped');
+                });
+            }
+        };
+
+        // Initialize after scripts load
+        setTimeout(() => {
+            if (window.SRSReview) window.SRSReview.init();
+        }, 500);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,63 @@
+# Writing Challenge: Business Logic & Implementation
+
+## 1. Feature Overview
+The **Writing Challenge** is an advanced active-recall mechanism in the SRS (Spaced Repetition System). It triggers after a user successfully completes a standard review (Listen, Speak, or Cloze) for a word that is specifically marked for mastery.
+
+### Key Objectives:
+- **Active Usage**: Move from passive recognition to active production.
+- **Contextualization**: Force the user to use the word in a grammatically correct and semantically relevant context.
+- **Scaffolding**: Provide definitions, synonyms, and real-world examples (via Tracau) to help the user construct their own sentence.
+
+---
+
+## 2. Why Writing Prompts are Needed?
+A blank textarea is intimidating and often leads to simple, repetitive sentences (e.g., "I like [word]"). Prompts are designed to:
+- **Guide the User**: Provide a specific angle or "collocation" to focus on.
+- **Ensure Quality**: By using phrase-based prompts, we encourage users to learn how words "hang together" (collocations) rather than just the isolated word.
+- **Reduce Cognitive Load**: A "Starter" or a specific "Phrase" gives the user a foundation to build upon.
+
+---
+
+## 3. Prompt Construction Logic
+The `generateWritingPrompt` function in `srs-review.js` uses a tiered fallback strategy to ensure the user always has a high-quality guiding question.
+
+### Strategy 1: Collocation-Based (Primary)
+- **Data Source**: Fetched from a local collocations database (or NLP detection).
+- **Classification**:
+    - **Verb Phrases**: (e.g., "make visible", "take a break"). Triggered by common verb starters.
+    - **Noun Phrases**: (e.g., "a big opportunity", "the favorte book"). Triggered by articles/determiners.
+- **Templates**:
+    - *Verb*: "Write a sentence using the phrase '${collocation}'."
+    - *Noun*: "Write about a situation involving '${collocation}'."
+- **Why?**: Collocations are the most natural way to use a word.
+
+### Strategy 2: Definition-Based (Fallback)
+- **Data Source**: `DictionaryService` (Wiktionary/Free Dictionary).
+- **Templates**:
+    - "Write a sentence using the word '${lemma}'."
+    - "Describe a situation where you might use '${lemma}'."
+- **Why?**: If no common phrases are known, we fall back to the base meaning of the word.
+
+### Strategy 4: Ultimate Fallback
+- **Generic**: "Write a sentence that clearly shows the meaning of '${lemma}'."
+
+---
+
+## 4. Implementation Details
+
+### The Trigger
+In `srs-review.js`, the challenge is triggered inside `recordReviewResult` if:
+1. The user's answer was **correct**.
+2. The word is an **allowed Part of Speech** (Noun, Verb, Adj, Adv).
+3. The word is NOT on the `shouldSkipWritingChallenge` list (too common/simple).
+
+### UI Display & Compactness
+- **Header POS Tag**: The Part of Speech is displayed as a small, color-coded tag in the modal header to save vertical space.
+- **Scaffolding Panel**: A dedicated panel shows real-world **Example Sentences** (fetched from Tracau/Tatoeba) and **Synonyms**.
+- **Removal of "Fake" Phrases**: Generic templates (like "I [word] because...") were removed in favor of real, high-quality examples to avoid confusing the learner.
+
+### Validation
+The `checkSentence` function verifies:
+1. The **Target Word** is present (using fuzzy/lemma matching).
+2. The sentence length is sufficient for a meaningful attempt.
+3. Feedback is provided based on the presence of the word.

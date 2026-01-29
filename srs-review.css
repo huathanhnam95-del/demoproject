@@ -367,7 +367,7 @@
     opacity: 0;
     visibility: hidden;
     transform: translateY(10px);
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.5s ease-in-out;
     max-height: 0;
     overflow: hidden;
     pointer-events: none;
@@ -1247,35 +1247,6 @@
     }
 }
 
-/* FIX: Ensure Writing Modal is ALWAYS on top */
-/* Writing Challenge Modal - Explicitly Defined for global scope */
-.srs-writing-modal {
-    display: none;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.95);
-    width: 90%;
-    max-width: 500px;
-    background: #ffffff;
-    border-radius: 20px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    z-index: 99999 !important;
-    /* Force top */
-    padding: 24px;
-    opacity: 0;
-    transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.srs-writing-modal.visible {
-    display: block;
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-    visibility: visible;
-}
-
-
 /* FIX: Tutorial Layering (Must be above SRS Panel z-index 10001 AND Writing Modal z-index 99999) */
 .vocab-tutorial-overlay {
     z-index: 100000 !important;
@@ -1296,4 +1267,53 @@
 .vocab-tutorial-tooltip .tutorial-skip {
     pointer-events: auto !important;
     cursor: pointer !important;
+}
+
+/* SRS Settings UI */
+.srs-settings-btn {
+    background: transparent;
+    border: none;
+    color: #9CA3AF;
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 4px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.srs-settings-btn:hover {
+    color: #111827;
+    transform: rotate(30deg);
+}
+
+.srs-settings-modal {
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.srs-settings-content {
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }

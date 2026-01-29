@@ -28,7 +28,9 @@ if exist cert.pem if exist key.pem (
     echo.
     echo Starting HTTPS server...
     echo.
-    %PYTHON_CMD% server.py
+    echo Starting Node.js HTTPS server...
+    echo.
+    node server.js
 ) else (
     echo SSL certificates not found!
     echo.
@@ -65,7 +67,9 @@ if exist cert.pem if exist key.pem (
         echo.
         echo Starting HTTPS server...
         echo.
-        %PYTHON_CMD% server.py
+        echo Starting Node.js HTTPS server...
+        echo.
+        node server.js
     ) else (
         echo.
         echo Failed to create certificates.

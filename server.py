@@ -39,7 +39,22 @@ else:
         def end_headers(self):
             # Add CORS headers if needed
             self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+            self.send_header('Access-Control-Allow-Headers', 'Content-Type')
             Handler.end_headers(self)
+
+        def do_OPTIONS(self):
+            self.send_response(200)
+            self.end_headers()
+
+        def do_POST(self):
+            # Basic proxy handling or 404/501 mitigation
+            if self.path.startswith('/api/'):
+                self.send_response(503) # Service Unavailable - redirect to Node.js
+                self.end_headers()
+                self.wfile.write(b'{"error": "Please restart using Node.js server"}')
+            else:
+                self.send_error(501, "Unsupported method ('POST')")
     
     with socketserver.TCPServer(("", PORT), MyHTTPRequestHandler) as httpd:
         # Create SSL context

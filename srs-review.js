@@ -3254,17 +3254,22 @@ const SRSReview = (function () {
             const pos = wordObj.partOfSpeech || 'word';
             // Get theme from vocab book if available (placeholder logic for now)
             const theme = wordObj.theme || 'general context';
+            // Enhance context with collocations if available
+            const collocations = getCollocations(lemma);
+            const collocationsContext = collocations.length > 0
+                ? `Common phrases: ${collocations.slice(0, 3).join(', ')}`
+                : '';
 
             const aiPrompt = `Role: English Teacher for Vietnamese speakers.
-            Task: Generate a creative, single-sentence composition prompt for the English word "${lemma}" (${pos}).
+            Task: Generate a creative, single-sentence composition prompt for the English word "${lemma}" (${pos}) with meaning "${wordObj.definition || 'general use'}".
             Target User: Level ${userLevel}/20 learner.
-            Context/Theme: ${theme !== 'general context' ? theme : 'Daily life, work, or social situations relevant to Vietnam'}.
-            
+            Context/Theme: ${theme !== 'general context' ? theme : 'Daily life, work, or social situations relevant to Vietnam'}. ${collocationsContext}
+
             Instructions:
-            1. The prompt should ask the user to describing a situation or opinion.
-            2. Do NOT use the target word "${lemma}" in the prompt itself.
-            3. Do NOT provide the answer or example sentence.
-            4. Keep the prompt short (under 15 words) and encouraging.
+            1. The prompt should encourage using "${lemma}" in a sentence about a situation, opinion, or story related to its meaning.
+            2. Do NOT use the target word "${lemma}" in the prompt itself, but hint at its concept (e.g., if the word is "field" meaning "field research", prompt about exploring or studying in real-world settings).
+            3. Keep the prompt short (under 15 words), encouraging, and tied to the theme.
+            4. Example Output: "Describe a project where you investigated something outdoors in your city."
 
             Output: Just the prompt text.`;
 

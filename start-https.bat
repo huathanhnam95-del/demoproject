@@ -17,8 +17,8 @@ if not exist "localhost.pem" (
     powershell -ExecutionPolicy Bypass -File "generate_cert.ps1"
 )
 
-:: Run the HTTPS server from project root
-python backend\local_server\local_https_server.py
+:: Run the Node.js HTTPS server from project root
+node server.js
 
 :: If python crashes or stops, pause so user can see why
 echo.

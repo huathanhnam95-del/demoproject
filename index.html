@@ -963,8 +963,8 @@
               </div>
 
               <!-- Word Form Selector (hidden by default) -->
-              <div id="pa-word-forms" class="pa-word-forms"
-                style="display: none; margin-bottom: 15px; display: flex; gap: 8px; flex-wrap: wrap;"></div>
+              <div id="pa-word-forms" class="pa-word-forms hidden"
+                style="margin-bottom: 15px; gap: 8px; flex-wrap: wrap;"></div>
               <div id="pa-word-info" class="pa-word-info">
                 <div class="pa-info-row">
                   <span class="pa-info-label">IPA:</span>
@@ -974,6 +974,12 @@
                   <span class="pa-info-label">Pattern:</span>
                   <span id="pa-pattern-display">3 Syllables, Stress on 1</span>
                 </div>
+              </div>
+
+              <!-- Loading Placeholder -->
+              <div id="pa-loading-placeholder" class="pa-loading-container">
+                <div class="pa-spinner" style="display: block; margin: 0;"></div>
+                <div class="pa-loading-text">Loading data...</div>
               </div>
             </div>
           </div>

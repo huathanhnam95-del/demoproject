@@ -34,6 +34,9 @@ class PronunciationApp {
         this.wordInput = document.getElementById('pa-word-input');
         this.ipaDisplay = document.getElementById('pa-ipa-display');
         this.patternDisplay = document.getElementById('pa-pattern-display');
+        this.wordInfo = document.getElementById('pa-word-info');
+        this.wordForms = document.getElementById('pa-word-forms');
+        this.loadingPlaceholder = document.getElementById('pa-loading-placeholder');
 
         // Native audio element
         this.nativeAudioContainer = document.getElementById('pa-native-audio-container');
@@ -155,7 +158,10 @@ class PronunciationApp {
             this.spinner.style.display = 'block';
             this.visualizer.clear();
 
-            // Hide native audio while loading
+            // Hide old data while loading
+            if (this.wordInfo) this.wordInfo.classList.add('hidden');
+            if (this.wordForms) this.wordForms.classList.add('hidden');
+            if (this.loadingPlaceholder) this.loadingPlaceholder.style.display = 'flex';
             if (this.nativeAudioContainer) {
                 this.nativeAudioContainer.style.display = 'none';
             }
@@ -170,7 +176,13 @@ class PronunciationApp {
                 // Fall back to existing Phonetics API
             }
 
+            if (this.loadingPlaceholder) this.loadingPlaceholder.style.display = 'none';
+
             if (wordRef && wordRef.found !== false) {
+                // Show containers
+                if (this.wordInfo) this.wordInfo.classList.remove('hidden');
+                if (this.wordForms) this.wordForms.classList.remove('hidden');
+
                 // Render word form selector (if multiple forms exist)
                 this.renderWordFormSelector(wordRef.alternatives || []);
 
@@ -771,11 +783,10 @@ class PronunciationApp {
      * Render buttons to switch between word forms (Noun, Verb, etc.)
      */
     renderWordFormSelector(alternatives) {
-        const container = document.getElementById('pa-word-forms');
-        if (!container) return;
+        if (!this.wordForms) return;
 
-        container.innerHTML = '';
-        container.style.display = 'none';
+        this.wordForms.innerHTML = '';
+        this.wordForms.classList.add('hidden');
 
         // Filter valid alternatives (must have definitions or audio)
         const validAlts = (alternatives || []).filter(a => a.definition || a.audioUrl);
@@ -784,39 +795,32 @@ class PronunciationApp {
             return;
         }
 
-        container.style.display = 'flex';
+        this.wordForms.classList.remove('hidden');
 
         validAlts.forEach((alt, index) => {
             const btn = document.createElement('button');
-            btn.className = 'pa-word-form-btn';
 
-            // Inline styles for pill appearance (move to CSS later if needed)
-            btn.style.padding = '6px 14px';
-            btn.style.fontSize = '0.9rem';
-            btn.style.borderRadius = '20px';
-            btn.style.border = '1px solid #e5e7eb';
-            btn.style.background = '#f3f4f6';
-            btn.style.color = '#374151';
-            btn.style.cursor = 'pointer';
-            btn.style.transition = 'all 0.2s';
-            btn.style.fontWeight = '500';
+            // Get POS and normalize for class name
+            const pos = (alt.partOfSpeech || 'default').toLowerCase().replace(/[^a-z]/g, '');
+            const posClass = `pa-pos-${['noun', 'verb', 'adj', 'adv'].includes(pos) ? pos : 'default'}`;
+
+            btn.className = `pa-word-form-btn ${posClass}`;
 
             // Text: Part of Speech + IPA
-            const pos = alt.partOfSpeech || 'Word';
-            // Capitalize first letter
-            const posFormatted = pos.charAt(0).toUpperCase() + pos.slice(1);
+            const posDisplay = alt.partOfSpeech || 'Word';
+            const posFormatted = posDisplay.charAt(0).toUpperCase() + posDisplay.slice(1);
             const ipa = alt.pronunciation ? ` /${alt.pronunciation}/` : '';
 
             // Add indicator for inherited pronunciation
             if (alt.inheritedPronunciation) {
-                btn.innerHTML = `${posFormatted}${ipa} <span style="font-size: 0.75em; opacity: 0.7; font-weight: normal;">(Shared)</span>`;
+                btn.innerHTML = `<span>${posFormatted}${ipa}</span> <span style="font-size: 0.75em; opacity: 0.7; font-weight: normal; margin-left: 4px;">(Shared)</span>`;
             } else {
-                btn.textContent = `${posFormatted}${ipa}`;
+                btn.innerHTML = `<span>${posFormatted}${ipa}</span>`;
             }
 
             // Highlight the first one initially
             if (index === 0) {
-                this.highlightSelectedForm(btn);
+                btn.classList.add('active');
             }
 
             btn.onclick = () => {
@@ -824,25 +828,17 @@ class PronunciationApp {
                 this.highlightSelectedForm(btn);
             };
 
-            container.appendChild(btn);
+            this.wordForms.appendChild(btn);
         });
     }
 
     highlightSelectedForm(selectedBtn) {
-        const container = document.getElementById('pa-word-forms');
-        const buttons = container.querySelectorAll('button');
+        if (!this.wordForms) return;
+        const buttons = this.wordForms.querySelectorAll('button');
         buttons.forEach(btn => {
-            btn.style.background = '#f3f4f6';
-            btn.style.color = '#374151';
-            btn.style.borderColor = '#e5e7eb';
-            btn.style.boxShadow = 'none';
+            btn.classList.remove('active');
         });
-
-        // Active styles (Blue)
-        selectedBtn.style.background = '#3b82f6';
-        selectedBtn.style.color = 'white';
-        selectedBtn.style.borderColor = '#2563eb';
-        selectedBtn.style.boxShadow = '0 2px 4px rgba(37, 99, 235, 0.2)';
+        selectedBtn.classList.add('active');
     }
 }
 

@@ -8,8 +8,8 @@ import { DatabaseService } from './database-service.js';
 import { STRESS_WEIGHTS, calculateStressScore } from './stress-utils.js';
 
 // Cache version - increment when backend algorithm changes
-// v7: Pronunciation inheritance for multi-form search (2026-01-29)
-const CACHE_VERSION = 7;
+// v8: Force re-fetch for syllable inheritance fix (2026-01-29)
+const CACHE_VERSION = 8;
 
 export class WordReferenceService {
     constructor() {
@@ -98,7 +98,12 @@ export class WordReferenceService {
         // 5. Save to database for future use (with cache version)
         if (config.features.saveToDatabase && this.db.isAvailable()) {
             wordData.cacheVersion = CACHE_VERSION;
-            this.db.saveWord(wordData).catch(err => {
+
+            // SANITIZATION: Firestore does not allow 'undefined' fields.
+            // We must traverse the object and convert all undefined to null.
+            const sanitizedData = this.sanitizeForFirestore(wordData);
+
+            this.db.saveWord(sanitizedData).catch(err => {
                 console.error('Error saving to database:', err);
             });
         }
@@ -191,14 +196,20 @@ export class WordReferenceService {
 
         await Promise.all(analysisPromises);
 
-        // Update primary data with its analysis if it's the first in alternatives
-        if (alternatives.length > 0 && alternatives[0].nativeAnalysis) {
-            mwData.nativeAnalysis = alternatives[0].nativeAnalysis;
-        }
+        // DEDUPLICATION: Collapse identical word forms to keep the UI clean
+        const seen = new Set();
+        const uniqueAlternatives = (alternatives || []).filter(alt => {
+            const pos = (alt.partOfSpeech || 'default').toLowerCase().trim();
+            const ipa = (alt.pronunciation || '').toLowerCase().trim();
+            const key = `${pos}:${ipa || word.toLowerCase()}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
 
         return {
             ...mwData,
-            alternatives,
+            alternatives: uniqueAlternatives,
             nativeAnalysis: mwData.nativeAnalysis,
             source: 'merriam-webster'
         };
@@ -553,5 +564,23 @@ export class WordReferenceService {
 
         console.log(`📦 Compressed analysis: ${currentPoints} → ${compressed.pitch.values.length} points (rate: 1/${sampleRate})`);
         return compressed;
+    }
+
+    /**
+     * Recursively sanitize data for Firestore by converting 'undefined' to 'null'
+     */
+    sanitizeForFirestore(obj) {
+        if (obj === undefined) return null;
+        if (obj === null || typeof obj !== 'object') return obj;
+
+        if (Array.isArray(obj)) {
+            return obj.map(item => this.sanitizeForFirestore(item));
+        }
+
+        const sanitized = {};
+        for (const [key, value] of Object.entries(obj)) {
+            sanitized[key] = this.sanitizeForFirestore(value);
+        }
+        return sanitized;
     }
 }

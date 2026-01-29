@@ -135,7 +135,8 @@ function calculateSM2(card, rating) {
     } = safeCard;
 
     const now = new Date();
-    let nextReviewDate;
+    // Safety fallback: default to tomorrow if logic misses
+    let nextReviewDate = addDays(now, 1);
     let newState = state;
     let newRepetitions = repetitions;
     let newInterval = interval;
@@ -167,8 +168,8 @@ function calculateSM2(card, rating) {
                 newStepIndex = 0;
                 newState = state === CARD_STATE.NEW ? CARD_STATE.LEARNING : CARD_STATE.RELEARNING;
                 nextReviewDate = addMinutes(now, SM2_CONFIG.LEARNING_STEPS[0]);
-                // Ease penalty only on entering relearning from reviewing
-                if (state === CARD_STATE.REVIEWING) {
+                // Ease penalty only on entering relearning from reviewing or mastered
+                if (state === CARD_STATE.REVIEWING || state === CARD_STATE.MASTERED) {
                     newEaseFactor = Math.max(SM2_CONFIG.MIN_EASE_FACTOR, easeFactor - 0.2);
                 }
                 break;
@@ -207,8 +208,8 @@ function calculateSM2(card, rating) {
                 break;
         }
     }
-    // --- Handle Reviewing State ---
-    else if (state === CARD_STATE.REVIEWING) {
+    // --- Handle Reviewing State (and Mastered) ---
+    else if (state === CARD_STATE.REVIEWING || state === CARD_STATE.MASTERED) {
         // Adjust for lateness (only for passing grades)
         // effective_interval = interval + days_late * bonus
         // But Anki applies this logic: next_i = current_i * factor + days_late * bonus... 
@@ -258,7 +259,7 @@ function calculateSM2(card, rating) {
         }
 
         // Apply Global Modifier to all reviewing intervals (if not relearning)
-        if (newState === CARD_STATE.REVIEWING) {
+        if (newState === CARD_STATE.REVIEWING || newState === CARD_STATE.MASTERED) {
             newInterval = Math.round(newInterval * SM2_CONFIG.INTERVAL_MODIFIER);
 
             // Fuzzing (Anki Logic: Apply to all intervals > 1 day)

@@ -372,6 +372,9 @@ app.post('/api/ai-feedback-stream', aiLimiter, async (req, res) => {
 
 // Fallback: serve index.html for all other routes (for SPA routing)
 app.get(/^(?!\/api).*$/, (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 

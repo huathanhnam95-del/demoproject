@@ -56,6 +56,7 @@ function initializeAuthUI() {
   const checkFirebase = () => {
     if (window.firebaseAuthFunctions && window.firebaseFirestoreFunctions) {
       console.log('✓ Firebase module functions found, linking to UI...');
+      console.log('[AuthUI] window.firebaseFirestoreFunctions.updateUserProfile exists:', typeof window.firebaseFirestoreFunctions.updateUserProfile);
       authFunctions = window.firebaseAuthFunctions;
       firestoreFunctions = window.firebaseFirestoreFunctions;
       setupAuthStateListener();
@@ -286,6 +287,10 @@ async function handleLevelSelection(level) {
 
   try {
     // Update Profile
+    console.log('[AuthUI] Calling updateUserProfile. firestoreFunctions status:', !!firestoreFunctions);
+    if (firestoreFunctions) {
+      console.log('[AuthUI] updateUserProfile function type:', typeof firestoreFunctions.updateUserProfile);
+    }
     await firestoreFunctions.updateUserProfile(currentUserId, {
       englishLevel: level,
       levelSelectedAt: new Date()

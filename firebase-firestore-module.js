@@ -1467,6 +1467,7 @@ async function recordPurchase(userId, item) {
 }
 
 // Export functions for use in other modules
+console.log('[FirestoreModule] Exporting functions, testing updateUserProfile:', typeof updateUserProfile);
 window.firebaseFirestoreFunctions = {
   createOrUpdateUserProfile,
   updateUserProfile,
@@ -1504,3 +1505,8 @@ window.firebaseFirestoreFunctions = {
   getPurchases,
   recordPurchase
 };
+console.log('[FirestoreModule] window.firebaseFirestoreFunctions keys:', Object.keys(window.firebaseFirestoreFunctions));
+if (!window.firebaseFirestoreFunctions.updateUserProfile) {
+  console.error('[FirestoreModule] FATAL: updateUserProfile MISSING FROM EXPORT!');
+}
+

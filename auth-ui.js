@@ -19,12 +19,33 @@ let currentUserId = null;
 // This is stored in sessionStorage to persist during the session
 let isGuestMode = false;
 
-// ============================================
-// Auth State Change Callbacks
-// ============================================
-// These callbacks are called when auth state changes (login/logout)
 // Used to trigger UI updates in other modules (e.g., progress reload)
 let authStateCallbacks = [];
+
+/**
+ * Trigger all auth state callbacks
+ * @param {string} type - 'login' or 'logout'
+ * @param {string} userId - User ID or null
+ */
+async function triggerAuthStateCallbacks(type, userId) {
+  for (const callback of authStateCallbacks) {
+    try {
+      await callback(userId);
+    } catch (err) {
+      console.error('Error in auth state callback:', err);
+    }
+  }
+}
+
+/**
+ * Register a callback to be called when auth state changes
+ * @param {Function} callback - Function to call on change
+ */
+function onAuthStateChanged(callback) {
+  if (typeof callback === 'function') {
+    authStateCallbacks.push(callback);
+  }
+}
 
 // Initialize when Firebase is ready
 function initializeAuthUI() {
@@ -283,6 +304,39 @@ async function handleLevelSelection(level) {
       });
       // Local update for immediate feedback if needed
       localStorage.setItem('unlocked_filter_length_type', 'true');
+    }
+
+    // Sync to DifficultyManager manual level
+    try {
+      const levelMap = { 'beginner': 1, 'intermediate': 2, 'expert': 3 };
+      const numericLevel = levelMap[normalizedLevel] || 1;
+
+      // Get existing profile or create new
+      const stored = localStorage.getItem('difficulty_profile');
+      let profileData = stored ? JSON.parse(stored) : { settings: {}, profiles: {} };
+
+      // Update manual settings
+      profileData.settings = {
+        ...profileData.settings,
+        autoAdjustEnabled: false, // Force manual when explicitly chosen
+        manualLevel: numericLevel
+      };
+
+      // Also update per-mode profiles to ensure fallback works if autoAdjust is locked
+      ['type', 'speak', 'listen'].forEach(mode => {
+        if (!profileData.profiles[mode]) profileData.profiles[mode] = {};
+        profileData.profiles[mode].level = numericLevel;
+      });
+
+      localStorage.setItem('difficulty_profile', JSON.stringify(profileData));
+      console.log(`🎯 [Auth] Synced level ${normalizedLevel} (${numericLevel}) to DifficultyManager`);
+
+      // Force DifficultyManager to reload settings immediately
+      if (window.DifficultyManager && typeof window.DifficultyManager.refreshProfile === 'function') {
+        window.DifficultyManager.refreshProfile();
+      }
+    } catch (err) {
+      console.error('Failed to sync level to DifficultyManager:', err);
     }
 
     // Hide Modal
@@ -916,21 +970,7 @@ function onAuthStateChange(callback) {
   }
 }
 
-/**
- * Trigger all registered auth state callbacks
- * 
- * @param {string} eventType - 'login' or 'logout'
- * @param {string|null} userId - User ID (null on logout)
- */
-function triggerAuthStateCallbacks(eventType, userId) {
-  authStateCallbacks.forEach(callback => {
-    try {
-      callback(eventType, userId);
-    } catch (error) {
-      console.error('Error in auth state callback:', error);
-    }
-  });
-}
+// Duplicate function definition removed to fix SyntaxError
 
 /**
  * Start session tracking
@@ -1490,6 +1530,7 @@ window.authUI.showPointsToast = showPointsToast;
 window.authUI.loadPointsHistory = loadPointsHistory;
 window.authUI.initializeAuthUI = initializeAuthUI;
 window.authUI.onAuthStateChange = onAuthStateChanged;
+window.authUI.onAuthStateChanged = onAuthStateChanged; // Compatibility alias
 
 // Initialize automatically
 initializeAuthUI();

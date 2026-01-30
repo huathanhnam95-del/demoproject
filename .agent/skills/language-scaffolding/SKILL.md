@@ -11,7 +11,7 @@ This skill covers **pedagogical techniques** for designing effective English lea
 
 ## Core Concept: Zone of Proximal Development
 
-```
+```text
 ┌─────────────────────────────────────────────────────┐
 │                                                     │
 │     Too Hard (Frustration Zone)                     │
@@ -39,7 +39,7 @@ This skill covers **pedagogical techniques** for designing effective English lea
 ### 1. Verbal Scaffolds
 
 | Technique | Implementation |
-|-----------|---------------|
+| :--- | :--- |
 | **Model pronunciation** | Play native audio before user attempts |
 | **Slow, clear speech** | Adjustable playback speed (0.75x, 1x) |
 | **Think-alouds** | Show IPA breakdown while audio plays |
@@ -48,16 +48,16 @@ This skill covers **pedagogical techniques** for designing effective English lea
 ### 2. Procedural Scaffolds
 
 | Technique | Implementation |
-|-----------|---------------|
+| :--- | :--- |
 | **Visual aids** | Mouth diagrams, IPA symbols, stress marks |
 | **Graphic organizers** | Syllable breakdown, word stress patterns |
-| **Sentence frames** | "The word ___means___" |
+| **Sentence frames** | "The word `___` means `___`" |
 | **Wait time** | 3-5 second pause before showing answer |
 
 ### 3. Instructional Scaffolds
 
 | Technique | Implementation |
-|-----------|---------------|
+| :--- | :--- |
 | **Pre-teach vocabulary** | Show word + definition before dictation |
 | **Activate prior knowledge** | "You know 'phone', this has same root" |
 | **Chunk content** | Break long sentences into phrases |

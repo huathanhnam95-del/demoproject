@@ -12,7 +12,7 @@ This skill covers **tutorial and onboarding design** for helping users learn the
 ## Tutorial Types
 
 | Type | Use When | Example |
-|------|----------|---------|
+| :--- | :--- | :--- |
 | **Tooltip tour** | First-time feature intro | Step-by-step feature highlights |
 | **Interactive walkthrough** | Teaching a workflow | "Try recording now" prompts |
 | **Video tutorial** | Complex concepts | Pronunciation technique demo |

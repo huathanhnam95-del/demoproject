@@ -12,7 +12,7 @@ This skill covers **visualization design** for presenting learning data, pronunc
 ## Visualization Principles
 
 | Principle | Description | Example |
-|-----------|-------------|---------|
+| :--- | :--- | :--- |
 | **Clarity** | Remove visual noise | No 3D effects, no chartjunk |
 | **Hierarchy** | Emphasize important data | Larger/bolder for key metrics |
 | **Consistency** | Same encoding throughout | Green = good, red = needs work |

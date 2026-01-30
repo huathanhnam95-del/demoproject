@@ -12,7 +12,7 @@ This skill covers **mobile web app testing** and optimization for the dictation 
 ## Testing Devices Matrix
 
 | Category | Devices to Test |
-|----------|-----------------|
+| :--- | :--- |
 | **iOS** | iPhone SE (375px), iPhone 14 (390px), iPhone 14 Pro Max (430px), iPad (768px) |
 | **Android** | Pixel 5 (393px), Samsung Galaxy S21 (360px), Galaxy Tab (800px) |
 | **Breakpoints** | 320px, 375px, 414px, 768px, 1024px, 1280px |
@@ -69,7 +69,7 @@ This skill covers **mobile web app testing** and optimization for the dictation 
 ### Common Layout Issues
 
 | Issue | Symptom | Fix |
-|-------|---------|-----|
+| :--- | :--- | :--- |
 | Horizontal scroll | Content wider than viewport | Use `max-width: 100%`, check fixed widths |
 | Text too small | Hard to read | Use `16px` minimum font size |
 | Elements overlap | Z-index conflicts | Check stacking context |
@@ -136,7 +136,7 @@ window.addEventListener('orientationchange', () => {
 ### Mobile Performance Budget
 
 | Metric | Target | Tool |
-|--------|--------|------|
+| :--- | :--- | :--- |
 | First Contentful Paint | < 1.8s | Lighthouse |
 | Largest Contentful Paint | < 2.5s | Lighthouse |
 | Time to Interactive | < 3.9s | Lighthouse |

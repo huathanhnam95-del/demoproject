@@ -16,7 +16,7 @@ Review and debug the newly implemented Adaptive Difficulty System.
 ## Hypotheses
 
 | # | Hypothesis | Likelihood | Status |
-|---|------------|------------|--------|
+| :--- | :--- | :--- | :--- |
 | 1 | Syntax errors in new modules | 10% | ELIMINATED |
 | 2 | Logic errors in adjustment thresholds or scoring | 40% | CONFIRMED |
 | 3 | Missing variable declarations or race conditions | 30% | ELIMINATED |

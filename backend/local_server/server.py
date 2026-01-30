@@ -15,9 +15,28 @@ except ImportError:
     try:
         from scipy.ndimage.filters import uniform_filter1d  # type: ignore
     except ImportError:
-        # Final dummy fallback to satisfy type checkers and prevent runtime crashes
         def uniform_filter1d(input: np.ndarray, size: int, *args, **kwargs) -> np.ndarray:
             return input
+
+try:
+    import nltk
+    from nltk.stem import WordNetLemmatizer
+    
+    # Ensure wordnet data is present
+    try:
+        nltk.data.find('corpora/wordnet')
+    except LookupError:
+        print("⚠️ NLTK WordNet data not found. Downloading...")
+        nltk.download('wordnet')
+    
+    lemmatizer = WordNetLemmatizer()
+    print("✅ NLTK Lemmatizer loaded.")
+except ImportError:
+    print("⚠️ NLTK not installed. Lemmatization fallback will be disabled.")
+    lemmatizer = None
+except Exception as e:
+    print(f"⚠️ Error loading NLTK: {e}")
+    lemmatizer = None
 
 # ============================================================================
 # CONFIGURATION - Research-backed parameters
@@ -589,7 +608,109 @@ def get_dictionary_word(word):
             return jsonify({'found': False, 'suggestions': data[:5]})
         
         # Parse the response
+        # Parse the response
         parsed = parse_mw_response(data, normalized_word)
+        
+        # LEMMATIZATION FALLBACK: If word not found, try lemma (e.g. practicing -> practice)
+        # We check if parsed is None/not found, OR if it was a suggestion response
+        # LEMMATIZATION FALLBACK: If word not found, try lemma
+        if (not parsed or not parsed.get('found')) and lemmatizer:
+             # Try different POS tags: verb (v), noun (n), adjective (a)
+             # "practicing" -> v -> practice
+             # "goods" -> n -> good
+             # "happier" -> a -> happy
+             lemmas_to_try = []
+             
+             # Prioritize based on likely inflection
+             if normalized_word.endswith('ing') or normalized_word.endswith('ed'):
+                 lemmas_to_try.append(lemmatizer.lemmatize(normalized_word, pos='v'))
+             elif normalized_word.endswith('s'):
+                 lemmas_to_try.append(lemmatizer.lemmatize(normalized_word, pos='n'))
+                 lemmas_to_try.append(lemmatizer.lemmatize(normalized_word, pos='v')) # e.g. "likes"
+             elif normalized_word.endswith('er') or normalized_word.endswith('est'):
+                 lemmas_to_try.append(lemmatizer.lemmatize(normalized_word, pos='a'))
+             
+             # Fallback to generic noun/verb if not caught above
+             lemmas_to_try.append(lemmatizer.lemmatize(normalized_word, pos='v'))
+             lemmas_to_try.append(lemmatizer.lemmatize(normalized_word, pos='n'))
+             
+             # Deduplicate and remove original word
+             candidates = []
+             seen = set()
+             seen.add(normalized_word)
+             
+             for l in lemmas_to_try:
+                 if l not in seen:
+                     candidates.append(l)
+                     seen.add(l)
+            
+             for lemma in candidates:
+                 print(f"DEBUG: '{normalized_word}' not found. Trying lemma '{lemma}'...")
+                 
+                 lemma_url = f'https://www.dictionaryapi.com/api/v3/references/collegiate/json/{lemma}?key={MW_API_KEY}'
+                 try:
+                    lemma_resp = http_requests.get(lemma_url, headers=headers, timeout=10)
+                    
+                    if lemma_resp.ok:
+                        lemma_data = lemma_resp.json()
+                        if isinstance(lemma_data, list) and len(lemma_data) > 0 and isinstance(lemma_data[0], dict):
+                            lemma_parsed = parse_mw_response(lemma_data, lemma)
+                            if lemma_parsed and lemma_parsed.get('found'):
+                                print(f"DEBUG: Found lemma '{lemma}'")
+                                lemma_parsed['isLemmaFallback'] = True
+                                lemma_parsed['originalWord'] = normalized_word
+                                return jsonify(lemma_parsed)
+                 except Exception as e:
+                     print(f"Lemma fetch error: {e}")
+
+        # FALLBACK: If no audio found (even after potential lemma check, or if lemma wasn't used), 
+        # try to inherit from stem (for the ORIGINAL word found case).
+        # ... (Existing stem logic remains effective for the *current* parsed result if it exists) ...
+        
+        if parsed and parsed.get('found'):
+            has_audio = any(alt.get('audioUrl') for alt in parsed.get('alternatives', []))
+            
+            if not has_audio and isinstance(data, list) and len(data) > 0 and isinstance(data[0], dict):
+                stems = data[0].get('meta', {}).get('stems', [])
+                # Prefer shortest stem that is not the word itself
+                candidates = [s for s in stems if s.lower() != normalized_word and ' ' not in s]
+                candidates.sort(key=len)
+                
+                if candidates:
+                    stem = candidates[0]
+                    print(f"DEBUG: No audio for '{normalized_word}', falling back to stem '{stem}'")
+                    
+                    stem_data = None
+                    # Simple fetch loop for stem
+                    for ref in ['collegiate', 'learners', 'sd4']:
+                        stem_url = f'https://www.dictionaryapi.com/api/v3/references/{ref}/json/{stem}?key={MW_API_KEY}'
+                        try:
+                            stem_resp = http_requests.get(stem_url, headers=headers, timeout=5)
+                            if stem_resp.ok:
+                                stem_json = stem_resp.json()
+                                if isinstance(stem_json, list) and len(stem_json) > 0 and isinstance(stem_json[0], dict):
+                                    stem_data = stem_json
+                                    break
+                        except Exception as e:
+                            print(f"Stem fetch error ({ref}): {e}")
+
+                    if stem_data:
+                        stem_parsed = parse_mw_response(stem_data, stem)
+                        if stem_parsed and stem_parsed.get('found'):
+                            # Find first audio in stem
+                            stem_audio_alt = next((alt for alt in stem_parsed.get('alternatives', []) if alt.get('audioUrl')), None)
+                            
+                            if stem_audio_alt:
+                                print(f"DEBUG: Found audio in stem '{stem}': {stem_audio_alt['audioUrl']}")
+                                # Inject into original
+                                for alt in parsed['alternatives']:
+                                    if not alt.get('audioUrl'):
+                                        alt['audioUrl'] = stem_audio_alt['audioUrl']
+                                        alt['audioFilename'] = stem_audio_alt.get('audioFilename')
+                                    if not alt.get('pronunciation'):
+                                        alt['pronunciation'] = stem_audio_alt.get('pronunciation')
+                                        alt['inheritedPronunciation'] = True
+
         if parsed and parsed.get('found'):
             return jsonify(parsed)
         else:

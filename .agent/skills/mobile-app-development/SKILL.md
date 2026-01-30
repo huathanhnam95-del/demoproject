@@ -12,7 +12,7 @@ This skill covers **converting the dictation practice web app** to a mobile app 
 ## Approach Comparison
 
 | Approach | Pros | Cons | Best For |
-|----------|------|------|----------|
+| :--- | :--- | :--- | :--- |
 | **PWA** | Minimal code changes, no app store | Limited native APIs | Quick deployment |
 | **Capacitor** | Reuse web code, native plugins | Additional build step | Existing web app |
 | **React Native** | Full native performance | Complete rewrite | Performance-critical |
@@ -167,7 +167,7 @@ npx cap open ios      # Opens Xcode
 
 ### Project Structure
 
-```
+```text
 dictation-native/
 ├── src/
 │   ├── components/

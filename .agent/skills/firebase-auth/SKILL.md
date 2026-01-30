@@ -78,7 +78,7 @@ async function signInWithGoogle() {
 
 ### Document Structure
 
-```
+```text
 users/{userId}/
 ├── profile/          # User settings
 ├── progress/         # Learning progress

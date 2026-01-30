@@ -145,42 +145,52 @@
 
 .letter-hint-word {
     display: inline-flex;
-    gap: 4px;
+    gap: 0px;
+    /* Reduced to 0 for natural word spacing */
 }
 
 .word-separator {
-    width: 12px;
+    width: 10px;
 }
 
 .letter-box {
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    width: 28px;
-    height: 32px;
+    min-width: 0;
+    /* Changed from 14px to allow tight packing */
+    height: auto;
     font-family: 'Inter', 'Segoe UI', sans-serif;
     font-size: 16px;
-    font-weight: 600;
-    border-radius: 8px;
-    text-transform: lowercase;
-    transition: all 0.2s ease;
+    font-weight: 700;
+    line-height: 1.5;
+    border-radius: 4px;
+    /* text-transform: lowercase; Removed to allow capitalization */
+    transition: color 0.2s ease;
+    padding: 0;
+    /* Removed padding for natural text flow */
+    background: transparent;
 }
 
 .letter-box.revealed {
-    background: #7c3aed;
-    color: white;
-    width: 28px;
-    height: 32px;
+    background: transparent;
+    color: #7c3aed;
+    border: none;
+    min-width: auto;
 }
 
 .letter-box.hidden {
     background: transparent;
     border: none;
-    border-bottom: 2px solid #cbd5e1;
+    display: inline-flex !important;
+    justify-content: center;
+    align-items: center;
+    border-bottom: 2px solid #94a3b8;
     border-radius: 0;
-    width: 20px;
-    height: 32px;
-    margin: 0 4px;
+    min-width: 16px;
+    height: 1.4em;
+    margin: 0 2px;
+    /* Increased margin slightly for clear separation */
     color: transparent;
     cursor: pointer;
     transition: all 0.2s ease;

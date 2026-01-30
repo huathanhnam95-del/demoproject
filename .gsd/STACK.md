@@ -5,7 +5,7 @@
 ## Runtime
 
 | Technology | Version | Purpose |
-|------------|---------|---------|
+| :--- | :--- | :--- |
 | Node.js | (System) | Backend runtime & Tooling |
 | Python | 3.x | Audio Processing runtime |
 | Browser | Modern | Frontend runtime |
@@ -15,7 +15,7 @@
 ### Production (Node.js)
 
 | Package | Version | Purpose |
-|---------|---------|---------|
+| :--- | :--- | :--- |
 | express | ^4.18.2 | Web Server Framework |
 | firebase-admin | ^12.7.0 | Backend Firebase SDK |
 | openai | ^4.20.0 | AI Integration |
@@ -28,10 +28,10 @@
 ### Production (Python)
 
 | Package | Version | Purpose |
-|---------|---------|---------|
+| :--- | :--- | :--- |
 | flask | 3.0.0 | API Framework |
 | flask-cors | 4.0.0 | CORS Middleware |
-| praat-parselmouth| 0.4.3 | Audio Analysis Core |
+| praat-parselmouth | 0.4.3 | Audio Analysis Core |
 | numpy | 1.26.2 | Numerical Computing |
 | scipy | 1.11.4 | Scientific Computing |
 | requests | 2.31.0 | HTTP Client |
@@ -39,13 +39,13 @@
 ### Development
 
 | Package | Version | Purpose |
-|---------|---------|---------|
+| :--- | :--- | :--- |
 | http-server | ^14.1.1 | Simple Static Server |
 
 ## Infrastructure
 
 | Service | Provider | Purpose |
-|---------|----------|---------|
+| :--- | :--- | :--- |
 | Database | Firebase Firestore | User Data & Progress |
 | Auth | Firebase Auth | User Identity |
 | Hosting | Localhost | Dev Environment (Ports 8443, 5000) |
@@ -53,7 +53,7 @@
 ## Configuration
 
 | Variable | Purpose | Location |
-|----------|---------|----------|
+| :--- | :--- | :--- |
 | PORT | Server Port | `server.js`, `app.py` |
 | HOST | Server Host | `app.py` |
 | SSL Certs | HTTPS | `cert.pem`, `key.pem` (Root) |

@@ -155,7 +155,8 @@ const DifficultyManager = (() => {
                     topicHint: true,
                     keywordPreview: true,
                     // Timing
-                    delayBeforeTyping: 0
+                    delayBeforeTyping: 0,
+                    initialRevealPercentage: 50
                 },
                 2: {
                     name: 'Supported',
@@ -169,12 +170,14 @@ const DifficultyManager = (() => {
                     chunkPlayback: false,
                     topicHint: true,
                     keywordPreview: false,
-                    delayBeforeTyping: 3
+                    delayBeforeTyping: 3,
+                    initialRevealPercentage: 30
                 },
                 3: {
-                    name: 'Independent',
+                    name: 'Expert',
                     maxReplays: 1,
                     sentenceLengthRange: null, // All lengths
+                    hints: 'none',
                     autoShowWordCount: false,
                     autoShowFirstLetters: false,
                     autoShowWordLengths: false,
@@ -557,7 +560,8 @@ const DifficultyManager = (() => {
         adjustDifficulty,
         openSettings,
         isFeatureEnabled: () => true, // System is active for manual levels/scaffolding
-        isAutoAdjustUnlocked: () => hasUnlockedFeature // Specific for the shop item
+        isAutoAdjustUnlocked: () => hasUnlockedFeature, // Specific for the shop item
+        refreshProfile: loadProfile // Allow external reload of settings
     };
 
 })();

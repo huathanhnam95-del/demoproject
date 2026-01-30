@@ -64,7 +64,7 @@ flowchart TD
 ### Browser DevTools Panels
 
 | Panel | Use For |
-|-------|---------|
+| :--- | :--- |
 | **Console** | JS errors, logs, network errors |
 | **Elements** | DOM inspection, CSS debugging |
 | **Sources** | Breakpoints, step-through code |
@@ -96,7 +96,7 @@ debugger;
 ### Common Frontend Issues
 
 | Symptom | Likely Cause | Check |
-|---------|--------------|-------|
+| :--- | :--- | :--- |
 | Element not visible | CSS `display`, `visibility`, `z-index` | Elements panel |
 | Click not working | Event handler, overlay blocking | Console, Elements |
 | API call fails | CORS, auth, network | Network panel |
@@ -130,7 +130,7 @@ def analyze_audio(audio_path, expected_syllables):
 ### Common Backend Issues
 
 | Symptom | Likely Cause | Check |
-|---------|--------------|-------|
+| :--- | :--- | :--- |
 | 500 error | Exception in handler | Server logs |
 | 404 error | Wrong URL or method | Route definitions |
 | CORS error | Missing headers | Flask-CORS config |

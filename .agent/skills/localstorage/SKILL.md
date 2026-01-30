@@ -12,7 +12,7 @@ This skill covers **client-side data persistence** patterns for the dictation pr
 ## Storage Options Comparison
 
 | Storage | Capacity | Persistence | Sync | Use Case |
-|---------|----------|-------------|------|----------|
+| :--- | :--- | :--- | :--- | :--- |
 | **LocalStorage** | ~5-10MB | Permanent | No | Settings, progress |
 | **SessionStorage** | ~5MB | Tab lifetime | No | Temporary state |
 | **IndexedDB** | Large | Permanent | No | Large datasets |

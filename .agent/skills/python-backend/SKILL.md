@@ -9,7 +9,7 @@ This skill covers **backend development** for the pronunciation analysis API inc
 
 ## Project Structure
 
-```
+```text
 backend/
 ├── server.py          # Main Flask app
 ├── requirements.txt   # Dependencies
@@ -115,7 +115,7 @@ CMD ["python", "server.py"]
 
 ## Requirements
 
-```
+```text
 flask>=2.0
 flask-cors>=4.0
 parselmouth>=0.4
@@ -128,7 +128,7 @@ gunicorn>=21.0
 ## Environment Variables
 
 | Variable | Purpose | Default |
-|----------|---------|---------|
+| :--- | :--- | :--- |
 | `PORT` | Server port | `8080` |
 | `DEBUG` | Debug mode | `false` |
 | `ALLOWED_ORIGINS` | CORS origins | `*` |

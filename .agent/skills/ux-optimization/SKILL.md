@@ -12,7 +12,7 @@ This skill covers **User Experience optimization** principles to improve usabili
 ## Core UX Principles
 
 | Principle | Description | Implementation |
-|-----------|-------------|----------------|
+| :--- | :--- | :--- |
 | **Clarity** | Users should never be confused | Clear labels, obvious actions |
 | **Consistency** | Same patterns throughout | Reuse components, terminology |
 | **Feedback** | Every action gets a response | Visual/audio cues, status updates |
@@ -554,7 +554,7 @@ function showError(error, actions) {
 > These patterns cause recurring bugs. Avoid them.
 
 | Anti-Pattern | Problem | Solution |
-|--------------|---------|----------|
+| :--- | :--- | :--- |
 | **Triggering UI before DOM ready** | Tutorials appear in wrong position | Use `waitForElementVisible()` |
 | **Not cleaning up event listeners** | Memory leaks, duplicate handlers | Store references, remove in `close()` |
 | **Forgetting pointer-events reset** | Elements become unclickable | Reset styles in cleanup |
@@ -601,7 +601,7 @@ function showError(error, actions) {
 ## UX Metrics to Track
 
 | Metric | What it Measures | Target |
-|--------|-----------------|--------|
+| :--- | :--- | :--- |
 | **Task Completion Rate** | % completing main flows | > 90% |
 | **Time on Task** | Efficiency of flows | Minimize |
 | **Error Rate** | Frequency of errors | < 5% |

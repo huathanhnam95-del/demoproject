@@ -126,7 +126,7 @@ function announceScore(score) {
 ### Minimum Ratios (WCAG AA)
 
 | Element | Ratio |
-|---------|-------|
+| :--- | :--- |
 | Normal text | 4.5:1 |
 | Large text (18px+ bold, 24px+) | 3:1 |
 | UI components | 3:1 |

@@ -1469,6 +1469,7 @@ async function recordPurchase(userId, item) {
 // Export functions for use in other modules
 window.firebaseFirestoreFunctions = {
   createOrUpdateUserProfile,
+  updateUserProfile,
   getUserProfile,
   recordSessionStart,
   recordSessionEnd,

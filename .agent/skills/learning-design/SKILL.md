@@ -14,7 +14,7 @@ This skill covers **instructional design principles** for creating effective lea
 A proven framework for structuring learning activities:
 
 | Event | Purpose | Implementation |
-|-------|---------|----------------|
+| :--- | :--- | :--- |
 | 1. **Gain Attention** | Focus learner | Sound effect, animation, provocative question |
 | 2. **State Objectives** | Set expectations | "By the end, you'll be able to..." |
 | 3. **Recall Prior Knowledge** | Build connections | "You already know the word 'phone'..." |

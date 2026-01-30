@@ -11,7 +11,7 @@ This skill covers **mobile-specific UI/UX design** patterns for adapting the dic
 
 ## Thumb Zone Design
 
-```
+```text
 ┌─────────────────────────────┐
 │      HARD TO REACH          │  ← Navigation menus
 │         (top)               │
@@ -57,7 +57,7 @@ This skill covers **mobile-specific UI/UX design** patterns for adapting the dic
 ### Minimum Sizes
 
 | Platform | Minimum Size | Recommended |
-|----------|--------------|-------------|
+| :--- | :--- | :--- |
 | iOS | 44 × 44 pt | 48 × 48 pt |
 | Android | 48 × 48 dp | 56 × 56 dp |
 | Web | 44 × 44 px | 48 × 48 px |
@@ -87,7 +87,7 @@ This skill covers **mobile-specific UI/UX design** patterns for adapting the dic
 ## Touch Gestures Reference
 
 | Gesture | Use For | Example |
-|---------|---------|---------|
+| :--- | :--- | :--- |
 | **Tap** | Primary actions | Play, submit, select |
 | **Swipe left/right** | Navigation, delete | Next/prev word, archive |
 | **Swipe up** | Reveal more content | Show full analysis |

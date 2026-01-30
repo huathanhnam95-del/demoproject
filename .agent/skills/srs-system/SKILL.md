@@ -118,7 +118,7 @@ function getDueCards() {
 ## Quality Ratings
 
 | Rating | Description | Interval Effect |
-|--------|-------------|-----------------|
+| :--- | :--- | :--- |
 | **0 - Again** | Complete failure | Reset to 1 day |
 | **1 - Hard** | Struggled | 1.2x current |
 | **2 - Good** | Some hesitation | Normal progression |

@@ -491,10 +491,25 @@
   /**
    * Show word scaffolding panel (Figma design)
    * @param {string} sentence - The correct sentence to hint
+   * @param {string} mode - 'type' or 'speak' (default: 'type')
    */
-  function showLetterHints(sentence) {
-    const container = document.getElementById('scaffolding-hints-type');
+  function showLetterHints(sentence, mode = 'type') {
+    const containerId = `scaffolding-hints-${mode}`;
+    const container = document.getElementById(containerId);
     if (!container || !sentence) return;
+
+    // Default to Level 1 settings if DM is missing
+    let revealPercentage = 50;
+    if (window.DifficultyManager) {
+      const settings = window.DifficultyManager.getCurrentSettings(mode);
+      // Ensure strict check: 0% reveal should mean NO hints shown
+      if (settings.hints === 'none' || settings.level === 3) {
+        container.innerHTML = '';
+        container.style.display = 'none';
+        return;
+      }
+      revealPercentage = settings.initialRevealPercentage || 0;
+    }
 
     const words = sentence.trim().split(/\s+/);
     const totalHints = 5; // Max hints per session
@@ -511,9 +526,9 @@
             <span class="icon">💡</span>
             <span>Hints</span>
           </div>
-          <div style="font-size:0.85rem; color:#64748b; font-weight:normal; margin-top:4px;">
-            Click on any <span style="border-bottom:2px solid #cbd5e1; display:inline-block; width:12px; margin:0 2px;"></span> to reveal a letter. 
-            <span id="hint-click-counter" style="color:#7c3aed; font-weight:600;">7</span> reveals left.
+            <div style="font-size:0.85rem; color:#64748b; font-weight:normal; margin-top:4px;">
+            Click on any <span class="instruction-placeholder" style="border-bottom:2px solid #475569; display:inline-block; width:16px; margin:0 2px; height: 12px; vertical-align: middle;"></span> to reveal a letter. 
+            <span id="hint-click-counter-${mode}" style="color:#7c3aed; font-weight:600;">7</span> reveals left.
           </div>
         </div>
       </div>
@@ -525,16 +540,25 @@
     words.forEach((word, wordIndex) => {
       html += '<div class="letter-hint-word">';
 
+      const lettersInWord = [...word].filter(c => /[a-zA-Z]/.test(c));
+      const revealCount = Math.max(1, Math.ceil(lettersInWord.length * (revealPercentage / 100)));
+      let AlphaCharIndex = 0;
+
       [...word].forEach((char, charIndex) => {
         if (/[a-zA-Z]/.test(char)) {
-          if (charIndex === 0) {
-            html += `<span class="letter-box revealed">${char.toLowerCase()}</span>`;
+          // Check if this is the very first letter of the first word
+          const isStart = wordIndex === 0 && AlphaCharIndex === 0;
+          const displayChar = isStart ? char.toUpperCase() : char.toLowerCase();
+
+          if (AlphaCharIndex < revealCount) {
+            html += `<span class="letter-box revealed">${displayChar}</span>`;
           } else {
             // Interactive hidden slot
             html += `<span class="letter-box hidden" 
                            onclick="revealClickedLetter(this)" 
-                           data-letter="${char.toLowerCase()}"></span>`;
+                           data-letter="${displayChar}"></span>`;
           }
+          AlphaCharIndex++;
         } else {
           html += `<span class="letter-box punctuation">${char}</span>`;
         }
@@ -556,16 +580,25 @@
 
     // SUPPRESS DUPLICATE LEGACY HINTS (The content below input)
     setTimeout(() => {
-      const legacyHints = document.querySelectorAll('.auto-hints-container');
+      const legacyHints = document.querySelectorAll('.auto-hints-container, .hint-controls');
       legacyHints.forEach(el => el.style.display = 'none');
     }, 50);
+
+    // Ensure indicator text matches logic
+    const counterEl = document.getElementById(`hint-click-counter-${mode}`);
+    if (counterEl) {
+      counterEl.textContent = '7'; // Reset display
+    }
   }
 
   /**
    * Hide word scaffolding panel
+   * @param {string} mode - 'type' or 'speak' (default: 'type')
    */
-  function hideLetterHints() {
-    const container = document.getElementById('scaffolding-hints-type');
+  function hideLetterHints(mode = 'type') {
+    // If no mode specified, hide both to be safe, or just the requested one
+    const containerId = `scaffolding-hints-${mode}`;
+    const container = document.getElementById(containerId);
     if (container) {
       container.innerHTML = '';
       container.style.display = 'none';
@@ -574,25 +607,32 @@
 
   /**
    * Reveal the next hidden letter hint
+   * @param {string} mode - 'type' or 'speak' (default: 'type')
    */
-  function revealNextHint() {
-    const hiddenBoxes = document.querySelectorAll('#scaffolding-hints-type .letter-box.hidden');
+  function revealNextHint(mode = 'type') {
+    const containerId = `scaffolding-hints-${mode}`;
+    const hiddenBoxes = document.querySelectorAll(`#${containerId} .letter-box.hidden`);
+
     if (hiddenBoxes.length > 0) {
       // Find the correct sentence to get the actual letter
-      if (window.correctSentenceType) {
-        const allBoxes = document.querySelectorAll('#scaffolding-hints-type .letter-box');
+      // Determine sentence variable based on mode
+      const correctSentence = mode === 'speak' ? window.correctSentenceSpeak : window.correctSentenceType;
+
+      if (correctSentence) {
+        const allBoxes = document.querySelectorAll(`#${containerId} .letter-box`);
         let letterIndex = 0;
-        const sentence = window.correctSentenceType.replace(/[^a-zA-Z]/g, '');
+        const sentence = correctSentence.replace(/[^a-zA-Z]/g, '');
 
         for (const box of allBoxes) {
           if (box.classList.contains('hidden')) {
-            box.textContent = sentence[letterIndex]?.toLowerCase() || '';
+            const char = sentence[letterIndex] || '';
+            box.textContent = (letterIndex === 0) ? char.toUpperCase() : char.toLowerCase();
             box.classList.remove('hidden');
             box.classList.add('revealed');
 
             // Update hints used
             window.scaffoldingHintsUsed = (window.scaffoldingHintsUsed || 2) + 1;
-            updateHintsDisplay();
+            updateHintsDisplay(mode);
             break;
           }
           if (box.classList.contains('revealed') || box.classList.contains('hidden')) {
@@ -605,25 +645,14 @@
 
   /**
    * Update the hints display in footer
+   * @param {string} mode - 'type' or 'speak'
    */
-  function updateHintsDisplay() {
-    const totalHints = 5;
-    const usedHints = window.scaffoldingHintsUsed || 2;
-    const hintsRemaining = Math.max(0, totalHints - usedHints);
-
-    const dotsContainer = document.querySelector('.hints-dots');
-    const remainingText = document.querySelector('.hints-remaining');
-
-    if (dotsContainer) {
-      let dotsHtml = '';
-      for (let i = 0; i < totalHints; i++) {
-        dotsHtml += `< span class="hint-dot ${i < usedHints ? 'used' : ''}" ></span > `;
-      }
-      dotsContainer.innerHTML = dotsHtml;
-    }
-
-    if (remainingText) {
-      remainingText.textContent = `${hintsRemaining} EXTRA HINTS LEFT`;
+  function updateHintsDisplay(mode = 'type') {
+    const MAX_CLICKS = 7;
+    const remaining = Math.max(0, MAX_CLICKS - window.manualHintsUsedCount);
+    const counterEl = document.getElementById(`hint-click-counter-${mode}`);
+    if (counterEl) {
+      counterEl.textContent = remaining;
     }
   }
 
@@ -665,11 +694,14 @@
       window.manualHintsUsedCount = (window.manualHintsUsedCount || 0) + 1;
 
       // Update UI counter
-      const counterEl = document.getElementById('hint-click-counter');
-      if (counterEl) {
-        const remaining = Math.max(0, MAX_CLICKS - window.manualHintsUsedCount);
-        counterEl.textContent = remaining;
+      // Infer mode from parent
+      const parentContainer = element.closest('.scaffolding-letter-hints');
+      let mode = 'type';
+      if (parentContainer && parentContainer.id.includes('speak')) {
+        mode = 'speak';
       }
+
+      updateHintsDisplay(mode);
     }
   }
 
@@ -5083,7 +5115,7 @@
     // Store for sentence generation
     vocabularyPracticeWordsType = contentWords.map(w => w.toLowerCase().trim());
 
-    if (contentWords.length === 0) {
+    if (contentWords.length === 0 || !vocabularyWords) {
       vocabularyPanel.style.display = "none";
       vocabularyPracticeWordsType = [];
       return;
@@ -5676,6 +5708,15 @@
     audio.appendChild(source);
 
     audio.load(); // Reload the audio element
+
+    // TRIGGER HINTS IMMEDIATELY ON LOAD
+    if (typeof showLetterHints === 'function') {
+      if (mode === 'type') {
+        showLetterHints(correctSentenceType, 'type');
+      } else if (mode === 'speak') {
+        showLetterHints(correctSentenceSpeak, 'speak');
+      }
+    }
 
     // Clear input/transcription
     if (mode === "type") {
@@ -6358,11 +6399,6 @@
     }
     if (checkBtn) checkBtn.style.display = "inline-block";
     if (retryBtn) retryBtn.style.display = "none";
-
-    // STANDALONE LETTER HINTS: Show letter boxes immediately
-    if (correctSentenceType && typeof showLetterHints === 'function') {
-      showLetterHints(correctSentenceType);
-    }
 
     // Hint system visibility check (Level 1 Scaffolding Conflict Resolution)
     const hintControlsEl = document.getElementById('hint-controls-type');

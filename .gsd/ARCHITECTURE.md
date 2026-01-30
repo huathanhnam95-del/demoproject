@@ -6,7 +6,7 @@
 
 A hybrid web application for dictation and language practice. It features a rich Vanilla JS frontend that interacts with multiple backends: a Node.js server for external API wrapping (YouTube) and serving the app, a Python Flask server for advanced audio analysis (Praat), and a direct connection to Firebase Firestore for user progress persistence.
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                      User Browser                           │
 │  [index.html] [script.js (Logic)] [style.css (UI)]          │

@@ -461,6 +461,15 @@ const WatchMode = (function () {
 
         // Show question overlay
         showQuestionOverlay(question);
+
+        // Dispatch event for tutorial or other listeners
+        const playerWrapper = document.getElementById('watch-player-wrapper');
+        if (playerWrapper) {
+            playerWrapper.dispatchEvent(new CustomEvent('watch-question-triggered', {
+                detail: { question: question },
+                bubbles: true
+            }));
+        }
     }
 
     /**
@@ -1005,7 +1014,38 @@ const WatchMode = (function () {
         selectMCOption,
         seekToQuestion,
         showVideoList,
-        pauseAndResetForTabSwitch
+        showVideoList,
+        pauseAndResetForTabSwitch,
+
+        /**
+         * Refresh layout state (e.g. when returning to tab)
+         */
+        refreshLayout: () => {
+            // If we have a current video, ensure side-by-side layout is active
+            if (currentVideo) {
+                const pageWrapper = document.getElementById('page-layout-wrapper');
+                if (pageWrapper) pageWrapper.classList.add('watch-active');
+            }
+        },
+
+        /**
+         * Trigger a simulated question for the tutorial
+         * @param {Object} questionData - Mock question data
+         */
+        triggerTutorialQuestion: (questionData) => {
+            // Ensure we have a valid question object
+            const q = {
+                id: 'tutorial-q1',
+                questionText: 'Test Question',
+                type: 'multiple_choice',
+                options: ['Option A', 'Option B'],
+                correctAnswer: 0,
+                ...questionData
+            };
+
+            // Allow the tutorial to "inject" this question
+            triggerQuestion(q);
+        }
     };
 })();
 

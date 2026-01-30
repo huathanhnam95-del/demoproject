@@ -688,37 +688,129 @@
                 target: null,
                 icon: '📺',
                 title: 'Watch Mode',
-                text: 'Watch short video clips and answer questions to test your comprehension.',
+                text: 'Welcome to <strong>Watch Mode</strong>! Here you can practice your listening comprehension with real video clips.',
                 position: 'center',
-                nextLabel: 'Show Me! →',
+                nextLabel: 'Let\'s Go! →',
+                interactive: false,
                 beforeShow: () => {
                     const tab = document.getElementById('tab-watch');
                     if (tab) tab.click();
+
+                    // Reset to list view if needed
+                    if (window.WatchMode && window.WatchMode.showVideoList) {
+                        window.WatchMode.showVideoList();
+                    }
                 }
             },
             {
                 target: '#watch-video-grid',
                 icon: '🎬',
-                title: 'Select a Video',
-                text: 'Choose a video lesson from the grid to start practicing.',
+                title: 'Step 1: Select a Video',
+                text: 'Choose a video from the library. We\'ll select the first one for you to demonstrate.',
                 position: 'top',
-                nextLabel: 'Got It →'
+                nextLabel: 'Select Video →',
+                interactive: false, // We'll auto-select for them in the next step
+            },
+            {
+                target: '#watch-play-btn',
+                icon: '▶️',
+                title: 'Step 2: Start Video',
+                text: 'Click <strong>Play</strong> to start the video lesson.',
+                position: 'top',
+                nextLabel: null,
+                interactive: true,
+                waitForEvent: 'click',
+                beforeShow: () => {
+                    // Simulate selecting the first video if needed
+                    const firstCard = document.querySelector('.watch-video-card');
+                    if (firstCard && !document.querySelector('#watch-player-view').offsetParent) {
+                        firstCard.click();
+                    } else if (window.WatchMode && window.WatchMode.selectVideo && !document.querySelector('#watch-player-view').offsetParent) {
+                        window.WatchMode.selectVideo('video-0');
+                    }
+                }
             },
             {
                 target: '#watch-player-wrapper',
-                icon: '📽️',
-                title: 'Watch & Listen',
-                text: 'Watch the clip. Questions will pop up automatically at specific moments!',
+                icon: '👀',
+                title: 'Step 3: Watching',
+                text: 'Watch carefully! The video will pause when a question appears.',
                 position: 'bottom',
-                nextLabel: 'Next →'
+                nextLabel: null,
+                interactive: true,
+                waitForEvent: 'watch-question-triggered'
             },
             {
                 target: '#watch-question-panel',
                 icon: '❓',
-                title: 'Answer Questions',
-                text: 'When a question appears, answer it here to earn points and progress!',
+                title: 'Step 4: Pop-up Questions',
+                text: 'Look! A question appeared. This happens automatically when you reach a key moment in the video.',
                 position: 'left',
-                nextLabel: 'Got It ✓'
+                nextLabel: 'How to Answer →',
+                beforeShow: () => {
+                    // Question triggered by event
+                }
+            },
+            {
+                target: '#watch-mc-options',
+                icon: '👆',
+                title: 'Step 5: Answer the Question',
+                text: 'Click on one of the options below to answer the question.',
+                position: 'left',
+                interactive: true,
+                waitForEvent: 'click',
+                beforeShow: () => {
+                    // Ensuring question is still there (redundant but safe)
+                    const panel = document.getElementById('watch-question-panel');
+                    if (panel && panel.style.display === 'none') {
+                        if (window.WatchMode && window.WatchMode.triggerTutorialQuestion) {
+                            window.WatchMode.triggerTutorialQuestion({
+                                id: 'tutorial-q1',
+                                questionText: 'What falls from the sky during a storm?',
+                                questionType: 'multiple_choice',
+                                options: ['Rain', 'Cats', 'Pianos'],
+                                correctAnswer: 0,
+                                allowSkip: false
+                            });
+                        }
+                    }
+                }
+            },
+            {
+                target: '#watch-submit-answer',
+                icon: '✅',
+                title: 'Step 6: Submit',
+                text: 'Click <strong>Submit</strong> to check your answer.',
+                position: 'left',
+                interactive: true,
+                waitForEvent: 'click'
+            },
+            {
+                target: '#watch-feedback',
+                icon: '🎉',
+                title: 'Step 7: Instant Feedback',
+                text: 'Great job! You\'ll see immediately if you got it right. You earn points for every correct answer!',
+                position: 'left',
+                nextLabel: 'Next →',
+                interactive: false
+            },
+            {
+                target: '#watch-continue-btn',
+                icon: '⏯️',
+                title: 'Step 8: Continue',
+                text: 'Click <strong>Continue Video</strong> to resume watching the clip.',
+                position: 'left',
+                interactive: true,
+                waitForEvent: 'click'
+            },
+            {
+                target: null,
+                icon: '🏆',
+                title: 'You\'re Ready!',
+                text: 'Watch videos, answer questions, and improve your listening skills. Have fun!',
+                position: 'center',
+                nextLabel: 'Finish Tutorial',
+                interactive: false
             }
         ],
         notes: [
@@ -726,37 +818,121 @@
                 target: null,
                 icon: '📓',
                 title: 'Note Mode',
-                text: 'Practice taking notes while listening — a crucial real-world skill!',
+                text: 'Practice taking notes while listening — a crucial real-world skill! We\'ll guide you through the process.',
                 position: 'center',
                 nextLabel: 'Show Me! →',
+                interactive: false,
                 beforeShow: () => {
                     const tab = document.getElementById('tab-notes');
                     if (tab) tab.click();
                 }
             },
             {
-                target: '#notes-step-video',
-                icon: '🔊',
-                title: 'Watch & Listen',
-                text: 'Play the clip and try to catch the main points and key details.',
+                target: '#question-select-notes',
+                icon: '🔢',
+                title: 'Step 1: Select Question 1',
+                text: 'We\'ve selected <strong>Question 1</strong> for you to start with. Click Next to continue.',
                 position: 'bottom',
-                nextLabel: 'Next →'
+                nextLabel: 'Next →',
+                interactive: true,
+                beforeShow: () => {
+                    const select = document.getElementById('question-select-notes');
+                    if (select) {
+                        select.value = '0'; // Logic index for Question 1
+                        select.dispatchEvent(new Event('change'));
+                    }
+                }
+            },
+            {
+                target: '#play-notes-btn',
+                icon: '▶️',
+                title: 'Step 2: Start Practice',
+                text: 'Click <strong>Start</strong> to begin the session. If there\'s a guiding video, it will play first.',
+                position: 'bottom',
+                nextLabel: null,
+                interactive: true,
+                waitForEvent: 'click'
+            },
+            {
+                target: '#notes-step-video',
+                icon: '📺',
+                title: 'Step 3: Watch Video',
+                text: 'If available, watch the video to get the main ideas. You can <strong>skip</strong> if you prefer to just listen.',
+                position: 'bottom',
+                nextLabel: 'Next →',
+                interactive: false,
+                beforeShow: () => {
+                    // Check if video step is visible, if not (audio only), SKIP this step
+                    const videoStep = document.getElementById('notes-step-video');
+                    if (!videoStep || videoStep.style.display === 'none') {
+                        return 'skip'; // Auto-advance to next step
+                    }
+                }
+            },
+            {
+                target: '#notes-skip-video-btn',
+                icon: '⏭️',
+                title: 'Skip Video',
+                text: 'Click <strong>Skip Guiding Video</strong> when you\'re ready to take notes.',
+                position: 'bottom',
+                nextLabel: null,
+                interactive: true,
+                waitForEvent: 'click',
+                beforeShow: () => {
+                    const videoStep = document.getElementById('notes-step-video');
+                    if (!videoStep || videoStep.style.display === 'none') {
+                        return 'skip';
+                    }
+                }
+            },
+            {
+                target: '#notes-audio',
+                icon: '🔊',
+                title: 'Step 4: Listen',
+                text: 'Listen to the audio carefully. You can pause and replay as often as needed.',
+                position: 'bottom',
+                nextLabel: 'Next →',
+                interactive: true,
+                beforeShow: () => {
+                    // Ensure we are on the audio step
+                    const audioStep = document.getElementById('notes-step-audio');
+                    if (audioStep && audioStep.style.display === 'none') {
+                        // This might happen if they manually skipped video before previous step? 
+                        // But logic should handle it.
+                    }
+                }
             },
             {
                 target: '#notes-user-input',
-                icon: '✏️',
-                title: 'Take Notes',
-                text: 'Write down your notes or a summary of what you heard here.',
+                icon: '✍️',
+                title: 'Step 5: Take Notes',
+                text: 'Type what you hear or a summary of the key points here.',
                 position: 'top',
-                nextLabel: 'Next →'
+                nextLabel: null,
+                interactive: true,
+                waitForEvent: 'input',
+                validate: (e) => {
+                    return e.target.value.length > 3;
+                }
             },
             {
                 target: '#notes-submit-btn',
-                icon: '⚖️',
-                title: 'Compare & Learn',
-                text: 'Submit your notes to see the official transcript and evaluate your performance.',
+                icon: '✅',
+                title: 'Step 6: Submit',
+                text: 'When you\'re done, click <strong>Submit Answers</strong> to check your work.',
                 position: 'top',
-                nextLabel: 'Got It ✓'
+                nextLabel: null,
+                interactive: true,
+                waitForEvent: 'click'
+            },
+            {
+                target: '#notes-step-results',
+                icon: '📊',
+                title: 'Step 7: Feedback',
+                text: 'Review the transcript. Words found in your notes are <span style="background:#dcfce7; padding:0 2px;">highlighted</span>. Great work!',
+                position: 'left',
+                nextLabel: 'Finish Tutorial ✓',
+                interactive: false
             }
         ],
         pronounce: [
@@ -764,37 +940,90 @@
                 target: null,
                 icon: '🗣️',
                 title: 'Pronounce Mode',
-                text: 'Analyze your stress, pitch, and rhythm to sound more like a native speaker!',
+                text: 'Master your pronunciation with real-time feedback on stress, pitch, and rhythm!',
                 position: 'center',
-                nextLabel: 'Show Me! →',
+                nextLabel: 'Start Tutorial →',
                 beforeShow: () => {
                     const tab = document.getElementById('tab-pronounce');
                     if (tab) tab.click();
                 }
             },
             {
-                target: '#pa-native-audio-container',
-                icon: '🔊',
-                title: 'Listen to Native',
-                text: 'Hear the target word pronounced correctly. Pay attention to the rising and falling pitch!',
+                target: '.pa-word-input-container > div',
+                icon: '⌨️',
+                title: 'Step 1: Choose & Search',
+                text: 'Type a word like <strong>"photograph"</strong>, then click <strong>Search</strong> to analyze it.',
                 position: 'bottom',
-                nextLabel: 'Next →'
+                nextLabel: null,
+                interactive: true,
+                waitForEvent: 'click',
+                validate: (e) => !!e.target.closest('#pa-search-btn')
+            },
+            {
+                target: '#pa-native-audio-container',
+                icon: '👂',
+                title: 'Step 2: Listen',
+                text: 'Click the <strong>Play</strong> button to hear the native speaker. Listen to the <em>stress</em> and <em>rhythm</em>.',
+                position: 'top',
+                nextLabel: 'I\'m Ready →',
+                interactive: true,
+                waitTimeout: 5000, // Wait longer for search results
+                beforeShow: () => {
+                    // Fail-safe: If audio container is still hidden (e.g. backend error), show it manually for tutorial
+                    const container = document.getElementById('pa-native-audio-container');
+                    if (container && container.offsetParent === null) {
+                        container.style.display = 'flex';
+                        // Optional: Add a visual cue that it's in tutorial/mock mode?
+                        container.setAttribute('data-tutorial-forced', 'true');
+                    }
+                }
             },
             {
                 target: '#pa-record-btn',
                 icon: '🎙️',
-                title: 'Record & Analyze',
-                text: 'Record yourself saying the word. We\'ll compare your pitch and stress to the native speaker!',
+                title: 'Step 3: Record',
+                text: 'Click <strong>Record</strong> and say the word clearly. Mimic the native speaker!',
                 position: 'top',
-                nextLabel: 'Next →'
+                nextLabel: null,
+                interactive: true,
+                waitForEvent: 'click'
+            },
+            {
+                target: '#pa-stop-btn',
+                icon: '⏹️',
+                title: 'Step 4: Stop',
+                text: 'Click <strong>Stop</strong> when you are done speaking to see your results.',
+                position: 'top',
+                nextLabel: null,
+                interactive: true,
+                waitForEvent: 'click'
             },
             {
                 target: '#pa-results-summary',
                 icon: '📊',
-                title: 'Visual Feedback',
-                text: 'See detailed charts of your pronunciation. Aim for a match with the native pattern!',
+                title: 'Step 5: Analysis',
+                text: 'Check your score! We analyze your <strong>Pitch</strong>, <strong>Duration</strong>, and <strong>Loudness</strong> compared to the native speaker.',
                 position: 'top',
-                nextLabel: 'Got It ✓'
+                nextLabel: 'Next →',
+                interactive: false
+            },
+            {
+                target: '.pa-charts-grid',
+                icon: '📈',
+                title: 'Step 6: Visual Feedback',
+                text: 'The <strong>Green line</strong> is the native pitch. The <strong>Blue line</strong> is yours. Try to match the shape!',
+                position: 'top',
+                nextLabel: 'Got it! →',
+                interactive: false
+            },
+            {
+                target: '#syllable-verifier-container',
+                icon: '🔍',
+                title: 'Step 7: Syllables',
+                text: 'Click on individual syllable boxes here to hear exactly how you sounded vs. the native speaker.',
+                position: 'top',
+                nextLabel: 'Finish Tutorial ✓',
+                interactive: false
             }
         ],
         shopUnlock: [
@@ -1076,7 +1305,14 @@
         cleanupInteractiveListener();
 
         // Run beforeShow callback if exists
-        if (step.beforeShow) step.beforeShow();
+        if (step.beforeShow) {
+            const result = step.beforeShow();
+            if (result === 'skip') {
+                console.log(`[Tutorial] Skipping step ${index} (${step.title})`);
+                showStep(index + 1);
+                return;
+            }
+        }
 
         // Hide tooltip before positioning to prevent visual jump
         tooltip.style.opacity = '0';
@@ -1110,8 +1346,8 @@
 
             // Position spotlight and tooltip
             if (step.target) {
-                // Robust wait for element
-                const targetEl = await waitForTarget(step.target);
+                // Robust wait for element with custom timeout if specified
+                const targetEl = await waitForTarget(step.target, step.waitTimeout || 500);
 
                 if (targetEl) {
                     // Ensure target is fully visible (auto for instant stability)
@@ -1135,16 +1371,17 @@
                         if (step.interactive) {
                             // Make target clickable through spotlight
                             targetEl.style.position = 'relative';
-                            targetEl.style.zIndex = '10002';
+                            targetEl.style.zIndex = '10002'; // above spotlight (10001)
 
                             if (step.waitForEvent) {
+                                // Specific event listening
                                 const handler = (e) => {
-                                    // optional real-time feedback
+                                    // Optional real-time feedback
                                     if (step.onInput && e.type === 'input') {
                                         step.onInput(e);
                                     }
 
-                                    // optional validation
+                                    // Optional validation
                                     if (step.validate && !step.validate.call(step, e)) {
                                         return;
                                     }
@@ -1152,29 +1389,43 @@
                                     // Avoid double-firing
                                     if (nextStepTimer) return;
 
-                                    // Small delay to let the click complete its normal action
+                                    // Small delay to let the event complete its normal action
                                     nextStepTimer = setTimeout(() => {
                                         nextStepTimer = null;
                                         nextStep();
                                     }, 100);
                                 };
 
-                                // For 'input' or steps with validation, we MUST use {once: false} 
-                                // because they might fail validation and need to be clicked again.
+                                // For 'input' or steps with validation, we use {once: false} 
                                 const useOnce = !(step.waitForEvent === 'input' || step.validate);
                                 const options = { once: useOnce };
-                                console.log(`Tutorial Step ${currentStep}: target=${step.target}, once=${useOnce}`);
 
                                 targetEl.addEventListener(step.waitForEvent, handler, options);
-                                interactiveListener = { target: targetEl, event: step.waitForEvent, handler, options };
+
+                                interactiveListener = {
+                                    target: targetEl,
+                                    event: step.waitForEvent,
+                                    handler: handler,
+                                    options: options
+                                };
                             }
                         }
 
+                        // Auto-advance feature (timer)
+                        if (step.autoAdvance) {
+                            if (nextStepTimer) clearTimeout(nextStepTimer);
+                            nextStepTimer = setTimeout(() => {
+                                nextStepTimer = null;
+                                nextStep();
+                            }, step.autoAdvance);
+                        }
+
+                        // Show elements
                         // Delay fade-in to allow scroll and positioning loop to stabilize
                         setTimeout(() => {
                             tooltip.style.transition = 'opacity 0.25s ease-out';
                             tooltip.style.opacity = '1';
-                        }, 150); // Wait 150ms for layout to stabilize
+                        }, 150);
                     });
                 } else {
                     console.warn(`Tutorial target not found: ${step.target}, falling back to centered`);
@@ -1195,12 +1446,6 @@
                     tooltip.style.opacity = '1';
                     tooltip.style.animation = '';
                 });
-            } else if (step.target) {
-                // Class update is handled in positionTooltip for target steps, 
-                // but we can double check here or just rely on positionTooltip logic.
-                // However, we moved positioning inside RAF above, so we shouldn't run this block synchronously for targets.
-            } else {
-                // Non-target fallback (rare)
             }
         }, 100);
     }

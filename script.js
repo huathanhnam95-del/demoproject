@@ -178,6 +178,35 @@
         modeSwitchBtn.classList.add('active');
       }
 
+      // HANDLE WATCH MODE CLEANUP/RESTORE
+      const pageWrapper = document.getElementById('page-layout-wrapper');
+      const watchQuestionPanel = document.getElementById('watch-question-panel');
+
+      if (mode !== 'watch') {
+        // Switching AWAY from Watch Mode
+        // 1. Remove the side-by-side layout class
+        if (pageWrapper) pageWrapper.classList.remove('watch-active');
+
+        // 2. Explicitly hide the watch question panel (popup)
+        if (watchQuestionPanel) watchQuestionPanel.style.display = 'none';
+
+        // 3. Pause video to prevent background playback
+        if (window.WatchMode && typeof window.WatchMode.pauseAndResetForTabSwitch === 'function') {
+          window.WatchMode.pauseAndResetForTabSwitch();
+        }
+      } else {
+        // Switching TO Watch Mode
+        // 1. Initialize logic
+        if (window.WatchMode && typeof window.WatchMode.init === 'function') {
+          window.WatchMode.init();
+        }
+
+        // 2. Restore layout if video was active
+        if (window.WatchMode && typeof window.WatchMode.refreshLayout === 'function') {
+          window.WatchMode.refreshLayout();
+        }
+      }
+
       // NEW: Clear any existing results/animations from previous sessions/modes
       // This ensures switching from Type to Speak (or vice versa) cleans up the UI
       if (typeof resetScaffolding === 'function') {
@@ -187,11 +216,6 @@
       // 4. Trigger any mode-specific initialization
       if (mode === 'extended' && typeof window.loadExtendedIfNeeded === 'function') {
         window.loadExtendedIfNeeded();
-      }
-
-      // Initialize Watch mode if needed
-      if (mode === 'watch' && window.WatchMode && typeof window.WatchMode.init === 'function') {
-        window.WatchMode.init();
       }
 
       // 5. Check if this is the first time using this mode - trigger tutorial
@@ -472,101 +496,8 @@
    * @param {string} mode - 'type' or 'speak' (default: 'type')
    */
   function showLetterHints(sentence, mode = 'type') {
-    const containerId = `scaffolding-hints-${mode}`;
-    const container = document.getElementById(containerId);
-    if (!container || !sentence) return;
-
-    // Default to Level 1 settings if DM is missing
-    let revealPercentage = 50;
-    if (window.DifficultyManager) {
-      const settings = window.DifficultyManager.getCurrentSettings(mode);
-      // Ensure strict check: 0% reveal should mean NO hints shown
-      if (settings.hints === 'none' || settings.level === 3) {
-        container.innerHTML = '';
-        container.style.display = 'none';
-        return;
-      }
-      revealPercentage = settings.initialRevealPercentage || 0;
-    }
-
-    const words = sentence.trim().split(/\s+/);
-    const totalHints = 5; // Max hints per session
-    const usedHints = window.scaffoldingHintsUsed || 2; // Track across session
-
-    // Reset manual hints counter for new question
-    window.manualHintsUsedCount = 0;
-
-    // Build header
-    let html = `
-      <div class="scaffolding-header">
-        <div class="scaffolding-title">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span class="icon">💡</span>
-            <span>Hints</span>
-          </div>
-            <div style="font-size:0.85rem; color:#64748b; font-weight:normal; margin-top:4px;">
-            Click on any <span class="instruction-placeholder" style="border-bottom:2px solid #475569; display:inline-block; width:16px; margin:0 2px; height: 12px; vertical-align: middle;"></span> to reveal a letter. 
-            <span id="hint-click-counter-${mode}" style="color:#7c3aed; font-weight:600;">7</span> reveals left.
-          </div>
-        </div>
-      </div>
-    `;
-
-    // Build letter boxes
-    html += '<div class="letter-hint-row">';
-
-    words.forEach((word, wordIndex) => {
-      html += '<div class="letter-hint-word">';
-
-      const lettersInWord = [...word].filter(c => /[a-zA-Z]/.test(c));
-      const revealCount = Math.max(1, Math.ceil(lettersInWord.length * (revealPercentage / 100)));
-      let AlphaCharIndex = 0;
-
-      [...word].forEach((char, charIndex) => {
-        if (/[a-zA-Z]/.test(char)) {
-          // Check if this is the very first letter of the first word
-          const isStart = wordIndex === 0 && AlphaCharIndex === 0;
-          const displayChar = isStart ? char.toUpperCase() : char.toLowerCase();
-
-          if (AlphaCharIndex < revealCount) {
-            html += `<span class="letter-box revealed">${displayChar}</span>`;
-          } else {
-            // Interactive hidden slot
-            html += `<span class="letter-box hidden" 
-                           onclick="revealClickedLetter(this)" 
-                           data-letter="${displayChar}"></span>`;
-          }
-          AlphaCharIndex++;
-        } else {
-          html += `<span class="letter-box punctuation">${char}</span>`;
-        }
-      });
-
-      html += '</div>';
-
-      if (wordIndex < words.length - 1) {
-        html += '<span class="word-separator"></span>';
-      }
-    });
-
-    html += '</div>';
-
-    // Footer removed
-
-    container.innerHTML = html;
-    container.style.display = 'block';
-
-    // SUPPRESS DUPLICATE LEGACY HINTS (The content below input)
-    setTimeout(() => {
-      const legacyHints = document.querySelectorAll('.auto-hints-container, .hint-controls');
-      legacyHints.forEach(el => el.style.display = 'none');
-    }, 50);
-
-    // Ensure indicator text matches logic
-    const counterEl = document.getElementById(`hint-click-counter-${mode}`);
-    if (counterEl) {
-      counterEl.textContent = '7'; // Reset display
-    }
+    // Feature disabled: Hint box removed from UI
+    return;
   }
 
   /**
@@ -2814,16 +2745,6 @@
       document.querySelectorAll('.mode-switch-btn').forEach(btn => btn.classList.remove('active'));
       const pronounceModeBtn = document.querySelector('.mode-switch-btn[onclick*="pronounce"]');
       if (pronounceModeBtn) pronounceModeBtn.classList.add('active');
-
-      // Hide all other mode panels
-      animationPanel.style.display = "none";
-      result.style.display = "none";
-      generatePanelType.style.display = "none";
-      generatePanelSpeak.style.display = "none";
-      sameVocabPanelType.style.display = "none";
-      sameVocabPanelSpeak.style.display = "none";
-      vocabularyPanel.style.display = "none";
-      breakdownPanel.style.display = "none";
 
       // Show Pronunciation Panel
       if (pronunciationPanel) {

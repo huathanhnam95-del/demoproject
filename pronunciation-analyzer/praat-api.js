@@ -125,7 +125,7 @@ export class PraatAPI {
             });
             return response.ok;
         } catch (error) {
-            console.error('Health check failed:', error);
+            console.warn('Health check failed (backend optional):', error);
             return false;
         }
     }

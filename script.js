@@ -342,24 +342,14 @@
 
     // Create container if it doesn't exist
     if (!container) {
-      const hintControlsEl = document.getElementById('hint-controls-type');
-      if (hintControlsEl) {
+      const inputEl = document.getElementById('answer-input');
+      if (inputEl) {
         container = document.createElement('div');
         container.id = 'auto-hints-type';
         container.className = 'auto-hints-container';
-        // Insert BEFORE the specialized hint controls
-        hintControlsEl.parentNode.insertBefore(container, hintControlsEl);
+        inputEl.parentNode.insertBefore(container, inputEl.nextSibling);
       } else {
-        // Fallback: append after input if hint controls missing
-        const inputEl = document.getElementById('answer-input');
-        if (inputEl) {
-          container = document.createElement('div');
-          container.id = 'auto-hints-type';
-          container.className = 'auto-hints-container';
-          inputEl.parentNode.insertBefore(container, inputEl.nextSibling);
-        } else {
-          return;
-        }
+        return;
       }
     }
 
@@ -452,19 +442,7 @@
       }
 
       // Reset hint controls visibility (Level 1 Scaffolding Conflict Resolution)
-      const hintControls = document.getElementById('hint-controls-type');
-      if (hintControls) {
-        if (window.DifficultyManager) {
-          const settings = window.DifficultyManager.getCurrentSettings('type');
-          if (settings.autoShowFirstLetters) {
-            hintControls.style.display = 'none'; // Level 1 (Guided) auto-hints active
-          } else {
-            hintControls.style.display = 'block';
-          }
-        } else {
-          hintControls.style.display = 'block';
-        }
-      }
+
 
 
 

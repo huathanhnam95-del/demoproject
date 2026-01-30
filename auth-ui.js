@@ -286,12 +286,17 @@ async function handleLevelSelection(level) {
   const modal = document.getElementById('level-selection-modal');
 
   try {
-    // Update Profile
+    // Update Profile - defensive fallback for older deployments
     console.log('[AuthUI] Calling updateUserProfile. firestoreFunctions status:', !!firestoreFunctions);
-    if (firestoreFunctions) {
-      console.log('[AuthUI] updateUserProfile function type:', typeof firestoreFunctions.updateUserProfile);
+
+    // Determine which function to use (fallback for compatibility)
+    const updateFn = firestoreFunctions.updateUserProfile || firestoreFunctions.createOrUpdateUserProfile;
+    if (!updateFn) {
+      throw new Error('No profile update function available');
     }
-    await firestoreFunctions.updateUserProfile(currentUserId, {
+    console.log('[AuthUI] Using function:', updateFn.name || 'anonymous');
+
+    await updateFn(currentUserId, {
       englishLevel: level,
       levelSelectedAt: new Date()
     });
@@ -304,9 +309,10 @@ async function handleLevelSelection(level) {
     }
 
     if (shouldUnlock) {
-      await firestoreFunctions.updateUserProfile(currentUserId, {
+      await updateFn(currentUserId, {
         sentenceLengthFilterUnlocked: true
       });
+
       // Local update for immediate feedback if needed
       localStorage.setItem('unlocked_filter_length_type', 'true');
     }

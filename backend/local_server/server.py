@@ -736,51 +736,70 @@ def parse_mw_response(api_data, word):
         exact_matches = [e for e in api_data if isinstance(e, dict) and 'meta' in e]
         
     for entry in exact_matches:
-        parsed = parse_single_mw_entry(entry, word)
-        if parsed:
-            all_parsed_entries.append(parsed)
+        # returns a list of forms
+        parsed_forms = parse_single_mw_entry(entry, word)
+        if parsed_forms:
+            all_parsed_entries.extend(parsed_forms)
             
     if all_parsed_entries:
-        # The primary result is the first one (usually the most common)
-        primary = all_parsed_entries[0]
+        # ROBUST AUDIO FILLING STRATEGY (Cross-entry IPA matching)
+        # Instead of inheriting from "primary" or "first in entry", we look for
+        # any entry that has audio for the SAME pronunciation (normalized).
         
-        # Inherit missing fields for alternatives
-        for alt in all_parsed_entries[1:]:
-            needs_inheritance = not alt.get('pronunciation') or not alt.get('audioUrl')
-            if needs_inheritance:
-                print(f"DEBUG: Form '{alt.get('partOfSpeech')}' for '{word}' is inheriting data from primary.")
+        # 1. Build Index of available audio
+        audio_by_ipa_pos = {}
+        audio_by_ipa = {}
+        
+        for f in all_parsed_entries:
+            ipa = normalize_ipa(f.get("pronunciation", ""))
+            if not ipa:
+                continue
+            
+            if f.get("audioUrl"):
+                pos = (f.get("partOfSpeech") or "").lower().strip()
+                audio_by_ipa_pos[(ipa, pos)] = (f["audioUrl"], f.get("audioFilename"))
+                audio_by_ipa[ipa] = (f["audioUrl"], f.get("audioFilename"))
+
+        # 2. Fill missing audio where IPA matches
+        for f in all_parsed_entries:
+            if f.get("audioUrl"):
+                continue
                 
-            if not alt.get('pronunciation'):
-                alt['pronunciation'] = primary.get('pronunciation')
-                alt['inheritedPronunciation'] = True
-                # Force inheritance of structural data when pronunciation is shared
-                alt['syllables'] = primary.get('syllables')
-                alt['syllableCount'] = primary.get('syllableCount')
-                alt['stressedSyllable'] = primary.get('stressedSyllable')
+            ipa = normalize_ipa(f.get("pronunciation", ""))
+            if not ipa:
+                continue
                 
-            if not alt.get('audioUrl'):
-                alt['audioUrl'] = primary.get('audioUrl')
+            pos = (f.get("partOfSpeech") or "").lower().strip()
+
+            # Try exact match (IPA + POS) first, then loose match (IPA only)
+            match = audio_by_ipa_pos.get((ipa, pos)) or audio_by_ipa.get(ipa)
+            if match:
+                f["audioUrl"], f["audioFilename"] = match
+                f["inheritedAudio"] = True
+                f["inheritedAudioReason"] = "ipa_match"
 
         # DEDUPLICATION: Collapse identical word forms to keep the UI clean.
         seen_forms = set()
         unique_entries = []
         
         print(f"\n{'#'*30}")
-        print(f"DEBUG: Processing {len(all_parsed_entries)} entries for '{word}'")
+        print(f"DEBUG: Processing {len(all_parsed_entries)} entries/forms for '{word}'")
         
         for entry in all_parsed_entries:
-            # Keys consist of: pos:ipa (identical audio/pos/ipa = same button)
-            pos = str(entry.get('partOfSpeech')).lower().strip()
+            # Keys consist of: pos:label:ipa (identical audio/pos/label/ipa = same button)
+            pos = str(entry.get('partOfSpeech') or "").lower().strip()
+            label = str(entry.get('label') or "").lower().strip()
             ipa = str(entry.get('pronunciation') or "").lower().strip()
-            key = f"{pos}:{ipa or word.lower()}"
+            # Also distinguish by audio filename if present (so we don't merge distinct variants if they happen to share text but not audio)
+            # Actually, deduping visually identical items is usually desired even if audio sources differ slightly.
+            # But here, we want visual distinctness.
+            key = f"{pos}:{label}:{ipa or word.lower()}"
             
-            print(f"DEBUG: entry key = '{key}'")
             if key not in seen_forms:
                 seen_forms.add(key)
                 unique_entries.append(entry)
-                print(f"DEBUG: KEEPING entry")
             else:
-                print(f"DEBUG: FILTERING entry")
+                pass # Duplicate
 
         print(f"DEBUG: Final count for '{word}': {len(unique_entries)}")
         print(f"{'#'*30}\n")
@@ -793,63 +812,99 @@ def parse_mw_response(api_data, word):
     else:
         return {'found': False, 'suggestions': []}
 
+def normalize_ipa(ipa):
+    """Normalize IPA for matching (remove stress marks, spaces)."""
+    if not ipa:
+        return ""
+    # Remove primary/secondary stress marks and whitespace
+    # Also handle some common variations if needed
+    import re
+    cleaned = ipa.replace("ˈ", "").replace("ˌ", "").replace("'", "")
+    cleaned = re.sub(r"\s+", "", cleaned)
+    return cleaned
+
 def parse_single_mw_entry(entry, word):
-    """Parse a single Merriam-Webster API entry int our format."""
+    """Parse a single Merriam-Webster API entry into our format.
+    Returns a list of word forms (multi-pronunciation support)."""
     if not entry or 'hwi' not in entry:
-        return None
+        return []
     
     hwi = entry.get('hwi', {})
-    
-    result = {
-        'word': word,
-        'source': 'merriam-webster',
-        'syllables': parse_syllables(hwi.get('hw', '')),
-        'syllableCount': 0,
-        'stressedSyllable': 0,
-        'pronunciation': None,
-        'audioUrl': None,
-        'audioFilename': None,
-        'partOfSpeech': entry.get('fl'),
-        'definition': entry.get('shortdef', [None])[0] if entry.get('shortdef') else None
-    }
-    
-    # Initial count from headword
-    hw_count = len(result['syllables'])
-    result['syllableCount'] = hw_count
+    hw_text = hwi.get('hw', '')
+    fl = entry.get('fl')
+    shortdef = entry.get('shortdef', [None])[0] if entry.get('shortdef') else None
     
     prs = hwi.get('prs', [])
-    if prs:
-        pron = prs[0]
-        # Prioritize IPA field for display, fallback to mw
+    if not prs:
+        # Still return basic form even without dictionary pronunciation
+        return [{
+            'word': word,
+            'source': 'merriam-webster',
+            'syllables': parse_syllables(hw_text),
+            'syllableCount': len(parse_syllables(hw_text)),
+            'stressedSyllable': 0,
+            'pronunciation': None,
+            'audioUrl': None,
+            'audioFilename': None,
+            'partOfSpeech': fl,
+            'definition': shortdef
+        }]
+
+    # NOTE: Removed unsafe "first_audio_data" logic. 
+    # We do NOT want to inherit audio within the entry unless we are sure it matches.
+    # Cross-entry IPA matching in parse_mw_response will handle missing audio more safely.
+
+    results = []
+    for i, pron in enumerate(prs):
+        # Extract metadata
         ipa_string = pron.get('ipa') or pron.get('mw') or ""
-        result['pronunciation'] = ipa_string
         
-        # Calculate IPA vowel count - TRUST IPA count if different (not just greater)
-        ipa_count = count_ipa_syllables(ipa_string)
+        # Improved label logic: Don't use 'pun' unless it looks like a label
+        pun = pron.get('pun')
+        label = pron.get('l')
         
-        print(f"Syllable counting for '{word}':")
-        print(f"  HW parsing: {result['syllables']} -> {hw_count} syllables")
-        print(f"  IPA '{ipa_string}' -> {ipa_count} syllables")
-        
-        if ipa_count > 0 and ipa_count != hw_count:
-            print(f"  ⚠️ Mismatch detected for '{word}'! Using IPA count: {ipa_count}")
-            result['syllableCount'] = ipa_count
-            # Force labels to sync with count using heuristic splitting
-            result['syllables'] = split_word_by_ipa(word, ipa_string, ipa_count)
+        if not label and pun and pun.strip() not in {",", ";", ":"}:
+            label = pun
             
-        # Recalculate stress index based on authoritative count
-        stress_source = ipa_string or result['pronunciation']
-        result['stressedSyllable'] = find_stressed_syllable(stress_source, result['syllableCount'])
+        # Clean label
+        if label:
+            label = label.strip().strip('.;,')
+            
+        res = {
+            'word': word,
+            'source': 'merriam-webster',
+            'syllables': parse_syllables(hw_text),
+            'syllableCount': 0,
+            'stressedSyllable': 0,
+            'pronunciation': ipa_string,
+            'audioUrl': None,
+            'audioFilename': None,
+            'partOfSpeech': fl,
+            'label': label,
+            'definition': shortdef
+        }
+
+        # Syllable counting logic
+        hw_count = len(res['syllables'])
+        res['syllableCount'] = hw_count
         
-        # Audio extraction - search all prs entries for a sound object
-        for p in prs:
-            if p.get('sound', {}).get('audio'):
-                audio_filename = p['sound']['audio']
-                result['audioFilename'] = audio_filename
-                result['audioUrl'] = build_audio_url(audio_filename)
-                break
+        if ipa_string:
+            ipa_count = count_ipa_syllables(ipa_string)
+            if ipa_count > 0 and ipa_count != hw_count:
+                res['syllableCount'] = ipa_count
+                res['syllables'] = split_word_by_ipa(word, ipa_string, ipa_count)
+            
+            res['stressedSyllable'] = find_stressed_syllable(ipa_string, res['syllableCount'])
+
+        # Audio pairing - ONLY use audio clearly attached to this pronunciation
+        if pron.get('sound', {}).get('audio'):
+            audio_filename = pron['sound']['audio']
+            res['audioFilename'] = audio_filename
+            res['audioUrl'] = build_audio_url(audio_filename)
+
+        results.append(res)
     
-    return result
+    return results
 
 def parse_syllables(hw):
     """Parse syllables from 'hw' field: 'pho·to·graph' -> ['pho', 'to', 'graph']"""

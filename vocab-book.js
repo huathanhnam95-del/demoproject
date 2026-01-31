@@ -585,6 +585,17 @@ const VocabularyBook = (function () {
     }
 
     /**
+     * Check if the current user is an admin
+     */
+    function isAdmin() {
+        if (typeof window.firebaseAuthFunctions !== 'undefined' && window.firebaseAuthFunctions.getCurrentUser) {
+            const user = window.firebaseAuthFunctions.getCurrentUser();
+            return user && user.email === 'huathanhnam95@gmail.com';
+        }
+        return false;
+    }
+
+    /**
      * Load vocabulary data from Firestore
      */
     async function loadVocabData() {
@@ -1249,7 +1260,7 @@ const VocabularyBook = (function () {
         currentSentence = sentence;
 
         vocabAddWords.innerHTML = '<div class="vocab-loading">Loading word details...</div>';
-        vocabAddModal.style.display = 'block';
+        vocabAddModal.style.display = 'flex';
 
         // Fetch details for each word with concurrency limit of 5
         const wordDetails = await mapLimit(missedWords, 5, async (word) => {
@@ -1286,7 +1297,7 @@ const VocabularyBook = (function () {
                         <span class="word">${escapeHtml(detail.word)}</span>
                         <span class="translation">${escapeHtml(detail.translation)}</span>
                     </label>
-                    ${hasSentences ? `<button class="vocab-expand-btn" title="Show Examples" type="button">▼</button>` : ''}
+                    ${hasSentences ? `<button class="vocab-expand-btn" title="Show Examples" type="button"></button>` : ''}
                 </div>
                 <div class="vocab-word-details" style="display: none;">
                     ${sentenceHtml}
@@ -1307,7 +1318,7 @@ const VocabularyBook = (function () {
                     e.stopPropagation();
                     const isVisible = details.style.display === 'block';
                     details.style.display = isVisible ? 'none' : 'block';
-                    expandBtn.textContent = isVisible ? '▼' : '▲';
+                    // Text content handled by CSS ::after
                     expandBtn.classList.toggle('active', !isVisible);
                 });
             }
@@ -1403,7 +1414,7 @@ const VocabularyBook = (function () {
             ${showButton ? `
                 <div class="vocab-list-footer">
                     <button id="vocab-view-all-btn" class="vocab-btn-secondary">View All Items</button>
-                    ${window.DictionaryService ?
+                    ${window.DictionaryService && isAdmin() ?
                     `<button onclick="if(confirm('Clear all dictionary caches? This will force a refresh of all translations.')) { window.DictionaryService.clearCache(); alert('Cache cleared!'); location.reload(); }" class="vocab-btn-text" style="font-size:11px;color:#94a3b8;margin-left:10px;">Reset Cache</button>`
                     : ''}
                 </div>

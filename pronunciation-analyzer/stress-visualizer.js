@@ -128,6 +128,7 @@ class StressVisualizer {
             this.stressChart.destroy();
             this.stressChart = null;
         }
+        this.toggleFeedbackSection(false);
     }
 
     destroy() {

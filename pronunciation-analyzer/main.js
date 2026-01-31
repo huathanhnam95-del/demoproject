@@ -166,6 +166,15 @@ class PronunciationApp {
                 this.nativeAudioContainer.style.display = 'none';
             }
 
+            // Clear previous results
+            if (this.resultsSummary) this.resultsSummary.innerHTML = "";
+            if (this.syllableVerifier) {
+                this.syllableVerifier.destroy();
+                this.syllableVerifier = null;
+            }
+            const verifierContainer = document.getElementById('syllable-verifier-container');
+            if (verifierContainer) verifierContainer.innerHTML = "";
+
             // Try to get native reference from backend (MW API)
             let wordRef = null;
             try {

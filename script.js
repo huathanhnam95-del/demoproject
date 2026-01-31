@@ -5416,13 +5416,11 @@
     // Store diff for sentence generation (Speak mode)
     lastDiffSpeak = diff;
 
-    // Show same vocabulary panel and generate panel immediately after check (if there are errors)
+    // Show same vocabulary panel after check (if there are errors)
     if (hasErrors) {
       renderSameVocabularySpeak();
-      generatePanelSpeak.style.display = "block";
     } else {
       sameVocabPanelSpeak.style.display = "none";
-      generatePanelSpeak.style.display = "none";
     }
 
     // Show animation panel and result box for Speak mode

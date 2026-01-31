@@ -965,32 +965,34 @@
               <!-- Word Form Selector (hidden by default) -->
               <div id="pa-word-forms" class="pa-word-forms hidden"
                 style="margin-bottom: 15px; gap: 8px; flex-wrap: wrap;"></div>
-              <div id="pa-word-info" class="pa-word-info">
-                <div class="pa-info-row">
-                  <span class="pa-info-label">IPA:</span>
-                  <span id="pa-ipa-display" class="pa-ipa-text">/ˈfoʊ.tə.ɡræf/</span>
+              <div class="pa-merged-info-box">
+                <div id="pa-word-info" class="pa-word-info">
+                  <div class="pa-info-row">
+                    <span class="pa-info-label">IPA:</span>
+                    <span id="pa-ipa-display" class="pa-ipa-text">/ˈfoʊ.tə.ɡræf/</span>
+                  </div>
+                  <div class="pa-info-row">
+                    <span class="pa-info-label">Pattern:</span>
+                    <span id="pa-pattern-display">3 Syllables, Stress on 1</span>
+                  </div>
                 </div>
-                <div class="pa-info-row">
-                  <span class="pa-info-label">Pattern:</span>
-                  <span id="pa-pattern-display">3 Syllables, Stress on 1</span>
+
+                <!-- Native Audio Player -->
+                <div id="pa-native-audio-container" class="pa-reference-audio" style="display: none;">
+                  <div class="pa-audio-info">
+                    <span class="pa-audio-icon">🔊</span>
+                    <span>Native Pronunciation:</span>
+                  </div>
+                  <audio id="pa-native-audio" controls preload="none"></audio>
                 </div>
               </div>
 
               <!-- Loading Placeholder -->
-              <div id="pa-loading-placeholder" class="pa-loading-container">
+              <div id="pa-loading-placeholder" class="pa-loading-container" style="display: none;">
                 <div class="pa-spinner" style="display: block; margin: 0;"></div>
                 <div class="pa-loading-text">Loading data...</div>
               </div>
             </div>
-          </div>
-
-          <!-- Native Audio Player -->
-          <div id="pa-native-audio-container" class="pa-reference-audio" style="display: none;">
-            <div class="pa-audio-info">
-              <span class="pa-audio-icon">🔊</span>
-              <span>Native Pronunciation:</span>
-            </div>
-            <audio id="pa-native-audio" controls preload="none"></audio>
           </div>
 
           <div id="pa-spinner" class="pa-spinner" style="display: none;"></div>
@@ -1446,7 +1448,8 @@
               </div>
             </div>
             <div class="phrase-controls">
-              <button id="check-phrases-btn" class="modern-btn modern-btn--check" type="button">Check Phrases</button>
+              <button id="check-phrases-btn" class="modern-btn modern-btn--check" type="button">Check
+                Phrases</button>
               <button id="support-phrases-btn" class="modern-btn modern-btn--hint" type="button">Show Hints</button>
               <button id="redo-phrases-btn" class="modern-btn modern-btn--retry" type="button"
                 style="display: none;">Retry Phrases</button>
@@ -1647,7 +1650,8 @@
         <div class="animation-header">
           <span>How to fix (step-by-step)</span>
           <div class="animation-controls">
-            <button id="skip-animation-btn" class="modern-btn modern-btn--hint" type="button">Skip Animation</button>
+            <button id="skip-animation-btn" class="modern-btn modern-btn--hint" type="button">Skip
+              Animation</button>
             <button id="replay-btn" class="modern-btn modern-btn--play" type="button">Replay</button>
           </div>
         </div>

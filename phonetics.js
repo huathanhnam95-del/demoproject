@@ -103,54 +103,8 @@ const Phonetics = (function () {
      * @returns {string|null} IPA transcription or null
      */
     async function lookupDictionary(word) {
-        const normalized = word.toLowerCase().trim();
-
-        try {
-            const response = await fetch(
-                `${CONFIG.dictionaryApiBase}${encodeURIComponent(normalized)}`
-            );
-
-            if (!response.ok) {
-                log(`Dictionary API: ${normalized} - ${response.status}`);
-                return null;
-            }
-
-            const data = await response.json();
-
-            // Response is an array of entries
-            if (!Array.isArray(data) || data.length === 0) {
-                return null;
-            }
-
-            const entry = data[0];
-
-            // Look for phonetics array - prefer US pronunciation (has -us.mp3 audio)
-            if (entry.phonetics && Array.isArray(entry.phonetics)) {
-                // First, try to find US pronunciation (has audio with -us.mp3)
-                const usPhonetic = entry.phonetics.find(p =>
-                    p.text && p.audio && p.audio.includes('-us.mp3')
-                );
-                if (usPhonetic && usPhonetic.text) {
-                    return usPhonetic.text;
-                }
-
-                // Otherwise, return first phonetic with text
-                const firstWithText = entry.phonetics.find(p => p.text);
-                if (firstWithText) {
-                    return firstWithText.text;
-                }
-            }
-
-            // Fallback to top-level phonetic field
-            if (entry.phonetic) {
-                return entry.phonetic;
-            }
-
-            return null;
-        } catch (error) {
-            log('Dictionary lookup failed:', error.message);
-            return null;
-        }
+        // Suppress failing external API to avoid CORS errors in console
+        return null;
     }
 
     // === MAIN API ===
@@ -170,7 +124,7 @@ const Phonetics = (function () {
             return '';
         }
 
-        const normalized = word.toLowerCase().trim().replace(/[^a-z']/g, '');
+        const normalized = word.toLowerCase().trim().replace(/[’]/g, "'").replace(/[^a-z']/g, '');
         if (!normalized) {
             return '';
         }
@@ -244,7 +198,7 @@ const Phonetics = (function () {
         // Ensure word is looked up (populates cache)
         await getIPA(word);
 
-        const normalized = word.toLowerCase().trim().replace(/[^a-z']/g, '');
+        const normalized = word.toLowerCase().trim().replace(/[’]/g, "'").replace(/[^a-z']/g, '');
         const cached = ipaCache.get(normalized);
 
         if (cached && typeof cached === 'object') {

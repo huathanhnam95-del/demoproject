@@ -21,7 +21,7 @@
   <script type="importmap">
     {
       "imports": {
-        "ts-fsrs": "./node_modules/ts-fsrs/dist/index.mjs"
+        "ts-fsrs": "https://esm.sh/ts-fsrs@4.5.1"
       }
     }
   </script>
@@ -1643,16 +1643,6 @@
         </div>
       </div>
 
-      <section id="vocabulary-practice" class="vocabulary-panel" style="display: none;">
-        <div class="vocabulary-header">
-          <span>Vocabulary practice</span>
-        </div>
-        <div class="vocabulary-subheader">
-          <span>Focus on the words that you missed from this question</span>
-        </div>
-        <div id="vocabulary-words" class="vocabulary-words"></div>
-      </section>
-
       <section class="animation-panel" style="display: none;">
         <div class="animation-header">
           <span>How to fix (step-by-step)</span>
@@ -1663,6 +1653,7 @@
         </div>
         <div id="animation" class="animation"></div>
       </section>
+
       <div id="result" aria-live="polite" style="display: none;">
         <div class="legend" aria-hidden="true">
           <span class="legend-item"><span class="chip missing"></span>missed (red highlight)</span>
@@ -1670,6 +1661,16 @@
           <span class="legend-item"><span class="chip misplaced"></span>misplaced (blue highlight)</span>
         </div>
       </div>
+
+      <section id="vocabulary-practice" class="vocabulary-panel" style="display: none;">
+        <div class="vocabulary-header">
+          <span>Vocabulary practice</span>
+        </div>
+        <div class="vocabulary-subheader">
+          <span>Focus on the words that you missed from this question</span>
+        </div>
+        <div id="vocabulary-words" class="vocabulary-words"></div>
+      </section>
 
       <section id="pronunciation-practice" class="pronunciation-panel" style="display: none;">
         <div class="pronunciation-header">

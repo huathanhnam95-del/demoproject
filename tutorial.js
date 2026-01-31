@@ -1360,7 +1360,9 @@
                         tooltip.style.opacity = '0';
                         tooltip.style.transition = 'none'; // Disable transition during positioning
 
+                        // Prepare spotlight (hidden initially for instant move)
                         spotlight.style.display = 'block';
+                        spotlight.style.opacity = '0'; // Start hidden
                         spotlight.classList.add('pulse');
                         backdrop.style.display = 'none';
 
@@ -1425,6 +1427,9 @@
                         setTimeout(() => {
                             tooltip.style.transition = 'opacity 0.25s ease-out';
                             tooltip.style.opacity = '1';
+
+                            // Fade in spotlight
+                            spotlight.style.opacity = '1';
                         }, 150);
                     });
                 } else {

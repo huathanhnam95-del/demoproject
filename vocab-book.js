@@ -54,7 +54,36 @@ const VocabularyBook = (function () {
     let currentMissedWords = [];
     let currentQuestionId = null;
     let currentMode = null;
-    let currentSentence = null; // NEW: Store sentence context for addBookmarkedWord
+    let currentSentence = null;
+
+    /**
+     * Escape HTML special characters to prevent XSS
+     */
+    function escapeHtml(s) {
+        return (String(s || '')).replace(/[&<>"']/g, c => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[c]));
+    }
+
+    /**
+     * Run an async map with a concurrency limit
+     * Uses atomic index-queue pattern to prevent race conditions.
+     */
+    async function mapLimit(arr, limit, fn) {
+        const ret = new Array(arr.length);
+        let nextIndex = 0;
+
+        const worker = async () => {
+            while (true) {
+                const idx = nextIndex++;
+                if (idx >= arr.length) return;
+                ret[idx] = await fn(arr[idx], idx);
+            }
+        };
+
+        await Promise.all(Array.from({ length: Math.min(limit, arr.length) }, worker));
+        return ret;
+    }
 
     /**
      * Initialize the Vocabulary Book module
@@ -278,8 +307,24 @@ const VocabularyBook = (function () {
      * Uses CMU Dict → Wiktionary → espeak-ng fallback chain
      */
     async function fetchPhonetics(word) {
-        const cleanWord = word.trim().toLowerCase().replace(/[^a-z]/g, '');
+        let cleanWord = word.trim().toLowerCase().replace(/[’]/g, "'").replace(/[^a-z']/g, '');
         if (!cleanWord) return null;
+
+        // Semantic contraction expansion for IPA (e.g., "we'll" -> "will")
+        if (window.DictionaryService && window.DictionaryService.detectContraction) {
+            const contraction = window.DictionaryService.detectContraction(cleanWord);
+            if (contraction && contraction.head) {
+                cleanWord = contraction.head;
+            }
+        } else {
+            // Replicate core head-word extraction if service not loaded or private
+            const mLL = cleanWord.match(/^([a-z]+)'ll$/);
+            if (mLL) cleanWord = 'will';
+            else if (cleanWord.endsWith("n't")) {
+                const base = cleanWord.slice(0, -3);
+                cleanWord = base === 'wo' ? 'will' : base;
+            }
+        }
 
         // Check local cache first
         if (phoneticCache.has(cleanWord)) {
@@ -297,26 +342,9 @@ const VocabularyBook = (function () {
             }
         }
 
-        // Fallback to old Dictionary API if Phonetics module not available
-        try {
-            const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${cleanWord}`);
-            if (!response.ok) throw new Error('Not found');
-            const data = await response.json();
-
-            let phonetic = '';
-            if (data[0].phonetic) phonetic = data[0].phonetic;
-            else if (data[0].phonetics && data[0].phonetics.length > 0) {
-                const p = data[0].phonetics.find(x => x.text);
-                if (p) phonetic = p.text;
-            }
-
-            phoneticCache.set(cleanWord, phonetic);
-            return phonetic;
-        } catch (e) {
-            console.warn(`[VocabBook] No phonetics found for: ${cleanWord}`);
-            phoneticCache.set(cleanWord, '');
-            return '';
-        }
+        // If reached here, Phonetics module failed or was unavailable
+        phoneticCache.set(cleanWord, '');
+        return '';
     }
 
     /**
@@ -354,7 +382,7 @@ const VocabularyBook = (function () {
         const tbody = tabName === 'bookmarks' ? vocabTableBodyBookmarks : vocabTableBodyMissed;
         if (!tbody) return;
 
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94a3b8;">Loading...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;">Loading...</td></tr>';
 
         let items = [];
         if (tabName === 'bookmarks') {
@@ -364,7 +392,7 @@ const VocabularyBook = (function () {
         }
 
         if (items.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;">No words found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;">No words found.</td></tr>';
             return;
         }
 
@@ -378,15 +406,15 @@ const VocabularyBook = (function () {
             const mode = item.mode || '-';
             const questionId = item.questionId || '-';
             const sourceCell = `<td>
-                <span class="vocab-badge vocab-badge-mode">${mode}</span>
-                <span class="vocab-badge vocab-badge-q">Q${questionId}</span>
+                <span class="vocab-badge vocab-badge-mode">${escapeHtml(mode)}</span>
+                <span class="vocab-badge vocab-badge-q">Q${escapeHtml(questionId)}</span>
             </td>`;
 
             // Form (Part of Speech) - NEW: Replaced SRS Status
             const pos = item.partOfSpeech || 'unknown';
             const posLabel = pos === 'unknown' ? '-' : pos;
             const posClass = pos !== 'unknown' ? `vocab-badge-pos vocab-badge-pos-${pos}` : 'vocab-badge-pos';
-            const formCell = `<td><span class="${posClass}">${posLabel}</span></td>`;
+            const formCell = `<td><span class="${posClass}">${escapeHtml(posLabel)}</span></td>`;
 
             // Stats column for Missed tab, Actions for Bookmarks
             let statsCell = '';
@@ -394,25 +422,37 @@ const VocabularyBook = (function () {
                 statsCell = `<td><span class="vocab-badge vocab-badge-miss">${item.missCount}</span></td>`;
             } else {
                 statsCell = `<td>
-                    <button class="btn-icon-remove" onclick="window.VocabularyBook.removeViaModal('${lemma}')" title="Remove">
+                    <button class="btn-icon-remove" onclick="window.VocabularyBook.removeViaModal('${escapeHtml(item.lemma)}')" title="Remove">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                     </button>
                 </td>`;
             }
 
             return `
-                <tr id="${rowId}">
-                    <td><span class="vocab-word-text">${wordText}</span></td>
-                    <td class="pronunciation-cell" data-word="${wordText}">
-                        <span class="vocab-phonetic">...</span>
-                        <button class="vocab-audio-btn-inline" onclick="window.VocabularyBook.playAudio('${wordText}')" title="Listen">🔊</button>
+                <tr id="${rowId}" class="vocab-row-main">
+                    <td class="vocab-word-cell">
+                        <span class="vocab-word-text">${escapeHtml(wordText)}</span>
                     </td>
-                    <td class="translation-cell" data-word="${wordText}">
+                    <td class="pronunciation-cell" data-word="${escapeHtml(wordText)}">
+                        <span class="vocab-phonetic">...</span>
+                        <button class="vocab-audio-btn-inline" onclick="window.VocabularyBook.playAudio('${escapeHtml(wordText)}')" title="Listen">🔊</button>
+                    </td>
+                    <td class="translation-cell" data-word="${escapeHtml(wordText)}">
                         <span class="vocab-vietnamese" style="color:#3B82F6;font-weight:500;">...</span>
+                    </td>
+                    <td class="examples-action-cell" data-word="${escapeHtml(wordText)}">
+                        <button class="vocab-table-expand-btn" style="display:none;" title="Show Examples" type="button">▼</button>
                     </td>
                     ${sourceCell}
                     ${formCell}
                     ${statsCell}
+                </tr>
+                <tr id="${rowId}-details" class="vocab-row-details" style="display: none;">
+                    <td colspan="7">
+                        <div class="vocab-table-details-content">
+                            <!-- Sentences go here -->
+                        </div>
+                    </td>
                 </tr>
             `;
         }).join('');
@@ -422,23 +462,59 @@ const VocabularyBook = (function () {
         // Fetch Phonetics and Vietnamese translations in background
         for (const item of items) {
             const wordText = item.word || item.originalWord;
+            const lemma = item.lemma;
 
             // Fetch Phonetics
             fetchPhonetics(wordText).then(phonetic => {
-                const cells = tbody.querySelectorAll(`.pronunciation-cell[data-word="${wordText}"]`);
+                const cells = tbody.querySelectorAll(`.pronunciation-cell[data-word="${CSS.escape(wordText)}"]`);
                 cells.forEach(cell => {
                     const phoneticText = phonetic || '-';
-                    cell.innerHTML = `<span class="vocab-phonetic">${phoneticText}</span> <button class="vocab-audio-btn-inline" onclick="window.VocabularyBook.playAudio('${wordText}')" title="Listen">🔊</button>`;
+                    cell.innerHTML = `<span class="vocab-phonetic">${escapeHtml(phoneticText)}</span> <button class="vocab-audio-btn-inline" onclick="window.VocabularyBook.playAudio('${escapeHtml(wordText)}')" title="Listen">🔊</button>`;
                 });
             });
 
-            // Fetch Vietnamese Translation using DictionaryService
-            if (typeof DictionaryService !== 'undefined') {
-                DictionaryService.getVietnameseTranslation(wordText).then(translation => {
-                    const cells = tbody.querySelectorAll(`.translation-cell[data-word="${wordText}"]`);
-                    cells.forEach(cell => {
-                        const transText = translation || '-';
-                        cell.innerHTML = `<span class="vocab-vietnamese" style="color:#3B82F6;font-weight:500;">${transText}</span>`;
+            // Fetch Vietnamese Entry using DictionaryService
+            if (window.DictionaryService) {
+                window.DictionaryService.getVietnameseEntry(wordText).then(entry => {
+                    const escapedWord = CSS.escape(wordText);
+                    const transCells = tbody.querySelectorAll(`.translation-cell[data-word="${escapedWord}"]`);
+                    transCells.forEach(cell => {
+                        cell.innerHTML = `<span class="vocab-vietnamese" style="color:#3B82F6;font-weight:500;">${escapeHtml(entry.translation || '-')}</span>`;
+                    });
+
+                    // Update examples button and content
+                    const actionCells = tbody.querySelectorAll(`.examples-action-cell[data-word="${escapedWord}"]`);
+                    actionCells.forEach((cell) => {
+                        const expandBtn = cell.querySelector('.vocab-table-expand-btn');
+                        if (entry.sentences && entry.sentences.length > 0) {
+                            expandBtn.style.display = 'inline-block';
+
+                            // Find the corresponding details row
+                            const row = cell.closest('tr');
+                            const detailsRow = row.nextElementSibling;
+                            if (detailsRow && detailsRow.classList.contains('vocab-row-details')) {
+                                const container = detailsRow.querySelector('.vocab-table-details-content');
+                                container.innerHTML = `
+                                    <div class="vocab-table-sentences">
+                                        ${entry.sentences.slice(0, 3).map(s => `
+                                            <div class="vocab-table-sentence">
+                                                <div class="vi">${escapeHtml(s.vi)}</div>
+                                                <div class="en">${escapeHtml(s.en)}</div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                `;
+
+                                expandBtn.onclick = (e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    const isVisible = detailsRow.style.display === 'table-row';
+                                    detailsRow.style.display = isVisible ? 'none' : 'table-row';
+                                    expandBtn.textContent = isVisible ? '▼' : '▲';
+                                    expandBtn.classList.toggle('active', !isVisible);
+                                };
+                            }
+                        }
                     });
                 });
             }
@@ -640,7 +716,8 @@ const VocabularyBook = (function () {
      */
     function lemmatize(word) {
         if (!word) return '';
-        const cleanWord = word.toLowerCase().trim().replace(/[^a-z]/g, '');
+        // Normalize curly apostrophes and preserve them
+        const cleanWord = word.toLowerCase().trim().replace(/[’]/g, "'").replace(/[^a-z']/g, '');
 
         // Use compromise.js if available
         if (typeof nlp !== 'undefined') {
@@ -1164,37 +1241,79 @@ const VocabularyBook = (function () {
     async function showAddModal(missedWords, questionId, mode, sentence = null) {
         console.log('[VocabBook] showAddModal called:', { missedWords, questionId, mode, sentence: sentence?.substring(0, 50) });
         const unlocked = await isUnlocked();
-        console.log('[VocabBook] isUnlocked result:', unlocked, 'modal element:', !!vocabAddModal);
-        if (!unlocked || !vocabAddModal || missedWords.length === 0) {
-            console.log('[VocabBook] Skipping modal - unlocked:', unlocked, 'modal:', !!vocabAddModal, 'words:', missedWords.length);
-            return;
-        }
+        if (!unlocked || !vocabAddModal || missedWords.length === 0) return;
 
         currentMissedWords = missedWords;
         currentQuestionId = questionId;
         currentMode = mode;
-        currentSentence = sentence; // NEW: Store sentence for later use
+        currentSentence = sentence;
 
-        // Clear previous words
+        vocabAddWords.innerHTML = '<div class="vocab-loading">Loading word details...</div>';
+        vocabAddModal.style.display = 'block';
+
+        // Fetch details for each word with concurrency limit of 5
+        const wordDetails = await mapLimit(missedWords, 5, async (word) => {
+            try {
+                const entry = window.DictionaryService ? await window.DictionaryService.getVietnameseEntry(word) : { translation: 'Not found', sentences: [] };
+                return { word, ...entry };
+            } catch (e) {
+                return { word, translation: 'Not found', sentences: [] };
+            }
+        });
+
         vocabAddWords.innerHTML = '';
 
-        // Add checkboxes for each word
-        missedWords.forEach((word, index) => {
+        wordDetails.forEach((detail, index) => {
             const item = document.createElement('div');
             item.className = 'vocab-add-word-item';
+
+            const hasSentences = detail.sentences && detail.sentences.length > 0;
+            const sentenceHtml = hasSentences
+                ? `<div class="vocab-details-sentences">
+                    ${detail.sentences.slice(0, 3).map(s => `
+                        <div class="vocab-detail-sentence">
+                            <div class="vi">${escapeHtml(s.vi)}</div>
+                            <div class="en">${escapeHtml(s.en)}</div>
+                        </div>
+                    `).join('')}
+                   </div>`
+                : '<div class="vocab-no-sentences">No example sentences available</div>';
+
             item.innerHTML = `
-        <input type="checkbox" id="vocab-word-${index}" value="${word}">
-        <label for="vocab-word-${index}">${word}</label>
-      `;
+                <div class="vocab-word-row">
+                    <input type="checkbox" id="vocab-word-${index}" value="${escapeHtml(detail.word)}">
+                    <label for="vocab-word-${index}" class="vocab-word-label">
+                        <span class="word">${escapeHtml(detail.word)}</span>
+                        <span class="translation">${escapeHtml(detail.translation)}</span>
+                    </label>
+                    ${hasSentences ? `<button class="vocab-expand-btn" title="Show Examples" type="button">▼</button>` : ''}
+                </div>
+                <div class="vocab-word-details" style="display: none;">
+                    ${sentenceHtml}
+                </div>
+            `;
 
             const checkbox = item.querySelector('input');
+            const expandBtn = item.querySelector('.vocab-expand-btn');
+            const details = item.querySelector('.vocab-word-details');
+
             checkbox.addEventListener('change', () => {
                 item.classList.toggle('selected', checkbox.checked);
             });
 
+            if (expandBtn && details) {
+                expandBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const isVisible = details.style.display === 'block';
+                    details.style.display = isVisible ? 'none' : 'block';
+                    expandBtn.textContent = isVisible ? '▼' : '▲';
+                    expandBtn.classList.toggle('active', !isVisible);
+                });
+            }
+
             item.addEventListener('click', (e) => {
-                // If clicked on the row (but not directly on input or label), toggle the checkbox
-                if (e.target !== checkbox && e.target.tagName !== 'LABEL') {
+                if (e.target !== checkbox && e.target.tagName !== 'LABEL' && !e.target.classList.contains('vocab-expand-btn')) {
                     e.preventDefault();
                     checkbox.checked = !checkbox.checked;
                     checkbox.dispatchEvent(new Event('change'));
@@ -1203,8 +1322,6 @@ const VocabularyBook = (function () {
 
             vocabAddWords.appendChild(item);
         });
-
-        vocabAddModal.style.display = 'block';
     }
 
     /**
@@ -1283,10 +1400,14 @@ const VocabularyBook = (function () {
             <div class="vocab-list-content">
                 ${listHtml}
             </div>
-            ${showButton ? `<button class="vocab-show-all-btn" id="vocab-show-all-bookmarks">
-                <span>View Full List (${totalCount})</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-            </button>` : ''}
+            ${showButton ? `
+                <div class="vocab-list-footer">
+                    <button id="vocab-view-all-btn" class="vocab-btn-secondary">View All Items</button>
+                    ${window.DictionaryService ?
+                    `<button onclick="if(confirm('Clear all dictionary caches? This will force a refresh of all translations.')) { window.DictionaryService.clearCache(); alert('Cache cleared!'); location.reload(); }" class="vocab-btn-text" style="font-size:11px;color:#94a3b8;margin-left:10px;">Reset Cache</button>`
+                    : ''}
+                </div>
+            ` : ''}
         `;
 
         // Add remove handlers
@@ -1297,7 +1418,7 @@ const VocabularyBook = (function () {
         });
 
         // Add Show All handler
-        const showAllBtn = vocabBookmarkedList.querySelector('#vocab-show-all-bookmarks');
+        const showAllBtn = vocabBookmarkedList.querySelector('#vocab-view-all-btn');
         if (showAllBtn) {
             showAllBtn.addEventListener('click', () => {
                 showListModal('bookmarks');
@@ -1480,7 +1601,8 @@ const VocabularyBook = (function () {
         removeViaModal: removeViaModal,
         togglePanel: togglePanel,
         updateSRSDueBadge: updateSRSDueBadge,
-        promoteToMastered: promoteToMastered  // NEW: For SRS 14-day mastery
+        promoteToMastered: promoteToMastered,
+        lemmatize: lemmatize
     };
 
 })();

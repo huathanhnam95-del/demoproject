@@ -143,7 +143,7 @@
    * Called by Learning Center mode buttons
    * @param {string} mode - 'type', 'speak', 'extended', 'watch', 'notes', 'pronounce'
    */
-  window.switchToMode = function (mode) {
+  window.switchToMode = async function (mode) {
     // Check if mode is locked
     if (window.shopModule && !window.shopModule.isModeUnlocked(mode)) {
       // Open shop if locked
@@ -216,6 +216,12 @@
       // 4. Trigger any mode-specific initialization
       if (mode === 'extended' && typeof window.loadExtendedIfNeeded === 'function') {
         window.loadExtendedIfNeeded();
+      } else if (mode === 'type' && typeDatabase.length > 0) {
+        console.log(`[switchToMode] Switching to Type mode, reloading question ${currentTypeQuestionId}`);
+        await loadQuestion('type', currentTypeQuestionId);
+      } else if (mode === 'speak' && speakDatabase.length > 0) {
+        console.log(`[switchToMode] Switching to Speak mode, reloading question ${currentSpeakQuestionId}`);
+        await loadQuestion('speak', currentSpeakQuestionId);
       }
 
       // 5. Check if this is the first time using this mode - trigger tutorial
@@ -362,20 +368,10 @@
    * @param {string} content - HTML content to display
    */
   function showAutoHint(hintType, content) {
-    let container = document.getElementById('auto-hints-type');
+    // Feature disabled: Automatic hints removed from UI
+    return;
 
-    // Create container if it doesn't exist
-    if (!container) {
-      const inputEl = document.getElementById('answer-input');
-      if (inputEl) {
-        container = document.createElement('div');
-        container.id = 'auto-hints-type';
-        container.className = 'auto-hints-container';
-        inputEl.parentNode.insertBefore(container, inputEl.nextSibling);
-      } else {
-        return;
-      }
-    }
+    let container = document.getElementById('auto-hints-type');
 
     // Check if this hint type already exists
     let hintEl = container.querySelector(`[data-hint-type="${hintType}"]`);
@@ -2449,6 +2445,15 @@
 
     // Reload the correct audio for Speak mode
     if (speakDatabase.length > 0 && currentSpeakQuestionId) {
+      console.log(`[tabSpeak] Loading question ${currentSpeakQuestionId} for speak mode`);
+
+      // Force clear audio before loading to ensure no artifacts
+      if (audio) {
+        audio.pause();
+        while (audio.firstChild) audio.removeChild(audio.firstChild);
+        audio.load();
+      }
+
       // Load all progress data for Speak mode (to update dropdown)
       await loadAllProgressForMode("speak");
       await loadQuestion("speak", currentSpeakQuestionId);
@@ -2456,6 +2461,8 @@
       await loadProgressStatus(currentSpeakQuestionId, "speak");
       // Update progress panel for Speak mode
       await updateProgressPanel("speak");
+    } else {
+      console.warn(`[tabSpeak] speakDatabase empty or invalid ID. Len: ${speakDatabase.length}, ID: ${currentSpeakQuestionId}`);
     }
 
     // Microphone access will be requested when user clicks "Start Recording"
@@ -2578,16 +2585,12 @@
         window.TakeNotesMode.reset();
       }
 
-      // Hide all other mode panels
-      animationPanel.style.display = "none";
-      result.style.display = "none";
-      generatePanelType.style.display = "none";
-      generatePanelSpeak.style.display = "none";
-      sameVocabPanelType.style.display = "none";
-      sameVocabPanelSpeak.style.display = "none";
-      vocabularyPanel.style.display = "none";
-      pronunciationPanel.style.display = "none";
-      breakdownPanel.style.display = "none";
+      // Hide valid mode panels
+      if (sameVocabPanelType) sameVocabPanelType.style.display = "none";
+      if (sameVocabPanelSpeak) sameVocabPanelSpeak.style.display = "none";
+      if (vocabularyPanel) vocabularyPanel.style.display = "none";
+      if (pronunciationPanel) pronunciationPanel.style.display = "none";
+      if (breakdownPanel) breakdownPanel.style.display = "none";
 
       // Stop any active recordings
       if (isRecording && recognition) {
@@ -2663,16 +2666,12 @@
       const notesModeBtn = document.querySelector('.mode-switch-btn[onclick*="notes"]');
       if (notesModeBtn) notesModeBtn.classList.add('active');
 
-      // Hide all other mode panels
-      animationPanel.style.display = "none";
-      result.style.display = "none";
-      generatePanelType.style.display = "none";
-      generatePanelSpeak.style.display = "none";
-      sameVocabPanelType.style.display = "none";
-      sameVocabPanelSpeak.style.display = "none";
-      vocabularyPanel.style.display = "none";
-      pronunciationPanel.style.display = "none";
-      breakdownPanel.style.display = "none";
+      // Hide valid mode panels
+      if (sameVocabPanelType) sameVocabPanelType.style.display = "none";
+      if (sameVocabPanelSpeak) sameVocabPanelSpeak.style.display = "none";
+      if (vocabularyPanel) vocabularyPanel.style.display = "none";
+      if (pronunciationPanel) pronunciationPanel.style.display = "none";
+      if (breakdownPanel) breakdownPanel.style.display = "none";
 
       // Stop any active recordings
       if (isRecording && recognition) {
@@ -4669,7 +4668,7 @@
       const testFile = `${baseFilename}.${ext}`;
       const testPath = `database/${mode}/audio/${testFile}`;
 
-      console.log(`Checking if file exists: ${testFile}`);
+      console.log(`[playSameVocabAudio] Checking if file exists (attempt ${i + 1}/${tryExtensions.length}): ${testFile}`);
       const exists = await checkFileExists(testPath);
 
       if (exists) {
@@ -5027,7 +5026,7 @@
       <div class="vocabulary-item" data-word-index="${idx}">
         <span class="vocabulary-word" id="vocab-word-${idx}">${word}</span>
         <button class="vocabulary-play-btn" data-word="${word}" data-index="${idx}" type="button">Play</button>
-        <input type="text" class="vocabulary-input" id="vocab-input-${idx}" placeholder="Press Play to listen to the word before typing" disabled />
+        <input type="text" class="vocabulary-input" id="vocab-input-${idx}" placeholder="Type word..." disabled />
         <button class="vocabulary-check-btn" data-word="${word}" data-index="${idx}" type="button">Check</button>
         <span class="vocabulary-status" id="vocab-status-${idx}"></span>
       </div>
@@ -5322,15 +5321,11 @@
     // Show same vocabulary panel and generate panel immediately after check (if there are errors)
     if (hasErrors) {
       renderSameVocabularyType();
-      generatePanelType.style.display = "block";
-    } else {
-      sameVocabPanelType.style.display = "none";
-      generatePanelType.style.display = "none";
     }
 
     // Show animation panel and result box for Type mode
-    animationPanel.style.display = "block";
-    result.style.display = "block";
+    if (typeof animationPanel !== 'undefined') animationPanel.style.display = "block";
+    if (typeof result !== 'undefined') result.style.display = "block";
 
     lastSteps = buildAnimationSteps(userAnswer, "type");
     if (!lastSteps || lastSteps.length === 0) {
@@ -5577,6 +5572,7 @@
       const testFile = `${baseFilename}.${ext}`;
       const testPath = `database/${mode}/audio/${testFile}`;
 
+      console.log(`[loadQuestion] Checking if file exists (attempt ${i + 1}/${tryExtensions.length}): ${testPath}`);
       const exists = await checkFileExists(testPath);
 
       if (exists) {
@@ -6354,8 +6350,8 @@
 
       // Auto-show first letters hint (Level 1 only)
       if (settings.autoShowFirstLetters && correctSentenceType) {
-        const firstLettersHint = generateFirstLettersPreview(correctSentenceType);
-        showAutoHint('first-letters', `💡 ${firstLettersHint}`);
+        // const firstLettersHint = generateFirstLettersPreview(correctSentenceType);
+        // showAutoHint('first-letters', `💡 ${firstLettersHint}`);
 
         // CONFLICT RESOLUTION: Hide manual hint button to prevent redundancy
         const hintControls = document.getElementById('hint-controls-type');

@@ -76,7 +76,7 @@ const DictionaryService = (function () {
         'show': 'cho thấy', 'showed': 'đã cho thấy', 'shown': 'được cho thấy',
         'bring': 'mang', 'brought': 'đã mang',
         'hold': 'giữ', 'held': 'đã giữ',
-        'follow': 'theo', 'followed': 'đã theo',
+        'follow': 'theo, theo dõi', 'followed': 'đã theo',
         'turn': 'quay', 'turned': 'đã quay',
         'reach': 'đạt', 'reached': 'đã đạt',
         'send': 'gửi', 'sent': 'đã gửi',
@@ -131,6 +131,7 @@ const DictionaryService = (function () {
         'class': 'lớp', 'classes': 'lớp',
         'lesson': 'bài học', 'lessons': 'bài học',
         'book': 'sách', 'books': 'sách',
+        'artist': 'nghệ sĩ, họa sĩ', 'artists': 'nghệ sĩ, họa sĩ',
         'word': 'từ', 'words': 'từ',
         'language': 'ngôn ngữ', 'languages': 'ngôn ngữ',
         'country': 'quốc gia', 'countries': 'quốc gia',
@@ -156,6 +157,7 @@ const DictionaryService = (function () {
         'area': 'khu vực', 'areas': 'khu vực',
         'level': 'mức độ', 'levels': 'mức độ',
         'end': 'kết thúc',
+        'rule': 'quy tắc, luật lệ', 'rules': 'quy tắc, luật lệ',
         'member': 'thành viên', 'members': 'thành viên',
         'law': 'luật', 'laws': 'luật',
         'power': 'quyền lực',
@@ -201,6 +203,7 @@ const DictionaryService = (function () {
         'young': 'trẻ',
         'long': 'dài', 'short': 'ngắn',
         'high': 'cao', 'low': 'thấp',
+        'own': 'của chính mình, riêng',
         'true': 'đúng', 'false': 'sai',
         'right': 'đúng', 'wrong': 'sai',
         'certain': 'chắc chắn',
@@ -506,15 +509,109 @@ const DictionaryService = (function () {
         throw new Error('No valid translation');
     }
 
+
+    const MT_STOPLIST = new Set(['đó', 'này', 'kia', 'ấy', 'thì', 'là']);
+    const NON_PLURAL_S_ENDINGS = ['ss', 'us', 'is', 'ics'];
+    const NON_PLURAL_WORDS = new Set(['this', 'his', 'as', 'is', 'was', 'news', 'yes', 'bus', 'gas']);
+
+    const MODAL_OVERRIDES = {
+        'will': 'sẽ',
+        'would': 'sẽ',
+        'can': 'có thể',
+        'could': 'có thể',
+        'may': 'có thể',
+        'might': 'có thể',
+        'must': 'phải',
+        'should': 'nên'
+    };
+
+    function detectContraction(word) {
+        if (!word) return null;
+        // Normalize curly apostrophes
+        word = word.replace(/[’]/g, "'");
+
+        // handle we'll, you'll, they'll, he'll, she'll, it'll, i'll
+        const mLL = word.match(/^([a-z]+)'ll$/);
+        if (mLL) return { type: 'll', head: 'will' };
+
+        // handle don't, won't, can't
+        const mNT = word.match(/^(.+?)n't$/);
+        if (mNT) {
+            const base = mNT[1];
+            // special case: won't = will not
+            if (base === 'wo') return { type: 'nt', head: 'will', neg: true };
+            return { type: 'nt', head: base, neg: true }; // can't->can, don't->do, shouldn't->should
+        }
+
+        // handle 've, 're, 'm, 'd
+        if (word.endsWith("'ve")) return { type: 've', head: 'have' };
+        if (word.endsWith("'re")) return { type: 're', head: 'be' };
+        if (word.endsWith("'m")) return { type: 'm', head: 'be' };
+        if (word.endsWith("'d")) return { type: 'd', head: 'would' };
+
+        return null;
+    }
+
+    function cleanTracauText(s) {
+        return (s || '')
+            .replace(/\u00a0/g, ' ')
+            .replace(/\s+/g, ' ')
+            .replace(/<\/?em>/g, '')
+            .replace(/^[■*•⁃\-–—]+\s*/g, '')
+            .trim();
+    }
+
+    function normalizeWord(raw) {
+        const normalized = (raw || '')
+            .toLowerCase()
+            .trim()
+            // Keep letters, apostrophes, and hyphens internally
+            // Strip non-a-z'- from ends only
+            .replace(/^[^a-z'-]+|[^a-z'-]+$/g, '');
+
+        // Reject if still contains characters outside a-z, ', or -
+        if (!/^[a-z'-]+$/.test(normalized)) return '';
+        return normalized;
+    }
+
+    function getLemma(wordLower) {
+        try {
+            if (typeof VocabularyBook !== 'undefined' && VocabularyBook.lemmatize) {
+                const l = VocabularyBook.lemmatize(wordLower);
+                if (l && typeof l === 'string') return l.toLowerCase();
+            }
+        } catch (_) { }
+
+        // Heuristic fallback safeguards
+        if (wordLower.length < 4) return wordLower;
+        if (NON_PLURAL_WORDS.has(wordLower)) return wordLower;
+        if (NON_PLURAL_S_ENDINGS.some(suf => wordLower.endsWith(suf))) return wordLower;
+
+        // Standard plural stripping
+        if (wordLower.endsWith('ies')) return wordLower.slice(0, -3) + 'y';
+        if (wordLower.endsWith('es')) return wordLower.slice(0, -2);
+        if (wordLower.endsWith('s')) return wordLower.slice(0, -1);
+
+        return wordLower;
+    }
+
+    function isValidMtResult(text, originalLower) {
+        if (!text) return false;
+        const t = text.trim();
+        if (t.length < 3) return false;
+        if (/<[^>]+>/.test(t)) return false;
+        if (MT_STOPLIST.has(t.toLowerCase())) return false;
+        if (t.toLowerCase() === originalLower) return false; // echo
+        return true;
+    }
+
     /**
      * Fetch translation and examples from Tracau.vn API
      * @param {string} word - The word to look up
      * @returns {Promise<Object>} Data from Tracau
      */
     async function fetchFromTracau(word) {
-        // Use local proxy to bypass CORS
         const url = `/api/tracau?word=${encodeURIComponent(word.toLowerCase())}`;
-
         const response = await fetch(url);
         if (!response.ok) throw new Error('Tracau API failed');
 
@@ -523,32 +620,76 @@ const DictionaryService = (function () {
         let translation = '';
         let sentences = [];
 
-        // Extract translation from 'sentences' or 'tratu'
-        if (data.sentences && data.sentences.length > 0) {
-            // Take the first Vietnamese translation part from the first sentence if it's short
-            // Usually data.sentences are bilingual pairs
-            sentences = data.sentences.map(s => ({
-                en: s.fields.en.replace(/<\/?em>/g, ''),
-                vi: s.fields.vi.replace(/<\/?em>/g, '')
-            }));
-
-            // Try to find a short translation in tratu if available
-            if (data.tratu && data.tratu.length > 0) {
-                // Tratu fulltext contains HTML, we might just use the first sentence vi for now 
-                // if it looks like a direct translation
-                const firstVi = sentences[0].vi;
-                if (firstVi.length < 50) {
-                    translation = firstVi;
+        // 1) Dictionary definition from tratu.fulltext
+        if (data.tratu && Array.isArray(data.tratu)) {
+            for (const entry of data.tratu) {
+                const html = entry?.fields?.fulltext;
+                const extracted = extractTracauDefinition(html);
+                if (extracted) {
+                    translation = extracted;
+                    break;
                 }
             }
         }
 
-        // Fallback: Use sentence-based translation if direct translation not found
-        if (!translation && sentences.length > 0) {
-            translation = sentences[0].vi;
+        // 2) Examples (keep them, but don't treat as definition)
+        if (data.sentences && Array.isArray(data.sentences) && data.sentences.length > 0) {
+            sentences = data.sentences.map(s => ({
+                en: cleanTracauText(s.fields && s.fields.en),
+                vi: cleanTracauText(s.fields && s.fields.vi)
+            }));
         }
 
         return { translation, sentences };
+    }
+
+    /**
+     * Extract Vietnamese definitions from Tracau EV HTML.
+     * Returns a single string (joined senses) or null.
+     */
+    function extractTracauDefinition(html) {
+        if (!html) return null;
+
+        try {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            // Tight scope to the English→Vietnamese dictionary tab/table
+            const root =
+                doc.querySelector('article#dict_ev table#definition') ||
+                doc.querySelector('article#dict_ev') ||
+                doc;
+
+            // NOTE: Tracau uses duplicated ids in rows (invalid HTML), so use [id="mn"]
+            const rows = root.querySelectorAll('tr[id="mn"]');
+            const defs = [];
+
+            for (const row of rows) {
+                const tds = row.querySelectorAll('td');
+                // Prefer last C_C (main definition cell) as it's often the most relevant in Tracau EV
+                const ccs = row.querySelectorAll('td#C_C');
+                const preferred = ccs.length ? ccs[ccs.length - 1] : tds[tds.length - 1];
+                const text = cleanTracauText(preferred?.textContent);
+
+                // keep definition-like strings
+                if (!text || text.length < 2) continue;
+                if (text.length > 180) continue;      // avoid long paragraph-like stuff
+                const wordCount = text.split(/\s+/).length;
+                if (wordCount > 15) continue;         // reject if too sentence-like
+
+                defs.push(text);
+            }
+
+            if (!defs.length) return null;
+
+            // Most apps do best showing 1–2 senses by default
+            return defs.slice(0, 3).join('; ');
+
+        } catch (e) {
+            console.warn('[DictionaryService] extractTracauDefinition failed:', e);
+        }
+
+        return null;
     }
 
     /**
@@ -608,78 +749,248 @@ const DictionaryService = (function () {
 
     /**
      * Get Vietnamese translation for a word (with caching)
-     * Priority: Wiktionary -> Local Dictionary -> Glosbe -> MyMemory
+     * Priority: Local -> Tracau -> Wiktionary -> Glosbe -> MyMemory
      * @param {string} word - The word to translate
      * @returns {Promise<string>} Vietnamese translation or empty string
      */
     async function getVietnameseTranslation(word) {
-        if (!word) return '';
+        const entry = await getVietnameseEntry(word);
+        return entry.translation;
+    }
 
-        const cacheKey = word.toLowerCase();
+    /**
+     * Get rich Vietnamese translation data including sentences
+     * @param {string} word - The word to look up
+     * @returns {Promise<Object>} { translation: string, sentences: Array, source: string, usedCandidate: string }
+     */
+    async function getVietnameseEntry(word) {
+        if (!word) return { translation: '', sentences: [], source: null, usedCandidate: null };
 
-        // Check cache
-        if (translationCache[cacheKey]) {
-            console.log('[DictionaryService] Translation cache hit:', word);
-            return translationCache[cacheKey];
+        const original = normalizeWord(word);
+        if (!original) return { translation: '', sentences: [], source: null, usedCandidate: null };
+
+        const contraction = detectContraction(original);
+        const lemma = getLemma(original);
+
+        // 1. Proactive Modal Overrides (prevent "will" becoming "ý chí")
+        // Apply before any external lookups
+        const modalKey = contraction?.head || original;
+        if (MODAL_OVERRIDES[modalKey]) {
+            return {
+                translation: MODAL_OVERRIDES[modalKey],
+                sentences: [],
+                source: 'local_modal',
+                usedCandidate: modalKey
+            };
+        }
+
+        // 2. Explicitly ordered candidates
+        const candidates = [];
+        const pushUnique = (x) => { if (x && !candidates.includes(x)) candidates.push(x); };
+
+        pushUnique(original);
+
+        // If it's a contraction, prioritize the head word and EXCLUDE stripped homonym
+        if (contraction) {
+            pushUnique(contraction.head);
+        } else {
+            pushUnique(lemma);
+            // Stripped version ('we'll' -> 'well') as absolute last resort (non-contractions)
+            if (original.includes("'")) {
+                pushUnique(original.replace(/'/g, ''));
+            }
+        }
+
+        const tracauMemo = {};
+        async function getTracau(c) {
+            if (!tracauMemo[c]) tracauMemo[c] = fetchFromTracau(c);
+            return tracauMemo[c];
+        }
+
+        // 2. Check cache for any candidate
+        for (const c of candidates) {
+            if (Object.prototype.hasOwnProperty.call(translationCache, c)) {
+                const cached = translationCache[c];
+
+                // If the cached translation is a stopword (bad MT), ignore it and re-fetch
+                const cachedTrans = (typeof cached === 'string' ? cached : cached.translation).toLowerCase().trim();
+                if (MT_STOPLIST.has(cachedTrans)) continue;
+
+                if (typeof cached === 'string') {
+                    upgradeCacheToRich(c).catch(() => { });
+                    return {
+                        translation: cached,
+                        sentences: [],
+                        source: 'cache',
+                        usedCandidate: c,
+                        servedFromCache: true
+                    };
+                }
+                console.log('[DictionaryService] Translation entry cache hit:', c);
+                return {
+                    ...cached,
+                    usedCandidate: c,
+                    servedFromCache: true
+                };
+            }
         }
 
         let translation = '';
+        let sentences = [];
+        let source = null;
+        let usedCandidate = original;
 
-        // 1. Try Tracau.vn first (high quality English-Vietnamese)
-        try {
-            const tracauData = await fetchFromTracau(word);
-            if (tracauData && tracauData.translation) {
-                translation = tracauData.translation;
-                console.log('[DictionaryService] Tracau success:', word, '->', translation);
+        // 1. Local dictionary
+        for (const c of candidates) {
+            if (LOCAL_DICTIONARY[c]) {
+                translation = LOCAL_DICTIONARY[c];
+                usedCandidate = c;
+                source = 'local';
+                break;
             }
-        } catch (e) {
-            console.log('[DictionaryService] Tracau failed:', e.message);
         }
 
-        // 2. Try Wiktionary next (structured dictionary data)
+        // 2. Tracau.vn (Source of rich data)
+        if (!translation) {
+            for (const c of candidates) {
+                try {
+                    const tracauData = await getTracau(c);
+                    if (tracauData && tracauData.translation) {
+                        translation = tracauData.translation;
+                        sentences = tracauData.sentences || [];
+                        usedCandidate = c;
+                        source = 'tracau';
+                        break;
+                    }
+                } catch (e) {
+                    console.log('[DictionaryService] Tracau failed for', c, ':', e.message);
+                }
+            }
+        }
+
+        // 3. Wiktionary
+        if (!translation) {
+            for (const c of candidates) {
+                try {
+                    const viTranslation = await fetchVietnameseFromWiktionary(c);
+                    if (viTranslation) {
+                        translation = viTranslation;
+                        usedCandidate = c;
+                        source = 'wiktionary';
+                        break;
+                    }
+                } catch (e) {
+                    console.log('[DictionaryService] Wiktionary failed for', c);
+                }
+            }
+        }
+
+        // 4. Glosbe
+        if (!translation) {
+            for (const c of candidates) {
+                try {
+                    const g = await fetchFromGlosbe(c);
+                    if (g) {
+                        translation = g;
+                        usedCandidate = c;
+                        source = 'glosbe';
+                        break;
+                    }
+                } catch (e) {
+                    console.log('[DictionaryService] Glosbe failed for', c);
+                }
+            }
+        }
+
+        // 5. MyMemory
         if (!translation) {
             try {
-                const viTranslation = await fetchVietnameseFromWiktionary(word);
-                if (viTranslation) {
-                    translation = viTranslation;
-                    console.log('[DictionaryService] Wiktionary VI success:', word, '->', translation);
+                const mt = await fetchFromMyMemory(original);
+                if (isValidMtResult(mt, original)) {
+                    translation = mt;
+                    source = 'mymemory';
                 }
             } catch (e) {
-                console.log('[DictionaryService] Wiktionary VI failed:', e.message);
+                console.warn('[DictionaryService] MyMemory failed:', e.message);
             }
         }
 
-        // 2. Fallback to local dictionary (for common words Wiktionary missed)
-        if (!translation && LOCAL_DICTIONARY[cacheKey]) {
-            translation = LOCAL_DICTIONARY[cacheKey];
-            console.log('[DictionaryService] Local dictionary hit:', word, '->', translation);
+        // 6. Overrides for Modals (Backup safety)
+        if (!translation && MODAL_OVERRIDES[usedCandidate || original]) {
+            translation = MODAL_OVERRIDES[usedCandidate || original];
+            sentences = [];
+            source = 'local_modal';
+            usedCandidate = usedCandidate || original;
         }
 
-        // 3. Try Glosbe as fallback
-        if (!translation) {
+        // Cache result with rich data
+        if (translation) {
+            const entryToCache = { translation, sentences, source };
+            translationCache[original] = entryToCache;
+            translationCache[usedCandidate] = entryToCache; // Explicitly cache winner
+
+            // Also cache lemma if it was the winner
+            if (lemma && lemma !== original && usedCandidate === lemma) {
+                translationCache[lemma] = entryToCache;
+            }
+            saveCaches();
+        }
+
+        return {
+            translation: translation || '',
+            sentences: sentences || [],
+            source: source || null,
+            usedCandidate: translation ? (usedCandidate || original) : null,
+            servedFromCache: false
+        };
+    }
+
+    const upgradeInFlight = new Map();
+
+    /**
+     * Upgrade a legacy string-only cache entry to a rich object in the background
+     * Preserves existing translation to avoid regressions.
+     */
+    async function upgradeCacheToRich(key) {
+        if (!key || upgradeInFlight.has(key)) return upgradeInFlight.get(key);
+
+        const p = (async () => {
+            if (!Object.prototype.hasOwnProperty.call(translationCache, key)) return;
+            const existing = translationCache[key];
+            if (typeof existing !== 'string') return;
+
+            const cachedTranslation = existing;
+            // Allow overwriting if the existing translation is a known bad stopword
+            const isBadCache = MT_STOPLIST.has(cachedTranslation.toLowerCase().trim());
+
             try {
-                translation = await fetchFromGlosbe(word);
-                console.log('[DictionaryService] Glosbe success:', word, '->', translation);
+                const data = await fetchFromTracau(key);
+                // Only upgrade if we actually found rich data (sentences) OR if we are fixing a bad cache
+                if (data && (isBadCache || (data.sentences && data.sentences.length > 0))) {
+                    translationCache[key] = {
+                        // If current cache is bad, take Tracau's translation. Otherwise preserve.
+                        translation: isBadCache ? (data.translation || cachedTranslation) : cachedTranslation,
+                        sentences: data.sentences || [],
+                        source: 'cache_upgraded'
+                    };
+                    saveCaches();
+                    console.log('[DictionaryService] Upgraded cache with rich data for:', key);
+                } else {
+                    // Mark as upgraded with empty sentences to prevent repeat attempts
+                    translationCache[key] = {
+                        translation: cachedTranslation,
+                        sentences: [],
+                        source: 'cache_upgraded'
+                    };
+                    saveCaches();
+                }
             } catch (e) {
-                console.log('[DictionaryService] Glosbe failed:', e.message);
+                // Ignore errors, stay as string for now or mark as upgraded empty
             }
-        }
+        })().finally(() => upgradeInFlight.delete(key));
 
-        // 4. Try MyMemory as last resort
-        if (!translation) {
-            try {
-                translation = await fetchFromMyMemory(word);
-                console.log('[DictionaryService] MyMemory success:', word, '->', translation);
-            } catch (e) {
-                console.warn('[DictionaryService] All translation sources failed for:', word);
-            }
-        }
-
-        // Cache result (even empty to avoid re-fetching)
-        translationCache[cacheKey] = translation;
-        saveCaches();
-
-        return translation;
+        upgradeInFlight.set(key, p);
+        return p;
     }
 
     /**
@@ -724,8 +1035,12 @@ const DictionaryService = (function () {
     return {
         getDefinition,
         getVietnameseTranslation,
+        getVietnameseEntry,
         getWordData,
-        clearCache
+        detectContraction,
+        clearCache,
+        upgradeCacheToRich,
+        saveCaches
     };
 })();
 
@@ -733,3 +1048,6 @@ const DictionaryService = (function () {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = DictionaryService;
 }
+
+// Ensure global access even in module scripts
+window.DictionaryService = DictionaryService;

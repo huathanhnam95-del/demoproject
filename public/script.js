@@ -7503,6 +7503,24 @@
   window.loadSpeakLengthData = loadSpeakLengthData;
 
   // ============================================
+  // Auth State Synchronization
+  // ============================================
+  if (window.authUI && window.authUI.onAuthStateChanged) {
+    window.authUI.onAuthStateChanged((userId) => {
+      // Update progress panel for both modes
+      updateProgressPanel('type');
+      updateProgressPanel('speak');
+
+      // Also refresh progress bars if visible
+      const select = document.getElementById('question-select');
+      if (select && select.value) {
+        updateProgressBarUI(select.value, 'type', progressCache['type']?.[select.value]);
+        updateProgressBarUI(select.value, 'speak', progressCache['speak']?.[select.value]);
+      }
+    });
+  }
+
+  // ============================================
   // Mobile Toolbar Button Handlers
   // Directly toggle panels instead of clicking hidden buttons
   // NOTE: Must defer attachment because toolbar HTML is at end of body

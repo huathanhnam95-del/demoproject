@@ -75,10 +75,11 @@ app.use(cors());
 // Parse JSON bodies
 app.use(express.json());
 
-// Serve static files (HTML, CSS, JS, etc.)
-app.use(express.static('.'));
+// --- Security: Serve static files from a dedicated public folder ---
+app.use(express.static(path.join(__dirname, 'public')));
 
 // API endpoint to fetch YouTube transcript
+// ... (lines 82-140)
 app.get('/api/transcript', async (req, res) => {
   try {
     const videoId = req.query.videoId;
@@ -140,41 +141,157 @@ app.get('/api/transcript', async (req, res) => {
 });
 
 
+// --- Local Dictionary Cache ---
+const LOCAL_DICT_PATH = path.join(__dirname, 'local_dictionary.json');
+let localDict = {};
+
+// Load local dictionary at startup
+try {
+  if (fs.existsSync(LOCAL_DICT_PATH)) {
+    localDict = JSON.parse(fs.readFileSync(LOCAL_DICT_PATH, 'utf8'));
+    console.log(`[Dict] Loaded ${Object.keys(localDict).length} words from local dictionary.`);
+  }
+} catch (e) {
+  console.warn('[Dict] Failed to load local dictionary:', e.message);
+}
+
+// --- Local Dictionary Hardening ---
+const MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000;
+const TMP_PATH = LOCAL_DICT_PATH + '.tmp';
+let dirty = false;
+let saveTimer = null;
+
+function isCacheableKey(wordLower) {
+  // Unified Normalization Guard: 1–30 chars, starts with letter, only letters/hyphens/apostrophes
+  return /^[a-z][a-z'-]{0,29}$/.test(wordLower);
+}
+
+function isValidTracauPayload(p) {
+  if (!p || typeof p !== 'object') return false;
+  // Robust check for non-empty arrays to avoid caching 'no-data' results
+  const hasTratu = Array.isArray(p.tratu) && p.tratu.length > 0;
+  const hasSentences = Array.isArray(p.sentences) && p.sentences.length > 0;
+  return hasTratu || hasSentences;
+}
+
+function isFresh(entry) {
+  return entry && (Date.now() - entry.timestamp) < MAX_AGE_MS;
+}
+
+function scheduleSave() {
+  dirty = true;
+  if (saveTimer) return;
+  saveTimer = setTimeout(() => {
+    saveTimer = null;
+    if (!dirty) return;
+    dirty = false;
+    try {
+      fs.writeFileSync(TMP_PATH, JSON.stringify(localDict, null, 2));
+      fs.renameSync(TMP_PATH, LOCAL_DICT_PATH);
+      console.log('[Dict] Periodic atomic save completed.');
+    } catch (e) {
+      console.error('[Dict] Atomic save failed:', e.message);
+    }
+  }, 2000);
+}
+
+function saveToLocalDict(wordLower, data) {
+  localDict[wordLower] = { data, timestamp: Date.now() };
+
+  // Cache Eviction Policy: Keep only 3000 freshest entries to prevent unbounded growth
+  const keys = Object.keys(localDict);
+  if (keys.length > 3000) {
+    const sorted = keys.sort((a, b) => localDict[a].timestamp - localDict[b].timestamp);
+    const toRemove = sorted.slice(0, keys.length - 3000);
+    toRemove.forEach(k => delete localDict[k]);
+    console.log(`[Dict] Evicted ${toRemove.length} oldest entries.`);
+  }
+
+  scheduleSave();
+}
+
+const inflight = new Map();
+
+async function fetchTracauLive(wordLower) {
+  if (inflight.has(wordLower)) return inflight.get(wordLower);
+
+  // Security Hardening: Remove hardcoded secret fallback
+  const TRACAU_API_KEY = process.env.TRACAU_KEY;
+  if (!TRACAU_API_KEY) {
+    throw new Error('TRACAU_KEY missing in environment variables');
+  }
+
+  const url = `https://api.tracau.vn/${TRACAU_API_KEY}/s/${encodeURIComponent(wordLower)}/en`;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 6000); // 6s timeout
+
+  const p = fetch(url, {
+    signal: controller.signal,
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'application/json'
+    }
+  })
+    .then(r => {
+      clearTimeout(timeout);
+      if (!r.ok) throw new Error(`Tracau responded with ${r.status}`);
+      return r.json();
+    })
+    .catch(err => {
+      clearTimeout(timeout);
+      throw err;
+    })
+    .finally(() => inflight.delete(wordLower));
+
+  inflight.set(wordLower, p);
+  return p;
+}
+
 // API endpoint to fetch Tracau dictionary data
 app.get('/api/tracau', async (req, res) => {
+  const word = req.query.word;
+  if (!word) return res.status(400).json({ error: 'Missing word' });
+
+  // Unified Normalization: Strip edges then validate strict regex
+  const wordLower = String(word)
+    .toLowerCase()
+    .trim()
+    .replace(/^[^a-z'-]+|[^a-z'-]+$/g, '');
+
+  // Sanitization: Reject junk to protect upstream and ensure normalization consistency
+  if (!isCacheableKey(wordLower)) {
+    return res.status(400).json({ error: 'Invalid word format. Use letters, hyphens, and apostrophes (2-30 chars).' });
+  }
+
+  // 1. Check Local Cache First
+  const cached = localDict[wordLower];
+  if (cached && isFresh(cached)) {
+    console.log(`[Dict] Local cache HIT for: ${wordLower}`);
+    return res.json({ ...cached.data, fromCache: true });
+  }
+
+  // 2. Fetch from External API
   try {
-    const { word, lang } = req.query;
-    if (!word) {
-      return res.status(400).json({ error: 'Missing word parameter' });
+    console.log(`[Proxy] Tracau request for: ${wordLower}`);
+    const data = await fetchTracauLive(wordLower);
+
+    // Only cache good, cacheable payloads (robust non-empty checks)
+    if (isValidTracauPayload(data)) {
+      saveToLocalDict(wordLower, data);
     }
 
-    const apiKey = 'WBBcwnwQpV89';
-    const targetLang = lang || 'en';
-    const url = `https://api.tracau.vn/${apiKey}/s/${encodeURIComponent(word.toLowerCase())}/${targetLang}`;
-
-    console.log(`[Proxy] Tracau request for: ${word} -> ${url}`);
-
-    // Add headers to mimic browser
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`Tracau API responded with ${response.status}`);
-    }
-
-    const data = await response.json();
-    res.json(data);
+    return res.json({ ...data, fromCache: false, staleCache: !!cached });
   } catch (error) {
-    console.error('[Proxy] Tracau Error:', error.message);
-    res.status(500).json({
-      error: 'Failed to fetch from Tracau',
-      message: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    });
+    console.error(`[Proxy] Tracau failed for ${wordLower}:`, error.message);
+
+    // If we have any stale cache, serve it rather than failing
+    if (cached && cached.data) {
+      console.log(`[Dict] Serving stale cache for: ${wordLower}`);
+      return res.json({ ...cached.data, fromCache: true, stale: true });
+    }
+
+    res.status(500).json({ error: 'API Error', message: error.message });
   }
 });
 
@@ -370,17 +487,16 @@ app.post('/api/ai-feedback-stream', aiLimiter, async (req, res) => {
   }
 });
 
-// Fallback: serve index.html for all other routes (for SPA routing)
+// Fallback: serve public/index.html for all other routes (for SPA routing)
 app.get(/^(?!\/api).*$/, (req, res) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Start server
-// Check if HTTPS certificates exist for port 8443
-
+// ... (lines 487-529)
 let server;
 if (PORT === 8443) {
   // Try to use mkcert trusted certificates first
@@ -420,3 +536,4 @@ if (PORT === 8443) {
     console.log(`API endpoint: http://localhost:${PORT}/api/transcript?videoId=VIDEO_ID`);
   });
 }
+

@@ -6,7 +6,8 @@
     "start": "node server.js",
     "setup": "node setup-https.js",
     "update-db": "node update-database.js",
-    "sync-rules": "node sync-points-rules.js points-rules.csv"
+    "sync-rules": "node sync-points-rules.js points-rules.csv",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@huggingface/inference": "^4.13.10",
@@ -25,6 +26,7 @@
     "youtube-transcript": "^1.2.1"
   },
   "devDependencies": {
+    "eslint": "^8.57.1",
     "http-server": "^14.1.1"
   }
 }

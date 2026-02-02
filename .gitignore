@@ -44,3 +44,7 @@ merriam-webster api key
 *.tmp
 *.temp
 
+node_modules
+node_modules
+node_modules
+node_modules

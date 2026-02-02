@@ -576,24 +576,95 @@ const DictionaryService = (function () {
     }
 
     function getLemma(wordLower) {
-        try {
-            if (typeof VocabularyBook !== 'undefined' && VocabularyBook.lemmatize) {
-                const l = VocabularyBook.lemmatize(wordLower);
-                if (l && typeof l === 'string') return l.toLowerCase();
+        return lemmatize(wordLower);
+    }
+
+    /**
+     * Lemmatize a word using compromise.js (if available)
+     */
+    function lemmatize(word) {
+        if (!word) return '';
+
+        // Unified Normalization
+        const cleanWord = normalizeWord(word);
+        if (!cleanWord) return '';
+
+        // MANUAL CONTRACTION HANDLING:
+        if (cleanWord.includes("'")) {
+            const contractionMap = {
+                "we'll": "we'll", "you'll": "you'll", "they'll": "they'll", "he'll": "he'll", "she'll": "she'll", "it'll": "it'll", "i'll": "i'll",
+                "won't": "won't", "don't": "don't", "can't": "can't", "isn't": "isn't", "aren't": "aren't", "wasn't": "wasn't", "weren't": "weren't",
+                "it's": "it's", "he's": "he's", "she's": "she's", "there's": "there's", "that's": "that's"
+            };
+            if (contractionMap[cleanWord]) return contractionMap[cleanWord];
+        }
+
+        // Use compromise.js if available
+        if (typeof nlp !== 'undefined') {
+            try {
+                const doc = nlp(cleanWord);
+                const verbs = doc.verbs().toInfinitive().out('array');
+                if (verbs.length > 0) return verbs[0];
+
+                const nouns = doc.nouns().toSingular().out('array');
+                if (nouns.length > 0) return nouns[0];
+            } catch (e) {
+                console.warn('[DictionaryService] Lemmatization failed:', e);
             }
-        } catch (_) { }
+        }
 
-        // Heuristic fallback safeguards
-        if (wordLower.length < 4) return wordLower;
-        if (NON_PLURAL_WORDS.has(wordLower)) return wordLower;
-        if (NON_PLURAL_S_ENDINGS.some(suf => wordLower.endsWith(suf))) return wordLower;
+        // Standard plural stripping fallback (if nlp fails or not found)
+        if (cleanWord.length < 4) return cleanWord;
+        if (NON_PLURAL_WORDS.has(cleanWord)) return cleanWord;
+        if (NON_PLURAL_S_ENDINGS.some(suf => cleanWord.endsWith(suf))) return cleanWord;
 
-        // Standard plural stripping
-        if (wordLower.endsWith('ies')) return wordLower.slice(0, -3) + 'y';
-        if (wordLower.endsWith('es')) return wordLower.slice(0, -2);
-        if (wordLower.endsWith('s')) return wordLower.slice(0, -1);
+        if (cleanWord.endsWith('ies')) return cleanWord.slice(0, -3) + 'y';
+        if (cleanWord.endsWith('es')) return cleanWord.slice(0, -2);
+        if (cleanWord.endsWith('s')) return cleanWord.slice(0, -1);
 
-        return wordLower;
+        return cleanWord;
+    }
+
+    /**
+     * Detect part of speech of a word within a sentence context
+     */
+    function detectPartOfSpeech(word, sentence) {
+        if (!word) return 'unknown';
+
+        // Use compromise.js for POS tagging if available
+        if (typeof nlp !== 'undefined') {
+            try {
+                const cleanWord = word.toLowerCase().trim();
+
+                if (sentence) {
+                    const doc = nlp(sentence);
+                    const terms = doc.terms().json();
+                    for (const term of terms) {
+                        if (term.text.toLowerCase() === cleanWord) {
+                            const tags = term.tags || [];
+                            if (tags.includes('Noun')) return 'noun';
+                            if (tags.includes('Verb')) return 'verb';
+                            if (tags.includes('Adjective')) return 'adjective';
+                            if (tags.includes('Adverb')) return 'adverb';
+                            if (tags.includes('Preposition')) return 'preposition';
+                            if (tags.includes('Conjunction')) return 'conjunction';
+                            if (tags.includes('Pronoun')) return 'pronoun';
+                        }
+                    }
+                }
+
+                // Fallback: analyze word alone
+                const wordDoc = nlp(cleanWord);
+                if (wordDoc.nouns().length > 0) return 'noun';
+                if (wordDoc.verbs().length > 0) return 'verb';
+                if (wordDoc.adjectives().length > 0) return 'adjective';
+                if (wordDoc.adverbs().length > 0) return 'adverb';
+            } catch (e) {
+                console.warn('[DictionaryService] POS detection failed:', e);
+            }
+        }
+
+        return 'unknown';
     }
 
     function isValidMtResult(text, originalLower) {
@@ -830,11 +901,19 @@ const DictionaryService = (function () {
         // If it's a contraction, prioritize the head word and EXCLUDE stripped homonym
         if (contraction) {
             pushUnique(contraction.head);
+            // For 'll, adding 'will' is better than 'well'
+            if (contraction.type === 'll' && !candidates.includes('will')) {
+                pushUnique('will');
+            }
         } else {
             pushUnique(lemma);
             // Stripped version ('we'll' -> 'well') as absolute last resort (non-contractions)
             if (original.includes("'")) {
-                pushUnique(original.replace(/'/g, ''));
+                const stripped = original.replace(/'/g, '');
+                // DANGER ZONE: don't strip if it becomes a common word with different meaning
+                if (stripped !== 'well' && stripped !== 'it' && stripped !== 'is') {
+                    pushUnique(stripped);
+                }
             }
         }
 
@@ -1078,6 +1157,8 @@ const DictionaryService = (function () {
         getWordData,
         detectContraction,
         normalizeWord,
+        lemmatize,
+        detectPartOfSpeech,
         clearCache,
         upgradeCacheToRich,
         saveCaches

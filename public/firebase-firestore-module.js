@@ -1023,6 +1023,7 @@ async function addPoints(userId, points, title, description = '') {
     return {
       success: true,
       pointsAwarded: points,
+      totalPoints: newTotal,
       historyId: historyRef.id
     };
   } catch (error) {

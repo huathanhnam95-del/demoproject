@@ -568,9 +568,10 @@ async function loadPracticePoints(userId) {
  * @param {number} points - New total points value
  */
 function updatePracticePointsDisplay(points) {
-  const pointsCountEl = document.getElementById('panel-points-count');
   if (pointsCountEl) {
-    pointsCountEl.textContent = points.toLocaleString();
+    // Defensive check: ensure points is a number
+    const safePoints = (typeof points === 'number') ? points : 0;
+    pointsCountEl.textContent = safePoints.toLocaleString();
   }
 }
 

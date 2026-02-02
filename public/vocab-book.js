@@ -765,123 +765,12 @@ const VocabularyBook = (function () {
     }
 
     /**
-     * Lemmatize a word using compromise.js (if available)
+     * Lemmatize a word (proxy to DictionaryService)
      */
     function lemmatize(word) {
-        if (!word) return '';
-
-        // Unified Normalization: Strips edges then validates strict regex
-        const cleanWord = window.DictionaryService ? window.DictionaryService.normalizeWord(word) : word.toLowerCase().trim().replace(/[’]/g, "'").replace(/[^a-z'-]/g, '');
-        if (!cleanWord) return '';
-
-        // Use compromise.js if available
-        if (typeof nlp !== 'undefined') {
-            const doc = nlp(cleanWord);
-            // Get the root form
-            const verbs = doc.verbs().toInfinitive().out('array');
-            if (verbs.length > 0) return verbs[0];
-
-            const nouns = doc.nouns().toSingular().out('array');
-            if (nouns.length > 0) return nouns[0];
-        }
-
-        return cleanWord;
+        return window.DictionaryService ? window.DictionaryService.lemmatize(word) : word.toLowerCase().trim();
     }
 
-    /**
-     * Detect part of speech of a word within a sentence context
-     * @param {string} word - The target word
-     * @param {string} sentence - The full sentence containing the word
-     * @returns {string} - Part of speech: 'noun', 'verb', 'adjective', 'adverb', 'preposition', etc.
-     */
-    function detectPartOfSpeech(word, sentence) {
-        if (!word || !sentence) return 'unknown';
-
-        // Use compromise.js for POS tagging if available
-        if (typeof nlp !== 'undefined') {
-            try {
-                const doc = nlp(sentence);
-                const cleanWord = word.toLowerCase().trim();
-
-                // Find the word in the parsed sentence
-                const terms = doc.terms().json();
-                for (const term of terms) {
-                    if (term.text.toLowerCase() === cleanWord) {
-                        // Get the primary tag
-                        const tags = term.tags || [];
-                        if (tags.includes('Noun')) return 'noun';
-                        if (tags.includes('Verb')) return 'verb';
-                        if (tags.includes('Adjective')) return 'adjective';
-                        if (tags.includes('Adverb')) return 'adverb';
-                        if (tags.includes('Preposition')) return 'preposition';
-                        if (tags.includes('Conjunction')) return 'conjunction';
-                        if (tags.includes('Pronoun')) return 'pronoun';
-                        if (tags.includes('Determiner')) return 'determiner';
-                        if (tags.includes('Interjection')) return 'interjection';
-                    }
-                }
-
-                // Fallback: just analyze the word itself
-                const wordDoc = nlp(cleanWord);
-                if (wordDoc.nouns().length > 0) return 'noun';
-                if (wordDoc.verbs().length > 0) return 'verb';
-                if (wordDoc.adjectives().length > 0) return 'adjective';
-                if (wordDoc.adverbs().length > 0) return 'adverb';
-            } catch (e) {
-                log.warn('POS detection failed:', e);
-            }
-        }
-
-        return 'unknown';
-    }
-
-    /**
-     * Fetch definition filtered by part of speech
-     * @param {string} word - The word to look up
-     * @param {string} partOfSpeech - Target POS: 'noun', 'verb', etc.
-     * @returns {Promise<{definition: string, example: string}>}
-     */
-    async function fetchDefinitionByPOS(word, partOfSpeech = 'unknown') {
-        const cleanWord = word.toLowerCase().trim().replace(/[^a-z]/g, '');
-        if (!cleanWord) return { definition: '', example: '' };
-
-        try {
-            const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${cleanWord}`);
-            if (!response.ok) throw new Error('Not found');
-
-            const data = await response.json();
-            if (!data[0] || !data[0].meanings) {
-                return { definition: 'Definition not available', example: '' };
-            }
-
-            // Try to find a meaning matching the target POS
-            let targetMeaning = null;
-
-            if (partOfSpeech !== 'unknown') {
-                targetMeaning = data[0].meanings.find(m =>
-                    m.partOfSpeech.toLowerCase() === partOfSpeech.toLowerCase()
-                );
-            }
-
-            // Fallback to first meaning if no POS match
-            if (!targetMeaning) {
-                targetMeaning = data[0].meanings[0];
-            }
-
-            if (targetMeaning && targetMeaning.definitions && targetMeaning.definitions.length > 0) {
-                const def = targetMeaning.definitions[0];
-                return {
-                    definition: def.definition || 'Definition not available',
-                    example: def.example || ''
-                };
-            }
-
-            return { definition: 'Definition not available', example: '' };
-        } catch (e) {
-            log.warn(`Definition fetch failed for: ${cleanWord}`, e);
-            return { definition: 'Definition not available', example: '' };
-        }
-    }
 
     /**
      * Track a word that was missed
@@ -909,15 +798,15 @@ const VocabularyBook = (function () {
         // NEW: Store sentence context and detect POS
         if (sentence) {
             vocabCache.wordStats[lemma].sentence = sentence;
-            const pos = detectPartOfSpeech(word, sentence);
-            vocabCache.wordStats[lemma].partOfSpeech = pos;
+            const partOfSpeech = window.DictionaryService ? window.DictionaryService.detectPartOfSpeech(word, sentence) : 'unknown';
+            vocabCache.wordStats[lemma].partOfSpeech = partOfSpeech;
 
             // Fetch and store definition matching the POS
-            const defData = await fetchDefinitionByPOS(word, pos);
+            const defData = window.DictionaryService ? await window.DictionaryService.getWordData(word, partOfSpeech) : { definition: 'Definition not available', example: '' };
             vocabCache.wordStats[lemma].definition = defData.definition;
             vocabCache.wordStats[lemma].example = defData.example || sentence;
 
-            log.debug(`Detected POS: "${word}" as ${pos} in: "${sentence.substring(0, 50)}..."`);
+            log.debug(`Detected POS: "${word}" as ${partOfSpeech} in: "${sentence.substring(0, 50)}..."`);
         }
 
         log.debug(`Tracked miss: "${word}" (${lemma}) from ${mode} Q${questionId}. Count: ${vocabCache.wordStats[lemma].missCount}`);
@@ -1257,11 +1146,11 @@ const VocabularyBook = (function () {
         let definition = null;
         let example = null;
 
-        if (sentence) {
-            partOfSpeech = detectPartOfSpeech(word, sentence);
-            const defData = await fetchDefinitionByPOS(word, partOfSpeech);
-            definition = defData.definition;
-            example = defData.example || sentence;
+        if (sentence && window.DictionaryService) {
+            partOfSpeech = window.DictionaryService.detectPartOfSpeech(word, sentence);
+            const wordData = await window.DictionaryService.getWordData(word, partOfSpeech);
+            definition = wordData.definition;
+            example = wordData.example || sentence;
             log.debug(`Bookmark: "${word}" as ${partOfSpeech}`);
         }
 

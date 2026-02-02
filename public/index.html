@@ -5,33 +5,32 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dictation Practice</title>
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
   <link rel="stylesheet" href="style.css?v=20260123_mode_fix">
   <link rel="stylesheet" href="srs-review.css">
   <link rel="stylesheet" href="srs-onboarding.css">
   <link rel="stylesheet" href="pronunciation-analyzer/style.css">
   <link rel="stylesheet" href="pronunciation-analyzer/syllable-verifier.css">
   <link rel="stylesheet" href="style-scaffolding.css?v=20260123_mode_fix">
-  <!-- XLSX Library -->
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
-  <!-- Wavesurfer.js for syllable verification -->
-  <script src="https://unpkg.com/wavesurfer.js@7"></script>
-  <script src="https://unpkg.com/wavesurfer.js@7/dist/plugins/regions.min.js"></script>
-  <!-- Sentry Error Monitoring -->
-  <script src="https://browser.sentry-cdn.com/7.114.0/bundle.tracing.min.js" crossorigin="anonymous"></script>
+  <!-- Scripts moved to end of body for performance -->
   <script>
     const IS_PROD = !['localhost', '127.0.0.1'].includes(location.hostname);
     if (IS_PROD) {
       // Initialize Sentry
+      // Initialize Sentry (Commented out: Invalid Placeholder DSN)
+      /* 
       Sentry.init({
         dsn: 'https://YOUR_KEY@YOUR_ORG.ingest.sentry.io/YOUR_PROJECT', // Placeholder
         tracesSampleRate: 0.1
       });
+      */
       window.LOG_LEVEL = 'error';
     } else {
       window.LOG_LEVEL = 'debug';
     }
   </script>
   <script src="js/logger.js"></script>
+  <script src="js/modals.js"></script>
   <script src="pronunciation-analyzer/syllable-verifier.js?v=20260114_ui_v4"></script>
   <!-- Import Map for NPM Packages (FSRS) -->
   <script type="importmap">
@@ -64,26 +63,26 @@
 
         if (text) {
           if (!modulesLoaded) {
-            text.innerHTML = '<span style="color:#ff6b6b;">⚠ Security/Certificate Block detected.</span><br>Some scripts failed to load. Please click below to bypass and see details in console (F12).<br><span style="font-size:0.9em; color:#4dabf7; cursor:pointer; text-decoration:underline;" onclick="document.getElementById(\'app-preloader\').style.display=\'none\'">Enter App Anyway</span>';
+            text.innerHTML = '<span style="color:#ff6b6b;">⚠ Security/Certificate Block detected.</span><br>Some scripts failed to load. Please click below to bypass and see details in console (F12).<br><span id="preloader-bypass-btn" style="font-size:0.9em; color:#4dabf7; cursor:pointer; text-decoration:underline;">Enter App Anyway</span>';
           } else {
-            text.innerHTML = 'Loading is taking longer than expected.<br><span style="font-size:0.9em; cursor:pointer; text-decoration:underline;" onclick="document.getElementById(\'app-preloader\').style.display=\'none\'">Dismiss loading screen</span>';
+            text.innerHTML = 'Loading is taking longer than expected.<br><span id="preloader-dismiss-btn" style="font-size:0.9em; cursor:pointer; text-decoration:underline;">Dismiss loading screen</span>';
           }
         }
       }
     }, 5000); // Reduced to 5s for faster feedback
   </script>
 
-  <!-- Demo Feedback Banner -->
-  <div class="feedback-banner">
-    <div class="feedback-banner-content">
-      <div class="feedback-text-en">
-        🚧 Demo version — feedback is welcome!
+  <!-- Demo Feedback Toast (Refactored) -->
+  <div id="feedback-toast" class="feedback-toast" style="display: none;">
+    <div class="feedback-toast-content">
+      <span class="toast-icon">🚧</span>
+      <div class="toast-text">
+        <span>Demo version — feedback welcome!</span>
         <a href="https://forms.gle/DKzNkhkQ5JFzc4yM9" target="_blank" rel="noopener noreferrer"
-          class="feedback-link">Give Feedback →</a>
+          class="feedback-link-toast">Give Feedback</a>
       </div>
-
     </div>
-    <button class="feedback-banner-close" aria-label="Close banner">&times;</button>
+    <button id="feedback-toast-close" class="toast-close" aria-label="Close">&times;</button>
   </div>
 
   <!-- Authentication UI -->
@@ -145,8 +144,7 @@
       </div>
       <!-- Quick Action Card -->
       <div class="dashboard-quick-action">
-        <div class="quick-action-card"
-          onclick="openVocabModal(); setTimeout(() => document.querySelector('.vocab-tab-btn[data-tab=\'practice\']').click(), 100); setTimeout(() => document.getElementById('srs-start-review-btn').click(), 300);">
+        <div class="quick-action-card" id="quick-action-start-review">
           <div class="action-icon">🚀</div>
           <div class="action-text">
             <h3>Start Review Session</h3>
@@ -431,118 +429,7 @@
     </div>
   </div>
 
-  <!-- Vocabulary Full List Modal -->
-  <div id="vocab-list-modal" class="vocab-list-modal" style="display: none;">
-    <div class="vocab-list-content-modal">
-      <div class="vocab-list-header">
-        <h2>Vocabulary List</h2>
-        <button id="vocab-list-close" class="vocab-add-close">×</button>
-      </div>
-
-      <div class="vocab-tabs">
-        <button class="vocab-tab-btn active" data-tab="bookmarks">Bookmarked Words</button>
-        <button class="vocab-tab-btn" data-tab="missed">Frequently Missed</button>
-        <button class="vocab-tab-btn" data-tab="practice">Vocabulary Practice</button>
-      </div>
-
-      <div class="vocab-tab-content active" id="tab-content-bookmarks">
-        <table class="vocab-table">
-          <thead>
-            <tr>
-              <th>Word</th>
-              <th>Pronunciation</th>
-              <th>Vietnamese</th>
-              <th>Examples</th>
-              <th>Source</th>
-              <th>Form</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="vocab-table-body-bookmarks">
-            <!-- Rows injected by JS -->
-          </tbody>
-        </table>
-      </div>
-
-      <div class="vocab-tab-content" id="tab-content-missed">
-        <table class="vocab-table">
-          <thead>
-            <tr>
-              <th>Word</th>
-              <th>Pronunciation</th>
-              <th>Vietnamese</th>
-              <th>Examples</th>
-              <th>Source</th>
-              <th>Form</th>
-              <th>Times Missed</th>
-            </tr>
-          </thead>
-          <tbody id="vocab-table-body-missed">
-            <!-- Rows injected by JS -->
-          </tbody>
-        </table>
-      </div>
-      <div class="vocab-tab-content" id="tab-content-practice">
-        <div class="vocab-practice-container" style="padding: 24px; text-align: center;">
-          <div class="practice-card"
-            style="background: #f8fafc; padding: 24px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #e2e8f0;">
-            <div style="font-size: 48px; margin-bottom: 16px;">🔄</div>
-            <h3>Spaced Repetition Review</h3>
-            <p style="color: #64748b; margin-bottom: 24px;">Review your vocabulary at optimal intervals to maximize
-              retention.</p>
-
-            <button id="srs-start-review-btn" class="btn-primary"
-              style="padding: 12px 32px; font-size: 1.1rem; width: 100%; max-width: 300px;"
-              onclick="if(window.SRSReview) window.SRSReview.startReviewSession()">
-              Start Review Session <span id="srs-due-badge" class="badge-count"
-                style="display:none; background: #ef4444; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; margin-left: 8px;">0</span>
-            </button>
-
-            <div id="srs-next-review-info" class="srs-next-review"
-              style="margin-top: 16px; color: #64748b; font-size: 0.9rem; display: none;">
-              Next review: <span id="srs-next-date">-</span>
-            </div>
-          </div>
-
-          <!-- Tutorial Replay Settings -->
-          <div class="tutorial-replay-section">
-            <h4 class="tutorial-replay-header">📘 Play Tutorial Next Time</h4>
-            <p class="tutorial-replay-desc">Enable to replay the tutorial for any mode you'd like to review.</p>
-            <div class="tutorial-toggle-list">
-              <div class="tutorial-toggle-item">
-                <span class="toggle-label">🔊 Listen and Type</span>
-                <label class="toggle-switch">
-                  <input type="checkbox" id="tutorial-replay-listen">
-                  <span class="toggle-slider"></span>
-                </label>
-              </div>
-              <div class="tutorial-toggle-item">
-                <span class="toggle-label">🎙️ Listen and Repeat</span>
-                <label class="toggle-switch">
-                  <input type="checkbox" id="tutorial-replay-speak">
-                  <span class="toggle-slider"></span>
-                </label>
-              </div>
-              <div class="tutorial-toggle-item">
-                <span class="toggle-label">📝 Fill in the Blank</span>
-                <label class="toggle-switch">
-                  <input type="checkbox" id="tutorial-replay-cloze">
-                  <span class="toggle-slider"></span>
-                </label>
-              </div>
-              <div class="tutorial-toggle-item">
-                <span class="toggle-label">✍️ Writing Challenge</span>
-                <label class="toggle-switch">
-                  <input type="checkbox" id="tutorial-replay-writing">
-                  <span class="toggle-slider"></span>
-                </label>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- Vocabulary Full List Modal (Extracted to js/modals.js) -->
 
   <!-- Component Alerts (Custom Modal) -->
   <div id="vocab-alert-modal" class="vocab-alert-modal" style="display: none;">
@@ -2152,6 +2039,39 @@
     style="position: fixed; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px; z-index: 9999;">
     v3.1 (Fix: updateUserProfile)
   </div>
+  <!-- Optimization: Scripts moved from Head -->
+  <!-- XLSX Library -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js" defer></script>
+  <!-- Wavesurfer.js for syllable verification -->
+  <script src="https://unpkg.com/wavesurfer.js@7" defer></script>
+  <script src="https://unpkg.com/wavesurfer.js@7/dist/plugins/regions.min.js" defer></script>
+  <!-- Sentry Error Monitoring -->
+  <script src="https://browser.sentry-cdn.com/7.114.0/bundle.tracing.min.js" crossorigin="anonymous" defer></script>
+  <script>
+    // Show feedback toast after delay
+    setTimeout(() => {
+      const toast = document.getElementById('feedback-toast');
+      if (toast) toast.style.display = 'flex';
+    }, 2000);
+
+    document.getElementById('feedback-toast-close')?.addEventListener('click', () => {
+      document.getElementById('feedback-toast').style.display = 'none';
+    });
+
+    // Security: Event Listeners for Dynamic Elements
+    document.addEventListener('click', (e) => {
+      if (e.target.id === 'preloader-bypass-btn' || e.target.id === 'preloader-dismiss-btn') {
+        document.getElementById('app-preloader').style.display = 'none';
+      }
+    });
+
+    // Quick Action Handler
+    document.getElementById('quick-action-start-review')?.addEventListener('click', () => {
+      if (typeof openVocabModal === 'function') openVocabModal();
+      setTimeout(() => document.querySelector('.vocab-tab-btn[data-tab="practice"]')?.click(), 100);
+      setTimeout(() => document.getElementById('srs-start-review-btn')?.click(), 300);
+    });
+  </script>
 </body>
 
 </html>

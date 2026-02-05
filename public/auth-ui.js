@@ -895,11 +895,28 @@ function setupAuthStateListener() {
           (new Date(user.metadata.creationTime) > new Date(user.metadata.lastSignInTime));
 
         log.debug('Attempting to create/update user profile for:', user.uid);
-        const profileResult = await firestoreFunctions.createOrUpdateUserProfile(user.uid, user.email, isNewUser);
+        let profileResult;
+        try {
+          profileResult = await firestoreFunctions.createOrUpdateUserProfile(user.uid, user.email, isNewUser);
+        } catch (profileErr) {
+          log.error('Critical exception in profile update:', profileErr);
+          profileResult = { success: false, error: profileErr.message };
+        }
 
         if (!profileResult.success) {
           log.error('Profile update failed:', profileResult.error);
-          alert('Warning: Could not update user profile. Some features may not work.\nError: ' + profileResult.error);
+          // If it's a permission error, it's likely a rules issue or cold start problem
+          if (profileResult.code === 'permission-denied') {
+            console.error('[AuthUI] Firestore Permission Denied. Check rules.');
+          }
+          // Don't alert for every failure to avoid annoying users, but log it clearly
+          // only alert if there's no cached profile
+          const cachedProfile = localStorage.getItem(`userProfile_${user.uid}`);
+          if (!cachedProfile) {
+            alert('Warning: Could not sync your profile with the cloud. Your progress may not be saved during this session.\n\nDetails: ' + profileResult.error);
+          } else {
+            log.warn('Could not sync profile, but found local cache. Carrying on...');
+          }
         }
 
         // Start session tracking

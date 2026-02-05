@@ -55,19 +55,31 @@ const log = Logger.create('Database');
 async function createOrUpdateUserProfile(userId, email, isNewUser = false) {
   try {
     const userRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userRef);
+    let userDoc;
 
-    if (!userDoc.exists() || isNewUser) {
+    try {
+      userDoc = await getDoc(userRef);
+    } catch (getErr) {
+      log.warn('Could not fetch existing profile, will attempt to create/overwrite:', getErr.message);
+      // If we can't get it, we'll try to set it. This might happen during signup
+      // if the rule check for "exists" fails due to some race condition.
+    }
+
+    if (!userDoc || !userDoc.exists() || isNewUser) {
       // Create new user profile
-      await setDoc(userRef, {
+      const profileData = {
         email: email,
         createdAt: serverTimestamp(),
         lastLoginAt: serverTimestamp(),
         totalActiveSeconds: 0,
         totalPoints: 0,
         coins: 0,
-        unlockedModes: ['type'] // Start with only 'type' mode unlocked
-      });
+        unlockedModes: ['type'],
+        isAdmin: false // Explicitly set to false during client-side creation
+      };
+
+      log.debug('Creating new user profile:', profileData);
+      await setDoc(userRef, profileData);
       log.log('✓ User profile created');
     } else {
       // Update existing user profile
@@ -83,10 +95,22 @@ async function createOrUpdateUserProfile(userId, email, isNewUser = false) {
       data: finalDoc.data()
     };
   } catch (error) {
-    log.error('Error creating/updating user profile:', error);
+    log.error('Error creating/updating user profile:', {
+      code: error.code,
+      message: error.message,
+      userId: userId
+    });
+
+    // Provide a more helpful error for permission issues
+    let errorMsg = error.message;
+    if (error.code === 'permission-denied') {
+      errorMsg = 'Firestore permission denied. Please ensure security rules are deployed correctly.';
+    }
+
     return {
       success: false,
-      error: error.message
+      error: errorMsg,
+      code: error.code
     };
   }
 }
@@ -1057,7 +1081,9 @@ async function getTotalPoints(userId) {
       };
     }
 
-    const totalPoints = userDoc.data().totalPoints || 0;
+    const userData = userDoc.data();
+    // Prefer totalPoints, fallback to practicePoints for migration
+    const totalPoints = userData.totalPoints ?? userData.practicePoints ?? 0;
 
     return {
       success: true,

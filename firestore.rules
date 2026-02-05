@@ -4,7 +4,9 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Helper function to check if user is admin via internal flag
     function isAdmin() {
+      // Robust check: ensure auth exists and document exists before accessing data
       return request.auth != null && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
     
@@ -16,9 +18,16 @@ service cloud.firestore {
     // Users can read/write their own user profile
     match /users/{userId} {
       allow read: if isOwner(userId);
-      // Prevent users from setting themselves as admin
-      allow write: if isOwner(userId) && 
-                   !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin']);
+      
+      // Separate create and update for safety
+      allow create: if isOwner(userId) && 
+                    // Prevent users from setting themselves as admin on creation
+                    (!request.resource.data.keys().hasAny(['isAdmin']) || request.resource.data.isAdmin == false);
+                    
+      allow update: if isOwner(userId) && 
+                    // Prevent users from changing their own isAdmin flag
+                    (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastLoginAt', 'totalActiveSeconds', 'totalPoints', 'coins', 'unlockedModes', 'englishLevel', 'levelSelectedAt', 'sentenceLengthFilterUnlocked', 'practiceStats', 'vocabularyBookUnlocked', 'vocabularyBookUnlockedAt']) ||
+                     !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin']));
       
       // Users can read/write their own progress data (tiered progression)
       match /progress/{progressId} {

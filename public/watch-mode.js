@@ -945,9 +945,10 @@ const WatchMode = (function () {
                 // Update total practice points
                 await db.runTransaction(async (transaction) => {
                     const userDoc = await transaction.get(userRef);
-                    const currentPoints = userDoc.exists ? (userDoc.data().practicePoints || 0) : 0;
+                    const currentPoints = userDoc.exists() ? (userDoc.data().totalPoints || 0) : 0;
                     transaction.update(userRef, {
-                        practicePoints: currentPoints + points
+                        totalPoints: currentPoints + points,
+                        coins: (userDoc.data().coins || 0) + points // Keep coins in sync if needed, though firestore module handles this usually
                     });
                 });
 

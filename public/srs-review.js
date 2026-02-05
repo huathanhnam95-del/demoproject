@@ -892,7 +892,8 @@ const SRSReview = (function () {
             const userDoc = await getDoc(userDocRef);
             if (userDoc.exists()) {
                 const userData = userDoc.data();
-                srsCache.totalPoints = userData.practicePoints || userData.totalPoints || 0;
+                // Prefer totalPoints, fallback to practicePoints if migrating
+                srsCache.totalPoints = userData.totalPoints ?? userData.practicePoints ?? 0;
 
                 // Load Algorithm Preference
                 if (userData.srsSettings && userData.srsSettings.algorithm) {

@@ -122,22 +122,310 @@
     const whatIsThisBtn = document.getElementById('what-is-this-btn');
     if (whatIsThisBtn) {
       whatIsThisBtn.addEventListener('click', () => {
-        // Find the active mode panel to determine current mode
-        const activePanel = document.querySelector('.mode-panel.active');
-        if (activePanel) {
-          const mode = activePanel.id.replace('mode-', '');
-          if (typeof window.startTutorial === 'function') {
-            window.startTutorial(mode, true); // Force replay
-          }
-        } else {
-          // Fallback to type mode if no active panel
-          if (typeof window.startTutorial === 'function') {
-            window.startTutorial('type', true);
-          }
-        }
+        window.showModeRecommendation();
       });
     }
+
+    // Accessibility: Keyboard interaction for cards
+    document.addEventListener('keydown', (e) => {
+      if ((e.key === 'Enter' || e.key === ' ') && e.target.getAttribute('role') === 'button') {
+        const activeEl = document.activeElement;
+        if (activeEl && activeEl.classList.contains('modern-card')) {
+          e.preventDefault(); // Prevent scrolling on Space
+          activeEl.click();
+        }
+      }
+    });
+
+    // Modal Close Logic - use reset function
+    document.getElementById('mode-helper-close-btn')?.addEventListener('click', () => {
+      const modal = document.getElementById('mode-helper-modal');
+      if (modal) modal.style.display = 'none';
+      resetGoalModalState(); // Clean up for next open
+    });
+
+    // Mode Helper Multiple Choice Flow
+    document.getElementById('mode-helper-submit-btn')?.addEventListener('click', handleGoalSubmit);
+    document.getElementById('mode-helper-back-btn')?.addEventListener('click', handleSuggestionsBack);
+    document.getElementById('mode-helper-start-btn')?.addEventListener('click', handleStartLearning);
+
+    // Enforce maximum 2 checkbox selections with live feedback
+    document.querySelectorAll('#mode-helper-modal input[name="goal"]').forEach(checkbox => {
+      checkbox.addEventListener('change', enforceMaxGoalSelection);
+    });
   });
+
+  /**
+   * Enforces the maximum 2 checkbox selection rule
+   * Updates disabled state and helper text visibility
+   */
+  function enforceMaxGoalSelection() {
+    const modal = document.getElementById('mode-helper-modal');
+    if (!modal) return;
+
+    const allCheckboxes = modal.querySelectorAll('input[name="goal"]');
+    const checkedCount = modal.querySelectorAll('input[name="goal"]:checked').length;
+    const helperText = modal.querySelector('.goal-limit-helper');
+
+    if (checkedCount >= 2) {
+      // Disable unchecked, show helper
+      allCheckboxes.forEach(cb => {
+        if (!cb.checked) {
+          cb.disabled = true;
+          cb.closest('.helper-option-checkbox')?.classList.add('disabled');
+        }
+      });
+      if (helperText) helperText.classList.add('visible');
+    } else {
+      // Re-enable all
+      allCheckboxes.forEach(cb => {
+        cb.disabled = false;
+        cb.closest('.helper-option-checkbox')?.classList.remove('disabled');
+      });
+      if (helperText) helperText.classList.remove('visible');
+    }
+  }
+
+  /**
+   * Completely resets the goal modal state
+   * Should be called on: close, start learning, and open
+   */
+  function resetGoalModalState() {
+    const modal = document.getElementById('mode-helper-modal');
+    if (!modal) return;
+
+    // Reset all checkboxes: uncheck and enable
+    modal.querySelectorAll('input[name="goal"]').forEach(cb => {
+      cb.checked = false;
+      cb.disabled = false;
+      cb.closest('.helper-option-checkbox')?.classList.remove('disabled');
+    });
+
+    // Reset selected mode
+    selectedModeToStart = null;
+
+    // Reset to step 1 (goals) using class toggles
+    setGoalModalStep('goals');
+
+    // Clear suggestions list
+    const suggestionsList = modal.querySelector('#mode-suggestions-list');
+    if (suggestionsList) suggestionsList.innerHTML = '';
+
+    // Hide helper text
+    const helperText = modal.querySelector('.goal-limit-helper');
+    if (helperText) helperText.classList.remove('visible');
+  }
+
+  /**
+   * Centralized step management for goal modal
+   * @param {'goals' | 'suggestions'} step
+   */
+  function setGoalModalStep(step) {
+    const modal = document.getElementById('mode-helper-modal');
+    if (!modal) return;
+
+    const goalsStep = modal.querySelector('#mode-helper-step-goals');
+    const suggestionsStep = modal.querySelector('#mode-helper-step-suggestions');
+
+    if (step === 'goals') {
+      goalsStep?.classList.remove('is-hidden');
+      suggestionsStep?.classList.add('is-hidden');
+    } else if (step === 'suggestions') {
+      goalsStep?.classList.add('is-hidden');
+      suggestionsStep?.classList.remove('is-hidden');
+    }
+  }
+
+  // Expose for external use
+  window.resetGoalModalState = resetGoalModalState;
+
+  // Global Mode Recommendation Functions
+  window.showModeRecommendation = function () {
+    const modal = document.getElementById('mode-helper-modal');
+    if (modal) {
+      resetGoalModalState(); // Always open in clean state
+      modal.style.display = 'flex';
+    }
+  };
+
+  // Goal to modes mapping with descriptions
+  const goalToModesMap = {
+    'spelling': {
+      modes: ['type'],
+      description: 'Write exactly what you hear to sharpen your spelling.',
+      icon: '⌨️'
+    },
+    'speaking': {
+      modes: ['speak'],
+      description: 'Practice speaking full sentences with speech recognition.',
+      icon: '🎤'
+    },
+    'accent': {
+      modes: ['pronounce'],
+      description: 'Get detailed phoneme-level feedback on your pronunciation.',
+      icon: '🗣️'
+    },
+    'vocabulary': {
+      modes: ['extended'],
+      description: 'Fill in blanks to reinforce vocabulary in context.',
+      icon: '📝'
+    },
+    'notetaking': {
+      modes: ['notes'],
+      description: 'Listen to lectures and practice capturing key points.',
+      icon: '📓'
+    },
+    'listening': {
+      modes: ['watch'],
+      description: 'Learn from real videos with interactive comprehension checks.',
+      icon: '📺'
+    }
+  };
+
+  // Mode display names
+  const modeDisplayNames = {
+    'type': 'Type Mode',
+    'speak': 'Speak Mode',
+    'pronounce': 'Pronounce Mode',
+    'extended': 'Fill Mode',
+    'notes': 'Notes Mode',
+    'watch': 'Watch Mode'
+  };
+
+  // Selected mode to start (set when suggestions are shown)
+  let selectedModeToStart = null;
+
+  /**
+   * Handle goal selection submit - shows suggestions, doesn't navigate directly
+   * Maximum 2 goals can be selected
+   */
+  window.handleGoalSubmit = function () {
+    const checkboxes = document.querySelectorAll('#mode-helper-modal input[name="goal"]:checked');
+    const selectedGoals = Array.from(checkboxes).map(cb => cb.value);
+
+    if (selectedGoals.length === 0) {
+      // Visual feedback: shake the button
+      const submitBtn = document.getElementById('mode-helper-submit-btn');
+      if (submitBtn) {
+        submitBtn.classList.add('shake');
+        setTimeout(() => submitBtn.classList.remove('shake'), 500);
+      }
+      return;
+    }
+
+    if (selectedGoals.length > 2) {
+      // Should not happen due to checkbox limit, but safety check
+      alert('Please select at most 2 goals.');
+      return;
+    }
+
+    // Generate suggestions based on selected goals
+    const suggestions = [];
+    const seenModes = new Set();
+
+    selectedGoals.forEach(goal => {
+      const mapping = goalToModesMap[goal];
+      if (mapping) {
+        mapping.modes.forEach(mode => {
+          if (!seenModes.has(mode)) {
+            seenModes.add(mode);
+            suggestions.push({
+              mode: mode,
+              name: modeDisplayNames[mode] || mode,
+              description: mapping.description,
+              icon: mapping.icon
+            });
+          }
+        });
+      }
+    });
+
+    // Set the first mode as default to start
+    selectedModeToStart = suggestions.length > 0 ? suggestions[0].mode : 'type';
+
+    // Render suggestions
+    const suggestionsContainer = document.getElementById('mode-suggestions-list');
+    if (suggestionsContainer) {
+      suggestionsContainer.innerHTML = suggestions.map((s, index) => `
+        <label class="suggestion-item ${index === 0 ? 'selected' : ''}">
+          <input type="radio" name="suggested-mode" value="${s.mode}" ${index === 0 ? 'checked' : ''}>
+          <div class="suggestion-content">
+            <span class="suggestion-icon">${s.icon}</span>
+            <div class="suggestion-text">
+              <strong>${s.name}</strong>
+              <span>${s.description}</span>
+            </div>
+          </div>
+        </label>
+      `).join('');
+
+      // Add change listeners to update selectedModeToStart
+      suggestionsContainer.querySelectorAll('input[name="suggested-mode"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          selectedModeToStart = e.target.value;
+          // Update visual selection
+          suggestionsContainer.querySelectorAll('.suggestion-item').forEach(item => {
+            item.classList.toggle('selected', item.querySelector('input').checked);
+          });
+        });
+      });
+    }
+
+    // Switch to suggestions step
+    setGoalModalStep('suggestions');
+  };
+
+  /**
+   * Go back from suggestions to goal selection
+   */
+  function handleSuggestionsBack() {
+    setGoalModalStep('goals');
+  }
+
+  /**
+   * Start learning with the selected mode
+   */
+  function handleStartLearning() {
+    const modal = document.getElementById('mode-helper-modal');
+    if (modal) modal.style.display = 'none';
+
+    // Capture mode before reset
+    const modeToStart = selectedModeToStart;
+
+    // Reset modal state for next time
+    resetGoalModalState();
+
+    // Switch to the selected mode
+    if (modeToStart) {
+      window.switchToMode(modeToStart);
+
+      // Optional: Start tutorial for that mode
+      if (typeof window.startTutorial === 'function') {
+        setTimeout(() => {
+          window.startTutorial(modeToStart, false);
+        }, 500);
+      }
+    }
+  }
+
+  // Legacy function - kept for backward compatibility but no longer called directly
+  window.handleModeSelection = function (goal) {
+    // Now we use the multi-choice flow, but keep this for any external calls
+    const modal = document.getElementById('mode-helper-modal');
+    if (modal) modal.style.display = 'none';
+
+    let targetMode = 'type';
+    switch (goal) {
+      case 'spelling': targetMode = 'type'; break;
+      case 'speaking': targetMode = 'speak'; break;
+      case 'accent': targetMode = 'pronounce'; break;
+      case 'vocabulary': targetMode = 'extended'; break;
+      case 'notetaking': targetMode = 'notes'; break;
+      case 'listening': targetMode = 'watch'; break;
+    }
+
+    window.switchToMode(targetMode);
+  };
 
   /**
    * Switch to a specific practice mode
@@ -173,11 +461,11 @@
       modePanel.style.display = 'block';
 
       // 3. Update mode-switch-btn active states in Learning Center
-      document.querySelectorAll('.mode-switch-btn').forEach(btn => btn.classList.remove('active'));
-      const modeSwitchBtn = document.getElementById('mode-btn-' + mode);
-      if (modeSwitchBtn) {
-        modeSwitchBtn.classList.add('active');
-      }
+      document.querySelectorAll('.mode-switch-btn').forEach(btn => {
+        const isSelected = btn.id === 'mode-btn-' + mode;
+        btn.classList.toggle('is-active', isSelected);
+        btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+      });
 
       // HANDLE WATCH MODE CLEANUP/RESTORE
       const pageWrapper = document.getElementById('page-layout-wrapper');
@@ -452,8 +740,13 @@
       if (replayBadge) {
         if (window.DifficultyManager) {
           const settings = window.DifficultyManager.getCurrentSettings('type');
-          const max = settings.maxReplays || 10;
-          replayBadge.textContent = `🔊 ${max} times left`;
+          const max = settings.maxReplays;
+          // Infinity check for Level 1
+          if (max === Infinity) {
+            replayBadge.textContent = '🔊 Unlimited';
+          } else {
+            replayBadge.textContent = `🔊 ${max} times left`;
+          }
           replayBadge.style.display = 'inline-block';
         } else {
           replayBadge.textContent = '';
@@ -5284,17 +5577,7 @@
       return;
     }
 
-    // Adaptive Difficulty Integration
-    const totalWords = getCorrectWordCount();
-    const accuracy = totalWords > 0 ? scoreValue / totalWords : 0;
-    if (window.DifficultyManager) {
-      window.DifficultyManager.adjustDifficulty('type', accuracy);
-    }
-
-    // Record practice attempt (correct if no errors)
-    recordPracticeAttempt(currentTypeQuestionId, !hasErrors, 'type');
-
-    // Smart Difficulty Tracking
+    // Smart Difficulty Tracking (Includes Weighted Accuracy/Speed/Hints)
     if (window.typePerformanceTracker) {
       window.currentQuestionAttempts = (window.currentQuestionAttempts || 0) + 1;
       const timeTaken = (Date.now() - (window.questionStartTime || Date.now())) / 1000;
@@ -5303,7 +5586,8 @@
         correct: !hasErrors,
         attempts: window.currentQuestionAttempts,
         hintUsed: window.hintUsedForCurrentQuestion || false,
-        timeTaken: timeTaken
+        timeTaken: timeTaken,
+        wordCount: totalWords
       });
     }
 
@@ -5384,17 +5668,7 @@
       return;
     }
 
-    // Adaptive Difficulty Integration
-    const totalWords = getCorrectWordCount();
-    const accuracy = totalWords > 0 ? scoreValue / totalWords : 0;
-    if (window.DifficultyManager) {
-      window.DifficultyManager.adjustDifficulty('speak', accuracy);
-    }
-
-    // Record practice attempt (correct if no errors)
-    recordPracticeAttempt(currentSpeakQuestionId, !hasErrors, 'speak');
-
-    // Smart Difficulty Tracking
+    // Smart Difficulty Tracking (Includes Weighted Accuracy/Speed/Hints)
     if (window.speakPerformanceTracker) {
       window.currentQuestionAttempts = (window.currentQuestionAttempts || 0) + 1;
       const timeTaken = (Date.now() - (window.questionStartTime || Date.now())) / 1000;
@@ -5403,7 +5677,8 @@
         correct: !hasErrors,
         attempts: window.currentQuestionAttempts,
         hintUsed: window.hintUsedForCurrentQuestion || false,
-        timeTaken: timeTaken
+        timeTaken: timeTaken,
+        wordCount: totalWords
       });
     }
 

@@ -377,8 +377,23 @@ class PronunciationApp {
                     const { syllables, noiseCount } = this.syllableDetector.detect(analysisData, expectedCount);
 
                     this.visualizer.drawPitchContour(analysisData.times, analysisData.pitches, analysisData.energies, syllables);
-                    this.visualizer.drawDurationChart([], syllables);
-                    this.generateSummary(syllables, noiseCount);
+
+                    // Show comparison chart if we have native pattern
+                    if (this.nativePattern && syllables.length > 0) {
+                        // Pass native pattern for the duration chart (fixes missing native bar)
+                        this.visualizer.drawDurationChart(this.nativePattern, syllables);
+
+                        // Generate detailed comparison score (fixes missing score analysis)
+                        const comparison = this.wordRefService.compareWithNative(
+                            syllables,
+                            this.nativePattern
+                        );
+                        this.generateComparisonSummary(syllables, comparison);
+                    } else {
+                        // Fallback to simple summary
+                        this.visualizer.drawDurationChart([], syllables);
+                        this.generateSummary(syllables, noiseCount);
+                    }
 
                     this.spinner.style.display = 'none';
                     this.recordBtn.disabled = false;

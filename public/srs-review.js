@@ -13,7 +13,11 @@ import {
     increment,
     collection,
     addDoc,
-    serverTimestamp
+    serverTimestamp,
+    getDocs,
+    query,
+    where,
+    writeBatch
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 // Import new SRS Scheduler
@@ -214,6 +218,17 @@ const SRSReview = (function () {
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'hidden') flushSRSSave();
         });
+
+        // AuthUI Integration (Phase 3)
+        // Subscribe to auth state changes if AuthUI is available
+        if (window.authUI && typeof window.authUI.onAuthStateChange === 'function') {
+            window.authUI.onAuthStateChange((userId) => {
+                log.debug('Auth state changed via AuthUI:', userId);
+                // Attempt to get firestore instance
+                const firestore = db || getFirestore();
+                setUser(userId, firestore);
+            });
+        }
     }
 
     /**
@@ -808,27 +823,47 @@ const SRSReview = (function () {
      * Set Firebase user reference
      */
     function setUser(userId, firestore) {
+        // Optimization: Don't reload if user hasn't changed
+        if (currentUserId === userId && db && (firestore || db)) {
+            log.debug('User already set, skipping reload.');
+            return;
+        }
+
         currentUserId = userId;
-        db = firestore || window.firebaseDb;
+        db = firestore || (window.__FIREBASE_INTERNAL__ ? window.__FIREBASE_INTERNAL__.db : null);
 
         if (userId && db) {
+            log.debug('Setting user for SRS:', userId);
             loadSRSData();
+        } else {
+            // Reset cache on logout
+            srsCache.srsData = {};
+            currentUserId = null;
         }
     }
 
     /**
      * Load SRS data from Firestore
+     * Uses subcollection 'srs_cards' for individual card data (Zero Trust)
+     * and a summary doc for stats.
      */
     async function loadSRSData() {
         if (!currentUserId || !db) return;
 
         try {
-            const vocabDocRef = doc(db, 'users', currentUserId, 'vocabularyBook', 'data');
-            const vocabDoc = await getDoc(vocabDocRef);
+            // 1. Load Summary Data (XP, Streak, etc)
+            const summaryRef = doc(db, 'users', currentUserId, 'vocabularyBook', 'data');
+            const summaryDoc = await getDoc(summaryRef);
 
-            if (vocabDoc.exists()) {
-                const data = vocabDoc.data();
-                srsCache.srsData = data.srsData || {};
+            if (summaryDoc.exists()) {
+                const data = summaryDoc.data();
+
+                // Legacy check: If srsData exists in the summary doc, we need to migrate it
+                if (data.srsData && Object.keys(data.srsData).length > 0) {
+                    log.warn('Legacy SRS data detected in monolithic doc. Migrating to srs_cards subcollection...');
+                    await migrateToSubcollection(data.srsData);
+                }
+
                 srsCache.reviewStats = data.reviewStats || {
                     totalReviews: 0,
                     reviewsToday: 0,
@@ -837,19 +872,27 @@ const SRSReview = (function () {
                     longestStreak: 0
                 };
                 srsCache.masteredWords = data.masteredWords || [];
-
-                log.debug('Loaded SRS data:', {
-                    words: Object.keys(srsCache.srsData).length,
-                    stats: srsCache.reviewStats
-                });
             }
 
-            // Fetch User Points for Gamification
+            // 2. Load Individual Cards from Subcollection
+            const cardsRef = collection(db, 'users', currentUserId, 'srs_cards');
+            const cardsSnapshot = await getDocs(cardsRef);
+
+            srsCache.srsData = {};
+            cardsSnapshot.forEach(doc => {
+                const card = doc.data();
+                const lemma = card.lemma || doc.id;
+                srsCache.srsData[lemma] = card;
+            });
+
+            log.debug(`Loaded ${Object.keys(srsCache.srsData).length} cards from srs_cards subcollection`);
+
+            // 3. Fetch User Points for Gamification (Global User Doc)
             const userDocRef = doc(db, 'users', currentUserId);
             const userDoc = await getDoc(userDocRef);
             if (userDoc.exists()) {
                 const userData = userDoc.data();
-                srsCache.totalPoints = userData.practicePoints || 0;
+                srsCache.totalPoints = userData.practicePoints || userData.totalPoints || 0;
 
                 // Load Algorithm Preference
                 if (userData.srsSettings && userData.srsSettings.algorithm) {
@@ -864,10 +907,9 @@ const SRSReview = (function () {
                 }
 
                 updateGamificationUI();
-                updateDashboardUI(); // Update "Next review" text on load
+                if (typeof updateDashboardUI === 'function') updateDashboardUI();
             }
 
-            // Update dashboard summary with loaded data
             updateDashboardSummary();
         } catch (e) {
             log.error('Error loading SRS data:', e);
@@ -875,86 +917,124 @@ const SRSReview = (function () {
     }
 
     /**
-     * Save SRS data to Firestore
+     * Migrate legacy srsData map to individual srs_cards documents
+     * @param {Object} legacyData - The srsData map from vocabularyBook/data
      */
-    async function saveSRSData() {
-        if (!currentUserId || !db) return;
+    async function migrateToSubcollection(legacyData) {
+        log.log(`Starting migration for ${Object.keys(legacyData).length} items...`);
+        const batch = writeBatch(db);
+        let count = 0;
 
-        // SANITIZE: Recursively replace undefined with null for Firestore
-        const sanitize = (obj) => {
-            if (obj === undefined) return null;
-            if (obj === null || typeof obj !== 'object') return obj;
-            if (Array.isArray(obj)) return obj.map(sanitize);
-            const newObj = {};
-            for (const key in obj) {
-                const val = sanitize(obj[key]);
-                if (val !== undefined) newObj[key] = val;
-                else newObj[key] = null;
+        for (const [lemma, card] of Object.entries(legacyData)) {
+            const safeId = lemma.replace(/\//g, '_');
+            const cardRef = doc(db, 'users', currentUserId, 'srs_cards', safeId);
+
+            batch.set(cardRef, {
+                ...card,
+                lemma: lemma,
+                migratedAt: serverTimestamp()
+            });
+            count++;
+
+            // Commit in chunks of 500
+            if (count % 500 === 0) {
+                await batch.commit();
+                log.log(`Migrated ${count} items...`);
             }
-            return newObj;
-        };
-
-        // NO-OP CHECK: Avoid unnecessary writes if data hasn't changed
-        const currentState = JSON.stringify({
-            srsData: srsCache.srsData,
-            reviewStats: srsCache.reviewStats,
-            masteredWords: srsCache.masteredWords
-        });
-
-        if (currentState === lastSavedSRState) {
-            log.debug('Skipping SRS save: No changes detected');
-            return;
         }
 
+        if (count % 500 !== 0) {
+            await batch.commit();
+        }
+
+        // Wipe legacy data from monolithic doc
+        const summaryRef = doc(db, 'users', currentUserId, 'vocabularyBook', 'data');
+        await updateDoc(summaryRef, {
+            srsData: {}
+        });
+
+        log.important(`✓ Migration complete! ${count} items moved to subcollection.`);
+    }
+
+    /**
+     * Save SRS summary stats to Firestore
+     */
+    async function saveSRSSummary() {
+        if (!currentUserId || !db) return;
+
         const dataToSave = sanitize({
-            srsData: srsCache.srsData,
             reviewStats: srsCache.reviewStats,
             masteredWords: srsCache.masteredWords,
             updatedAt: new Date().toISOString()
         });
 
-        // Always save to localStorage first (instant, reliable)
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
-            userId: currentUserId,
-            data: dataToSave,
-            timestamp: Date.now()
-        }));
-
         try {
             const vocabDocRef = doc(db, 'users', currentUserId, 'vocabularyBook', 'data');
             await setDoc(vocabDocRef, dataToSave, { merge: true });
-
-            // Clear pending save on success
-            localStorage.removeItem(LOCAL_STORAGE_KEY);
-            lastSavedSRState = currentState; // Update last saved state
-            log.debug('Saved SRS data to Firestore');
-            updateDashboardSummary();
+            log.debug('Saved SRS summary to Firestore');
         } catch (e) {
-            log.error('Error saving SRS data:', e);
-            showToast('Progress saved locally (offline). Will sync when online.', 'warning');
-            scheduleRetry();
+            log.error('Error saving SRS summary:', e);
         }
     }
 
     /**
-     * Debounced save wrapper to avoid excessive Firestore writes
+     * Save individual card SRS data to Firestore
+     * @param {string} lemma
+     * @param {object} card
+     */
+    async function saveCardSRS(lemma, card) {
+        if (!currentUserId || !db) return;
+
+        const safeId = lemma.replace(/\//g, '_');
+        const cardRef = doc(db, 'users', currentUserId, 'srs_cards', safeId);
+
+        try {
+            await setDoc(cardRef, sanitize({
+                ...card,
+                lemma: lemma,
+                updatedAt: new Date().toISOString()
+            }), { merge: true });
+            log.debug(`Saved card SRS for: ${lemma}`);
+        } catch (e) {
+            log.error(`Error saving card SRS for ${lemma}:`, e);
+        }
+    }
+
+    /**
+     * SANITIZE: Recursively replace undefined with null for Firestore
+     */
+    const sanitize = (obj) => {
+        if (obj === undefined) return null;
+        if (obj === null || typeof obj !== 'object') return obj;
+        if (Array.isArray(obj)) return obj.map(sanitize);
+        const newObj = {};
+        for (const key in obj) {
+            const val = sanitize(obj[key]);
+            if (val !== undefined) newObj[key] = val;
+            else newObj[key] = null;
+        }
+        return newObj;
+    };
+
+    /**
+     * Debounced save wrapper for summary stats
      */
     function debouncedSave() {
         if (saveTimeout) clearTimeout(saveTimeout);
         saveTimeout = setTimeout(() => {
-            saveSRSData();
+            saveSRSSummary();
         }, 2000); // 2 second delay
     }
 
     /**
-     * Flush any pending save immediately
+     * Flush any pending summary save immediately
      */
     function flushSRSSave() {
         if (saveTimeout) {
             log.debug('Flushing pending SRS save...');
             clearTimeout(saveTimeout);
             saveTimeout = null;
-            saveSRSData();
+            saveSRSSummary();
         }
     }
 
@@ -965,7 +1045,7 @@ const SRSReview = (function () {
         if (pendingSave) clearTimeout(pendingSave);
         pendingSave = setTimeout(async () => {
             log.debug('Attempting to sync local data...');
-            await saveSRSData();
+            await saveSRSSummary();
         }, 10000); // Retry after 10 seconds
     }
 
@@ -984,7 +1064,7 @@ const SRSReview = (function () {
                 srsCache.srsData = data.srsData || srsCache.srsData;
                 srsCache.reviewStats = data.reviewStats || srsCache.reviewStats;
                 srsCache.masteredWords = data.masteredWords || srsCache.masteredWords;
-                saveSRSData(); // Try to sync immediately
+                saveSRSSummary(); // Try to sync immediately
             }
         } catch (e) {
             log.warn('Could not parse pending data:', e);
@@ -1033,7 +1113,10 @@ const SRSReview = (function () {
         };
 
         log.log('Initialized word:', lemma, 'POS:', contextData.partOfSpeech || 'unknown');
-        debouncedSave(); // Use debounced save
+
+        // Save to Firestore (Per-card for Zero Trust + Debounced summary)
+        saveCardSRS(lemma, srsCache.srsData[lemma]);
+        debouncedSave();
     }
 
     /**
@@ -2380,8 +2463,10 @@ const SRSReview = (function () {
         await awardPoints(POINTS_PER_REVIEW, 'srs_review');
         // FIX: Removed duplicate awardPoints call
 
-        await saveSRSData();
-        updateDashboardSummary(); // Update dashboard \"Next review\" info
+        // Save to Firestore (Per-card for Zero Trust + Debounced summary)
+        await saveCardSRS(lemma, srsCache.srsData[lemma]);
+        debouncedSave();
+        updateDashboardSummary(); // Update dashboard "Next review" info
 
         // Reset flip animation
         if (elements.flashcard) {
@@ -2393,13 +2478,11 @@ const SRSReview = (function () {
             showWritingChallenge(currentWord, () => {
                 reviewSession.currentIndex++;
                 showCurrentWord();
-                saveSRSData();
             });
         } else {
             // Move to next word immediately if wrong
             reviewSession.currentIndex++;
             showCurrentWord();
-            saveSRSData();
         }
     }
 
@@ -2451,8 +2534,9 @@ const SRSReview = (function () {
         // Award points for review
         await awardPoints(POINTS_PER_REVIEW, 'srs_review');
 
-        // Save to Firestore
-        await saveSRSData();
+        // Save to Firestore (Per-card for Zero Trust + Debounced summary)
+        await saveCardSRS(lemma, srsCache.srsData[lemma]);
+        debouncedSave();
 
         // Reset flip animation
         if (elements.flashcard) {
@@ -3722,14 +3806,21 @@ const SRSReview = (function () {
             }
         }
 
-        // 1. Try AI Generation
+        // 1. Collocation Selection (PTE vs Fallback) - PRIORITIZED
+        // This allows user to choose their target phrase before AI generates a scenario if needed
+        const selectionPrompt = await generateSelectionPrompt(wordObj, userLevel);
+        if (selectionPrompt && selectionPrompt.type === 'multi-option') {
+            return selectionPrompt;
+        }
+
+        // 2. Try AI Generation (Fallback for single-option or no-option scenarios)
         if (navigator.onLine) {
             const aiResult = await generateAiPrompt(wordObj, userLevel);
             if (aiResult) return aiResult;
         }
 
-        // 2. Collocation Selection (PTE vs Fallback)
-        return generateSelectionPrompt(wordObj, userLevel);
+        return selectionPrompt; // Final fallback (will be template or definition)
+
     }
 
     /**
@@ -3853,9 +3944,9 @@ const SRSReview = (function () {
 
             item.nextReviewDate = nextDate.toISOString();
 
-            // Persist
-            srsCache.srsData[lemma] = item;
-            saveSRSData();
+            // Persist (Per-card for Zero Trust + Debounced summary)
+            saveCardSRS(lemma, item);
+            debouncedSave();
 
             // Show Toast
             if (typeof showToast === 'function') {

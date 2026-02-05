@@ -64,12 +64,44 @@ function initializeAuthUI() {
       setupAuthStateListener();
       setupSessionTracking();
     } else {
-      log.warn('Waiting for Firebase modules... (Check console for ERR_CERT_AUTHORITY_INVALID)');
+      const missing = [];
+      if (!window.firebaseAuthFunctions) missing.push('AuthModule');
+      if (!window.firebaseFirestoreFunctions) missing.push('FirestoreModule');
+      log.warn(`Waiting for Firebase modules: ${missing.join(', ')}. (If this persists, check console for script errors or certificate issues)`);
       setTimeout(checkFirebase, 1000);
     }
   };
 
   checkFirebase();
+
+  // Check for demo mode bypass
+  checkDemoMode();
+}
+
+/**
+ * Check if the user is visiting in demo mode
+ * Bypasses login modal and enables guest mode
+ */
+function checkDemoMode() {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('demo') === '1') {
+    log.debug('🚀 Demo mode detected, activating guest mode');
+    // Force guest mode activation
+    handleGuestModeChoice();
+
+    // Customize toast message
+    setTimeout(() => {
+      const toastText = document.querySelector('#guest-toast span');
+      if (toastText) {
+        toastText.innerHTML = '<strong>Demo Mode Active</strong><br>Create a free account to save your progress!';
+        toastText.style.textAlign = 'center';
+      }
+    }, 100);
+
+    // Clean URL without reloading
+    const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+    window.history.replaceState({ path: newUrl }, '', newUrl);
+  }
 }
 
 /**
@@ -321,32 +353,23 @@ async function handleLevelSelection(level) {
 
     // Sync to DifficultyManager manual level
     try {
-      const levelMap = { 'beginner': 1, 'intermediate': 2, 'expert': 3 };
+      // Map legacy 3-choice selection to new 6-level CEFR scale
+      // Beginner -> 1 (A1)
+      // Intermediate -> 3 (B1)
+      // Expert -> 5 (C1)
+      const levelMap = { 'beginner': 1, 'intermediate': 3, 'expert': 5 };
       const numericLevel = levelMap[normalizedLevel] || 1;
 
-      // Get existing profile or create new
-      const stored = localStorage.getItem('difficulty_profile');
-      let profileData = stored ? JSON.parse(stored) : { settings: {}, profiles: {} };
-
-      // Update manual settings
-      profileData.settings = {
-        ...profileData.settings,
-        autoAdjustEnabled: false, // Force manual when explicitly chosen
-        manualLevel: numericLevel
-      };
-
-      // Also update per-mode profiles to ensure fallback works if autoAdjust is locked
-      ['type', 'speak', 'listen'].forEach(mode => {
-        if (!profileData.profiles[mode]) profileData.profiles[mode] = {};
-        profileData.profiles[mode].level = numericLevel;
-      });
-
-      localStorage.setItem('difficulty_profile', JSON.stringify(profileData));
-      log.debug(`🎯 [Auth] Synced level ${normalizedLevel} (${numericLevel}) to DifficultyManager`);
-
-      // Force DifficultyManager to reload settings immediately
-      if (window.DifficultyManager && typeof window.DifficultyManager.refreshProfile === 'function') {
-        window.DifficultyManager.refreshProfile();
+      if (window.DifficultyManager && typeof window.DifficultyManager.setManualLevel === 'function') {
+        window.DifficultyManager.setManualLevel(numericLevel);
+        log.debug(`🎯 [Auth] Synced level ${normalizedLevel} mapped to CEFR Level ${numericLevel} via API`);
+      } else {
+        // Fallback if DM not initialized (safety)
+        log.warn('DifficultyManager not fully available, falling back to storage write');
+        const stored = localStorage.getItem('difficulty_profile');
+        let profileData = stored ? JSON.parse(stored) : { settings: {}, profiles: {} };
+        profileData.settings = { ...profileData.settings, autoAdjustEnabled: false, manualLevel: numericLevel };
+        localStorage.setItem('difficulty_profile', JSON.stringify(profileData));
       }
     } catch (err) {
       log.error('Failed to sync level to DifficultyManager:', err);
@@ -489,38 +512,42 @@ function updateAccountPanelState() {
     isGuestMode = false; // Clear guest mode when logged in
     sessionStorage.removeItem('guestMode');
 
-    // Show admin link for admin users
+    // Show admin link for admin users (Secure check via Firestore profile)
     const adminLink = document.getElementById('panel-admin-link');
-    if (adminLink) {
-      const isAdmin = user.email === 'huathanhnam95@gmail.com';
-      adminLink.style.display = isAdmin ? 'block' : 'none';
+    if (adminLink && firestoreFunctions) {
+      firestoreFunctions.getUserProfile(user.uid).then(result => {
+        if (result.success && result.data && result.data.isAdmin) {
+          adminLink.style.display = 'block';
 
-      // Seed cache for admin user to ensure full access even when Firestore fails
-      if (isAdmin) {
-        const allModes = ['type', 'speak', 'extended', 'watch', 'notes', 'pronounce', 'lengthFilter', 'vocabBook', 'autoAdjust'];
-        const cacheKey = `userProfile_${user.uid}`;
-        const modesKey = `unlockedModes_${user.uid}`;
+          // Seed cache for admin user to ensure full access
+          const allModes = ['type', 'speak', 'extended', 'watch', 'notes', 'pronounce', 'lengthFilter', 'vocabBook', 'autoAdjust'];
+          const cacheKey = `userProfile_${user.uid}`;
+          const modesKey = `unlockedModes_${user.uid}`;
 
-        // Only seed if not already cached
-        if (!localStorage.getItem(cacheKey)) {
-          log.debug('⚡ Seeding admin cache for', user.email);
-          localStorage.setItem(cacheKey, JSON.stringify({
-            email: user.email,
-            coins: 9999,
-            totalPoints: 9999,
-            unlockedModes: allModes,
-            cachedAt: Date.now()
-          }));
-        }
-        if (!localStorage.getItem(modesKey)) {
-          localStorage.setItem(modesKey, JSON.stringify(allModes));
-        }
+          if (!localStorage.getItem(cacheKey)) {
+            log.debug('⚡ Seeding admin cache for', user.email);
+            localStorage.setItem(cacheKey, JSON.stringify({
+              email: user.email,
+              coins: 9999,
+              totalPoints: 9999,
+              unlockedModes: allModes,
+              cachedAt: Date.now()
+            }));
+          }
+          if (!localStorage.getItem(modesKey)) {
+            localStorage.setItem(modesKey, JSON.stringify(allModes));
+          }
 
-        // Also update shop module if available
-        if (window.shopModule && window.shopModule.setUnlockedModes) {
-          window.shopModule.setUnlockedModes(allModes);
+          if (window.shopModule && window.shopModule.setUnlockedModes) {
+            window.shopModule.setUnlockedModes(allModes);
+          }
+        } else {
+          adminLink.style.display = 'none';
         }
-      }
+      }).catch(err => {
+        log.error('Error checking admin status:', err);
+        adminLink.style.display = 'none';
+      });
     }
 
     // Load and display Practice Points
@@ -888,7 +915,7 @@ function setupAuthStateListener() {
         if (window.VocabularyBook) {
           // window.VocabularyBook is now a module that handles its own DB connection
           // Explicitly pass the DB instance to ensure it's available
-          window.VocabularyBook.setUser(user.uid, window.firebaseDb);
+          window.VocabularyBook.setUser(user.uid, window.__FIREBASE_INTERNAL__?.db);
 
           // Check if unlocked and show toggle
           try {
@@ -899,7 +926,7 @@ function setupAuthStateListener() {
 
               // Initialize SRS Review module with user (part of Vocabulary Book)
               if (window.SRSReview) {
-                window.SRSReview.setUser(user.uid, window.firebaseDb);
+                window.SRSReview.setUser(user.uid, window.__FIREBASE_INTERNAL__?.db);
                 // Update due badge after data loads
                 setTimeout(() => {
                   if (window.VocabularyBook.updateSRSDueBadge) {
@@ -1176,13 +1203,26 @@ async function loadPointsHistory(userId) {
       };
       const displayDate = isToday(date) ? `Today, ${timeStr}` : `${dateStr}, ${timeStr}`;
 
-      el.innerHTML = `
-        <div class="history-info">
-          <span class="history-title">${item.title}</span>
-          <span class="history-time">${displayDate}</span>
-        </div>
-        <span class="history-points">+${item.points}</span>
-      `;
+      const infoDiv = document.createElement('div');
+      infoDiv.className = 'history-info';
+
+      const titleSpan = document.createElement('span');
+      titleSpan.className = 'history-title';
+      titleSpan.textContent = item.title || 'Practice Item';
+
+      const timeSpan = document.createElement('span');
+      timeSpan.className = 'history-time';
+      timeSpan.textContent = displayDate;
+
+      infoDiv.appendChild(titleSpan);
+      infoDiv.appendChild(timeSpan);
+
+      const pointsSpan = document.createElement('span');
+      pointsSpan.className = 'history-points';
+      pointsSpan.textContent = `+${item.points}`;
+
+      el.appendChild(infoDiv);
+      el.appendChild(pointsSpan);
 
       // Click to show explanation
       el.addEventListener('click', () => {

@@ -17,10 +17,12 @@ export class DatabaseService {
     constructor() {
         // window.firebaseDb is initialized in index.html modular script
         this.db = window.firebaseDb;
+        // Initialize Firestore
+        this.db = (window.__FIREBASE_INTERNAL__ && window.__FIREBASE_INTERNAL__.db) || null;
         this.collectionName = config.wordReferencesCollection;
 
         if (!this.db) {
-            console.warn('Firebase Firestore not initialized - database caching disabled');
+            console.warn('[DatabaseService] Firebase Firestore not initialized. Word caching disabled.');
         }
     }
 

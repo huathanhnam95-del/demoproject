@@ -475,20 +475,12 @@ const ShopModule = (() => {
             renderShop();
 
             try {
-                // 1. Deduct coins
-                const deductResult = await window.firebaseFirestoreFunctions.deductCoins(userId, item.cost);
-                if (!deductResult.success) {
-                    throw new Error(deductResult.error);
-                }
+                // Perform atomic purchase transaction
+                const purchaseResult = await window.firebaseFirestoreFunctions.purchaseFeature(userId, item);
 
-                // 2. Unlock mode
-                const unlockResult = await window.firebaseFirestoreFunctions.updateUnlockedModes(userId, unlockedModes);
-                if (!unlockResult.success) {
-                    throw new Error(unlockResult.error);
+                if (!purchaseResult.success) {
+                    throw new Error(purchaseResult.error);
                 }
-
-                // 3. Record purchase history
-                await window.firebaseFirestoreFunctions.recordPurchase(userId, item);
 
                 // Success!
                 // Trigger refresh in main script to unlock tabs

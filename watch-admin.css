@@ -784,3 +784,31 @@ textarea.admin-input {
     background: var(--admin-primary);
     color: white;
 }
+/* Toast Notifications */
+.admin-toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: #333;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 10000;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.admin-toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+.toast-info { border-left: 4px solid var(--admin-primary); }
+.toast-success { border-left: 4px solid var(--admin-success); }
+.toast-error { border-left: 4px solid var(--admin-danger); }
+.toast-warning { border-left: 4px solid #f59e0b; }

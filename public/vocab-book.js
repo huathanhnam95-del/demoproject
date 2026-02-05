@@ -541,13 +541,8 @@ const VocabularyBook = (function () {
      */
     function setUser(userId, firestore) {
         currentUserId = userId;
-        // Prefer passed firestore, fallback to global, then init new
-        db = firestore || window.firebaseDb;
-
-        if (!db && window.firebaseApp) {
-            log.warn('DB not passed/found, initializing new instance from app');
-            db = getFirestore(window.firebaseApp);
-        }
+        // Prefer passed firestore, fallback to internal global
+        db = firestore || (window.__FIREBASE_INTERNAL__ ? window.__FIREBASE_INTERNAL__.db : window.firebaseDb);
 
         log.debug('setUser:', userId, 'db available:', !!db);
 

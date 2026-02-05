@@ -2,43 +2,52 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper function to check if user is admin
+    // Helper function to check if user is admin via internal flag
     function isAdmin() {
-      return request.auth != null && request.auth.token.email == 'huathanhnam95@gmail.com';
+      return request.auth != null && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+    
+    // Helper to check ownership
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
     }
     
     // Users can read/write their own user profile
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      
-      // Users can read/write their own mastery data (legacy)
-      match /mastery/{masteryId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
+      allow read: if isOwner(userId);
+      // Prevent users from setting themselves as admin
+      allow write: if isOwner(userId) && 
+                   !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin']);
       
       // Users can read/write their own progress data (tiered progression)
       match /progress/{progressId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        allow read, write: if isOwner(userId);
       }
       
+      // SRS System Cards - allow owner full access
+      match /srs_cards/{cardId} {
+        allow read, write: if isOwner(userId);
+      }
+
       // Users can create and read their own points history
       match /pointsHistory/{historyId} {
-        allow read, create: if request.auth != null && request.auth.uid == userId;
+        allow read, create: if isOwner(userId);
       }
 
       // Vocabulary Book data
       match /vocabularyBook/{docId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        allow read, write: if isOwner(userId);
       }
       
       // Watch mode progress per video
       match /watchProgress/{videoId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        allow read, write: if isOwner(userId);
       }
-      
-      // Take Notes mode progress
-      match /takeNotesProgress/{entryId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      // Purchase history
+      match /purchases/{purchaseId} {
+        allow read, create: if isOwner(userId);
       }
     }
     

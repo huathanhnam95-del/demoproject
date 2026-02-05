@@ -26,6 +26,13 @@ from pathlib import Path
 from datetime import datetime
 from wordfreq import zipf_frequency
 
+try:
+    from mutagen.mp3 import MP3
+    HAS_MUTAGEN = True
+except ImportError:
+    HAS_MUTAGEN = False
+    print("WARNING: mutagen not installed. Audio duration features will be disabled. (pip install mutagen)")
+
 # =============================================================================
 # CONFIGURATION CONSTANTS (all tunable)
 # =============================================================================
@@ -35,12 +42,15 @@ LEX_HARD_THRESHOLD = 3.0    # rare_avg below this → lex_score = 2
 LEX_MED_THRESHOLD = 3.9     # rare_avg below this → lex_score = 1
 
 # === DICTATION THRESHOLDS ===
-LONG_WORD_COUNT = 11        # word_count >= this → +1 dictation
-DENSE_CONTENT_COUNT = 6     # content_count >= this → +1 dictation
+LONG_WORD_COUNT = 12        # +1 dictation score if count >= this
+DENSE_CONTENT_COUNT = 7     # +1 dictation score if count >= this
+WPM_MED_THRESHOLD = 165     # WPM higher than this -> faster
+WPM_HARD_THRESHOLD = 185    # WPM higher than this -> fast_wpm flag
+MAX_DICTATION_SCORE = 3     # Cap for dictation sub-score
 
 # === SCORE CAPS ===
 MAX_GRAMMAR_SCORE = 4
-MAX_DICTATION_SCORE = 3
+# MAX_DICTATION_SCORE = 3 # Moved to DICTATION THRESHOLDS
 
 # === UK→US SPELLING NORMALIZATION ===
 UK_US_MAP = {
@@ -84,12 +94,17 @@ ADVANCED_PHRASES = [
     "as long as", "so that", "such that"
 ]
 
+BASIC_SUBORDINATORS = {"because", "if", "when", "while", "after", "before", "since"}
+
 MODALS = {"might", "may", "must", "should", "could", "would"}
 
 RELATIVE_MARKERS = {"who", "which", "whose", "whom", "where"}
 
 # === CONTRACTION PATTERNS ===
-CONTRACTION_PATTERN = r"(n't|'re|'ve|'ll|'d|'m|'s)\b"
+CONTRACTION_PATTERN = r"(n't|'re|'ve|'ll|'d|'m|'s|'clock)\b"
+
+# === NUMBER WORDS PATTERN ===
+NUMBER_WORD_PATTERN = r"\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion|first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth)\b"
 
 # === PASSIVE VOICE PATTERNS ===
 BE_FORMS = r"\b(is|are|was|were|be|been|being)\b"
@@ -104,52 +119,177 @@ DEFAULT_FILES = [
     ("database/speak/RS.xlsx", "ANSWER"),
 ]
 
+# === AUDIO CONFIGURATION ===
+DEFAULT_AUDIO_DIR = "public/database/type/audio"
+DEFAULT_INDEX_JSON = "public/database/type/index.json"
+DEFAULT_CACHE_FILE = ".audio_cache.json"
+
 
 # =============================================================================
-# TEXT PROCESSING FUNCTIONS
+# DATA RESOLUTION FUNCTIONS
 # =============================================================================
+
+def normalize_row_id(x):
+    """Normalize Excel IDs (float/int/string) to a consistent string."""
+    if x is None:
+        return None
+    # handle floats from Excel (e.g., 1.0 -> "1")
+    if isinstance(x, float) and x.is_integer():
+        return str(int(x))
+    # handle ints
+    if isinstance(x, int):
+        return str(int(x))
+    # handle strings like "001"
+    s = str(x).strip()
+    # if "1.0" as string
+    if re.fullmatch(r"\d+\.0", s):
+        return str(int(float(s)))
+    # if digits
+    if re.fullmatch(r"\d+", s):
+        return str(int(s))
+    return s
+
+def resolve_audio_path(row_id, audio_dir, index_data=None):
+    """
+    Resolve audio file path for a given row ID.
+    Priority:
+    1. Direct file check: {audio_dir}/{row_id}.mp3
+    2. Index JSON lookup (if provided)
+    """
+    if not row_id:
+        return None
+    
+    # 1. Direct check
+    direct_path = Path(audio_dir) / f"{row_id}.mp3"
+    if direct_path.exists():
+        return direct_path
+        
+    # 2. Index lookup
+    if index_data and str(row_id) in index_data:
+        filename = index_data[str(row_id)].get("audioFile")
+        if filename:
+            json_path = Path(audio_dir) / filename
+            if json_path.exists():
+                return json_path
+                
+    return None
+
+def get_audio_metadata(audio_path):
+    """
+    Get duration in seconds from MP3 file.
+    Returns: duration_sec (float) or None
+    """
+    if not HAS_MUTAGEN or not audio_path:
+        return None
+    
+    try:
+        audio = MP3(audio_path)
+        if audio.info:
+            return audio.info.length
+        return None
+    except Exception as e:
+        # print(f"Error reading audio {audio_path}: {e}")
+        return None
+
+def compute_audio_features(row_id, word_count, audio_dir, index_data=None):
+    """
+    Compute audio-based features (duration, WPM).
+    Returns: (duration, wpm, path)
+    """
+    if not audio_dir:
+        return None, None, None
+        
+    path = resolve_audio_path(row_id, audio_dir, index_data)
+    if not path:
+        return None, None, None
+        
+    duration = get_audio_metadata(path)
+    if not duration or duration <= 0:
+        return None, None, str(path)
+        
+    # Calculate WPM (Words Per Minute)
+    # wpm = (words / seconds) * 60
+    wpm = (word_count / duration) * 60
+    
+    return duration, wpm, str(path)
+
+
+def load_audio_cache(cache_path):
+    """Load audio metadata cache from JSON."""
+    if cache_path and Path(cache_path).exists():
+        try:
+            with open(cache_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"  WARNING: Failed to load audio cache: {e}")
+    return {}
+
+def save_audio_cache(cache, cache_path):
+    """Save audio metadata cache to JSON."""
+    if not cache_path:
+        return
+    try:
+        with open(cache_path, 'w', encoding='utf-8') as f:
+            json.dump(cache, f, indent=2)
+    except Exception as e:
+        print(f"  WARNING: Failed to save audio cache: {e}")
+
+def load_index_json(json_path):
+    """Load index.json and return a dict keyed by ID (str)."""
+    if not json_path or not Path(json_path).exists():
+        return None
+    
+    try:
+        with open(json_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            # Create lookup dict: str(id) -> item
+            lookup = {}
+            if isinstance(data, dict) and "items" in data:
+                for item in data["items"]:
+                    lookup[str(item.get("id"))] = item
+            elif isinstance(data, list):
+                for item in data:
+                    lookup[str(item.get("id"))] = item
+            return lookup
+    except Exception as e:
+        print(f"  WARNING: Failed to load index JSON: {e}")
+        return None
 
 def normalize_uk_us(word):
     """Convert UK spelling to US for Zipf lookup."""
     return UK_US_MAP.get(word.lower(), word.lower())
 
-
 def get_words(sentence):
-    """Extract words from sentence."""
-    return re.findall(r"[a-zA-Z']+", sentence)
+    """Clean and tokenize sentence into words (no punctuation)."""
+    # Remove punctuation and split
+    # Keep apostrophes inside words (e.g. don't)
+    return re.findall(r"\b[a-zA-Z']+\b", sentence)
 
+def get_raw_tokens(sentence):
+    """Tokenize ensuring punctuation is preserved for context."""
+    # Matches words (with optional apostrophe part), digits, or sentence-ending punctuation
+    return re.findall(r"[A-Za-z]+(?:'[A-Za-z]+)?|\d+|[.!?]", sentence)
 
-def get_content_words(sentence):
-    """Extract content words (non-function words) for lexical analysis."""
-    words = get_words(sentence)
-    content = []
-    for word in words:
-        lower = word.lower()
-        # Skip function words
-        if lower in FUNCTION_WORDS:
-            continue
-        # Skip very short words
-        if len(lower) < 2:
-            continue
-        # Skip words that look like proper nouns (capitalized in middle of sentence)
-        # This is a heuristic - not perfect but helps
-        content.append(lower)
-    return content
-
-
-def is_likely_proper_noun(word, position, words):
-    """Heuristic to detect proper nouns (capitalized words not at start)."""
-    if position == 0:
-        return False  # First word is always capitalized
-    
-    # If the previous word ended with a sentence-finishing punctuation, this isn't a proper noun
-    prev_word = words[position - 1]
-    if any(p in prev_word for p in ".!?"):
-        return False
+def is_likely_proper_noun(token_index, raw_tokens):
+    """
+    Check if a word is likely a proper noun based on context.
+    Uses raw tokens to check for sentence-ending punctuation in the previous token.
+    """
+    if token_index == 0:
+        return False # Start of sentence usually capitalized
         
-    if word[0].isupper() and len(word) > 1:
-        return True
+    prev_token = raw_tokens[token_index - 1]
+    if prev_token in {'.', '!', '?'}:
+        return False # Start of new sentence/fragment
+        
+    token = raw_tokens[token_index]
+    # If mid-sentence and capitalized, likely proper noun
+    if token and len(token) > 0 and token[0].isupper() and token[1:].islower():
+         return True
+         
     return False
+
+# NOTE: get_content_words logic is moved into compute_lexical_score to use raw_tokens context
 
 
 # =============================================================================
@@ -161,38 +301,56 @@ def compute_lexical_score(sentence):
     Compute lexical difficulty using two-rarest-average method.
     Returns: (lex_score, rare_avg, rare_words_info, content_count)
     """
-    words = get_words(sentence)
+    # Use raw tokens for proper noun context
+    raw_tokens = get_raw_tokens(sentence)
+    
     content_words = []
     
-    for i, word in enumerate(words):
-        lower = word.lower()
+    # Iterate raw tokens to find content words
+    for i, token in enumerate(raw_tokens):
+        # Check if it's a word (letters/apostrophe)
+        if not re.match(r"^[a-zA-Z']+$", token):
+            continue
+            
+        lower = token.lower()
+        
         # Skip function words
         if lower in FUNCTION_WORDS:
             continue
         # Skip very short words
         if len(lower) < 2:
             continue
-        # Skip likely proper nouns (capitalized mid-sentence)
-        if is_likely_proper_noun(word, i, words):
+            
+        # Check proper noun (skip if likely proper noun)
+        if is_likely_proper_noun(i, raw_tokens):
             continue
+            
         content_words.append(lower)
     
     content_count = len(content_words)
     
     if not content_words:
-        return 0, 9.0, [], 0
+        return 0, 9.0, [], 0, 9.0, 0.0, 0
     
     # Get Zipf frequencies
     zipf_scores = []
+    oov_count = 0
+    
     for word in content_words:
         normalized = normalize_uk_us(word)
         zipf = zipf_frequency(normalized, 'en')
-        if zipf == 0:  # Unknown word — treat as rare
+        if zipf == 0:  # Unknown word - treat as rare
+            oov_count += 1
             zipf = 2.0
         zipf_scores.append((word, zipf))
     
     # Sort by Zipf ascending (rarest first)
     zipf_scores.sort(key=lambda x: x[1])
+    
+    # Metrics
+    zipf_values = [z for w, z in zipf_scores]
+    min_zipf = zipf_values[0]
+    pct_rare = sum(1 for z in zipf_values if z < 3.5) / len(zipf_values)
     
     # Two-rarest average
     if len(zipf_scores) >= 2:
@@ -202,18 +360,34 @@ def compute_lexical_score(sentence):
         rare_avg = zipf_scores[0][1]
         rare_words = zipf_scores[:1]
     
-    # Assign score
-    if rare_avg < LEX_HARD_THRESHOLD:
+    rare_words_info = [f"{w}({z:.2f})" for w, z in rare_words]
+    
+    # Assign score (New Logic)
+    # oov >= 1 or min_zipf < 2.8 or pct_rare >= 0.34 => Level 2 (Hard)
+    # min_zipf < 3.4 or pct_rare >= 0.17 or rare_avg < 3.7 => Level 1 (Med)
+    
+    if oov_count >= 1 or min_zipf < 2.8 or pct_rare >= 0.34:
         lex_score = 2
-    elif rare_avg < LEX_MED_THRESHOLD:
+    elif min_zipf < 3.4 or pct_rare >= 0.17 or rare_avg < 3.7:
         lex_score = 1
     else:
         lex_score = 0
     
-    rare_words_info = [f"{w}({z:.2f})" for w, z in rare_words]
-    
-    return lex_score, rare_avg, rare_words_info, content_count
+    return lex_score, rare_avg, rare_words_info, content_count, min_zipf, pct_rare, oov_count
 
+
+def relative_marker_heuristic(words):
+    """
+    Check for relative markers, excluding sentence-initial interrogatives.
+    """
+    for i, w in enumerate(words):
+        if w in RELATIVE_MARKERS:
+            if i == 0:  # "Where are you going?" -> interrogate, not relative
+                continue
+            if i > 0 and words[i-1] in FUNCTION_WORDS: # e.g. "of which" (often advanced phrase)
+                continue
+            return w
+    return None
 
 def compute_grammar_score(sentence):
     """
@@ -247,6 +421,27 @@ def compute_grammar_score(sentence):
             flags.append(f"modal({modal})")
             break
     
+    # --- Basic subordinators (+1) ---
+    for sub in BASIC_SUBORDINATORS:
+        if sub in words:
+            # Only count if not at start of sentence (heuristically)
+            if words[0] == sub:
+                 # Check if there's a comma later
+                 if ',' in sentence_lower:
+                      score += 1
+                      flags.append(f"subord({sub})")
+                      break
+            else:
+                 score += 1
+                 flags.append(f"subord({sub})")
+                 break
+
+    # --- Relative markers (+1) ---
+    rel = relative_marker_heuristic(words)
+    if rel:
+        score += 1
+        flags.append(f"relative({rel})")
+
     # --- Passive voice (+1): be-form + past participle pattern (allow adverbs) ---
     # Loosened to allow up to 2 intervening words (e.g., "is not often done")
     # We filter out very short words like "red" or "open" that mimic participles
@@ -277,22 +472,20 @@ def compute_grammar_score(sentence):
         score += 1
         flags.append(f"modal_perfect({match.group(0)})")
     
-    # --- Relative markers (+1) ---
-    for marker in RELATIVE_MARKERS:
-        if marker in words:
-            score += 1
-            flags.append(f"relative({marker})")
-            break
-    
     # Cap the score
     score = min(score, MAX_GRAMMAR_SCORE)
     
     return score, flags
 
 
-def compute_dictation_score(sentence, word_count, content_count):
+def compute_dictation_score(sentence, word_count, content_count, wpm=None):
     """
     Compute dictation-specific difficulty.
+    New v2.1 Logic:
+    - Number words / Digits (+1)
+    - Proper Nouns / Acronyms (+1 for significant presence)
+    - High content ratio (density) (+1)
+    - WPM Speed (+1 if fast)
     Returns: (dictation_score, dictation_flags)
     """
     score = 0
@@ -303,10 +496,39 @@ def compute_dictation_score(sentence, word_count, content_count):
         score += 1
         flags.append("contraction")
     
-    # --- Numbers (+1) ---
+    # --- Numbers / Number Words (+1) ---
+    has_number = False
     if re.search(r'\d', sentence):
+        has_number = True
+        flags.append("digits")
+    if re.search(NUMBER_WORD_PATTERN, sentence, re.IGNORECASE):
+        has_number = True
+        flags.append("num_words")
+        
+    if has_number:
         score += 1
-        flags.append("number")
+        
+    # --- Proper Nouns / Acronyms (+1) ---
+    # We use raw_tokens to check for upper-case words not at start
+    raw_tokens = get_raw_tokens(sentence)
+    proper_noun_count = 0
+    for i, token in enumerate(raw_tokens):
+        # Skip start of sentence
+        if i == 0: continue
+            
+        # Check if previous was punctuation (new sentence start)
+        if raw_tokens[i-1] in {'.', '!', '?'}: continue
+            
+        if token[0].isupper() and token[1:].islower() and len(token) > 2:
+            proper_noun_count += 1
+        elif token.isupper() and len(token) >= 2 and not token.isdigit(): # Acronyms like USA, NASA (ignore single letter I or A)
+             # "I" specific check
+             if token == 'I': continue
+             proper_noun_count += 1
+             
+    if proper_noun_count >= 2:
+        score += 1
+        flags.append(f"proper_nouns({proper_noun_count})")
     
     # --- List/enumeration (+1) ---
     comma_count = sentence.count(',')
@@ -320,15 +542,19 @@ def compute_dictation_score(sentence, word_count, content_count):
         score += 1
         flags.append("list_enum")
     
-    # --- Long sentence (+1) ---
-    if word_count >= LONG_WORD_COUNT:
-        score += 1
-        flags.append(f"long({word_count})")
+    # --- Content Density (Ratio instead of absolute count) (+1) ---
+    # > 60% content words is dense
+    if word_count > 0:
+        ratio = content_count / word_count
+        if ratio >= 0.60:
+            score += 1
+            flags.append(f"dense_ratio({ratio:.2f})")
     
-    # --- High content density (+1) ---
-    if content_count >= DENSE_CONTENT_COUNT:
-        score += 1
-        flags.append(f"dense({content_count})")
+    # --- Audio Rate (WPM) (+1) ---
+    if wpm is not None:
+        if wpm >= WPM_HARD_THRESHOLD:
+            score += 1
+            flags.append(f"fast_wpm({wpm:.0f})")
     
     # Cap the score
     score = min(score, MAX_DICTATION_SCORE)
@@ -338,33 +564,30 @@ def compute_dictation_score(sentence, word_count, content_count):
 
 def assign_level(lex_score, grammar_score, dictation_score, word_count, content_count):
     """
-    Assign difficulty level 1, 2, or 3.
-    Uses two totals to prevent dictation-only escalation to Level 3.
+    Assign difficulty level 1, 2, or 3 using a weighted model.
+    Logic:
+    - Core = 2*Lex + 2*Grammar
+    - Total = Core + Dictation
+    Levels:
+    - 3: Core >= 6 OR (Lex=2 AND Gram>=2)
+    - 2: Total >= 5 OR Core >= 4
+    - 1: Default
     """
-    total_all = lex_score + grammar_score + dictation_score
-    total_core = lex_score + grammar_score
-    
-    # === LEVEL 3 ===
-    if lex_score == 2 and grammar_score >= 1:
+    core = 2 * lex_score + 2 * grammar_score
+    total = core + dictation_score
+
+    # L3: must be core-driven
+    if core >= 6 or (lex_score == 2 and grammar_score >= 2):
         return 3
-    if grammar_score >= 2:
-        return 3
-    if total_core >= 4:
-        return 3
-    
-    # === LEVEL 2 ===
-    if total_all >= 3:
+
+    # L2: combined evidence
+    if total >= 5 or core >= 4:
         return 2
-    if word_count >= LONG_WORD_COUNT and (lex_score >= 1 or grammar_score >= 1 or content_count >= DENSE_CONTENT_COUNT):
-        return 2
-    if dictation_score >= 2 and (lex_score >= 1 or grammar_score >= 1):
-        return 2
-    
-    # === LEVEL 1 ===
+
     return 1
 
 
-def build_reasons(lex_score, rare_avg, rare_words_info, grammar_flags, dictation_flags):
+def build_reasons(lex_score, rare_avg, rare_words_info, grammar_flags, dictation_flags, duration=None, wpm=None):
     """Build human-readable reasons string."""
     parts = []
     
@@ -380,6 +603,9 @@ def build_reasons(lex_score, rare_avg, rare_words_info, grammar_flags, dictation
     if dictation_flags:
         parts.append(f"dictation={'; '.join(dictation_flags)}")
     
+    if duration and wpm:
+        parts.append(f"audio={duration:.1f}s({wpm:.0f}wpm)")
+    
     return " | ".join(parts)
 
 
@@ -387,7 +613,7 @@ def build_reasons(lex_score, rare_avg, rare_words_info, grammar_flags, dictation
 # CLASSIFICATION FUNCTIONS
 # =============================================================================
 
-def classify_sentence(sentence):
+def classify_sentence(sentence, audio_features=None):
     """Classify a single sentence."""
     if not isinstance(sentence, str) or not sentence.strip():
         return {
@@ -402,14 +628,28 @@ def classify_sentence(sentence):
             "reasons": "empty_sentence"
         }
     
-    word_count = len(sentence.split())
+    # 1. Word stats
+    # Use consistent tokenization found in get_words (no punctuation)
+    words = get_words(sentence)
+    word_count = len(words)
     
-    lex_score, rare_avg, rare_words_info, content_count = compute_lexical_score(sentence)
+    # Audio features
+    duration = None
+    wpm = None
+    audio_path = None
+    if audio_features:
+        duration = audio_features.get('duration')
+        wpm = audio_features.get('wpm')
+        audio_path = audio_features.get('path')
+    
+    # 2. Compute scores
+    lex_score, rare_avg, rare_words_info, content_count, min_zipf, pct_rare, oov_count = compute_lexical_score(sentence)
     grammar_score, grammar_flags = compute_grammar_score(sentence)
-    dictation_score, dictation_flags = compute_dictation_score(sentence, word_count, content_count)
+    dictation_score, dictation_flags = compute_dictation_score(sentence, word_count, content_count, wpm=wpm)
     
+    # 3. Assign Level
     level = assign_level(lex_score, grammar_score, dictation_score, word_count, content_count)
-    reasons = build_reasons(lex_score, rare_avg, rare_words_info, grammar_flags, dictation_flags)
+    reasons = build_reasons(lex_score, rare_avg, rare_words_info, grammar_flags, dictation_flags, duration=duration, wpm=wpm)
     
     return {
         "sentence": sentence,
@@ -420,11 +660,17 @@ def classify_sentence(sentence):
         "word_count": word_count,
         "content_count": content_count,
         "rare_avg": round(rare_avg, 2),
+        "min_zipf": round(min_zipf, 2),
+        "pct_rare": round(pct_rare, 2),
+        "oov_count": oov_count,
+        "duration": duration,
+        "wpm": wpm,
+        "audio_path": audio_path,
         "reasons": reasons
     }
 
 
-def classify_all(sentences):
+def classify_all(sentences, row_ids=None, audio_data_list=None):
     """Classify all sentences with progress updates."""
     results = []
     total = len(sentences)
@@ -433,8 +679,9 @@ def classify_all(sentences):
         if (i + 1) % 500 == 0:
             print(f"  Processing {i+1}/{total}...")
         
-        result = classify_sentence(sentence)
-        result["id"] = i + 1
+        audio_feat = audio_data_list[i] if audio_data_list and i < len(audio_data_list) else None
+        result = classify_sentence(sentence, audio_features=audio_feat)
+        result["id"] = row_ids[i] if row_ids and i < len(row_ids) else (i + 1)
         results.append(result)
     
     print(f"  Completed {total} sentences.")
@@ -451,10 +698,24 @@ def load_xlsx(file_path, sentence_column):
     print(f"Loaded {len(df)} rows from {file_path}")
     print(f"Columns: {list(df.columns)}")
     
+    print(f"Columns: {list(df.columns)}")
+    
     if sentence_column not in df.columns:
         raise ValueError(f"Column '{sentence_column}' not found. Available: {list(df.columns)}")
+        
+    # Auto-detect ID column
+    id_col = None
+    for col in ["ID", "id", "Id", "Rank", "No."]:
+        if col in df.columns:
+            id_col = col
+            break
+            
+    if id_col:
+        print(f"  ID Column detected: {id_col}")
+    else:
+        print("  WARNING: No ID column found (ID/id/Id). Using row index.")
     
-    return df
+    return df, id_col
 
 
 def backup_file(file_path):
@@ -473,6 +734,12 @@ def save_results(df, results, file_path, dry_run=False):
     df['lex_score'] = [r['lex_score'] for r in results]
     df['grammar_score'] = [r['grammar_score'] for r in results]
     df['dictation_score'] = [r['dictation_score'] for r in results]
+    df['min_zipf'] = [r.get('min_zipf', 9.0) for r in results]
+    df['pct_rare'] = [r.get('pct_rare', 0.0) for r in results]
+    df['oov_count'] = [r.get('oov_count', 0) for r in results]
+    df['audio_path'] = [r.get('audio_path') for r in results]
+    df['duration'] = [r.get('duration') for r in results]
+    df['wpm'] = [r.get('wpm') for r in results]
     df['reasons'] = [r['reasons'] for r in results]
     
     path = Path(file_path)
@@ -483,8 +750,12 @@ def save_results(df, results, file_path, dry_run=False):
         print(f"  [DRY RUN] Would export CSV to: {csv_path}")
     else:
         backup_file(file_path)
-        df.to_excel(file_path, index=False, engine='openpyxl')
-        print(f"  Updated XLSX: {file_path}")
+        try:
+            df.to_excel(file_path, index=False, engine='openpyxl')
+            print(f"  Updated XLSX: {file_path}")
+        except Exception as e:
+            print(f"  WARNING: Could not update XLSX: {e}")
+            
         df.to_csv(csv_path, index=False)
         print(f"  Exported CSV: {csv_path}")
     
@@ -546,6 +817,18 @@ def test_specific_sentences():
         ("During some stages of sleep, your eyes move rapidly behind your closed eyelids.", 2, "long + density"),
         ("A new report outlines ways in which cities should address transport issues.", 2, "phrase + modal"),
         ("Please confirm that you have received the textbook.", 1, "simple sentence"),
+        # Verification Cases for v2.1
+        ("The results were good. However, the data was bad.", 1, "However start of sentence (not PN)"),
+        ("I saw John yesterday.", 1, "John is PN (skipped)"),
+        ("The World Bank is an organization.", 1, "World Bank is PN (skipped)"),
+        # Verification Cases for Dictation (v2.1)
+        ("Twenty five students attended the first lecture.", 1, "Number words (Twenty, five, first) -> +1 Dictation"),
+        ("NASA and USA are acronyms.", 1, "Acronyms (NASA, USA) -> +1 Dictation"),
+        ("The very dense sentence has many heavy concepts packed inside.", 2, "High density ratio"),
+        # Grammar Precision Tests (v2.1)
+        ("Where are you going today?", 1, "Initial WH-question -> NO relative marker flag"),
+        ("This is the house where I live.", 2, "Mid-sentence WH -> Relative marker flag"),
+        ("I stayed because it rained.", 2, "Subordinator (because)"),
     ]
     
     print("\n=== TEST SENTENCE VALIDATION ===")
@@ -574,31 +857,48 @@ def calibration_helper(results):
     print(f"  LEX_MED_THRESHOLD = {LEX_MED_THRESHOLD}")
     print(f"  LONG_WORD_COUNT = {LONG_WORD_COUNT}")
     print(f"  DENSE_CONTENT_COUNT = {DENSE_CONTENT_COUNT}")
+    print(f"  WPM_MED_THRESHOLD = {WPM_MED_THRESHOLD}")
+    print(f"  WPM_HARD_THRESHOLD = {WPM_HARD_THRESHOLD}")
     
     rare_avgs = [r["rare_avg"] for r in results]
     word_counts = [r["word_count"] for r in results]
-    content_counts = [r["content_count"] for r in results]
+    wpms = [r["wpm"] for r in results if r.get("wpm")]
+    path_count = sum(1 for r in results if r.get("audio_path"))
     
-    print(f"\nrare_avg: Min={min(rare_avgs):.2f}, Max={max(rare_avgs):.2f}, Median={sorted(rare_avgs)[len(rare_avgs)//2]:.2f}")
+    total = len(results)
+    print(f"\nAudio Connectivity: {path_count}/{total} ({path_count/total*100:.1f}%)")
     
-    print(f"\nLEX_MED threshold impact:")
-    for threshold in [3.5, 3.7, 3.9, 4.0, 4.2]:
-        count_lex1 = sum(1 for r in rare_avgs if r < threshold and r >= LEX_HARD_THRESHOLD)
-        count_lex2 = sum(1 for r in rare_avgs if r < LEX_HARD_THRESHOLD)
-        count_lex0 = sum(1 for r in rare_avgs if r >= threshold)
-        print(f"  If LEX_MED={threshold}: lex=0:{count_lex0}, lex=1:{count_lex1}, lex=2:{count_lex2}")
+    if rare_avgs:
+        print(f"\nrare_avg: Min={min(rare_avgs):.2f}, Max={max(rare_avgs):.2f}, Median={sorted(rare_avgs)[len(rare_avgs)//2]:.2f}")
+        print(f"LEX_MED threshold impact:")
+        for threshold in [3.5, 3.7, 3.9, 4.0, 4.2]:
+            count_lex1 = sum(1 for r in rare_avgs if r < threshold and r >= LEX_HARD_THRESHOLD)
+            count_lex2 = sum(1 for r in rare_avgs if r < LEX_HARD_THRESHOLD)
+            count_lex0 = sum(1 for r in rare_avgs if r >= threshold)
+            print(f"  If LEX_MED={threshold}: lex=0:{count_lex0}, lex=1:{count_lex1}, lex=2:{count_lex2}")
     
-    print(f"\nword_count: Min={min(word_counts)}, Max={max(word_counts)}")
-    for wc in [9, 10, 11, 12]:
-        count = sum(1 for w in word_counts if w >= wc)
-        print(f"  word_count >= {wc}: {count} ({count/len(results)*100:.1f}%)")
+    if word_counts:
+        print(f"\nword_count distribution:")
+        for wc in [9, 10, 11, 12]:
+            count = sum(1 for w in word_counts if w >= wc)
+            print(f"  word_count >= {wc}: {count} ({count/total*100:.1f}%)")
+
+    if wpms:
+        wpms_sorted = sorted(wpms)
+        p50 = wpms_sorted[len(wpms_sorted)//2]
+        p90 = wpms_sorted[int(len(wpms_sorted)*0.9)]
+        print(f"\nWPM stats (n={len(wpms)}):")
+        print(f"  Min:    {min(wpms):.0f}")
+        print(f"  Median: {p50:.0f} <-- Suggested WPM_MED")
+        print(f"  90th%:  {p90:.0f} <-- Suggested WPM_HARD")
+        print(f"  Max:    {max(wpms):.0f}")
 
 
 # =============================================================================
 # MAIN EXECUTION
 # =============================================================================
 
-def process_file(file_path, sentence_column, dry_run=False):
+def process_file(file_path, sentence_column, audio_dir=None, index_data=None, dry_run=False, audio_cache_path=None):
     """Process a single XLSX file."""
     print(f"\n{'='*60}")
     print(f"Processing: {file_path}")
@@ -608,11 +908,78 @@ def process_file(file_path, sentence_column, dry_run=False):
         print(f"  WARNING: File not found: {file_path}")
         return None, None
     
-    df = load_xlsx(file_path, sentence_column)
+    df, id_col = load_xlsx(file_path, sentence_column)
     sentences = df[sentence_column].astype(str).tolist()
     
+    # Resolve audio paths and compute features
+    audio_data_list = []
+    row_ids = []
+    
+    # Load cache if enabled
+    cache = load_audio_cache(audio_cache_path) if audio_cache_path else {}
+    cache_hits = 0
+    
+    if audio_dir:
+        print(f"  Resolving audio from: {audio_dir}")
+        resolved_count = 0
+        for idx, row in df.iterrows():
+            row_id = normalize_row_id(row[id_col]) if id_col else str(int(str(idx)) + 1)
+            row_ids.append(row_id)
+            
+            # Check cache
+            if row_id in cache:
+                cached = cache[row_id]
+                # Check if path still exists
+                if isinstance(cached, dict) and cached.get('path') and Path(cached['path']).exists():
+                    audio_data_list.append(cached)
+                    cache_hits += 1
+                    resolved_count += 1
+                    continue
+
+            # Estimate word count if column exists, else 0
+            sent_text = str(row[sentence_column])
+            word_count = len(re.findall(r"\b[a-zA-Z']+\b", sent_text))
+            
+            duration, wpm, path = compute_audio_features(row_id, word_count, audio_dir, index_data)
+            
+            entry = {
+                'duration': duration, 
+                'wpm': wpm, 
+                'path': path
+            }
+            audio_data_list.append(entry)
+            
+            if path:
+                resolved_count += 1
+                # Update cache
+                cache[row_id] = entry
+                
+        print(f"  Resolved {resolved_count}/{len(df)} audio files ({cache_hits} from cache).")
+        if cache_hits < resolved_count and audio_cache_path:
+            save_audio_cache(cache, audio_cache_path)
+    else:
+        # Build row_ids even if no audio
+        for idx, row in df.iterrows():
+            row_id = normalize_row_id(row[id_col]) if id_col else str(int(str(idx)) + 1)
+            row_ids.append(row_id)
+        audio_data_list = [None] * len(df)
+    
     print(f"\nClassifying {len(sentences)} sentences...")
-    results = classify_all(sentences)
+    results = classify_all(sentences, row_ids=row_ids, audio_data_list=audio_data_list)
+    
+    # Merge audio paths back into results (optional redundant but keeps it safe)
+    for i, r in enumerate(results):
+        if audio_data_list and i < len(audio_data_list):
+            entry = audio_data_list[i]
+            if isinstance(entry, dict):
+                audio_path = str(entry.get('path', '')) or ""
+                if not audio_path:
+                    audio_path = str(entry.get('audio_path', '')) or "" # Fallback if 'path' isn't set
+                r['audio_path'] = audio_path
+            else:
+                r['audio_path'] = "" # Handle None entry
+        else:
+            r['audio_path'] = ""
     
     df = save_results(df, results, file_path, dry_run=dry_run)
     print_distribution(results, Path(file_path).name)
@@ -628,6 +995,12 @@ def main():
     parser.add_argument("--dry-run", action="store_true", help="Show results without writing")
     parser.add_argument("--test-only", action="store_true", help="Only run test sentences")
     parser.add_argument("--samples", type=int, default=10, help="Samples per level to show")
+    
+    # New v2.1 args
+    parser.add_argument("--audio-dir", type=str, default=DEFAULT_AUDIO_DIR, help="Directory containing audio files")
+    parser.add_argument("--index-json", type=str, default=DEFAULT_INDEX_JSON, help="Path to index.json for ID mapping")
+    parser.add_argument("--audio-cache", type=str, default=DEFAULT_CACHE_FILE, help="Path to audio features cache JSON")
+    
     args = parser.parse_args()
     
     print("ESL Dictation Categorizer v2.1 (Regex-based, no spaCy)")
@@ -637,6 +1010,13 @@ def main():
         test_specific_sentences()
         return
     
+    # Load index JSON once
+    index_data = load_index_json(args.index_json)
+    if index_data:
+        print(f"Loaded index data for {len(index_data)} items.")
+    else:
+        print("No index data loaded (will rely on direct file ID checks).")
+    
     if args.file:
         files_to_process = [(args.file, args.column)]
     else:
@@ -644,7 +1024,17 @@ def main():
     
     all_results = {}
     for file_path, sentence_column in files_to_process:
-        results, df = process_file(file_path, sentence_column, dry_run=args.dry_run)
+        # Auto-disable audio for RS.xlsx if using default type-dir
+        current_audio_dir = args.audio_dir
+        if "RS.xlsx" in str(file_path) and args.audio_dir == DEFAULT_AUDIO_DIR:
+             print(f"  NOTE: Auto-disabling audio for {file_path} (speak mode)")
+             current_audio_dir = None
+
+        results, df = process_file(file_path, sentence_column, 
+                                 audio_dir=current_audio_dir, 
+                                 index_data=index_data, 
+                                 dry_run=args.dry_run,
+                                 audio_cache_path=args.audio_cache)
         if results:
             all_results[file_path] = results
             print_samples(results, Path(file_path).name, n_per_level=args.samples)

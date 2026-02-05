@@ -6,19 +6,8 @@
 (function () {
     'use strict';
 
-    // Firebase config - MUST match the main app (index.html)
-    const firebaseConfig = {
-        apiKey: "AIzaSyB0vXX7NwOvME_XoaGiJlYaiLRcaHJtrIQ",
-        authDomain: "listening-tasks-3ae34.firebaseapp.com",
-        projectId: "listening-tasks-3ae34",
-        storageBucket: "listening-tasks-3ae34.firebasestorage.app",
-        messagingSenderId: "737872673808",
-        appId: "1:737872673808:web:4db57599aa22b4830fde95",
-        measurementId: "G-1891MSSLXT"
-    };
-
-    // Admin email whitelist
-    const ADMIN_EMAIL = 'huathanhnam95@gmail.com';
+    // State
+    let firebaseConfig = null;
 
     // State
     let videos = [];
@@ -42,56 +31,80 @@
      * Initialize admin console
      */
     async function init() {
-        // Initialize Firebase
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-
-        // Cache DOM elements
-        cacheElements();
-
-        // Show loading state
-        elements.videoList.innerHTML = '<div class="admin-loading">Checking authentication...</div>';
-
-        // Wait for Firebase auth to fully initialize
-        // The first onAuthStateChanged may fire with null while Firebase is still loading
-        // We use a promise to ensure we get the final auth state
         try {
+            // 1. Fetch Config from server
+            const configResponse = await fetch('/api/config');
+            const configResult = await configResponse.json();
+            if (!configResult.success) {
+                throw new Error('Failed to fetch server configuration');
+            }
+            firebaseConfig = configResult.config;
+
+            // 2. Initialize Firebase
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+
+            // Cache DOM elements
+            cacheElements();
+
+            // Show loading state
+            elements.videoList.innerHTML = '<div class="admin-loading">Checking authentication...</div>';
+
+            // Wait for Firebase auth to fully initialize
             const user = await new Promise((resolve, reject) => {
                 const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
-                    unsubscribe(); // Unsubscribe after first callback
+                    unsubscribe();
                     resolve(user);
                 }, reject);
-
-                // Timeout after 5 seconds if auth is stuck
-                setTimeout(() => {
-                    unsubscribe();
-                    resolve(null);
-                }, 5000);
+                setTimeout(() => { unsubscribe(); resolve(null); }, 5000);
             });
 
             if (user) {
-                if (user.email !== ADMIN_EMAIL) {
-                    alert('Access denied. Admin privileges required.');
-                    window.location.href = 'index.html';
-                    return;
-                }
+                // The server will enforce the specific admin email via middleware,
+                // so we just display the email and proceed.
                 elements.userEmail.textContent = user.email;
                 await loadVideos();
             } else {
-                // Not logged in - redirect to main app
-                alert('Please log in as admin first.');
-                window.location.href = 'index.html';
+                showNotification('Please log in as admin first.', 'error');
+                setTimeout(() => window.location.href = 'index.html', 2000);
                 return;
             }
         } catch (error) {
-            console.error('Auth error:', error);
-            window.location.href = 'index.html';
+            console.error('Initialization error:', error);
+            showNotification('Initialization failed: ' + error.message, 'error');
             return;
         }
 
         // Set up event listeners
         setupEventListeners();
+    }
+
+    /**
+     * Show a clean notification instead of alert()
+     */
+    function showNotification(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `admin-toast toast-${type}`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        // Simple animation/timeout
+        setTimeout(() => toast.classList.add('show'), 100);
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    /**
+     * Escape HTML special characters
+     */
+    function escapeHTML(str) {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
     }
 
     /**
@@ -306,52 +319,32 @@
         // Show loading state
         syncStatus.style.display = 'block';
         syncStatus.className = 'admin-sync-status loading';
-        syncStatus.textContent = '🔄 Syncing videos to Firestore...';
+        syncStatus.textContent = '🔄 Syncing videos to Firestore (Server-side)...';
         syncBtn.disabled = true;
 
         try {
-            // Reload videos from Excel first
-            const response = await fetch('database/watch/Videos.xlsx');
-            const arrayBuffer = await response.arrayBuffer();
-            const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-            const sheetName = workbook.SheetNames[0];
-            const sheet = workbook.Sheets[sheetName];
-            const data = XLSX.utils.sheet_to_json(sheet);
+            const idToken = await firebase.auth().currentUser.getIdToken();
+            const response = await fetch('/api/admin/sync-database', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}`
+                },
+                body: JSON.stringify({ type: 'watch' })
+            });
 
-            const db = firebase.firestore();
-            const batch = db.batch();
-            let syncCount = 0;
+            const result = await response.json();
 
-            for (const row of data) {
-                // Use VideoID column from Excel - MUST be string for Firestore doc ID
-                let videoId = row.VideoID || row['Video ID'] || extractVideoId(row.URL);
-                if (!videoId || !row.URL) continue;
-
-                // Convert to string (Excel might return numbers)
-                videoId = String(videoId);
-
-                const videoRef = db.collection('watchVideos').doc(videoId);
-                batch.set(videoRef, {
-                    id: videoId,
-                    title: row.Title || 'Untitled Video',
-                    level: row.Level || 'Beginner',
-                    description: row.Description || '',
-                    url: row.URL,
-                    updatedAt: new Date(),
-                    syncedFromExcel: true
-                }, { merge: true });
-
-                syncCount++;
+            if (!response.ok) {
+                throw new Error(result.message || 'Server-side sync failed');
             }
-
-            await batch.commit();
 
             // Reload videos
             await loadVideos();
 
             // Show success
             syncStatus.className = 'admin-sync-status success';
-            syncStatus.textContent = `✅ Successfully synced ${syncCount} videos to Firestore!`;
+            syncStatus.textContent = `✅ ${result.message}`;
 
             // Hide after 3 seconds
             setTimeout(() => {
@@ -408,10 +401,10 @@
     function renderVideoList(videosToRender) {
         elements.videoList.innerHTML = videosToRender.map(video => `
             <div class="admin-video-item ${currentVideo?.id === video.id ? 'selected' : ''}" 
-                 data-video-id="${video.id}" 
-                 onclick="WatchAdmin.selectVideo('${video.id}')">
-                <h4 class="admin-video-item-title">${video.title}</h4>
-                <span class="admin-video-item-level ${video.level.toLowerCase()}">${video.level}</span>
+                 data-video-id="${escapeHTML(video.id)}" 
+                 onclick="WatchAdmin.selectVideo('${escapeHTML(video.id)}')">
+                <h4 class="admin-video-item-title">${escapeHTML(video.title)}</h4>
+                <span class="admin-video-item-level ${escapeHTML(video.level.toLowerCase())}">${escapeHTML(video.level)}</span>
                 <div class="admin-video-item-questions">${video.questionCount || 0} questions</div>
             </div>
         `).join('');
@@ -617,16 +610,16 @@
 
         elements.questionList.innerHTML = questions.map((q, index) => {
             const isSelected = currentQuestion?.id === q.id;
-            const questionPreview = q.questionText
-                ? q.questionText.substring(0, 50) + (q.questionText.length > 50 ? '...' : '')
-                : 'No question text';
+            const text = q.questionText || 'No question text';
+            const questionPreview = text.substring(0, 50) + (text.length > 50 ? '...' : '');
+
             return `
                 <div class="admin-question-item ${isSelected ? 'selected' : ''}" 
-                     onclick="WatchAdmin.selectQuestion('${q.id}')">
+                     onclick="WatchAdmin.selectQuestion('${escapeHTML(q.id)}')">
                     <span class="admin-question-number">Q${index + 1}</span>
                     <span class="admin-question-time">${formatTime(q.timestamp)}</span>
-                    <span class="admin-question-preview">${questionPreview}</span>
-                    <span class="admin-question-type">${q.type === 'mc' ? 'MC' : 'Open'}</span>
+                    <span class="admin-question-preview">${escapeHTML(questionPreview)}</span>
+                    <span class="admin-question-type">${q.questionType === 'multiple_choice' ? 'MC' : 'Open'}</span>
                 </div>
             `;
         }).join('');
@@ -716,7 +709,7 @@
         elements.mcOptionsList.innerHTML = options.map((opt, index) => `
             <div class="admin-mc-option">
                 <span class="admin-mc-option-label">${String.fromCharCode(65 + index)}</span>
-                <input type="text" class="admin-input mc-option-input" value="${opt || ''}" placeholder="Option ${String.fromCharCode(65 + index)}" />
+                <input type="text" class="admin-input mc-option-input" value="${escapeHTML(opt || '')}" placeholder="Option ${String.fromCharCode(65 + index)}" />
                 <button type="button" class="admin-mc-option-remove" onclick="WatchAdmin.removeMCOption(${index})">×</button>
             </div>
         `).join('');
@@ -798,7 +791,7 @@
 
         // Validate
         if (!questionData.questionText) {
-            alert('Please enter question text');
+            showNotification('Please enter question text', 'warning');
             return;
         }
 
@@ -828,10 +821,10 @@
                 selectQuestion(questionId);
             }
 
-            alert('Question saved successfully!');
+            showNotification('Question saved successfully!', 'success');
         } catch (error) {
             console.error('Error saving question:', error);
-            alert('Error saving question. Please try again.');
+            showNotification('Error saving question. Please try again.', 'error');
         }
     }
 
@@ -889,10 +882,10 @@
             hideEditor();
             currentQuestion = null;
 
-            alert('Question deleted!');
+            showNotification('Question deleted!', 'success');
         } catch (error) {
             console.error('Error deleting question:', error);
-            alert('Error deleting question.');
+            showNotification('Error deleting question.', 'error');
         }
     }
 
@@ -1021,62 +1014,29 @@
             syncBtn.disabled = true;
             syncBtn.textContent = '🔄 Syncing...';
 
-            // Load from Excel - URL encode the space
-            const response = await fetch('database/Take%20Notes/RL/RL.xlsx');
+            const idToken = await firebase.auth().currentUser.getIdToken();
+            const response = await fetch('/api/admin/sync-database', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}`
+                },
+                body: JSON.stringify({ type: 'notes' })
+            });
+
+            const result = await response.json();
+
             if (!response.ok) {
-                throw new Error('Excel file not found');
+                throw new Error(result.message || 'Server-side sync failed');
             }
 
-            const arrayBuffer = await response.arrayBuffer();
-            const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-            const sheetName = workbook.SheetNames[0];
-            const sheet = workbook.Sheets[sheetName];
-            const data = XLSX.utils.sheet_to_json(sheet); // Use header row like Watch console
-
-            const db = firebase.firestore();
-            const batch = db.batch();
-            let syncCount = 0;
-
-            console.log('[Admin] Syncing Take Notes entries from Excel with headers:', Object.keys(data[0] || {}));
-
-            for (const row of data) {
-                // Use ID column from Excel
-                const entryId = row['ID'];
-                if (!entryId) continue;
-
-                const idStr = String(entryId).trim();
-                const entryRef = db.collection('takeNotesEntries').doc(idStr);
-
-                // Map columns: Transcript, Youtube URL
-                const transcript = row['Transcript'] ? String(row['Transcript']).trim() : '';
-                const videoUrl = row['Youtube URL'] ? String(row['Youtube URL']).trim() : (row['Video URL'] || ''); // Fallback just in case
-
-                // Debug specific entry 4
-                if (idStr === '4') {
-                    console.log(`[Admin] Entry 4 from Excel - URL: "${videoUrl}", Raw: "${row['Youtube URL']}"`);
-                }
-
-                batch.set(entryRef, {
-                    id: idStr,
-                    transcript: transcript,
-                    videoUrl: videoUrl,
-                    updatedAt: new Date(),
-                    syncedFromExcel: true
-                }, { merge: true }); // Using merge: true to match Watch console pattern
-
-                syncCount++;
-            }
-
-            await batch.commit();
-
-            // Log success with headers info for debugging
-            console.log(`[Admin] Synced ${syncCount} Take Notes entries to Firestore`);
+            console.log(`[Admin] Server result: ${result.message}`);
 
             // Reload entries from Firestore
             await loadNotesEntries();
 
             // Show success
-            syncBtn.textContent = `✅ Synced ${syncCount} entries!`;
+            syncBtn.textContent = `✅ Synced!`;
             setTimeout(() => {
                 syncBtn.disabled = false;
                 syncBtn.textContent = originalText;
@@ -1112,16 +1072,20 @@
             return numA - numB;
         });
 
-        elements.notesEntryList.innerHTML = sortedEntries.map(entry => `
-            <div class="admin-video-item ${currentNotesEntry && currentNotesEntry.id === entry.id ? 'selected' : ''}" 
-                 data-entry-id="${entry.id}"
-                 onclick="window.WatchAdmin.selectNotesEntry('${entry.id}')">
-                <div class="admin-video-title">${entry.id}</div>
-                <div class="admin-video-meta">
-                    ${entry.transcript ? entry.transcript.substring(0, 50) + '...' : 'No transcript'}
+        elements.notesEntryList.innerHTML = sortedEntries.map(entry => {
+            const transcript = entry.transcript || 'No transcript';
+            const preview = transcript.substring(0, 50) + (transcript.length > 50 ? '...' : '');
+            return `
+                <div class="admin-video-item ${currentNotesEntry && currentNotesEntry.id === entry.id ? 'selected' : ''}" 
+                     data-entry-id="${escapeHTML(entry.id)}"
+                     onclick="window.WatchAdmin.selectNotesEntry('${escapeHTML(entry.id)}')">
+                    <div class="admin-video-title">${escapeHTML(entry.id)}</div>
+                    <div class="admin-video-meta">
+                        ${escapeHTML(preview)}
+                    </div>
                 </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     /**
@@ -1240,7 +1204,7 @@
         console.log('[Admin] Preview video - URL value:', url);
 
         if (!url) {
-            alert('No video URL entered');
+            showNotification('No video URL entered', 'warning');
             return;
         }
 
@@ -1248,7 +1212,7 @@
         console.log('[Admin] Extracted video ID:', videoId);
 
         if (!videoId) {
-            alert('Invalid YouTube URL');
+            showNotification('Invalid YouTube URL', 'error');
             return;
         }
 
@@ -1271,7 +1235,7 @@
                 <iframe 
                     width="100%" 
                     height="315" 
-                    src="https://www.youtube.com/embed/${videoId}" 
+                    src="https://www.youtube.com/embed/${escapeHTML(videoId)}" 
                     frameborder="0" 
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                     allowfullscreen>
@@ -1302,12 +1266,11 @@
 
             await db.collection('takeNotesEntries').doc(entryData.id).set(entryData, { merge: true });
 
-            alert('Entry saved to Firestore!');
+            showNotification('Entry saved to Firestore!', 'success');
             console.log('[Admin] Saved Take Notes entry:', entryData.id);
-
         } catch (error) {
             console.error('[Admin] Error saving entry:', error);
-            alert('Error saving entry: ' + error.message);
+            showNotification('Error saving entry: ' + error.message, 'error');
         }
     }
 

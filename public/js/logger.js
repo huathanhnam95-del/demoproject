@@ -102,6 +102,14 @@ const Logger = (function () {
                 originalError(DEFAULT_PREFIX, ...args);
                 captureError(args);
             }
+        },
+        important: (...args) => {
+            // Always log important messages regardless of level (or treat as 'log' with special prefix)
+            originalLog(`${DEFAULT_PREFIX} [IMPORTANT]`, ...args);
+            // Optionally capture to Sentry as info
+            if (window.Sentry && !IS_DEV) {
+                Sentry.captureMessage(args.map(a => String(a)).join(' '), 'info');
+            }
         }
     };
 

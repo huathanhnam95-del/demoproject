@@ -1,0 +1,21 @@
+Start frame (0s) — 2D clinical side cut, tongue-focused prompt
+Create a 2D clinical sagittal cross‑section (side cutaway) illustrating the start posture for the vowel /ɑː/ (General American “father” vowel). Focus primarily on the tongue shape and placement.
+
+Framing / crop
+Zoom in extremely close on the oral cavity + oropharynx (from lips/teeth back to the tongue root and upper pharynx).
+Exclude the upper nasal cavity, brain, and neck. The frame should be dominated by the mouth and tongue.
+Tongue depiction (priority)
+Draw the tongue with highly defined contour (top surface, tongue body, tongue root) using thicker outline than other structures.
+Use a distinct, saturated highlight color for the tongue (e.g., strong orange/red) while all other structures are muted pastel/gray.
+Show correct /ɑː/ onset posture: tongue low and back, dorsum lowered, tongue root slightly retracted, tip relaxed near the lower incisors (not raised).
+Emphasize the open pharyngeal/oral space above the tongue appropriate for /ɑː/.
+Other articulators (secondary, simplified)
+Jaw lowered (open).
+Lips neutral/unrounded, slightly parted.
+Soft palate/velum raised (closed velopharyngeal port).
+Teeth as simple silhouettes.
+Style
+“Speech pathology textbook” look: flat colors, clean vector lines, high contrast, minimal shading, white background.
+No text labels (unless requested), no arrows unless asked.
+Negative prompt (if supported)
+Full head/neck diagram, brain visible, tiny tongue, equal emphasis on all organs, 3D render, photoreal textures, messy gradients, low contrast, incorrect tongue position (high/front), cartoon style, labels/text.

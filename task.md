@@ -17,7 +17,11 @@
     - [x] Redesign Writing Challenge help panel (Accordion)
     - [x] Add "Click to flip" hint element
     - [x] Simplify onboarding language (Classic vs Smart AI)
-- [/] Final Verification
-  - [/] Browser testing of refined UI
+- [x] Security Hardening (Alignment)
+  - [x] Apply council security fixes to `auth-ui.js` and `index.html`
+  - [x] Implement server-side validation for SRS progress
+  - [x] Move economy/points to Firestore Transactions
+- [ ] Final Verification & Deployment
+  - [/] Browser testing of refined UI and security fixes
   - [ ] Verify onboarding flow and algorithm switching
-  - [ ] Test keyboard shortcuts in new layout
+  - [ ] Cross-device sync verification (Firestore)

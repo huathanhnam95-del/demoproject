@@ -23,7 +23,8 @@ import {
   Timestamp,
   orderBy,
   setLogLevel,
-  writeBatch
+  writeBatch,
+  runTransaction
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 // Configure Firestore Logging
@@ -36,8 +37,7 @@ if (isLocal) {
 }
 
 
-// Get Firestore instance
-const db = window.firebaseDb;
+import { db } from 'firebase-init';
 const log = Logger.create('Database');
 
 /**
@@ -1418,28 +1418,70 @@ async function updateUnlockedModes(userId, modes) {
 }
 
 /**
- * Deduct coins from user
+ * Atomic transaction to deduct coins from a user
  * @param {string} userId
  * @param {number} amount
  */
 async function deductCoins(userId, amount) {
   try {
     const userRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userRef);
-    if (!userDoc.exists()) throw new Error('User not found');
-
-    const currentCoins = userDoc.data().coins || 0;
-    if (currentCoins < amount) {
-      return { success: false, error: 'Insufficient coins' };
-    }
-
     await updateDoc(userRef, {
       coins: increment(-amount)
     });
-
-    return { success: true, newBalance: currentCoins - amount };
+    log.log(`✓ Deducted ${amount} coins from user ${userId}`);
+    return { success: true };
   } catch (error) {
     log.error('Error deducting coins:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Atomic transaction to purchase a feature
+ * Ensures coins are deducted and mode is unlocked together, or not at all.
+ * @param {string} userId
+ * @param {Object} item - Shop item object
+ */
+async function purchaseFeature(userId, item) {
+  try {
+    const userRef = doc(db, 'users', userId);
+
+    await runTransaction(db, async (transaction) => {
+      const userDoc = await transaction.get(userRef);
+      if (!userDoc.exists()) throw new Error('User not found');
+
+      const userData = userDoc.data();
+      const currentCoins = userData.coins || 0;
+      const unlockedModes = userData.unlockedModes || ['type'];
+
+      if (currentCoins < item.cost) {
+        throw new Error('Insufficient coins');
+      }
+
+      if (unlockedModes.includes(item.unlocksMode)) {
+        throw new Error('Feature already unlocked');
+      }
+
+      // Update coins and unlockedModes
+      transaction.update(userRef, {
+        coins: currentCoins - item.cost,
+        unlockedModes: [...unlockedModes, item.unlocksMode]
+      });
+
+      // Also record purchase in history
+      const purchaseRef = doc(collection(db, 'users', userId, 'purchases'));
+      transaction.set(purchaseRef, {
+        itemId: item.id,
+        title: item.title,
+        cost: item.cost,
+        purchasedAt: serverTimestamp()
+      });
+    });
+
+    log.log('✓ Feature purchased atomically:', item.title);
+    return { success: true };
+  } catch (error) {
+    log.error('Atomic purchase failed:', error);
     return { success: false, error: error.message };
   }
 }
@@ -1537,6 +1579,7 @@ window.firebaseFirestoreFunctions = {
 
   updateUnlockedModes,
   deductCoins,
+  purchaseFeature,
   getPurchases,
   recordPurchase
 };

@@ -16,3 +16,7 @@
 ## Instructions
 
 This file guides the agent's understanding of the project structure and context.
+
+## Triggers & Protocols
+
+- **#council**: When the user types `#council [query]`, run `node scripts/summon_council.js "[query]"` and present the output.

@@ -19,9 +19,7 @@ import {
   browserLocalPersistence,
   setPersistence
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-
-// Get auth instance
-const auth = window.firebaseAuth;
+import { auth } from 'firebase-init';
 const log = Logger.create('AuthSDK');
 
 /**
@@ -106,8 +104,13 @@ async function signIn(email, password) {
     // Check if email is verified
     if (!emailVerified) {
       // Sign out immediately if not verified
-      log.debug('✗ Email not verified (Policy disabled for testing)');
-      // STRICT VERIFICATION DISABLED FOR DEBUGGING - Allows testing unverified accounts
+      log.warn('✗ Email not verified. Enforcing verification policy.');
+      await signOut(auth);
+      return {
+        success: false,
+        error: 'Please verify your email address before logging in. Check your inbox for the verification link.',
+        code: 'auth/unverified-email'
+      };
     }
 
     log.debug('✓ User signed in successfully with verified email');

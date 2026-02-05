@@ -1,0 +1,22 @@
+Create a traditional 2D clinical sagittal cross‑section (side cutaway) diagram of the human vocal tract at the start of producing the vowel /ɑː/ (General American “father” vowel), neutral onset just before steady phonation.
+
+View / composition:
+
+True mid‑sagittal slice (side view) showing the full vocal tract from larynx/glottis → pharynx → oral cavity → lips, and the nasal cavity above.
+Clear outlines and high legibility, like a speech pathology / phonetics textbook plate.
+White or very light background; clean vector/flat medical illustration style.
+Articulator positions (start of /ɑː/):
+
+Jaw: lowered (open mouth posture).
+Tongue: low and back; tongue dorsum lowered; tongue tip resting behind lower incisors.
+Lips: neutral, unrounded, slightly parted due to jaw opening.
+Velum (soft palate): raised to close the velopharyngeal port (oral sound, no nasal airflow).
+Pharynx: relatively open.
+Larynx/glottis: vocal folds positioned for voicing (adducted), but keep it simplified and non-graphic.
+Styling requirements:
+
+Use distinct color-coding for articulators (e.g., tongue, palate/velum, pharyngeal wall, teeth, lips), with crisp labeled boundaries (but no text labels unless requested).
+High contrast, thin clean linework, no shading clutter.
+Include teeth silhouette and hard palate clearly for reference.
+Negative prompt (if supported):
+3D render, photoreal tissue textures, outside mouth view, frontal view, messy shading, low contrast, heavy gradients, text labels, gore/surgery imagery, cartoon style.

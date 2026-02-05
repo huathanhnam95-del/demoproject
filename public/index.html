@@ -4,7 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dictation Practice</title>
+  <meta name="theme-color" content="#f4f4f6">
+  <title>Dictation Practice | AI Language Learning</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
   <link rel="stylesheet" href="style.css?v=20260123_mode_fix">
   <link rel="stylesheet" href="srs-review.css">
@@ -32,11 +36,12 @@
   <script src="js/logger.js"></script>
   <script src="js/modals.js"></script>
   <script src="pronunciation-analyzer/syllable-verifier.js?v=20260114_ui_v4"></script>
-  <!-- Import Map for NPM Packages (FSRS) -->
+  <!-- Import Map for NPM Packages & Internal Modules -->
   <script type="importmap">
     {
       "imports": {
-        "ts-fsrs": "https://esm.sh/ts-fsrs@4.5.1"
+        "ts-fsrs": "https://esm.sh/ts-fsrs@4.5.1",
+        "firebase-init": "./js/firebase-init.js"
       }
     }
   </script>
@@ -757,77 +762,304 @@
         </div>
 
         <!-- Content Area -->
-        <div class="dashboard-content-wrapper">
-          <!-- Panel 1: SRS Vocabulary Review -->
-          <div id="panel-srs" class="dashboard-panel" style="display: none;">
-            <div class="dashboard-card srs-card modern-card"
-              onclick="if(window.SRSReview) { SRSReview.startReviewSession(); } else { alert('System is initializing, please wait...'); }">
-              <div class="dashboard-cta-content">
-                <h3>Start Review Session</h3>
-                <p>Practice your words now to keep your streak!</p>
-                <div id="dashboard-srs-summary" class="dashboard-srs-summary" style="display: none;">
-                  <span class="icon">🕒</span>
-                  <span id="dashboard-srs-text">Next review: ...</span>
-                </div>
-              </div>
-              <div class="dashboard-cta-icon">→</div>
+        <div class="dashboard-content-wrapper" id="dashboard-content-wrapper">
+          <!-- Panel 1: For Skill Center -->
+          <div id="panel-tutorials" class="dashboard-panel active">
+            <div class="dashboard-section-header">
+              <h2>For Skills</h2>
+              <p>Master dictation and pronunciation through interactive modes.</p>
             </div>
-
-            <!-- SRS Schedule Table -->
-            <div class="srs-schedule-container">
-              <div class="schedule-header">
-                <h4>📅 Review Schedule</h4>
-                <div class="schedule-stats">
-                  <span id="schedule-due-count">0 words due</span>
+            <div class="tutorial-grid">
+              <!-- 1. Type Mode Card -->
+              <div id="mode-btn-type" class="modern-card transition-card mode-switch-btn"
+                onclick="window.switchToMode('type')" tabindex="0" role="button" aria-label="Type Practice mode">
+                <span class="badge new">Popular</span>
+                <div class="card-visual visual-type">
+                  <div class="anim-container">
+                    <svg class="ctx-icon ctx-type" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+                      <!-- Waveform -->
+                      <rect class="wave-tick" style="--d:0s" x="8" y="30" width="4" height="12" rx="2"
+                        fill="currentColor" />
+                      <rect class="wave-tick" style="--d:.12s" x="14" y="26" width="4" height="20" rx="2"
+                        fill="currentColor" />
+                      <rect class="wave-tick" style="--d:.24s" x="20" y="32" width="4" height="8" rx="2"
+                        fill="currentColor" />
+                      <!-- Flow arrow (line + chevron) -->
+                      <path class="flow-line" d="M28 36H40" stroke="var(--visual-accent)" stroke-width="2"
+                        stroke-linecap="round" />
+                      <path class="flow-head" d="M38 33L41 36L38 39" stroke="var(--visual-accent)" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                      <!-- Caret + typing bars -->
+                      <rect class="caret" x="42" y="28" width="2" height="16" rx="1" fill="currentColor" />
+                      <rect class="type-bar" style="--d:.25s" x="48" y="34" width="10" height="4" rx="2"
+                        fill="currentColor" opacity="0" />
+                      <rect class="type-bar" style="--d:.45s" x="48" y="40" width="14" height="4" rx="2"
+                        fill="currentColor" opacity="0" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Type</h3>
+                  <p>Improve typing speed and spelling accuracy.</p>
+                  <button class="card-cta">Practice Now</button>
+                  <a class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('type', true);">What's this?</a>
                 </div>
               </div>
-              <div class="schedule-table-wrapper">
-                <table class="schedule-table">
-                  <thead>
-                    <tr>
-                      <th>Word</th>
-                      <th>Status</th>
-                      <th>Next Review</th>
-                    </tr>
-                  </thead>
-                  <tbody id="srs-schedule-body">
-                    <tr>
-                      <td colspan="3" class="loading-schedule">Loading schedule...</td>
-                    </tr>
-                  </tbody>
-                </table>
+
+              <!-- 2. Speak Mode Card -->
+              <div id="mode-btn-speak" class="modern-card transition-card mode-switch-btn"
+                onclick="window.switchToMode('speak')" tabindex="0" role="button" aria-label="Speak Practice mode">
+                <div class="card-visual visual-speak">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
+                      <!-- Microphone -->
+                      <rect class="mic-body" x="28" y="14" width="16" height="24" rx="8" stroke="currentColor"
+                        stroke-width="3" fill="var(--visual-bg)" />
+                      <path class="mic-stand" d="M36 42v8M28 50h16" stroke="currentColor" stroke-width="3"
+                        stroke-linecap="round" />
+                      <!-- Transcript lines -->
+                      <rect class="transcript-line" x="12" y="58" width="16" height="3" rx="1.5" fill="currentColor"
+                        opacity="0" />
+                      <rect class="transcript-line" x="30" y="58" width="12" height="3" rx="1.5" fill="currentColor"
+                        opacity="0" />
+                      <rect class="transcript-line" x="44" y="58" width="18" height="3" rx="1.5" fill="currentColor"
+                        opacity="0" />
+                      <!-- Checkmark -->
+                      <path class="check-draw" d="M52 20l5 5 10-10" stroke="var(--visual-accent)" stroke-width="3"
+                        stroke-linecap="round" stroke-linejoin="round" opacity="0" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Speak</h3>
+                  <p>Record your voice and verify transcription.</p>
+                  <button class="card-cta">Practice Now</button>
+                  <a class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('speak', true);">What's this?</a>
+                </div>
               </div>
+
+              <!-- 3. Fill Mode Card -->
+              <div id="mode-btn-extended" class="modern-card transition-card mode-switch-btn"
+                onclick="window.switchToMode('extended')" tabindex="0" role="button"
+                aria-label="Fill in the blanks mode">
+                <div class="card-visual visual-fill">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
+                      <!-- Sentence line with blank slot -->
+                      <rect x="8" y="32" width="14" height="4" rx="2" fill="currentColor" />
+                      <rect class="blank-slot" x="26" y="30" width="20" height="12" rx="4" stroke="currentColor"
+                        stroke-width="2" stroke-dasharray="4 2" fill="none" />
+                      <rect x="50" y="32" width="14" height="4" rx="2" fill="currentColor" />
+                      <!-- Word chip (snaps in) -->
+                      <rect class="word-chip" x="28" y="32" width="16" height="8" rx="3" fill="var(--visual-accent)"
+                        opacity="0" />
+                      <!-- Checkmark flash -->
+                      <circle class="chip-check" cx="60" cy="24" r="8" fill="var(--visual-accent)" opacity="0" />
+                      <path class="chip-check-mark" d="M56 24l3 3 6-6" stroke="white" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" opacity="0" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Fill</h3>
+                  <p>Complete sentences with missing words.</p>
+                  <button class="card-cta">Practice Now</button>
+                  <a class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('extended', true);">What's this?</a>
+                </div>
+              </div>
+
+              <!-- 4. Watch Mode Card -->
+              <div id="mode-btn-watch" class="modern-card transition-card mode-switch-btn"
+                onclick="window.switchToMode('watch')" tabindex="0" role="button" aria-label="Watch Video mode">
+                <div class="card-visual visual-watch">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
+                      <!-- Video frame -->
+                      <rect x="10" y="16" width="52" height="32" rx="4" stroke="currentColor" stroke-width="2"
+                        fill="var(--visual-bg)" />
+                      <!-- Play triangle -->
+                      <polygon class="play-pop" points="31,26 31,42 43,34" fill="currentColor" />
+                      <!-- Progress bar -->
+                      <rect x="10" y="52" width="52" height="4" rx="2" fill="currentColor" opacity="0.2" />
+                      <rect class="progress-sweep" x="10" y="52" width="0" height="4" rx="2"
+                        fill="var(--visual-accent)" />
+                      <!-- Subtitle bubble -->
+                      <rect class="subtitle-bubble" x="16" y="42" width="28" height="6" rx="2" fill="currentColor"
+                        opacity="0" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Watch</h3>
+                  <p>Interactive video-based dictation practice.</p>
+                  <button class="card-cta">Practice Now</button>
+                  <a class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('watch', true);">What's this?</a>
+                </div>
+              </div>
+
+              <!-- 5. Note Mode Card -->
+              <div id="mode-btn-notes" class="modern-card transition-card mode-switch-btn"
+                onclick="window.switchToMode('notes')" tabindex="0" role="button" aria-label="Note taking mode">
+                <span class="badge">New</span>
+                <div class="card-visual visual-notes">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
+                      <!-- Video tile (left) -->
+                      <rect x="6" y="20" width="24" height="16" rx="3" stroke="currentColor" stroke-width="2"
+                        fill="var(--visual-bg)" />
+                      <polygon points="14,24 14,32 20,28" fill="currentColor" />
+                      <!-- Arrow transfer -->
+                      <path class="transfer-arrow" d="M34 28h8l-2-2M34 28h8l-2 2" stroke="var(--visual-accent)"
+                        stroke-width="2" stroke-linecap="round" />
+                      <!-- Note page (right) -->
+                      <rect x="46" y="16" width="20" height="28" rx="3" stroke="currentColor" stroke-width="2"
+                        fill="var(--visual-bg)" />
+                      <path class="note-line" d="M50 24h12" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" opacity="0" />
+                      <path class="note-line" d="M50 30h10" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" opacity="0" />
+                      <path class="note-line" d="M50 36h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        opacity="0" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Note</h3>
+                  <p>Watch videos and engage in note-taking.</p>
+                  <button class="card-cta">Practice Now</button>
+                  <a class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('notes', true);">What's this?</a>
+                </div>
+              </div>
+
+              <!-- 6. Pronounce Mode Card -->
+              <div id="mode-btn-pronounce" class="modern-card transition-card mode-switch-btn"
+                onclick="window.switchToMode('pronounce')" tabindex="0" role="button" aria-label="Pronunciation mode">
+                <span class="badge experimental">Experimental</span>
+                <div class="card-visual visual-pronounce">
+                  <div class="anim-container">
+                    <svg class="ctx-icon ctx-pronounce" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+                      <!-- Mouth profile (outline only) -->
+                      <ellipse cx="18" cy="36" rx="10" ry="12" stroke="currentColor" stroke-width="2" fill="none" />
+                      <path d="M14 36h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                      <!-- Link (draws in) -->
+                      <path class="phoneme-link" d="M38 30L50 36L62 32" stroke="var(--visual-accent)" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                      <!-- Nodes (settle) -->
+                      <circle class="phoneme-node" style="--d:0s" cx="38" cy="30" r="4" fill="currentColor" />
+                      <circle class="phoneme-node" style="--d:.12s" cx="50" cy="36" r="4" fill="currentColor" />
+                      <circle class="phoneme-node" style="--d:.24s" cx="62" cy="32" r="4" fill="currentColor" />
+                      <!-- Stress bar -->
+                      <rect class="stress-bar" x="48" y="44" width="6" height="14" rx="3" fill="var(--visual-accent)" />
+                      <!-- Radiating ring -->
+                      <circle class="radiate-ring" cx="50" cy="36" r="18" stroke="var(--visual-accent)" stroke-width="1"
+                        fill="none" opacity="0" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Pronounce</h3>
+                  <p>Analyze stress patterns and phonemes.</p>
+                  <button class="card-cta">Practice Now</button>
+                  <a class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('pronounce', true);">What's this?</a>
+                </div>
+              </div>
+            </div>
+            <div class="whats-this-container-modern">
+              <button id="what-is-this-btn" class="btn-secondary">
+                <span class="icon">💡</span> Help me choose a mode
+              </button>
             </div>
           </div>
 
-          <!-- Panel 2: Learning Center (Tutorials) -->
-          <div id="panel-tutorials" class="dashboard-panel active">
-            <div class="tutorial-card-content modern-card-content">
-              <div class="tutorial-grid">
-                <button id="mode-btn-type" class="mode-switch-btn" onclick="window.switchToMode('type')">
-                  <span class="t-icon">⌨️</span> Type
-                </button>
-                <button id="mode-btn-speak" class="mode-switch-btn" onclick="window.switchToMode('speak')">
-                  <span class="t-icon">🎤</span> Speak
-                </button>
-                <button id="mode-btn-extended" class="mode-switch-btn" onclick="window.switchToMode('extended')">
-                  <span class="t-icon">📝</span> Fill
-                </button>
-                <button id="mode-btn-watch" class="mode-switch-btn" onclick="window.switchToMode('watch')">
-                  <span class="t-icon">📺</span> Watch
-                </button>
-                <button id="mode-btn-notes" class="mode-switch-btn" onclick="window.switchToMode('notes')">
-                  <span class="t-icon">📓</span> Note
-                </button>
-                <button id="mode-btn-pronounce" class="mode-switch-btn" onclick="window.switchToMode('pronounce')">
-                  <span class="t-icon">🗣️</span> Pronounce
-                </button>
+          <!-- Panel 2: For Growth & Retention -->
+          <div id="panel-srs" class="dashboard-panel" style="display: none;">
+            <div class="dashboard-section-header">
+              <h2>For Growth</h2>
+              <p>Personalized review sessions to consolidate your memory.</p>
+            </div>
+            <div class="growth-grid">
+              <div class="modern-card srs-card-modern"
+                onclick="if(window.SRSReview) { SRSReview.startReviewSession(); }" tabindex="0" role="button"
+                aria-label="Start Daily Review">
+                <div class="card-visual visual-srs">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
+                      <!-- Flashcard stack -->
+                      <rect class="flash-back" x="16" y="20" width="32" height="24" rx="4" fill="currentColor"
+                        opacity="0.2" />
+                      <rect class="flash-mid" x="20" y="16" width="32" height="24" rx="4" fill="currentColor"
+                        opacity="0.4" />
+                      <rect class="flash-front" x="24" y="12" width="32" height="24" rx="4" stroke="currentColor"
+                        stroke-width="2" fill="var(--visual-bg)" />
+                      <!-- Circular arrow (refresh/repeat) -->
+                      <path class="refresh-arrow" d="M48 50a14 14 0 1 1 0-12" stroke="var(--visual-accent)"
+                        stroke-width="2" fill="none" stroke-linecap="round" />
+                      <polygon class="refresh-head" points="48,38 44,42 52,42" fill="var(--visual-accent)" />
+                      <!-- Clock tick -->
+                      <circle cx="22" cy="56" r="8" stroke="currentColor" stroke-width="2" fill="var(--visual-bg)" />
+                      <path class="clock-hand" d="M22 56v-5" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" />
+                      <path class="clock-hand-min" d="M22 56l3 2" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <span class="badge">Essential</span>
+                  <h3>Daily Review</h3>
+                  <p>Spaced repetition flashcards for your saved words.</p>
+                  <div id="dashboard-srs-summary" class="dashboard-srs-status">
+                    <span id="dashboard-srs-text">Loading schedule...</span>
+                  </div>
+                  <button class="card-cta primary">Practice Now</button>
+                </div>
               </div>
-              <!-- What's this? button - prominent placement -->
-              <div class="whats-this-container">
-                <button id="what-is-this-btn" class="what-is-this-btn orange" title="Learn how to use the current mode">
-                  <span class="icon">💡</span> What's this?
-                </button>
+
+              <div class="modern-card stats-card-modern"
+                onclick="document.getElementById('progress-panel-toggle').click()" tabindex="0" role="button"
+                aria-label="View Progress Statistics">
+                <div class="card-visual visual-stats">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
+                      <!-- Axes -->
+                      <path d="M12 56h48M12 56V16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                      <!-- Line chart -->
+                      <path class="chart-draw" d="M16 48 L28 40 L40 44 L52 28" stroke="var(--visual-accent)"
+                        stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                      <!-- Flag marker at end -->
+                      <circle class="chart-dot" cx="52" cy="28" r="5" fill="var(--visual-accent)" />
+                      <rect class="flag-pop" x="50" y="12" width="10" height="8" rx="2" fill="var(--visual-fg)"
+                        opacity="0" />
+                      <path class="flag-pole" d="M52 20V28" stroke="var(--visual-fg)" stroke-width="1.5" />
+                      <!-- Subtle confetti dot -->
+                      <circle class="confetti" cx="58" cy="18" r="2" fill="var(--visual-accent)" opacity="0" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Track Progress</h3>
+                  <p>Visualize your vocabulary growth and mastery tiers.</p>
+                  <button class="card-cta secondary">Practice Now</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="srs-schedule-preview">
+              <h4>Upcoming Reviews</h4>
+              <div class="schedule-mini-table">
+                <table class="schedule-table">
+                  <tbody id="srs-schedule-body">
+                    <tr>
+                      <td colspan="3" class="loading-schedule">Loading...</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -1231,7 +1463,7 @@
 
 
 
-        <label class="input-label">Speak what you hear:</label>
+        <span class="input-label">Speak what you hear:</span>
         <div id="transcription-display" class="transcription-display">
           <div id="transcription-text" class="transcription-text">Click "Start Recording" and speak...</div>
           <div id="recording-status" class="recording-status"></div>
@@ -1667,36 +1899,7 @@
   <audio id="audio-phrases" preload="auto"></audio>
   <audio id="vocab-audio" preload="auto"></audio>
 
-  <!-- Firebase SDK v9+ (modular) -->
-  <script type="module">
-    // Import Firebase modules
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-    import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-    import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-
-    // Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyB0vXX7NwOvME_XoaGiJlYaiLRcaHJtrIQ",
-      authDomain: "listening-tasks-3ae34.firebaseapp.com",
-      projectId: "listening-tasks-3ae34",
-      storageBucket: "listening-tasks-3ae34.firebasestorage.app",
-      messagingSenderId: "737872673808",
-      appId: "1:737872673808:web:4db57599aa22b4830fde95",
-      measurementId: "G-1891MSSLXT"
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    // Make available globally
-    window.firebaseApp = app;
-    window.firebaseAuth = auth;
-    window.firebaseDb = db;
-
-    console.log('✓ Firebase initialized successfully');
-  </script>
+  <!-- Firebase Initialized via JS modules (firebase-init.js) -->
 
   <script src="https://cdn.jsdelivr.net/npm/compromise@14.10.0/builds/compromise.min.js"></script>
   <script>
@@ -1813,6 +2016,103 @@
       </ul>
       <button id="grammar-warning-ok-btn" class="modern-btn modern-btn--retry" style="margin-top: 20px;">Got
         it!</button>
+    </div>
+  </div>
+
+  <!-- Mode Recommendation Modal -->
+  <div id="mode-helper-modal" class="entry-modal" style="display: none;">
+    <div class="entry-modal-content mode-helper-content" role="dialog" aria-modal="true"
+      aria-labelledby="mode-helper-title">
+      <button id="mode-helper-close-btn" class="close-btn" aria-label="Close">×</button>
+
+      <!-- Step 1: Goal Selection -->
+      <div id="mode-helper-step-goals">
+        <div class="mode-helper-header">
+          <div class="mode-helper-icon">🎯</div>
+          <h2 id="mode-helper-title">What's your goal today?</h2>
+          <p>Select the areas you'd like to focus on:</p>
+          <span class="goal-limit-helper">✓ Max 2 selections</span>
+        </div>
+        <div class="mode-helper-options">
+          <label class="helper-option-checkbox">
+            <input type="checkbox" name="goal" value="spelling">
+            <div class="option-content">
+              <div class="option-emoji">⌨️</div>
+              <div class="option-text">
+                <strong>Spelling & Accuracy</strong>
+                <span>Perfect your typing and recall of words.</span>
+              </div>
+            </div>
+          </label>
+          <label class="helper-option-checkbox">
+            <input type="checkbox" name="goal" value="speaking">
+            <div class="option-content">
+              <div class="option-emoji">🎤</div>
+              <div class="option-text">
+                <strong>Speaking Confidence</strong>
+                <span>Practice saying full sentences naturally.</span>
+              </div>
+            </div>
+          </label>
+          <label class="helper-option-checkbox">
+            <input type="checkbox" name="goal" value="accent">
+            <div class="option-content">
+              <div class="option-emoji">🗣️</div>
+              <div class="option-text">
+                <strong>Native-like Accent</strong>
+                <span>Analyze stress and phonemes in detail.</span>
+              </div>
+            </div>
+          </label>
+          <label class="helper-option-checkbox">
+            <input type="checkbox" name="goal" value="vocabulary">
+            <div class="option-content">
+              <div class="option-emoji">📝</div>
+              <div class="option-text">
+                <strong>Vocabulary Building</strong>
+                <span>Fill in missing words and expand your lexicon.</span>
+              </div>
+            </div>
+          </label>
+          <label class="helper-option-checkbox">
+            <input type="checkbox" name="goal" value="notetaking">
+            <div class="option-content">
+              <div class="option-emoji">📓</div>
+              <div class="option-text">
+                <strong>Note-Taking Skills</strong>
+                <span>Capture key information while listening.</span>
+              </div>
+            </div>
+          </label>
+          <label class="helper-option-checkbox">
+            <input type="checkbox" name="goal" value="listening">
+            <div class="option-content">
+              <div class="option-emoji">📺</div>
+              <div class="option-text">
+                <strong>Real Context</strong>
+                <span>Learn from videos and diverse accents.</span>
+              </div>
+            </div>
+          </label>
+        </div>
+        <div class="mode-helper-actions">
+          <button id="mode-helper-submit-btn" class="modern-btn modern-btn--check" type="button">Get
+            Suggestions</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Suggestions (hidden initially) -->
+      <div id="mode-helper-step-suggestions" class="is-hidden">
+        <div class="mode-helper-suggestions">
+          <h3>📌 Recommended for You</h3>
+          <div id="mode-suggestions-list" class="mode-suggestions-list"></div>
+          <div class="mode-helper-actions">
+            <button id="mode-helper-back-btn" class="modern-btn modern-btn--hint" type="button">← Back</button>
+            <button id="mode-helper-start-btn" class="modern-btn modern-btn--play" type="button">Start Learning</button>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 

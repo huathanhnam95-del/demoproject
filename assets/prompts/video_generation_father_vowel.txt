@@ -1,0 +1,23 @@
+Generate an 8-second photorealistic educational video demonstrating the General American “father” vowel /ɑ/ (sustained /ɑː/ length).
+
+Critical camera requirement (must follow):
+Camera POV is inside the vocal tract/mouth looking outward toward the lips/outside, never from outside looking in. This is the speaker’s internal perspective, not a mirror. Do not horizontally flip; left/right must match true anatomy from inside.
+
+Single continuous shot (no cuts). Mid-mouth end framing:
+
+0–2s (start frame): Camera begins inside the throat (pharynx), facing forward toward the oral cavity. We see the back of the tongue and soft palate from behind; the mouth opening is ahead in the distance.
+2–6s: Slow, smooth camera move forward into the oral cavity. Demonstrate shaping the US /ɑ/:
+jaw clearly open
+tongue low and back, broad tongue body lowered
+tongue tip relaxed near the lower front teeth (not raised)
+lips neutral/unrounded (no protrusion)
+velum lifted (no nasal airflow)
+Sustain the vowel while the tongue settles into its final position.
+6–8s (end frame): Camera comes to rest mid-mouth (around the center of the oral cavity), still looking outward toward the teeth/lips, with the tongue position clearly visible in the foreground and the teeth/lip opening visible ahead. Hold steady on the final /ɑ/ tongue placement for clarity.
+Look & lighting:
+Photorealistic oral anatomy (tongue texture, palate, uvula, inner cheeks), clean/non-gory, bright clinical lighting, high visibility, sharp focus on tongue and palate, minimal motion blur. Outside beyond the lips appears as a bright soft blur to reinforce the inside-to-out POV.
+
+Output: 16:9, 4K or highest available, 24–30 fps, stable camera, smooth motion, no text/labels, no external face.
+
+Negative prompt (if supported):
+Outside-looking-in view, mirror/selfie view, horizontally flipped orientation, external face, cartoon/anime, gore, dental tools, shaky cam, dark lighting, heavy motion blur, saliva strands obscuring the view.

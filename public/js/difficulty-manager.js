@@ -1,38 +1,60 @@
 /**
  * Difficulty Manager Module
- * Manages difficulty levels, persistence, and adjustments for the Adaptive Difficulty System.
+ * Manages difficulty levels (CEFR A1-C2), persistence, and adjustments for the Adaptive Difficulty System.
  */
 
 const DifficultyManager = (() => {
-    // Default profiles for each mode
-    const DEFAULT_PROFILE = {
-        level: 1, // 1: Guided, 2: Supported, 3: Independent
+    // Factory function to create fresh profile objects for each mode
+    // This prevents shared array/object references across modes.
+    const makeDefaultProfile = () => ({
+        level: 1, // 1: A1, 2: A2, 3: B1, 4: B2, 5: C1, 6: C2
         exp: 0,
-        history: [], // Recent performance history
-        settings: {} // Mode-specific overrides
-    };
+        history: [], // Recent performance history (score + difficulty) for RA calculation
+        attemptsAtLevel: 0 // Track attempts at current level for grace period
+    });
 
     let userDifficultyProfile = {
-        type: { ...DEFAULT_PROFILE },
-        speak: { ...DEFAULT_PROFILE },
-        extended: { ...DEFAULT_PROFILE },
-        watch: { ...DEFAULT_PROFILE },
-        srs: { ...DEFAULT_PROFILE }
+        type: makeDefaultProfile(),
+        speak: makeDefaultProfile(),
+        extended: makeDefaultProfile(),
+        watch: makeDefaultProfile(),
+        srs: makeDefaultProfile()
     };
 
     let globalSettings = {
         autoAdjustEnabled: true,
-        adjustmentSensitivity: 'medium', // low, medium, high
+        adjustmentSensitivity: 'medium', // Determines RA window size
         notificationsEnabled: true,
-        manualLevel: 1 // Default manual level
+        manualLevel: 1 // Default manual level (1-6)
     };
 
-    const HISTORY_SIZE = 15;
+    // CEFR Level Definitions
+    const MAX_LEVEL = 6;
+    const MIN_LEVEL = 1;
+
+    const LEVEL_NAMES = {
+        1: 'A1 (Beginner I)',
+        2: 'A2 (Beginner II)',
+        3: 'B1 (Intermediate I)',
+        4: 'B2 (Intermediate II)',
+        5: 'C1 (Expert I)',
+        6: 'C2 (Expert II)'
+    };
+
+    const HISTORY_SIZE = 20; // Keep enough history for rolling averages
+    const GRACE_PERIOD_ATTEMPTS = 20; // Minimum attempts before level change allowed (approx 5-10 mins)
+
+    // Hysteresis Thresholds
+    const THRESHOLDS = {
+        UP: 0.85,    // > 85% to level up
+        DOWN: 0.60,  // < 60% to level down
+        SMURF: 0.98  // > 98% allows fast track
+    };
+
     let isInitialized = false;
     let hasUnlockedFeature = false;
 
     // DOM Elements
-    let indicatorEl = null;
     let toastContainer = null;
 
     /**
@@ -56,7 +78,7 @@ const DifficultyManager = (() => {
         createToastContainer();
 
         isInitialized = true;
-        console.log('🎯 Difficulty Manager Initialized. Feature enabled:', hasUnlockedFeature);
+        console.log('🎯 Difficulty Manager Initialized (CEFR 6-Level). Feature enabled:', hasUnlockedFeature);
 
         // Listen for shop unlocks
         window.addEventListener('shop-unlock', (e) => {
@@ -70,10 +92,12 @@ const DifficultyManager = (() => {
         // Listen for tab changes to update indicator
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('tab-btn')) {
-                // Small delay to allow active class to update
                 setTimeout(updateIndicator, 50);
             }
         });
+
+        // Save profile on page unload to prevent data loss
+        window.addEventListener('beforeunload', saveProfile);
     }
 
     /**
@@ -86,6 +110,31 @@ const DifficultyManager = (() => {
                 const data = JSON.parse(stored);
                 userDifficultyProfile = { ...userDifficultyProfile, ...data.profiles };
                 globalSettings = { ...globalSettings, ...data.settings };
+
+                // Normalize global settings
+                const validSens = new Set(['low', 'medium', 'high']);
+                if (!validSens.has(globalSettings.adjustmentSensitivity)) {
+                    globalSettings.adjustmentSensitivity = 'medium';
+                }
+                globalSettings.manualLevel = Math.max(MIN_LEVEL, Math.min(MAX_LEVEL, parseInt(globalSettings.manualLevel, 10) || MIN_LEVEL));
+                globalSettings.autoAdjustEnabled = !!globalSettings.autoAdjustEnabled;
+                globalSettings.notificationsEnabled = globalSettings.notificationsEnabled !== false;
+
+                // Normalize each mode profile to ensure required fields exist and are not shared
+                for (const mode of Object.keys(userDifficultyProfile)) {
+                    const p = userDifficultyProfile[mode] ??= makeDefaultProfile();
+
+                    // Type-safe normalization
+                    if (!Array.isArray(p.history)) p.history = [];
+                    p.level = Number.isFinite(p.level) ? p.level : MIN_LEVEL;
+                    p.level = Math.max(MIN_LEVEL, Math.min(MAX_LEVEL, p.level));
+
+                    // Migrate old 'sessionsAtLevel' -> 'attemptsAtLevel' at load-time
+                    if (!Number.isFinite(p.attemptsAtLevel)) {
+                        p.attemptsAtLevel = Number.isFinite(p.sessionsAtLevel) ? p.sessionsAtLevel : 0;
+                        if (p.sessionsAtLevel != null) delete p.sessionsAtLevel;
+                    }
+                }
             } catch (e) {
                 console.error('Error loading difficulty profile:', e);
             }
@@ -96,16 +145,15 @@ const DifficultyManager = (() => {
      * Save difficulty profile to storage
      */
     function saveProfile() {
-        const data = {
-            profiles: userDifficultyProfile,
-            settings: globalSettings,
-            updatedAt: Date.now()
-        };
-        localStorage.setItem('difficulty_profile', JSON.stringify(data));
-
-        // Sync to Firestore if user is logged in (optional implementation)
-        if (window.authUI && window.authUI.getCurrentUserId()) {
-            // debounced Firestore save could go here
+        try {
+            const data = {
+                profiles: userDifficultyProfile,
+                settings: globalSettings,
+                updatedAt: Date.now()
+            };
+            localStorage.setItem('difficulty_profile', JSON.stringify(data));
+        } catch (e) {
+            console.warn('[DM] Failed to save difficulty profile:', e);
         }
     }
 
@@ -127,283 +175,341 @@ const DifficultyManager = (() => {
             level = userDifficultyProfile[mode]?.level || 1;
         }
 
+        // Clamp level to valid range using constants
+        level = Math.max(MIN_LEVEL, Math.min(MAX_LEVEL, level));
+
         return getLevelSettings(mode, level);
     }
 
     /**
-     * Get specific settings for a difficulty level
+     * Get specific settings for a difficulty level (CEFR Mapped)
      */
     function getLevelSettings(mode, level) {
-        // Define difficulty parameters for each mode
         const params = {
             type: {
+                // A1: Beginner I
                 1: {
-                    name: 'Guided',
-                    // Replay limits
+                    name: LEVEL_NAMES[1],
                     maxReplays: 10,
-                    // Sentence filtering (word count range)
                     sentenceLengthRange: [5, 8],
-                    // Auto-show hints
                     autoShowWordCount: true,
                     autoShowFirstLetters: true,
                     autoShowWordLengths: true,
-                    // Scaffolds (Phase 2)
-                    partialDictation: false, // Future
-                    wordBank: 'full', // Future
-                    chunkPlayback: true, // Future
-                    // Context hints
                     topicHint: true,
                     keywordPreview: true,
-                    // Timing
                     delayBeforeTyping: 0,
                     initialRevealPercentage: 50
                 },
+                // A2: Beginner II
                 2: {
-                    name: 'Supported',
-                    maxReplays: 3,
-                    sentenceLengthRange: [7, 10],
+                    name: LEVEL_NAMES[2],
+                    maxReplays: 5,
+                    sentenceLengthRange: [8, 12],
+                    autoShowWordCount: true,
+                    autoShowFirstLetters: false,
+                    autoShowWordLengths: true,
+                    topicHint: true,
+                    keywordPreview: true,
+                    delayBeforeTyping: 1,
+                    initialRevealPercentage: 40
+                },
+                // B1: Intermediate I
+                3: {
+                    name: LEVEL_NAMES[3],
+                    maxReplays: 4,
+                    sentenceLengthRange: [12, 18],
                     autoShowWordCount: true,
                     autoShowFirstLetters: false,
                     autoShowWordLengths: false,
-                    partialDictation: false,
-                    wordBank: 'partial',
-                    chunkPlayback: false,
                     topicHint: true,
                     keywordPreview: false,
                     delayBeforeTyping: 3,
                     initialRevealPercentage: 30
                 },
-                3: {
-                    name: 'Expert',
-                    maxReplays: 1,
-                    sentenceLengthRange: null, // All lengths
-                    hints: 'none',
+                // B2: Intermediate II
+                4: {
+                    name: LEVEL_NAMES[4],
+                    maxReplays: 3,
+                    sentenceLengthRange: [18, 25],
                     autoShowWordCount: false,
                     autoShowFirstLetters: false,
                     autoShowWordLengths: false,
-                    partialDictation: false,
-                    wordBank: null,
-                    chunkPlayback: false,
+                    topicHint: true,
+                    keywordPreview: false,
+                    delayBeforeTyping: 4,
+                    initialRevealPercentage: 15
+                },
+                // C1: Expert I
+                5: {
+                    name: LEVEL_NAMES[5],
+                    maxReplays: 2,
+                    sentenceLengthRange: [25, 35],
+                    autoShowWordCount: false,
+                    autoShowFirstLetters: false,
+                    autoShowWordLengths: false,
                     topicHint: false,
                     keywordPreview: false,
-                    delayBeforeTyping: 5
+                    delayBeforeTyping: 5,
+                    initialRevealPercentage: 0
+                },
+                // C2: Expert II
+                6: {
+                    name: LEVEL_NAMES[6],
+                    maxReplays: 1,
+                    sentenceLengthRange: [30, 999], // Unbounded
+                    autoShowWordCount: false,
+                    autoShowFirstLetters: false,
+                    autoShowWordLengths: false,
+                    topicHint: false,
+                    keywordPreview: false,
+                    delayBeforeTyping: 6,
+                    initialRevealPercentage: 0
                 }
             },
+            // Mapping for other modes (simplified for now)
             speak: {
-                1: { name: 'Guided', strictness: 'low', showIPA: true, visualAids: true, maxReplays: Infinity },
-                2: { name: 'Supported', strictness: 'medium', showIPA: true, visualAids: false, maxReplays: 3 },
-                3: { name: 'Independent', strictness: 'high', showIPA: false, visualAids: false, maxReplays: 1 }
+                1: { name: LEVEL_NAMES[1], strictness: 'low', showIPA: true, maxReplays: Infinity },
+                2: { name: LEVEL_NAMES[2], strictness: 'low', showIPA: true, maxReplays: 5 },
+                3: { name: LEVEL_NAMES[3], strictness: 'medium', showIPA: true, maxReplays: 3 },
+                4: { name: LEVEL_NAMES[4], strictness: 'medium', showIPA: false, maxReplays: 2 },
+                5: { name: LEVEL_NAMES[5], strictness: 'high', showIPA: false, maxReplays: 1 },
+                6: { name: LEVEL_NAMES[6], strictness: 'high', showIPA: false, maxReplays: 1 }
             },
             srs: {
-                1: { name: 'Guided', typoTolerance: 2, showStart: true, showDef: true },
-                2: { name: 'Supported', typoTolerance: 1, showStart: false, showDef: true },
-                3: { name: 'Independent', typoTolerance: 0, showStart: false, showDef: false }
+                1: { name: LEVEL_NAMES[1], typoTolerance: 2, showDef: true },
+                2: { name: LEVEL_NAMES[2], typoTolerance: 2, showDef: true },
+                3: { name: LEVEL_NAMES[3], typoTolerance: 1, showDef: true },
+                4: { name: LEVEL_NAMES[4], typoTolerance: 1, showDef: true },
+                5: { name: LEVEL_NAMES[5], typoTolerance: 0, showDef: false },
+                6: { name: LEVEL_NAMES[6], typoTolerance: 0, showDef: false }
             }
         };
 
-        // Default or specific mode settings
         const modeParams = params[mode] || params['type'];
-        return { level, ...modeParams[level] };
+        // Fallback to level 1 if requested level doesn't exist
+        return { level, ...(modeParams[level] || modeParams[1]) };
     }
 
     /**
      * Adjust difficulty based on performance score (0.0 - 1.0)
-     * @param {string} mode 
-     * @param {number} score 
+     * Implements: Rolling Average + Hysteresis + Grace Period + Smurf fast-track
      */
     function adjustDifficulty(mode, score) {
         if (!hasUnlockedFeature || !globalSettings.autoAdjustEnabled) return;
 
-        const profile = userDifficultyProfile[mode];
-        const OPTIMAL_MIN = 0.60;
-        const OPTIMAL_MAX = 0.85;
+        // --- Validate inputs ---
+        score = Number.isFinite(score) ? Math.max(0, Math.min(1, score)) : 0;
+
+        const profile = userDifficultyProfile?.[mode];
+        if (!profile) return;
+
+        // --- Init / sanitization guards ---
+        if (!Array.isArray(profile.history)) profile.history = [];
+        profile.level = Number.isFinite(profile.level) ? profile.level : MIN_LEVEL;
+        profile.level = Math.max(MIN_LEVEL, Math.min(MAX_LEVEL, profile.level));
+        profile.attemptsAtLevel = Number.isFinite(profile.attemptsAtLevel) ? profile.attemptsAtLevel : 0;
+
+        // Normalize existing history entries defensively
+        profile.history = profile.history
+            .filter(Boolean)
+            .map(h => ({
+                date: h.date ?? Date.now(),
+                score: Number.isFinite(h.score) ? Math.max(0, Math.min(1, h.score)) : 0,
+                level: Number.isFinite(h.level) ? h.level : profile.level
+            }));
+
+        // --- Record attempt ---
+        profile.history.push({ date: Date.now(), score, level: profile.level });
+        if (profile.history.length > HISTORY_SIZE) profile.history.shift();
+        profile.attemptsAtLevel++;
+
+        const windowSizes = { low: 15, medium: 10, high: 5 };
+        const windowSize = windowSizes[globalSettings.adjustmentSensitivity] || 10;
+
+        // Only consider attempts at the CURRENT level for decisions
+        const relevantHistory = profile.history.filter(h => h.level === profile.level);
+
+        // --- Smurf check (does NOT require RA window size) ---
+        const lastFive = relevantHistory.slice(-5);
+        const isSmurfing = lastFive.length === 5 && lastFive.every(h => h.score >= THRESHOLDS.SMURF);
 
         let newLevel = profile.level;
-        let didChange = false;
         let direction = 'maintain';
+        let didChange = false;
 
-        // Add to history
-        profile.history.push({ date: Date.now(), score });
-        if (profile.history.length > HISTORY_SIZE) profile.history.shift();
+        if (isSmurfing && profile.level < MAX_LEVEL) {
+            newLevel = profile.level + 1;
+            direction = 'increase';
+            didChange = true;
+            console.log('[DM] Smurf detected! Fast tracking level up.');
+        } else {
+            // --- Normal logic only if we have enough same-level history for RA ---
+            if (relevantHistory.length >= windowSize) {
+                const recentHistory = relevantHistory.slice(-windowSize);
+                const rollingAvg = recentHistory.reduce((sum, item) => sum + item.score, 0) / windowSize;
 
-        // Calculate Trend (last N attempts based on sensitivity)
-        const attemptCounts = { low: 8, medium: 5, high: 3 };
-        const requiredAttempts = attemptCounts[globalSettings.adjustmentSensitivity] || 5;
+                console.log(
+                    `[DM] Mode: ${mode} | Level: ${profile.level} | Score: ${score.toFixed(
+                        2
+                    )} | RA: ${rollingAvg.toFixed(2)} | Attempts: ${profile.attemptsAtLevel}`
+                );
 
-        const recentAttempts = profile.history.slice(-requiredAttempts);
-        if (recentAttempts.length < requiredAttempts) return; // Need enough attempts to adjust
+                // Grace period
+                if (profile.attemptsAtLevel >= GRACE_PERIOD_ATTEMPTS) {
+                    // Level up
+                    if (rollingAvg > THRESHOLDS.UP && profile.level < MAX_LEVEL) {
+                        const lastThree = relevantHistory.slice(-3);
+                        const lastThreeConsistent = lastThree.every(h => h.score >= 0.70);
 
-        const avgScore = recentAttempts.reduce((sum, item) => sum + item.score, 0) / recentAttempts.length;
-
-        if (avgScore > OPTIMAL_MAX) {
-            // Too easy -> Increase difficulty
-            if (profile.level < 3) {
-                newLevel++;
-                direction = 'increase';
-                didChange = true;
+                        if (lastThreeConsistent) {
+                            newLevel = profile.level + 1;
+                            direction = 'increase';
+                            didChange = true;
+                        }
+                    }
+                    // Level down
+                    else if (rollingAvg < THRESHOLDS.DOWN && profile.level > MIN_LEVEL) {
+                        newLevel = profile.level - 1;
+                        direction = 'decrease';
+                        didChange = true;
+                    }
+                }
             }
-        } else if (avgScore < OPTIMAL_MIN) {
-            // Too hard -> Decrease difficulty
-            if (profile.level > 1) {
-                newLevel--;
-                direction = 'decrease';
-                didChange = true;
-            }
+            // else: not enough data yet; do nothing but still allow periodic saving below
         }
 
         if (didChange) {
             profile.level = newLevel;
-            // Clear recent history to prevent rapid oscillation
-            profile.history = [];
+            profile.attemptsAtLevel = 0;
+
+            // Keep a small tail for audit/debug (won’t affect decisions due to level filtering)
+            profile.history = profile.history.slice(-3);
 
             saveProfile();
             notifyAdjustment(direction, newLevel);
             updateIndicator();
 
             console.log(`[Difficulty] Adjusted ${mode} to Level ${newLevel} (${direction})`);
+        } else if (profile.attemptsAtLevel % 10 === 0) {
+            // Periodic save to prevent data loss on refresh (every 10 attempts)
+            saveProfile();
         }
     }
 
     /**
-     * Notify user of difficulty change
+     * Notify user of difficulty change (Level Ascension Event)
      */
     function notifyAdjustment(direction, newLevel) {
-        // Only show toast if explicitly requested (e.g. from tests) or it's a real change
-        // For 'maintain', maybe no toast needed unless debug
-        if (direction === 'maintain') {
-            showToast('Settings saved', 'success', 'check-circle');
-            return;
+        if (direction === 'maintain') return;
+
+        const levelName = LEVEL_NAMES[newLevel];
+
+        // Level Up "Ascension"
+        if (direction === 'increase') {
+            triggerAscensionEvent(newLevel, levelName);
+        }
+        // Level Down "Optimization"
+        else {
+            showToast(`Optimizing difficulty: ${levelName}`, 'info', 'trending-down');
+        }
+    }
+
+    /**
+     * Trigger the full screen ascension visual
+     */
+    function triggerAscensionEvent(newLevel, levelName) {
+        // Create modal if not exists
+        let modal = document.getElementById('ascension-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'ascension-modal';
+            modal.innerHTML = `
+                <div class="ascension-content">
+                    <div class="ascension-icon">🏆</div>
+                    <h2>LEVEL UP!</h2>
+                    <p class="ascension-level" id="ascension-level-text"></p>
+                    <p class="ascension-sub">Difficulty increased. Keep pushing!</p>
+                </div>
+            `;
+            document.body.appendChild(modal);
         }
 
-        const msg = direction === 'increase' ? 'Difficulty Increased!' : 'Difficulty Decreased';
-        const icon = direction === 'increase' ? 'trending-up' : 'trending-down';
+        const levelText = document.getElementById('ascension-level-text');
+        levelText.textContent = levelName;
 
-        showToast(`${msg} (Level ${newLevel})`, 'info', icon);
+        // Animate Enter (CSS transition handles opacity)
+        modal.style.display = 'flex';
+        // Force reflow
+        void modal.offsetWidth;
+        modal.style.opacity = '1';
+        modal.querySelector('.ascension-content').style.transform = 'scale(1)';
+
+        // Auto Close
+        setTimeout(() => {
+            modal.style.opacity = '0';
+            modal.querySelector('.ascension-content').style.transform = 'scale(0.8)';
+            setTimeout(() => { modal.style.display = 'none'; }, 500);
+        }, 3000);
     }
 
     function showToast(message, type, iconName) {
         if (!toastContainer) return;
 
         const toast = document.createElement('div');
+        // Legacy support: map 'info' to 'info', 'success' to 'success'
+        // New styles use specific border colors
         toast.className = `toast ${type}`;
-        toast.style.cssText = `
-            background: white;
-            color: #333;
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.3s ease;
-            pointer-events: auto;
-            min-width: 250px;
-        `;
 
         if (iconName) {
-            // In a real app we'd use an icon library like Feather
-            // Here just a placeholder or emoji
-            const emoji = type === 'success' ? '✅' : (type === 'info' ? 'ℹ️' : '⚠️');
+            const emoji = iconName === 'trending-up' ? '🚀' : '🛡️';
             message = `${emoji} ${message}`;
         }
 
-        toast.innerHTML = `<span style="font-weight:500;">${message}</span>`; // Simple for now
-
-        if (toast.querySelector('.icon')) {
-            toast.querySelector('.icon').style.fontSize = '20px';
-        }
-
+        const span = document.createElement('span');
+        span.textContent = message;
+        toast.innerHTML = ''; // Clear
+        toast.appendChild(span);
         toastContainer.appendChild(toast);
 
-        // Animate In
+        // Animation handled by CSS (opacity/transform) but JS needed to trigger state
+        // Force reflow
+        void toast.offsetWidth;
+
         requestAnimationFrame(() => {
             toast.style.opacity = '1';
             toast.style.transform = 'translateY(0)';
         });
 
-        // Animate Out
         setTimeout(() => {
             toast.style.opacity = '0';
-            toast.style.transform = 'translateY(10px)';
+            toast.style.transform = 'translateY(20px)';
             setTimeout(() => toast.remove(), 300);
         }, 4000);
     }
 
-    /**
-     * UI: Create Toast Container
-     */
-    function createToastContainer() {
-        if (document.getElementById('difficulty-toast-container')) return;
+    // ... (settings code) ...
 
+    function createToastContainer() {
+        const existing = document.getElementById('difficulty-toast-container');
+        if (existing) {
+            toastContainer = existing;
+            return;
+        }
         toastContainer = document.createElement('div');
         toastContainer.id = 'difficulty-toast-container';
-        toastContainer.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 10000;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            pointer-events: none;
-        `;
+        // Inline styles removed in favor of CSS
         document.body.appendChild(toastContainer);
     }
-
-    function updateIndicator() {
-        const badge = document.getElementById('difficulty-badge');
-        if (!badge) return;
-
-        // Determine current mode
-        let activeMode = 'type';
-        if (document.getElementById('tab-speak') && document.getElementById('tab-speak').classList.contains('active')) {
-            activeMode = 'speak';
-        } else if (document.getElementById('tab-srs') && document.getElementById('tab-srs').classList.contains('active')) {
-            activeMode = 'srs';
-        } // Add other modes as needed
-
-        // Check if manual or auto
-        // Note: getCurrentSettings handles the logic, but we want to know if it's manual for display text
-        const isManual = hasUnlockedFeature && !globalSettings.autoAdjustEnabled;
-
-        // Use getCurrentSettings to get the EFFECTIVE settings (auto or manual)
-        const settings = getCurrentSettings(activeMode);
-
-        if (!hasUnlockedFeature && !globalSettings.manualLevel) { // Hide if not unlocked and not manually forced (unlikely case)
-            badge.style.display = 'none';
-            return;
-        }
-
-        // Ensure badge is visible if unlocked OR if we want to show it for manual testing
-        // The requirement "when auto is turned off, let user choose" implies feature is unlocked.
-        if (!hasUnlockedFeature) {
-            badge.style.display = 'none';
-            return;
-        }
-
-        const levelName = settings.name || `Level ${settings.level}`;
-        const suffix = isManual ? ' (Manual)' : '';
-
-        const textEl = document.getElementById('diff-level-text');
-        if (textEl) textEl.textContent = `${levelName}${suffix}`;
-
-        badge.className = `difficulty-badge level-${settings.level}`;
-        badge.style.display = 'inline-flex';
-        badge.title = `Smart Difficulty: ${activeMode.toUpperCase()} Mode (Level ${settings.level}${suffix})`;
-    }
-
     /**
      * UI: Create and Open Settings Modal
      */
     function openSettings() {
-        let modal = document.getElementById('difficulty-settings-modal');
-        if (!modal) {
-            createSettingsModal();
-            modal = document.getElementById('difficulty-settings-modal');
-        }
+        // Remove old modal if exists (to force re-render with new options)
+        const oldModal = document.getElementById('difficulty-settings-modal');
+        if (oldModal) oldModal.remove();
+
+        createSettingsModal();
+        const modal = document.getElementById('difficulty-settings-modal');
 
         // Sync state
         const toggle = document.getElementById('diff-s-toggle');
@@ -426,10 +532,7 @@ const DifficultyManager = (() => {
         if (sensitivity) sensitivity.value = globalSettings.adjustmentSensitivity;
         if (manualLevel) manualLevel.value = globalSettings.manualLevel || 1;
 
-        // Show modal with transition
-        modal.display = 'flex'; // This line might be redundant with style.display below or incorrect props
         modal.style.display = 'flex';
-        // Force reflow
         void modal.offsetWidth;
         modal.classList.add('active');
     }
@@ -437,55 +540,50 @@ const DifficultyManager = (() => {
     function createSettingsModal() {
         const modal = document.createElement('div');
         modal.id = 'difficulty-settings-modal';
-        // Reuse shop-modal classes for consistent "Premium" look
         modal.className = 'shop-modal';
-        modal.style.zIndex = '11000'; // Ensure it's above other elements
+        modal.style.zIndex = '11000';
 
         modal.innerHTML = `
             <div class="shop-modal-content" style="max-width: 450px; padding: 0;">
                 <div class="shop-header">
-                    <h2>Smart Difficulty Settings</h2>
+                    <h2>Smart Difficulty (CEFR)</h2>
                     <button class="shop-close-btn" id="diff-s-close">&times;</button>
                 </div>
                 
                 <div class="shop-body">
-                    <div class="setting-group" style="margin-bottom: 24px; background: white; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0;">
-                        <label class="setting-label" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer; margin-bottom: 8px;">
-                            <span style="font-weight:600; font-size: 1.1rem; color: #1e293b;">Enable Auto-Adjust</span>
-                            <!-- Custom Toggle Switch -->
+                    <div class="setting-group">
+                        <label class="setting-label">
+                            <span>Auto-Adjust Levels</span>
                             <div class="toggle-switch">
                                 <input type="checkbox" id="diff-s-toggle">
                                 <span class="toggle-slider"></span>
                             </div>
                         </label>
-                        <p style="color:#64748b; font-size:0.9rem; margin:0; line-height: 1.5;">
-                            Automatically increases or decreases difficulty based on your performance history.
+                        <p class="setting-desc">
+                            AI will promote/demote you between A1-C2 based on your performance.
                         </p>
                     </div>
 
-                    <!-- Manual Level Selection (Hidden by default) -->
-                    <div id="diff-s-manual-container" class="setting-group" style="margin-bottom: 24px; background: white; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; display: none;">
-                        <label class="setting-label" style="display:block; font-weight:600; margin-bottom:12px; color: #1e293b; font-size: 1.1rem;">Manual Level Selection</label>
-                        <select id="diff-s-manual-level" style="width:100%; padding:12px; border-radius:8px; border:1px solid #cbd5e1; font-size: 1rem; color: #334155; background-color: #f8fafc;">
-                            <option value="1">Level 1 (Guided)</option>
-                            <option value="2">Level 2 (Supported)</option>
-                            <option value="3">Level 3 (Independent)</option>
+                    <!-- Manual Level Selection (1-6) -->
+                    <div id="diff-s-manual-container" class="setting-group" style="display: none;">
+                        <label class="setting-label">Manual Level (CEFR)</label>
+                        <select id="diff-s-manual-level" class="setting-select">
+                            <option value="1">A1 - Beginner I</option>
+                            <option value="2">A2 - Beginner II</option>
+                            <option value="3">B1 - Intermediate I</option>
+                            <option value="4">B2 - Intermediate II</option>
+                            <option value="5">C1 - Expert I</option>
+                            <option value="6">C2 - Expert II</option>
                         </select>
-                        <p style="color:#64748b; font-size:0.85rem; margin-top:8px; line-height: 1.4;">
-                            Manually override the difficulty level for testing or specific practice.
-                        </p>
                     </div>
 
-                    <div id="diff-s-sensitivity-container" class="setting-group" style="margin-bottom: 24px; background: white; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0;">
-                        <label class="setting-label" style="display:block; font-weight:600; margin-bottom:12px; color: #1e293b; font-size: 1.1rem;">Adjustment Sensitivity</label>
-                        <select id="diff-s-sensitivity" style="width:100%; padding:12px; border-radius:8px; border:1px solid #cbd5e1; font-size: 1rem; color: #334155; background-color: #f8fafc;">
-                            <option value="low">Low (Steady Progress)</option>
+                    <div id="diff-s-sensitivity-container" class="setting-group">
+                        <label class="setting-label">Sensitivity</label>
+                        <select id="diff-s-sensitivity" class="setting-select">
+                            <option value="low">Low (Stable)</option>
                             <option value="medium">Medium (Recommended)</option>
-                            <option value="high">High (Fast Paced)</option>
+                            <option value="high">High (Responsive)</option>
                         </select>
-                        <p style="color:#64748b; font-size:0.85rem; margin-top:8px; line-height: 1.4;">
-                            Determines how quickly the AI reacts to your success or struggle.
-                        </p>
                     </div>
 
                     <div style="text-align:right; margin-top:10px;">
@@ -519,38 +617,93 @@ const DifficultyManager = (() => {
 
             globalSettings.autoAdjustEnabled = toggle.checked;
             globalSettings.adjustmentSensitivity = sensitivity.value;
-            // Ensure manualLevel is saved as a number
-            globalSettings.manualLevel = parseInt(manualLevel.value, 10);
+            globalSettings.manualLevel = Math.max(MIN_LEVEL, Math.min(MAX_LEVEL, parseInt(manualLevel.value, 10) || MIN_LEVEL));
 
             saveProfile();
-            updateIndicator(); // Reflect changes immediately
+            updateIndicator();
 
-            // Close modal
             modal.classList.remove('active');
-            setTimeout(() => {
-                modal.style.display = 'none';
-            }, 300);
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
 
-            // Show toast
-
-            notifyAdjustment('maintain', userDifficultyProfile.type.level);
+            showToast('Settings saved', 'success', 'check-circle');
         });
 
-        // Close functions
         const closeBtn = document.getElementById('diff-s-close');
         const closeFn = () => {
             modal.classList.remove('active');
-            setTimeout(() => {
-                modal.style.display = 'none';
-            }, 300);
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
         };
-
         closeBtn.onclick = closeFn;
+        modal.onclick = (e) => { if (e.target === modal) closeFn(); };
+    }
 
-        // Close on outside click
-        modal.onclick = (e) => {
-            if (e.target === modal) closeFn();
-        };
+
+
+    function updateIndicator() {
+        const badge = document.getElementById('difficulty-badge');
+        if (!badge) return;
+
+        let activeMode = 'type';
+        // Simple heuristic for active tab (should be improved with actual state if available)
+        if (document.getElementById('tab-speak') && document.getElementById('tab-speak').classList.contains('active')) activeMode = 'speak';
+        else if (document.getElementById('tab-srs') && document.getElementById('tab-srs').classList.contains('active')) activeMode = 'srs';
+
+        const settings = getCurrentSettings(activeMode);
+        const isManual = hasUnlockedFeature && !globalSettings.autoAdjustEnabled;
+
+        if (!hasUnlockedFeature) {
+            badge.style.display = 'none';
+            return;
+        }
+
+        const levelName = settings.name;
+        const suffix = isManual ? ' (M)' : '';
+
+        const textEl = document.getElementById('diff-level-text');
+        if (textEl) textEl.textContent = `${levelName}${suffix}`; // e.g. A2 (Beginner II) (M)
+
+        // Map CEFR levels to CSS classes (level-1 to level-6)
+        // Ensure CSS handles level-4, level-5, level-6 colors
+        badge.className = `difficulty-badge level-${settings.level}`;
+        badge.style.display = 'inline-flex';
+        badge.title = `Smart Difficulty: ${activeMode.toUpperCase()} Mode (Level ${settings.level} - ${levelName})`;
+    }
+
+    /**
+     * Public API: Manually set a difficulty level (CEFR 1-6)
+     * This disables auto-adjust and saves the profile.
+     * @param {number} level - 1 to 6
+     */
+    function setManualLevel(level) {
+        if (!isInitialized) init();
+
+        const numericLevel = parseInt(level, 10);
+        if (isNaN(numericLevel) || numericLevel < 1 || numericLevel > 6) {
+            console.error('[DM] Invalid manual level:', level);
+            return;
+        }
+
+        globalSettings.autoAdjustEnabled = false;
+        globalSettings.manualLevel = numericLevel;
+
+        // Also update the current mode's profile if it exists to ensure fallback immediate consistency
+        // Update ALL modes to this baseline to prevent "difficulty shock" if they switch back to Auto later.
+        // Dynamically get all mode keys from the profile object
+        const modes = Object.keys(userDifficultyProfile);
+        modes.forEach(mode => {
+            if (userDifficultyProfile[mode]) {
+                userDifficultyProfile[mode].level = numericLevel;
+                // Optional: Reset their history so they start fresh at this new level
+                userDifficultyProfile[mode].history = [];
+                userDifficultyProfile[mode].attemptsAtLevel = 0;
+            }
+        });
+
+        saveProfile();
+        updateIndicator();
+
+        console.log(`🎯 [DM] Manual Level set to ${numericLevel} (${LEVEL_NAMES[numericLevel]})`);
+        showToast(`Manual Level: ${LEVEL_NAMES[numericLevel].split(' ')[0]}`, 'success', 'check-circle');
     }
 
     // Public API
@@ -559,9 +712,10 @@ const DifficultyManager = (() => {
         getCurrentSettings,
         adjustDifficulty,
         openSettings,
-        isFeatureEnabled: () => true, // System is active for manual levels/scaffolding
-        isAutoAdjustUnlocked: () => hasUnlockedFeature, // Specific for the shop item
-        refreshProfile: loadProfile // Allow external reload of settings
+        setManualLevel,
+        isFeatureEnabled: () => hasUnlockedFeature,
+        isAutoAdjustUnlocked: () => hasUnlockedFeature,
+        refreshProfile: loadProfile
     };
 
 })();

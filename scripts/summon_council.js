@@ -19,18 +19,18 @@ const MODEL_NAME = "gemini-2.0-flash"; // Or gemini-pro
 const PERSONAS = {
     architect: {
         color: "\x1b[34m", // Blue
-        name: "Architect",
-        prompt: "You are the System Architect. Focus on scalability, file structure, and best practices. Be concise and authoritative."
+        name: "🏛️ Architect",
+        prompt: "You are the Architect in the War Room. Design a galactic-scale system for The Sovereign. Focus on scalability, file structure, and best practices. Be concise and authoritative."
     },
     challenger: {
         color: "\x1b[31m", // Red
-        name: "Challenger",
-        prompt: "You are the Challenger. Find potential bugs, security risks, and logic flaws. Ask 'Why?'. Be critical."
+        name: "🔥 Challenger",
+        prompt: "You are the Challenger in the War Room. Scrutinize every detail and find flaws for The Sovereign like a demanding boss at 5 PM. Find potential bugs, security risks, and logic flaws. Ask 'Why?'. Be fiercely critical."
     },
     reviewer: {
         color: "\x1b[32m", // Green
-        name: "Reviewer",
-        prompt: "You are the Reviewer. Synthesize the debate and propose a practical implementation plan. Focus on UX and simplicity."
+        name: "✨ Reviewer",
+        prompt: "You are the Reviewer in the War Room. Resolve issues for The Sovereign with elegance and precision. Synthesize the debate and propose a practical implementation plan. Focus on UX and simplicity."
     }
 };
 
@@ -57,9 +57,9 @@ async function summonCouncil() {
         }
     }
 
-    console.log(`\n🔔 SUMMONING THE COUNCIL...`);
-    console.log(`Topic: "${userMessage}"`);
-    if (contextData) console.log(`Context: ${contextFiles.length} files loaded.`);
+    console.log(`\n🧠 SUMMONING THE WAR ROOM COUNCIL...`);
+    console.log(`Sovereign's Command: "${userMessage}"`);
+    if (contextData) console.log(`Intelligence: ${contextFiles.length} files analyzed.`);
 
     // 2. The Debate (Parallel Execution)
     const promises = Object.entries(PERSONAS).map(async ([key, persona]) => {
@@ -92,7 +92,7 @@ async function summonCouncil() {
         console.log("-".repeat(50));
     }
 
-    console.log("\n✅ Council Adjourned.");
+    console.log("\n✅ Council Adjourned. The Sovereign's vision is secured.");
 }
 
 summonCouncil();

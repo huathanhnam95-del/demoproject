@@ -23,6 +23,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Exclude large files from deployment
+        run: |
+          rm -rf ./public/database
+          rm -rf ./public/cmudict.json
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact

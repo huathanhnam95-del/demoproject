@@ -330,11 +330,11 @@ const DictionaryService = (function () {
         let example = '';
         let partOfSpeech = bestEntry.partOfSpeech || '';
 
-        // Quality filter: Skip definitions that are likely obscure or technical
         const OBSCURE_KEYWORDS = [
             'iso 639', 'language code', 'symbol for', 'abbreviation',
             'obsolete', 'archaic', 'rare', 'dialect', 'slang',
-            'dated', 'nonstandard', 'eye dialect', 'misspelling'
+            'dated', 'nonstandard', 'eye dialect', 'misspelling',
+            'grub', 'maggot' // Specific issues reported by user
         ];
 
         function isObscureDefinition(defText) {
@@ -379,28 +379,8 @@ const DictionaryService = (function () {
      * @returns {Promise<string>} Vietnamese translation or empty string
      */
     async function fetchVietnameseFromWiktionary(word) {
-        // Wiktionary has a different endpoint for translations
-        // We can try the Vietnamese Wiktionary which has English-Vietnamese entries
-        const url = `https://vi.wiktionary.org/api/rest_v1/page/definition/${encodeURIComponent(word.toLowerCase())}`;
-
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Vietnamese Wiktionary not found');
-
-        const data = await response.json();
-
-        // Vietnamese Wiktionary stores English words with Vietnamese definitions
-        // Look for the Vietnamese definition of the English word
-        if (data && data.vi && data.vi.length > 0) {
-            const entry = data.vi[0];
-            if (entry.definitions && entry.definitions.length > 0) {
-                const defText = stripHtml(entry.definitions[0].definition || '');
-                if (defText && defText.length < 50) { // Keep only short, clean translations
-                    return defText;
-                }
-            }
-        }
-
-        throw new Error('No Vietnamese translation in Wiktionary');
+        // Unreliable REST endpoint for vi.wiktionary.org - Disabling to prevent long timeouts
+        throw new Error('Wiktionary Vietnamese REST API disabled for reliability');
     }
 
     /**

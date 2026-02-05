@@ -249,7 +249,29 @@ const ShopModule = (() => {
             if (isOwned) {
                 const purchase = purchaseHistory.find(p => p.itemId === item.id);
                 if (purchase && purchase.purchasedAt) {
-                    unlockedDate = purchase.purchasedAt.toLocaleDateString();
+                    try {
+                        let date;
+                        const val = purchase.purchasedAt;
+
+                        if (val instanceof Date) {
+                            date = val;
+                        } else if (typeof val.toDate === 'function') {
+                            // Firestore Timestamp object
+                            date = val.toDate();
+                        } else if (val && typeof val === 'object' && 'seconds' in val) {
+                            // Serialized Firestore Timestamp (from JSON/cache)
+                            date = new Date(val.seconds * 1000);
+                        } else {
+                            // String or Number (timestamp)
+                            date = new Date(val);
+                        }
+
+                        if (!isNaN(date.getTime())) {
+                            unlockedDate = date.toLocaleDateString();
+                        }
+                    } catch (e) {
+                        console.warn('Error parsing date for item:', item.id, e);
+                    }
                 }
             }
 

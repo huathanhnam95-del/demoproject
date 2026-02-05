@@ -49,13 +49,18 @@ export class DatabaseService {
             if (docSnap.exists()) {
                 console.log('📚 Database hit:', normalizedWord);
 
-                // Update search count (fire and forget)
-                updateDoc(docRef, {
-                    searchCount: increment(1),
-                    lastAccessedAt: serverTimestamp()
-                }).catch(err => {
-                    console.warn('Failed to update stats for:', normalizedWord, err.message);
-                });
+                // Update search count (fire and forget) - only if authenticated to avoid permission errors
+                const auth = window.auth || (window.firebaseAuth && window.firebaseAuth.currentUser);
+                const currentUser = auth ? auth.currentUser || auth : null; // Handle both auth object or user object
+
+                if (currentUser) {
+                    updateDoc(docRef, {
+                        searchCount: increment(1),
+                        lastAccessedAt: serverTimestamp()
+                    }).catch(err => {
+                        console.warn('Failed to update stats for:', normalizedWord, err.message);
+                    });
+                }
 
                 return docSnap.data();
             }

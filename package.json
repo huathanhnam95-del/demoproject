@@ -7,6 +7,7 @@
     "setup": "node setup-https.js",
     "update-db": "node update-database.js",
     "sync-rules": "node sync-points-rules.js points-rules.csv",
+    "deploy": "firebase deploy --only hosting",
     "lint": "eslint ."
   },
   "dependencies": {

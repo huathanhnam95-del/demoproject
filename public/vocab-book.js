@@ -1361,6 +1361,14 @@ const VocabularyBook = (function () {
             ` : ''}
         `;
 
+        // Add View All Items handler
+        const viewAllBtn = vocabBookmarkedList.querySelector('#vocab-view-all-btn');
+        if (viewAllBtn) {
+            viewAllBtn.addEventListener('click', () => {
+                showListModal('bookmarks');
+            });
+        }
+
         // Add remove handlers
         vocabBookmarkedList.querySelectorAll('.vocab-word-remove').forEach(btn => {
             btn.addEventListener('click', () => {

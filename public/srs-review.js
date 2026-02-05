@@ -2034,70 +2034,60 @@ const SRSReview = (function () {
         if (typeof DictionaryService !== 'undefined') {
             try {
                 // Use lemma for lookup
-                let lookupWord = currentWord.lemma || wordToLookup;
-                let wordData = await DictionaryService.getWordData(lookupWord, currentWord.partOfSpeech);
+                const lookupWord = (currentWord.lemma || wordToLookup).toLowerCase();
 
-                // Check for obscure definition and retry with base form if needed
-                const OBSCURE_KEYWORDS = ['iso 639', 'language code', 'grub', 'maggot', 'symbol for'];
-                const isObscure = wordData.definition && OBSCURE_KEYWORDS.some(kw => wordData.definition.toLowerCase().includes(kw));
+                // PERFORMANCE: Fetch in background, don't await if we already have some data
+                // but for SRS, we want accurate data, so we'll await with a shorter timeout if we could
+                const wordDataPromise = DictionaryService.getWordData(lookupWord, currentWord.partOfSpeech);
 
-                if (isObscure) {
-                    log.warn('Obscure definition detected, trying base form...');
-                    // Try common base forms (being -> be, made -> make, etc.)
-                    const baseFormMap = {
-                        'being': 'be', 'been': 'be',
-                        'made': 'make', 'making': 'make',
-                        'doing': 'do', 'done': 'do', 'did': 'do',
-                        'going': 'go', 'went': 'go', 'gone': 'go'
-                    };
-                    const baseWord = baseFormMap[lookupWord.toLowerCase()] || lookupWord;
-                    if (baseWord !== lookupWord) {
-                        wordData = await DictionaryService.getWordData(baseWord, currentWord.partOfSpeech);
-                    }
-                }
+                // Add a timeout to the promise to prevent hanging UI
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2500));
+                const wordData = await Promise.race([wordDataPromise, timeoutPromise]);
 
                 // Display Vietnamese translation
                 if (elements.srsVietnamese) {
                     elements.srsVietnamese.textContent = wordData.vietnameseTranslation || '';
                 }
 
-                // Display English definition - DISABLED PER USER REQUEST
-                if (elements.srsDefinition) {
-                    elements.srsDefinition.style.display = 'none';
-                    elements.srsDefinition.textContent = '';
+                // Display example sentence (prefer stored, fallback to fetched)
+                // Also update the prompt if it was empty
+                const example = currentWord.example || currentWord.sentence || wordData.example || '';
+                if (elements.srsExample) {
+                    elements.srsExample.textContent = example;
                 }
 
-                // Display example sentence (prefer stored, fallback to fetched)
-                if (elements.srsExample) {
-                    const example = currentWord.example || currentWord.sentence || wordData.example || '';
-                    elements.srsExample.textContent = example;
+                if (elements.srsDefinitionPrompt && (!elements.srsDefinitionPrompt.textContent || elements.srsDefinitionPrompt.textContent.includes('...'))) {
+                    if (example) elements.srsDefinitionPrompt.textContent = example;
                 }
 
                 log.debug('Word data loaded:', wordToLookup, wordData);
 
-                // Sync back to currentWord for Writing Challenge hints
+                // Sync back
                 currentWord.vietnameseTranslation = wordData.vietnameseTranslation;
                 currentWord.definition = wordData.definition;
-                currentWord.example = wordData.example || currentWord.example;
+                currentWord.example = example;
+            } catch (e) {
+                log.warn('DictionaryService call failed or timed out:', e);
+                // Fallback to locally stored info
+                if (elements.srsVietnamese) elements.srsVietnamese.textContent = currentWord.vietnameseTranslation || '';
+                if (elements.srsExample) elements.srsExample.textContent = currentWord.example || currentWord.sentence || '';
 
-                // Update interval preview labels on rating buttons
+                // Ensure prompt is NOT empty
+                if (elements.srsDefinitionPrompt && (!elements.srsDefinitionPrompt.textContent || elements.srsDefinitionPrompt.textContent.includes('...'))) {
+                    elements.srsDefinitionPrompt.textContent = currentWord.example || currentWord.sentence || 'No prompt available';
+                }
+            } finally {
+                // Update interval preview labels on rating buttons (always do this)
                 try {
                     const previews = getIntervalPreviews(currentWord);
                     updateIntervalLabels(previews);
                 } catch (e) {
                     log.warn('Could not update interval labels:', e);
                 }
-            } catch (e) {
-                log.warn('DictionaryService failed:', e);
-                // Fallback to stored data
-                if (elements.srsVietnamese) elements.srsVietnamese.textContent = '';
-                if (elements.srsDefinition) elements.srsDefinition.style.display = 'none';
-                if (elements.srsExample) elements.srsExample.textContent = currentWord.example || currentWord.sentence || '';
             }
         } else {
-            // DictionaryService not available, use stored data only
-            if (elements.srsVietnamese) elements.srsVietnamese.textContent = '';
-            if (elements.srsDefinition) elements.srsDefinition.style.display = 'none';
+            // DictionaryService not available
+            if (elements.srsVietnamese) elements.srsVietnamese.textContent = currentWord.vietnameseTranslation || '';
             if (elements.srsExample) elements.srsExample.textContent = currentWord.example || currentWord.sentence || '';
         }
     }

@@ -5582,6 +5582,9 @@
       window.currentQuestionAttempts = (window.currentQuestionAttempts || 0) + 1;
       const timeTaken = (Date.now() - (window.questionStartTime || Date.now())) / 1000;
 
+      // Calculate word count from the correct answer
+      const totalWords = correctSentenceType.trim().split(/\s+/).length;
+
       window.typePerformanceTracker.recordAttempt({
         correct: !hasErrors,
         attempts: window.currentQuestionAttempts,
@@ -5672,6 +5675,9 @@
     if (window.speakPerformanceTracker) {
       window.currentQuestionAttempts = (window.currentQuestionAttempts || 0) + 1;
       const timeTaken = (Date.now() - (window.questionStartTime || Date.now())) / 1000;
+
+      // Calculate word count from the correct answer
+      const totalWords = correctSentenceSpeak.trim().split(/\s+/).length;
 
       window.speakPerformanceTracker.recordAttempt({
         correct: !hasErrors,

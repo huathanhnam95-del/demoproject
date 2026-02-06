@@ -499,7 +499,7 @@
 
         // Compare notes with transcript
         const transcript = currentEntry.transcript || '';
-        const { highlightedTranscript, matchedWords } = compareTexts(transcript, userNotes);
+        const { highlightedTranscript, matchedWords, transcriptWordCount } = compareTexts(transcript, userNotes);
 
         // Display results
         elements.transcriptDisplay.innerHTML = highlightedTranscript;
@@ -507,7 +507,7 @@
         elements.matchCount.textContent = matchedWords.length;
 
         // Save progress if user is logged in
-        saveProgress(userNotes, matchedWords);
+        saveProgress(userNotes, matchedWords, transcriptWordCount);
     }
 
     /**
@@ -596,18 +596,26 @@
             return part;
         }).join('');
 
-        return { highlightedTranscript, matchedWords };
+        const transcriptWordCount = transcript.split(/\s+/).filter(w => w.length > 3).length; // Filter short words for better metric
+
+        return { highlightedTranscript, matchedWords, transcriptWordCount };
     }
 
     /**
      * Save user progress to Firestore
      */
-    async function saveProgress(userNotes, matchedWords) {
+    async function saveProgress(userNotes, matchedWords, transcriptWordCount) {
         try {
             if (typeof firebase === 'undefined' || !firebase.auth) return;
 
             const user = firebase.auth().currentUser;
             if (!user) return;
+
+            // Dual-Track Scoring Integration (Phase 2.1 - Server-Authoritative)
+            if (window.handleDualTrackScoring) {
+                // Pass raw user notes text for server-side word matching
+                await window.handleDualTrackScoring('notes', currentEntry.id, userNotes);
+            }
 
             const db = firebase.firestore();
             await db.collection('users').doc(user.uid)
@@ -616,6 +624,7 @@
                     entryId: currentEntry.id,
                     userNotes: userNotes,
                     matchedWordsCount: matchedWords.length,
+                    transcriptWordCount: transcriptWordCount,
                     completedAt: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
 

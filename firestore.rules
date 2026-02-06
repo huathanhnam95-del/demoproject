@@ -4,7 +4,6 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Helper function to check if user is admin via internal flag
     function isAdmin() {
-      // Robust check: ensure auth exists and document exists before accessing data
       return request.auth != null && 
              exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
@@ -15,90 +14,130 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == userId;
     }
     
-    // Users can read/write their own user profile
+    // ============================================
+    // USER PROFILES
+    // ============================================
     match /users/{userId} {
       allow read: if isOwner(userId);
       
-      // Separate create and update for safety
+      // Create: Prevent users from setting themselves as admin
       allow create: if isOwner(userId) && 
-                    // Prevent users from setting themselves as admin on creation
                     (!request.resource.data.keys().hasAny(['isAdmin']) || request.resource.data.isAdmin == false);
-                    
-      allow update: if isOwner(userId) && 
-                    // Prevent users from changing their own isAdmin flag
-                    (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastLoginAt', 'totalActiveSeconds', 'totalPoints', 'coins', 'unlockedModes', 'englishLevel', 'levelSelectedAt', 'sentenceLengthFilterUnlocked', 'practiceStats', 'vocabularyBookUnlocked', 'vocabularyBookUnlockedAt']) ||
-                     !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin']));
       
-      // Users can read/write their own progress data (tiered progression)
+      // Update: CLIENT CAN ONLY UPDATE HARMLESS PROFILE FIELDS
+      // Scoring and currency fields are SERVER-ONLY (Cloud Functions)
+      allow update: if isOwner(userId) && 
+                    !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin']) &&
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+                      // Allowed client-writable fields:
+                      'lastLoginAt', 
+                      'totalActiveSeconds',
+                      'englishLevel', 
+                      'levelSelectedAt',
+                      'practiceStats'
+                      // REMOVED: totalPoints, coins, skillPoints, skillRatings, 
+                      // cefrLevels, srsBonus, skillsUpdatedAt, unlockedModes, 
+                      // vocabularyBookUnlocked, sentenceLengthFilterUnlocked
+                    ]);
+      
+      // Progress data (tiered progression) - client can still manage
       match /progress/{progressId} {
         allow read, write: if isOwner(userId);
       }
       
-      // SRS System Cards - allow owner full access
+      // SRS System Cards - client can manage review scheduling
       match /srs_cards/{cardId} {
         allow read, write: if isOwner(userId);
       }
 
-      // Users can create and read their own points history
+      // Points History - SERVER-ONLY (Cloud Functions write only)
       match /pointsHistory/{historyId} {
-        allow read, create: if isOwner(userId);
+        allow read: if isOwner(userId);
+        allow create, update, delete: if false;  // Client cannot write
       }
 
-      // Vocabulary Book data
+      // Vocabulary Book data - client can manage word lists
       match /vocabularyBook/{docId} {
         allow read, write: if isOwner(userId);
       }
       
-      // Watch mode progress per video
+      // Watch mode progress per video - client tracks local state
       match /watchProgress/{videoId} {
         allow read, write: if isOwner(userId);
       }
 
-      // Purchase history
+      // Take Notes progress - client tracks local state
+      match /takeNotesProgress/{entryId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Purchase history - SERVER-ONLY (Cloud Functions write only)
       match /purchases/{purchaseId} {
-        allow read, create: if isOwner(userId);
+        allow read: if isOwner(userId);
+        allow create, update, delete: if false;  // Client cannot write
       }
     }
     
-    // Users can create practice attempts (read their own)
+    // ============================================
+    // PRACTICE ATTEMPTS (tightened schema)
+    // ============================================
     match /practiceAttempts/{attemptId} {
-      allow create: if request.auth != null;
+      // Tightened: require userId match and valid mode
+      allow create: if request.auth != null &&
+                    request.resource.data.userId == request.auth.uid &&
+                    request.resource.data.mode in ['type', 'speak', 'extended', 'watch', 'notes', 'writingChallenge', 'srs'];
       allow read: if request.auth != null && resource.data.userId == request.auth.uid;
     }
     
-    // Users can read/write their own sessions
+    // ============================================
+    // SESSIONS (client-managed for analytics)
+    // ============================================
     match /sessions/{sessionId} {
       allow read: if request.auth != null && resource.data.userId == request.auth.uid;
       allow create, update: if request.auth != null && request.resource.data.userId == request.auth.uid;
     }
     
-    // Points rules - any logged-in user can read
-    // Write access is via Admin SDK only (sync-points-rules.js script)
+    // ============================================
+    // POINTS RULES (read-only reference data)
+    // ============================================
     match /pointsRules/{ruleId} {
       allow read: if request.auth != null;
     }
     
-    // Watch mode video questions
-    // Anyone can read (including guests), only admin can write
+    // ============================================
+    // CONTENT ITEMS (canonical content for server-side scoring)
+    // Read-only for clients, write via Admin SDK only
+    // ============================================
+    match /contentItems/{contentId} {
+      allow read: if true;  // Anyone can read content for display
+      allow write: if false;  // Admin SDK only (migration script)
+    }
+    
+    // ============================================
+    // CONTENT COLLECTIONS (admin-managed)
+    // ============================================
     match /watchVideos/{videoId} {
       allow read: if true;
       allow write: if isAdmin();
       
+      // Public question metadata
       match /questions/{questionId} {
         allow read: if true;
         allow write: if isAdmin();
       }
+
+      // Private answer keys (Server/Admin ONLY)
+      match /questionKeys/{questionId} {
+        allow read, write: if isAdmin(); 
+      }
     }
     
-    // Take Notes entries
-    // Anyone can read (including guests), only admin can write
     match /takeNotesEntries/{entryId} {
       allow read: if true;
       allow write: if isAdmin();
     }
     
     // Word References for Pronunciation Analyzer
-    // Anyone can read (cached dictionary data), authenticated users can write
     match /word_references/{wordId} {
       allow read: if true;
       allow create, update: if request.auth != null;

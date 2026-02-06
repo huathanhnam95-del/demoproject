@@ -628,7 +628,7 @@
     /**
      * Select a question for editing
      */
-    function selectQuestion(questionId) {
+    async function selectQuestion(questionId) {
         if (hasUnsavedChanges) {
             if (!confirm('You have unsaved changes. Continue anyway?')) {
                 return;
@@ -637,6 +637,22 @@
 
         currentQuestion = questions.find(q => q.id === questionId);
         if (!currentQuestion) return;
+
+        // Fetch private keys (correctAnswer / modelAnswer)
+        try {
+            const db = firebase.firestore();
+            const keySnap = await db.collection('watchVideos')
+                .doc(currentVideo.id)
+                .collection('questionKeys')
+                .doc(questionId)
+                .get();
+
+            if (keySnap.exists) {
+                currentQuestion = { ...currentQuestion, ...keySnap.data() };
+            }
+        } catch (error) {
+            console.warn('Could not fetch question keys:', error);
+        }
 
         isNewQuestion = false;
         populateEditor(currentQuestion);
@@ -780,12 +796,13 @@
             updatedAt: new Date()
         };
 
+        const keys = {};
         if (questionData.questionType === 'multiple_choice') {
             const inputs = elements.mcOptionsList.querySelectorAll('.mc-option-input');
             questionData.options = Array.from(inputs).map(input => input.value);
-            questionData.correctAnswer = parseInt(elements.qCorrectAnswer.value) || 0;
+            keys.correctAnswer = parseInt(elements.qCorrectAnswer.value) || 0;
         } else {
-            questionData.modelAnswer = elements.qModelAnswer.value.trim();
+            keys.modelAnswer = elements.qModelAnswer.value.trim();
             questionData.caseSensitive = elements.qCaseSensitive.checked;
         }
 
@@ -799,13 +816,16 @@
             const db = firebase.firestore();
             const questionId = isNewQuestion ? `q-${Date.now()}` : currentQuestion.id;
 
-            await db.collection('watchVideos')
-                .doc(currentVideo.id)
-                .collection('questions')
-                .doc(questionId)
-                .set(questionData, { merge: true });
+            const batch = db.batch();
+            const qRef = db.collection('watchVideos').doc(currentVideo.id).collection('questions').doc(questionId);
+            const kRef = db.collection('watchVideos').doc(currentVideo.id).collection('questionKeys').doc(questionId);
 
-            console.log('Question saved:', questionId);
+            batch.set(qRef, questionData, { merge: true });
+            batch.set(kRef, keys, { merge: true });
+
+            await batch.commit();
+
+            console.log('Question saved (dual-collection):', questionId);
             hasUnsavedChanges = false;
 
             // Reload questions
@@ -816,10 +836,7 @@
             renderVideoList(videos);
 
             // Select the saved question
-            currentQuestion = questions.find(q => q.id === questionId);
-            if (currentQuestion) {
-                selectQuestion(questionId);
-            }
+            await selectQuestion(questionId);
 
             showNotification('Question saved successfully!', 'success');
         } catch (error) {
@@ -861,13 +878,16 @@
 
         try {
             const db = firebase.firestore();
-            await db.collection('watchVideos')
-                .doc(currentVideo.id)
-                .collection('questions')
-                .doc(currentQuestion.id)
-                .delete();
+            const batch = db.batch();
+            const qRef = db.collection('watchVideos').doc(currentVideo.id).collection('questions').doc(currentQuestion.id);
+            const kRef = db.collection('watchVideos').doc(currentVideo.id).collection('questionKeys').doc(currentQuestion.id);
 
-            console.log('Question deleted:', currentQuestion.id);
+            batch.delete(qRef);
+            batch.delete(kRef);
+
+            await batch.commit();
+
+            console.log('Question deleted (dual-collection):', currentQuestion.id);
 
             elements.deleteModal.style.display = 'none';
             hasUnsavedChanges = false;

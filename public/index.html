@@ -159,6 +159,76 @@
         </div>
       </div>
 
+      <!-- Skill Dashboard (Dual-Track System) -->
+      <div id="skill-dashboard" class="skill-dashboard" style="display: none;">
+        <div class="dashboard-section-header">
+          <h2>Proficiency Dashboard</h2>
+          <div class="cefr-indicator">
+            <span class="cefr-label">Overall Level:</span>
+            <span id="overall-cefr-badge" class="cefr-badge">A1</span>
+          </div>
+        </div>
+
+        <div class="skills-grid">
+          <!-- Skill: Vocabulary (Type) -->
+          <div class="skill-item">
+            <div class="skill-info">
+              <span class="skill-name">Writing (Dictation)</span>
+              <span id="skill-rating-type" class="skill-rating">0</span>
+            </div>
+            <div class="skill-bar-track">
+              <div id="skill-bar-fill-type" class="skill-bar-fill" style="width: 0%;"></div>
+            </div>
+            <div class="skill-level-row">
+              <span id="skill-cefr-type" class="skill-cefr">A1</span>
+              <span id="skill-points-type" class="skill-points">0 XP</span>
+            </div>
+          </div>
+
+          <!-- Skill: Speaking (Speak) -->
+          <div class="skill-item">
+            <div class="skill-info">
+              <span class="skill-name">Speaking</span>
+              <span id="skill-rating-speak" class="skill-rating">0</span>
+            </div>
+            <div class="skill-bar-track">
+              <div id="skill-bar-fill-speak" class="skill-bar-fill" style="width: 0%;"></div>
+            </div>
+            <div class="skill-level-row">
+              <span id="skill-cefr-speak" class="skill-cefr">A1</span>
+              <span id="skill-points-speak" class="skill-points">0 XP</span>
+            </div>
+          </div>
+
+          <!-- Skill: Writing (Challenge) -->
+          <div class="skill-item">
+            <div class="skill-info">
+              <span class="skill-name">Writing</span>
+              <span id="skill-rating-writing" class="skill-rating">0</span>
+            </div>
+            <div class="skill-bar-track">
+              <div id="skill-bar-fill-writing" class="skill-bar-fill" style="width: 0%;"></div>
+            </div>
+            <div class="skill-level-row">
+              <span id="skill-cefr-writing" class="skill-cefr">A1</span>
+              <span id="skill-points-writing" class="skill-points">0 XP</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stability & Consistency (Track B Meta) -->
+        <div class="stability-info">
+          <div class="stability-tag">
+            <span class="tag-icon">📈</span>
+            <span id="overall-stability">Rating is Stable</span>
+          </div>
+          <div class="stability-tag">
+            <span class="tag-icon">📅</span>
+            <span id="daily-consistency">7 Day Streak</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Recent Activity Header -->
       <div class="section-header">
         <h2>Recent Activity</h2>
@@ -596,7 +666,7 @@
 
   <!-- SRS Settings & Visualization Modal -->
   <div id="srs-settings-modal" class="srs-settings-modal"
-    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; align-items: center; justify-content: center;">
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 20000; align-items: center; justify-content: center;">
     <div class="srs-settings-content"
       style="background: white; width: 90%; max-width: 600px; border-radius: 16px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
       <div class="settings-header"
@@ -685,6 +755,7 @@
 
 
         <div class="panel-actions">
+          <button id="panel-view-profile-btn" class="panel-btn primary">📊 View Profile</button>
           <button id="panel-change-password-btn" class="panel-btn secondary">Change Password</button>
           <!-- Admin Console Link (visible only for admins) -->
           <a id="panel-admin-link" href="watch-admin.html" class="panel-btn primary"
@@ -696,12 +767,21 @@
 
         <!-- Practice Points & History -->
         <div class="panel-points-section">
-          <div class="panel-points-header">
-            <div class="points-value-large">
-              <span class="points-icon">🪙</span>
-              <span id="panel-points-count">0</span>
+          <div class="panel-points-header" style="display: flex; gap: 16px; justify-content: space-around;">
+            <div class="points-item" style="text-align: center;">
+              <div class="points-value-large">
+                <span class="points-icon">🪙</span>
+                <span id="panel-coins-count">0</span>
+              </div>
+              <div class="points-label">Coins</div>
             </div>
-            <div class="points-label">Practice Points</div>
+            <div class="points-item" style="text-align: center;">
+              <div class="points-value-large">
+                <span class="points-icon">⭐</span>
+                <span id="panel-points-count">0</span>
+              </div>
+              <div class="points-label">Lifetime XP</div>
+            </div>
           </div>
 
           <!-- Shopping Card -->
@@ -728,6 +808,63 @@
         <p class="panel-guest-note">No data will be saved. Log in to track your progress.</p>
         <div class="panel-actions">
           <button id="panel-guest-login-btn" class="panel-btn primary">Log In</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Adaptive Engine Profile Modal -->
+  <div id="adaptive-engine-modal" class="adaptive-engine-modal" style="display: none;">
+    <div class="ae-backdrop"></div>
+    <div class="ae-content">
+      <div class="ae-header">
+        <div class="ae-header-left">
+          <span class="ae-status-dot"></span>
+          <span class="ae-title">Adaptive Engine — Active</span>
+        </div>
+        <button id="ae-close-btn" class="ae-close-btn" title="Close">×</button>
+      </div>
+      <div class="ae-body">
+        <div class="ae-main-stat">
+          <span class="ae-label">Current Level</span>
+          <span class="ae-value ae-level-value" id="ae-level">B1 (Intermediate)</span>
+        </div>
+        <div class="ae-mode-tabs">
+          <button class="ae-mode-btn active" data-mode="type">Type</button>
+          <button class="ae-mode-btn" data-mode="speak">Speak</button>
+          <button class="ae-mode-btn" data-mode="extended">Fill</button>
+        </div>
+        <div class="ae-stats-grid">
+          <div class="ae-stat-item">
+            <span class="ae-label">Rolling Accuracy</span>
+            <span class="ae-value" id="ae-rolling-accuracy">—%</span>
+            <div class="ae-progress-mini">
+              <div class="ae-progress-fill" id="ae-ra-bar" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="ae-stat-item">
+            <span class="ae-label">Stability</span>
+            <span class="ae-value" id="ae-stability">— / 20 sets</span>
+          </div>
+        </div>
+        <div class="ae-divider"></div>
+        <div class="ae-adjustments">
+          <h4>Current Settings</h4>
+          <div class="ae-adj-item">
+            <span class="ae-adj-label">Sentence Length</span>
+            <span class="ae-adj-val" id="ae-sentence-length">—</span>
+          </div>
+          <div class="ae-adj-item">
+            <span class="ae-adj-label">Max Replays</span>
+            <span class="ae-adj-val" id="ae-max-replays">—</span>
+          </div>
+          <div class="ae-adj-item">
+            <span class="ae-adj-label">Initial Reveal</span>
+            <span class="ae-adj-val" id="ae-initial-reveal">—%</span>
+          </div>
+        </div>
+        <div class="ae-footer">
+          <span class="ae-badge" id="ae-status-badge">STABLE</span>
         </div>
       </div>
     </div>
@@ -970,10 +1107,20 @@
                 </div>
               </div>
             </div>
-            <div class="whats-this-container-modern">
-              <button id="what-is-this-btn" class="btn-secondary">
+            <div class="whats-this-container-compact">
+              <button id="what-is-this-btn" class="btn-secondary btn-compact">
                 <span class="icon">💡</span> Help me choose a mode
               </button>
+            </div>
+            <!-- Current Mode Indicator -->
+            <div id="current-mode-indicator" class="current-mode-indicator" style="display: none;">
+              <div class="mode-indicator-content">
+                <span class="mode-indicator-label">Current Mode:</span>
+                <span id="current-mode-name" class="mode-indicator-name">Type</span>
+                <button id="mode-tutorial-btn" class="mode-tutorial-btn" title="Learn about this mode">
+                  <span class="icon">❓</span> What's this?
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1018,6 +1165,9 @@
                     <span id="dashboard-srs-text">Loading schedule...</span>
                   </div>
                   <button class="card-cta primary">Practice Now</button>
+                  <button class="card-cta secondary"
+                    onclick="event.stopPropagation(); if(window.SRSReview) { SRSReview.openSettings(); }"
+                    style="margin-top: 8px; width: 100%; background: transparent; border: 1px solid var(--border-light); color: var(--text-muted);">Settings</button>
                 </div>
               </div>
 
@@ -2330,6 +2480,7 @@
   <!-- Scripts -->
   <script src="hint-system.js"></script>
   <script src="js/difficulty-manager.js"></script>
+  <script src="js/adaptive-engine-ui.js"></script>
   <script src="js/performance-tracker.js"></script>
   <script src="shop-module.js"></script>
   <script src="difficulty-filter.js"></script>

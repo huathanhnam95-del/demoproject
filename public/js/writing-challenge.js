@@ -336,8 +336,17 @@ export class WritingChallenge {
             this.deps.saveUserSentence(this.currentWord.id || 'unknown', lemma, sentence, feedback);
         }
 
-        if (score > 0 && this.deps.applyAIScoreToSRS) {
-            this.deps.applyAIScoreToSRS(lemma, score);
+        if (score > 0) {
+            if (this.deps.applyAIScoreToSRS) {
+                this.deps.applyAIScoreToSRS(lemma, score);
+            }
+
+            // Dual-Track Scoring (Track A: XP, Track B: Writing Prof)
+            if (window.handleDualTrackScoring) {
+                const accuracy = score / 5;
+                // Writing Challenge is inherently "Hard" (2.0)
+                window.handleDualTrackScoring('writingChallenge', this.currentWord.id || 'wc', accuracy, 1);
+            }
         }
 
         this.deps.clearDraft?.(lemma);

@@ -2449,7 +2449,13 @@ const SRSReview = (function () {
         // Update stats
         srsCache.reviewStats.totalReviews++;
         srsCache.reviewStats.reviewsToday++;
+        if (wasCorrect) {
+            srsCache.reviewStats.totalCorrect = (srsCache.reviewStats.totalCorrect || 0) + 1;
+        }
         srsCache.reviewStats.lastReviewSession = new Date().toISOString();
+
+        // Track last quality for awardPoints (Map wasCorrect to quality 4 or 1)
+        reviewSession.lastQuality = wasCorrect ? 4 : 1;
 
         await awardPoints(POINTS_PER_REVIEW, 'srs_review');
         // FIX: Removed duplicate awardPoints call
@@ -2615,6 +2621,9 @@ const SRSReview = (function () {
             bonusPoints += POINTS_WEEKLY_STREAK;
             await awardPoints(POINTS_WEEKLY_STREAK, 'weekly_streak');
         }
+
+        // Update the global SRS proficiency bonus
+        await updateSRSBonus();
 
         // Update UI to show summary
         if (elements.flashcard) elements.flashcard.style.display = 'none';
@@ -2831,8 +2840,16 @@ const SRSReview = (function () {
         if (!currentUserId || !db) return;
 
         try {
-            // Use unified points awarding function if available
-            if (window.firebaseFirestoreFunctions && window.firebaseFirestoreFunctions.addPoints) {
+            // Use Dual-Track Scoring for SRS Reviews if available
+            if (reason === 'srs_review' && window.handleDualTrackScoring) {
+                // Pass synthetic diff pieces to trigger F1 accuracy computation
+                const syntheticDiff = (quality >= 3)
+                    ? [{ type: 'match' }, { type: 'match' }]
+                    : [{ type: 'missing' }, { type: 'extra' }];
+
+                // Award XP only for SRS (Track A), don't update specific Skill Ratings (Track B)
+                await window.handleDualTrackScoring('srs', 'srs_review', syntheticDiff, 2);
+            } else if (window.firebaseFirestoreFunctions && window.firebaseFirestoreFunctions.addPoints) {
                 await window.firebaseFirestoreFunctions.addPoints(
                     currentUserId,
                     points,
@@ -2848,11 +2865,6 @@ const SRSReview = (function () {
                 });
             }
 
-            // Show toast if available
-            if (window.showPointsToast) {
-                window.showPointsToast(points, reason);
-            }
-
             // Update local cache and UI
             if (typeof srsCache.totalPoints === 'undefined') srsCache.totalPoints = 0;
             srsCache.totalPoints += points;
@@ -2861,6 +2873,38 @@ const SRSReview = (function () {
             log.debug(`Awarded ${points} points for ${reason}`);
         } catch (e) {
             log.error('Error awarding points:', e);
+        }
+    }
+
+    /**
+     * Update the global SRS proficiency bonus
+     * Bonus = Consistency^0.7 * Retention^1.3 (Max 5.0)
+     */
+    async function updateSRSBonus() {
+        if (!currentUserId || !firestoreFunctions) return;
+
+        const streak = srsCache.reviewStats.streak || 0;
+        const total = srsCache.reviewStats.totalReviews || 1;
+        const correct = srsCache.reviewStats.totalCorrect || 0; // Need to track this
+        const retention = correct / total;
+
+        // V6 Normalized Formula: bonus = 5 * Consistency^0.7 * Retention^1.3
+        // Consistency is streak normalized to [0, 1] relative to a 30-day "full power" target
+        const consistencyScale = Math.min(streak / 30, 1);
+        const consistencyFactor = Math.pow(consistencyScale, 0.7);
+        const retentionFactor = Math.pow(retention, 1.3);
+
+        const bonus = Math.min(5.0, 5.0 * consistencyFactor * retentionFactor);
+
+        log.debug(`[SRS] Calculated Bonus: ${bonus.toFixed(2)} (Streak: ${streak}, Retention: ${(retention * 100).toFixed(1)}%)`);
+
+        try {
+            const updateFn = firestoreFunctions.updateUserProfile || firestoreFunctions.createOrUpdateUserProfile;
+            if (updateFn) {
+                await updateFn(currentUserId, { srsBonus: bonus });
+            }
+        } catch (err) {
+            log.error('Failed to update SRS bonus:', err);
         }
     }
 
@@ -4092,7 +4136,8 @@ const SRSReview = (function () {
         getWordData,
         init: initModule,
         renderScheduleTable,
-        showWritingChallenge // Expose for testing/manual triggering
+        showWritingChallenge, // Expose for testing/manual triggering
+        openSettings // Expose for Settings button
     };
 
 })();

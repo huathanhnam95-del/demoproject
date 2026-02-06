@@ -571,36 +571,129 @@ function updateAccountPanelState() {
  */
 async function loadPracticePoints(userId) {
   const pointsCountEl = document.getElementById('panel-points-count');
-  if (!pointsCountEl) return;
+  const coinsCountEl = document.getElementById('panel-coins-count');
+
+  if (!pointsCountEl && !coinsCountEl) return;
 
   try {
-    const result = await firestoreFunctions.getTotalPoints(userId);
+    // Use getUserProfile to get both totalPoints and coins
+    const result = await firestoreFunctions.getUserProfile(userId);
+
     if (result.success) {
-      pointsCountEl.textContent = result.totalPoints.toLocaleString();
+      if (pointsCountEl) pointsCountEl.textContent = (result.data.totalPoints || 0).toLocaleString();
+      if (coinsCountEl) coinsCountEl.textContent = (result.data.coins || 0).toLocaleString();
+
+      // Render the Proficiency Dashboard (Track B)
+      renderSkillDashboard(result.data);
     } else {
-      pointsCountEl.textContent = '0';
+      if (pointsCountEl) pointsCountEl.textContent = '0';
+      if (coinsCountEl) coinsCountEl.textContent = '0';
     }
 
     // Load history as well
     loadPointsHistory(userId);
   } catch (error) {
     log.error('Error loading practice points:', error);
-    pointsCountEl.textContent = '0';
+    if (pointsCountEl) pointsCountEl.textContent = '0';
+    if (coinsCountEl) coinsCountEl.textContent = '0';
+  }
+}
+
+/**
+ * Render the Proficiency Dashboard (Track B) in the Account Details modal
+ * @param {object} data - User profile data from Firestore
+ */
+function renderSkillDashboard(data) {
+  const dashboard = document.getElementById('skill-dashboard');
+  if (!dashboard) return;
+
+  const ratings = data.skillRatings || { listening: 0, writing: 0, reading: 0, speaking: 0 };
+  const points = data.skillPoints || { listening: 0, writing: 0, reading: 0, speaking: 0 };
+
+  // Show dashboard if user has any ratings
+  const hasHistory = Object.values(ratings).some(v => v > 0) || (data.totalPoints > 0);
+  dashboard.style.display = hasHistory ? 'block' : 'none';
+
+  if (!hasHistory) return;
+
+  // 1. Skill Items
+  const skills = [
+    { id: 'type', key: 'writing', name: 'Writing (Dictation)' }, // Dictation Mode
+    { id: 'speak', key: 'speaking', name: 'Speaking' },
+    { id: 'writing', key: 'writing', name: 'Writing' }
+  ];
+
+  // Map modes to skills for display
+  const skillMap = {
+    'type': { ratingKey: 'writing', pointsKey: 'writing', label: 'Writing (Dictation)' },
+    'speak': { ratingKey: 'speaking', pointsKey: 'speaking', label: 'Speaking' },
+    'writing': { ratingKey: 'writing', pointsKey: 'writing', label: 'Writing' }
+  };
+
+  // Update Skill Bars & CEFR
+  Object.entries(skillMap).forEach(([id, config]) => {
+    const rating = ratings[config.ratingKey] || 0;
+    const skillPoints = points[config.pointsKey] || 0;
+
+    // Update Rating Text
+    const ratingEl = document.getElementById(`skill-rating-${id}`);
+    if (ratingEl) ratingEl.textContent = rating.toFixed(1);
+
+    // Update Bar
+    const barEl = document.getElementById(`skill-bar-fill-${id}`);
+    if (barEl) barEl.style.width = `${Math.max(5, rating)}%`;
+
+    // Update CEFR badge
+    const cefrEl = document.getElementById(`skill-cefr-${id}`);
+    if (cefrEl && window.PointsLogic) {
+      cefrEl.textContent = window.PointsLogic.getCefrLevel(rating);
+    }
+
+    // Update Points Text
+    const pointsEl = document.getElementById(`skill-points-${id}`);
+    if (pointsEl) pointsEl.textContent = `${Math.round(skillPoints).toLocaleString()} XP`;
+  });
+
+  // 2. Overall Level
+  const overallBadge = document.getElementById('overall-cefr-badge');
+  if (overallBadge && window.PointsLogic) {
+    const overallRating = window.PointsLogic.calculateOverallRating(ratings);
+    overallBadge.textContent = window.PointsLogic.getCefrLevel(overallRating);
+
+    // Color code badge based on rating
+    if (overallRating >= 80) overallBadge.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)'; // Gold (C1/C2)
+    else if (overallRating >= 60) overallBadge.style.background = 'linear-gradient(135deg, #10b981, #059669)'; // Green (B2)
+    else overallBadge.style.background = 'linear-gradient(135deg, #6366f1, #4f46e5)'; // Blue (A1-B1)
+  }
+
+  // 3. Stability & Consistency
+  const stabilityEl = document.getElementById('overall-stability');
+  if (stabilityEl) {
+    // Basic heuristic: if rating is high, it's "stable" or "pro"
+    stabilityEl.textContent = data.totalPoints > 500 ? 'Rating is High Fidelity' : 'Assessment in Progress';
+  }
+
+  const consistencyEl = document.getElementById('daily-consistency');
+  if (consistencyEl) {
+    const streak = data.srsStreak || 0;
+    consistencyEl.textContent = streak > 0 ? `${streak} Day Streak 🔥` : 'Start your streak!';
   }
 }
 
 /**
  * Update the Practice Points display with a new value
  * Called when points change (e.g., after completing a task)
- * @param {number} points - New total points value
+ * This now refreshes from server to ensure coins/points are synced
  */
-function updatePracticePointsDisplay(points) {
-  if (pointsCountEl) {
-    // Defensive check: ensure points is a number
-    const safePoints = (typeof points === 'number') ? points : 0;
-    pointsCountEl.textContent = safePoints.toLocaleString();
+async function updatePracticePointsDisplay() {
+  const user = authFunctions ? authFunctions.getCurrentUser() : null;
+  if (user) {
+    await loadPracticePoints(user.uid);
   }
 }
+
+// Expose globally for other modules (watch-mode, etc)
+window.updatePointsDisplay = updatePracticePointsDisplay;
 
 /**
  * ============================================

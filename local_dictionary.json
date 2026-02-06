@@ -5046,5 +5046,163 @@
       ]
     },
     "timestamp": 1770175099609
+  },
+  "policy": {
+    "data": {
+      "language": "en",
+      "sentences": [
+        {
+          "_id": "150270",
+          "fields": {
+            "en": "<em>policy</em>",
+            "vi": "chính sách"
+          }
+        },
+        {
+          "_id": "118172",
+          "fields": {
+            "en": "<em>Policy</em> instruments",
+            "vi": "Các công cụ chính sách"
+          }
+        },
+        {
+          "_id": "150136",
+          "fields": {
+            "en": "Industrial <em>policy</em>",
+            "vi": "Chính sách công nghiệp"
+          }
+        },
+        {
+          "_id": "738971",
+          "fields": {
+            "en": "Divisive <em>policy</em>",
+            "vi": "Chính sách gây chia rẽ"
+          }
+        },
+        {
+          "_id": "764510",
+          "fields": {
+            "en": "<em>Policy</em> document",
+            "vi": "Tài liệu về hợp đồng bảo hiểm"
+          }
+        },
+        {
+          "_id": "829232",
+          "fields": {
+            "en": "Insurance <em>policy</em>",
+            "vi": "Hợp đồng bảo hiểm"
+          }
+        },
+        {
+          "_id": "913681",
+          "fields": {
+            "en": "Monetary <em>policy</em>.",
+            "vi": "Chính sách tiền tệ."
+          }
+        },
+        {
+          "_id": "150292",
+          "fields": {
+            "en": "Fiscal <em>policy</em>",
+            "vi": "Chính sách thuế khoá ; chính sách thu chi ngân sách"
+          }
+        },
+        {
+          "_id": "150312",
+          "fields": {
+            "en": "Competition <em>policy</em>",
+            "vi": "Chính sách về cạnh tranh"
+          }
+        },
+        {
+          "_id": "731655",
+          "fields": {
+            "en": "Deflationary <em>policy</em>",
+            "vi": "Chính sách kiềm chế lạm phát"
+          }
+        },
+        {
+          "_id": "786807",
+          "fields": {
+            "en": "Corporate <em>policy</em>",
+            "vi": "Chính sách của liên hiệp công ty"
+          }
+        },
+        {
+          "_id": "916358",
+          "fields": {
+            "en": "ENTERPRISE <em>POLICY</em>",
+            "vi": "CHíNH SáCH DOANH NGHIệP"
+          }
+        },
+        {
+          "_id": "121703",
+          "fields": {
+            "en": "<em>Policy</em> targets",
+            "vi": "Các mục tiêu chính sách"
+          }
+        },
+        {
+          "_id": "150125",
+          "fields": {
+            "en": "Security <em>policy</em>",
+            "vi": "Chính sách an ninh"
+          }
+        },
+        {
+          "_id": "150182",
+          "fields": {
+            "en": "Regulatory <em>policy</em>",
+            "vi": "Chính sách điều tiết"
+          }
+        },
+        {
+          "_id": "150202",
+          "fields": {
+            "en": "Regional <em>policy</em>",
+            "vi": "Chính sách khu vực"
+          }
+        },
+        {
+          "_id": "150269",
+          "fields": {
+            "en": "Stabilization <em>policy</em>",
+            "vi": "Chính sách ổn định hoá"
+          }
+        },
+        {
+          "_id": "150295",
+          "fields": {
+            "en": "Incomes <em>policy</em>",
+            "vi": "Chính sách thu nhập"
+          }
+        },
+        {
+          "_id": "249338",
+          "fields": {
+            "en": "<em>Policy</em> coordination",
+            "vi": "Điều phối chính sách"
+          }
+        },
+        {
+          "_id": "714115",
+          "fields": {
+            "en": "Colonial <em>policy</em>",
+            "vi": "Chính sách thực dân"
+          }
+        }
+      ],
+      "suggestions": [],
+      "tratu": [
+        {
+          "fields": {
+            "fulltext": "<script>var tcGT = {\"name\":\"policy\",\"type\":0,\"children\":[{\"name\":\"procedure\",\"type\":1,\"children\":[{\"name\":\"action\",\"type\":2},{\"name\":\"programme\",\"type\":2},{\"name\":\"practice\",\"type\":2},{\"name\":\"scheme\",\"type\":2},{\"name\":\"theory\",\"type\":2},{\"name\":\"code\",\"type\":2},{\"name\":\"custom\",\"type\":2},{\"name\":\"stratagem\",\"type\":2}]},{\"name\":\"line\",\"type\":1,\"children\":[{\"name\":\"line\",\"type\":2},{\"name\":\"rules\",\"type\":2},{\"name\":\"approach\",\"type\":2},{\"name\":\"guideline\",\"type\":2},{\"name\":\"protocol\",\"type\":2}]}]}</script><article id=\"dict_ev\" data-tab-name=\"Anh - Việt\" class=\"tcTab--slide\"><div id=\"ev\"><div class=\"dict--title\">Từ điển Anh - Việt</div><div class=\"dict--content\"><table id=\"definition\" border=\"0\"><tr id=\"pa\"><td id=\"I_C\"><font color=\"#9e9e9e\">◘</font></td><td id=\"C_C\" colspan=\"3\"><font color=\"#9e9e9e\">['pɔləsi]</font></td></tr><tr id=\"tl\"><td id=\"I_C\"><font color=\"#1a76bf\">*</font></td><td id=\"C_C\" colspan=\"3\"><b><font color=\"#1a76bf\">danh từ</font></b></td></tr><tr id=\"mn\"><td> </td><td id=\"I_C\"><font color=\"#999\">■</font></td><td id=\"C_C\" colspan=\"2\">chính sách (của chính phủ, đảng...)</td></tr><tr id=\"mh\"><td colspan=\"2\"> </td><td id=\"I_C\"><font color=\"#1371BB\">⁃</font></td><td id=\"C_C\"><font color=\"#1371BB\">foreign policy</font></td></tr><tr id=\"mh_n\"><td colspan=\"3\"> </td><td id=\"C_C\"><font color=\"#7E7E7E\">chính sách đối ngoại</font></td></tr><tr id=\"mh\"><td colspan=\"2\"> </td><td id=\"I_C\"><font color=\"#1371BB\">⁃</font></td><td id=\"C_C\"><font color=\"#1371BB\">to adopt fresh policies</font></td></tr><tr id=\"mh_n\"><td colspan=\"3\"> </td><td id=\"C_C\"><font color=\"#7E7E7E\">theo đường lối mới</font></td></tr><tr id=\"mh\"><td colspan=\"2\"> </td><td id=\"I_C\"><font color=\"#1371BB\">⁃</font></td><td id=\"C_C\"><font color=\"#1371BB\">what's your policy on domestic investment encouragement</font><font color=\"#7E7E7E\">?</font></td></tr><tr id=\"mh_n\"><td colspan=\"3\"> </td><td id=\"C_C\"><font color=\"#7E7E7E\">chính sách khuyến khích đầu tư trong nước của các ông là như thế nào?</font></td></tr><tr id=\"mn\"><td> </td><td id=\"I_C\"><font color=\"#999\">■</font></td><td id=\"C_C\" colspan=\"2\">cách xử sự, cách giải quyết (vấn đề...) đường lối hành động</td></tr><tr id=\"mh\"><td colspan=\"2\"> </td><td id=\"I_C\"><font color=\"#1371BB\">⁃</font></td><td id=\"C_C\"><font color=\"#1371BB\">it is the best policy</font></td></tr><tr id=\"mh_n\"><td colspan=\"3\"> </td><td id=\"C_C\"><font color=\"#7E7E7E\">đó là đường lối tốt nhất, đó là cách xử sự tốt nhất</font></td></tr><tr id=\"mn\"><td> </td><td id=\"I_C\"><font color=\"#999\">■</font></td><td id=\"C_C\" colspan=\"2\">những điều khoản (của hợp đồng bảo hiểm); hợp đồng, khế ước</td></tr><tr id=\"mh\"><td colspan=\"2\"> </td><td id=\"I_C\"><font color=\"#1371BB\">⁃</font></td><td id=\"C_C\"><font color=\"#1371BB\">insurance policy</font></td></tr><tr id=\"mh_n\"><td colspan=\"3\"> </td><td id=\"C_C\"><font color=\"#7E7E7E\">hợp đồng bảo hiểm</font></td></tr><tr id=\"mh\"><td colspan=\"2\"> </td><td id=\"I_C\"><font color=\"#1371BB\">⁃</font></td><td id=\"C_C\"><font color=\"#1371BB\">a policy document</font></td></tr><tr id=\"mh_n\"><td colspan=\"3\"> </td><td id=\"C_C\"><font color=\"#7E7E7E\">tài liệu về hợp đồng bảo hiểm</font></td></tr><tr id=\"mh\"><td colspan=\"2\"> </td><td id=\"I_C\"><font color=\"#1371BB\">⁃</font></td><td id=\"C_C\"><font color=\"#1371BB\">a policy holder</font></td></tr><tr id=\"mh_n\"><td colspan=\"3\"> </td><td id=\"C_C\"><font color=\"#7E7E7E\">người có hợp đồng bảo hiểm</font></td></tr><tr id=\"mn\"><td> </td><td id=\"I_C\"><font color=\"#999\">■</font></td><td id=\"C_C\" colspan=\"2\">sự khôn ngoan, sự khôn khéo, sự tin tưởng, sự sáng suốt, sự sắc bén (về (chính trị), về sự chỉ đạo công việc)</td></tr><tr id=\"mn\"><td> </td><td id=\"I_C\"><font color=\"#999\">■</font></td><td id=\"C_C\" colspan=\"2\">(Ê-cốt) vườn rộng (quanh lâu đài)</td></tr></table><i></i></div></div></article><article id=\"dict_np\" data-tab-name=\"Ngữ pháp\" class=\"tcTab--slide\"><div id=\"bb\"><div class=\"dict--title\">Kết hợp từ &amp; Cấu trúc câu</div><div class=\"dict--content\"><k>policy</k><br><b>I</b><br><blockquote><blockquote><abr>n.</abr></blockquote></blockquote><br><blockquote><b>plan</b></blockquote><br><blockquote><b>principle</b></blockquote><br><blockquote><blockquote><ex>1) to adopt, establish, formulate, set a policy </ex></blockquote></blockquote><br><blockquote><blockquote><ex>2) to adhere to, follow, pursue; carry out, implement a policy </ex></blockquote></blockquote><br><blockquote><blockquote><ex>3) to form, shape a policy </ex></blockquote></blockquote><br><blockquote><blockquote><ex>4) a cautious; clear, clear-cut; conciliatory; deliberate; established, set; firm; flexible; foolish; friendly; prudent; rigid; sound, wise policy </ex></blockquote></blockquote><br><blockquote><blockquote><ex>5) (a) company; economic; foreign; government, public; long-range, long-term; military; monetary; national; official; open-door; personnel; population; scorched-earth; service; short-range, short-term; standard; wait-and-see; written policy </ex></blockquote></blockquote><br><blockquote><blockquote><ex>6) a policy to + <abr>inf.</abr> (it is our established policy to treat everyone fairly) </ex></blockquote></blockquote><br><blockquote><blockquote><ex>7) a policy that + clause; <abr>subj.</abr> (it is company policy that all workers be/should be paid according to the same criteria) </ex></blockquote></blockquote><br><b>II</b><br><blockquote><blockquote><abr>n.</abr></blockquote></blockquote><br><blockquote><b>contract for insurance</b></blockquote><br><blockquote><blockquote><ex>1) to take out a policy </ex></blockquote></blockquote><br><blockquote><blockquote><ex>2) to issue, write up a policy </ex></blockquote></blockquote><br><blockquote><blockquote><ex>3) to reinstate a policy </ex></blockquote></blockquote><br><blockquote><blockquote><ex>4) to cancel a policy </ex></blockquote></blockquote><br><blockquote><blockquote><ex>5) an endowment; homeowner's; insurance; lifetime; straight life; term policy</ex></blockquote></blockquote></div></div></article><article id=\"dict_th\" data-tab-name=\"Đồng nghĩa\" class=\"tcTab--slide\"><div id=\"th\"><div class=\"dict--title\">Từ điển Đồng nghĩa</div><div class=\"dict--content\"><k>policy</k><br><blockquote>▸ <cclass>noun</cclass></blockquote><br><blockquote><b>1</b><i>government policy</i>: PLANS, strategy, stratagem, approach, code, system, guidelines, theory; line, position, stance, attitude.</blockquote><br><blockquote><b>2</b><cclass><i>(archaic)</i><i>it's good policy to listen</i>: PRACTICE, custom, procedure, conduct, convention.</cclass></blockquote><svg id=\"vwSVG\" viewBox=\"0 0 600 500\" onload=\"VisualWords(tcGT)\"></svg></div></div></article><article id=\"dict_cn\" data-tab-name=\"Chuyên ngành\" class=\"tcTab--slide\"><div id=\"et\"><div class=\"dict--title\">Từ điển Kỹ thuật (EN)</div><div class=\"dict--content\"><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><font color=\"#999\">■</font><font> chính sách</font></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">account policy</font><font color=\"#282828\">: chính sách tài khoản</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">agricultural policy</font><font color=\"#282828\">: chính sách nông nghiệp</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">code policy</font><font color=\"#282828\">: chính sách mã</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">free trade policy</font><font color=\"#282828\">: chính sách mậu dịch tự do</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">housing policy</font><font color=\"#282828\">: chính sách nhà ở</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">icon layout policy</font><font color=\"#282828\">: chính sách sắp xếp biểu tượng</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">icon layout policy</font><font color=\"#282828\">: chính sách bố trí biểu tượng</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">insurance policy</font><font color=\"#282828\">: chính sách bảo hiểm</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">maintenance policy</font><font color=\"#282828\">: chính sách bảo dưỡng</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">monopoly policy</font><font color=\"#282828\">: chính sách độc quyền</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">policy of industrial decentralization</font><font color=\"#282828\">: chính sách phân tán công nghiệp</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">policy of technical development</font><font color=\"#282828\">: chính sách phát triển kỹ thuật</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">regional policy</font><font color=\"#282828\">: chính sách miền</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">safety policy</font><font color=\"#282828\">: chính sách an toàn</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">security policy</font><font color=\"#282828\">: chính sách an toàn</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">security policy</font><font color=\"#282828\">: chính sách an ninh</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">security policy model</font><font color=\"#282828\">: mô hình chính sách an toàn</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">stabilization policy</font><font color=\"#282828\">: chính sách ổn định</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">technical policy</font><font color=\"#282828\">: chính sách kỹ thuật</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><font color=\"#999\">■</font><font> nguyên tắc</font></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td><font color=\"#005ba1\">construction risks policy</font></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><font color=\"#999\">■</font><font> hợp đồng bảo hiểm xây dựng</font></td></tr></tbody></table></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td><font color=\"#005ba1\">design policy</font></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><font color=\"#999\">■</font><font> quan điểm thiết kế</font></td></tr></tbody></table></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td><font color=\"#005ba1\">insurance policy</font></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><font color=\"#999\">■</font><font> hợp đồng bảo hiểm</font></td></tr></tbody></table></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td><font color=\"#005ba1\">open policy</font></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><font color=\"#999\">■</font><font> đơn bảo hiểm ngỏ</font></td></tr></tbody></table></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td><font color=\"#005ba1\">policy space</font></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><font color=\"#999\">■</font><font> không gian các chiến lược</font></td></tr></tbody></table></td></tr></tbody></table></div></div><div id=\"ce\"><div class=\"dict--title\">Chuyên ngành</div><div class=\"dict--content\"><font color=\"#1a76bf\">*</font><font color=\"#1a76bf\"><b> danh từ</b></font><br>  - <font color=\"#595959\">chính sách (của chính phủ, đảng...)</font><br><font color=\"#005ba1\"><span>   </span><i>foreign policy</i></font> ~ <font color=\"#7E7E7E\">chính sách đối ngoại</font><br>  - <font color=\"#595959\">cách xử sự, cách giải quyết (vấn đề...) đường lối hành động</font><br><font color=\"#005ba1\"><span>   </span><i>it is the best policy</i></font> ~ <font color=\"#7E7E7E\">đó là đường lối tốt nhất, đó là cách xử sự tốt nhất</font><br>  - <font color=\"#595959\">sự khôn ngoan, sự khôn khéo, sự tin tưởng, sự sáng suốt, sự sắc bén (về chính trị, về sự chỉ đạo công việc)</font><br>  - <font color=\"#595959\">(Ê-cốt) vườn rộng (quanh lâu đài)</font><br><font color=\"#1a76bf\">*</font><font color=\"#1a76bf\"><b> danh từ</b></font><br>  - <font color=\"#595959\">hợp đồng, khế ước</font><br><font color=\"#005ba1\"><span>   </span><i>insurance policy; policy of insurance (assurance)</i></font> ~ <font color=\"#7E7E7E\">hợp đồng bảo hiểm</font></div></div></article><article id=\"dict_aa\" data-tab-name=\"Anh - Anh\" class=\"tcTab--slide\"><div id=\"ox\"><div class=\"dict--title\">Anh - Anh</div><div class=\"dict--content\"><k>policy</k><br><blockquote><b>policy<sup>1</sup></b></blockquote><br><blockquote>■ <cclass>noun (<cclass>plural <cclass><b>policies</b>) </cclass></cclass></cclass></blockquote><br><blockquote><blockquote>1》 a course or principle of action adopted or proposed by an organization or individual. </blockquote></blockquote><br><blockquote><blockquote>2》 <cclass>archaic prudent or expedient conduct or action. </cclass></blockquote></blockquote><br><blockquote></blockquote><br><blockquote><b><cclass>Origin</cclass></b></blockquote><br><blockquote>ME: from OFr. <i>policie</i> 'civil administration', via L. from Gk <i>politeia</i> 'citizenship'. </blockquote><br><blockquote><blockquote>————————</blockquote></blockquote><br><blockquote><b>policy<sup>2</sup></b></blockquote><br><blockquote>■ <cclass>noun (<cclass>plural <cclass><b>policies</b>) a contract of insurance. </cclass></cclass></cclass></blockquote><br><blockquote></blockquote><br><blockquote><b><cclass>Origin</cclass></b></blockquote><br><blockquote>C16: from Fr. <i>police</i> 'bill of lading, contract of insurance'. </blockquote></div></div><div id=\"ee\"><div class=\"dict--title\">WordNet</div><div class=\"dict--content\"><font color=\"#3673a2\"> noun</font><br><b>1.</b> a plan of action adopted by an individual or social group <br><font color=\"#3673a2\"><b> (<font color=\"#3673a2\"> Freq.</font> 33)</b></font><br>- <font color=\"#005ba1\">it was a policy of retribution</font><br>- <font color=\"#005ba1\">a politician keeps changing his policies</font><br><font color=\"#3673a2\"><b> •</b></font><font color=\"#3673a2\"> Hypernyms</font>: <kref>plan of action</kref><br><font color=\"#3673a2\"><b> •</b></font><font color=\"#3673a2\"> Hyponyms</font>:<br><kref>activism</kref> , <kref>beggar-my-neighbor policy</kref> , <kref>beggar-my-neighbour policy</kref> , <kref>beggar-my-neighbor strategy</kref> , <kref>beggar-my-neighbour strategy</kref> , <kref>centralism</kref> , <kref>containment</kref> , <kref>moderationism</kref> , <kref>obscurantism</kref> , <kref>Thatcherism</kref> , <kref>ultramontanism</kref><br><b>2.</b> a line of argument rationalizing the course of action of a government <br><font color=\"#3673a2\"><b> (<font color=\"#3673a2\"> Freq.</font> 25)</b></font><br>- <font color=\"#005ba1\">they debated the policy or impolicy of the proposed legislation</font><br><font color=\"#3673a2\"><b> •</b></font><font color=\"#3673a2\"> Hypernyms</font>: <kref>argumentation</kref> , <kref>logical argument</kref> , <kref>argument</kref> , <kref>line of reasoning</kref> , <kref>line</kref><br><font color=\"#3673a2\"><b> •</b></font><font color=\"#3673a2\"> Hyponyms</font>:<br><kref>clericalism</kref> , <kref>plank</kref> , <kref>economic policy</kref> , <kref>social policy</kref> , <kref>party line</kref> , <kref>foreign policy</kref> , <kref>zero-tolerance policy</kref> , <kref>Zionism</kref><br><b>3.</b> written contract or certificate of insurance <br><font color=\"#3673a2\"><b> (<font color=\"#3673a2\"> Freq.</font> 2)</b></font><br>- <font color=\"#005ba1\">you should have read the small print on your policy</font><br><font color=\"#005ba1\"> •</font><font color=\"#3673a2\"> Syn</font>: <kref>insurance policy</kref> , <kref>insurance</kref><br><font color=\"#3673a2\"><b> •</b></font><font color=\"#3673a2\"> Hypernyms</font>: <kref>contract</kref><br><font color=\"#3673a2\"><b> •</b></font><font color=\"#3673a2\"> Hyponyms</font>: <kref>floater</kref> , <kref>floating policy</kref></div></div></article>",
+            "kinds": "ev|np|th|cn|aa",
+            "word": "policy"
+          }
+        }
+      ]
+    },
+    "timestamp": 1770334083259
   }
 }

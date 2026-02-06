@@ -279,6 +279,10 @@ const ShopModule = (() => {
             card.className = `shop-item ${isOwned ? 'purchased' : ''}`;
 
             let actionButtons = '';
+            // Define which items are actual practice modes (can be "tried")
+            const practiceModesIds = ['speak', 'extended', 'watch', 'notes', 'pronounce'];
+            const isPracticeMode = practiceModesIds.includes(item.id);
+
             if (isOwned) {
                 if (item.id === 'autoAdjust') {
                     // Smart Difficulty: Settings + What's this? (No Try Now)
@@ -288,11 +292,18 @@ const ShopModule = (() => {
                             <button class="shop-tutorial-btn" data-id="${item.id}">What's this ❓</button>
                         </div>
                     `;
-                } else {
-                    // Standard: Try Now + What's this?
+                } else if (isPracticeMode) {
+                    // Practice Modes: Try Now + What's this?
                     actionButtons = `
                         <div class="shop-owned-actions">
                             <button class="shop-play-btn" data-id="${item.id}">Try Now ▶️</button>
+                            <button class="shop-tutorial-btn" data-id="${item.id}">What's this ❓</button>
+                        </div>
+                    `;
+                } else {
+                    // Features (lengthFilter, difficultyFilter, vocabBook): Only What's this?
+                    actionButtons = `
+                        <div class="shop-owned-actions">
                             <button class="shop-tutorial-btn" data-id="${item.id}">What's this ❓</button>
                         </div>
                     `;

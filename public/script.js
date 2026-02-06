@@ -239,6 +239,50 @@
   // Expose for external use
   window.resetGoalModalState = resetGoalModalState;
 
+  // Track current active mode for tutorial button
+  let currentActiveMode = 'type';
+
+  /**
+   * Update the current mode indicator shown between mode cards and progress bar
+   * @param {string} mode - The active mode name
+   */
+  function updateCurrentModeIndicator(mode) {
+    currentActiveMode = mode;
+    const indicator = document.getElementById('current-mode-indicator');
+    const modeName = document.getElementById('current-mode-name');
+
+    if (indicator && modeName) {
+      // Show the indicator
+      indicator.style.display = 'block';
+
+      // Update mode name with display-friendly text
+      const displayNames = {
+        'type': 'Type',
+        'speak': 'Speak',
+        'pronounce': 'Pronounce',
+        'extended': 'Fill',
+        'notes': 'Note',
+        'watch': 'Watch'
+      };
+      modeName.textContent = displayNames[mode] || mode;
+    }
+  }
+
+  // Expose for external use
+  window.updateCurrentModeIndicator = updateCurrentModeIndicator;
+
+  // Event listener for mode tutorial button
+  document.addEventListener('DOMContentLoaded', () => {
+    const tutorialBtn = document.getElementById('mode-tutorial-btn');
+    if (tutorialBtn) {
+      tutorialBtn.addEventListener('click', () => {
+        if (typeof window.startTutorial === 'function') {
+          window.startTutorial(currentActiveMode, true);
+        }
+      });
+    }
+  });
+
   // Global Mode Recommendation Functions
   window.showModeRecommendation = function () {
     const modal = document.getElementById('mode-helper-modal');
@@ -466,6 +510,9 @@
         btn.classList.toggle('is-active', isSelected);
         btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
       });
+
+      // 4. Update current mode indicator
+      updateCurrentModeIndicator(mode);
 
       // HANDLE WATCH MODE CLEANUP/RESTORE
       const pageWrapper = document.getElementById('page-layout-wrapper');
@@ -4316,10 +4363,12 @@
     checkResultExtended.textContent = `You got ${correctCount} out of ${totalGaps} gaps correct!`;
     checkResultExtended.style.display = 'block';
 
-    // Record practice attempt for extended listening (single words)
-    // Consider correct if all gaps are correct
-    const isFullyCorrect = correctCount === totalGaps && totalGaps > 0;
     recordPracticeAttempt(currentExtendedQuestionId || 'extended', isFullyCorrect, 'extended');
+
+    // Dual-Track Scoring Integration (v6)
+    if (window.handleDualTrackScoring) {
+      window.handleDualTrackScoring('extended', currentExtendedQuestionId || 'extended', correctCount, totalGaps);
+    }
 
     // Vocabulary Book tracking for Fill mode
     if (window.VocabularyBook) {
@@ -4554,10 +4603,13 @@
     checkResultPhrases.textContent = `You got ${correctCount} out of ${totalPhrases} phrases correct!`;
     checkResultPhrases.style.display = 'block';
 
-    // Record practice attempt for phrases
-    // Consider correct if all phrases are correct
-    const isFullyCorrect = correctCount === totalPhrases && totalPhrases > 0;
     recordPracticeAttempt(currentExtendedQuestionId || 'extended', isFullyCorrect, 'phrases');
+
+    // Dual-Track Scoring Integration (v6)
+    if (window.handleDualTrackScoring) {
+      // Note: Phrases also contributes to the 'extended' mode pool for proficiency
+      window.handleDualTrackScoring('extended', currentExtendedQuestionId || 'extended', correctCount, totalPhrases);
+    }
   });
 
   // Redo Phrases button
@@ -5565,6 +5617,93 @@
     }
   };
 
+  /**
+   * Dual Track Scoring Helper (Track A: XP + Track B: Proficiency)
+   * PHASE 2.1: TRUE SERVER-AUTHORITATIVE SCORING
+   * Client sends raw answers, server computes accuracy from canonical content.
+   */
+  const handleDualTrackScoring = async (mode, questionId, userAnswerData, totalWords) => {
+    // 1. Basic Validation
+    if (!window.auth || !window.auth.currentUser) return; // Guest
+
+    // 2. Check for Cloud Function wrapper
+    if (!window.callSubmitAttempt) {
+      console.warn('[Scoring] Cloud Function wrapper not loaded');
+      return;
+    }
+
+    try {
+      // 3. Build mode-specific payload with RAW answers (not computed accuracy)
+      const attemptId = crypto.randomUUID();
+      let payload = {};
+
+      if (mode === 'type' || mode === 'speak') {
+        // Send the actual user text for server-side F1 computation
+        if (typeof userAnswerData === 'string') {
+          payload = { text: userAnswerData };
+        } else if (Array.isArray(userAnswerData)) {
+          // If we received diff pieces, extract the user text from matches + extras
+          const userText = userAnswerData
+            .filter(p => p.type === 'match' || p.type === 'extra')
+            .map(p => p.value)
+            .join(' ');
+          payload = { text: userText };
+        }
+      } else if (mode === 'extended') {
+        // Send array of gap answers
+        if (Array.isArray(userAnswerData)) {
+          payload = { answers: userAnswerData };
+        } else if (typeof userAnswerData === 'object' && userAnswerData.answers) {
+          payload = { answers: userAnswerData.answers };
+        }
+      } else if (mode === 'watch') {
+        // Send selected option index
+        if (typeof userAnswerData === 'number') {
+          payload = { selectedIndex: userAnswerData };
+        } else if (typeof userAnswerData === 'object' && userAnswerData.selectedIndex !== undefined) {
+          payload = { selectedIndex: userAnswerData.selectedIndex };
+        }
+      } else if (mode === 'notes') {
+        // Send user's note text
+        if (typeof userAnswerData === 'string') {
+          payload = { text: userAnswerData };
+        } else if (typeof userAnswerData === 'object' && userAnswerData.text) {
+          payload = { text: userAnswerData.text };
+        }
+      } else {
+        // Fallback: try to extract text
+        payload = { text: String(userAnswerData) };
+      }
+
+      // 4. Call Cloud Function (server computes accuracy from canonical content)
+      const result = await window.callSubmitAttempt({
+        attemptId: attemptId,
+        mode: mode,
+        contentId: String(questionId),
+        payload: payload
+      });
+
+      if (result.success) {
+        console.log('[Scoring] ✓ Server scored:', result.xpEarned, 'XP, accuracy:', result.accuracy);
+
+        // Refresh UI if AuthUI is available
+        if (window.updatePointsDisplay) {
+          window.updatePointsDisplay();
+        }
+      } else if (result.alreadyRecorded) {
+        console.log('[Scoring] Attempt already recorded (idempotency)');
+      } else {
+        console.warn('[Scoring] Cloud Function returned error:', result.error);
+      }
+
+    } catch (e) {
+      console.error('[Scoring] Cloud Function call failed:', e);
+    }
+  };
+
+  // Expose globally for other modules (SRS, Writing Challenge)
+  window.handleDualTrackScoring = handleDualTrackScoring;
+
   // Type mode check function
   const performCheckType = (userAnswer, scoreElement) => {
     const diff = diffWords(userAnswer, correctSentenceType);
@@ -5636,6 +5775,9 @@
         audio.currentTime = 0;
         audio.play();
       }
+
+      // Trigger Dual Track Scoring (Pass diff pieces for F1 accuracy)
+      handleDualTrackScoring('type', currentTypeQuestionId, diff, getCorrectWordCount());
 
       // Vocabulary Book tracking
       if (window.VocabularyBook) {
@@ -5730,6 +5872,9 @@
         audio.currentTime = 0;
         audio.play();
       }
+
+      // Trigger Dual Track Scoring (Pass diff pieces for F1 accuracy)
+      handleDualTrackScoring('speak', currentSpeakQuestionId, diff, getCorrectWordCount());
 
       // Vocabulary Book tracking
       if (window.VocabularyBook) {
@@ -6006,6 +6151,7 @@
 
       select.innerHTML = "";
       let visibleCount = 0;
+      let firstVisibleId = null;
 
       // Filter and render questions based on filters
       database.forEach(item => {
@@ -6013,41 +6159,37 @@
         const progress = modeProgressCache[questionId] || { perfectCount: 0, hasAttempted: false };
         const hasAttempted = progress.hasAttempted || false;
         const perfectCount = progress.perfectCount || 0;
-        const tier = calculateTier(perfectCount); // Using calculated tier for consistency
         const state = calculateState(hasAttempted, perfectCount);
 
         // 1. Status Filter
-        let shouldShow = false;
-        if (state === 'not-started' && filterNotStarted) shouldShow = true;
-        else if (state === 'in-progress' && filterInProgress) shouldShow = true;
-        else if (state === 'completed' && filterCompleted) shouldShow = true;
-        else if (state === 'consolidated' && filterConsolidated) shouldShow = true;
-        else if (state === 'mastered' && filterMastered) shouldShow = true;
+        let matchesStatus = false;
+        if (state === 'not-started' && filterNotStarted) matchesStatus = true;
+        else if (state === 'in-progress' && filterInProgress) matchesStatus = true;
+        else if (state === 'completed' && filterCompleted) matchesStatus = true;
+        else if (state === 'consolidated' && filterConsolidated) matchesStatus = true;
+        else if (state === 'mastered' && filterMastered) matchesStatus = true;
+
+        if (!matchesStatus) return;
 
         // 2. Length Filter
-        if (shouldShow && lengthContainer && lengthContainer.style.display !== 'none' && lengthValue !== 'all') {
-          // If data hasn't loaded (validLengthIds is null), hide everything
-          if (validLengthIds === null) {
-            shouldShow = false;
-          } else if (!validLengthIds.has(questionId)) {
-            shouldShow = false;
+        const isLengthFilterActive = lengthContainer && lengthContainer.style.display !== 'none' && lengthValue !== 'all';
+        if (isLengthFilterActive) {
+          if (validLengthIds === null || !validLengthIds.has(questionId)) {
+            return;
           }
         }
 
         // 3. Difficulty Filter
-        if (shouldShow && difficultyContainer && difficultyContainer.style.display !== 'none' && difficultyLevel !== null) {
+        const isDifficultyFilterActive = difficultyContainer && difficultyContainer.style.display !== 'none' && difficultyLevel !== null;
+        if (isDifficultyFilterActive) {
           if (item.level !== difficultyLevel) {
-            shouldShow = false;
+            return;
           }
         }
 
-        // Don't force currentId to show if it doesn't match filters
-
-        if (!shouldShow) {
-          return; // Skip this question based on filter
-        }
-
+        // If we reach here, it matches all active filters
         visibleCount++;
+        if (firstVisibleId === null) firstVisibleId = questionId;
 
         // Create option element
         const option = document.createElement("option");
@@ -6073,51 +6215,30 @@
       const hasFilters = !filterNotStarted || !filterInProgress || !filterCompleted || !filterConsolidated || !filterMastered || (validLengthIds !== null) || (difficultyLevel !== null);
       totalDisplay.textContent = hasFilters ? `${visibleCount} (${database.length} total)` : database.length;
 
-      // Set selected value (ensure current question is selected)
-      select.value = currentId;
+      // Handle selection change if current question is filtered out
+      const currentExists = Array.from(select.options).some(opt => opt.value == currentId);
 
-      // Make sure selected question exists in dropdown
-      const existingOption = select.querySelector(`option[value="${currentId}"]`);
-      if (!existingOption) {
-        // Check if length filter is active - if so, don't force add a non-matching question
-        const isLengthFilterActive = lengthContainer && lengthContainer.style.display !== 'none' && lengthValue !== 'all';
-        const currentIdMatchesLengthFilter = !isLengthFilterActive || (validLengthIds && validLengthIds.has(currentId));
+      if (currentExists) {
+        select.value = currentId;
+      } else if (select.options.length > 0) {
+        // Current question filtered out - select first available
+        const firstValue = parseInt(select.options[0].value, 10);
+        select.value = firstValue;
 
-        if (currentIdMatchesLengthFilter) {
-          // Add current question if it was filtered out by status (but matches length filter)
-          const progress = modeProgressCache[currentId] || { perfectCount: 0, hasAttempted: false };
-          const hasAttempted = progress.hasAttempted || false;
-          const perfectCount = progress.perfectCount || 0;
-          const state = calculateState(hasAttempted, perfectCount);
-          const stateIndicators = {
-            'not-started': '',
-            'in-progress': ' ◐ (In Progress)',
-            'completed': ' ✓ (Completed)',
-            'consolidated': ' ✓✓ (Consolidated)',
-            'mastered': ' ★ (Mastered)'
-          };
-
-          const option = document.createElement("option");
-          option.value = currentId;
-          option.textContent = `${currentId}${stateIndicators[state] || ''}`;
-          option.classList.add(`state-${state}`);
-          select.appendChild(option);
-          select.value = currentId;
-        } else if (select.options.length > 0) {
-          // Length filter is active and current question doesn't match - select first available
-          select.selectedIndex = 0;
-          const firstValue = parseInt(select.options[0].value, 10);
-          if (mode === 'type') {
-            currentTypeQuestionId = firstValue;
-            loadQuestion('type', firstValue);
-          } else {
-            currentSpeakQuestionId = firstValue;
-            loadQuestion('speak', firstValue);
-          }
+        // Update the active question global state and UI
+        if (mode === 'type') {
+          currentTypeQuestionId = firstValue;
+          loadQuestion('type', firstValue);
+        } else {
+          currentSpeakQuestionId = firstValue;
+          loadQuestion('speak', firstValue);
         }
+      } else {
+        // No results match filters - show "No results" or similar?
+        // For now, keep current state but maybe warn user
+        console.log(`[populateQuestionSelect] No items match current filters for ${mode} mode`);
       }
     }
-
   };
 
   // Initialize databases

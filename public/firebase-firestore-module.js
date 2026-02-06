@@ -73,7 +73,7 @@ async function createOrUpdateUserProfile(userId, email, isNewUser = false) {
         lastLoginAt: serverTimestamp(),
         totalActiveSeconds: 0,
         totalPoints: 0,
-        coins: 0,
+        coins: 100,
         unlockedModes: ['type'],
         isAdmin: false // Explicitly set to false during client-side creation
       };
@@ -1155,6 +1155,141 @@ async function getPointsHistory(userId, limitCount = 10) {
   }
 }
 
+/**
+ * Record a scored attempt with Dual-Track Scoring (Track A + Track B)
+ * Atomically updates:
+ * 1. Track A: Lifetime XP (skillPoints) - Increments
+ * 2. Track B: Proficiency Rating (skillRatings) - Overwrites with new EMA
+ * 3. CEFR Labels (cefrLevels) - Derived from ratings
+ * 4. Points History - Detailed breakdown
+ * 
+ * @param {string} userId
+ * @param {object} scoreData - {
+ *   mode: string, // 'type', 'speak', etc.
+ *   questionId: string,
+ *   points: { total: number, breakdown: { listening, writing, reading, speaking } }, // Delta XP to add
+ *   rating: { listening, writing, reading, speaking, overall }, // NEW Complete Rating State (0-100)
+ *   cefr: { listening, writing, reading, speaking, overall }, // CEFR Labels ('B1', etc.)
+ *   meta: { basePoints, selectedDiff, effectiveDiff, creditMult, accuracy, performanceScore }
+ * }
+ */
+async function recordDualTrackScore(userId, scoreData) {
+  try {
+    if (!userId) return { success: false, error: 'User ID required' };
+
+    const userRef = doc(db, 'users', userId);
+
+    // Deterministic Attempt ID for idempotency (e.g. "type_123")
+    const attemptId = `${scoreData.mode}_${scoreData.questionId}`;
+    const historyRef = doc(db, 'users', userId, 'pointsHistory', attemptId);
+
+    const result = await runTransaction(db, async (transaction) => {
+      // 1. Idempotency Check
+      const historyDoc = await transaction.get(historyRef);
+      if (historyDoc.exists()) {
+        return { success: true, alreadyRecorded: true };
+      }
+
+      const userDoc = await transaction.get(userRef);
+      if (!userDoc.exists()) throw new Error('User profile not found');
+
+      const userData = userDoc.data();
+      const currentPoints = userData.skillPoints || {};
+      const currentRatings = userData.skillRatings || {};
+      const srsBonus = userData.srsBonus || 0;
+
+      // 2. Validate Inputs (Simple Security)
+      if (scoreData.points.total > 100) throw new Error("Points out of range");
+      if (scoreData.meta.accuracy < 0 || scoreData.meta.accuracy > 1.0) throw new Error("Invalid accuracy");
+
+      // 3. Trusted Derivation (Track B: Proficiency)
+      const validatedRatings = { ...currentRatings };
+      const performanceScore = scoreData.meta.performanceScore || 0;
+      const modeWeights = window.PointsLogic.CONFIG.MODE_WEIGHTS[scoreData.mode];
+
+      if (modeWeights) {
+        Object.entries(modeWeights).forEach(([skill, weight]) => {
+          if (weight > 0) {
+            const oldRating = currentRatings[skill] || 0;
+            // Deriving the new rating inside the transaction logic ensures we use the LATEST data
+            validatedRatings[skill] = window.PointsLogic.updateRating(oldRating, performanceScore, weight);
+          }
+        });
+      }
+
+      // Derive Overall and CEFR Labels inside transaction logic
+      const derivedOverall = window.PointsLogic.calculateOverallRating(validatedRatings, srsBonus);
+      const derivedCefr = {
+        writing: window.PointsLogic.getCefrLevel(validatedRatings.writing || 0),
+        listening: window.PointsLogic.getCefrLevel(validatedRatings.listening || 0),
+        speaking: window.PointsLogic.getCefrLevel(validatedRatings.speaking || 0),
+        reading: window.PointsLogic.getCefrLevel(validatedRatings.reading || 0),
+        overall: window.PointsLogic.getCefrLevel(derivedOverall)
+      };
+
+      // 4. Prepare updates
+      const userUpdate = {
+        // Track A: Lifetime XP
+        'skillPoints.listening': (currentPoints.listening || 0) + (scoreData.points.breakdown.listening || 0),
+        'skillPoints.writing': (currentPoints.writing || 0) + (scoreData.points.breakdown.writing || 0),
+        'skillPoints.reading': (currentPoints.reading || 0) + (scoreData.points.breakdown.reading || 0),
+        'skillPoints.speaking': (currentPoints.speaking || 0) + (scoreData.points.breakdown.speaking || 0),
+
+        totalPoints: (userData.totalPoints || 0) + (scoreData.points.total || 0),
+        coins: (userData.coins || 0) + (scoreData.points.total || 0),
+
+        // Track B: Proficiency (Derived)
+        'skillRatings.listening': validatedRatings.listening || 0,
+        'skillRatings.writing': validatedRatings.writing || 0,
+        'skillRatings.reading': validatedRatings.reading || 0,
+        'skillRatings.speaking': validatedRatings.speaking || 0,
+        'skillRatings.overall': derivedOverall,
+
+        // CEFR (Derived)
+        'cefrLevels.listening': derivedCefr.listening,
+        'cefrLevels.writing': derivedCefr.writing,
+        'cefrLevels.reading': derivedCefr.reading,
+        'cefrLevels.speaking': derivedCefr.speaking,
+        'cefrLevels.overall': derivedCefr.overall,
+
+        skillsUpdatedAt: serverTimestamp()
+      };
+
+      transaction.update(userRef, userUpdate);
+
+      // Using deterministic historyRef (defined above) for idempotency
+      const historyEntry = {
+        title: `${scoreData.mode.charAt(0).toUpperCase() + scoreData.mode.slice(1)} Practice`,
+        description: `Completed question ${scoreData.questionId} on ${scoreData.meta.selectedDiff}x difficulty`,
+        points: scoreData.points.total,
+        mode: scoreData.mode,
+        attemptId: attemptId,
+        details: {
+          breakdown: scoreData.points.breakdown,
+          meta: scoreData.meta,
+          newRating: validatedRatings,
+          cefr: derivedCefr
+        },
+        createdAt: serverTimestamp()
+      };
+
+      transaction.set(historyRef, historyEntry);
+
+      return { totalPoints: userUpdate.totalPoints, attemptId, derivedOverall };
+    });
+
+    const { totalPoints, derivedOverall } = result;
+
+    log.log('✓ Dual-Track Score Recorded (Atomic):', { userId, xpAdded: scoreData.points.total, newRating: derivedOverall });
+    return { success: true, ...result };
+
+  } catch (error) {
+    log.error('Error recording dual-track score:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+
 // Export functions for use in other modules
 // Export functions for use in other modules - MOVED TO END OF FILE
 
@@ -1570,47 +1705,114 @@ async function recordPurchase(userId, item) {
 }
 
 // Export functions for use in other modules
+// SECURITY: Removed dangerous functions (addPoints, deductCoins, recordDualTrackScore)
+// These are now handled by Cloud Functions only
 log.debug('[FirestoreModule] Exporting functions, testing updateUserProfile:', typeof updateUserProfile);
 window.firebaseFirestoreFunctions = {
+  // User profile (read + harmless updates only)
   createOrUpdateUserProfile,
-  updateUserProfile,
+  updateUserProfile, // Now restricted to harmless fields by rules
   getUserProfile,
+
+  // Session tracking (analytics only)
   recordSessionStart,
   recordSessionEnd,
   getActiveSessionId,
+
+  // Practice attempts (logging only, no points)
   recordPracticeAttempt,
   getPracticeStats,
-  // Legacy mastery functions (now redirect to progress)
+
+  // Legacy mastery functions (redirect to progress)
   getMasteryStatus,
   updateMasteryStatus,
   removeMasteryStatus,
-  // New tiered progress functions
+
+  // Tiered progress functions (read + local state)
   calculateTier,
   calculateState,
   getProgressStatus,
-  recordAttempt,
+  recordAttempt, // Local progress, no points
   incrementProgress,
   resetProgress,
   getAllProgressForMode,
   getRecentProgress,
-  // Points system functions
-  addPoints,
+
+  // Points (READ-ONLY - writes blocked by rules)
   getTotalPoints,
   getPointsHistory,
-  // Points rules functions
   getPointsRules,
   getPointsRuleByTitle,
-  awardPointsByRule,
-  awardPoints,
 
-  updateUnlockedModes,
-  deductCoins,
-  purchaseFeature,
+  // Purchases (READ-ONLY - writes now via Cloud Function)
   getPurchases,
-  recordPurchase
+
+  // Unlocked modes (READ-ONLY after migration)
+  updateUnlockedModes // Will be removed after full migration
+
+  // REMOVED (now Cloud Function only):
+  // - addPoints
+  // - deductCoins
+  // - purchaseFeature
+  // - recordDualTrackScore
+  // - awardPoints
+  // - awardPointsByRule
+  // - recordPurchase
 };
+
 log.debug('[FirestoreModule] window.firebaseFirestoreFunctions keys:', Object.keys(window.firebaseFirestoreFunctions));
 if (!window.firebaseFirestoreFunctions.updateUserProfile) {
   log.error('[FirestoreModule] FATAL: updateUserProfile MISSING FROM EXPORT!');
 }
+
+// ============================================
+// CLOUD FUNCTION WRAPPERS
+// ============================================
+// These call the server-authoritative Cloud Functions
+
+/**
+ * Call submitAttempt Cloud Function
+ * @param {object} attemptData - { mode, contentId, userAnswer, difficulty, correctCount?, totalCount? }
+ */
+async function callSubmitAttempt(attemptData) {
+  try {
+    if (!firebase.functions) {
+      log.error('Firebase Functions not initialized');
+      return { success: false, error: 'Functions not available' };
+    }
+
+    const submitAttempt = firebase.functions().httpsCallable('submitAttempt');
+    const result = await submitAttempt(attemptData);
+    log.log('✓ Submit attempt result:', result.data);
+    return result.data;
+  } catch (error) {
+    log.error('Error calling submitAttempt:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Call purchaseItem Cloud Function
+ * @param {string} itemId - Item identifier (e.g., 'vocabularyBook')
+ */
+async function callPurchaseItem(itemId) {
+  try {
+    if (!firebase.functions) {
+      log.error('Firebase Functions not initialized');
+      return { success: false, error: 'Functions not available' };
+    }
+
+    const purchaseItem = firebase.functions().httpsCallable('purchaseItem');
+    const result = await purchaseItem({ itemId });
+    log.log('✓ Purchase result:', result.data);
+    return result.data;
+  } catch (error) {
+    log.error('Error calling purchaseItem:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Export Cloud Function wrappers globally
+window.callSubmitAttempt = callSubmitAttempt;
+window.callPurchaseItem = callPurchaseItem;
 

@@ -100,6 +100,11 @@ const VocabularyBook = (function () {
             db = window.firebaseDb;
         }
 
+        // Ensure modal is present (fix for race condition with modals.js)
+        if (typeof window.injectVocabListModal === 'function') {
+            window.injectVocabListModal();
+        }
+
         // Get DOM elements
         vocabPanelToggle = document.getElementById('vocab-panel-toggle');
         vocabPanelSide = document.getElementById('vocab-panel-side');

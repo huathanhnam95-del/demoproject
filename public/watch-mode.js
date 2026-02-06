@@ -577,18 +577,31 @@ const WatchMode = (function () {
             isCorrect = true; // Open-ended always counts as attempted = correct for points
         }
 
-        // Check if this question was already answered (for points)
+        // Check if this question was already answered (for points or proficiency)
         const alreadyAnswered = answeredQuestions.has(currentQuestion.id);
 
-        // Award points only if correct AND not already answered
-        if (isCorrect && !alreadyAnswered) {
-            const points = currentQuestion.questionType === 'multiple_choice'
+        if (!alreadyAnswered) {
+            const maxPoints = currentQuestion.questionType === 'multiple_choice'
                 ? POINTS_MULTIPLE_CHOICE
                 : POINTS_OPEN_ENDED;
-            watchPoints += points;
-            await awardPoints(points, currentQuestion);
+            const earnedPoints = isCorrect ? maxPoints : 0;
 
-            // Mark question as answered (for points tracking)
+            if (isCorrect) watchPoints += earnedPoints;
+
+            // Dual-Track Scoring Integration (Phase 2.1 - Server-Authoritative)
+            if (window.handleDualTrackScoring) {
+                // Pass selectedIndex for MC, or text for open-ended
+                // Format: videoId::questionId for server to locate answer key
+                const payloadData = currentQuestion.questionType === 'multiple_choice'
+                    ? { selectedIndex: userAnswer }
+                    : { text: userAnswer };
+                await window.handleDualTrackScoring('watch', `${currentVideoId}::${currentQuestion.id}`, payloadData);
+            } else {
+                // Fallback for legacy (should not happen in v6)
+                if (isCorrect) await awardPoints(earnedPoints, currentQuestion);
+            }
+
+            // Mark question as answered in local state
             answeredQuestions.add(currentQuestion.id);
         }
 
@@ -596,7 +609,7 @@ const WatchMode = (function () {
         updateScoreDisplay();
         showFeedback(isCorrect, userAnswer, alreadyAnswered);
 
-        // Save progress
+        // Save progress (legacy persistence)
         await saveProgress();
     }
 
@@ -933,45 +946,12 @@ const WatchMode = (function () {
     /**
      * Award points to user
      */
+    /**
+     * Award points to user (LEGACY - replaced by handleDualTrackScoring)
+     * Kept as fallback during migration if needed, but no longer called internally.
+     */
     async function awardPoints(points, question) {
-        try {
-            if (window.firebase && window.firebase.auth && window.firebase.firestore) {
-                const user = window.firebase.auth().currentUser;
-                if (!user) return;
-
-                const db = window.firebase.firestore();
-                const userRef = db.collection('users').doc(user.uid);
-
-                // Update total practice points
-                await db.runTransaction(async (transaction) => {
-                    const userDoc = await transaction.get(userRef);
-                    const currentPoints = userDoc.exists() ? (userDoc.data().totalPoints || 0) : 0;
-                    transaction.update(userRef, {
-                        totalPoints: currentPoints + points,
-                        coins: (userDoc.data().coins || 0) + points // Keep coins in sync if needed, though firestore module handles this usually
-                    });
-                });
-
-                // Add to points history
-                await userRef.collection('pointsHistory').add({
-                    points: points,
-                    mode: 'watch',
-                    videoId: currentVideo.id,
-                    questionId: question.id,
-                    questionType: question.questionType,
-                    timestamp: new Date()
-                });
-
-                Logger.log(`[WatchMode] Awarded ${points} points`);
-
-                // Update displayed points if AuthUI is available
-                if (window.updatePointsDisplay) {
-                    window.updatePointsDisplay();
-                }
-            }
-        } catch (error) {
-            Logger.error('[WatchMode] Error awarding points:', error);
-        }
+        Logger.warn('[WatchMode] Legacy awardPoints called - use handleDualTrackScoring instead');
     }
 
     /**

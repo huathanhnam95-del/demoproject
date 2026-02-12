@@ -163,42 +163,61 @@ const AdaptiveEngineUI = (() => {
             raBar.style.width = `${Math.round(rollingAccuracy * 100)}%`;
         }
 
-        // --- Stability (attempts at current level) ---
+        // --- Level Progress (Stability) ---
         const attempts = profile.attemptsAtLevel || 0;
-        const stabilityEl = document.getElementById('ae-stability');
-        if (stabilityEl) {
-            stabilityEl.textContent = `${Math.min(attempts, GRACE_PERIOD)} / ${GRACE_PERIOD} sets`;
+        const progressPercent = Math.min((attempts / GRACE_PERIOD) * 100, 100);
+
+        const lpEl = document.getElementById('ae-level-progress');
+        const lpBar = document.getElementById('ae-lp-bar');
+
+        if (lpEl) {
+            lpEl.textContent = `${Math.round(progressPercent)}%`;
+        }
+        if (lpBar) {
+            lpBar.style.width = `${progressPercent}%`;
         }
 
-        // --- Current Settings (from DifficultyManager) ---
+        // --- Current Settings (Active Configuration) ---
         let levelSettings = {};
         if (window.DifficultyManager && typeof window.DifficultyManager.getCurrentSettings === 'function') {
             levelSettings = window.DifficultyManager.getCurrentSettings(currentMode);
         } else {
-            // Fallback: use basic defaults
             levelSettings = getDefaultSettings(level);
         }
 
-        const slEl = document.getElementById('ae-sentence-length');
-        const mrEl = document.getElementById('ae-max-replays');
-        const irEl = document.getElementById('ae-initial-reveal');
+        const compEl = document.getElementById('ae-complexity');
+        const assistEl = document.getElementById('ae-assistance');
 
-        if (slEl && levelSettings.sentenceLengthRange) {
+        // Complexity (Sentence Length)
+        if (compEl && levelSettings.sentenceLengthRange) {
             const [min, max] = levelSettings.sentenceLengthRange;
-            slEl.textContent = `${min}–${max} words`;
-        } else if (slEl) {
-            slEl.textContent = '—';
+            // Humanize range
+            let label = `${min}-${max} words`;
+            if (max > 900) label = "Unlimited Length";
+            else if (max <= 12) label = `Basic (${label})`;
+            else if (max <= 25) label = `Intermediate (${label})`;
+            else label = `Advanced (${label})`;
+
+            compEl.textContent = label;
+        } else if (compEl) {
+            compEl.textContent = '—';
         }
 
-        if (mrEl) {
+        // Assistance (Replays + Reveal)
+        if (assistEl) {
+            const masking = levelSettings.initialRevealPercentage || 0;
             const replays = levelSettings.maxReplays;
-            mrEl.textContent = replays === Infinity || replays > 99 ? 'Unlimited' : `${replays}`;
-        }
 
-        if (irEl) {
-            irEl.textContent = levelSettings.initialRevealPercentage != null
-                ? `${levelSettings.initialRevealPercentage}%`
-                : '—';
+            let assistLabel = "Standard";
+
+            if (masking >= 40) assistLabel = "High Support (Hints Active)";
+            else if (masking >= 15) assistLabel = "Moderate Support";
+            else if (masking === 0 && replays <= 2) assistLabel = " minimal assistance";
+            else assistLabel = "Low Support";
+
+            // Add concise replay note
+            const replayText = (replays > 99) ? "∞ Replays" : `${replays} Replays`;
+            assistEl.textContent = `${assistLabel} • ${replayText}`;
         }
 
         // --- Status Badge ---
@@ -206,14 +225,20 @@ const AdaptiveEngineUI = (() => {
         if (badge) {
             badge.classList.remove('promoting', 'stable', 'optimizing');
 
+            const setsUntilCheck = Math.max(0, GRACE_PERIOD - attempts);
+
             if (rollingAccuracy >= THRESHOLDS.UP && recentHistory.length >= windowSize) {
-                badge.textContent = `PROMOTING TO ${LEVEL_NAMES[Math.min(level + 1, 6)].split(' ')[0]}`;
+                badge.textContent = `Ready for Promotion`;
                 badge.classList.add('promoting');
             } else if (rollingAccuracy < THRESHOLDS.DOWN && recentHistory.length >= windowSize) {
-                badge.textContent = 'OPTIMIZING';
+                badge.textContent = 'Needs Optimization';
                 badge.classList.add('optimizing');
             } else {
-                badge.textContent = 'STABLE';
+                if (setsUntilCheck > 0) {
+                    badge.textContent = `${setsUntilCheck} sets to evaluation`;
+                } else {
+                    badge.textContent = 'Analyzing Performance...';
+                }
                 badge.classList.add('stable');
             }
         }

@@ -45,7 +45,7 @@
                             btn.click();
                             state.retryCount++;
                             foundCount++;
-                            console.log(`[Auto Retry] 🎯 Clicked button in iframe[${idx}]! (Total: ${state.retryCount})`);
+                            // console.log(`[Auto Retry] 🎯 Clicked button in iframe[${idx}]! (Total: ${state.retryCount})`);
 
                             // Re-sync observers for this iframe as content likely changed
                             setupIframeObserver(iframe, idx);
@@ -96,7 +96,7 @@
             });
 
             state.observers.set(iframe, observer);
-            console.log(`[Auto Retry] 🔍 Observer attached to iframe[${index}]`);
+            // console.log(`[Auto Retry] 🔍 Observer attached to iframe[${index}]`);
         } catch (e) {
             // Likely cross-origin
         }
@@ -135,5 +135,5 @@
         subtree: true
     });
 
-    console.log('[Auto Retry] 🚀 Enhanced version loaded and monitoring...');
+    // console.log('[Auto Retry] 🚀 Enhanced version loaded and monitoring...');
 })();

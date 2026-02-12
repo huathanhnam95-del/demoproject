@@ -7,21 +7,40 @@
 
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
+const CORE_ALWAYS_UNLOCKED_MODES = new Set(['type', 'speak', 'extended', 'watch', 'notes', 'pronounce']);
 
 // Shop item definitions (canonical source)
 const SHOP_ITEMS = {
-    'vocabularyBook': {
-        cost: 100,
-        unlockField: 'vocabularyBookUnlocked',
-        timestampField: 'vocabularyBookUnlockedAt',
-        name: 'Vocabulary Book'
+    // Legacy / Existing Modes
+    'speak': { cost: 50, unlocksMode: 'speak', name: 'Speak Mode' },
+    'extended': { cost: 50, unlocksMode: 'extended', name: 'Fill in the Blank' },
+    'watch': { cost: 50, unlocksMode: 'watch', name: 'Watch Mode' },
+    'notes': { cost: 50, unlocksMode: 'notes', name: 'Notes Mode' },
+    'pronounce': { cost: 50, unlocksMode: 'pronounce', name: 'Pronunciation Analyzer' },
+    'lengthFilter': { cost: 20, unlocksMode: 'lengthFilter', name: 'Length Filter', unlockField: 'lengthFilterUnlocked' },
+    'difficultyFilter': { cost: 30, unlocksMode: 'difficultyFilter', name: 'Difficulty Filter' },
+    'vocabBook': {
+        cost: 30,
+        unlocksMode: 'vocabBook',
+        name: 'Vocab Book',
+        unlockField: 'vocabularyBookUnlocked'
     },
-    'sentenceLengthFilter': {
-        cost: 50,
-        unlockField: 'sentenceLengthFilterUnlocked',
-        name: 'Sentence Length Filter'
-    },
-    // Add more items as needed
+    'autoAdjust': { cost: 100, unlocksMode: 'autoAdjust', name: 'Smart Difficulty', unlockField: 'smartDifficultyUnlocked' },
+    'survival': { cost: 100, unlocksMode: 'survival', name: 'Survival Mode' },
+
+    // New Level System Items
+    'hintLadder': { cost: 25, unlockField: 'hintLadderUnlocked', name: 'Hint Ladder' },
+    'slowAudio': { cost: 30, unlockField: 'slowAudioUnlocked', name: 'Slow Audio' },
+    'replayTrainer': { cost: 25, unlockField: 'replayTrainerUnlocked', name: 'Replay Trainer' },
+    'chunkingMode': { cost: 40, unlockField: 'chunkingModeUnlocked', name: 'Chunking Mode' },
+    'focusWords': { cost: 20, unlockField: 'focusWordsUnlocked', name: 'Focus Words' },
+    'shadowingMode': { cost: 60, unlockField: 'shadowingModeUnlocked', name: 'Shadowing Mode' },
+    'phonemeCoach': { cost: 70, unlockField: 'phonemeCoachUnlocked', name: 'Phoneme Coach' },
+    'collocationBooster': { cost: 40, unlockField: 'collocationBoosterUnlocked', name: 'Collocation Booster' },
+    'fsrsScheduler': { cost: 80, unlockField: 'fsrsSchedulerUnlocked', name: 'FSRS Scheduler' },
+    'writingChallenges': { cost: 60, unlockField: 'writingChallengesUnlocked', name: 'Writing Challenges' },
+    'prosodyCoach': { cost: 80, unlockField: 'prosodyCoachUnlocked', name: 'Prosody Coach' },
+    'customImport': { cost: 100, unlockField: 'customImportUnlocked', name: 'Custom Import' }
 };
 
 /**
@@ -62,9 +81,21 @@ const purchaseItem = onCall({ maxInstances: 10 }, async (request) => {
 
             const userData = userDoc.data();
             const currentCoins = userData.coins || 0;
+            const currentUnlockedModes = userData.unlockedModes || [];
+
+            if (item.unlocksMode && CORE_ALWAYS_UNLOCKED_MODES.has(item.unlocksMode)) {
+                return {
+                    success: false,
+                    error: 'already_unlocked',
+                    message: `${item.name} is available by default`
+                };
+            }
 
             // 4. Check if already unlocked
-            if (userData[item.unlockField] === true) {
+            const isAlreadyUnlocked = (item.unlocksMode && currentUnlockedModes.includes(item.unlocksMode)) ||
+                (item.unlockField && userData[item.unlockField] === true);
+
+            if (isAlreadyUnlocked) {
                 return {
                     success: false,
                     error: 'already_unlocked',
@@ -77,19 +108,21 @@ const purchaseItem = onCall({ maxInstances: 10 }, async (request) => {
                 return {
                     success: false,
                     error: 'insufficient_funds',
-                    message: `Not enough coins. Need ${item.cost}, have ${currentCoins}`,
-                    required: item.cost,
-                    current: currentCoins
+                    message: `Not enough coins. Need ${item.cost}, have ${currentCoins}`
                 };
             }
 
             // 6. Prepare update
             const userUpdate = {
-                coins: currentCoins - item.cost,
-                [item.unlockField]: true
+                coins: currentCoins - item.cost
             };
 
-            // Add timestamp if defined
+            if (item.unlocksMode) {
+                userUpdate.unlockedModes = FieldValue.arrayUnion(item.unlocksMode);
+            }
+            if (item.unlockField) {
+                userUpdate[item.unlockField] = true;
+            }
             if (item.timestampField) {
                 userUpdate[item.timestampField] = FieldValue.serverTimestamp();
             }
@@ -99,8 +132,6 @@ const purchaseItem = onCall({ maxInstances: 10 }, async (request) => {
                 itemId: itemId,
                 itemName: item.name,
                 cost: item.cost,
-                previousBalance: currentCoins,
-                newBalance: currentCoins - item.cost,
                 createdAt: FieldValue.serverTimestamp()
             };
 

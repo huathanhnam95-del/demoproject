@@ -294,7 +294,7 @@ const DifficultyManager = (() => {
      * Adjust difficulty based on performance score (0.0 - 1.0)
      * Implements: Rolling Average + Hysteresis + Grace Period + Smurf fast-track
      */
-    function adjustDifficulty(mode, score) {
+    function adjustDifficulty(mode, score, meta = {}) {
         if (!hasUnlockedFeature || !globalSettings.autoAdjustEnabled) return;
 
         // --- Validate inputs ---
@@ -315,11 +315,23 @@ const DifficultyManager = (() => {
             .map(h => ({
                 date: h.date ?? Date.now(),
                 score: Number.isFinite(h.score) ? Math.max(0, Math.min(1, h.score)) : 0,
-                level: Number.isFinite(h.level) ? h.level : profile.level
+                level: Number.isFinite(h.level) ? h.level : profile.level,
+                assisted: h.assisted === true,
+                calibMult: Number.isFinite(h.calibMult) ? Math.max(0.25, Math.min(1, h.calibMult)) : 1.0
             }));
 
         // --- Record attempt ---
-        profile.history.push({ date: Date.now(), score, level: profile.level });
+        const assisted = meta && meta.assisted === true;
+        const calibMult = Number.isFinite(meta?.calibMult)
+            ? Math.max(0.25, Math.min(1, meta.calibMult))
+            : 1.0;
+        profile.history.push({
+            date: Date.now(),
+            score,
+            level: profile.level,
+            assisted,
+            calibMult
+        });
         if (profile.history.length > HISTORY_SIZE) profile.history.shift();
         profile.attemptsAtLevel++;
 
@@ -331,7 +343,11 @@ const DifficultyManager = (() => {
 
         // --- Smurf check (does NOT require RA window size) ---
         const lastFive = relevantHistory.slice(-5);
-        const isSmurfing = lastFive.length === 5 && lastFive.every(h => h.score >= THRESHOLDS.SMURF);
+        const isSmurfing = lastFive.length === 5 && lastFive.every(h =>
+            h.score >= THRESHOLDS.SMURF &&
+            h.assisted !== true &&
+            (Number(h.calibMult) || 1) >= 0.9
+        );
 
         let newLevel = profile.level;
         let direction = 'maintain';

@@ -51,8 +51,8 @@ const CONFIG = {
     // Mode Contribution Matrix
     MODE_WEIGHTS: {
         type: { listening: 0.40, writing: 0.60, reading: 0.00, speaking: 0.00 },
-        speak: { listening: 0.20, writing: 0.00, reading: 0.00, speaking: 0.80 },
-        extended: { listening: 0.00, writing: 0.40, reading: 0.60, speaking: 0.00 },
+        speak: { listening: 0.60, writing: 0.00, reading: 0.00, speaking: 0.40 },
+        extended: { listening: 0.60, writing: 0.40, reading: 0.00, speaking: 0.00 },
         watch: { listening: 0.50, writing: 0.00, reading: 0.50, speaking: 0.00 },
         notes: { listening: 0.40, writing: 0.60, reading: 0.00, speaking: 0.00 },
         writingChallenge: { listening: 0.00, writing: 1.00, reading: 0.00, speaking: 0.00 }
@@ -311,9 +311,16 @@ function calculatePerformanceScore(selectedDiff, accuracy) {
 /**
  * Update rating with EMA and clamping
  */
-function updateRating(currentRating, performanceScore, weight = 1.0, ratingMult = 1.0) {
-    // Scale current learning rate (alpha) by ratingMult
-    const alpha = Math.min(1.0, CONFIG.RATING.ALPHA * weight * ratingMult);
+function updateRating(currentRating, performanceScore, weight = 1.0, ratingMult = 1.0, options = {}) {
+    const applyMultUpwardOnly = options && options.applyMultUpwardOnly === true;
+
+    const baseAlpha = Math.min(1.0, CONFIG.RATING.ALPHA * weight);
+    const deltaWithoutMult = baseAlpha * (performanceScore - currentRating);
+    const shouldScaleByMult = !(applyMultUpwardOnly && deltaWithoutMult < 0);
+    const effectiveMult = shouldScaleByMult ? ratingMult : 1.0;
+
+    // Scale learning rate by rating multiplier (with optional upward-only rule).
+    const alpha = Math.min(1.0, baseAlpha * effectiveMult);
     const rawDelta = alpha * (performanceScore - currentRating);
     const clampedDelta = Math.min(Math.max(rawDelta, -CONFIG.RATING.MAX_CHANGE), CONFIG.RATING.MAX_CHANGE);
     return Math.round((currentRating + clampedDelta) * 100) / 100;
@@ -343,14 +350,20 @@ function calculateOverallRating(skillRatings, srsBonus = 0) {
 /**
  * Update all skill ratings based on mode and performance
  */
-function updateAllRatings(currentRatings, performanceScore, mode, ratingMult = 1.0) {
+function updateAllRatings(currentRatings, performanceScore, mode, ratingMult = 1.0, options = {}) {
     const weights = CONFIG.MODE_WEIGHTS[mode];
     if (!weights) return currentRatings;
 
     const newRatings = { ...currentRatings };
     Object.entries(weights).forEach(([skill, weight]) => {
         if (weight > 0) {
-            newRatings[skill] = updateRating(currentRatings[skill] || 0, performanceScore, weight, ratingMult);
+            newRatings[skill] = updateRating(
+                currentRatings[skill] || 0,
+                performanceScore,
+                weight,
+                ratingMult,
+                options
+            );
         }
     });
 

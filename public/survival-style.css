@@ -1,0 +1,121 @@
+/* Survival Mode UI */
+#survival-game-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    background: #1a1a1a;
+}
+
+#survival-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+#survival-hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    padding: 20px;
+}
+
+.hp-bar {
+    width: 300px;
+    height: 20px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid #333;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.hp-fill {
+    height: 100%;
+    background: #4dabf7;
+    transition: width 0.2s;
+}
+
+.xp-bar-container {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 10px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid #444;
+    border-radius: 5px;
+}
+
+.xp-bar-fill {
+    height: 100%;
+    background: #eebefa;
+    /* XP Pink/Purple */
+    width: 0%;
+    transition: width 0.2s;
+}
+
+#survival-level-display {
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #eebefa;
+    font-weight: bold;
+}
+
+.survival-modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+}
+
+.modal-content {
+    background: #2c2e33;
+    padding: 40px;
+    border-radius: 16px;
+    text-align: center;
+    color: #fff;
+    border: 1px solid #444;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+}
+
+.upgrade-options {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.upgrade-card {
+    background: #373a40;
+    padding: 20px;
+    border-radius: 8px;
+    width: 200px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.upgrade-card:hover {
+    border-color: #4dabf7;
+    transform: translateY(-5px);
+    background: #40c057;
+    /* Highlight on hover */
+}
+
+.upgrade-card h3 {
+    color: #4dabf7;
+    margin-bottom: 10px;
+}

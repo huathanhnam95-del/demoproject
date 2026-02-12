@@ -18,7 +18,17 @@ export class WritingChallenge {
     initEventListeners() {
         const { srsWritingSubmit, srsWritingSkip, srsWritingCloseBtn, srsWritingInput, skipAiToggle, refreshStarterBtn } = this.elements;
 
+        // NEW: AI Check Button (if exists in HTML, or we create it dynamically)
+        // Ideally we should inject this button or expect it in the HTML.
+        // For now, let's assume we might need to create it if it doesn't exist.
+        this.aiCheckBtn = document.getElementById('srs-writing-ai-check');
+        if (!this.aiCheckBtn) {
+            // Create it if missing (simplest for integration without touching HTML file yet)
+            this.createAiCheckButton();
+        }
+
         if (srsWritingSubmit) srsWritingSubmit.addEventListener('click', () => this.handleSubmit());
+        if (this.aiCheckBtn) this.aiCheckBtn.addEventListener('click', () => this.handleAiCheck());
         if (srsWritingSkip) srsWritingSkip.addEventListener('click', () => this.handleSkip());
         if (srsWritingCloseBtn) srsWritingCloseBtn.addEventListener('click', () => this.close());
 
@@ -225,7 +235,11 @@ export class WritingChallenge {
         if (defVal) defVal.textContent = wordObj.definition || 'No definition';
 
         // Example
+        // Example - HIDDEN to prevent duplication with Scaffolding/Main Card
         const exRow = document.getElementById('hint-example');
+        if (exRow) exRow.style.display = 'none';
+
+        /* Original Code preserved for reference:
         const exVal = document.getElementById('hint-example-value');
         if (wordObj.example) {
             if (exVal) exVal.textContent = wordObj.example;
@@ -233,6 +247,7 @@ export class WritingChallenge {
         } else {
             if (exRow) exRow.style.display = 'none';
         }
+        */
 
         // Collocations
         const colloRow = document.getElementById('hint-collocations');
@@ -351,7 +366,8 @@ export class WritingChallenge {
 
         this.deps.clearDraft?.(lemma);
 
-        setTimeout(() => this.close(), 1500);
+        // Increased timeout to 4s to allow reading feedback
+        setTimeout(() => this.close(), 4000);
     }
 
     showFeedback(msg, type) {
@@ -363,6 +379,130 @@ export class WritingChallenge {
 
     handleSkip() {
         this.close();
+    }
+
+    createAiCheckButton() {
+        if (!this.elements.srsWritingSubmit) return;
+
+        const btn = document.createElement('button');
+        btn.id = 'srs-writing-ai-check';
+        btn.className = 'srs-writing-ai-check-btn';
+        btn.innerHTML = '✨ AI Check';
+        btn.style.cssText = `
+            margin-left: 10px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        `;
+
+        // Insert after Submit button
+        this.elements.srsWritingSubmit.parentNode.insertBefore(btn, this.elements.srsWritingSubmit.nextSibling);
+        this.aiCheckBtn = btn;
+    }
+
+    async handleAiCheck() {
+        const sentence = this.elements.srsWritingInput.value.trim();
+        if (!sentence) return;
+
+        this.showFeedback('Thinking...', 'info');
+
+        try {
+            // Call Backend Function
+            // Note: writing-challenge.js doesn't import firebase functions directly usually.
+            // We rely on deps.assessWriting which we need to wire up in srs-review.js
+            if (this.deps.assessWriting) {
+                const result = await this.deps.assessWriting(sentence, this.currentWord);
+
+                if (result.limited) {
+                    this.showFeedback(result.message, 'warning');
+                    // Fallback to LanguageTool automatically?
+                    if (result.fallback) {
+                        setTimeout(() => this.checkWithLanguageTool(sentence), 1500);
+                    }
+                } else if (result.success) {
+                    this.displayGeminiFeedback(result);
+                }
+            } else {
+                // Fallback if function not passed
+                this.checkWithLanguageTool(sentence);
+            }
+        } catch (e) {
+            this.log.error('AI Check failed completely:', e);
+            this.showFeedback('AI Check failed. Trying LanguageTool...', 'warning');
+            // Ensure fallback triggers even on catch
+            setTimeout(() => this.checkWithLanguageTool(sentence), 1000);
+        }
+    }
+
+    async checkWithLanguageTool(text) {
+        this.showFeedback('Checking grammar...', 'info');
+        try {
+            const response = await fetch('https://api.languagetool.org/v2/check', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    text: text,
+                    language: 'en-US'
+                })
+            });
+            const data = await response.json();
+
+            // Format LanguageTool response to look like Gemini response
+            const corrections = data.matches.map(m => ({
+                original: text.slice(m.offset, m.offset + m.length),
+                replacement: m.replacements[0]?.value || '',
+                type: m.rule.issueType,
+                reason: m.message
+            }));
+
+            const result = {
+                score: Math.max(0, 100 - (corrections.length * 10)),
+                feedback: corrections.length === 0 ? "Looks good!" : `Found ${corrections.length} issues.`,
+                corrections: corrections,
+                improved_text: null // LanguageTool doesn't give full rewrite easily
+            };
+
+            this.displayGeminiFeedback(result);
+
+        } catch (e) {
+            this.showFeedback('Grammar check unavailable.', 'error');
+        }
+    }
+
+    displayGeminiFeedback(data) {
+        let html = `<div class="ai-feedback-result">`;
+        html += `<div class="ai-feedback-header">
+            <span class="ai-score">Score: ${data.score}/100</span>
+            <span class="ai-summary">${data.feedback}</span>
+        </div>`;
+
+        if (data.corrections && data.corrections.length > 0) {
+            html += `<ul class="ai-correction-list">`;
+            data.corrections.forEach(c => {
+                html += `<li>
+                    <span class="ai-correction-original">${c.original}</span>
+                    <span class="ai-correction-arrow">→</span>
+                    <span class="ai-correction-replacement">${c.replacement}</span>
+                    <div class="ai-correction-reason">${c.reason}</div>
+                </li>`;
+            });
+            html += `</ul>`;
+        } else {
+            html += `<div class="ai-perfect-msg">Great job! No errors found.</div>`;
+        }
+
+        html += `</div>`;
+
+        this.showFeedback(html, 'ai-result');
+        // Add specific class styling for ai-result in CSS or inline here
     }
 
     close() {

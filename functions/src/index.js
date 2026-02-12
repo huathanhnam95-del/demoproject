@@ -12,10 +12,16 @@ initializeApp();
 // Export callable functions
 const { submitAttempt } = require('./submitAttempt');
 const { purchaseItem } = require('./purchaseItem');
+const { purchaseSkill } = require('./purchaseSkill');
+const { useActiveSkill } = require('./useActiveSkill');
 const { migrateUserCoins } = require('./migrateCoins');
+const { assessWriting } = require('./assessWriting');
 
 module.exports = {
     submitAttempt,
     purchaseItem,
-    migrateUserCoins
+    purchaseSkill,
+    useActiveSkill,
+    migrateUserCoins,
+    assessWriting
 };

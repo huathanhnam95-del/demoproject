@@ -1330,3 +1330,73 @@
         opacity: 1;
     }
 }
+
+.settings-header {
+    margin-bottom: 12px;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 8px;
+}
+
+.ai-score {
+    font-weight: 700;
+    color: #6366f1;
+    font-size: 1.1rem;
+}
+
+.ai-summary {
+    color: #64748b;
+    font-style: italic;
+}
+
+.ai-correction-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.ai-correction-list li {
+    background: white;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    border-left: 3px solid #f59e0b;
+    /* Default warning color */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.ai-correction-original {
+    text-decoration: line-through;
+    color: #94a3b8;
+    margin-right: 8px;
+}
+
+.ai-correction-arrow {
+    color: #64748b;
+    margin-right: 8px;
+}
+
+.ai-correction-replacement {
+    color: #10b981;
+    font-weight: 600;
+}
+
+.ai-correction-reason {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-top: 4px;
+}
+
+.ai-perfect-msg {
+    color: #10b981;
+    text-align: center;
+    font-weight: 600;
+    padding: 8px;
+}
+
+/* Feedback Types via classes */
+.srs-writing-feedback.ai-result {
+    background: white;
+    border: 1px solid #e2e8f0;
+    padding: 0;
+    /* Let inner content handle padding */
+}

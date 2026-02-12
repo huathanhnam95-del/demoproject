@@ -8,6 +8,11 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const pointsLogic = require('./pointsLogic');
+const {
+    computeAttemptCalibMult,
+    updateNoAssistStreakTokens,
+    shouldApplyNoRevealRebate
+} = require('./skillEconomy');
 
 /**
  * Submit a practice attempt for scoring
@@ -50,8 +55,9 @@ const submitAttempt = onCall({ maxInstances: 10 }, async (request) => {
     }
 
     const db = getFirestore();
-    const userRef = db.collection('users').doc(uid);
-    const historyRef = userRef.collection('pointsHistory').doc(attemptId);
+            const userRef = db.collection('users').doc(uid);
+            const historyRef = userRef.collection('pointsHistory').doc(attemptId);
+            const assistRef = userRef.collection('assistLedger').doc(attemptId);
 
     try {
         const result = await db.runTransaction(async (transaction) => {
@@ -76,6 +82,11 @@ const submitAttempt = onCall({ maxInstances: 10 }, async (request) => {
                 listening: 0, writing: 0, reading: 0, speaking: 0
             };
             const srsBonus = userData.srsBonus || 0;
+            const assistDoc = await transaction.get(assistRef);
+            const assistData = assistDoc.exists ? assistDoc.data() : null;
+            const assistCalibMult = assistData
+                ? computeAttemptCalibMult(assistData.skillsUsed || [])
+                : 1.0;
 
             // 5. Load canonical content and compute accuracy SERVER-SIDE
             let accuracy = 0;
@@ -109,6 +120,7 @@ const submitAttempt = onCall({ maxInstances: 10 }, async (request) => {
             const dailyCount = (ledger.dailyDate === today) ? (ledger.dailyCount || 0) : 0;
 
             const { xpMult, ratingMult } = computeRepeatMults(dailyCount, mode);
+            const effectiveRatingMult = ratingMult * assistCalibMult;
 
             // 6. Calculate points (Track A)
             const { total: xpEarned, breakdown, meta } = pointsLogic.calculateActivityPoints(
@@ -120,7 +132,20 @@ const submitAttempt = onCall({ maxInstances: 10 }, async (request) => {
 
             // 7. Calculate performance and update ratings (Track B)
             const performanceScore = pointsLogic.calculatePerformanceScore(difficulty, accuracy);
-            const newRatings = pointsLogic.updateAllRatings(currentRatings, performanceScore, mode, ratingMult);
+            const newRatings = pointsLogic.updateAllRatings(
+                currentRatings,
+                performanceScore,
+                mode,
+                effectiveRatingMult,
+                { applyMultUpwardOnly: true }
+            );
+
+            // 7.5 Assist-based economy hooks (refunds + streak token progress)
+            const issueNoRevealRebate = shouldApplyNoRevealRebate(userData, assistData, accuracy);
+            const rebateCoins = issueNoRevealRebate
+                ? Math.ceil((Number(assistData?.totalCost) || 0) * 0.25)
+                : 0;
+            const nextEconomyState = updateNoAssistStreakTokens(userData, assistData, accuracy);
 
             // 8. Derive CEFR levels
             const cefrLevels = pointsLogic.deriveCefrLevels(newRatings, srsBonus);
@@ -134,7 +159,8 @@ const submitAttempt = onCall({ maxInstances: 10 }, async (request) => {
                 'skillPoints.reading': FieldValue.increment(breakdown.reading || 0),
                 'skillPoints.speaking': FieldValue.increment(breakdown.speaking || 0),
                 totalPoints: FieldValue.increment(xpEarned),
-                coins: FieldValue.increment(xpEarned),
+                coins: FieldValue.increment(xpEarned + rebateCoins),
+                economyState: nextEconomyState,
 
                 // Track B: Proficiency (overwrite with new EMA)
                 'skillRatings.listening': newRatings.listening || 0,
@@ -168,7 +194,27 @@ const submitAttempt = onCall({ maxInstances: 10 }, async (request) => {
                     newRatings: newRatings,
                     cefrLevels: cefrLevels,
                     scoring: scoringDetails,
-                    antiFarm: { xpMult, ratingMult, dailyCountBefore: dailyCount }
+                    antiFarm: {
+                        xpMult,
+                        ratingMult,
+                        assistCalibMult,
+                        effectiveRatingMult,
+                        dailyCountBefore: dailyCount
+                    },
+                    assist: {
+                        used: !!assistData,
+                        attemptCalibMult: assistCalibMult,
+                        totalAssistCost: Number(assistData?.totalCost) || 0,
+                        skillsUsed: Array.isArray(assistData?.skillsUsed)
+                            ? assistData.skillsUsed.map((entry) => ({
+                                skillId: entry.skillId,
+                                tier: entry.tier,
+                                cost: entry.cost,
+                                charged: entry.charged
+                            }))
+                            : [],
+                        rebateCoins
+                    }
                 },
                 createdAt: FieldValue.serverTimestamp()
             };
@@ -184,6 +230,21 @@ const submitAttempt = onCall({ maxInstances: 10 }, async (request) => {
                 }, { merge: true });
             }
 
+            if (assistData) {
+                transaction.set(assistRef, {
+                    attemptCalibMult: assistCalibMult,
+                    submittedAt: FieldValue.serverTimestamp()
+                }, { merge: true });
+            }
+
+            if (rebateCoins > 0 && assistData) {
+                transaction.set(assistRef, {
+                    refundIssued: true,
+                    refundCoins: rebateCoins,
+                    refundIssuedAt: FieldValue.serverTimestamp()
+                }, { merge: true });
+            }
+
             // 12. Execute writes
             transaction.update(userRef, userUpdate);
             transaction.set(historyRef, historyEntry);
@@ -195,7 +256,14 @@ const submitAttempt = onCall({ maxInstances: 10 }, async (request) => {
                 difficulty: difficulty,
                 newRatings: newRatings,
                 cefrLevels: cefrLevels,
-                antiFarm: { xpMult, ratingMult, dailyCount: dailyCount + 1 }
+                rebateCoins,
+                antiFarm: {
+                    xpMult,
+                    ratingMult,
+                    assistCalibMult,
+                    effectiveRatingMult,
+                    dailyCount: dailyCount + 1
+                }
             };
         });
 

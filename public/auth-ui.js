@@ -23,6 +23,10 @@ let isGuestMode = false;
 // Used to trigger UI updates in other modules (e.g., progress reload)
 let authStateCallbacks = [];
 
+// Cache admin checks to avoid repeated network calls
+const adminAccessCache = new Map(); // uid -> { value: boolean, atMs: number }
+const ADMIN_ACCESS_CACHE_TTL_MS = 60 * 1000;
+
 /**
  * Trigger all auth state callbacks
  * @param {string} type - 'login' or 'logout'
@@ -196,13 +200,12 @@ function setupEventListeners() {
     // --- Shopping Card ---
     const shoppingCard = document.getElementById('panel-shopping-card');
     if (shoppingCard) {
-      // Remove old listener if any (though this function is init)
-      // Use new shop module
       shoppingCard.addEventListener('click', () => {
-        if (window.shopModule) {
+        if (window.shopModule && window.shopModule.openShop) {
           window.shopModule.openShop();
+          closeAccountPanel();
         } else {
-          log.warn('Shop module not loaded');
+          showShoppingModal();
         }
       });
     }
@@ -512,13 +515,19 @@ function updateAccountPanelState() {
     isGuestMode = false; // Clear guest mode when logged in
     sessionStorage.removeItem('guestMode');
 
-    // Show admin link for admin users (Secure check via Firestore profile)
-    const adminLink = document.getElementById('panel-admin-link');
-    if (adminLink && firestoreFunctions) {
-      firestoreFunctions.getUserProfile(user.uid).then(result => {
-        if (result.success && result.data && result.data.isAdmin) {
-          adminLink.style.display = 'block';
+    // Show admin links for admin users
+    const watchAdminLink = document.getElementById('panel-admin-link');
+    const crmAdminLink = document.getElementById('panel-crm-admin-link');
 
+    if (watchAdminLink) watchAdminLink.style.display = 'none';
+    if (crmAdminLink) crmAdminLink.style.display = 'none';
+
+    if (watchAdminLink || crmAdminLink) {
+      resolveAdminAccess(user).then(isAdmin => {
+        if (watchAdminLink) watchAdminLink.style.display = isAdmin ? 'block' : 'none';
+        if (crmAdminLink) crmAdminLink.style.display = isAdmin ? 'block' : 'none';
+
+        if (isAdmin) {
           // Seed cache for admin user to ensure full access
           const allModes = ['type', 'speak', 'extended', 'watch', 'notes', 'pronounce', 'lengthFilter', 'vocabBook', 'autoAdjust'];
           const cacheKey = `userProfile_${user.uid}`;
@@ -531,6 +540,7 @@ function updateAccountPanelState() {
               coins: 9999,
               totalPoints: 9999,
               unlockedModes: allModes,
+              isAdmin: true,
               cachedAt: Date.now()
             }));
           }
@@ -541,12 +551,11 @@ function updateAccountPanelState() {
           if (window.shopModule && window.shopModule.setUnlockedModes) {
             window.shopModule.setUnlockedModes(allModes);
           }
-        } else {
-          adminLink.style.display = 'none';
         }
       }).catch(err => {
         log.error('Error checking admin status:', err);
-        adminLink.style.display = 'none';
+        if (watchAdminLink) watchAdminLink.style.display = 'none';
+        if (crmAdminLink) crmAdminLink.style.display = 'none';
       });
     }
 
@@ -562,6 +571,64 @@ function updateAccountPanelState() {
     if (panelLoggedIn) panelLoggedIn.style.display = 'none';
     if (panelGuestMode) panelGuestMode.style.display = 'none';
     if (panelLoggedOut) panelLoggedOut.style.display = 'block';
+  }
+}
+
+function getCachedAdminAccess(uid) {
+  const entry = adminAccessCache.get(uid);
+  if (!entry) return null;
+  if ((Date.now() - entry.atMs) > ADMIN_ACCESS_CACHE_TTL_MS) {
+    adminAccessCache.delete(uid);
+    return null;
+  }
+  return !!entry.value;
+}
+
+function setCachedAdminAccess(uid, value) {
+  adminAccessCache.set(uid, { value: !!value, atMs: Date.now() });
+}
+
+async function resolveAdminAccess(user) {
+  if (!user?.uid) return false;
+
+  const cached = getCachedAdminAccess(user.uid);
+  if (cached !== null) return cached;
+
+  // 1) Fast path: Firestore profile flag
+  let isAdmin = false;
+  if (firestoreFunctions && typeof firestoreFunctions.getUserProfile === 'function') {
+    try {
+      const result = await firestoreFunctions.getUserProfile(user.uid);
+      isAdmin = !!(result?.success && result?.data && result.data.isAdmin);
+    } catch (e) {
+      // ignore; fallback to server check
+    }
+  }
+
+  // 2) Fallback: server-verified admin (also bootstraps Firestore isAdmin flag)
+  if (!isAdmin) {
+    isAdmin = await isAdminViaServer(user);
+  }
+
+  setCachedAdminAccess(user.uid, isAdmin);
+  return isAdmin;
+}
+
+async function isAdminViaServer(user) {
+  try {
+    if (!user?.getIdToken) return false;
+    const idToken = await user.getIdToken();
+
+    const res = await fetch('/api/admin/status', {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${idToken}` },
+      cache: 'no-store'
+    });
+
+    const result = await res.json().catch(() => null);
+    return !!(res.ok && result?.success && result?.isAdmin);
+  } catch (e) {
+    return false;
   }
 }
 
@@ -1018,6 +1085,18 @@ function setupAuthStateListener() {
         // Update panel to show logged in state
         updateAccountPanelState();
 
+        // Update Level Header Badge
+        if (window.LevelSystem && window.LevelSystem.updateHeaderLevel) {
+          // Fetch profile strictly for level update if not already available
+          // Note: updateAccountPanelState might fetch it internally, but for safety we fetch here
+          // or pass it if available.
+          firestoreFunctions.getUserProfile(user.uid).then(res => {
+            if (res.success) {
+              window.LevelSystem.updateHeaderLevel(res.data);
+            }
+          });
+        }
+
         // Check for Level Selection (First Login Feature)
         await checkLevelSelection(user.uid);
 
@@ -1398,282 +1477,41 @@ async function showExplanationPopup(ruleTitle, points) {
 }
 
 /**
- * Show the Shopping modal with Points Exchange table
+ * Show the Level / Skill Tree Modal
  */
-function showShoppingModal() {
-  // Close account panel first for better UX and to avoid stacking issues
+async function showShoppingModal() {
+  // Close account panel first
   closeAccountPanel();
 
-  const modal = document.getElementById('shopping-modal');
-  const closeBtn = document.getElementById('shopping-close-btn');
-  const pointsDisplay = document.getElementById('shopping-current-points');
-  const tableBody = document.getElementById('shopping-table-body');
-  const feedbackEl = document.getElementById('shopping-feedback');
+  const modal = document.getElementById('shop-modal');
+  const closeBtn = document.getElementById('shop-close-btn');
+  const container = document.getElementById('level-system-container');
 
-  if (!modal) return;
+  if (!modal || !container) return;
 
-  // Shopping Items Data
-  const shoppingItems = [
-    {
-      id: 'sentence_length_filter_type',
-      title: 'Filter mode: Length (Type mode)',
-      description: 'Unlock "All Lengths" filter for Type questions. (Required for Beginner/Expert)',
-      cost: 50,
-      unlockFlag: 'sentenceLengthFilterFullUnlock',
-      unlockTimestampField: 'sentenceLengthFilterFullUnlockedAt',
-      extraUnlockFields: { sentenceLengthFilterUnlocked: true },
-      hasTutorial: true,
-      tutorialFunction: () => {
-        if (window.LengthFilterTutorial) {
-          window.LengthFilterTutorial.reset('typeLengthFilter');
-          window.LengthFilterTutorial.start('typeLengthFilter');
-        }
-      },
-      onUnlock: () => {
-        if (window.onFilterUnlocked) window.onFilterUnlocked('type');
+  // Show modal using the class transition if possible, otherwise display
+  modal.classList.add('active');
+  modal.style.display = 'flex'; // Ensure flex layout for center alignment
+
+  try {
+    if (window.shopModule && typeof window.shopModule.renderSkillTree === 'function') {
+      await window.shopModule.renderSkillTree();
+    } else if (window.LevelSystem && window.LevelSystem.renderSkillTree) {
+      const user = authFunctions.getCurrentUser();
+      let userProfile = null;
+      if (user) {
+        const result = await firestoreFunctions.getUserProfile(user.uid);
+        if (result.success) userProfile = result.data;
       }
-    },
-    {
-      id: 'sentence_length_filter_speak',
-      title: 'Filter mode: Length (Speak mode)',
-      description: 'Unlock "All Lengths" filter for Speak questions. (Required for Beginner/Expert)',
-      cost: 50,
-      unlockFlag: 'speakLengthFilterFullUnlock',
-      unlockTimestampField: 'speakLengthFilterFullUnlockedAt',
-      extraUnlockFields: { speakLengthFilterUnlocked: true },
-      hasTutorial: true,
-      tutorialFunction: () => {
-        // Switch to Speak mode first so the UI matches the tutorial
-        const speakTab = document.getElementById('tab-speak');
-        if (speakTab) speakTab.click();
-
-        if (window.LengthFilterTutorial) {
-          window.LengthFilterTutorial.reset('speak');
-          window.LengthFilterTutorial.start('speak');
-        }
-      },
-      onUnlock: () => {
-        if (window.onFilterUnlocked) window.onFilterUnlocked('speak');
-      }
-    },
-    {
-      id: 'vocabulary_book',
-      title: 'Vocabulary Book',
-      description: 'Track missed words and build your personal vocabulary list',
-      cost: 10,
-      unlockFlag: 'vocabularyBookUnlocked',
-      unlockTimestampField: 'vocabularyBookUnlockedAt',
-      hasTutorial: true,
-      tutorialFunction: () => {
-        // Replay the Vocab Book intro tutorial
-        if (window.VocabTutorial) {
-          window.VocabTutorial.resetTutorial('vocabBookIntro');
-          setTimeout(() => {
-            window.VocabTutorial.startVocabBookIntro();
-          }, 300);
-        }
-      },
-      onUnlock: () => {
-        // Show the vocabulary book toggle button
-        const vocabToggle = document.getElementById('vocab-panel-toggle');
-        if (vocabToggle) vocabToggle.style.display = 'flex';
-
-        // Trigger Vocab Book intro tutorial
-        if (window.VocabTutorial) {
-          setTimeout(() => {
-            window.VocabTutorial.startVocabBookIntro();
-          }, 500); // Small delay to allow modal close animation
-        }
-      }
+      window.LevelSystem.renderSkillTree(container, userProfile, null);
+    } else {
+      container.innerHTML = '<div style="color:red; padding:20px;">Error: LevelSystem module not loaded.</div>';
     }
-  ];
-
-  // Helper to show feedback
-  const showFeedback = (message, type) => {
-    if (!feedbackEl) return;
-    feedbackEl.textContent = message;
-    feedbackEl.className = `shopping-feedback ${type}`;
-    feedbackEl.style.display = 'block';
-
-    // Auto-hide after 5s for success
-    if (type === 'success') {
-      setTimeout(() => { feedbackEl.style.display = 'none'; }, 5000);
-    }
-  };
-
-  const hideFeedback = () => {
-    if (feedbackEl) feedbackEl.style.display = 'none';
-  };
-
-  // Render the table
-  const renderTable = async () => {
-    if (!tableBody) return;
-    tableBody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 20px; color: #6b7280;">Loading...</td></tr>';
-
-    let currentPoints = 0;
-    let userProfile = null;
-
-    // Fetch user data
-    if (firestoreFunctions && currentUserId) {
-      const result = await firestoreFunctions.getUserProfile(currentUserId);
-      if (result && result.success) {
-        userProfile = result.data;
-        currentPoints = userProfile.totalPoints || 0; // FIX: Use totalPoints instead of points
-      }
-    }
-
-    // Update points display
-    if (pointsDisplay) {
-      pointsDisplay.textContent = currentPoints.toLocaleString();
-    }
-
-    // Clear and render rows
-    tableBody.innerHTML = '';
-
-    shoppingItems.forEach(item => {
-      const isUnlocked = userProfile && userProfile[item.unlockFlag];
-      const unlockTimestamp = userProfile && userProfile[item.unlockTimestampField];
-
-      const row = document.createElement('tr');
-
-      // Reward column
-      const rewardCell = document.createElement('td');
-      rewardCell.innerHTML = `
-        <div class="reward-info">
-          <span class="reward-title">${item.title}</span>
-          <span class="reward-description">${item.description}</span>
-        </div>
-      `;
-
-      // Cost column
-      const costCell = document.createElement('td');
-      costCell.innerHTML = `<span class="reward-cost"><span class="cost-icon">🪙</span>${item.cost}</span>`;
-
-      // Action column
-      const actionCell = document.createElement('td');
-      actionCell.style.textAlign = 'center';
-
-      const btn = document.createElement('button');
-      btn.className = 'shopping-unlock-btn';
-
-      if (isUnlocked) {
-        // Already unlocked - show timestamp
-        btn.className += ' unlocked';
-        btn.disabled = true;
-
-        let timestampStr = '';
-        if (unlockTimestamp) {
-          const date = unlockTimestamp.toDate ? unlockTimestamp.toDate() : new Date(unlockTimestamp);
-          timestampStr = date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
-        }
-
-        btn.innerHTML = `✓ UNLOCKED<span class="unlocked-timestamp">${timestampStr}</span>`;
-      } else if (currentPoints < item.cost) {
-        // Not enough points
-        btn.className += ' insufficient';
-        btn.textContent = `Need ${item.cost - currentPoints} more`;
-        btn.onclick = () => {
-          showFeedback(`You need ${item.cost - currentPoints} more points to unlock this reward.`, 'error');
-        };
-      } else {
-        // Available to unlock
-        btn.className += ' available';
-        btn.textContent = 'Unlock';
-        btn.onclick = async () => {
-          hideFeedback();
-          btn.className = 'shopping-unlock-btn processing';
-          btn.textContent = 'Processing...';
-          btn.disabled = true;
-
-          try {
-            // 1. Deduct points
-            await firestoreFunctions.addPoints(currentUserId, -item.cost, `Unlock: ${item.title}`);
-
-            // 2. Set unlock flag with timestamp
-            const updateData = {};
-            updateData[item.unlockFlag] = true;
-            updateData[item.unlockTimestampField] = new Date();
-
-            // Add extra fields if any
-            if (item.extraUnlockFields) {
-              Object.assign(updateData, item.extraUnlockFields);
-            }
-
-            await firestoreFunctions.updateUserProfile(currentUserId, updateData);
-
-            // 3. Trigger filter unlock callback (item-specific)
-            if (item.onUnlock) item.onUnlock();
-
-            // 4. Show success and re-render
-            showFeedback(`🎉 Successfully unlocked "${item.title}"!`, 'success');
-            renderTable(); // Re-render to show updated state
-
-            // 5. Update points in account panel
-            if (window.authUI && window.authUI.loadPracticePoints) {
-              window.authUI.loadPracticePoints(currentUserId);
-            }
-          } catch (err) {
-            log.error('Purchase failed:', err);
-            showFeedback('Purchase failed. Please try again.', 'error');
-            btn.className = 'shopping-unlock-btn available';
-            btn.textContent = 'Unlock';
-            btn.disabled = false;
-          }
-        };
-      }
-
-      actionCell.appendChild(btn);
-
-      // Tutorial column
-      const tutorialCell = document.createElement('td');
-      tutorialCell.style.textAlign = 'center';
-
-      if (item.hasTutorial && isUnlocked) {
-        const tutorialBtn = document.createElement('button');
-        tutorialBtn.className = 'shopping-tutorial-btn';
-        tutorialBtn.innerHTML = '<span class="btn-icon">▶</span> Play';
-        tutorialBtn.onclick = () => {
-          // Close the modal first
-          modal.style.display = 'none';
-          // Then start the tutorial
-          if (item.tutorialFunction) item.tutorialFunction();
-        };
-        tutorialCell.appendChild(tutorialBtn);
-      } else if (item.hasTutorial && !isUnlocked) {
-        tutorialCell.innerHTML = '<span style="color: #9ca3af; font-size: 0.85rem;">Unlock first</span>';
-      } else {
-        tutorialCell.innerHTML = '<span style="color: #d1d5db;">—</span>';
-      }
-
-      row.appendChild(rewardCell);
-      row.appendChild(costCell);
-      row.appendChild(actionCell);
-      row.appendChild(tutorialCell);
-      tableBody.appendChild(row);
-    });
-  };
-
-  // Show modal
-  modal.style.display = 'flex';
-  hideFeedback();
-  renderTable();
-
-  // Close handlers
-  const closeModal = () => {
-    modal.style.display = 'none';
-  };
-  if (closeBtn) closeBtn.onclick = closeModal;
-
-  // Bottom close button
-  const closeBottomBtn = document.getElementById('shopping-close-bottom-btn');
-  if (closeBottomBtn) closeBottomBtn.onclick = closeModal;
-
-  modal.onclick = (e) => {
-    if (e.target === modal) closeModal();
-  };
+  } catch (err) {
+    log.error('Error rendering skill tree:', err);
+    container.innerHTML = '<div style="color:red; padding:20px;">Failed to load data. Please try again.</div>';
+  }
 }
-
-// Export functions to window
 window.authUI = window.authUI || {};
 window.authUI.showPointsToast = showPointsToast;
 window.authUI.loadPointsHistory = loadPointsHistory;
@@ -1684,3 +1522,4 @@ window.authUI.onAuthStateChanged = onAuthStateChange; // Compatibility alias
 // Initialize automatically
 initializeAuthUI();
 log.log('✓ auth-ui.js: Module loaded and initialized');
+

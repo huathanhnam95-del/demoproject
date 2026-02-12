@@ -5204,5 +5204,163 @@
       ]
     },
     "timestamp": 1770334083259
+  },
+  "apple": {
+    "data": {
+      "language": "en",
+      "sentences": [
+        {
+          "_id": "58343",
+          "fields": {
+            "en": "<em>apple</em>",
+            "vi": "quả táo"
+          }
+        },
+        {
+          "_id": "705569",
+          "fields": {
+            "en": "<em>Apple</em> wine",
+            "vi": "Rượu vang táo"
+          }
+        },
+        {
+          "_id": "740762",
+          "fields": {
+            "en": "<em>Apple</em> crumble",
+            "vi": "Bánh hấp phết táo"
+          }
+        },
+        {
+          "_id": "744391",
+          "fields": {
+            "en": "<em>Apple</em> orchards",
+            "vi": "Vườn táo"
+          }
+        },
+        {
+          "_id": "791760",
+          "fields": {
+            "en": "Adam's <em>apple</em>",
+            "vi": "Trái cổ"
+          }
+        },
+        {
+          "_id": "928887",
+          "fields": {
+            "en": "Crisp <em>apple</em>",
+            "vi": "Quả táo giòn"
+          }
+        },
+        {
+          "_id": "791832",
+          "fields": {
+            "en": "<em>Apple</em> puree",
+            "vi": "Táo nghiền nhuyễn"
+          }
+        },
+        {
+          "_id": "889858",
+          "fields": {
+            "en": "Wormy <em>apple</em>",
+            "vi": "Một quả táo sâu"
+          }
+        },
+        {
+          "_id": "309453",
+          "fields": {
+            "en": "Try this <em>apple</em>.",
+            "vi": "Hãy thử quả táo này xem."
+          }
+        },
+        {
+          "_id": "550506",
+          "fields": {
+            "en": "This <em>apple</em> is wormy.",
+            "vi": "Quả táo này có sâu."
+          }
+        },
+        {
+          "_id": "929802",
+          "fields": {
+            "en": "Quarter an <em>apple</em>",
+            "vi": "Chia tư một quả táo"
+          }
+        },
+        {
+          "_id": "984762",
+          "fields": {
+            "en": "THE <em>APPLE</em> TREE",
+            "vi": "CÂY TÁO"
+          }
+        },
+        {
+          "_id": "259009",
+          "fields": {
+            "en": "It's a rotten <em>apple</em>.",
+            "vi": "Đó là một quả táo thối."
+          }
+        },
+        {
+          "_id": "383310",
+          "fields": {
+            "en": "I like eating <em>apple</em>",
+            "vi": "tôi thích ăn táo"
+          }
+        },
+        {
+          "_id": "761528",
+          "fields": {
+            "en": "In <em>apple</em>-pie order",
+            "vi": "Hết sức gọn gàng ngăn nắp"
+          }
+        },
+        {
+          "_id": "776921",
+          "fields": {
+            "en": "<em>Apple</em> of discord",
+            "vi": "Mối bất hoà"
+          }
+        },
+        {
+          "_id": "790971",
+          "fields": {
+            "en": "Mechanical <em>apple</em>-picker",
+            "vi": "Máy hái táo"
+          }
+        },
+        {
+          "_id": "911332",
+          "fields": {
+            "en": "Slice of <em>apple</em> strudel",
+            "vi": "Miếng táo tây bọc bột đường"
+          }
+        },
+        {
+          "_id": "944030",
+          "fields": {
+            "en": "Deep-dish <em>apple</em> pie",
+            "vi": "Bánh nhân táo nướng trong đĩa sâu"
+          }
+        },
+        {
+          "_id": "944888",
+          "fields": {
+            "en": "Dead sea <em>apple</em>",
+            "vi": "Quả táo trông mã ngoài thì đẹp nhưng trong đã thối"
+          }
+        }
+      ],
+      "suggestions": [],
+      "tratu": [
+        {
+          "fields": {
+            "fulltext": "<script>var tcGT = {\"name\":\"apple\",\"type\":0,\"children\":[{\"name\":\"pick\",\"type\":2},{\"name\":\"choice\",\"type\":2},{\"name\":\"dear\",\"type\":2},{\"name\":\"pet\",\"type\":2},{\"name\":\"darling\",\"type\":2},{\"name\":\"beloved\",\"type\":2},{\"name\":\"idol\",\"type\":2},{\"name\":\"fave\",\"type\":2,\"end\":true},{\"name\":\"blue-eyed boy\",\"type\":2,\"end\":true}]}</script><article id=\"dict_ev\" data-tab-name=\"Anh - Việt\" class=\"tcTab--slide\"><div id=\"ev\"><div class=\"dict--title\">Từ điển Anh - Việt</div><div class=\"dict--content\"><table id=\"definition\" border=\"0\"><tr id=\"pa\"><td id=\"I_C\"><font color=\"#9e9e9e\">◘</font></td><td id=\"C_C\" colspan=\"3\"><font color=\"#9e9e9e\">['æpl]</font></td></tr><tr id=\"tl\"><td id=\"I_C\"><font color=\"#1a76bf\">*</font></td><td id=\"C_C\" colspan=\"3\"><b><font color=\"#1a76bf\">danh từ</font></b></td></tr><tr id=\"mn\"><td> </td><td id=\"I_C\"><font color=\"#999\">■</font></td><td id=\"C_C\" colspan=\"2\">quả táo</td></tr><tr id=\"mn\"><td> </td><td id=\"I_C\"><font color=\"#999\">■</font></td><td id=\"C_C\" colspan=\"2\">(xem) <font color=\"#1371BB\">Adam</font></td></tr><tr id=\"tn\"><td> </td><td id=\"I_C\"><font color=\"#1371BB\">▸</font></td><td id=\"C_C\" colspan=\"2\"><font color=\"#1371BB\">apple of discord</font></td></tr><tr id=\"tn_n\"><td colspan=\"2\"> </td><td id=\"I_C\"><font color=\"#aaa\">■</font></td><td id=\"C_C\">mối bất hoà</td></tr><tr id=\"tn\"><td> </td><td id=\"I_C\"><font color=\"#1371BB\">▸</font></td><td id=\"C_C\" colspan=\"2\"><font color=\"#1371BB\">apple of the eye</font></td></tr><tr id=\"tn_n\"><td colspan=\"2\"> </td><td id=\"I_C\"><font color=\"#aaa\">■</font></td><td id=\"C_C\">đồng tử, con ngươi</td></tr><tr id=\"tn_n\"><td colspan=\"2\"> </td><td id=\"I_C\"><font color=\"#aaa\">■</font></td><td id=\"C_C\">vật quí báu phải giữ gìn nhất</td></tr><tr id=\"tn\"><td> </td><td id=\"I_C\"><font color=\"#1371BB\">▸</font></td><td id=\"C_C\" colspan=\"2\"><font color=\"#1371BB\">the apple of Sodom</font>; <font color=\"#1371BB\">Dead Sea apple</font></td></tr><tr id=\"tn_n\"><td colspan=\"2\"> </td><td id=\"I_C\"><font color=\"#aaa\">■</font></td><td id=\"C_C\">quả táo trông mã ngoài thì đẹp nhưng trong đã thối</td></tr><tr id=\"tn_n\"><td colspan=\"2\"> </td><td id=\"I_C\"><font color=\"#aaa\">■</font></td><td id=\"C_C\">(nghĩa bóng) thành tích bề ngoài, thành tích giả tạo</td></tr><tr id=\"tn\"><td> </td><td id=\"I_C\"><font color=\"#1371BB\">▸</font></td><td id=\"C_C\" colspan=\"2\"><font color=\"#1371BB\">the rotten apple injures its neighbours</font></td></tr><tr id=\"tn_n\"><td colspan=\"2\"> </td><td id=\"I_C\"><font color=\"#aaa\">■</font></td><td id=\"C_C\">(tục ngữ) con sâu làm rầu nồi canh</td></tr></table><i></i></div></div></article><article id=\"dict_np\" data-tab-name=\"Ngữ pháp\" class=\"tcTab--slide\"><div id=\"bb\"><div class=\"dict--title\">Kết hợp từ &amp; Cấu trúc câu</div><div class=\"dict--content\"><k>apple</k><br><blockquote><blockquote><abr>n.</abr></blockquote></blockquote><br><blockquote><blockquote><ex>1) cooking; eating apples </ex></blockquote></blockquote><br><blockquote><blockquote><ex>2) a baked; green; sour apple </ex></blockquote></blockquote><br><blockquote><blockquote><ex>3) (<abr>misc.</abr>) a rotten apple ('an undesirable person')</ex></blockquote></blockquote></div></div></article><article id=\"dict_cn\" data-tab-name=\"Chuyên ngành\" class=\"tcTab--slide\"><div id=\"eb\"><div class=\"dict--title\">Từ điển Kinh tế (EN)</div><div class=\"dict--content\"><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><font color=\"#999\">■</font><font> táo</font></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">apple brandy</font><font color=\"#282828\">: rượu (brandi) táo</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">apple cream</font><font color=\"#282828\">: kem táo</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">apple cutter</font><font color=\"#282828\">: dao gọt táo</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">apple essence</font><font color=\"#282828\">: tinh dầu táo</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">apple flake</font><font color=\"#282828\">: cốm táo</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">apple jack</font><font color=\"#282828\">: rượu brandi táo</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">apple juice</font><font color=\"#282828\">: nước ép táo</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">apple marrow</font><font color=\"#282828\">: thịt táo nghiền</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">apple tart</font><font color=\"#282828\">: bánh nhân táo</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">apple tree</font><font color=\"#282828\">: cây táo tây</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">canned apple</font><font color=\"#282828\">: táo đóng hộp</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><li><font color=\"#005ba1\">liquid apple</font><font color=\"#282828\">: dịch táo</font></li></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td><font color=\"#005ba1\">apple wine</font></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><font color=\"#999\">■</font><font> rượu nho</font></td></tr></tbody></table></td></tr></tbody></table> .</div></div><div id=\"et\"><div class=\"dict--title\">Từ điển Kỹ thuật (EN)</div><div class=\"dict--content\"><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><b><font color=\"#6699ff\">Lĩnh vực:</font></b><font color=\"#666699\"> xây dựng</font></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><font color=\"#999\">■</font><font> trái táo</font></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td><font color=\"#005ba1\">coal apple</font></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><font color=\"#999\">■</font><font> kết hạch than</font></td></tr></tbody></table></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td><font color=\"#005ba1\">oak apple</font></td></tr></tbody></table><table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tbody><tr><td></td><td><font color=\"#999\">■</font><font> vú lá sồi</font></td></tr></tbody></table></td></tr></tbody></table></div></div><div id=\"ce\"><div class=\"dict--title\">Chuyên ngành</div><div class=\"dict--content\"><font color=\"#1a76bf\">*</font><font color=\"#1a76bf\"><b> danh từ</b></font><br>  - <font color=\"#595959\">quả táo</font><br> . <font color=\"#595959\">Adam's apple</font><br>  - <font color=\"#595959\">(xem) Adam</font><br> . <font color=\"#595959\">apple of discord</font><br>  - <font color=\"#595959\">mối bất hoà</font><br> . <font color=\"#595959\">apple of the eye</font><br>  - <font color=\"#595959\">đồng tử, con ngươi</font><br>  - <font color=\"#595959\">vật quí báu phải giữ gìn nhất</font><br> . <font color=\"#595959\">the apple of Sodom; Dead Sea apple</font><br>  - <font color=\"#595959\">quả táo trông mã ngoài thì đẹp nhưng trong đã thối</font><br>  - <font color=\"#595959\">(nghĩa bóng) thành tích bề ngoài, thành tích giả tạo</font><br> . <font color=\"#595959\">the rotten apple injures its neighbours</font><br>  - <font color=\"#595959\">(tục ngữ) con sâu bỏ rầu nồi canh</font></div></div></article><article id=\"dict_th\" data-tab-name=\"Đồng nghĩa\" class=\"tcTab--slide\"><div id=\"th\"><div class=\"dict--title\">Từ điển Đồng nghĩa</div><div class=\"dict--content\"><svg id=\"vwSVG\" viewBox=\"0 0 600 500\" onload=\"VisualWords(tcGT)\"></svg></div></div></article><article id=\"dict_aa\" data-tab-name=\"Anh - Anh\" class=\"tcTab--slide\"><div id=\"ox\"><div class=\"dict--title\">Anh - Anh</div><div class=\"dict--content\"><k>apple</k><br><blockquote>■ <cclass>noun </cclass></blockquote><br><blockquote><blockquote>1》 the rounded fruit of a tree of the rose family, with green or red skin and crisp flesh. </blockquote></blockquote><br><blockquote><blockquote>2》 the tree which bears apples. [Genus <i>Malus</i>: numerous cultivated forms.] </blockquote></blockquote><br><blockquote><blockquote>3》 used in names of similar unrelated fruits, e.g. <cclass><b>custard apple</b>. </cclass></blockquote></blockquote><br><blockquote></blockquote><br><blockquote><b><cclass>Phrases</cclass></b></blockquote><br><blockquote><cclass><b>the apple of one's eye</b> a person of whom one is extremely fond and proud. [orig. denoting the pupil of the eye, extended as a symbol of something cherished.] </cclass></blockquote><br><blockquote><cclass><b>apples and pears</b><cclass>Brit. <cclass>rhyming slang stairs. </cclass></cclass></cclass></blockquote><br><blockquote><cclass><b>a rotten </b>(or <cclass><b>bad</b>)<cclass><b> apple</b><cclass>informal a corrupt person in a group, likely to have a detrimental influence on the others. </cclass></cclass></cclass></cclass></blockquote><br><blockquote><cclass><b>upset the apple cart</b> spoil a plan. </cclass></blockquote><br><blockquote></blockquote><br><blockquote><b><cclass>Derivatives</cclass></b></blockquote><br><blockquote><cclass><b>appley</b><cclass>adjective </cclass></cclass></blockquote><br><blockquote></blockquote><br><blockquote><b><cclass>Origin</cclass></b></blockquote><br><blockquote>OE <i>æppel</i>, of Gmc origin. </blockquote></div></div><div id=\"ee\"><div class=\"dict--title\">WordNet</div><div class=\"dict--content\"><font color=\"#3673a2\"> noun</font><br><b>1.</b> fruit with red or yellow or green skin and sweet to tart crisp whitish flesh <br><font color=\"#3673a2\"><b> (<font color=\"#3673a2\"> Freq.</font> 1)</b></font><br><font color=\"#3673a2\"><b> •</b></font><font color=\"#3673a2\"> Hypernyms</font>: <kref>edible fruit</kref> , <kref>pome</kref> , <kref>false fruit</kref><br><font color=\"#3673a2\"><b> •</b></font><font color=\"#3673a2\"> Hyponyms</font>: <kref>crab apple</kref> , <kref>crabapple</kref> , <kref>eating apple</kref> , <kref>dessert apple</kref> , <kref>cooking apple</kref><br><font color=\"#3673a2\"><b> •</b></font><font color=\"#3673a2\"> Part Holonyms</font>: <kref>orchard apple tree</kref> , <kref>Malus pumila</kref><br><b>2.</b> native Eurasian tree widely cultivated in many varieties for its firm rounded edible fruits<br><font color=\"#005ba1\"> •</font><font color=\"#3673a2\"> Syn</font>: <kref>orchard apple tree</kref> , <kref>Malus pumila</kref><br><font color=\"#3673a2\"><b> •</b></font><font color=\"#3673a2\"> Hypernyms</font>: <kref>apple tree</kref><br><font color=\"#3673a2\"><b> •</b></font><font color=\"#3673a2\"> Member Holonyms</font>: <kref>Malus</kref> , <kref>genus Malus</kref></div></div></article>",
+            "kinds": "ev|np|cn|th|aa",
+            "word": "apple"
+          }
+        }
+      ]
+    },
+    "timestamp": 1770679995597
   }
 }

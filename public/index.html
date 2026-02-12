@@ -8,9 +8,14 @@
   <title>Dictation Practice | AI Language Learning</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;700&display=swap"
+    rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    rel="stylesheet" />
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-  <link rel="stylesheet" href="style.css?v=20260123_mode_fix">
+  <link rel="stylesheet" href="style.css?v=20260211_dragon_nest_v2">
   <link rel="stylesheet" href="srs-review.css">
   <link rel="stylesheet" href="srs-onboarding.css">
   <link rel="stylesheet" href="pronunciation-analyzer/style.css">
@@ -19,6 +24,53 @@
   <!-- Scripts moved to end of body for performance -->
   <script>
     const IS_PROD = !['localhost', '127.0.0.1'].includes(location.hostname);
+    // Survival Game Entry Stub
+    window.openSurvivalGame = function () {
+      const overlay = document.getElementById('survival-game-overlay');
+      const wrapper = document.querySelector('.page-layout-wrapper');
+
+      // Hide all potential blocking modals and overlays
+      const blockers = document.querySelectorAll('.modal, .entry-modal, .shop-modal, .progress-panel-side, .vocab-panel-side, .srs-panel, .srs-overlay, .auth-overlay, .progress-panel-overlay, .vocab-panel-overlay, .guest-toast, .feedback-toast, .vocab-alert-modal, .vocab-add-modal');
+      blockers.forEach(function (m) {
+        m.style.setProperty('display', 'none', 'important');
+      });
+
+      // Explicitly hide known problematic IDs
+      const specificIds = ['shopping-modal', 'progress-panel-side', 'vocab-panel-side', 'srs-review-panel', 'auth-overlay'];
+      specificIds.forEach(function (id) {
+        const el = document.getElementById(id);
+        if (el) el.style.setProperty('display', 'none', 'important');
+      });
+
+      // Re-run hiding after a short delay to catch any late-opening modals (e.g. from event bubbling)
+      setTimeout(function () {
+        const specificIds = ['shopping-modal', 'progress-panel-side', 'vocab-panel-side', 'srs-review-panel', 'auth-overlay', 'level-system-container'];
+        specificIds.forEach(function (id) {
+          const el = document.getElementById(id);
+          if (el) el.style.setProperty('display', 'none', 'important');
+        });
+      }, 50);
+
+      console.log('Survival Game: Hiding UI blockers complete.');
+
+      if (overlay) {
+        overlay.style.display = 'flex';
+        overlay.style.visibility = 'visible';
+      }
+
+      // Hide the main dashboard UI to prevent overlap
+      if (wrapper) {
+        wrapper.style.display = 'none';
+      }
+
+      if (window.survivalGame && typeof window.survivalGame.start === 'function') {
+        window.survivalGame.start();
+      } else {
+        console.log('Survival Game module is loading...');
+        window._survivalGamePendingStart = true;
+      }
+    };
+
     if (IS_PROD) {
       // Initialize Sentry
       // Initialize Sentry (Commented out: Invalid Placeholder DSN)
@@ -57,6 +109,7 @@
       <p id="preloader-text" class="preloader-text">Loading Practice Data...</p>
     </div>
   </div>
+
   <script>
     // Failsafe: Allow dismissing preloader if it takes too long (e.g., script error or SSL block)
     setTimeout(() => {
@@ -762,6 +815,10 @@
             style="display: none; text-decoration: none; text-align: center;">
             🎬 Watch Admin
           </a>
+          <a id="panel-crm-admin-link" href="crm-admin.html" class="panel-btn primary"
+            style="display: none; text-decoration: none; text-align: center;">
+            🗂️ CRM Admin
+          </a>
           <button id="panel-logout-btn" class="panel-btn danger">Logout</button>
         </div>
 
@@ -836,31 +893,30 @@
         </div>
         <div class="ae-stats-grid">
           <div class="ae-stat-item">
-            <span class="ae-label">Rolling Accuracy</span>
+            <span class="ae-label">Recent Accuracy</span>
             <span class="ae-value" id="ae-rolling-accuracy">—%</span>
             <div class="ae-progress-mini">
               <div class="ae-progress-fill" id="ae-ra-bar" style="width: 0%"></div>
             </div>
           </div>
           <div class="ae-stat-item">
-            <span class="ae-label">Stability</span>
-            <span class="ae-value" id="ae-stability">— / 20 sets</span>
+            <span class="ae-label">Level Progress</span>
+            <span class="ae-value" id="ae-level-progress">—%</span>
+            <div class="ae-progress-mini">
+              <div class="ae-progress-fill brand" id="ae-lp-bar" style="width: 0%"></div>
+            </div>
           </div>
         </div>
         <div class="ae-divider"></div>
         <div class="ae-adjustments">
-          <h4>Current Settings</h4>
+          <h4>Active Configuration</h4>
           <div class="ae-adj-item">
-            <span class="ae-adj-label">Sentence Length</span>
-            <span class="ae-adj-val" id="ae-sentence-length">—</span>
+            <span class="ae-adj-label">Complexity</span>
+            <span class="ae-adj-val" id="ae-complexity">—</span>
           </div>
           <div class="ae-adj-item">
-            <span class="ae-adj-label">Max Replays</span>
-            <span class="ae-adj-val" id="ae-max-replays">—</span>
-          </div>
-          <div class="ae-adj-item">
-            <span class="ae-adj-label">Initial Reveal</span>
-            <span class="ae-adj-val" id="ae-initial-reveal">—%</span>
+            <span class="ae-adj-label">Assistance</span>
+            <span class="ae-adj-val" id="ae-assistance">—</span>
           </div>
         </div>
         <div class="ae-footer">
@@ -874,7 +930,25 @@
   <div id="page-layout-wrapper" class="page-layout-wrapper">
     <main class="container">
       <div class="main-header">
-        <h1>Listening Practice</h1>
+        <div class="header-left">
+          <h1>Listening Practice</h1>
+          <div id="current-mode-indicator" class="mode-pill-indicator" style="display: none;">
+            <span id="current-mode-name" class="mode-pill-name">Type</span>
+            <button id="mode-tutorial-btn" class="mode-pill-tutorial" title="Learn about this mode">?</button>
+          </div>
+        </div>
+
+        <!-- Level Display (Header) -->
+        <div id="level-header-display" class="level-header-badge" style="display: none;">
+          <!-- Hidden until data loaded -->
+          <span class="level-pill-icon">⭐</span>
+          <div class="level-pill-info">
+            <span class="level-pill-text">Lvl <span id="header-level-num">1</span></span>
+            <div class="header-xp-track">
+              <div id="header-xp-bar" class="header-xp-fill" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
         <div id="difficulty-badge" class="difficulty-badge" style="display: none;" title="Smart Difficulty Active">
           <span class="diff-icon">🎯</span>
           <span id="diff-level-text" class="diff-level-text">Guided</span>
@@ -895,6 +969,10 @@
           </button>
           <button class="segmented-btn" id="btn-panel-srs" onclick="toggleDashboardPanel('panel-srs')">
             Daily Review
+          </button>
+          <button class="segmented-btn" id="btn-panel-entertainment"
+            onclick="toggleDashboardPanel('panel-entertainment')">
+            Entertainment Hub
           </button>
         </div>
 
@@ -1037,6 +1115,7 @@
                     onclick="event.stopPropagation(); window.startTutorial('watch', true);">What's this?</a>
                 </div>
               </div>
+
 
               <!-- 5. Note Mode Card -->
               <div id="mode-btn-notes" class="modern-card transition-card mode-switch-btn"
@@ -1210,6 +1289,49 @@
                     </tr>
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel 3: Entertainment Hub -->
+          <div id="panel-entertainment" class="dashboard-panel" style="display: none;">
+            <div class="dashboard-section-header">
+              <h2>Entertainment Hub</h2>
+              <p>Take a break and test your skills in fast-paced arcade modes.</p>
+            </div>
+            <div class="tutorial-grid">
+              <!-- Survival Mode Card -->
+              <div id="mode-btn-survival" class="modern-card transition-card mode-switch-btn"
+                onclick="window.switchToMode('survival')" tabindex="0" role="button" aria-label="Survival Mode">
+                <span class="badge action">Challenge</span>
+                <div class="card-visual visual-survival">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
+                      <!-- Enemy cluster -->
+                      <rect class="enemy-glitch" x="10" y="20" width="8" height="8" fill="currentColor" />
+                      <rect class="enemy-glitch" x="22" y="15" width="8" height="8" fill="currentColor" opacity="0.6" />
+                      <rect class="enemy-glitch" x="15" y="30" width="8" height="8" fill="currentColor" opacity="0.4" />
+
+                      <!-- Projectile/Laser -->
+                      <path class="laser-beam" d="M50 36H25" stroke="var(--visual-accent)" stroke-width="2"
+                        stroke-dasharray="4 2" />
+
+                      <!-- Player node -->
+                      <circle cx="55" cy="36" r="6" stroke="currentColor" stroke-width="2" />
+                      <circle class="player-ring" cx="55" cy="36" r="10" stroke="var(--visual-accent)" stroke-width="1"
+                        opacity="0.5" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Survival</h3>
+                  <p>Type to survive waves of enemies. Roguelike fun!</p>
+                  <button class="card-cta"
+                    onclick="event.stopPropagation(); if (window.openSurvivalGame) { window.openSurvivalGame(); } else if (window.switchToMode) { window.switchToMode('survival'); }">Play
+                    Now</button>
+                  <a class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('survival', true);">What's this?</a>
+                </div>
               </div>
             </div>
           </div>
@@ -1451,13 +1573,34 @@
         <div class="question-total">
           <span>Total number of questions: <span id="total-questions-type">1</span></span>
         </div>
-        <div class="controls">
-          <button id="play-btn" class="modern-btn modern-btn--play" type="button">Play</button>
-          <span id="replay-counter-type" class="replay-counter"></span>
-          <button id="check-btn" class="modern-btn modern-btn--check" type="button"
-            style="display: none;">Check</button>
-          <button id="retry-btn" class="modern-btn modern-btn--retry" type="button"
-            style="display: none;">Retry</button>
+        <div class="unified-controls">
+          <div class="control-toolbar">
+            <div class="playback-group">
+              <button id="play-btn" class="modern-btn modern-btn--play" type="button">Play</button>
+              <div class="audio-tools">
+                <button id="speed-toggle-btn" class="tool-btn" title="Playback Speed">1.0x</button>
+                <button id="loop-btn" class="tool-btn" title="Loop Audio">🔁</button>
+              </div>
+            </div>
+
+            <div class="status-group">
+              <span id="replay-counter-type" class="badge-status badge-replay"></span>
+              <div id="hint-controls" class="hint-controls">
+                <button id="hint-btn" class="hint-badge-btn" title="Get a hint">
+                  <span class="hint-icon">💡</span> Hint
+                  <span id="hint-cost-badge" class="hint-cost"></span>
+                </button>
+              </div>
+            </div>
+
+            <div class="action-group">
+              <button id="check-btn" class="modern-btn modern-btn--check" type="button"
+                style="display: none;">Check</button>
+              <button id="retry-btn" class="modern-btn modern-btn--retry" type="button"
+                style="display: none;">Retry</button>
+            </div>
+          </div>
+          <div id="auto-hints-type" class="auto-hints-type-drawer" style="display: none;"></div>
         </div>
         <div id="score" class="score">Points: 0</div>
 
@@ -2094,9 +2237,16 @@
       setTimeout(checkCompromise, 1000);
     })();
   </script>
+  <script src="js/points-logic.js"></script>
+  <script src="js/skill-catalog.js"></script>
+  <script src="js/difficulty-manager.js"></script>
+  <script src="js/performance-tracker.js"></script>
+  <script src="hint-system.js"></script>
   <script type="module" src="firebase-auth-module.js"></script>
   <script type="module" src="firebase-firestore-module.js"></script>
   <script type="module" src="auth-ui.js"></script>
+  <script src="js/modules/level-system.js"></script>
+  <script src="shop-module.js"></script>
   <script src="script.js"></script>
   <!-- Points Toast Notification Container -->
   <div id="points-toast-container" class="points-toast-container"></div>
@@ -2114,44 +2264,38 @@
     </div>
   </div>
 
-  <!-- Shopping Modal -->
-  <div id="shopping-modal" class="entry-modal" style="display: none;">
-    <div class="entry-modal-content shopping-modal-content">
-      <button id="shopping-close-btn" class="close-btn">×</button>
+  <!-- Shop Modal -->
+  <div id="shop-modal" class="shop-modal">
+    <div class="shop-modal-content">
+      <div class="shop-header">
+        <h2>Your Journey</h2>
+        <button class="shop-close-btn" id="shop-close-btn">&times;</button>
+      </div>
 
-      <!-- Header with Points -->
-      <div class="shopping-header">
-        <div class="shopping-icon">🛍️</div>
-        <h2>Points Exchange</h2>
-        <div class="shopping-points-display">
-          <span class="points-icon">🪙</span>
-          <span id="shopping-current-points" class="shopping-points-value">0</span>
-          <span class="shopping-points-label">Practice Points</span>
+      <!-- Tab Navigation -->
+      <div class="shop-tabs">
+        <button class="shop-tab-btn active" data-target="shop-items-container">Shop</button>
+        <button class="shop-tab-btn" data-target="skill-tree-container">Skill Tree</button>
+      </div>
+
+      <div class="shop-body">
+        <!-- Shop Items Container -->
+        <div id="shop-items-container" class="shop-tab-content active">
+          <div class="shop-balance">
+            <span>🪙</span> <span id="shop-balance-display">0</span>
+          </div>
+          <div id="shop-grid" class="shop-grid">
+            <!-- Rendered by shop-module.js -->
+          </div>
+        </div>
+
+        <!-- Skill Tree Container -->
+        <div id="skill-tree-container" class="shop-tab-content">
+          <div id="level-system-container" class="level-system-container">
+            <!-- JS will render Level Header & Skill Tree here -->
+          </div>
         </div>
       </div>
-
-      <!-- Feedback Area -->
-      <div id="shopping-feedback" class="shopping-feedback" style="display: none;"></div>
-
-      <!-- Rewards Table -->
-      <div class="shopping-table-container">
-        <table class="shopping-table">
-          <thead>
-            <tr>
-              <th>Reward</th>
-              <th>Cost</th>
-              <th>Action</th>
-              <th>Tutorial</th>
-            </tr>
-          </thead>
-          <tbody id="shopping-table-body">
-            <!-- Rows will be injected by JS -->
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Close Button at Bottom -->
-      <button id="shopping-close-bottom-btn" class="modal-close-bottom-btn">Close</button>
     </div>
   </div>
 
@@ -2456,40 +2600,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script type="module" src="pronunciation-analyzer/main.js?v=20260128_forms"></script>
 
-  <!-- Shop Modal -->
-  <div id="shop-modal" class="shop-modal">
-    <div class="shop-modal-content">
-      <div class="shop-header">
-        <h2>
-          <span>🛒</span> Practice Shop
-        </h2>
-        <div class="shop-balance">
-          <span>🪙</span>
-          <span id="shop-balance-display">0</span>
-        </div>
-        <button id="shop-close-btn" class="shop-close-btn">×</button>
-      </div>
-      <div class="shop-body">
-        <div id="shop-grid" class="shop-grid">
-          <!-- Shop items injected by JS -->
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- Scripts -->
-  <script src="hint-system.js"></script>
-  <script src="js/difficulty-manager.js"></script>
-  <script src="js/adaptive-engine-ui.js"></script>
-  <script src="js/performance-tracker.js"></script>
-  <script src="shop-module.js"></script>
-  <script src="difficulty-filter.js"></script>
-
-
-  <div
-    style="position: fixed; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px; z-index: 9999;">
-    V1.1.0
-  </div>
   <!-- Optimization: Scripts moved from Head -->
   <!-- XLSX Library -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js" defer></script>
@@ -2522,6 +2633,152 @@
       setTimeout(() => document.querySelector('.vocab-tab-btn[data-tab="practice"]')?.click(), 100);
       setTimeout(() => document.getElementById('srs-start-review-btn')?.click(), 300);
     });
+  </script>
+
+  <!-- Survival Game Overlay -->
+  <div id="survival-game-overlay" class="survival-game-overlay" style="display: none;">
+    <canvas id="survival-canvas"></canvas>
+
+    <!-- HUD Layer -->
+    <div id="survival-hud" class="survival-hud">
+      <div class="hud-top">
+        <div id="survival-time" class="hud-time">00:00:00</div>
+        <div id="survival-weapon" class="hud-weapon">Level 1 Repeater</div>
+      </div>
+      <div class="hud-hp-container">
+        <div id="survival-hp-bar" class="hud-hp-bar">
+          <div class="hp-fill" style="width: 100%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="survival-xp">
+      <div class="xp-bar">
+        <div id="survival-xp-fill" class="xp-bar-fill" style="width: 0%;"></div>
+      </div>
+      <div id="survival-level-display" class="xp-level">Lvl 1</div>
+    </div>
+
+    <!-- Level Up Modal -->
+    <div id="survival-levelup-modal" class="survival-modal" style="display: none;">
+      <h2>EVOLUTION COMPLETE</h2>
+      <p>Select an upgrade to strengthen your build</p>
+      <div class="survival-modal-actions">
+        <button id="survival-reroll-btn" type="button" class="survival-reroll-btn" disabled>
+          Reroll (<span id="survival-reroll-count">0</span>)
+        </button>
+      </div>
+      <div id="survival-upgrade-choices" class="upgrade-grid">
+        <!-- Upgrades injected here -->
+      </div>
+    </div>
+
+    <!-- Loot Modal -->
+    <div id="survival-loot-modal" class="survival-modal" style="display: none;">
+      <h2>LOOT CACHE</h2>
+      <p>Select one cache upgrade</p>
+      <div id="survival-loot-choices" class="upgrade-grid">
+        <!-- Loot upgrades injected here -->
+      </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="survival-gameover-modal" class="survival-modal" style="display: none;">
+      <h1 class="gameover-title">TERMINATED</h1>
+      <div class="final-stats">
+        <p>Score: <span id="final-score">0</span></p>
+        <p>Wave: <span id="final-wave">0</span></p>
+      </div>
+      <div class="gameover-actions">
+        <button id="survival-retry-btn" class="btn-primary">RETRY</button>
+        <button id="survival-exit-btn" class="btn-secondary">EXIT</button>
+      </div>
+    </div>
+
+    <!-- Close Button -->
+    <button id="survival-close-btn" class="survival-close-btn">×</button>
+  </div>
+
+  <!-- Game Scripts -->
+  <script type="module">
+    import SurvivalGame from './js/survival-game/SurvivalGame.js';
+    const initGame = () => {
+      if (!window.survivalGame) {
+        try {
+          window.survivalGame = new SurvivalGame();
+          if (window._survivalGamePendingStart) {
+            window.survivalGame.start();
+            window._survivalGamePendingStart = false;
+          }
+        } catch (e) {
+          console.error('SurvivalGame initialization failed:', e);
+        }
+      }
+    };
+
+    if (document.readyState === 'complete') {
+      initGame();
+    } else {
+      window.addEventListener('load', () => setTimeout(initGame, 500));
+    }
+
+
+    document.getElementById('survival-close-btn').onclick = () => {
+      document.getElementById('survival-game-overlay').style.display = 'none';
+      const wrapper = document.querySelector('.page-layout-wrapper');
+      if (wrapper) wrapper.style.display = 'block';
+
+      if (window.survivalGame && typeof window.survivalGame.stop === 'function') {
+        window.survivalGame.stop();
+      } else if (window.survivalGame) {
+        window.survivalGame.state = 'MENU';
+      }
+    };
+
+    document.getElementById('survival-retry-btn').onclick = () => {
+      window.survivalGame.start();
+      document.getElementById('survival-gameover-modal').style.display = 'none';
+    };
+
+    document.getElementById('survival-exit-btn').onclick = () => {
+      document.getElementById('survival-game-overlay').style.display = 'none';
+      const wrapper = document.querySelector('.page-layout-wrapper');
+      if (wrapper) wrapper.style.display = 'block';
+
+      if (window.survivalGame && typeof window.survivalGame.stop === 'function') {
+        window.survivalGame.stop();
+      } else if (window.survivalGame) {
+        window.survivalGame.state = 'MENU';
+      }
+    };
+
+    window.addEventListener('keydown', (e) => {
+      if (!window.survivalGame) return;
+
+      // Debug check for the reported error
+      if (typeof window.survivalGame.handleInput !== 'function') {
+        console.error('🔥 CRITICAL ERROR: window.survivalGame exists but handleInput is missing!', window.survivalGame);
+        console.log('Type:', typeof window.survivalGame);
+        console.log('Constructor:', window.survivalGame.constructor ? window.survivalGame.constructor.name : 'Unknown');
+        return;
+      }
+
+      if (window.survivalGame.state === 'PLAYING') {
+        const upgradeManager = window.survivalGame.upgradeManager;
+        if (upgradeManager && upgradeManager.pendingLevelUps > 0 && (e.code === 'Space' || e.key === ' ')) {
+          e.preventDefault();
+          upgradeManager.tryOpenLevelUpMenu();
+          return;
+        }
+        if (e.key === 'Backspace') {
+          e.preventDefault();
+        }
+        window.survivalGame.handleInput(e.key);
+      }
+    });
+
+    // Note: openSurvivalGame is now defined in the head to avoid race conditions.
+
   </script>
 </body>
 

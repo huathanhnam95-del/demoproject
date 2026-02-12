@@ -27,6 +27,8 @@ import {
   runTransaction
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
+import { httpsCallable } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
+
 // Configure Firestore Logging
 // Silence logs in production (except errors)
 const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
@@ -37,8 +39,9 @@ if (isLocal) {
 }
 
 
-import { db } from 'firebase-init';
+import { db, functions } from 'firebase-init';
 const log = Logger.create('Database');
+const CORE_ALWAYS_UNLOCKED_MODES = ['type', 'speak', 'extended', 'watch', 'notes', 'pronounce'];
 
 /**
  * User Profile Operations
@@ -74,7 +77,7 @@ async function createOrUpdateUserProfile(userId, email, isNewUser = false) {
         totalActiveSeconds: 0,
         totalPoints: 0,
         coins: 100,
-        unlockedModes: ['type'],
+        unlockedModes: CORE_ALWAYS_UNLOCKED_MODES,
         isAdmin: false // Explicitly set to false during client-side creation
       };
 
@@ -150,7 +153,7 @@ async function getUserProfile(userId) {
     if (!userData.unlockedModes) {
       log.log('Legacy user detected: Migrating to unlocked modes...');
       // Unlock all existing modes for legacy users so they don't lose access
-      const allModes = ['type', 'speak', 'extended', 'watch', 'notes', 'pronounce'];
+      const allModes = CORE_ALWAYS_UNLOCKED_MODES;
 
       try {
         await updateDoc(doc(db, 'users', userId), {
@@ -167,11 +170,12 @@ async function getUserProfile(userId) {
 
     // Cache to localStorage for future resilience
     try {
-      localStorage.setItem(cacheKey, JSON.stringify({
+        localStorage.setItem(cacheKey, JSON.stringify({
         email: userData.email,
         coins: userData.coins || 0,
         totalPoints: userData.totalPoints || 0,
-        unlockedModes: userData.unlockedModes || ['type'],
+          unlockedModes: userData.unlockedModes || CORE_ALWAYS_UNLOCKED_MODES,
+        isAdmin: userData.isAdmin === true,
         englishLevel: userData.englishLevel,
         cachedAt: Date.now()
       }));
@@ -1613,7 +1617,7 @@ async function purchaseFeature(userId, item) {
 
       const userData = userDoc.data();
       const currentCoins = userData.coins || 0;
-      const unlockedModes = userData.unlockedModes || ['type'];
+      const unlockedModes = userData.unlockedModes || CORE_ALWAYS_UNLOCKED_MODES;
 
       if (currentCoins < item.cost) {
         throw new Error('Insufficient coins');
@@ -1748,7 +1752,7 @@ window.firebaseFirestoreFunctions = {
   getPurchases,
 
   // Unlocked modes (READ-ONLY after migration)
-  updateUnlockedModes // Will be removed after full migration
+  updateUnlockedModes, // Will be removed after full migration
 
   // REMOVED (now Cloud Function only):
   // - addPoints
@@ -1774,14 +1778,18 @@ if (!window.firebaseFirestoreFunctions.updateUserProfile) {
  * Call submitAttempt Cloud Function
  * @param {object} attemptData - { mode, contentId, userAnswer, difficulty, correctCount?, totalCount? }
  */
+/**
+ * Call submitAttempt Cloud Function
+ * @param {object} attemptData - { mode, contentId, userAnswer, difficulty, correctCount?, totalCount? }
+ */
 async function callSubmitAttempt(attemptData) {
   try {
-    if (!firebase.functions) {
+    if (!functions) {
       log.error('Firebase Functions not initialized');
       return { success: false, error: 'Functions not available' };
     }
 
-    const submitAttempt = firebase.functions().httpsCallable('submitAttempt');
+    const submitAttempt = httpsCallable(functions, 'submitAttempt');
     const result = await submitAttempt(attemptData);
     log.log('✓ Submit attempt result:', result.data);
     return result.data;
@@ -1797,12 +1805,12 @@ async function callSubmitAttempt(attemptData) {
  */
 async function callPurchaseItem(itemId) {
   try {
-    if (!firebase.functions) {
+    if (!functions) {
       log.error('Firebase Functions not initialized');
       return { success: false, error: 'Functions not available' };
     }
 
-    const purchaseItem = firebase.functions().httpsCallable('purchaseItem');
+    const purchaseItem = httpsCallable(functions, 'purchaseItem');
     const result = await purchaseItem({ itemId });
     log.log('✓ Purchase result:', result.data);
     return result.data;
@@ -1812,7 +1820,50 @@ async function callPurchaseItem(itemId) {
   }
 }
 
+/**
+ * Call purchaseSkill Cloud Function
+ * @param {string} skillId - Skill identifier from SkillCatalog
+ */
+async function callPurchaseSkill(skillId) {
+  try {
+    if (!functions) {
+      log.error('Firebase Functions not initialized');
+      return { success: false, error: 'Functions not available' };
+    }
+
+    const purchaseSkill = httpsCallable(functions, 'purchaseSkill');
+    const result = await purchaseSkill({ skillId });
+    log.log('✓ Skill purchase result:', result.data);
+    return result.data;
+  } catch (error) {
+    log.error('Error calling purchaseSkill:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Call useActiveSkill Cloud Function
+ * @param {object} payload - { attemptId, mode, contentId, skillId }
+ */
+async function callUseActiveSkill(payload) {
+  try {
+    if (!functions) {
+      log.error('Firebase Functions not initialized');
+      return { success: false, error: 'Functions not available' };
+    }
+
+    const useActiveSkill = httpsCallable(functions, 'useActiveSkill');
+    const result = await useActiveSkill(payload);
+    return result.data;
+  } catch (error) {
+    log.error('Error calling useActiveSkill:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 // Export Cloud Function wrappers globally
 window.callSubmitAttempt = callSubmitAttempt;
 window.callPurchaseItem = callPurchaseItem;
+window.callPurchaseSkill = callPurchaseSkill;
+window.callUseActiveSkill = callUseActiveSkill;
 

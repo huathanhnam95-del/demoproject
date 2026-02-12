@@ -614,6 +614,9 @@
             // Dual-Track Scoring Integration (Phase 2.1 - Server-Authoritative)
             if (window.handleDualTrackScoring) {
                 // Pass raw user notes text for server-side word matching
+                if (window.startAttemptContext) {
+                    window.startAttemptContext('notes', String(currentEntry.id));
+                }
                 await window.handleDualTrackScoring('notes', currentEntry.id, userNotes);
             }
 

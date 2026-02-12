@@ -28,6 +28,159 @@
   let sentenceLengthData = null; // Map<lengthRange, Set<questionId>> for Type mode
   let speakLengthData = null; // Map<lengthRange, Set<questionId>> for Speak mode
 
+  // RPG assist attempt state (used for active-skill spending + calibration penalties).
+  const CORE_PRACTICE_MODES = new Set(['type', 'speak', 'extended', 'watch', 'notes', 'pronounce']);
+  const HINT_SKILL_BY_LEVEL = {
+    1: 'hint_wc',
+    2: 'hint_fl'
+  };
+
+  function normalizeAttemptContentId(contentId) {
+    return String(contentId ?? '');
+  }
+
+  function createAttemptContext(mode, contentId) {
+    return {
+      attemptId: crypto.randomUUID(),
+      mode,
+      contentId: normalizeAttemptContentId(contentId),
+      assistCalibMult: 1.0,
+      totalAssistCost: 0,
+      skillsUsed: {},
+      createdAtMs: Date.now()
+    };
+  }
+
+  function getAttemptContext(mode, contentId) {
+    const context = window.currentAttemptContext || null;
+    if (!context) return null;
+    if (mode && context.mode !== mode) return null;
+    if (contentId !== undefined && context.contentId !== normalizeAttemptContentId(contentId)) return null;
+    return context;
+  }
+
+  function startAttemptContext(mode, contentId) {
+    const context = createAttemptContext(mode, contentId);
+    window.currentAttemptContext = context;
+    return context;
+  }
+
+  function ensureAttemptContext(mode, contentId) {
+    const existing = getAttemptContext(mode, contentId);
+    if (existing) return existing;
+    return startAttemptContext(mode, contentId);
+  }
+
+  function registerAssistUsage(skillId, mode, contentId, useResult) {
+    const context = ensureAttemptContext(mode, contentId);
+    context.skillsUsed[skillId] = (context.skillsUsed[skillId] || 0) + 1;
+    context.totalAssistCost += Number(useResult?.cost) || 0;
+
+    const serverMult = Number(useResult?.attemptCalibMult);
+    if (Number.isFinite(serverMult)) {
+      context.assistCalibMult = Math.max(0.25, Math.min(1.0, serverMult));
+    } else {
+      const catalogMult = window.SkillCatalog?.getSkill?.(skillId)?.calibMult;
+      if (Number.isFinite(catalogMult)) {
+        context.assistCalibMult = Math.max(0.25, Math.min(context.assistCalibMult, catalogMult));
+      }
+    }
+  }
+
+  function getAttemptAssistMeta(mode, contentId) {
+    const context = getAttemptContext(mode, contentId);
+    if (!context) {
+      return { assistCalibMult: 1.0, assistCount: 0 };
+    }
+    const assistCount = Object.values(context.skillsUsed || {}).reduce((sum, count) => sum + (Number(count) || 0), 0);
+    const assistCalibMult = Number.isFinite(context.assistCalibMult)
+      ? Math.max(0.25, Math.min(1.0, context.assistCalibMult))
+      : 1.0;
+    return { assistCalibMult, assistCount };
+  }
+
+  async function useActiveSkillForAttempt(skillId, mode, contentId) {
+    const normalizedContentId = normalizeAttemptContentId(contentId);
+    if (!window.auth || !window.auth.currentUser) {
+      window.shopModule?.showAlertModal?.('Please log in to use active skills.', true);
+      return { success: false, error: 'unauthenticated' };
+    }
+
+    const isUnlocked = window.shopModule?.isSkillUnlocked?.(skillId);
+    if (!isUnlocked) {
+      window.shopModule?.showAlertModal?.('This skill is locked. Purchase it in the Skill Tree first.', true);
+      return { success: false, error: 'skill_locked' };
+    }
+
+    if (!window.callUseActiveSkill) {
+      console.warn('[RPG] useActiveSkill wrapper not available');
+      return { success: false, error: 'use_active_skill_unavailable' };
+    }
+
+    const context = ensureAttemptContext(mode, normalizedContentId);
+    const result = await window.callUseActiveSkill({
+      attemptId: context.attemptId,
+      mode,
+      contentId: normalizedContentId,
+      skillId
+    });
+
+    if (!result?.success) {
+      if (result?.error === 'insufficient_funds') {
+        window.shopModule?.showAlertModal?.(`Not enough coins (${result.required ?? '??'} needed).`, true);
+      } else if (result?.error === 'skill_locked') {
+        window.shopModule?.showAlertModal?.('Skill is locked. Purchase it in the Skill Tree.', true);
+      }
+      return result || { success: false, error: 'use_active_skill_failed' };
+    }
+
+    registerAssistUsage(skillId, mode, normalizedContentId, result);
+
+    if (Number.isFinite(Number(result.newBalance))) {
+      window.shopModule?.setCoins?.(Number(result.newBalance));
+    }
+
+    return result;
+  }
+
+  function getNextHintSkillId() {
+    const currentLevel = Number(window.HintSystem?.getCurrentHintLevel?.() || 0);
+    const nextLevel = currentLevel + 1;
+    return HINT_SKILL_BY_LEVEL[nextLevel] || 'hint_reveal';
+  }
+
+  function updateActiveSkillControlLocks() {
+    const speedBtn = document.getElementById('speed-toggle-btn');
+    const loopBtn = document.getElementById('loop-btn');
+    const hintBtn = document.getElementById('hint-btn');
+    const hasUser = !!(window.auth && window.auth.currentUser);
+
+    const canUseSlow = hasUser && !!window.shopModule?.isSkillUnlocked?.('slow_audio');
+    const canUseLoop = hasUser && !!window.shopModule?.isSkillUnlocked?.('echo_loop');
+    const canUseHints = hasUser && !!window.shopModule?.isSkillUnlocked?.('hint_wc');
+
+    if (speedBtn) {
+      speedBtn.disabled = !canUseSlow;
+      speedBtn.title = canUseSlow ? 'Playback Speed' : 'Unlock Slow Audio in Skill Tree';
+    }
+    if (loopBtn) {
+      loopBtn.disabled = !canUseLoop;
+      loopBtn.title = canUseLoop ? 'Loop Audio' : 'Unlock Echo Loop in Skill Tree';
+    }
+    if (hintBtn) {
+      hintBtn.disabled = !canUseHints;
+      if (!canUseHints) {
+        hintBtn.title = 'Unlock Hint Skills in Skill Tree';
+      } else {
+        hintBtn.title = 'Get a hint';
+      }
+    }
+  }
+
+  window.startAttemptContext = startAttemptContext;
+  window.ensureAttemptContext = ensureAttemptContext;
+  window.refreshActiveSkillLocks = updateActiveSkillControlLocks;
+
   // Dashboard Panel Logic (Modern Segmented Control)
   window.toggleDashboardPanel = function (panelId) {
     // 1. Panel Visibility Logic
@@ -66,9 +219,13 @@
       // The tabs-header is permanently hidden in HTML
       const modePanels = document.querySelectorAll('.mode-panel');
 
-      if (panelId === 'panel-srs') {
-        // Hide all mode panels when in Daily Review
+      if (panelId === 'panel-srs' || panelId === 'panel-entertainment') {
+        // Hide all mode panels when in non-practice dashboards
         modePanels.forEach(p => p.style.setProperty('display', 'none', 'important'));
+
+        // Hide current mode indicator pill in header
+        const indicator = document.getElementById('current-mode-indicator');
+        if (indicator) indicator.style.display = 'none';
       } else {
         // Restore visibility of the active mode panel when in Learning Center
         modePanels.forEach(p => {
@@ -253,7 +410,7 @@
 
     if (indicator && modeName) {
       // Show the indicator
-      indicator.style.display = 'block';
+      indicator.style.display = 'inline-flex';
 
       // Update mode name with display-friendly text
       const displayNames = {
@@ -477,16 +634,40 @@
    * @param {string} mode - 'type', 'speak', 'extended', 'watch', 'notes', 'pronounce'
    */
   window.switchToMode = async function (mode) {
-    // Check if mode is locked
-    if (window.shopModule && !window.shopModule.isModeUnlocked(mode)) {
-      // Open shop if locked
-      window.shopModule.openShop();
+    // SPECIAL HANDLING: Survival Mode (Fullscreen overlay, not a tab)
+    if (mode === 'survival') {
+      if (window.openSurvivalGame) {
+        window.openSurvivalGame();
+      } else {
+        console.error('Survival Game module not loaded or initialized. Please try again in a few seconds.');
+        if (window.shopModule && window.shopModule.showAlertModal) {
+          window.shopModule.showAlertModal('Survival game is still loading. Please wait a moment.', true);
+        }
+      }
       return;
     }
 
     // Map mode names to tab IDs and panel IDs
     const tabId = 'tab-' + mode;
     const panelId = 'mode-' + mode;
+
+    // RESTORE LAYOUT (Fixing blank screen after survival mode)
+    const pageWrapper = document.getElementById('page-layout-wrapper');
+    if (pageWrapper && pageWrapper.style.display === 'none') {
+      pageWrapper.style.display = 'block';
+      console.log('Restored .page-layout-wrapper visibility for mode:', mode);
+    }
+
+    // CLOSE SURVIVAL OVERLAY IF OPEN
+    const survivalOverlay = document.getElementById('survival-game-overlay');
+    if (survivalOverlay && survivalOverlay.style.visibility === 'visible' && mode !== 'survival') {
+      survivalOverlay.style.display = 'none';
+      survivalOverlay.style.visibility = 'hidden';
+      if (window.survivalGame && typeof window.survivalGame.stop === 'function') {
+        window.survivalGame.stop();
+      }
+      console.log('Closed Survival Mode overlay due to mode switch to:', mode);
+    }
 
     const tabBtn = document.getElementById(tabId);
     const modePanel = document.getElementById(panelId);
@@ -617,13 +798,15 @@
     tabs.forEach(tab => {
       if (!tab.element) return;
 
-      const isUnlocked = window.shopModule.isModeUnlocked(tab.mode);
+      const isUnlocked = CORE_PRACTICE_MODES.has(tab.mode) || window.shopModule.isModeUnlocked(tab.mode);
       if (!isUnlocked) {
         tab.element.classList.add('locked');
       } else {
         tab.element.classList.remove('locked');
       }
     });
+
+    updateActiveSkillControlLocks();
   };
 
   // refresh on load
@@ -645,6 +828,7 @@
     }
     window.refreshLockedTabs();
     window.refreshLengthFilterLocks();
+    updateActiveSkillControlLocks();
   });
 
   /**
@@ -692,6 +876,7 @@
     if (e.detail && e.detail.mode === 'lengthFilter') {
       window.refreshLengthFilterLocks();
     }
+    updateActiveSkillControlLocks();
   });
 
   // ============================================
@@ -799,13 +984,22 @@
           replayBadge.textContent = '';
           replayBadge.style.display = 'none';
         }
-        replayBadge.classList.remove('limit-reached');
       }
 
+      // Reset Hint System
+      if (window.HintSystem) {
+        window.HintSystem.reset();
+      }
+
+      // Clear auto hints container
+      const autoHints = document.getElementById('auto-hints-type');
+      if (autoHints) {
+        autoHints.innerHTML = '';
+        autoHints.style.display = 'none';
+      }
+      replayBadge.classList.remove('limit-reached');
+
       // Reset hint controls visibility (Level 1 Scaffolding Conflict Resolution)
-
-
-
 
       // Clear auto hints
       clearAutoHints();
@@ -2081,6 +2275,96 @@
   const removeMasteryTypeBtn = document.getElementById("remove-mastery-type-btn");
   const removeMasterySpeakBtn = document.getElementById("remove-mastery-speak-btn");
 
+  // Audio Control Elements (Type Mode)
+  const speedToggleBtn = document.getElementById("speed-toggle-btn");
+  const loopBtn = document.getElementById("loop-btn");
+
+  // Speed Toggle Logic
+  if (speedToggleBtn) {
+    speedToggleBtn.addEventListener("click", async () => {
+      const currentSpeed = audio.playbackRate;
+      let newSpeed = 1.0;
+
+      if (currentSpeed === 1.0) newSpeed = 0.75;
+      else if (currentSpeed === 0.75) newSpeed = 0.5;
+      else newSpeed = 1.0;
+
+      if (newSpeed < 1.0) {
+        const skillResult = await useActiveSkillForAttempt('slow_audio', 'type', currentTypeQuestionId);
+        if (!skillResult?.success) {
+          return;
+        }
+      }
+
+      audio.playbackRate = newSpeed;
+      if (newSpeed === 1.0) speedToggleBtn.textContent = "1.0x";
+      else if (newSpeed === 0.75) speedToggleBtn.textContent = "0.75x";
+      else if (newSpeed === 0.5) speedToggleBtn.textContent = "0.5x";
+    });
+  }
+
+  // Loop Toggle Logic
+  if (loopBtn) {
+    loopBtn.addEventListener("click", async () => {
+      const nextLoopState = !audio.loop;
+      if (nextLoopState) {
+        const skillResult = await useActiveSkillForAttempt('echo_loop', 'type', currentTypeQuestionId);
+        if (!skillResult?.success) {
+          return;
+        }
+      }
+
+      audio.loop = nextLoopState;
+      loopBtn.classList.toggle("active", audio.loop);
+
+      if (audio.loop) {
+        loopBtn.title = "Loop Active";
+      } else {
+        loopBtn.title = "Loop Audio";
+      }
+    });
+  }
+
+  // Hint Button Logic
+  const hintBtn = document.getElementById("hint-btn");
+  const hintCostBadge = document.getElementById("hint-cost-badge");
+  const autoHintsType = document.getElementById("auto-hints-type");
+  if (hintBtn) {
+    hintBtn.addEventListener("click", async () => {
+      // Get current question properties
+      // Note: currently only supporting Type mode for hints as per UI
+      const question = typeDatabase.find(q => q.id === currentTypeQuestionId);
+      if (!question) return;
+
+      const skillId = getNextHintSkillId();
+      const skillResult = await useActiveSkillForAttempt(skillId, 'type', currentTypeQuestionId);
+      if (!skillResult?.success) return;
+
+      // Hint reveal is still handled by existing HintSystem logic, but economy is server-authoritative.
+      if (window.HintSystem) {
+        const hintResult = await window.HintSystem.useHint(
+          question.correctSentence,
+          Number.MAX_SAFE_INTEGER,
+          async () => true,
+          { skipEconomy: true, externalCost: Number(skillResult.cost) || 0 }
+        );
+
+        if (hintResult?.success) {
+          window.hintUsedForCurrentQuestion = true;
+          if (autoHintsType && hintResult.hint?.content) {
+            autoHintsType.style.display = 'block';
+            autoHintsType.innerHTML = `<div class="auto-hint-item">${hintResult.hint.content}</div>`;
+          }
+          if (hintCostBadge) {
+            hintCostBadge.textContent = `-${Number(skillResult.cost) || 0} 🪙`;
+          }
+        } else if (hintResult?.error) {
+          window.shopModule?.showAlertModal?.(hintResult.error, true);
+        }
+      }
+    });
+  }
+
   // Event listeners for remove mastery buttons
   if (removeMasteryTypeBtn) {
     removeMasteryTypeBtn.addEventListener("click", async () => {
@@ -2734,24 +3018,6 @@
   });
 
   tabSpeak.addEventListener("click", async () => {
-    // LOCK CHECK
-    if (window.shopModule && !window.shopModule.isModeUnlocked('speak')) {
-      const userId = window.authUI?.getCurrentUserId?.();
-      if (!userId) {
-        // Guest user - prompt login
-        if (confirm("Sign in to unlock Speak Mode and earn coins!")) {
-          window.authUI.openLoginModal();
-        }
-      } else {
-        // Logged in user - open shop
-        const confirmShop = confirm("This mode is locked. Visit the Shop to unlock it with your coins!");
-        if (confirmShop) {
-          window.shopModule.openShop();
-        }
-      }
-      return;
-    }
-
     document.getElementById('page-layout-wrapper')?.classList.remove('watch-active');
     // Hide Watch mode question panel
     const watchQuestionPanel = document.getElementById('watch-question-panel');
@@ -2810,25 +3076,6 @@
   });
 
   tabExtended.addEventListener("click", () => {
-    // LOCK CHECK
-    if (window.shopModule && !window.shopModule.isModeUnlocked('extended')) {
-      const userId = window.authUI?.getCurrentUserId?.();
-      if (!userId) {
-        // Guest user - prompt login
-        if (confirm("Sign in to unlock Fill in the Blank Mode and earn coins!")) {
-          window.authUI.openLoginModal();
-        }
-      } else {
-        // Logged in user - open shop
-        // OPTIONAL: Add a toast notification here instead of alert
-        const confirmShop = confirm("This mode is locked. Visit the Shop to unlock it with your coins!");
-        if (confirmShop) {
-          window.shopModule.openShop();
-        }
-      }
-      return;
-    }
-
     document.getElementById('page-layout-wrapper')?.classList.remove('watch-active');
     // Hide Watch mode question panel
     const watchQuestionPanel = document.getElementById('watch-question-panel');
@@ -2885,21 +3132,6 @@
   // Watch mode tab handler
   if (tabWatch) {
     tabWatch.addEventListener("click", () => {
-      // LOCK CHECK
-      if (window.shopModule && !window.shopModule.isModeUnlocked('watch')) {
-        const userId = window.authUI?.getCurrentUserId?.();
-        if (!userId) {
-          // Guest user - prompt login
-          if (confirm("Sign in to unlock Watch Mode and earn coins!")) {
-            window.authUI.openLoginModal();
-          }
-        } else {
-          // Logged in user - open shop
-          window.shopModule.openShop();
-        }
-        return;
-      }
-
       tabWatch.classList.add("active");
       tabType.classList.remove("active");
       tabSpeak.classList.remove("active");
@@ -2963,21 +3195,6 @@
   // Notes mode tab handler
   if (tabNotes) {
     tabNotes.addEventListener("click", () => {
-      // LOCK CHECK
-      if (window.shopModule && !window.shopModule.isModeUnlocked('notes')) {
-        const userId = window.authUI?.getCurrentUserId?.();
-        if (!userId) {
-          // Guest user - prompt login
-          if (confirm("Sign in to unlock Notes Mode and earn coins!")) {
-            window.authUI.openLoginModal();
-          }
-        } else {
-          // Logged in user - open shop
-          window.shopModule.openShop();
-        }
-        return;
-      }
-
       document.getElementById('page-layout-wrapper')?.classList.remove('watch-active');
       // Hide Watch mode question panel
       const watchQuestionPanel = document.getElementById('watch-question-panel');
@@ -3039,21 +3256,6 @@
 
   if (tabPronounce) {
     tabPronounce.addEventListener("click", () => {
-      // LOCK CHECK
-      if (window.shopModule && !window.shopModule.isModeUnlocked('pronounce')) {
-        const userId = window.authUI?.getCurrentUserId?.();
-        if (!userId) {
-          // Guest user - prompt login
-          if (confirm("Sign in to unlock Pronounce Mode and earn coins!")) {
-            window.authUI.openLoginModal();
-          }
-        } else {
-          // Logged in user - open shop
-          window.shopModule.openShop();
-        }
-        return;
-      }
-
       document.getElementById('page-layout-wrapper')?.classList.remove('watch-active');
       // Hide Watch mode question panel
       const watchQuestionPanel = document.getElementById('watch-question-panel');
@@ -3779,6 +3981,11 @@
     }
 
     currentExtendedQuestionId = questionId;
+    startAttemptContext('extended', questionId);
+    window.questionStartTime = Date.now();
+    window.currentQuestionAttempts = 0;
+    window.hintUsedForCurrentQuestion = false;
+
     // Get transcript and clean it (remove existing gap markers like __word__)
     let rawTranscript = question.transcript || question.correctSentence || "";
     // Remove gap markers (double underscores) and keep the word
@@ -5634,7 +5841,9 @@
 
     try {
       // 3. Build mode-specific payload with RAW answers (not computed accuracy)
-      const attemptId = crypto.randomUUID();
+      const normalizedContentId = String(questionId);
+      const attemptContext = ensureAttemptContext(mode, normalizedContentId);
+      const attemptId = attemptContext.attemptId;
       let payload = {};
 
       if (mode === 'type' || mode === 'speak') {
@@ -5679,7 +5888,7 @@
       const result = await window.callSubmitAttempt({
         attemptId: attemptId,
         mode: mode,
-        contentId: String(questionId),
+        contentId: normalizedContentId,
         payload: payload
       });
 
@@ -5694,6 +5903,10 @@
         console.log('[Scoring] Attempt already recorded (idempotency)');
       } else {
         console.warn('[Scoring] Cloud Function returned error:', result.error);
+      }
+
+      if ((result.success || result.alreadyRecorded) && window.currentAttemptContext?.attemptId === attemptId) {
+        window.currentAttemptContext = null;
       }
 
     } catch (e) {
@@ -5720,6 +5933,7 @@
     if (window.typePerformanceTracker) {
       window.currentQuestionAttempts = (window.currentQuestionAttempts || 0) + 1;
       const timeTaken = (Date.now() - (window.questionStartTime || Date.now())) / 1000;
+      const assistMeta = getAttemptAssistMeta('type', currentTypeQuestionId);
 
       // Calculate word count from the correct answer
       const totalWords = correctSentenceType.trim().split(/\s+/).length;
@@ -5728,6 +5942,8 @@
         correct: !hasErrors,
         attempts: window.currentQuestionAttempts,
         hintUsed: window.hintUsedForCurrentQuestion || false,
+        assistCalibMult: assistMeta.assistCalibMult,
+        assistCount: assistMeta.assistCount,
         timeTaken: timeTaken,
         wordCount: totalWords
       });
@@ -5817,6 +6033,7 @@
     if (window.speakPerformanceTracker) {
       window.currentQuestionAttempts = (window.currentQuestionAttempts || 0) + 1;
       const timeTaken = (Date.now() - (window.questionStartTime || Date.now())) / 1000;
+      const assistMeta = getAttemptAssistMeta('speak', currentSpeakQuestionId);
 
       // Calculate word count from the correct answer
       const totalWords = correctSentenceSpeak.trim().split(/\s+/).length;
@@ -5825,6 +6042,8 @@
         correct: !hasErrors,
         attempts: window.currentQuestionAttempts,
         hintUsed: window.hintUsedForCurrentQuestion || false,
+        assistCalibMult: assistMeta.assistCalibMult,
+        assistCount: assistMeta.assistCount,
         timeTaken: timeTaken,
         wordCount: totalWords
       });
@@ -6050,6 +6269,11 @@
       currentSpeakQuestionId = questionId;
       currentQuestionIdSpeak.textContent = questionId;
     }
+
+    startAttemptContext(mode, questionId);
+    window.questionStartTime = Date.now();
+    window.currentQuestionAttempts = 0;
+    window.hintUsedForCurrentQuestion = false;
 
     // Reset UI state to initial
     if (mode === "type") {
@@ -6644,6 +6868,8 @@
 
       log.debug('✓ Progress UI: Cleared after logout');
     }
+
+    updateActiveSkillControlLocks();
   }
 
   // Register the callback with auth-ui.js
@@ -6697,8 +6923,8 @@
     if (retryBtn) retryBtn.style.display = "none";
 
     // Hint system visibility check (Level 1 Scaffolding Conflict Resolution)
-    const hintControlsEl = document.getElementById('hint-controls-type');
-    const hintDisplayEl = document.getElementById('hint-display-type');
+    const hintControlsEl = document.getElementById('hint-controls');
+    const hintDisplayEl = document.getElementById('auto-hints-type');
 
     if (hintControlsEl) {
       const settings = window.DifficultyManager ? window.DifficultyManager.getCurrentSettings('type') : null;
@@ -6717,8 +6943,8 @@
 
 
       // Update hint cost badge directly
-      const costBadge = document.getElementById('hint-cost-badge-type');
-      const hintBtn = document.getElementById('hint-btn-type');
+      const costBadge = document.getElementById('hint-cost-badge');
+      const hintBtn = document.getElementById('hint-btn');
       if (costBadge && window.HintSystem) {
         const state = window.HintSystem.getState();
         if (!state.hasMore) {
@@ -6755,7 +6981,7 @@
         // showAutoHint('first-letters', `💡 ${firstLettersHint}`);
 
         // CONFLICT RESOLUTION: Hide manual hint button to prevent redundancy
-        const hintControls = document.getElementById('hint-controls-type');
+        const hintControls = document.getElementById('hint-controls');
         if (hintControls) hintControls.style.display = 'none';
       }
     }
@@ -6814,164 +7040,19 @@
       resetScaffolding();
 
       // Hide hint controls and reset hint state for new attempt
-      const hintControlsType = document.getElementById('hint-controls-type');
-      const hintDisplayType = document.getElementById('hint-display-type');
+      const hintControlsType = document.getElementById('hint-controls');
+      const hintDisplayType = document.getElementById('auto-hints-type');
       if (hintControlsType) hintControlsType.style.display = 'none';
       if (hintDisplayType) hintDisplayType.style.display = 'none';
       if (window.HintSystem) window.HintSystem.resetForNewQuestion(currentTypeQuestionId, 'type');
+      startAttemptContext('type', currentTypeQuestionId);
+      window.questionStartTime = Date.now();
+      window.currentQuestionAttempts = 0;
+      window.hintUsedForCurrentQuestion = false;
     });
   }
 
-  // ============================================
-  // Hint System Integration for Type Mode
-  // ============================================
 
-  const hintBtnType = document.getElementById('hint-btn-type');
-  const hintControlsType = document.getElementById('hint-controls-type');
-  const hintDisplayType = document.getElementById('hint-display-type');
-  const hintContentType = document.getElementById('hint-content-type');
-  const hintLevelBadgeType = document.getElementById('hint-level-badge-type');
-  const hintTypeLabelType = document.getElementById('hint-type-label-type');
-  const hintCostBadgeType = document.getElementById('hint-cost-badge-type');
-
-  // Function to update hint button cost badge
-  function updateHintButtonUI() {
-    if (!window.HintSystem || !hintCostBadgeType) return;
-
-    const state = window.HintSystem.getState();
-
-    if (!state.hasMore) {
-      hintCostBadgeType.textContent = '(All used)';
-      hintCostBadgeType.className = 'hint-cost-badge max-reached';
-      if (hintBtnType) hintBtnType.disabled = true;
-    } else if (state.freeRemaining > 0) {
-      hintCostBadgeType.textContent = `(${state.freeRemaining} free)`;
-      hintCostBadgeType.className = 'hint-cost-badge free';
-      if (hintBtnType) hintBtnType.disabled = false;
-    } else {
-      hintCostBadgeType.textContent = `(${state.nextCost} coins)`;
-      hintCostBadgeType.className = 'hint-cost-badge paid';
-      if (hintBtnType) hintBtnType.disabled = false;
-    }
-  }
-
-  // Function to display a hint
-  function displayHint(hint) {
-    if (!hintDisplayType || !hintContentType || !hintLevelBadgeType || !hintTypeLabelType) return;
-
-    hintLevelBadgeType.textContent = `Level ${hint.level}`;
-    hintTypeLabelType.textContent = hint.description;
-    hintContentType.innerHTML = hint.content;
-    hintDisplayType.style.display = 'block';
-
-    // Track hint usage for Smart Difficulty
-    window.hintUsedForCurrentQuestion = true;
-  }
-
-  // Function to show insufficient coins message
-  function showInsufficientCoinsForHint(needed, have) {
-    const message = `Not enough coins!<br><br>Hint cost: <strong>${needed}</strong> coins<br>Your balance: <strong>${have}</strong> coins<br><br>Earn more coins by practicing!`;
-
-    if (window.shopModule && window.shopModule.showAlertModal) {
-      window.shopModule.showAlertModal(message, true);
-    } else {
-      // Fallback if shop module isn't loaded
-      alert(message.replace(/<br>/g, '\n').replace(/<strong>|<\/strong>/g, ''));
-    }
-  }
-
-  // Function to deduct coins for hint
-  async function deductCoinsForHint(amount) {
-    if (!window.firebaseFirestoreFunctions || !window.authUI) {
-      throw new Error('Firebase not initialized');
-    }
-
-    const userId = window.authUI.getCurrentUserId();
-    if (!userId) {
-      throw new Error('User not logged in');
-    }
-
-    // Deduct coins
-    const result = await window.firebaseFirestoreFunctions.deductCoins(userId, amount);
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to deduct coins');
-    }
-
-
-    // Refresh UI
-    if (window.authUI.loadPointsUI) {
-      await window.authUI.loadPointsUI(userId);
-    }
-    if (window.shopModule && window.shopModule.refreshUserData) {
-      await window.shopModule.refreshUserData();
-    }
-  }
-
-  // Hint button click handler
-  let hintButtonDebounce = false;
-  if (hintBtnType) {
-    hintBtnType.addEventListener('click', async (e) => {
-      // Prevent event bubbling
-      e.stopPropagation();
-
-      // Debounce to prevent double-clicks
-      if (hintButtonDebounce) {
-        log.debug('Hint button debounced');
-        return;
-      }
-      hintButtonDebounce = true;
-      setTimeout(() => { hintButtonDebounce = false; }, 500);
-
-      if (!window.HintSystem || !correctSentenceType) {
-        log.warn('Hint system not available or no correct sentence loaded');
-        return;
-      }
-
-      // Guest mode check
-      if (window.authUI && window.authUI.isGuestMode && window.authUI.isGuestMode()) {
-        alert('Sign in to use hints and track your progress!');
-        return;
-      }
-
-      // Get user's coin balance
-      let userCoins = 0;
-      if (window.shopModule && window.shopModule.getCoins) {
-        userCoins = window.shopModule.getCoins();
-      } else if (window.authUI && window.authUI.getCurrentPoints) {
-        userCoins = window.authUI.getCurrentPoints();
-      }
-
-      // Use hint
-      const result = await window.HintSystem.useHint(correctSentenceType, userCoins, deductCoinsForHint);
-
-      if (result.success) {
-        displayHint(result.hint);
-        updateHintButtonUI();
-
-        // Show points toast for coin deduction if paid
-        if (result.cost > 0 && window.authUI && window.authUI.showPointsToast) {
-          // Negative toast to show deduction
-          window.authUI.showPointsToast('Hint Used', -result.cost);
-        }
-
-        // ANALYTICS: Track hint usage
-        log.debug('📊 ANALYTICS: Hint Used', {
-          questionId: correctSentenceType ? 'current' : 'unknown',
-          level: result.level,
-          cost: result.cost,
-          timestamp: new Date().toISOString()
-        });
-      } else if (result.maxReached) {
-        // All hints used for this question
-        updateHintButtonUI();
-      } else if (result.needed) {
-        // Not enough coins
-        showInsufficientCoinsForHint(result.needed, result.have);
-      } else {
-        log.error('Hint error:', result.error);
-      }
-    });
-  }
 
 
   // Speak mode
@@ -7121,6 +7202,10 @@
       if (playBtnSpeak) playBtnSpeak.style.display = "inline-block";
       retryBtnSpeak.style.display = "none";
       resetScaffolding();
+      startAttemptContext('speak', currentSpeakQuestionId);
+      window.questionStartTime = Date.now();
+      window.currentQuestionAttempts = 0;
+      window.hintUsedForCurrentQuestion = false;
     });
   }
 

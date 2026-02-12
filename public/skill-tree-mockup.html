@@ -1,0 +1,1253 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Skill Tree Mockup (Active Blue / Passive Gold)</title>
+    <style>
+      :root {
+        --bg0: #0a0c10;
+        --bg1: #0e131c;
+        --panel: rgba(255, 255, 255, 0.06);
+        --panel2: rgba(255, 255, 255, 0.09);
+        --border: rgba(255, 255, 255, 0.10);
+        --text: rgba(255, 255, 255, 0.92);
+        --muted: rgba(255, 255, 255, 0.65);
+
+        --active: #56d7ff;
+        --activeDeep: #1d4ed8;
+        --activeGlow: rgba(86, 215, 255, 0.35);
+
+        --passive: #ffd07a;
+        --passiveDeep: #b45309;
+        --passiveGlow: rgba(255, 208, 122, 0.35);
+
+        --slot0: #161a22;
+        --slot1: #0b0d12;
+
+        --stoneA: rgba(255, 255, 255, 0.05);
+        --stoneB: rgba(0, 0, 0, 0.25);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(1200px 800px at 20% 10%, rgba(40, 80, 160, 0.25) 0%, transparent 60%),
+          radial-gradient(900px 700px at 85% 30%, rgba(140, 70, 40, 0.18) 0%, transparent 55%),
+          linear-gradient(180deg, var(--bg1), var(--bg0));
+        min-height: 100vh;
+      }
+
+      .shell {
+        max-width: 1440px;
+        margin: 18px auto 40px;
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        border-radius: 14px;
+        overflow: hidden;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 30%),
+          radial-gradient(800px 500px at 40% 0%, rgba(255, 255, 255, 0.04), transparent 60%),
+          rgba(0, 0, 0, 0.18);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+      }
+
+      .topbar {
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 14px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.05));
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .title {
+        font-weight: 800;
+        letter-spacing: 0.03em;
+      }
+
+      .controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .controls label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      select {
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        color: var(--text);
+        border-radius: 10px;
+        padding: 7px 10px;
+        outline: none;
+      }
+
+      .content {
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr) 420px;
+        min-height: 640px;
+      }
+
+      /* Left panel (2nd screenshot inspired) */
+      .sidebar {
+        padding: 12px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)),
+          repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0 6px, rgba(0, 0, 0, 0.03) 6px 12px);
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        margin-bottom: 10px;
+      }
+
+      .tab {
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(0, 0, 0, 0.28);
+        color: rgba(255, 255, 255, 0.75);
+        font-weight: 700;
+        font-size: 12px;
+        text-align: center;
+        cursor: default;
+        user-select: none;
+      }
+
+      .tab.active {
+        background: rgba(255, 255, 255, 0.10);
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .tree-list {
+        margin-top: 10px;
+        display: grid;
+        gap: 6px;
+      }
+
+      .tree-btn {
+        width: 100%;
+        text-align: left;
+        padding: 10px 10px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        background: rgba(0, 0, 0, 0.30);
+        color: rgba(255, 255, 255, 0.85);
+        font-weight: 750;
+        cursor: pointer;
+      }
+
+      .tree-btn:hover {
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .tree-btn.active {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.18);
+      }
+
+      .coin-box {
+        margin-top: 12px;
+        padding: 12px 10px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        background: rgba(0, 0, 0, 0.30);
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.75);
+      }
+
+      .coin-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+      }
+
+      .coin-val {
+        font-weight: 800;
+        color: #fbbf24;
+      }
+
+      /* Center panel (tree graph) */
+      .main {
+        padding: 14px 14px 18px;
+        position: relative;
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Right panel (detail) */
+      .detailpanel {
+        padding: 14px 14px 18px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(0, 0, 0, 0.08));
+        display: flex;
+        flex-direction: column;
+      }
+
+      .hint {
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        background: rgba(0, 0, 0, 0.22);
+        padding: 10px 12px;
+        border-radius: 12px;
+        color: rgba(255, 255, 255, 0.75);
+        font-size: 12px;
+        margin-bottom: 12px;
+      }
+
+      .tree-wrap {
+        position: relative;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        background:
+          radial-gradient(800px 500px at 50% 0%, var(--stoneA), transparent 60%),
+          radial-gradient(900px 700px at 0% 70%, rgba(255, 255, 255, 0.03), transparent 70%),
+          linear-gradient(180deg, rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.38));
+        height: 520px;
+        overflow: hidden;
+      }
+
+      .actionbar {
+        margin-top: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        background: rgba(0, 0, 0, 0.22);
+        border-radius: 12px;
+        padding: 10px 10px;
+        display: flex;
+        gap: 10px;
+      }
+
+      .bar-btn {
+        flex: 1;
+        padding: 10px 10px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(0, 0, 0, 0.35);
+        color: rgba(255, 255, 255, 0.88);
+        font-weight: 900;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+      }
+
+      .bar-btn.primary {
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(0, 0, 0, 0.10)),
+          linear-gradient(180deg, #fbbf24, #b45309);
+        border-color: rgba(255, 208, 122, 0.35);
+        color: rgba(20, 12, 6, 0.95);
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.22);
+      }
+
+      .tree-canvas {
+        position: absolute;
+        inset: 0;
+      }
+
+      .tree-grid {
+        position: absolute;
+        inset: 0;
+        background-image:
+          radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+        background-size: 34px 34px;
+        opacity: 0.35;
+        pointer-events: none;
+      }
+
+      .nodes {
+        position: absolute;
+        inset: 0;
+      }
+
+      /* Node slot (2nd screenshot) + icon treatment (1st screenshot) */
+      .node {
+        position: absolute;
+        width: 70px;
+        height: 70px;
+        border-radius: 10px;
+        background: linear-gradient(180deg, var(--slot0), var(--slot1));
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.06),
+          inset 0 -3px 0 rgba(0, 0, 0, 0.55),
+          0 10px 24px rgba(0, 0, 0, 0.35);
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        user-select: none;
+        transform: translate(-50%, -50%);
+      }
+
+      .node:hover {
+        filter: brightness(1.08);
+      }
+
+      .node.selected {
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.08),
+          inset 0 -3px 0 rgba(0, 0, 0, 0.55),
+          0 0 0 1px rgba(86, 215, 255, 0.35),
+          0 0 18px rgba(86, 215, 255, 0.20),
+          0 10px 24px rgba(0, 0, 0, 0.35);
+      }
+
+      .node.locked {
+        opacity: 0.55;
+        filter: grayscale(1) brightness(0.85);
+      }
+
+      .orb {
+        width: 52px;
+        height: 52px;
+        border-radius: 999px;
+        position: relative;
+        background:
+          radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.22), rgba(0, 0, 0, 0.45) 60%, rgba(0, 0, 0, 0.80));
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.10),
+          0 0 0 2px rgba(0, 0, 0, 0.75);
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+      }
+
+      .node.active .orb {
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.10),
+          0 0 0 2px rgba(0, 0, 0, 0.75),
+          0 0 18px var(--activeGlow);
+      }
+
+      .node.passive .orb {
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.10),
+          0 0 0 2px rgba(0, 0, 0, 0.75),
+          0 0 18px var(--passiveGlow);
+      }
+
+      .orb::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 999px;
+        border: 3px solid rgba(255, 255, 255, 0.18);
+        box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.60);
+        pointer-events: none;
+      }
+
+      .node.active .orb::before {
+        border-color: rgba(86, 215, 255, 0.95);
+        box-shadow:
+          inset 0 0 0 2px rgba(29, 78, 216, 0.55),
+          0 0 14px rgba(86, 215, 255, 0.28);
+      }
+
+      .node.passive .orb::before {
+        border-color: rgba(255, 208, 122, 0.96);
+        box-shadow:
+          inset 0 0 0 2px rgba(180, 83, 9, 0.55),
+          0 0 14px rgba(255, 208, 122, 0.22);
+      }
+
+      .art {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        object-fit: contain;
+        filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.55));
+      }
+
+      .rune {
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.85);
+        text-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
+      }
+
+      .node.active .rune {
+        color: rgba(210, 245, 255, 0.95);
+        text-shadow: 0 0 14px rgba(86, 215, 255, 0.50);
+      }
+
+      .node.passive .rune {
+        color: rgba(255, 245, 220, 0.95);
+        text-shadow: 0 0 14px rgba(255, 208, 122, 0.45);
+      }
+
+      .rank {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        left: auto;
+        padding: 2px 6px;
+        border-radius: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: #111;
+        font-size: 10px;
+        font-weight: 800;
+        color: #fbbf24;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      }
+
+      .dot {
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: #ef4444;
+        box-shadow:
+          0 0 0 2px rgba(0, 0, 0, 0.75),
+          0 0 12px rgba(239, 68, 68, 0.35);
+        z-index: 6;
+      }
+
+      .equip {
+        position: absolute;
+        left: 50%;
+        bottom: -18px;
+        transform: translateX(-50%);
+        padding: 2px 7px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(0, 0, 0, 0.60);
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 0.02em;
+        color: rgba(255, 208, 122, 0.95);
+        white-space: nowrap;
+        z-index: 6;
+      }
+
+      .plus {
+        position: absolute;
+        bottom: -6px;
+        right: -6px;
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+        border: 1px solid rgba(0, 0, 0, 0.65);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.20), rgba(0, 0, 0, 0.10)),
+          linear-gradient(180deg, #b45309, #7c2d12);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.22),
+          0 10px 18px rgba(0, 0, 0, 0.45);
+        color: rgba(255, 255, 255, 0.92);
+        font-weight: 950;
+        display: grid;
+        place-items: center;
+        font-size: 16px;
+      }
+
+      .plus.hidden {
+        display: none;
+      }
+
+      .node.available .plus {
+        animation: pulse 1.6s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0% { transform: scale(1); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 10px 18px rgba(0, 0, 0, 0.45); }
+        50% { transform: scale(1.06); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 0 22px rgba(255, 208, 122, 0.35), 0 10px 18px rgba(0, 0, 0, 0.45); }
+        100% { transform: scale(1); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 10px 18px rgba(0, 0, 0, 0.45); }
+      }
+
+      .detail {
+        margin-top: 0;
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        background: rgba(0, 0, 0, 0.22);
+        border-radius: 12px;
+        padding: 14px 16px;
+        flex: 1;
+        overflow: auto;
+      }
+
+      .detail .name {
+        font-weight: 900;
+        letter-spacing: 0.02em;
+        margin-bottom: 0;
+        font-size: 18px;
+      }
+
+      .detail .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .detail-header {
+        margin-bottom: 10px;
+      }
+
+      .detail-title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 12px;
+      }
+
+      .detail-sub {
+        font-size: 11px;
+        font-weight: 900;
+        color: rgba(255, 255, 255, 0.55);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        white-space: nowrap;
+      }
+
+      .detail-tabs {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .detail-tab {
+        flex: 1;
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(0, 0, 0, 0.32);
+        color: rgba(255, 255, 255, 0.78);
+        font-weight: 900;
+        font-size: 12px;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+      }
+
+      .detail-tab.active {
+        background: rgba(255, 255, 255, 0.10);
+        border-color: rgba(255, 255, 255, 0.18);
+        color: rgba(255, 255, 255, 0.95);
+      }
+
+      .section {
+        margin-top: 14px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .section-title {
+        font-size: 10px;
+        font-weight: 950;
+        color: rgba(255, 255, 255, 0.40);
+        text-transform: uppercase;
+        letter-spacing: 0.09em;
+        margin-bottom: 8px;
+      }
+
+      .req-grid,
+      .effect-grid {
+        display: grid;
+        gap: 8px;
+      }
+
+      .req-row,
+      .effect-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        background: rgba(255, 255, 255, 0.04);
+        font-size: 12px;
+      }
+
+      .req-row .k,
+      .effect-row .k {
+        color: rgba(255, 255, 255, 0.60);
+        font-weight: 750;
+      }
+
+      .req-row .v,
+      .effect-row .v {
+        color: rgba(255, 255, 255, 0.90);
+        font-weight: 900;
+        text-align: right;
+      }
+
+      .req-row.ok {
+        border-color: rgba(34, 197, 94, 0.25);
+      }
+
+      .req-row.ok .v {
+        color: rgba(134, 239, 172, 0.95);
+      }
+
+      .req-row.bad {
+        border-color: rgba(239, 68, 68, 0.25);
+      }
+
+      .req-row.bad .v {
+        color: rgba(253, 164, 175, 0.95);
+      }
+
+      .effect-text {
+        font-size: 12px;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.72);
+        margin-bottom: 10px;
+      }
+
+      .footer {
+        margin-top: 14px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        gap: 10px;
+      }
+
+      .action-btn {
+        flex: 1;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(0, 0, 0, 0.35);
+        color: rgba(255, 255, 255, 0.90);
+        font-weight: 950;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.08),
+          0 10px 18px rgba(0, 0, 0, 0.35);
+      }
+
+      .action-btn.secondary {
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(0, 0, 0, 0.18)),
+          rgba(0,  0, 0, 0.35);
+        border-color: rgba(255, 255, 255, 0.12);
+      }
+
+      .action-btn.primary {
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(0, 0, 0, 0.10)),
+          linear-gradient(180deg, #fbbf24, #b45309);
+        border-color: rgba(255, 208, 122, 0.35);
+        color: rgba(20, 12, 6, 0.95);
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.22);
+      }
+
+      .action-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .pill {
+        padding: 4px 8px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .pill.active {
+        border-color: rgba(86, 215, 255, 0.22);
+        background: rgba(86, 215, 255, 0.10);
+      }
+
+      .pill.passive {
+        border-color: rgba(255, 208, 122, 0.22);
+        background: rgba(255, 208, 122, 0.10);
+      }
+
+      /* SVG links */
+      svg.links {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      .link {
+        stroke: rgba(255, 255, 255, 0.22);
+        stroke-width: 3;
+        stroke-linecap: round;
+        fill: none;
+      }
+
+      .link.active {
+        stroke: rgba(86, 215, 255, 0.32);
+      }
+
+      .link.passive {
+        stroke: rgba(255, 208, 122, 0.30);
+      }
+
+      @media (max-width: 980px) {
+        .content {
+          grid-template-columns: 1fr;
+        }
+        .sidebar {
+          border-right: none;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .main {
+          border-right: none;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="topbar">
+        <div class="title">Skills (Mockup)</div>
+        <div class="controls">
+          <label>
+            Branch:
+            <select id="branchSelect">
+              <option value="listening">Listening</option>
+              <option value="writing">Writing</option>
+              <option value="reading">Reading</option>
+              <option value="speaking">Speaking</option>
+            </select>
+          </label>
+          <label>
+            Progress:
+            <select id="progressSelect">
+              <option value="early">Early</option>
+              <option value="mid">Mid</option>
+              <option value="late">Late</option>
+            </select>
+          </label>
+          <label>
+            Art set:
+            <select id="artSelect">
+              <option value="runescape">RuneScape-ish</option>
+              <option value="painted">Painted</option>
+              <option value="pixel">Pixel</option>
+              <option value="vector">Vector</option>
+              <option value="none">None</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="content">
+        <aside class="sidebar">
+          <div class="tabs">
+            <div class="tab active">Basic Skill</div>
+            <div class="tab">Expanded</div>
+          </div>
+          <div class="tree-list" id="treeList"></div>
+          <div class="coin-box">
+            <div class="coin-row"><span>Coins</span><span class="coin-val" id="coins">0</span></div>
+          </div>
+        </aside>
+
+        <main class="main">
+          <div class="hint">Goal: copy the 2nd screenshot tree layout + 1st screenshot icon vibe. Active rim = blue. Passive rim = gold.</div>
+
+          <div class="tree-wrap">
+            <div class="tree-grid"></div>
+            <svg class="links" id="linksSvg"></svg>
+            <div class="nodes" id="nodes"></div>
+          </div>
+
+          <div class="actionbar" aria-label="Tree Actions">
+            <button class="bar-btn" id="btnReset" type="button">Reset Skill Points</button>
+            <button class="bar-btn" id="btnUndo" type="button">Undo</button>
+            <button class="bar-btn primary" id="btnConfirm" type="button">Confirm</button>
+          </div>
+        </main>
+
+        <aside class="detailpanel">
+          <div class="detail" id="detail">
+            <div class="detail-header">
+              <div class="detail-title-row">
+                <div class="name">Select a node</div>
+                <div class="detail-sub">Details</div>
+              </div>
+              <div class="detail-tabs">
+                <button class="detail-tab active" type="button">Stage</button>
+                <button class="detail-tab" type="button">Arena</button>
+              </div>
+            </div>
+            <div class="meta">
+              <span class="pill">Type</span>
+              <span class="pill">State</span>
+              <span class="pill">Rank</span>
+              <span class="pill">Unlock Cost</span>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <script src="js/skill-catalog.js"></script>
+    <script>
+      const BRANCHES = [
+        { id: "listening", label: "Listening" },
+        { id: "writing", label: "Writing" },
+        { id: "reading", label: "Reading" },
+        { id: "speaking", label: "Speaking" }
+      ];
+
+      // Static mock tree layout (positions are percent of canvas).
+      // Node kind: "active" (blue) / "passive" (gold) / "root"
+      const TREES = {
+        listening: {
+          nodes: [
+            { id: "root_listening", title: "Listening Core", kind: "root", x: 50, y: 10, rankMax: 1, cost: 0 },
+            { id: "slow_audio", title: "Slow Audio", kind: "active", x: 35, y: 28, rankMax: 1, cost: 120 },
+            { id: "frugal_listener_1", title: "Frugal Listener I", kind: "passive", x: 65, y: 28, rankMax: 1, cost: 400 },
+            { id: "echo_loop", title: "Echo Loop", kind: "active", x: 35, y: 44, rankMax: 1, cost: 200 },
+            { id: "audio_engineer", title: "Audio Engineer", kind: "passive", x: 65, y: 44, rankMax: 1, cost: 900 },
+            { id: "chunking", title: "Chunking", kind: "active", x: 35, y: 60, rankMax: 1, cost: 350 },
+            { id: "frugal_listener_2", title: "Frugal Listener II", kind: "passive", x: 65, y: 60, rankMax: 1, cost: 1600 },
+            { id: "transcript_glimpse", title: "Transcript Glimpse", kind: "active", x: 35, y: 76, rankMax: 1, cost: 700 },
+            { id: "transcript_permit", title: "Transcript Permit", kind: "passive", x: 65, y: 76, rankMax: 1, cost: 2400 },
+            { id: "streak_shield", title: "Streak Shield", kind: "active", x: 50, y: 90, rankMax: 1, cost: 900 }
+          ],
+          edges: [
+            ["root_listening", "slow_audio"],
+            ["root_listening", "frugal_listener_1"],
+            ["slow_audio", "echo_loop"],
+            ["frugal_listener_1", "audio_engineer"],
+            ["echo_loop", "chunking"],
+            ["audio_engineer", "frugal_listener_2"],
+            ["chunking", "transcript_glimpse"],
+            ["frugal_listener_2", "transcript_permit"],
+            ["transcript_glimpse", "streak_shield"],
+            ["transcript_permit", "streak_shield"]
+          ]
+        },
+        writing: {
+          nodes: [
+            { id: "root_writing", title: "Writing Core", kind: "root", x: 50, y: 10, rankMax: 1, cost: 0 },
+            { id: "hint_wc", title: "Hint: Word Count", kind: "active", x: 35, y: 28, rankMax: 1, cost: 100 },
+            { id: "frugal_writer_1", title: "Frugal Writer I", kind: "passive", x: 65, y: 28, rankMax: 1, cost: 400 },
+            { id: "hint_fl", title: "Hint: First Letters", kind: "active", x: 35, y: 44, rankMax: 1, cost: 180 },
+            { id: "hint_kit", title: "Hint Kit", kind: "passive", x: 65, y: 44, rankMax: 1, cost: 900 },
+            { id: "hint_reveal", title: "Hint: Reveal Word", kind: "active", x: 35, y: 60, rankMax: 1, cost: 600 },
+            { id: "coupon_book", title: "Coupon Book", kind: "passive", x: 65, y: 60, rankMax: 1, cost: 2400 }
+          ],
+          edges: [
+            ["root_writing", "hint_wc"],
+            ["root_writing", "frugal_writer_1"],
+            ["hint_wc", "hint_fl"],
+            ["frugal_writer_1", "hint_kit"],
+            ["hint_fl", "hint_reveal"],
+            ["hint_kit", "coupon_book"]
+          ]
+        },
+        reading: {
+          nodes: [
+            { id: "root_reading", title: "Reading Core", kind: "root", x: 50, y: 10, rankMax: 1, cost: 0 },
+            { id: "dict_peek", title: "Dictionary Peek", kind: "active", x: 35, y: 28, rankMax: 1, cost: 90 },
+            { id: "frugal_reader_1", title: "Frugal Reader I", kind: "passive", x: 65, y: 28, rankMax: 1, cost: 400 },
+            { id: "summary_scroll", title: "Summary Scroll", kind: "active", x: 35, y: 44, rankMax: 1, cost: 380 },
+            { id: "mode_license_watch", title: "Watch License", kind: "passive", x: 65, y: 44, rankMax: 1, cost: 900 },
+            { id: "time_freeze", title: "Time Freeze", kind: "active", x: 35, y: 60, rankMax: 1, cost: 500 },
+            { id: "no_reveal_rebate", title: "No-Reveal Rebate", kind: "passive", x: 65, y: 60, rankMax: 1, cost: 2400 }
+          ],
+          edges: [
+            ["root_reading", "dict_peek"],
+            ["root_reading", "frugal_reader_1"],
+            ["dict_peek", "summary_scroll"],
+            ["frugal_reader_1", "mode_license_watch"],
+            ["summary_scroll", "time_freeze"],
+            ["mode_license_watch", "no_reveal_rebate"]
+          ]
+        },
+        speaking: {
+          nodes: [
+            { id: "root_speaking", title: "Speaking Core", kind: "root", x: 50, y: 10, rankMax: 1, cost: 0 },
+            { id: "pron_rune", title: "Pronunciation Rune", kind: "active", x: 35, y: 28, rankMax: 1, cost: 100 },
+            { id: "frugal_speaker_1", title: "Frugal Speaker I", kind: "passive", x: 65, y: 28, rankMax: 1, cost: 400 },
+            { id: "shadow_mode", title: "Shadow Mode", kind: "active", x: 35, y: 44, rankMax: 1, cost: 260 },
+            { id: "breath_control", title: "Breath Control", kind: "passive", x: 65, y: 44, rankMax: 1, cost: 900 },
+            { id: "second_take", title: "Second Take", kind: "active", x: 35, y: 60, rankMax: 1, cost: 650 },
+            { id: "second_take_insurance", title: "Second Take Insurance", kind: "passive", x: 65, y: 60, rankMax: 1, cost: 2400 }
+          ],
+          edges: [
+            ["root_speaking", "pron_rune"],
+            ["root_speaking", "frugal_speaker_1"],
+            ["pron_rune", "shadow_mode"],
+            ["frugal_speaker_1", "breath_control"],
+            ["shadow_mode", "second_take"],
+            ["breath_control", "second_take_insurance"]
+          ]
+        }
+      };
+
+      const branchSelect = document.getElementById("branchSelect");
+      const progressSelect = document.getElementById("progressSelect");
+      const artSelect = document.getElementById("artSelect");
+      const nodesEl = document.getElementById("nodes");
+      const linksSvg = document.getElementById("linksSvg");
+      const treeList = document.getElementById("treeList");
+      const detailEl = document.getElementById("detail");
+      const btnReset = document.getElementById("btnReset");
+      const btnUndo = document.getElementById("btnUndo");
+      const btnConfirm = document.getElementById("btnConfirm");
+
+      if (btnReset) {
+        btnReset.addEventListener("click", () => {
+          progressSelect.value = "early";
+          render();
+        });
+      }
+
+      if (btnUndo) {
+        btnUndo.addEventListener("click", () => {
+          document.querySelectorAll(".node.selected").forEach((n) => n.classList.remove("selected"));
+          setEmptyDetail();
+        });
+      }
+
+      if (btnConfirm) {
+        btnConfirm.addEventListener("click", () => {
+          // Visual-only mock action.
+          btnConfirm.textContent = "Confirmed";
+          setTimeout(() => {
+            btnConfirm.textContent = "Confirm";
+          }, 800);
+        });
+      }
+
+      function getArtUrl(skillId) {
+        const set = artSelect.value;
+        if (set === "none") return null;
+        const ext = set === "vector" ? "svg" : "png";
+        return `assets/skill-icons/${set}/${skillId}.${ext}`;
+      }
+
+      function runeForSkill(skillId) {
+        const parts = String(skillId).split("_").filter(Boolean);
+        const letters = parts.map((p) => p[0]).join("").toUpperCase();
+        return letters.slice(0, 3);
+      }
+
+      function escHtml(value) {
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function progressConfig() {
+        const stage = progressSelect.value;
+        if (stage === "late") return { unlockedCount: 999, coins: 12000, coreLevel: 12 };
+        if (stage === "mid") return { unlockedCount: 5, coins: 2600, coreLevel: 6 };
+        return { unlockedCount: 2, coins: 650, coreLevel: 2 };
+      }
+
+      const EQUIPPED_BY_BRANCH = {
+        listening: new Set(["slow_audio", "echo_loop"]),
+        writing: new Set(["hint_wc", "hint_fl"]),
+        reading: new Set(["dict_peek"]),
+        speaking: new Set(["pron_rune"])
+      };
+
+      function setEmptyDetail() {
+        detailEl.innerHTML = `
+          <div class="detail-header">
+            <div class="detail-title-row">
+              <div class="name">Select a node</div>
+              <div class="detail-sub">Details</div>
+            </div>
+            <div class="detail-tabs">
+              <button class="detail-tab active" type="button">Stage</button>
+              <button class="detail-tab" type="button">Arena</button>
+            </div>
+          </div>
+          <div class="meta">
+            <span class="pill">Type</span>
+            <span class="pill">State</span>
+            <span class="pill">Rank</span>
+            <span class="pill">Unlock Cost</span>
+          </div>
+        `;
+      }
+
+      function setDetail(node, state, ctx) {
+        const catalog = window.SkillCatalog || null;
+        const skillDef = catalog && typeof catalog.getSkill === "function" ? catalog.getSkill(node.id) : null;
+        const req = catalog && typeof catalog.getUnlockRequirement === "function" ? catalog.getUnlockRequirement(node.id) : null;
+
+        const tier = String(skillDef?.tier || "").trim();
+        const desc = String(skillDef?.desc || "").trim() || "(No description yet)";
+        const allowedModes = Array.isArray(skillDef?.allowedModes) ? skillDef.allowedModes : [];
+        const flatCost = !!skillDef?.flatCost;
+        const useCost = Number.isFinite(Number(skillDef?.baseCost)) ? Number(skillDef.baseCost) : null;
+        const calibMult = Number.isFinite(Number(skillDef?.calibMult)) ? Number(skillDef.calibMult) : null;
+
+        const coins = Number(ctx?.coins) || 0;
+        const levelRequired = Number(req?.level) || 1;
+        const yourLevel = Number(ctx?.coreLevel) || 1;
+
+        const canBuy = state === "available" && coins >= (Number(node.cost) || 0);
+
+        const pills = [
+          `<span class="pill ${node.kind === "active" ? "active" : node.kind === "passive" ? "passive" : ""}">${escHtml(node.kind)}</span>`,
+          `<span class="pill">${escHtml(state)}</span>`,
+          `<span class="pill">${node.rankCur}/${node.rankMax}</span>`,
+          `<span class="pill">${node.cost} coins</span>`,
+          tier ? `<span class="pill">${escHtml(tier)}</span>` : ""
+        ].filter(Boolean);
+
+        detailEl.innerHTML = `
+          <div class="detail-header">
+            <div class="detail-title-row">
+              <div class="name">${escHtml(node.title)}</div>
+              <div class="detail-sub">${node.kind === "root" ? "Core" : `Level ${levelRequired}`}</div>
+            </div>
+            <div class="detail-tabs">
+              <button class="detail-tab active" type="button">Stage</button>
+              <button class="detail-tab" type="button">Arena</button>
+            </div>
+          </div>
+
+          <div class="meta">${pills.join("")}</div>
+
+          <div class="section">
+            <div class="section-title">Upgrade Requirements</div>
+            <div class="req-grid">
+              <div class="req-row ${yourLevel >= levelRequired ? "ok" : "bad"}">
+                <span class="k">Level Required</span>
+                <span class="v">${levelRequired}</span>
+              </div>
+              <div class="req-row ${yourLevel >= levelRequired ? "ok" : "bad"}">
+                <span class="k">Your Level</span>
+                <span class="v">${yourLevel}</span>
+              </div>
+              <div class="req-row ${coins >= (Number(node.cost) || 0) ? "ok" : "bad"}">
+                <span class="k">Coins Required</span>
+                <span class="v">${node.cost} (You: ${coins})</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Skill Effects</div>
+            <div class="effect-text">${escHtml(desc)}</div>
+            ${node.kind === "active" ? `
+            <div class="effect-grid">
+              ${useCost !== null ? `<div class="effect-row"><span class="k">Use Cost</span><span class="v">${useCost} coin${useCost === 1 ? "" : "s"}${flatCost ? "" : "/use"}</span></div>` : ""}
+              ${calibMult !== null ? `<div class="effect-row"><span class="k">Calibration</span><span class="v">${Math.round(calibMult * 100)}%</span></div>` : ""}
+              <div class="effect-row"><span class="k">Allowed Modes</span><span class="v">${allowedModes.length ? escHtml(allowedModes.join(", ")) : "Any"}</span></div>
+            </div>` : ""}
+          </div>
+
+          <div class="footer">
+            <button class="action-btn secondary" id="btnDetailUndo" type="button">Undo</button>
+            <button class="action-btn primary" id="btnDetailUpgrade" type="button" ${canBuy ? "" : "disabled"}>${node.kind === "root" ? "Core" : state === "acquired" ? "Learned" : "Upgrade"}</button>
+          </div>
+        `;
+
+        const btnDetailUndo = document.getElementById("btnDetailUndo");
+        if (btnDetailUndo) {
+          btnDetailUndo.addEventListener("click", () => {
+            document.querySelectorAll(".node.selected").forEach((n) => n.classList.remove("selected"));
+            setEmptyDetail();
+          });
+        }
+      }
+
+      function renderSidebar(activeBranch) {
+        treeList.innerHTML = "";
+        BRANCHES.forEach((b) => {
+          const btn = document.createElement("button");
+          btn.className = `tree-btn ${b.id === activeBranch ? "active" : ""}`;
+          btn.textContent = b.label;
+          btn.addEventListener("click", () => {
+            branchSelect.value = b.id;
+            render();
+          });
+          treeList.appendChild(btn);
+        });
+      }
+
+      function renderLinks(branchId, domById) {
+        linksSvg.innerHTML = "";
+        const wrap = linksSvg.closest(".tree-wrap");
+        if (!wrap) return;
+        const rect = wrap.getBoundingClientRect();
+        linksSvg.setAttribute("viewBox", `0 0 ${rect.width} ${rect.height}`);
+        linksSvg.setAttribute("width", rect.width);
+        linksSvg.setAttribute("height", rect.height);
+
+        const edges = TREES[branchId].edges || [];
+        edges.forEach(([fromId, toId]) => {
+          const fromEl = domById.get(fromId);
+          const toEl = domById.get(toId);
+          if (!fromEl || !toEl) return;
+
+          const a = fromEl.getBoundingClientRect();
+          const b = toEl.getBoundingClientRect();
+
+          const ax = (a.left + a.width / 2) - rect.left;
+          const ay = (a.top + a.height / 2) - rect.top;
+          const bx = (b.left + b.width / 2) - rect.left;
+          const by = (b.top + b.height / 2) - rect.top;
+
+          const toNode = TREES[branchId].nodes.find((n) => n.id === toId);
+          const klass = toNode && toNode.kind === "active" ? "active" : toNode && toNode.kind === "passive" ? "passive" : "";
+
+          const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          path.setAttribute("class", `link ${klass}`);
+
+          // Slight curve like RPG UI connectors.
+          const midY = (ay + by) / 2;
+          const d = `M ${ax} ${ay} C ${ax} ${midY}, ${bx} ${midY}, ${bx} ${by}`;
+          path.setAttribute("d", d);
+          linksSvg.appendChild(path);
+        });
+      }
+
+      function render() {
+        const branchId = branchSelect.value;
+        const cfg = progressConfig();
+        renderSidebar(branchId);
+
+        const coins = document.getElementById("coins");
+        coins.textContent = String(cfg.coins);
+
+        nodesEl.innerHTML = "";
+        linksSvg.innerHTML = "";
+
+        const data = TREES[branchId];
+        const domById = new Map();
+
+        // Decide unlock state by simple index in list (mock).
+        const unlockableNodes = data.nodes.filter((n) => n.kind !== "root");
+
+        data.nodes.forEach((n) => {
+          const el = document.createElement("div");
+          el.className = "node";
+          el.dataset.id = n.id;
+          el.style.left = `${n.x}%`;
+          el.style.top = `${n.y}%`;
+
+          const nodeStateIndex = unlockableNodes.findIndex((x) => x.id === n.id);
+          let state = "root";
+          if (n.kind === "root") {
+            state = "acquired";
+          } else if (nodeStateIndex >= 0 && nodeStateIndex < cfg.unlockedCount) {
+            state = "acquired";
+          } else if (nodeStateIndex === cfg.unlockedCount) {
+            state = "available";
+          } else {
+            state = "locked";
+          }
+
+          const rankCur = state === "acquired" ? n.rankMax : 0;
+          n.rankCur = rankCur;
+
+          el.classList.add(n.kind === "active" ? "active" : n.kind === "passive" ? "passive" : "root");
+          if (state === "locked") el.classList.add("locked");
+          if (state === "available") el.classList.add("available");
+
+          const orb = document.createElement("div");
+          orb.className = "orb";
+
+          const artUrl = getArtUrl(n.id);
+          if (artUrl) {
+            const img = document.createElement("img");
+            img.className = "art";
+            img.alt = n.id;
+            img.src = artUrl;
+            img.onerror = () => {
+              img.remove();
+              const rune = document.createElement("div");
+              rune.className = "rune";
+              rune.textContent = runeForSkill(n.id);
+              orb.appendChild(rune);
+            };
+            orb.appendChild(img);
+          } else {
+            const rune = document.createElement("div");
+            rune.className = "rune";
+            rune.textContent = runeForSkill(n.id);
+            orb.appendChild(rune);
+          }
+
+          const rank = document.createElement("div");
+          rank.className = "rank";
+          rank.textContent = `${rankCur}/${n.rankMax}`;
+
+          const plus = document.createElement("div");
+          plus.className = `plus ${state === "available" ? "" : "hidden"}`;
+          plus.textContent = "+";
+
+          if (state === "available") {
+            const dot = document.createElement("div");
+            dot.className = "dot";
+            el.appendChild(dot);
+          }
+
+          const equippedSet = EQUIPPED_BY_BRANCH[branchId];
+          const isEquipped = state === "acquired" && n.kind === "active" && equippedSet && equippedSet.has(n.id);
+          if (isEquipped) {
+            const equip = document.createElement("div");
+            equip.className = "equip";
+            equip.textContent = "Equipped";
+            el.appendChild(equip);
+          }
+
+          el.appendChild(orb);
+          el.appendChild(rank);
+          el.appendChild(plus);
+
+          el.addEventListener("click", () => {
+            document.querySelectorAll(".node.selected").forEach((x) => x.classList.remove("selected"));
+            el.classList.add("selected");
+            setDetail(n, state, { coins: cfg.coins, coreLevel: cfg.coreLevel });
+          });
+
+          nodesEl.appendChild(el);
+          domById.set(n.id, el);
+        });
+
+        // Delay link render until DOM has layout.
+        setTimeout(() => renderLinks(branchId, domById), 0);
+
+        // Default detail: first non-root node
+        const first = data.nodes.find((n) => n.kind !== "root");
+        if (first) {
+          const firstIndex = unlockableNodes.findIndex((x) => x.id === first.id);
+          const state = firstIndex >= 0 && firstIndex < cfg.unlockedCount ? "acquired" : firstIndex === cfg.unlockedCount ? "available" : "locked";
+          setDetail(first, state, { coins: cfg.coins, coreLevel: cfg.coreLevel });
+          const firstEl = domById.get(first.id);
+          if (firstEl) firstEl.classList.add("selected");
+        }
+      }
+
+      window.addEventListener("resize", () => {
+        render();
+      });
+
+      branchSelect.addEventListener("change", render);
+      progressSelect.addEventListener("change", render);
+      artSelect.addEventListener("change", render);
+
+      // Initial UI state: show the icons we generated where possible
+      artSelect.value = "runescape";
+      render();
+    </script>
+  </body>
+</html>

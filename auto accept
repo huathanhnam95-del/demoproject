@@ -1,5 +1,4 @@
-// ═══════════════════════════════════════════════════════════
-// AUTO-CLICKER FOR "Accept" BUTTON
+// AUTO-CLICKER FOR "Confirm" BUTTON
 // Searches inside iframes and auto-click: Help -> Toggle developer tools -> Console
 // ═══════════════════════════════════════════════════════════
 
@@ -38,7 +37,7 @@
 
         console.clear();
         console.log('═'.repeat(80));
-        console.log('🎯 AUTO-CLICKER FOR "Accept" BUTTON');
+        console.log('🎯 AUTO-CLICKER FOR "Confirm" BUTTON');
         console.log('═'.repeat(80));
     }
 
@@ -63,7 +62,7 @@
 
         const title = document.createElement('div');
         title.style.cssText = 'font-weight: bold; color: #4ec9b0; flex: 1;';
-        title.textContent = '🎯 Accept Auto-Clicker';
+        title.textContent = '🎯 Confirm Auto-Clicker';
 
         const collapseBtn = document.createElement('button');
         collapseBtn.id = 'collapse-btn';
@@ -423,22 +422,37 @@
             const autoClickEnabled = document.getElementById('auto-click-checkbox').checked;
             const scrollIntoViewEnabled = document.getElementById('scroll-into-view-checkbox').checked;
 
-            iframes.forEach((iframe) => {
-                try {
-                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                    const buttons = iframeDoc.querySelectorAll('button');
+            // iframes.forEach((iframe) => {
+            //     try {
+            //         const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            //         const buttons = iframeDoc.querySelectorAll('button');
 
-                    buttons.forEach(button => {
-                        const text = (button.textContent || '').trim();
-                        const className = button.className?.toString() || '';
+            //         buttons.forEach(button => {
+            //             const text = (button.textContent || '').trim();
+            //             const className = button.className?.toString() || '';
 
-                        if (text.toLowerCase().includes('accept') &&
-                            (className.includes('hover:bg-ide-button-hover') || className.includes('bg-ide-button-bac')) &&
-                            button.offsetWidth > 0 && button.offsetHeight > 0 && !button.disabled) {
-                            foundButtons.push({ button, iframe });
-                        }
+            //             if (text.toLowerCase().includes('accept') &&
+            //                 (className.includes('hover:bg-ide-button-hover') || className.includes('bg-ide-button-bac')) &&
+            //                 button.offsetWidth > 0 && button.offsetHeight > 0 && !button.disabled) {
+            //                 foundButtons.push({ button, iframe });
+            //             }
+            //         });
+            //     } catch (e) { /* Can't access iframe */ }
+            // });
+
+            const buttons = document.querySelectorAll('button');
+
+            buttons.forEach(button => {
+                const text = (button.textContent || '').trim();
+                const className = button.className?.toString() || '';
+
+                if (text.toLowerCase().includes('confirm') && (className.includes('hover:bg-ide-button-hover') || className.includes('bg-ide-button-bac')) && button.offsetWidth > 0 && button.offsetHeight > 0 && !button.disabled) {
+                    foundButtons.push({
+                        button,
+                        // iframe,
+                        document
                     });
-                } catch (e) { /* Can't access iframe */ }
+                }
             });
 
             updateUI(foundButtons.length);
@@ -491,7 +505,7 @@
     window.autoClickerUI = ui;
 
     console.log('✅ AUTO-CLICKER ACTIVE');
-    console.log('🔍 Searching for "Accept" buttons in iframes');
+    console.log('🔍 Searching for "Confirm" buttons in the current context');
     console.log('📊 Scanning every 3 seconds');
     console.log('☑️  Check the box to enable auto-clicking');
     console.log('═'.repeat(80));

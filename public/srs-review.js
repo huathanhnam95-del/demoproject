@@ -19,6 +19,7 @@ import {
     where,
     writeBatch
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
 
 // Import new SRS Scheduler
 import { SRSScheduler, ALGORITHM, CARD_STATE, RATING } from './srs-scheduler.js';
@@ -177,6 +178,18 @@ const SRSReview = (function () {
             log: log,
             generateWritingPrompt: generateWritingPrompt, // Use existing function
             assessSentence: assessSentence,
+            // NEW: Cloud Function for Advanced AI Check
+            assessWriting: async (text, context) => {
+                const functions = getFunctions();
+                const assessFn = httpsCallable(functions, 'assessWriting');
+                try {
+                    const result = await assessFn({ text, context });
+                    return result.data;
+                } catch (e) {
+                    console.error('Cloud Function Call Failed:', e);
+                    throw e;
+                }
+            },
             saveUserSentence: saveUserSentence,
             applyAIScoreToSRS: applyAIScoreToSRS,
             saveDraft: saveDraft,
@@ -3284,7 +3297,21 @@ const SRSReview = (function () {
             if (sentences.length === 0) {
                 // Use local proxy to avoid CORS
                 try {
-                    const response = await fetch(`/api/tatoeba?word=${encodeURIComponent(word)}`);
+                    // Create a timeout promise (2000ms = 2s)
+                    const fetchWithTimeout = (url, ms = 2000) => {
+                        return new Promise((resolve, reject) => {
+                            const timer = setTimeout(() => reject(new Error('Timeout')), ms);
+                            fetch(url).then(response => {
+                                clearTimeout(timer);
+                                resolve(response);
+                            }, err => {
+                                clearTimeout(timer);
+                                reject(err);
+                            });
+                        });
+                    };
+
+                    const response = await fetchWithTimeout(`/api/tatoeba?word=${encodeURIComponent(word)}`);
                     if (response.ok) {
                         const data = await response.json();
                         if (data.sentences && data.sentences.length > 0) {
@@ -3292,7 +3319,8 @@ const SRSReview = (function () {
                         }
                     }
                 } catch (backendErr) {
-                    log.warn('Backend sentences fetch failed:', backendErr);
+                    log.warn('Backend sentences fetch failed or timed out:', backendErr);
+                    // Continue to fallbacks immediately
                 }
             }
 
@@ -3755,6 +3783,8 @@ const SRSReview = (function () {
                         `Why is ${collocation} important?`
                     ]);
                 }
+                starter = pickRandom(collocationStarterTemplates);
+                showStarter = true;
             } else if (isExpert) {
                 // Expert: More challenging, optional second collocation
                 if (collocations.length > 1) {
@@ -3766,17 +3796,21 @@ const SRSReview = (function () {
                 } else {
                     prompt = pickRandom(collocationPromptTemplates);
                 }
+                starter = ''; // Expert gets no starter
+                showStarter = false;
             } else {
                 // Intermediate: Full contextual prompts
                 prompt = pickRandom(collocationPromptTemplates);
+                starter = pickRandom(collocationStarterTemplates);
+                showStarter = true;
             }
 
             return {
                 prompt,
-                starter: '',
+                starter: starter,
                 usedCollocation: collocation,
                 type: isVerbPhrase ? 'verb-collocation' : 'noun-collocation',
-                showStarter: false
+                showStarter: showStarter
             };
         }
 
@@ -3800,10 +3834,10 @@ const SRSReview = (function () {
 
             return {
                 prompt: pickRandom(definitionPromptTemplates),
-                starter: '',
+                starter: pickRandom(definitionStarterTemplates),
                 usedCollocation: null,
                 type: 'definition',
-                showStarter: false
+                showStarter: true
             };
         }
 
@@ -3812,11 +3846,11 @@ const SRSReview = (function () {
         // Should rarely happen - word has no collocations AND no definition
         // ============================================
         return {
-            prompt: `Write a sentence that clearly shows the meaning of "${lemma}".`,
-            starter: '',
+            prompt: `Write a clear sentence using the word "**${lemma}**".`,
+            starter: `I think ${lemma} is...`,
             usedCollocation: null,
             type: 'generic',
-            showStarter: false
+            showStarter: true
         };
     }
 

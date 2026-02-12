@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F5DFA8"/>
+      <stop offset="1" stop-color="#B57A2F"/>
+    </linearGradient>
+    <linearGradient id="sand" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#B7ECFF"/>
+      <stop offset="1" stop-color="#4AAEFF"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <g filter="url(#shadow)">
+    <rect x="28" y="18" width="72" height="16" rx="8" fill="url(#gold)" stroke="#1A0F0A" stroke-width="3"/>
+    <rect x="28" y="94" width="72" height="16" rx="8" fill="url(#gold)" stroke="#1A0F0A" stroke-width="3"/>
+    <rect x="40" y="30" width="48" height="72" rx="24" fill="none" stroke="#1A0F0A" stroke-width="3"/>
+    <path d="M48 36h32l-12 20H60z" fill="rgba(140,220,255,0.25)"/>
+    <path d="M60 70h8l12 18H48z" fill="rgba(140,220,255,0.25)"/>
+    <path d="M50 38h28l-12 18h-4z" fill="url(#sand)"/>
+    <rect x="50" y="82" width="28" height="10" rx="4" fill="url(#sand)"/>
+    <circle cx="64" cy="64" r="4" fill="#E9FBFF"/>
+    <path d="M36 26h10" stroke="#FFF2CF" stroke-width="3" stroke-linecap="round"/>
+    <path d="M38 30h10" stroke="#FFF2CF" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>

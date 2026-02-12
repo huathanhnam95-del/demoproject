@@ -32,10 +32,19 @@ class PerformanceTracker {
 
         // Calculate score for this single attempt (0.0 - 1.0)
         const attemptScore = this.calculateAttemptScore(attempt);
+        const assistCalibMultRaw = Number(attempt.assistCalibMult);
+        const assistCalibMult = Number.isFinite(assistCalibMultRaw)
+            ? Math.max(0.25, Math.min(1.0, assistCalibMultRaw))
+            : 1.0;
+        const adjustedAttemptScore = Math.max(0, Math.min(1.0, attemptScore * assistCalibMult));
+        const assisted = (Number(attempt.assistCount) || 0) > 0 || assistCalibMult < 0.9;
 
         // Send to DifficultyManager
         if (window.DifficultyManager) {
-            window.DifficultyManager.adjustDifficulty(this.mode, attemptScore);
+            window.DifficultyManager.adjustDifficulty(this.mode, adjustedAttemptScore, {
+                assisted,
+                calibMult: assistCalibMult
+            });
         }
     }
 
@@ -85,17 +94,10 @@ class PerformanceTracker {
             speedScore = Math.min(0.8, speedScore);
         }
 
-        // 3. Hint Usage (0.0 - 1.0)
-        const hintCount = attempt.hintsUsed || (attempt.hintUsed ? 1 : 0);
-        // Cap hint penalty at 0.5 max (so 2 hints = 50% penalty, but 10 hints != < 0 score)
-        const hintPenalty = Math.min(0.5, hintCount * 0.25);
-        const hintScore = 1.0 - hintPenalty;
-
-        // Weighted Total: Accuracy (60%), Speed (20%), Hints (20%)
+        // Weighted Total: Accuracy (70%), Speed (30%)
         const total = (
-            (accuracyScore * 0.60) +
-            (speedScore * 0.20) +
-            (hintScore * 0.20)
+            (accuracyScore * 0.70) +
+            (speedScore * 0.30)
         );
 
         console.log(`[Performance] Score: ${total.toFixed(2)} | WPM: ${userWPM.toFixed(1)} vs Target: ${targetWPM} `);

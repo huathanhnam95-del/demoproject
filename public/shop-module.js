@@ -4,6 +4,8 @@
  */
 
 const ShopModule = (() => {
+    const CORE_ALWAYS_UNLOCKED_MODES = new Set(['type', 'speak', 'extended', 'watch', 'notes', 'pronounce']);
+    const STARTER_ACTIVE_SKILLS = new Set(['slow_audio', 'echo_loop', 'hint_wc', 'hint_fl', 'hint_reveal']);
     // defined items
     const SHOP_ITEMS = [
         {
@@ -77,11 +79,21 @@ const ShopModule = (() => {
             icon: '🎯',
             cost: 100,
             unlocksMode: 'autoAdjust'
+        },
+        {
+            id: 'survival',
+            title: 'Survival Mode',
+            description: 'Type to survive in this fast-paced roguellite mode.',
+            icon: '👾',
+            cost: 100,
+            unlocksMode: 'survival'
         }
     ];
 
     let userCoins = 0;
-    let unlockedModes = ['type', 'difficultyFilter']; // default
+    let unlockedModes = [...CORE_ALWAYS_UNLOCKED_MODES, 'difficultyFilter']; // default
+    let unlockedSkills = {};
+    let userProfileSnapshot = {};
     let purchaseHistory = []; // Cache for purchase dates
     let isInitialized = false;
 
@@ -102,6 +114,9 @@ const ShopModule = (() => {
         modal = document.getElementById('shop-modal');
         closeBtn = document.getElementById('shop-close-btn');
         balanceDisplay = document.getElementById('shop-balance-display');
+        notificationDot = document.querySelector('.shop-notification');
+
+        // Target grid has changed in index.html to #shop-grid
         shopGrid = document.getElementById('shop-grid');
         notificationDot = document.querySelector('.shop-notification');
 
@@ -123,6 +138,7 @@ const ShopModule = (() => {
         // Initialize data
         refreshUserData().then(() => {
             isInitialized = true;
+            initTabs(); // Initialize tabs after data is ready
             console.log('🛒 Shop Module Initialized and data refreshed');
         });
     }
@@ -160,7 +176,9 @@ const ShopModule = (() => {
         if (!userId) {
             // Guest mode defaults
             userCoins = 0;
-            unlockedModes = ['type'];
+            unlockedModes = [...CORE_ALWAYS_UNLOCKED_MODES];
+            unlockedSkills = {};
+            userProfileSnapshot = {};
             purchaseHistory = [];
             return;
         }
@@ -168,17 +186,22 @@ const ShopModule = (() => {
         // Try to load from localStorage as fallback
         const cachedModes = localStorage.getItem(`unlockedModes_${userId}`);
         const cachedCoins = localStorage.getItem(`coins_${userId}`);
+        const cachedSkills = localStorage.getItem(`unlockedSkills_${userId}`);
 
         try {
             const result = await window.firebaseFirestoreFunctions.getUserProfile(userId);
             if (result.success) {
+                userProfileSnapshot = result.data || {};
                 userCoins = result.data.coins || 0;
-                unlockedModes = result.data.unlockedModes || ['type'];
+                const remoteModes = result.data.unlockedModes || [];
+                unlockedModes = [...new Set([...remoteModes, ...CORE_ALWAYS_UNLOCKED_MODES])];
+                unlockedSkills = result.data.unlockedSkills || {};
                 updateBalanceDisplay();
 
                 // Cache to localStorage for fallback
                 localStorage.setItem(`unlockedModes_${userId}`, JSON.stringify(unlockedModes));
                 localStorage.setItem(`coins_${userId}`, String(userCoins));
+                localStorage.setItem(`unlockedSkills_${userId}`, JSON.stringify(unlockedSkills));
             } else {
                 // Firestore failed - use cached data if available
                 console.warn('Firestore getUserProfile failed, using localStorage fallback');
@@ -186,12 +209,20 @@ const ShopModule = (() => {
                     try {
                         unlockedModes = JSON.parse(cachedModes);
                     } catch (e) {
-                        unlockedModes = ['type'];
+                        unlockedModes = [...CORE_ALWAYS_UNLOCKED_MODES];
                     }
                 }
                 if (cachedCoins) {
                     userCoins = parseInt(cachedCoins, 10) || 0;
                 }
+                if (cachedSkills) {
+                    try {
+                        unlockedSkills = JSON.parse(cachedSkills) || {};
+                    } catch (e) {
+                        unlockedSkills = {};
+                    }
+                }
+                unlockedModes = [...new Set([...(unlockedModes || []), ...CORE_ALWAYS_UNLOCKED_MODES])];
                 updateBalanceDisplay();
             }
 
@@ -213,13 +244,21 @@ const ShopModule = (() => {
                     try {
                         unlockedModes = JSON.parse(cachedModes);
                     } catch (e) {
-                        unlockedModes = unlockedModes || ['type'];
+                        unlockedModes = unlockedModes || [...CORE_ALWAYS_UNLOCKED_MODES];
                     }
                 }
             }
             if (userCoins === 0 && cachedCoins) {
                 userCoins = parseInt(cachedCoins, 10) || 0;
             }
+            if (cachedSkills && Object.keys(unlockedSkills || {}).length === 0) {
+                try {
+                    unlockedSkills = JSON.parse(cachedSkills) || {};
+                } catch (e) {
+                    unlockedSkills = {};
+                }
+            }
+            unlockedModes = [...new Set([...(unlockedModes || []), ...CORE_ALWAYS_UNLOCKED_MODES])];
             updateBalanceDisplay();
         }
     }
@@ -241,7 +280,9 @@ const ShopModule = (() => {
         if (!shopGrid) return;
         shopGrid.innerHTML = '';
 
-        SHOP_ITEMS.forEach(item => {
+        const visibleItems = SHOP_ITEMS.filter(item => !CORE_ALWAYS_UNLOCKED_MODES.has(item.unlocksMode));
+
+        visibleItems.forEach(item => {
             const isOwned = unlockedModes.includes(item.unlocksMode);
             const canAfford = userCoins >= item.cost;
             let unlockedDate = null;
@@ -280,7 +321,7 @@ const ShopModule = (() => {
 
             let actionButtons = '';
             // Define which items are actual practice modes (can be "tried")
-            const practiceModesIds = ['speak', 'extended', 'watch', 'notes', 'pronounce'];
+            const practiceModesIds = ['speak', 'extended', 'watch', 'notes', 'pronounce', 'survival'];
             const isPracticeMode = practiceModesIds.includes(item.id);
 
             if (isOwned) {
@@ -368,7 +409,15 @@ const ShopModule = (() => {
             'notes': 'tab-notes',
             'pronounce': 'tab-pronounce',
             'vocabBook': 'tab-vocab',
+            'survival': 'survival'
         };
+
+        if (item.id === 'survival') {
+            if (window.openSurvivalGame) {
+                window.openSurvivalGame();
+            }
+            return;
+        }
 
         if (tabMap[item.id]) {
             const tab = document.getElementById(tabMap[item.id]);
@@ -494,6 +543,11 @@ const ShopModule = (() => {
             return;
         }
 
+        if (CORE_ALWAYS_UNLOCKED_MODES.has(item.unlocksMode)) {
+            showAlertModal('This mode is available by default.');
+            return;
+        }
+
         const confirmed = await showConfirmModal(
             'Confirm Purchase',
             `Purchase <strong>${item.title}</strong> for <strong>${item.cost} coins</strong>?`
@@ -508,8 +562,8 @@ const ShopModule = (() => {
             renderShop();
 
             try {
-                // Perform atomic purchase transaction
-                const purchaseResult = await window.firebaseFirestoreFunctions.purchaseFeature(userId, item);
+                // Perform authoritative purchase via Cloud Function
+                const purchaseResult = await window.callPurchaseItem(item.id);
 
                 if (!purchaseResult.success) {
                     throw new Error(purchaseResult.error);
@@ -551,10 +605,9 @@ const ShopModule = (() => {
      * Enhanced with localStorage fallback for resilience
      */
     function isModeUnlocked(mode) {
-        // 'type' is always unlocked
-        if (mode === 'type') return true;
+        if (CORE_ALWAYS_UNLOCKED_MODES.has(mode)) return true;
 
-        // If user is guest, only 'type' is allowed
+        // If user is guest, only core modes are allowed
         const userId = window.authUI?.getCurrentUserId?.();
         if (!userId) return false;
 
@@ -598,8 +651,94 @@ const ShopModule = (() => {
      */
     function setUnlockedModes(modes) {
         if (Array.isArray(modes)) {
-            unlockedModes = modes;
+            unlockedModes = [...new Set([...modes, ...CORE_ALWAYS_UNLOCKED_MODES])];
         }
+    }
+
+    /**
+     * Handle RPG skill purchase via purchaseSkill Cloud Function
+     */
+    async function purchaseTreeSkill(skillNode) {
+        const userId = window.authUI?.getCurrentUserId?.();
+        if (!userId) {
+            showAlertModal('Please log in to unlock skills.', true);
+            return { success: false };
+        }
+
+        if (!skillNode || !skillNode.id) {
+            showAlertModal('Invalid skill node.', true);
+            return { success: false };
+        }
+
+        const skillTitle = skillNode.title || skillNode.id;
+        const cost = Number(skillNode.cost) || 0;
+        const confirmed = await showConfirmModal(
+            'Confirm Skill Purchase',
+            `Unlock <strong>${skillTitle}</strong> for <strong>${cost} coins</strong>?`
+        );
+
+        if (!confirmed) {
+            return { success: false, cancelled: true };
+        }
+
+        try {
+            if (typeof window.callPurchaseSkill !== 'function') {
+                throw new Error('purchaseSkill API not available');
+            }
+
+            const purchaseResult = await window.callPurchaseSkill(skillNode.id);
+            if (!purchaseResult || !purchaseResult.success) {
+                const msg = purchaseResult?.message || purchaseResult?.error || 'Skill purchase failed.';
+                showAlertModal(msg, true);
+                return { success: false };
+            }
+
+            await refreshUserData();
+            renderShop();
+
+            if (window.refreshLockedTabs) {
+                window.refreshLockedTabs();
+            }
+
+            showAlertModal(`Successfully unlocked ${skillTitle}!`);
+            return {
+                success: true,
+                userProfile: userProfileSnapshot
+            };
+        } catch (error) {
+            console.error('Skill purchase failed:', error);
+            showAlertModal('Skill purchase failed. Please try again.', true);
+            return { success: false };
+        }
+    }
+
+    function isSkillUnlocked(skillId) {
+        if (!skillId) return false;
+        const userId = window.authUI?.getCurrentUserId?.();
+        if (!userId) return false;
+        if (unlockedSkills && unlockedSkills[skillId] === true) return true;
+
+        const hasInventory = unlockedSkills && Object.keys(unlockedSkills).length > 0;
+        if (!hasInventory && STARTER_ACTIVE_SKILLS.has(skillId)) {
+            return true;
+        }
+
+        // Legacy unlock fallback
+        if (skillId === 'slow_audio' && userProfileSnapshot.slowAudioUnlocked) return true;
+        if (skillId === 'echo_loop' && (userProfileSnapshot.slowAudioUnlocked || userProfileSnapshot.replayTrainerUnlocked)) return true;
+        if ((skillId === 'hint_wc' || skillId === 'hint_fl' || skillId === 'hint_reveal') && userProfileSnapshot.hintLadderUnlocked) return true;
+        if (skillId === 'chunking' && userProfileSnapshot.chunkingModeUnlocked) return true;
+        if (skillId === 'shadow_mode' && userProfileSnapshot.shadowingModeUnlocked) return true;
+
+        return false;
+    }
+
+    function setUnlockedSkills(skills) {
+        unlockedSkills = skills && typeof skills === 'object' ? skills : {};
+    }
+
+    function getUnlockedSkills() {
+        return { ...(unlockedSkills || {}) };
     }
 
     function setCoins(amount) {
@@ -614,6 +753,7 @@ const ShopModule = (() => {
         if (!notificationDot) return;
 
         const affordableItem = SHOP_ITEMS.find(item =>
+            !CORE_ALWAYS_UNLOCKED_MODES.has(item.unlocksMode) &&
             !unlockedModes.includes(item.unlocksMode) && userCoins >= item.cost
         );
 
@@ -624,18 +764,104 @@ const ShopModule = (() => {
         }
     }
 
+    function deductCoins(amount) {
+        // Check if user has enough coins
+        if (userCoins < amount) return false;
+
+        const userId = window.authUI?.getCurrentUserId?.();
+        if (!userId) return false;
+
+        // Optimistic UI update
+        const originalCoins = userCoins;
+        userCoins -= amount;
+        updateBalanceDisplay();
+
+        // Sync with backend
+        // We use updateUserProfile which should be available
+        if (window.firebaseFirestoreFunctions && window.firebaseFirestoreFunctions.updateUserProfile) {
+            window.firebaseFirestoreFunctions.updateUserProfile(userId, { coins: userCoins })
+                .catch(err => {
+                    console.error('Failed to sync coin deduction:', err);
+                    // Revert on failure
+                    userCoins = originalCoins;
+                    updateBalanceDisplay();
+                });
+        }
+
+        return true;
+    }
+
+    function getUserCoins() {
+        return userCoins;
+    }
+
     // Initialize on load
     document.addEventListener('DOMContentLoaded', init);
+
+    /**
+     * Initialize tab navigation within the shop modal
+     */
+    function initTabs() {
+        const tabBtns = document.querySelectorAll('.shop-tab-btn');
+        const tabContents = document.querySelectorAll('.shop-tab-content');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const target = btn.dataset.target;
+
+                // Update buttons
+                tabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Update contents
+                tabContents.forEach(content => {
+                    if (content.id === target) {
+                        content.classList.add('active');
+                    } else {
+                        content.classList.remove('active');
+                    }
+                });
+
+                // If Skill Tree tab selected, render it
+                if (target === 'skill-tree-container') {
+                    renderSkillTree();
+                }
+            });
+        });
+    }
+
+    /**
+     * Render the Skill Tree using LevelSystem
+     */
+    async function renderSkillTree() {
+        const container = document.getElementById('level-system-container');
+        if (!container || !window.LevelSystem) return;
+
+        await refreshUserData();
+        const userProfile = userProfileSnapshot && typeof userProfileSnapshot === 'object'
+            ? userProfileSnapshot
+            : { coins: userCoins || 0, unlockedSkills: unlockedSkills || {}, skillPoints: {} };
+
+        window.LevelSystem.renderSkillTree(container, userProfile, async (skillNode) => {
+            return purchaseTreeSkill(skillNode);
+        });
+    }
 
     return {
         init,
         openShop,
         refreshUserData,
         isModeUnlocked,
+        isSkillUnlocked,
         setUnlockedModes,
+        setUnlockedSkills,
+        getUnlockedSkills,
         setCoins,
+        deductCoins,
+        getUserCoins,
         showConfirmModal,
-        showAlertModal
+        showAlertModal,
+        renderSkillTree // Expose for LevelSystem updates
     };
 })();
 

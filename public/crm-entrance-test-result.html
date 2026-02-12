@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>CRM Admin - Entrance Test Result</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
+
+  <!-- Reuse CRM admin design system -->
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="crm-admin.css" />
+  <link rel="stylesheet" href="crm-entrance-test-result.css" />
+</head>
+
+<body>
+  <div class="crm-admin">
+    <header class="crm-header">
+      <div class="crm-header-left">
+        <div class="crm-logo-box">
+          <img src="database/Logo.png" alt="BEL"
+            class="crm-logo-img">
+        </div>
+
+        <div class="crm-result-heading">
+          <div class="crm-result-title">Entrance Test Result</div>
+          <div id="crm-result-subtitle" class="crm-result-subtitle">Loading…</div>
+        </div>
+      </div>
+
+      <div class="crm-header-right">
+        <div class="crm-header-actions crm-result-header-actions">
+          <span id="crm-result-user-email" class="crm-result-user-email"></span>
+          <a class="crm-result-back-link" href="crm-admin.html" rel="noopener">← Back to CRM</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="crm-content" aria-live="polite">
+      <section class="crm-panel">
+        <div id="crm-result-root" class="crm-result-root">
+          <div class="crm-placeholder-card">Loading…</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Loading / Access Gate -->
+  <div id="crm-loading" class="crm-loading-overlay" aria-live="polite">
+    <div class="crm-loading-card">
+      <div class="crm-spinner" aria-hidden="true"></div>
+      <div id="crm-loading-text" class="crm-loading-text">Checking admin access…</div>
+      <div id="crm-loading-subtext" class="crm-loading-subtext">Please wait</div>
+    </div>
+  </div>
+
+  <!-- Firebase compat SDKs (admin pages use compat like CRM Admin) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+  <script src="crm-entrance-test-result.js"></script>
+</body>
+
+</html>

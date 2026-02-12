@@ -21,6 +21,11 @@ const HintSystem = (() => {
     const COIN_INCREMENT = 2;
     const MAX_HINT_LEVEL = 5;
 
+    // Hint Ladder Configuration
+    const HINT_LADDER_ENABLED = true; // Feature flag
+    const PEEK_DURATION_MS = 800;
+
+
     // State
     let hintsUsedToday = 0;
     let lastHintDate = null;
@@ -114,8 +119,13 @@ const HintSystem = (() => {
         }
     }
 
+    function reset() {
+        currentHintLevel = 0;
+        currentQuestionId = null;
+    }
+
     /**
-     * Get current hint level for the question
+     * getCurrentHintLevel for the question
      * @returns {number} 0-5
      */
     function getCurrentHintLevel() {
@@ -146,6 +156,10 @@ const HintSystem = (() => {
 
         switch (level) {
             case 1:
+                // Enhancing Level 1: If Hint Ladder is unlocked, show Word Ghost
+                if (window.shopModule && window.shopModule.isItemUnlocked('hintLadder')) {
+                    return generateWordGhostHint(words);
+                }
                 return generateWordCountHint(words);
             case 2:
                 return generateFirstLettersHint(words);
@@ -158,6 +172,24 @@ const HintSystem = (() => {
             default:
                 return null;
         }
+    }
+
+    /**
+     * Level 1 (Enhanced): Word Ghost Hint
+     * Shows: "_ _ _ _" to indicate word structure without letters
+     */
+    function generateWordGhostHint(words) {
+        const hint = words.map(word => {
+            // Replace all alphanumeric characters with underscores, keep punctuation
+            return word.replace(/[a-zA-Z0-9]/g, '_');
+        }).join(' ');
+
+        return {
+            type: 'word-ghost',
+            level: 1,
+            description: 'Word Ghost',
+            content: `<span class="hint-text-mono">${hint}</span>`
+        };
     }
 
     /**
@@ -287,7 +319,10 @@ const HintSystem = (() => {
      * @param {Function} deductCoins - Async function to deduct coins
      * @returns {Promise<Object>} { success, hint, cost, freeRemaining, error }
      */
-    async function useHint(correctSentence, userCoins, deductCoins) {
+    async function useHint(correctSentence, userCoins, deductCoins, options = {}) {
+        const skipEconomy = options && options.skipEconomy === true;
+        const externalCost = Number(options?.externalCost) || 0;
+
         // Check in-flight lock to prevent double-triggering
         if (useHintInFlight) {
             console.log('⏭ useHint skipped: already in-flight');
@@ -312,7 +347,7 @@ const HintSystem = (() => {
             const cost = getNextHintCost();
 
             // Check if user can afford
-            if (userCoins < cost) {
+            if (!skipEconomy && userCoins < cost) {
                 return {
                     success: false,
                     error: 'Not enough coins',
@@ -322,7 +357,7 @@ const HintSystem = (() => {
             }
 
             // Deduct coins if not free
-            if (cost > 0 && deductCoins) {
+            if (!skipEconomy && cost > 0 && deductCoins) {
                 try {
                     await deductCoins(cost);
                 } catch (err) {
@@ -348,7 +383,7 @@ const HintSystem = (() => {
             return {
                 success: true,
                 hint,
-                cost,
+                cost: skipEconomy ? externalCost : cost,
                 freeRemaining: getFreeHintsRemaining(),
                 nextCost: getNextHintCost(),
                 hasMore: hasMoreHints(),
@@ -423,6 +458,7 @@ const HintSystem = (() => {
     // Public API
     return {
         init,
+        reset,
         resetForNewQuestion,
         getCurrentHintLevel,
         hasMoreHints,
@@ -430,10 +466,25 @@ const HintSystem = (() => {
         getFreeHintsRemaining,
         canAffordNextHint,
         useHint,
+        peekFirstLetters, // New Feature
         getState,
         generateHint, // Exposed for testing
         MAX_HINT_LEVEL
     };
+
+    /**
+     * New Feature: Peek First Letters (Timed Reveal)
+     * Requirements: 'hintLadder' unlocked + Scaffolding Stage 1
+     */
+    function peekFirstLetters(correctSentence) {
+        // Check unlock status
+        if (!window.shopModule || !window.shopModule.isItemUnlocked('hintLadder')) {
+            return null;
+        }
+
+        const words = correctSentence.split(/\s+/).filter(Boolean);
+        return generateFirstLettersHint(words);
+    }
 })();
 
 // Expose to window

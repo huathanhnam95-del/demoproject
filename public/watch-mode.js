@@ -592,10 +592,14 @@ const WatchMode = (function () {
             if (window.handleDualTrackScoring) {
                 // Pass selectedIndex for MC, or text for open-ended
                 // Format: videoId::questionId for server to locate answer key
+                const attemptContentId = `${currentVideoId}::${currentQuestion.id}`;
+                if (window.startAttemptContext) {
+                    window.startAttemptContext('watch', attemptContentId);
+                }
                 const payloadData = currentQuestion.questionType === 'multiple_choice'
                     ? { selectedIndex: userAnswer }
                     : { text: userAnswer };
-                await window.handleDualTrackScoring('watch', `${currentVideoId}::${currentQuestion.id}`, payloadData);
+                await window.handleDualTrackScoring('watch', attemptContentId, payloadData);
             } else {
                 // Fallback for legacy (should not happen in v6)
                 if (isCorrect) await awardPoints(earnedPoints, currentQuestion);

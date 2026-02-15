@@ -4,6 +4,7 @@
  */
 
 import { GameStates } from './GameConfig.js';
+import { UPGRADE_DEFAULT_ICON_PATH, getUpgradeIconPath } from './SurvivalIcons.js';
 
 export default class UpgradeManager {
     constructor(game) {
@@ -22,6 +23,10 @@ export default class UpgradeManager {
         this.rerolls = 0;
         this.currentLevelOptions = [];
         this.currentLootOptions = [];
+        this.claimedAugmentIds = new Set();
+        this.choiceInput = '';
+        this.choiceInputTimer = 0;
+        this.choiceInputWindow = 2.4;
 
         this.availableAugments = this.buildLevelAugments();
         this.availableLootAugments = this.buildLootAugments();
@@ -168,7 +173,7 @@ export default class UpgradeManager {
             {
                 id: 'sentry',
                 name: 'Sentry',
-                desc: 'Unlock Auto-Turret (targets nearest)',
+                desc: 'Unlock Auto-Turret (nearest targets in range)',
                 type: 'new_weapon',
                 weaponId: 'sentry'
             },
@@ -360,6 +365,8 @@ export default class UpgradeManager {
 
     isAugmentEligible(augment) {
         if (!augment) return false;
+        const isRepeatable = augment.repeatable === true;
+        if (!isRepeatable && this.claimedAugmentIds.has(augment.id)) return false;
         if (!this.meetsWeaponRequirement(augment)) return false;
 
         if (augment.type === 'new_weapon') {
@@ -387,9 +394,13 @@ export default class UpgradeManager {
         this.level = 1;
         this.nextLevelXp = 100;
         this.pendingLevelUps = 0;
-        this.rerolls = 0;
+        // Glyphica patch parity: new runs start with a few re-rolls so early leveling feels less RNG-gated.
+        this.rerolls = 3;
         this.currentLevelOptions = [];
         this.currentLootOptions = [];
+        this.claimedAugmentIds = new Set();
+        this.choiceInput = '';
+        this.choiceInputTimer = 0;
         this.availableAugments = this.buildLevelAugments();
         this.availableLootAugments = this.buildLootAugments();
         if (this.modal) this.modal.style.display = 'none';
@@ -462,9 +473,129 @@ export default class UpgradeManager {
         return `Affects: ${names.slice(0, 2).join(', ')} +${names.length - 2} more`;
     }
 
-    createUpgradeCard(opt, onPick) {
+    sanitizeChoiceToken(value) {
+        return String(value || '').toUpperCase().replace(/[^A-Z]/g, '');
+    }
+
+    buildChoiceToken(opt, used, fallbackIndex = 0) {
+        const candidates = [];
+        const nameParts = String(opt?.name || '')
+            .split(/\s+/)
+            .map(part => this.sanitizeChoiceToken(part))
+            .filter(token => token.length >= 3);
+        candidates.push(...nameParts);
+
+        const idParts = String(opt?.id || '')
+            .split(/[_-]/)
+            .map(part => this.sanitizeChoiceToken(part))
+            .filter(token => token.length >= 3);
+        candidates.push(...idParts);
+
+        for (const token of candidates) {
+            if (!used.has(token) && token !== 'BACK' && token !== 'NEXT') return token;
+        }
+
+        const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        let serial = Math.max(0, fallbackIndex);
+        let suffix = '';
+        do {
+            suffix = alpha[serial % 26] + suffix;
+            serial = Math.floor(serial / 26) - 1;
+        } while (serial >= 0);
+
+        const fallback = `OPT${suffix}`;
+        if (!used.has(fallback)) return fallback;
+
+        let extra = 0;
+        let alt = fallback;
+        while (used.has(alt)) {
+            extra++;
+            alt = `${fallback}${alpha[extra % 26]}`;
+        }
+        return alt;
+    }
+
+    assignChoiceTokens(options) {
+        const list = Array.isArray(options) ? options : [];
+        const used = new Set();
+        list.forEach((opt, index) => {
+            const token = this.buildChoiceToken(opt, used, index);
+            opt._choiceToken = token;
+            used.add(token);
+        });
+        this.choiceInput = '';
+        this.choiceInputTimer = 0;
+    }
+
+    getActiveChoiceOptions() {
+        if (this.modal && this.modal.style.display === 'block') return this.currentLevelOptions || [];
+        if (this.lootModal && this.lootModal.style.display === 'block') return this.currentLootOptions || [];
+        return [];
+    }
+
+    handleTypingKey(key) {
+        const options = this.getActiveChoiceOptions();
+        if (!options || options.length === 0 || !key) return false;
+
+        if (key === 'Backspace') {
+            if (this.choiceInput.length > 0) {
+                this.choiceInput = this.choiceInput.slice(0, -1);
+                return true;
+            }
+            return false;
+        }
+
+        if (key.length !== 1 || !/^[a-z]$/i.test(key)) return false;
+
+        const now = performance.now();
+        if (this.choiceInputTimer > 0 && now > this.choiceInputTimer) {
+            this.choiceInput = '';
+        }
+
+        const nextInput = this.choiceInput + key.toUpperCase();
+        const matches = options.filter(opt => String(opt?._choiceToken || '').startsWith(nextInput));
+        if (matches.length === 0) {
+            this.choiceInput = '';
+            this.choiceInputTimer = 0;
+            return true;
+        }
+
+        this.choiceInput = nextInput;
+        this.choiceInputTimer = now + (this.choiceInputWindow * 1000);
+
+        if (matches.length === 1 && matches[0]._choiceToken === nextInput) {
+            const picked = matches[0];
+            this.choiceInput = '';
+            this.choiceInputTimer = 0;
+            if (this.modal && this.modal.style.display === 'block') {
+                this.selectUpgrade(picked);
+            } else if (this.lootModal && this.lootModal.style.display === 'block') {
+                this.selectLootUpgrade(picked);
+            }
+        }
+        return true;
+    }
+
+    createUpgradeCard(opt) {
         const btn = document.createElement('div');
         btn.className = 'upgrade-card';
+        btn.style.pointerEvents = 'none';
+
+        const iconWrap = document.createElement('div');
+        iconWrap.className = 'upgrade-icon-wrap';
+
+        const icon = document.createElement('img');
+        icon.className = 'upgrade-icon';
+        icon.loading = 'lazy';
+        icon.decoding = 'async';
+        icon.alt = `${opt.name} icon`;
+        icon.src = getUpgradeIconPath(opt);
+        icon.onerror = () => {
+            if (icon.src.endsWith(UPGRADE_DEFAULT_ICON_PATH)) return;
+            icon.src = UPGRADE_DEFAULT_ICON_PATH;
+        };
+        iconWrap.appendChild(icon);
+        btn.appendChild(iconWrap);
 
         const title = document.createElement('h3');
         title.textContent = opt.name;
@@ -479,7 +610,11 @@ export default class UpgradeManager {
         target.textContent = this.formatAugmentTargets(opt);
         btn.appendChild(target);
 
-        btn.onclick = () => onPick(opt);
+        const command = document.createElement('p');
+        command.className = 'upgrade-command';
+        command.textContent = `Type: ${opt._choiceToken || 'OPT'}`;
+        btn.appendChild(command);
+
         return btn;
     }
 
@@ -498,11 +633,12 @@ export default class UpgradeManager {
         if (!container || !list) return false;
         if (options.length === 0) return false;
 
+        this.assignChoiceTokens(options);
         this.currentLevelOptions = options;
         list.innerHTML = '';
 
         options.forEach(opt => {
-            const btn = this.createUpgradeCard(opt, picked => this.selectUpgrade(picked));
+            const btn = this.createUpgradeCard(opt);
             list.appendChild(btn);
         });
 
@@ -519,10 +655,11 @@ export default class UpgradeManager {
         if (!container || !list) return false;
         if (options.length === 0) return false;
 
+        this.assignChoiceTokens(options);
         this.currentLootOptions = options;
         list.innerHTML = '';
         options.forEach(opt => {
-            const btn = this.createUpgradeCard(opt, picked => this.selectLootUpgrade(picked));
+            const btn = this.createUpgradeCard(opt);
             list.appendChild(btn);
         });
 
@@ -572,9 +709,12 @@ export default class UpgradeManager {
         const targets = this.getApplicableWeapons(opt);
         targets.forEach(weapon => {
             if (!this.canApplyWeaponStat(weapon, opt)) return;
+            const minCooldown = Number.isFinite(weapon.minBaseCooldown)
+                ? Math.max(0.05, weapon.minBaseCooldown)
+                : 0.05;
             if (Number.isFinite(opt.mult)) {
                 if (opt.stat === 'baseCooldown') {
-                    weapon.baseCooldown = Math.max(0.05, weapon.baseCooldown * opt.mult);
+                    weapon.baseCooldown = Math.max(minCooldown, weapon.baseCooldown * opt.mult);
                 } else {
                     weapon[opt.stat] *= opt.mult;
                 }
@@ -582,7 +722,7 @@ export default class UpgradeManager {
             }
             if (Number.isFinite(opt.val)) {
                 if (opt.stat === 'baseCooldown') {
-                    weapon.baseCooldown = Math.max(0.05, weapon.baseCooldown + opt.val);
+                    weapon.baseCooldown = Math.max(minCooldown, weapon.baseCooldown + opt.val);
                 } else {
                     weapon[opt.stat] += opt.val;
                 }
@@ -651,6 +791,29 @@ export default class UpgradeManager {
         if (!weapon.evolutions.includes(opt.id)) weapon.evolutions.push(opt.id);
     }
 
+    getWeaponActivationHint(weapon) {
+        if (!weapon) return '';
+        if (!weapon.trigger) {
+            if (weapon.autoFire) return 'auto fire (nearest targets in range)';
+            if (weapon.type === 'drone') return 'auto orbit fire';
+            if (weapon.type === 'mine_trap') return 'auto deploy mines';
+            return 'fires on completed enemy words';
+        }
+        if (weapon.trigger.type === 'charge' && Number.isFinite(weapon.trigger.charsPerShot) && weapon.trigger.charsPerShot > 0) {
+            return `charges from typing (${Math.floor(weapon.trigger.charsPerShot)} chars)`;
+        }
+        if (weapon.trigger.type === 'containsAny' && Array.isArray(weapon.trigger.letters) && weapon.trigger.letters.length > 0) {
+            return `type words containing ${weapon.trigger.letters.map(ch => String(ch).toUpperCase()).join('/')}`;
+        }
+        if (weapon.trigger.type === 'containsAll' && Array.isArray(weapon.trigger.letters) && weapon.trigger.letters.length > 0) {
+            return `type words containing all ${weapon.trigger.letters.map(ch => String(ch).toUpperCase()).join('+')}`;
+        }
+        if (weapon.trigger.type === 'startsWith' && weapon.trigger.value) {
+            return `type words starting with ${String(weapon.trigger.value).toUpperCase()}`;
+        }
+        return 'fires on completed enemy words';
+    }
+
     applyAugment(opt) {
         if (!opt) return;
         if (opt.type === 'weapon_stat') {
@@ -663,6 +826,12 @@ export default class UpgradeManager {
         }
         if (opt.type === 'new_weapon') {
             this.game.weaponSystem.addWeapon(opt.weaponId);
+            const unlocked = this.game.weaponSystem.getWeaponById(opt.weaponId);
+            if (this.game && typeof this.game.setPickupToast === 'function' && unlocked) {
+                const hint = this.getWeaponActivationHint(unlocked);
+                const hintText = hint ? ` (${hint})` : '';
+                this.game.setPickupToast(`${unlocked.name} online${hintText}`, unlocked.color || '#2f2f2f');
+            }
             this.availableAugments = this.availableAugments.filter(a => a.id !== opt.id);
             return;
         }
@@ -682,6 +851,7 @@ export default class UpgradeManager {
     selectUpgrade(opt) {
         this.applyAugment(opt);
         if (opt && opt.repeatable !== true) {
+            this.claimedAugmentIds.add(opt.id);
             this.availableAugments = this.availableAugments.filter(a => a.id !== opt.id);
         }
         this.pendingLevelUps = Math.max(0, this.pendingLevelUps - 1);
@@ -699,6 +869,8 @@ export default class UpgradeManager {
 
         if (this.modal) this.modal.style.display = 'none';
         this.currentLevelOptions = [];
+        this.choiceInput = '';
+        this.choiceInputTimer = 0;
         this.updateRerollUi();
         this.game.resume();
     }
@@ -706,10 +878,13 @@ export default class UpgradeManager {
     selectLootUpgrade(opt) {
         this.applyAugment(opt);
         if (!opt.repeatable) {
+            this.claimedAugmentIds.add(opt.id);
             this.availableLootAugments = this.availableLootAugments.filter(a => a.id !== opt.id);
         }
         if (this.lootModal) this.lootModal.style.display = 'none';
         this.currentLootOptions = [];
+        this.choiceInput = '';
+        this.choiceInputTimer = 0;
         if (this.game && typeof this.game.setPickupToast === 'function') {
             this.game.setPickupToast(opt.name, '#9c7b5c');
         }

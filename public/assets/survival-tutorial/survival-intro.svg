@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-label="Survival mode overview">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#0b1220"/>
+    </linearGradient>
+    <linearGradient id="playerFill" x1="260" y1="120" x2="380" y2="240" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#60a5fa"/>
+      <stop offset="1" stop-color="#2563eb"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="14" y="14" width="612" height="332" rx="26" fill="url(#bg)" />
+
+  <!-- Subtle grid -->
+  <g stroke="#94a3b8" stroke-width="1" opacity="0.08">
+    <path d="M60 40v280M120 40v280M180 40v280M240 40v280M300 40v280M360 40v280M420 40v280M480 40v280M540 40v280"/>
+    <path d="M40 80h560M40 140h560M40 200h560M40 260h560"/>
+  </g>
+
+  <!-- Player -->
+  <circle cx="320" cy="180" r="44" fill="url(#playerFill)" stroke="#f1f5f9" stroke-width="6"/>
+  <circle cx="320" cy="180" r="68" fill="none" stroke="#818cf8" stroke-width="4" opacity="0.35"/>
+  <circle cx="320" cy="180" r="96" fill="none" stroke="#818cf8" stroke-width="2" opacity="0.18"/>
+
+  <!-- Incoming enemies -->
+  <g stroke="#f1f5f9" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="120" cy="92" r="26" fill="#b24c4c"/>
+    <path d="M508 84h44V66l58 46-58 46v-14h-44z" fill="#c66d6d"/>
+    <rect x="92" y="248" width="62" height="46" rx="12" fill="#8a5353"/>
+    <rect x="470" y="246" width="74" height="58" rx="14" fill="#5f5f5f"/>
+    <circle cx="520" cy="170" r="30" fill="#9c27b0"/>
+  </g>
+
+  <!-- Word tags -->
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="18" fill="#e2e8f0">
+    <g opacity="0.95">
+      <rect x="86" y="34" width="92" height="28" rx="14" fill="#111827" opacity="0.95"/>
+      <text x="132" y="54" text-anchor="middle">ember</text>
+    </g>
+    <g opacity="0.95">
+      <rect x="466" y="24" width="122" height="28" rx="14" fill="#111827" opacity="0.95"/>
+      <text x="527" y="44" text-anchor="middle">rush</text>
+    </g>
+    <g opacity="0.95">
+      <rect x="70" y="304" width="132" height="28" rx="14" fill="#111827" opacity="0.95"/>
+      <text x="136" y="324" text-anchor="middle">turret</text>
+    </g>
+    <g opacity="0.95">
+      <rect x="450" y="310" width="132" height="28" rx="14" fill="#111827" opacity="0.95"/>
+      <text x="516" y="330" text-anchor="middle">granite</text>
+    </g>
+    <g opacity="0.95">
+      <rect x="474" y="128" width="96" height="28" rx="14" fill="#111827" opacity="0.95"/>
+      <text x="522" y="148" text-anchor="middle">split</text>
+    </g>
+  </g>
+
+  <!-- Center hint -->
+  <g font-family="Outfit, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" fill="#f1f5f9" opacity="0.95">
+    <text x="320" y="286" text-anchor="middle" font-size="20" font-weight="700">TYPE WORDS TO FIRE</text>
+    <text x="320" y="310" text-anchor="middle" font-size="14" opacity="0.75">New enemy types unlock over time</text>
+  </g>
+</svg>

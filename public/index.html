@@ -25,40 +25,20 @@
   <script>
     const IS_PROD = !['localhost', '127.0.0.1'].includes(location.hostname);
     // Survival Game Entry Stub
-    window.openSurvivalGame = function () {
+    window._openSurvivalOverlayAndStart = function () {
       const overlay = document.getElementById('survival-game-overlay');
-      const wrapper = document.querySelector('.page-layout-wrapper');
+      const wrapper = document.getElementById('page-layout-wrapper') || document.querySelector('.page-layout-wrapper');
 
-      // Hide all potential blocking modals and overlays
-      const blockers = document.querySelectorAll('.modal, .entry-modal, .shop-modal, .progress-panel-side, .vocab-panel-side, .srs-panel, .srs-overlay, .auth-overlay, .progress-panel-overlay, .vocab-panel-overlay, .guest-toast, .feedback-toast, .vocab-alert-modal, .vocab-add-modal');
-      blockers.forEach(function (m) {
-        m.style.setProperty('display', 'none', 'important');
-      });
-
-      // Explicitly hide known problematic IDs
-      const specificIds = ['shopping-modal', 'progress-panel-side', 'vocab-panel-side', 'srs-review-panel', 'auth-overlay'];
-      specificIds.forEach(function (id) {
-        const el = document.getElementById(id);
-        if (el) el.style.setProperty('display', 'none', 'important');
-      });
-
-      // Re-run hiding after a short delay to catch any late-opening modals (e.g. from event bubbling)
-      setTimeout(function () {
-        const specificIds = ['shopping-modal', 'progress-panel-side', 'vocab-panel-side', 'srs-review-panel', 'auth-overlay', 'level-system-container'];
-        specificIds.forEach(function (id) {
-          const el = document.getElementById(id);
-          if (el) el.style.setProperty('display', 'none', 'important');
-        });
-      }, 50);
-
-      console.log('Survival Game: Hiding UI blockers complete.');
-
-      if (overlay) {
-        overlay.style.display = 'flex';
-        overlay.style.visibility = 'visible';
+      if (!overlay) {
+        console.error('Survival Game: overlay not found.');
+        return;
       }
 
-      // Hide the main dashboard UI to prevent overlap
+      // Keep non-survival UI hidden via scoped CSS while this class is present.
+      document.body.classList.add('survival-active');
+      overlay.style.setProperty('display', 'flex', 'important');
+      overlay.style.setProperty('visibility', 'visible', 'important');
+
       if (wrapper) {
         wrapper.style.display = 'none';
       }
@@ -66,10 +46,32 @@
       if (window.survivalGame && typeof window.survivalGame.start === 'function') {
         window.survivalGame.start();
       } else {
-        console.log('Survival Game module is loading...');
         window._survivalGamePendingStart = true;
       }
     };
+
+    window.openSurvivalGame = function (opts = {}) {
+      const forceTutorial = !!(opts && opts.forceTutorial);
+
+      // First-time: show tutorial before launching the game overlay so it stays visible.
+      if (typeof window.startTutorial === 'function' && !window.isTutorialActive) {
+        window.startTutorial('survival', forceTutorial);
+        if (window.isTutorialActive) {
+          window._survivalLaunchAfterTutorial = true;
+          return;
+        }
+      }
+
+      window._openSurvivalOverlayAndStart();
+    };
+
+    window.addEventListener('tutorial:end', (e) => {
+      const mode = e && e.detail ? e.detail.mode : null;
+      if (mode !== 'survival') return;
+      if (!window._survivalLaunchAfterTutorial) return;
+      window._survivalLaunchAfterTutorial = false;
+      window._openSurvivalOverlayAndStart();
+    });
 
     if (IS_PROD) {
       // Initialize Sentry
@@ -98,7 +100,8 @@
     }
   </script>
   <!-- Load SRS Scheduler as Module for FSRS support -->
-  <script type="module" src="srs-scheduler.js"></script>
+  <script type="module" src="/srs-scheduler.js"></script>
+  <script type="module" src="/games/penguin-crossing/penguin-crossing.js"></script>
 </head>
 
 <body>
@@ -1329,13 +1332,48 @@
                   <button class="card-cta"
                     onclick="event.stopPropagation(); if (window.openSurvivalGame) { window.openSurvivalGame(); } else if (window.switchToMode) { window.switchToMode('survival'); }">Play
                     Now</button>
-                  <a class="whats-this-link"
-                    onclick="event.stopPropagation(); window.startTutorial('survival', true);">What's this?</a>
+                  <button type="button" class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('survival', true);">Tutorial</button>
+                </div>
+              </div>
+
+              <!-- Penguin Crossing Card -->
+              <div id="mode-btn-penguin" class="modern-card transition-card mode-switch-btn"
+                onclick="window.openPenguinGame()" tabindex="0" role="button" aria-label="Penguin Crossing">
+                <span class="badge new">New</span>
+                <div class="card-visual visual-penguin" style="background: #e0f7fa; color: #006064;">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
+                      <!-- Icebergs -->
+                      <path d="M10 50 L20 40 L30 50 Z" fill="currentColor" opacity="0.8" />
+                      <path d="M40 30 L50 20 L60 30 Z" fill="currentColor" opacity="0.6" />
+                      <!-- Penguin -->
+                      <circle cx="35" cy="45" r="5" fill="#333" />
+                      <circle cx="35" cy="45" r="3" fill="white" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Penguin Crossing</h3>
+                  <p>Jump across icebergs by typing words!</p>
+                  <button class="card-cta" onclick="event.stopPropagation(); window.openPenguinGame()">Play Now</button>
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Penguin Crossing Game Overlay -->
+      <div id="penguin-game-overlay"
+        style="display:none; position:fixed; inset:0; width:100vw; height:100vh; background:#000; z-index:10000; align-items:center; justify-content:center; flex-direction:column;">
+        <div style="position:absolute; top:20px; right:20px; z-index:10001;">
+          <button id="close-penguin-btn"
+            style="background:rgba(255,255,255,0.15); color:white; border:1px solid rgba(255,255,255,0.3); padding:8px 20px; border-radius:8px; cursor:pointer; font-size:14px; backdrop-filter:blur(4px);">
+            Exit Game</button>
+        </div>
+        <canvas id="penguin-canvas" width="800" height="600"
+          style="background:#006994; width:800px; height:600px; max-width:95vw; max-height:85vh; object-fit:contain; box-shadow:0 0 40px rgba(0,120,200,0.3); border-radius:8px;"></canvas>
       </div>
 
       <!-- Lower tabs now hidden - kept for JS compatibility -->
@@ -2239,7 +2277,7 @@
   </script>
   <script src="js/points-logic.js"></script>
   <script src="js/skill-catalog.js"></script>
-  <script src="js/difficulty-manager.js"></script>
+  <script type="module" src="js/difficulty-manager.js"></script>
   <script src="js/performance-tracker.js"></script>
   <script src="hint-system.js"></script>
   <script type="module" src="firebase-auth-module.js"></script>
@@ -2247,7 +2285,7 @@
   <script type="module" src="auth-ui.js"></script>
   <script src="js/modules/level-system.js"></script>
   <script src="shop-module.js"></script>
-  <script src="script.js"></script>
+  <script type="module" src="script.js"></script>
   <!-- Points Toast Notification Container -->
   <div id="points-toast-container" class="points-toast-container"></div>
 
@@ -2644,6 +2682,33 @@
       <div class="hud-top">
         <div id="survival-time" class="hud-time">00:00:00</div>
         <div id="survival-weapon" class="hud-weapon">Level 1 Repeater</div>
+        <div id="survival-wordrush" class="hud-wordrush" style="display: none;" aria-live="polite"></div>
+      </div>
+      <div class="survival-track-controls" aria-label="Playlist controls">
+        <button id="survival-track-prev" type="button" class="survival-track-btn">BACK</button>
+        <div id="survival-track-label" class="survival-track-label">No Track</div>
+        <button id="survival-track-next" type="button" class="survival-track-btn">NEXT</button>
+      </div>
+      <div class="survival-audio-controls" aria-label="Audio controls">
+        <button id="survival-audio-toggle" type="button" class="survival-track-btn survival-audio-toggle"
+          aria-expanded="false" aria-controls="survival-audio-panel">AUDIO</button>
+        <div id="survival-audio-panel" class="survival-audio-panel" hidden>
+          <label class="survival-audio-row" for="survival-bgm-volume">
+            <span class="survival-audio-name">BGM</span>
+            <input id="survival-bgm-volume" type="range" min="0" max="100" step="1" value="60">
+            <span id="survival-bgm-value" class="survival-audio-value">60%</span>
+          </label>
+          <label class="survival-audio-row" for="survival-sfx-volume">
+            <span class="survival-audio-name">SFX</span>
+            <input id="survival-sfx-volume" type="range" min="0" max="100" step="1" value="80">
+            <span id="survival-sfx-value" class="survival-audio-value">80%</span>
+          </label>
+          <div class="survival-setting-row">
+            <span class="survival-audio-name">STRICT</span>
+            <button id="survival-strict-toggle" type="button" class="survival-track-btn survival-setting-btn"
+              aria-pressed="false">OFF</button>
+          </div>
+        </div>
       </div>
       <div class="hud-hp-container">
         <div id="survival-hp-bar" class="hud-hp-bar">
@@ -2662,7 +2727,7 @@
     <!-- Level Up Modal -->
     <div id="survival-levelup-modal" class="survival-modal" style="display: none;">
       <h2>EVOLUTION COMPLETE</h2>
-      <p>Select an upgrade to strengthen your build</p>
+      <p>Type the command word shown on a card to choose it.</p>
       <div class="survival-modal-actions">
         <button id="survival-reroll-btn" type="button" class="survival-reroll-btn" disabled>
           Reroll (<span id="survival-reroll-count">0</span>)
@@ -2676,9 +2741,21 @@
     <!-- Loot Modal -->
     <div id="survival-loot-modal" class="survival-modal" style="display: none;">
       <h2>LOOT CACHE</h2>
-      <p>Select one cache upgrade</p>
+      <p>Type the command word shown on a card to pick your loot.</p>
       <div id="survival-loot-choices" class="upgrade-grid">
         <!-- Loot upgrades injected here -->
+      </div>
+    </div>
+
+    <!-- Enemy Tutorial Modal -->
+    <div id="survival-enemy-tutorial-modal" class="survival-modal survival-enemy-tutorial-modal" style="display: none;">
+      <h2 id="survival-enemy-tutorial-title">NEW ENEMY</h2>
+      <div class="survival-enemy-tutorial-body">
+        <img id="survival-enemy-tutorial-image" class="survival-enemy-tutorial-image" alt="">
+        <div id="survival-enemy-tutorial-text" class="survival-enemy-tutorial-text"></div>
+      </div>
+      <div class="survival-enemy-tutorial-actions">
+        <button id="survival-enemy-tutorial-continue" type="button" class="btn-primary">CONTINUE</button>
       </div>
     </div>
 
@@ -2723,60 +2800,82 @@
     }
 
 
-    document.getElementById('survival-close-btn').onclick = () => {
-      document.getElementById('survival-game-overlay').style.display = 'none';
-      const wrapper = document.querySelector('.page-layout-wrapper');
+    const closeSurvivalOverlay = () => {
+      const overlay = document.getElementById('survival-game-overlay');
+      if (overlay) {
+        overlay.style.display = 'none';
+        overlay.style.visibility = 'hidden';
+      }
+
+      const wrapper = document.getElementById('page-layout-wrapper') || document.querySelector('.page-layout-wrapper');
       if (wrapper) wrapper.style.display = 'block';
 
       if (window.survivalGame && typeof window.survivalGame.stop === 'function') {
         window.survivalGame.stop();
       } else if (window.survivalGame) {
         window.survivalGame.state = 'MENU';
+        document.body.classList.remove('survival-active');
+      } else {
+        document.body.classList.remove('survival-active');
       }
     };
+
+    document.getElementById('survival-close-btn').onclick = closeSurvivalOverlay;
 
     document.getElementById('survival-retry-btn').onclick = () => {
       window.survivalGame.start();
       document.getElementById('survival-gameover-modal').style.display = 'none';
     };
 
-    document.getElementById('survival-exit-btn').onclick = () => {
-      document.getElementById('survival-game-overlay').style.display = 'none';
-      const wrapper = document.querySelector('.page-layout-wrapper');
-      if (wrapper) wrapper.style.display = 'block';
-
-      if (window.survivalGame && typeof window.survivalGame.stop === 'function') {
-        window.survivalGame.stop();
-      } else if (window.survivalGame) {
-        window.survivalGame.state = 'MENU';
-      }
-    };
-
+    document.getElementById('survival-exit-btn').onclick = closeSurvivalOverlay;
     window.addEventListener('keydown', (e) => {
-      if (!window.survivalGame) return;
+      const game = window.survivalGame;
+      if (!game || typeof game.handleInput !== 'function') return;
+      const isCtrlOnly = e.key === 'Control' || e.code === 'ControlLeft' || e.code === 'ControlRight';
+      if (isCtrlOnly && e.repeat) return;
+      if (!isCtrlOnly && (e.ctrlKey || e.metaKey || e.altKey)) return;
 
-      // Debug check for the reported error
-      if (typeof window.survivalGame.handleInput !== 'function') {
-        console.error('🔥 CRITICAL ERROR: window.survivalGame exists but handleInput is missing!', window.survivalGame);
-        console.log('Type:', typeof window.survivalGame);
-        console.log('Constructor:', window.survivalGame.constructor ? window.survivalGame.constructor.name : 'Unknown');
-        return;
+      const target = e.target;
+      const isEditableTarget = target && (
+        target.tagName === 'INPUT'
+        || target.tagName === 'TEXTAREA'
+        || target.isContentEditable
+      );
+      if (isEditableTarget) return;
+
+      const isPlaying = game.state === 'PLAYING';
+      const isLevelUp = game.state === 'LEVEL_UP';
+      if (!isPlaying && !isLevelUp) return;
+
+      if (e.key === ' ' || e.code === 'Space') {
+        // Prevent the page from scrolling while typing spaces in survival mode.
+        e.preventDefault();
       }
 
-      if (window.survivalGame.state === 'PLAYING') {
-        const upgradeManager = window.survivalGame.upgradeManager;
-        if (upgradeManager && upgradeManager.pendingLevelUps > 0 && (e.code === 'Space' || e.key === ' ')) {
-          e.preventDefault();
+      if (isPlaying) {
+        const upgradeManager = game.upgradeManager;
+        if (upgradeManager && upgradeManager.pendingLevelUps > 0 && isCtrlOnly) {
           upgradeManager.tryOpenLevelUpMenu();
           return;
         }
-        if (e.key === 'Backspace') {
-          e.preventDefault();
-        }
-        window.survivalGame.handleInput(e.key);
       }
-    });
 
+      if (isLevelUp && isCtrlOnly) {
+        const upgradeManager = game.upgradeManager;
+        if (upgradeManager && typeof upgradeManager.rerollOptions === 'function') {
+          const didReroll = upgradeManager.rerollOptions();
+          if (didReroll) return;
+        }
+      }
+
+      if (isCtrlOnly) return;
+
+      if (e.key === 'Backspace') {
+        e.preventDefault();
+      }
+
+      game.handleInput(e.key);
+    });
     // Note: openSurvivalGame is now defined in the head to avoid race conditions.
 
   </script>

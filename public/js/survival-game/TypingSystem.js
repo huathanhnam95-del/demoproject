@@ -16,6 +16,72 @@ export default class TypingSystem {
         this.pendingTargets = new Set();
         this.combo = 0;
         this.bestCombo = 0;
+        this.hitTimestamps = [];
+    }
+
+    isStrictMode() {
+        const strict = GameConfig.DIFFICULTY?.STRICT_MODE;
+        if (typeof strict === 'boolean') return strict;
+        return !!GameConfig.DIFFICULTY_CAP?.STRICT_MODE;
+    }
+
+    normalizeLooseInput(value) {
+        // Loose matching: case-insensitive and accent-insensitive (e.g. "a" matches "å").
+        return String(value || '')
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    nowSeconds() {
+        if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
+            return performance.now() / 1000;
+        }
+        return Date.now() / 1000;
+    }
+
+    getWordRushWindowSeconds() {
+        const cfg = GameConfig.WORD_RUSH || {};
+        const window = Number(cfg.WINDOW_SECONDS);
+        return Number.isFinite(window) && window > 0 ? window : 6;
+    }
+
+    pruneHitTimestamps(nowSeconds) {
+        const hits = this.hitTimestamps;
+        if (!Array.isArray(hits) || hits.length === 0) return;
+
+        const window = this.getWordRushWindowSeconds();
+        const cutoff = (Number.isFinite(nowSeconds) ? nowSeconds : this.nowSeconds()) - window;
+        while (hits.length > 0 && hits[0] < cutoff) hits.shift();
+
+        // Safety cap: keeps memory stable if something goes wrong with pruning.
+        const maxHits = Math.max(120, Math.ceil(window * 40));
+        if (hits.length > maxHits) hits.splice(0, hits.length - maxHits);
+    }
+
+    recordCorrectHit() {
+        const cfg = GameConfig.WORD_RUSH || {};
+        if (cfg.ENABLED === false) return;
+        const now = this.nowSeconds();
+        this.hitTimestamps.push(now);
+        this.pruneHitTimestamps(now);
+    }
+
+    getRecentWpm() {
+        const cfg = GameConfig.WORD_RUSH || {};
+        if (cfg.ENABLED === false) return 0;
+
+        const now = this.nowSeconds();
+        this.pruneHitTimestamps(now);
+
+        const hits = this.hitTimestamps.length;
+        if (hits <= 0) return 0;
+
+        const window = this.getWordRushWindowSeconds();
+        const span = hits >= 2 ? (now - this.hitTimestamps[0]) : window;
+        const seconds = Math.max(1, Math.min(window, span));
+        const wpm = (hits * 60) / (5 * seconds);
+        return Number.isFinite(wpm) ? Math.max(0, wpm) : 0;
     }
 
     reset() {
@@ -27,6 +93,7 @@ export default class TypingSystem {
         this.pendingTargets.clear();
         this.combo = 0;
         this.bestCombo = 0;
+        this.hitTimestamps = [];
     }
 
     getExpectedChar(enemy) {
@@ -59,7 +126,11 @@ export default class TypingSystem {
         if (!this.isTargetable(enemy)) return false;
         if (!prefix) return false;
         if (enemy.isStealth && prefix.length > enemy.revealIndex) return false;
-        return enemy.word.toLowerCase().startsWith(prefix.toLowerCase());
+
+        if (this.isStrictMode()) {
+            return enemy.word.startsWith(prefix);
+        }
+        return this.normalizeLooseInput(enemy.word).startsWith(this.normalizeLooseInput(prefix));
     }
 
     findCandidates(prefix) {
@@ -130,7 +201,8 @@ export default class TypingSystem {
         if (this.mistakePenalty > 0) return; // Prevent input during penalty
         if (key.length !== 1) return; // Ignore control keys
 
-        const char = key.toLowerCase();
+        const strict = this.isStrictMode();
+        const char = strict ? key : key.toLowerCase();
 
         if (this.lockTarget) {
             this.lockTimer = 0;
@@ -148,11 +220,17 @@ export default class TypingSystem {
                 }
                 return;
             }
-            if (expected && expected.toLowerCase() === char) {
+            // Strict Mode: Exact match needed. Normal Mode: Case-insensitive match.
+            const isMatch = strict
+                ? (expected === char)
+                : (expected && this.normalizeLooseInput(expected) === this.normalizeLooseInput(char));
+
+            if (isMatch) {
                 this.lockTarget.typedIndex = Math.min(this.lockTarget.typedIndex + 1, this.lockTarget.word.length);
                 if (this.lockTarget.isStealth && this.lockTarget.typedIndex >= 2) {
                     this.lockTarget.revealIndex = this.lockTarget.word.length;
                 }
+                this.recordCorrectHit();
                 this.combo++;
                 this.bestCombo = Math.max(this.bestCombo, this.combo);
 
@@ -197,6 +275,7 @@ export default class TypingSystem {
                 return;
             }
 
+            this.recordCorrectHit();
             this.combo++;
             this.bestCombo = Math.max(this.bestCombo, this.combo);
 
@@ -268,9 +347,16 @@ export default class TypingSystem {
     }
 
     tryRetargetOnMismatch(char) {
+        const strict = this.isStrictMode();
         const current = this.lockTarget;
-        const typedPrefix = current && current.word ? current.word.substring(0, current.typedIndex || 0).toLowerCase() : '';
-        const buffer = (typedPrefix + char).toLowerCase();
+
+        let typedPrefix = '';
+        if (current && current.word) {
+            const rawPrefix = current.word.substring(0, current.typedIndex || 0);
+            typedPrefix = strict ? rawPrefix : rawPrefix.toLowerCase();
+        }
+
+        const buffer = typedPrefix + char;
 
         const prefixCandidates = [];
         prefixCandidates.push(buffer);
@@ -294,6 +380,7 @@ export default class TypingSystem {
         if (!bestPrefix || !bestMatches || bestMatches.length === 0) return false;
 
         this.clearLock();
+        this.recordCorrectHit();
         this.combo++;
         this.bestCombo = Math.max(this.bestCombo, this.combo);
 

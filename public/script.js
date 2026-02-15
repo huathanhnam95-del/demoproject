@@ -655,18 +655,19 @@
     const pageWrapper = document.getElementById('page-layout-wrapper');
     if (pageWrapper && pageWrapper.style.display === 'none') {
       pageWrapper.style.display = 'block';
-      console.log('Restored .page-layout-wrapper visibility for mode:', mode);
     }
 
     // CLOSE SURVIVAL OVERLAY IF OPEN
     const survivalOverlay = document.getElementById('survival-game-overlay');
-    if (survivalOverlay && survivalOverlay.style.visibility === 'visible' && mode !== 'survival') {
+    const survivalOverlayVisible = !!(survivalOverlay && survivalOverlay.style.display !== 'none');
+    if (survivalOverlayVisible && mode !== 'survival') {
       survivalOverlay.style.display = 'none';
       survivalOverlay.style.visibility = 'hidden';
       if (window.survivalGame && typeof window.survivalGame.stop === 'function') {
         window.survivalGame.stop();
+      } else {
+        document.body.classList.remove('survival-active');
       }
-      console.log('Closed Survival Mode overlay due to mode switch to:', mode);
     }
 
     const tabBtn = document.getElementById(tabId);

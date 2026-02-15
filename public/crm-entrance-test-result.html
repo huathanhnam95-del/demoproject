@@ -7,10 +7,8 @@
   <meta name="robots" content="noindex, nofollow" />
   <title>CRM Admin - Entrance Test Result</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet" />
+  <!-- Use system serif/Times New Roman only -->
+
 
   <!-- Reuse CRM admin design system -->
   <link rel="stylesheet" href="style.css" />
@@ -23,8 +21,7 @@
     <header class="crm-header">
       <div class="crm-header-left">
         <div class="crm-logo-box">
-          <img src="database/Logo.png" alt="BEL"
-            class="crm-logo-img">
+          <img src="database/Logo.png" alt="BEL" class="crm-logo-img">
         </div>
 
         <div class="crm-result-heading">
@@ -36,6 +33,8 @@
       <div class="crm-header-right">
         <div class="crm-header-actions crm-result-header-actions">
           <span id="crm-result-user-email" class="crm-result-user-email"></span>
+          <button id="crm-export-pdf-btn" class="crm-export-btn" style="display:none"
+            onclick="window.__exportResultPdf && window.__exportResultPdf()">📄 Export PDF</button>
           <a class="crm-result-back-link" href="crm-admin.html" rel="noopener">← Back to CRM</a>
         </div>
       </div>
@@ -58,6 +57,10 @@
       <div id="crm-loading-subtext" class="crm-loading-subtext">Please wait</div>
     </div>
   </div>
+
+  <!-- html2pdf.js for PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js" crossorigin="anonymous"
+    referrerpolicy="no-referrer"></script>
 
   <!-- Firebase compat SDKs (admin pages use compat like CRM Admin) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>

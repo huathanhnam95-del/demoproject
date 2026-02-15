@@ -441,7 +441,7 @@
     const speakingBadge = speakingExpected ? `${speakingUploaded}/${speakingExpected}` : (speakingUploaded ? String(speakingUploaded) : UI_DASH);
 
     const studentCard = `\n      <div class="crm-result-card">\n        <div class="crm-result-card-header">\n          <h3>Student</h3>\n          ${student ? `<span class="crm-result-muted">${escapeHtml(student.id || '')}</span>` : ''}\n        </div>\n        <div class="crm-result-card-body">\n          ${student
-      ? `\n            <div class="crm-result-kv">\n              <div class="crm-result-kv-label">Name</div>\n              <div class="crm-result-kv-value">${escapeHtml(student.name || UI_DASH)}</div>\n              <div class="crm-result-kv-label">Phone</div>\n              <div class="crm-result-kv-value">${escapeHtml(student.phone || UI_DASH)}</div>\n              <div class="crm-result-kv-label">Email</div>\n              <div class="crm-result-kv-value">${escapeHtml(student.email || UI_DASH)}</div>\n              <div class="crm-result-kv-label">Label</div>\n              <div class="crm-result-kv-value">${escapeHtml(student.label || UI_DASH)}</div>\n              <div class="crm-result-kv-label">Zalo</div>\n              <div class="crm-result-kv-value">${escapeHtml(student.zalo || UI_DASH)}</div>\n              <div class="crm-result-kv-label">Facebook</div>\n              <div class="crm-result-kv-value">${escapeHtml(student.facebook || UI_DASH)}</div>\n            </div>\n          `
+      ? `\n            <div class="crm-result-kv">\n              <div class="crm-result-kv-label">Name</div>\n              <div class="crm-result-kv-value">${escapeHtml(student.name || UI_DASH)}</div>\n              <div class="crm-result-kv-label">Phone</div>\n              <div class="crm-result-kv-value">${escapeHtml(student.phone || UI_DASH)}</div>\n              <div class="crm-result-kv-label">Email</div>\n              <div class="crm-result-kv-value">${escapeHtml(student.email || UI_DASH)}</div>\n              ${student.label ? `<div class="crm-result-kv-label">Label</div><div class="crm-result-kv-value">${escapeHtml(student.label)}</div>` : ''}\n              ${student.zalo ? `<div class="crm-result-kv-label">Zalo</div><div class="crm-result-kv-value">${escapeHtml(student.zalo)}</div>` : ''}\n              ${student.facebook ? `<div class="crm-result-kv-label">Facebook</div><div class="crm-result-kv-value">${escapeHtml(student.facebook)}</div>` : ''}\n            </div>\n          `
       : '<div class="crm-result-muted">Student profile not found.</div>'
       }\n        </div>\n      </div>\n    `;
 
@@ -455,7 +455,7 @@
               <div>
                 <div class="crm-score-label">Overall (Objective)</div>
                 <div class="crm-score-value">${escapeHtml(scoring ? overallLabel : UI_DASH)}</div>
-                <div class="crm-score-sub">${escapeHtml(scoring ? 'Vocab + Grammar + Listen & Write' : 'Not submitted yet')}</div>
+                ${scoring ? '' : '<div class="crm-score-sub">Not submitted yet</div>'}
               </div>
               <div class="crm-score-badge">${escapeHtml(formatPercent(overallPct))}</div>
             </div>
@@ -474,9 +474,191 @@
     `;
 
 
-    const detailsHtml = '';
+    let detailsHtml = '';
+    if (!session) {
+      detailsHtml = '<div class="crm-result-error">Session definition missing from server response.</div>';
+    } else {
+      detailsHtml = [
+        renderSpeakingSection({ test, session, audioUrls }),
+        scoring
+          ? renderObjectiveSection({ title: 'Vocab (TỪ VỰNG)', sectionId: 'vocab', session, sectionScoring: vocab })
+          : '<div class="crm-result-muted" style="margin-top:18px;">Objective scoring will appear after submission.</div>',
+        scoring
+          ? renderObjectiveSection({ title: 'Grammar (NGỮ PHÁP)', sectionId: 'grammar', session, sectionScoring: grammar })
+          : '',
+        scoring
+          ? renderObjectiveSection({ title: 'Nghe & Viết (NGHE & VIẾT)', sectionId: 'listen_write', session, sectionScoring: listenWrite })
+          : ''
+      ].join('\n');
+    }
 
+
+    // Show export button now that content is rendered
+    const exportBtn = document.getElementById('crm-export-pdf-btn');
+    if (exportBtn) exportBtn.style.display = '';
 
     elements.root.innerHTML = `\n      <div class="crm-result-grid">\n        ${studentCard}\n        ${metaCard}\n      </div>\n      ${summary}\n      ${detailsHtml}\n    `;
+
+    // Show export button now that content is rendered
+    if (exportBtn) exportBtn.style.display = '';
   }
+
+  /* ── PDF Export ─────────────────────────────────── */
+  window.__exportResultPdf = async function () {
+    if (typeof html2pdf === 'undefined') {
+      alert('PDF library not loaded. Please refresh the page and try again.');
+      return;
+    }
+
+    const btn = document.getElementById('crm-export-pdf-btn');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '⏳ Generating…';
+    }
+
+    const container = document.querySelector('.crm-admin');
+    if (!container) {
+      alert('Nothing to export.');
+      if (btn) { btn.disabled = false; btn.textContent = '📄 Export PDF'; }
+      return;
+    }
+
+    // 1. Expand all <details> and remember which were closed
+    const allDetails = container.querySelectorAll('details');
+    const closedDetails = [];
+    allDetails.forEach((d) => {
+      if (!d.open) {
+        closedDetails.push(d);
+        d.open = true;
+      }
+    });
+
+    // 2. Hide header actions (buttons) during capture
+    const headerActions = container.querySelector('.crm-result-header-actions');
+    let headerActionsDisplay = '';
+    if (headerActions) {
+      headerActionsDisplay = headerActions.style.display;
+      headerActions.style.display = 'none';
+    }
+
+    // 3. Add export class for print-color-adjust
+    container.classList.add('crm-pdf-exporting');
+
+    // 3b. Constrain width to precise A4 printable area
+    //     A4 = 210mm width.
+    //     Margins = 10mm left + 10mm right = 20mm.
+    //     Printable width = 190mm.
+    //     190mm @ 96 DPI ~= 718px.
+    //     We use 715px to be safe and avoid any partial pixel clipping.
+    const origMaxWidth = container.style.maxWidth;
+    const origWidth = container.style.width;
+    const origMargin = container.style.margin;
+    const origPadding = container.style.padding;
+
+    // CRITICAL: Force left-alignment and exact printable width
+    container.style.maxWidth = '715px';
+    container.style.width = '715px';
+    container.style.marginLeft = '0';
+    container.style.marginRight = 'auto';
+    container.style.padding = '0';
+
+    // 3c. Hide the "Test" card and force 1-column layout
+    const grid = container.querySelector('.crm-result-grid');
+    let origGridTemplate = '';
+    if (grid) {
+      origGridTemplate = grid.style.gridTemplateColumns;
+      grid.style.gridTemplateColumns = '1fr';
+
+      const cards = grid.querySelectorAll('.crm-result-card');
+      if (cards.length > 1) {
+        const testCard = cards[1];
+        testCard.classList.add('crm-pdf-hide');
+      }
+    }
+
+    // 4. Add page-break-before markers on each section <details>
+    //    Skip the FIRST section to avoid a blank page after the summary.
+    const sectionDetails = container.querySelectorAll('.crm-result-details');
+    sectionDetails.forEach((d, i) => {
+      if (i > 0) d.classList.add('html2pdf__page-break');
+    });
+
+    // 5. Hide audio elements (they render as blank blocks in the PDF)
+    const audioEls = container.querySelectorAll('audio');
+    audioEls.forEach((a) => {
+      a.dataset.origDisplay = a.style.display;
+      a.style.display = 'none';
+    });
+
+    // 6. Add footer
+    const footer = document.createElement('div');
+    footer.className = 'crm-pdf-footer';
+    const now = new Date();
+    footer.textContent = `Generated on ${now.toLocaleString()} • BEL Entrance Test`;
+    const root = document.getElementById('crm-result-root');
+    if (root) root.appendChild(footer);
+
+    // 7. Build filename
+    const subtitleEl = document.getElementById('crm-result-subtitle');
+    const subtitleText = subtitleEl ? subtitleEl.textContent.trim() : '';
+    const studentName = subtitleText.split('•')[0].trim().replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '-') || 'student';
+    const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+    const filename = `entrance-test-${studentName}-${dateStr}.pdf`;
+
+    try {
+      const opt = {
+        margin: [20, 10, 10, 10], // Increased top margin to 20mm to prevent cutting
+        filename: filename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale: 2, // High quality
+          useCORS: true,
+          logging: true, // Enable for debugging
+          letterRendering: true,
+          scrollX: 0,
+          scrollY: 0
+        },
+        jsPDF: {
+          unit: 'mm',
+          format: 'a4',
+          orientation: 'portrait'
+        },
+        pagebreak: { mode: ['css', 'legacy'] } // Added legacy mode for better splitting
+      };
+
+      await html2pdf().set(opt).from(container).save();
+    } catch (e) {
+      console.error('[ExportPDF] Error:', e);
+      alert('Failed to generate PDF. See console for details.');
+    } finally {
+      // 8. Restore original state
+      container.classList.remove('crm-pdf-exporting');
+      container.style.maxWidth = origMaxWidth;
+      container.style.width = origWidth;
+      container.style.marginLeft = ''; // Reset inline style
+      container.style.marginRight = ''; // Reset inline style
+      container.style.padding = origPadding;
+
+      if (grid) {
+        grid.style.gridTemplateColumns = origGridTemplate;
+        const cards = grid.querySelectorAll('.crm-result-card');
+        if (cards.length > 1) {
+          const testCard = cards[1];
+          testCard.classList.remove('crm-pdf-hide');
+        }
+      }
+
+      closedDetails.forEach((d) => (d.open = false));
+      sectionDetails.forEach((d) => {
+        d.classList.remove('html2pdf__page-break');
+      });
+      audioEls.forEach((a) => {
+        a.style.display = a.dataset.origDisplay || '';
+        delete a.dataset.origDisplay;
+      });
+      if (headerActions) headerActions.style.display = headerActionsDisplay;
+      if (footer.parentNode) footer.parentNode.removeChild(footer);
+      if (btn) { btn.disabled = false; btn.textContent = '📄 Export PDF'; }
+    }
+  };
 })();

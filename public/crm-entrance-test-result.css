@@ -3,22 +3,45 @@
    Uses crm-admin.css tokens/components.
    ============================================ */
 
+:root {
+  --crm-primary: #165d31;
+  /* Deep Emerald */
+  --crm-primary-hover: #104524;
+  --crm-bg: #fcfaf7;
+  /* Warm ivory/cream */
+  --crm-text-main: #1a1a1a;
+  --crm-text-muted: #4b5563;
+  --crm-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --crm-shadow-md: 0 4px 12px rgba(22, 93, 49, 0.08);
+}
+
+.crm-admin,
+.crm-admin * {
+  font-family: "Times New Roman", Times, serif !important;
+}
+
+.crm-admin {
+  background-color: var(--crm-bg);
+  min-height: 100vh;
+}
+
 .crm-result-heading {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
   line-height: 1.1;
 }
 
 .crm-result-title {
-  font-size: 1.05rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: #ffffff;
 }
 
 .crm-result-subtitle {
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.95rem;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .crm-result-header-actions {
@@ -55,9 +78,12 @@
 
 .crm-result-card {
   background: #ffffff;
-  border-radius: var(--crm-radius);
-  box-shadow: var(--crm-shadow);
+  border-radius: 12px;
+  box-shadow: var(--crm-shadow-sm);
+  border: 1px solid rgba(22, 93, 49, 0.1);
   overflow: hidden;
+  break-inside: avoid;
+  /* Prevent PDF splits */
 }
 
 .crm-result-card-header {
@@ -261,38 +287,42 @@
 }
 
 .crm-score-card.theme-overall {
-  --score-accent: var(--crm-primary);
-  --score-accent-2: var(--crm-primary-hover);
-  --score-accent-soft: rgba(27, 138, 79, 0.14);
-  --score-accent-border: rgba(27, 138, 79, 0.28);
+  --score-accent: #165d31;
+  --score-accent-2: #0c4222;
+  --score-accent-soft: rgba(22, 93, 49, 0.08);
+  --score-accent-border: rgba(22, 93, 49, 0.2);
 }
 
 .crm-score-card.theme-speaking {
-  --score-accent: #2563eb;
-  --score-accent-2: #1d4ed8;
-  --score-accent-soft: rgba(37, 99, 235, 0.14);
-  --score-accent-border: rgba(37, 99, 235, 0.28);
+  --score-accent: #1a365d;
+  /* Navy */
+  --score-accent-2: #102a43;
+  --score-accent-soft: rgba(26, 54, 93, 0.08);
+  --score-accent-border: rgba(26, 54, 93, 0.2);
 }
 
 .crm-score-card.theme-vocab {
-  --score-accent: #7c3aed;
-  --score-accent-2: #6d28d9;
-  --score-accent-soft: rgba(124, 58, 237, 0.14);
-  --score-accent-border: rgba(124, 58, 237, 0.28);
+  --score-accent: #4c1d95;
+  /* Deep Purple */
+  --score-accent-2: #3b0764;
+  --score-accent-soft: rgba(76, 29, 149, 0.08);
+  --score-accent-border: rgba(76, 29, 149, 0.2);
 }
 
 .crm-score-card.theme-grammar {
-  --score-accent: #f59e0b;
-  --score-accent-2: #d97706;
-  --score-accent-soft: rgba(245, 158, 11, 0.18);
-  --score-accent-border: rgba(245, 158, 11, 0.32);
+  --score-accent: #92400e;
+  /* Gold/Amber */
+  --score-accent-2: #78350f;
+  --score-accent-soft: rgba(146, 64, 14, 0.08);
+  --score-accent-border: rgba(146, 64, 14, 0.2);
 }
 
 .crm-score-card.theme-listenwrite {
-  --score-accent: #0ea5e9;
-  --score-accent-2: #0284c7;
-  --score-accent-soft: rgba(14, 165, 233, 0.14);
-  --score-accent-border: rgba(14, 165, 233, 0.28);
+  --score-accent: #0c4a6e;
+  /* Cyan/Blue */
+  --score-accent-2: #083344;
+  --score-accent-soft: rgba(12, 74, 110, 0.08);
+  --score-accent-border: rgba(12, 74, 110, 0.2);
 }
 
 .crm-result-summary-grid {
@@ -333,42 +363,52 @@
 .crm-result-details {
   margin-top: 18px;
   background: #ffffff;
-  border-radius: var(--crm-radius);
-  box-shadow: var(--crm-shadow);
+  border-radius: 12px;
+  box-shadow: var(--crm-shadow-sm);
+  border: 1px solid rgba(22, 93, 49, 0.08);
   overflow: hidden;
+  /* break-inside: avoid; Removed to prevent blank pages when section is large */
 }
 
 .crm-result-details summary {
   cursor: pointer;
-  padding: 14px 18px;
-  font-weight: 800;
-  color: var(--crm-text-main);
+  padding: 16px 20px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--crm-primary);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   user-select: none;
-}
-
-.crm-result-details[open] summary {
-  border-bottom: 1px solid #edf2f7;
+  background: rgba(22, 93, 49, 0.03);
+  break-after: avoid;
+  /* PDF fix */
+  page-break-after: avoid;
 }
 
 .crm-result-details-body {
   padding: 16px 18px;
+  break-before: avoid;
+  /* PDF fix */
+  page-break-before: avoid;
 }
 
 .crm-result-section-note {
   margin: 0 0 12px;
   color: var(--crm-text-muted);
   font-size: 0.92rem;
+  break-after: avoid;
 }
 
 .crm-result-question {
   border: 1px solid #edf2f7;
-  border-radius: 10px;
-  padding: 14px 14px;
-  margin-bottom: 12px;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  background: #ffffff;
+  break-inside: avoid;
+  /* PDF fix */
 }
 
 .crm-result-question:last-child {
@@ -463,6 +503,16 @@
   overflow-x: auto;
 }
 
+.crm-pdf-exporting .crm-result-table-container {
+  overflow-x: visible !important;
+}
+
+.crm-pdf-exporting .crm-table th,
+.crm-pdf-exporting .crm-table td {
+  white-space: normal !important;
+  word-break: break-word !important;
+}
+
 .crm-result-table-container .crm-table th {
   white-space: nowrap;
 }
@@ -495,4 +545,117 @@
   .crm-result-kv {
     grid-template-columns: 1fr;
   }
+}
+
+/* Export PDF button */
+.crm-export-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+  font-family: inherit;
+}
+
+.crm-export-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.crm-export-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* PDF export overrides */
+.crm-pdf-exporting .crm-header {
+  background: #165d31 !important;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  padding: 0 12px !important;
+  height: 50px !important;
+}
+
+.crm-pdf-exporting .crm-logo-box {
+  width: 40px !important;
+}
+
+.crm-pdf-exporting .crm-result-title {
+  font-size: 1.1rem !important;
+}
+
+.crm-pdf-exporting .crm-score-card {
+  background: #ffffff !important;
+  box-shadow: none !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.crm-pdf-exporting .crm-score-card::before,
+.crm-pdf-exporting .crm-score-card::after {
+  display: none !important;
+}
+
+.crm-pdf-exporting .crm-score-bar-fill {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* html2pdf page-break marker */
+.html2pdf__page-break {
+  page-break-before: always;
+}
+
+/* Hide audio players in PDF (they render as blank rectangles) */
+.crm-pdf-exporting audio {
+  display: none !important;
+}
+
+/* Tighten spacing in PDF mode */
+.crm-pdf-exporting .crm-admin {
+  padding: 0 !important;
+  margin-left: 0 !important;
+  margin-right: auto !important;
+  width: 190mm !important;
+  max-width: 190mm !important;
+  overflow: hidden !important;
+  /* Force clip at container edge if needed, but width should match */
+  background-color: #ffffff !important;
+  /* Ensure white bg */
+}
+
+.crm-pdf-exporting .crm-result-grid {
+  margin-top: 10px !important;
+  gap: 10px !important;
+  grid-template-columns: 1fr !important;
+}
+
+/* Strictly hide the Test card (2nd child of grid) */
+.crm-pdf-exporting .crm-result-grid>.crm-result-card:nth-child(2) {
+  display: none !important;
+}
+
+.crm-pdf-exporting .crm-result-card {
+  margin-top: 5px !important;
+}
+
+.crm-pdf-exporting .crm-result-details {
+  margin-top: 10px !important;
+}
+
+.crm-pdf-exporting .crm-result-question {
+  margin-bottom: 10px !important;
+  padding: 12px !important;
+}
+
+.crm-pdf-footer {
+  text-align: center;
+  padding: 16px 0 8px;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  border-top: 1px solid #e2e8f0;
+  margin-top: 24px;
 }

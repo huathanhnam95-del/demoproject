@@ -1026,6 +1026,76 @@
                 interactive: false
             }
         ],
+        survival: [
+            {
+                target: null,
+                icon: 'S',
+                title: 'Survival Mode',
+                text: `
+                    <div class="tutorial-media">
+                        <img class="tutorial-media-img" src="assets/survival-tutorial/survival-intro.svg" alt="Survival mode overview">
+                    </div>
+                    <strong>Type to survive.</strong> Enemies approach with words. Finish a word to fire your weapons.
+                    <div class="tutorial-subtle">New enemy types unlock gradually, with quick popups the first time you meet them.</div>
+                `,
+                position: 'center',
+                nextLabel: 'How It Works \u2192',
+                interactive: false
+            },
+            {
+                target: null,
+                icon: 'K',
+                title: 'Controls',
+                text: `
+                    <div class="tutorial-media">
+                        <img class="tutorial-media-img" src="assets/survival-tutorial/survival-controls.svg" alt="Survival controls">
+                    </div>
+                    <div class="tutorial-checklist">
+                        <div class="checklist-item done"><span class="checklist-icon">\u2705</span><span>Type letters to lock onto a target</span></div>
+                        <div class="checklist-item done"><span class="checklist-icon">\u2705</span><span><strong>Backspace</strong> clears your lock</span></div>
+                        <div class="checklist-item done"><span class="checklist-icon">\u2705</span><span><strong>Ctrl</strong> opens Level Up (and rerolls in the menu)</span></div>
+                    </div>
+                `,
+                position: 'center',
+                nextLabel: 'Powerups \u2192',
+                interactive: false
+            },
+            {
+                target: null,
+                icon: '+',
+                title: 'Powerups & Loot',
+                text: `
+                    <div class="tutorial-media">
+                        <img class="tutorial-media-img" src="assets/survival-tutorial/survival-items.svg" alt="Survival powerups">
+                    </div>
+                    Powerups drop during the run. Type the pickup word to collect it.
+                    <div class="tutorial-subtle">Tip: Loot caches pause the action and let you pick an augment.</div>
+                `,
+                position: 'center',
+                nextLabel: 'Enemies \u2192',
+                interactive: false
+            },
+            { 
+                target: null, 
+                icon: 'E', 
+                title: 'Enemies', 
+                text: ` 
+                    Each enemy has a different behavior. You\u2019ll get a short popup the first time a new enemy type (or major trait) appears. 
+                    <div class="tutorial-media-grid"> 
+                        <img class="tutorial-media-thumb" src="assets/survival-tutorial/enemy-drone.svg" alt="Drone enemy"> 
+                        <img class="tutorial-media-thumb" src="assets/survival-tutorial/enemy-rusher.svg" alt="Rusher enemy"> 
+                        <img class="tutorial-media-thumb" src="assets/survival-tutorial/enemy-turret.svg" alt="Turret enemy"> 
+                        <img class="tutorial-media-thumb" src="assets/survival-tutorial/enemy-tank.svg" alt="Tank enemy"> 
+                        <img class="tutorial-media-thumb" src="assets/survival-tutorial/enemy-splitter.svg" alt="Splitter enemy"> 
+                        <img class="tutorial-media-thumb" src="assets/survival-tutorial/enemy-shielded.svg" alt="Shielded enemy"> 
+                    </div> 
+                    Ready? Good luck. 
+                `, 
+                position: 'center', 
+                nextLabel: 'Start \u2713', 
+                interactive: false
+            }
+        ],
         shopUnlock: [
             {
                 target: '#panel-shopping-card',
@@ -1077,6 +1147,10 @@
         if (mode === 'pronounce') return {
             complete: 'pronounceTutorialCompleted',
             replay: 'pronounceTutorialReplay'
+        };
+        if (mode === 'survival') return {
+            complete: 'survivalTutorialCompleted',
+            replay: 'survivalTutorialReplay'
         };
         // Type Length Filter (for shop unlock tutorial)
         if (mode === 'typeLengthFilter') return {
@@ -1655,6 +1729,11 @@
         if (dropdownSpeak) dropdownSpeak.classList.remove('open');
 
         console.log(`Tutorial for ${currentMode} mode completed!`);
+        try {
+            window.dispatchEvent(new CustomEvent('tutorial:end', { detail: { mode: currentMode } }));
+        } catch (_) {
+            // Ignore event dispatch failures.
+        }
     }
 
     /**

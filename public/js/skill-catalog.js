@@ -8,7 +8,7 @@
             slow_audio: {
                 id: 'slow_audio',
                 title: 'Slow Audio',
-                desc: 'Playback <1.0x speed (charged when used).',
+                desc: 'Plays the audio at 0.75x speed. Essential for catching fast pronunciation or complex linking sounds.',
                 tags: ['listening'],
                 allowedModes: ['type', 'speak', 'extended', 'watch', 'notes'],
                 baseCost: 2,
@@ -18,7 +18,7 @@
             echo_loop: {
                 id: 'echo_loop',
                 title: 'Echo Loop',
-                desc: 'Loop the last 3 to 5 seconds (charged per press).',
+                desc: 'Infinitely loops the last 3-5 seconds of audio. Perfect for drilling difficult phrases or mimicking intonation patterns.',
                 tags: ['listening'],
                 allowedModes: ['type', 'speak', 'watch', 'notes'],
                 baseCost: 2,
@@ -28,7 +28,7 @@
             chunking: {
                 id: 'chunking',
                 title: 'Chunking',
-                desc: 'Split audio into chunks with next/prev controls (charged when enabled).',
+                desc: 'Breaks long sentences into manageable phrases with manual next/prev controls. Critical for mastering complex sentence structures.',
                 tags: ['listening'],
                 allowedModes: ['type', 'notes'],
                 baseCost: 4,
@@ -38,7 +38,7 @@
             transcript_glimpse: {
                 id: 'transcript_glimpse',
                 title: 'Transcript Glimpse',
-                desc: 'Reveal one short transcript line briefly (stacking cost per reveal).',
+                desc: 'Briefly flashes the text transcript for 2 seconds. Use it to verify a specific word you cannot quite hear.',
                 tags: ['listening'],
                 allowedModes: ['type', 'speak', 'watch'],
                 baseCost: 8,
@@ -49,7 +49,7 @@
             hint_wc: {
                 id: 'hint_wc',
                 title: 'Hint: Word Count',
-                desc: 'Show the word or gap count (a lightweight nudge).',
+                desc: 'Displays the exact word count or gap length. Helps you determine if you are missing a particle or a full word.',
                 tags: ['writing'],
                 allowedModes: ['type', 'extended', 'notes'],
                 baseCost: 1,
@@ -59,7 +59,7 @@
             hint_fl: {
                 id: 'hint_fl',
                 title: 'Hint: First Letters',
-                desc: 'Reveal the first letters for each word or gap.',
+                desc: 'Reveals the first letter of every missing word. A strong nudge to jog your memory without giving away the full answer.',
                 tags: ['writing'],
                 allowedModes: ['type', 'extended', 'notes'],
                 baseCost: 4,
@@ -69,7 +69,7 @@
             hint_reveal: {
                 id: 'hint_reveal',
                 title: 'Hint: Reveal Word',
-                desc: 'Reveal one missing word or gap answer (stacking cost, heavy assist).',
+                desc: 'Instantly fills in the current missing word. Use sparingly as it has a high coin cost and significantly reduces your calibration score.',
                 tags: ['writing'],
                 allowedModes: ['type', 'extended', 'notes'],
                 baseCost: 16,
@@ -79,7 +79,7 @@
             punct_ghost: {
                 id: 'punct_ghost',
                 title: 'Punctuation Ghost',
-                desc: 'Show punctuation and structure placeholders (commas/periods/quotes).',
+                desc: 'Shows ghosted placeholders for punctuation marks. Vital for learning correct sentence structuring and comma usage.',
                 tags: ['writing'],
                 allowedModes: ['type', 'notes'],
                 baseCost: 2,
@@ -89,7 +89,7 @@
             typo_shield: {
                 id: 'typo_shield',
                 title: 'Typo Shield',
-                desc: 'Allow +1 typo forgiveness for this attempt (charged when enabled).',
+                desc: 'Protects your streak from one minor typo or spelling error. Active for the current question only.',
                 tags: ['writing'],
                 allowedModes: ['type', 'notes'],
                 baseCost: 5,
@@ -100,7 +100,7 @@
             dict_peek: {
                 id: 'dict_peek',
                 title: 'Dictionary Peek',
-                desc: 'Peek a definition and example sentence (charged per lookup).',
+                desc: 'Instantly view the definition and example sentence for any selected word without leaving the question.',
                 tags: ['reading'],
                 allowedModes: ['extended', 'watch'],
                 baseCost: 1,
@@ -110,7 +110,7 @@
             time_freeze: {
                 id: 'time_freeze',
                 title: 'Time Freeze',
-                desc: 'Pause the timer briefly on timed questions (charged per use).',
+                desc: 'Pauses the countdown timer for 10 seconds. Gives you a moment to think during timed rapid-fire challenges.',
                 tags: ['reading', 'listening'],
                 allowedModes: ['type', 'speak', 'extended', 'watch', 'notes'],
                 baseCost: 4,
@@ -120,7 +120,7 @@
             evidence_highlight: {
                 id: 'evidence_highlight',
                 title: 'Evidence Highlight',
-                desc: 'Post-answer: highlight the proof sentence(s) in the passage.',
+                desc: 'After answering, highlights exactly where the answer was found in the source text. Great for learning to scan passages.',
                 tags: ['reading'],
                 allowedModes: ['extended', 'watch'],
                 baseCost: 2,
@@ -130,7 +130,7 @@
             summary_scroll: {
                 id: 'summary_scroll',
                 title: 'Summary Scroll',
-                desc: 'Post-answer: show a summary and saved keywords to review.',
+                desc: 'Generates a concise summary of the text and saves key vocabulary to your review list after the question.',
                 tags: ['reading'],
                 allowedModes: ['extended', 'watch'],
                 baseCost: 4,
@@ -141,7 +141,7 @@
             pron_rune: {
                 id: 'pron_rune',
                 title: 'Pronunciation Rune',
-                desc: 'Show IPA/stress plus one pronunciation tip before recording.',
+                desc: 'Display IPA guides and stress markers for the target phrase before you speak.',
                 tags: ['speaking'],
                 allowedModes: ['speak'],
                 baseCost: 2,
@@ -151,7 +151,7 @@
             shadow_mode: {
                 id: 'shadow_mode',
                 title: 'Shadow Mode',
-                desc: 'Speak-along timing guidance (shadowing) and compare pacing.',
+                desc: 'Plays the audio at a rhythmic pace you can follow ("shadowing"), allowing you to match native intonation and speed.',
                 tags: ['speaking'],
                 allowedModes: ['speak'],
                 baseCost: 5,
@@ -161,7 +161,7 @@
             second_take: {
                 id: 'second_take',
                 title: 'Second Take',
-                desc: 'Re-record once and keep the best take (charged when used).',
+                desc: 'Allows you to re-record your answer if you stumble. The system will automatically grade the best of your two attempts.',
                 tags: ['speaking'],
                 allowedModes: ['speak'],
                 baseCost: 10,
@@ -172,7 +172,7 @@
             streak_shield: {
                 id: 'streak_shield',
                 title: 'Streak Shield',
-                desc: 'Prevent a streak break (meta skill; not answer help).',
+                desc: 'A one-time consumable that protects your daily streak if you miss a day of practice. Equips automatically.',
                 tags: [],
                 allowedModes: ['type', 'speak', 'extended', 'watch', 'notes'],
                 baseCost: 40,
@@ -185,7 +185,7 @@
             frugal_listener_1: {
                 id: 'frugal_listener_1',
                 title: 'Frugal Listener I',
-                desc: '-10% coin cost on: slow_audio, echo_loop, chunking, transcript_glimpse.',
+                desc: 'Reduces the coin cost by 10% for: Slow Audio, Echo Loop, Chunking, and Transcript Glimpse.',
                 tree: 'listening',
                 level: 2,
                 cost: 400
@@ -193,7 +193,7 @@
             audio_engineer: {
                 id: 'audio_engineer',
                 title: 'Audio Engineer',
-                desc: 'Extra -15% on: slow_audio, echo_loop (stacks; still capped).',
+                desc: 'Provides an extra 15% discount on Slow Audio and Echo Loop. Stacks with Frugal Listener.',
                 tree: 'listening',
                 level: 4,
                 cost: 900
@@ -201,7 +201,7 @@
             frugal_listener_2: {
                 id: 'frugal_listener_2',
                 title: 'Frugal Listener II',
-                desc: 'Upgrade to -20% (replaces rank I).',
+                desc: 'Upgrades your discount to 20% for all Listening skills (Replaces Rank I).',
                 tree: 'listening',
                 level: 6,
                 cost: 1600
@@ -209,7 +209,7 @@
             transcript_permit: {
                 id: 'transcript_permit',
                 title: 'Transcript Permit',
-                desc: '-20% on transcript_glimpse and reduce stacking exponent (1.5 -> 1.3).',
+                desc: 'Reduces the cost of Transcript Glimpse by 20% and prevents the cost from doubling as quickly when used multiple times.',
                 tree: 'listening',
                 level: 8,
                 cost: 2400
@@ -217,7 +217,7 @@
             clean_streak_saver: {
                 id: 'clean_streak_saver',
                 title: 'Clean Streak Saver',
-                desc: 'After 5 correct attempts with no actives, next Minor/Medium active is 50% off (once).',
+                desc: 'If you get 5 correct answers in a row without help, your next Minor/Medium active skill is 50% off.',
                 tree: 'listening',
                 level: 10,
                 cost: 3300
@@ -225,7 +225,7 @@
             frugal_listener_3: {
                 id: 'frugal_listener_3',
                 title: 'Frugal Listener III',
-                desc: 'Upgrade to -30% (replaces rank II).',
+                desc: 'Upgrades your discount to 30% for all Listening skills (Replaces Rank II).',
                 tree: 'listening',
                 level: 12,
                 cost: 4500
@@ -234,7 +234,7 @@
             frugal_writer_1: {
                 id: 'frugal_writer_1',
                 title: 'Frugal Writer I',
-                desc: '-10% on: hint_wc, hint_fl, hint_reveal, punct_ghost, typo_shield.',
+                desc: 'Reduces the coin cost by 10% for: Word Count, First Letters, Reveal Word, Punctuation Ghost, and Typo Shield.',
                 tree: 'writing',
                 level: 2,
                 cost: 400
@@ -242,7 +242,7 @@
             hint_kit: {
                 id: 'hint_kit',
                 title: 'Hint Kit',
-                desc: 'Extra -20% on hint_wc + hint_fl only (never on hint_reveal).',
+                desc: 'Extra 20% discount on Word Count and First Letters hints (Does not apply to Reveal Word).',
                 tree: 'writing',
                 level: 4,
                 cost: 900
@@ -250,7 +250,7 @@
             frugal_writer_2: {
                 id: 'frugal_writer_2',
                 title: 'Frugal Writer II',
-                desc: 'Upgrade to -20% (replaces rank I).',
+                desc: 'Upgrades your discount to 20% for all Writing skills (Replaces Rank I).',
                 tree: 'writing',
                 level: 6,
                 cost: 1600
@@ -258,7 +258,7 @@
             coupon_book: {
                 id: 'coupon_book',
                 title: 'Coupon Book',
-                desc: 'First active used each day is 50% off.',
+                desc: 'The very first active skill you use each day is 50% off.',
                 tree: 'writing',
                 level: 8,
                 cost: 2400
@@ -266,7 +266,7 @@
             combo_coupon: {
                 id: 'combo_coupon',
                 title: 'Combo Coupon',
-                desc: 'After 5 correct attempts with no actives, next active is 30% off (once; then resets).',
+                desc: 'After 5 correct attempts with no actives, your next active skill uses is 30% off (Reset after use).',
                 tree: 'writing',
                 level: 10,
                 cost: 3300
@@ -274,7 +274,7 @@
             frugal_writer_3: {
                 id: 'frugal_writer_3',
                 title: 'Frugal Writer III',
-                desc: 'Upgrade to -30% (replaces rank II).',
+                desc: 'Upgrades your discount to 30% for all Writing skills (Replaces Rank II).',
                 tree: 'writing',
                 level: 12,
                 cost: 4500
@@ -283,7 +283,7 @@
             frugal_reader_1: {
                 id: 'frugal_reader_1',
                 title: 'Frugal Reader I',
-                desc: '-10% on: dict_peek, evidence_highlight, summary_scroll.',
+                desc: 'Reduces the coin cost by 10% for: Dictionary Peek, Evidence Highlight, and Summary Scroll.',
                 tree: 'reading',
                 level: 2,
                 cost: 400
@@ -291,7 +291,7 @@
             mode_license_watch: {
                 id: 'mode_license_watch',
                 title: 'Watch License',
-                desc: '-15% on all active costs used in watch mode.',
+                desc: 'Reduces all active skill costs by 15% specifically when using Watch Mode.',
                 tree: 'reading',
                 level: 4,
                 cost: 900
@@ -299,7 +299,7 @@
             frugal_reader_2: {
                 id: 'frugal_reader_2',
                 title: 'Frugal Reader II',
-                desc: 'Upgrade to -20% (replaces rank I).',
+                desc: 'Upgrades your discount to 20% for all Reading skills (Replaces Rank I).',
                 tree: 'reading',
                 level: 6,
                 cost: 1600
@@ -307,7 +307,7 @@
             no_reveal_rebate: {
                 id: 'no_reveal_rebate',
                 title: 'No-Reveal Rebate',
-                desc: 'If accuracy >= 90% and no Major/Reveal/SecondTake was used, refund 25% of active spend for that attempt.',
+                desc: 'If you answer with >90% accuracy and used NO major helps, you get a 25% refund on any minor skills used.',
                 tree: 'reading',
                 level: 8,
                 cost: 2400
@@ -315,7 +315,7 @@
             mode_license_extended: {
                 id: 'mode_license_extended',
                 title: 'Extended License',
-                desc: '-15% on all active costs used in extended mode.',
+                desc: 'Reduces all active skill costs by 15% specifically when using Extended Mode.',
                 tree: 'reading',
                 level: 10,
                 cost: 3300
@@ -323,7 +323,7 @@
             frugal_reader_3: {
                 id: 'frugal_reader_3',
                 title: 'Frugal Reader III',
-                desc: 'Upgrade to -30% (replaces rank II).',
+                desc: 'Upgrades your discount to 30% for all Reading skills (Replaces Rank II).',
                 tree: 'reading',
                 level: 12,
                 cost: 4500
@@ -332,7 +332,7 @@
             frugal_speaker_1: {
                 id: 'frugal_speaker_1',
                 title: 'Frugal Speaker I',
-                desc: '-10% on: pron_rune, shadow_mode, second_take.',
+                desc: 'Reduces the coin cost by 10% for: Pronunciation Rune, Shadow Mode, and Second Take.',
                 tree: 'speaking',
                 level: 2,
                 cost: 400
@@ -340,7 +340,7 @@
             breath_control: {
                 id: 'breath_control',
                 title: 'Breath Control',
-                desc: 'Extra -15% on pron_rune + shadow_mode.',
+                desc: 'Extra 15% discount on Pronunciation Rune and Shadow Mode.',
                 tree: 'speaking',
                 level: 4,
                 cost: 900
@@ -348,7 +348,7 @@
             frugal_speaker_2: {
                 id: 'frugal_speaker_2',
                 title: 'Frugal Speaker II',
-                desc: 'Upgrade to -20% (replaces rank I).',
+                desc: 'Upgrades your discount to 20% for all Speaking skills (Replaces Rank I).',
                 tree: 'speaking',
                 level: 6,
                 cost: 1600
@@ -356,7 +356,7 @@
             second_take_insurance: {
                 id: 'second_take_insurance',
                 title: 'Second Take Insurance',
-                desc: '-20% on second_take (still capped).',
+                desc: 'Reduces the cost of Second Take by 20%.',
                 tree: 'speaking',
                 level: 8,
                 cost: 2400
@@ -364,7 +364,7 @@
             mode_license_speak: {
                 id: 'mode_license_speak',
                 title: 'Speak License',
-                desc: '-15% on all active costs used in speak mode.',
+                desc: 'Reduces all active skill costs by 15% specifically when using Speak Mode.',
                 tree: 'speaking',
                 level: 10,
                 cost: 3300
@@ -372,7 +372,7 @@
             frugal_speaker_3: {
                 id: 'frugal_speaker_3',
                 title: 'Frugal Speaker III',
-                desc: 'Upgrade to -30% (replaces rank II).',
+                desc: 'Upgrades your discount to 30% for all Speaking skills (Replaces Rank II).',
                 tree: 'speaking',
                 level: 12,
                 cost: 4500

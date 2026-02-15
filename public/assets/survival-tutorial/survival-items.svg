@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-label="Survival powerups and loot">
+  <defs>
+    <linearGradient id="bg3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#0b1220"/>
+    </linearGradient>
+    <linearGradient id="loot" x1="180" y1="120" x2="320" y2="260" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fbbf24"/>
+      <stop offset="1" stop-color="#b45309"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="14" y="14" width="612" height="332" rx="26" fill="url(#bg3)" />
+
+  <!-- Loot cache -->
+  <rect x="160" y="128" width="180" height="120" rx="22" fill="url(#loot)" stroke="#f1f5f9" stroke-width="6"/>
+  <path d="M160 176h180" fill="none" stroke="#0b1220" stroke-width="10" opacity="0.4"/>
+  <rect x="238" y="168" width="24" height="40" rx="12" fill="#0b1220" opacity="0.55"/>
+
+  <!-- Powerup icons -->
+  <g stroke="#f1f5f9" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Shield -->
+    <path d="M456 126l58 18v54c0 40-28 70-58 82-30-12-58-42-58-82v-54z" fill="#2563eb" opacity="0.95"/>
+    <path d="M456 146v118" stroke="#0b1220" opacity="0.35"/>
+
+    <!-- Bolt -->
+    <path d="M94 260l42-74h-30l58-86-20 64h32z" fill="#22c55e" opacity="0.95"/>
+  </g>
+
+  <!-- Pickup word tags -->
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" font-size="18" fill="#e2e8f0">
+    <rect x="118" y="278" width="92" height="28" rx="14" fill="#111827" opacity="0.95"/>
+    <text x="164" y="298" text-anchor="middle">boost</text>
+    <rect x="420" y="272" width="110" height="28" rx="14" fill="#111827" opacity="0.95"/>
+    <text x="475" y="292" text-anchor="middle">shield</text>
+  </g>
+
+  <!-- Caption -->
+  <g font-family="Outfit, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" fill="#f1f5f9" opacity="0.92">
+    <text x="320" y="72" text-anchor="middle" font-size="20" font-weight="700">TYPE PICKUPS TO COLLECT</text>
+    <text x="320" y="96" text-anchor="middle" font-size="14" opacity="0.75">Loot caches pause the action and offer augments</text>
+  </g>
+</svg>

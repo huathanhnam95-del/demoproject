@@ -2167,8 +2167,8 @@ h1 {
 .control-toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  justify-content: flex-start;
+  gap: 32px;
   flex-wrap: wrap;
 }
 
@@ -6990,6 +6990,42 @@ textarea:focus {
 .tutorial-text strong {
   color: #818cf8;
   font-weight: 600;
+}
+
+.tutorial-subtle {
+  margin-top: 10px;
+  font-size: 0.88rem;
+  color: rgba(148, 163, 184, 0.92);
+}
+
+.tutorial-media {
+  margin: 12px 0 10px;
+}
+
+.tutorial-media-img {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(15, 23, 42, 0.35);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
+}
+
+.tutorial-media-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.tutorial-media-thumb {
+  display: block;
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(15, 23, 42, 0.35);
 }
 
 .tutorial-actions {
@@ -13775,6 +13811,117 @@ body.survival-active #level-system-container {
   color: rgba(47, 47, 47, 0.6);
 }
 
+.hud-wordrush {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: rgba(47, 47, 47, 0.55);
+}
+
+.hud-wordrush.is-active {
+  color: rgba(0, 208, 132, 0.85);
+}
+
+.survival-track-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.survival-track-btn {
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 999px;
+  background: rgba(247, 246, 242, 0.84);
+  color: rgba(47, 47, 47, 0.8);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.survival-track-btn:hover {
+  background: #faf7f0;
+}
+
+.survival-track-label {
+  min-width: 120px;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: rgba(47, 47, 47, 0.66);
+}
+
+.survival-audio-controls {
+  position: relative;
+  pointer-events: auto;
+}
+
+.survival-audio-toggle {
+  min-width: 68px;
+}
+
+.survival-audio-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 260px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: rgba(247, 246, 242, 0.95);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.14);
+  backdrop-filter: blur(2px);
+  z-index: 22;
+}
+
+.survival-audio-panel[hidden] {
+  display: none !important;
+}
+
+.survival-audio-row {
+  display: grid;
+  grid-template-columns: 34px 1fr 42px;
+  align-items: center;
+  gap: 8px;
+}
+
+.survival-audio-name,
+.survival-audio-value {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(47, 47, 47, 0.74);
+}
+
+.survival-audio-value {
+  text-align: right;
+}
+
+.survival-audio-row input[type="range"] {
+  width: 100%;
+  accent-color: #b24c4c;
+}
+
+.survival-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.survival-setting-btn {
+  min-width: 92px;
+}
+
 .hud-hp-container {
   display: none;
 }
@@ -13948,6 +14095,82 @@ body.survival-active #level-system-container {
   text-transform: uppercase;
 }
 
+.survival-enemy-tutorial-modal {
+  width: min(760px, calc(100vw - 46px));
+  max-width: min(760px, calc(100vw - 46px));
+  padding: 28px 28px;
+  text-align: left;
+}
+
+.survival-enemy-tutorial-body {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 18px;
+  align-items: center;
+  margin-top: 18px;
+}
+
+.survival-enemy-tutorial-image {
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.65);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
+}
+
+.survival-enemy-tutorial-text {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: rgba(47, 47, 47, 0.78);
+}
+
+.survival-enemy-tutorial-bullets {
+  margin-top: 12px;
+  display: grid;
+  gap: 6px;
+  font-size: 0.92rem;
+  color: rgba(47, 47, 47, 0.72);
+}
+
+.survival-enemy-tutorial-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.survival-enemy-tutorial-actions .btn-primary {
+  background: var(--surv-accent);
+  box-shadow: 0 6px 18px rgba(178, 76, 76, 0.35);
+}
+
+.survival-enemy-tutorial-actions .btn-primary:hover {
+  background: #a34444;
+  box-shadow: 0 8px 22px rgba(178, 76, 76, 0.42);
+}
+
+@media (max-width: 520px) {
+  .survival-enemy-tutorial-modal {
+    padding: 22px 18px;
+    text-align: center;
+  }
+
+  .survival-enemy-tutorial-body {
+    grid-template-columns: 1fr;
+  }
+
+  .survival-enemy-tutorial-image {
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  .survival-enemy-tutorial-actions {
+    justify-content: center;
+  }
+}
+
 .gameover-title {
   font-size: 3rem;
   color: #ff6b6b !important;
@@ -13995,7 +14218,7 @@ body.survival-active #level-system-container {
   padding: 20px;
   border-radius: 12px;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  cursor: pointer;
+  cursor: default;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   transition: all 0.2s;
 }
@@ -14004,6 +14227,38 @@ body.survival-active #level-system-container {
   transform: translateY(-4px);
   background: #faf7f0;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+
+.upgrade-icon-wrap {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.48);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.upgrade-icon {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+}
+
+.upgrade-target {
+  margin: 8px 0 0;
+  font-size: 11px;
+  color: rgba(47, 47, 47, 0.65);
+}
+
+.upgrade-command {
+  margin: 10px 0 0;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(47, 47, 47, 0.72);
 }
 
 @keyframes survival-sheen {
@@ -14056,10 +14311,24 @@ body.survival-active #level-system-container {
   .survival-hud {
     left: 50%;
     transform: translateX(-50%);
+    gap: 6px;
+    flex-direction: column;
+    align-items: center;
   }
 
   .hud-top {
     font-size: 11px;
+  }
+
+  .survival-track-label {
+    max-width: 180px;
+  }
+
+  .survival-audio-panel {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(280px, 90vw);
   }
 
   .upgrade-grid {
@@ -14164,20 +14433,23 @@ body.survival-active #level-system-container {
 .rpg-tree-wrap {
   position: relative;
   flex: 1;
-  border-radius: 24px;
-  background: radial-gradient(circle at 50% 0%, #ffffff 0%, transparent 70%), linear-gradient(180deg, #f1f5f9, #e2e8f0);
-  border: 2px solid #cbd5e1;
+  border-radius: 20px;
+  background:
+    radial-gradient(ellipse at 50% 5%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+    linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid #334155;
   overflow: hidden;
-  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0 2px 20px rgba(0, 0, 0, 0.3);
   margin: 14px;
 }
 
 .rpg-tree-grid {
   position: absolute;
   inset: 0;
-  background-image: linear-gradient(#94a3b8 0.5px, transparent 0.5px), linear-gradient(90deg, #94a3b8 0.5px, transparent 0.5px);
-  background-size: 40px 40px;
-  opacity: 0.15;
+  background-image:
+    radial-gradient(circle, rgba(100, 116, 139, 0.15) 1px, transparent 1px);
+  background-size: 32px 32px;
+  opacity: 0.6;
 }
 
 .rpg-tree-nodes {
@@ -14198,43 +14470,89 @@ body.survival-active #level-system-container {
   pointer-events: none;
 }
 
+/* --- Node Styling (Dark RPG) --- */
 .rpg-node {
   position: absolute;
-  width: 100px;
-  height: 100px;
-  border-radius: 20px;
-  background: linear-gradient(145deg, #f1f5f9, #cbd5e1);
-  box-shadow: 4px 4px 10px #94a3b8, -2px -2px 8px #ffffff;
+  width: 90px;
+  height: 90px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #334155, #1e293b);
+  border: 2px solid #475569;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
   transform: translate(-50%, -50%);
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .rpg-node:hover {
-  transform: translate(-50%, -50%) scale(1.1);
+  transform: translate(-50%, -50%) scale(1.12);
   z-index: 100;
+  border-color: #94a3b8;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
 .rpg-node.node-selected {
-  background: white;
-  box-shadow: 0 0 20px var(--activeGlow), inset 0 0 0 2px #1a73e8;
+  border-color: #60a5fa;
+  box-shadow: 0 0 24px var(--activeGlow), inset 0 0 0 1px rgba(96, 165, 250, 0.3);
+}
+
+/* Acquired (unlocked) node — bright, golden border */
+.rpg-node.acquired {
+  background: linear-gradient(145deg, #374151, #1f2937);
+  border-color: #fbbf24;
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.2), 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .rpg-node.acquired .rpg-orb {
-  border-color: #3b82f6;
+  border-color: #fbbf24;
 }
 
+/* Available node — pulsing glow */
+.rpg-node.available {
+  border-color: #34d399;
+  animation: rpg-node-pulse 2s ease-in-out infinite;
+}
+
+@keyframes rpg-node-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(52, 211, 153, 0.2), 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 20px rgba(52, 211, 153, 0.5), 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Locked node */
 .rpg-node.locked {
-  filter: grayscale(1) opacity(0.5);
+  filter: brightness(0.5) saturate(0.3);
+  opacity: 0.55;
+}
+
+.rpg-node.locked:hover {
+  filter: brightness(0.7) saturate(0.5);
+  opacity: 0.7;
+}
+
+/* Root node — larger, special glow */
+.rpg-node.root {
+  width: 100px;
+  height: 100px;
+  border-radius: 22px;
+  background: linear-gradient(145deg, #1e3a5f, #0c1f3d);
+  border: 2px solid #60a5fa;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.25), 0 6px 24px rgba(0, 0, 0, 0.4);
 }
 
 .rpg-orb {
-  width: 84px;
-  height: 84px;
-  border-radius: 16px;
+  width: 78px;
+  height: 78px;
+  border-radius: 14px;
   background: radial-gradient(circle at 35% 30%, #4b5563, #1f2937 100%);
   position: relative;
   display: flex;
@@ -14244,56 +14562,116 @@ body.survival-active #level-system-container {
   border: 2px solid #374151;
 }
 
+.root .rpg-orb {
+  width: 88px;
+  height: 88px;
+  border-radius: 18px;
+}
+
 .active .rpg-orb {
-  background: radial-gradient(circle at 35% 30%, #3b82f6, #1e3a8a 100%);
+  background: #ffffff;
   border-color: #60a5fa;
-  box-shadow: inset 0 4px 12px rgba(255, 255, 255, 0.4), 0 0 15px var(--activeGlow);
+  box-shadow: inset 0 4px 12px rgba(255, 255, 255, 0.5), 0 0 10px var(--activeGlow);
 }
 
 .passive .rpg-orb {
-  background: radial-gradient(circle at 35% 30%, #fbbf24, #b45309 100%);
+  background: #ffffff;
   border-color: #fcd34d;
-  box-shadow: inset 0 4px 12px rgba(255, 255, 255, 0.4), 0 0 15px var(--passiveGlow);
+  box-shadow: inset 0 4px 12px rgba(255, 255, 255, 0.5), 0 0 10px var(--passiveGlow);
 }
 
 .rpg-icon {
-  width: 82px !important;
-  height: 82px !important;
+  width: 60px !important;
+  height: 60px !important;
   object-fit: contain;
   z-index: 2;
+}
+
+.root .rpg-icon {
+  width: 68px !important;
+  height: 68px !important;
 }
 
 .rpg-rank {
   position: absolute;
   top: -6px;
   right: -6px;
-  background: #1e293b;
+  background: #0f172a;
   color: #fbbf24;
   font-size: 9px;
   font-weight: 800;
-  padding: 2px 5px;
-  border-radius: 4px;
-  border: 1px solid #fbbf24;
+  padding: 2px 6px;
+  border-radius: 5px;
+  border: 1px solid #475569;
   z-index: 20;
+  letter-spacing: 0.02em;
 }
 
+.rpg-node.acquired .rpg-rank {
+  background: #422006;
+  border-color: #fbbf24;
+}
+
+/* Plus indicator for available nodes */
+.rpg-plus {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #059669;
+  color: white;
+  font-size: 11px;
+  font-weight: 900;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  border: 1px solid #0f172a;
+}
+
+/* Available dot */
+.rpg-dot {
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #34d399;
+  z-index: 20;
+  box-shadow: 0 0 6px #34d399;
+}
+
+/* --- Connection Lines --- */
 .rpg-link {
-  stroke: #94a3b8;
-  stroke-width: 3;
-  opacity: 0.4;
+  stroke: #475569;
+  stroke-width: 2;
+  opacity: 0.5;
   stroke-linecap: round;
   fill: none;
 }
 
 .rpg-link.active {
-  stroke: var(--active);
-  stroke-dasharray: 6 3;
-  opacity: 1;
+  stroke: #60a5fa;
+  stroke-dasharray: 8 4;
+  stroke-width: 2.5;
+  opacity: 0.8;
 }
 
 .rpg-link.passive {
-  stroke: var(--passive);
-  opacity: 0.8;
+  stroke: #fbbf24;
+  stroke-width: 2.5;
+  opacity: 0.7;
+}
+
+.rpg-link.root {
+  stroke: #60a5fa;
+  stroke-width: 3;
+  opacity: 0.6;
 }
 
 .rpg-detail-panel {
@@ -14489,3 +14867,55 @@ body.survival-active #level-system-container {
   line-height: 100px;
   border-width: 3px;
 }
+
+/* Override for larger skill icons */
+.rpg-icon-large {
+  width: 440px !important;
+  height: 440px !important;
+}
+
+.rpg-detail-icon-wrapper {
+  width: 480px !important;
+  height: 480px !important;
+}
+/* Skill Detail Enhanced Styles */
+.rpg-detail-modes {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.85rem;
+}
+.rpg-detail-modes .label {
+  color: #64748b;
+  margin-right: 6px;
+}
+.rpg-detail-modes .val {
+  font-weight: 700;
+  color: #3b82f6;
+  letter-spacing: 0.05em;
+}
+
+.rpg-calib-box {
+  margin-top: 16px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.rpg-calib-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  color: #334155;
+}
+
+.rpg-calib-explain {
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: #64748b;
+  margin: 0;
+}
+

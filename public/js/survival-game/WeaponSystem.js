@@ -13,6 +13,32 @@ export default class WeaponSystem {
         this.maxPendingShots = 30;
     }
 
+    getWeaponBaseCooldown(weapon, fallback = 0.5) {
+        const raw = Number(weapon && weapon.baseCooldown);
+        if (!Number.isFinite(raw) || raw <= 0) return fallback;
+        return raw;
+    }
+
+    getLockedEnemyTarget() {
+        const target = this.game?.typingSystem?.lockTarget || null;
+        if (!target || target.isDead) return null;
+        if (target.isItem) return null;
+        return target;
+    }
+
+    getRecentAimTarget() {
+        const target = this.game?.recentAimTarget || null;
+        const timer = this.game?.recentAimTargetTimer || 0;
+        if (!target || timer <= 0) return null;
+        if (target.isDead || target.isItem) return null;
+        return target;
+    }
+
+    getAvoidTargetForWeapon(weapon) {
+        if (!weapon || weapon.avoidLockedTarget !== true) return null;
+        return this.getLockedEnemyTarget() || this.getRecentAimTarget();
+    }
+
     createBaseWeapons() {
         return [
             {
@@ -67,54 +93,125 @@ export default class WeaponSystem {
     }
 
     update(deltaTime) {
+        const speedMult = Number.isFinite(this.game?.playerSpeedMult)
+            ? Math.max(0.35, Math.min(3, this.game.playerSpeedMult))
+            : 1;
+        const cooldownDt = deltaTime * speedMult;
+
         // Update cooldowns
         this.weapons.forEach(w => {
+            if (!Number.isFinite(w.cooldown) || w.cooldown < 0) w.cooldown = 0;
             if (w.cooldown > 0) {
-                w.cooldown = Math.max(0, w.cooldown - deltaTime);
+                w.cooldown = Math.max(0, w.cooldown - cooldownDt);
             }
         });
 
         for (const weapon of this.weapons) {
             if (weapon.type === 'drone') {
-                this.updateDroneWeapon(weapon, deltaTime);
+                this.updateDroneWeapon(weapon, deltaTime, cooldownDt);
                 continue;
             }
             if (weapon.type === 'mine_trap') {
                 this.updateMineWeapon(weapon, deltaTime);
                 continue;
             }
+            if (weapon.autoFire) {
+                this.updateAutoWeapon(weapon, deltaTime);
+                continue;
+            }
+            if (weapon.trigger && weapon.trigger.type === 'charge') {
+                this.updateChargeWeapon(weapon, deltaTime);
+                continue;
+            }
 
-            if (weapon.cooldown > 0 || weapon.queue.length === 0) continue;
-            while (weapon.queue.length > 0) {
-                const shot = weapon.queue.shift();
+            const queue = Array.isArray(weapon.queue) ? weapon.queue : [];
+            if (weapon.cooldown > 0 || queue.length === 0) continue;
+            while (queue.length > 0) {
+                const shot = queue.shift();
                 if (!shot) continue;
                 const fired = this.executeWeapon(weapon, shot.target, shot.word);
                 if (!fired) continue;
-                weapon.cooldown = weapon.baseCooldown;
+                weapon.cooldown = this.getWeaponBaseCooldown(weapon, 0.6);
                 break;
             }
         }
     }
 
     trigger(target, word) {
+        const typedWord = String(word || '');
+
+        // Avoid piling secondary damage into the just-typed target while projectiles are in-flight.
+        // This makes secondaries feel like crowd-control instead of redundant repeats of the main weapon.
+        if (target && !target.isDead && !target.isItem && this.game) {
+            this.game.recentAimTarget = target;
+            const current = Number.isFinite(this.game.recentAimTargetTimer) ? this.game.recentAimTargetTimer : 0;
+            this.game.recentAimTargetTimer = Math.max(current, 0.9);
+        }
+
         for (const weapon of this.weapons) {
             if (weapon.type === 'drone' || weapon.type === 'mine_trap') continue;
+            if (weapon.autoFire) continue;
+
+            if (weapon.trigger && weapon.trigger.type === 'charge') {
+                const amount = Math.max(0, typedWord.length);
+                weapon.charge = (Number.isFinite(weapon.charge) ? weapon.charge : 0) + amount;
+                continue;
+            }
             if (!this.shouldTriggerWeapon(weapon, word)) continue;
 
             if (weapon.cooldown > 0) {
+                if (!Array.isArray(weapon.queue)) weapon.queue = [];
                 if (weapon.queue.length < this.maxPendingShots) {
-                    weapon.queue.push({ target, word });
+                    weapon.queue.push({ target, word: typedWord });
                 }
                 continue;
             }
 
-            const fired = this.executeWeapon(weapon, target, word);
+            const fired = this.executeWeapon(weapon, target, typedWord);
             if (!fired) continue;
-            weapon.cooldown = weapon.baseCooldown;
+            weapon.cooldown = this.getWeaponBaseCooldown(weapon, 0.6);
         }
     }
 
-    executeWeapon(weapon, primaryTarget, word) {
+    updateAutoWeapon(weapon) {
+        if (!weapon || weapon.cooldown > 0) return;
+        const baseCooldown = this.getWeaponBaseCooldown(weapon, 1);
+        const excludeTarget = this.getAvoidTargetForWeapon(weapon);
+        const target = this.resolveTarget(weapon, null, excludeTarget);
+        if (!target || target.isDead) {
+            weapon.cooldown = Math.max(0.25, Math.min(0.75, baseCooldown * 0.25));
+            return;
+        }
+        const fired = this.executeWeapon(weapon, target, '', { target });
+        weapon.cooldown = fired ? baseCooldown : Math.max(0.25, Math.min(0.75, baseCooldown * 0.25));
+    }
+
+    updateChargeWeapon(weapon) {
+        if (!weapon || weapon.cooldown > 0) return;
+        const baseCooldown = this.getWeaponBaseCooldown(weapon, 1);
+        const trigger = weapon.trigger || {};
+        const rawThreshold = Number.parseInt(trigger.charsPerShot, 10);
+        const threshold = Number.isFinite(rawThreshold) ? Math.max(1, rawThreshold) : 0;
+        const charge = Number.isFinite(weapon.charge) ? weapon.charge : 0;
+        if (threshold <= 0 || charge < threshold) return;
+
+        const excludeTarget = this.getAvoidTargetForWeapon(weapon);
+        const target = this.resolveTarget(weapon, null, excludeTarget);
+        if (!target || target.isDead) {
+            weapon.cooldown = Math.max(0.25, Math.min(0.75, baseCooldown * 0.25));
+            return;
+        }
+
+        const fired = this.executeWeapon(weapon, target, '', { target });
+        if (fired) {
+            weapon.cooldown = baseCooldown;
+            weapon.charge = Math.max(0, charge - threshold);
+        } else {
+            weapon.cooldown = Math.max(0.25, Math.min(0.75, baseCooldown * 0.25));
+        }
+    }
+
+    executeWeapon(weapon, primaryTarget, word, opts = {}) {
         if (!weapon) return false;
 
         if (weapon.type === 'blast') {
@@ -125,7 +222,7 @@ export default class WeaponSystem {
             return true;
         }
 
-        const target = this.resolveTarget(weapon, primaryTarget);
+        const target = opts.target || this.resolveTarget(weapon, primaryTarget, opts.excludeTarget || null);
         if (!target || target.isDead) return false;
 
         if (weapon.type === 'beam') {
@@ -145,24 +242,29 @@ export default class WeaponSystem {
         return false;
     }
 
-    resolveTarget(weapon, primaryTarget) {
+    resolveTarget(weapon, primaryTarget, excludeTarget = null) {
         if (!weapon || !weapon.targetMode || weapon.targetMode === 'primary') return primaryTarget;
-        if (weapon.targetMode === 'nearest') return this.findNearestEnemy();
-        if (weapon.targetMode === 'random') return this.findRandomEnemy();
+        if (weapon.targetMode === 'nearest') {
+            const range = Number.isFinite(weapon.targetRange) ? weapon.targetRange : Infinity;
+            return this.findNearestEnemy(null, null, range, excludeTarget);
+        }
+        if (weapon.targetMode === 'random') return this.findRandomEnemy(excludeTarget);
         return primaryTarget;
     }
 
-    findNearestEnemy(originX = null, originY = null, maxDistance = Infinity) {
+    findNearestEnemy(originX = null, originY = null, maxDistance = Infinity, excludeEnemy = null) {
         const enemies = this.game.entityManager ? this.game.entityManager.enemies : null;
         if (!enemies || enemies.length === 0) return null;
         const player = this.game.entityManager.player;
         const px = Number.isFinite(originX) ? originX : player.x;
         const py = Number.isFinite(originY) ? originY : player.y;
         const maxDistSq = Number.isFinite(maxDistance) ? (maxDistance * maxDistance) : Infinity;
+        const excludeId = excludeEnemy && excludeEnemy.id ? excludeEnemy.id : null;
         let best = null;
         let bestDistSq = Infinity;
         for (const e of enemies) {
             if (!e || e.isDead) continue;
+            if (excludeEnemy && (e === excludeEnemy || (excludeId && e.id === excludeId))) continue;
             const dx = e.x - px;
             const dy = e.y - py;
             const d2 = (dx * dx) + (dy * dy);
@@ -175,25 +277,34 @@ export default class WeaponSystem {
         return best;
     }
 
-    findRandomEnemy() {
+    findRandomEnemy(excludeEnemy = null) {
         const enemies = this.game.entityManager ? this.game.entityManager.enemies : null;
         if (!enemies || enemies.length === 0) return null;
-        const alive = enemies.filter(e => e && !e.isDead);
+        const excludeId = excludeEnemy && excludeEnemy.id ? excludeEnemy.id : null;
+        const alive = enemies.filter(e => e && !e.isDead && !(excludeEnemy && (e === excludeEnemy || (excludeId && e.id === excludeId))));
         if (alive.length === 0) return null;
         return alive[Math.floor(Math.random() * alive.length)];
     }
 
-    updateDroneWeapon(weapon, deltaTime) {
+    updateDroneWeapon(weapon, deltaTime, cooldownDt = deltaTime) {
         if (!weapon || !this.game || !this.game.entityManager || !this.game.entityManager.player) return;
+        const speedMult = Number.isFinite(this.game?.playerSpeedMult)
+            ? Math.max(0.35, Math.min(3, this.game.playerSpeedMult))
+            : 1;
         const player = this.game.entityManager.player;
+        const excludeTarget = this.getAvoidTargetForWeapon(weapon);
         const droneCount = Math.max(1, Number.parseInt(weapon.droneCount || 1, 10) || 1);
+        const baseCooldown = this.getWeaponBaseCooldown(weapon, 0.9);
+        // Sub-linear scaling so additional drones don't multiply total fire rate too aggressively.
+        const packMult = 0.6 + 0.4 * droneCount;
+        const shotCooldown = baseCooldown * packMult;
         if (!Array.isArray(weapon.drones)) weapon.drones = [];
 
         while (weapon.drones.length < droneCount) {
             const idx = weapon.drones.length;
             weapon.drones.push({
                 angle: (Math.PI * 2 * idx) / Math.max(1, droneCount),
-                cooldown: Math.random() * Math.max(0.08, weapon.baseCooldown || 0.5),
+                cooldown: Math.random() * Math.max(0.08, shotCooldown),
                 x: player.x,
                 y: player.y
             });
@@ -210,13 +321,14 @@ export default class WeaponSystem {
             const phase = drone.angle + (i / Math.max(1, weapon.drones.length)) * Math.PI * 2;
             drone.x = player.x + Math.cos(phase) * orbitRadius;
             drone.y = player.y + Math.sin(phase) * orbitRadius;
-            drone.cooldown = Math.max(0, (drone.cooldown || 0) - deltaTime);
+            drone.cooldown = Math.max(0, (drone.cooldown || 0) - cooldownDt);
 
             if (drone.cooldown > 0) continue;
 
-            const target = this.findNearestEnemy(drone.x, drone.y, weapon.range || 520);
+            const range = Number.isFinite(weapon.range) ? weapon.range : 520;
+            const target = this.findNearestEnemy(drone.x, drone.y, range, excludeTarget);
             if (!target || target.isDead) {
-                drone.cooldown = Math.max(0.14, (weapon.baseCooldown || 0.5) * 0.45);
+                drone.cooldown = Math.max(0.14, shotCooldown * 0.45);
                 continue;
             }
 
@@ -224,7 +336,7 @@ export default class WeaponSystem {
             const dy = target.y - drone.y;
             const angle = Math.atan2(dy, dx);
             const damage = (weapon.damage || 5) * (this.game.damageMult || 1);
-            const speed = weapon.speed || 780;
+            const speed = (weapon.speed || 780) * speedMult;
 
             this.game.entityManager.spawnBeam({
                 x0: drone.x,
@@ -249,7 +361,7 @@ export default class WeaponSystem {
 
             this.grantWeaponXp(weapon, 0.7);
             if (this.game.audioManager) this.game.audioManager.playShoot();
-            drone.cooldown = Math.max(0.08, weapon.baseCooldown || 0.5);
+            drone.cooldown = Math.max(0.08, shotCooldown);
         }
     }
 
@@ -261,7 +373,7 @@ export default class WeaponSystem {
         const maxMines = Math.max(1, Number.parseInt(weapon.maxMines || 3, 10) || 3);
         if (weapon.cooldown <= 0 && weapon.mines.length < maxMines) {
             this.deployMine(weapon, player);
-            weapon.cooldown = Math.max(0.2, weapon.baseCooldown || 1.1);
+            weapon.cooldown = Math.max(0.2, this.getWeaponBaseCooldown(weapon, 1.1));
             if (this.game.audioManager) this.game.audioManager.playShoot();
         }
 
@@ -368,6 +480,34 @@ export default class WeaponSystem {
         return instances;
     }
 
+    getWeaponById(id) {
+        if (!id) return null;
+        return this.weapons.find(weapon => weapon && weapon.id === id) || null;
+    }
+
+    getSentryRange() {
+        const sentry = this.getWeaponById('sentry');
+        if (!sentry) return 0;
+        if (Number.isFinite(sentry.targetRange)) return sentry.targetRange;
+        if (Number.isFinite(sentry.range)) return sentry.range;
+        if (Number.isFinite(sentry.radius)) return sentry.radius;
+        return 0;
+    }
+
+    getSentryWeapon() {
+        return this.getWeaponById('sentry');
+    }
+
+    getDroneRange() {
+        let maxRange = 0;
+        for (const weapon of this.weapons) {
+            if (!weapon || weapon.type !== 'drone') continue;
+            const range = Number.isFinite(weapon.range) ? weapon.range : 0;
+            if (range > maxRange) maxRange = range;
+        }
+        return maxRange;
+    }
+
     shouldTriggerWeapon(weapon, word) {
         if (!weapon.trigger) return true;
         const input = (word || '').toLowerCase();
@@ -390,6 +530,9 @@ export default class WeaponSystem {
         const dx = target.x - this.game.entityManager.player.x;
         const dy = target.y - this.game.entityManager.player.y;
         const angle = Math.atan2(dy, dx);
+        const speedMult = Number.isFinite(this.game?.playerSpeedMult)
+            ? Math.max(0.35, Math.min(3, this.game.playerSpeedMult))
+            : 1;
 
         const combo = this.game.typingSystem ? this.game.typingSystem.combo : 0;
         const critChance = Math.min(GameConfig.COMBO.CRIT_MAX, combo * GameConfig.COMBO.CRIT_PER_HIT);
@@ -402,7 +545,7 @@ export default class WeaponSystem {
             y0: this.game.entityManager.player.y,
             x1: target.x,
             y1: target.y,
-            color: '#b24c4c',
+            color: weapon.color || '#b24c4c',
             width: 2.5,
             duration: 0.12
         });
@@ -427,12 +570,13 @@ export default class WeaponSystem {
                 ? (i - (projectileCount - 1) / 2) * (rawSpread * (Math.PI / 180))
                 : 0;
             const finalAngle = aimAngle + spreadAngle;
+            const projectileSpeed = (weapon.speed || 800) * speedMult;
 
             this.game.entityManager.spawnProjectile({
                 x: originX,
                 y: originY,
-                vx: Math.cos(finalAngle) * weapon.speed,
-                vy: Math.sin(finalAngle) * weapon.speed,
+                vx: Math.cos(finalAngle) * projectileSpeed,
+                vy: Math.sin(finalAngle) * projectileSpeed,
                 damage,
                 color: isCrit ? '#2f2f2f' : weapon.color,
                 size: 4 + (weapon.level * 1) + (isCrit ? 2 : 0),
@@ -524,7 +668,8 @@ export default class WeaponSystem {
                 tags: ['heat', 'dot', 'beam'],
                 dps: 18,
                 cooldown: 0,
-                baseCooldown: 0.35,
+                baseCooldown: 1.35,
+                minBaseCooldown: 0.95,
                 duration: 0.8,
                 width: 3.6,
                 color: '#ff922b',
@@ -536,8 +681,14 @@ export default class WeaponSystem {
                 maxExtraBeamTargets: 4,
                 evolutions: [],
                 queue: [],
-                targetMode: 'primary',
-                trigger: null
+                targetMode: 'nearest',
+                targetRange: 520,
+                avoidLockedTarget: true,
+                charge: 0,
+                trigger: {
+                    type: 'charge',
+                    charsPerShot: 14
+                }
             });
         } else if (id === 'minefield') {
             this.weapons.push({
@@ -571,7 +722,11 @@ export default class WeaponSystem {
                 tags: ['heat', 'turret', 'projectile'],
                 damage: 6,
                 cooldown: 0,
-                baseCooldown: 0.7,
+                // Close-range point defense. Keep this *slow* so it doesn't outshine typing.
+                baseCooldown: 5.6,
+                minBaseCooldown: 3.8,
+                autoFire: true,
+                avoidLockedTarget: true,
                 speed: 760,
                 color: '#5c7cfa',
                 level: 1,
@@ -583,6 +738,8 @@ export default class WeaponSystem {
                 evolutions: [],
                 queue: [],
                 targetMode: 'nearest',
+                // 60% of previous default radius to keep it as close-range defense.
+                targetRange: 187,
                 trigger: null
             });
         } else if (id === 'spectre') {
@@ -594,7 +751,10 @@ export default class WeaponSystem {
                 tags: ['drone', 'kinetic', 'projectile'],
                 damage: 5,
                 cooldown: 0,
-                baseCooldown: 0.52,
+                // Drones are support fire; keep their cadence low to avoid clutter and overkill.
+                baseCooldown: 2.08,
+                minBaseCooldown: 1.25,
+                avoidLockedTarget: true,
                 speed: 780,
                 color: '#2f2f2f',
                 level: 1,

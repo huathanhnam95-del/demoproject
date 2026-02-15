@@ -4,6 +4,8 @@
  * Focus: "Subtle Cool" minimalism (light canvas, wireframes, text-first), while keeping per-frame work low.
  */
 
+import { LEVELUP_PROMPT_ICON_PATH, POWERUP_ICON_PATHS } from './SurvivalIcons.js';
+
 const RGB_CACHE = new Map();
 
 function clamp(value, min, max) {
@@ -51,6 +53,7 @@ export default class Renderer {
         this.hud = {
             time: document.getElementById('survival-time'),
             weapon: document.getElementById('survival-weapon'),
+            wordRush: document.getElementById('survival-wordrush'),
             xpFill: document.getElementById('survival-xp-fill'),
             level: document.getElementById('survival-level-display')
         };
@@ -58,6 +61,8 @@ export default class Renderer {
         this._hudState = {
             time: null,
             weapon: null,
+            wordRushText: null,
+            wordRushVisible: null,
             xpPct: null,
             levelText: null
         };
@@ -77,6 +82,8 @@ export default class Renderer {
         this._noisePattern = null;
         this._scanlinePattern = null;
         this._stars = [];
+        this._powerupIcons = this._createIconMap(POWERUP_ICON_PATHS);
+        this._levelupPromptIcon = this._loadIcon(LEVELUP_PROMPT_ICON_PATH);
     }
 
     resize(width, height, dpr = 1) {
@@ -195,6 +202,7 @@ export default class Renderer {
             ctx.fillRect(0, 0, width, height);
         }
         this._drawBackgroundFx(ctx, width, height, t);
+        this._drawShockwaves(ctx, entityManager, t);
 
         // Shattering shards (kept below text to avoid clutter).
         ctx.globalCompositeOperation = 'source-over';
@@ -298,6 +306,42 @@ export default class Renderer {
         }
     }
 
+    _drawShockwaves(ctx, entityManager, t) {
+        const waves = entityManager && Array.isArray(entityManager.shockwaves) ? entityManager.shockwaves : [];
+        if (!waves || waves.length === 0) return;
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        for (const sw of waves) {
+            if (!sw) continue;
+            const maxLife = Number.isFinite(sw.maxLife) && sw.maxLife > 0 ? sw.maxLife : 0.55;
+            const life = Number.isFinite(sw.life) ? sw.life : 0;
+            const p = 1 - clamp(life / maxLife, 0, 1);
+            const eased = easeOutCubic(p);
+            const radius = Math.max(10, (sw.radius || 0) * eased);
+            const fade = 1 - p;
+            const color = sw.color || '#e0a800';
+
+            ctx.globalAlpha = 0.55 * fade;
+            ctx.strokeStyle = rgba(color, 0.22);
+            ctx.lineWidth = 5.5;
+            ctx.beginPath();
+            ctx.arc(sw.x, sw.y, radius, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.globalAlpha = 0.75 * fade;
+            ctx.strokeStyle = rgba(color, 0.35);
+            ctx.lineWidth = 1.8;
+            ctx.setLineDash([10, 10]);
+            ctx.lineDashOffset = -t * 40;
+            ctx.beginPath();
+            ctx.arc(sw.x, sw.y, radius, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+        ctx.restore();
+    }
+
     _drawTargetLine(ctx, entityManager, t) {
         const target = this.game.typingSystem ? this.game.typingSystem.lockTarget : null;
         if (!target) return;
@@ -373,10 +417,11 @@ export default class Renderer {
         if (flash <= 0.001) return;
 
         const kind = this.game.screenFlashKind || 'mistype';
-        let r = 77, g = 171, b = 247; // cyan
+        let r = 77, g = 171, b = 247; // cyan (default)
         if (kind === 'damage') { r = 255; g = 107; b = 107; }
         if (kind === 'mistype') { r = 255; g = 212; b = 59; }
         if (kind === 'block') { r = 77; g = 171; b = 247; }
+        if (kind === 'beat') { r = 180; g = 140; b = 255; } // warm purple pulse
 
         const a0 = clamp(flash * 0.22, 0, 0.22);
         const a1 = clamp(flash * 0.08, 0, 0.08);
@@ -509,6 +554,70 @@ export default class Renderer {
         ctx.stroke();
         ctx.restore();
 
+        const droneRange = this.game.weaponSystem && typeof this.game.weaponSystem.getDroneRange === 'function'
+            ? this.game.weaponSystem.getDroneRange()
+            : 0;
+        if (droneRange > 0) {
+            const pulse = 0.45 + 0.55 * Math.sin(t * 1.7);
+            // Intentionally subtle, but still visible on the matte background.
+            const fillAlpha = 0.02 + pulse * 0.01;
+            const ringAlpha = 0.12 + pulse * 0.06;
+
+            ctx.save();
+            ctx.fillStyle = `rgba(47, 47, 47, ${fillAlpha})`;
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, droneRange, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = `rgba(47, 47, 47, ${ringAlpha})`;
+            ctx.lineWidth = 1.4;
+            ctx.setLineDash([7, 12]);
+            ctx.lineDashOffset = -t * 14;
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, droneRange, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.restore();
+        }
+
+        const sentryRange = this.game.weaponSystem && typeof this.game.weaponSystem.getSentryRange === 'function'
+            ? this.game.weaponSystem.getSentryRange()
+            : 0;
+        if (sentryRange > 0) {
+            const pulse = 0.45 + 0.55 * Math.sin(t * 2.6);
+            ctx.save();
+            const fillAlpha = 0.065 + pulse * 0.03;
+            const ringAlphaOuter = 0.26 + pulse * 0.16;
+            const ringAlphaCore = 0.58 + pulse * 0.22;
+
+            ctx.fillStyle = `rgba(92, 124, 250, ${fillAlpha})`;
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, sentryRange, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = `rgba(92, 124, 250, ${ringAlphaOuter})`;
+            ctx.lineWidth = 4.6;
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, sentryRange, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.strokeStyle = `rgba(92, 124, 250, ${ringAlphaCore})`;
+            ctx.lineWidth = 1.9;
+            ctx.setLineDash([10, 8]);
+            ctx.lineDashOffset = -t * 30;
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, sentryRange, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.font = '700 10px "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = 'rgba(92, 124, 250, 0.78)';
+            ctx.fillText('SENTRY AOE', player.x, player.y - sentryRange - 12);
+            ctx.restore();
+        }
+
         // Central turret: thin wireframe triangle that points at the current target.
         const target = this.game.typingSystem ? this.game.typingSystem.lockTarget : null;
         const aim = target ? Math.atan2(target.y - player.y, target.x - player.x) : -Math.PI / 2;
@@ -562,8 +671,15 @@ export default class Renderer {
 
         const hitAge = enemy.lastHitTime != null ? (this.game.runTime - enemy.lastHitTime) : 999;
         const hitPulse = hitAge < 0.12 ? (1 - hitAge / 0.12) : 0;
+        const deadFade = (() => {
+            if (!enemy.isDead) return 1;
+            const max = Number.isFinite(enemy.deathTimerMax) && enemy.deathTimerMax > 0 ? enemy.deathTimerMax : 0.25;
+            const left = Number.isFinite(enemy.deathTimer) ? enemy.deathTimer : 0;
+            return 0.05 + 0.95 * clamp(left / max, 0, 1);
+        })();
 
         ctx.save();
+        ctx.globalAlpha = deadFade;
         ctx.translate(enemy.x, enemy.y);
         ctx.scale(scale * (1 + hitPulse * 0.06), scale * (1 + hitPulse * 0.06));
         ctx.translate(-enemy.x, -enemy.y);
@@ -703,6 +819,27 @@ export default class Renderer {
             }
         }
 
+        if (enemy.isBoss) {
+            const pulse = 0.45 + 0.55 * Math.sin(t * 2.4 + (enemy.spawnOrder || 0) * 0.15);
+            const ringRadius = enemy.size + 14;
+            const ringAlpha = 0.2 + pulse * 0.2;
+
+            ctx.strokeStyle = `rgba(178, 76, 76, ${ringAlpha})`;
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.arc(enemy.x, enemy.y, ringRadius, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.strokeStyle = 'rgba(178, 76, 76, 0.82)';
+            ctx.lineWidth = 1.8;
+            ctx.setLineDash([10, 8]);
+            ctx.lineDashOffset = -t * 36;
+            ctx.beginPath();
+            ctx.arc(enemy.x, enemy.y, ringRadius, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
         // Hidden/Stealth: "beaded circle" marker.
         if (enemy.isStealth) {
             const beadCount = 10;
@@ -827,20 +964,29 @@ export default class Renderer {
         ctx.rect(item.x - size, y - size, size * 2, size * 2);
         ctx.stroke();
 
-        const glyphs = {
-            loot: 'L',
-            shield: 'S',
-            freeze: 'F',
-            double_damage: 'D',
-            reroll: 'R',
-            health: 'H'
-        };
-        const glyph = glyphs[item.type] || 'I';
-        ctx.font = '700 10px "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(glyph, item.x, y);
+        const icon = this.getPowerupIcon(item.type);
+        if (icon) {
+            const iconSize = Math.max(12, size * 1.24);
+            const half = iconSize * 0.5;
+            ctx.globalAlpha = 0.95;
+            ctx.drawImage(icon, item.x - half, y - half, iconSize, iconSize);
+            ctx.globalAlpha = 1;
+        } else {
+            const glyphs = {
+                loot: 'L',
+                shield: 'S',
+                freeze: 'F',
+                double_damage: 'D',
+                reroll: 'R',
+                health: 'H'
+            };
+            const glyph = glyphs[item.type] || 'I';
+            ctx.font = '700 10px "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(glyph, item.x, y);
+        }
 
         const pct = clamp(item.life / item.maxLife, 0, 1);
         const barW = 28;
@@ -913,7 +1059,7 @@ export default class Renderer {
         const ctx = this.ctx;
         const typingSystem = this.game.typingSystem;
 
-        const fullWord = enemy.word;
+        const fullWord = String(enemy.word || '');
         const revealIndex = enemy.isStealth ? enemy.revealIndex : fullWord.length;
         const visibleWord = fullWord.substring(0, revealIndex);
         const typedIndex = Math.min(typingSystem.getDisplayTypedIndex(enemy), revealIndex);
@@ -924,7 +1070,8 @@ export default class Renderer {
         const visibleWidth = visibleWord.length * this._monoCharWidth;
         const typedWidth = typed.length * this._monoCharWidth;
 
-        const textY = enemy.y - enemy.size - 18;
+        const stackOffset = this.getEnemyTextStackOffset(enemy);
+        const textY = enemy.y - enemy.size - 18 - stackOffset;
         const leftX = enemy.x - totalWidth / 2;
         const boxX = leftX - this._textPadX;
         const boxY = textY - 12 - this._textPadY;
@@ -932,6 +1079,11 @@ export default class Renderer {
         const boxH = 24 + this._textPadY * 2;
 
         ctx.save();
+        if (enemy.isDead) {
+            const max = Number.isFinite(enemy.deathTimerMax) && enemy.deathTimerMax > 0 ? enemy.deathTimerMax : 0.25;
+            const left = Number.isFinite(enemy.deathTimer) ? enemy.deathTimer : 0;
+            ctx.globalAlpha = 0.08 + 0.92 * clamp(left / max, 0, 1);
+        }
         ctx.font = this._textFont;
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
@@ -961,12 +1113,42 @@ export default class Renderer {
         }
         ctx.fillText(remaining, leftX + typedWidth, textY);
 
+        if (enemy.isBoss) {
+            const bossLabel = String(enemy.bossName || 'BOSS').toUpperCase();
+            ctx.save();
+            ctx.font = '700 11px "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = 'rgba(178, 76, 76, 0.9)';
+            ctx.fillText(bossLabel, enemy.x, textY - 18);
+            ctx.restore();
+        }
+
         if (enemy.isStealth && visibleWidth < totalWidth) {
             const hiddenWidth = totalWidth - visibleWidth;
             ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
             ctx.fillRect(leftX + visibleWidth, textY - 9, hiddenWidth, 18);
         }
         ctx.restore();
+    }
+
+    getEnemyTextStackOffset(enemy) {
+        if (enemy && enemy.isBoss) return 10;
+        const enemies = this.game?.entityManager?.enemies || [];
+        const originOrder = enemy.spawnOrder || 0;
+        const wordWidth = String(enemy?.word || '').length * this._monoCharWidth;
+        let stackDepth = 0;
+        for (const other of enemies) {
+            if (!other || other === enemy || other.isDead || other.isProjectileEnemy) continue;
+            if ((other.spawnOrder || 0) >= originOrder) continue;
+            const otherWidth = String(other.word || '').length * this._monoCharWidth;
+            const minDx = (wordWidth + otherWidth) * 0.5 + 12;
+            if (Math.abs(other.x - enemy.x) > minDx) continue;
+            const minDy = Math.max(26, Math.min(54, ((enemy.size || 12) + (other.size || 12)) * 0.55));
+            if (Math.abs(other.y - enemy.y) > minDy) continue;
+            stackDepth++;
+        }
+        return Math.min(26, stackDepth * 12);
     }
 
     drawTargetReticle(enemy, t) {
@@ -1009,12 +1191,24 @@ export default class Renderer {
     _drawPowerupStatus(player, t) {
         if (!player) return;
         const ctx = this.ctx;
+        const statusScale = 1.3;
+        const textMainPx = 12 * statusScale;
+        const textSubPx = 11 * statusScale;
+        const keyPx = 10 * statusScale;
+        const lineGap = 14 * statusScale;
+        const toastGap = 16 * statusScale;
+        const iconSize = 12 * statusScale;
+        const iconGap = 6 * statusScale;
+
         const statusLines = [];
         if (this.game.freezeTimer > 0) {
-            statusLines.push({ label: 'Freeze', time: this.game.freezeTimer, color: '#5d7ea6' });
+            statusLines.push({ key: 'freeze', label: 'Freeze', time: this.game.freezeTimer, color: '#5d7ea6' });
         }
         if (this.game.doubleDamageTimer > 0) {
-            statusLines.push({ label: 'Double DMG', time: this.game.doubleDamageTimer, color: '#b24c4c' });
+            statusLines.push({ key: 'double_damage', label: 'Double DMG', time: this.game.doubleDamageTimer, color: '#b24c4c' });
+        }
+        if (this.game.speedBoostTimer > 0) {
+            statusLines.push({ key: 'speed_boost', label: 'Speed Boost', time: this.game.speedBoostTimer, color: '#00d084' });
         }
         const toast = this.game.pickupToast;
         const pendingLevelUp = this.game.upgradeManager && this.game.upgradeManager.pendingLevelUps > 0;
@@ -1022,56 +1216,80 @@ export default class Renderer {
         if (!toast && statusLines.length === 0 && !showPrompt) return;
 
         ctx.save();
-        ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
+        ctx.textAlign = 'left';
 
         let y = player.y + player.size + 64;
         if (toast) {
-            ctx.font = '700 12px "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
-            ctx.fillStyle = toast.color || '#2f2f2f';
+            ctx.font = `700 ${textMainPx}px "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`;
+            const text = toast.text || '';
+            const measured = ctx.measureText(text).width;
+            const startX = player.x - measured / 2;
             const alpha = clamp(toast.time / 0.6, 0, 1);
             ctx.globalAlpha = alpha;
-            ctx.fillText(toast.text, player.x, y);
+            ctx.fillStyle = toast.color || '#2f2f2f';
+            ctx.fillText(text, startX, y);
             ctx.globalAlpha = 1;
-            y += 16;
+            y += toastGap;
         }
 
-        ctx.font = '600 11px "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
+        ctx.font = `600 ${textSubPx}px "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`;
         for (const line of statusLines) {
+            const text = `${line.label} ${line.time.toFixed(1)}s`;
+            const icon = this.getPowerupIcon(line.key);
+            const textWidth = ctx.measureText(text).width;
+            const blockW = textWidth + (icon ? (iconSize + iconGap) : 0);
+            let x = player.x - blockW / 2;
+            if (icon) {
+                ctx.globalAlpha = 0.95;
+                ctx.drawImage(icon, x, y - iconSize * 0.5, iconSize, iconSize);
+                ctx.globalAlpha = 1;
+                x += iconSize + iconGap;
+            }
             ctx.fillStyle = line.color;
-            ctx.fillText(`${line.label} ${line.time.toFixed(1)}s`, player.x, y);
-            y += 14;
+            ctx.fillText(text, x, y);
+            y += lineGap;
         }
 
         if (showPrompt) {
             const label = 'Press';
             const tail = 'to level up';
-            const keyText = 'SPACE';
+            const keyText = 'CTRL';
 
             const pulse = 0.6 + 0.4 * Math.sin(t * 5.5);
             ctx.globalAlpha = pulse;
-            ctx.font = '600 11px "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
+            ctx.font = `600 ${textSubPx}px "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`;
             ctx.textAlign = 'left';
 
             const labelW = ctx.measureText(label).width;
             const tailW = ctx.measureText(tail).width;
 
-            ctx.font = '700 10px "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
+            ctx.font = `700 ${keyPx}px "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`;
             const keyTextW = ctx.measureText(keyText).width;
-            const keyPadX = 8;
-            const keyPadY = 5;
-            const keyW = Math.max(36, keyTextW + keyPadX * 2);
-            const keyH = 18;
+            const keyPadX = 8 * statusScale;
+            const keyPadY = 5 * statusScale;
+            const keyW = Math.max(36 * statusScale, keyTextW + keyPadX * 2);
+            const keyH = 18 * statusScale;
+            const levelUpIcon = this._getLoadedIcon(this._levelupPromptIcon);
+            const promptIconW = levelUpIcon ? (iconSize + iconGap) : 0;
 
-            const totalW = labelW + 8 + keyW + 8 + tailW;
+            const totalW = promptIconW + labelW + 8 + keyW + 8 + tailW;
             const startX = player.x - totalW / 2;
             const baselineY = y + 2;
+            let cursorX = startX;
 
-            ctx.font = '600 11px "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
+            if (levelUpIcon) {
+                ctx.globalAlpha = pulse * 0.95;
+                ctx.drawImage(levelUpIcon, cursorX, baselineY - iconSize * 0.5, iconSize, iconSize);
+                ctx.globalAlpha = pulse;
+                cursorX += promptIconW;
+            }
+
+            ctx.font = `600 ${textSubPx}px "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`;
             ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
-            ctx.fillText(label, startX, baselineY);
+            ctx.fillText(label, cursorX, baselineY);
 
-            const keyX = startX + labelW + 8;
+            const keyX = cursorX + labelW + 8;
             const keyY = baselineY - keyH / 2;
 
             ctx.fillStyle = 'rgba(0, 0, 0, 0.06)';
@@ -1084,12 +1302,12 @@ export default class Renderer {
             ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.font = '700 10px "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
+            ctx.font = `700 ${keyPx}px "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`;
             ctx.fillText(keyText, keyX + keyW / 2, baselineY);
 
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
-            ctx.font = '600 11px "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
+            ctx.font = `600 ${textSubPx}px "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`;
             ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
             ctx.fillText(tail, keyX + keyW + 8, baselineY);
             ctx.globalAlpha = 1;
@@ -1112,6 +1330,36 @@ export default class Renderer {
         ctx.closePath();
     }
 
+    _createIconMap(paths) {
+        const map = {};
+        const source = paths || {};
+        Object.keys(source).forEach(key => {
+            map[key] = this._loadIcon(source[key]);
+        });
+        return map;
+    }
+
+    _loadIcon(src) {
+        if (!src) return null;
+        const img = new Image();
+        img.decoding = 'async';
+        img.src = src;
+        return img;
+    }
+
+    _getLoadedIcon(img) {
+        if (!img) return null;
+        if (!img.complete) return null;
+        if (!Number.isFinite(img.naturalWidth) || img.naturalWidth <= 0) return null;
+        return img;
+    }
+
+    getPowerupIcon(type) {
+        if (!type) return null;
+        const img = this._powerupIcons ? this._powerupIcons[type] : null;
+        return this._getLoadedIcon(img);
+    }
+
     formatTime(totalSeconds) {
         const total = Math.max(0, totalSeconds);
         const minutes = Math.floor(total / 60);
@@ -1131,10 +1379,31 @@ export default class Renderer {
             ? this.game.weaponSystem.weapons[this.game.weaponSystem.activeWeaponIndex] : null;
         const weaponName = weapon ? weapon.name : 'Repeater';
         const level = this.game.upgradeManager ? this.game.upgradeManager.level : 1;
-        const weaponText = `Level ${level} ${weaponName}`;
+        const suffix = this.game && typeof this.game.getHudStatusSuffix === 'function'
+            ? this.game.getHudStatusSuffix()
+            : '';
+        const weaponText = suffix
+            ? `Level ${level} ${weaponName} | ${suffix}`
+            : `Level ${level} ${weaponName}`;
         if (this.hud.weapon && this._hudState.weapon !== weaponText) {
             this.hud.weapon.textContent = weaponText;
             this._hudState.weapon = weaponText;
+        }
+
+        if (this.hud.wordRush) {
+            const rushText = this.game && typeof this.game.getWordRushHudText === 'function'
+                ? this.game.getWordRushHudText()
+                : '';
+            const visible = !!rushText;
+            if (this._hudState.wordRushText !== rushText) {
+                this.hud.wordRush.textContent = rushText;
+                this._hudState.wordRushText = rushText;
+            }
+            if (this._hudState.wordRushVisible !== visible) {
+                this.hud.wordRush.style.display = visible ? 'block' : 'none';
+                this._hudState.wordRushVisible = visible;
+            }
+            this.hud.wordRush.classList.toggle('is-active', visible);
         }
 
         if (this.game.upgradeManager && this.hud.xpFill && this.hud.level) {

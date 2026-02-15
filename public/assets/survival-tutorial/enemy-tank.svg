@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Tank enemy (in-game style)">
+  <defs>
+    <linearGradient id="tileBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f1ede4"/>
+      <stop offset="1" stop-color="#d7d1c6"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="256" height="256" rx="32" fill="url(#tileBg)"/>
+  <rect x="0" y="0" width="256" height="256" rx="32" fill="none" stroke="rgba(15,23,42,0.10)" stroke-width="2"/>
+
+  <!-- Tank: layered pentagon (Renderer tank polygons) -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Outer -->
+    <polygon points="128.0,54.0 198.4,105.1 171.5,187.9 84.5,187.9 57.6,105.1" stroke="#5f5f5f" stroke-width="12" opacity="0.18"/>
+    <polygon points="128.0,54.0 198.4,105.1 171.5,187.9 84.5,187.9 57.6,105.1" stroke="#5f5f5f" stroke-width="3.5" opacity="0.88"/>
+
+    <!-- Mid -->
+    <polygon points="128.0,72.0 181.3,110.7 160.9,173.3 95.1,173.3 74.7,110.7" stroke="#5f5f5f" stroke-width="10" opacity="0.14"/>
+    <polygon points="128.0,72.0 181.3,110.7 160.9,173.3 95.1,173.3 74.7,110.7" stroke="#5f5f5f" stroke-width="3" opacity="0.72"/>
+
+    <!-- Inner -->
+    <polygon points="128.0,88.0 166.0,115.6 151.5,160.4 104.5,160.4 90.0,115.6" stroke="#5f5f5f" stroke-width="8" opacity="0.10"/>
+    <polygon points="128.0,88.0 166.0,115.6 151.5,160.4 104.5,160.4 90.0,115.6" stroke="#5f5f5f" stroke-width="2.5" opacity="0.62"/>
+  </g>
+</svg>

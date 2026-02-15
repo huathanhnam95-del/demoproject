@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Turret shot (in-game style)">
+  <defs>
+    <linearGradient id="tileBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f1ede4"/>
+      <stop offset="1" stop-color="#d7d1c6"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="256" height="256" rx="32" fill="url(#tileBg)"/>
+  <rect x="0" y="0" width="256" height="256" rx="32" fill="none" stroke="rgba(15,23,42,0.10)" stroke-width="2"/>
+
+  <!-- Shot: small circle with filled core (Renderer 'shot' style) -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="128" cy="128" r="26" stroke="#8a5353" stroke-width="10" opacity="0.12"/>
+    <circle cx="128" cy="128" r="26" stroke="#8a5353" stroke-width="3.2" opacity="0.9"/>
+  </g>
+  <circle cx="128" cy="128" r="14" fill="#8a5353" opacity="0.35"/>
+</svg>
+

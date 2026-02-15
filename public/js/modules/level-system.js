@@ -192,108 +192,124 @@
 
     const TREE_LAYOUT_MOCK = {
         listening: {
-            root_listening: { x: 50, y: 5 },
-            slow_audio: { x: 35, y: 16 },
-            frugal_listener_1: { x: 65, y: 27 },
-            echo_loop: { x: 35, y: 38 },
-            audio_engineer: { x: 65, y: 49 },
-            chunking: { x: 35, y: 56 },
-            frugal_listener_2: { x: 65, y: 63 },
-            transcript_glimpse: { x: 35, y: 70 },
-            transcript_permit: { x: 65, y: 77 },
-            clean_streak_saver: { x: 35, y: 84 },
-            frugal_listener_3: { x: 65, y: 88 },
-            streak_shield: { x: 35, y: 94 }
+            root_listening: { x: 50, y: 2 },
+            slow_audio: { x: 50, y: 16 },
+            frugal_listener_1: { x: 72, y: 30 },
+            echo_loop: { x: 30, y: 30 },
+            audio_engineer: { x: 72, y: 44 },
+            chunking: { x: 30, y: 44 },
+            frugal_listener_2: { x: 72, y: 58 },
+            transcript_glimpse: { x: 30, y: 58 },
+            transcript_permit: { x: 50, y: 72 },
+            clean_streak_saver: { x: 30, y: 84 },
+            frugal_listener_3: { x: 72, y: 84 },
+            streak_shield: { x: 50, y: 96 }
         },
         writing: {
-            root_writing: { x: 50, y: 5 },
-            hint_wc: { x: 35, y: 14 },
-            frugal_writer_1: { x: 65, y: 23 },
-            hint_fl: { x: 35, y: 32 },
-            hint_kit: { x: 65, y: 41 },
-            punct_ghost: { x: 35, y: 50 },
-            hint_reveal: { x: 65, y: 56 },
-            typo_shield: { x: 35, y: 62 },
-            frugal_writer_2: { x: 65, y: 68 },
-            coupon_book: { x: 35, y: 74 },
-            combo_coupon: { x: 65, y: 82 },
-            frugal_writer_3: { x: 35, y: 90 }
+            root_writing: { x: 50, y: 2 },
+            hint_wc: { x: 50, y: 16 },
+            frugal_writer_1: { x: 72, y: 30 },
+            hint_fl: { x: 30, y: 30 },
+            hint_kit: { x: 72, y: 44 },
+            punct_ghost: { x: 30, y: 44 },
+            hint_reveal: { x: 30, y: 58 },
+            typo_shield: { x: 72, y: 58 },
+            frugal_writer_2: { x: 50, y: 72 },
+            coupon_book: { x: 30, y: 84 },
+            combo_coupon: { x: 72, y: 84 },
+            frugal_writer_3: { x: 50, y: 96 }
         },
         reading: {
-            root_reading: { x: 50, y: 5 },
-            dict_peek: { x: 35, y: 16 },
-            frugal_reader_1: { x: 65, y: 27 },
-            evidence_highlight: { x: 35, y: 38 },
-            mode_license_watch: { x: 65, y: 49 },
-            summary_scroll: { x: 35, y: 56 },
-            frugal_reader_2: { x: 65, y: 63 },
-            time_freeze: { x: 35, y: 70 },
-            no_reveal_rebate: { x: 65, y: 77 },
-            mode_license_extended: { x: 35, y: 84 },
-            frugal_reader_3: { x: 65, y: 92 }
+            root_reading: { x: 50, y: 2 },
+            dict_peek: { x: 50, y: 16 },
+            frugal_reader_1: { x: 72, y: 30 },
+            evidence_highlight: { x: 30, y: 30 },
+            mode_license_watch: { x: 72, y: 44 },
+            summary_scroll: { x: 30, y: 44 },
+            frugal_reader_2: { x: 50, y: 58 },
+            time_freeze: { x: 30, y: 72 },
+            no_reveal_rebate: { x: 72, y: 72 },
+            mode_license_extended: { x: 50, y: 86 }, // slightly lower to separate from tier 5
+            frugal_reader_3: { x: 50, y: 98 }
         },
         speaking: {
-            root_speaking: { x: 50, y: 5 },
-            pron_rune: { x: 35, y: 16 },
-            frugal_speaker_1: { x: 65, y: 27 },
-            shadow_mode: { x: 35, y: 38 },
-            breath_control: { x: 65, y: 49 },
-            frugal_speaker_2: { x: 35, y: 56 },
-            second_take: { x: 65, y: 65 },
-            second_take_insurance: { x: 35, y: 74 },
-            mode_license_speak: { x: 65, y: 83 },
-            frugal_speaker_3: { x: 35, y: 92 }
+            root_speaking: { x: 50, y: 2 },
+            pron_rune: { x: 50, y: 16 },
+            frugal_speaker_1: { x: 72, y: 30 },
+            shadow_mode: { x: 30, y: 30 },
+            breath_control: { x: 72, y: 44 },
+            frugal_speaker_2: { x: 30, y: 44 },
+            second_take: { x: 50, y: 58 },
+            second_take_insurance: { x: 30, y: 72 },
+            mode_license_speak: { x: 72, y: 72 },
+            frugal_speaker_3: { x: 50, y: 86 }
         }
     };
 
     const TREE_EDGES_MOCK = {
         listening: [
+            // Root → first skill (trunk)
             ['root_listening', 'slow_audio'],
+            // Branch left & right from first skill
+            ['slow_audio', 'echo_loop'],
             ['slow_audio', 'frugal_listener_1'],
-            ['frugal_listener_1', 'echo_loop'],
-            ['echo_loop', 'audio_engineer'],
-            ['audio_engineer', 'chunking'],
-            ['chunking', 'frugal_listener_2'],
-            ['frugal_listener_2', 'transcript_glimpse'],
+            // Left branch continues
+            ['echo_loop', 'chunking'],
+            // Right branch continues
+            ['frugal_listener_1', 'audio_engineer'],
+            // Second tier continues
+            ['chunking', 'transcript_glimpse'],
+            ['audio_engineer', 'frugal_listener_2'],
+            // Converge at transcript_permit
             ['transcript_glimpse', 'transcript_permit'],
+            ['frugal_listener_2', 'transcript_permit'],
+            // Branch again
             ['transcript_permit', 'clean_streak_saver'],
-            ['clean_streak_saver', 'frugal_listener_3'],
+            ['transcript_permit', 'frugal_listener_3'],
+            // Converge at capstone
+            ['clean_streak_saver', 'streak_shield'],
             ['frugal_listener_3', 'streak_shield']
         ],
         writing: [
             ['root_writing', 'hint_wc'],
+            ['hint_wc', 'hint_fl'],
             ['hint_wc', 'frugal_writer_1'],
-            ['frugal_writer_1', 'hint_fl'],
-            ['hint_fl', 'hint_kit'],
-            ['hint_kit', 'punct_ghost'],
+            ['hint_fl', 'punct_ghost'],
+            ['frugal_writer_1', 'hint_kit'],
             ['punct_ghost', 'hint_reveal'],
-            ['hint_reveal', 'typo_shield'],
+            ['hint_kit', 'typo_shield'],
+            ['hint_reveal', 'frugal_writer_2'],
             ['typo_shield', 'frugal_writer_2'],
             ['frugal_writer_2', 'coupon_book'],
-            ['coupon_book', 'combo_coupon'],
+            ['frugal_writer_2', 'combo_coupon'],
+            ['coupon_book', 'frugal_writer_3'],
             ['combo_coupon', 'frugal_writer_3']
         ],
         reading: [
             ['root_reading', 'dict_peek'],
+            ['dict_peek', 'evidence_highlight'],
             ['dict_peek', 'frugal_reader_1'],
-            ['frugal_reader_1', 'evidence_highlight'],
-            ['evidence_highlight', 'mode_license_watch'],
-            ['mode_license_watch', 'summary_scroll'],
+            ['evidence_highlight', 'summary_scroll'],
+            ['frugal_reader_1', 'mode_license_watch'],
             ['summary_scroll', 'frugal_reader_2'],
+            ['mode_license_watch', 'frugal_reader_2'],
             ['frugal_reader_2', 'time_freeze'],
-            ['time_freeze', 'no_reveal_rebate'],
+            ['frugal_reader_2', 'no_reveal_rebate'],
+            ['time_freeze', 'mode_license_extended'],
             ['no_reveal_rebate', 'mode_license_extended'],
             ['mode_license_extended', 'frugal_reader_3']
         ],
         speaking: [
             ['root_speaking', 'pron_rune'],
+            ['pron_rune', 'shadow_mode'],
             ['pron_rune', 'frugal_speaker_1'],
-            ['frugal_speaker_1', 'shadow_mode'],
-            ['shadow_mode', 'breath_control'],
-            ['breath_control', 'frugal_speaker_2'],
+            ['shadow_mode', 'frugal_speaker_2'],
+            ['frugal_speaker_1', 'breath_control'],
             ['frugal_speaker_2', 'second_take'],
+            ['breath_control', 'second_take'],
             ['second_take', 'second_take_insurance'],
-            ['second_take_insurance', 'mode_license_speak'],
+            ['second_take', 'mode_license_speak'],
+            ['second_take_insurance', 'frugal_speaker_3'],
             ['mode_license_speak', 'frugal_speaker_3']
         ]
     };
@@ -340,6 +356,7 @@
                 id: `root_${branch}`,
                 branch,
                 parentId: null,
+                parentIds: [],
                 level: 1,
                 cost: 0,
                 title: `${BRANCH_META[branch].label} Core`,
@@ -391,10 +408,26 @@
             [...preferred, ...appended].forEach((skillId) => {
                 const node = buildSkillNode(skillId, branch, parentId, catalog, active, passive);
                 if (!node) return;
+                node.parentIds = [];
                 nodesByBranch[branch].push(node);
                 byId[node.id] = node;
                 allNodes.push(node);
                 parentId = node.id;
+            });
+        });
+
+        // Derive parentIds from TREE_EDGES_MOCK for branching topology
+        BRANCH_ORDER.forEach((branch) => {
+            const edges = TREE_EDGES_MOCK[branch] || [];
+            edges.forEach(([fromId, toId]) => {
+                const toNode = byId[toId];
+                if (toNode && !toNode.parentIds.includes(fromId)) {
+                    toNode.parentIds.push(fromId);
+                }
+                // Keep first parent as primary parentId for backward compat
+                if (toNode && !toNode.parentId) {
+                    toNode.parentId = fromId;
+                }
             });
         });
 
@@ -408,7 +441,9 @@
         }
 
         const unlocked = hasUnlockedSkill(node.id, userProfile);
-        const parentUnlocked = node.parentId ? hasUnlockedSkill(node.parentId, userProfile) : true;
+        // For branching trees: available if ANY parent is unlocked
+        const parents = node.parentIds && node.parentIds.length > 0 ? node.parentIds : (node.parentId ? [node.parentId] : []);
+        const parentUnlocked = parents.length === 0 ? true : parents.some(pid => hasUnlockedSkill(pid, userProfile));
         const currentLevel = getTreeLevel(userProfile, node.branch);
         const levelMet = currentLevel >= node.level;
         const canAfford = Math.max(0, num(userProfile?.coins, 0)) >= Math.max(0, node.cost || 0);
@@ -553,10 +588,21 @@
             const calibMult = Number.isFinite(num(skillDef?.calibMult, NaN)) ? num(skillDef?.calibMult, 1) : num(node.calibMult, 1);
             const parent = node.parentId ? treeData.byId[node.parentId] : null;
 
-            // New variables for the updated panel structure
-            const SKILL_CATALOG = catalog.DATA; // Assuming catalog.DATA is available and contains active/passive
-            const hasPrereq = node.parentId ? hasUnlockedSkill(node.parentId, safeProfile) : true; // Re-using hasUnlockedSkill for prereq check
+            // Derive all prerequisite parents from parentIds (branching tree)
+            const prereqParents = (node.parentIds && node.parentIds.length > 0 ? node.parentIds : (node.parentId ? [node.parentId] : []))
+                .map(pid => treeData.byId[pid]).filter(Boolean);
+            const hasAnyPrereq = prereqParents.length === 0 || prereqParents.some(p => hasUnlockedSkill(p.id, safeProfile));
             const nodeLevelReq = node.level; // Using node.level as level_req
+
+            // Build prerequisite HTML
+            const prereqHtml = prereqParents.map(p => {
+                const met = hasUnlockedSkill(p.id, safeProfile);
+                return `
+                        <div class="rpg-req-item ${met ? 'unlocked' : ''}">
+                            <span class="label">Prerequisite</span>
+                            <span class="val rpg-jump-link" data-jump-id="${p.id}">${esc(p.title)}</span>
+                        </div>`;
+            }).join('');
 
             detailArea.innerHTML = `
                 <div class="rpg-detail-header">
@@ -565,7 +611,7 @@
                     </div>
                     <div class="rpg-detail-title-row">
                         <div class="rpg-detail-name">${esc(node.title)}</div>
-                        <div class="rpg-detail-sub">${node.kind === 'root' ? 'Core' : (node.kind === 'passive' ? 'Passive' : 'Active')}</div>
+                        <div class="rpg-detail-sub">${node.kind === 'root' ? 'Core' : (node.kind === 'passive' ? 'Passive Ability' : 'Active Skill')}</div>
                     </div>
                 </div>
                 <div class="rpg-detail-scroll">
@@ -575,12 +621,7 @@
                             <span class="label">${titleCase(node.branch)} Level</span>
                             <span class="val">${state.currentLevel} / ${nodeLevelReq}</span>
                         </div>
-                        ${parent ? `
-                        <div class="rpg-req-item ${hasPrereq ? 'unlocked' : ''}">
-                            <span class="label">Required Prerequisite</span>
-                            <span class="val rpg-jump-link" data-jump-id="${parent.id}">${esc(parent.title)}</span>
-                        </div>
-                        ` : ''}
+                        ${prereqHtml}
                         <div class="rpg-req-item ${canBuy ? 'unlocked' : ''}">
                             <span class="label">Unlock Cost</span>
                             <span class="val">${node.cost} Coins</span>
@@ -588,17 +629,31 @@
                     </div>
                     <div class="rpg-detail-section">
                         <div class="rpg-detail-sec-title">SKILL DETAILS</div>
+                        
+                        ${skillDef && skillDef.allowedModes ? `
+                        <div class="rpg-detail-modes">
+                            <span class="label">Applies to:</span>
+                            <span class="val">${skillDef.allowedModes.join(', ').toUpperCase()}</span>
+                        </div>` : ''}
+
                         <p class="rpg-detail-desc">${esc(node.description)}</p>
+                        
                         ${node.kind === 'active' ? `
                             <div class="rpg-detail-stat">
                                 <span class="label">Use Cost</span>
                                 <span class="val">${useCost} Coins${flatCost ? '' : '/use'}</span>
                             </div>
-                            <div class="rpg-detail-stat">
-                                <span class="label">Calibration 
-                                    <span class="calib-info-icon" title="Scales rewards (XP/Coins) based on your performance. Higher calibration means more calculated rewards.">?</span>
-                                </span>
-                                <span class="val">${Math.round(calibMult * 100)}%</span>
+                            
+                            <div class="rpg-calib-box">
+                                <div class="rpg-calib-header">
+                                    <span class="label">Calibration Impact</span>
+                                    <span class="val">${Math.round(calibMult * 100)}%</span>
+                                </div>
+                                <p class="rpg-calib-explain">
+                                    Calibration represents your "Assisted Score". 
+                                    Using this skill counts as <strong>${Math.round(calibMult * 100)}%</strong> of a normal correct answer for XP & Coin rewards.
+                                    <br><em>(Lower impact = fewer rewards)</em>
+                                </p>
                             </div>
                         ` : ''}
                     </div>

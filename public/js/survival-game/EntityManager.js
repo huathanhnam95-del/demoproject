@@ -22,6 +22,7 @@ export default class EntityManager {
         this.projectiles = [];
         this.beams = [];
         this.items = [];
+        this.shockwaves = [];
 
         // Projectile Pool
         this.projectilePool = [];
@@ -38,6 +39,10 @@ export default class EntityManager {
         this.itemPool = [];
         this.maxItems = 25;
 
+        // Shockwave Pool (simple ring FX for AoE items)
+        this.shockwavePool = [];
+        this.maxShockwaves = 10;
+
         this.spawnSeq = 0;
     }
 
@@ -51,6 +56,7 @@ export default class EntityManager {
         this.projectiles = [];
         this.beams = [];
         this.items = [];
+        this.shockwaves = [];
         this.spawnSeq = 0;
 
         this.player.x = this.game.width / 2;
@@ -69,12 +75,14 @@ export default class EntityManager {
         if (this.enemies.length > 0) {
             qtree = new Quadtree(boundary);
             for (let enemy of this.enemies) {
+                if (!enemy || enemy.isDead) continue;
                 qtree.insert(enemy);
             }
         }
 
         // Trait updates and buff prep
         for (const enemy of this.enemies) {
+            if (!enemy || enemy.isDead) continue;
             enemy.speedMult = 1;
             enemy.damageMult = 1;
             enemy.isBuffed = false;
@@ -102,6 +110,7 @@ export default class EntityManager {
         // Apply buffer buffs
         if (qtree) {
             for (const bufferEnemy of this.enemies) {
+                if (!bufferEnemy || bufferEnemy.isDead) continue;
                 if (!bufferEnemy.isBuffer) continue;
                 const r = bufferEnemy.bufferRadius;
                 const range = {
@@ -113,7 +122,7 @@ export default class EntityManager {
                 const neighbors = qtree.query(range);
                 for (const neighbor of neighbors) {
                     if (neighbor === bufferEnemy) continue;
-                    if (neighbor.isProjectileEnemy) continue;
+                    if (!neighbor || neighbor.isDead || neighbor.isProjectileEnemy) continue;
                     neighbor.speedMult = Math.max(neighbor.speedMult, bufferEnemy.bufferSpeedMult);
                     neighbor.damageMult = Math.max(neighbor.damageMult, bufferEnemy.bufferDamageMult);
                     neighbor.isBuffed = true;
@@ -125,6 +134,7 @@ export default class EntityManager {
         if (qtree) {
             const linkRadius = GameConfig.ENEMIES.SHIELD_LINK.RADIUS;
             for (const shieldEnemy of this.enemies) {
+                if (!shieldEnemy || shieldEnemy.isDead) continue;
                 if (!shieldEnemy.isShielded) continue;
                 const range = {
                     x: shieldEnemy.x - linkRadius,
@@ -135,7 +145,7 @@ export default class EntityManager {
                 const neighbors = qtree.query(range);
                 for (const neighbor of neighbors) {
                     if (neighbor === shieldEnemy) continue;
-                    if (neighbor.isProjectileEnemy) continue;
+                    if (!neighbor || neighbor.isDead || neighbor.isProjectileEnemy) continue;
                     neighbor.isShieldLinked = true;
                     neighbor.linkedShield = shieldEnemy;
                 }
@@ -208,6 +218,21 @@ export default class EntityManager {
         // Update enemies
         for (let i = this.enemies.length - 1; i >= 0; i--) {
             const enemy = this.enemies[i];
+            if (!enemy) {
+                this.enemies.splice(i, 1);
+                continue;
+            }
+
+            // Brief linger window after death (for fast typers).
+            if (enemy.isDead) {
+                const timer = Number.isFinite(enemy.deathTimer) ? enemy.deathTimer : 0;
+                enemy.deathTimer = timer - deltaTime;
+                if (enemy.deathTimer <= 0) {
+                    this.enemies.splice(i, 1);
+                    if (this.game.typingSystem.lockTarget === enemy) this.game.typingSystem.clearLock();
+                }
+                continue;
+            }
             const dx = this.player.x - enemy.x;
             const dy = this.player.y - enemy.y;
             const distSq = (dx * dx) + (dy * dy);
@@ -283,10 +308,28 @@ export default class EntityManager {
             }
         }
 
+        if (!freezeActive) {
+            this.resolveEnemyOverlaps(deltaTime);
+        }
+
         // Update particles
         for (let i = this.particles.length - 1; i >= 0; i--) {
             this.particles[i].update(deltaTime);
             if (this.particles[i].life <= 0) this.releaseParticle(i);
+        }
+
+        // Update shockwaves (visual-only)
+        for (let i = this.shockwaves.length - 1; i >= 0; i--) {
+            const sw = this.shockwaves[i];
+            if (!sw) {
+                this.shockwaves.splice(i, 1);
+                continue;
+            }
+            sw.life = (sw.life || 0) - deltaTime;
+            if (sw.life <= 0) {
+                const expired = this.shockwaves.splice(i, 1)[0];
+                if (expired) this.shockwavePool.push(expired);
+            }
         }
 
         // Update items (timed pickups)
@@ -312,6 +355,45 @@ export default class EntityManager {
         }
     }
 
+    resolveEnemyOverlaps(deltaTime) {
+        const enemies = this.enemies || [];
+        if (enemies.length < 2) return;
+        const padding = GameConfig.BALANCE?.ENEMY_OVERLAP_PADDING || 10;
+        const maxPushPerStep = (GameConfig.BALANCE?.ENEMY_OVERLAP_PUSH || 70) * deltaTime;
+        const minX = 8;
+        const minY = 8;
+        const maxX = Math.max(minX, this.game.width - 8);
+        const maxY = Math.max(minY, this.game.height - 8);
+
+        for (let i = 0; i < enemies.length - 1; i++) {
+            const a = enemies[i];
+            if (!a || a.isDead || a.isProjectileEnemy) continue;
+
+            for (let j = i + 1; j < enemies.length; j++) {
+                const b = enemies[j];
+                if (!b || b.isDead || b.isProjectileEnemy) continue;
+
+                const dx = b.x - a.x;
+                const dy = b.y - a.y;
+                const distSq = (dx * dx) + (dy * dy);
+                const minDist = (a.size || 10) + (b.size || 10) + padding;
+                const minDistSq = minDist * minDist;
+                if (distSq >= minDistSq) continue;
+
+                const dist = Math.sqrt(Math.max(0.0001, distSq));
+                const nx = dx / dist;
+                const ny = dy / dist;
+                const overlap = minDist - dist;
+                const push = Math.min(overlap * 0.5, maxPushPerStep);
+
+                a.x = Math.max(minX, Math.min(maxX, a.x - nx * push));
+                a.y = Math.max(minY, Math.min(maxY, a.y - ny * push));
+                b.x = Math.max(minX, Math.min(maxX, b.x + nx * push));
+                b.y = Math.max(minY, Math.min(maxY, b.y + ny * push));
+            }
+        }
+    }
+
     isEnemyShieldBlocked(enemy) {
         if (!enemy) return false;
         const shieldSource = enemy.isShielded ? enemy : (enemy.isShieldLinked ? enemy.linkedShield : null);
@@ -333,8 +415,12 @@ export default class EntityManager {
             sourceColor = enemy.color,
             refreshWord = true,
             playHit = true,
+            playKillSound = true,
             spawnFx = true,
-            fxKind = 'explosion'
+            fxKind = 'explosion',
+            skipItemDrop = false,
+            suppressOnDeathEffects = false,
+            deathGraceSeconds = null
         } = opts;
 
         let remaining = Math.max(0, amount || 0);
@@ -363,18 +449,80 @@ export default class EntityManager {
 
         if (enemy.health <= 0) {
             enemy.isDead = true;
-            this.game.audioManager.playExplosion();
-            this.game.score += 10 * (enemy.maxHealth / 10);
-            if (this.game.upgradeManager) {
-                this.game.upgradeManager.addXp(10 * (enemy.maxHealth / 10));
-            }
-            this.maybeSpawnItem(enemy);
+            const grace = Number.isFinite(deathGraceSeconds)
+                ? Math.max(0, deathGraceSeconds)
+                : (GameConfig.TYPING?.DEATH_GRACE_SECONDS || 0.25);
+            enemy.deathTimer = grace;
+            enemy.deathTimerMax = grace;
 
-            const idx = this.enemies.indexOf(enemy);
-            if (idx !== -1) this.enemies.splice(idx, 1);
-            if (this.game.typingSystem.lockTarget === enemy) {
-                this.game.typingSystem.clearLock();
+            if (playKillSound) {
+                this.game.audioManager.playExplosion();
             }
+
+            const baseReward = 10 * (enemy.maxHealth / 10);
+            const rushMult = (this.game && typeof this.game.getWordRushMultiplier === 'function')
+                ? this.game.getWordRushMultiplier()
+                : 1;
+            const safeMult = Number.isFinite(rushMult) ? Math.max(1, rushMult) : 1;
+            const reward = Number.isFinite(baseReward) ? Math.max(0, baseReward * safeMult) : 0;
+            if (reward > 0) {
+                this.game.score += reward;
+                if (this.game.upgradeManager) {
+                    this.game.upgradeManager.addXp(reward);
+                }
+            }
+            if (!skipItemDrop) {
+                this.maybeSpawnItem(enemy);
+            }
+
+            // Splitter Logic: Spawn mini-drones on death.
+            if (!suppressOnDeathEffects && String(enemy.type || '').toLowerCase() === 'splitter') {
+                const cfg = GameConfig.SPLITTER || {};
+                const minCount = Number.isFinite(cfg.MINI_COUNT_MIN) ? cfg.MINI_COUNT_MIN : 2;
+                const maxCount = Number.isFinite(cfg.MINI_COUNT_MAX) ? cfg.MINI_COUNT_MAX : 3;
+                const minWord = Number.isFinite(cfg.MINI_WORD_MIN) ? cfg.MINI_WORD_MIN : 2;
+                const maxWord = Number.isFinite(cfg.MINI_WORD_MAX) ? cfg.MINI_WORD_MAX : 4;
+                const scatter = Number.isFinite(cfg.MINI_SCATTER) ? cfg.MINI_SCATTER : 34;
+
+                let miniCount = Math.max(0, minCount + Math.floor(Math.random() * (Math.max(minCount, maxCount) - minCount + 1)));
+
+                // Keep splits from blowing past the player's WPM difficulty cap too aggressively.
+                let activeLimit = Math.max(1, GameConfig.ENEMIES.MAX_ACTIVE || 80);
+                if (this.game && typeof this.game.getSpawnLoadState === 'function') {
+                    const load = this.game.getSpawnLoadState(maxWord);
+                    const soft = Number.isFinite(load?.maxAllowed) ? (load.maxAllowed + 4) : activeLimit;
+                    activeLimit = Math.min(activeLimit, soft);
+                }
+                const activeAlive = (this.enemies || []).reduce((count, e) => {
+                    if (!e || e.isDead || e.isProjectileEnemy) return count;
+                    return count + 1;
+                }, 0);
+                const room = Math.max(0, activeLimit - activeAlive);
+                miniCount = Math.min(miniCount, room);
+
+                const usedWords = new Set();
+                for (let k = 0; k < miniCount; k++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const dist = scatter * (0.4 + Math.random() * 0.9);
+                    const mx = enemy.x + Math.cos(angle) * dist;
+                    const my = enemy.y + Math.sin(angle) * dist;
+
+                    let miniWord = this.game.getShortWord(minWord, maxWord, enemy.word);
+                    let safety = 0;
+                    while (usedWords.has(miniWord) && safety < 8) {
+                        miniWord = this.game.getShortWord(minWord, maxWord, miniWord);
+                        safety++;
+                    }
+                    usedWords.add(miniWord);
+
+                    const miniEnemy = this.spawnEnemy(miniWord, 'mini_drone', {}, { x: mx, y: my });
+                    if (miniEnemy) {
+                        miniEnemy.noItemDrop = true;
+                        miniEnemy.splitParentId = enemy.id;
+                    }
+                }
+            }
+
             return { hit: true, killed: true };
         }
 
@@ -619,7 +767,9 @@ export default class EntityManager {
         const typeConfig = GameConfig.ENEMIES.TYPES.SHOT;
         const word = this.game.getProjectileWord();
         const angle = Math.atan2(this.player.y - originEnemy.y, this.player.x - originEnemy.x);
-        const speed = GameConfig.ENEMIES.TURRET.SHOT_SPEED * this.game.omenConfig.speedMult;
+        const speed = GameConfig.ENEMIES.TURRET.SHOT_SPEED
+            * (GameConfig.BALANCE?.ENEMY_SPEED_MULT || 1)
+            * this.game.omenConfig.speedMult;
 
         const enemy = {
             id: 's_' + Math.random().toString(36).substr(2, 9),
@@ -666,6 +816,9 @@ export default class EntityManager {
         };
 
         this.enemies.push(enemy);
+        if (this.game && typeof this.game.onEnemySpawned === 'function') {
+            this.game.onEnemySpawned(enemy);
+        }
         return enemy;
     }
 
@@ -706,7 +859,7 @@ export default class EntityManager {
     }
 
     maybeSpawnItem(enemy) {
-        if (!enemy || enemy.isProjectileEnemy) return;
+        if (!enemy || enemy.isProjectileEnemy || enemy.noItemDrop) return;
         if (Math.random() > GameConfig.ITEMS.DROP_CHANCE) return;
 
         const weights = { ...GameConfig.ITEMS.WEIGHTS };
@@ -735,41 +888,78 @@ export default class EntityManager {
         this.spawnItem(picked, enemy.x, enemy.y);
     }
 
-    spawnEnemy(word, type = 'drone', traits = {}) {
+    spawnBossEnemy(spec = {}) {
+        const safeSpec = spec && typeof spec === 'object' ? spec : {};
+        const rawId = String(safeSpec.id || safeSpec.bossId || 'boss').trim().toLowerCase();
+        const bossId = rawId || 'boss';
+        const bossName = String(safeSpec.name || bossId).trim() || bossId;
+        const bossType = String(safeSpec.type || 'tank').toLowerCase();
+        const bossTraits = (safeSpec.traits && typeof safeSpec.traits === 'object') ? safeSpec.traits : {};
+        const bossWord = this.game.getBossWord ? this.game.getBossWord(safeSpec) : this.game.getWordForDifficulty();
+
+        const enemy = this.spawnEnemy(bossWord, bossType, bossTraits);
+        if (!enemy) return null;
+
+        const healthOverride = Number.isFinite(safeSpec.health) ? safeSpec.health : null;
+        const speedMult = Number.isFinite(safeSpec.speedMult) ? safeSpec.speedMult : 1;
+        const damageMult = Number.isFinite(safeSpec.damageMult) ? safeSpec.damageMult : 1;
+        const sizeOverride = Number.isFinite(safeSpec.size)
+            ? Math.max(20, Math.min(120, safeSpec.size))
+            : null;
+        const ringCountOverride = Number.isFinite(safeSpec.ringCount)
+            ? Math.max(1, Math.floor(safeSpec.ringCount))
+            : null;
+
+        if (sizeOverride) enemy.size = sizeOverride;
+        if (safeSpec.color) enemy.color = safeSpec.color;
+
+        if (healthOverride && healthOverride > 0) {
+            enemy.health = healthOverride;
+            enemy.maxHealth = healthOverride;
+        } else {
+            const boostedHealth = Math.max(enemy.maxHealth * 3.5, enemy.maxHealth + 220);
+            enemy.health = boostedHealth;
+            enemy.maxHealth = boostedHealth;
+        }
+
+        enemy.baseSpeed = Math.max(18, enemy.baseSpeed * speedMult);
+        enemy.baseDamage = Math.max(6, enemy.baseDamage * damageMult);
+        enemy.ringCount = ringCountOverride || Math.max(enemy.ringCount || 0, 3);
+        enemy.turretRank = Math.max(enemy.turretRank || 0, 2);
+
+        enemy.isBoss = true;
+        enemy.bossId = bossId;
+        enemy.bossName = bossName;
+        enemy.noItemDrop = safeSpec.noItemDrop === true;
+        return enemy;
+    }
+
+    spawnEnemy(word, type = 'drone', traits = {}, spawnPosOverride = null) {
         const safeWord = String(word || 'target');
 
         const w = this.game.width;
         const h = this.game.height;
+        const safeType = String(type || 'drone').trim().toLowerCase() || 'drone';
+        const typeKey = safeType.toUpperCase();
+        const typeConfig = GameConfig.ENEMIES.TYPES[typeKey] || GameConfig.ENEMIES.TYPES.DRONE;
+        const size = typeConfig.size || 15;
         const spawnInset = (() => {
             const minDim = Math.min(w || 0, h || 0);
             return Math.max(22, Math.min(70, minDim * 0.04));
         })();
-        const side = Math.random();
-        let x = this.player.x;
-        let y = this.player.y;
-        if (Number.isFinite(w) && Number.isFinite(h) && w > 0 && h > 0) {
-            const rangeX = Math.max(0, w - spawnInset * 2);
-            const rangeY = Math.max(0, h - spawnInset * 2);
-            if (side < 0.25) {
-                x = spawnInset;
-                y = spawnInset + Math.random() * rangeY;
-            } else if (side < 0.5) {
-                x = w - spawnInset;
-                y = spawnInset + Math.random() * rangeY;
-            } else if (side < 0.75) {
-                x = spawnInset + Math.random() * rangeX;
-                y = spawnInset;
-            } else {
-                x = spawnInset + Math.random() * rangeX;
-                y = h - spawnInset;
-            }
-        }
 
-        const typeKey = type.toUpperCase();
-        const typeConfig = GameConfig.ENEMIES.TYPES[typeKey] || GameConfig.ENEMIES.TYPES.DRONE;
+        const spawnPos = (spawnPosOverride && Number.isFinite(spawnPosOverride.x) && Number.isFinite(spawnPosOverride.y))
+            ? { x: spawnPosOverride.x, y: spawnPosOverride.y }
+            : this.findNonOverlappingSpawnPosition(size, spawnInset, w, h);
+
+        const minX = 8;
+        const minY = 8;
+        const maxX = Math.max(minX, w - 8);
+        const maxY = Math.max(minY, h - 8);
+        const x = Math.max(minX, Math.min(maxX, spawnPos.x));
+        const y = Math.max(minY, Math.min(maxY, spawnPos.y));
         const speedBase = GameConfig.ENEMIES.BASE_SPEED + (this.game.difficulty * 5);
         const baseDamage = GameConfig.ENEMIES.BASE_DAMAGE * (typeConfig.dmgMult || 1);
-        const size = typeConfig.size || 15;
         const color = typeConfig.color || '#ff6b6b';
         const lengthBonus = Math.max(0, safeWord.length - 4) * GameConfig.ENEMIES.HEALTH_PER_CHAR;
         const health = (GameConfig.ENEMIES.BASE_HEALTH * (typeConfig.hpMult || 1)) + lengthBonus;
@@ -785,16 +975,17 @@ export default class EntityManager {
         const hpScale = Math.max(0.55, Math.min(1, 1 / Math.pow(Math.max(1, hpRatio), 0.25)));
 
         const baseSpeed = speedBase
+            * (GameConfig.BALANCE?.ENEMY_SPEED_MULT || 1)
             * (typeConfig.speedMult || 1)
             * this.game.omenConfig.speedMult
             * approachScale
             * hpScale;
         let ringCount = 0;
-        if (type === 'drone') {
+        if (safeType === 'drone') {
             ringCount = Math.min(3, Math.max(0, Math.floor((health / GameConfig.ENEMIES.BASE_HEALTH) - 1)));
         }
         let turretRank = 0;
-        if (type === 'turret') {
+        if (safeType === 'turret') {
             turretRank = (this.game.wave >= 8 || health > GameConfig.ENEMIES.BASE_HEALTH * 2) ? 2 : 1;
         }
 
@@ -808,7 +999,7 @@ export default class EntityManager {
             baseDamage,
             size,
             color,
-            type,
+            type: safeType,
             health,
             maxHealth: health,
             isDead: false,
@@ -872,7 +1063,59 @@ export default class EntityManager {
         }
 
         this.enemies.push(enemy);
+        if (this.game && typeof this.game.onEnemySpawned === 'function') {
+            this.game.onEnemySpawned(enemy);
+        }
         return enemy;
+    }
+
+    pickEdgeSpawnPoint(spawnInset, w, h) {
+        let x = this.player.x;
+        let y = this.player.y;
+        if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) {
+            return { x, y };
+        }
+
+        const rangeX = Math.max(0, w - spawnInset * 2);
+        const rangeY = Math.max(0, h - spawnInset * 2);
+        const side = Math.random();
+        if (side < 0.25) {
+            x = spawnInset;
+            y = spawnInset + Math.random() * rangeY;
+        } else if (side < 0.5) {
+            x = w - spawnInset;
+            y = spawnInset + Math.random() * rangeY;
+        } else if (side < 0.75) {
+            x = spawnInset + Math.random() * rangeX;
+            y = spawnInset;
+        } else {
+            x = spawnInset + Math.random() * rangeX;
+            y = h - spawnInset;
+        }
+        return { x, y };
+    }
+
+    hasSpawnClearance(x, y, size) {
+        const padding = GameConfig.BALANCE?.ENEMY_OVERLAP_PADDING || 10;
+        for (const enemy of this.enemies) {
+            if (!enemy || enemy.isDead || enemy.isProjectileEnemy) continue;
+            const minDist = (enemy.size || 10) + (size || 10) + padding;
+            const dx = enemy.x - x;
+            const dy = enemy.y - y;
+            if ((dx * dx) + (dy * dy) < minDist * minDist) return false;
+        }
+        return true;
+    }
+
+    findNonOverlappingSpawnPosition(size, spawnInset, w, h) {
+        let candidate = this.pickEdgeSpawnPoint(spawnInset, w, h);
+        if (this.hasSpawnClearance(candidate.x, candidate.y, size)) return candidate;
+
+        for (let attempt = 0; attempt < 20; attempt++) {
+            candidate = this.pickEdgeSpawnPoint(spawnInset, w, h);
+            if (this.hasSpawnClearance(candidate.x, candidate.y, size)) return candidate;
+        }
+        return candidate;
     }
 
     spawnParticles(x, y, color, count) {
@@ -894,6 +1137,24 @@ export default class EntityManager {
 
     spawnHitSpark(x, y, color) {
         this.spawnParticles(x, y, color, 4);
+    }
+
+    spawnShockwave(x, y, radius, color = '#e0a800', duration = 0.55) {
+        if (this.shockwaves.length >= this.maxShockwaves) return null;
+        const r = Number.isFinite(radius) ? Math.max(60, radius) : 360;
+        const life = Number.isFinite(duration) ? Math.max(0.15, duration) : 0.55;
+        let sw = this.shockwavePool.pop();
+        if (!sw) sw = {};
+        Object.assign(sw, {
+            x,
+            y,
+            radius: r,
+            color,
+            life,
+            maxLife: life
+        });
+        this.shockwaves.push(sw);
+        return sw;
     }
 
     refreshEnemyWord(enemy) {

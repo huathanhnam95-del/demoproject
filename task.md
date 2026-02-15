@@ -1,27 +1,23 @@
-# SRS System Upgrade Tasks
+# Task: Implement Penguin Crossing Game
 
-- [x] Planning & Design (Initial)
-  - [x] Analyze existing `srs-review.js`
-  - [x] Create Implementation Plan (Dual-Engine)
-  - [x] Create User Guide
-- [x] Implementation: Core System
-  - [x] Create `srs-scheduler.js`, `srs-onboarding.js`, `srs-onboarding.css`
-  - [x] Integrate into `index.html` and `srs-review.js`
-  - [x] Fix syntax and integration errors
-- [x] UI/UX & Learning Design Audit
-  - [x] Perform expert browser audit of UI/UX
-  - [x] Refine UI/UX based on audit findings
-    - [x] Move rating buttons to card bottom (centralize focus)
-    - [x] Update button design (Again/Hard/Good/Easy)
-    - [x] Simplify prompts and descriptions ("How well did you remember?")
-    - [x] Redesign Writing Challenge help panel (Accordion)
-    - [x] Add "Click to flip" hint element
-    - [x] Simplify onboarding language (Classic vs Smart AI)
-- [x] Security Hardening (Alignment)
-  - [x] Apply council security fixes to `auth-ui.js` and `index.html`
-  - [x] Implement server-side validation for SRS progress
-  - [x] Move economy/points to Firestore Transactions
-- [ ] Final Verification & Deployment
-  - [/] Browser testing of refined UI and security fixes
-  - [ ] Verify onboarding flow and algorithm switching
-  - [ ] Cross-device sync verification (Firestore)
+- [x] Planning & Design
+  - [x] Research technical implementation details (Canvas, Audio, Spawning) <!-- id: 0 -->
+  - [x] Create Implementation Plan <!-- id: 1 -->
+  - [x] Design Data Structures for Game State & Spawning <!-- id: 2 -->
+- [x] Phase 1: Core Engine & Physics
+  - [x] Create `public/games/penguin-crossing` directory structure <!-- id: 3 -->
+  - [x] Implement Basic Canvas Rendering Loop <!-- id: 4 -->
+  - [x] Implement Iceberg Spawning Logic to avoid collisions <!-- id: 5 -->
+  - [x] Implement WPM-based Velocity Logic <!-- id: 6 -->
+- [/] Phase 2: Input & Feedback Loop
+  - [/] Implement "Wait-on-Error" State Machine <!-- id: 7 -->
+  - [ ] Implement Backspace Toggle Logic <!-- id: 8 -->
+  - [ ] Implement Audio Feedback System (Squawk, Success) <!-- id: 9 -->
+- [ ] Phase 3: HUD & Analytics
+  - [ ] Implement HUD (WPM, Accuracy, Progress) <!-- id: 10 -->
+  - [ ] Implement Guide Hands Visuals <!-- id: 11 -->
+  - [ ] Implement "Overstrike" & "Standard" Rendering Modes <!-- id: 12 -->
+- [ ] Phase 4: Integration & Polish
+  - [x] Integrate into "Entertainment Hub" in main app <!-- id: 13 -->
+  - [ ] Implement Custom Lesson Designer (JSON/Text parser) <!-- id: 14 -->
+  - [ ] Final Polish & Testing <!-- id: 15 -->

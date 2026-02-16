@@ -7101,11 +7101,9 @@ textarea:focus {
 /* Mobile responsiveness for general tutorial */
 @media (max-width: 480px) {
   .tutorial-tooltip {
-    width: calc(100vw - 32px) !important;
-    padding: 20px !important;
-    left: 16px !important;
-    right: 16px !important;
-    max-width: none !important;
+    width: calc(100vw - 32px);
+    max-width: none;
+    padding: 20px;
   }
 
   .tutorial-icon {
@@ -8923,6 +8921,37 @@ textarea:focus {
 }
 
 @media (max-width: 767px) {
+
+  /* Prevent horizontal overflow on mobile */
+  .container {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 24px;
+    width: auto;
+    max-width: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  /* Keep segmented control within viewport */
+  .dashboard-segmented-control {
+    box-sizing: border-box;
+    display: flex;
+    width: 100%;
+    max-width: 100%;
+    left: 0;
+    transform: none;
+  }
+
+  .segmented-btn {
+    flex: 1;
+    padding: 10px 10px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   /* ============================================
      FIX 1: Hide floating panel toggles on mobile
      Replace with mobile toolbar at bottom
@@ -14671,7 +14700,135 @@ body.survival-active #level-system-container {
 .rpg-link.root {
   stroke: #60a5fa;
   stroke-width: 3;
-  opacity: 0.6;
+  opacity: 0.8;
+  filter: drop-shadow(0 0 2px #60a5fa);
+}
+
+/* ==========================================================================
+   Mobile Responsive Adjustments for Skill Tree
+   ========================================================================== */
+@media (max-width: 900px) {
+  .rpg-main-layout {
+    display: flex;
+    flex-direction: column;
+    height: 85vh;
+    border-radius: 12px;
+  }
+
+  /* Sidebar becomes a top horizontal scroller */
+  .rpg-sidebar {
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    padding: 8px;
+    border-right: none;
+    border-bottom: 1px solid #334155;
+    overflow-x: auto;
+    white-space: nowrap;
+    background: #0f172a;
+    /* Match dark theme */
+  }
+
+  .rpg-sidebar-header,
+  .rpg-sidebar-footer {
+    display: none;
+  }
+
+  .rpg-category-list {
+    flex-direction: row;
+    width: auto;
+    gap: 12px;
+  }
+
+  .rpg-cat-btn {
+    width: auto;
+    padding: 6px 16px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #94a3b8;
+    border-radius: 20px;
+    font-size: 12px;
+  }
+
+  .rpg-cat-btn.active {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+  }
+
+  /* Tree Container */
+  .rpg-tree-container {
+    flex: 1;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0;
+    border-radius: 0;
+    border: none;
+  }
+
+  .rpg-tree-wrap {
+    margin: 0;
+    min-height: 600px;
+    /* Ensure scroll space */
+    border-radius: 0;
+  }
+
+  /* Scale nodes down slightly for mobile */
+  .rpg-node {
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+
+  .rpg-node:hover {
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+
+  /* Detail Panel - Slide up Bottom Sheet */
+  #rpg-detail-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: auto;
+    max-height: 80vh;
+    background: white;
+    z-index: 2000;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+    transform: translateY(110%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #rpg-detail-panel.active {
+    transform: translateY(0);
+  }
+
+  /* Close button for mobile panel */
+  .rpg-close-detail {
+    display: block !important;
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: #f1f5f9;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 20px;
+    line-height: 1;
+    color: #64748b;
+    cursor: pointer;
+    z-index: 10;
+  }
+}
+
+/* Hide close button on desktop */
+.rpg-close-detail {
+  display: none;
 }
 
 .rpg-detail-panel {
@@ -14878,6 +15035,7 @@ body.survival-active #level-system-container {
   width: 480px !important;
   height: 480px !important;
 }
+
 /* Skill Detail Enhanced Styles */
 .rpg-detail-modes {
   margin-bottom: 12px;
@@ -14885,10 +15043,12 @@ body.survival-active #level-system-container {
   border-bottom: 1px solid #e2e8f0;
   font-size: 0.85rem;
 }
+
 .rpg-detail-modes .label {
   color: #64748b;
   margin-right: 6px;
 }
+
 .rpg-detail-modes .val {
   font-weight: 700;
   color: #3b82f6;
@@ -14918,4 +15078,3 @@ body.survival-active #level-system-container {
   color: #64748b;
   margin: 0;
 }
-

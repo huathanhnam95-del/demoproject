@@ -51,6 +51,11 @@
     };
 
     window.openSurvivalGame = function (opts = {}) {
+      // Mobile/Tablet Check
+      if (window.innerWidth < 1024 || 'ontouchstart' in window) {
+        alert("Desktop Only: This game requires a physical keyboard.");
+        return;
+      }
       const forceTutorial = !!(opts && opts.forceTutorial);
 
       // First-time: show tutorial before launching the game overlay so it stays visible.
@@ -880,7 +885,7 @@
       <div class="ae-header">
         <div class="ae-header-left">
           <span class="ae-status-dot"></span>
-          <span class="ae-title">Adaptive Engine — Active</span>
+          <span class="ae-title">Adaptive Engine</span>
         </div>
         <button id="ae-close-btn" class="ae-close-btn" title="Close">×</button>
       </div>
@@ -1790,6 +1795,7 @@
           <button id="retry-btn-speak" class="modern-btn modern-btn--retry" type="button"
             style="display: none;">Retry</button>
         </div>
+        <span id="replay-counter-speak" class="badge-status badge-replay"></span>
         <div id="score-speak" class="score">Points: 0</div>
 
 

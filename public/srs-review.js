@@ -183,14 +183,22 @@ const SRSReview = (function () {
                 const functions = getFunctions();
                 const assessFn = httpsCallable(functions, 'assessWriting');
                 try {
-                    const result = await assessFn({ text, context });
+                    const targetWord = context?.lemma || context?.originalWord || context?.word || '';
+                    const safeContext = {
+                        word: targetWord,
+                        lemma: context?.lemma || context?.originalWord || '',
+                        partOfSpeech: context?.partOfSpeech || context?.pos || ''
+                    };
+                    const result = await assessFn({ text, context: safeContext });
                     return result.data;
                 } catch (e) {
                     console.error('Cloud Function Call Failed:', e);
                     throw e;
                 }
             },
-            saveUserSentence: saveUserSentence,
+            // writing-challenge.js calls saveUserSentence(wordId, lemma, sentence, feedback)
+            // but the underlying persistence function is saveUserSentence(uid, word, sentence, feedback).
+            saveUserSentence: (wordId, word, sentence, feedback) => saveUserSentence(currentUserId, word, sentence, feedback),
             applyAIScoreToSRS: applyAIScoreToSRS,
             saveDraft: saveDraft,
             loadDraft: loadDraft,
@@ -318,7 +326,7 @@ const SRSReview = (function () {
             showAnswerBtn: document.getElementById('srs-show-answer-btn'), // FIX: Added missing reference
 
             // Hint elements
-            hintDefValue: document.getElementById('hint-def-value'),
+            hintDefValue: document.getElementById('hint-definition-value') || document.getElementById('hint-def-value'),
             hintExampleValue: document.getElementById('hint-example-value'),
             hintCollocationsValue: document.getElementById('hint-collocations-value'),
             hintStarterValue: document.getElementById('hint-starter-value'),
@@ -328,7 +336,7 @@ const SRSReview = (function () {
             scaffoldingPanel: document.getElementById('scaffolding-panel'),
             exampleSentencesList: document.getElementById('example-sentences-list'),
             scaffoldingExtras: document.getElementById('scaffolding-extras-container'),
-            exampleSentencesList: document.getElementById('example-sentences-list'),
+            // exampleSentencesList duplicated (legacy) - keep single reference above
 
             // Settings
             srsSettingsModal: document.getElementById('srs-settings-modal'),
@@ -584,6 +592,11 @@ const SRSReview = (function () {
             elements.moreHelpBtn.addEventListener('click', toggleScaffolding);
         }
 
+        // Save Settings Button
+        if (elements.saveSettingsBtn) {
+            elements.saveSettingsBtn.addEventListener('click', saveSettings);
+        }
+
         // Keyboard Shortcuts for SRS Review
         document.addEventListener('keydown', handleSRSKeyboardShortcuts);
 
@@ -599,9 +612,89 @@ const SRSReview = (function () {
                 if (elements.srsSettingsModal) elements.srsSettingsModal.style.display = 'none';
             });
         }
-        if (elements.saveSettingsBtn) {
-            elements.saveSettingsBtn.addEventListener('click', saveSettings);
-        }
+
+        // Setup Mobile Swipe Gestures
+        setupSwipeGestures();
+    }
+
+    /**
+     * Setup Mobile Swipe Gestures for Flashcards
+     */
+    function setupSwipeGestures() {
+        const card = elements.flashcard;
+        if (!card) return;
+
+        let startX = 0;
+        let startY = 0;
+        let diffX = 0;
+        let isDragging = false;
+        const SWIPE_THRESHOLD = 80;
+
+        card.addEventListener('touchstart', (e) => {
+            // Ignore if touching interactive elements (buttons, inputs)
+            if (e.target.closest('button') || e.target.closest('input')) return;
+
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            isDragging = true;
+            card.style.transition = 'none';
+        }, { passive: true });
+
+        card.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            const currentX = e.touches[0].clientX;
+            const currentY = e.touches[0].clientY;
+            diffX = currentX - startX;
+            const diffY = currentY - startY;
+
+            // If mostly vertical scrolling, ignore swipe
+            if (Math.abs(diffY) > Math.abs(diffX)) return;
+
+            // Prevent default to stop scrolling while swiping horizontally
+            if (e.cancelable) e.preventDefault();
+
+            // Visual Translate & Rotate
+            const rotation = diffX * 0.05;
+            card.style.transform = `translateX(${diffX}px) rotate(${rotation}deg)`;
+
+        }, { passive: false });
+
+        card.addEventListener('touchend', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            card.style.transition = 'transform 0.3s ease';
+
+            if (Math.abs(diffX) > SWIPE_THRESHOLD) {
+                // Swipe Action
+                if (diffX > 0) {
+                    // Right -> Good (3)
+                    const btn = document.querySelector('button[data-quality="3"]');
+                    if (btn) {
+                        btn.click();
+                        // Visual fly-out
+                        card.style.transform = `translateX(${window.innerWidth}px) rotate(20deg)`;
+                    }
+                } else {
+                    // Left -> Again (1)
+                    const btn = document.querySelector('button[data-quality="1"]');
+                    if (btn) {
+                        btn.click();
+                        // Visual fly-out
+                        card.style.transform = `translateX(-${window.innerWidth}px) rotate(-20deg)`;
+                    }
+                }
+
+                // Reset transform after animation
+                setTimeout(() => {
+                    card.style.transition = 'none';
+                    card.style.transform = '';
+                }, 300);
+            } else {
+                // Snap Back
+                card.style.transform = '';
+            }
+            diffX = 0;
+        });
     }
 
     /**
@@ -2411,6 +2504,55 @@ const SRSReview = (function () {
     }
 
     /**
+     * Decide whether to trigger the Writing Challenge for a word.
+     * Used by both Auto-Assign and manual quality rating flows.
+     */
+    function getWritingChallengeTriggerDecision(currentWord, wasCorrect) {
+        const decision = {
+            shouldTrigger: false,
+            wasCorrect: wasCorrect === true,
+            currentPOS: '',
+            isAllowedPOS: false,
+            shouldSkipWord: false
+        };
+
+        if (!wasCorrect || !currentWord) return decision;
+
+        // Only show Writing Challenge for nouns, verbs, adjectives, adverbs
+        const ALLOWED_POS = ['noun', 'verb', 'adjective', 'adverb', 'n', 'v', 'adj', 'adv'];
+
+        // Try multiple sources for POS: partOfSpeech, pos, or detect via dictionary service
+        let currentPOS = String(currentWord.partOfSpeech || currentWord.pos || '').toLowerCase();
+
+        // If POS is still unknown, use DictionaryService
+        if ((!currentPOS || currentPOS === 'unknown') && window.DictionaryService && typeof window.DictionaryService.detectPartOfSpeech === 'function') {
+            try {
+                const detected = window.DictionaryService.detectPartOfSpeech(
+                    currentWord.originalWord || currentWord.lemma,
+                    currentWord.sentence || currentWord.example || ''
+                );
+                currentPOS = String(detected || '').toLowerCase();
+            } catch (e) {
+                // Ignore POS detection errors and continue with existing value.
+            }
+        }
+
+        const isAllowedPOS = ALLOWED_POS.some(pos => currentPOS.includes(pos));
+
+        // Words to skip for Writing Challenge (too common/simple for meaningful practice)
+        const SKIP_WRITING_CHALLENGE_WORDS = ['be', 'a', 'an', 'the', 'is', 'are', 'was', 'were'];
+        const wordLemma = String(currentWord.lemma || currentWord.originalWord || '').toLowerCase().trim();
+        const shouldSkip = SKIP_WRITING_CHALLENGE_WORDS.includes(wordLemma);
+
+        decision.currentPOS = currentPOS;
+        decision.isAllowedPOS = isAllowedPOS;
+        decision.shouldSkipWord = shouldSkip;
+        decision.shouldTrigger = wasCorrect && isAllowedPOS && !shouldSkip;
+
+        return decision;
+    }
+
+    /**
      * Record review result using Auto-Assign mode
      * Uses answer correctness to automatically determine next interval
      */
@@ -2483,14 +2625,21 @@ const SRSReview = (function () {
             elements.flashcard.classList.remove('flipped');
         }
 
-        // Trigger Writing Challenge even in auto mode if correct
-        if (wasCorrect) {
-            showWritingChallenge(currentWord, () => {
-                reviewSession.currentIndex++;
-                showCurrentWord();
-            });
+        // Trigger Writing Challenge in auto mode using the same gating logic as manual mode.
+        const wcDecision = getWritingChallengeTriggerDecision(currentWord, wasCorrect);
+        log.debug('[SRS Auto] Writing Challenge decision:', wcDecision);
+
+        if (wcDecision.shouldTrigger) {
+            setTimeout(() => {
+                showWritingChallenge(currentWord, () => {
+                    reviewSession.lastAnswerCorrect = false;
+                    reviewSession.currentIndex++;
+                    showCurrentWord();
+                }, 'review_' + Date.now());
+            }, 300);
         } else {
-            // Move to next word immediately if wrong
+            // Move to next word immediately if wrong or not eligible
+            reviewSession.lastAnswerCorrect = false;
             reviewSession.currentIndex++;
             showCurrentWord();
         }
@@ -2522,6 +2671,9 @@ const SRSReview = (function () {
             quality,
             wasCorrect: quality >= 3
         });
+
+        // Track last quality for server-scored SRS attempts
+        reviewSession.lastQuality = quality;
 
         // Check if word is now mastered
         if (newData.status === 'mastered') {
@@ -2560,44 +2712,20 @@ const SRSReview = (function () {
         const isSelfRatedCorrect = typeof quality === 'number' && quality >= 3;
         const wasCorrect = reviewSession.lastAnswerCorrect === true || isSelfRatedCorrect;
 
-        // Only show Writing Challenge for nouns, verbs, adjectives, adverbs
-        const ALLOWED_POS = ['noun', 'verb', 'adjective', 'adverb', 'n', 'v', 'adj', 'adv'];
-
-        // Try multiple sources for POS: partOfSpeech, pos, or detect via dictionary service
-        let currentPOS = (currentWord.partOfSpeech || currentWord.pos || '').toLowerCase();
-
-        // If POS is still unknown, use DictionaryService
-        if ((!currentPOS || currentPOS === 'unknown' || currentPOS === '') && window.DictionaryService) {
-            currentPOS = window.DictionaryService.detectPartOfSpeech(currentWord.originalWord || currentWord.lemma, currentWord.sentence || '');
-            log.debug('[SRS DEBUG] Detected POS via DictionaryService:', currentPOS);
-        }
-
-        const isAllowedPOS = ALLOWED_POS.some(pos => currentPOS.includes(pos));
-
-        // Words to skip for Writing Challenge (too common/simple for meaningful practice)
-        const SKIP_WRITING_CHALLENGE_WORDS = ['be', 'a', 'an', 'the', 'is', 'are', 'was', 'were'];
-        const wordLemma = (currentWord.lemma || currentWord.originalWord || '').toLowerCase().trim();
-        const shouldSkipWritingChallenge = SKIP_WRITING_CHALLENGE_WORDS.includes(wordLemma);
+        const wcDecision = getWritingChallengeTriggerDecision(currentWord, wasCorrect);
 
         log.debug('[SRS DEBUG] recordReviewResult - wasCorrect:', wasCorrect, 'reviewSession.lastAnswerCorrect:', reviewSession.lastAnswerCorrect);
-        log.debug('[SRS DEBUG] recordReviewResult - currentPOS:', currentPOS, 'isAllowedPOS:', isAllowedPOS);
-        log.debug('[SRS DEBUG] recordReviewResult - Will trigger Writing Challenge?', wasCorrect && isAllowedPOS && !shouldSkipWritingChallenge);
+        log.debug('[SRS DEBUG] recordReviewResult - currentPOS:', wcDecision.currentPOS, 'isAllowedPOS:', wcDecision.isAllowedPOS);
+        log.debug('[SRS DEBUG] recordReviewResult - Will trigger Writing Challenge?', wcDecision.shouldTrigger);
 
-        if (wasCorrect && isAllowedPOS && !shouldSkipWritingChallenge) {
+        if (wcDecision.shouldTrigger) {
             setTimeout(() => {
-                if (writingChallenge) {
-                    writingChallenge.show(currentWord, calculateUserLevel(), 'review_' + Date.now(), () => {
-                        // Callback after challenge
-                        reviewSession.lastAnswerCorrect = false;
-                        reviewSession.currentIndex++;
-                        showCurrentWord();
-                    });
-                } else {
-                    // Fallback if module fails (shouldn't happen)
+                showWritingChallenge(currentWord, () => {
+                    // Callback after challenge
                     reviewSession.lastAnswerCorrect = false;
                     reviewSession.currentIndex++;
                     showCurrentWord();
-                }
+                }, 'review_' + Date.now());
             }, 300);
         } else {
             // Incorrect answer, no answer check, or non-content word: Move to next word directly
@@ -2855,13 +2983,15 @@ const SRSReview = (function () {
         try {
             // Use Dual-Track Scoring for SRS Reviews if available
             if (reason === 'srs_review' && window.handleDualTrackScoring) {
-                // Pass synthetic diff pieces to trigger F1 accuracy computation
-                const syntheticDiff = (quality >= 3)
-                    ? [{ type: 'match' }, { type: 'match' }]
-                    : [{ type: 'missing' }, { type: 'extra' }];
+                const currentWord = reviewSession.wordsToReview?.[reviewSession.currentIndex] || null;
+                const lemma = currentWord?.lemma || currentWord?.originalWord || 'srs_review';
+                const lastQuality = Number(reviewSession?.lastQuality);
+                const qualityValue = Number.isFinite(lastQuality)
+                    ? lastQuality
+                    : (reviewSession?.lastAnswerCorrect === true ? 4 : 1);
 
-                // Award XP only for SRS (Track A), don't update specific Skill Ratings (Track B)
-                await window.handleDualTrackScoring('srs', 'srs_review', syntheticDiff, 2);
+                // Award XP for SRS (Track A). Track B ratings do not update for 'srs' mode on server.
+                await window.handleDualTrackScoring('srs', String(lemma), qualityValue);
             } else if (window.firebaseFirestoreFunctions && window.firebaseFirestoreFunctions.addPoints) {
                 await window.firebaseFirestoreFunctions.addPoints(
                     currentUserId,
@@ -3203,7 +3333,71 @@ const SRSReview = (function () {
 
     // Tatoeba cache for example sentences
     const tatoebaCache = new Map();
-    let scaffoldingLoaded = false;
+    let scaffoldingLoadedForWord = null;
+
+    function getCurrentScaffoldingWord() {
+        const current = reviewSession.wordsToReview?.[reviewSession.currentIndex] || null;
+        const word = current?.lemma || current?.originalWord || '';
+        return String(word || '').trim();
+    }
+
+    function ensureMoreHelpLabelSpan() {
+        const btn = elements.moreHelpBtn;
+        if (!btn) return null;
+
+        const existing = btn.querySelector('.more-help-label');
+        if (existing) return existing;
+
+        const label = document.createElement('span');
+        label.className = 'more-help-label';
+
+        const text = Array.from(btn.childNodes)
+            .filter((n) => n.nodeType === Node.TEXT_NODE)
+            .map((n) => n.textContent)
+            .join(' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        // Remove existing text nodes so we can reliably toggle just the label text.
+        Array.from(btn.childNodes)
+            .filter((n) => n.nodeType === Node.TEXT_NODE)
+            .forEach((n) => n.remove());
+
+        label.textContent = text || '💡 Need more help?';
+        btn.appendChild(label);
+        return label;
+    }
+
+    function setMoreHelpButtonLabel(isOpen) {
+        const label = ensureMoreHelpLabelSpan();
+        if (!label) return;
+        label.textContent = isOpen ? '✖️ Close help' : '💡 Need more help?';
+    }
+
+    function resetWritingChallengeScaffolding() {
+        scaffoldingLoadedForWord = null;
+
+        if (elements.scaffoldingPanel) {
+            elements.scaffoldingPanel.classList.remove('visible');
+        }
+
+        if (elements.moreHelpBtn) {
+            elements.moreHelpBtn.classList.remove('active');
+            setMoreHelpButtonLabel(false);
+
+            const pulseRing = elements.moreHelpBtn.querySelector('.pulse-ring');
+            if (pulseRing && elements.moreHelpBtn.dataset.pulseHidden === '1') {
+                pulseRing.style.display = 'none';
+            }
+        }
+
+        if (elements.exampleSentencesList) {
+            elements.exampleSentencesList.innerHTML = '<li class="example-sentence-item loading">Loading examples...</li>';
+        }
+        if (elements.scaffoldingExtras) {
+            elements.scaffoldingExtras.innerHTML = '';
+        }
+    }
 
     /**
      * Toggle scaffolding panel visibility
@@ -3217,24 +3411,29 @@ const SRSReview = (function () {
 
         // Hide pulse ring on first interaction
         const pulseRing = btn ? btn.querySelector('.pulse-ring') : null;
-        if (pulseRing) pulseRing.style.display = 'none';
+        if (pulseRing) {
+            pulseRing.style.display = 'none';
+            if (btn) btn.dataset.pulseHidden = '1';
+        }
 
         if (isVisible) {
             panel.classList.remove('visible');
             if (btn) {
                 btn.classList.remove('active');
-                btn.innerHTML = btn.innerHTML.replace('✖️ Close Help', '💡 More Help!');
+                setMoreHelpButtonLabel(false);
             }
         } else {
             panel.classList.add('visible');
             if (btn) {
                 btn.classList.add('active');
-                btn.innerHTML = btn.innerHTML.replace('💡 More Help!', '✖️ Close Help');
+                setMoreHelpButtonLabel(true);
             }
 
-            if (!scaffoldingLoaded) {
-                await loadScaffoldingContent();
-                scaffoldingLoaded = true;
+            const word = getCurrentScaffoldingWord();
+            const key = word ? word.toLowerCase() : '';
+            if (word && scaffoldingLoadedForWord !== key) {
+                const loaded = await loadScaffoldingContent(word);
+                if (loaded) scaffoldingLoadedForWord = key;
             }
         }
     }
@@ -3242,14 +3441,14 @@ const SRSReview = (function () {
     /**
      * Load scaffolding content (example sentences + Enhanced Scaffolding)
      */
-    async function loadScaffoldingContent() {
-        const word = reviewSession.currentWritingWord;
-        if (!word) return;
+    async function loadScaffoldingContent(word) {
+        if (!word) return false;
 
         const sentences = await fetchTatoebaSentences(word);
         displayExampleSentences(sentences, word);
 
         await displayEnhancedScaffolding(word);
+        return true;
     }
 
     /**
@@ -4027,9 +4226,17 @@ const SRSReview = (function () {
     /**
      * Legacy Bridge for Writing Challenge
      */
-    function showWritingChallenge(wordObj, onComplete) {
+    function showWritingChallenge(wordObj, onComplete, uniqueId) {
+        // Reset scaffolding UI/state per challenge so "More help" loads the correct word.
+        resetWritingChallengeScaffolding();
+        reviewSession.currentWritingWord = wordObj?.lemma || wordObj?.originalWord || '';
+
+        const resolvedId = (typeof uniqueId === 'string' && uniqueId.length > 0)
+            ? uniqueId
+            : 'manual_' + Date.now();
+
         if (writingChallenge) {
-            writingChallenge.show(wordObj, calculateUserLevel(), 'manual_' + Date.now(), onComplete);
+            writingChallenge.show(wordObj, calculateUserLevel(), resolvedId, onComplete);
         } else {
             console.warn('WritingChallenge module not initialized');
             if (onComplete) onComplete();

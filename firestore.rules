@@ -56,6 +56,11 @@ service cloud.firestore {
         allow create, update, delete: if false;  // Client cannot write
       }
 
+      // Writing Challenge history (user-authored content + AI feedback)
+      match /writingHistory/{entryId} {
+        allow read, write: if isOwner(userId);
+      }
+
       // Vocabulary Book data - client can manage word lists
       match /vocabularyBook/{docId} {
         allow read, write: if isOwner(userId);

@@ -19,12 +19,16 @@ const {
  * 
  * @param {object} data - {
  *   attemptId: string,        // UUID for idempotency (client generates)
- *   mode: string,             // 'type', 'speak', 'extended', 'watch', 'notes'
+ *   mode: string,             // 'type', 'speak', 'extended', 'watch', 'notes', 'writingChallenge', 'srs'
  *   contentId: string,        // Content identifier
  *   payload: {                // Mode-specific raw answer
  *     text?: string,          // For type/speak/notes
- *     answers?: string[],     // For extended (one per gap)
- *     selectedIndex?: number  // For watch (MC option index)
+ *     answers?: string[],     // For extended (one per gap) when canonical gaps exist
+ *     correctCount?: number,  // For extended (client-verified gap counts)
+ *     totalCount?: number,    // For extended (client-verified gap counts)
+ *     selectedIndex?: number, // For watch (MC option index)
+ *     accuracy?: number,      // For writingChallenge (AI/heuristic score 0..1)
+ *     quality?: number        // For srs (0..5 self/auto rating)
  *   }
  * }
  */
@@ -279,12 +283,33 @@ const submitAttempt = onCall({ maxInstances: 10 }, async (request) => {
  * Score Type/Speak/Extended modes using contentItems collection
  */
 async function scoreContentMode(db, mode, contentId, payload, transaction) {
+    if (mode === 'srs') {
+        return scoreSrsMode(payload);
+    }
+
+    if (mode === 'writingChallenge') {
+        return scoreWritingChallengeMode(payload);
+    }
+
     // Build document ID based on mode prefix
     const docId = contentId.startsWith(`${mode}_`) ? contentId : `${mode}_${contentId}`;
     const contentRef = db.collection('contentItems').doc(docId);
     const contentDoc = await transaction.get(contentRef);
 
     if (!contentDoc.exists) {
+        if (mode === 'extended') {
+            const fallback = scoreExtendedFromCounts(payload);
+            if (fallback) {
+                return {
+                    ...fallback,
+                    difficulty: 1.5,
+                    details: {
+                        ...fallback.details,
+                        warning: 'Canonical content not found'
+                    }
+                };
+            }
+        }
         throw new HttpsError('not-found', `Content not found in Firestore: ${docId}`);
     }
 
@@ -293,32 +318,73 @@ async function scoreContentMode(db, mode, contentId, payload, transaction) {
     const difficulty = content.difficultyMultiplier || 1.5;
 
     if (mode === 'extended') {
-        const userAnswers = payload.answers || [];
         const gaps = content.gaps || [];
+        const hasCanonicalGaps = Array.isArray(gaps) && gaps.length > 0;
+        const hasAnswerArray = Array.isArray(payload.answers);
+        const fallbackCounts = scoreExtendedFromCounts(payload);
 
-        let correctCount = 0;
-        const gapResults = [];
+        // Prefer server-verifiable canonical scoring when we have canonical gaps + answer array.
+        // Otherwise, fall back to client-verified counts (for dynamic/randomized gaps).
+        if (hasCanonicalGaps && hasAnswerArray) {
+            const userAnswers = payload.answers;
+            let correctCount = 0;
+            const gapResults = [];
 
-        const norm = s => (s || '').toLowerCase().trim();
+            const norm = s => (s || '').toLowerCase().trim();
 
-        gaps.forEach((gap, idx) => {
-            const userAnswer = norm(userAnswers[idx]);
-            const correctAnswers = (gap.answers || []).map(norm);
-            const isCorrect = correctAnswers.includes(userAnswer);
+            gaps.forEach((gap, idx) => {
+                const userAnswer = norm(userAnswers[idx]);
+                const correctAnswers = (gap.answers || []).map(norm);
+                const isCorrect = correctAnswers.includes(userAnswer);
 
-            if (isCorrect) correctCount++;
-            gapResults.push({ index: idx, userAnswer, isCorrect });
-        });
+                if (isCorrect) correctCount++;
+                gapResults.push({ index: idx, userAnswer, isCorrect });
+            });
 
-        const accuracy = gaps.length > 0 ? correctCount / gaps.length : 0;
+            const accuracy = gaps.length > 0 ? correctCount / gaps.length : 0;
 
+            return {
+                accuracy: accuracy,
+                difficulty: difficulty,
+                details: {
+                    type: 'canonical_gaps',
+                    gapResults: gapResults,
+                    correctCount: correctCount,
+                    totalGaps: gaps.length
+                }
+            };
+        }
+
+        if (fallbackCounts) {
+            const details = { ...(fallbackCounts.details || {}) };
+            if (hasCanonicalGaps) {
+                details.note = 'Used client counts despite canonical gaps (no answers sent)';
+            }
+            return {
+                ...fallbackCounts,
+                difficulty: difficulty,
+                details
+            };
+        }
+
+        if (!hasCanonicalGaps) {
+            return {
+                accuracy: 0,
+                difficulty: difficulty,
+                details: {
+                    type: 'missing_gaps',
+                    warning: 'Canonical gaps not found and no client counts provided'
+                }
+            };
+        }
+
+        // Canonical gaps exist but the client did not send answers or counts.
         return {
-            accuracy: accuracy,
+            accuracy: 0,
             difficulty: difficulty,
             details: {
-                gapResults: gapResults,
-                correctCount: correctCount,
-                totalGaps: gaps.length
+                type: 'missing_payload',
+                warning: 'Canonical gaps exist but no answers/correctCount were provided'
             }
         };
     } else {
@@ -472,10 +538,10 @@ async function scoreNotesMode(db, contentId, payload, transaction) {
         };
     }
 
-    // Compare with canonical using word overlap
-    const diffPieces = pointsLogic.diffWords(canonical, userText);
-    const matchCount = diffPieces.filter(p => p.type === 'match').length;
-    const canonicalWordCount = canonical.split(/\s+/).filter(w => w.length > 3).length;
+    // Compare with canonical using LCS match counts (word-level)
+    const diff = pointsLogic.diffWords(canonical, userText);
+    const matchCount = diff.matches;
+    const canonicalWordCount = diff.expectedLen;
 
     // Notes mode: capped performance score
     const rawAccuracy = canonicalWordCount > 0 ? matchCount / canonicalWordCount : 0;
@@ -489,6 +555,99 @@ async function scoreNotesMode(db, contentId, payload, transaction) {
             matchCount: matchCount,
             canonicalWordCount: canonicalWordCount,
             userWordCount: userText.split(/\s+/).filter(w => w).length
+        }
+    };
+}
+
+function scoreExtendedFromCounts(payload) {
+    const rawCorrect = payload?.correctCount;
+    const rawTotal = payload?.totalCount;
+
+    const correctCount = Number(rawCorrect);
+    const totalCount = Number(rawTotal);
+
+    if (!Number.isFinite(correctCount) || !Number.isFinite(totalCount)) return null;
+    if (totalCount <= 0) return null;
+
+    const safeTotal = Math.max(1, Math.min(50, Math.floor(totalCount)));
+    const safeCorrect = Math.max(0, Math.min(safeTotal, Math.floor(correctCount)));
+
+    return {
+        accuracy: safeCorrect / safeTotal,
+        difficulty: 1.5,
+        details: {
+            type: 'client_counts',
+            correctCount: safeCorrect,
+            totalCount: safeTotal
+        }
+    };
+}
+
+function scoreWritingChallengeMode(payload) {
+    const rawAccuracy = payload?.accuracy;
+    const asNumber = Number(rawAccuracy);
+
+    if (Number.isFinite(asNumber)) {
+        const accuracy = Math.max(0, Math.min(1, asNumber));
+        return {
+            accuracy,
+            difficulty: 2.0,
+            details: {
+                type: 'client_accuracy',
+                accuracy
+            }
+        };
+    }
+
+    // Fallback: effort-based credit from text length
+    const text = String(payload?.text || '').trim();
+    const wordCount = text.split(/\s+/).filter(Boolean).length;
+    const attempted = wordCount >= 8;
+
+    return {
+        accuracy: attempted ? 0.6 : 0.0,
+        difficulty: 2.0,
+        details: {
+            type: 'effort_based',
+            wordCount,
+            attempted
+        }
+    };
+}
+
+function scoreSrsMode(payload) {
+    const raw = payload?.quality;
+    const q = Number(raw);
+    const quality = Number.isFinite(q) ? Math.max(0, Math.min(5, Math.round(q))) : null;
+
+    if (quality === null) {
+        return {
+            accuracy: 0,
+            difficulty: 1.0,
+            details: {
+                type: 'invalid_quality',
+                rawQuality: raw
+            }
+        };
+    }
+
+    const QUALITY_TO_ACCURACY = {
+        0: 0.0,
+        1: 0.2,
+        2: 0.5,
+        3: 0.7,
+        4: 0.85,
+        5: 1.0
+    };
+
+    const accuracy = QUALITY_TO_ACCURACY[quality] ?? 0.0;
+    return {
+        accuracy,
+        difficulty: 1.0,
+        details: {
+            type: 'quality_map_v1',
+            quality,
+            accuracy
         }
     };
 }

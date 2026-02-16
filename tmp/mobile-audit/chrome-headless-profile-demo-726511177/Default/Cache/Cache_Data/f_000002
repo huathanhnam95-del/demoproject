@@ -1,0 +1,1402 @@
+/**
+ * SRS Review Styles
+ * Flashcard-based vocabulary review UI
+ */
+
+/* Overlay (Strict Mode) */
+.srs-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    /* Darker, solid backdrop */
+    backdrop-filter: blur(4px);
+    z-index: 10000;
+    /* High Z-Index */
+    pointer-events: auto;
+    /* Block interactions */
+}
+
+/* Main Panel */
+.srs-panel {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -55%) scale(0.95);
+    width: 92%;
+    max-width: 600px;
+    max-height: 90vh;
+    background: var(--bg-card);
+    border-radius: var(--radius-xl);
+    box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.25);
+    z-index: 10001;
+    display: flex;
+    flex-direction: column;
+    padding: 32px;
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Centralized Desktop Layout */
+@media (min-width: 1000px) {
+    .srs-panel {
+        max-width: 640px;
+        /* Slightly wider for central bottom buttons */
+    }
+}
+
+.srs-panel.active {
+    display: flex;
+    /* Ensure flex when active */
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+}
+
+/* Header */
+/* Header */
+.srs-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+    background: transparent;
+    padding: 0;
+    border: none;
+}
+
+.srs-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.srs-close-btn {
+    background: transparent;
+    border: none;
+    color: #9CA3AF;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 4px;
+    transition: color 0.2s;
+}
+
+.srs-close-btn:hover {
+    color: #111827;
+    background: transparent;
+}
+
+/* Stats Row */
+.srs-stats {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 0;
+    background: transparent;
+    border: none;
+}
+
+.srs-stats span {
+    font-size: 0.875rem;
+    color: #9CA3AF;
+    font-weight: 500;
+}
+
+#srs-streak {
+    color: #F59E0B;
+}
+
+/* Flashcard Container - NO SCROLL NEEDED */
+.srs-flashcard-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 16px;
+    margin-bottom: 32px;
+    /* Increased margin to prevent overlap */
+    flex-shrink: 0;
+    /* Prevent shrinking */
+    width: 100%;
+}
+
+/* SRS Element Box Sizing */
+.srs-panel,
+.srs-panel *,
+.srs-overlay {
+    box-sizing: border-box;
+}
+
+/* Flashcard */
+.srs-flashcard {
+    width: 100%;
+    max-width: 420px;
+    /* Consistently narrower */
+    height: 380px;
+    /* Increased from 320px to fit examples + results */
+    perspective: 1000px;
+    position: relative;
+    z-index: 10;
+}
+
+.srs-flashcard-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+}
+
+.srs-flashcard.flipped .srs-flashcard-inner {
+    transform: rotateY(180deg);
+}
+
+.srs-flashcard-front,
+.srs-flashcard-back {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    border-radius: var(--radius-xl);
+    background: var(--primary-tonal);
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-sm);
+    height: 100%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    color: var(--text-main);
+    overflow-y: hidden;
+    transition: var(--transition-base);
+    position: relative;
+    overflow: hidden;
+}
+
+.srs-flashcard-front::after,
+.srs-flashcard-back::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, 0.4),
+            transparent);
+    transform: skewX(-20deg);
+    transition: 0.6s;
+}
+
+.srs-flashcard:hover .srs-flashcard-front::after,
+.srs-flashcard:hover .srs-flashcard-back::after {
+    left: 150%;
+}
+
+.srs-flashcard-back {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform: rotateY(180deg);
+}
+
+/* Word Display */
+.srs-word,
+.srs-word-front {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-main) !important;
+    margin-bottom: 8px;
+    text-align: center;
+    letter-spacing: -0.02em;
+}
+
+/* Pronunciation Row */
+.srs-pronunciation-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.srs-phonetic,
+.srs-phonetic-back {
+    font-size: 15px;
+    color: #6B7280 !important;
+    font-family: 'Times New Roman', serif;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+}
+
+/* Small Audio Button */
+.srs-audio-btn-small {
+    background: var(--primary);
+    border: none;
+    color: white;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-pill);
+    font-size: 18px;
+    cursor: pointer;
+    transition: var(--transition-base);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(26, 115, 232, 0.2);
+}
+
+.srs-audio-btn-small:hover {
+    transform: scale(1.1);
+    background: #2563eb;
+}
+
+.srs-audio-btn {
+    background: linear-gradient(145deg, #3b82f6, #2563eb);
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.srs-audio-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+}
+
+.srs-audio-btn:active {
+    transform: scale(0.98);
+}
+
+/* Back of Card */
+/* Vietnamese Translation */
+.srs-vietnamese {
+    font-size: 16px;
+    font-weight: 600;
+    color: #3B82F6;
+    /* Blue accent */
+    text-align: center;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.srs-vietnamese:empty {
+    display: none;
+}
+
+/* Definition */
+.srs-definition {
+    font-size: 15px;
+    /* Slightly smaller */
+    color: #374151 !important;
+    text-align: center;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    font-weight: 400;
+
+    /* Clamp text to avoid overflow */
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+#srs-example {
+    font-size: 13px;
+    color: #6B7280 !important;
+    font-style: italic;
+    opacity: 1 !important;
+    text-align: center;
+    margin-bottom: 4px;
+    /* Reduced margin */
+
+    /* Clamp text */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.srs-example::before {
+    content: '"';
+}
+
+.srs-example::after {
+    content: '"';
+}
+
+.srs-example:empty {
+    display: none;
+}
+
+.srs-example:empty::before,
+.srs-example:empty::after {
+    content: none;
+}
+
+/* Controls - FIXED POSITION AREA */
+.srs-controls {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0 8px 0;
+    background: #FAFAFA;
+    flex-shrink: 0;
+}
+
+.srs-quality-btns {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 0;
+    margin-top: 8px;
+    border-top: 1px solid #f3f4f6;
+
+    /* Animation: Hidden by default */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.5s ease-in-out;
+    max-height: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.srs-quality-btns.visible {
+    /* Animation: Show */
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    max-height: 300px;
+    /* Allow enough space */
+    pointer-events: auto;
+}
+
+.srs-skip-btn {
+    margin-top: 8px;
+    padding: 8px 20px;
+    background: transparent;
+    border: 1px solid #d1d5db;
+    border-radius: 20px;
+    color: #6b7280;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.srs-skip-btn:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+    color: #374151;
+}
+
+.srs-quality-prompt {
+    font-size: 15px;
+    font-weight: 600;
+    color: #374151;
+    margin: 0 0 8px 0;
+    text-align: center;
+}
+
+.srs-quality-options {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    width: 100%;
+    max-width: 100%;
+    gap: 8px;
+}
+
+/* Base Quality Button */
+.quality-option {
+    width: 100%;
+    padding: 12px 8px;
+    border: none;
+    border-radius: 12px;
+    background: #ffffff;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    min-height: 70px;
+}
+
+.quality-option:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.quality-option:active {
+    transform: scale(0.96);
+}
+
+/* Keyboard hint */
+.quality-kbd {
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+    background: rgba(0, 0, 0, 0.15);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'SF Mono', 'Monaco', monospace;
+}
+
+/* Label */
+.quality-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Interval */
+.quality-interval {
+    font-size: 11px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+/* Again Button - Red */
+.quality-again {
+    background: linear-gradient(145deg, #ef4444, #dc2626);
+}
+
+.quality-again:hover {
+    background: linear-gradient(145deg, #f87171, #ef4444);
+}
+
+/* Hard Button - Orange */
+.quality-hard {
+    background: linear-gradient(145deg, #f59e0b, #d97706);
+}
+
+.quality-hard:hover {
+    background: linear-gradient(145deg, #fbbf24, #f59e0b);
+}
+
+/* Good Button - Green */
+.quality-good {
+    background: linear-gradient(145deg, #10b981, #059669);
+}
+
+.quality-good:hover {
+    background: linear-gradient(145deg, #34d399, #10b981);
+}
+
+/* Easy Button - Blue */
+.quality-easy {
+    background: linear-gradient(145deg, #3b82f6, #2563eb);
+}
+
+.quality-easy:hover {
+    background: linear-gradient(145deg, #60a5fa, #3b82f6);
+}
+
+/* Legacy classes for backward compatibility */
+.quality-1day {
+    border-left: 4px solid #EF4444;
+}
+
+.quality-3days {
+    border-left: 4px solid #F59E0B;
+}
+
+.quality-6days {
+    border-left: 4px solid #10B981;
+}
+
+.quality-14days {
+    border-left: 4px solid #3B82F6;
+}
+
+/* Mobile: 2x2 grid */
+@media (max-width: 480px) {
+    .srs-quality-options {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .quality-option {
+        min-height: 60px;
+        padding: 10px 6px;
+    }
+
+    .quality-label {
+        font-size: 12px;
+    }
+}
+
+/* Pronunciation Practice Button */
+.srs-practice-pronunciation-btn {
+    margin-top: 12px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #10B981, #059669);
+    border: none;
+    border-radius: 20px;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.srs-practice-pronunciation-btn:hover {
+    transform: scale(1.03);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.srs-practice-pronunciation-btn.recording {
+    background: linear-gradient(135deg, #0891b2, #0e7490);
+    animation: pulse-recording 1.5s infinite;
+}
+
+@keyframes pulse-recording {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.srs-pronunciation-result {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #F0FDF4;
+    border-radius: 8px;
+    font-size: 13px;
+    text-align: center;
+}
+
+.srs-pronunciation-result.correct {
+    background: #D1FAE5;
+    color: #065F46;
+}
+
+.srs-pronunciation-result.incorrect {
+    background: #FEE2E2;
+    color: #991B1B;
+}
+
+/* Input Styling */
+.srs-input-container {
+    width: 100%;
+    margin-top: 12px;
+}
+
+.srs-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    background: #F9FAFB;
+    color: #111827;
+    font-size: 16px;
+    text-align: center;
+    outline: none;
+}
+
+.srs-input:focus {
+    border-color: #3B82F6;
+    background: #FFFFFF;
+}
+
+/* Pagination */
+.srs-progress {
+    text-align: center;
+    font-size: 14px;
+    color: #9CA3AF;
+    padding: 0;
+    border: none;
+    background: transparent;
+}
+
+.srs-progress-bar {
+    display: none;
+}
+
+/* Hide bar, show text only? User said "Pagination: 14px normal centered" */
+/* Actually keeping bar but making it subtle? User didn't design bar. Assuming text only or subtle. */
+/* I'll hide the bar for now as per "Pagination: 14px, normal, centered" usually implies text "1 / 10" */
+
+
+.srs-progress-bar {
+    height: 8px;
+    background: #cbd5e1;
+    /* Clearer track */
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.srs-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+/* Session Summary */
+.srs-summary {
+    display: none;
+    padding: 32px 24px;
+    text-align: center;
+}
+
+.srs-summary-content h3 {
+    font-size: 1.5rem;
+    color: #f1f5f9;
+    margin-bottom: 24px;
+}
+
+.srs-summary-stats {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.srs-summary-stats .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.srs-summary-stats .stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #6366f1;
+}
+
+.srs-summary-stats .stat-label {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.srs-points-earned {
+    background: linear-gradient(145deg, rgba(34, 197, 94, 0.2), rgba(22, 163, 74, 0.1));
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+}
+
+.srs-points-earned span {
+    color: #22c55e;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.srs-points-earned .bonus {
+    display: block;
+    font-size: 0.85rem;
+    color: #86efac;
+    margin-top: 4px;
+}
+
+.srs-all-done {
+    color: #22c55e;
+    font-size: 1rem;
+    margin-bottom: 20px;
+}
+
+.srs-remaining {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+}
+
+.srs-done-btn {
+    background: linear-gradient(145deg, #6366f1, #4f46e5);
+    border: none;
+    color: white;
+    padding: 14px 48px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.srs-done-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+}
+
+/* Start Review Button (in Vocab Book) */
+.srs-start-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(145deg, #8b5cf6, #7c3aed);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 16px;
+}
+
+.srs-start-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+}
+
+.srs-start-btn:disabled {
+    background: #475569;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.srs-due-badge {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+}
+
+/* No Words Due State */
+.srs-no-due {
+    text-align: center;
+    padding: 20px;
+    color: #94a3b8;
+}
+
+.srs-next-review {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-top: 8px;
+}
+
+/* Mobile Styles */
+@media (max-width: 640px) {
+    .srs-panel {
+        width: 95%;
+        max-height: 90vh;
+        border-radius: 20px;
+    }
+
+    .srs-word {
+        font-size: 1.75rem;
+    }
+
+    .srs-quality-btns {
+        flex-wrap: wrap;
+    }
+
+    .srs-quality-btns button {
+        min-width: 45%;
+        padding: 12px 8px;
+    }
+
+    .srs-summary-stats {
+        gap: 16px;
+    }
+
+    .srs-summary-stats .stat-value {
+        font-size: 1.5rem;
+    }
+}
+
+/* Input Styling */
+.srs-input-container {
+    width: 100%;
+    margin-top: 24px;
+    padding: 0 16px;
+    box-sizing: border-box;
+}
+
+.srs-input {
+    width: 100%;
+    padding: 16px;
+    background: #ffffff;
+    border: 2px solid #cbd5e1;
+    border-radius: 12px;
+    color: #0f172a;
+    font-size: 1.2rem;
+    text-align: center;
+    transition: all 0.2s;
+    box-sizing: border-box !important;
+    /* Force fix overflow */
+    box-shadow: inner 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.srs-input:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    transform: translateY(-1px);
+}
+
+/* Record Button */
+.srs-record-btn {
+    background: linear-gradient(145deg, #ef4444, #dc2626);
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.srs-record-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+}
+
+.srs-record-btn.recording {
+    background: linear-gradient(145deg, #0891b2, #0e7490);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Result Display */
+.srs-result-container {
+    margin-top: 8px;
+    /* Reduced from 16px */
+    text-align: center;
+    padding: 8px 12px;
+    /* More compact */
+    background: #F0FDF4;
+    /* Light green tint for correct, will be overridden by JS if needed */
+    border-radius: 12px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.srs-result-message {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #111827;
+}
+
+.srs-result-message.correct {
+    color: #10B981;
+    /* Match Good button */
+}
+
+.srs-result-message.incorrect {
+    color: #EF4444;
+    /* Match Again button */
+}
+
+.srs-user-input-display {
+    font-size: 14px;
+    color: #6B7280;
+    font-style: italic;
+}
+
+.srs-definition-prompt {
+    font-size: 16px;
+    color: #374151 !important;
+    /* Dark Gray - must be visible */
+    text-align: center;
+    line-height: 1.5;
+}
+
+/* Feedback Toast */
+.srs-feedback-toast {
+    position: absolute;
+    bottom: 80px;
+    /* Lower, above controls */
+    left: 50%;
+    transform: translateX(-50%) scale(0.9);
+    background: rgba(31, 41, 55, 0.95);
+    color: white;
+    padding: 16px 32px;
+    border-radius: 50px;
+    font-size: 18px;
+    font-weight: 600;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 2000;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.srs-feedback-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+    margin-top: 0;
+}
+
+/* Writing Prompt Styled as Info Box */
+.srs-writing-prompt {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    color: #065f46;
+    padding: 16px;
+    border-radius: 12px;
+    margin: 12px 0 16px 0;
+    text-align: center;
+    font-weight: 500;
+    font-size: 1.1rem;
+    line-height: 1.5;
+}
+
+/* Auto-Continue Button (Auto-Assign Mode) */
+.srs-auto-continue-btn {
+    width: 100%;
+    max-width: 320px;
+    padding: 16px 24px;
+    margin: 12px auto;
+    background: linear-gradient(145deg, #10B981, #059669);
+    border: none;
+    border-radius: 16px;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.srs-auto-continue-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+}
+
+.srs-auto-continue-btn:active {
+    transform: translateY(0);
+}
+
+.auto-continue-text {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.auto-continue-hint {
+    font-size: 0.75rem;
+    font-weight: 400;
+    opacity: 0.85;
+}
+
+/* =========================================
+   Dashboard SRS Summary
+   ========================================= */
+.dashboard-srs-summary {
+    margin-top: 12px;
+    padding: 10px 16px;
+    background-color: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 12px;
+    font-size: 0.95rem;
+    color: #ffffff;
+    display: none;
+    /* Managed by JS */
+    align-items: center;
+    gap: 8px;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-srs-summary.has-due {
+    background-color: rgba(251, 191, 36, 0.25);
+    border-color: rgba(251, 191, 36, 0.45);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    font-weight: 600;
+}
+
+.dashboard-srs-summary .icon {
+    font-size: 1.1em;
+}
+
+.dashboard-cta-card:hover .dashboard-srs-summary {
+    background-color: rgba(37, 99, 235, 0.2);
+    border-color: rgba(37, 99, 235, 0.3);
+}
+
+/* =========================================
+   Mobile UI Optimizations
+   ========================================= */
+@media (max-width: 640px) {
+
+    /* Full Screen Modal */
+    .srs-panel {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
+        max-height: none !important;
+        top: 0 !important;
+        left: 0 !important;
+        transform: none !important;
+        border-radius: 0 !important;
+        padding: 16px !important;
+        justify-content: space-between;
+        /* Space out header, content, footer */
+    }
+
+    .srs-panel.active {
+        transform: none !important;
+    }
+
+    /* Compact Header */
+    .srs-header {
+        margin-bottom: 12px;
+        flex-shrink: 0;
+    }
+
+    .srs-header h2 {
+        font-size: 1.2rem;
+    }
+
+    .srs-stats {
+        margin-bottom: 16px;
+    }
+
+    /* Flexible Flashcard Container */
+    .srs-flashcard-container {
+        padding: 0;
+        margin: 0;
+        flex: 1;
+        /* Take all available vertical space */
+        justify-content: center;
+        /* Center vertically */
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        max-height: 55vh;
+        /* Don't be too tall */
+    }
+
+    .srs-flashcard {
+        width: 100%;
+        max-width: 100%;
+        height: 100%;
+        /* Fill container */
+        min-height: 300px;
+        /* Increased from 220px to fit content */
+    }
+
+    .srs-flashcard-front,
+    .srs-flashcard-back {
+        padding: 16px;
+        justify-content: center;
+        /* Center content vertically */
+    }
+
+    .srs-word,
+    .srs-word-front {
+        font-size: 2rem;
+        /* Readable size */
+        margin-bottom: 8px;
+    }
+
+    .srs-definition {
+        font-size: 14px;
+        -webkit-line-clamp: 5;
+        line-clamp: 5;
+        /* Show more text if needed */
+    }
+
+    /* Controls at Bottom - FIXED POSITION to prevent push */
+    .srs-controls {
+        width: 100%;
+        padding: 12px 16px 24px 16px;
+        flex-shrink: 0;
+        background: transparent;
+        gap: 12px;
+
+        /* Absolute positioning at bottom */
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        z-index: 20;
+    }
+
+    /* Add padding to panel bottom to reserve space for controls */
+    .srs-panel {
+        padding-bottom: 90px !important;
+        /* Reserve space for buttons */
+    }
+
+    /* When quality buttons appear, they overlay or slide up without moving card */
+    .srs-quality-btns {
+        position: absolute;
+        bottom: 0px;
+        left: 0;
+        right: 0;
+        background: #FAFAFA;
+        /* Opaque background to cover anything behind */
+        padding: 16px;
+        border-radius: 20px 20px 0 0;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+        z-index: 30;
+    }
+
+    /* Big Friendly Buttons */
+    .srs-audio-btn {
+        width: 100%;
+        padding: 14px;
+        justify-content: center;
+        font-size: 1.1rem;
+        border-radius: 12px;
+    }
+
+    .srs-record-btn {
+        width: 100%;
+        padding: 14px;
+        border-radius: 12px;
+    }
+
+    /* Quality Grid - 2x2 for buttons */
+    .srs-quality-options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .quality-option {
+        padding: 12px;
+        height: auto;
+        justify-content: center;
+        text-align: center;
+        align-items: center;
+    }
+
+    .quality-days {
+        font-size: 1.1rem;
+        margin-bottom: 2px;
+    }
+
+    .quality-desc {
+        display: none;
+        /* Hide description to keep it clean */
+    }
+
+    .srs-quality-prompt {
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+        opacity: 0.8;
+    }
+
+    /* Writing Mode Mobile */
+    .srs-writing-modal {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
+        border-radius: 0 !important;
+        top: 0 !important;
+        left: 0 !important;
+        transform: none !important;
+        padding: 16px !important;
+        z-index: 99999 !important;
+    }
+
+    .srs-writing-input {
+        font-size: 1.2rem;
+        /* Larger text for input */
+        padding: 12px;
+    }
+}
+
+/* FIX: Tutorial Layering (Must be above SRS Panel z-index 10001 AND Writing Modal z-index 99999) */
+.vocab-tutorial-overlay {
+    z-index: 100000 !important;
+}
+
+.vocab-tutorial-spotlight {
+    z-index: 100001 !important;
+}
+
+.vocab-tutorial-tooltip {
+    z-index: 100002 !important;
+    pointer-events: auto !important;
+}
+
+/* Ensure tutorial buttons are clickable */
+.vocab-tutorial-tooltip .tutorial-actions,
+.vocab-tutorial-tooltip .tutorial-next,
+.vocab-tutorial-tooltip .tutorial-skip {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* SRS Settings UI */
+.srs-settings-btn {
+    background: transparent;
+    border: none;
+    color: #9CA3AF;
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 4px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.srs-settings-btn:hover {
+    color: #111827;
+    transform: rotate(30deg);
+}
+
+.srs-settings-modal {
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.srs-settings-content {
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.settings-header {
+    margin-bottom: 12px;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 8px;
+}
+
+.ai-score {
+    font-weight: 700;
+    color: #6366f1;
+    font-size: 1.1rem;
+}
+
+.ai-summary {
+    color: #64748b;
+    font-style: italic;
+}
+
+.ai-correction-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.ai-correction-list li {
+    background: white;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    border-left: 3px solid #f59e0b;
+    /* Default warning color */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.ai-correction-original {
+    text-decoration: line-through;
+    color: #94a3b8;
+    margin-right: 8px;
+}
+
+.ai-correction-arrow {
+    color: #64748b;
+    margin-right: 8px;
+}
+
+.ai-correction-replacement {
+    color: #10b981;
+    font-weight: 600;
+}
+
+.ai-correction-reason {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-top: 4px;
+}
+
+.ai-perfect-msg {
+    color: #10b981;
+    text-align: center;
+    font-weight: 600;
+    padding: 8px;
+}
+
+/* Feedback Types via classes */
+.srs-writing-feedback.ai-result {
+    background: white;
+    border: 1px solid #e2e8f0;
+    padding: 0;
+    /* Let inner content handle padding */
+}

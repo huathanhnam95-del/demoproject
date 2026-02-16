@@ -11,6 +11,7 @@ export class WritingChallenge {
         this.currentWord = null;
         this.currentPrompt = null;
         this.onCompleteCallback = null;
+        this.userLevel = 1;
 
         this.initEventListeners();
     }
@@ -96,7 +97,7 @@ export class WritingChallenge {
             // ... (POS Check Logic) ... 
             // Reuse logic from srs-review.js but simplified
 
-            this.elements.srsWritingModal.style.display = 'flex'; // Ensure flex for visibility checks
+            // Ensure modal lives at document body root for stacking context.
             document.body.appendChild(this.elements.srsWritingModal);
 
             // Generate Prompt
@@ -112,6 +113,10 @@ export class WritingChallenge {
                 // Hide hints initially
                 this.toggleHintsVisibility(false);
             } else {
+                // Ensure selection UI is hidden if a prior prompt used multi-option.
+                const optionContainer = document.getElementById('writing-option-container');
+                if (optionContainer) optionContainer.style.display = 'none';
+
                 this.renderWritingUI();
                 if (this.elements.srsWritingPrompt) this.elements.srsWritingPrompt.textContent = this.currentPrompt.prompt;
                 // Update Starter
@@ -230,9 +235,15 @@ export class WritingChallenge {
     }
 
     updateHintsUI(wordObj, usedCollo) {
-        // ... (Logic from srs-review.js) ...
-        const defVal = document.getElementById('hint-def-value');
-        if (defVal) defVal.textContent = wordObj.definition || 'No definition';
+        // Definition
+        const defRow = document.getElementById('hint-definition');
+        const defVal = document.getElementById('hint-definition-value');
+        if (wordObj.definition && defVal) {
+            defVal.textContent = wordObj.definition;
+            if (defRow) defRow.style.display = 'flex';
+        } else {
+            if (defRow) defRow.style.display = 'none';
+        }
 
         // Example
         // Example - HIDDEN to prevent duplication with Scaffolding/Main Card
@@ -255,10 +266,19 @@ export class WritingChallenge {
         const collocations = this.deps.getCollocations(wordObj.lemma || wordObj.originalWord, wordObj);
 
         if (collocations.length > 0 && colloVal) {
-            colloVal.innerHTML = collocations.map(c =>
-                c === usedCollo ? `<b>${c}</b>` : c
-            ).join(', ');
-            if (colloRow) colloRow.style.display = 'block';
+            const escapeHtml = (s) => String(s)
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+
+            colloVal.innerHTML = collocations.map((c) => {
+                const isUsed = usedCollo && String(c).toLowerCase() === String(usedCollo).toLowerCase();
+                const cls = isUsed ? 'collocation-pill collocation-pill-used' : 'collocation-pill';
+                return `<span class="${cls}">${escapeHtml(c)}</span>`;
+            }).join('');
+            if (colloRow) colloRow.style.display = 'flex';
         } else {
             if (colloRow) colloRow.style.display = 'none';
         }
@@ -324,43 +344,85 @@ export class WritingChallenge {
             return;
         }
 
+        // Must include target word (or the chosen phrase) to count as a valid attempt.
+        const usedPhrase = this.currentPrompt?.usedCollocation || '';
+        const normalize = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9'\s-]/g, ' ').replace(/\s+/g, ' ').trim();
+        const normalizedSentence = normalize(sentence);
+        const normalizedLemma = normalize(lemma);
+        const normalizedPhrase = normalize(usedPhrase);
+
+        const containsTarget = (() => {
+            if (normalizedPhrase && normalizedSentence.includes(normalizedPhrase)) return true;
+            if (!normalizedLemma) return true;
+            // Allow simple inflections: plural/3rd-person/past/gerund.
+            const escaped = normalizedLemma.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const re = new RegExp(`\\b${escaped}(s|es|ed|ing)?\\b`, 'i');
+            return re.test(normalizedSentence);
+        })();
+
+        if (!containsTarget) {
+            const safeLemma = String(lemma)
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+            this.showFeedback(`Make sure your sentence includes "<b>${safeLemma}</b>".`, 'error');
+            return;
+        }
+
         this.showFeedback('Checking...', 'info');
 
         // Skip AI check logic (simplified)
         const skipAi = this.elements.skipAiToggle?.checked;
 
-        let feedback = "Saved!";
-        let score = 0;
+        let feedback = 'Saved!';
+        let score = null;
+        let accuracy = null;
 
         if (!skipAi && this.deps.assessSentence) {
             // Assess
             try {
                 const result = await this.deps.assessSentence(sentence, lemma);
-                feedback = result;
-                if (result.includes('5/5')) score = 5;
-                else if (result.includes('4/5')) score = 4;
+                if (result) {
+                    feedback = result;
+                    const match = String(result).match(/Score:\s*([1-5])\s*\/\s*5/i) || String(result).match(/\b([1-5])\s*\/\s*5\b/);
+                    if (match) {
+                        score = Number(match[1]);
+                        if (Number.isFinite(score) && score >= 1 && score <= 5) {
+                            accuracy = score / 5;
+                        } else {
+                            score = null;
+                        }
+                    }
+                }
             } catch (e) {
                 this.log.error('AI Assess failed', e);
             }
         }
 
         this.showFeedback(feedback, 'success');
-        this.deps.triggerConfetti?.();
+        if (accuracy !== null && accuracy >= 0.8) {
+            this.deps.triggerConfetti?.();
+        }
 
         if (this.deps.saveUserSentence) {
             this.deps.saveUserSentence(this.currentWord.id || 'unknown', lemma, sentence, feedback);
         }
 
-        if (score > 0) {
-            if (this.deps.applyAIScoreToSRS) {
-                this.deps.applyAIScoreToSRS(lemma, score);
-            }
+        if (score !== null && this.deps.applyAIScoreToSRS) {
+            this.deps.applyAIScoreToSRS(lemma, score);
+        }
 
-            // Dual-Track Scoring (Track A: XP, Track B: Writing Prof)
-            if (window.handleDualTrackScoring) {
-                const accuracy = score / 5;
-                // Writing Challenge is inherently "Hard" (2.0)
-                window.handleDualTrackScoring('writingChallenge', this.currentWord.id || 'wc', accuracy, 1);
+        // Dual-Track Scoring (Track A: XP, Track B: Writing Prof)
+        // Always submit a meaningful attempt so users consistently earn XP/coins.
+        if (window.handleDualTrackScoring) {
+            const contentId = lemma || this.currentWord.id || 'writing_challenge';
+            if (accuracy !== null) {
+                window.handleDualTrackScoring('writingChallenge', contentId, accuracy, 1);
+            } else {
+                // Server will fall back to effort-based credit (word count).
+                window.handleDualTrackScoring('writingChallenge', contentId, sentence, 1);
             }
         }
 
@@ -478,20 +540,27 @@ export class WritingChallenge {
     }
 
     displayGeminiFeedback(data) {
+        const escapeHtml = (s) => String(s ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+
         let html = `<div class="ai-feedback-result">`;
         html += `<div class="ai-feedback-header">
-            <span class="ai-score">Score: ${data.score}/100</span>
-            <span class="ai-summary">${data.feedback}</span>
+            <span class="ai-score">Score: ${escapeHtml(data.score)}/100</span>
+            <span class="ai-summary">${escapeHtml(data.feedback)}</span>
         </div>`;
 
         if (data.corrections && data.corrections.length > 0) {
             html += `<ul class="ai-correction-list">`;
             data.corrections.forEach(c => {
                 html += `<li>
-                    <span class="ai-correction-original">${c.original}</span>
+                    <span class="ai-correction-original">${escapeHtml(c.original)}</span>
                     <span class="ai-correction-arrow">→</span>
-                    <span class="ai-correction-replacement">${c.replacement}</span>
-                    <div class="ai-correction-reason">${c.reason}</div>
+                    <span class="ai-correction-replacement">${escapeHtml(c.replacement)}</span>
+                    <div class="ai-correction-reason">${escapeHtml(c.reason)}</div>
                 </li>`;
             });
             html += `</ul>`;
@@ -510,6 +579,11 @@ export class WritingChallenge {
             this.elements.srsWritingModal.classList.remove('visible');
             this.elements.srsWritingModal.style.pointerEvents = 'none';
         }
+
+        // Hide option container if it exists (multi-option state cleanup)
+        const container = document.getElementById('writing-option-container');
+        if (container) container.style.display = 'none';
+
         // Restore callback
         if (this.onCompleteCallback) {
             this.onCompleteCallback();

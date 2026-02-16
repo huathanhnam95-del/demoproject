@@ -11,6 +11,12 @@ let gameInstance = null;
  * would also hide the overlay if it's nested inside the wrapper.
  */
 window.openPenguinGame = function () {
+    // Mobile/Tablet Check
+    if (window.innerWidth < 1024 || 'ontouchstart' in window) {
+        alert("Desktop Only: This game requires a physical keyboard.");
+        return;
+    }
+
     const overlay = document.getElementById('penguin-game-overlay');
     if (!overlay) return;
 

@@ -566,7 +566,9 @@
             const detailArea = container.querySelector('#rpg-detail-panel');
             if (!detailArea) return;
 
+
             if (!node) {
+                detailArea.classList.remove('active'); // Close panel
                 detailArea.innerHTML = `
                     <div class="rpg-empty">
                         <div class="rpg-empty-title">Select a skill</div>
@@ -574,6 +576,9 @@
                     </div>`;
                 return;
             }
+
+            // Open panel on mobile
+            detailArea.classList.add('active');
 
             const state = getNodeState(node, safeProfile);
             const branchLabel = BRANCH_META[node.branch]?.label || titleCase(node.branch);
@@ -604,10 +609,12 @@
                         </div>`;
             }).join('');
 
+            // Build Panel Content
             detailArea.innerHTML = `
+                <button class="rpg-close-detail" onclick="document.getElementById('rpg-detail-panel').classList.remove('active')">×</button>
                 <div class="rpg-detail-header">
-                    <div class="rpg-detail-icon-wrapper">
-                        ${getSkillIconHtml(node, 'large')}
+                    <div class="rpg-detail-icon-large ${state.unlocked ? 'unlocked' : ''}">
+                        ${getSkillIconHtml(node)}
                     </div>
                     <div class="rpg-detail-title-row">
                         <div class="rpg-detail-name">${esc(node.title)}</div>

@@ -1,6 +1,6 @@
 /**
  * Adaptive Engine UI Module
- * Displays the "Adaptive Engine — Active" profile panel with live data from DifficultyManager.
+ * Displays the Adaptive Engine profile panel with live data from DifficultyManager.
  */
 const AdaptiveEngineUI = (() => {
     // CEFR Level Mappings (mirrored from DifficultyManager)
@@ -18,7 +18,12 @@ const AdaptiveEngineUI = (() => {
         DOWN: 0.60
     };
 
-    const GRACE_PERIOD = 20;
+    const GRACE_PERIOD = 10;
+    const WINDOW_SIZES = {
+        low: 15,
+        medium: 10,
+        high: 5
+    };
 
     let currentMode = 'type';
     let modal = null;
@@ -118,20 +123,35 @@ const AdaptiveEngineUI = (() => {
     function refreshData() {
         // Try to get profile from localStorage directly (same source as DifficultyManager)
         let profiles = {};
-        let settings = {};
+        let globalSettings = {};
 
         try {
             const stored = localStorage.getItem('difficulty_profile');
             if (stored) {
                 const data = JSON.parse(stored);
                 profiles = data.profiles || {};
-                settings = data.settings || {};
+                globalSettings = data.globalSettings || data.settings || {};
             }
         } catch (e) {
             console.warn('[AE-UI] Failed to load profile:', e);
         }
 
         const profile = profiles[currentMode] || { level: 1, history: [], attemptsAtLevel: 0 };
+        const isAutoAdjust = globalSettings.autoAdjustEnabled !== false;
+        const sensitivity = globalSettings.adjustmentSensitivity || 'medium';
+        const windowSize = WINDOW_SIZES[sensitivity] || 10;
+        const requiredAttempts = Math.max(GRACE_PERIOD, windowSize);
+
+        // --- Header State ---
+        const titleEl = modal?.querySelector?.('.ae-title');
+        if (titleEl) {
+            titleEl.textContent = isAutoAdjust ? 'Adaptive Engine — Auto' : 'Adaptive Engine — Manual';
+        }
+        const dotEl = modal?.querySelector?.('.ae-status-dot');
+        if (dotEl) {
+            // Green = Auto, Gray = Manual
+            dotEl.style.background = isAutoAdjust ? '#22c55e' : '#94a3b8';
+        }
 
         // --- Current Level ---
         const level = profile.level || 1;
@@ -145,7 +165,6 @@ const AdaptiveEngineUI = (() => {
         const history = Array.isArray(profile.history) ? profile.history : [];
         // Filter to current level entries
         const relevantHistory = history.filter(h => h.level === level);
-        const windowSize = 10; // Medium sensitivity
         const recentHistory = relevantHistory.slice(-windowSize);
 
         let rollingAccuracy = 0;
@@ -165,16 +184,16 @@ const AdaptiveEngineUI = (() => {
 
         // --- Level Progress (Stability) ---
         const attempts = profile.attemptsAtLevel || 0;
-        const progressPercent = Math.min((attempts / GRACE_PERIOD) * 100, 100);
+        const progressPercent = Math.min((attempts / requiredAttempts) * 100, 100);
 
         const lpEl = document.getElementById('ae-level-progress');
         const lpBar = document.getElementById('ae-lp-bar');
 
         if (lpEl) {
-            lpEl.textContent = `${Math.round(progressPercent)}%`;
+            lpEl.textContent = isAutoAdjust ? `${Math.round(progressPercent)}%` : 'Manual';
         }
         if (lpBar) {
-            lpBar.style.width = `${progressPercent}%`;
+            lpBar.style.width = isAutoAdjust ? `${progressPercent}%` : '0%';
         }
 
         // --- Current Settings (Active Configuration) ---
@@ -223,14 +242,22 @@ const AdaptiveEngineUI = (() => {
         // --- Status Badge ---
         const badge = document.getElementById('ae-status-badge');
         if (badge) {
+            if (!isAutoAdjust) {
+                badge.classList.remove('promoting', 'stable', 'optimizing');
+                badge.textContent = 'MANUAL';
+                badge.classList.add('stable');
+                return;
+            }
+
             badge.classList.remove('promoting', 'stable', 'optimizing');
 
-            const setsUntilCheck = Math.max(0, GRACE_PERIOD - attempts);
+            const meetsEvaluationMinimum = attempts >= requiredAttempts && recentHistory.length >= windowSize;
+            const setsUntilCheck = Math.max(0, requiredAttempts - attempts);
 
-            if (rollingAccuracy >= THRESHOLDS.UP && recentHistory.length >= windowSize) {
+            if (meetsEvaluationMinimum && rollingAccuracy >= THRESHOLDS.UP) {
                 badge.textContent = `Ready for Promotion`;
                 badge.classList.add('promoting');
-            } else if (rollingAccuracy < THRESHOLDS.DOWN && recentHistory.length >= windowSize) {
+            } else if (meetsEvaluationMinimum && rollingAccuracy < THRESHOLDS.DOWN) {
                 badge.textContent = 'Needs Optimization';
                 badge.classList.add('optimizing');
             } else {
@@ -249,12 +276,12 @@ const AdaptiveEngineUI = (() => {
      */
     function getDefaultSettings(level) {
         const defaults = {
-            1: { sentenceLengthRange: [5, 8], maxReplays: 10, initialRevealPercentage: 50 },
+            1: { sentenceLengthRange: [5, 8], maxReplays: 5, initialRevealPercentage: 50 },
             2: { sentenceLengthRange: [8, 12], maxReplays: 5, initialRevealPercentage: 40 },
-            3: { sentenceLengthRange: [12, 18], maxReplays: 4, initialRevealPercentage: 30 },
-            4: { sentenceLengthRange: [18, 25], maxReplays: 3, initialRevealPercentage: 15 },
-            5: { sentenceLengthRange: [25, 35], maxReplays: 2, initialRevealPercentage: 0 },
-            6: { sentenceLengthRange: [30, 999], maxReplays: 1, initialRevealPercentage: 0 }
+            3: { sentenceLengthRange: [12, 18], maxReplays: 5, initialRevealPercentage: 30 },
+            4: { sentenceLengthRange: [18, 25], maxReplays: 5, initialRevealPercentage: 15 },
+            5: { sentenceLengthRange: [25, 35], maxReplays: 5, initialRevealPercentage: 0 },
+            6: { sentenceLengthRange: [30, 999], maxReplays: 5, initialRevealPercentage: 0 }
         };
         return defaults[level] || defaults[1];
     }

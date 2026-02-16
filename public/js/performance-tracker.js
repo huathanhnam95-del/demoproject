@@ -49,23 +49,25 @@ class PerformanceTracker {
     }
 
     /**
-     * Calculate score for a single attempt
-     */
-    /**
      * Calculate score for a single attempt (CEFR-aligned)
      * Returns 0.0 to 1.0
      */
     calculateAttemptScore(attempt) {
-        // 1. Accuracy (0.0 - 1.0)
-        let accuracyScore = 0;
-        const tries = attempt.attempts ?? 1; // Default to 1 if undefined
+        // 1) Accuracy (0.0 - 1.0)
+        // Prefer word-level accuracy if provided, otherwise fall back to binary correct/incorrect.
+        const tries = Number(attempt.attempts ?? 1);
+        const triesMult =
+            tries <= 1 ? 1.0 :
+                tries === 2 ? 0.8 :
+                    tries === 3 ? 0.5 :
+                        0.2;
 
-        if (attempt.correct) {
-            if (tries <= 1) accuracyScore = 1.0;
-            else if (tries === 2) accuracyScore = 0.8;
-            else if (tries === 3) accuracyScore = 0.5;
-            else accuracyScore = 0.2;
-        }
+        const rawAccuracy = Number(attempt.accuracy);
+        const baseAccuracy = Number.isFinite(rawAccuracy)
+            ? Math.max(0, Math.min(1, rawAccuracy))
+            : (attempt.correct ? 1.0 : 0.0);
+
+        const accuracyScore = Math.max(0, Math.min(1, baseAccuracy * triesMult));
 
         // 2. Speed (WPM-based)
         const wordCount = attempt.wordCount || 10;
@@ -94,10 +96,10 @@ class PerformanceTracker {
             speedScore = Math.min(0.8, speedScore);
         }
 
-        // Weighted Total: Accuracy (70%), Speed (30%)
+        // Weighted Total: Accuracy (80%), Speed (20%)
         const total = (
-            (accuracyScore * 0.70) +
-            (speedScore * 0.30)
+            (accuracyScore * 0.80) +
+            (speedScore * 0.20)
         );
 
         console.log(`[Performance] Score: ${total.toFixed(2)} | WPM: ${userWPM.toFixed(1)} vs Target: ${targetWPM} `);

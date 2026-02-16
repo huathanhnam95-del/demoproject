@@ -9,7 +9,9 @@ import { DifficultyUI } from './difficulty/DifficultyUI.js';
 const DifficultyManager = (function () {
     // --- State ---
     let isInitialized = false;
-    let hasUnlockedFeature = false; // "Auto-Adjust" shop item
+    // Smart Difficulty is now a core feature (no shop gating).
+    // Keep this flag for backward compatibility, but it is always enabled.
+    const hasUnlockedFeature = true;
     let globalSettings = {
         autoAdjustEnabled: true,
         adjustmentSensitivity: 'medium', // low, medium, high
@@ -30,21 +32,8 @@ const DifficultyManager = (function () {
     function init() {
         if (isInitialized) return;
 
-        // Check Shop Unlock
-        if (window.shopModule) {
-            hasUnlockedFeature = window.shopModule.isModeUnlocked('autoAdjust');
-        }
-
         // Load Persistence
         loadProfile();
-
-        // Listeners
-        window.addEventListener('shop-unlock', (e) => {
-            if (e.detail && e.detail.mode === 'autoAdjust') {
-                hasUnlockedFeature = true;
-                updateIndicator();
-            }
-        });
 
         // Tab Changes
         document.addEventListener('click', (e) => {
@@ -58,17 +47,35 @@ const DifficultyManager = (function () {
 
         ui.init();
         isInitialized = true;
+
+        // Settings entrypoint (UX): clicking the badge opens settings.
+        const badge = document.getElementById('difficulty-badge');
+        if (badge) {
+            badge.addEventListener('click', () => openSettings());
+        }
+
+        updateIndicator();
         console.log('Main DifficultyManager Initialized (Modular)');
     }
 
     function loadProfile() {
+        let needsResave = false;
         try {
             const stored = localStorage.getItem(DifficultyConfig.STORAGE_KEY);
             if (stored) {
                 const parsed = JSON.parse(stored);
+                const legacySettings = parsed.settings && !parsed.globalSettings;
+
+                // Migration: legacy schema used `settings` instead of `globalSettings`.
+                const loadedGlobalSettings = parsed.globalSettings || parsed.settings;
                 // Merge loaded data
-                if (parsed.globalSettings) globalSettings = { ...globalSettings, ...parsed.globalSettings };
+                if (loadedGlobalSettings) globalSettings = { ...globalSettings, ...loadedGlobalSettings };
                 if (parsed.profiles) userDifficultyProfile = { ...userDifficultyProfile, ...parsed.profiles };
+
+                if (legacySettings) {
+                    // Rewrite as canonical schema after defaults are ensured.
+                    needsResave = true;
+                }
             }
         } catch (e) {
             console.error('[DifficultyManager] Load failed', e);
@@ -80,6 +87,10 @@ const DifficultyManager = (function () {
                 userDifficultyProfile[mode] = logic.makeDefaultProfile();
             }
         });
+
+        if (needsResave) {
+            saveProfile();
+        }
     }
 
     function saveProfile() {
@@ -97,8 +108,6 @@ const DifficultyManager = (function () {
     }
 
     function adjustDifficulty(mode, score, meta = {}) {
-        if (!hasUnlockedFeature) return;
-
         const profile = userDifficultyProfile[mode];
         if (!profile) return; // Should not happen after init
 
@@ -147,15 +156,12 @@ const DifficultyManager = (function () {
         // 1. Determine Level
         let effectiveLevel = 1;
 
-        if (hasUnlockedFeature && !globalSettings.autoAdjustEnabled) {
+        if (!globalSettings.autoAdjustEnabled) {
             // Manual
             effectiveLevel = globalSettings.manualLevel;
-        } else if (hasUnlockedFeature && globalSettings.autoAdjustEnabled) {
+        } else if (globalSettings.autoAdjustEnabled) {
             // Auto
             effectiveLevel = userDifficultyProfile[mode]?.level || 1;
-        } else {
-            // Default / Locked
-            effectiveLevel = 1;
         }
 
         // 2. Get Settings from Logic
@@ -184,6 +190,31 @@ const DifficultyManager = (function () {
         updateIndicator();
     }
 
+    /**
+     * Seed a starting CEFR level without toggling auto-adjust off.
+     * Used by onboarding / AuthUI to set an initial level baseline.
+     * @param {number} level
+     */
+    function seedLevel(level) {
+        if (!isInitialized) init();
+
+        level = parseInt(level, 10);
+        if (isNaN(level) || level < 1 || level > 6) return;
+
+        globalSettings.manualLevel = level;
+
+        Object.keys(userDifficultyProfile).forEach(m => {
+            if (userDifficultyProfile[m]) {
+                userDifficultyProfile[m].level = level;
+                userDifficultyProfile[m].history = [];
+                userDifficultyProfile[m].attemptsAtLevel = 0;
+            }
+        });
+
+        saveProfile();
+        updateIndicator();
+    }
+
     function openSettings() {
         if (!isInitialized) init();
         ui.openSettingsModal(globalSettings, (newSettings) => {
@@ -201,8 +232,6 @@ const DifficultyManager = (function () {
     }
 
     function updateIndicator() {
-        if (!hasUnlockedFeature) return; // Or hide badge
-
         // Simple heuristic for active mode (can be improved)
         let activeMode = 'type';
         if (document.querySelector('#tab-speak.active')) activeMode = 'speak';
@@ -215,10 +244,14 @@ const DifficultyManager = (function () {
     // Public API
     return {
         init,
+        // Back-compat: public/script.js expects this to exist.
+        // Semantics: feature availability (not whether auto-adjust is toggled on).
+        isFeatureEnabled: () => hasUnlockedFeature,
         adjustDifficulty,
         getCurrentSettings,
         openSettings,
         setManualLevel,
+        seedLevel,
         // Expose state getters for debugging
         getProfile: (mode) => userDifficultyProfile[mode],
         getGlobalSettings: () => globalSettings

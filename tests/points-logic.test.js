@@ -65,10 +65,11 @@ assert.strictEqual(typePoints.writing, 60, 'Type writing weight correct');
 assert.strictEqual(typePoints.listening, 40, 'Type listening weight correct');
 assert.strictEqual(typePoints.speaking, 0, 'Type speaking should be 0');
 
-// Speak: Speak 80, List 20
+// Speak: Speak 40, List 60
 const speakPoints = Logic.distributePointsToSkills('speak', 100);
 console.log('Speak (100 pts) ->', speakPoints);
-assert.strictEqual(speakPoints.speaking, 80, 'Speak speaking weight correct');
+assert.strictEqual(speakPoints.listening, 60, 'Speak listening weight correct');
+assert.strictEqual(speakPoints.speaking, 40, 'Speak speaking weight correct');
 
 
 // ============================================

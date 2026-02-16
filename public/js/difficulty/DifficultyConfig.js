@@ -17,7 +17,7 @@ export const DifficultyConfig = {
         }
     },
     HISTORY_SIZE: 20,
-    GRACE_PERIOD_ATTEMPTS: 20,
+    GRACE_PERIOD_ATTEMPTS: 10,
     THRESHOLDS: {
         UP: 0.85,
         DOWN: 0.60,
@@ -33,20 +33,20 @@ export const DifficultyConfig = {
     },
     MODE_SETTINGS: {
         type: {
-            1: { maxReplays: 10, sentenceLengthRange: [5, 8], autoShowWordCount: true, autoShowFirstLetters: true, autoShowWordLengths: true, topicHint: true, keywordPreview: true, delayBeforeTyping: 0, initialRevealPercentage: 50 },
+            1: { maxReplays: 5, sentenceLengthRange: [5, 8], autoShowWordCount: true, autoShowFirstLetters: true, autoShowWordLengths: true, topicHint: true, keywordPreview: true, delayBeforeTyping: 0, initialRevealPercentage: 50 },
             2: { maxReplays: 5, sentenceLengthRange: [8, 12], autoShowWordCount: true, autoShowFirstLetters: false, autoShowWordLengths: true, topicHint: true, keywordPreview: true, delayBeforeTyping: 1, initialRevealPercentage: 40 },
-            3: { maxReplays: 4, sentenceLengthRange: [12, 18], autoShowWordCount: true, autoShowFirstLetters: false, autoShowWordLengths: false, topicHint: true, keywordPreview: false, delayBeforeTyping: 3, initialRevealPercentage: 30 },
-            4: { maxReplays: 3, sentenceLengthRange: [18, 25], autoShowWordCount: false, autoShowFirstLetters: false, autoShowWordLengths: false, topicHint: true, keywordPreview: false, delayBeforeTyping: 4, initialRevealPercentage: 15 },
-            5: { maxReplays: 2, sentenceLengthRange: [25, 35], autoShowWordCount: false, autoShowFirstLetters: false, autoShowWordLengths: false, topicHint: false, keywordPreview: false, delayBeforeTyping: 5, initialRevealPercentage: 0 },
-            6: { maxReplays: 1, sentenceLengthRange: [30, 999], autoShowWordCount: false, autoShowFirstLetters: false, autoShowWordLengths: false, topicHint: false, keywordPreview: false, delayBeforeTyping: 6, initialRevealPercentage: 0 }
+            3: { maxReplays: 5, sentenceLengthRange: [12, 18], autoShowWordCount: true, autoShowFirstLetters: false, autoShowWordLengths: false, topicHint: true, keywordPreview: false, delayBeforeTyping: 3, initialRevealPercentage: 30 },
+            4: { maxReplays: 5, sentenceLengthRange: [18, 25], autoShowWordCount: false, autoShowFirstLetters: false, autoShowWordLengths: false, topicHint: true, keywordPreview: false, delayBeforeTyping: 4, initialRevealPercentage: 15 },
+            5: { maxReplays: 5, sentenceLengthRange: [25, 35], autoShowWordCount: false, autoShowFirstLetters: false, autoShowWordLengths: false, topicHint: false, keywordPreview: false, delayBeforeTyping: 5, initialRevealPercentage: 0 },
+            6: { maxReplays: 5, sentenceLengthRange: [30, 999], autoShowWordCount: false, autoShowFirstLetters: false, autoShowWordLengths: false, topicHint: false, keywordPreview: false, delayBeforeTyping: 6, initialRevealPercentage: 0 }
         },
         speak: {
-            1: { strictness: 'low', showIPA: true, maxReplays: Infinity },
+            1: { strictness: 'low', showIPA: true, maxReplays: 5 },
             2: { strictness: 'low', showIPA: true, maxReplays: 5 },
-            3: { strictness: 'medium', showIPA: true, maxReplays: 3 },
-            4: { strictness: 'medium', showIPA: false, maxReplays: 2 },
-            5: { strictness: 'high', showIPA: false, maxReplays: 1 },
-            6: { strictness: 'high', showIPA: false, maxReplays: 1 }
+            3: { strictness: 'medium', showIPA: true, maxReplays: 5 },
+            4: { strictness: 'medium', showIPA: false, maxReplays: 5 },
+            5: { strictness: 'high', showIPA: false, maxReplays: 5 },
+            6: { strictness: 'high', showIPA: false, maxReplays: 5 }
         },
         srs: {
             1: { typoTolerance: 2, showDef: true },

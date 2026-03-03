@@ -11,7 +11,7 @@
 ## Active State
 
 - **Status**: Active Development
-- **Phase**: Release V1.1.1
+- **Phase**: Release V1.3.0
 
 ## Instructions
 
@@ -26,7 +26,7 @@ This file guides the agent's understanding of the project structure and context.
 
 - **Versioning Rule**: ALWAYS name commits and pushes with explicit version tags.
 - **Changelog Rule**: ALWAYS add a changelog summarizing all updates before pushing.
-- **Next Version**: `V1.1.2` (Minor bug fixes/refinement)
+- **Next Version**: `V1.3.1` (Minor bug fixes/refinement)
 - **SemVer Protocol**:
   - **Minor Push (Bug fixes, small edits)**: Increment the LAST digit (e.g., `1.0.0` -> `1.0.1`).
   - **Major Push (New functions, big updates)**: Increment the MIDDLE digit (e.g., `1.0.0` -> `1.1.0`).

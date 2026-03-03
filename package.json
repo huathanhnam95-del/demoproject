@@ -1,6 +1,6 @@
 {
   "name": "dictation-practice",
-  "version": "1.1.0",
+  "version": "1.3.0",
   "description": "Dictation practice app",
   "scripts": {
     "start": "node server.js",
@@ -10,7 +10,8 @@
     "deploy": "firebase deploy --only hosting",
     "lint": "eslint .",
     "lint:entrance-crm": "eslint public/entrance-test.js public/crm-admin.js public/crm-entrance-test-result.js src/routes/entrance-tests.js src/routes/admin.js src/utils/firebase.js src/entrance-test/test36plus.js --quiet",
-    "smoke:entrance-test": "node scripts/smoke-entrance-test.js --start-server --port 8787"
+    "smoke:entrance-test": "node scripts/smoke-entrance-test.js --start-server --port 8787",
+    "audit:a2-onboarding": "node scripts/audit/run-a2-onboarding-audit.js --base-url http://localhost:8443"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -31,6 +32,7 @@
   },
   "devDependencies": {
     "eslint": "^8.57.1",
-    "http-server": "^14.1.1"
+    "http-server": "^14.1.1",
+    "playwright": "^1.58.2"
   }
 }

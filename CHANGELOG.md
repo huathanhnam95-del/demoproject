@@ -1,5 +1,20 @@
 # Changelog
 
+## [V1.3.0] - 2026-03-03
+
+### Added
+
+- **Penguin Crossing 2.5D Overhaul**: Complete high-fidelity 2.5D renderer upgrade with parallax backgrounds, dynamic layers (Water, Shore, Floes), and high-quality sprite assets.
+- **CRM & Student Management**: Initial launch of the teacher/admin CRM for managing entrance tests, student profiles, and progress tracking.
+- **Shop Expansion**: Added specialized skill unlocks and items for the RPG progression layer.
+- **AI-Powered Services**: Integrated Gemini-based AI checks for writing and streaming feedback for enhanced pedagogy.
+
+### Improved
+
+- **Adaptive Engine V2**: Refined Smart Difficulty with responsive calibration, word-level accuracy scoring, and specialized hint ladders.
+- **Product Specifications**: Comprehensive documentation update covering all major features, guidelines, and user workflows in `docs/specs/`.
+- **System Architecture**: Hardened server-authoritative scoring and economy logic in Firebase Cloud Functions.
+
 ## [V1.1.1] - 2026-02-11
 
 ### Added

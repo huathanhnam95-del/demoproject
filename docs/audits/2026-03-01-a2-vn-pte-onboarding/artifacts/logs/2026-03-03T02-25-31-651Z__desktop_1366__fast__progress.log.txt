@@ -1,0 +1,40 @@
+2026-03-03T02:25:31.784Z [audit][desktop_1366__fast] >> L1_landing_load
+2026-03-03T02:25:36.305Z [audit][desktop_1366__fast] << L1_landing_load ok 4521ms
+2026-03-03T02:25:36.305Z [audit][desktop_1366__fast] >> L2_landing_sections
+2026-03-03T02:25:39.297Z [audit][desktop_1366__fast] << L2_landing_sections ok 2992ms
+2026-03-03T02:25:39.297Z [audit][desktop_1366__fast] >> A1_click_demo_cta
+2026-03-03T02:25:49.792Z [audit][desktop_1366__fast] << A1_click_demo_cta ok 10495ms
+2026-03-03T02:25:49.792Z [audit][desktop_1366__fast] >> A2_open_app_direct
+2026-03-03T02:25:52.865Z [audit][desktop_1366__fast] << A2_open_app_direct ok 3073ms
+2026-03-03T02:25:52.866Z [audit][desktop_1366__fast] >> R1_choose_guest
+2026-03-03T02:25:54.163Z [audit][desktop_1366__fast] << R1_choose_guest ok 1297ms
+2026-03-03T02:25:54.163Z [audit][desktop_1366__fast] >> R2_open_side_panels
+2026-03-03T02:26:06.396Z [audit][desktop_1366__fast] << R2_open_side_panels ok 12233ms
+2026-03-03T02:26:06.396Z [audit][desktop_1366__fast] >> P1_type_clean_attempt
+2026-03-03T02:26:10.189Z [audit][desktop_1366__fast] << P1_type_clean_attempt ok 3793ms
+2026-03-03T02:26:10.189Z [audit][desktop_1366__fast] >> P2_type_assisted_attempt
+2026-03-03T02:26:13.616Z [audit][desktop_1366__fast] << P2_type_assisted_attempt ok 3427ms
+2026-03-03T02:26:13.617Z [audit][desktop_1366__fast] >> P3_type_fail_attempt
+2026-03-03T02:26:16.543Z [audit][desktop_1366__fast] << P3_type_fail_attempt ok 2927ms
+2026-03-03T02:26:16.543Z [audit][desktop_1366__fast] >> V1_vocab_manual_add
+2026-03-03T02:26:18.981Z [audit][desktop_1366__fast] << V1_vocab_manual_add ok 2438ms
+2026-03-03T02:26:18.981Z [audit][desktop_1366__fast] >> S1_start_srs_review
+2026-03-03T02:26:21.337Z [audit][desktop_1366__fast] << S1_start_srs_review ok 2356ms
+2026-03-03T02:26:21.338Z [audit][desktop_1366__fast] >> SP1_speak_mode_smoke
+2026-03-03T02:26:26.347Z [audit][desktop_1366__fast] << SP1_speak_mode_smoke ok 5009ms
+2026-03-03T02:26:26.347Z [audit][desktop_1366__fast] >> M1_fill_mode_smoke
+2026-03-03T02:26:29.463Z [audit][desktop_1366__fast] << M1_fill_mode_smoke ok 3116ms
+2026-03-03T02:26:29.464Z [audit][desktop_1366__fast] >> M2_notes_mode_smoke
+2026-03-03T02:26:32.400Z [audit][desktop_1366__fast] << M2_notes_mode_smoke ok 2936ms
+2026-03-03T02:26:32.400Z [audit][desktop_1366__fast] >> M3_watch_mode_smoke
+2026-03-03T02:26:50.488Z [audit][desktop_1366__fast] << M3_watch_mode_smoke ok 18088ms
+2026-03-03T02:26:50.488Z [audit][desktop_1366__fast] >> M4_pronounce_mode_smoke
+2026-03-03T02:27:39.700Z [audit][desktop_1366__fast] << M4_pronounce_mode_smoke ok 49212ms
+2026-03-03T02:27:39.700Z [audit][desktop_1366__fast] >> M5_survival_mode_smoke
+2026-03-03T02:27:42.972Z [audit][desktop_1366__fast] << M5_survival_mode_smoke ok 3272ms
+2026-03-03T02:27:42.972Z [audit][desktop_1366__fast] >> D1_dictionary_vn_translation
+2026-03-03T02:27:44.518Z [audit][desktop_1366__fast] << D1_dictionary_vn_translation ok 1546ms
+2026-03-03T02:27:44.518Z [audit][desktop_1366__fast] >> AI1_ai_proxy_smoke
+2026-03-03T02:27:46.535Z [audit][desktop_1366__fast] << AI1_ai_proxy_smoke ok 2017ms
+2026-03-03T02:27:46.535Z [audit][desktop_1366__fast] >> ADM1_admin_pages_blocked
+2026-03-03T02:27:51.785Z [audit][desktop_1366__fast] << ADM1_admin_pages_blocked ok 5250ms

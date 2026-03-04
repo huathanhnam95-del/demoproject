@@ -28,18 +28,29 @@
 
 - The analysis pipeline must be robust to noisy recordings and short clips.
 - Prefer fast approximate feedback over slow perfect analysis.
+- Praat backend is optional: if backend health check fails, mode must automatically use local JS analysis.
+- Dictionary/native-reference lookup failures must degrade to fallback pronunciation info or a non-blocking error state.
+- Analysis failures must restore controls (`Record` re-enabled) so users can retry without page reload.
 
 ## 4. Data & Contracts (The "Contract")
 
-- Client hooks:
-  - `public/phonetics.js` (phonetic helpers)
-- Python analysis (local service):
+- Pronounce app controller: `public/pronunciation-analyzer/main.js`
+  - Chooses backend or local analyzer path (`usePraatBackend`) via startup health check.
+- Backend adapter: `public/pronunciation-analyzer/praat-api.js`
+  - `GET /health` availability check
+  - `POST /analyze` for uploaded user audio
+  - `POST /analyze-url` for native reference analysis
+- Native reference + fallback pipeline: `public/pronunciation-analyzer/word-reference-service.js`
+  - Dictionary lookup + optional native-audio analysis with per-audio reuse.
+- Python analysis service:
   - `backend/local_server/server.py`
-    - `POST /analyze` accepts an audio file and returns analysis JSON.
-    - Uses Parselmouth/Praat for pitch/intensity and an adaptive syllable detector.
+    - Provides `/analyze` and `/analyze-url` for Parselmouth/Praat-backed analysis.
 
 ## 5. Verification
 
 - Manual:
   - Record audio -> verify analysis returns pitch/intensity arrays and syllable segmentation.
   - Try a very short/noisy clip -> verify errors are handled gracefully.
+  - Stop backend service -> verify mode still analyzes using local JS path (no hard block).
+  - Force backend analysis error -> verify error appears in summary and `Record` becomes usable again.
+  - Trigger dictionary/reference failure -> verify mode remains interactive and does not crash panel switching.

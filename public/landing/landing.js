@@ -116,6 +116,78 @@
     }
 
     // ============================================
+    // Your Journey: Roadmap Interactivity
+    // ============================================
+
+    function initJourneyAnimations() {
+        const roadWrapper = document.getElementById('roadMapWrapper');
+        if (!roadWrapper) return;
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+
+                    // Auto-open Day 0 after a short delay for better UX
+                    setTimeout(() => {
+                        openMilestone('1');
+                    }, 1200);
+                }
+            });
+        }, { threshold: 0.2 });
+
+        observer.observe(roadWrapper);
+    }
+
+    function openMilestone(pinNum) {
+        const pins = document.querySelectorAll('.road-pin');
+        const details = document.querySelectorAll('.roadmap-detail');
+        const panel = document.getElementById('roadmapDetailPanel');
+
+        // Deactivate all
+        pins.forEach(p => p.classList.remove('active'));
+        details.forEach(d => d.classList.remove('active'));
+
+        // Activate selected
+        const targetPin = document.querySelector(`.road-pin[data-pin="${pinNum}"]`);
+        const targetDetail = document.querySelector(`.roadmap-detail[data-for-pin="${pinNum}"]`);
+
+        if (targetPin) targetPin.classList.add('active');
+        if (targetDetail) {
+            targetDetail.classList.add('active');
+
+            // Smooth scroll to details if needed
+            if (window.innerWidth < 768) {
+                targetDetail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+    }
+
+    function initRoadmapInteractions() {
+        const pins = document.querySelectorAll('.road-pin');
+        let hoverTimeout;
+
+        pins.forEach(pin => {
+            pin.addEventListener('mouseenter', () => {
+                const pinNum = pin.getAttribute('data-pin');
+
+                // Add a tiny delay to prevent jitter when quickly sweeping across pins
+                clearTimeout(hoverTimeout);
+                hoverTimeout = setTimeout(() => {
+                    openMilestone(pinNum);
+                }, 50);
+            });
+
+            // Allow click as a fallback/mobile support too
+            pin.addEventListener('click', () => {
+                const pinNum = pin.getAttribute('data-pin');
+                openMilestone(pinNum);
+            });
+        });
+    }
+
+    // ============================================
     // Initialize
     // ============================================
 
@@ -124,8 +196,8 @@
         initSmoothScroll();
         initNavScroll();
         handleMissingImages();
-
-        console.log('🚀 BEL Landing page initialized');
+        initJourneyAnimations();
+        initRoadmapInteractions();
     }
 
     // Run when DOM is ready
@@ -136,3 +208,4 @@
     }
 
 })();
+

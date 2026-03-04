@@ -24,8 +24,9 @@
   - replay limits
 - Enforce replay limits consistently across Type + Speak.
 - Provide a coherent hint ladder that integrates with the Skill Tree:
-  - Baseline hints (free) at low levels.
+  - Baseline hints (free) at low levels, including guest users (session-limited quota).
   - Paid active assists (coin cost per use) when logged in.
+- Hint UI must communicate state clearly for guests (`Free N left`) vs paid skill paths.
 
 ### Non-Functional
 
@@ -47,6 +48,7 @@
 - No "bait-and-switch": never show "Active" if the engine is effectively off.
 - Keep tuning changes visible in the UI (calibrating/evaluating/ready states).
 - Prefer local-only logic for adaptation; reserve server calls for scoring/rewards.
+- Guest mode should degrade to baseline free hints, not login-blocking hint controls.
 
 ## 6. Verification
 

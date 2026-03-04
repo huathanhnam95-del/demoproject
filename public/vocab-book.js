@@ -57,10 +57,70 @@ const VocabularyBook = (function () {
     let currentQuestionId = null;
     let currentMode = null;
     let currentSentence = null;
+    let vocabUnlockCache = null;
+    let guestUnlockNudgeShown = false;
+    const GUEST_USER_ID = 'guest';
+    const GUEST_VOCAB_STORAGE_KEY = 'bel_guest_vocab_v1';
 
     // Save debouncing
     let saveTimeout = null;
     let lastSavedState = null;
+
+    function createEmptyVocabCache() {
+        return {
+            bookmarkedWords: [],
+            wordStats: {},
+            frequentlyMissed: [],
+            usedToMiss: [],
+            masteredWords: []
+        };
+    }
+
+    function isGuestSession() {
+        return currentUserId === GUEST_USER_ID;
+    }
+
+    function loadGuestVocabData() {
+        try {
+            const stored = localStorage.getItem(GUEST_VOCAB_STORAGE_KEY);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                vocabCache = {
+                    bookmarkedWords: Array.isArray(parsed?.bookmarkedWords) ? parsed.bookmarkedWords : [],
+                    wordStats: parsed?.wordStats && typeof parsed.wordStats === 'object' ? parsed.wordStats : {},
+                    frequentlyMissed: Array.isArray(parsed?.frequentlyMissed) ? parsed.frequentlyMissed : [],
+                    usedToMiss: Array.isArray(parsed?.usedToMiss) ? parsed.usedToMiss : [],
+                    masteredWords: Array.isArray(parsed?.masteredWords) ? parsed.masteredWords : []
+                };
+            } else {
+                vocabCache = createEmptyVocabCache();
+            }
+        } catch (e) {
+            log.warn('Failed to load guest vocabulary data:', e);
+            vocabCache = createEmptyVocabCache();
+        }
+
+        renderBookmarkedWords();
+        renderFrequentlyMissed();
+        renderUsedToMiss();
+
+        if (window.SRSReview && typeof window.SRSReview.initializeWord === 'function') {
+            const allWordsToSync = [...vocabCache.bookmarkedWords, ...vocabCache.frequentlyMissed];
+            const syncedLemmas = new Set();
+            allWordsToSync.forEach(entry => {
+                const lemma = entry?.lemma;
+                const word = entry?.word || entry?.originalWord;
+                if (!lemma || !word || syncedLemmas.has(lemma)) return;
+                window.SRSReview.initializeWord(lemma, word, {
+                    partOfSpeech: entry?.partOfSpeech || 'unknown',
+                    definition: entry?.definition || null,
+                    example: entry?.example || null,
+                    sentence: entry?.sentence || null
+                });
+                syncedLemmas.add(lemma);
+            });
+        }
+    }
 
     /**
      * Escape HTML special characters to prevent XSS
@@ -80,9 +140,13 @@ const VocabularyBook = (function () {
         let nextIndex = 0;
 
         const worker = async () => {
-            while (true) {
+            let active = true;
+            while (active) {
                 const idx = nextIndex++;
-                if (idx >= arr.length) return;
+                if (idx >= arr.length) {
+                    active = false;
+                    return;
+                }
                 ret[idx] = await fn(arr[idx], idx);
             }
         };
@@ -226,6 +290,7 @@ const VocabularyBook = (function () {
             if (document.visibilityState === 'hidden') flushVocabSave();
         });
 
+        syncToggleVisibility();
         log.debug('Module initialized');
     }
 
@@ -298,17 +363,6 @@ const VocabularyBook = (function () {
             setTimeout(() => {
                 vocabListModal.style.display = 'none';
             }, 300);
-        }
-    }
-
-    // ... (rest of file)
-
-    /**
-     * Show toggle button when unlocked
-     */
-    function showToggle() {
-        if (vocabPanelToggle) {
-            vocabPanelToggle.style.display = 'flex';
         }
     }
 
@@ -545,47 +599,122 @@ const VocabularyBook = (function () {
      * Set Firebase references when user logs in
      */
     function setUser(userId, firestore) {
-        currentUserId = userId;
+        currentUserId = userId || null;
         // Prefer passed firestore, fallback to internal global
         db = firestore || (window.__FIREBASE_INTERNAL__ ? window.__FIREBASE_INTERNAL__.db : window.firebaseDb);
+        vocabUnlockCache = null;
+        guestUnlockNudgeShown = false;
 
         log.debug('setUser:', userId, 'db available:', !!db);
 
-        if (userId) {
+        if (isGuestSession()) {
+            loadGuestVocabData();
+        } else if (userId) {
             if (db) {
                 loadVocabData();
             } else {
                 log.error('Critical: DB missing in setUser! Data cannot be saved.');
             }
+        } else {
+            vocabCache = createEmptyVocabCache();
+            renderBookmarkedWords();
+            renderFrequentlyMissed();
+            renderUsedToMiss();
         }
+        syncToggleVisibility();
     }
 
     /**
      * Check if vocabulary book is unlocked for current user
      */
     async function isUnlocked() {
-        // Primary check: Shop Module (client-side cache)
-        if (window.shopModule && typeof window.shopModule.isModeUnlocked === 'function') {
-            const unlocked = window.shopModule.isModeUnlocked('vocabBook');
-            if (unlocked) return true;
+        if (isGuestSession()) return true;
+        if (!currentUserId) return false;
+        if (vocabUnlockCache === true) return true;
+
+        const cachedProfile = window.currentUserProfile && typeof window.currentUserProfile === 'object'
+            ? window.currentUserProfile
+            : null;
+        if (cachedProfile) {
+            const unlockedFromProfile = cachedProfile.vocabularyBookUnlocked === true ||
+                cachedProfile.vocabBookAutoUnlocked === true ||
+                (Array.isArray(cachedProfile.unlockedModes) && cachedProfile.unlockedModes.includes('vocabBook'));
+            if (unlockedFromProfile) {
+                vocabUnlockCache = true;
+                return true;
+            }
         }
 
-        if (!currentUserId || !db) return false;
+        if (!db) return false;
 
         try {
             const userDoc = await getDoc(doc(db, 'users', currentUserId));
             if (userDoc.exists()) {
                 const data = userDoc.data();
-                // Check both legacy flag and new array
-                const isUnlocked = data.vocabularyBookUnlocked === true ||
+                const unlocked = data.vocabularyBookUnlocked === true ||
+                    data.vocabBookAutoUnlocked === true ||
                     (data.unlockedModes && data.unlockedModes.includes('vocabBook'));
 
-                if (isUnlocked) return true;
+                if (unlocked) {
+                    vocabUnlockCache = true;
+                    return true;
+                }
             }
         } catch (e) {
-            log.error('Error checking checking vocab unlock status:', e);
+            log.error('Error checking vocab unlock status:', e);
         }
         return false;
+    }
+
+    function cacheUnlockLocally() {
+        vocabUnlockCache = true;
+        if (window.currentUserProfile && typeof window.currentUserProfile === 'object') {
+            window.currentUserProfile.vocabularyBookUnlocked = true;
+            window.currentUserProfile.vocabBookAutoUnlocked = true;
+        }
+
+        if (currentUserId) {
+            const profileKey = `userProfile_${currentUserId}`;
+            try {
+                const cached = localStorage.getItem(profileKey);
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    parsed.vocabularyBookUnlocked = true;
+                    parsed.vocabBookAutoUnlocked = true;
+                    localStorage.setItem(profileKey, JSON.stringify(parsed));
+                }
+            } catch (e) {
+                log.warn('Failed to update local profile cache after vocab auto-unlock:', e);
+            }
+        }
+    }
+
+    async function autoUnlockFromPractice(mode, missedWords) {
+        if (isGuestSession()) return true;
+        if (!currentUserId) return false;
+        if (!Array.isArray(missedWords) || missedWords.length === 0) return false;
+        if (!['type', 'speak'].includes(mode)) return false;
+
+        if (await isUnlocked()) return true;
+
+        cacheUnlockLocally();
+        showToggle();
+
+        if (!db) {
+            return true;
+        }
+
+        try {
+            await setDoc(doc(db, 'users', currentUserId), {
+                vocabularyBookUnlocked: true,
+                vocabBookAutoUnlocked: true,
+                vocabBookUnlockedAt: serverTimestamp()
+            }, { merge: true });
+        } catch (e) {
+            log.warn('Failed to persist vocab auto-unlock (continuing local unlock):', e);
+        }
+
+        return true;
     }
 
     /**
@@ -603,6 +732,10 @@ const VocabularyBook = (function () {
      * Load vocabulary data from Firestore
      */
     async function loadVocabData() {
+        if (isGuestSession()) {
+            loadGuestVocabData();
+            return;
+        }
         if (!currentUserId || !db) return;
 
         try {
@@ -699,6 +832,30 @@ const VocabularyBook = (function () {
      * Save vocabulary data to Firestore
      */
     async function saveVocabData() {
+        if (isGuestSession()) {
+            const currentState = JSON.stringify(vocabCache);
+            if (lastSavedState && currentState === lastSavedState) {
+                return;
+            }
+            try {
+                localStorage.setItem(
+                    GUEST_VOCAB_STORAGE_KEY,
+                    JSON.stringify({
+                        bookmarkedWords: vocabCache.bookmarkedWords,
+                        wordStats: vocabCache.wordStats,
+                        frequentlyMissed: vocabCache.frequentlyMissed,
+                        usedToMiss: vocabCache.usedToMiss,
+                        masteredWords: vocabCache.masteredWords,
+                        updatedAt: new Date().toISOString()
+                    })
+                );
+                lastSavedState = currentState;
+            } catch (e) {
+                log.warn('Failed to save guest vocabulary data:', e);
+            }
+            return;
+        }
+
         if (!currentUserId || !db) {
             log.error('cannot save: missing user or db', { uid: currentUserId, db: !!db });
             return;
@@ -780,6 +937,7 @@ const VocabularyBook = (function () {
      * @param {string} sentence - The original sentence containing the word (NEW)
      */
     async function trackMissedWord(word, mode = null, questionId = null, sentence = null) {
+        if (!currentUserId) return;
         const lemma = lemmatize(word);
         if (!lemma) return;
 
@@ -920,6 +1078,7 @@ const VocabularyBook = (function () {
      * Track a word that was answered correctly
      */
     async function trackCorrectWord(word) {
+        if (!currentUserId) return;
         const lemma = lemmatize(word);
         if (!lemma) return;
 
@@ -981,6 +1140,7 @@ const VocabularyBook = (function () {
      * Award points for mastering a frequently missed word
      */
     async function awardMasteryPoints(lemma) {
+        if (isGuestSession()) return;
         if (!currentUserId || !db) return;
 
         try {
@@ -1196,8 +1356,21 @@ const VocabularyBook = (function () {
      */
     async function showAddModal(missedWords, questionId, mode, sentence = null) {
         log.debug('showAddModal called:', { missedWords, questionId, mode, sentence: sentence?.substring(0, 50) });
-        const unlocked = await isUnlocked();
-        if (!unlocked || !vocabAddModal || missedWords.length === 0) return;
+        if (!vocabAddModal || !Array.isArray(missedWords) || missedWords.length === 0) return;
+        if (!currentUserId) {
+            if (!guestUnlockNudgeShown) {
+                guestUnlockNudgeShown = true;
+                window.shopModule?.showAlertModal?.('Please log in to save missed words to your Vocabulary Book.', true);
+            }
+            return; // Guests do not have vocabulary behaviors
+        }
+
+        const wasUnlocked = await isUnlocked();
+        let unlocked = wasUnlocked;
+        if (!unlocked) {
+            unlocked = await autoUnlockFromPractice(mode, missedWords);
+        }
+        if (!unlocked) return;
 
         currentMissedWords = missedWords;
         currentQuestionId = questionId;
@@ -1278,6 +1451,12 @@ const VocabularyBook = (function () {
 
             vocabAddWords.appendChild(item);
         });
+
+        if (!wasUnlocked && ['type', 'speak'].includes(mode) && window.VocabTutorial?.start) {
+            setTimeout(() => {
+                window.VocabTutorial.start('vocabAddModalIntro');
+            }, 120);
+        }
     }
 
     /**
@@ -1461,14 +1640,14 @@ const VocabularyBook = (function () {
      * Toggle panel open/close
      */
     async function togglePanel() {
-        // Enforce unlock check
+        if (!currentUserId) {
+            window.shopModule?.showAlertModal?.('Please log in to use Vocabulary Book.', true);
+            return;
+        }
+
         const unlocked = await isUnlocked();
         if (!unlocked) {
-            // alert('Unlock "Vocab Book" in the Shop to use this feature!');
-            // Open shop to nudge user
-            if (window.shopModule && window.shopModule.openShop) {
-                window.shopModule.openShop();
-            }
+            window.shopModule?.showAlertModal?.('Vocabulary Book unlocks automatically after missed keywords in Type or Speak mode.', true);
             return;
         }
 
@@ -1542,13 +1721,15 @@ const VocabularyBook = (function () {
      * Show toggle button when unlocked
      */
     function showToggle() {
-        log.debug('showToggle called, element:', !!vocabPanelToggle);
         if (vocabPanelToggle) {
             vocabPanelToggle.style.display = 'flex';
-            log.debug('Toggle now visible');
-        } else {
-            log.warn('Toggle element not found!');
         }
+    }
+
+    async function syncToggleVisibility() {
+        if (!vocabPanelToggle) return;
+        const unlocked = await isUnlocked();
+        vocabPanelToggle.style.display = unlocked ? 'flex' : 'none';
     }
 
     // Initialize on DOM ready

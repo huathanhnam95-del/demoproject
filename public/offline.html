@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline | BEL</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+    }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+    .card {
+      width: min(560px, 100%);
+      background: #111827;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 28px;
+      box-sizing: border-box;
+    }
+    h1 {
+      margin: 0 0 12px;
+      font-size: 1.5rem;
+      color: #f8fafc;
+    }
+    p {
+      margin: 0 0 12px;
+      line-height: 1.5;
+      color: #cbd5e1;
+    }
+    .actions {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      border: 1px solid #475569;
+      border-radius: 10px;
+      padding: 10px 14px;
+      text-decoration: none;
+      color: #e2e8f0;
+      font-weight: 600;
+      background: #1e293b;
+      cursor: pointer;
+    }
+    .btn.primary {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>You are offline</h1>
+    <p>BEL could not reach the network. You can retry now or come back once your connection is available.</p>
+    <p>Your local guest data remains on this device.</p>
+    <div class="actions">
+      <button class="btn primary" type="button" onclick="window.location.reload()">Retry</button>
+      <a class="btn" href="/index.html">Open App Home</a>
+      <a class="btn" href="/landing/">Open Landing</a>
+    </div>
+  </main>
+</body>
+</html>

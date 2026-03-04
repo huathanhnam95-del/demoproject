@@ -1,0 +1,651 @@
+{
+  "console": [
+    {
+      "type": "log",
+      "text": "✓ compromise library loaded successfully"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][LevelSystem] LevelSystem module initialized."
+    },
+    {
+      "type": "log",
+      "text": "✓ Firebase compat SDK initialized for Watch mode"
+    },
+    {
+      "type": "debug",
+      "text": "[FSRS V5]auto fill w to 19 length"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][Database] [FirestoreModule] Exporting functions, testing updateUserProfile: function"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][Database] [FirestoreModule] window.firebaseFirestoreFunctions keys: [createOrUpdateUserProfile, updateUserProfile, getUserProfile, recordSessionStart, recordSessionEnd, getActiveSessionId, recordPracticeAttempt, getPracticeStats, getMasteryStatus, updateMasteryStatus, removeMasteryStatus, calculateTier, calculateState, getProgressStatus, recordAttempt, incrementProgress, resetProgress, getAllProgressForMode, getRecentProgress, getTotalPoints, getPointsHistory, getPointsRules, getPointsRuleByTitle, updateUnlockedModes]"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][Auth] Initializing Auth UI listeners..."
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][Auth] ✓ Firebase module functions found, linking to UI..."
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][Auth] [AuthUI] window.firebaseFirestoreFunctions.updateUserProfile exists: function"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][Auth] 🚀 Demo mode detected, activating guest mode"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][Auth] Initializing Auth UI listeners..."
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][Auth] ✓ Firebase module functions found, linking to UI..."
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][Auth] [AuthUI] window.firebaseFirestoreFunctions.updateUserProfile exists: function"
+    },
+    {
+      "type": "log",
+      "text": "[Dictation App][sess:f6a9bb58][guest][Auth] ✓ auth-ui.js: Module loaded and initialized"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][Auth] ✓ Auth state callback registered"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][App] ✓ Progress UI: Auth state callback registered"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][Auth] ✓ Auth state callback registered"
+    },
+    {
+      "type": "log",
+      "text": "✅ Vocab List Modal injected."
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] Init - Elements found: {toggle: true, panel: true, overlay: true, modal: true, listModal: true}"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] Module initialized"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] Init - Elements found: {toggle: true, panel: true, overlay: true, modal: true, listModal: true}"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] Module initialized"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][SRS] Module Initialized"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][SRS] Module initialized"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][Auth] ✓ Auth state callback registered"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][App] Resetting scaffolding..."
+    },
+    {
+      "type": "log",
+      "text": "Main DifficultyManager Initialized (Modular)"
+    },
+    {
+      "type": "log",
+      "text": "[Performance] Tracker started for type"
+    },
+    {
+      "type": "log",
+      "text": "[Performance] Tracker started for speak"
+    },
+    {
+      "type": "log",
+      "text": "PraatAPI using backend: https://localhost:8081"
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:17.683Z]  @firebase/firestore: Firestore (10.7.1): FirebaseAuthCredentialsProvider Auth detected"
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:17.714Z]  @firebase/firestore: Firestore (10.7.1): FirebaseAppCheckTokenProvider AppCheck not yet detected"
+    },
+    {
+      "type": "log",
+      "text": "✓ compromise library loaded successfully"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][SRS] Collocations loaded: 1297 words"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] setUser: guest db available: true"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][SRS] Setting guest session for SRS"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] setUser: guest db available: true"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][SRS] User already set, skipping reload."
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:17.747Z]  @firebase/firestore: Firestore (10.7.1): FirestoreClient Received user= null"
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:17.747Z]  @firebase/firestore: Firestore (10.7.1): FirestoreClient Using default OnlineComponentProvider"
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:17.747Z]  @firebase/firestore: Firestore (10.7.1): FirestoreClient Using default OfflineComponentProvider"
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:17.748Z]  @firebase/firestore: Firestore (10.7.1): FirestoreClient Initializing OfflineComponentProvider"
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:17.749Z]  @firebase/firestore: Firestore (10.7.1): FirestoreClient Initializing OnlineComponentProvider"
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:17.751Z]  @firebase/firestore: Firestore (10.7.1): MemoryPersistence Starting transaction: Allocate target"
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:17.752Z]  @firebase/firestore: Firestore (10.7.1): MemoryPersistence Starting transaction: Execute query"
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:17.753Z]  @firebase/firestore: Firestore (10.7.1): QueryEngine Using full collection scan to execute query: Query(target=Target(word_references/photograph, orderBy: [__name__ (asc)]); limitType=F)"
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:17.756Z]  @firebase/firestore: Firestore (10.7.1): WebChannelConnection Creating RPC 'Listen' stream 0x7f53791b: https://firestore.googleapis.com/google.firestore.v1.Firestore/Listen/channel {\"httpSessionIdParam\":\"gsessionid\",\"initMessageHeaders\":{\"X-Goog-Api-Client\":\"gl-js/ fire/10.7.1\",\"Content-Type\":\"text/plain\",\"X-Firebase-GMPID\":\"1:737872673808:web:4db57599aa22b4830fde95\"},\"messageUrlParams\":{\"database\":\"projects/listening-tasks-3ae34/databases/(default)\"},\"sendRawJson\":true,\"supportsCrossDomainXhr\":true,\"internalChannelParams\":{\"forwardChannelRequestTimeoutMs\":600000},\"forceLongPolling\":false,\"detectBufferingProxy\":true,\"useFetchStreams\":true,\"encodeInitMessageHeaders\":true}"
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:17.761Z]  @firebase/firestore: Firestore (10.7.1): WebChannelConnection Opening RPC 'Listen' stream 0x7f53791b transport."
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:17.763Z]  @firebase/firestore: Firestore (10.7.1): WebChannelConnection RPC 'Listen' stream 0x7f53791b sending: {\"database\":\"projects/listening-tasks-3ae34/databases/(default)\",\"addTarget\":{\"documents\":{\"documents\":[\"projects/listening-tasks-3ae34/databases/(default)/documents/word_references/photograph\"]},\"targetId\":2}}"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][App] [loadQuestion] Checking if file exists (attempt 1/5): database/speak/audio/1.mp3"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][App] [checkFileExists] ✓ Valid audio file: database/speak/audio/1.mp3 (Content-Type: audio/mpeg)"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][App] [loadQuestion] Found file: 1.mp3 (database said: 1.mp3)"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][App] Resetting scaffolding..."
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][App] [loadQuestion] Checking if file exists (attempt 1/5): database/type/audio/1.mp3"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][App] [checkFileExists] ✓ Valid audio file: database/type/audio/1.mp3 (Content-Type: audio/mpeg)"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][App] [loadQuestion] Found file: 1.mp3 (database said: 1.mp3)"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][App] Resetting scaffolding..."
+    },
+    {
+      "type": "log",
+      "text": "[Dictation App] ✅ Praat backend available - using server-side analysis"
+    },
+    {
+      "type": "log",
+      "text": "[Tutorial] Delaying auto-start for type until entry/auth flow completes."
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:18.169Z]  @firebase/firestore: Firestore (10.7.1): WebChannelConnection RPC 'Listen' stream 0x7f53791b transport opened."
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:18.219Z]  @firebase/firestore: Firestore (10.7.1): WebChannelConnection RPC 'Listen' stream 0x7f53791b received: {\"targetChange\":{\"targetChangeType\":\"ADD\",\"targetIds\":[2]}}"
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:18.220Z]  @firebase/firestore: Firestore (10.7.1): WebChannelConnection RPC 'Listen' stream 0x7f53791b detected no buffering proxy"
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:18.250Z]  @firebase/firestore: Firestore (10.7.1): WebChannelConnection RPC 'Listen' stream 0x7f53791b received: {\"documentChange\":{\"document\":{\"name\":\"projects/listening-tasks-3ae34/databases/(default)/documents/word_references/photograph\",\"fields\":{\"audioFilename\":{\"stringValue\":\"photog13\"},\"stressedSyllable\":{\"integerValue\":\"0\"},\"updatedAt\":{\"timestampValue\":\"2026-01-29T07:54:48.001Z\"},\"pronunciation\":{\"stringValue\":\"ˈfoʊtəˌgræf\"},\"word\":{\"stringValue\":\"photograph\"},\"cacheVersion\":{\"integerValue\":\"8\"},\"syllables\":{\"arrayValue\":{\"values\":[{\"stringValue\":\"pho\"},{\"stringValue\":\"to\"},{\"stringValue\":\"graph\"}]}},\"partOfSpeech\":{\"stringValue\":\"noun\"},\"nativeAnalysis\":{\"mapValue\":{\"fields\":{\"intensity\":{\"mapValue\":{\"fields\":{\"values\":{\"arrayValue\":{\"values\":[{\"integerValue\":\"0\"},{\"integerValue\":\"0\"},{\"integerValue\":\"0\"},{\"integerValue\":\"0\"},{\"integerValue\":\"0\"},{\"doubleValue\":21.5},{\"doubleValue\":26.73},{\"doubleValue\":31.99},{\"doubleValue\":38.58},{\"doubleValue\":48.82},{\"doubleValue\":59.27},{\"doubleValue\":71.22},{\"doubleValue\":78.53},{\"doubleValue\":81.95},{\"doubleValue\":82.86},{\"doubleValue\":82.67},{\"doubleValue\":82.25},{\"doubleValue\":81.69},{\"doubleValue\":81.06},{\"doubleValue\":80.6},{\"doubleValue\":80.32},{\"doubleValue\":80.02},{\"doubleValue\":79.7},{\"doubleValue\":79.14},{\"doubleValue\":77.45},{\"doubleValue\":74.24},{\"doubleValue\":73.08},{\"doubleValue\":76.21},{\"doubleValue\":79.44},{\"doubleValue\":80.83},{\"doubleValue\":80.95},{\"doubleValue\":80.11},{\"doubleValue\":78.05},{\"doubleValue\":74.42},{\"doubleValue\":69.7},{\"doubleValue\":65.87},{\"doubleValue\":63.87},{\"doubleValue\":62.52},{\"doubleValue\":62.9},{\"doubleValue\":66.2},{\"doubleValue\":70.42},{\"doubleValue\":73.86},{\"doubleValue\":76.05},{\"doubleValue\":77.48},{\"doubleValue\":78.67},{\"doubleValue\":79.44},{\"doubleValue\":79.43},{\"doubleValue\":78.78},{\"doubleValue\":78.03},{\"doubleValue\":77.32},{\"doubleValue\":76.56},{\"doubleValue\":76.08},{\"doubleValue\":75.71},{\"doubleValue\":75.05},{\"doubleValue\":74.39},{\"doubleValue\":74.05},{\"doubleValue\":73.61},{\"doubleValue\":72.7},{\"doubleValue\":71.73},{\"doubleValue\":71.3},{\"doubleValue\":71.32},{\"doubleValue\":71.07},{\"doubleValue\":69.85},{\"doubleValue\":67.4},{\"doubleValue\":63.68},{\"doubleValue\":58.99},{\"doubleValue\":54.61},{\"doubleValue\":51.75},{\"doubleValue\":49.79},{\"doubleValue\":47.72},{\"doubleValue\":45.96},{\"doubleValue\":45.72},{\"doubleValue\":46.09},{\"doubleValue\":45.92},{\"doubleValue\":44.67},{\"doubleValue\":41.65},{\"doubleValue\":38.9},{\"doubleValue\":39.01},{\"doubleValue\":39.18},{\"doubleValue\":38.55},{\"integerValue\":\"0\"},{\"integerValue\":\"0\"},{\"integerValue\":\"0\"},{\"integerValue\":\"0\"}]}},\"times\":{\"arrayValue\":{\"values\":[{\"integerValue\":\"0\"},{\"doubleValue\":0.01},{\"doubleValue\":0.02},{\"doubleValue\":0.03},{\"doubleValue\":0.04},{\"doubleValue\":0.05},{\"doubleValue\":0.06},{\"doubleValue\":0.07},{\"doubleValue\":0.08},{\"doubleValue\":0.09},{\"doubleValue\":0.1},{\"doubleValue\":0.11},{\"doubleValue\":0.12},{\"doubleValue\":0.13},{\"doubleValue\":0.14},{\"doubleValue\":0.15},{\"doubleValue\":0.16},{\"doubleValue\":0.17},{\"doubleValue\":0.18},{\"doubleValue\":0.19},{\"doubleValue\":0.2},{\"doubleValue\":0.21},{\"doubleValue\":0.22},{\"doubleValue\":0.23},{\"doubleValue\":0.24},{\"doubleValue\":0.25},{\"doubleValue\":0.26},{\"doubleValue\":0.27},{\"doubleValue\":0.28},{\"doubleValue\":0.29},{\"doubleValue\":0.3},{\"doubleValue\":0.31},{\"doubleValue\":0.32},{\"doubleValue\":0.33},{\"doubleValue\":0.34},{\"doubleValue\":0.35},{\"doubleValue\":0.36},{\"doubleValue\":0.37},{\"doubleValue\":0.38},{\"doubleValue\":0.39},{\"doubleValue\":0.4},{\"doubleValue\":0.41},{\"doubleValue\":0.42},{\"doubleValue\":0.43},{\"doubleValue\":0.44},{\"doubleValue\":0.45},{\"doubleValue\":0.46},{\"doubleValue\":0.47},{\"doubleValue\":0.48},{\"doubleValue\":0.49},{\"doubleValue\":0.5},{\"doubleValue\":0.51},{\"doubleValue\":0.52},{\"doubleValue\":0.53},{\"doubleValue\":0.54},{\"doubleValue\":0.55},{\"doubleValue\":0.56},{\"doubleValue\":0.57},{\"doubleValue\":0.58},{\"doubleValue\":0.59},{\"doubleValue\":0.6},{\"doubleValue\":0.61},{\"doubleValue\":0.62},{\"doubleValue\":0.63},{\"doubleValue\":0.64},{\"doubleValue\":0.65},{\"doubleValue\":0.66},{\"doubleValue\":0.67},{\"doubleValue\":0.68},{\"doubleValue\":0.69},{\"doubleValue\":0.7},{\"doubleValue\":0.71},{\"doubleValue\":0.72},{\"doubleValue\":0.73},{\"doubleValue\":0.74},{\"doubleValue\":0.75},{\"doubleValue\":0.76},{\"doubleValue\":0.77},{\"doubleValue\":0.78},{\"doubleValue\":0.79},{\"doubleValue\":0.8},{\"doubleValue\":0.81},{\"doubleValue\":0.82},{\"doubleValue\":0.83}]}}}}},\"syllables\":{\"arrayValue\":{\"values\":[{\"mapValue\":{\"fields\":{\"duration\":{\"doubleValue\":0.15},\"maxPitch\":{\"doubleValue\":186.4},\"vowelDuration\":{\"doubleValue\":0.12},\"endTime\":{\"doubleValue\":0.246},\"syllable\":{\"integerValue\":\"1\"},\"intensity\":{\"doubleValue\":82.8},\"startTime\":{\"doubleValue\":0.096},\"isStressed\":{\"booleanValue\":true},\"avgPitch\":{\"doubleValue\":181.2}}}},{\"mapValue\":{\"fields\":{\"duration\":{\"doubleValue\":0.1},\"maxPitch\":{\"doubleValue\":169.1},\"endTime\":{\"doubleValue\":0.346},\"vowelDuration\":{\"doubleValue\":0.1},\"isStressed\":{\"booleanValue\":false},\"avgPitch\":{\"doubleValue\":147.7},\"syllable\":{\"integerValue\":\"2\"},\"intensity\":{\"integerValue\":\"81\"},\"startTime\":{\"doubleValue\":0.246}}}},{\"mapValue\":{\"fields\":{\"duration\":{\"doubleValue\":0.28},\"vowelDuration\":{\"doubleValue\":0.28},\"maxPitch\":{\"doubleValue\":116.2},\"endTime\":{\"doubleValue\":0.626},\"syllable\":{\"integerValue\":\"3\"},\"intensity\":{\"doubleValue\":79.5},\"startTime\":{\"doubleValue\":0.346},\"avgPitch\":{\"doubleValue\":94.3},\"isStressed\":{\"booleanValue\":false}}}}]}},\"pitch\":{\"mapValue\":{\"fields\":{\"values\":{\"arrayValue\":{\"values\":[{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"doubleValue\":186.4},{\"doubleValue\":179.6},{\"doubleValue\":178.4},{\"doubleValue\":179.4},{\"doubleValue\":180.7},{\"doubleValue\":182.1},{\"doubleValue\":183.5},{\"doubleValue\":184.6},{\"doubleValue\":184.7},{\"doubleValue\":182.9},{\"integerValue\":\"181\"},{\"doubleValue\":180.1},{\"doubleValue\":159.8},{\"doubleValue\":163.1},{\"integerValue\":\"161\"},{\"doubleValue\":160.7},{\"doubleValue\":158.1},{\"doubleValue\":152.9},{\"doubleValue\":146.5},{\"doubleValue\":138.3},{\"integerValue\":\"124\"},{\"doubleValue\":116.6},{\"doubleValue\":116.3},{\"doubleValue\":113.2},{\"doubleValue\":106.9},{\"doubleValue\":102.9},{\"doubleValue\":102.7},{\"doubleValue\":109.5},{\"doubleValue\":110.6},{\"doubleValue\":107.8},{\"doubleValue\":106.7},{\"doubleValue\":107.7},{\"doubleValue\":108.7},{\"doubleValue\":105.9},{\"doubleValue\":100.1},{\"doubleValue\":95.9},{\"doubleValue\":91.4},{\"doubleValue\":90.3},{\"doubleValue\":86.9},{\"doubleValue\":86.8},{\"doubleValue\":84.1},{\"doubleValue\":82.4},{\"doubleValue\":80.4},{\"doubleValue\":79.1},{\"doubleValue\":78.8},{\"doubleValue\":78.4},{\"doubleValue\":77.8},{\"doubleValue\":77.4},{\"doubleValue\":76.3},{\"doubleValue\":75.9},{\"doubleValue\":79.6},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null}]}},\"times\":{\"arrayValue\":{\"values\":[{\"integerValue\":\"0\"},{\"doubleValue\":0.01},{\"doubleValue\":0.02},{\"doubleValue\":0.03},{\"doubleValue\":0.04},{\"doubleValue\":0.05},{\"doubleValue\":0.06},{\"doubleValue\":0.07},{\"doubleValue\":0.08},{\"doubleValue\":0.09},{\"doubleValue\":0.1},{\"doubleValue\":0.11},{\"doubleValue\":0.12},{\"doubleValue\":0.13},{\"doubleValue\":0.14},{\"doubleValue\":0.15},{\"doubleValue\":0.16},{\"doubleValue\":0.17},{\"doubleValue\":0.18},{\"doubleValue\":0.19},{\"doubleValue\":0.2},{\"doubleValue\":0.21},{\"doubleValue\":0.22},{\"doubleValue\":0.23},{\"doubleValue\":0.24},{\"doubleValue\":0.25},{\"doubleValue\":0.26},{\"doubleValue\":0.27},{\"doubleValue\":0.28},{\"doubleValue\":0.29},{\"doubleValue\":0.3},{\"doubleValue\":0.31},{\"doubleValue\":0.32},{\"doubleValue\":0.33},{\"doubleValue\":0.34},{\"doubleValue\":0.35},{\"doubleValue\":0.36},{\"doubleValue\":0.37},{\"doubleValue\":0.38},{\"doubleValue\":0.39},{\"doubleValue\":0.4},{\"doubleValue\":0.41},{\"doubleValue\":0.42},{\"doubleValue\":0.43},{\"doubleValue\":0.44},{\"doubleValue\":0.45},{\"doubleValue\":0.46},{\"doubleValue\":0.47},{\"doubleValue\":0.48},{\"doubleValue\":0.49},{\"doubleValue\":0.5},{\"doubleValue\":0.51},{\"doubleValue\":0.52},{\"doubleValue\":0.53},{\"doubleValue\":0.54},{\"doubleValue\":0.55},{\"doubleValue\":0.56},{\"doubleValue\":0.57},{\"doubleValue\":0.58},{\"doubleValue\":0.59},{\"doubleValue\":0.6},{\"doubleValue\":0.61},{\"doubleValue\":0.62},{\"doubleValue\":0.63},{\"doubleValue\":0.64},{\"doubleValue\":0.65},{\"doubleValue\":0.66},{\"doubleValue\":0.67},{\"doubleValue\":0.68},{\"doubleValue\":0.69},{\"doubleValue\":0.7},{\"doubleValue\":0.71},{\"doubleValue\":0.72},{\"doubleValue\":0.73},{\"doubleValue\":0.74},{\"doubleValue\":0.75},{\"doubleValue\":0.76},{\"doubleValue\":0.77},{\"doubleValue\":0.78},{\"doubleValue\":0.79},{\"doubleValue\":0.8},{\"doubleValue\":0.81},{\"doubleValue\":0.82},{\"doubleValue\":0.83}]}}}}},\"duration\":{\"doubleValue\":0.831}}}},\"syllableCount\":{\"integerValue\":\"3\"},\"alternatives\":{\"arrayValue\":{\"values\":[{\"mapValue\":{\"fields\":{\"nativeAnalysis\":{\"mapValue\":{\"fields\":{\"syllables\":{\"arrayValue\":{\"values\":[{\"mapValue\":{\"fields\":{\"isStressed\":{\"booleanValue\":true},\"avgPitch\":{\"doubleValue\":181.2},\"startTime\":{\"doubleValue\":0.096},\"intensity\":{\"doubleValue\":82.8},\"syllable\":{\"integerValue\":\"1\"},\"maxPitch\":{\"doubleValue\":186.4},\"vowelDuration\":{\"doubleValue\":0.12},\"endTime\":{\"doubleValue\":0.246},\"duration\":{\"doubleValue\":0.15}}}},{\"mapValue\":{\"fields\":{\"isStressed\":{\"booleanValue\":false},\"avgPitch\":{\"doubleValue\":147.7},\"syllable\":{\"integerValue\":\"2\"},\"startTime\":{\"doubleValue\":0.246},\"intensity\":{\"integerValue\":\"81\"},\"duration\":{\"doubleValue\":0.1},\"endTime\":{\"doubleValue\":0.346},\"maxPitch\":{\"doubleValue\":169.1},\"vowelDuration\":{\"doubleValue\":0.1}}}},{\"mapValue\":{\"fields\":{\"syllable\":{\"integerValue\":\"3\"},\"intensity\":{\"doubleValue\":79.5},\"startTime\":{\"doubleValue\":0.346},\"avgPitch\":{\"doubleValue\":94.3},\"isStressed\":{\"booleanValue\":false},\"duration\":{\"doubleValue\":0.28},\"endTime\":{\"doubleValue\":0.626},\"vowelDuration\":{\"doubleValue\":0.28},\"maxPitch\":{\"doubleValue\":116.2}}}}]}},\"intensity\":{\"mapValue\":{\"fields\":{\"values\":{\"arrayValue\":{\"values\":[{\"integerValue\":\"0\"},{\"integerValue\":\"0\"},{\"integerValue\":\"0\"},{\"integerValue\":\"0\"},{\"integerValue\":\"0\"},{\"doubleValue\":21.5},{\"doubleValue\":26.73},{\"doubleValue\":31.99},{\"doubleValue\":38.58},{\"doubleValue\":48.82},{\"doubleValue\":59.27},{\"doubleValue\":71.22},{\"doubleValue\":78.53},{\"doubleValue\":81.95},{\"doubleValue\":82.86},{\"doubleValue\":82.67},{\"doubleValue\":82.25},{\"doubleValue\":81.69},{\"doubleValue\":81.06},{\"doubleValue\":80.6},{\"doubleValue\":80.32},{\"doubleValue\":80.02},{\"doubleValue\":79.7},{\"doubleValue\":79.14},{\"doubleValue\":77.45},{\"doubleValue\":74.24},{\"doubleValue\":73.08},{\"doubleValue\":76.21},{\"doubleValue\":79.44},{\"doubleValue\":80.83},{\"doubleValue\":80.95},{\"doubleValue\":80.11},{\"doubleValue\":78.05},{\"doubleValue\":74.42},{\"doubleValue\":69.7},{\"doubleValue\":65.87},{\"doubleValue\":63.87},{\"doubleValue\":62.52},{\"doubleValue\":62.9},{\"doubleValue\":66.2},{\"doubleValue\":70.42},{\"doubleValue\":73.86},{\"doubleValue\":76.05},{\"doubleValue\":77.48},{\"doubleValue\":78.67},{\"doubleValue\":79.44},{\"doubleValue\":79.43},{\"doubleValue\":78.78},{\"doubleValue\":78.03},{\"doubleValue\":77.32},{\"doubleValue\":76.56},{\"doubleValue\":76.08},{\"doubleValue\":75.71},{\"doubleValue\":75.05},{\"doubleValue\":74.39},{\"doubleValue\":74.05},{\"doubleValue\":73.61},{\"doubleValue\":72.7},{\"doubleValue\":71.73},{\"doubleValue\":71.3},{\"doubleValue\":71.32},{\"doubleValue\":71.07},{\"doubleValue\":69.85},{\"doubleValue\":67.4},{\"doubleValue\":63.68},{\"doubleValue\":58.99},{\"doubleValue\":54.61},{\"doubleValue\":51.75},{\"doubleValue\":49.79},{\"doubleValue\":47.72},{\"doubleValue\":45.96},{\"doubleValue\":45.72},{\"doubleValue\":46.09},{\"doubleValue\":45.92},{\"doubleValue\":44.67},{\"doubleValue\":41.65},{\"doubleValue\":38.9},{\"doubleValue\":39.01},{\"doubleValue\":39.18},{\"doubleValue\":38.55},{\"integerValue\":\"0\"},{\"integerValue\":\"0\"},{\"integerValue\":\"0\"},{\"integerValue\":\"0\"}]}},\"times\":{\"arrayValue\":{\"values\":[{\"integerValue\":\"0\"},{\"doubleValue\":0.01},{\"doubleValue\":0.02},{\"doubleValue\":0.03},{\"doubleValue\":0.04},{\"doubleValue\":0.05},{\"doubleValue\":0.06},{\"doubleValue\":0.07},{\"doubleValue\":0.08},{\"doubleValue\":0.09},{\"doubleValue\":0.1},{\"doubleValue\":0.11},{\"doubleValue\":0.12},{\"doubleValue\":0.13},{\"doubleValue\":0.14},{\"doubleValue\":0.15},{\"doubleValue\":0.16},{\"doubleValue\":0.17},{\"doubleValue\":0.18},{\"doubleValue\":0.19},{\"doubleValue\":0.2},{\"doubleValue\":0.21},{\"doubleValue\":0.22},{\"doubleValue\":0.23},{\"doubleValue\":0.24},{\"doubleValue\":0.25},{\"doubleValue\":0.26},{\"doubleValue\":0.27},{\"doubleValue\":0.28},{\"doubleValue\":0.29},{\"doubleValue\":0.3},{\"doubleValue\":0.31},{\"doubleValue\":0.32},{\"doubleValue\":0.33},{\"doubleValue\":0.34},{\"doubleValue\":0.35},{\"doubleValue\":0.36},{\"doubleValue\":0.37},{\"doubleValue\":0.38},{\"doubleValue\":0.39},{\"doubleValue\":0.4},{\"doubleValue\":0.41},{\"doubleValue\":0.42},{\"doubleValue\":0.43},{\"doubleValue\":0.44},{\"doubleValue\":0.45},{\"doubleValue\":0.46},{\"doubleValue\":0.47},{\"doubleValue\":0.48},{\"doubleValue\":0.49},{\"doubleValue\":0.5},{\"doubleValue\":0.51},{\"doubleValue\":0.52},{\"doubleValue\":0.53},{\"doubleValue\":0.54},{\"doubleValue\":0.55},{\"doubleValue\":0.56},{\"doubleValue\":0.57},{\"doubleValue\":0.58},{\"doubleValue\":0.59},{\"doubleValue\":0.6},{\"doubleValue\":0.61},{\"doubleValue\":0.62},{\"doubleValue\":0.63},{\"doubleValue\":0.64},{\"doubleValue\":0.65},{\"doubleValue\":0.66},{\"doubleValue\":0.67},{\"doubleValue\":0.68},{\"doubleValue\":0.69},{\"doubleValue\":0.7},{\"doubleValue\":0.71},{\"doubleValue\":0.72},{\"doubleValue\":0.73},{\"doubleValue\":0.74},{\"doubleValue\":0.75},{\"doubleValue\":0.76},{\"doubleValue\":0.77},{\"doubleValue\":0.78},{\"doubleValue\":0.79},{\"doubleValue\":0.8},{\"doubleValue\":0.81},{\"doubleValue\":0.82},{\"doubleValue\":0.83}]}}}}},\"pitch\":{\"mapValue\":{\"fields\":{\"values\":{\"arrayValue\":{\"values\":[{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"doubleValue\":186.4},{\"doubleValue\":179.6},{\"doubleValue\":178.4},{\"doubleValue\":179.4},{\"doubleValue\":180.7},{\"doubleValue\":182.1},{\"doubleValue\":183.5},{\"doubleValue\":184.6},{\"doubleValue\":184.7},{\"doubleValue\":182.9},{\"integerValue\":\"181\"},{\"doubleValue\":180.1},{\"doubleValue\":159.8},{\"doubleValue\":163.1},{\"integerValue\":\"161\"},{\"doubleValue\":160.7},{\"doubleValue\":158.1},{\"doubleValue\":152.9},{\"doubleValue\":146.5},{\"doubleValue\":138.3},{\"integerValue\":\"124\"},{\"doubleValue\":116.6},{\"doubleValue\":116.3},{\"doubleValue\":113.2},{\"doubleValue\":106.9},{\"doubleValue\":102.9},{\"doubleValue\":102.7},{\"doubleValue\":109.5},{\"doubleValue\":110.6},{\"doubleValue\":107.8},{\"doubleValue\":106.7},{\"doubleValue\":107.7},{\"doubleValue\":108.7},{\"doubleValue\":105.9},{\"doubleValue\":100.1},{\"doubleValue\":95.9},{\"doubleValue\":91.4},{\"doubleValue\":90.3},{\"doubleValue\":86.9},{\"doubleValue\":86.8},{\"doubleValue\":84.1},{\"doubleValue\":82.4},{\"doubleValue\":80.4},{\"doubleValue\":79.1},{\"doubleValue\":78.8},{\"doubleValue\":78.4},{\"doubleValue\":77.8},{\"doubleValue\":77.4},{\"doubleValue\":76.3},{\"doubleValue\":75.9},{\"doubleValue\":79.6},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null}]}},\"times\":{\"arrayValue\":{\"values\":[{\"integerValue\":\"0\"},{\"doubleValue\":0.01},{\"doubleValue\":0.02},{\"doubleValue\":0.03},{\"doubleValue\":0.04},{\"doubleValue\":0.05},{\"doubleValue\":0.06},{\"doubleValue\":0.07},{\"doubleValue\":0.08},{\"doubleValue\":0.09},{\"doubleValue\":0.1},{\"doubleValue\":0.11},{\"doubleValue\":0.12},{\"doubleValue\":0.13},{\"doubleValue\":0.14},{\"doubleValue\":0.15},{\"doubleValue\":0.16},{\"doubleValue\":0.17},{\"doubleValue\":0.18},{\"doubleValue\":0.19},{\"doubleValue\":0.2},{\"doubleValue\":0.21},{\"doubleValue\":0.22},{\"doubleValue\":0.23},{\"doubleValue\":0.24},{\"doubleValue\":0.25},{\"doubleValue\":0.26},{\"doubleValue\":0.27},{\"doubleValue\":0.28},{\"doubleValue\":0.29},{\"doubleValue\":0.3},{\"doubleValue\":0.31},{\"doubleValue\":0.32},{\"doubleValue\":0.33},{\"doubleValue\":0.34},{\"doubleValue\":0.35},{\"doubleValue\":0.36},{\"doubleValue\":0.37},{\"doubleValue\":0.38},{\"doubleValue\":0.39},{\"doubleValue\":0.4},{\"doubleValue\":0.41},{\"doubleValue\":0.42},{\"doubleValue\":0.43},{\"doubleValue\":0.44},{\"doubleValue\":0.45},{\"doubleValue\":0.46},{\"doubleValue\":0.47},{\"doubleValue\":0.48},{\"doubleValue\":0.49},{\"doubleValue\":0.5},{\"doubleValue\":0.51},{\"doubleValue\":0.52},{\"doubleValue\":0.53},{\"doubleValue\":0.54},{\"doubleValue\":0.55},{\"doubleValue\":0.56},{\"doubleValue\":0.57},{\"doubleValue\":0.58},{\"doubleValue\":0.59},{\"doubleValue\":0.6},{\"doubleValue\":0.61},{\"doubleValue\":0.62},{\"doubleValue\":0.63},{\"doubleValue\":0.64},{\"doubleValue\":0.65},{\"doubleValue\":0.66},{\"doubleValue\":0.67},{\"doubleValue\":0.68},{\"doubleValue\":0.69},{\"doubleValue\":0.7},{\"doubleValue\":0.71},{\"doubleValue\":0.72},{\"doubleValue\":0.73},{\"doubleValue\":0.74},{\"doubleValue\":0.75},{\"doubleValue\":0.76},{\"doubleValue\":0.77},{\"doubleValue\":0.78},{\"doubleValue\":0.79},{\"doubleValue\":0.8},{\"doubleValue\":0.81},{\"doubleValue\":0.82},{\"doubleValue\":0.83}]}}}}},\"duration\":{\"doubleValue\":0.831}}}},\"source\":{\"stringValue\":\"merriam-webster\"},\"audioUrl\":{\"stringValue\":\"https://media.merriam-webster.com/audio/prons/en/us/mp3/p/photog13.mp3\"},\"definition\":{\"stringValue\":\"a picture made by a camera —called also photo\"},\"syllableCount\":{\"integerValue\":\"3\"},\"audioFilename\":{\"stringValue\":\"photog13\"},\"stressedSyllable\":{\"integerValue\":\"0\"},\"word\":{\"stringValue\":\"photograph\"},\"partOfSpeech\":{\"stringValue\":\"noun\"},\"syllables\":{\"arrayValue\":{\"values\":[{\"stringValue\":\"pho\"},{\"stringValue\":\"to\"},{\"stringValue\":\"graph\"}]}},\"pronunciation\":{\"stringValue\":\"ˈfoʊtəˌgræf\"}}}},{\"mapValue\":{\"fields\":{\"audioUrl\":{\"stringValue\":\"https://media.merriam-webster.com/audio/prons/en/us/mp3/p/photog13.mp3\"},\"source\":{\"stringValue\":\"merriam-webster\"},\"syllableCount\":{\"integerValue\":\"3\"},\"definition\":{\"stringValue\":\"to take a photograph of (someone or something)\"},\"nativeAnalysis\":{\"mapValue\":{\"fields\":{\"duration\":{\"doubleValue\":0.831},\"pitch\":{\"mapValue\":{\"fields\":{\"values\":{\"arrayValue\":{\"values\":[{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"doubleValue\":186.4},{\"doubleValue\":179.6},{\"doubleValue\":178.4},{\"doubleValue\":179.4},{\"doubleValue\":180.7},{\"doubleValue\":182.1},{\"doubleValue\":183.5},{\"doubleValue\":184.6},{\"doubleValue\":184.7},{\"doubleValue\":182.9},{\"integerValue\":\"181\"},{\"doubleValue\":180.1},{\"doubleValue\":159.8},{\"doubleValue\":163.1},{\"integerValue\":\"161\"},{\"doubleValue\":160.7},{\"doubleValue\":158.1},{\"doubleValue\":152.9},{\"doubleValue\":146.5},{\"doubleValue\":138.3},{\"integerValue\":\"124\"},{\"doubleValue\":116.6},{\"doubleValue\":116.3},{\"doubleValue\":113.2},{\"doubleValue\":106.9},{\"doubleValue\":102.9},{\"doubleValue\":102.7},{\"doubleValue\":109.5},{\"doubleValue\":110.6},{\"doubleValue\":107.8},{\"doubleValue\":106.7},{\"doubleValue\":107.7},{\"doubleValue\":108.7},{\"doubleValue\":105.9},{\"doubleValue\":100.1},{\"doubleValue\":95.9},{\"doubleValue\":91.4},{\"doubleValue\":90.3},{\"doubleValue\":86.9},{\"doubleValue\":86.8},{\"doubleValue\":84.1},{\"doubleValue\":82.4},{\"doubleValue\":80.4},{\"doubleValue\":79.1},{\"doubleValue\":78.8},{\"doubleValue\":78.4},{\"doubleValue\":77.8},{\"doubleValue\":77.4},{\"doubleValue\":76.3},{\"doubleValue\":75.9},{\"doubleValue\":79.6},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null},{\"nullValue\":null}]}},\"times\":{\"arrayValue\":{\"values\":[{\"integerValue\":\"0\"},{\"doubleValue\":0.01},{\"doubleValue\":0.02},{\"doubleValue\":0.03},{\"doubleValue\":0.04},{\"doubleValue\":0.05},{\"doubleValue\":0.06},{\"doubleValue\":0.07},{\"doubleValue\":0.08},{\"doubleValue\":0.09},{\"doubleValue\":0.1},{\"doubleValue\":0.11},{\"doubleValue\":0.12},{\"doubleValue\":0.13},{\"doubleValue\":0.14},{\"doubleValue\":0.15},{\"doubleValue\":0.16},{\"doubleValue\":0.17},{\"doubleValue\":0.18},{\"doubleValue\":0.19},{\"doubleValue\":0.2},{\"doubleValue\":0.21},{\"doubleValue\":0.22},{\"doubleValue\":0.23},{\"doubleValue\":0.24},{\"doubleValue\":0.25},{\"doubleValue\":0.26},{\"doubleValue\":0.27},{\"doubleValue\":0.28},{\"doubleValue\":0.29},{\"doubleValue\":0.3},{\"doubleValue\":0.31},{\"doubleValue\":0.32},{\"doubleValue\":0.33},{\"doubleValue\":0.34},{\"doubleValue\":0.35},{\"doubleValue\":0.36},{\"doubleValue\":0.37},{\"doubleValue\":0.38},{\"doubleValue\":0.39},{\"doubleValue\":0.4},{\"doubleValue\":0.41},{\"doubleValue\":0.42},{\"doubleValue\":0.43},{\"doubleValue\":0.44},{\"doubleValue\":0.45},{\"doubleValue\":0.46},{\"doubleValue\":0.47},{\"doubleValue\":0.48},{\"doubleValue\":0.49},{\"doubleValue\":0.5},{\"doubleValue\":0.51},{\"doubleValue\":0.52},{\"doubleValue\":0.53},{\"doubleValue\":0.54},{\"doubleValue\":0.55},{\"doubleValue\":0.56},{\"doubleValue\":0.57},{\"doubleValue\":0.58},{\"doubleValue\":0.59},{\"doubleValue\":0.6},{\"doubleValue\":0.61},{\"doubleValue\":0.62},{\"doubleValue\":0.63},{\"doubleValue\":0.64},{\"doubleValue\":0.65},{\"doubleValue\":0.66},{\"doubleValue\":0.67},{\"doubleValue\":0.68},{\"doubleValue\":0.69},{\"doubleValue\":0.7},{\"doubleValue\":0.71},{\"doubleValue\":0.72},{\"doubleValue\":0.73},{\"doubleValue\":0.74},{\"doubleValue\":0.75},{\"doubleValue\":0.76},{\"doubleValue\":0.77},{\"doubleValue\":0.78},{\"doubleValue\":0.79},{\"doubleValue\":0.8},{\"doubleValue\":0.81},{\"doubleValue\":0.82},{\"doubleValue\":0.83}]}}}}},\"intensity\":{\"mapValue\":{\"fields\":{\"values\":{\"arrayValue\":{\"values\":[{\"integerValue\":\"0\"},{\"integerValue\":\"0\"},{\"integerValue\":\"0\"},{\"integerValue\":\"0\"},{\"integerValue\":\"0\"},{\"doubleValue\":21.5},{\"doubleValue\":26.73},{\"doubleValue\":31.99},{\"doubleValue\":38.58},{\"doubleValue\":48.82},{\"doubleValue\":59.27},{\"doubleValue\":71.22},{\"doubleValue\":78.53},{\"doubleValue\":81.95},{\"doubleValue\":82.86},{\"doubleValue\":82.67},{\"doubleValue\":82.25},{\"doubleValue\":81.69},{\"doubleValue\":81.06},{\"doubleValue\":80.6},{\"doubleValue\":80.32},{\"doubleValue\":80.02},{\"doubleValue\":79.7},{\"doubleValue\":79.14},{\"doubleValue\":77.45},{\"doubleValue\":74.24},{\"doubleValue\":73.08},{\"doubleValue\":76.21},{\"doubleValue\":79.44},{\"doubleValue\":80.83},{\"doubleValue\":80.95},{\"doubleValue\":80.11},{\"doubleValue\":78.05},{\"doubleValue\":74.42},{\"doubleValue\":69.7},{\"doubleValue\":65.87},{\"doubleValue\":63.87},{\"doubleValue\":62.52},{\"doubleValue\":62.9},{\"doubleValue\":66.2},{\"doubleValue\":70.42},{\"doubleValue\":73.86},{\"doubleValue\":76.05},{\"doubleValue\":77.48},{\"doubleValue\":78.67},{\"doubleValue\":79.44},{\"doubleValue\":79.43},{\"doubleValue\":78.78},{\"doubleValue\":78.03},{\"doubleValue\":77.32},{\"doubleValue\":76.56},{\"doubleValue\":76.08},{\"doubleValue\":75.71},{\"doubleValue\":75.05},{\"doubleValue\":74.39},{\"doubleValue\":74.05},{\"doubleValue\":73.61},{\"doubleValue\":72.7},{\"doubleValue\":71.73},{\"doubleValue\":71.3},{\"doubleValue\":71.32},{\"doubleValue\":71.07},{\"doubleValue\":69.85},{\"doubleValue\":67.4},{\"doubleValue\":63.68},{\"doubleValue\":58.99},{\"doubleValue\":54.61},{\"doubleValue\":51.75},{\"doubleValue\":49.79},{\"doubleValue\":47.72},{\"doubleValue\":45.96},{\"doubleValue\":45.72},{\"doubleValue\":46.09},{\"doubleValue\":45.92},{\"doubleValue\":44.67},{\"doubleValue\":41.65},{\"doubleValue\":38.9},{\"doubleValue\":39.01},{\"doubleValue\":39.18},{\"doubleValue\":38.55},{\"integerValue\":\"0\"},{\"integerValue\":\"0\"},{\"integerValue\":\"0\"},{\"integerValue\":\"0\"}]}},\"times\":{\"arrayValue\":{\"values\":[{\"integerValue\":\"0\"},{\"doubleValue\":0.01},{\"doubleValue\":0.02},{\"doubleValue\":0.03},{\"doubleValue\":0.04},{\"doubleValue\":0.05},{\"doubleValue\":0.06},{\"doubleValue\":0.07},{\"doubleValue\":0.08},{\"doubleValue\":0.09},{\"doubleValue\":0.1},{\"doubleValue\":0.11},{\"doubleValue\":0.12},{\"doubleValue\":0.13},{\"doubleValue\":0.14},{\"doubleValue\":0.15},{\"doubleValue\":0.16},{\"doubleValue\":0.17},{\"doubleValue\":0.18},{\"doubleValue\":0.19},{\"doubleValue\":0.2},{\"doubleValue\":0.21},{\"doubleValue\":0.22},{\"doubleValue\":0.23},{\"doubleValue\":0.24},{\"doubleValue\":0.25},{\"doubleValue\":0.26},{\"doubleValue\":0.27},{\"doubleValue\":0.28},{\"doubleValue\":0.29},{\"doubleValue\":0.3},{\"doubleValue\":0.31},{\"doubleValue\":0.32},{\"doubleValue\":0.33},{\"doubleValue\":0.34},{\"doubleValue\":0.35},{\"doubleValue\":0.36},{\"doubleValue\":0.37},{\"doubleValue\":0.38},{\"doubleValue\":0.39},{\"doubleValue\":0.4},{\"doubleValue\":0.41},{\"doubleValue\":0.42},{\"doubleValue\":0.43},{\"doubleValue\":0.44},{\"doubleValue\":0.45},{\"doubleValue\":0.46},{\"doubleValue\":0.47},{\"doubleValue\":0.48},{\"doubleValue\":0.49},{\"doubleValue\":0.5},{\"doubleValue\":0.51},{\"doubleValue\":0.52},{\"doubleValue\":0.53},{\"doubleValue\":0.54},{\"doubleValue\":0.55},{\"doubleValue\":0.56},{\"doubleValue\":0.57},{\"doubleValue\":0.58},{\"doubleValue\":0.59},{\"doubleValue\":0.6},{\"doubleValue\":0.61},{\"doubleValue\":0.62},{\"doubleValue\":0.63},{\"doubleValue\":0.64},{\"doubleValue\":0.65},{\"doubleValue\":0.66},{\"doubleValue\":0.67},{\"doubleValue\":0.68},{\"doubleValue\":0.69},{\"doubleValue\":0.7},{\"doubleValue\":0.71},{\"doubleValue\":0.72},{\"doubleValue\":0.73},{\"doubleValue\":0.74},{\"doubleValue\":0.75},{\"doubleValue\":0.76},{\"doubleValue\":0.77},{\"doubleValue\":0.78},{\"doubleValue\":0.79},{\"doubleValue\":0.8},{\"doubleValue\":0.81},{\"doubleValue\":0.82},{\"doubleValue\":0.83}]}}}}},\"syllables\":{\"arrayValue\":{\"values\":[{\"mapValue\":{\"fields\":{\"avgPitch\":{\"doubleValue\":181.2},\"isStressed\":{\"booleanValue\":true},\"intensity\":{\"doubleValue\":82.8},\"startTime\":{\"doubleValue\":0.096},\"syllable\":{\"integerValue\":\"1\"},\"maxPitch\":{\"doubleValue\":186.4},\"endTime\":{\"doubleValue\":0.246},\"vowelDuration\":{\"doubleValue\":0.12},\"duration\":{\"doubleValue\":0.15}}}},{\"mapValue\":{\"fields\":{\"endTime\":{\"doubleValue\":0.346},\"maxPitch\":{\"doubleValue\":169.1},\"vowelDuration\":{\"doubleValue\":0.1},\"duration\":{\"doubleValue\":0.1},\"intensity\":{\"integerValue\":\"81\"},\"startTime\":{\"doubleValue\":0.246},\"syllable\":{\"integerValue\":\"2\"},\"isStressed\":{\"booleanValue\":false},\"avgPitch\":{\"doubleValue\":147.7}}}},{\"mapValue\":{\"fields\":{\"maxPitch\":{\"doubleValue\":116.2},\"vowelDuration\":{\"doubleValue\":0.28},\"endTime\":{\"doubleValue\":0.626},\"duration\":{\"doubleValue\":0.28},\"startTime\":{\"doubleValue\":0.346},\"intensity\":{\"doubleValue\":79.5},\"syllable\":{\"integerValue\":\"3\"},\"avgPitch\":{\"doubleValue\":94.3},\"isStressed\":{\"booleanValue\":false}}}}]}}}}},\"partOfSpeech\":{\"stringValue\":\"verb\"},\"syllables\":{\"arrayValue\":{\"values\":[{\"stringValue\":\"pho\"},{\"stringValue\":\"to\"},{\"stringValue\":\"graph\"}]}},\"word\":{\"stringValue\":\"photograph\"},\"inheritedPronunciation\":{\"booleanValue\":true},\"pronunciation\":{\"stringValue\":\"ˈfoʊtəˌgræf\"},\"stressedSyllable\":{\"integerValue\":\"0\"},\"audioFilename\":{\"nullValue\":null}}}}]}},\"lastAccessedAt\":{\"timestampValue\":\"2026-02-08T21:45:24.104Z\"},\"createdAt\":{\"timestampValue\":\"2026-01-29T07:54:48.001Z\"},\"searchCount\":{\"integerValue\":\"250\"},\"definition\":{\"stringValue\":\"a picture made by a camera —called also photo\"},\"source\":{\"stringValue\":\"merriam-webster\"},\"audioUrl\":{\"stringValue\":\"https://media.merriam-webster.com/audio/prons/en/us/mp3/p/photog13.mp3\"}},\"createTime\":\"2026-01-12T05:29:25.233693Z\",\"updateTime\":\"2026-02-08T21:45:24.130032Z\"},\"targetIds\":[2]}}"
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:18.251Z]  @firebase/firestore: Firestore (10.7.1): WebChannelConnection RPC 'Listen' stream 0x7f53791b received: {\"targetChange\":{\"targetChangeType\":\"CURRENT\",\"targetIds\":[2],\"resumeToken\":\"CgkI2fPrvOuAkwM=\",\"readTime\":\"2026-03-02T08:53:14.165721Z\"}}"
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:18.251Z]  @firebase/firestore: Firestore (10.7.1): WebChannelConnection RPC 'Listen' stream 0x7f53791b received: {\"targetChange\":{\"resumeToken\":\"CgkI2fPrvOuAkwM=\",\"readTime\":\"2026-03-02T08:53:14.165721Z\"}}"
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:18.252Z]  @firebase/firestore: Firestore (10.7.1): MemoryPersistence Starting transaction: Get last remote snapshot version"
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:18.253Z]  @firebase/firestore: Firestore (10.7.1): MemoryPersistence Starting transaction: Apply remote event"
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:18.256Z]  @firebase/firestore: Firestore (10.7.1): MemoryPersistence Starting transaction: notifyLocalViewChanges"
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:18.257Z]  @firebase/firestore: Firestore (10.7.1): MemoryPersistence Starting transaction: Release target"
+    },
+    {
+      "type": "log",
+      "text": "📚 Database hit: photograph"
+    },
+    {
+      "type": "log",
+      "text": "=== DATABASE DATA ==="
+    },
+    {
+      "type": "log",
+      "text": "Word: photograph"
+    },
+    {
+      "type": "log",
+      "text": "Cache version: 8"
+    },
+    {
+      "type": "log",
+      "text": "📚 Firestore hit with complete data: photograph"
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:18.259Z]  @firebase/firestore: Firestore (10.7.1): WebChannelConnection RPC 'Listen' stream 0x7f53791b sending: {\"database\":\"projects/listening-tasks-3ae34/databases/(default)\",\"removeTarget\":2}"
+    },
+    {
+      "type": "log",
+      "text": "Normalizing: shifting time by -0.096s"
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:18.328Z]  @firebase/firestore: Firestore (10.7.1): WebChannelConnection RPC 'Listen' stream 0x7f53791b received: {\"targetChange\":{\"resumeToken\":\"CgkI59nuvOuAkwM=\",\"readTime\":\"2026-03-02T08:53:14.211559Z\"}}"
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:18.328Z]  @firebase/firestore: Firestore (10.7.1): WatchChangeAggregator Detected inactive target 2"
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:18.328Z]  @firebase/firestore: Firestore (10.7.1): MemoryPersistence Starting transaction: Get last remote snapshot version"
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:18.329Z]  @firebase/firestore: Firestore (10.7.1): MemoryPersistence Starting transaction: Apply remote event"
+    },
+    {
+      "type": "log",
+      "text": "✓ compromise library loaded successfully"
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:54:18.610Z]  @firebase/firestore: Firestore (10.7.1): WebChannelConnection RPC 'Listen' stream 0x7f53791b received: {\"targetChange\":{\"targetChangeType\":\"REMOVE\",\"targetIds\":[2]}}"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] setUser: guest db available: true"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][SRS] User already set, skipping reload."
+    },
+    {
+      "type": "log",
+      "text": "Starting tutorial for type mode..."
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][SRS] Running draft cleanup..."
+    },
+    {
+      "type": "log",
+      "text": "Tutorial for type mode completed!"
+    },
+    {
+      "type": "log",
+      "text": "Tutorial for type mode completed!"
+    },
+    {
+      "type": "log",
+      "text": "Tutorial for type mode completed!"
+    },
+    {
+      "type": "log",
+      "text": "Tutorial for type mode completed!"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][App] Resetting scaffolding..."
+    },
+    {
+      "type": "log",
+      "text": "[Dictation App][sess:f6a9bb58][guest][App] [switchToMode] Switching to Type mode, reloading question 1"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][App] [loadQuestion] Checking if file exists (attempt 1/5): database/type/audio/1.mp3"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][App] [checkFileExists] ✓ Valid audio file: database/type/audio/1.mp3 (Content-Type: audio/mpeg)"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][App] [loadQuestion] Found file: 1.mp3 (database said: 1.mp3)"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][App] Resetting scaffolding..."
+    },
+    {
+      "type": "log",
+      "text": "[Performance] Score: 1.00 | WPM: 330.0 vs Target: 15 "
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][App] Resetting scaffolding..."
+    },
+    {
+      "type": "log",
+      "text": "[Performance] Score: 1.00 | WPM: 330.0 vs Target: 15 "
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][App] Resetting scaffolding..."
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:55:18.263Z]  @firebase/firestore: Firestore (10.7.1): WebChannelConnection RPC 'Listen' stream 0x7f53791b transport closed"
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:55:18.263Z]  @firebase/firestore: Firestore (10.7.1): PersistentStream stream callback skipped by getCloseGuardedDispatcher."
+    },
+    {
+      "type": "log",
+      "text": "[Performance] Score: 0.20 | WPM: 330.0 vs Target: 15 "
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] showAddModal called: {missedWords: Array(7), questionId: 1, mode: type, sentence: The artists and conservative politicians follow th}"
+    },
+    {
+      "type": "log",
+      "text": "[DictionaryService] Translation entry cache hit: artists"
+    },
+    {
+      "type": "log",
+      "text": "[DictionaryService] Translation entry cache hit: follow"
+    },
+    {
+      "type": "log",
+      "text": "[DictionaryService] Translation entry cache hit: own"
+    },
+    {
+      "type": "log",
+      "text": "[DictionaryService] Translation entry cache hit: rules"
+    },
+    {
+      "type": "log",
+      "text": "[DictionaryService] Wiktionary failed for conservative"
+    },
+    {
+      "type": "log",
+      "text": "[DictionaryService] Wiktionary failed for politics"
+    },
+    {
+      "type": "log",
+      "text": "[DictionaryService] Wiktionary failed for politicians"
+    },
+    {
+      "type": "log",
+      "text": "[DictionaryService] Wiktionary failed for politician"
+    },
+    {
+      "type": "log",
+      "text": "[DictionaryService] Wiktionary success: artists"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] Detected POS: \"artists\" as noun in: \"The artists and conservative politicians follow th...\""
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] Tracked miss: \"artists\" (artist) from type Q1. Count: 1"
+    },
+    {
+      "type": "log",
+      "text": "[DictionaryService] Wiktionary success: the"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] Detected POS: \"the\" as unknown in: \"The artists and conservative politicians follow th...\""
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] Tracked miss: \"the\" (the) from type Q1. Count: 1"
+    },
+    {
+      "type": "log",
+      "text": "[DictionaryService] Wiktionary success: conservative"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] Detected POS: \"conservative\" as adjective in: \"The artists and conservative politicians follow th...\""
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] Tracked miss: \"conservative\" (conservative) from type Q1. Count: 1"
+    },
+    {
+      "type": "log",
+      "text": "[DictionaryService] Wiktionary success: and"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] Detected POS: \"and\" as unknown in: \"The artists and conservative politicians follow th...\""
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] Tracked miss: \"and\" (and) from type Q1. Count: 1"
+    },
+    {
+      "type": "log",
+      "text": "[DictionaryService] Wiktionary success: politicians"
+    },
+    {
+      "type": "log",
+      "text": "[DictionaryService] Wiktionary success: follow"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] Detected POS: \"follow\" as verb in: \"The artists and conservative politicians follow th...\""
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] Tracked miss: \"follow\" (follow) from type Q1. Count: 1"
+    },
+    {
+      "type": "log",
+      "text": "[DictionaryService] Wiktionary success: their"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] Detected POS: \"their\" as noun in: \"The artists and conservative politicians follow th...\""
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] Tracked miss: \"their\" (their) from type Q1. Count: 1"
+    },
+    {
+      "type": "log",
+      "text": "[DictionaryService] Wiktionary success: own"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] Detected POS: \"own\" as adjective in: \"The artists and conservative politicians follow th...\""
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] Tracked miss: \"own\" (own) from type Q1. Count: 1"
+    },
+    {
+      "type": "log",
+      "text": "[DictionaryService] Wiktionary success: rules"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] Detected POS: \"rules\" as verb in: \"The artists and conservative politicians follow th...\""
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] Tracked miss: \"rules\" (rule) from type Q1. Count: 1"
+    },
+    {
+      "type": "log",
+      "text": "[DictionaryService] Wiktionary success: politics"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] Detected POS: \"politics\" as noun in: \"The artists and conservative politicians follow th...\""
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] Tracked miss: \"politics\" (politics) from type Q1. Count: 1"
+    },
+    {
+      "type": "log",
+      "text": "[DictionaryService] Wiktionary success: in"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] Detected POS: \"in\" as unknown in: \"The artists and conservative politicians follow th...\""
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] Tracked miss: \"in\" (in) from type Q1. Count: 1"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 ()"
+    },
+    {
+      "type": "log",
+      "text": "[DictionaryService] Glosbe failed for politicians"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 ()"
+    },
+    {
+      "type": "log",
+      "text": "[DictionaryService] Glosbe failed for politics"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 ()"
+    },
+    {
+      "type": "log",
+      "text": "[DictionaryService] Glosbe failed for conservative"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 ()"
+    },
+    {
+      "type": "log",
+      "text": "[DictionaryService] Glosbe failed for politician"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] Detected POS: \"politicians\" as noun in: \"The artists and conservative politicians follow th...\""
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] Tracked miss: \"politicians\" (politician) from type Q1. Count: 1"
+    },
+    {
+      "type": "log",
+      "text": "[2026-03-02T08:56:23.068Z]  @firebase/firestore: Firestore (10.7.1): AsyncQueue Visibility state changed to hidden"
+    },
+    {
+      "type": "debug",
+      "text": "[Dictation App][sess:f6a9bb58][guest][VocabBook] Flushing pending vocab save..."
+    }
+  ],
+  "pageErrors": [],
+  "requestFailed": [
+    {
+      "url": "https://localhost:8443/database/speak/audio/1.mp3",
+      "failure": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://localhost:8443/database/type/audio/1.mp3",
+      "failure": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://localhost:8443/database/speak/audio/1.mp3?t=1772441657837",
+      "failure": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://localhost:8443/database/type/audio/1.mp3",
+      "failure": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://firestore.googleapis.com/google.firestore.v1.Firestore/Listen/channel?gsessionid=G2-_aBfqCy6Sng2kQZUaHYAm-wiDdD4mX-jhLo9p60xzElcjPPM_tg&VER=8&database=projects%2Flistening-tasks-3ae34%2Fdatabases%2F(default)&RID=rpc&SID=-XtPLUzvs9EECCmuSc3VXQ&AID=0&CI=0&TYPE=xmlhttp&zx=ceb67fjbnwn8&t=1",
+      "failure": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://firestore.googleapis.com/google.firestore.v1.Firestore/Listen/channel?gsessionid=G2-_aBfqCy6Sng2kQZUaHYAm-wiDdD4mX-jhLo9p60xzElcjPPM_tg&VER=8&database=projects%2Flistening-tasks-3ae34%2Fdatabases%2F(default)&RID=rpc&SID=-XtPLUzvs9EECCmuSc3VXQ&AID=8&CI=0&TYPE=xmlhttp&zx=vnzzt0jf720l&t=1",
+      "failure": "net::ERR_ABORTED"
+    }
+  ]
+}

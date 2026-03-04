@@ -1,5 +1,30 @@
 # Changelog
 
+## [V1.3.4] - 2026-03-04
+
+### Added
+
+- **Production Rollout**: Committing all pending changes/10k+ files and deploying to Firebase Production.
+
+## [V1.3.3] - 2026-03-04
+
+### Improved
+
+- **Vocabulary Practice UI**: Unified the UI design of the "Other questions with the same vocabulary" section to match the standard Vocabulary Practice components.
+- **Progress Tracking**: Fixed progress bar logic for Type and Note modes after achieving 100% completion.
+- **Vocabulary Modal**: Resolved text obstruction issue in the "Add to Vocabulary Book" modal at 100% display scale.
+
+## [V1.3.1] - 2026-03-03
+
+### Added
+
+- **Landing Page Localization**: Added a dedicated Vietnamese landing page (`/landing/vi`) with natural, engaging translation tailored for A2 learners.
+- **Language Switcher**: Implemented a seamless language toggle (EN | VI) across all landing pages.
+
+### Improved
+
+- **Landing Page Routing**: Configured `/landing` to automatically redirect to the English version (`/landing/en`) as the default fallback.
+
 ## [V1.3.0] - 2026-03-03
 
 ### Added

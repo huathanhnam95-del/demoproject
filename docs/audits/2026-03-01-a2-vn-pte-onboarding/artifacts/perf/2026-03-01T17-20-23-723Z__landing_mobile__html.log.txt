@@ -1,0 +1,7 @@
+[cmd] npx "lighthouse" "https://localhost:8443/landing/" "--form-factor=mobile" "--screenEmulation.mobile=true" "--screenEmulation.width=393" "--screenEmulation.height=851" "--screenEmulation.deviceScaleFactor=2.75" "--chrome-flags=--ignore-certificate-errors --allow-insecure-localhost" "--quiet" "--output=html" "--output-path=docs\\audits\\2026-03-01-a2-vn-pte-onboarding\\artifacts\\perf\\2026-03-01T17-20-23-723Z__landing_mobile.html"
+[exit] 0
+
+--- stdout ---
+
+
+--- stderr ---

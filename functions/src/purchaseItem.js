@@ -43,6 +43,13 @@ const SHOP_ITEMS = {
     'customImport': { cost: 100, unlockField: 'customImportUnlocked', name: 'Custom Import' }
 };
 
+const DEPRECATED_ITEM_MESSAGES = {
+    lengthFilter: 'Length Filter is now unlocked via the Skill Tree (passive skill: Length Filter).',
+    difficultyFilter: 'Difficulty Filter is now unlocked via the Skill Tree (passive skill: Difficulty Filter).',
+    vocabBook: 'Vocabulary Book now unlocks automatically after missed keywords in Type or Speak mode.',
+    survival: 'Survival Mode is now available by default.'
+};
+
 /**
  * Purchase an item from the shop
  * 
@@ -62,6 +69,14 @@ const purchaseItem = onCall({ maxInstances: 10 }, async (request) => {
     // 2. Validate item
     if (!itemId || !SHOP_ITEMS[itemId]) {
         throw new HttpsError('invalid-argument', `Invalid item: ${itemId}`);
+    }
+
+    if (DEPRECATED_ITEM_MESSAGES[itemId]) {
+        return {
+            success: false,
+            error: 'deprecated',
+            message: DEPRECATED_ITEM_MESSAGES[itemId]
+        };
     }
 
     const item = SHOP_ITEMS[itemId];

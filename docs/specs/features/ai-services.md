@@ -35,6 +35,8 @@
 
 - Never expose AI API keys to the client.
 - Bound token limits and timeouts to avoid runaway requests.
+- AI/provider/network failures must return structured fallback signals so the client can continue practice without hard-stop.
+- Streaming endpoints must terminate cleanly on upstream failure (send terminal error payload, close stream, keep UI responsive).
 
 ## 4. Data & Contracts (The "Contract")
 
@@ -42,7 +44,9 @@
   - `POST /api/ai-proxy` in `src/routes/ai-proxy.js`
     - Uses Firestore collection `ai_cache` (hash-keyed) with 7-day TTL.
     - Cache key derives from `prompt + model + max_tokens` and is not user-scoped.
+    - Error contract includes fallback metadata for client handling.
   - `POST /api/ai-feedback-stream` in `src/routes/ai-proxy.js` (SSE to Hugging Face router).
+    - On stream errors, event payload includes `fallback: true`.
 - Firebase callable function:
   - `assessWriting` in `functions/src/assessWriting.js`
     - Uses `gemini-1.5-flash`
@@ -62,3 +66,5 @@
 - Manual:
   - Run prompt generation twice with identical prompt -> verify `fromCache` becomes true.
   - Exceed daily `assessWriting` quota -> verify LanguageTool fallback is used.
+  - Force AI endpoint failure (invalid key/upstream timeout) -> verify client receives fallback signal and flow continues with non-AI path.
+  - Simulate offline/disconnected mode during AI check -> verify UI stays usable and user gets actionable retry/fallback messaging.

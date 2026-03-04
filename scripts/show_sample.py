@@ -19,7 +19,8 @@ if len(df) > 0:
     }
     import json
     with open(r'C:\Cursor AI\scripts\sample_out.json', 'w', encoding='utf-8') as f:
-        json.dump(sample_data, f, indent=2)
+        json_str = json.dumps(sample_data, indent=2, ensure_ascii=False)
+        f.write(json_str)
     print("Done.")
 else:
     print("No simplified data found.")

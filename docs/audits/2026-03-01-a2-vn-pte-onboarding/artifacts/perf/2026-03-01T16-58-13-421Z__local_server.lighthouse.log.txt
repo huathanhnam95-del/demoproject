@@ -1,0 +1,4 @@
+[dotenv@17.2.3] injecting env (13) from .env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+[Dict] Loaded 34 words.
+[SECURE] Firebase Admin initialized.
+[SECURE] Server running with TRUSTED CA on https://localhost:8443

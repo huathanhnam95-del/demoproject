@@ -1,0 +1,8 @@
+2026-03-03T02:39:58.120Z [audit][desktop_1366__slow3g] >> L1_landing_load
+2026-03-03T02:40:08.539Z [audit][desktop_1366__slow3g] << L1_landing_load ok 10419ms
+2026-03-03T02:40:08.540Z [audit][desktop_1366__slow3g] >> L2_landing_sections
+2026-03-03T02:40:10.077Z [audit][desktop_1366__slow3g] << L2_landing_sections ok 1537ms
+2026-03-03T02:40:10.077Z [audit][desktop_1366__slow3g] >> A1_click_demo_cta
+2026-03-03T02:40:52.106Z [audit][desktop_1366__slow3g] << A1_click_demo_cta ok 42029ms
+2026-03-03T02:40:52.107Z [audit][desktop_1366__slow3g] >> A2_open_app_direct
+2026-03-03T02:41:33.535Z [audit][desktop_1366__slow3g] << A2_open_app_direct ok 41428ms

@@ -1,0 +1,27 @@
+{
+  "runId": "2026-03-01T16-59-52-092Z",
+  "timestamp": "2026-03-01T16:59:52.094Z",
+  "baseUrl": "https://localhost:8443",
+  "startServer": true,
+  "results": [
+    {
+      "id": "landing_mobile",
+      "name": "Landing (Mobile)",
+      "url": "https://localhost:8443/landing/",
+      "html": "docs\\audits\\2026-03-01-a2-vn-pte-onboarding\\artifacts\\perf\\2026-03-01T16-59-52-092Z__landing_mobile.html",
+      "json": "docs\\audits\\2026-03-01-a2-vn-pte-onboarding\\artifacts\\perf\\2026-03-01T16-59-52-092Z__landing_mobile.json",
+      "htmlExitCode": 1,
+      "jsonExitCode": 1
+    },
+    {
+      "id": "app_mobile",
+      "name": "App Home (Mobile)",
+      "url": "https://localhost:8443/index.html",
+      "html": "docs\\audits\\2026-03-01-a2-vn-pte-onboarding\\artifacts\\perf\\2026-03-01T16-59-52-092Z__app_mobile.html",
+      "json": "docs\\audits\\2026-03-01-a2-vn-pte-onboarding\\artifacts\\perf\\2026-03-01T16-59-52-092Z__app_mobile.json",
+      "htmlExitCode": 1,
+      "jsonExitCode": 1
+    }
+  ],
+  "localServerLog": "docs\\audits\\2026-03-01-a2-vn-pte-onboarding\\artifacts\\perf\\2026-03-01T16-59-52-092Z__local_server.lighthouse.log.txt"
+}

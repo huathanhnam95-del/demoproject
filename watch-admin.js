@@ -267,8 +267,6 @@
         try {
             const response = await fetch('database/watch/Videos.xlsx');
 
-            console.log('Video fetch status:', response.status);
-            console.log('Video fetch type:', response.headers.get('content-type'));
 
             if (!response.ok) {
                 const text = await response.text();
@@ -279,7 +277,6 @@
             const arrayBuffer = await response.arrayBuffer();
 
             // Debug file size
-            console.log('Video file size:', arrayBuffer.byteLength);
 
             const workbook = XLSX.read(arrayBuffer, { type: 'array' });
             const sheetName = workbook.SheetNames[0];
@@ -490,7 +487,6 @@
             const duration = player.getDuration();
             if (duration > 0) {
                 videoDuration = duration;
-                console.log('[Admin] Video duration loaded:', formatTime(duration));
                 updateTimelineMarkers();
                 renderQuestionList();
                 durationPollCount = 0; // Reset for next video
@@ -825,7 +821,6 @@
 
             await batch.commit();
 
-            console.log('Question saved (dual-collection):', questionId);
             hasUnsavedChanges = false;
 
             // Reload questions
@@ -887,7 +882,6 @@
 
             await batch.commit();
 
-            console.log('Question deleted (dual-collection):', currentQuestion.id);
 
             elements.deleteModal.style.display = 'none';
             hasUnsavedChanges = false;
@@ -984,7 +978,6 @@
             loadNotesEntries();
         }
 
-        console.log(`[Admin] Switched to ${mode} mode`);
     }
 
     /**
@@ -1009,7 +1002,6 @@
             }
 
             notesEntries = snapshot.docs.map(doc => doc.data());
-            console.log(`[Admin] Loaded ${notesEntries.length} Take Notes entries from Firestore`);
             renderNotesEntryList(notesEntries);
 
         } catch (error) {
@@ -1050,7 +1042,6 @@
                 throw new Error(result.message || 'Server-side sync failed');
             }
 
-            console.log(`[Admin] Server result: ${result.message}`);
 
             // Reload entries from Firestore
             await loadNotesEntries();
@@ -1134,9 +1125,6 @@
 
         currentNotesEntry = entry;
 
-        console.log('[Admin] Selected entry:', entryId);
-        console.log('[Admin] Entry data:', entry);
-        console.log('[Admin] Entry videoUrl:', entry.videoUrl);
 
         // Update selection in list
         document.querySelectorAll('#notes-entry-list .admin-video-item').forEach(el => {
@@ -1163,7 +1151,6 @@
         elements.notesAudioId.value = entry.id;
         elements.notesTranscript.value = entry.transcript || '';
 
-        console.log('[Admin] Video URL field value after setting:', elements.notesVideoUrl.value);
 
         // Try to load audio
         loadNotesAudio(entry.id);
@@ -1181,7 +1168,6 @@
             const exists = await checkNotesFileExists(audioPath);
             if (exists) {
                 elements.notesPreviewAudio.src = audioPath;
-                console.log(`[Admin] Loaded audio: ${audioPath}`);
                 return;
             }
         }
@@ -1220,8 +1206,6 @@
         const urlElement = elements.notesVideoUrl || document.getElementById('notes-video-url');
         const url = urlElement ? urlElement.value.trim() : '';
 
-        console.log('[Admin] Preview video - URL element:', urlElement);
-        console.log('[Admin] Preview video - URL value:', url);
 
         if (!url) {
             showNotification('No video URL entered', 'warning');
@@ -1229,7 +1213,6 @@
         }
 
         const videoId = extractVideoId(url);
-        console.log('[Admin] Extracted video ID:', videoId);
 
         if (!videoId) {
             showNotification('Invalid YouTube URL', 'error');
@@ -1241,8 +1224,6 @@
         const videoWrapper = document.getElementById('notes-video-wrapper');
         const previewVideo = document.getElementById('notes-preview-video');
 
-        console.log('[Admin] Video wrapper:', videoWrapper);
-        console.log('[Admin] Preview video container:', previewVideo);
 
         if (placeholder) placeholder.style.display = 'none';
         if (videoWrapper) {
@@ -1261,12 +1242,10 @@
                     allowfullscreen>
                 </iframe>
             `;
-            console.log('[Admin] Video iframe embedded successfully');
         } else {
             console.error('[Admin] Preview video container not found!');
         }
 
-        console.log('[Admin] Previewing video:', videoId);
     }
 
     /**
@@ -1287,7 +1266,6 @@
             await db.collection('takeNotesEntries').doc(entryData.id).set(entryData, { merge: true });
 
             showNotification('Entry saved to Firestore!', 'success');
-            console.log('[Admin] Saved Take Notes entry:', entryData.id);
         } catch (error) {
             console.error('[Admin] Error saving entry:', error);
             showNotification('Error saving entry: ' + error.message, 'error');

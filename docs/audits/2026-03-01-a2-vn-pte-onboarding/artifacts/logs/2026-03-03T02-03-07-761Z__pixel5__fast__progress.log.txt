@@ -1,0 +1,34 @@
+2026-03-03T02:05:30.480Z [audit][pixel5__fast] >> L1_landing_load
+2026-03-03T02:05:32.529Z [audit][pixel5__fast] << L1_landing_load ok 2049ms
+2026-03-03T02:05:32.529Z [audit][pixel5__fast] >> L2_landing_sections
+2026-03-03T02:05:36.264Z [audit][pixel5__fast] << L2_landing_sections ok 3735ms
+2026-03-03T02:05:36.264Z [audit][pixel5__fast] >> A1_click_demo_cta
+2026-03-03T02:05:47.688Z [audit][pixel5__fast] << A1_click_demo_cta ok 11424ms
+2026-03-03T02:05:47.688Z [audit][pixel5__fast] >> A2_open_app_direct
+2026-03-03T02:05:57.438Z [audit][pixel5__fast] << A2_open_app_direct ok 9750ms
+2026-03-03T02:05:57.439Z [audit][pixel5__fast] >> R1_choose_guest
+2026-03-03T02:05:58.659Z [audit][pixel5__fast] << R1_choose_guest ok 1220ms
+2026-03-03T02:05:58.660Z [audit][pixel5__fast] >> R2_open_side_panels
+2026-03-03T02:06:31.121Z [audit][pixel5__fast] << R2_open_side_panels ok 32461ms
+2026-03-03T02:06:31.121Z [audit][pixel5__fast] >> P1_type_clean_attempt
+2026-03-03T02:06:34.584Z [audit][pixel5__fast] << P1_type_clean_attempt ok 3463ms
+2026-03-03T02:06:34.585Z [audit][pixel5__fast] >> P2_type_assisted_attempt
+2026-03-03T02:06:38.119Z [audit][pixel5__fast] << P2_type_assisted_attempt ok 3534ms
+2026-03-03T02:06:38.120Z [audit][pixel5__fast] >> P3_type_fail_attempt
+2026-03-03T02:06:41.194Z [audit][pixel5__fast] << P3_type_fail_attempt ok 3074ms
+2026-03-03T02:06:41.195Z [audit][pixel5__fast] >> V1_vocab_manual_add
+2026-03-03T02:07:03.633Z [audit][pixel5__fast] << V1_vocab_manual_add ok 22438ms
+2026-03-03T02:07:03.634Z [audit][pixel5__fast] >> S1_start_srs_review
+2026-03-03T02:07:06.160Z [audit][pixel5__fast] << S1_start_srs_review ok 2526ms
+2026-03-03T02:07:06.160Z [audit][pixel5__fast] >> SP1_speak_mode_smoke
+2026-03-03T02:07:12.479Z [audit][pixel5__fast] << SP1_speak_mode_smoke ok 6319ms
+2026-03-03T02:07:12.479Z [audit][pixel5__fast] >> M1_fill_mode_smoke
+2026-03-03T02:07:15.506Z [audit][pixel5__fast] << M1_fill_mode_smoke ok 3027ms
+2026-03-03T02:07:15.506Z [audit][pixel5__fast] >> M2_notes_mode_smoke
+2026-03-03T02:09:45.510Z [audit][pixel5__fast] << M2_notes_mode_smoke fail 150004ms
+2026-03-03T02:09:45.510Z [audit][pixel5__fast] << M3_watch_mode_smoke skipped
+2026-03-03T02:09:45.511Z [audit][pixel5__fast] << M4_pronounce_mode_smoke skipped
+2026-03-03T02:09:45.511Z [audit][pixel5__fast] << M5_survival_mode_smoke skipped
+2026-03-03T02:09:45.511Z [audit][pixel5__fast] << D1_dictionary_vn_translation skipped
+2026-03-03T02:09:45.511Z [audit][pixel5__fast] << AI1_ai_proxy_smoke skipped
+2026-03-03T02:09:45.512Z [audit][pixel5__fast] << ADM1_admin_pages_blocked skipped

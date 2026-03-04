@@ -40,10 +40,10 @@ const migrateUserCoins = onRequest(
                         })
                     );
                     updatedCount++;
-                    console.log(`Updating user ${userDoc.id}: ${currentCoins} -> 100 coins`);
+
                 } else {
                     skippedCount++;
-                    console.log(`Skipping user ${userDoc.id}: already has ${currentCoins} coins`);
+
                 }
             }
 
@@ -60,7 +60,7 @@ const migrateUserCoins = onRequest(
                 totalUsers: usersSnapshot.size
             };
 
-            console.log('Migration result:', result);
+
             res.json(result);
 
         } catch (error) {

@@ -592,7 +592,7 @@ const WatchMode = (function () {
             if (window.handleDualTrackScoring) {
                 // Pass selectedIndex for MC, or text for open-ended
                 // Format: videoId::questionId for server to locate answer key
-                const attemptContentId = `${currentVideoId}::${currentQuestion.id}`;
+                const attemptContentId = `${String(currentVideo.id)}::${currentQuestion.id}`;
                 if (window.startAttemptContext) {
                     window.startAttemptContext('watch', attemptContentId);
                 }
@@ -882,31 +882,24 @@ const WatchMode = (function () {
      */
     async function loadUserProgress(videoId) {
         try {
-            if (window.firebase && window.firebase.auth && window.firebase.firestore) {
-                const user = window.firebase.auth().currentUser;
-                if (!user) return;
+            const userId = window.authUI?.getCurrentUserId?.() || window.auth?.currentUser?.uid;
+            if (!userId) return;
+            if (!window.firebaseFirestoreFunctions?.getWatchProgress) return;
 
-                const db = window.firebase.firestore();
-                const doc = await db.collection('users')
-                    .doc(user.uid)
-                    .collection('watchProgress')
-                    .doc(videoId)
-                    .get();
+            const result = await window.firebaseFirestoreFunctions.getWatchProgress(userId, String(videoId));
+            if (!result?.success || !result.data) return;
 
-                if (doc.exists) {
-                    const data = doc.data();
-                    answeredQuestions = new Set(data.answeredQuestions || []);
-                    watchPoints = data.pointsEarned || 0;
+            const data = result.data;
+            answeredQuestions = new Set(data.answeredQuestions || []);
+            watchPoints = data.pointsEarned || 0;
 
-                    // NOTE: Auto-resume disabled to prevent question auto-triggering
-                    // Videos now always start from the beginning
-                    // User can see their progress via question markers
+            // NOTE: Auto-resume disabled to prevent question auto-triggering
+            // Videos now always start from the beginning
+            // User can see their progress via question markers
 
-                    updateScoreDisplay();
-                    updateQuestionMarkers();
-                    Logger.log('[WatchMode] Loaded user progress');
-                }
-            }
+            updateScoreDisplay();
+            updateQuestionMarkers();
+            Logger.log('[WatchMode] Loaded user progress');
         } catch (error) {
             Logger.error('[WatchMode] Error loading progress:', error);
         }
@@ -919,29 +912,20 @@ const WatchMode = (function () {
         if (!currentVideo) return;
 
         try {
-            if (window.firebase && window.firebase.auth && window.firebase.firestore) {
-                const user = window.firebase.auth().currentUser;
-                if (!user) return;
+            const userId = window.authUI?.getCurrentUserId?.() || window.auth?.currentUser?.uid;
+            if (!userId) return;
+            if (!window.firebaseFirestoreFunctions?.upsertWatchProgress) return;
 
-                const db = window.firebase.firestore();
-                const currentTime = player ? player.getCurrentTime() : 0;
+            const currentTime = player ? player.getCurrentTime() : 0;
+            await window.firebaseFirestoreFunctions.upsertWatchProgress(userId, String(currentVideo.id), {
+                videoTitle: currentVideo.title,
+                currentTime: currentTime,
+                answeredQuestions: Array.from(answeredQuestions),
+                pointsEarned: watchPoints,
+                totalQuestions: questions.length
+            });
 
-                await db.collection('users')
-                    .doc(user.uid)
-                    .collection('watchProgress')
-                    .doc(currentVideo.id)
-                    .set({
-                        videoId: currentVideo.id,
-                        videoTitle: currentVideo.title,
-                        currentTime: currentTime,
-                        answeredQuestions: Array.from(answeredQuestions),
-                        pointsEarned: watchPoints,
-                        totalQuestions: questions.length,
-                        updatedAt: new Date()
-                    }, { merge: true });
-
-                Logger.log('[WatchMode] Progress saved');
-            }
+            Logger.log('[WatchMode] Progress saved');
         } catch (error) {
             Logger.error('[WatchMode] Error saving progress:', error);
         }
@@ -998,7 +982,6 @@ const WatchMode = (function () {
         selectVideo,
         selectMCOption,
         seekToQuestion,
-        showVideoList,
         showVideoList,
         pauseAndResetForTabSwitch,
 

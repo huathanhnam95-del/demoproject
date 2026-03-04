@@ -25,11 +25,15 @@
 
 - Server-side scoring remains the source of truth for rewards.
 - Handle noisy environments gracefully (don't hard-fail the session UI).
+- Microphone denial/unavailable-device/network-STT errors must show actionable status text and reset controls for retry.
+- Speak mode failures must remain mode-local (no global app freeze, no forced reload).
 
 ## 4. Data & Contracts (The "Contract")
 
 - Content items: Firestore `contentItems/{speak_<id>}`.
 - Attempt scoring + rewards: `functions/src/submitAttempt.js` (`mode = 'speak'`).
+- Client STT + retry loop: `public/script.js` (Web Speech API, error handling, retry/check transitions).
+- Speech error contract includes at least: `not-allowed`, `audio-capture`, `no-speech`, `network` with user-facing guidance.
 
 ## 5. Rewards & Progression
 
@@ -40,3 +44,5 @@
 - Manual:
   - Record a near-perfect attempt -> verify high accuracy and normal rewards.
   - Exceed replay limit -> verify UI blocks further replays for that item.
+  - Deny microphone permission -> verify clear guidance is shown and recording controls recover to idle state.
+  - Trigger STT/network failure -> verify user can retry recording/checking without reloading the app.

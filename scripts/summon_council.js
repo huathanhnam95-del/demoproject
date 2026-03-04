@@ -1,4 +1,6 @@
 
+/* eslint-disable no-console */
+
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const fs = require('fs');
 const path = require('path');
@@ -13,7 +15,7 @@ if (!API_KEY) {
 }
 
 const genAI = new GoogleGenerativeAI(API_KEY);
-const MODEL_NAME = "gemini-2.0-flash"; // Or gemini-pro
+const MODEL_NAME = "gemini-3-pro-preview"; // Or gemini-pro
 
 // --- PERSONAS ---
 const PERSONAS = {
@@ -36,11 +38,20 @@ const PERSONAS = {
 
 async function summonCouncil() {
     const args = process.argv.slice(2);
+
+    // Check for --out flag
+    let outIndex = args.indexOf('--out');
+    let outFile = null;
+    if (outIndex !== -1 && outIndex < args.length - 1) {
+        outFile = args[outIndex + 1];
+        args.splice(outIndex, 2);
+    }
+
     const userMessage = args[0];
     const contextFiles = args.slice(1);
 
     if (!userMessage) {
-        console.log("Usage: node summon_council.js 'Your Question' [file_paths...]");
+        console.log("Usage: node summon_council.js 'Your Question' [file_paths...] [--out filename]");
         return;
     }
 
@@ -79,6 +90,7 @@ async function summonCouncil() {
 
     // 3. Output
     console.log("\n" + "=".repeat(50));
+    let fileOutput = "=".repeat(50) + "\n\n";
 
     // Order: Architect -> Challenger -> Reviewer
     const order = ['architect', 'challenger', 'reviewer'];
@@ -90,9 +102,23 @@ async function summonCouncil() {
         console.log(`${persona.color}[ ${persona.name} ]\x1b[0m`);
         console.log(result.text.trim());
         console.log("-".repeat(50));
+
+        fileOutput += `[ ${persona.name} ]\n`;
+        fileOutput += result.text.trim() + "\n";
+        fileOutput += "-".repeat(50) + "\n\n";
     }
 
     console.log("\n✅ Council Adjourned. The Sovereign's vision is secured.");
+    fileOutput += "✅ Council Adjourned. The Sovereign's vision is secured.\n";
+
+    if (outFile) {
+        try {
+            fs.writeFileSync(outFile, fileOutput, 'utf-8');
+            console.log(`\n📄 Council output saved to: ${outFile}`);
+        } catch (err) {
+            console.error(`\n❌ Failed to save output to ${outFile}:`, err.message);
+        }
+    }
 }
 
 summonCouncil();

@@ -33,6 +33,8 @@
 
 - Prompt generation should be deterministic for a given input (word + level) unless explicitly randomized.
 - The UX must remain usable offline (prompt falls back to templates; AI checks disabled).
+- AI feedback is optional: submit flow and rewards must still complete when AI endpoints are unavailable.
+- Draft persistence must survive modal close/reopen and page refresh so user writing is not lost.
 
 ## 4. Writing Prompt Generation (Current Behavior)
 
@@ -53,6 +55,7 @@
 - `POST /api/ai-proxy` caches AI responses in Firestore `ai_cache` with a **7-day TTL**.
 - The cache key is derived from `prompt + model + max_tokens` (hash), and is **not user-scoped**.
 - Result: if the **same prompt string** is generated for the same target word, later users can receive a cached scenario for up to 7 days.
+- Offline/no-network path: `generateAiPrompt` returns `null` and flow falls back to template/definition prompt generation in `public/srs-review.js`.
 
 ## 5. AI Feedback (Current Behavior)
 
@@ -72,11 +75,16 @@
   - Limit: 20 checks/day/user (returns `{ limited: true, fallback: true }` after limit)
   - Context currently includes the **target word** but **does not include the writing prompt/scenario**.
 - Fallback check: LanguageTool public API (`https://api.languagetool.org/v2/check`)
+- Submit path: `handleSubmit` in `public/js/writing-challenge.js` proceeds even if AI assessment is skipped/failed.
 
 ## 6. Rewards & SRS Hooks
 
 - Writing Challenge submits a `writingChallenge` attempt to the dual-track scoring system.
 - AI score can optionally tighten/boost SRS intervals (`applyAIScoreToSRS` in `public/srs-review.js`).
+- Draft contract:
+  - Save: `public/srs-review.js` -> `saveDraft` -> `localStorage['srs_draft_<word>']`
+  - Restore: `loadDraft` on challenge open
+  - Cleanup: stale draft cleanup routine in `public/srs-review.js`
 
 ## 7. Known Gaps (Documented)
 
@@ -89,3 +97,6 @@
   - Trigger Writing Challenge for a word with collocations -> confirm multi-option flow.
   - Trigger Writing Challenge for a word without collocations -> confirm AI scenario fallback when online.
   - Press "AI Check" repeatedly -> confirm daily limit and LanguageTool fallback behavior.
+  - Disable network -> open challenge -> confirm template/definition fallback prompt and successful submit path.
+  - Reload during draft writing -> reopen challenge -> confirm draft restoration from local storage.
+  - Force AI endpoint failure -> verify submit still succeeds and feedback path degrades without blocking completion.

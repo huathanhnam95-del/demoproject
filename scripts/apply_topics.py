@@ -80,7 +80,12 @@ def apply_topics():
 
     # Verification: Print counts
     print("\nTopic Distribution:")
-    print(df['Topic'].value_counts())
+    topic_counts = df['Topic'].value_counts()
+    if hasattr(topic_counts, 'to_string'):
+        print(topic_counts)
+    else:
+        print(f"(Warning: Distribution count result is type {type(topic_counts)})")
+        print(topic_counts)
 
 if __name__ == "__main__":
     apply_topics()

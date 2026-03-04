@@ -51,3 +51,8 @@ node_modules
 
 # Gemini Agent Folder
 .gemini/
+
+# Large binaries
+.survivalmode/audio/*.wav
+docs/audits/**/*.mp4
+docs/audits/**/*.webm

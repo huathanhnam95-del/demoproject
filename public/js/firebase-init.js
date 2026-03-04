@@ -31,3 +31,6 @@ export { app, auth, db, functions };
 // INTERNAL USE ONLY: For non-module script legacy support (Temporary Migration)
 // We still expose them BUT via a more controlled window object that we will eventually remove.
 window.__FIREBASE_INTERNAL__ = { auth, db, functions };
+
+// Legacy compat: some scripts still expect `window.auth.currentUser`.
+window.auth = window.auth || auth;

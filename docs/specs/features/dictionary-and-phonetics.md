@@ -30,23 +30,34 @@
 
 - Performance: cache aggressively (localStorage) to avoid repeated API calls.
 - Resilience: multiple fallbacks per lookup path; never block the main loop.
+- Lookup failures must degrade to partial/empty result objects (not uncaught exceptions in the learner UI).
+- In-flight request deduplication should prevent duplicate external calls for the same normalized word.
 
 ## 4. Data & Contracts (The "Contract")
 
 - Client dictionary service: `public/dictionary-service.js`
-  - Primary sources:
-    - Definitions: Wiktionary REST API
-    - Translations: Glosbe API
+  - Definition path:
+    - Primary: Wiktionary REST API
+    - Fallback: dictionaryapi.dev
+  - Translation path (ordered):
+    - local dictionary overrides
+    - `/api/tracau` proxy (rich translation + example sentences)
+    - Wiktionary Vietnamese endpoint (kept in chain, currently reliability-limited)
+    - Glosbe API
+    - MyMemory API
   - Fallback sources:
-    - Definitions: dictionaryapi.dev
-    - Translations: MyMemory API
-  - Includes local dictionary overrides for very common words.
-  - Caches in `localStorage` (definitions + translations).
+    - empty-safe object return when all sources fail
+  - Caches in `localStorage`:
+    - definitions: `vocab_definitions_cache`
+    - translations: `vocab_translations_cache`
+  - Request dedupe contracts:
+    - `tracauInFlight` suppresses duplicate `/api/tracau` calls
+    - `upgradeInFlight` suppresses duplicate cache-upgrade jobs
 - Collocations:
   - Local dataset: `public/collocations.json`
   - Optional online expansion (e.g., Datamuse) when online.
 - Phonetics helpers:
-  - `public/phonetics.js`
+  - `public/phonetics.js` (dictionary API lookup + CMU/heuristic fallback + in-memory cache)
   - `public/arpabet-ipa-map.js`
   - `public/cmudict.json`
 - Optional local services (advanced / dev tooling):
@@ -63,3 +74,6 @@
   - Look up a frequent word (should hit local cache fast).
   - Look up an uncommon word (should hit external sources, then cache).
   - In Writing Challenge, open "More help" and confirm examples/collocations render.
+  - Disable network and look up a cached word -> verify instant cache response.
+  - Disable network and look up an uncached word -> verify graceful empty/partial result (no practice-loop crash).
+  - Force `/api/tracau` failure -> verify translation chain falls through and UI remains responsive.

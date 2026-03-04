@@ -1,0 +1,8 @@
+2026-03-03T02:41:49.098Z [audit][tablet_768__fast] >> L1_landing_load
+2026-03-03T02:41:50.988Z [audit][tablet_768__fast] << L1_landing_load ok 1890ms
+2026-03-03T02:41:50.988Z [audit][tablet_768__fast] >> L2_landing_sections
+2026-03-03T02:41:52.780Z [audit][tablet_768__fast] << L2_landing_sections ok 1792ms
+2026-03-03T02:41:52.781Z [audit][tablet_768__fast] >> A1_click_demo_cta
+2026-03-03T02:42:03.406Z [audit][tablet_768__fast] << A1_click_demo_cta ok 10625ms
+2026-03-03T02:42:03.407Z [audit][tablet_768__fast] >> A2_open_app_direct
+2026-03-03T02:42:13.194Z [audit][tablet_768__fast] << A2_open_app_direct ok 9787ms

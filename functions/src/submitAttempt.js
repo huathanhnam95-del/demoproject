@@ -59,9 +59,9 @@ const submitAttempt = onCall({ maxInstances: 10 }, async (request) => {
     }
 
     const db = getFirestore();
-            const userRef = db.collection('users').doc(uid);
-            const historyRef = userRef.collection('pointsHistory').doc(attemptId);
-            const assistRef = userRef.collection('assistLedger').doc(attemptId);
+    const userRef = db.collection('users').doc(uid);
+    const historyRef = userRef.collection('pointsHistory').doc(attemptId);
+    const assistRef = userRef.collection('assistLedger').doc(attemptId);
 
     try {
         const result = await db.runTransaction(async (transaction) => {
@@ -249,6 +249,30 @@ const submitAttempt = onCall({ maxInstances: 10 }, async (request) => {
                 }, { merge: true });
             }
 
+            // 11.5 Error Heatmap Infrastructure
+            const wordErrors = scoringDetails.wordErrors;
+            if (Array.isArray(wordErrors) && wordErrors.length > 0) {
+                const heatmapRef = userRef.collection('errorHeatmap').doc(contentId);
+                const heatmapUpdates = {
+                    lastMissedAt: FieldValue.serverTimestamp()
+                };
+
+                // Aggregate counts per word to avoid duplicate field paths
+                const errorFreq = {};
+                wordErrors.forEach(w => {
+                    const cleanWord = (w || '').slice(0, 50).replace(/[.#$[\]]/g, ''); // Firestore valid key limits
+                    if (cleanWord) {
+                        errorFreq[cleanWord] = (errorFreq[cleanWord] || 0) + 1;
+                    }
+                });
+
+                Object.entries(errorFreq).forEach(([word, count]) => {
+                    heatmapUpdates[`words.${word}`] = FieldValue.increment(count);
+                });
+
+                transaction.set(heatmapRef, heatmapUpdates, { merge: true });
+            }
+
             // 12. Execute writes
             transaction.update(userRef, userUpdate);
             transaction.set(historyRef, historyEntry);
@@ -329,6 +353,7 @@ async function scoreContentMode(db, mode, contentId, payload, transaction) {
             const userAnswers = payload.answers;
             let correctCount = 0;
             const gapResults = [];
+            const wordErrors = [];
 
             const norm = s => (s || '').toLowerCase().trim();
 
@@ -337,7 +362,11 @@ async function scoreContentMode(db, mode, contentId, payload, transaction) {
                 const correctAnswers = (gap.answers || []).map(norm);
                 const isCorrect = correctAnswers.includes(userAnswer);
 
-                if (isCorrect) correctCount++;
+                if (isCorrect) {
+                    correctCount++;
+                } else if (correctAnswers.length > 0) {
+                    wordErrors.push(correctAnswers[0]);
+                }
                 gapResults.push({ index: idx, userAnswer, isCorrect });
             });
 
@@ -350,7 +379,8 @@ async function scoreContentMode(db, mode, contentId, payload, transaction) {
                     type: 'canonical_gaps',
                     gapResults: gapResults,
                     correctCount: correctCount,
-                    totalGaps: gaps.length
+                    totalGaps: gaps.length,
+                    wordErrors: wordErrors
                 }
             };
         }
@@ -393,6 +423,20 @@ async function scoreContentMode(db, mode, contentId, payload, transaction) {
         const diff = pointsLogic.diffWords(canonical, userText);
         const accuracy = pointsLogic.calculateF1Accuracy(diff);
 
+        // Heatmap Error Extraction
+        const expWords = pointsLogic.tokenize(canonical);
+        const actWords = pointsLogic.tokenize(userText);
+        const actCounts = {};
+        actWords.forEach(w => actCounts[w] = (actCounts[w] || 0) + 1);
+        const wordErrors = [];
+        expWords.forEach(w => {
+            if (actCounts[w] && actCounts[w] > 0) {
+                actCounts[w]--;
+            } else {
+                wordErrors.push(w);
+            }
+        });
+
         return {
             accuracy: accuracy,
             difficulty: difficulty,
@@ -401,7 +445,8 @@ async function scoreContentMode(db, mode, contentId, payload, transaction) {
                 userWordCount: diff.actualLen,
                 matchCount: diff.matches,
                 missingCount: diff.missing,
-                extraCount: diff.extra
+                extraCount: diff.extra,
+                wordErrors: wordErrors
             }
         };
     }
@@ -409,7 +454,7 @@ async function scoreContentMode(db, mode, contentId, payload, transaction) {
 
 /**
  * Score Watch mode using watchVideos collection
- */
+     */
 async function scoreWatchMode(db, contentId, payload, transaction) {
     // contentId format: "videoId::questionId"
     const parts = contentId.split('::');

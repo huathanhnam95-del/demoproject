@@ -35,7 +35,13 @@ const ADMIN_ACCESS_CACHE_TTL_MS = 60 * 1000;
 async function triggerAuthStateCallbacks(type, userId) {
   for (const callback of authStateCallbacks) {
     try {
-      await callback(userId);
+      // Backward compatibility: some callbacks accept only (userId),
+      // while newer ones accept (type, userId).
+      if (typeof callback === 'function' && callback.length >= 2) {
+        await callback(type, userId);
+      } else {
+        await callback(userId);
+      }
     } catch (err) {
       log.error('Error in auth state callback:', err);
     }
@@ -338,21 +344,7 @@ async function handleLevelSelection(level) {
       levelSelectedAt: new Date()
     });
 
-    // Handle Unlocking based on level
     const normalizedLevel = level ? level.toLowerCase() : '';
-    let shouldUnlock = false;
-    if (normalizedLevel === 'beginner' || normalizedLevel === 'intermediate' || normalizedLevel === 'expert') {
-      shouldUnlock = true;
-    }
-
-    if (shouldUnlock) {
-      await updateFn(currentUserId, {
-        sentenceLengthFilterUnlocked: true
-      });
-
-      // Local update for immediate feedback if needed
-      localStorage.setItem('unlocked_filter_length_type', 'true');
-    }
 
     // Seed a starting CEFR level for Smart Difficulty (without disabling auto-adjust)
     try {
@@ -448,6 +440,12 @@ function hideEntryModal() {
 function handleGuestModeChoice() {
   isGuestMode = true;
   sessionStorage.setItem('guestMode', 'true');
+  if (window.VocabularyBook && typeof window.VocabularyBook.setUser === 'function') {
+    window.VocabularyBook.setUser('guest', null);
+  }
+  if (window.SRSReview && typeof window.SRSReview.setUser === 'function') {
+    window.SRSReview.setUser('guest', null);
+  }
   hideEntryModal();
   showGuestToast();
   updateAccountPanelState();
@@ -544,8 +542,16 @@ function updateAccountPanelState() {
     const watchAdminLink = document.getElementById('panel-admin-link');
     const crmAdminLink = document.getElementById('panel-crm-admin-link');
 
-    if (watchAdminLink) watchAdminLink.style.display = 'none';
-    if (crmAdminLink) crmAdminLink.style.display = 'none';
+    // First, check cache for immediate visibility if previously verified
+    const wasAdmin = getCachedAdminAccess(user.uid);
+    if (wasAdmin) {
+      if (watchAdminLink) watchAdminLink.style.display = 'block';
+      if (crmAdminLink) crmAdminLink.style.display = 'block';
+    } else {
+      // Default to hidden while resolving or if not admin
+      if (watchAdminLink) watchAdminLink.style.display = 'none';
+      if (crmAdminLink) crmAdminLink.style.display = 'none';
+    }
 
     if (watchAdminLink || crmAdminLink) {
       resolveAdminAccess(user).then(isAdmin => {
@@ -591,11 +597,26 @@ function updateAccountPanelState() {
     if (panelLoggedOut) panelLoggedOut.style.display = 'none';
     if (panelLoggedIn) panelLoggedIn.style.display = 'none';
     if (panelGuestMode) panelGuestMode.style.display = 'block';
+    if (window.VocabularyBook && typeof window.VocabularyBook.setUser === 'function') {
+      window.VocabularyBook.setUser('guest', null);
+      if (typeof window.VocabularyBook.showToggle === 'function') {
+        window.VocabularyBook.showToggle();
+      }
+    }
+    if (window.SRSReview && typeof window.SRSReview.setUser === 'function') {
+      window.SRSReview.setUser('guest', null);
+    }
   } else {
     // Logged out state
     if (panelLoggedIn) panelLoggedIn.style.display = 'none';
     if (panelGuestMode) panelGuestMode.style.display = 'none';
     if (panelLoggedOut) panelLoggedOut.style.display = 'block';
+    if (window.VocabularyBook && typeof window.VocabularyBook.setUser === 'function') {
+      window.VocabularyBook.setUser(null, null);
+    }
+    if (window.SRSReview && typeof window.SRSReview.setUser === 'function') {
+      window.SRSReview.setUser(null, null);
+    }
   }
 }
 
@@ -674,6 +695,11 @@ async function loadPracticePoints(userId) {
     if (result.success) {
       if (pointsCountEl) pointsCountEl.textContent = (result.data.totalPoints || 0).toLocaleString();
       if (coinsCountEl) coinsCountEl.textContent = (result.data.coins || 0).toLocaleString();
+
+      // Keep header XP bar in sync when points change (Type/Watch/Notes/etc).
+      if (window.LevelSystem && window.LevelSystem.updateHeaderLevel) {
+        window.LevelSystem.updateHeaderLevel(result.data);
+      }
 
       // Render the Proficiency Dashboard (Track B)
       renderSkillDashboard(result.data);

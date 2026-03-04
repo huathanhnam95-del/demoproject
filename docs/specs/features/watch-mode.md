@@ -24,10 +24,14 @@
 ### Non-Functional
 
 - The mode must be usable on typical networks; handle transcript/metadata failures gracefully.
+- If YouTube API/video loading fails (offline, blocked domain, timeout), the UI must show a recoverable error state with `Retry` and a clear return path to other modes.
+- Watch-mode failures must not break global app navigation, panel toggles, or the current user session.
 
 ## 4. Data & Contracts (The "Contract")
 
 - Watch mode UI: `public/watch-mode.js`, `public/youtube-player.js`
+- YouTube dependency: `public/youtube-player.js` loads `https://www.youtube.com/iframe_api` at runtime.
+- Fallback contract: player init/load errors are surfaced as non-blocking mode errors; app shell remains interactive.
 - Content items: Firestore `contentItems/{watch_<id>}` (and related watch collections as needed).
 - Attempt scoring + rewards: `functions/src/submitAttempt.js` (`mode = 'watch'`).
 - Admin pages:
@@ -39,3 +43,5 @@
 - Manual:
   - Load a watch item -> verify video plays and questions render.
   - Submit an answer -> verify scoring and rewards.
+  - Simulate unavailable YouTube/offline -> open Watch Mode -> verify recoverable error state and successful exit to another mode without reload.
+  - Restore network and retry -> verify player can recover.

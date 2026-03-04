@@ -1,0 +1,31 @@
+{
+  "runId": "2026-03-01T17-19-07-966Z",
+  "timestamp": "2026-03-01T17:19:07.967Z",
+  "baseUrl": "https://localhost:8443",
+  "startServer": true,
+  "results": [
+    {
+      "id": "landing_mobile",
+      "name": "Landing (Mobile)",
+      "url": "https://localhost:8443/landing/",
+      "html": "docs\\audits\\2026-03-01-a2-vn-pte-onboarding\\artifacts\\perf\\2026-03-01T17-19-07-966Z__landing_mobile.html",
+      "json": "docs\\audits\\2026-03-01-a2-vn-pte-onboarding\\artifacts\\perf\\2026-03-01T17-19-07-966Z__landing_mobile.json",
+      "htmlLog": "docs\\audits\\2026-03-01-a2-vn-pte-onboarding\\artifacts\\perf\\2026-03-01T17-19-07-966Z__landing_mobile__html.log.txt",
+      "jsonLog": "docs\\audits\\2026-03-01-a2-vn-pte-onboarding\\artifacts\\perf\\2026-03-01T17-19-07-966Z__landing_mobile__json.log.txt",
+      "htmlExitCode": 1,
+      "jsonExitCode": 1
+    },
+    {
+      "id": "app_mobile",
+      "name": "App Home (Mobile)",
+      "url": "https://localhost:8443/index.html",
+      "html": "docs\\audits\\2026-03-01-a2-vn-pte-onboarding\\artifacts\\perf\\2026-03-01T17-19-07-966Z__app_mobile.html",
+      "json": "docs\\audits\\2026-03-01-a2-vn-pte-onboarding\\artifacts\\perf\\2026-03-01T17-19-07-966Z__app_mobile.json",
+      "htmlLog": "docs\\audits\\2026-03-01-a2-vn-pte-onboarding\\artifacts\\perf\\2026-03-01T17-19-07-966Z__app_mobile__html.log.txt",
+      "jsonLog": "docs\\audits\\2026-03-01-a2-vn-pte-onboarding\\artifacts\\perf\\2026-03-01T17-19-07-966Z__app_mobile__json.log.txt",
+      "htmlExitCode": 1,
+      "jsonExitCode": 1
+    }
+  ],
+  "localServerLog": "docs\\audits\\2026-03-01-a2-vn-pte-onboarding\\artifacts\\perf\\2026-03-01T17-19-07-966Z__local_server.lighthouse.log.txt"
+}

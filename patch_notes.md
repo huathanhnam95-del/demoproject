@@ -100,9 +100,9 @@ Keen eyed speakers of the Queen’s English will note how we spelled license, wh
 
 Our solo dev XM is taking a long needed vacation before slowly getting back into building a much bigger update for you in January. Until then, we will still be doing maintenance and bugfixing for the game.
 
-### Changelog
+### Changelog (v2)
 
-#### Balancing
+#### Balancing (v2)
 
 - Higher level version of existing enemies added for late game.
 - Added 'Word Rush' bonus to the game.
@@ -122,7 +122,7 @@ Our solo dev XM is taking a long needed vacation before slowly getting back into
 - Cap some uncommon items from spawning too often.
 - Added .25 second grace period after enemy dies before removing word.
 
-#### Bugfixes
+#### Bugfixes (v2)
 
 - Fixed "Max Ammo!" effect on Barrage Resupply pickups not using localized fonts.
 - Fixed Hunter and Tesla Mine SFX still playing at main menu.
@@ -157,7 +157,7 @@ Our solo dev XM is taking a long needed vacation before slowly getting back into
 - Fixed Infector not increasing when taking additional copies of it.
 - Added additional halo around Augment buttons in focus because it looks the same as equipped Augments.
 
-#### Features
+#### Features (v2)
 
 - Added Caustic Ammo Augment.
 - Added Conviction Augment.
@@ -198,16 +198,16 @@ To celebrate the season, we've added a special Holiday Wordlist! It's filled wit
 
 We've made some adjustments to the English wordlist to provide a smoother mental load, especially for longer words. We've also tweaked enemy behavior - specifically their speed and spawning cooldowns - to prevent those massive, overwhelming hordes from forming too quickly.
 
-### Changelog
+### Changelog (v2.5)
 
-#### Balancing
+#### Balancing (v2.5)
 
 - Improved English wordlist for better mental load consistency.
 - Lowered the base speed of fast-type enemies.
 - Increased the minimum spawning cooldown for all enemy types.
 - Fixed an issue where too many enemies would spawn simultaneously at high levels.
 
-#### Features
+#### Features (v2.5)
 
 - Added Holiday-themed main menu effects.
 - Added special Holiday Wordlist.
@@ -258,13 +258,13 @@ Another relatively small but meaningful update is a reorganizing of our options 
 
 We added an official wiki in one of our recent updates, and have now updated it with more localized content!
 
-### Future Plans
+### Future Plans (v3)
 
 And that’s all for Update 3. We hope you enjoy these updates! In the meantime, we’ll get back to work and bring you another update at the end of next month.
 
-### CHANGELOG
+### Changelog (v3)
 
-#### BUGFIXES
+#### Bugfixes (v3)
 
 - Fixed rarity icon not scaling based on resolution.
 - Fixed Barrage explosion radius not scaling based on resolution.
@@ -295,7 +295,7 @@ And that’s all for Update 3. We hope you enjoy these updates! In the meantime,
 - Fixed current weapons header not localized in run information.
 - Fixed having coins exactly equal to main weapon cost does not allow player to unlock it.
 
-#### BALANCING
+#### Balancing (v3)
 
 - Main turret are now bought with coins. Turrets will remain unlocked for players who have unlocked them before.
 - Endless record changed to score-based. Score is time in milliseconds multiplied by additional 20% for each omen level.
@@ -326,7 +326,7 @@ And that’s all for Update 3. We hope you enjoy these updates! In the meantime,
 -- For freeze and double damage drop rate it is 2%
 - 4 new Uncommon Loot Items that increase the chance for status effects for Kinetic, Heat, Cold and Electric weapons by 4%
 
-#### FEATURES
+#### Features (v3)
 
 - Added Leaderboard categorized by Main Weapon.
 - Added Current Loot and Current Augments tabs to Weapon Details screen.
@@ -339,7 +339,7 @@ And that’s all for Update 3. We hope you enjoy these updates! In the meantime,
 
 ---
 
-## Glyphica: Typing Survival - Update 9: Steam Workshop! (Build 17915669)
+## Glyphica: Typing Survival - Update 4: Steam Workshop Preview (Build 17915669)
 
 **Date:** 5 February 2025
 **Build ID:** 17915669
@@ -389,13 +389,15 @@ A new late-game boss that challenges your typing speed with complex, shifting pa
 ### Consumable Loot
 
 We've added a variety of consumable items that can be found during runs:
+
 - **Speed Boost:** Briefly increases typing multiplier.
 - **Shield Overload:** Instantly clears nearby small enemies.
 - **Time Warp:** Slows down enemy movement for 5 seconds.
 
 ### Other Changes and Fixes
 
-* Fixed an issue where certain achievements weren't triggering correctly in Endless Mode.
+- Fixed an issue where certain achievements weren't triggering correctly in Endless Mode.
+
 - Optimized performance for Mac users during late-game waves.
 - Adjusted the health of the "Repeater" enemy type to improve early-game balance.
 - Updated localizations for Simplified Chinese and Japanese.
@@ -450,9 +452,9 @@ Both pair beautifully with their visual theme counterparts, and you can swap the
 
 That’s it for this update, folks! We hope you enjoy the new weapons, bosses, tunes, and quality-of-life changes. As always, we’ll be back again in 2 months with even more content and features to keep your fingers flying.
 
-### CHANGELOG
+### CHANGELOG (v6)
 
-#### Bugfixes
+#### Bugfixes (v6)
 
 - Added auto-correct when Capslock is on for Korean input.
 - Fixed Guardian chases Jormungander endlessly.
@@ -468,7 +470,7 @@ That’s it for this update, folks! We hope you enjoy the new weapons, bosses, t
 - Fixed when loading game with missing or renamed upgrade.
 - Fixed wrong number printed in loot description for Release.
 
-#### Balancing
+#### Balancing (v6)
 
 - Added new lane management so reduced word overlapping (not entirely eliminated though).
 - Caltrops: Increased base Bleed Chance + Bleed Chance scale with Caltrops damage.
@@ -481,7 +483,7 @@ That’s it for this update, folks! We hope you enjoy the new weapons, bosses, t
 - Made all Main Weapons cost 1000 coins and doubled coin drop rate.
 - Made at least one choice during level up an upgrade by default. No longer requires Devotion Augment.
 
-#### Features
+#### Features (v6)
 
 - New Electric Augment Codex.
 - New Heat Augment Codex.
@@ -521,7 +523,8 @@ We are excited to announce that a playable demo of Glyphica is now available dir
 
 ### Bugfixes & Improvements
 
-* **Balance:** Adjusted the health of the Poet boss in later rounds.
+- **Balance:** Adjusted the health of the Poet boss in later rounds.
+
 - **UI:** Improved the visibility of the "Critical Hit" indicators.
 - **Localization:** Fixed several typos in the German and Japanese translations.
 - **Performance:** Optimized the particle effects for the "Splattershot" evolution to prevent frame drops on lower-end hardware.
@@ -537,7 +540,7 @@ We are excited to announce that a playable demo of Glyphica is now available dir
 
 Hello Survival Typists! We're back with another update to Glyphica. Our big addition to this update is Steam puts the power in the hands of our players. That's right, we're finally adding Steam Workshop!
 
-### Steam Workshop
+### Steam Workshop (v9)
 
 ![Steam Workshop Interface](https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2400160/ss_e1e19d7796d88c0a37e54f9a5602058f84405a30.1920x1080.jpg)
 With Steam Workshop, you can now easily download and play with custom wordlists created by the community. You can find everything from new languages to themed dictionaries.

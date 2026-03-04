@@ -88,7 +88,57 @@
             ]
         },
 
-        // Tutorial 2: Listen and Type Mode
+        // Tutorial 2: Add Modal Introduction (auto-unlock flow)
+        vocabAddModalIntro: {
+            id: 'vocabAddModalIntro',
+            name: 'Add to Vocabulary',
+            steps: [
+                {
+                    target: '#vocab-add-modal',
+                    icon: 'ðŸ“–',
+                    title: 'Vocabulary Book is Ready',
+                    text: 'You missed some key words. This panel lets you save them for review.',
+                    position: 'center',
+                    nextLabel: 'Next â†’',
+                    interactive: false
+                },
+                {
+                    target: '#vocab-add-words .vocab-add-word-item:first-child input',
+                    icon: 'âœ…',
+                    title: 'Select Words',
+                    text: 'Tick the words you want to keep. You can open examples before deciding.',
+                    position: 'bottom',
+                    nextLabel: 'Next â†’',
+                    interactive: false,
+                    skipIfMissing: true
+                },
+                {
+                    target: '#vocab-add-btn',
+                    icon: 'ðŸ’¾',
+                    title: 'Save to Vocabulary Book',
+                    text: 'Press Add Selected to store these words for later practice.',
+                    position: 'top',
+                    nextLabel: 'Next â†’',
+                    interactive: false
+                },
+                {
+                    target: '#vocab-panel-toggle',
+                    icon: 'ðŸ“š',
+                    title: 'Review Later',
+                    text: 'Open your Vocabulary Book from this button any time to review saved words.',
+                    position: 'right',
+                    nextLabel: 'Got It',
+                    interactive: false,
+                    skipIfMissing: true,
+                    beforeShow: () => {
+                        const toggle = document.getElementById('vocab-panel-toggle');
+                        if (toggle) toggle.style.display = 'flex';
+                    }
+                }
+            ]
+        },
+
+        // Tutorial 3: Listen and Type Mode
         srsListenType: {
             id: 'srsListenType',
             name: 'Listen and Type',
@@ -133,7 +183,7 @@
             ]
         },
 
-        // Tutorial 3: Listen and Repeat Mode  
+        // Tutorial 4: Listen and Repeat Mode  
         srsListenRepeat: {
             id: 'srsListenRepeat',
             name: 'Listen and Repeat',
@@ -179,7 +229,7 @@
             ]
         },
 
-        // Tutorial 4: Cloze (Fill in the Blank) Mode
+        // Tutorial 5: Cloze (Fill in the Blank) Mode
         srsCloze: {
             id: 'srsCloze',
             name: 'Fill in the Blank',
@@ -214,7 +264,7 @@
             ]
         },
 
-        // Tutorial 5: Writing Challenge
+        // Tutorial 6: Writing Challenge
         writingChallenge: {
             id: 'writingChallenge',
             name: 'Writing Challenge',

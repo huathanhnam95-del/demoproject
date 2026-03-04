@@ -46,23 +46,23 @@
                 calibMult: 0.4
             },
 
-            hint_wc: {
-                id: 'hint_wc',
-                title: 'Hint: Word Count',
-                desc: 'Displays the exact word count or gap length. Helps you determine if you are missing a particle or a full word.',
+            word_ghost: {
+                id: 'word_ghost',
+                title: 'Word Ghost',
+                desc: 'Displays ghosted placeholders for every missing word and punctuation mark. Helps you determine sentence structure.',
                 tags: ['writing'],
                 allowedModes: ['type', 'extended', 'notes'],
-                baseCost: 1,
+                baseCost: 15,
                 tier: 'minor',
                 calibMult: 0.85
             },
-            hint_fl: {
-                id: 'hint_fl',
-                title: 'Hint: First Letters',
-                desc: 'Reveals the first letter of every missing word. A strong nudge to jog your memory without giving away the full answer.',
+            first_letter_peek: {
+                id: 'first_letter_peek',
+                title: 'First-Letter Peek',
+                desc: 'Reveals the first letter of every missing word for 0.8 seconds. A strong nudge to jog your memory without giving away the full answer.',
                 tags: ['writing'],
                 allowedModes: ['type', 'extended', 'notes'],
-                baseCost: 4,
+                baseCost: 25,
                 tier: 'medium',
                 calibMult: 0.65
             },
@@ -76,16 +76,7 @@
                 tier: 'reveal',
                 calibMult: 0.25
             },
-            punct_ghost: {
-                id: 'punct_ghost',
-                title: 'Punctuation Ghost',
-                desc: 'Shows ghosted placeholders for punctuation marks. Vital for learning correct sentence structuring and comma usage.',
-                tags: ['writing'],
-                allowedModes: ['type', 'notes'],
-                baseCost: 2,
-                tier: 'minor',
-                calibMult: 0.85
-            },
+
             typo_shield: {
                 id: 'typo_shield',
                 title: 'Typo Shield',
@@ -107,16 +98,6 @@
                 tier: 'minor',
                 calibMult: 0.85
             },
-            time_freeze: {
-                id: 'time_freeze',
-                title: 'Time Freeze',
-                desc: 'Pauses the countdown timer for 10 seconds. Gives you a moment to think during timed rapid-fire challenges.',
-                tags: ['reading', 'listening'],
-                allowedModes: ['type', 'speak', 'extended', 'watch', 'notes'],
-                baseCost: 4,
-                tier: 'medium',
-                calibMult: 0.65
-            },
             evidence_highlight: {
                 id: 'evidence_highlight',
                 title: 'Evidence Highlight',
@@ -125,7 +106,8 @@
                 allowedModes: ['extended', 'watch'],
                 baseCost: 2,
                 tier: 'post',
-                calibMult: 1.0
+                calibMult: 1.0,
+                comingSoon: true
             },
             summary_scroll: {
                 id: 'summary_scroll',
@@ -135,7 +117,8 @@
                 allowedModes: ['extended', 'watch'],
                 baseCost: 4,
                 tier: 'post',
-                calibMult: 1.0
+                calibMult: 1.0,
+                comingSoon: true
             },
 
             pron_rune: {
@@ -182,6 +165,22 @@
             }
         },
         passive: {
+            length_filter: {
+                id: 'length_filter',
+                title: 'Length Filter',
+                desc: 'Unlock sentence length filtering in Type and Speak modes (short, medium, long).',
+                tree: 'listening',
+                level: 1,
+                cost: 80
+            },
+            difficulty_filter: {
+                id: 'difficulty_filter',
+                title: 'Difficulty Filter',
+                desc: 'Unlock difficulty filtering in Type, Speak, and Fill modes (Easy, Medium, Hard).',
+                tree: 'listening',
+                level: 1,
+                cost: 120
+            },
             frugal_listener_1: {
                 id: 'frugal_listener_1',
                 title: 'Frugal Listener I',
@@ -234,7 +233,7 @@
             frugal_writer_1: {
                 id: 'frugal_writer_1',
                 title: 'Frugal Writer I',
-                desc: 'Reduces the coin cost by 10% for: Word Count, First Letters, Reveal Word, Punctuation Ghost, and Typo Shield.',
+                desc: 'Reduces the coin cost by 10% for: Word Ghost, First-Letter Peek, Hint: Reveal Word, and Typo Shield.',
                 tree: 'writing',
                 level: 2,
                 cost: 400
@@ -242,7 +241,7 @@
             hint_kit: {
                 id: 'hint_kit',
                 title: 'Hint Kit',
-                desc: 'Extra 20% discount on Word Count and First Letters hints (Does not apply to Reveal Word).',
+                desc: 'Extra 20% discount on Word Ghost and First-Letter Peek hints (Does not apply to Reveal Word).',
                 tree: 'writing',
                 level: 4,
                 cost: 900
@@ -386,16 +385,14 @@
         chunking: { tree: 'listening', level: 4, cost: 350 },
         transcript_glimpse: { tree: 'listening', level: 6, cost: 700 },
 
-        hint_wc: { tree: 'writing', level: 1, cost: 100 },
-        hint_fl: { tree: 'writing', level: 2, cost: 180 },
-        punct_ghost: { tree: 'writing', level: 3, cost: 220 },
+        word_ghost: { tree: 'writing', level: 1, cost: 100 },
+        first_letter_peek: { tree: 'writing', level: 2, cost: 180 },
         hint_reveal: { tree: 'writing', level: 4, cost: 600 },
         typo_shield: { tree: 'writing', level: 5, cost: 420 },
 
         dict_peek: { tree: 'reading', level: 1, cost: 90 },
         evidence_highlight: { tree: 'reading', level: 2, cost: 160 },
         summary_scroll: { tree: 'reading', level: 4, cost: 380 },
-        time_freeze: { tree: 'reading', level: 5, cost: 500 },
 
         pron_rune: { tree: 'speaking', level: 1, cost: 100 },
         shadow_mode: { tree: 'speaking', level: 3, cost: 260 },

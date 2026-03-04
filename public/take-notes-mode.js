@@ -27,7 +27,6 @@
      */
     function init() {
         if (isInitialized) {
-            console.log('[TakeNotes] Already initialized');
             return;
         }
 
@@ -40,7 +39,6 @@
         setupEventListeners();
         loadEntries();
         isInitialized = true;
-        console.log('[TakeNotes] Module initialized');
     }
 
     /**
@@ -70,7 +68,6 @@
         if (elements.userInput) {
             elements.userInput.value = '';
         }
-        console.log('[TakeNotes] Mode reset');
     }
 
     /**
@@ -185,7 +182,6 @@
 
                     if (!snapshot.empty) {
                         entries = snapshot.docs.map(doc => doc.data());
-                        console.log(`[TakeNotes] Loaded ${entries.length} entries from Firestore`);
 
                         // Sort entries numerically by ID
                         entries.sort((a, b) => {
@@ -197,7 +193,6 @@
                         applyFilter('all');
                         return;
                     }
-                    console.log('[TakeNotes] No entries in Firestore, trying Excel...');
                 } catch (firestoreError) {
                     console.warn('[TakeNotes] Firestore error, falling back to Excel:', firestoreError.message);
                 }
@@ -205,7 +200,6 @@
 
             // Fallback: Load from Excel
             const excelPath = 'database/Take%20Notes/RL/RL.xlsx';
-            console.log('[TakeNotes] Fetching Excel from:', excelPath);
 
             const response = await fetch(excelPath);
             if (!response.ok) {
@@ -221,15 +215,18 @@
             for (let i = 1; i < data.length; i++) {
                 const row = data[i];
                 if (row[0]) {
+                    let parsedLevel = parseInt(row[3], 10);
+                    if (isNaN(parsedLevel) || parsedLevel < 1 || parsedLevel > 3) parsedLevel = 1;
+
                     entries.push({
                         id: String(row[0]).trim(),
                         transcript: row[2] ? String(row[2]).trim() : '',
+                        level: parsedLevel,
                         videoUrl: row[5] ? String(row[5]).trim() : ''
                     });
                 }
             }
 
-            console.log(`[TakeNotes] Loaded ${entries.length} entries from Excel`);
 
             // Sort entries numerically by ID
             entries.sort((a, b) => {
@@ -248,9 +245,9 @@
     }
 
     /**
-     * Apply status filter
+     * Apply compound filters (status and difficulty)
      */
-    function applyFilter(filterValue) {
+    function applyFilter(filterValue = currentFilter) {
         currentFilter = filterValue;
 
         // Update filter label
@@ -263,24 +260,58 @@
             elements.statusFilterLabel.textContent = filterLabels[filterValue] || 'Filter by Status';
         }
 
-        // Apply filter
-        switch (filterValue) {
-            case 'has-video':
-                filteredEntries = entries.filter(e => e.videoUrl && e.videoUrl.length > 0);
-                break;
-            case 'no-video':
-                filteredEntries = entries.filter(e => !e.videoUrl || e.videoUrl.length === 0);
-                break;
-            default:
-                filteredEntries = [...entries];
+        let tempEntries = [...entries];
+
+        // 1. Apply Status Filter
+        if (filterValue === 'has-video') {
+            tempEntries = tempEntries.filter(e => e.videoUrl && e.videoUrl.length > 0);
+        } else if (filterValue === 'no-video') {
+            tempEntries = tempEntries.filter(e => !e.videoUrl || e.videoUrl.length === 0);
         }
+
+        // 2. Apply Difficulty Filter
+        const currentDifficulty = window.DifficultyFilter ? window.DifficultyFilter.getCurrentDifficulty('notes') : 'all';
+        if (currentDifficulty !== 'all') {
+            const level = parseInt(currentDifficulty, 10);
+            tempEntries = tempEntries.filter(e => e.level === level);
+        }
+
+        filteredEntries = tempEntries;
 
         // Update UI
         updateQuestionSelector();
-        currentEntryIndex = 0;
-        if (filteredEntries.length > 0) {
+
+        if (filteredEntries.length === 0) {
+            handleEmptyState();
+        } else {
+            if (elements.playBtn) elements.playBtn.disabled = false;
+            if (elements.questionSelect) elements.questionSelect.disabled = false;
+            currentEntryIndex = 0;
             selectEntry(0);
         }
+    }
+
+    /**
+     * Handle empty state when filters return 0 results
+     */
+    function handleEmptyState() {
+        if (elements.questionSelect) {
+            elements.questionSelect.innerHTML = '<option value="">No matching questions</option>';
+            elements.questionSelect.disabled = true;
+        }
+        if (elements.totalQuestions) {
+            elements.totalQuestions.textContent = '0';
+        }
+        if (elements.currentQuestionId) {
+            elements.currentQuestionId.textContent = '-';
+        }
+        if (elements.playBtn) {
+            elements.playBtn.disabled = true;
+        }
+
+        currentEntry = null;
+        currentEntryIndex = -1;
+        reset();
     }
 
     /**
@@ -298,10 +329,12 @@
     function updateQuestionSelector() {
         if (!elements.questionSelect) return;
 
+        if (filteredEntries.length === 0) return;
+
         elements.questionSelect.innerHTML = filteredEntries.map((entry, index) => {
             const hasVideo = entry.videoUrl && entry.videoUrl.trim().length > 0;
-            const label = hasVideo ? `${entry.id} - Video available` : entry.id;
-            return `<option value="${index}">${label}</option>`;
+            const videoLabel = hasVideo ? ` 🎥` : ``;
+            return `<option value="${index}">[Lvl ${entry.level}] ${entry.id}${videoLabel}</option>`;
         }).join('');
 
         if (elements.totalQuestions) {
@@ -357,7 +390,6 @@
         // Reset practice area
         reset();
 
-        console.log('[TakeNotes] Selected entry:', currentEntry.id);
     }
 
     /**
@@ -369,9 +401,6 @@
             return;
         }
 
-        console.log('[TakeNotes] Starting practice for:', currentEntry.id);
-        console.log('[TakeNotes] Entry data:', JSON.stringify(currentEntry));
-        console.log('[TakeNotes] Video URL:', currentEntry.videoUrl);
 
         // Show practice area
         elements.practiceArea.style.display = 'block';
@@ -384,14 +413,11 @@
 
         // Check if has guiding video
         const hasVideo = currentEntry.videoUrl && currentEntry.videoUrl.trim().length > 0;
-        console.log('[TakeNotes] Has guiding video:', hasVideo);
 
         if (hasVideo) {
-            console.log('[TakeNotes] Loading guiding video...');
             loadGuidingVideo(currentEntry.videoUrl);
             elements.stepVideo.style.display = 'block';
         } else {
-            console.log('[TakeNotes] No guiding video, going to audio step');
             goToAudioStep();
         }
     }
@@ -433,7 +459,6 @@
      * Go to audio step (Step 2)
      */
     function goToAudioStep() {
-        console.log('[TakeNotes] Moving to audio step');
 
         // Clear video iframe
         if (elements.youtubePlayer) {
@@ -460,7 +485,6 @@
             const exists = await checkFileExists(audioPath);
             if (exists) {
                 elements.audio.src = audioPath;
-                console.log(`[TakeNotes] Loaded audio: ${audioPath}`);
                 return;
             }
         }
@@ -491,7 +515,6 @@
             return;
         }
 
-        console.log('[TakeNotes] Submitting notes');
 
         // Hide audio step, show results step
         elements.stepAudio.style.display = 'none';
@@ -606,32 +629,24 @@
      */
     async function saveProgress(userNotes, matchedWords, transcriptWordCount) {
         try {
-            if (typeof firebase === 'undefined' || !firebase.auth) return;
-
-            const user = firebase.auth().currentUser;
-            if (!user) return;
+            const userId = window.authUI?.getCurrentUserId?.() || window.auth?.currentUser?.uid;
+            if (!userId) return;
 
             // Dual-Track Scoring Integration (Phase 2.1 - Server-Authoritative)
             if (window.handleDualTrackScoring) {
                 // Pass raw user notes text for server-side word matching
-                if (window.startAttemptContext) {
-                    window.startAttemptContext('notes', String(currentEntry.id));
-                }
                 await window.handleDualTrackScoring('notes', currentEntry.id, userNotes);
             }
 
-            const db = firebase.firestore();
-            await db.collection('users').doc(user.uid)
-                .collection('takeNotesProgress').doc(currentEntry.id)
-                .set({
-                    entryId: currentEntry.id,
-                    userNotes: userNotes,
-                    matchedWordsCount: matchedWords.length,
-                    transcriptWordCount: transcriptWordCount,
-                    completedAt: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
+            if (!window.firebaseFirestoreFunctions?.upsertTakeNotesProgress) return;
 
-            console.log('[TakeNotes] Progress saved');
+            await window.firebaseFirestoreFunctions.upsertTakeNotesProgress(userId, String(currentEntry.id), {
+                entryId: String(currentEntry.id),
+                userNotes: userNotes,
+                matchedWordsCount: matchedWords.length,
+                transcriptWordCount: transcriptWordCount
+            });
+
         } catch (error) {
             console.error('[TakeNotes] Error saving progress:', error);
         }
@@ -639,16 +654,15 @@
 
     // Initialize when DOM is ready
     document.addEventListener('DOMContentLoaded', () => {
-        if (document.getElementById('mode-notes')) {
-            init();
-        }
+        init();
     });
 
     // Public API
     window.TakeNotesMode = {
         init,
         reset,
-        loadEntries
+        loadEntries,
+        applyFilters: applyFilter
     };
 
 })();

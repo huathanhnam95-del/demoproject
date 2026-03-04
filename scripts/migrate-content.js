@@ -176,7 +176,7 @@ async function batchWrite(collectionName, documents, prefix) {
 
         await batch.commit();
         written += chunk.length;
-        console.log(`  ✓ Written ${written}/${documents.length} documents`);
+        console.log(`  ✓ Written ${written}/${documents.length} documents`); // eslint-disable-line no-console
     }
 
     return written;
@@ -186,7 +186,7 @@ async function batchWrite(collectionName, documents, prefix) {
  * Main migration function
  */
 async function migrate() {
-    console.log('🚀 Starting content migration...\n');
+    console.log('🚀 Starting content migration...\n'); // eslint-disable-line no-console
 
     const stats = {
         type: 0,
@@ -195,46 +195,46 @@ async function migrate() {
     };
 
     for (const [mode, config] of Object.entries(CONTENT_SOURCES)) {
-        console.log(`📁 Processing ${mode} content from ${config.file}...`);
+        console.log(`📁 Processing ${mode} content from ${config.file}...`); // eslint-disable-line no-console
 
         try {
             const rawData = readExcel(config.file);
 
             if (rawData.length === 0) {
-                console.log(`  ⚠️ No data found in ${config.file}`);
+                console.log(`  ⚠️ No data found in ${config.file}`); // eslint-disable-line no-console
                 continue;
             }
 
-            console.log(`  Found ${rawData.length} rows`);
+            console.log(`  Found ${rawData.length} rows`); // eslint-disable-line no-console
 
             const documents = config.parser(rawData);
-            console.log(`  Parsed ${documents.length} valid documents`);
+            console.log(`  Parsed ${documents.length} valid documents`); // eslint-disable-line no-console
 
             if (documents.length > 0) {
                 const count = await batchWrite('contentItems', documents, config.prefix);
                 stats[mode] = count;
             }
 
-            console.log('');
+            console.log(''); // eslint-disable-line no-console
         } catch (error) {
             console.error(`  ❌ Error processing ${mode}:`, error.message);
         }
     }
 
-    console.log('='.repeat(50));
-    console.log('📊 Migration Summary:');
-    console.log(`  Type (WFD):      ${stats.type} documents`);
-    console.log(`  Extended (LFIB): ${stats.extended} documents`);
-    console.log(`  Speak (RS):      ${stats.speak} documents`);
-    console.log(`  Total:           ${stats.type + stats.extended + stats.speak} documents`);
-    console.log('='.repeat(50));
-    console.log('✅ Migration complete!');
+    console.log('='.repeat(50)); // eslint-disable-line no-console
+    console.log('📊 Migration Summary:'); // eslint-disable-line no-console
+    console.log(`  Type (WFD):      ${stats.type} documents`); // eslint-disable-line no-console
+    console.log(`  Extended (LFIB): ${stats.extended} documents`); // eslint-disable-line no-console
+    console.log(`  Speak (RS):      ${stats.speak} documents`); // eslint-disable-line no-console
+    console.log(`  Total:           ${stats.type + stats.extended + stats.speak} documents`); // eslint-disable-line no-console
+    console.log('='.repeat(50)); // eslint-disable-line no-console
+    console.log('✅ Migration complete!'); // eslint-disable-line no-console
 }
 
 // Run migration
 migrate()
     .then(() => process.exit(0))
     .catch(err => {
-        console.error('❌ Migration failed:', err);
+        console.error('❌ Migration failed:', err); // eslint-disable-line no-console
         process.exit(1);
     });

@@ -413,6 +413,25 @@ h6 {
     line-height: 1.7;
 }
 
+.hero-pte-map {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.pte-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    background: rgba(37, 99, 235, 0.08);
+    color: #1e40af;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
 .hero-cta-group {
     display: flex;
     gap: 16px;
@@ -2468,4 +2487,305 @@ body.dark-mode .engine-list strong {
     .pill-divider {
         display: none;
     }
+}
+
+/* ============================================
+   Your Journey: Compact Roadmap
+   ============================================ */
+
+.your-journey {
+    padding: var(--section-padding) 0;
+    background: #f8faff;
+    position: relative;
+    overflow: hidden;
+}
+
+.your-journey::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 10% 20%, rgba(26, 115, 232, 0.04) 0%, transparent 60%),
+        radial-gradient(ellipse at 90% 80%, rgba(108, 71, 255, 0.03) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+/* Road Map Visualization */
+.road-map-wrapper {
+    max-width: 900px;
+    margin: 40px auto 20px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 24px;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+    position: relative;
+    z-index: 2;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.road-map-wrapper.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.road-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    overflow: visible;
+}
+
+/* Road Animations */
+.road-progress {
+    transition: stroke-dashoffset 2.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.road-map-wrapper.visible .road-progress {
+    stroke-dashoffset: 0;
+}
+
+/* Pins */
+.road-pin {
+    cursor: pointer;
+    /* Do NOT apply transform here as it clobbers the translation attribute */
+}
+
+.pin-visuals {
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-origin: center;
+    transform-box: fill-box;
+    /* This group will animate while the parent .road-pin stays stable */
+}
+
+.road-pin:hover .pin-visuals {
+    transform: scale(1.18);
+}
+
+.pin-inner {
+    transition: transform 0.3s ease;
+}
+
+.road-pin:hover .pin-inner {
+    transform: translateY(-8px);
+}
+
+.road-pin.active .pin-inner {
+    transform: scale(1.1) translateY(-8px);
+}
+
+.pin-hit-area {
+    pointer-events: all;
+    /* This invisible circle catches the hover and stays rock solid */
+}
+
+.road-pin text {
+    user-select: none;
+    pointer-events: none;
+}
+
+/* Roadmap Detail Panel */
+.roadmap-detail-panel {
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    min-height: 100px;
+    z-index: 1;
+}
+
+.roadmap-detail {
+    display: none;
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    animation: slideUpFade 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    position: relative;
+}
+
+@keyframes slideUpFade {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.roadmap-detail.active {
+    display: block;
+}
+
+.rd-header {
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.rd-badge {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+}
+
+.rd-badge--1 {
+    background: rgba(26, 115, 232, 0.1);
+    color: #1a73e8;
+}
+
+.rd-badge--2 {
+    background: rgba(108, 71, 255, 0.1);
+    color: #6c47ff;
+}
+
+.rd-badge--3 {
+    background: rgba(168, 85, 247, 0.1);
+    color: #a855f7;
+}
+
+.rd-badge--4 {
+    background: rgba(236, 72, 153, 0.1);
+    color: #ec4899;
+}
+
+.rd-header h3 {
+    margin: 0;
+    font-size: 1.4rem;
+    color: #0d1b2a;
+}
+
+.rd-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.rd-card {
+    background: #f8fafc;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.rd-card:hover {
+    background: #ffffff;
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.rd-icon {
+    font-size: 1.4rem;
+    margin-bottom: 4px;
+}
+
+.rd-card strong {
+    font-size: 0.9rem;
+    color: #1e293b;
+}
+
+.rd-card p {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.rd-tip {
+    font-size: 0.8rem;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 10px 16px;
+    border-radius: 999px;
+    display: inline-block;
+}
+
+/* Footer (re-used but adjusted) */
+.journey-footer {
+    margin-top: 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.journey-footer-note {
+    font-size: 0.875rem;
+    color: #94a3b8;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .jt-step {
+        gap: 16px;
+    }
+
+    .jt-dot {
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
+    }
+
+    .jt-node {
+        width: 40px;
+    }
+
+    .jt-title {
+        font-size: 1.05rem;
+    }
+
+    .jt-content {
+        padding-bottom: 28px;
+    }
+}
+ 
+ 
+/* ============================================
+   Language Switcher
+   ============================================ */
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.lang-switch {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.lang-switch a {
+    color: var(--text-muted);
+    transition: color var(--transition-fast);
+}
+
+.lang-switch a:hover {
+    color: var(--primary);
+}
+
+.lang-switch a.active {
+    color: var(--primary);
+}
+
+.lang-divider {
+    color: var(--border-light);
 }

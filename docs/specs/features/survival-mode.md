@@ -30,14 +30,25 @@
 
 - 60fps target on typical hardware (canvas-based rendering).
 - Instant restart flow (low friction between runs).
+- Mode-load failures must be recoverable (show user-facing message and preserve main app usability).
+- Audio and vocabulary-data failures are non-critical; gameplay should continue with fallback behavior.
+- Exiting Survival must restore standard layout (no blank-page state after overlay close).
 
 ## 4. Data & Contracts (The "Contract")
 
 - UI overlay + canvas: `public/index.html` + `public/survival-style.css` / `public/style.css`
-- Survival mode lifecycle is orchestrated from the main frontend mode switcher.
+- Entry + load guards: `public/script.js` (`switchToMode('survival')`, `ensureSurvivalGameLoaded` checks).
+- Overlay open/close + retry wiring: `public/index.html` (`openSurvivalGame`, close handlers, retry button handlers).
+- Engine lifecycle: `public/js/survival-game/SurvivalGame.js` (`start`, game-over modal flow, `stop`).
+- Fallback signals in engine:
+  - BGM/analysis failures are handled as warnings in `public/js/survival-game/AudioManager.js`.
+  - Oxford list load failures fall back to built-in word sources in `public/js/survival-game/SurvivalGame.js`.
 
 ## 5. Verification
 
 - Manual:
   - Start a run -> verify overlay renders and HUD updates.
   - Lose a run -> verify "restart" path is fast.
+  - Force module load failure (or block survival module) -> verify recoverable alert and no main-layout corruption.
+  - Simulate BGM failure/unavailable audio file -> verify run remains playable.
+  - Exit from overlay -> verify normal app layout and mode switching still work.

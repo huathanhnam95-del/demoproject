@@ -304,21 +304,12 @@
     color: #4f46e5;
     margin-left: 12px;
     padding: 6px 14px;
-    background: rgba(255, 255, 255, 0.9);
+    background: #f8fafc;
     border: 1px solid #e0e7ff;
-    border-radius: 20px;
-    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
-    backdrop-filter: blur(4px);
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    border-radius: 12px;
     letter-spacing: 0.3px;
-    transform: translateY(1px);
-}
-
-#replay-counter-type:hover,
-#replay-counter-speak:hover {
-    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.15);
-    transform: translateY(0);
-    border-color: #c7d2fe;
+    cursor: help;
+    user-select: none;
 }
 
 #replay-counter-type.limit-reached,
@@ -434,35 +425,27 @@
     justify-content: center;
     align-items: center;
     width: 28px;
-    /* Slightly wider */
     height: 32px;
     font-family: 'Consolas', 'Monaco', monospace;
     font-size: 18px;
     border-radius: 4px;
     position: relative;
     border: 1px solid #cbd5e1;
-    /* Base border */
     background-color: #f8fafc;
-    /* Base background */
     margin: 0 1px;
-    /* Slight separation */
 }
 
 .hint-char.revealed {
     color: #1e293b;
     font-weight: 700;
     border: 1px solid #3b82f6;
-    /* Blue border */
     background-color: #eff6ff;
-    /* Light blue tint */
 }
 
 .hint-char.hidden {
     color: transparent;
     border: 2px solid #64748b;
-    /* Darker gray border for visibility */
     background-color: #cbd5e1;
-    /* Darker background to look like a slot */
 }
 
 .hint-char.punctuation {
@@ -472,7 +455,6 @@
     color: #475569;
     font-weight: 600;
     font-family: inherit;
-    /* Use default font for punctuation */
     border: none;
     background: transparent;
     font-size: 20px;
@@ -516,9 +498,22 @@
     min-width: 32px;
 }
 
-.tool-btn:hover {
+.tool-btn:hover:not(:disabled):not(.locked) {
     background: #e2e8f0;
     color: #334155;
+}
+
+.tool-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    filter: grayscale(1);
+    pointer-events: none;
+}
+
+.tool-btn.locked {
+    opacity: 0.5;
+    filter: grayscale(0.8);
+    cursor: pointer;
 }
 
 .tool-btn.active {
@@ -526,30 +521,64 @@
     color: #0284c7;
 }
 
+/* Unified Control Toolbar Layout */
+.control-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    gap: 16px;
+    margin-top: 12px;
+}
+
+.function-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.utility-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+    /* Push to right */
+}
+
 /* Hint Button */
 .hint-controls {
     display: flex;
-    justify-content: flex-end;
-    margin-top: 0.5rem;
+    align-items: center;
+    /* Reset legacy styles from style.css */
+    margin-top: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
 }
 
-.hint-btn {
+.hint-btn,
+.hint-badge-btn {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.25rem;
     background: #fff;
     border: 1px solid #cbd5e1;
-    border-radius: 20px;
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-    font-weight: 500;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
     color: #475569;
     cursor: pointer;
     transition: all 0.2s ease;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    height: 30px;
+    /* Harmonize with tool-btn typical height */
+    box-sizing: border-box;
 }
 
-.hint-btn:hover:not(:disabled) {
+.hint-btn:hover:not(:disabled):not(.locked),
+.hint-badge-btn:hover:not(:disabled):not(.locked) {
     background: #f8fafc;
     border-color: #94a3b8;
     color: #334155;
@@ -557,23 +586,33 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.hint-btn:disabled {
+.hint-btn:disabled,
+.hint-badge-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
     background: #f1f5f9;
 }
 
+.hint-btn.locked,
+.hint-badge-btn.locked {
+    opacity: 0.5;
+    filter: grayscale(0.6);
+    background: #f8fafc;
+    cursor: pointer;
+}
+
 .hint-icon {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
 }
 
 .hint-cost {
-    font-size: 0.8rem;
-    font-weight: 600;
+    font-size: 0.75rem;
+    font-weight: 700;
     color: #f59e0b;
     background: #fffbeb;
-    padding: 2px 6px;
-    border-radius: 10px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    margin-left: 2px;
 }
 
 .control-row-secondary {
@@ -582,4 +621,255 @@
     gap: 0.5rem;
     margin-top: 0.5rem;
     width: 100%;
+}
+
+/* ============================================
+   ACTION POPOVER MENU (RPG Skills)
+   ============================================ */
+.hint-controls {
+    position: relative;
+    /* Need this for absolute positioning of popover */
+}
+
+.action-popover-menu {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right: 0;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 100;
+    min-width: 200px;
+}
+
+.popover-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    text-align: left;
+    width: 100%;
+}
+
+.popover-item:hover {
+    background: #f8fafc;
+}
+
+.popover-icon {
+    font-size: 1.2rem;
+}
+
+.popover-label {
+    flex-grow: 1;
+    font-weight: 600;
+    color: #334155;
+    font-size: 0.85rem;
+}
+
+.popover-cost {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #f59e0b;
+    background: #fffbeb;
+    padding: 2px 5px;
+    border-radius: 4px;
+}
+
+/* ============================================
+   DICTIONARY PEEK (Reading Skill)
+   ============================================ */
+.dict-peek-bubble {
+    position: absolute;
+    z-index: 1000;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 4px;
+    animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.dict-peek-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #3b82f6;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.dict-peek-btn:hover {
+    background: #eff6ff;
+}
+
+.dict-peek-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 400px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    z-index: 10000;
+}
+
+.dict-peek-modal-content {
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh;
+}
+
+.dict-peek-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.dict-peek-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #1e293b;
+    text-transform: capitalize;
+}
+
+.dict-peek-body {
+    padding: 20px;
+    overflow-y: auto;
+    font-size: 0.95rem;
+    color: #475569;
+    line-height: 1.5;
+}
+
+@keyframes popIn {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* ============================================
+   SECOND TAKE (Speak Retry Overlay)
+   ============================================ */
+.second-take-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.2s ease;
+}
+
+.second-take-card {
+    background: #fff;
+    padding: 24px 32px;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    max-width: 360px;
+    width: 90%;
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.second-take-card h3 {
+    margin: 0 0 8px 0;
+    font-size: 1.3rem;
+    color: #1e293b;
+}
+
+.second-take-card p {
+    margin: 0 0 16px 0;
+    color: #64748b;
+    font-size: 0.95rem;
+}
+
+.second-take-card button {
+    margin: 0 6px;
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+/* ============================================
+   PRON RUNE (IPA Display)
+   ============================================ */
+.pron-rune-display {
+    background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+    border: 1px solid #c4b5fd;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: fadeIn 0.3s ease;
+}
+
+.pron-rune-label {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #7c3aed;
+    white-space: nowrap;
+}
+
+.pron-rune-text {
+    font-family: 'Noto Sans', 'Segoe UI', sans-serif;
+    font-size: 1rem;
+    color: #4c1d95;
+    letter-spacing: 1px;
+}
+
+/* ============================================
+   DICT PEEK (Definition Display)
+   ============================================ */
+.dict-peek-pos {
+    color: #3b82f6;
+    margin-top: 10px;
+    margin-bottom: 4px;
+    text-transform: capitalize;
+}
+
+.dict-peek-defs {
+    padding-left: 20px;
+    margin-top: 0;
+}
+
+.dict-peek-defs li {
+    margin-bottom: 4px;
 }

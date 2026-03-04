@@ -1,7 +1,7 @@
-# Penguin Practice RPG - Product Overview
+# Listening Practice RPG - Product Overview
 
 **Status**: Active
-**Last updated**: 2026-02-16
+**Last updated**: 2026-03-03
 
 This document is the **product-level overview**. Detailed specs live in `docs/specs/features/` and are linked below.
 
@@ -21,6 +21,36 @@ A gamified language learning platform that merges **rigorous study tools** (SRS,
 3. Spend Coins on the **Skill Tree** (active assists + passive perks).
 4. Save vocabulary, review via **SRS**, and convert weak words into mastered words.
 5. Optional: play **Survival Mode** for a high-intensity "run" that still trains language skills.
+
+## Activation Notes (A2/PTE-first)
+
+- Landing hero must map directly to PTE tasks (WFD / RS / RL) in simple language.
+- Demo entry (`?demo=1`) should reach first practice without auth blocking.
+- Day-0 guest flow includes local Vocabulary + SRS loop before account creation.
+
+## Offline Resilience Contract
+
+- The landing page and app shell register a service worker via `public/js/sw-register.js` (HTTPS or localhost only).
+- Service worker entrypoint is `public/sw.js` with shell pre-cache for:
+  - `/`, `/index.html`
+  - `/landing/`, `/landing/index.html`
+  - `/offline.html`
+  - core CSS (`/style.css`, `/landing/landing.css`)
+- Navigation requests are network-first with cache fallback:
+  - return cached route when available
+  - use `/landing/index.html` for landing routes
+  - fall back to `/offline.html` if no route cache exists
+- API routes (`/api/*`) are network-only and are never served from cache.
+- Offline shell reliability assumes at least one successful online load to prime caches.
+
+## Audit Automation Contract
+
+- Canonical runner: `scripts/audit/run-a2-onboarding-audit.js`.
+- Baseline command (local HTTPS): `node scripts/audit/run-a2-onboarding-audit.js --base-url https://localhost:8443 --no-server --full-only --assert-p0`.
+- Critical-only gate: add `--p0-only` for fast CI-style checks.
+- Multi-scenario matrix (includes offline shell validation): `node scripts/audit/run-a2-onboarding-audit.js --base-url https://localhost:8443 --no-server`.
+- Video recording is opt-in (`--record-video`) to avoid lock/contention during regular smoke runs.
+- Reports must be written under `docs/audits/2026-03-01-a2-vn-pte-onboarding/artifacts/` with screenshots, logs, and JSON run output.
 
 ## Core Functions (Spec Map)
 
@@ -53,9 +83,10 @@ A gamified language learning platform that merges **rigorous study tools** (SRS,
 - Backend API: Node/Express server (see `server.js`, `src/routes/*`) for AI proxying and server-side helpers.
 - Server-authoritative scoring + economy: Firebase Cloud Functions in `functions/src/*` (e.g., attempt scoring, purchases).
 - Optional local Python services: Flask-based analyzers/proxies in `backend/` (audio analysis and auxiliary endpoints).
+- Heavy non-core mode assets (Watch/Notes/Survival) are lazy-loaded with timeout-safe script loading to reduce initial load friction without indefinite hangs.
 - Storage:
   - Firestore: user profiles, attempts/ledger, skills/items, writing checks, etc.
-  - Local storage: UX caches (dictionary, drafts, difficulty profiles) to keep loops fast.
+  - Local storage: UX caches (dictionary, drafts, difficulty profiles) and guest-local vocab/SRS loop state.
 
 ## Related Specs
 

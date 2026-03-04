@@ -1,119 +1,34 @@
 /**
- * Shop Module
- * Handles the in-app shop, coin balance, and unlocking features.
+ * Journey Module (Skill Tree modal).
+ * Kept as ShopModule for backward compatibility with existing callers.
  */
 
 const ShopModule = (() => {
-    // Core modes/features are always available (no shop gating).
-    const CORE_ALWAYS_UNLOCKED_MODES = new Set(['type', 'speak', 'extended', 'watch', 'notes', 'pronounce', 'autoAdjust']);
-    const STARTER_ACTIVE_SKILLS = new Set(['slow_audio', 'echo_loop', 'hint_wc', 'hint_fl', 'hint_reveal']);
-    // defined items
-    const SHOP_ITEMS = [
-        {
-            id: 'speak',
-            title: 'Speak Mode',
-            description: 'Unlock the ability to practice speaking and pronunciation.',
-            icon: '🎙️',
-            cost: 50,
-            unlocksMode: 'speak'
-        },
-        {
-            id: 'extended',
-            title: 'Fill in the Blank',
-            description: 'Challenge yourself with longer sentences and missing words.',
-            icon: '📝',
-            cost: 50,
-            unlocksMode: 'extended'
-        },
-        {
-            id: 'watch',
-            title: 'Watch Mode',
-            description: 'Learn from real-world videos and context.',
-            icon: '🎬',
-            cost: 50,
-            unlocksMode: 'watch'
-        },
-        {
-            id: 'notes',
-            title: 'Notes Mode',
-            description: 'Unlock the ability to take notes during practice.',
-            icon: '📓',
-            cost: 50,
-            unlocksMode: 'notes'
-        },
-        {
-            id: 'pronounce',
-            title: 'Pronunciation Analyzer',
-            description: 'Analyze your pitch and stress accuracy.',
-            icon: '🗣️',
-            cost: 50,
-            unlocksMode: 'pronounce'
-        },
-        {
-            id: 'lengthFilter',
-            title: 'Length Filter',
-            description: 'Filter sentences by length (Short, Medium, Long).',
-            icon: '📏',
-            cost: 20,
-            unlocksMode: 'lengthFilter'
-        },
-        {
-            id: 'difficultyFilter',
-            title: 'Difficulty Filter',
-            description: 'Filter questions by CEFR-aligned difficulty (Easy, Medium, Hard).',
-            icon: '🎚️',
-            cost: 30,
-            unlocksMode: 'difficultyFilter'
-        },
-        {
-            id: 'vocabBook',
-            title: 'Vocab Book',
-            description: 'Save difficult words and review them later.',
-            icon: '📖',
-            cost: 30,
-            unlocksMode: 'vocabBook'
-        },
-        {
-            id: 'survival',
-            title: 'Survival Mode',
-            description: 'Type to survive in this fast-paced roguellite mode.',
-            icon: '👾',
-            cost: 100,
-            unlocksMode: 'survival'
-        }
-    ];
+    // Core modes/features are always available (no gating).
+    const CORE_ALWAYS_UNLOCKED_MODES = new Set(['type', 'speak', 'extended', 'watch', 'notes', 'pronounce', 'survival', 'autoAdjust']);
+
+    // Legacy "modes" mapped to passive skill IDs.
+    const FILTER_SKILL_MAP = {
+        lengthFilter: 'length_filter',
+        difficultyFilter: 'difficulty_filter'
+    };
 
     let userCoins = 0;
-    let unlockedModes = [...CORE_ALWAYS_UNLOCKED_MODES, 'difficultyFilter']; // default
+    let unlockedModes = [...CORE_ALWAYS_UNLOCKED_MODES];
     let unlockedSkills = {};
     let userProfileSnapshot = {};
-    let purchaseHistory = []; // Cache for purchase dates
     let isInitialized = false;
 
-    // DOM Elements - retrieved in init() to ensure DOM is ready
+    // DOM elements (resolved in init()).
     let modal = null;
     let closeBtn = null;
-    let balanceDisplay = null;
-    let shopGrid = null;
-    let notificationDot = null;
 
-    /**
-     * Initialize the shop module
-     */
     function init() {
         if (isInitialized) return;
 
-        // Retrieve DOM elements now that DOM is ready
         modal = document.getElementById('shop-modal');
         closeBtn = document.getElementById('shop-close-btn');
-        balanceDisplay = document.getElementById('shop-balance-display');
-        notificationDot = document.querySelector('.shop-notification');
 
-        // Target grid has changed in index.html to #shop-grid
-        shopGrid = document.getElementById('shop-grid');
-        notificationDot = document.querySelector('.shop-notification');
-
-        // Event listeners
         if (closeBtn) closeBtn.addEventListener('click', closeShop);
         if (modal) {
             modal.addEventListener('click', (e) => {
@@ -121,518 +36,257 @@ const ShopModule = (() => {
             });
         }
 
-        // Subscribe to auth changes to refresh data
-        if (window.authUI) {
-            // we rely on global auth state or events. 
-            // script.js often reloads stuff on login.
-            // We can expose a refresh method.
-        }
-
-        // Initialize data
-        refreshUserData().then(() => {
+        // Prime caches.
+        refreshUserData().finally(() => {
             isInitialized = true;
-            initTabs(); // Initialize tabs after data is ready
-            console.log('🛒 Shop Module Initialized and data refreshed');
         });
     }
 
     /**
-     * Open the shop modal
+     * Open the Journey modal (Skill Tree only).
+     * Kept as openShop for backward compatibility with existing callers.
      */
     async function openShop() {
         if (!modal) return;
-
         await refreshUserData();
-        renderShop();
         modal.classList.add('active');
-
-        // Hide notification when opening shop
-        if (notificationDot) notificationDot.style.display = 'none';
-
-        // Mark tutorial as seen if needed (handled in tutorial.js)
+        await renderSkillTree();
     }
 
-    /**
-     * Close the shop modal
-     */
     function closeShop() {
         if (!modal) return;
         modal.classList.remove('active');
     }
 
     /**
-     * Refresh user data (coins, unlocked modes, purchases) from Firestore or AuthUI
-     * With localStorage fallback to preserve unlock state when Firestore fails
+     * Refresh user data (coins, unlocked modes, skill unlocks) from Firestore.
+     * Falls back to localStorage caches when Firestore fails.
      */
     async function refreshUserData() {
         const userId = window.authUI?.getCurrentUserId?.();
         if (!userId) {
-            // Guest mode defaults
             userCoins = 0;
             unlockedModes = [...CORE_ALWAYS_UNLOCKED_MODES];
             unlockedSkills = {};
             userProfileSnapshot = {};
-            purchaseHistory = [];
             return;
         }
 
-        // Try to load from localStorage as fallback
         const cachedModes = localStorage.getItem(`unlockedModes_${userId}`);
         const cachedCoins = localStorage.getItem(`coins_${userId}`);
         const cachedSkills = localStorage.getItem(`unlockedSkills_${userId}`);
 
         try {
             const result = await window.firebaseFirestoreFunctions.getUserProfile(userId);
-            if (result.success) {
-                userProfileSnapshot = result.data || {};
-                userCoins = result.data.coins || 0;
-                const remoteModes = result.data.unlockedModes || [];
-                unlockedModes = [...new Set([...remoteModes, ...CORE_ALWAYS_UNLOCKED_MODES])];
-                unlockedSkills = result.data.unlockedSkills || {};
-                updateBalanceDisplay();
-
-                // Cache to localStorage for fallback
-                localStorage.setItem(`unlockedModes_${userId}`, JSON.stringify(unlockedModes));
-                localStorage.setItem(`coins_${userId}`, String(userCoins));
-                localStorage.setItem(`unlockedSkills_${userId}`, JSON.stringify(unlockedSkills));
-            } else {
-                // Firestore failed - use cached data if available
-                console.warn('Firestore getUserProfile failed, using localStorage fallback');
-                if (cachedModes) {
-                    try {
-                        unlockedModes = JSON.parse(cachedModes);
-                    } catch (e) {
-                        unlockedModes = [...CORE_ALWAYS_UNLOCKED_MODES];
-                    }
-                }
-                if (cachedCoins) {
-                    userCoins = parseInt(cachedCoins, 10) || 0;
-                }
-                if (cachedSkills) {
-                    try {
-                        unlockedSkills = JSON.parse(cachedSkills) || {};
-                    } catch (e) {
-                        unlockedSkills = {};
-                    }
-                }
-                unlockedModes = [...new Set([...(unlockedModes || []), ...CORE_ALWAYS_UNLOCKED_MODES])];
-                updateBalanceDisplay();
+            if (!result?.success) {
+                throw new Error('getUserProfile failed');
             }
 
-            // Fetch purchase history to get dates (non-critical)
-            try {
-                const purchasesResult = await window.firebaseFirestoreFunctions.getPurchases(userId);
-                if (purchasesResult && purchasesResult.success) {
-                    purchaseHistory = purchasesResult.data;
-                }
-            } catch (purchaseError) {
-                console.warn('Failed to load purchase history (permissions):', purchaseError);
-                // Non-critical, continue with what we have
-            }
+            userProfileSnapshot = result.data || {};
+            userCoins = Number(userProfileSnapshot.coins) || 0;
+            const remoteModes = Array.isArray(userProfileSnapshot.unlockedModes) ? userProfileSnapshot.unlockedModes : [];
+            unlockedModes = [...new Set([...remoteModes, ...CORE_ALWAYS_UNLOCKED_MODES])];
+            unlockedSkills = userProfileSnapshot.unlockedSkills && typeof userProfileSnapshot.unlockedSkills === 'object'
+                ? userProfileSnapshot.unlockedSkills
+                : {};
+
+            localStorage.setItem(`unlockedModes_${userId}`, JSON.stringify(unlockedModes));
+            localStorage.setItem(`coins_${userId}`, String(userCoins));
+            localStorage.setItem(`unlockedSkills_${userId}`, JSON.stringify(unlockedSkills));
         } catch (error) {
-            console.error('Error refreshing shop data:', error);
-            // Ensure we have some data from cache
-            if (!unlockedModes || unlockedModes.length <= 1) {
-                if (cachedModes) {
-                    try {
-                        unlockedModes = JSON.parse(cachedModes);
-                    } catch (e) {
-                        unlockedModes = unlockedModes || [...CORE_ALWAYS_UNLOCKED_MODES];
-                    }
+            console.warn('[ShopModule] refreshUserData fallback:', error);
+
+            if (cachedModes) {
+                try {
+                    unlockedModes = JSON.parse(cachedModes);
+                } catch (e) {
+                    unlockedModes = [...CORE_ALWAYS_UNLOCKED_MODES];
                 }
+            } else {
+                unlockedModes = [...CORE_ALWAYS_UNLOCKED_MODES];
             }
-            if (userCoins === 0 && cachedCoins) {
+
+            if (cachedCoins) {
                 userCoins = parseInt(cachedCoins, 10) || 0;
+            } else {
+                userCoins = 0;
             }
-            if (cachedSkills && Object.keys(unlockedSkills || {}).length === 0) {
+
+            if (cachedSkills) {
                 try {
                     unlockedSkills = JSON.parse(cachedSkills) || {};
                 } catch (e) {
                     unlockedSkills = {};
                 }
+            } else {
+                unlockedSkills = {};
             }
+
             unlockedModes = [...new Set([...(unlockedModes || []), ...CORE_ALWAYS_UNLOCKED_MODES])];
-            updateBalanceDisplay();
+            userProfileSnapshot = userProfileSnapshot && typeof userProfileSnapshot === 'object'
+                ? userProfileSnapshot
+                : {};
         }
     }
 
-    /**
-     * Update the balance display in the modal
-     */
-    function updateBalanceDisplay() {
-        if (balanceDisplay) {
-            balanceDisplay.textContent = userCoins;
-            // animate change?
-        }
+    function isSkillGranted(skillId) {
+        if (!skillId) return false;
+        if (unlockedSkills && unlockedSkills[skillId] === true) return true;
+        if (userProfileSnapshot?.unlockedSkills?.[skillId] === true) return true;
+        if (userProfileSnapshot?.skillPassives?.[skillId]) return true;
+        return false;
     }
 
-    /**
-     * Render the shop items
-     */
-    function renderShop() {
-        if (!shopGrid) return;
-        shopGrid.innerHTML = '';
+    // Backward-compatible helpers expected by older callers (script.js, hint system).
+    function isSkillUnlocked(skillId) {
+        if (!skillId) return false;
+        if (isSkillGranted(skillId)) return true;
 
-        const visibleItems = SHOP_ITEMS.filter(item => !CORE_ALWAYS_UNLOCKED_MODES.has(item.unlocksMode));
-
-        visibleItems.forEach(item => {
-            const isOwned = unlockedModes.includes(item.unlocksMode);
-            const canAfford = userCoins >= item.cost;
-            let unlockedDate = null;
-
-            if (isOwned) {
-                const purchase = purchaseHistory.find(p => p.itemId === item.id);
-                if (purchase && purchase.purchasedAt) {
-                    try {
-                        let date;
-                        const val = purchase.purchasedAt;
-
-                        if (val instanceof Date) {
-                            date = val;
-                        } else if (typeof val.toDate === 'function') {
-                            // Firestore Timestamp object
-                            date = val.toDate();
-                        } else if (val && typeof val === 'object' && 'seconds' in val) {
-                            // Serialized Firestore Timestamp (from JSON/cache)
-                            date = new Date(val.seconds * 1000);
-                        } else {
-                            // String or Number (timestamp)
-                            date = new Date(val);
-                        }
-
-                        if (!isNaN(date.getTime())) {
-                            unlockedDate = date.toLocaleDateString();
-                        }
-                    } catch (e) {
-                        console.warn('Error parsing date for item:', item.id, e);
-                    }
-                }
-            }
-
-            const card = document.createElement('div');
-            card.className = `shop-item ${isOwned ? 'purchased' : ''}`;
-
-            let actionButtons = '';
-            // Define which items are actual practice modes (can be "tried")
-            const practiceModesIds = ['speak', 'extended', 'watch', 'notes', 'pronounce', 'survival'];
-            const isPracticeMode = practiceModesIds.includes(item.id);
-
-            if (isOwned) {
-                if (isPracticeMode) {
-                    // Practice Modes: Try Now + What's this?
-                    actionButtons = `
-                        <div class="shop-owned-actions">
-                            <button class="shop-play-btn" data-id="${item.id}">Try Now ▶️</button>
-                            <button class="shop-tutorial-btn" data-id="${item.id}">What's this ❓</button>
-                        </div>
-                    `;
-                } else {
-                    // Features (lengthFilter, difficultyFilter, vocabBook): Only What's this?
-                    actionButtons = `
-                        <div class="shop-owned-actions">
-                            <button class="shop-tutorial-btn" data-id="${item.id}">What's this ❓</button>
-                        </div>
-                    `;
-                }
-            } else {
-                actionButtons = `
-                    <button class="shop-item-btn ${isOwned ? 'owned' : 'buy'}" 
-                        ${isOwned ? 'disabled' : (canAfford ? '' : 'disabled')}
-                        data-id="${item.id}">
-                        ${isOwned ? 'Owned' : 'Buy'}
-                    </button>
-                `;
-            }
-
-            card.innerHTML = `
-                ${!isOwned && canAfford ? '<div class="shop-item-tag">Unlockable!</div>' : ''}
-                <div class="shop-item-icon">${item.icon}</div>
-                <div class="shop-item-title">${item.title}</div>
-                <div class="shop-item-desc">${item.description}</div>
-                <div class="shop-item-price">
-                    ${isOwned ? (unlockedDate ? `<span class="unlocked-date">Unlocked: ${unlockedDate}</span>` : 'Purchased') : `🪙 ${item.cost}`}
-                </div>
-                ${actionButtons}
-            `;
-
-            // Attach handlers
-            if (isOwned) {
-                const playBtn = card.querySelector('.shop-play-btn');
-                const tutorialBtn = card.querySelector('.shop-tutorial-btn');
-                const settingsBtn = card.querySelector('.shop-settings-btn');
-
-                if (playBtn) playBtn.onclick = () => activateFeature(item);
-                if (tutorialBtn) tutorialBtn.onclick = () => replayTutorial(item);
-                if (settingsBtn) settingsBtn.onclick = () => {
-                    closeShop();
-                    if (window.DifficultyManager && window.DifficultyManager.openSettings) {
-                        window.DifficultyManager.openSettings();
-                    }
-                };
-            } else {
-                const btn = card.querySelector('.shop-item-btn');
-                if (canAfford) {
-                    btn.onclick = () => purchaseItem(item);
-                }
-            }
-
-            shopGrid.appendChild(card);
-        });
-    }
-
-    /**
-     * Activate the feature (switch tab, etc.)
-     */
-    function activateFeature(item) {
-        closeShop();
-
-        // Map item ID to tab ID or action
-        const tabMap = {
-            'speak': 'tab-speak',
-            'extended': 'tab-extended',
-            'watch': 'tab-watch',
-            'notes': 'tab-notes',
-            'pronounce': 'tab-pronounce',
-            'vocabBook': 'tab-vocab',
-            'survival': 'survival'
-        };
-
-        if (item.id === 'survival') {
-            if (window.openSurvivalGame) {
-                window.openSurvivalGame();
-            }
-            return;
-        }
-
-        if (tabMap[item.id]) {
-            const tab = document.getElementById(tabMap[item.id]);
-            if (tab) tab.click();
-        } else if (item.id === 'lengthFilter') {
-            // Special handling for length filter (maybe focus on filter dropdown?)
-            const filter = document.getElementById('length-filter');
-            if (filter) {
-                filter.focus();
-                filter.classList.add('highlight-pulse');
-                setTimeout(() => filter.classList.remove('highlight-pulse'), 2000);
-            }
-        }
-    }
-
-    /**
-     * Replay tutorial for the feature
-     */
-    function replayTutorial(item) {
-        closeShop();
-        if (window.startTutorial) {
-            // Map item ID to tutorial mode name if different
-            // For most, item.id matches tutorial mode
-            window.startTutorial(item.id, true); // true = force replay
-        }
-    }
-
-    /**
-     * Handle item purchase
-     */
-    /**
-     * Show a generic confirmation modal
-     */
-    function showConfirmModal(title, message) {
-        return new Promise((resolve) => {
-            const modalId = 'shop-confirm-modal';
-            let modal = document.getElementById(modalId);
-
-            if (modal) modal.remove();
-
-            modal = document.createElement('div');
-            modal.id = modalId;
-            modal.className = 'shop-modal active';
-            modal.style.zIndex = '11000'; // Above shop modal
-
-            modal.innerHTML = `
-                <div class="shop-modal-content" style="max-width: 400px; text-align: center; padding: 30px;">
-                    <h3 style="margin-top: 0; color: #1e293b;">${title}</h3>
-                    <p style="color: #64748b; margin-bottom: 24px; line-height: 1.5;">${message}</p>
-                    <div style="display: flex; gap: 12px; justify-content: center;">
-                        <button id="${modalId}-cancel" style="padding: 10px 20px; border: 1px solid #e2e8f0; background: white; border-radius: 8px; cursor: pointer; font-weight: 600; color: #64748b;">Cancel</button>
-                        <button id="${modalId}-confirm" style="padding: 10px 20px; border: none; background: #2563eb; color: white; border-radius: 8px; cursor: pointer; font-weight: 600;">Confirm</button>
-                    </div>
-                </div>
-            `;
-
-            document.body.appendChild(modal);
-
-            const confirmBtn = document.getElementById(`${modalId}-confirm`);
-            const cancelBtn = document.getElementById(`${modalId}-cancel`);
-
-            function cleanup() {
-                modal.remove();
-            }
-
-            confirmBtn.onclick = () => {
-                cleanup();
-                resolve(true);
-            };
-
-            cancelBtn.onclick = () => {
-                cleanup();
-                resolve(false);
-            };
-
-            // Close on click outside
-            modal.onclick = (e) => {
-                if (e.target === modal) {
-                    cleanup();
-                    resolve(false);
-                }
-            };
-        });
-    }
-
-    /**
-     * Show a generic alert modal
-     */
-    function showAlertModal(message, isError = false) {
-        const modalId = 'shop-alert-modal';
-        let modal = document.getElementById(modalId);
-
-        if (modal) modal.remove();
-
-        modal = document.createElement('div');
-        modal.id = modalId;
-        modal.className = 'shop-modal active';
-        modal.style.zIndex = '11000'; // Above shop modal
-
-        modal.innerHTML = `
-            <div class="shop-modal-content" style="max-width: 400px; text-align: center; padding: 30px;">
-                <div style="font-size: 3rem; margin-bottom: 16px;">${isError ? '⚠️' : '✅'}</div>
-                <p style="color: #64748b; margin-bottom: 24px; line-height: 1.5; font-size: 1.1rem;">${message}</p>
-                <button id="${modalId}-ok" style="padding: 10px 30px; border: none; background: ${isError ? '#ef4444' : '#22c55e'}; color: white; border-radius: 8px; cursor: pointer; font-weight: 600;">OK</button>
-            </div>
-        `;
-
-        document.body.appendChild(modal);
-
-        document.getElementById(`${modalId}-ok`).onclick = () => modal.remove();
-        modal.onclick = (e) => {
-            if (e.target === modal) modal.remove();
-        };
-    }
-
-    /**
-     * Handle item purchase
-     */
-    async function purchaseItem(item) {
-        const userId = window.authUI?.getCurrentUserId?.();
-        if (!userId) {
-            showAlertModal('Please log in to make purchases.', true);
-            return;
-        }
-
-        if (CORE_ALWAYS_UNLOCKED_MODES.has(item.unlocksMode)) {
-            showAlertModal('This mode is available by default.');
-            return;
-        }
-
-        const confirmed = await showConfirmModal(
-            'Confirm Purchase',
-            `Purchase <strong>${item.title}</strong> for <strong>${item.cost} coins</strong>?`
-        );
-
-        if (confirmed) {
-            // Optimistic UI update
-            const originalCoins = userCoins;
-            userCoins -= item.cost;
-            unlockedModes.push(item.unlocksMode);
-            updateBalanceDisplay();
-            renderShop();
-
-            try {
-                // Perform authoritative purchase via Cloud Function
-                const purchaseResult = await window.callPurchaseItem(item.id);
-
-                if (!purchaseResult.success) {
-                    throw new Error(purchaseResult.error);
-                }
-
-                // Success!
-                // Trigger refresh in main script to unlock tabs
-                if (window.refreshLockedTabs) window.refreshLockedTabs();
-
-                // Dispatch event for other modules (e.g., DifficultyManager)
-                window.dispatchEvent(new CustomEvent('shop-unlock', {
-                    detail: { mode: item.unlocksMode }
-                }));
-
-                // Refresh full data to get correct server timestamp for UI
-                await refreshUserData();
-                renderShop();
-
-                // Show success modal
-                showAlertModal(`Successfully unlocked ${item.title}!`);
-
-            } catch (error) {
-                console.error('Purchase failed:', error);
-
-                // Revert
-                userCoins = originalCoins;
-                unlockedModes = unlockedModes.filter(m => m !== item.unlocksMode);
-                updateBalanceDisplay();
-                renderShop();
-
-                showAlertModal('Purchase failed. Please try again.', true);
-            }
-        }
-    }
-
-    /**
-     * Check if a mode is unlocked (synchronous check against cached data)
-     * Useful for script.js to check before switching tabs
-     * Enhanced with localStorage fallback for resilience
-     */
-    function isModeUnlocked(mode) {
-        if (CORE_ALWAYS_UNLOCKED_MODES.has(mode)) return true;
-
-        // If user is guest, only core modes are allowed
         const userId = window.authUI?.getCurrentUserId?.();
         if (!userId) return false;
 
-        // Check in-memory cache first
-        if (unlockedModes.includes(mode)) {
-            return true;
+        try {
+            const cachedSkills = localStorage.getItem(`unlockedSkills_${userId}`);
+            if (cachedSkills) {
+                const parsed = JSON.parse(cachedSkills);
+                if (parsed && parsed[skillId] === true) {
+                    unlockedSkills = parsed;
+                    return true;
+                }
+            }
+
+            const cachedProfile = localStorage.getItem(`userProfile_${userId}`);
+            if (cachedProfile) {
+                const profile = JSON.parse(cachedProfile);
+                if (profile?.unlockedSkills?.[skillId] === true || profile?.skillPassives?.[skillId]) {
+                    userProfileSnapshot = profile;
+                    if (profile?.unlockedSkills && typeof profile.unlockedSkills === 'object') {
+                        unlockedSkills = profile.unlockedSkills;
+                    }
+                    return true;
+                }
+            }
+        } catch (e) {
+            console.warn('[ShopModule] Error checking localStorage unlockedSkills:', e);
         }
 
-        // Fallback: Check localStorage directly (in case Firestore failed but cache exists)
+        return false;
+    }
+
+    function hasSkill(skillId) {
+        return isSkillUnlocked(skillId);
+    }
+
+    function getCoins() {
+        return Number(userCoins) || 0;
+    }
+
+    function setCoins(nextCoins) {
+        const userId = window.authUI?.getCurrentUserId?.();
+        userCoins = Math.max(0, parseInt(nextCoins, 10) || 0);
+        if (userProfileSnapshot && typeof userProfileSnapshot === 'object') {
+            userProfileSnapshot.coins = userCoins;
+        }
+
+        if (userId) {
+            try {
+                localStorage.setItem(`coins_${userId}`, String(userCoins));
+            } catch (e) {
+                // Ignore storage failures (private mode / quota)
+            }
+
+            try {
+                const cachedProfile = localStorage.getItem(`userProfile_${userId}`);
+                if (cachedProfile) {
+                    const profile = JSON.parse(cachedProfile);
+                    if (profile && typeof profile === 'object') {
+                        profile.coins = userCoins;
+                        localStorage.setItem(`userProfile_${userId}`, JSON.stringify(profile));
+                    }
+                }
+            } catch (e) {
+                // Ignore cache update failures
+            }
+        }
+    }
+
+    function isModeUnlockedFromLegacyCaches(mode, userId) {
+        if (unlockedModes.includes(mode)) return true;
+        if (!userId) return false;
+
         try {
-            // Check unlockedModes cache
             const cachedModes = localStorage.getItem(`unlockedModes_${userId}`);
             if (cachedModes) {
                 const modes = JSON.parse(cachedModes);
                 if (Array.isArray(modes) && modes.includes(mode)) {
-                    // Update in-memory cache for future checks
                     unlockedModes = modes;
                     return true;
                 }
             }
 
-            // Check userProfile cache
             const cachedProfile = localStorage.getItem(`userProfile_${userId}`);
             if (cachedProfile) {
                 const profile = JSON.parse(cachedProfile);
-                if (profile.unlockedModes && Array.isArray(profile.unlockedModes) && profile.unlockedModes.includes(mode)) {
-                    // Update in-memory cache for future checks
+                if (Array.isArray(profile?.unlockedModes) && profile.unlockedModes.includes(mode)) {
                     unlockedModes = profile.unlockedModes;
                     return true;
                 }
             }
         } catch (e) {
-            console.warn('Error checking localStorage for unlocked modes:', e);
+            console.warn('[ShopModule] Error checking localStorage unlockedModes:', e);
         }
 
         return false;
     }
 
     /**
-     * Update local cache of unlocked modes (called by script.js on login)
+     * Check if a mode/feature is unlocked.
+     * Filters are now passive skill unlocks with legacy unlockedModes fallback.
+     */
+    function isModeUnlocked(mode) {
+        if (CORE_ALWAYS_UNLOCKED_MODES.has(mode)) return true;
+
+        const filterSkillId = FILTER_SKILL_MAP[mode];
+        if (filterSkillId && isSkillGranted(filterSkillId)) {
+            return true;
+        }
+
+        const userId = window.authUI?.getCurrentUserId?.();
+        if (!userId) return false;
+
+        if (isModeUnlockedFromLegacyCaches(mode, userId)) {
+            return true;
+        }
+
+        if (!filterSkillId) return false;
+
+        try {
+            const cachedSkills = localStorage.getItem(`unlockedSkills_${userId}`);
+            if (cachedSkills) {
+                const parsed = JSON.parse(cachedSkills);
+                if (parsed && parsed[filterSkillId] === true) {
+                    unlockedSkills = parsed;
+                    return true;
+                }
+            }
+
+            const cachedProfile = localStorage.getItem(`userProfile_${userId}`);
+            if (cachedProfile) {
+                const profile = JSON.parse(cachedProfile);
+                if (profile?.unlockedSkills?.[filterSkillId] === true || profile?.skillPassives?.[filterSkillId]) {
+                    userProfileSnapshot = profile;
+                    return true;
+                }
+            }
+        } catch (e) {
+            console.warn('[ShopModule] Error checking localStorage unlockedSkills:', e);
+        }
+
+        return false;
+    }
+
+    /**
+     * Update local cache of unlocked modes (called by auth-ui on login).
      */
     function setUnlockedModes(modes) {
         if (Array.isArray(modes)) {
@@ -641,7 +295,7 @@ const ShopModule = (() => {
     }
 
     /**
-     * Handle RPG skill purchase via purchaseSkill Cloud Function
+     * Handle RPG skill purchase via purchaseSkill Cloud Function.
      */
     async function purchaseTreeSkill(skillNode) {
         const userId = window.authUI?.getCurrentUserId?.();
@@ -672,17 +326,28 @@ const ShopModule = (() => {
             }
 
             const purchaseResult = await window.callPurchaseSkill(skillNode.id);
-            if (!purchaseResult || !purchaseResult.success) {
+            if (!purchaseResult?.success) {
                 const msg = purchaseResult?.message || purchaseResult?.error || 'Skill purchase failed.';
                 showAlertModal(msg, true);
                 return { success: false };
             }
 
             await refreshUserData();
-            renderShop();
+            await renderSkillTree();
 
             if (window.refreshLockedTabs) {
                 window.refreshLockedTabs();
+            }
+
+            window.dispatchEvent(new CustomEvent('skill-unlock', {
+                detail: { skillId: skillNode.id }
+            }));
+
+            // Back-compat for legacy listeners.
+            if (skillNode.id === 'length_filter') {
+                window.dispatchEvent(new CustomEvent('shop-unlock', { detail: { mode: 'lengthFilter' } }));
+            } else if (skillNode.id === 'difficulty_filter') {
+                window.dispatchEvent(new CustomEvent('shop-unlock', { detail: { mode: 'difficultyFilter' } }));
             }
 
             showAlertModal(`Successfully unlocked ${skillTitle}!`);
@@ -691,132 +356,14 @@ const ShopModule = (() => {
                 userProfile: userProfileSnapshot
             };
         } catch (error) {
-            console.error('Skill purchase failed:', error);
+            console.error('[ShopModule] Skill purchase failed:', error);
             showAlertModal('Skill purchase failed. Please try again.', true);
             return { success: false };
         }
     }
 
-    function isSkillUnlocked(skillId) {
-        if (!skillId) return false;
-        const userId = window.authUI?.getCurrentUserId?.();
-        if (!userId) return false;
-        if (unlockedSkills && unlockedSkills[skillId] === true) return true;
-
-        const hasInventory = unlockedSkills && Object.keys(unlockedSkills).length > 0;
-        if (!hasInventory && STARTER_ACTIVE_SKILLS.has(skillId)) {
-            return true;
-        }
-
-        // Legacy unlock fallback
-        if (skillId === 'slow_audio' && userProfileSnapshot.slowAudioUnlocked) return true;
-        if (skillId === 'echo_loop' && (userProfileSnapshot.slowAudioUnlocked || userProfileSnapshot.replayTrainerUnlocked)) return true;
-        if ((skillId === 'hint_wc' || skillId === 'hint_fl' || skillId === 'hint_reveal') && userProfileSnapshot.hintLadderUnlocked) return true;
-        if (skillId === 'chunking' && userProfileSnapshot.chunkingModeUnlocked) return true;
-        if (skillId === 'shadow_mode' && userProfileSnapshot.shadowingModeUnlocked) return true;
-
-        return false;
-    }
-
-    function setUnlockedSkills(skills) {
-        unlockedSkills = skills && typeof skills === 'object' ? skills : {};
-    }
-
-    function getUnlockedSkills() {
-        return { ...(unlockedSkills || {}) };
-    }
-
-    function setCoins(amount) {
-        userCoins = amount;
-        updateBalanceDisplay();
-
-        // Check for affordable items to show notification
-        checkForAffordableItems();
-    }
-
-    function checkForAffordableItems() {
-        if (!notificationDot) return;
-
-        const affordableItem = SHOP_ITEMS.find(item =>
-            !CORE_ALWAYS_UNLOCKED_MODES.has(item.unlocksMode) &&
-            !unlockedModes.includes(item.unlocksMode) && userCoins >= item.cost
-        );
-
-        if (affordableItem) {
-            notificationDot.style.display = 'block';
-        } else {
-            notificationDot.style.display = 'none';
-        }
-    }
-
-    function deductCoins(amount) {
-        // Check if user has enough coins
-        if (userCoins < amount) return false;
-
-        const userId = window.authUI?.getCurrentUserId?.();
-        if (!userId) return false;
-
-        // Optimistic UI update
-        const originalCoins = userCoins;
-        userCoins -= amount;
-        updateBalanceDisplay();
-
-        // Sync with backend
-        // We use updateUserProfile which should be available
-        if (window.firebaseFirestoreFunctions && window.firebaseFirestoreFunctions.updateUserProfile) {
-            window.firebaseFirestoreFunctions.updateUserProfile(userId, { coins: userCoins })
-                .catch(err => {
-                    console.error('Failed to sync coin deduction:', err);
-                    // Revert on failure
-                    userCoins = originalCoins;
-                    updateBalanceDisplay();
-                });
-        }
-
-        return true;
-    }
-
-    function getUserCoins() {
-        return userCoins;
-    }
-
-    // Initialize on load
-    document.addEventListener('DOMContentLoaded', init);
-
     /**
-     * Initialize tab navigation within the shop modal
-     */
-    function initTabs() {
-        const tabBtns = document.querySelectorAll('.shop-tab-btn');
-        const tabContents = document.querySelectorAll('.shop-tab-content');
-
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const target = btn.dataset.target;
-
-                // Update buttons
-                tabBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-
-                // Update contents
-                tabContents.forEach(content => {
-                    if (content.id === target) {
-                        content.classList.add('active');
-                    } else {
-                        content.classList.remove('active');
-                    }
-                });
-
-                // If Skill Tree tab selected, render it
-                if (target === 'skill-tree-container') {
-                    renderSkillTree();
-                }
-            });
-        });
-    }
-
-    /**
-     * Render the Skill Tree using LevelSystem
+     * Render the Skill Tree using LevelSystem.
      */
     async function renderSkillTree() {
         const container = document.getElementById('level-system-container');
@@ -832,23 +379,95 @@ const ShopModule = (() => {
         });
     }
 
+    /**
+     * Show a generic confirmation modal.
+     */
+    function showConfirmModal(title, message) {
+        return new Promise((resolve) => {
+            const modalId = 'shop-confirm-modal';
+            let confirmModal = document.getElementById(modalId);
+
+            if (confirmModal) confirmModal.remove();
+
+            confirmModal = document.createElement('div');
+            confirmModal.id = modalId;
+            confirmModal.className = 'shop-modal active';
+            confirmModal.style.zIndex = '11000'; // Above Journey modal
+
+            confirmModal.innerHTML = `
+                <div class="shop-modal-content" style="max-width: 400px; text-align: center; padding: 30px;">
+                    <h3 style="margin-top: 0; color: #1e293b;">${title}</h3>
+                    <p style="color: #64748b; margin-bottom: 24px; line-height: 1.5;">${message}</p>
+                    <div style="display: flex; gap: 12px; justify-content: center;">
+                        <button id="${modalId}-cancel" style="padding: 10px 20px; border: 1px solid #e2e8f0; background: white; border-radius: 8px; cursor: pointer; font-weight: 600; color: #64748b;">Cancel</button>
+                        <button id="${modalId}-confirm" style="padding: 10px 20px; border: none; background: #2563eb; color: white; border-radius: 8px; cursor: pointer; font-weight: 600;">Confirm</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(confirmModal);
+
+            const confirmBtn = document.getElementById(`${modalId}-confirm`);
+            const cancelBtn = document.getElementById(`${modalId}-cancel`);
+
+            function cleanup(result) {
+                confirmModal.remove();
+                resolve(result);
+            }
+
+            confirmBtn.onclick = () => cleanup(true);
+            cancelBtn.onclick = () => cleanup(false);
+            confirmModal.onclick = (e) => {
+                if (e.target === confirmModal) cleanup(false);
+            };
+        });
+    }
+
+    /**
+     * Show a generic alert modal.
+     */
+    function showAlertModal(message, isError = false) {
+        const modalId = 'shop-alert-modal';
+        let alertModal = document.getElementById(modalId);
+
+        if (alertModal) alertModal.remove();
+
+        alertModal = document.createElement('div');
+        alertModal.id = modalId;
+        alertModal.className = 'shop-modal active';
+        alertModal.style.zIndex = '11000'; // Above Journey modal
+
+        alertModal.innerHTML = `
+            <div class="shop-modal-content" style="max-width: 400px; text-align: center; padding: 30px;">
+                <div style="font-size: 3rem; margin-bottom: 16px;">${isError ? '⚠️' : '✅'}</div>
+                <p style="color: #64748b; margin-bottom: 24px; line-height: 1.5; font-size: 1.1rem;">${message}</p>
+                <button id="${modalId}-ok" style="padding: 10px 30px; border: none; background: ${isError ? '#ef4444' : '#22c55e'}; color: white; border-radius: 8px; cursor: pointer; font-weight: 600;">OK</button>
+            </div>
+        `;
+
+        document.body.appendChild(alertModal);
+
+        document.getElementById(`${modalId}-ok`).onclick = () => alertModal.remove();
+        alertModal.onclick = (e) => {
+            if (e.target === alertModal) alertModal.remove();
+        };
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+
     return {
         init,
         openShop,
         refreshUserData,
         isModeUnlocked,
         isSkillUnlocked,
-        setUnlockedModes,
-        setUnlockedSkills,
-        getUnlockedSkills,
+        hasSkill,
+        getCoins,
         setCoins,
-        deductCoins,
-        getUserCoins,
-        showConfirmModal,
+        setUnlockedModes,
         showAlertModal,
-        renderSkillTree // Expose for LevelSystem updates
+        renderSkillTree
     };
 })();
 
-// Expose to window
 window.shopModule = ShopModule;

@@ -47,6 +47,11 @@
         window.survivalGame.start();
       } else {
         window._survivalGamePendingStart = true;
+        if (typeof window.ensureSurvivalGameLoaded === 'function') {
+          window.ensureSurvivalGameLoaded().catch((error) => {
+            console.error('Failed to load Survival Game module:', error);
+          });
+        }
       }
     };
 
@@ -106,7 +111,6 @@
   </script>
   <!-- Load SRS Scheduler as Module for FSRS support -->
   <script type="module" src="/srs-scheduler.js"></script>
-  <script type="module" src="/games/penguin-crossing/penguin-crossing.js"></script>
 </head>
 
 <body>
@@ -118,24 +122,58 @@
     </div>
   </div>
 
-  <script>
-    // Failsafe: Allow dismissing preloader if it takes too long (e.g., script error or SSL block)
+    <script>
+    window.__belPreloaderDiagnostics = {
+      resourceErrors: [],
+      scriptErrors: [],
+      lastUpdatedAt: Date.now()
+    };
+
+    window.addEventListener('error', (event) => {
+      if (!window.__belPreloaderDiagnostics) return;
+      const source = event?.filename || event?.target?.src || event?.target?.href || '';
+      const message = event?.message || event?.target?.tagName || 'resource-load-error';
+      const payload = { message: String(message), source: String(source), at: Date.now() };
+      const isResourceError = !!(event?.target && event.target !== window && (event.target.src || event.target.href));
+
+      if (isResourceError) {
+        window.__belPreloaderDiagnostics.resourceErrors.push(payload);
+      } else {
+        window.__belPreloaderDiagnostics.scriptErrors.push(payload);
+      }
+      window.__belPreloaderDiagnostics.lastUpdatedAt = Date.now();
+    }, true);
+
+    window.addEventListener('unhandledrejection', (event) => {
+      if (!window.__belPreloaderDiagnostics) return;
+      const reason = event?.reason;
+      const message = typeof reason === 'string' ? reason : (reason?.message || 'unhandledrejection');
+      window.__belPreloaderDiagnostics.scriptErrors.push({
+        message: String(message),
+        source: 'promise',
+        at: Date.now()
+      });
+      window.__belPreloaderDiagnostics.lastUpdatedAt = Date.now();
+    });
+
+    // Failsafe: allow retry/dismiss if loading exceeds a reasonable wait time.
     setTimeout(() => {
       const preloader = document.getElementById('app-preloader');
-      if (preloader && preloader.style.display !== 'none') {
-        const text = document.getElementById('preloader-text');
-        console.warn('Preloader timeout: Checking module status...');
-        const modulesLoaded = window.firebaseAuthFunctions && window.firebaseFirestoreFunctions;
+      if (!preloader || preloader.style.display === 'none') return;
 
-        if (text) {
-          if (!modulesLoaded) {
-            text.innerHTML = '<span style="color:#ff6b6b;">⚠ Security/Certificate Block detected.</span><br>Some scripts failed to load. Please click below to bypass and see details in console (F12).<br><span id="preloader-bypass-btn" style="font-size:0.9em; color:#4dabf7; cursor:pointer; text-decoration:underline;">Enter App Anyway</span>';
-          } else {
-            text.innerHTML = 'Loading is taking longer than expected.<br><span id="preloader-dismiss-btn" style="font-size:0.9em; cursor:pointer; text-decoration:underline;">Dismiss loading screen</span>';
-          }
-        }
+      const text = document.getElementById('preloader-text');
+      if (!text) return;
+
+      const modulesLoaded = !!(window.firebaseAuthFunctions && window.firebaseFirestoreFunctions);
+      const diagnostics = window.__belPreloaderDiagnostics || { resourceErrors: [], scriptErrors: [] };
+      const hasErrors = (diagnostics.resourceErrors?.length || 0) > 0 || (diagnostics.scriptErrors?.length || 0) > 0;
+
+      if (!modulesLoaded || hasErrors) {
+        text.innerHTML = 'Loading is taking longer than expected.<br>If your network is unstable, retry loading or continue in limited mode.<br><span id="preloader-retry-btn" style="font-size:0.9em; color:#4dabf7; cursor:pointer; text-decoration:underline;">Retry loading</span> | <span id="preloader-dismiss-btn" style="font-size:0.9em; cursor:pointer; text-decoration:underline;">Continue</span>';
+      } else {
+        text.innerHTML = 'Still loading on this network.<br><span id="preloader-dismiss-btn" style="font-size:0.9em; cursor:pointer; text-decoration:underline;">Continue</span>';
       }
-    }, 5000); // Reduced to 5s for faster feedback
+    }, 9000);
   </script>
 
   <!-- Demo Feedback Toast (Refactored) -->
@@ -852,7 +890,7 @@
           <!-- Shopping Card -->
           <div id="panel-shopping-card" class="panel-shopping-card">
             <span class="shopping-icon">🛒</span>
-            <span class="shopping-label">SHOPPING</span>
+            <span class="shopping-label">SKILL TREE</span>
             <div class="shop-notification" style="display: none;"></div>
             <span class="shopping-arrow">›</span>
           </div>
@@ -1342,43 +1380,9 @@
                 </div>
               </div>
 
-              <!-- Penguin Crossing Card -->
-              <div id="mode-btn-penguin" class="modern-card transition-card mode-switch-btn"
-                onclick="window.openPenguinGame()" tabindex="0" role="button" aria-label="Penguin Crossing">
-                <span class="badge new">New</span>
-                <div class="card-visual visual-penguin" style="background: #e0f7fa; color: #006064;">
-                  <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
-                      <!-- Icebergs -->
-                      <path d="M10 50 L20 40 L30 50 Z" fill="currentColor" opacity="0.8" />
-                      <path d="M40 30 L50 20 L60 30 Z" fill="currentColor" opacity="0.6" />
-                      <!-- Penguin -->
-                      <circle cx="35" cy="45" r="5" fill="#333" />
-                      <circle cx="35" cy="45" r="3" fill="white" />
-                    </svg>
-                  </div>
-                </div>
-                <div class="card-body">
-                  <h3>Penguin Crossing</h3>
-                  <p>Jump across icebergs by typing words!</p>
-                  <button class="card-cta" onclick="event.stopPropagation(); window.openPenguinGame()">Play Now</button>
-                </div>
-              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Penguin Crossing Game Overlay -->
-      <div id="penguin-game-overlay"
-        style="display:none; position:fixed; inset:0; width:100vw; height:100vh; background:#000; z-index:10000; align-items:center; justify-content:center; flex-direction:column;">
-        <div style="position:absolute; top:20px; right:20px; z-index:10001;">
-          <button id="close-penguin-btn"
-            style="background:rgba(255,255,255,0.15); color:white; border:1px solid rgba(255,255,255,0.3); padding:8px 20px; border-radius:8px; cursor:pointer; font-size:14px; backdrop-filter:blur(4px);">
-            Exit Game</button>
-        </div>
-        <canvas id="penguin-canvas" width="800" height="600"
-          style="background:#006994; width:800px; height:600px; max-width:95vw; max-height:85vh; object-fit:contain; box-shadow:0 0 40px rgba(0,120,200,0.3); border-radius:8px;"></canvas>
       </div>
 
       <!-- Lower tabs now hidden - kept for JS compatibility -->
@@ -1618,29 +1622,47 @@
         </div>
         <div class="unified-controls">
           <div class="control-toolbar">
-            <div class="playback-group">
+            <div class="function-group">
               <button id="play-btn" class="modern-btn modern-btn--play" type="button">Play</button>
+              <button id="check-btn" class="modern-btn modern-btn--check" type="button"
+                style="display: none;">Check</button>
+              <button id="retry-btn" class="modern-btn modern-btn--retry" type="button"
+                style="display: none;">Retry</button>
+            </div>
+
+            <div class="utility-group">
               <div class="audio-tools">
                 <button id="speed-toggle-btn" class="tool-btn" title="Playback Speed">1.0x</button>
                 <button id="loop-btn" class="tool-btn" title="Loop Audio">🔁</button>
+                <button id="chunking-btn" class="tool-btn" title="Segment Audio (Cost: 4c)"
+                  style="display: none;">➗</button>
               </div>
-            </div>
-
-            <div class="status-group">
-              <span id="replay-counter-type" class="badge-status badge-replay"></span>
+              <span id="replay-counter-type" class="badge-status badge-replay"
+                title="Audio replays remaining for this question"></span>
               <div id="hint-controls" class="hint-controls">
                 <button id="hint-btn" class="hint-badge-btn" title="Get a hint">
                   <span class="hint-icon">💡</span> Hint
                   <span id="hint-cost-badge" class="hint-cost"></span>
                 </button>
+                <!-- RPG Action Popover -->
+                <div id="action-popover-menu" class="action-popover-menu" style="display: none;">
+                  <button id="skill-word-ghost" class="popover-item" title="Impact: -0.15x Calibration">
+                    <span class="popover-icon">👻</span>
+                    <span class="popover-label">Word Ghost</span>
+                    <span class="popover-cost">15c</span>
+                  </button>
+                  <button id="skill-first-letter" class="popover-item" title="Impact: -0.35x Calibration">
+                    <span class="popover-icon">👁️</span>
+                    <span class="popover-label">First-Letter Peek</span>
+                    <span class="popover-cost">25c</span>
+                  </button>
+                  <button id="skill-transcript-glimpse" class="popover-item" title="Impact: -0.60x Calibration">
+                    <span class="popover-icon">📜</span>
+                    <span class="popover-label">Flash Transcript</span>
+                    <span class="popover-cost">8c</span>
+                  </button>
+                </div>
               </div>
-            </div>
-
-            <div class="action-group">
-              <button id="check-btn" class="modern-btn modern-btn--check" type="button"
-                style="display: none;">Check</button>
-              <button id="retry-btn" class="modern-btn modern-btn--retry" type="button"
-                style="display: none;">Retry</button>
             </div>
           </div>
           <div id="auto-hints-type" class="auto-hints-type-drawer" style="display: none;"></div>
@@ -1787,19 +1809,33 @@
         <div class="question-total">
           <span>Total number of questions: <span id="total-questions-speak">1</span></span>
         </div>
-        <div class="controls">
-          <button id="play-btn-speak" class="modern-btn modern-btn--play" type="button">Play</button>
-          <button id="record-btn" class="modern-btn modern-btn--record" type="button">Start Recording</button>
-          <button id="check-btn-speak" class="modern-btn modern-btn--check" type="button"
-            style="display: none;">Check</button>
-          <button id="retry-btn-speak" class="modern-btn modern-btn--retry" type="button"
-            style="display: none;">Retry</button>
+        <div class="unified-controls">
+          <div class="control-toolbar">
+            <div class="function-group">
+              <button id="play-btn-speak" class="modern-btn modern-btn--play" type="button">Play</button>
+              <button id="record-btn" class="modern-btn modern-btn--record" type="button">Start Recording</button>
+              <button id="check-btn-speak" class="modern-btn modern-btn--check" type="button"
+                style="display: none;">Check</button>
+              <button id="retry-btn-speak" class="modern-btn modern-btn--retry" type="button"
+                style="display: none;">Retry</button>
+            </div>
+
+            <div class="utility-group">
+              <button id="shadow-mode-btn" class="tool-btn" title="Shadow Mode (Cost: 5c)"
+                style="display: none;">🎙️</button>
+              <span id="replay-counter-speak" class="badge-status badge-replay"
+                title="Audio replays remaining for this question"></span>
+            </div>
+          </div>
         </div>
-        <span id="replay-counter-speak" class="badge-status badge-replay"></span>
         <div id="score-speak" class="score">Points: 0</div>
 
 
 
+        <div id="pron-rune-display" class="pron-rune-display" style="display: none;">
+          <span class="pron-rune-label">🔮 IPA Guide:</span>
+          <span id="pron-rune-text" class="pron-rune-text"></span>
+        </div>
         <span class="input-label">Speak what you hear:</span>
         <div id="transcription-display" class="transcription-display">
           <div id="transcription-text" class="transcription-text">Click "Start Recording" and speak...</div>
@@ -1824,6 +1860,32 @@
             <button id="next-btn-extended" class="nav-btn nav-btn-next" type="button" title="Next Question">
               Next →
             </button>
+          </div>
+          <div class="question-filters-row">
+            <div id="difficulty-filter-container-extended" class="difficulty-filter-dropdown" style="display: none;">
+              <button id="difficulty-filter-btn-extended" class="difficulty-filter-btn" type="button">
+                <span id="difficulty-filter-label-extended">Filter by Difficulty</span>
+                <span class="filter-arrow">▼</span>
+              </button>
+              <div id="difficulty-filter-menu-extended" class="difficulty-filter-menu" style="display: none;">
+                <div class="filter-option selected" data-value="all">
+                  <span class="filter-option-icon">ALL</span>
+                  <span class="filter-option-text">All Levels</span>
+                </div>
+                <div class="filter-option" data-value="1">
+                  <span class="filter-option-icon">L1</span>
+                  <span class="filter-option-text">Level 1 <span class="difficulty-tag easy">Easy</span></span>
+                </div>
+                <div class="filter-option" data-value="2">
+                  <span class="filter-option-icon">L2</span>
+                  <span class="filter-option-text">Level 2 <span class="difficulty-tag medium">Medium</span></span>
+                </div>
+                <div class="filter-option" data-value="3">
+                  <span class="filter-option-icon">L3</span>
+                  <span class="filter-option-text">Level 3 <span class="difficulty-tag hard">Hard</span></span>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="question-total">
             <span>Total number of questions: <span id="total-questions-extended">1</span></span>
@@ -2020,6 +2082,32 @@
 
           <!-- Filters Row: Status Filter -->
           <div class="question-filters-row">
+            <!-- Difficulty Filter -->
+            <div id="difficulty-filter-container-notes" class="difficulty-filter-dropdown" style="display: none;">
+              <button id="difficulty-filter-btn-notes" class="difficulty-filter-btn" type="button">
+                <span id="difficulty-filter-label-notes">Filter by Difficulty</span>
+                <span class="filter-arrow">▼</span>
+              </button>
+              <div id="difficulty-filter-menu-notes" class="difficulty-filter-menu" style="display: none;">
+                <div class="filter-option selected" data-value="all">
+                  <span class="filter-option-icon">📋</span>
+                  <span class="filter-option-text">All Levels</span>
+                </div>
+                <div class="filter-option" data-value="1">
+                  <span class="filter-option-icon">🟢</span>
+                  <span class="filter-option-text">Level 1 <span class="difficulty-tag easy">Easy</span></span>
+                </div>
+                <div class="filter-option" data-value="2">
+                  <span class="filter-option-icon">🟡</span>
+                  <span class="filter-option-text">Level 2 <span class="difficulty-tag medium">Medium</span></span>
+                </div>
+                <div class="filter-option" data-value="3">
+                  <span class="filter-option-icon">🔴</span>
+                  <span class="filter-option-text">Level 3 <span class="difficulty-tag hard">Hard</span></span>
+                </div>
+              </div>
+            </div>
+
             <div class="status-filter-dropdown" id="status-filter-container-notes">
               <button id="status-filter-btn-notes" class="status-filter-btn" type="button">
                 <span id="status-filter-label-notes">Filter by Status</span>
@@ -2284,6 +2372,7 @@
   <script src="js/points-logic.js"></script>
   <script src="js/skill-catalog.js"></script>
   <script type="module" src="js/difficulty-manager.js"></script>
+  <script src="js/adaptive-engine-ui.js"></script>
   <script src="js/performance-tracker.js"></script>
   <script src="hint-system.js"></script>
   <script type="module" src="firebase-auth-module.js"></script>
@@ -2291,6 +2380,8 @@
   <script type="module" src="auth-ui.js"></script>
   <script src="js/modules/level-system.js"></script>
   <script src="shop-module.js"></script>
+  <script src="difficulty-filter.js"></script>
+  <script src="js/lazy-loader.js"></script>
   <script type="module" src="script.js"></script>
   <!-- Points Toast Notification Container -->
   <div id="points-toast-container" class="points-toast-container"></div>
@@ -2315,26 +2406,8 @@
         <h2>Your Journey</h2>
         <button class="shop-close-btn" id="shop-close-btn">&times;</button>
       </div>
-
-      <!-- Tab Navigation -->
-      <div class="shop-tabs">
-        <button class="shop-tab-btn active" data-target="shop-items-container">Shop</button>
-        <button class="shop-tab-btn" data-target="skill-tree-container">Skill Tree</button>
-      </div>
-
       <div class="shop-body">
-        <!-- Shop Items Container -->
-        <div id="shop-items-container" class="shop-tab-content active">
-          <div class="shop-balance">
-            <span>🪙</span> <span id="shop-balance-display">0</span>
-          </div>
-          <div id="shop-grid" class="shop-grid">
-            <!-- Rendered by shop-module.js -->
-          </div>
-        </div>
-
-        <!-- Skill Tree Container -->
-        <div id="skill-tree-container" class="shop-tab-content">
+        <div id="skill-tree-container" class="shop-tab-content active">
           <div id="level-system-container" class="level-system-container">
             <!-- JS will render Level Header & Skill Tree here -->
           </div>
@@ -2504,12 +2577,7 @@
     }
     console.log('✓ Firebase compat SDK initialized for Watch mode');
   </script>
-  <script src="https://unpkg.com/compromise"></script>
-  <!-- Excel Parser (Must be loaded before watch-mode.js) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="youtube-player.js"></script>
-  <script src="watch-mode.js"></script>
-  <script src="take-notes-mode.js"></script>
+  <!-- Watch/Notes heavy scripts are lazy-loaded by js/lazy-loader.js -->
 
   <!-- Dictionary Service (Definitions & Translations) -->
   <script src="dictionary-service.js"></script>
@@ -2625,9 +2693,6 @@
     }
   </script>
 
-  <!-- NLP Library (Compromise) -->
-  <script src="https://unpkg.com/compromise"></script>
-
   <!-- Confetti Library -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
@@ -2644,10 +2709,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script type="module" src="pronunciation-analyzer/main.js?v=20260128_forms"></script>
 
-
   <!-- Optimization: Scripts moved from Head -->
-  <!-- XLSX Library -->
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js" defer></script>
   <!-- Wavesurfer.js for syllable verification -->
   <script src="https://unpkg.com/wavesurfer.js@7" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7/dist/plugins/regions.min.js" defer></script>
@@ -2666,6 +2728,10 @@
 
     // Security: Event Listeners for Dynamic Elements
     document.addEventListener('click', (e) => {
+      if (e.target.id === 'preloader-retry-btn') {
+        window.location.reload();
+        return;
+      }
       if (e.target.id === 'preloader-bypass-btn' || e.target.id === 'preloader-dismiss-btn') {
         document.getElementById('app-preloader').style.display = 'none';
       }
@@ -2782,28 +2848,41 @@
     <button id="survival-close-btn" class="survival-close-btn">×</button>
   </div>
 
+  <!-- Dictionary Peek Components -->
+  <div id="dict-peek-bubble" class="dict-peek-bubble" style="display: none;">
+    <button id="dict-peek-btn" class="dict-peek-btn">
+      <span class="icon">📖</span> Define (<span id="dict-peek-cost">--</span>c)
+    </button>
+  </div>
+  <div id="dict-peek-modal" class="dict-peek-modal" style="display: none;">
+    <div class="dict-peek-modal-content">
+      <div class="dict-peek-header">
+        <h3 id="dict-peek-word">Word</h3>
+        <button id="dict-peek-close" class="close-btn">×</button>
+      </div>
+      <div id="dict-peek-body" class="dict-peek-body"></div>
+    </div>
+  </div>
+
   <!-- Game Scripts -->
   <script type="module">
-    import SurvivalGame from './js/survival-game/SurvivalGame.js';
-    const initGame = () => {
-      if (!window.survivalGame) {
-        try {
-          window.survivalGame = new SurvivalGame();
-          if (window._survivalGamePendingStart) {
-            window.survivalGame.start();
-            window._survivalGamePendingStart = false;
-          }
-        } catch (e) {
-          console.error('SurvivalGame initialization failed:', e);
-        }
-      }
-    };
+    let survivalModulePromise = null;
 
-    if (document.readyState === 'complete') {
-      initGame();
-    } else {
-      window.addEventListener('load', () => setTimeout(initGame, 500));
-    }
+    window.ensureSurvivalGameLoaded = async () => {
+      if (!window.survivalGame) {
+        if (!survivalModulePromise) {
+          survivalModulePromise = import('./js/survival-game/SurvivalGame.js');
+        }
+        const module = await survivalModulePromise;
+        const SurvivalGame = module.default;
+        window.survivalGame = new SurvivalGame();
+      }
+      if (window._survivalGamePendingStart && typeof window.survivalGame.start === 'function') {
+        window.survivalGame.start();
+        window._survivalGamePendingStart = false;
+      }
+      return window.survivalGame;
+    };
 
 
     const closeSurvivalOverlay = () => {
@@ -2828,7 +2907,8 @@
 
     document.getElementById('survival-close-btn').onclick = closeSurvivalOverlay;
 
-    document.getElementById('survival-retry-btn').onclick = () => {
+    document.getElementById('survival-retry-btn').onclick = async () => {
+      await window.ensureSurvivalGameLoaded();
       window.survivalGame.start();
       document.getElementById('survival-gameover-modal').style.display = 'none';
     };
@@ -2885,6 +2965,7 @@
     // Note: openSurvivalGame is now defined in the head to avoid race conditions.
 
   </script>
+  <script src="js/sw-register.js"></script>
 </body>
 
 </html>

@@ -1,0 +1,6 @@
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+[Dict] Loaded 34 words.
+[SECURE] Firebase Admin initialized.
+[SECURE] Server running with TRUSTED CA on https://localhost:8443
+[AI-Cache] HIT 5968feed09dbc1052cc59a2fd349c37b0cc3322b1c3709e636a24b4db2189e34
+[AI-Cache] HIT 5968feed09dbc1052cc59a2fd349c37b0cc3322b1c3709e636a24b4db2189e34

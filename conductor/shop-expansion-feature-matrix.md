@@ -21,7 +21,7 @@ This document outlines proposed features for the Shop expansion, mapped to **cur
 - **Recommended Fit**:
   - **P**: Fill/Extended
   - **S**: Type
-- **Implementation Note**: Display `_ _ _` placeholders derived from the `data-correct` length. Best implemented in `Fill` or `Extended` modes.
+- **Implementation Note**: Display `_ _ _` placeholders derived from the `data-correct` length. Best implemented in `Fill` or `Extended` modes. **(Implemented via RPG Action Popover)**
 
 ### **First-Letter Peek** (Stage 1)
 
@@ -29,7 +29,7 @@ This document outlines proposed features for the Shop expansion, mapped to **cur
 - **Recommended Fit**:
   - **P**: Fill/Extended
   - **S**: Type
-- **Implementation Note**: Distinct from existing "Hints". This should be a **timed peek** (e.g., reveals letter for 800ms) rather than a persistent reveal.
+- **Implementation Note**: Distinct from existing "Hints". This should be a **timed peek** (e.g., reveals letter for 800ms) rather than a persistent reveal. **(Implemented via RPG Action Popover)**
 
 ### **Audio Slow-Mo** (Stage 1)
 
@@ -37,7 +37,7 @@ This document outlines proposed features for the Shop expansion, mapped to **cur
 - **Recommended Fit**:
   - **P**: Type, Speak
   - **S**: Watch, Notes
-- **Implementation Note**: Unlock playback speed controls (< 1.0x). High value for transcription (`Type`) and shadowing (`Speak`).
+- **Implementation Note**: Unlock playback speed controls (< 1.0x). High value for transcription (`Type`) and shadowing (`Speak`). **(Implemented natively in Speed Toggle)**
 
 ### **Phonetic Hint (IPA)** (Stage 2)
 
@@ -67,7 +67,7 @@ This document outlines proposed features for the Shop expansion, mapped to **cur
 - **Recommended Fit**:
   - **P**: Type
   - **S**: Fill/Extended
-- **Implementation Note**: Visualizes spelling differences. Requires per-attempt error logging, not just "missed word" counts.
+- **Implementation Note**: Visualizes spelling differences. Requires per-attempt error logging, not just "missed word" counts. **(Infrastructure Implemented: `submitAttempt.js` now batch-increments skipped word frequencies to `users/{uid}/errorHeatmap/{contentId}`)**
 
 ### **Weak Word Focus** (Stage 2)
 

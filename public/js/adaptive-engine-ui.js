@@ -81,7 +81,6 @@ const AdaptiveEngineUI = (() => {
             }
         });
 
-        console.log('[AE-UI] Adaptive Engine UI initialized');
     }
 
     /**

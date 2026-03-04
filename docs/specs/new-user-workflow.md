@@ -2,7 +2,7 @@
 
 **Status**: Draft
 **Owner**: Admin
-**Last updated**: 2026-02-16
+**Last updated**: 2026-02-17
 
 This document is a **new-user guide** written as a workflow/roadmap.
 
@@ -23,18 +23,18 @@ At this point the app reloads and seeds Smart Difficulty (CEFR baseline) from yo
 - Mode cards (main dashboard): Type, Speak, Fill, Watch, Notes, Pronounce, Survival.
 - Progress panel (left toggle): shows stats, next goal, recent activity.
 - Vocabulary Book panel (right toggle): bookmarking + frequently missed words.
-  - If locked, clicking it will open the Shop to unlock it.
-- Account panel: profile, coins/XP, and the entry point to Shop + Skill Tree.
+  - Unlocks automatically on missed keywords in Type/Speak for authenticated users.
+  - Guests can still use manual add + local Vocabulary/SRS (browser-only persistence) and see a gentle login nudge for cloud sync.
+- Account panel: profile, coins/XP, and the entry point to the Skill Tree (Journey).
 - Smart Difficulty badge: opens the Adaptive Engine modal (CEFR level, recent accuracy, adjustments).
 
 ## 2. Roadmap Summary (What to do first, next, later)
 
 ### First (Day 0): Build your "learning pipeline"
 
-1. Unlock Vocabulary Book (required for SRS)
-2. Do a short Type session to generate missed words
-3. Save missed words into Vocabulary Book
-4. Start your first SRS Review session
+1. Do a short Type session to generate missed words
+2. When the “Add to Vocabulary” panel appears, save the words you want to keep
+3. Start your first SRS Review session
 
 ### Level-based defaults (first sessions)
 
@@ -59,7 +59,7 @@ Use these as training wheels. Smart Difficulty will adapt after you have real at
 - Add Fill Mode (collocations + usage patterns)
 - Add Watch/Notes Mode (real-world comprehension + extraction)
 - Add Pronounce Mode (deep, technical feedback when you want it)
-- Add Survival Mode (optional "game runs" after your daily SRS is done)
+- Try Survival Mode (optional "game runs" after your daily SRS is done)
 
 ## 3. Workflow Flowchart
 
@@ -76,16 +76,15 @@ flowchart TD
     subgraph Day0 ["Day 0: Build Pipeline"]
         direction TB
         
-        %% Convergence on Unlock
-        SeedBeg & SeedInt & SeedExp --> Unlock["Unlock Vocab Book\n(Shop)"]
-        
-        Unlock --> Practice0{"First Practice"}
+        SeedBeg & SeedInt & SeedExp --> Practice0{"First Practice"}
         
         Practice0 -->|Beginner| P_Type["Type Mode\n(Short Sentences)"]
         Practice0 -->|Intermediate| P_Speak["Speak Mode\n(Short/Med Sentences)"]
         Practice0 -->|Expert| P_Fill["Fill Mode\n(Med/Long Sentences)"]
         
-        P_Type & P_Speak & P_Fill --> Save0["Save Missed Words"]
+        P_Type & P_Speak --> AutoUnlock["Miss keywords?\nVocab Book auto-unlocks\n+ Add panel tutorial"]
+        P_Fill --> Save0["Save Missed Words (optional)"]
+        AutoUnlock --> Save0["Save Missed Words"]
         Save0 --> SRS0["First SRS Review\n(Select Engine: SM2/FSRS)"]
     end
 
@@ -99,18 +98,18 @@ flowchart TD
         dailyStart --> dailyPrac["Practice: Type/Speak\n(10-20m)"]
         dailyPrac --> dailySave["Save New Words\n(1-3m)"]
         dailySave --> dailySRS["SRS Review\n(to 0 items)"]
-        dailySRS --> dailyShop["Buy Upgrades\n(Hints, Audio)"]
+        dailySRS --> dailySkillTree["Unlock Skill Tree upgrades\n(passives + active assists)"]
     end
 
     %% 3. Week 1+: Expand
     subgraph Week1 ["Week 1+: Expand Stack"]
         direction TB
-        dailyShop --> Expand{"Add Modes"}
+        dailySkillTree --> Expand{"Add Modes"}
         
         Expand -->|Pronunciation| AddSpeak["Add: Speak Mode"]
         Expand -->|Phrasing| AddFill["Add: Fill Mode"]
         Expand -->|Immersion| AddWatch["Add: Watch Mode"]
-        Expand -->|Games| AddSurv["Add: Survival Mode"]
+        Expand -->|Games| AddSurv["Try: Survival Mode"]
     end
 ```
 
@@ -125,6 +124,7 @@ flowchart TD
 - 1) Start SRS Review:
   - pick SM2 if you want the simplest default
   - do reviews until you are at 0 due words (or stop after 5-10 minutes)
+  - if no words are due yet, the session should show "Early review" so it doesn’t look broken
 
 ## 5. Daily Routine (Recommended 15-30 minutes)
 
@@ -143,15 +143,16 @@ flowchart TD
 - Open Smart Difficulty (Adaptive Engine) and sanity-check:
   - your current level is reasonable
   - your recent accuracy is not constantly red (too hard) or always perfect (too easy)
-- Spend coins on 1-2 upgrades that match your friction points:
+- Spend coins on 1-2 Skill Tree upgrades that match your friction points:
   - If you struggle to hear: slow audio / replay assists
   - If you struggle to spell: hint ladder improvements
-  - If you overuse reveal: buy passives that reward clean attempts
+  - If you overuse reveal: earn passives that reward clean attempts (via Skill Tree)
 
 ## 7. Notes (How the app behaves)
 
-- Your level selection seeds Smart Difficulty (CEFR baseline) and unlocks the sentence length filter.
-- Vocabulary Book is unlock-gated; attempting to open it should nudge you into the Shop.
-- Survival Mode is unlock-gated in the Shop.
+- Your level selection seeds Smart Difficulty (CEFR baseline).
+- Sentence Length Filter and Difficulty Filter unlock via the Skill Tree (Listening passives).
+- Vocabulary Book + SRS work in guest-local mode for Day 0; logging in upgrades persistence to Firestore sync.
+- Survival Mode is available by default.
 - Writing Challenge is triggered during SRS when you get a word correct and it is eligible (POS-based).
 - AI features are optional; the core loop works without them.

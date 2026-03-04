@@ -221,7 +221,7 @@ function buildDiscountPlan({
         discountPct += 0.15;
         breakdown.push({ id: 'audio_engineer', pct: 0.15, type: 'skill_specific' });
     }
-    if ((skillId === 'hint_wc' || skillId === 'hint_fl') && passives.has('hint_kit')) {
+    if ((skillId === 'word_ghost' || skillId === 'first_letter_peek' || skillId === 'hint_wc' || skillId === 'hint_fl') && passives.has('hint_kit')) {
         discountPct += 0.20;
         breakdown.push({ id: 'hint_kit', pct: 0.20, type: 'skill_specific' });
     }

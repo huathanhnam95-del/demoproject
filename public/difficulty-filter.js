@@ -6,9 +6,15 @@
 const DifficultyFilter = (() => {
     'use strict';
 
+    const SUPPORTED_MODES = ['type', 'speak', 'extended', 'notes'];
+
     // State
-    let currentDifficultyType = 'all';
-    let currentDifficultySpeak = 'all';
+    const currentDifficultyByMode = {
+        type: 'all',
+        speak: 'all',
+        extended: 'all',
+        notes: 'all'
+    };
     let isInitialized = false;
 
     /**
@@ -17,24 +23,24 @@ const DifficultyFilter = (() => {
     function init() {
         if (isInitialized) return;
 
-        // Initialize for Type mode
-        initFilterDropdown('type');
+        SUPPORTED_MODES.forEach((mode) => initFilterDropdown(mode));
 
-        // Initialize for Speak mode
-        initFilterDropdown('speak');
-
-        // Check if filter should be visible based on shop unlock
+        // Check if filter should be visible based on Skill Tree unlock
         updateFilterVisibility();
 
-        // Listen for shop unlock events
+        // Listen for unlock events
         window.addEventListener('shop-unlock', (e) => {
             if (e.detail && e.detail.mode === 'difficultyFilter') {
                 updateFilterVisibility();
             }
         });
+        window.addEventListener('skill-unlock', (e) => {
+            if (e.detail && e.detail.skillId === 'difficulty_filter') {
+                updateFilterVisibility();
+            }
+        });
 
         isInitialized = true;
-        console.log('🎚️ Difficulty Filter Module Initialized');
     }
 
     /**
@@ -87,7 +93,7 @@ const DifficultyFilter = (() => {
      * Close all difficulty dropdowns
      */
     function closeAllDropdowns() {
-        ['type', 'speak'].forEach(mode => {
+        SUPPORTED_MODES.forEach(mode => {
             const container = document.getElementById(`difficulty-filter-container-${mode}`);
             const menu = document.getElementById(`difficulty-filter-menu-${mode}`);
             if (container) container.classList.remove('open');
@@ -119,11 +125,8 @@ const DifficultyFilter = (() => {
             }
         }
 
-        // Store selection
-        if (mode === 'type') {
-            currentDifficultyType = value;
-        } else {
-            currentDifficultySpeak = value;
+        if (Object.prototype.hasOwnProperty.call(currentDifficultyByMode, mode)) {
+            currentDifficultyByMode[mode] = value;
         }
 
         // Save to localStorage
@@ -137,11 +140,15 @@ const DifficultyFilter = (() => {
      * Apply the difficulty filter to the question list
      */
     function applyFilter(mode) {
-        if (typeof window.populateQuestionSelect === 'function') {
+        if (mode === 'notes') {
+            if (window.TakeNotesMode && typeof window.TakeNotesMode.applyFilters === 'function') {
+                window.TakeNotesMode.applyFilters();
+            } else {
+                console.debug('[DifficultyFilter] TakeNotesMode not ready yet, filter saved but not applied.');
+            }
+        } else if (typeof window.populateQuestionSelect === 'function') {
             window.populateQuestionSelect(mode);
         }
-
-        console.log(`🎚️ Difficulty filter triggered refresh for ${mode}`);
     }
 
     /**
@@ -164,12 +171,16 @@ const DifficultyFilter = (() => {
     }
 
     /**
-     * Update filter visibility based on shop unlock status
+     * Update filter visibility based on Skill Tree unlock status
      */
     function updateFilterVisibility() {
-        const isUnlocked = window.shopModule?.isModeUnlocked?.('difficultyFilter');
+        const profile = window.currentUserProfile && typeof window.currentUserProfile === 'object'
+            ? window.currentUserProfile
+            : null;
+        const unlockedBySkillTree = !!(profile?.unlockedSkills?.difficulty_filter || profile?.skillPassives?.difficulty_filter);
+        const isUnlocked = unlockedBySkillTree || window.shopModule?.isModeUnlocked?.('difficultyFilter');
 
-        ['type', 'speak'].forEach(mode => {
+        SUPPORTED_MODES.forEach(mode => {
             const container = document.getElementById(`difficulty-filter-container-${mode}`);
             if (container) {
                 container.style.display = isUnlocked ? 'block' : 'none';
@@ -188,7 +199,7 @@ const DifficultyFilter = (() => {
      * Get current difficulty level for a mode
      */
     function getCurrentDifficulty(mode) {
-        return mode === 'type' ? currentDifficultyType : currentDifficultySpeak;
+        return currentDifficultyByMode[mode] || 'all';
     }
 
     // Initialize on DOMContentLoaded

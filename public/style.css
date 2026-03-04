@@ -6774,6 +6774,10 @@ textarea:focus {
   margin-left: 10px;
 }
 
+#difficulty-filter-container-extended.difficulty-filter-dropdown {
+  margin-left: 0;
+}
+
 .difficulty-filter-btn {
   display: flex;
   align-items: center;
@@ -14461,6 +14465,8 @@ body.survival-active #level-system-container {
 
 .rpg-tree-wrap {
   position: relative;
+  display: flex;
+  flex-direction: column;
   flex: 1;
   border-radius: 20px;
   background:
@@ -14470,6 +14476,100 @@ body.survival-active #level-system-container {
   overflow: hidden;
   box-shadow: inset 0 2px 20px rgba(0, 0, 0, 0.3);
   margin: 14px;
+  min-height: 0;
+}
+
+.rpg-tree-toolbar {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px 0;
+}
+
+.rpg-tree-gesture-hint {
+  margin-right: auto;
+  color: #94a3b8;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  opacity: 0.95;
+}
+
+.rpg-zoom-btn,
+.rpg-zoom-reset {
+  height: 34px;
+  min-width: 34px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: rgba(15, 23, 42, 0.75);
+  color: #e2e8f0;
+  font-weight: 800;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.rpg-zoom-reset {
+  padding: 0 10px;
+  min-width: 56px;
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.rpg-zoom-btn:hover,
+.rpg-zoom-reset:hover {
+  background: rgba(30, 41, 59, 0.92);
+  border-color: #64748b;
+}
+
+.rpg-zoom-value {
+  min-width: 52px;
+  text-align: center;
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: rgba(15, 23, 42, 0.6);
+  color: #cbd5e1;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.rpg-tree-viewport {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin: 10px 12px 12px;
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+  border: 1px solid rgba(100, 116, 139, 0.25);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.6), rgba(2, 6, 23, 0.45));
+}
+
+.rpg-tree-viewport.is-grabbing {
+  cursor: grabbing;
+}
+
+.rpg-tree-viewport.is-gliding {
+  cursor: grabbing;
+}
+
+.rpg-tree-viewport.is-pinching {
+  cursor: zoom-in;
+}
+
+.rpg-tree-scene {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+  will-change: transform;
 }
 
 .rpg-tree-grid {
@@ -14570,8 +14670,8 @@ body.survival-active #level-system-container {
 
 /* Root node — larger, special glow */
 .rpg-node.root {
-  width: 100px;
-  height: 100px;
+  width: 96px;
+  height: 96px;
   border-radius: 22px;
   background: linear-gradient(145deg, #1e3a5f, #0c1f3d);
   border: 2px solid #60a5fa;
@@ -14592,8 +14692,8 @@ body.survival-active #level-system-container {
 }
 
 .root .rpg-orb {
-  width: 88px;
-  height: 88px;
+  width: 84px;
+  height: 84px;
   border-radius: 18px;
 }
 
@@ -14712,6 +14812,8 @@ body.survival-active #level-system-container {
     display: flex;
     flex-direction: column;
     height: 85vh;
+    height: 85dvh;
+    min-height: 560px;
     border-radius: 12px;
   }
 
@@ -14725,8 +14827,14 @@ body.survival-active #level-system-container {
     border-bottom: 1px solid #334155;
     overflow-x: auto;
     white-space: nowrap;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
     background: #0f172a;
     /* Match dark theme */
+  }
+
+  .rpg-sidebar::-webkit-scrollbar {
+    display: none;
   }
 
   .rpg-sidebar-header,
@@ -14736,18 +14844,21 @@ body.survival-active #level-system-container {
 
   .rpg-category-list {
     flex-direction: row;
-    width: auto;
-    gap: 12px;
+    width: max-content;
+    gap: 10px;
+    padding-right: 4px;
   }
 
   .rpg-cat-btn {
     width: auto;
-    padding: 6px 16px;
+    padding: 7px 14px;
     background: #1e293b;
     border: 1px solid #334155;
     color: #94a3b8;
     border-radius: 20px;
-    font-size: 12px;
+    font-size: 11px;
+    scroll-snap-align: start;
+    touch-action: manipulation;
   }
 
   .rpg-cat-btn.active {
@@ -14768,18 +14879,55 @@ body.survival-active #level-system-container {
 
   .rpg-tree-wrap {
     margin: 0;
-    min-height: 600px;
-    /* Ensure scroll space */
+    min-height: 0;
     border-radius: 0;
+    border: none;
   }
 
-  /* Scale nodes down slightly for mobile */
+  .rpg-tree-toolbar {
+    padding: 10px 10px 0;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .rpg-tree-gesture-hint {
+    width: 100%;
+    margin-right: 0;
+    font-size: 0.66rem;
+    color: #a5b4fc;
+    letter-spacing: 0.02em;
+  }
+
+  .rpg-tree-viewport {
+    margin: 8px 8px 10px;
+    border-radius: 12px;
+    min-height: 360px;
+  }
+
+  .rpg-zoom-btn,
+  .rpg-zoom-reset {
+    height: 34px;
+    min-width: 34px;
+  }
+
+  .rpg-zoom-reset {
+    min-width: 56px;
+    padding: 0 10px;
+    font-size: 0.68rem;
+  }
+
+  .rpg-zoom-value {
+    min-width: 50px;
+    font-size: 0.72rem;
+  }
+
+  /* Keep nodes tappable on mobile */
   .rpg-node {
-    transform: translate(-50%, -50%) scale(0.85);
+    transform: translate(-50%, -50%);
   }
 
   .rpg-node:hover {
-    transform: translate(-50%, -50%) scale(0.95);
+    transform: translate(-50%, -50%) scale(1.03);
   }
 
   /* Detail Panel - Slide up Bottom Sheet */
@@ -15077,4 +15225,19 @@ body.survival-active #level-system-container {
   line-height: 1.4;
   color: #64748b;
   margin: 0;
+}
+
+/* Coming Soon Badge */
+.rpg-coming-soon-badge {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 6px;
+  vertical-align: middle;
+  margin-left: 6px;
 }

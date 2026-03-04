@@ -445,6 +445,93 @@ async function getPracticeStats(userId) {
 
 /**
  * ============================================
+ * Mode-Specific Progress (Notes / Watch)
+ * ============================================
+ */
+
+/**
+ * Upsert Take Notes mode progress for an entry.
+ * Stored under: users/{uid}/takeNotesProgress/{entryId}
+ *
+ * @param {string} userId
+ * @param {string} entryId
+ * @param {object} data - Additional fields to store (merged).
+ */
+async function upsertTakeNotesProgress(userId, entryId, data = {}) {
+  try {
+    if (!userId) return { success: false, error: 'Missing userId' };
+    if (!entryId) return { success: false, error: 'Missing entryId' };
+
+    const docRef = doc(db, 'users', userId, 'takeNotesProgress', String(entryId));
+    await setDoc(docRef, {
+      entryId: String(entryId),
+      ...data,
+      completedAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+
+    return { success: true };
+  } catch (error) {
+    log.error('Error upserting take notes progress:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Load Watch mode progress for a video.
+ * Stored under: users/{uid}/watchProgress/{videoId}
+ *
+ * @param {string} userId
+ * @param {string} videoId
+ */
+async function getWatchProgress(userId, videoId) {
+  try {
+    if (!userId) return { success: false, error: 'Missing userId' };
+    if (!videoId) return { success: false, error: 'Missing videoId' };
+
+    const docRef = doc(db, 'users', userId, 'watchProgress', String(videoId));
+    const snap = await getDoc(docRef);
+
+    if (!snap.exists()) {
+      return { success: true, data: null };
+    }
+
+    return { success: true, data: snap.data() };
+  } catch (error) {
+    log.error('Error getting watch progress:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Upsert Watch mode progress for a video.
+ * Stored under: users/{uid}/watchProgress/{videoId}
+ *
+ * @param {string} userId
+ * @param {string} videoId
+ * @param {object} data - Additional fields to store (merged).
+ */
+async function upsertWatchProgress(userId, videoId, data = {}) {
+  try {
+    if (!userId) return { success: false, error: 'Missing userId' };
+    if (!videoId) return { success: false, error: 'Missing videoId' };
+
+    const docRef = doc(db, 'users', userId, 'watchProgress', String(videoId));
+    await setDoc(docRef, {
+      videoId: String(videoId),
+      ...data,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+
+    return { success: true };
+  } catch (error) {
+    log.error('Error upserting watch progress:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * ============================================
  * Tiered Progress Operations
  * ============================================
  * 
@@ -1652,41 +1739,6 @@ async function purchaseFeature(userId, item) {
 }
 
 /**
- * Get user's purchase history
- * @param {string} userId
- * @returns {Promise<Array>} Array of purchase objects
- */
-async function getPurchases(userId) {
-  try {
-    const purchasesQuery = query(
-      collection(db, 'users', userId, 'purchases'),
-      orderBy('purchasedAt', 'desc')
-    );
-    const snapshot = await getDocs(purchasesQuery);
-    const purchases = [];
-    snapshot.forEach(doc => {
-      purchases.push(doc.data());
-    });
-    return { success: true, data: purchases };
-  } catch (error) {
-    // Firebase error codes can be lowercase or uppercase depending on SDK version
-    const errorCode = (error.code || '').toLowerCase();
-    const isPermissionError =
-      errorCode === 'permission-denied' ||
-      errorCode === 'failed-precondition' ||
-      (error.message && error.message.includes('Missing or insufficient permissions'));
-
-    if (isPermissionError) {
-      log.warn('[Shop] Purchases not loaded: User may not have purchase permissions. This is expected for new or restricted users.');
-    } else {
-      log.error('Error getting purchases:', error);
-    }
-    // Return success: true with empty data to prevent blocking other features
-    return { success: true, data: [] };
-  }
-}
-
-/**
  * Record a new purchase
  * @param {string} userId
  * @param {Object} item - Item details
@@ -1727,6 +1779,11 @@ window.firebaseFirestoreFunctions = {
   recordPracticeAttempt,
   getPracticeStats,
 
+  // Notes/Watch progress (user-owned subcollections)
+  upsertTakeNotesProgress,
+  getWatchProgress,
+  upsertWatchProgress,
+
   // Legacy mastery functions (redirect to progress)
   getMasteryStatus,
   updateMasteryStatus,
@@ -1747,9 +1804,6 @@ window.firebaseFirestoreFunctions = {
   getPointsHistory,
   getPointsRules,
   getPointsRuleByTitle,
-
-  // Purchases (READ-ONLY - writes now via Cloud Function)
-  getPurchases,
 
   // Unlocked modes (READ-ONLY after migration)
   updateUnlockedModes, // Will be removed after full migration
@@ -1801,27 +1855,6 @@ async function callSubmitAttempt(attemptData) {
 }
 
 /**
- * Call purchaseItem Cloud Function
- * @param {string} itemId - Item identifier (e.g., 'vocabularyBook')
- */
-async function callPurchaseItem(itemId) {
-  try {
-    if (!functions) {
-      log.error('Firebase Functions not initialized');
-      return { success: false, error: 'Functions not available' };
-    }
-
-    const purchaseItem = httpsCallable(functions, 'purchaseItem');
-    const result = await purchaseItem({ itemId });
-    log.log('✓ Purchase result:', result.data);
-    return result.data;
-  } catch (error) {
-    log.error('Error calling purchaseItem:', error);
-    return { success: false, error: error.message };
-  }
-}
-
-/**
  * Call purchaseSkill Cloud Function
  * @param {string} skillId - Skill identifier from SkillCatalog
  */
@@ -1864,7 +1897,6 @@ async function callUseActiveSkill(payload) {
 
 // Export Cloud Function wrappers globally
 window.callSubmitAttempt = callSubmitAttempt;
-window.callPurchaseItem = callPurchaseItem;
 window.callPurchaseSkill = callPurchaseSkill;
 window.callUseActiveSkill = callUseActiveSkill;
 

@@ -1,0 +1,23 @@
+{
+  "console": [
+    {
+      "type": "error",
+      "text": "Fetch API cannot load chrome-error://chromewebdata/api/ai-proxy. URL scheme \"chrome-error\" is not supported."
+    }
+  ],
+  "pageErrors": [],
+  "requestFailed": [
+    {
+      "url": "https://localhost:8443/landing/?utm_source=fb&utm_campaign=pte_wfd&utm_content=a2_vn",
+      "failure": "net::ERR_INTERNET_DISCONNECTED"
+    },
+    {
+      "url": "https://localhost:8443/index.html",
+      "failure": "net::ERR_INTERNET_DISCONNECTED"
+    },
+    {
+      "url": "https://localhost:8443/crm-admin.html",
+      "failure": "net::ERR_INTERNET_DISCONNECTED"
+    }
+  ]
+}

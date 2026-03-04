@@ -1,0 +1,15 @@
+[cmd] npx "lighthouse" "https://localhost:8443/index.html" "--form-factor=mobile" "--screenEmulation.mobile=true" "--screenEmulation.width=393" "--screenEmulation.height=851" "--screenEmulation.deviceScaleFactor=2.75" "--chrome-flags=--ignore-certificate-errors --allow-insecure-localhost" "--quiet" "--output=html" "--output-path=docs\\audits\\2026-03-01-a2-vn-pte-onboarding\\artifacts\\perf\\2026-03-01T17-20-23-723Z__app_mobile.html"
+[exit] 1
+
+--- stdout ---
+
+
+--- stderr ---
+Runtime error encountered: EPERM, Permission denied: \\?\C:\Users\Admin\AppData\Local\Temp\lighthouse.76967548 '\\?\C:\Users\Admin\AppData\Local\Temp\lighthouse.76967548'
+Error: EPERM, Permission denied: \\?\C:\Users\Admin\AppData\Local\Temp\lighthouse.76967548 '\\?\C:\Users\Admin\AppData\Local\Temp\lighthouse.76967548'
+    at rmSync (node:fs:1236:18)
+    at Launcher.destroyTmp (file:///C:/Users/Admin/AppData/Local/npm-cache/_npx/0f94ee7615faf582/node_modules/chrome-launcher/dist/chrome-launcher.js:367:9)
+    at Launcher.kill (file:///C:/Users/Admin/AppData/Local/npm-cache/_npx/0f94ee7615faf582/node_modules/chrome-launcher/dist/chrome-launcher.js:349:14)
+    at Object.kill (file:///C:/Users/Admin/AppData/Local/npm-cache/_npx/0f94ee7615faf582/node_modules/chrome-launcher/dist/chrome-launcher.js:39:18)
+    at runLighthouse (file:///C:/Users/Admin/AppData/Local/npm-cache/_npx/0f94ee7615faf582/node_modules/lighthouse/cli/run.js:217:21)
+    at async file:///C:/Users/Admin/AppData/Local/npm-cache/_npx/0f94ee7615faf582/node_modules/lighthouse/cli/index.js:10:1

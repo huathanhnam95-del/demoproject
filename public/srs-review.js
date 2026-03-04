@@ -112,10 +112,30 @@ const SRSReview = (function () {
     }
     let pendingSave = null;
     const LOCAL_STORAGE_KEY = 'srs_pending_data';
+    const GUEST_USER_ID = 'guest';
+    const GUEST_SRS_STORAGE_KEY = 'bel_guest_srs_v1';
 
     // Save debouncing
     let saveTimeout = null;
     let lastSavedSRState = null;
+
+    function isGuestSession() {
+        return currentUserId === GUEST_USER_ID;
+    }
+
+    function resetSRSCache() {
+        srsCache.srsData = {};
+        srsCache.reviewStats = {
+            totalReviews: 0,
+            dailyReviews: 0,
+            streak: 0,
+            lastReviewDate: null,
+            xp: 0,
+            masteredCount: 0,
+            sessionsCompleted: 0
+        };
+        srsCache.masteredWords = [];
+    }
 
     // Collocations data cache
     let collocationsData = null;
@@ -928,22 +948,81 @@ const SRSReview = (function () {
     /**
      * Set Firebase user reference
      */
+    function loadGuestSRSData() {
+        resetSRSCache();
+        try {
+            const stored = localStorage.getItem(GUEST_SRS_STORAGE_KEY);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                srsCache.srsData = parsed?.srsData && typeof parsed.srsData === 'object' ? parsed.srsData : {};
+                srsCache.reviewStats = parsed?.reviewStats && typeof parsed.reviewStats === 'object'
+                    ? parsed.reviewStats
+                    : srsCache.reviewStats;
+                srsCache.masteredWords = Array.isArray(parsed?.masteredWords) ? parsed.masteredWords : [];
+                if (Number.isFinite(Number(parsed?.totalPoints))) {
+                    srsCache.totalPoints = Number(parsed.totalPoints);
+                }
+                if (parsed?.algorithm) {
+                    currentAlgorithm = parsed.algorithm;
+                }
+            } else {
+                resetSRSCache();
+            }
+        } catch (e) {
+            log.warn('Failed to load guest SRS data:', e);
+            resetSRSCache();
+        }
+
+        updateGamificationUI();
+        if (typeof updateDashboardUI === 'function') updateDashboardUI();
+        updateDashboardSummary();
+        renderScheduleTable();
+    }
+
+    function saveGuestSRSData() {
+        try {
+            const payload = {
+                srsData: srsCache.srsData || {},
+                reviewStats: srsCache.reviewStats || {},
+                masteredWords: Array.isArray(srsCache.masteredWords) ? srsCache.masteredWords : [],
+                totalPoints: Number(srsCache.totalPoints) || 0,
+                algorithm: currentAlgorithm,
+                updatedAt: new Date().toISOString()
+            };
+            localStorage.setItem(GUEST_SRS_STORAGE_KEY, JSON.stringify(payload));
+            lastSavedSRState = JSON.stringify(payload);
+        } catch (e) {
+            log.warn('Failed to save guest SRS data:', e);
+        }
+    }
+
     function setUser(userId, firestore) {
+        const normalizedUserId = userId || null;
+        const nextDb = normalizedUserId === GUEST_USER_ID
+            ? null
+            : (firestore || (window.__FIREBASE_INTERNAL__ ? window.__FIREBASE_INTERNAL__.db : null));
+
         // Optimization: Don't reload if user hasn't changed
-        if (currentUserId === userId && db && (firestore || db)) {
+        if (
+            currentUserId === normalizedUserId &&
+            (normalizedUserId === GUEST_USER_ID || (db && (firestore || db)))
+        ) {
             log.debug('User already set, skipping reload.');
             return;
         }
 
-        currentUserId = userId;
-        db = firestore || (window.__FIREBASE_INTERNAL__ ? window.__FIREBASE_INTERNAL__.db : null);
+        currentUserId = normalizedUserId;
+        db = nextDb;
 
-        if (userId && db) {
-            log.debug('Setting user for SRS:', userId);
+        if (isGuestSession()) {
+            log.debug('Setting guest session for SRS');
+            loadGuestSRSData();
+        } else if (currentUserId && db) {
+            log.debug('Setting user for SRS:', currentUserId);
             loadSRSData();
         } else {
             // Reset cache on logout
-            srsCache.srsData = {};
+            resetSRSCache();
             currentUserId = null;
         }
     }
@@ -954,6 +1033,10 @@ const SRSReview = (function () {
      * and a summary doc for stats.
      */
     async function loadSRSData() {
+        if (isGuestSession()) {
+            loadGuestSRSData();
+            return;
+        }
         if (!currentUserId || !db) return;
 
         try {
@@ -1067,6 +1150,10 @@ const SRSReview = (function () {
      * Save SRS summary stats to Firestore
      */
     async function saveSRSSummary() {
+        if (isGuestSession()) {
+            saveGuestSRSData();
+            return;
+        }
         if (!currentUserId || !db) return;
 
         const dataToSave = sanitize({
@@ -1090,6 +1177,10 @@ const SRSReview = (function () {
      * @param {object} card
      */
     async function saveCardSRS(lemma, card) {
+        if (isGuestSession()) {
+            saveGuestSRSData();
+            return;
+        }
         if (!currentUserId || !db) return;
 
         const safeId = lemma.replace(/\//g, '_');
@@ -1310,15 +1401,7 @@ const SRSReview = (function () {
         }).join('');
     }
 
-    /**
-     * Get SRS data for a specific word
-     * @param {string} lemma - The word to look up
-     * @returns {object|null} - SRS data for the word, or null if not found
-     */
-    function getWordData(lemma) {
-        if (!lemma) return null;
-        return srsCache.srsData[lemma] || null;
-    }
+
 
     /**
      * Get ALL words for review (including not-yet-due)
@@ -3602,7 +3685,9 @@ const SRSReview = (function () {
                     const synonymsHtml = `<div class="scaffold-section"><h4>📚 Synonyms</h4><div class="context-content">${data.synonyms.slice(0, 5).join(', ')}</div></div>`;
                     container.innerHTML = synonymsHtml;
                 }
-            } catch (e) { }
+            } catch (e) {
+                log.warn('Failed to fetch definitions for synonyms:', synonymsHtml, e);
+            }
         }
 
         // NOTE: "Example Phrases" (fake patterns) have been removed as per user feedback ("unmeaningful").
@@ -3724,7 +3809,9 @@ const SRSReview = (function () {
     function clearDraft(word) {
         try {
             localStorage.removeItem(`srs_draft_${word}`);
-        } catch (e) { }
+        } catch (e) {
+            log.warn(`Failed to clear draft for ${word}:`, e);
+        }
     }
 
     /**
@@ -3844,9 +3931,13 @@ const SRSReview = (function () {
 
             // Get the feedback feedback container if it exists to stream directly (optional)
             // For now, we'll accumulate and return, but the infrastructure is ready for UI streaming
-            while (true) {
+            let readingStream = true;
+            while (readingStream) {
                 const { done, value } = await reader.read();
-                if (done) break;
+                if (done) {
+                    readingStream = false;
+                    break;
+                }
 
                 const chunk = decoder.decode(value);
                 const lines = chunk.split('\n');

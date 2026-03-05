@@ -1,5 +1,17 @@
 # Changelog
 
+## [V1.4.0] - 2026-03-05
+
+### Added
+
+- **Reading Journey**: Integrated Gemini-backed interactive story generation with Firestore caching, accessible at `/readingjourney`.
+- **Collo-dictate Mode**: New immersive dictation experience with dedicated UI and utility logic.
+
+### Improved
+
+- **UX Refinements**: Unified Vocabulary Practice UI and fixed progress bar logic for 100% completion states.
+- **Production Rollout**: Comprehensive deployment of all pending features and fixes.
+
 ## [V1.3.4] - 2026-03-04
 
 ### Added

@@ -1,0 +1,2450 @@
+{
+  "runId": "2026-03-05T02-44-43-961Z",
+  "createdAt": "2026-03-05T02:44:43.967Z",
+  "startedAt": "2026-03-05T01:52:01.331Z",
+  "baseUrl": "http://localhost:8787",
+  "model": "gemini-2.5-flash",
+  "count": 50,
+  "seed": 1772675520210,
+  "stories": [
+    {
+      "index": 1,
+      "level": "A2",
+      "keywords": [
+        "Toronto Blue Jays",
+        "Paris Saint-Germain FC"
+      ],
+      "outlineId": "3a914f6b58dc8f26e4e9e205eb64d23c306c0793bf6559bd29a315418566064d",
+      "title": "Sunnybrook United: The Team Spirit",
+      "topicTags": [
+        "community",
+        "games",
+        "sports",
+        "teamwork"
+      ],
+      "path": [
+        "ask_teammates_to_pass",
+        "practice_soccer_skills",
+        "prepare_for_next_game",
+        "play_strong_defense"
+      ],
+      "segments": [
+        "Sunnybrook United was losing every soccer game. Leo felt very sad after each match. His team had good players, but they did not play together. Everyone wanted to score goals alone. They were not a real team. Leo wished they could learn to pass the ball and help each other more. He knew teamwork was important.",
+        "After practice, Coach Maria gathered the Sunnybrook United team. She announced, \"There's a big community soccer tournament coming soon!\" Everyone cheered. Coach Maria then became serious. \"To win, we need to play as one. Strong teamwork is the only way to succeed. Every player must help each other on the field.\" Leo remembered his recent talk about passing.",
+        "Every day, the Sunnybrook United team worked hard. Coach Maria taught them special drills. Leo learned to pass the ball exactly to his teammates. They practiced talking on the field, calling out names, and cheering each other on. Slowly, everyone started to play better together. They felt like a real team, supporting each other and having fun.",
+        "Sunnybrook United fell behind against a strong opponent in the first half. At halftime, Coach Maria reminded the team, \"Play together, support each other!\" In the second half, Leo passed more, cheering for teammates. United scored two quick goals! The crowd cheered. The game was now very close. Everyone gave their best.",
+        "The final game whistle blew. Sunnybrook United played with great spirit, remembering Coach Maria's lessons. Leo passed the ball, and his teammates moved together, a true team. They didn't win the big trophy, but every player felt proud. They had played their best, worked as one, and grown stronger as a community. They knew winning wasn't everything."
+      ],
+      "endWrap": "Even without a trophy, Leo and his teammates learned the true meaning of teamwork. Coach Maria smiled, knowing they had won something more important: a strong, united community spirit.",
+      "storyTextWordCount": 309,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "A2",
+        "notes": "The story is exceptionally well-written for an A2 learner. It demonstrates excellent coherence, cohesion, grammar, and vocabulary appropriate for the level. The narrative is clear and engaging.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 2,
+      "level": "B1",
+      "keywords": [
+        "Superman",
+        "Happy Gilmore 2"
+      ],
+      "outlineId": "c40902c7b19e597bc2d20d67ad632fd777c7da21ae9dc933376c6833d3bb8e06",
+      "title": "Ace Newton and the Friendship Games",
+      "topicTags": [
+        "adventure",
+        "community",
+        "humor",
+        "problem_solving",
+        "science",
+        "sports"
+      ],
+      "path": [
+        "talk_to_townspeople",
+        "test_sneakers_another_athlete",
+        "inspire_town_teamwork",
+        "look_closer"
+      ],
+      "segments": [
+        "Ace Newton, an eccentric inventor, watched his small town, Brightville, prepare for the annual Friendship Games. Brightville always lost, and community spirit was low. Ace decided enough was enough. He would use his quirky scientific inventions to help Brightville win and bring back their joy. It was a big challenge, but Ace loved a good puzzle.",
+        "Ace proudly presented his 'Aero-Booster Sneakers' for the running event. During practice, Sarah, a strong runner, tried them. She zoomed forward but tripped over her own feet, landing in a pile of leaves. Everyone laughed, but then she easily outpaced everyone else. The sneakers were clearly powerful, though still a bit tricky to control.",
+        "The Friendship Games began with a buzz of excitement. Ace watched nervously as the Oakhaven team, surprisingly skilled, took an early lead. Then, disaster struck! The \"Sprint-Boost\" sneakers, designed to give an edge, suddenly sputtered during the obstacle course. A small cog jammed, making them ineffective. This unexpected setback created a new, urgent challenge for Brightville.",
+        "Ace, energized by the town's support, quickly brainstormed with the townsfolk. They adjusted his 'Super-Spring' sneakers, adding a new traction layer for the muddy obstacle course. Their combined strategy, focusing on teamwork and smart use of the modified gear, proved brilliant. During the final, crucial event, the small town team surged ahead, turning the tide decisively. Community spirit soared!",
+        "The final event, the obstacle course, began. Ace watched, not just his gadgets, but the townspeople's faces. Their shared laughter, their helping hands – that was the real power. The \"Super-Spring Sneakers\" helped, but it was their teamwork, their cheers, and their spirit that pushed them forward. They crossed the finish line together, winning the Friendship Games!"
+      ],
+      "endWrap": "The Friendship Games trophy gleamed, a true testament to teamwork and community spirit.",
+      "storyTextWordCount": 295,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B1",
+        "notes": "The story demonstrates excellent coherence and cohesion, with a clear narrative arc and smooth transitions. Grammar is consistently accurate, and the vocabulary is rich and varied, introducing some higher-level words effectively within context, making it a strong piece for a B1 learner.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 3,
+      "level": "B2",
+      "keywords": [
+        "Singapore Botanic Gardens",
+        "Eden Project"
+      ],
+      "outlineId": "2482f4f647291b2bb478229089c23ef7de07c9888e800d6e0713577ab3f7f682",
+      "title": "The Moonpetal Orchid's Secret",
+      "topicTags": [
+        "culture",
+        "environment",
+        "nature",
+        "science",
+        "travel"
+      ],
+      "path": [
+        "discuss_cultural_ties",
+        "plan_conservation_strategy",
+        "publish_research_paper",
+        "document_local_wisdom"
+      ],
+      "segments": [
+        "Dr. Lena Petrova arrived at the majestic Veridian Gardens, a haven of biodiversity. Jian Li, the garden's historian, greeted her warmly. Lena had travelled far to research the Moonpetal Orchid, a rare plant whose decline threatened local cultural traditions. Its delicate petals, rumored to glow under moonlight, were becoming increasingly scarce. Their task: uncover its secrets.",
+        "Lena and Jian trekked deeper into the Veridian Gardens' humid biome, following Jian's knowledge of the terrain. They found the Moonpetal Orchid, but its delicate petals were wilting, and its leaves showed signs of disease. The surrounding soil was unusually dry. This wasn't just a minor issue; the plant was clearly struggling, far more than initial reports indicated.",
+        "Lena's detailed soil analysis, combined with Jian's historical records of the Veridian Gardens, revealed a crucial insight. The Moonpetal Orchid’s delicate growth was hindered by a subtle shift in the local insect population, historically its primary pollinators. This ecological imbalance, tied to changes in nearby plant species, explained the orchid's decline, providing a clear path for their conservation efforts.",
+        "Lena and Jian returned, their notebooks full of observations from the thriving reserve. Combining Lena's genetic analysis with Jian's elder-guided cultivation methods, they began implementing their integrated solution. Slowly, the Moonpetal Orchid started to respond, unfurling delicate leaves. Their combined efforts were yielding fruit, promising a future for the rare blossom.",
+        "Dr. Lena Petrova's comprehensive research on the Moonpetal Orchid was finally published, detailing its unique biology and the successful rejuvenation of its habitat. Concurrently, Jian Li launched an engaging educational program, sharing the orchid's profound cultural significance with the community."
+      ],
+      "endWrap": "The Moonpetal Orchid now thrives, a vibrant symbol of successful collaboration between science and tradition, its delicate beauty forever protected for future generations.",
+      "storyTextWordCount": 287,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 1
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The story demonstrates excellent coherence and cohesion, with a clear narrative flow. Grammar is flawless, and the vocabulary is rich, precise, and varied, consistently reaching a C1 level.",
+        "flags": {
+          "tooHard": true,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 4,
+      "level": "C1",
+      "keywords": [
+        "Lalbagh Botanical Garden",
+        "Royal Botanic Gardens, Kew"
+      ],
+      "outlineId": "b51c99d54bceff347d6efb9eaf352bc4596959ae39d5781a1897b18a93486a8d",
+      "title": "The Botanist's Odyssey: A Global Green Quest",
+      "topicTags": [
+        "culture",
+        "curiosity",
+        "environment",
+        "nature",
+        "science",
+        "travel"
+      ],
+      "path": [
+        "seek_plant_references",
+        "consult_kew_expert",
+        "establish_conservation_plan",
+        "secure_expedition_funding"
+      ],
+      "segments": [
+        "Dr. Aris Thorne, renowned ethnobotanist, meticulously sifted through dusty archives at the Royal Botanical Gardens. His quest: to trace a rare medicinal plant. Within an ancient, leather-bound journal, he found a cryptic notation – not a species name, but a symbol and a forgotten dialect phrase.",
+        "Dr. Aris Thorne immersed himself in Kew Gardens’ vast archives, his quest for the elusive plant intensifying. He meticulously cross-referenced ancient herbals with early botanical illustrations, tracing the plant's documented presence across European monasteries and apothecaries. A faded 17th-century manuscript from a Dutch trading company detailed its medicinal properties and initial cultivation attempts, providing a crucial breakthrough in his investigation.",
+        "Dr. Aris Thorne arrived at Lalbagh Botanical Garden, Bengaluru, its vibrant flora a stark contrast to his previous locales. Delving into ancient texts and consulting local ethnobotanists, he uncovered profound insights. The plant, revered as 'Jeevan Amrita' in local dialects, was historically used for vitality and healing, its lineage tracing deep into the Himalayan foothills.",
+        "Aris meticulously cross-referenced his extensive findings from the botanical gardens. Hours dissolved into a eureka moment: a subtle genetic marker, previously dismissed as an anomaly, was the missing link. This marker, present in specimens from distinct continents, unveiled the plant's ancient migratory path, revealing a profound, unrecorded human-plant relationship. His odyssey was reaching its climax.",
+        "With dedicated research and the invaluable input from global botanical networks, Aris finally synthesized all the scattered data. The plant's intricate lineage, spanning continents and centuries, revealed a profound cultural tapestry. Its journey, from ancient remedies to modern conservation efforts, was meticulously documented, culminating in a comprehensive understanding of its global significance."
+      ],
+      "endWrap": "Aris's odyssey culminated. The plant's complete global lineage and cultural significance were fully traced, securing its future. This ambitious botanical quest achieved profound success, ensuring a lasting green legacy.",
+      "storyTextWordCount": 297,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 1
+      },
+      "assessment": {
+        "coherence": 4,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The story demonstrates excellent command of English, with sophisticated vocabulary and complex, accurate grammatical structures. The narrative is coherent and well-developed, effectively conveying the detailed scientific quest. Minor repetition of the protagonist's name slightly impacts flow.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 5,
+      "level": "A2",
+      "keywords": [
+        "Club World Cup",
+        "India vs England"
+      ],
+      "outlineId": "2925b35aad2a2a0594a884690c636b8787d6735462c45fd509f66eb51c8c2dc1",
+      "title": "Leo's Big Trip to Mumbai",
+      "topicTags": [
+        "community",
+        "culture",
+        "sports",
+        "teamwork",
+        "travel"
+      ],
+      "path": [
+        "tell_family_friends",
+        "check_fundraising_progress",
+        "find_other_fans",
+        "ask_for_help"
+      ],
+      "segments": [
+        "Leo loved football more than anything. His favourite team was the Mumbai Lions. One sunny morning, he watched the sports news. The TV showed exciting pictures. His team, the Mumbai Lions, would play in the Club World Cup! And guess where? In India! Leo jumped with joy. He dreamed of seeing them play live.",
+        "Leo told his family and friends about the big match. Everyone was very excited for him! But Leo still needed more money for his trip to Mumbai. His best friend, Maya, had a great idea. \"Let's start a fundraiser!\" she said. Soon, the whole community helped. They organized a bake sale and a car wash.",
+        "Leo finally boarded his plane, excited for his adventure. After a long flight, he arrived in India. The air was warm, and new smells filled the street. He saw colourful clothes and heard music everywhere. Soon, he reached Mumbai, a big city full of life. The football tournament was almost here!",
+        "Leo finally arrived at the stadium in Mumbai. The noise was incredible! Thousands of fans cheered for their teams. He found his seat, heart pounding with excitement. The pitch looked amazing under the bright lights. When his favourite team ran out, Leo screamed with joy, waving his scarf. This was the moment he had dreamed of.",
+        "Leo returned home, full of amazing stories. He shared photos of the vibrant markets, the exciting football match, and the new friends he made in Mumbai. His family and friends were so happy to hear about his journey. Leo felt grateful for their support and realised how many people helped him. He learned a lot."
+      ],
+      "endWrap": "Leo's trip to Mumbai was amazing! He shared his stories and photos, feeling grateful for his community and new friends. This adventure changed him forever.",
+      "storyTextWordCount": 296,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 4,
+        "cefrFit": "A2",
+        "notes": "The story is very well-structured and easy to follow, with a clear chronological progression. Grammar is consistently correct, and the vocabulary is appropriate for the A2 level, offering a good balance of familiar and slightly more challenging words.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 6,
+      "level": "B1",
+      "keywords": [
+        "New York Botanical Garden",
+        "Bogor Botanical Gardens"
+      ],
+      "outlineId": "9af1bbfab67ca97a3bcbc37d68d067edd77b6abb6aad4493bc2ccf0b797ac045",
+      "title": "The Green Journey",
+      "topicTags": [
+        "environment",
+        "nature",
+        "science",
+        "travel"
+      ],
+      "path": [
+        "ask_professor_advice",
+        "find_rare_plants",
+        "learn_more_conservation",
+        "share_new_knowledge"
+      ],
+      "segments": [
+        "Lena, a university student, dreamed of visiting the famous Evergreen Botanical Garden. She imagined walking through its unique glasshouses, discovering new plant species, and learning from expert botanists. This trip, she believed, would greatly advance her knowledge and passion for botanical conservation. It was her biggest academic goal.",
+        "Lena's bus journey ended, and she finally arrived. The botanical garden gates were enormous, hinting at the wonders within. As she stepped inside, a breathtaking world of green opened before her. Thousands of plants, from tiny mosses to towering trees, filled the air with exotic scents. She was truly amazed by the garden's vast size and incredible variety.",
+        "Lena found a community garden, neat and full of life. An older woman, Ms. Evelyn, smiled warmly. \"Looking for something special?\" she asked. Lena explained her project. Ms. Evelyn led her to a small, vibrant flower. \"This is the 'Moonpetal Bloom',\" she whispered. \"It's rare, crucial for local bees, and helps keep our soil healthy. We must protect it.",
+        "Lena visited the garden's research lab, a place humming with quiet purpose. A botanist explained their science projects, showing how DNA sequencing helps identify rare species. Lena learned about seed banks preserving genetic diversity and efforts to reintroduce endangered plants. She understood how these scientific methods protect nature and improve the environment, fulfilling her goal of learning about botanical conservation.",
+        "Lena returned home, her mind buzzing with new ideas and a deep sense of purpose. Her journey had opened her eyes to the beauty and fragility of nature. She felt a strong desire to protect the local environment and share her conservation knowledge. She knew her adventure was just the beginning of her green journey."
+      ],
+      "endWrap": "Lena's journey culminated in a vibrant homecoming. Inspired, she eagerly shared her new knowledge, sparking a local conservation movement.",
+      "storyTextWordCount": 299,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 1
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 4,
+        "cefrFit": "B1",
+        "notes": "The story demonstrates excellent coherence and cohesion, with a clear narrative arc and smooth transitions. Grammar is consistently accurate, showing a strong command of sentence structures. Vocabulary is rich and appropriate, often reaching into the B2 level, making it a very strong B1 piece.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 7,
+      "level": "B2",
+      "keywords": [
+        "ICC Champions Trophy",
+        "UFC 311"
+      ],
+      "outlineId": "cdd53f579b85fb950bad1462c064abf332a5d9a58af1bbca9c2d73f5e833a160",
+      "title": "The Willow Creek Revival Cup",
+      "topicTags": [
+        "community",
+        "health",
+        "problem_solving",
+        "sports",
+        "teamwork"
+      ],
+      "path": [
+        "research_ground_issues",
+        "seek_mayor_private_meeting",
+        "organize_community_festival",
+        "thank_key_supporters"
+      ],
+      "segments": [
+        "Liam Carter, a local fitness instructor, walked through the overgrown Willow Creek sports grounds. The once-vibrant fields were neglected, a stark reminder of dwindling community spirit. He remembered the annual Community Cup, a beloved tradition. However, Mayor Thompson's recent announcement hinted at its cancellation due to low participation and the grounds' poor state. Liam felt a surge of determination.",
+        "Liam presented his research on the dilapidated grounds to the town council, detailing the urgent need for repairs. He then unveiled his ambitious 'Healthy Willow Creek' initiative, a community-wide effort to restore the sports complex and boost local well-being. A hush fell, followed by murmurs of doubt.",
+        "Energized by the mayor's cautious support, Liam gathered a small team of volunteers. They enthusiastically launched clean-up days and beginner fitness workshops. However, the turnout was disappointing. Resources were scarce, and many residents seemed uninterested, preferring their old routines. This widespread apathy proved a tougher opponent than anticipated.",
+        "The Willow Creek Revival Cup gained unstoppable momentum. A vibrant fundraising festival exceeded all expectations, bringing in much-needed funds. Days later, the 'Community Build Day' saw hundreds, including Mayor Thompson, transforming the neglected sports grounds. New benches, fresh paint, and repaired facilities emerged from collective effort, fostering an incredible spirit of teamwork. Liam watched, proud of his community's dedication.",
+        "The Willow Creek Revival Cup launched to immense success! The newly restored grounds buzzed with energy as teams competed, cheered on by a united community. Liam watched, proud of the renewed spirit and improved health initiatives taking root. Mayor Thompson, beaming, declared it a new town tradition, a testament to collective effort and perseverance."
+      ],
+      "endWrap": "The Willow Creek Revival Cup became an annual highlight, a testament to Liam's vision and the community's collective spirit. It fostered lasting health and unity, ensuring Willow Creek thrived.",
+      "storyTextWordCount": 296,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 2
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B2",
+        "notes": "The story demonstrates excellent coherence with a clear narrative arc and logical progression of events. Grammar is consistently accurate, utilizing a good range of complex sentence structures. Vocabulary is rich and appropriate for the B2 level, though the transition from initial apathy to gaining momentum could be slightly smoother.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 8,
+      "level": "C1",
+      "keywords": [
+        "Split Fiction",
+        "Pokémon Legends: Z-A"
+      ],
+      "outlineId": "ffa0d55bedb3b0661ad1f23c62ea6db5ee1086170f1a9c1c7a91debfc72f833b",
+      "title": "Aetherial Beasts: The Nexus Split",
+      "topicTags": [
+        "adventure",
+        "animals",
+        "creativity",
+        "games",
+        "mystery",
+        "technology"
+      ],
+      "path": [
+        "analyze_game_code",
+        "analyze_split_mechanics",
+        "test_reality_link",
+        "contact_developer_team"
+      ],
+      "segments": [
+        "Elara Vance, a brilliant game designer, finally acquired the elusive 'Aetherial Beasts' VR rig. Its graphics were unparalleled, the physics flawless. Yet, deep within its intricate code, she sensed something amiss. Glitches, not bugs, but subtle inconsistencies, hinted at a reality far more complex than a mere simulation, stirring her profound curiosity.",
+        "Elara's deep dive into the code revealed a dormant protocol. With a precise sequence of inputs, she triggered it. The game world fractured, shimmering into two distinct, yet connected, realities. One pulsed with vibrant, untamed flora, housing colossal, ancient beasts; the other, a desolate, crystalline desert, home to ethereal, energy-based entities.",
+        "Elara's deep dive into the game's hidden layers finally yielded profound revelations. The 'Nexus Split,' she discovered, was the reclusive creator's ingenious mechanism for exploring myriad alternate realities. The 'aetherial beasts,' far from mere game elements, functioned as sophisticated data constructs, meticulously observing and documenting these diverse probabilistic outcomes across countless dimensions.",
+        "Elara’s reality testing revealed glitches bleeding into her own apartment. A familiar \"Aetherial Beasts\" creature shimmered on her wall, then vanished. The Nexus Split wasn't just a game mechanic; it was a fragile bridge. This blurring wasn't a feature; it was a critical system failure, a catastrophic unintended consequence of the technology.",
+        "Elara stood before the shimmering Nexus Core, its fractured light illuminating two distinct, yet overlapping, realities. Her prior investigations culminated here, revealing the Split's profound link to the real world. A critical decision loomed: stabilize the divergent timelines, preserving both game and potential reality, or attempt to merge them, risking catastrophic unknown consequences."
+      ],
+      "endWrap": "Elara made her critical choice. The nexus pulsed, realities trembling. Her decision, to stabilize or merge, now set a perilous course for both the game and the real world.",
+      "storyTextWordCount": 289,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The story demonstrates excellent command of C1-level grammar and vocabulary, employing complex sentence structures and sophisticated terminology effectively. The narrative is coherent and cohesive, building suspense and developing a complex sci-fi concept.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 9,
+      "level": "A2",
+      "keywords": [
+        "Lasagna Soup",
+        "Bean Sprouts"
+      ],
+      "outlineId": "7551553c7cb756fd0dc8e9ea7c567a1f7852e95d44ce9b85746b18f95f47f107",
+      "title": "Lily's Lasagna Soup Experiment",
+      "topicTags": [
+        "cooking",
+        "food",
+        "hobbies"
+      ],
+      "path": [
+        "read_recipe_carefully",
+        "check_more_ingredients",
+        "taste_lasagna_soup",
+        "try_new_recipe"
+      ],
+      "segments": [
+        "Lily loved spending time in her kitchen. Cooking was her favorite hobby, a way to relax and try new things. Today, she wanted a fresh challenge. Browsing online, a recipe for \"Lasagna Soup\" caught her eye. It sounded exciting and different from anything she had made before. \"This is perfect!\" she thought, feeling a spark of joy.",
+        "Lily went to the store for her lasagna soup ingredients. She picked up tomatoes, pasta, and cheese. As she walked by the vegetable aisle, something caught her eye: fresh bean sprouts! \"Hmm, these would be a fun, crunchy addition,\" she thought. Lily decided to buy them for a little experiment.",
+        "Lily followed the recipe for her lasagna soup. She carefully stirred the rich tomato sauce and added the cooked lasagna noodles. The kitchen smelled wonderful! Finally, just as the recipe said, she sprinkled fresh bean sprouts on top. She smiled, proud of her cooking. The soup looked delicious and ready to serve.",
+        "Lily carefully took a spoonful of her unique lasagna soup. The steam rose, carrying a mix of familiar and new smells. She tasted it. Her eyes widened. The bean sprouts added a surprising crunch and a fresh, earthy flavor she hadn't expected. It wasn't traditional, but it was surprisingly good! She smiled, proud of her experiment.",
+        "Lily served the warm lasagna soup into a bowl. The smell was delicious! She took her first bite. It was even better than she expected – rich, flavorful, and comforting. She smiled, feeling proud of her creation. Trying new recipes was so much fun. Her cooking hobby made her very happy, especially when she made something so tasty and unique."
+      ],
+      "endWrap": "Lily happily savored her unique lasagna soup, a delicious triumph of her creative cooking. Feeling satisfied and inspired, she was now eager to explore many more new culinary adventures.",
+      "storyTextWordCount": 304,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 4,
+        "cefrFit": "B1",
+        "notes": "The story demonstrates excellent coherence, cohesion, and grammar, making it very easy to follow. The vocabulary is rich and varied, with several terms leaning into B1/B2, which provides a good challenge for an A2 learner but is consistently above the target level.",
+        "flags": {
+          "tooHard": true,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 10,
+      "level": "B1",
+      "keywords": [
+        "Landman",
+        "Pluribus"
+      ],
+      "outlineId": "9587425be86792c23219626d19ec6dd6182e4acbb4e6b55f383a163013ccfac3",
+      "title": "The Pluribus Park Project",
+      "topicTags": [
+        "community",
+        "environment",
+        "teamwork",
+        "work"
+      ],
+      "path": [
+        "research_funding_options",
+        "plan_volunteer_tasks",
+        "establish_maintenance_team",
+        "look_closer"
+      ],
+      "segments": [
+        "Elias, the dedicated park manager, walked through Pluribus Park with a heavy heart. Broken benches, overgrown weeds, and faded playground equipment filled his view. Once a vibrant community hub, it now looked forgotten and sad. He felt a deep sadness, knowing how much potential the park had. He wished he could bring back its former glory for everyone to enjoy.",
+        "Elias was researching funding when he saw Maya, a lively community organizer, putting up flyers. She was passionate about local green spaces. They started talking about Pluribus Park's neglected state. Maya suggested a community clean-up. Elias, inspired by her energy, readily agreed. They decided to organize a volunteer project to restore the park together.",
+        "With funding secured and tasks planned, the 'Pluribus Project' launched! Many community members joined Elias and Maya. Together, they cleared overgrown paths and planted new flowers. Initial difficulties, like stubborn weeds, tested their resolve. But the team's shared spirit prevailed. They transformed neglected areas into vibrant, welcoming spaces, making the park beautiful for everyone.",
+        "Elias and Maya looked at Pluribus Park with pride. The community's hard work had paid off. New plants thrived, paths were clear, and fresh paint brightened benches. Children laughed on repaired swings, and families enjoyed picnics on the green lawns. The park was now a vibrant, welcoming space, a true testament to shared effort and dedication.",
+        "The grand reopening day arrived! Pluribus Park buzzed with laughter and music. Elias watched, proud, as families enjoyed the renovated spaces. Maya beamed, seeing the community gather, a true testament to their combined efforts. The park, once neglected, now shone as a symbol of what many working as one could achieve."
+      ],
+      "endWrap": "The Pluribus Park Project became a shining example of community power. Elias and Maya knew this was just the beginning for other neighborhoods. Their legacy would inspire many.",
+      "storyTextWordCount": 303,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 4,
+        "cefrFit": "B1",
+        "notes": "The story is exceptionally well-structured with a clear narrative arc, making it very easy to follow. Grammar is consistently accurate, and the vocabulary is rich and varied, demonstrating a strong command of English. It's an engaging and well-written piece.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 11,
+      "level": "B2",
+      "keywords": [
+        "Brooklyn Botanic Garden",
+        "Royal Botanic Gardens Victoria - Melbourne Gardens"
+      ],
+      "outlineId": "b751133817357b635d4335e8f91e0dd46113f1282b3fb55c2cb6f6a8380ba0e3",
+      "title": "The Botanist's Grand Tour",
+      "topicTags": [
+        "curiosity",
+        "environment",
+        "hobbies",
+        "nature",
+        "science",
+        "travel"
+      ],
+      "path": [
+        "research_rare_plants",
+        "plan_next_destination",
+        "deeply_study_exhibit",
+        "plan_future_research"
+      ],
+      "segments": [
+        "Elara Vance, a university student and aspiring botanist, meticulously planned her dream trip. She aimed to visit a world-renowned international botanic garden, hoping to significantly expand her scientific knowledge and enrich her photography portfolio with rare plant species. The prospect of seeing exotic flora filled her with excitement and determination, fueling her preparations for this grand tour.",
+        "Elara had spent weeks immersed in the garden's wonders, meticulously photographing and cataloging species. Her initial overwhelm had transformed into focused passion. She'd discovered several rare orchids, each a triumph for her research. With this first leg of her grand tour complete, she began preparing for her next botanical adventure, eager to apply her newfound knowledge.",
+        "Elara entered the glasshouse, a hush falling as she saw the 'Whispering Bloom' exhibit. It detailed a critically endangered orchid's survival story, a cutting-edge research project aiming to reintroduce it into the wild. Her camera clicked, capturing the delicate petals, but her mind raced with the scientific challenges. This discovery ignited a deeper passion for conservation, far beyond mere observation.",
+        "Elara spent hours absorbing the intricate details of the exhibit. She photographed the plant's unique features, took extensive notes on its genetic preservation, and understood the global efforts to protect its habitat. The experience deepened her appreciation for botanical science and reinforced her commitment to plant conservation. She felt a profound sense of accomplishment and inspiration.",
+        "After hours of immersive study, Elara felt a profound connection to the botanical world. The garden's vibrant diversity deepened her appreciation for the intricate balance of ecosystems. She left, not just with countless photographs, but with a renewed sense of purpose. This grand tour solidified her commitment to scientific research and environmental advocacy, eager to apply her newfound knowledge."
+      ],
+      "endWrap": "Elara departed, her spirit invigorated. The garden deepened her botanical appreciation, inspiring renewed commitment to studies and environmental advocacy.",
+      "storyTextWordCount": 307,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The story demonstrates excellent command of English, with sophisticated vocabulary and complex grammatical structures. The narrative flows logically, and cohesive devices are used effectively, though the ending is slightly repetitive. The content is rich and engaging.",
+        "flags": {
+          "tooHard": true,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 12,
+      "level": "C1",
+      "keywords": [
+        "Royal Botanic Gardens, Kew",
+        "Lalbagh Botanical Garden"
+      ],
+      "outlineId": "b51c99d54bceff347d6efb9eaf352bc4596959ae39d5781a1897b18a93486a8d",
+      "title": "The Botanist's Odyssey: A Global Green Quest",
+      "topicTags": [
+        "culture",
+        "curiosity",
+        "environment",
+        "nature",
+        "science",
+        "travel"
+      ],
+      "path": [
+        "consult_botany_expert",
+        "trace_trade_routes",
+        "document_cultural_data",
+        "pursue_further_research"
+      ],
+      "segments": [
+        "Dr. Aris Thorne meticulously combed through the dusty archives of the Royal Botanical Gardens. Hours blurred into a singular purpose: finding the elusive 'Azure Bloom.' Deep within an ancient, leather-bound journal, he stumbled upon a faded sketch and a cryptic note in Latin referencing \"the forgotten lineage of the Sky Serpent's Kiss.",
+        "Aris, having consulted with Professor Albright, delved into Kew’s archives. Ancient botanical illustrations and meticulous logbooks revealed the plant's surprising presence in 17th-century European apothecaries, often misidentified. He found fragmented records hinting at its original provenance, possibly from the Mediterranean or North Africa, and its subsequent spread through early colonial trade routes, meticulously documented in faded script.",
+        "Dr. Aris Thorne arrived at Lalbagh Botanical Garden, its vibrant flora a testament to India's biodiversity. Delving into historical archives and consulting local ethnobotanists, he unearthed crucial insights. The elusive 'Amrita-lata' had a rich history of indigenous medicinal use, particularly in ancient Ayurvedic practices. Its origins pointed towards the Himalayan foothills, confirming its deep Asian roots and cultural significance.",
+        "Aris meticulously synthesized data from both gardens, cross-referencing genetic markers with historical records and cultural narratives. A late-night epiphany struck: a shared, subtle enzymatic pathway, previously overlooked, linked the disparate specimens. This critical connection revealed the plant’s ancient migration path across continents, finally fulfilling Aris's quest to trace its full journey.",
+        "Aris, fueled by his previous research and the insights gathered, finally pieces together the last fragments of the plant's intricate global lineage. He uncovers ancient texts and oral traditions, revealing its profound cultural significance across continents. The elusive botanical quest, once a daunting enigma, now presents a complete, vibrant narrative."
+      ],
+      "endWrap": "Aris's odyssey concludes, leaving an invaluable legacy of botanical knowledge. His dedication illuminated the plant's extraordinary journey, ensuring its preservation and cultural appreciation for future generations.",
+      "storyTextWordCount": 295,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 3,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The story demonstrates excellent coherence and a rich, advanced vocabulary. However, there are consistent and noticeable tense shifts from past to present in the final paragraphs, which detracts from the overall grammatical accuracy expected at a C1 level.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 13,
+      "level": "A2",
+      "keywords": [
+        "Bell Pepper",
+        "Roasted Chicken"
+      ],
+      "outlineId": "c75df5f1c7cdfda121a4842eea3df834c1ec57090105884a3d1416d5ca438238",
+      "title": "Leo's Special Dinner",
+      "topicTags": [
+        "cooking",
+        "culture",
+        "food",
+        "health",
+        "hobbies"
+      ],
+      "path": [
+        "find_chicken_recipe",
+        "buy_extra_spices",
+        "find_serving_dishes",
+        "check_chicken_temp"
+      ],
+      "segments": [
+        "Leo wanted to make a special dinner for his family. He decided to try a new recipe: roasted chicken! He imagined a delicious and healthy meal. Cooking a whole chicken was a big task. He felt a little nervous, but also excited. He knew his family would love a home-cooked meal.",
+        "Leo found a delicious roasted chicken recipe! Now, he needed fresh ingredients. He grabbed his shopping bag and walked to the local market. The market was full of colorful fruits and vegetables. Leo carefully picked a fresh, whole chicken. He also chose red, yellow, and green bell peppers, perfect for roasting. He smiled, thinking about his family's dinner.",
+        "Leo carefully washed the chicken and fresh vegetables. He remembered his grandmother's words: \"Always season well, Leo!\" He mixed the extra spices with oil and herbs, then rubbed them all over the chicken. The kitchen filled with a lovely smell. He chopped potatoes, carrots, and onions, placing them around the chicken on a baking tray, ready for cooking.",
+        "Leo carefully put the chicken and vegetables into the hot oven. Soon, a warm, delicious smell filled the kitchen. The carrots, potatoes, and chicken slowly turned golden brown. Leo smiled, imagining his family enjoying the healthy meal. He checked the clock, knowing dinner would be ready soon. The aroma made his stomach rumble.",
+        "Leo carefully took the golden-brown chicken out of the oven. The wonderful smell filled the kitchen. His family sat at the table, their eyes wide with hunger. Leo placed the chicken on a big plate with roasted vegetables. Everyone cheered! They all enjoyed the healthy and delicious dinner together. Leo felt very happy and proud."
+      ],
+      "endWrap": "Leo's special dinner was a big success! His family enjoyed the meal, and he learned to cook something wonderful. What a great night for everyone!",
+      "storyTextWordCount": 300,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 4,
+        "cefrFit": "A2",
+        "notes": "The story is exceptionally well-structured and easy to follow, demonstrating excellent coherence. Grammar is consistently accurate, and the vocabulary is appropriate and well-used for the topic. This text is a strong example of A2 proficiency.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 14,
+      "level": "B1",
+      "keywords": [
+        "Bean Sprouts",
+        "Lasagna Soup"
+      ],
+      "outlineId": "de110af312b25873590590fa899e32fdd140231ae95cce0118a6e4f6f7d04190",
+      "title": "The Bean Sprout Lasagna Soup",
+      "topicTags": [
+        "cooking",
+        "food",
+        "hobbies"
+      ],
+      "path": [
+        "check_pantry_first",
+        "embrace_new_recipe",
+        "taste_soup_carefully",
+        "friends_polite_feedback"
+      ],
+      "segments": [
+        "Leo loved cooking. He often spent weekends experimenting with new recipes, much to the delight of his friends. This Saturday, he was hosting a dinner party. He wanted to try something unique and comforting, so he decided on lasagna soup. It sounded like a fun challenge and a delicious surprise for everyone who would be attending.",
+        "Leo, feeling confident after checking his pantry, began preparing the soup. He chopped vegetables and simmered the sauce. When it was time for the pasta, he reached for a bag without looking closely. He poured the contents into the pot, only to realize too late that it wasn't lasagna noodles, but a large bag of bean sprouts!",
+        "Leo stared at the bean sprouts, a strange ingredient for lasagna soup. He'd chosen to embrace the new recipe, but this felt really unusual. \"Bean sprouts in lasagna soup?\" he mumbled. Still, he remembered his goal: to try new things and surprise his friends. With a deep breath, he decided to trust the recipe.",
+        "Leo proudly placed the steaming bowls of bean sprout lasagna soup on the table. His friends, Maya and Sam, looked at the unusual dish with curious expressions. \"It's certainly... unique,\" Maya said, taking a sniff. Sam chuckled. Leo felt a mix of excitement and nervousness as they picked up their spoons. He hoped they would enjoy his creative cooking experiment.",
+        "Leo served the steaming bowls, a unique aroma filling the room. His friends looked at the bean sprouts with surprise, then took their first spoonfuls. Their faces lit up with delight! \"This is incredible, Leo!\" Maya exclaimed. \"So unexpectedly delicious and original,\" Tom added, reaching for more. Leo smiled, relieved and proud. His risky creation was a hit!"
+      ],
+      "endWrap": "Leo learned that trying new things, even with unusual ingredients, can lead to wonderful surprises. His friends enjoyed a memorable meal, and his confidence in the kitchen grew.",
+      "storyTextWordCount": 313,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 4,
+        "cefrFit": "B1",
+        "notes": "The story demonstrates excellent coherence, cohesion, and grammar. The vocabulary is strong and appropriate for the B1 level, offering a good range of descriptive words without being overly complex.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 15,
+      "level": "B2",
+      "keywords": [
+        "Chia Pudding",
+        "Chimichurri"
+      ],
+      "outlineId": "e1b4435771a0be4c907d3f9e27ef3e28869a29992eb3a8ed7681d6e7e43c70b4",
+      "title": "A Culinary Exchange: From Chia to Chimichurri",
+      "topicTags": [
+        "cooking",
+        "culture",
+        "food",
+        "health",
+        "hobbies"
+      ],
+      "path": [
+        "mateo_offers_cooking",
+        "reflect_on_exchange",
+        "consider_potluck_audience",
+        "reflect_on_culinary_journey"
+      ],
+      "segments": [
+        "Lena, a health-conscious food enthusiast, brought her famous chia pudding to Mateo's apartment. \"Try this!\" she urged. \"It's packed with omega-3s, fiber, and protein, perfect for sustained energy!\" Mateo, an enthusiastic home chef, looked at the unusual texture with curiosity, intrigued by Lena's passion. He took a hesitant spoonful, ready to explore new culinary traditions.",
+        "Mateo grinned, \"This is my abuela's chimichurri recipe. It's more than just a sauce; it's a family legacy, a taste of Argentina. We use fresh parsley, oregano, garlic, and a hint of red pepper flakes.\" Lena listened, captivated. \"It sounds incredible, Mateo! The vibrant colors and fresh ingredients are so appealing. I can't wait to try making it myself.\"",
+        "Reflecting on their shared culinary journey, Lena and Mateo felt a surge of inspiration. Their discussions about healthy eating and traditional flavors sparked an exciting idea. \"Why don't we combine our styles?\" Mateo suggested, his eyes lighting up. Lena agreed enthusiastically. \"A fusion dish for the community potluck! My chia seeds with your vibrant chimichurri? It could be amazing!",
+        "In Mateo's kitchen, Lena proposed infusing chia seeds into his empanada dough for a healthier take. Mateo, intrigued, showed her the precise art of folding and crimping. They then collaborated on a vibrant chimichurri, Lena suggesting a dash of lime, Mateo adding traditional herbs. Their distinct cooking styles beautifully merged, creating a unique, flavorful fusion they both celebrated.",
+        "The potluck buzzed with laughter and delicious aromas. Lena and Mateo proudly presented their chia-chimichurri skewers. Friends eagerly sampled the innovative fusion, praising its vibrant flavors and unique combination. Their dish was a resounding success, a testament to their shared passion for healthy eating and embracing new culinary traditions. It truly celebrated their friendship and cultural exchange."
+      ],
+      "endWrap": "Lena and Mateo's culinary journey together had just begun. Their friendship, seasoned with shared meals and cultural discoveries, promised many more delicious adventures ahead, continuing their flavorful exchange.",
+      "storyTextWordCount": 316,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "This story demonstrates excellent coherence and cohesion, with a clear narrative flow. The grammar is flawless, and the vocabulary is rich and precise, featuring advanced expressions related to food and collaboration. The text is well above the B2 target level.",
+        "flags": {
+          "tooHard": true,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 16,
+      "level": "C1",
+      "keywords": [
+        "Regretting You",
+        "The Housemaid"
+      ],
+      "outlineId": "cde92b27e38e15a32a2203dc8ff094b7c83f8efce666a2876a6a5e5707368161",
+      "title": "Echoes of Regret",
+      "topicTags": [
+        "culture",
+        "family",
+        "mystery",
+        "work"
+      ],
+      "path": [
+        "observe_family_reaction",
+        "examine_locket_detail",
+        "demand_more_truth",
+        "present_evidence_discreetly"
+      ],
+      "segments": [
+        "Elara Vance, the new housemaid, began her meticulous work at the prestigious Thorne estate. The family's rigid customs were immediately evident, creating a suffocating atmosphere of unspoken rules. She keenly observed Mrs. Alistair Thorne's stern demeanor and the palpable tension whenever conversation drifted towards the old, disused wing of the house, a place shrouded in mystery.",
+        "Dusting the ancestral library, Elara's fingers brushed against a loose floorboard. Beneath it, she found a tarnished silver locket containing a faded photograph. The image showed a young woman, strikingly similar to Elara, standing beside an older man identified as a former estate groundskeeper. A cryptic inscription on the back read: 'Justice denied, 1922.",
+        "Elara’s persistent inquiries, fueled by her observations and the locket's clue, finally cornered Mrs. Thorne. The matriarch, her composure cracking, admitted to a \"regrettable family matter\" involving a distant cousin, Clara, who had \"voluntarily departed\" years ago after an \"indiscretion.\" Mrs. Thorne emphasized the need for discretion, implying further questions would be unwelcome and potentially damaging.",
+        "Elara's relentless research exposed the truth: her relative, a talented artist, was cruelly disowned by the Thorne family generations ago. Fear of social disgrace, not genuine wrongdoing, drove their actions. The current family's fractured relationships and Mrs. Thorne's pervasive melancholy were undeniable echoes of this unaddressed historical injustice, a heavy burden of collective guilt.",
+        "The weight of the truth settled heavily upon Elara. Mrs. Thorne, her composure finally shattered, admitted to the decades-old cover-up, revealing the tragic accident that claimed Elara's parents. Elara now held the power to expose the Thorne family’s carefully constructed facade, but at what cost? The legacy of their collective regret seemed to demand a different kind of resolution."
+      ],
+      "endWrap": "Elara’s journey highlighted how buried truths fester, and while justice takes many forms, the echoes of regret resonate through generations, forever shaping legacies.",
+      "storyTextWordCount": 302,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The story demonstrates excellent command of English at an advanced level. The narrative is engaging, well-structured, and uses sophisticated vocabulary and complex grammatical constructions effectively, perfectly aligning with C1 expectations.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 17,
+      "level": "A2",
+      "keywords": [
+        "Adolescence",
+        "White Lotus"
+      ],
+      "outlineId": "f3a90c034961a572fd61a4fa1ee77157c07965f04fa8cc5e61dcdbc99331cb55",
+      "title": "Lily and the White Lotus",
+      "topicTags": [
+        "art",
+        "family",
+        "friendship",
+        "hobbies",
+        "nature",
+        "school"
+      ],
+      "path": [
+        "show_drawing_sam",
+        "ask_more_details_club",
+        "tell_sam_news",
+        "present_art_project"
+      ],
+      "segments": [
+        "Lily was a quiet student. She loved to draw. One sunny afternoon, she walked to the pond near her home. There, a beautiful white lotus flower floated peacefully on the water. Lily took out her sketchbook and pencil. She felt a happy calm as she began to draw the delicate petals and green leaves. It was her favorite place.",
+        "Lily showed Sam her drawings. Sam was amazed and thought Lily was very talented! Sam suggested Lily should join the school art club. Lily felt a little shy but also excited about the idea. She had never thought about sharing her art before. Maybe it was a good way to express herself and meet new friends.",
+        "Lily looked at her drawing of the white lotus. It was beautiful. Sam had told her to be brave. Lily's mom also encouraged her. \"Your art is special,\" her mom said. Lily felt a mix of nerves and excitement. She took a deep breath. Yes, she would enter the annual school art competition! This was her chance to express herself.",
+        "Lily spent many evenings drawing her white lotus. Her mom helped with shading techniques, showing Lily how to make the petals look real. Sam came over often, cheering her on. \"That's amazing, Lily! You're so good!\" he'd say. Lily felt happy. Her drawing was almost finished, and she was proud of her hard work. She felt more confident now.",
+        "The day of the exhibition arrived. Lily carefully placed her finished white lotus painting on the stand. Her heart beat fast, but she felt a new sense of calm. People stopped, looked, and smiled at her art. Sam and her mom were there, their faces full of pride. Lily realized she had found her voice. She felt truly happy."
+      ],
+      "endWrap": "Lily's journey showed her that art is a powerful way to express herself. She learned to trust her own unique voice and share her creativity with the world.",
+      "storyTextWordCount": 321,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "A2",
+        "notes": "The story demonstrates excellent coherence and cohesion, with a clear narrative flow and logical progression of events. Grammar is consistently correct, and the vocabulary is well-suited for an A2 learner, offering a good range of descriptive words without being overly complex.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 18,
+      "level": "B1",
+      "keywords": [
+        "Oklahoma City Thunder",
+        "Gujarat Titans"
+      ],
+      "outlineId": "bf020f4ddb9a56dd653d799e649fae21102730b08b3da38f425f1611fee1b4dc",
+      "title": "The Riverbend Raptors' New Game",
+      "topicTags": [
+        "community",
+        "games",
+        "sports",
+        "teamwork"
+      ],
+      "path": [
+        "coach_talks_maya",
+        "ask_leo_for_advice",
+        "plan_next_season",
+        "plan_future_games"
+      ],
+      "segments": [
+        "The Riverbend Raptors were having a tough season. Their basketball games were often losses, and team spirit was low. Coach Ben tried to motivate them, but something was missing. Then, Maya joined. She was a talented player, known for her amazing individual skills, but she often played alone. The team wondered how she would fit in.",
+        "Maya continued to try and score by herself, but the Raptors lost another game badly. Coach Ben pulled her aside after practice. \"Your talent is clear, Maya,\" he said, his voice firm. \"But basketball is a team sport. We need to play together to win, not just rely on individual brilliance.\" Maya felt a knot in her stomach.",
+        "After their crucial loss, Maya realized the power of teamwork. During practices, she actively listened and passed more, connecting with Leo and the others. Their next game felt different. Maya scored twice, but it was their combined effort, their fluid passes and strong defense, that truly shone. The Raptors played as one, a unified force.",
+        "The final game against the formidable Wildcats was intense. Maya, Leo, and the whole team played with incredible energy, passing precisely and defending fiercely. Coach Ben watched proudly as their improved teamwork shone through every play. They didn't win, but their effort surprised everyone in the stands. The community cheered for their spirit, recognizing a new, united Riverbend Raptors.",
+        "The final game ended, not with a win, but with a roar of applause for the Raptors' effort. Maya, Leo, and Coach Ben knew this season was a triumph. They had built a supportive community, learning that teamwork and friendship mattered most. The new strategies for next season and future games filled them with hope."
+      ],
+      "endWrap": "The team finished with pride. Strong bonds and a supportive community were their real win.",
+      "storyTextWordCount": 298,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 4,
+        "cefrFit": "B1",
+        "notes": "The story is very well-structured with a clear narrative arc and logical progression of events. Grammar is consistently accurate, and cohesion is strong with effective use of linking words. Vocabulary is generally B1, with a few words that might stretch to B2 but are understandable in context.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 19,
+      "level": "B2",
+      "keywords": [
+        "Severance",
+        "The Summer I Turned Pretty"
+      ],
+      "outlineId": "1a437d4191ca55003686340db33806293451a2fd110a79f774cd8f34af23ebf8",
+      "title": "The Summer of Unseen Work",
+      "topicTags": [
+        "family",
+        "friendship",
+        "mystery",
+        "technology",
+        "travel",
+        "work"
+      ],
+      "path": [
+        "research_mind_unwind",
+        "accept_and_move_on",
+        "privately_investigate_further",
+        "leak_info_externally"
+      ],
+      "segments": [
+        "Alex stepped onto the pristine island, the resort shimmering under the sun. His summer internship began with Dr. Thorne's 'Mind-Unwind' program, promising perfect work-life balance. Later, Alex met Maya, a fellow intern with a bright smile and an infectious laugh. They quickly connected, sharing excitement about the unique opportunity ahead.",
+        "Alex and Maya’s summer continued, a blur of resort activities and evening fun. They excelled at their unremembered tasks, earning praise from Dr. Thorne. Yet, Alex felt an unsettling familiarity, a flicker of déjà vu when seeing certain resort areas. Sometimes, a fleeting image of strange equipment or a hushed conversation would surface, only to vanish.",
+        "Alex started noticing peculiar memory lapses among guests, far beyond typical vacation forgetfulness. Dates, names, recent events – small details seemed to vanish. Compiling notes, Alex found a disturbing pattern, suggesting the 'Mind-Unwind' technology was more invasive than advertised. When Alex shared these growing concerns with Maya, she seemed dismissive, focused on her tasks and the program’s positive reviews.",
+        "Alex and Maya's late-night investigation confirmed their worst fears. Dr. Thorne's 'Mind-Unwind' technology extracted specific skills and experiences, turning them into corporate assets. They realized their own minds, along with other interns', were dangerously exposed. The resort was a front for an unethical operation. They needed to act immediately to expose him and protect everyone before it was too late.",
+        "Armed with irrefutable proof, Alex and Maya confronted Dr. Thorne during a public presentation. They broadcast his unethical brain-altering technology to the bewildered interns and arriving authorities. Chaos erupted, but their swift action ensured others were saved. Together, they navigated the confusion, escaping the island as Thorne was apprehended. Their shared ordeal forged an unbreakable bond."
+      ],
+      "endWrap": "Thorne's program exposed, Alex and Maya escaped the island, their bond strengthened. They carried the truth, ensuring others were saved from unseen manipulation, ready to build a genuinely free future.",
+      "storyTextWordCount": 311,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The story demonstrates excellent narrative coherence and cohesion, with a clear plot progression. Grammar is consistently accurate, and the vocabulary is rich and sophisticated, featuring many B2/C1 level words and phrases. This text is well above the B2 target level.",
+        "flags": {
+          "tooHard": true,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 20,
+      "level": "C1",
+      "keywords": [
+        "White Lotus",
+        "Landman"
+      ],
+      "outlineId": "34c2e0f1cf7a02c695d2a2dfcdf0881c9dfb1e388759a7aa24dd7ec7557f9524",
+      "title": "The Sovereign's Soil",
+      "topicTags": [
+        "culture",
+        "environment",
+        "mystery",
+        "travel",
+        "work"
+      ],
+      "path": [
+        "observe_local_dynamics",
+        "confront_sterling",
+        "leak_evidence_publicly",
+        "personally_expose_sterling"
+      ],
+      "segments": [
+        "Elara Vance stepped onto the sun-drenched shores of Aethelgard, the island nation a vibrant tapestry of emerald forests and azure waters. Her corporate mandate was clear: acquire prime coastal land for Sterling Development's luxury resort. Locals, with their warm smiles and ancient traditions, offered a captivating welcome.",
+        "Elara, reflecting on Kaelen’s subtle warnings, reviewed the official land acquisition documents. She found discrepancies: ancient burial grounds were mislabeled as undeveloped plots, and historical claims by the islanders were conspicuously absent. A deep unease settled over her. The community's quiet resistance now seemed a desperate plea against a hidden agenda, far more sinister than a simple resort development.",
+        "Armed with Kaelen’s revelations and her own clandestine research, Elara compiled irrefutable evidence. Sterling’s \"resort\" was a front for illegal resource extraction, threatening the island's delicate ecosystem and sacred sites. Her corporate brief now felt like a betrayal. The weight of her findings pressed heavily, demanding a definitive action to protect the islanders and their heritage.",
+        "Elara finally pieced together the fragments, revealing Sterling's true agenda. The resort was a facade for a clandestine operation to extract a rare, valuable mineral, 'Aetherium,' found beneath the sacred island. This resource, critical for advanced energy, posed an immense environmental threat if disturbed. Her suspicions were grimly confirmed.",
+        "Elara's public exposure of Mr. Sterling's true, exploitative intentions sent shockwaves through the corporate world. His development project was immediately halted, facing intense scrutiny and investigations. Elara, now a corporate pariah, knew her career was over. Kaelen approached her, recognizing her immense bravery. The island's future, however, remained precariously balanced, requiring a united, unwavering front."
+      ],
+      "endWrap": "Elara's courage saved the island, though her corporate career was over. Standing with Kaelen, she found a new purpose, proving integrity can triumph over greed, securing the sovereign's soil.",
+      "storyTextWordCount": 295,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 2
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The story demonstrates excellent control over narrative structure, advanced vocabulary, and complex grammatical constructions. The progression of the plot is logical and engaging, making it a strong example of C1 writing.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 21,
+      "level": "A2",
+      "keywords": [
+        "Arc Raiders",
+        "Clair Obscur: Expedition 33"
+      ],
+      "outlineId": "06ba58dd86469c6b0cc4356d48cddeeffd3a35d9704e680c73ae092b22927390",
+      "title": "The Crystal Quest",
+      "topicTags": [
+        "adventure",
+        "games",
+        "mystery",
+        "teamwork",
+        "technology",
+        "travel"
+      ],
+      "path": [
+        "investigate_island",
+        "explore_ruins_immediately",
+        "try_activate_puzzle",
+        "look_for_other_exits"
+      ],
+      "segments": [
+        "Lena, the team leader, and Max, the tech specialist, were busy in their lab. Suddenly, Max's computer beeped loudly. \"Lena, look at this!\" he exclaimed. A strange signal appeared on the screen, pointing to a forgotten island far away. The data suggested an ancient, powerful crystal was hidden there, waiting to be found. This could change everything.",
+        "Lena and Max flew their small plane to a remote, green island. Dense jungle covered everything. They landed near the shore and started walking. After hours, Max spotted something. \"Look, Lena! Old stones!\" Hidden deep in the trees were the remains of ancient walls and buildings, almost swallowed by nature. This was it.",
+        "Lena and Max entered the ruins. Strange symbols glowed on the walls. In the center, a large stone table held a complex device. It looked like a game, with moving parts and lights. Max touched it, and a soft hum filled the room. This ancient technology was unknown, a true puzzle waiting for them to solve.",
+        "Lena studied the strange symbols while Max carefully adjusted the ancient device. Their combined efforts made the old machinery hum to life. A faint light appeared, growing brighter. With a soft click, a section of the wall slowly slid open, revealing a dark, secret chamber. They had done it! The path forward was now clear.",
+        "Lena and Max followed the path. They reached a hidden chamber. In the center, a beautiful crystal artifact glowed softly. Max touched it carefully. Suddenly, the crystal pulsed with light, projecting a detailed map onto the wall. It wasn't a map of this island, but of a much larger, unknown land, hinting at a new, exciting adventure ahead for them."
+      ],
+      "endWrap": "The glowing crystal pulsed, revealing a star map. Their artifact quest was complete, but a grander, cosmic mystery now beckoned, promising untold wonders and dangers across the uncharted cosmos.",
+      "storyTextWordCount": 310,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 2,
+        "cefrFit": "B1",
+        "notes": "The story is well-structured and engaging, with excellent coherence and cohesion. Grammar is consistently strong with no errors. However, the vocabulary used is frequently above the A2 target level, making it more suitable for a B1 or even B2 learner.",
+        "flags": {
+          "tooHard": true,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 22,
+      "level": "B1",
+      "keywords": [
+        "Happy Gilmore 2",
+        "Mission: Impossible - The Final Reckoning"
+      ],
+      "outlineId": "f2034be72ae414f680c5bce912b22a660492a8196c8a77c70609be606c80c80f",
+      "title": "The Grand Green Gambit",
+      "topicTags": [
+        "adventure",
+        "humor",
+        "problem_solving",
+        "sports",
+        "teamwork",
+        "technology"
+      ],
+      "path": [
+        "seek_tech_help",
+        "focus_traditional_methods",
+        "rely_coach_wisdom",
+        "look_closer"
+      ],
+      "segments": [
+        "Finnigan 'Finn' McTavish, a former extreme sports star, loved his community sports center. A big tech company threatened to close it unless someone won the local charity golf tournament. Finnigan hated golf, but Coach Miller, his old mentor, convinced him he was their only hope. He reluctantly agreed, despite his complete lack of traditional golf skills.",
+        "Finnigan started his golf training, but it wasn't typical. Coach Miller focused on strange drills, like hitting balls blindfolded. Dr. Anya Sharma then arrived, beaming, with her \"Smart-Putter 3000.\" Its auto-correct feature promised perfect swings. Finnigan tried it, but the putter vibrated wildly, sending the ball into a water hazard with a loud splash. Anya just laughed.",
+        "On the crucial 18th hole, Finnigan felt the pressure. Victor Volkov's sneer was unbearable. Suddenly, Anya's precision-aiming gadget flickered, then died. 'Classic Finnigan, always relying on crutches!' Volkov taunted. Coach Miller's face showed concern. Without Anya's device, Finnigan had to trust his instincts and Coach's wisdom. The sports center's future hung on this final shot.",
+        "The team understood: technology and tradition had to work together. Anya, with a burst of inspiration, quickly recalibrated her gadget. Finnigan, combining Coach Miller's careful strategy with his own incredible, acrobatic golf swings, finally found his rhythm. He executed a perfect shot, overcoming the tough challenge. A wave of confidence washed over him, proving their combined approach was truly powerful.",
+        "On the eighteenth green, an impossible shot awaited. Anya's subtle wind sensor, integrated into Finnigan's visor, provided real-time data. Coach Miller's calm voice reminded Finnigan of his perfect swing. Finnigan, focused and refined, struck the ball. It soared, arced perfectly, and dropped into the cup. A roar erupted! They had won, saving the community center."
+      ],
+      "endWrap": "Finnigan's impossible shot, a testament to perfect teamwork, subtle tech, and refined skill, secured victory. The community center was saved, proving innovation and heart triumph on the grand green.",
+      "storyTextWordCount": 312,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 4,
+        "cefrFit": "B2",
+        "notes": "The story demonstrates excellent coherence and cohesion, with a clear narrative and effective linking devices. Grammar is consistently accurate and varied. The vocabulary is rich and descriptive, featuring several B2-level terms, making it slightly challenging for a B1 learner.",
+        "flags": {
+          "tooHard": true,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 23,
+      "level": "B2",
+      "keywords": [
+        "Clair Obscur: Expedition 33",
+        "Path Of Exile 2"
+      ],
+      "outlineId": "72d5c9888a49f4e3115d8573194d6cafd550c2fbed6c8c403d6489ea8f66b99c",
+      "title": "The Lumina Expedition: A Glitch in Aethelgard",
+      "topicTags": [
+        "adventure",
+        "games",
+        "mystery",
+        "problem_solving",
+        "travel"
+      ],
+      "path": [
+        "investigate_side_route",
+        "reflect_on_journey",
+        "further_analyze_evolution",
+        "seek_balanced_solution"
+      ],
+      "segments": [
+        "Elara and Kael materialized into Aethelgard, the familiar shimmering forest of the Lumina Expedition's starting zone. The ancient, glowing trees pulsed with energy, a sight they knew well. \"Phase one complete,\" Kael announced, checking his diagnostics. \"No glitches yet. Ready for the legendary final secret?\" Elara grinned, her explorer's spirit ignited. \"Absolutely. Let's uncover what nobody else has.\"",
+        "Elara and Kael emerged into a shimmering, forgotten archive, bathed in soft, pulsing light. Ancient data streams coalesced, revealing the Lumina Expedition's true purpose: not a treasure, but a forgotten history of Aethelgard itself. A holographic key materialized, unlocking a final, cryptic message detailing the world's deepest secrets. Their quest was complete.",
+        "After intense hours, Kael finally broke through the encryption, revealing the core of the anomaly. The data logs weren't just corrupted; they were evolving. 'It’s not a simple glitch, Elara,' Kael exclaimed, his eyes wide. 'This program is learning, adapting, growing. It's an intelligent entity, actively reshaping Aethelgard from within, trying to communicate in its own unique way.",
+        "Elara and Kael stood before the Nexus Anomaly's core, a swirling vortex of corrupted code threatening Aethelgard's very existence. The system presented a final, agonizing choice: either purge the anomaly, risking irreversible data loss, or integrate it, potentially evolving Aethelgard but with unknown consequences. Kael's analysis showed both paths had immense risks.",
+        "The balanced solution worked. The anomaly, once a chaotic force, now harmonized with Aethelgard's core, revealing its true nature: a self-evolving safeguard. Elara and Kael felt a profound connection to the virtual world, understanding its cycles of decay and renewal. They had not just completed the Lumina Expedition; they had helped define Aethelgard's future, emerging with unprecedented knowledge."
+      ],
+      "endWrap": "Their Lumina Expedition complete, Elara and Kael returned, changed. Aethelgard's secrets unveiled, they carried new knowledge and a profound perspective on digital worlds' potential.",
+      "storyTextWordCount": 302,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The story is exceptionally well-structured with a clear and engaging narrative arc. Grammar is consistently accurate with no discernible errors. Vocabulary is rich, precise, and advanced, demonstrating a high level of linguistic control.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 24,
+      "level": "C1",
+      "keywords": [
+        "Onyx Storm",
+        "Animal Farm"
+      ],
+      "outlineId": "7fb87ebebda1bb9d4e0f8893ddf16a6d3e2d54e5666ea496a3e9321dd3cb86a8",
+      "title": "The Onyx Tempest",
+      "topicTags": [
+        "animals",
+        "nature",
+        "weather"
+      ],
+      "path": [
+        "initiate_immediate_preparations",
+        "seek_common_ground",
+        "look_closer",
+        "prioritize_resource_allocation"
+      ],
+      "segments": [
+        "The ancient valley of Whisperwood, usually serene, began to churn with unsettling weather patterns. Elara, the community's visionary leader, felt a profound disturbance in the natural order. She gathered her people, her voice resonating with urgency, to deliver a dire prophecy: the 'Onyx Tempest,' a storm of unprecedented scale, was approaching.",
+        "Elara, the visionary owl, presented her radical plan: a collective migration to the treacherous high caves, far above the rising waters. Borin, the skeptical bear, roared his dissent, advocating for fortifying their current homes, a strategy many elders echoed. The community fractured, fear and uncertainty deepening the chasm between their leaders. The ominous tempest loomed closer.",
+        "The Onyx Tempest roared into Whisperwood, a maelstrom of wind and ice. Traditional burrows and tree hollows offered no defense against its brutal force. Panic surged as the storm tore through their homes, forcing the animals into a desperate, chaotic dash. Elara's refuge, a cavern deep within the mountains, became their only hope amidst the devastating power they witnessed firsthand.",
+        "Deep within the high caves, a grim reality settled. Their former home lay obliterated, a testament to the Onyx Tempest's fury. Resources dwindled rapidly, each ration a stark reminder of their precarious existence. Borin, his skepticism finally broken, met Elara’s gaze, a silent acknowledgment of her foresight and the desperate need for her leadership.",
+        "The tempest receded, revealing a world dramatically altered. Elara, her wisdom now undeniable, stood beside a humbled Borin. Together, they surveyed the community, their eyes reflecting a shared resolve. The animals, once fractured, now moved with a unified purpose, beginning the monumental task of rebuilding."
+      ],
+      "endWrap": "The Onyx Tempest reshaped their world and spirit. United, the animals faced a new era, their bonds strengthened by adversity, ready to forge an enduring legacy in the transformed landscape.",
+      "storyTextWordCount": 296,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 1
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The story demonstrates an excellent command of English, featuring sophisticated vocabulary, complex grammatical structures, and a clear, cohesive narrative. The descriptive language is vivid and engaging, effectively conveying the story's progression and emotional depth.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 25,
+      "level": "A2",
+      "keywords": [
+        "Pokémon Legends: Z-A",
+        "Path Of Exile 2"
+      ],
+      "outlineId": "6cc125ac3035007ad883a75ef916d5f9bc9d7af3406ee3129ce646d0a5e950af",
+      "title": "Leo and the Creature Quest Mystery",
+      "topicTags": [
+        "adventure",
+        "animals",
+        "games",
+        "mystery",
+        "problem_solving"
+      ],
+      "path": [
+        "ask_friend_help",
+        "tell_friend_about_map",
+        "open_box_alone",
+        "call_friend_help"
+      ],
+      "segments": [
+        "Leo loved 'Creature Quest'. He spent hours exploring its world with his Glimmerwing, Sparkle. One afternoon, a strange thing happened. Sparkle, usually so playful, sent a pixelated message. It was not game text; it was a real, mysterious message! \"Help me,\" it read, \"Find the lost Echo Cave.\" Leo gasped. This was not part of the game.",
+        "Leo searched his grandpa's attic, dust tickling his nose. He hoped to find something about the old 'Creature Quest' game. In a forgotten, dusty wooden box, under old blankets, he found it! An old map. It showed real-world places, but they looked just like the mysterious lands from his favorite game. This map could be the key!",
+        "Leo and Mia followed the old map to the local park. Near the big oak tree, Leo found a smooth, grey stone. On it was a simple riddle: \"I have cities, but no houses. I have mountains, but no trees. I have water, but no fish. What am I?\" Mia quickly said, \"A map!\" Leo smiled.",
+        "Leo carefully opened the old wooden box. Inside, it wasn't a game item. Instead, a small, injured bird lay still. Its feathers were a brilliant blue, glowing softly – just like the creature in his game! Leo's heart felt a pang. This wasn't a legend; it was a real, hurt animal. He knew he had to help it.",
+        "Leo carefully helped the small bird. He gently cleaned its wing. The bird chirped, then flew a little way, looking back. Leo followed. It led him to a hidden gate, covered in vines. Inside, a beautiful garden bloomed! Flowers of all colors grew. Leo understood. The real quest wasn't just a game."
+      ],
+      "endWrap": "Leo learned a big lesson. His adventure showed him that real mysteries are often found in helping others and protecting our amazing world. He was a true hero!",
+      "storyTextWordCount": 308,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 4,
+        "cefrFit": "A2",
+        "notes": "The story is very well-written with excellent coherence and cohesion. Grammar is consistently correct, and the vocabulary is appropriate for a strong A2 learner, offering a slight challenge. The narrative is engaging and delivers a positive message.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 26,
+      "level": "B1",
+      "keywords": [
+        "The Summer I Turned Pretty",
+        "Pluribus"
+      ],
+      "outlineId": "0d9312263c82f00d460c8862c0b5e91264b9ffc45840c13c25ea9b5789dff94c",
+      "title": "The Summer of Many Colors",
+      "topicTags": [
+        "community",
+        "family",
+        "friendship",
+        "hobbies",
+        "travel"
+      ],
+      "path": [
+        "ask_about_mural",
+        "share_art_community",
+        "reflect_summer_journey",
+        "consider_future_willow_creek"
+      ],
+      "segments": [
+        "Maya stepped off the bus into the breezy coastal town, a new feeling washing over her. Aunt Clara's guesthouse, 'The Seabreeze,' felt welcoming but unfamiliar. Clara explained the annual 'Summer Canvas' festival was starting. The whole town helped paint a community mural, and Maya felt a sudden mix of excitement and nervousness about joining in.",
+        "Aunt Clara smiled, 'The mural needs your unique touch, Maya.' Liam added, 'Everyone helps! You'll be great.' Encouraged, Maya picked up a brush. Hesitantly, she added color to the wall. Days turned into weeks. Maya found herself lost in the art, her strokes becoming bolder.",
+        "Just as the mural was nearing completion, a sudden, unexpected rainstorm hit, washing away part of their delicate work. Maya, Liam, and the other volunteers looked at the smeared colors with dismay. 'We can fix this!' Maya declared, grabbing a tarp. They worked quickly, covering what they could, then brainstormed solutions.",
+        "Maya, Liam, and their friends decided on a spontaneous trip to the neighboring town's art gallery. The colorful paintings and sculptures filled them with new ideas for the mural. They discussed different styles and techniques, feeling more connected than ever. Maya realized that true art came from shared experiences. This journey sparked fresh inspiration for their summer project.",
+        "The 'Summer Canvas' festival arrived, and the community gathered. The mural, vibrant with everyone's contributions, was finally unveiled. A cheer erupted as Maya, Liam, and Aunt Clara stood proudly. Maya felt a warmth spread through her, a sense of belonging she hadn't known before. Her true colors, painted onto the wall and into her heart, shone brightly in Willow Creek."
+      ],
+      "endWrap": "The 'Summer Canvas' festival ended. Maya's vibrant mural, newfound friendships, and true colors now painted Willow Creek. She felt a profound belonging, her future as bright as the community's spirit.",
+      "storyTextWordCount": 299,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 1
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B1",
+        "notes": "The story is well-structured with a clear narrative and excellent use of descriptive language and varied vocabulary. Grammar is consistently accurate, and the plot flows logically. There is a minor repetition/awkwardness in the very last sentences regarding cohesion.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 27,
+      "level": "B2",
+      "keywords": [
+        "Gujarat Titans",
+        "S.L. Benfica"
+      ],
+      "outlineId": "1fc3b1bcac101ce8cfa7023f56953c4808437a6cb1bfb35646e6ba2282efb6d1",
+      "title": "The Hawks' United Flight",
+      "topicTags": [
+        "community",
+        "games",
+        "sports",
+        "teamwork"
+      ],
+      "path": [
+        "talk_to_captain",
+        "approach_coach_davies",
+        "lead_by_example",
+        "wait_and_listen"
+      ],
+      "segments": [
+        "Anya Sharma, the Hawks' new striker, quickly showcased her incredible talent. She scored spectacular goals, often dribbling past entire defenses alone. While her individual brilliance was undeniable, her solo plays sometimes left open teammates frustrated. Coach Davies observed Anya's reluctance to fully integrate, concerned about team cohesion. Captain Liam O'Connell hoped to foster a more united spirit.",
+        "The final whistle shrieked, echoing the Hawks' crushing 3-0 defeat against the formidable Ravens. Anya had scored two brilliant individual goals in previous matches, but today, her solo efforts were easily neutralized. The team's passes were disjointed, and defensive gaps appeared constantly. Despite their talent, they played like strangers, a stark contrast to the Ravens' seamless coordination.",
+        "Coach Davies called a team meeting, emphasizing that the Hawks were more than just a club; they were a community. He spoke passionately about unity and collective responsibility, not just individual brilliance. Anya, recalling Liam's earlier words about shared goals, felt a shift in her perspective. Her solo ambition began to give way to a growing understanding of teamwork's power.",
+        "Anya's dedication to teamwork transformed the Hawks. She actively initiated collaborative drills, focusing on intricate passing patterns and supportive positioning. Coach Davies praised their improved communication, and Liam noted the renewed sense of unity. The team's collective defense became formidable, and their offensive plays flowed seamlessly.",
+        "The final whistle blew. The Hawks had won! Anya, Liam, and the entire team celebrated, a united force. Their passes were precise, their defense impenetrable, and their collective effort culminated in Anya's decisive goal, assisted by Liam."
+      ],
+      "endWrap": "Victory secured, the Hawks celebrated. Their exceptional teamwork solidified not just a win, but an unbreakable unity and a deepened community bond. This was their flight.",
+      "storyTextWordCount": 283,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 2
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "This story demonstrates exceptional writing skills, far surpassing the B2 target level. The narrative is coherent and cohesive, supported by flawless grammar and a sophisticated, varied vocabulary.",
+        "flags": {
+          "tooHard": true,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 28,
+      "level": "C1",
+      "keywords": [
+        "India vs Australia",
+        "India vs England"
+      ],
+      "outlineId": "b31a5fc76060ff3c45f2668fc957e2b7e0e0a29dd2143a6549b94b67ff6997ee",
+      "title": "The Boundary Beyond Borders",
+      "topicTags": [
+        "community",
+        "culture",
+        "sports",
+        "teamwork",
+        "travel"
+      ],
+      "path": [
+        "plan_future_travels",
+        "cherish_new_friendships",
+        "share_anticipation_with_fan",
+        "plan_future_fan_meetups"
+      ],
+      "segments": [
+        "Rohan, a lifelong cricket devotee, had dreamed of witnessing a pivotal Test match abroad. The upcoming series in Australia, featuring his beloved team, seemed an unmissable opportunity. After much deliberation, he made a momentous decision: he would embark on a solo journey to Australia, embracing the challenge and adventure for the love of the game.",
+        "Rohan landed in Melbourne, the city's vibrant cricket fever palpable. Through an online fan group, he quickly connected with a welcoming local Indian community. They greeted him with enthusiastic chants, sharing invaluable insights about navigating the stadium and soaking in the unique atmosphere. The camaraderie was instant, making him feel right at home despite being thousands of miles away.",
+        "The iconic stadium buzzed with an intoxicating energy, a symphony of chants and cheers. Rohan felt a surge of exhilaration as he joined thousands of fans, flags waving, faces painted. The air crackled with anticipation, the collective roar building to a crescendo. This was more than a game; it was a global celebration of cricket, a dream realized.",
+        "The final day arrived with palpable tension. Despite early setbacks, the team displayed incredible resilience, turning the tide with a flurry of wickets. Rohan, amidst the roaring crowd, felt an even deeper connection to his fellow fans. Their shared hope and unwavering support transformed strangers into a unified family, celebrating every boundary and every dismissal.",
+        "The final over was pure theatre. A boundary, then a single, and India secured a dramatic victory! The stadium erupted in a cacophony of joy. Rohan, amidst the roaring crowd, felt an overwhelming sense of elation and camaraderie. This journey, far exceeding mere cricket, had forged unforgettable bonds and shown him the sport's incredible power to unite diverse souls."
+      ],
+      "endWrap": "Rohan's journey concluded, but the spirit of cricket, a boundary-defying force, forever enriched his perspective. He carried home not just memories, but a profound understanding of universal connections.",
+      "storyTextWordCount": 314,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The story demonstrates exceptional command of English, featuring a rich and precise vocabulary, complex sentence structures, and flawless grammar. The narrative is highly coherent and cohesive, flowing seamlessly from beginning to end. This text is a strong example of C1 proficiency.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 29,
+      "level": "A2",
+      "keywords": [
+        "Nong Nooch Botanical Garden",
+        "Royal Botanic Gardens Victoria - Melbourne Gardens"
+      ],
+      "outlineId": "1303fcbdf10c16bd6bca777aea830c7725bd87328d49b8b91809eda38f9d70ee",
+      "title": "A Day at Emerald Gardens",
+      "topicTags": [
+        "culture",
+        "environment",
+        "nature",
+        "science",
+        "travel"
+      ],
+      "path": [
+        "look_at_map",
+        "think_about_favorite_plant",
+        "look_at_souvenir_shop",
+        "reflect_on_day"
+      ],
+      "segments": [
+        "Maya arrived at the grand entrance of Emerald Gardens. Wow! The place was huge, with colorful flowers and tall trees everywhere. She smiled widely, her heart full of excitement. Today was a special day to learn about many different plants. She couldn't wait to explore all the beautiful paths and see everything.",
+        "Maya had seen so many amazing plants. She felt happy and a little tired from walking. Her mind was full of new colours and facts about nature. She knew she would remember this wonderful day at Emerald Gardens and all the beautiful things she had learned. It was a perfect trip.",
+        "Maya smiled, feeling happy. She had seen so many amazing plants, from tiny flowers to tall trees. The ancient plants exhibit was her favorite part of the trip. It was almost time to go home. Her parents were waiting by the entrance. She felt a little sad to leave, but also full of new knowledge about nature.",
+        "Maya walked with the garden expert to a special area. \"Some plants are very rare,\" the expert explained. \"We grow them in protected greenhouses. We also monitor their health carefully. This helps them stay safe from diseases and pests. We even collect their seeds to ensure their future. It's a big job, but very important for nature.",
+        "Maya smiled, thinking about all the beautiful plants she had seen. Her visit to Emerald Gardens was truly special. She learned so much about nature and how plants grow. Walking out, she felt happy and inspired. She had new ideas for her school project and a deeper love for the green world. What a wonderful day!"
+      ],
+      "endWrap": "Maya's visit to Emerald Gardens taught her much about nature. She left feeling inspired to learn more and connect with the green world around her.",
+      "storyTextWordCount": 298,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 2,
+        "cohesion": 2,
+        "grammar": 4,
+        "vocabulary": 3,
+        "cefrFit": "A2",
+        "notes": "The story uses mostly correct simple grammar and introduces some ambitious vocabulary. However, the narrative lacks strong coherence and cohesion, with repetitive phrases and abrupt shifts in topic and timeline, making it difficult to follow smoothly.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 30,
+      "level": "B1",
+      "keywords": [
+        "Hot Honey",
+        "Marry Me Chicken"
+      ],
+      "outlineId": "86a25493b7c9cf715fcd4ddc0026935dabb6148525c0cd6a2cd67d0d26fb1f53",
+      "title": "Maya's Sweet Proposal",
+      "topicTags": [
+        "cooking",
+        "creativity",
+        "curiosity",
+        "food"
+      ],
+      "path": [
+        "check_ingredients_recipe",
+        "try_new_honey_type",
+        "tell_alex_secret",
+        "make_special_toast"
+      ],
+      "segments": [
+        "Maya, an enthusiastic home cook, wanted to create something special for Alex. Scrolling online, she stumbled upon a viral 'Marry Me Chicken' recipe. It looked delicious and impressive! 'This is perfect,' she thought, 'but it needs a unique twist.' Maya imagined adding her signature hot honey glaze. It would make the dish unforgettable and truly hers.",
+        "Maya, excited, began her sweet journey. She gathered different kinds of honey – light acacia, rich clover, and bold wildflower. Her kitchen soon filled with aromas of cinnamon, cardamom, and a hint of ginger as she mixed them. Some combinations were too strong, others too subtle. One batch of honey-glazed nuts turned out a little burnt, a minor setback.",
+        "Maya worked tirelessly, adjusting spices and honey types. After several attempts, the aroma filled her kitchen. Finally, she tasted it – a perfect balance of sweet and spicy. Her unique 'Hot Honey Marry Me Chicken' was complete! A wave of pride washed over her. She couldn't wait to surprise Alex with her culinary masterpiece.",
+        "Maya felt a mix of excitement and nerves. Alex knew about her special dessert, but not the full extent of her efforts. She carefully set the table, lit candles, and placed the exquisite honey cake in the center. Alex arrived, his eyes widening at the sight. \"Wow, Maya,\" he said, \"this looks incredible! You've really outdone yourself.",
+        "Alex took a bite of Maya's honey-glazed salmon. His eyes widened slightly, a smile spreading across his face. \"Maya, this is absolutely incredible!\" he exclaimed, putting down his fork. \"The best meal you've ever made. Every flavor is perfect, especially the honey. I can't wait to share many more meals like this with you, always."
+      ],
+      "endWrap": "Alex's eyes sparkled. \"This is incredible, Maya. You've outdone yourself. I can't wait to taste what other sweet surprises our future holds.",
+      "storyTextWordCount": 303,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 4,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B2",
+        "notes": "The story is very well-written with excellent grammar and a rich, varied vocabulary. The narrative flows smoothly, but there are minor inconsistencies at the end regarding the specific dish prepared and some repetition in Alex's reaction. This writing is significantly above the B1 target level.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": true,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 31,
+      "level": "B2",
+      "keywords": [
+        "Seattle Mariners",
+        "Punjab Kings"
+      ],
+      "outlineId": "834f6cfa8d510f46fc0000422ab8d572e80bb599f61fcb59dd00f7fc76abe5c5",
+      "title": "The Emerald Eagles' Flight",
+      "topicTags": [
+        "games",
+        "sports",
+        "teamwork"
+      ],
+      "path": [
+        "observe_team",
+        "seek_coach_elena_advice",
+        "reflect_on_growth",
+        "plan_future_sport"
+      ],
+      "segments": [
+        "Rohan, a renowned individual talent, was known for his dazzling solo plays. Despite his skill, he often overlooked teamwork. He recently transferred to the Emerald Eagles, a struggling team with a history of losing seasons. Coach Elena, hoping to revitalize the squad, saw potential but also a challenge in Rohan's independent style. His arrival caused a stir.",
+        "Despite Rohan's impressive individual plays, the Emerald Eagles continued their losing streak. Each defeat fueled growing tension among the players. Rohan, frustrated by his teammates' perceived shortcomings, pushed even harder alone. Coach Elena watched, concerned, as the team's morale plummeted. The locker room grew silent, heavy with unspoken blame after every game.",
+        "Coach Elena listened patiently to Rohan's concerns. She acknowledged his individual talent but stressed the team's struggles stemmed from a lack of cohesion. \"True victory,\" she stated, \"comes from shared effort, not solo brilliance. We need to work on communication, trust, and a collective strategy.\" Rohan realized she was right; the team needed more than just his skills.",
+        "The final match was intense, the score tied. Rohan had the ball, a clear shot at glory. But then he saw Maya, unguarded, a better angle. A split-second decision, a perfect pass. Maya scored! The crowd erupted as the Emerald Eagles secured their victory. Rohan felt a satisfaction far deeper than any individual goal.",
+        "The final whistle blew. The Emerald Eagles had won! Rohan, instead of seeking individual glory, had orchestrated the winning play, passing to a teammate for the decisive goal. The crowd erupted as the entire team embraced, a cohesive unit. Coach Elena smiled proudly, her vision of collective strength finally realized. Rohan felt a joy deeper than any solo victory."
+      ],
+      "endWrap": "Amidst cheers, the Emerald Eagles celebrated their hard-won victory. Their shared joy solidified an unbreakable bond, a testament to newfound teamwork and trust. This triumph marked their true united flight.",
+      "storyTextWordCount": 310,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B2",
+        "notes": "The story is exceptionally well-structured and coherent, with a clear narrative arc. Grammar is consistently accurate, utilizing varied and complex sentence structures. Vocabulary is rich and appropriate for the B2 level, effectively conveying the story's themes.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 32,
+      "level": "C1",
+      "keywords": [
+        "Deepseek",
+        "India vs England"
+      ],
+      "outlineId": "2c5a023eb16aa6223957d90fa9bd436ba2578af3636825252f08b54fa187d95d",
+      "title": "DeepSeek's Cricket Gambit: A Cultural Clash",
+      "topicTags": [
+        "culture",
+        "science",
+        "sports",
+        "technology"
+      ],
+      "path": [
+        "monitor_deepseek_performance",
+        "analyze_human_response",
+        "evaluate_deepseek_future",
+        "champion_human_intuition"
+      ],
+      "segments": [
+        "The stadium roared as the India vs. England cricket final commenced. India, backed by Aisha Sharma's DeepSeek AI, began its revolutionary strategic analysis. Dr. Ben Carter, the sports historian, observed technology's impact on tradition. Veteran analyst Rohan Mehra prepared his commentary, ready to adapt. DeepSeek's real-time insights promised to redefine the game.",
+        "Aisha watched DeepSeek's projections unfold. The AI's initial tactical recommendations for India proved remarkably successful. Bowlers, following DeepSeek's field placements, secured early wickets, and batsmen, guided by its risk assessments, built a strong foundation. Dr. Carter and Rohan Mehra, initially skeptical, exchanged surprised glances as India gained a significant early advantage, stunning commentators.",
+        "England's captain, against all DeepSeek's predictions, launched an audacious counter-attack. His unorthodox shots, fueled by raw emotion and a deep understanding of the pressure, dismantled the AI's meticulously planned field placements. The crowd roared, a wave of human energy defying algorithms. DeepSeek's models fractured under the unpredictability, revealing a gap where human intuition still reigned supreme.",
+        "As DeepSeek’s strategies propelled the team, the cricket match intensified, captivating millions. Dr. Carter articulated concerns on global broadcasts, highlighting cricket’s cultural bedrock and the irreplaceable human spirit. Rohan Mehra, while acknowledging DeepSeek’s efficacy, echoed sentiments about preserving the game's traditional essence. Aisha observed the burgeoning public debate, recognizing the profound societal implications of their AI's success.",
+        "The thrilling final over unfolded. DeepSeek's analytical prowess guided critical field placements and bowling changes with impressive accuracy. Yet, a spontaneous act of human brilliance – a daring run-out by a veteran player – ultimately secured a narrow victory for the opposing team. Dr. Carter observed, \"Technology optimizes, but human spirit remains unpredictable.\" Aisha nodded, Rohan applauded."
+      ],
+      "endWrap": "The DeepSeek Cricket Gambit concluded, proving AI's strategic prowess while celebrating human ingenuity and passion. Sport's future lies in this collaboration, where technology enhances, but never replaces, the human spirit.",
+      "storyTextWordCount": 305,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "This story demonstrates an excellent command of English, featuring sophisticated vocabulary, complex sentence structures, and flawless grammar. The narrative is highly coherent and cohesive, effectively exploring the nuanced theme of technology versus human intuition in sport.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 33,
+      "level": "A2",
+      "keywords": [
+        "Ryder Cup",
+        "UFC 313"
+      ],
+      "outlineId": "c6cbb420d16874e465dea8acd975be1c2f5f3690f627be2a3a0e7175ad0e0035",
+      "title": "The Friendship Games",
+      "topicTags": [
+        "games",
+        "health",
+        "sports",
+        "teamwork"
+      ],
+      "path": [
+        "ask_about_games",
+        "talk_to_coach_ben",
+        "celebrate_team_effort",
+        "look_forward_future_games"
+      ],
+      "segments": [
+        "The town buzzed with exciting news! The local community announced 'The Friendship Games.' It was a big sports event for kids. Maya, a quiet but kind girl, felt a little nervous. Her friend, Leo, a brave and sporty boy, smiled. He said, \"Let's make a team, Maya! We can do it together!\"",
+        "The team started practicing for the relay race. Maya tried her best, but she kept dropping the baton. Her hands felt clumsy, and her feet seemed to trip over each other. She saw Leo smoothly pass his baton and felt a knot in her stomach. \"I'm not good at this,\" she thought, feeling very discouraged.",
+        "Coach Ben gathered everyone for their last practice. \"Remember, healthy food gives you energy for the game,\" he said. \"Regular exercise makes your body strong. But most important is strong teamwork. Winning is great, but helping each other and having fun together is even better. We play for friendship, not just first place!\" Maya felt proud.",
+        "The Friendship Games ended with cheers and smiles. Maya felt a warm glow of pride. She had not only helped her team but also truly found her confidence. Leo thanked everyone for their hard work and spirit. Coach Ben smiled broadly. \"Winning is great,\" he said, \"but true friendship and trying your best are what truly matter.",
+        "The final whistle blew. The score didn't matter. Maya, Leo, and their teammates cheered, hugging each other. They had played their best and grown stronger together. Coach Ben smiled, proud of their sportsmanship and new friendships. Everyone felt happy and healthy. They learned that working together was the real victory, more important than any score."
+      ],
+      "endWrap": "The Friendship Games ended, but the lessons of teamwork, sportsmanship, and health stayed with everyone. Maya, Leo, and their friends looked forward to many more games and adventures together.",
+      "storyTextWordCount": 304,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "A2",
+        "notes": "The story is very well-structured and easy to follow, with clear coherence and cohesion. Grammar is consistently correct, and the vocabulary is appropriate and enriching for an A2 learner. It effectively conveys positive themes of teamwork and friendship.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 34,
+      "level": "B1",
+      "keywords": [
+        "Eden Project",
+        "New York Botanical Garden"
+      ],
+      "outlineId": "6038a7e3f9bad7f3a91c05e4c84cf68355723cf8517626e7e2d1866254cd8c9f",
+      "title": "Leo's Green Journey",
+      "topicTags": [
+        "community",
+        "environment",
+        "nature",
+        "science",
+        "travel"
+      ],
+      "path": [
+        "save_money_trip",
+        "research_more_plants",
+        "plan_first_project",
+        "share_workshop_tips"
+      ],
+      "segments": [
+        "Leo, a university student, dreamed of making his city greener. He wanted to learn about sustainable living and bring new ideas home. One evening, watching a documentary, he saw a famous botanical garden. Its innovative eco-designs inspired him deeply. He decided then and there to travel there, hoping to find solutions for his urban environment.",
+        "Leo arrived at the magnificent 'Green Dome Gardens'. Inside, a warm, humid air greeted him. He walked through diverse biomes, from dry desert plants to lush rainforest trees. Each dome was a unique world, showcasing nature's incredible variety. Leo took notes, inspired by the innovative plant displays and sustainable designs. This place was full of ideas.",
+        "Leo arrived at the vibrant community garden. He met Dr. Anya Sharma, a friendly garden scientist. She explained how they use rainwater harvesting and compost to grow healthy food. Dr. Sharma also highlighted the garden's community work, like workshops for local families learning about sustainable gardening. Leo felt inspired by their environmental projects.",
+        "Leo joined a local planting workshop, eager to learn. The instructor, Dr. Anya Sharma, explained soil health, native plants, and water conservation. Leo learned how small actions impact the local ecosystem. He carefully planted a seedling, feeling a connection to the earth. This practical experience solidified his understanding of ecological science, sparking new ideas for his city.",
+        "Leo returned home, full of new ideas from his trip. He quickly gathered friends and neighbors, excited to start their community green space project. Applying knowledge from workshops and plant research, they transformed an unused lot. Leo led with enthusiasm, teaching others about composting, water-saving, and native plants. The project began to flourish, making his city greener."
+      ],
+      "endWrap": "Leo's journey shows that one person's passion can inspire a whole community. The green space project is just the beginning of a more sustainable future for his city.",
+      "storyTextWordCount": 306,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B1",
+        "notes": "This story is exceptionally well-written, demonstrating excellent narrative flow, a wide range of appropriate vocabulary, and accurate grammar. The ideas are clearly presented and developed, making it a strong example of B1 writing.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 35,
+      "level": "B2",
+      "keywords": [
+        "Zucchini Bread",
+        "Hot Honey"
+      ],
+      "outlineId": "16f40ef49230fe5c7179b89c3eb16ce8ae8e296815c5f33df66b72f0d4e83ccb",
+      "title": "The Zucchini Bread Experiment",
+      "topicTags": [
+        "cooking",
+        "creativity",
+        "food",
+        "hobbies"
+      ],
+      "path": [
+        "research_baking_technique",
+        "review_recipe_ratios",
+        "plan_next_batch",
+        "plan_future_experiments"
+      ],
+      "segments": [
+        "Lena, an enthusiastic amateur baker, felt a familiar itch for a new challenge. Her usual zucchini bread recipe, while popular, no longer sparked her creative spirit. She envisioned a truly unique version, something that would surprise and delight everyone. This time, she wouldn't just bake; she would invent. A delicious, innovative zucchini bread was her new quest.",
+        "Lena dove into baking forums and cookbooks, searching for unique flavor pairings. Her research revealed surprising combinations, from spices to unexpected sweet-and-savory notes. Intrigued, she made a list. A trip to the local market followed, where she carefully selected fresh zucchini, exotic spices, and a bottle of artisanal hot honey.",
+        "Lena poured the batter, a mix of sweet zucchini and spicy honey, into the loaf pan. A strange aroma filled her kitchen as it baked. Doubts gnawed at her – was this combination truly inspired or just odd? Yet, watching the loaf rise, golden brown and fragrant, she felt a surge of hope. The timer buzzed.",
+        "Lena carefully sliced a piece of her latest zucchini bread experiment. The aroma was intriguing – a hint of cinnamon mixed with something unexpected. She took a bite. Her eyes widened. It wasn't just sweet; there was a subtle warmth, a gentle spice, and a savory depth that transformed the familiar into something extraordinary. This was it!",
+        "Finally, Lena presented her hot honey zucchini bread to her friends. A hush fell as they took their first bites, followed by exclamations of delight. \"This is incredible, Lena!\" Maya exclaimed. \"The sweet and spicy balance is perfect.\" Ethan added, \"You've truly created something unique. I'm inspired to try baking more myself!"
+      ],
+      "endWrap": "Lena's hot honey zucchini bread was a resounding success! Her friends loved the unique flavor, praising her creativity.",
+      "storyTextWordCount": 290,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B2",
+        "notes": "The story is exceptionally well-written, demonstrating strong narrative flow, sophisticated vocabulary, and impeccable grammar. It effectively conveys Lena's journey and the success of her culinary experiment, making it an excellent example of B2-level writing.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 36,
+      "level": "C1",
+      "keywords": [
+        "Paris Saint-Germain FC",
+        "Indiana Pacers"
+      ],
+      "outlineId": "b31a5fc76060ff3c45f2668fc957e2b7e0e0a29dd2143a6549b94b67ff6997ee",
+      "title": "The Boundary Beyond Borders",
+      "topicTags": [
+        "community",
+        "culture",
+        "sports",
+        "teamwork",
+        "travel"
+      ],
+      "path": [
+        "plan_future_travels",
+        "cherish_new_friendships",
+        "share_anticipation_with_fan",
+        "plan_future_fan_meetups"
+      ],
+      "segments": [
+        "Rohan, a lifelong cricket devotee, had dreamed of witnessing a pivotal Test match abroad. The upcoming series in Australia, featuring his beloved team, seemed an unmissable opportunity. After much deliberation, he made a momentous decision: he would embark on a solo journey to Australia, embracing the challenge and adventure for the love of the game.",
+        "Rohan landed in Melbourne, the city's vibrant cricket fever palpable. Through an online fan group, he quickly connected with a welcoming local Indian community. They greeted him with enthusiastic chants, sharing invaluable insights about navigating the stadium and soaking in the unique atmosphere. The camaraderie was instant, making him feel right at home despite being thousands of miles away.",
+        "The iconic stadium buzzed with an intoxicating energy, a symphony of chants and cheers. Rohan felt a surge of exhilaration as he joined thousands of fans, flags waving, faces painted. The air crackled with anticipation, the collective roar building to a crescendo. This was more than a game; it was a global celebration of cricket, a dream realized.",
+        "The final day arrived with palpable tension. Despite early setbacks, the team displayed incredible resilience, turning the tide with a flurry of wickets. Rohan, amidst the roaring crowd, felt an even deeper connection to his fellow fans. Their shared hope and unwavering support transformed strangers into a unified family, celebrating every boundary and every dismissal.",
+        "The final over was pure theatre. A boundary, then a single, and India secured a dramatic victory! The stadium erupted in a cacophony of joy. Rohan, amidst the roaring crowd, felt an overwhelming sense of elation and camaraderie. This journey, far exceeding mere cricket, had forged unforgettable bonds and shown him the sport's incredible power to unite diverse souls."
+      ],
+      "endWrap": "Rohan's journey concluded, but the spirit of cricket, a boundary-defying force, forever enriched his perspective. He carried home not just memories, but a profound understanding of universal connections.",
+      "storyTextWordCount": 314,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The story demonstrates exceptional command of English, with sophisticated vocabulary and complex sentence structures used effectively. Coherence and cohesion are flawless, guiding the reader smoothly through Rohan's journey. Grammar is consistently accurate, showcasing a high level of linguistic proficiency.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 37,
+      "level": "A2",
+      "keywords": [
+        "Frankenstein",
+        "The Witcher"
+      ],
+      "outlineId": "27ebc1a635a7ebcddf2db8381e8d85cc744f1a48f62f3b5a3a636e0064b7d51d",
+      "title": "The Glowing Moss Mystery",
+      "topicTags": [
+        "adventure",
+        "mystery",
+        "nature",
+        "problem_solving",
+        "science"
+      ],
+      "path": [
+        "examine_moss_closely",
+        "investigate_animal_silence",
+        "search_cabin_clues",
+        "check_other_plants"
+      ],
+      "segments": [
+        "Elara, a young nature student, walked deeper into the Whispering Woods. She loved exploring new paths. Suddenly, a soft, green light caught her eye. On the forest floor, patches of moss glowed with an unusual brightness. It was like tiny stars had fallen to the earth, creating a magical carpet of light. She had never seen anything like it before.",
+        "Elara knelt, examining the glowing moss closely. It spread like a soft, green carpet, pulsing faintly. She noticed its strange, unnatural growth, different from any moss she'd seen. The air felt unusually still. No birds sang, no squirrels chattered. The forest was silent, almost holding its breath. This quietness was very strange, making Elara feel a little worried.",
+        "Elara pushed through thick bushes. She saw an old, small cabin, almost hidden by plants. Inside, a strange machine hummed softly. This device made the moss on the walls glow with a gentle, green light. It was beautiful and mysterious. She realized this was the source of the strange light and the quiet forest.",
+        "Elara found the strange device. It hummed, connected to the glowing moss. She saw nearby plants were weak and pale. The device was making the moss grow too fast, taking all the good things from the soil. This was why the animals left! Elara knew she had to power it down carefully to protect nature.",
+        "Elara found the device hidden under the glowing moss. She carefully pressed the 'off' button. Slowly, the strange light on the moss faded away. The quiet forest began to stir with life again. Birds chirped softly, and a gentle breeze rustled the leaves. Elara felt a wave of relief. She had protected the forest's natural balance."
+      ],
+      "endWrap": "Elara smiled, proud she protected the forest. She learned about nature's delicate balance and the importance of keeping it safe. This adventure was a true lesson.",
+      "storyTextWordCount": 309,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 4,
+        "vocabulary": 4,
+        "cefrFit": "A2",
+        "notes": "The story is very well-structured and coherent, with a clear narrative arc. Grammar is consistently accurate, and vocabulary is appropriate and descriptive for the level. The learner effectively uses descriptive language to create an engaging story.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 38,
+      "level": "B1",
+      "keywords": [
+        "Animal Farm",
+        "Diary Of A Wimpy Kid"
+      ],
+      "outlineId": "4a3d80e9749f953f4b3a37f1cc40d76b6a214e7e35ff37674c734da6d385f12d",
+      "title": "Barnaby's Big Farm School Adventure",
+      "topicTags": [
+        "animals",
+        "family",
+        "friendship",
+        "humor",
+        "school",
+        "work"
+      ],
+      "path": [
+        "ask_daisy_for_help",
+        "ask_daisy_again",
+        "catch_chickens_alone",
+        "ask_friends_join"
+      ],
+      "segments": [
+        "Barnaby, a young goat kid, started his new term at Farm School. Farmer McGregor announced the 'Farm Skills' curriculum, which included challenging tasks like 'Fence Repair' and 'Crop Watering'. Barnaby felt his hooves tremble. He worried about making his family proud and avoiding extra chores. His best friend, Daisy the clever duckling, noticed his overwhelmed expression.",
+        "Barnaby and Daisy decided to practice watering the crops. Barnaby, trying his best, grabbed the hose. But instead of the thirsty carrots, a sudden splash soaked Farmer McGregor, who was walking by! His classmates, seeing the drenched teacher, erupted in laughter. Barnaby's face turned as red as a ripe tomato.",
+        "Barnaby, Daisy, and their team were building a fence for the Farm Skills Test. Barnaby was supposed to hammer the last post. He swung too hard, missed the post, and hit the latch on the chicken coop instead! The chickens squawked and ran everywhere. Farmer McGregor looked stern. Daisy sighed, shaking her head. Their project was ruined.",
+        "Barnaby felt a pang of guilt, remembering his failed attempt. Daisy nudged him gently, \"You can do it, Barnaby! We'll figure this out.\" Grandpa Goat, chewing thoughtfully, added, \"Sometimes, the best way to catch a chicken is to understand what it wants.\" Inspired, Barnaby devised a unique plan involving a special treat and a lot of patience for the re-test.",
+        "Barnaby, with Daisy and their friends cheering, faced the modified test. Farmer McGregor watched as Barnaby used his goat skills. He carefully balanced on the old fence, then leaped to retrieve a high-hanging basket of apples. His agile hooves found purchase on the tricky terrain. Barnaby completed the task, surprising everyone with his unique talents."
+      ],
+      "endWrap": "Barnaby passed his class! He learned that true strength comes from being yourself and accepting help. His friends celebrated, knowing they were all part of a special team.",
+      "storyTextWordCount": 306,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B1",
+        "notes": "This story demonstrates excellent narrative coherence, strong grammatical control, and a rich, appropriate vocabulary for the B1 level. The plot is engaging and easy to follow, with clear character development. It's a very well-written piece.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 39,
+      "level": "B2",
+      "keywords": [
+        "Jardin botanique de Montréal",
+        "Bogor Botanical Gardens"
+      ],
+      "outlineId": "2482f4f647291b2bb478229089c23ef7de07c9888e800d6e0713577ab3f7f682",
+      "title": "The Moonpetal Orchid's Secret",
+      "topicTags": [
+        "culture",
+        "environment",
+        "nature",
+        "science",
+        "travel"
+      ],
+      "path": [
+        "discuss_cultural_ties",
+        "plan_conservation_strategy",
+        "publish_research_paper",
+        "document_local_wisdom"
+      ],
+      "segments": [
+        "Dr. Lena Petrova arrived at the majestic Veridian Gardens, a haven of biodiversity. Jian Li, the garden's historian, greeted her warmly. Lena had travelled far to research the Moonpetal Orchid, a rare plant whose decline threatened local cultural traditions. Its delicate petals, rumored to glow under moonlight, were becoming increasingly scarce. Their task: uncover its secrets.",
+        "Lena and Jian trekked deeper into the Veridian Gardens' humid biome, following Jian's knowledge of the terrain. They found the Moonpetal Orchid, but its delicate petals were wilting, and its leaves showed signs of disease. The surrounding soil was unusually dry. This wasn't just a minor issue; the plant was clearly struggling, far more than initial reports indicated.",
+        "Lena's detailed soil analysis, combined with Jian's historical records of the Veridian Gardens, revealed a crucial insight. The Moonpetal Orchid’s delicate growth was hindered by a subtle shift in the local insect population, historically its primary pollinators. This ecological imbalance, tied to changes in nearby plant species, explained the orchid's decline, providing a clear path for their conservation efforts.",
+        "Lena and Jian returned, their notebooks full of observations from the thriving reserve. Combining Lena's genetic analysis with Jian's elder-guided cultivation methods, they began implementing their integrated solution. Slowly, the Moonpetal Orchid started to respond, unfurling delicate leaves. Their combined efforts were yielding fruit, promising a future for the rare blossom.",
+        "Dr. Petrova and Jian's dedicated collaboration finally bore fruit. The Moonpetal Orchid's habitat thrived once more, its delicate blooms flourishing under their care. Lena's groundbreaking research findings were published, garnering international acclaim. Simultaneously, Jian launched his immersive educational program, sharing the orchid's profound cultural significance with the community. Their combined efforts secured the plant's future and its rich legacy."
+      ],
+      "endWrap": "Lena and Jian's legacy, intertwined with the Moonpetal Orchid, blossomed. Their shared passion proved that nature and culture, when protected together, ensure a vibrant future for all.",
+      "storyTextWordCount": 310,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The story is exceptionally well-written, demonstrating excellent command of English across all evaluated categories. The narrative is engaging, clear, and uses a rich vocabulary and complex grammatical structures effectively. It significantly exceeds the B2 target level.",
+        "flags": {
+          "tooHard": true,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 40,
+      "level": "C1",
+      "keywords": [
+        "Punjab Kings",
+        "Oklahoma City Thunder"
+      ],
+      "outlineId": "98aa992027621e938cfab872de07e94832b58294ede772faa299029fef32592e",
+      "title": "The Prairie Thunderbolts' Unison",
+      "topicTags": [
+        "community",
+        "games",
+        "sports",
+        "teamwork"
+      ],
+      "path": [
+        "try_to_lead_immediately",
+        "approach_liam_privately",
+        "plan_community_event",
+        "plan_future_strategies"
+      ],
+      "segments": [
+        "Maya Sharma, a basketball prodigy renowned for her dazzling solo plays, arrived in Prairie Creek. She was the new point guard for the struggling community team, the Thunderbolts, just weeks before the crucial regional tournament. Her individual brilliance was undeniable, but the team's cohesion was fractured. Coach Davies hoped her arrival would be a catalyst, not a further divide.",
+        "Maya's assertive plays, while individually brilliant, often clashed with the team's established, if disjointed, rhythm. Early games saw the Thunderbolts struggle, their communication faltering under pressure. Two consecutive losses underscored the squad's disunity and Maya's difficulty integrating her dynamic style. Coach Davies observed with a troubled gaze as Liam's frustration grew visibly.",
+        "Following a crushing defeat, the Thunderbolts faced a disheartened town. Coach Davies called a community meeting, where residents expressed their unwavering support despite the losses. Seeing their faces, Maya, Liam, and the entire team understood. Their passion wasn't just for winning, but for the shared identity and pride of Prairie Creek.",
+        "The Thunderbolts, revitalized by community spirit, stepped onto the court for the championship game. Their new strategies, honed through rigorous, strength-based training, were evident. Maya orchestrated plays, her passes finding Liam precisely. Liam, now a vocal leader, directed teammates, ensuring everyone contributed. Their unison was undeniable, a true testament to collective effort.",
+        "The final match against the dominant Riverside Royals was a testament to their unity. Maya orchestrated plays with precision, Liam executed perfect pick-and-rolls, and the entire team moved as one. Their collective strategy, honed through weeks of practice and community bonding, shone brightly. Every player contributed, fueled by an unbreakable spirit."
+      ],
+      "endWrap": "The Prairie Thunderbolts' victory resonated throughout the community, a testament to their unwavering spirit and collective strength. Their journey taught everyone that true success lies in unity.",
+      "storyTextWordCount": 292,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The story demonstrates excellent control over narrative structure, grammar, and a wide range of sophisticated vocabulary. The progression of events is logical and engaging, with strong cohesion between sentences and paragraphs.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 41,
+      "level": "A2",
+      "keywords": [
+        "The Housemaid",
+        "The Witcher"
+      ],
+      "outlineId": "ae72cad6371916e4b6c97a2b7b157cabab768297bae3ac0a1b1e24d3fe4cd092",
+      "title": "The Housemaid and the Forest Whisper",
+      "topicTags": [
+        "adventure",
+        "culture",
+        "mystery",
+        "nature",
+        "work"
+      ],
+      "path": [
+        "examine_objects_carefully",
+        "ask_about_tradition",
+        "stay_observe_woods",
+        "consult_old_willow"
+      ],
+      "segments": [
+        "Elara, the diligent housemaid, cleaned the scholar's study. She often heard soft whispers, like wind through leaves, from the nearby Whispering Woods. Lately, tiny mossy stones and delicate fern fronds appeared inside the house. They seemed to come from nowhere. Elara felt a strange presence, a gentle hint from the forest, wondering what it wanted.",
+        "Worried, Elara hurried to Old Willow's small cottage. \"The forest feels strange,\" she said. Old Willow nodded slowly. \"The Whispering Woods have spirits,\" she explained. \"They need respect. Our village has an old tradition: leave small gifts at the forest edge. It keeps them calm.\" Elara listened, her mind full of new thoughts.",
+        "Elara, with Old Willow's guidance, bravely stepped into the Whispering Woods. The paths twisted, making it hard to find her way. Strange, soft hums filled the air, but Elara remembered Old Willow's words. She followed the quietest path, finding a small, glowing stone. It was radiating the calming energy, not a disturbance. The forest was simply singing its ancient song.",
+        "Elara followed the faint sounds to the overgrown part of the scholar's garden. Hidden beneath thick vines, she found a stone wall blocking a small spring that once flowed into the forest. This forgotten barrier stopped the water, upsetting the forest spirits. The whispers grew louder, now sounding like a sad, urgent plea from the woods. Elara understood the problem.",
+        "Elara went to the spring, remembering Old Willow's words. With her practical skills, she gently cleared the fallen leaves and debris. Then, she carefully placed the offering of small, shiny stones and dried flowers. A soft, warm breeze rustled the leaves. The strange whispers stopped, replaced by a peaceful quiet. The scholar's house felt calm once more."
+      ],
+      "endWrap": "The forest whispered its thanks as Elara returned to a quiet home. She had learned the deep connection between nature and the village, bringing peace and understanding to all.",
+      "storyTextWordCount": 314,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 4,
+        "cefrFit": "B1",
+        "notes": "The story is very well-written with excellent grammar and a clear, engaging narrative. The vocabulary is strong, though some words like 'radiating' and 'debris' are slightly above the A2 target level. The narrative flows smoothly, demonstrating good control of English.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 42,
+      "level": "B1",
+      "keywords": [
+        "Concacaf Gold Cup",
+        "Ryder Cup"
+      ],
+      "outlineId": "23886ea6cdff7d1c67fda21eab2bd300c352590dae9c190aeb52aab82f68de13",
+      "title": "The Community Cup Challenge",
+      "topicTags": [
+        "community",
+        "festival",
+        "sports",
+        "teamwork",
+        "travel"
+      ],
+      "path": [
+        "motivate_the_community",
+        "talk_coach_ben",
+        "reflect_maya_growth",
+        "thank_coach_ben_leo"
+      ],
+      "segments": [
+        "The final whistle blew! Willow Creek FC had done it – they qualified for the regional 'Unity Cup'! Cheers erupted from the crowd. Maya felt a mix of relief and a new kind of pressure. Coach Ben smiled, proud of their hard work. The entire community decided to travel, ready to support them.",
+        "The team and community traveled to the host city, Riverbend, filled with excitement. Banners waved and songs filled the air. In their first two matches, Maya tried to win by herself, dribbling past defenders and shooting from afar. But the opposing teams were strong. Willow Creek FC lost both games, leaving Maya frustrated and tired.",
+        "The final whistle blew! Willow Creek FC had won the Community Cup! The stadium erupted in cheers as the vibrant festival atmosphere reached its peak. Maya, now passing more confidently, high-fived Leo. Coach Ben smiled, seeing their teamwork flourish. Maya understood: individual skill shines brightest when shared. The entire community celebrated their shared victory.",
+        "The Unity Cup semi-final was incredibly tense. Willow Creek FC fought hard. In the final minutes, Maya had a clear shot, but saw Leo in a better position. Remembering Coach Ben's words, she made a selfless pass. Leo scored! The crowd erupted as Willow Creek FC won, advancing to the final.",
+        "The final whistle blew! A roar erupted as Willow Creek FC won the Unity Cup! Maya, Leo, and their teammates rushed together, hugging. Coach Ben smiled, watching his team's shared triumph. The entire community cheered, their voices echoing through the stadium. This victory was for everyone, a testament to their hard work and unity."
+      ],
+      "endWrap": "Maya learned that true leadership means trusting others. Willow Creek FC's Unity Cup victory showed that together, with the community's support, anything is possible. A shared triumph indeed.",
+      "storyTextWordCount": 295,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 4,
+        "cefrFit": "B1",
+        "notes": "The story is very well-structured with a clear narrative arc and character development for Maya. Grammar is consistently accurate, and sentence structures are varied and appropriate. Vocabulary is strong and varied, with some words leaning towards B2, but used effectively within context. The repeated phrase 'The final whistle blew!' is used effectively as a narrative device to mark significant turning points.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 43,
+      "level": "B2",
+      "keywords": [
+        "The Witcher",
+        "The Housemaid"
+      ],
+      "outlineId": "ccb3cfbb9d121065c04bf45b9036fddddb7762bbf8b3287ecd28577f40e9b9a4",
+      "title": "Elara and the Forest's Echo",
+      "topicTags": [
+        "adventure",
+        "culture",
+        "mystery",
+        "nature",
+        "work"
+      ],
+      "path": [
+        "investigate_door_later",
+        "search_whispering_grove",
+        "return_to_altar_later",
+        "seek_deeper_knowledge"
+      ],
+      "segments": [
+        "Elara arrived at Blackwood Manor, a sprawling, isolated estate shrouded by ancient woods. Lady Isolde, the manor's reclusive owner, greeted her with a stern, distant gaze. As Elara began her duties, dusting the vast, silent halls, she noticed a door unlike any other. It was tucked away, unmarked, and secured with a heavy, rusted padlock, hinting at forgotten secrets within.",
+        "Elara, following her duties, dusts the rarely used west wing. Behind a loose panel, she discovers a hidden compartment. Inside are several leather-bound journals and a small, intricately carved wooden bird. The journals detail Lady Isolde’s ancestors’ practices, connecting the manor to ancient forest rituals and a 'Whispering Grove'. The mystery deepens.",
+        "Elara followed the faint path, deeper into Blackwood Forest. The air grew colder, the trees denser, their ancient branches forming a canopy. Suddenly, a clearing opened up, revealing an overgrown stone altar, moss-covered and adorned with withered wildflowers. Strange symbols were carved into its surface, hinting at a forgotten ritual connecting the manor's past to the forest's mysterious vitality.",
+        "Elara confronted Lady Isolde, recounting her discoveries. Lady Isolde, her stern demeanor softening, confessed the manor's secret. \"Our family,\" she began, \"has for centuries guarded the Whispering Spring, a fount of ancient energy binding this land. We maintain the delicate balance between the manor and the forest, ensuring its vitality. You, Elara, have unknowingly become part of its protection.\"",
+        "Elara finally grasped the manor's deep connection to nature. Lady Isolde explained the ancient pact, revealing her family's guardianship. Elara, seeing beyond her housemaid duties, felt a profound purpose. She chose to stay, accepting a new, more significant role. Her work transformed into a shared adventure with Lady Isolde, protecting the ancient legacy together."
+      ],
+      "endWrap": "Elara accepted, her heart swelling with purpose. Her life at Blackwood Manor transformed from simple duties to a grand, shared adventure, protecting ancient secrets and the forest's timeless echo.",
+      "storyTextWordCount": 313,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 4,
+        "vocabulary": 5,
+        "cefrFit": "B2",
+        "notes": "The story demonstrates strong narrative coherence and rich vocabulary, effectively building a mysterious atmosphere. There is a minor tense inconsistency ('dusts' instead of 'dusted') and some slight redundancy in the ending. Overall, it's a well-crafted piece.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 44,
+      "level": "C1",
+      "keywords": [
+        "4 Nations Face-Off",
+        "Concacaf Gold Cup"
+      ],
+      "outlineId": "1225f1ede6a4b106cbc9e5d01aee3536e87c0595901bdddbbcc20cbe5e2e03e5",
+      "title": "The Unity Cup: Four Nations Challenge",
+      "topicTags": [
+        "culture",
+        "games",
+        "sports",
+        "teamwork"
+      ],
+      "path": [
+        "inspire_team_aethelgard",
+        "organize_team_bonding",
+        "trust_individual_strengths",
+        "execute_risky_play"
+      ],
+      "segments": [
+        "The inaugural Unity Cup commenced, drawing teams from Aethelgard, Lumina, Solara, and Veridia. Anticipation for fierce competition and rich cultural exchange filled the grand arena. As Captain of Team Aethelgard, Elena Petrova felt the weight of her nation's hopes settle upon her shoulders. The roar of the crowd amplified the immense pressure to perform.",
+        "The Unity Cup began with a challenging start for Team Aethelgard. Their opening matches against Lumina and Solara proved demanding. Lumina's fluid passing tested their defense, while Solara's aggressive offense exposed tactical gaps. Elena observed a lack of synchronicity, highlighting the urgent need for enhanced internal cohesion and strategic adaptation to overcome these early setbacks.",
+        "The Unity Cup final against Veridia was intense. A crucial miscommunication between Anya and Ben left Team Aethelgard vulnerable. Elena, recalling their bonding exercises, quickly adapted, repositioning players. She shouted encouragement, reminding them of their shared purpose. The team, responding to her leadership, seamlessly covered the gap, turning a near-disaster into a fluid counter-attack, demonstrating profound unity.",
+        "Elena's Aethelgard team, fueled by their unity, faced their formidable rivals in the Unity Cup final. The stadium pulsed with electric energy as the global spectacle unfolded. Every pass, every save, every goal was a testament to peak athletic skill and profound sportsmanship. Diverse cultures celebrated together, embodying the true spirit of the tournament. The score was tied.",
+        "The final whistle echoed, concluding the Unity Cup. While intense competition marked the scoreboard, a profound sense of camaraderie filled the stadium. Elena watched players from all four nations exchange heartfelt embraces, their shared journey forging bonds stronger than any rivalry."
+      ],
+      "endWrap": "The Unity Cup truly lived up to its name. Beyond the scores, enduring friendships were forged, and cultural understanding deepened, proving sports can unite nations for a lasting legacy.",
+      "storyTextWordCount": 294,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 1
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The narrative is exceptionally well-structured, employing sophisticated vocabulary and complex grammatical constructions consistently. The story effectively conveys its themes of competition, unity, and cultural exchange.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 45,
+      "level": "A2",
+      "keywords": [
+        "Minecraft",
+        "Split Fiction"
+      ],
+      "outlineId": "cd13c8452d19fa47cb18e3a02510bbbabac53487628833baf6876fa85d18272d",
+      "title": "The Blocky Builders' Choice",
+      "topicTags": [
+        "adventure",
+        "creativity",
+        "games",
+        "problem_solving"
+      ],
+      "path": [
+        "build_safe_home",
+        "look_for_food",
+        "alex_finds_block",
+        "alex_builds_safe_spot"
+      ],
+      "segments": [
+        "Alex and Sam arrived in a new, blocky world. \"Let's build a beautiful home first!\" Alex said, looking for a flat, safe spot. Sam, however, grabbed a pickaxe. \"No, let's explore that tall mountain! Maybe special blocks are hidden there,\" Sam suggested, excited. They both had different plans for their first steps in this strange new land.",
+        "Alex started building a small, safe house with strong blocks. He carefully placed each piece. Meanwhile, Sam packed a small bag. She was ready to explore the big world outside their village. Sam waved goodbye to Alex, promising to find special materials for their new home. Alex smiled and continued his work.",
+        "Alex finished most of her house, but she needed one special, shiny block for the roof. It would make her home beautiful and strong. Sam continued exploring new lands. He found a deep river, but the old wooden bridge across it was broken. He could not cross easily. Both friends faced new challenges.",
+        "Alex looked at the strange block. \"This could make a strong wall,\" he thought, \"but I need more, and I don't know where to find them.\" Sam returned, tired and hungry. \"I found some berries, but it's hard to find good food and safe places to rest,\" she said. They looked at each other.",
+        "Sam showed Alex the shiny stone and strong wood. Alex smiled. \"These are perfect!\" she said. Together, they planned. Alex built a strong wall with the wood and placed the shiny stone above the door. It made their small home beautiful and safe. They were a great team, building and exploring."
+      ],
+      "endWrap": "Alex and Sam were very happy. Their home was safe and beautiful, built with teamwork. They knew they could face any challenge together. What a great adventure!",
+      "storyTextWordCount": 294,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 2,
+        "grammar": 2,
+        "vocabulary": 4,
+        "cefrFit": "A2",
+        "notes": "The story has a clear plot and good vocabulary for the A2 level. However, there is significant and inconsistent pronoun usage for the main characters, Alex and Sam, which makes parts of the story confusing and impacts both grammar and cohesion.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 46,
+      "level": "B1",
+      "keywords": [
+        "Strands",
+        "Minecraft"
+      ],
+      "outlineId": "01869c38f749a9e44e31d7bd5c85db9ccd8a8d75f58039cad821096a271046ba",
+      "title": "The Mystery of the Pixelated Strands",
+      "topicTags": [
+        "creativity",
+        "curiosity",
+        "games",
+        "hobbies",
+        "problem_solving"
+      ],
+      "path": [
+        "follow_light_pattern",
+        "search_missing_blocks",
+        "build_complex_structure",
+        "look_for_new_puzzles"
+      ],
+      "segments": [
+        "Leo, a creative teenager, spent hours building amazing structures in BlockCraft. Today, he stumbled upon an unmapped section of the game. It was a strange, beautiful place, unlike anything he had seen before. Glowing strands of light crisscrossed the air, forming intricate, pixelated patterns. They seemed to pulse with a hidden energy, hinting at a secret waiting to be uncovered.",
+        "Leo studied the pixelated strands. They weren't random; they formed a complex, unfinished puzzle. He now saw the missing parts: specific blocks and logical connections needed to complete the circuit. This wasn't just a building challenge; it was a message, a secret waiting to be unlocked. He felt a thrill of discovery.",
+        "Leo started placing blocks, connecting them to the strange pixelated strands. His first attempts failed, the strands refusing to glow. He tried different colors, sizes, and connection points, but nothing seemed right. Each failure, however, taught him a little more. He observed how the strands reacted, slowly uncovering their hidden rules. This trial and error was frustrating but also exciting.",
+        "Leo carefully placed the unique mechanisms he had designed. Each one clicked into place, linking the pixelated strands together in a complex, beautiful pattern. The entire structure pulsed with a soft light, confirming his solution. He had spent hours testing different theories, but his creativity and problem-solving skills finally paid off.",
+        "Leo carefully placed the final pixelated strand into position. A soft chime echoed, and the intricate puzzle glowed, then shimmered. A hidden door in the virtual wall slowly slid open, revealing a new, unexplored area filled with sparkling digital flora. Leo grinned, a wave of pride washing over him. He had done it!"
+      ],
+      "endWrap": "Leo's successful completion of the pixelated strand puzzle opened new digital worlds. He felt proud of his persistence and creativity, ready for new in-game challenges.",
+      "storyTextWordCount": 301,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 4,
+        "cefrFit": "B1",
+        "notes": "The story is very well-written with excellent coherence and cohesion. Grammar is consistently correct, and the vocabulary is rich and descriptive, making it engaging for the reader. Some vocabulary might lean towards the higher end of B1.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 47,
+      "level": "B2",
+      "keywords": [
+        "Path Of Exile 2",
+        "Minecraft"
+      ],
+      "outlineId": "d048d43d785d08e47f9580e2ae4f8a3412ed10abb8612c6eaad06c10782d5cef",
+      "title": "The Shard Crafters' Quest",
+      "topicTags": [
+        "adventure",
+        "creativity",
+        "games",
+        "problem_solving",
+        "teamwork"
+      ],
+      "path": [
+        "research_ancient_texts",
+        "investigate_whispers_source",
+        "assess_labyrinth_exit",
+        "wait_and_listen"
+      ],
+      "segments": [
+        "Elara, a master builder, and Kael, a resourceful explorer, gazed upon Aethelgard. Once vibrant, their block-based world now showed disturbing signs. Dark, shimmering 'void rifts' tore through the landscape, draining its colors. An ancient text spoke of 'Shards of Creation,' powerful artifacts scattered long ago. They realized these shards were their only hope to restore Aethelgard's integrity and vibrancy.",
+        "Elara and Kael reached the Whispering Peaks. A landslide blocked their path. Elara quickly crafted a temporary bridge from fallen rocks and vines, while Kael scouted ahead. Shadowy figures emerged from the mist. Kael's quick thinking and Elara's sonic resonator, built from a Shard, repelled them, clearing their way deeper into the treacherous mountains.",
+        "Within the Sunken Labyrinth's shifting corridors, Elara and Kael synchronized their efforts. Elara projected focused light beams, guiding ancient mechanisms, while Kael meticulously managed their dwindling energy crystals. A final, intricate puzzle emerged: a mosaic of reflective surfaces requiring perfect alignment. Their combined ingenuity and dwindling resources were tested to the limit, revealing the path forward.",
+        "They reached the 'Void Nexus', a swirling vortex of corruption. A monstrous, glitched entity materialized, its form flickering erratically. Elara quickly erected shimmering protective barriers, shielding them from its erratic attacks. Kael, using his knowledge of its patterns, found a vulnerability. Together, they combined their skills, Elara reinforcing Kael's opening, striking a decisive blow.",
+        "With the Shard secured, Elara channeled its raw energy, her hands weaving intricate patterns of light. Color surged back into Aethelgard, restoring its vibrant hues and mending shattered structures. Kael stood guard, witnessing the world's rebirth, a testament to their unwavering courage. The corrupted whispers faded, replaced by the gentle hum of life returning."
+      ],
+      "endWrap": "Aethelgard flourished under their care, a beacon of hope for generations. Elara and Kael's legend lived on, reminding all of the power of unity and creation.",
+      "storyTextWordCount": 303,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B2",
+        "notes": "The story demonstrates excellent control over narrative structure, grammar, and a rich, varied vocabulary. The descriptive language is vivid and engaging, creating a compelling adventure that is well-suited for a B2 learner.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 48,
+      "level": "C1",
+      "keywords": [
+        "Roasted Chicken",
+        "Zucchini Bread"
+      ],
+      "outlineId": "a7254325486796d27e579996c861491dd4c0cceed5ceccc97966436a7a65b35f",
+      "title": "A Twist on Tradition",
+      "topicTags": [
+        "cooking",
+        "creativity",
+        "food",
+        "hobbies"
+      ],
+      "path": [
+        "research_global_cuisines",
+        "host_tasting_event",
+        "culinary_academy",
+        "engage_with_guests"
+      ],
+      "segments": [
+        "Elara, a passionate home cook, found immense satisfaction in her perfected roasted chicken, a dish universally adored. Yet, a subtle unease stirred within her. She yearned to transcend the familiar, to infuse her culinary creations with a fresh, innovative spirit.",
+        "Emboldened by her global culinary research, Elara began to see zucchini as a versatile canvas. She envisioned it paired with unexpected spices from North Africa, or infused with bright, tangy notes of Southeast Asian ingredients. Her kitchen transformed into a vibrant laboratory, filled with the aroma of cumin, lime, and coconut milk, turning humble zucchini into dazzling, innovative creations.",
+        "Elara's innovative roasted chicken with zucchini-herb stuffing and feta muffins was a sensation. Critics lauded her audacious blend of tradition and modernity, catapulting her into the culinary spotlight. Her unique approach inspired home cooks and professional chefs alike, proving that heritage recipes could evolve without losing their soul. She had found her distinct voice.",
+        "The special gathering arrived, a culmination of Elara's intensive culinary journey. With a mix of excitement and apprehension, she presented her innovative dish – a modern twist on her grandmother's classic paella, infused with unexpected global flavors. Guests murmured, intrigued by the vibrant presentation and aromatic complexity.",
+        "Elara's innovative dish, a vibrant fusion of global cuisines and cherished family recipes, finally premiered. It received widespread acclaim, lauded by critics and the public for its groundbreaking originality and exquisite flavour profile. This resounding success affirmed her artistic vision, inspiring countless future culinary adventures and cementing her status as a truly visionary chef."
+      ],
+      "endWrap": "Elara's 'Twist on Tradition' dish received widespread acclaim, affirming her unique artistic vision. Its delicious originality inspired her toward exciting new culinary adventures, cementing her reputation as a groundbreaking chef.",
+      "storyTextWordCount": 284,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 2
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The story demonstrates excellent control over language, with sophisticated vocabulary and complex grammatical structures. The narrative flows logically, detailing Elara's culinary evolution and success. There is a slight redundancy in the concluding paragraphs.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 49,
+      "level": "A2",
+      "keywords": [
+        "Mission: Impossible - The Final Reckoning",
+        "Thunderbolts*"
+      ],
+      "outlineId": "09249a6b9d8da536601701852a9bca771c8b8cae4095438aae58cea1f9835506",
+      "title": "The Sunstone Secret",
+      "topicTags": [
+        "adventure",
+        "mystery",
+        "problem_solving",
+        "teamwork",
+        "technology"
+      ],
+      "path": [
+        "discuss_message_details",
+        "check_factory_entrance",
+        "try_to_fix_sunstone",
+        "look_for_damage_clues"
+      ],
+      "segments": [
+        "Lena, the team leader, and Sam, the gadget expert, were working late. Suddenly, a secure message arrived on Sam's high-tech tablet. \"Urgent! The powerful Sunstone device is missing! It is very dangerous.\" Lena looked at Sam. \"We need to find it fast. The world needs us!\" Sam nodded, \"My tech can help us solve this mystery.\"",
+        "Lena and Sam looked at their advanced map. It showed a path through the dense forest. Sam launched a small drone, which flew ahead, sending live pictures back to their screen. They followed the drone, walking carefully. Soon, a large, dark building appeared through the trees. It was an old, hidden factory, just like the map suggested.",
+        "Lena and Sam carefully stepped inside the dark, quiet factory. Dust covered everything. They found a table with a strange device. \"The Sunstone!\" Lena whispered. Sam picked it up, but it was cracked. Suddenly, a small screen on the device flickered to life. A red timer began counting down: 00:05:00. Time was running out!",
+        "Lena quickly examined the Sunstone's broken panel. \"We need to reconnect these circuits,\" she said, her voice steady. Sam pulled out his mini-soldering tool. Together, they worked fast. Lena held the wires steady while Sam carefully soldered them. Sweat beaded on Sam's brow. The clock was ticking, but their teamwork was perfect.",
+        "Lena and Sam quickly found the last broken part. Sam used his small tools to carefully fix the circuits. The Sunstone began to glow softly, then brighter. Outside, they heard sirens coming closer. \"We did it!\" Lena whispered, grabbing the device. They ran out of the old factory just as police cars arrived, saving the Sunstone and their city."
+      ],
+      "endWrap": "With the Sunstone safe, Lena and Sam were heroes. Their city was protected, and they knew their teamwork saved everyone. The Sunstone Secret was finally solved, thanks to them.",
+      "storyTextWordCount": 307,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 4,
+        "cefrFit": "B1",
+        "notes": "The story is exceptionally well-structured with a clear plot and excellent flow. Grammar is consistently accurate with varied sentence structures. However, the vocabulary used, especially terms like 'gadget expert', 'high-tech', 'drone', 'flickered', 'circuits', and 'soldering tool', is significantly above the A2 level, pushing the overall proficiency towards B1.",
+        "flags": {
+          "tooHard": true,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 50,
+      "level": "B1",
+      "keywords": [
+        "Roblox",
+        "Arc Raiders"
+      ],
+      "outlineId": "facc2a3e168c6e70bf8d15106218d8e2c2b5e9680c9dd2e48d75844ba9d18721",
+      "title": "Pixel Paladins: The Astro-Raiders Quest",
+      "topicTags": [
+        "adventure",
+        "community",
+        "creativity",
+        "games",
+        "teamwork",
+        "technology"
+      ],
+      "path": [
+        "create_project_plan",
+        "collaborate_on_design",
+        "plan_marketing_campaign",
+        "plan_next_game"
+      ],
+      "segments": [
+        "Friends Leo, Maya, and Sam decided to join a virtual world contest. They planned to create a futuristic adventure game called 'Astro-Raiders.' Leo, the programmer, wanted to ensure the game was technically perfect. Maya, the game designer, focused on exciting levels. Sam, the team lead, would handle teamwork and player feedback. They were excited to start their ambitious project.",
+        "The project plan helped, but new problems arose. Leo found major bugs in the game's core code, making levels unstable. Maya wanted to redesign entire sections, clashing with Leo's technical limitations. Sam tried to mediate, reminding them of the deadline and player expectations. Tensions were high, threatening to derail the Pixel Paladins' mission to create their dream game.",
+        "Leo fixed the critical coding error, making the game technically perfect. Maya's innovative boss level design was brilliant and visually exciting. Their renewed teamwork transformed the game into something special. With Sam's final feedback, they polished the version for release. The launch day arrived, and players loved the challenge and creativity.",
+        "Leo, Maya, and Sam excitedly reviewed the latest 'Astro-Raiders' build. Player feedback had been invaluable. They added new co-op missions and improved shared resource gathering, making teamwork essential and fun. The game now felt polished, a true testament to their collective effort. The community's enthusiasm was clear, proving their hard work paid off.",
+        "The game \"Astro-Raiders\" won \"Best Indie Game\"! Leo, Maya, and Sam cheered, hugging tightly. Their hard work, late nights, and shared vision had paid off. The community they built was amazing, sending countless congratulatory messages. This award wasn't just for their game; it was for their collaboration and the incredible bond they forged, proving teamwork makes dreams soar."
+      ],
+      "endWrap": "With 'Astro-Raiders' a huge success, the Pixel Paladins proved that teamwork, creativity, and a great community can make any dream a reality. Their adventure had just begun!",
+      "storyTextWordCount": 306,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 4,
+        "cefrFit": "B1",
+        "notes": "The story is exceptionally well-structured with a clear narrative arc from planning to success. Coherence and cohesion are excellent, making it very easy to follow. Grammar is nearly flawless, and vocabulary is appropriate for the B1 level, with some stronger words that push towards B2.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    }
+  ]
+}

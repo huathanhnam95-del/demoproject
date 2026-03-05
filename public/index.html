@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Roboto+Mono:wght@400;700&display=swap"
     rel="stylesheet">
   <link
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
@@ -1068,7 +1068,42 @@
                 </div>
               </div>
 
-              <!-- 2. Speak Mode Card -->
+              <!-- 2. Collo-dictate Mode Card -->
+              <div id="mode-btn-collo-dictate" class="modern-card transition-card mode-switch-btn"
+                onclick="window.switchToMode('collo-dictate')" tabindex="0" role="button"
+                aria-label="Collo-dictate mode (Collocation dictation)">
+                <span class="badge new">New</span>
+                <div class="card-visual visual-collo">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+                      <!-- Two word chips -->
+                      <rect x="10" y="18" width="26" height="14" rx="7" stroke="currentColor" stroke-width="3"
+                        fill="var(--visual-bg)" />
+                      <rect x="36" y="40" width="26" height="14" rx="7" stroke="currentColor" stroke-width="3"
+                        fill="var(--visual-bg)" />
+                      <!-- Link -->
+                      <path d="M34 25h6" stroke="var(--visual-accent)" stroke-width="3" stroke-linecap="round" />
+                      <path d="M32 27l6 6" stroke="var(--visual-accent)" stroke-width="3" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                      <path d="M40 35l6 6" stroke="var(--visual-accent)" stroke-width="3" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                      <!-- Tiny waveform ticks -->
+                      <rect x="12" y="46" width="3" height="10" rx="1.5" fill="currentColor" opacity="0.25" />
+                      <rect x="17" y="42" width="3" height="18" rx="1.5" fill="currentColor" opacity="0.35" />
+                      <rect x="22" y="48" width="3" height="6" rx="1.5" fill="currentColor" opacity="0.25" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Collo-dictate</h3>
+                  <p>Listen and type collocations.</p>
+                  <button class="card-cta">Practice Now</button>
+                  <a class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('collo-dictate', true);">What's this?</a>
+                </div>
+              </div>
+
+              <!-- 3. Speak Mode Card -->
               <div id="mode-btn-speak" class="modern-card transition-card mode-switch-btn"
                 onclick="window.switchToMode('speak')" tabindex="0" role="button" aria-label="Speak Practice mode">
                 <div class="card-visual visual-speak">
@@ -1389,6 +1424,7 @@
       <div class="tabs-header" style="display: none !important;">
         <div class="tabs">
           <button id="tab-type" class="tab-btn active" type="button">Type</button>
+          <button id="tab-collo-dictate" class="tab-btn" type="button">Collo-dictate</button>
           <button id="tab-speak" class="tab-btn" type="button">Speak</button>
           <button id="tab-extended" class="tab-btn" type="button">Fill</button>
           <button id="tab-watch" class="tab-btn" type="button">Watch</button>
@@ -1678,6 +1714,57 @@
 
       </div>
 
+
+      <div id="mode-collo-dictate" class="mode-panel" style="display: none;">
+        <div class="collo-dictate-header">
+          <h2>Collo-dictate</h2>
+          <p class="collo-dictate-sub">Listen and type collocations (from collocations.json).</p>
+        </div>
+
+        <div class="unified-controls">
+          <div class="control-toolbar">
+            <div class="function-group">
+              <button id="collo-play-btn" class="modern-btn modern-btn--play" type="button">Play</button>
+              <button id="collo-check-btn" class="modern-btn modern-btn--check" type="button" disabled>Check</button>
+              <button id="collo-back-btn" class="modern-btn modern-btn--back" type="button" disabled>Back</button>
+              <button id="collo-next-btn" class="modern-btn modern-btn--retry" type="button" disabled>Next</button>
+            </div>
+
+            <div class="utility-group">
+              <div class="audio-tools">
+                <button id="collo-speed-btn" class="tool-btn" type="button" title="Playback Speed">1.0x</button>
+              </div>
+              <div class="collo-dictate-settings">
+                <label class="collo-setting-label" for="collo-length-filter">Length:</label>
+                <select id="collo-length-filter" class="question-select question-select-narrow">
+                  <option value="any">Any</option>
+                  <option value="2" selected>2 words</option>
+                  <option value="3">3 words</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="collo-dictate-meta" aria-live="polite">
+          <div class="question-id-display">
+            <label>Q:</label>
+            <span id="collo-question-id" class="current-question-id">-</span>
+          </div>
+          <div class="question-id-display">
+            <label>Audio:</label>
+            <span id="collo-audio-id" class="current-question-id">-</span>
+          </div>
+        </div>
+
+        <div id="collo-score" class="score">Score: 0</div>
+        <div id="collo-stats" class="collo-dictate-stats" aria-live="polite"></div>
+
+        <label class="input-label" for="collo-answer-input">Type what you hear:</label>
+        <textarea id="collo-answer-input" rows="3" placeholder="Start typing..." disabled></textarea>
+
+        <div id="collo-feedback" class="check-result-box" style="display: none;"></div>
+      </div>
 
       <div id="mode-speak" class="mode-panel" style="display: none;">
         <div class="question-selector">
@@ -2319,10 +2406,14 @@
     </div>
   </div> <!-- End of page-layout-wrapper -->
 
+  <!-- Reading Journey (hidden route-only shell) -->
+  <div id="readingjourney-root" class="readingjourney-root" style="display:none;"></div>
+
   <audio id="audio" preload="auto"></audio>
   <audio id="audio-extended" preload="auto"></audio>
   <audio id="audio-phrases" preload="auto"></audio>
   <audio id="vocab-audio" preload="auto"></audio>
+  <audio id="audio-collo-dictate" preload="auto"></audio>
 
   <!-- Firebase Initialized via JS modules (firebase-init.js) -->
 
@@ -2382,6 +2473,8 @@
   <script src="shop-module.js"></script>
   <script src="difficulty-filter.js"></script>
   <script src="js/lazy-loader.js"></script>
+  <script type="module" src="js/collo-dictate-mode.js"></script>
+  <script type="module" src="js/reading-journey.js"></script>
   <script type="module" src="script.js"></script>
   <!-- Points Toast Notification Container -->
   <div id="points-toast-container" class="points-toast-container"></div>

@@ -12,6 +12,7 @@ const dictionaryRoutes = require('./src/routes/dictionary');
 const aiProxyRoutes = require('./src/routes/ai-proxy');
 const adminRoutes = require('./src/routes/admin');
 const entranceTestRoutes = require('./src/routes/entrance-tests');
+const readingJourneyRoutes = require('./src/routes/reading-journey');
 
 const app = express();
 const PORT = process.env.PORT || 8443;
@@ -27,6 +28,7 @@ app.use('/api', dictionaryRoutes);
 app.use('/api', aiProxyRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/entrance-tests', entranceTestRoutes);
+app.use('/api', readingJourneyRoutes);
 
 // --- Health Check ---
 app.get('/api/health', (req, res) => {

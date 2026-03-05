@@ -703,6 +703,7 @@
       // Update mode name with display-friendly text
       const displayNames = {
         'type': 'Type',
+        'collo-dictate': 'Collo-dictate',
         'speak': 'Speak',
         'pronounce': 'Pronounce',
         'extended': 'Fill',
@@ -774,6 +775,7 @@
   // Mode display names
   const modeDisplayNames = {
     'type': 'Type Mode',
+    'collo-dictate': 'Collo-dictate Mode',
     'speak': 'Speak Mode',
     'pronounce': 'Pronounce Mode',
     'extended': 'Fill Mode',
@@ -969,14 +971,24 @@
       if (!assetsReady) return;
     }
 
+    // Collo-dictate cleanup when switching away
+    if (currentActiveMode === 'collo-dictate' && mode !== 'collo-dictate') {
+      window.ColloDictateMode?.onExit?.();
+    }
+
     // Map mode names to tab IDs and panel IDs
     const tabId = 'tab-' + mode;
     const panelId = 'mode-' + mode;
 
     // RESTORE LAYOUT (Fixing blank screen after survival mode)
-    const pageWrapper = document.getElementById('page-layout-wrapper');
-    if (pageWrapper && pageWrapper.style.display === 'none') {
-      pageWrapper.style.display = 'block';
+    // Skip on Reading Journey hidden route (it intentionally hides the main app wrapper).
+    const normalizedPath = (window.location.pathname || '/').replace(/\/+$/, '');
+    const isReadingJourneyRoute = normalizedPath === '/readingjourney';
+    if (!isReadingJourneyRoute) {
+      const pageWrapper = document.getElementById('page-layout-wrapper');
+      if (pageWrapper && pageWrapper.style.display === 'none') {
+        pageWrapper.style.display = 'block';
+      }
     }
 
     // CLOSE SURVIVAL OVERLAY IF OPEN
@@ -1059,6 +1071,8 @@
       } else if (mode === 'type' && typeDatabase.length > 0) {
         log.log(`[switchToMode] Switching to Type mode, reloading question ${currentTypeQuestionId}`);
         await loadQuestion('type', currentTypeQuestionId);
+      } else if (mode === 'collo-dictate' && typeof window.ColloDictateMode?.onEnter === 'function') {
+        await window.ColloDictateMode.onEnter();
       } else if (mode === 'speak' && speakDatabase.length > 0) {
         log.log(`[switchToMode] Switching to Speak mode, reloading question ${currentSpeakQuestionId}`);
         await loadQuestion('speak', currentSpeakQuestionId);

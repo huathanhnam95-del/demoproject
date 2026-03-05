@@ -1,0 +1,254 @@
+{
+  "runId": "2026-03-05T01-51-49-367Z",
+  "createdAt": "2026-03-05T01:51:49.368Z",
+  "startedAt": "2026-03-05T01:45:49.666Z",
+  "baseUrl": "http://localhost:8787",
+  "model": "gemini-2.5-flash",
+  "count": 5,
+  "seed": 1772675148520,
+  "stories": [
+    {
+      "index": 1,
+      "level": "A2",
+      "keywords": [
+        "Bean Sprouts",
+        "Chia Pudding"
+      ],
+      "outlineId": "6e87f77171b6607f80a4f1b17d149714c336dc8516b3d7591c61c8eb716adef9",
+      "title": "Lily's Healthy Kitchen Adventures",
+      "topicTags": [
+        "cooking",
+        "food",
+        "health"
+      ],
+      "path": [
+        "ask_for_help",
+        "ask_market_vendor",
+        "celebrate_lilys_success",
+        "find_new_recipe"
+      ],
+      "segments": [
+        "Lily often felt tired after school. She wanted more energy for her activities. \"Maybe I should eat healthier food,\" she thought one evening. Lily decided to try cooking something new. She opened her tablet and searched for \"easy healthy recipes for beginners.\" Soon, she found a simple bean sprout stir-fry. It looked colorful and quick to make. \"Perfect!\" she smiled.",
+        "Lily went to the local market. It was busy and smelled of fresh produce. She found a stand with bright green bean sprouts and other colorful vegetables. \"These look perfect!\" she thought. She bought the sprouts, carrots, and some bell peppers. Lily felt excited to try her new recipe at home. Cooking healthy food would be fun!",
+        "Lily followed the recipe carefully. She chopped the vegetables and stirred them in the pan. Soon, a delicious smell filled the kitchen. She tasted her bean sprout stir-fry. It was crunchy and tasty! Lily felt proud. She had cooked her first healthy meal all by herself. It was a wonderful feeling.",
+        "Lily started making the chia pudding. She carefully mixed the chia seeds with milk and a little honey. Then, she put it in the fridge to chill overnight. The next morning, Lily added fresh berries and sliced bananas on top. It looked so colorful and healthy! She felt proud of her simple, delicious breakfast.",
+        "Lily carefully mixed chia seeds with milk, fruit, and a little honey. She put it in the fridge overnight. The next morning, she smiled. Her chia pudding looked delicious! She took a bite. \"Mmm, this is so good and healthy!\" she thought. Lily felt proud. She learned to cook new, simple, healthy meals."
+      ],
+      "endWrap": "Lily's kitchen adventures taught her a lot. She now enjoys cooking healthy food and feels great. What a wonderful new skill to have!",
+      "storyTextWordCount": 298,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 4,
+        "cefrFit": "A2",
+        "notes": "The story is well-structured and easy to follow, with consistently accurate grammar. Vocabulary is appropriate for the topic. There is a minor repetitive section when describing the chia pudding preparation.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 2,
+      "level": "B1",
+      "keywords": [
+        "Royal Botanic Gardens, Kew",
+        "Eden Project"
+      ],
+      "outlineId": "bc8aaa38be51ce8d7b73b5fbbbed06c653a526f362b23f91f71d732ec1ebd5fd",
+      "title": "The Green Heart of the City",
+      "topicTags": [
+        "culture",
+        "environment",
+        "nature",
+        "science"
+      ],
+      "path": [
+        "ask_information_desk",
+        "ask_about_plant",
+        "ask_about_volunteering",
+        "plan_project_details"
+      ],
+      "segments": [
+        "Maya arrived at the Grand Botanical Gardens, a vibrant green oasis in the middle of the city. Sunlight filtered through tall trees, and colorful flowers bloomed everywhere. She clutched her notebook and camera, ready for her school project on plant conservation. This was the perfect place to learn about nature and complete her assignment.",
+        "Maya followed the map, finding herself in a large, warm conservatory. Exotic plants of all shapes and sizes filled the air with sweet scents. She walked through a tropical zone, then a desert area, admiring the unique flora. Suddenly, a friendly woman with kind eyes and a name tag, 'Dr. Aris, Botanist,' smiled at her near a giant fern.",
+        "Dr. Aris smiled. \"Many plants here are rare, some almost gone from the wild. Our special conservation project focuses on protecting these endangered species. We study their needs, grow new ones, and hope to reintroduce them. It's vital work to maintain biodiversity and ensure these unique plants survive for future generations.\" Maya felt a deep sense of purpose.",
+        "Dr. Aris showed Maya the research lab. \"We use DNA analysis to understand plant health,\" she explained. \"And our seed bank preserves rare species for future generations.\" Maya felt a deep sense of wonder. The scientific methods here were truly protecting nature. She realized how interconnected everything was, from tiny seeds to the vast ecosystem.",
+        "Dr. Aris smiled, pleased with Maya’s enthusiasm. \"Remember, every small action helps protect our planet,\" she advised. Maya thanked Dr. Aris, her mind buzzing with ideas. She felt deeply inspired, her school project now clearer and more meaningful. Leaving the vibrant gardens, Maya was eager to share her new understanding of environmental protection with her classmates and community."
+      ],
+      "endWrap": "Maya left the gardens, deeply inspired. Her understanding of environmental protection clarified, she was now ready to share this knowledge, eager to ignite community action and foster a greener city.",
+      "storyTextWordCount": 314,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 4,
+        "cefrFit": "B1",
+        "notes": "The story demonstrates excellent coherence and cohesion, with a clear narrative flow and smooth transitions. Grammar is consistently accurate, showcasing a strong command of sentence structures. Vocabulary is rich and varied, though some terms like 'biodiversity' or 'DNA analysis' might be slightly challenging for a weaker B1 learner, pushing it towards a strong B1/B2 level.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 3,
+      "level": "B2",
+      "keywords": [
+        "The Summer I Turned Pretty",
+        "Adolescence"
+      ],
+      "outlineId": "39033d173c7b8e4616dd09b518f36df7d220e0849454efb972ccf63aa8fae83c",
+      "title": "A Summer by the Lake",
+      "topicTags": [
+        "community",
+        "family",
+        "friendship",
+        "hobbies",
+        "nature",
+        "travel"
+      ],
+      "path": [
+        "text_city_friends",
+        "observe_group_dynamics",
+        "cherish_memories",
+        "continue_photography"
+      ],
+      "segments": [
+        "The bus pulled into Oakhaven, a sleepy town nestled by a shimmering lake. Elara stared out the window, a knot forming in her stomach. Distant mountains and dense forests replaced the familiar city skyline. She missed her friends already, their summer plans now feeling miles away. This was Aunt Clara's idea of a 'refreshing change'.",
+        "Aunt Clara encouraged Elara to join the local nature conservation group. Still feeling a bit out of place, Elara reluctantly agreed. At her first lake cleanup, she met Leo, a charming local. He shared his passion for the area's natural beauty, his adventurous spirit evident. Elara found herself surprisingly engaged, a spark of connection forming amidst the group's shared purpose.",
+        "The misunderstanding with Leo lingered, a quiet reminder of their diverging paths. Elara spent her final days by the lake, reflecting. She realized that while their futures might be different, this summer had been transformative. She found a new sense of self, a quiet confidence that wasn't tied to city life or anyone else's expectations.",
+        "Elara stepped up, leading the group's final project with newfound confidence. Her photography hobby became invaluable, capturing every moment of their success. Later, she and Leo talked openly by the lake, resolving their unspoken feelings and solidifying their bond. The summer, once a blur of uncertainty, now felt like a mosaic of purpose and connection.",
+        "As the summer waned, Elara reviewed her photographs. Each image captured not just a scene, but a memory, a laugh shared with Leo, a comforting talk with Aunt Clara. She saw a confident young woman emerging, her perspective broadened by the lake's quiet wisdom and the community's warmth. Elara felt ready to face her future, transformed."
+      ],
+      "endWrap": "Elara left the lakeside, transformed and confident. New friendships, a love for nature and community, and a promise to return filled her heart, concluding a summer of profound personal growth.",
+      "storyTextWordCount": 311,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The story demonstrates excellent coherence and cohesion, with a clear narrative arc of personal growth. Grammar is consistently accurate, and the vocabulary is rich and sophisticated, featuring many B2/C1 level expressions. This text is well above the B2 target.",
+        "flags": {
+          "tooHard": true,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 4,
+      "level": "C1",
+      "keywords": [
+        "Delhi Capitals",
+        "Indiana Pacers"
+      ],
+      "outlineId": "c49cd855bdcaa78dce7849469eb59ee042dbf6643b7f289b0981e64f342447ea",
+      "title": "The Navigators' Comeback: A Community Court Story",
+      "topicTags": [
+        "community",
+        "games",
+        "hobbies",
+        "sports",
+        "teamwork"
+      ],
+      "path": [
+        "organize_community_event",
+        "address_team_skepticism",
+        "celebrate_team_journey",
+        "plan_team_future"
+      ],
+      "segments": [
+        "Aisha Khan, captain of The City Navigators, felt the weight of their legacy. A dismal losing streak had eroded community support, leaving their cherished local basketball club on the brink of disbandment. The once-vibrant court now echoed with uncertainty, threatening to silence the cheers and camaraderie that defined their neighborhood.",
+        "The community event Aisha organized was a success, drawing in many supporters. As the team's spirits lifted, Coach Miller arrived, a figure both enigmatic and inspiring. His initial practice sessions were unconventional, focusing less on individual skill drills and more on complex team challenges requiring constant communication and strategic cooperation. He even suggested involving local residents in certain training exercises.",
+        "The Navigators' final outreach event, a youth basketball clinic, was a resounding success. Seeing the children's beaming faces and hearing parents' heartfelt thanks, the players truly grasped their team's significance. Aisha observed a palpable shift; conflicts dissolved into shared purpose. Coach Miller's vision of community impact resonated deeply, forging an unbreakable bond among them. Their unity was complete.",
+        "The Navigators faced their bitter rivals in a packed community court. Aisha's leadership and Coach Miller's strategies culminated in a display of unprecedented synergy. Passes flowed seamlessly, defense was impenetrable, and every player moved with a shared purpose. They didn't just win; they showcased true teamwork, earning the admiration of the crowd and even their opponents, solidifying their comeback.",
+        "The local club board, witnessing The Navigators' profound transformation and renewed community ties, officially reversed their decision. The team, once on the brink of disbandment, was now a celebrated symbol of local spirit. Their future as a vibrant hub for sports and collective activities was secured, thanks to Aisha and Coach Miller's tireless efforts."
+      ],
+      "endWrap": "Moved by their transformation and rekindled community spirit, the board reversed course. The Navigators' future was secured, cementing their role as a vibrant hub for local sports and collective joy.",
+      "storyTextWordCount": 311,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The story demonstrates excellent command of English, with sophisticated vocabulary, complex sentence structures, and flawless grammar. The narrative is coherent and cohesive, flowing logically from beginning to end. It comfortably meets the C1 CEFR level.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "index": 5,
+      "level": "A2",
+      "keywords": [
+        "Mission: Impossible - The Final Reckoning",
+        "Thunderbolts*"
+      ],
+      "outlineId": "09249a6b9d8da536601701852a9bca771c8b8cae4095438aae58cea1f9835506",
+      "title": "The Sunstone Secret",
+      "topicTags": [
+        "adventure",
+        "mystery",
+        "problem_solving",
+        "teamwork",
+        "technology"
+      ],
+      "path": [
+        "discuss_message_details",
+        "check_factory_entrance",
+        "try_to_fix_sunstone",
+        "look_for_damage_clues"
+      ],
+      "segments": [
+        "Lena, the team leader, and Sam, the gadget expert, were working late. Suddenly, a secure message arrived on Sam's high-tech tablet. \"Urgent! The powerful Sunstone device is missing! It is very dangerous.\" Lena looked at Sam. \"We need to find it fast. The world needs us!\" Sam nodded, \"My tech can help us solve this mystery.\"",
+        "Lena and Sam looked at their advanced map. It showed a path through the dense forest. Sam launched a small drone, which flew ahead, sending live pictures back to their screen. They followed the drone, walking carefully. Soon, a large, dark building appeared through the trees. It was an old, hidden factory, just like the map suggested.",
+        "Lena and Sam carefully stepped inside the dark, quiet factory. Dust covered everything. They found a table with a strange device. \"The Sunstone!\" Lena whispered. Sam picked it up, but it was cracked. Suddenly, a small screen on the device flickered to life. A red timer began counting down: 00:05:00. Time was running out!",
+        "Lena quickly examined the Sunstone's broken panel. \"We need to reconnect these circuits,\" she said, her voice steady. Sam pulled out his mini-soldering tool. Together, they worked fast. Lena held the wires steady while Sam carefully soldered them. Sweat beaded on Sam's brow. The clock was ticking, but their teamwork was perfect.",
+        "Lena and Sam quickly found the last broken part. Sam used his small tools to carefully fix the circuits. The Sunstone began to glow softly, then brighter. Outside, they heard sirens coming closer. \"We did it!\" Lena whispered, grabbing the device. They ran out of the old factory just as police cars arrived, saving the Sunstone and their city."
+      ],
+      "endWrap": "With the Sunstone safe, Lena and Sam were heroes. Their city was protected, and they knew their teamwork saved everyone. The Sunstone Secret was finally solved, thanks to them.",
+      "storyTextWordCount": 307,
+      "endedEarly": false,
+      "segmentCompliance": {
+        "outOfRangeCount": 0
+      },
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 4,
+        "cefrFit": "B1",
+        "notes": "The story is exceptionally well-structured with excellent coherence and cohesion. Grammar is nearly flawless. Vocabulary is strong and precise, with several words leaning towards a B1 level, demonstrating a high level of proficiency.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    }
+  ]
+}

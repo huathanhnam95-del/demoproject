@@ -1,0 +1,25 @@
+{
+  "runId": "2026-03-05T01-51-49-367Z",
+  "createdAt": "2026-03-05T01:51:49.368Z",
+  "baseUrl": "http://localhost:8787",
+  "model": "gemini-2.5-flash",
+  "count": 5,
+  "averages": {
+    "coherence": 5,
+    "cohesion": 4.8,
+    "grammar": 5,
+    "vocabulary": 4.4
+  },
+  "cefrFit": {
+    "A2": 1,
+    "B1": 2,
+    "C1": 2
+  },
+  "flags": {
+    "tooHard": 1,
+    "tooEasy": 0,
+    "unsafe": 0
+  },
+  "endedEarly": 0,
+  "segmentsOutOfRange": 0
+}

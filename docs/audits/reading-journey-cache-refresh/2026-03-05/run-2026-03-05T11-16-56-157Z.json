@@ -1,0 +1,62 @@
+{
+  "runId": "2026-03-05T11-16-56-157Z",
+  "createdAt": "2026-03-05T11:18:32.145Z",
+  "apply": false,
+  "model": "gemini-3.1-pro-preview",
+  "ttlMs": 2592000000,
+  "keywordTags": {
+    "total": 56,
+    "upgraded": 55,
+    "kept": 1
+  },
+  "outlines": {
+    "total": 57,
+    "processed": 1
+  },
+  "beats": {
+    "before": 281,
+    "deletePlan": {
+      "total": 281,
+      "deleted": 0,
+      "skipped": 281
+    },
+    "generatedBeatsWritesApprox": 6
+  },
+  "summary": {
+    "coherenceAvg": 5,
+    "cohesionAvg": 5,
+    "retriedCount": 0,
+    "tooHardCount": 0,
+    "tooEasyCount": 0,
+    "unsafeCount": 0
+  },
+  "perOutline": [
+    {
+      "outlineId": "01869c38f749a9e44e31d7bd5c85db9ccd8a8d75f58039cad821096a271046ba",
+      "level": "B1",
+      "topicTags": [
+        "creativity",
+        "curiosity",
+        "games",
+        "hobbies",
+        "problem_solving"
+      ],
+      "title": "The Mystery of the Pixelated Strands",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 4,
+        "cefrFit": "B1",
+        "notes": "The story is very well-structured with clear logical progression and effective use of transition words. The vocabulary is engaging and fits the B1 level well, though terms like 'synchronize' and 'sophisticated' lean slightly toward B2. It provides an excellent reading experience for the target audience.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    }
+  ]
+}

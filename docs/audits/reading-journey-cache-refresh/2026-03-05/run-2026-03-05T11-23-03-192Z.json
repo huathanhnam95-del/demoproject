@@ -1,0 +1,1569 @@
+{
+  "runId": "2026-03-05T11-23-03-192Z",
+  "createdAt": "2026-03-05T12:05:11.962Z",
+  "apply": true,
+  "model": "gemini-3.1-pro-preview",
+  "effectiveModel": "gemini-3-flash-preview",
+  "fallbackModel": "gemini-3-flash-preview",
+  "fallbackReason": "[GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent: [429 Too Many Requests] You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_requests_per_model_per_day, limit: 250, model: gemini-3.1-pro\nPlease retry in 12h37m56.891852837s. [{\"@type\":\"type.googleapis.com/google.rpc.Help\",\"links\":[{\"description\":\"Learn more about Gemini API quotas\",\"url\":\"https://ai.google.dev/gemini-api/docs/rate-limits\"}]},{\"@type\":\"type.googleapis.com/google.rpc.QuotaFailure\",\"violations\":[{\"quotaMetric\":\"generativelanguage.googleapis.com/generate_requests_per_model_per_day\",\"quotaId\":\"GenerateRequestsPerDayPerProjectPerModel\",\"quotaDimensions\":{\"model\":\"gemini-3.1-pro\",\"location\":\"global\"},\"quotaValue\":\"250\"}]},{\"@type\":\"type.googleapis.com/google.rpc.RetryInfo\",\"retryDelay\":\"45476s\"}]",
+  "ttlMs": 2592000000,
+  "keywordTags": {
+    "total": 56,
+    "upgraded": 55,
+    "kept": 1
+  },
+  "outlines": {
+    "total": 57,
+    "processed": 57
+  },
+  "beats": {
+    "before": 282,
+    "deletePlan": {
+      "total": 282,
+      "deleted": 282,
+      "skipped": 0
+    },
+    "generatedBeatsWritesApprox": 348
+  },
+  "summary": {
+    "coherenceAvg": 5,
+    "cohesionAvg": 4.19,
+    "retriedCount": 1,
+    "tooHardCount": 0,
+    "tooEasyCount": 0,
+    "unsafeCount": 0
+  },
+  "perOutline": [
+    {
+      "outlineId": "01869c38f749a9e44e31d7bd5c85db9ccd8a8d75f58039cad821096a271046ba",
+      "level": "B1",
+      "topicTags": [
+        "creativity",
+        "curiosity",
+        "games",
+        "hobbies",
+        "problem_solving"
+      ],
+      "title": "The Mystery of the Pixelated Strands",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B1",
+        "notes": "The story is well-structured and uses appropriate B1-level vocabulary like 'persistence' and 'mechanism'. The use of cohesive devices is clear, though some transitions like 'Because of this' are used somewhat repetitively. Overall, it is an excellent fit for the target level.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "06ba58dd86469c6b0cc4356d48cddeeffd3a35d9704e680c73ae092b22927390",
+      "level": "A2",
+      "topicTags": [
+        "adventure",
+        "games",
+        "mystery",
+        "teamwork",
+        "technology",
+        "travel"
+      ],
+      "title": "The Crystal Quest",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 4,
+        "vocabulary": 4,
+        "cefrFit": "A2",
+        "notes": "The story is well-structured and follows a clear narrative arc suitable for A2 learners. Some vocabulary like 'holographic' and 'pedestal' is slightly advanced but supported by context, and the grammar remains accessible.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "09249a6b9d8da536601701852a9bca771c8b8cae4095438aae58cea1f9835506",
+      "level": "A2",
+      "topicTags": [
+        "adventure",
+        "mystery",
+        "problem_solving",
+        "teamwork",
+        "technology"
+      ],
+      "title": "The Sunstone Secret",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "A2",
+        "notes": "The story is perfectly aligned with A2 level, using clear chronological transitions and accessible vocabulary. The sentence structures are simple but effective for the target audience.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "0d9312263c82f00d460c8862c0b5e91264b9ffc45840c13c25ea9b5789dff94c",
+      "level": "B1",
+      "topicTags": [
+        "community",
+        "family",
+        "friendship",
+        "hobbies",
+        "travel"
+      ],
+      "title": "The Summer of Many Colors",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B1",
+        "notes": "The story is well-structured and uses appropriate B1-level vocabulary and grammar. Transitions are clear, though slightly repetitive, and the narrative flow is easy to follow.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "1225f1ede6a4b106cbc9e5d01aee3536e87c0595901bdddbbcc20cbe5e2e03e5",
+      "level": "C1",
+      "topicTags": [
+        "culture",
+        "games",
+        "sports",
+        "teamwork"
+      ],
+      "title": "The Unity Cup: Four Nations Challenge",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The text demonstrates a high level of lexical precision and complex sentence structures appropriate for C1 learners. While the narrative flow is excellent, some transitional phrases like 'After that' are used somewhat mechanically for this level.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "1303fcbdf10c16bd6bca777aea830c7725bd87328d49b8b91809eda38f9d70ee",
+      "level": "A2",
+      "topicTags": [
+        "culture",
+        "environment",
+        "nature",
+        "science",
+        "travel"
+      ],
+      "title": "A Day at Emerald Gardens",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 4,
+        "cefrFit": "A2",
+        "notes": "The story follows a clear, logical progression and uses simple past tense correctly. While some vocabulary like 'endangered' and 'environment' leans toward B1, the repetitive sentence structures and clear context make it a perfect fit for A2 learners.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "16f40ef49230fe5c7179b89c3eb16ce8ae8e296815c5f33df66b72f0d4e83ccb",
+      "level": "B2",
+      "topicTags": [
+        "cooking",
+        "creativity",
+        "food",
+        "hobbies"
+      ],
+      "title": "The Zucchini Bread Experiment",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B2",
+        "notes": "The story is well-structured with a clear narrative arc and sophisticated vocabulary suitable for B2 learners. While cohesive devices are used frequently, some transitions like 'Because of this' feel slightly repetitive. Overall, it demonstrates a strong command of descriptive language and complex sentence structures.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "1a437d4191ca55003686340db33806293451a2fd110a79f774cd8f34af23ebf8",
+      "level": "B2",
+      "topicTags": [
+        "family",
+        "friendship",
+        "mystery",
+        "technology",
+        "travel",
+        "work"
+      ],
+      "title": "The Summer of Unseen Work",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B2",
+        "notes": "The story uses sophisticated vocabulary and complex structures like participle clauses and passive voice, which align well with B2 expectations. While the narrative flow is clear, some transitional phrases like 'After that' are used somewhat repetitively.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "1fc3b1bcac101ce8cfa7023f56953c4808437a6cb1bfb35646e6ba2282efb6d1",
+      "level": "B2",
+      "topicTags": [
+        "community",
+        "games",
+        "sports",
+        "teamwork"
+      ],
+      "title": "The Hawks' United Flight",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 4,
+        "cefrFit": "B2",
+        "notes": "The story is well-structured with a clear narrative arc and effective use of cohesive devices. The vocabulary and grammar are appropriate for B2 learners, focusing on teamwork and personal growth.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "23886ea6cdff7d1c67fda21eab2bd300c352590dae9c190aeb52aab82f68de13",
+      "level": "B1",
+      "topicTags": [
+        "community",
+        "festival",
+        "sports",
+        "teamwork",
+        "travel"
+      ],
+      "title": "The Community Cup Challenge",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B1",
+        "notes": "The story follows a clear, logical narrative arc with a strong moral theme. The vocabulary is well-suited for B1 learners, featuring descriptive adjectives and appropriate transition words. The grammar is consistent and accurate throughout.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": true,
+      "previousAssessment": {
+        "coherence": 3,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B1",
+        "notes": "The story uses appropriate B1 vocabulary and grammar, but contains a significant logical error where a rowing race mentions scoring a goal. The sudden shift to second-person narration at the end is also inconsistent with the rest of the text.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      }
+    },
+    {
+      "outlineId": "2482f4f647291b2bb478229089c23ef7de07c9888e800d6e0713577ab3f7f682",
+      "level": "B2",
+      "topicTags": [
+        "culture",
+        "environment",
+        "nature",
+        "science",
+        "travel"
+      ],
+      "title": "The Moonpetal Orchid's Secret",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B2",
+        "notes": "The text uses sophisticated vocabulary and complex sentence structures that align well with B2 level expectations. The narrative flow is logical, although some cohesive devices like 'Because of this' are used somewhat repetitively.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "27ebc1a635a7ebcddf2db8381e8d85cc744f1a48f62f3b5a3a636e0064b7d51d",
+      "level": "A2",
+      "topicTags": [
+        "adventure",
+        "mystery",
+        "nature",
+        "problem_solving",
+        "science"
+      ],
+      "title": "The Glowing Moss Mystery",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 4,
+        "cefrFit": "A2",
+        "notes": "The story is very clear and uses appropriate present simple structures for A2 learners. While some words like 'emits' or 'overgrown' are slightly advanced, the repetitive use of transition phrases helps maintain accessibility.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "2925b35aad2a2a0594a884690c636b8787d6735462c45fd509f66eb51c8c2dc1",
+      "level": "A2",
+      "topicTags": [
+        "community",
+        "culture",
+        "sports",
+        "teamwork",
+        "travel"
+      ],
+      "title": "Leo's Big Trip to Mumbai",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 4,
+        "cefrFit": "A2",
+        "notes": "The story is very well-structured with clear chronological transitions and logical flow. The vocabulary is slightly elevated for a basic A2 level but remains accessible through context, making it an excellent stretch text.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "2c5a023eb16aa6223957d90fa9bd436ba2578af3636825252f08b54fa187d95d",
+      "level": "C1",
+      "topicTags": [
+        "culture",
+        "science",
+        "sports",
+        "technology"
+      ],
+      "title": "DeepSeek's Cricket Gambit: A Cultural Clash",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The text employs sophisticated vocabulary and complex sentence structures that align well with C1 expectations. The narrative is logically sound, though the repetitive use of certain transitional phrases slightly impacts the cohesion score.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "34c2e0f1cf7a02c695d2a2dfcdf0881c9dfb1e388759a7aa24dd7ec7557f9524",
+      "level": "C1",
+      "topicTags": [
+        "culture",
+        "environment",
+        "mystery",
+        "travel",
+        "work"
+      ],
+      "title": "The Sovereign's Soil",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The text utilizes sophisticated vocabulary and complex sentence structures that are highly appropriate for the C1 level. While the narrative is very clear, some cohesive transitions are slightly repetitive, though they remain grammatically correct.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "39033d173c7b8e4616dd09b518f36df7d220e0849454efb972ccf63aa8fae83c",
+      "level": "B2",
+      "topicTags": [
+        "community",
+        "family",
+        "friendship",
+        "hobbies",
+        "nature",
+        "travel"
+      ],
+      "title": "A Summer by the Lake",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B2",
+        "notes": "The story effectively uses B2-level vocabulary and complex sentence structures to create a clear narrative arc. While the cohesion is strong, some transitions like 'After that' are slightly repetitive for this level.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "3a914f6b58dc8f26e4e9e205eb64d23c306c0793bf6559bd29a315418566064d",
+      "level": "A2",
+      "topicTags": [
+        "community",
+        "games",
+        "sports",
+        "teamwork"
+      ],
+      "title": "Sunnybrook United: The Team Spirit",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "A2",
+        "notes": "The story is well-structured and perfectly aligned with A2 vocabulary and grammar expectations. The frequent use of transition phrases like 'Because of this' provides clear logical links, though it feels slightly repetitive.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "3bc4c36b44c9c0b77b974d265af88aff2fc4c2c2e33f3cdd625e81e5b7f66b8f",
+      "level": "B1",
+      "topicTags": [
+        "creativity",
+        "hobbies",
+        "problem_solving",
+        "school"
+      ],
+      "title": "Leo's Creative Breakthrough",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B1",
+        "notes": "The story follows a clear, logical progression and uses vocabulary that is perfectly suited for B1 learners. While the cohesive devices are somewhat repetitive, they effectively guide the reader through the narrative.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "4a3d80e9749f953f4b3a37f1cc40d76b6a214e7e35ff37674c734da6d385f12d",
+      "level": "B1",
+      "topicTags": [
+        "animals",
+        "family",
+        "friendship",
+        "humor",
+        "school",
+        "work"
+      ],
+      "title": "Barnaby's Big Farm School Adventure",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B1",
+        "notes": "The story is well-structured and aligns perfectly with B1 level expectations, featuring clear narrative progression and appropriate thematic vocabulary. While the grammar is accurate, some cohesive devices like 'Because of this' are used somewhat repetitively.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "6038a7e3f9bad7f3a91c05e4c84cf68355723cf8517626e7e2d1866254cd8c9f",
+      "level": "B1",
+      "topicTags": [
+        "community",
+        "environment",
+        "nature",
+        "science",
+        "travel"
+      ],
+      "title": "Leo's Green Journey",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B1",
+        "notes": "The story is well-structured and uses appropriate B1-level vocabulary and connectors. The narrative flow is logical and the grammar is accurate for the target level.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "6cc125ac3035007ad883a75ef916d5f9bc9d7af3406ee3129ce646d0a5e950af",
+      "level": "A2",
+      "topicTags": [
+        "adventure",
+        "animals",
+        "games",
+        "mystery",
+        "problem_solving"
+      ],
+      "title": "Leo and the Creature Quest Mystery",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 4,
+        "cefrFit": "A2",
+        "notes": "The story is highly coherent and uses effective transition words to guide the reader through the plot. The grammar is appropriate for A2, though some vocabulary words like 'pixelated' and 'compartment' provide a slight challenge.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "6e87f77171b6607f80a4f1b17d149714c336dc8516b3d7591c61c8eb716adef9",
+      "level": "A2",
+      "topicTags": [
+        "cooking",
+        "food",
+        "health"
+      ],
+      "title": "Lily's Healthy Kitchen Adventures",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "A2",
+        "notes": "The story is perfectly aligned with A2 level requirements, using simple past tense and clear, logical sequencing. The repetitive use of cohesive devices like 'After that' and 'Because of this' makes it very accessible for learners.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "714281f04384df31d8a9cee9744412dfbe26d8d5a77a79b31e1a4172aa82e483",
+      "level": "B1",
+      "topicTags": [
+        "cooking",
+        "family",
+        "food"
+      ],
+      "title": "The Family Lasagna Day",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B1",
+        "notes": "The story is well-structured and fits the B1 level perfectly with appropriate vocabulary and clear narrative flow. The use of cohesive devices is consistent, though the repetitive use of 'Because of this' feels slightly mechanical.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "72d5c9888a49f4e3115d8573194d6cafd550c2fbed6c8c403d6489ea8f66b99c",
+      "level": "B2",
+      "topicTags": [
+        "adventure",
+        "games",
+        "mystery",
+        "problem_solving",
+        "travel"
+      ],
+      "title": "The Lumina Expedition: A Glitch in Aethelgard",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B2",
+        "notes": "The story uses sophisticated vocabulary and complex sentence structures that align well with B2 level expectations. The narrative flow is logical, though the repetitive use of 'Because of this' slightly impacts the variety of cohesion. The content is safe and engaging for a classroom environment.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "7551553c7cb756fd0dc8e9ea7c567a1f7852e95d44ce9b85746b18f95f47f107",
+      "level": "A2",
+      "topicTags": [
+        "cooking",
+        "food",
+        "hobbies"
+      ],
+      "title": "Lily's Lasagna Soup Experiment",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "A2",
+        "notes": "The story is perfectly aligned with the A2 level, using simple sentence structures and clear chronological sequencing. Some transition phrases like 'Because of this' are slightly overused, but the vocabulary remains accessible and appropriate for the target audience.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "7fb87ebebda1bb9d4e0f8893ddf16a6d3e2d54e5666ea496a3e9321dd3cb86a8",
+      "level": "C1",
+      "topicTags": [
+        "animals",
+        "nature",
+        "weather"
+      ],
+      "title": "The Onyx Tempest",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The story utilizes sophisticated vocabulary and complex sentence structures that align perfectly with C1 expectations. While the repetitive use of 'Because of this' as a cohesive device is slightly mechanical, the overall narrative flow and descriptive depth are excellent.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "834f6cfa8d510f46fc0000422ab8d572e80bb599f61fcb59dd00f7fc76abe5c5",
+      "level": "B2",
+      "topicTags": [
+        "games",
+        "sports",
+        "teamwork"
+      ],
+      "title": "The Emerald Eagles' Flight",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B2",
+        "notes": "The story is well-structured with a clear narrative arc and effective use of cohesive devices like 'despite' and 'although'. The vocabulary and grammatical complexity are perfectly suited for a B2 learner, offering a good balance of challenge and accessibility.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "86a25493b7c9cf715fcd4ddc0026935dabb6148525c0cd6a2cd67d0d26fb1f53",
+      "level": "B1",
+      "topicTags": [
+        "cooking",
+        "creativity",
+        "curiosity",
+        "food"
+      ],
+      "title": "Maya's Sweet Proposal",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B1",
+        "notes": "The story is well-structured and fits the B1 level perfectly with appropriate vocabulary and clear transitions. While some cohesive devices like 'Because of this' are slightly repetitive, the narrative is engaging and grammatically sound.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "955a40fe4a70abf20eac260f1273c697383480bd1a7c5fe493e446d3efc55260",
+      "level": "B2",
+      "topicTags": [
+        "cooking",
+        "culture",
+        "family",
+        "food"
+      ],
+      "title": "Elena's Legacy Lasagna",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B2",
+        "notes": "The story uses sophisticated vocabulary and complex sentence structures appropriate for the B2 level. The narrative is logically organized, though some transition phrases like 'After that' and 'Because of this' are used somewhat repetitively.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "9587425be86792c23219626d19ec6dd6182e4acbb4e6b55f383a163013ccfac3",
+      "level": "B1",
+      "topicTags": [
+        "community",
+        "environment",
+        "teamwork",
+        "work"
+      ],
+      "title": "The Pluribus Park Project",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B1",
+        "notes": "The story is well-structured and perfectly aligned with B1 vocabulary and grammar expectations. While cohesive devices are used frequently, they are somewhat repetitive, which is helpful for learners but slightly mechanical.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "98aa992027621e938cfab872de07e94832b58294ede772faa299029fef32592e",
+      "level": "C1",
+      "topicTags": [
+        "community",
+        "games",
+        "sports",
+        "teamwork"
+      ],
+      "title": "The Prairie Thunderbolts' Unison",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The text employs sophisticated vocabulary and complex sentence structures that align perfectly with C1 level expectations. The narrative flow is logical and utilizes a wide range of cohesive devices effectively.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "9af1bbfab67ca97a3bcbc37d68d067edd77b6abb6aad4493bc2ccf0b797ac045",
+      "level": "B1",
+      "topicTags": [
+        "environment",
+        "nature",
+        "science",
+        "travel"
+      ],
+      "title": "The Green Journey",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B1",
+        "notes": "The story is logically structured and uses appropriate B1-level vocabulary such as 'ecosystem' and 'endangered species'. While the transitions are clear, some connectors like 'After that' and 'Then' are used somewhat repetitively.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "a7254325486796d27e579996c861491dd4c0cceed5ceccc97966436a7a65b35f",
+      "level": "C1",
+      "topicTags": [
+        "cooking",
+        "creativity",
+        "food",
+        "hobbies"
+      ],
+      "title": "A Twist on Tradition",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The text features sophisticated vocabulary and complex syntactic structures appropriate for an advanced learner. While highly cohesive, the repetitive paragraph starters slightly detract from the natural flow, though the overall narrative is very strong.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "ae72cad6371916e4b6c97a2b7b157cabab768297bae3ac0a1b1e24d3fe4cd092",
+      "level": "A2",
+      "topicTags": [
+        "adventure",
+        "culture",
+        "mystery",
+        "nature",
+        "work"
+      ],
+      "title": "The Housemaid and the Forest Whisper",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 4,
+        "cefrFit": "B1",
+        "notes": "The story is logically structured and uses clear transitions, though the repetitive use of 'Because of this' and 'After that' is slightly mechanical. Vocabulary like 'artifact' and 'restless' pushes the text into the B1 range, making it a challenging but suitable read for high A2 learners.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "b31a5fc76060ff3c45f2668fc957e2b7e0e0a29dd2143a6549b94b67ff6997ee",
+      "level": "C1",
+      "topicTags": [
+        "community",
+        "culture",
+        "sports",
+        "teamwork",
+        "travel"
+      ],
+      "title": "The Boundary Beyond Borders",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The story utilizes sophisticated vocabulary such as 'dilapidated', 'camaraderie', and 'resilience', which is appropriate for C1 learners. The grammar is complex and accurate, though some transitional phrases are used somewhat repetitively. Overall, the narrative flow is clear and the thematic depth matches the target level.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "b51c99d54bceff347d6efb9eaf352bc4596959ae39d5781a1897b18a93486a8d",
+      "level": "C1",
+      "topicTags": [
+        "culture",
+        "curiosity",
+        "environment",
+        "nature",
+        "science",
+        "travel"
+      ],
+      "title": "The Botanist's Odyssey: A Global Green Quest",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The text employs sophisticated academic and botanical vocabulary such as 'enzymatic signature' and 'universal panacea,' which aligns well with C1 expectations. While the narrative is logically sound, the repetitive use of basic transitions like 'After that' slightly detracts from the otherwise high-level cohesion.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "b751133817357b635d4335e8f91e0dd46113f1282b3fb55c2cb6f6a8380ba0e3",
+      "level": "B2",
+      "topicTags": [
+        "curiosity",
+        "environment",
+        "hobbies",
+        "nature",
+        "science",
+        "travel"
+      ],
+      "title": "The Botanist's Grand Tour",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B2",
+        "notes": "The text uses sophisticated vocabulary such as 'cryopreservation' and 'encroaching' which aligns well with B2 level expectations. The narrative is logically structured, though the use of cohesive markers like 'Because of this' and 'After that' is somewhat repetitive. It is a safe and educational story for a classroom setting.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "bc8aaa38be51ce8d7b73b5fbbbed06c653a526f362b23f91f71d732ec1ebd5fd",
+      "level": "B1",
+      "topicTags": [
+        "culture",
+        "environment",
+        "nature",
+        "science"
+      ],
+      "title": "The Green Heart of the City",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B1",
+        "notes": "The story is logically structured and uses appropriate vocabulary for the B1 level, including some specialized terms like 'conservation' and 'ecosystem'. While cohesive, the repetitive use of transition phrases like 'Because of this' and 'After that' makes the flow feel slightly mechanical.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "bf020f4ddb9a56dd653d799e649fae21102730b08b3da38f425f1611fee1b4dc",
+      "level": "B1",
+      "topicTags": [
+        "community",
+        "games",
+        "sports",
+        "teamwork"
+      ],
+      "title": "The Riverbend Raptors' New Game",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 4,
+        "vocabulary": 4,
+        "cefrFit": "B1",
+        "notes": "The story is well-structured and uses appropriate B1-level vocabulary related to sports and teamwork. The grammar is clear and the narrative flow is easy to follow for intermediate learners.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "c40902c7b19e597bc2d20d67ad632fd777c7da21ae9dc933376c6833d3bb8e06",
+      "level": "B1",
+      "topicTags": [
+        "adventure",
+        "community",
+        "humor",
+        "problem_solving",
+        "science",
+        "sports"
+      ],
+      "title": "Ace Newton and the Friendship Games",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B1",
+        "notes": "The story follows a clear logical progression with a strong narrative arc. The vocabulary and grammar are perfectly aligned with B1 expectations, though some cohesive devices are used somewhat repetitively.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "c49cd855bdcaa78dce7849469eb59ee042dbf6643b7f289b0981e64f342447ea",
+      "level": "C1",
+      "topicTags": [
+        "community",
+        "games",
+        "hobbies",
+        "sports",
+        "teamwork"
+      ],
+      "title": "The Navigators' Comeback: A Community Court Story",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The text employs sophisticated vocabulary and complex sentence structures that align well with C1 expectations. The narrative is logically sound, though the repetitive use of 'Because of this' as a transition slightly limits the cohesion score.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "c6cbb420d16874e465dea8acd975be1c2f5f3690f627be2a3a0e7175ad0e0035",
+      "level": "A2",
+      "topicTags": [
+        "games",
+        "health",
+        "sports",
+        "teamwork"
+      ],
+      "title": "The Friendship Games",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 4,
+        "cefrFit": "A2",
+        "notes": "The story is well-structured and perfectly aligned with A2 level expectations, using simple present tense and clear themes. While cohesive devices like 'Because of this' are repetitive, they provide excellent scaffolding for the target audience.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "c75df5f1c7cdfda121a4842eea3df834c1ec57090105884a3d1416d5ca438238",
+      "level": "A2",
+      "topicTags": [
+        "cooking",
+        "culture",
+        "food",
+        "health",
+        "hobbies"
+      ],
+      "title": "Leo's Special Dinner",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "A2",
+        "notes": "The story is perfectly aligned with the A2 level, using clear chronological markers and simple present tense. The vocabulary is accessible yet descriptive, making it ideal for the target audience.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "c76ffc1201e70c58b5a64b64ce16af6c8ead0e704ea2c3e9f0a4fdeadbb17021",
+      "level": "B1",
+      "topicTags": [
+        "food",
+        "friendship",
+        "mystery"
+      ],
+      "title": "The Mystery of the Missing Hot Honey",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B1",
+        "notes": "The story is well-structured and uses appropriate B1-level vocabulary and narrative tenses. While the use of 'Because of this' is slightly repetitive, the overall flow and complexity are perfect for the target level.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "ccb3cfbb9d121065c04bf45b9036fddddb7762bbf8b3287ecd28577f40e9b9a4",
+      "level": "B2",
+      "topicTags": [
+        "adventure",
+        "culture",
+        "mystery",
+        "nature",
+        "work"
+      ],
+      "title": "Elara and the Forest's Echo",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B2",
+        "notes": "The story features a sophisticated range of vocabulary and complex sentence structures that align perfectly with B2 expectations. The narrative flow is logical, though the repetitive use of certain transitional phrases slightly impacts the cohesion score.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "cd13c8452d19fa47cb18e3a02510bbbabac53487628833baf6876fa85d18272d",
+      "level": "A2",
+      "topicTags": [
+        "adventure",
+        "creativity",
+        "games",
+        "problem_solving"
+      ],
+      "title": "The Blocky Builders' Choice",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "A2",
+        "notes": "The story is perfectly aligned with the A2 level, featuring clear logical progression and effective use of basic connectors. The vocabulary is accessible while still providing a cohesive narrative about teamwork.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "cdd53f579b85fb950bad1462c064abf332a5d9a58af1bbca9c2d73f5e833a160",
+      "level": "B2",
+      "topicTags": [
+        "community",
+        "health",
+        "problem_solving",
+        "sports",
+        "teamwork"
+      ],
+      "title": "The Willow Creek Revival Cup",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B2",
+        "notes": "The story is well-structured with a clear narrative arc and appropriate B2-level vocabulary like 'undeterred' and 'palpable.' While the grammar is accurate, some cohesive devices like 'Because of this' are used somewhat repetitively.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "cde92b27e38e15a32a2203dc8ff094b7c83f8efce666a2876a6a5e5707368161",
+      "level": "C1",
+      "topicTags": [
+        "culture",
+        "family",
+        "mystery",
+        "work"
+      ],
+      "title": "Echoes of Regret",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The story uses sophisticated vocabulary such as 'provenance' and 'restitution' and complex sentence structures that perfectly match the C1 level. The narrative flow is logical and the cohesive devices are used effectively to link the plot points.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "d048d43d785d08e47f9580e2ae4f8a3412ed10abb8612c6eaad06c10782d5cef",
+      "level": "B2",
+      "topicTags": [
+        "adventure",
+        "creativity",
+        "games",
+        "problem_solving",
+        "teamwork"
+      ],
+      "title": "The Shard Crafters' Quest",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B2",
+        "notes": "The story uses sophisticated vocabulary and complex sentence structures that align well with the B2 level. While the narrative flow is logical, some transitional phrases like 'After that' are used somewhat repetitively. It provides an engaging and level-appropriate reading experience for upper-intermediate learners.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "d1ec76447e206220a98746a56dc97a9acbe1182f6e5089abd0b2f24ff7e5eabf",
+      "level": "B1",
+      "topicTags": [
+        "art",
+        "cooking",
+        "creativity",
+        "food",
+        "sports"
+      ],
+      "title": "Sweet Victory Pudding",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B1",
+        "notes": "The story follows a clear and logical narrative arc suitable for B1 learners. While the cohesive devices are somewhat repetitive and mechanical, the vocabulary and grammar are perfectly aligned with the target level.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "d38438f2d0ad76cbb39093ea970dd1e7a99130f70cf085786feacd802d024687",
+      "level": "B1",
+      "topicTags": [
+        "cooking",
+        "food",
+        "friendship",
+        "mystery",
+        "problem_solving"
+      ],
+      "title": "The Mystery of the Missing Hot Honey",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B1",
+        "notes": "The story is well-structured and uses appropriate vocabulary for B1 learners. Some cohesive devices like 'Because of this' are used a bit repetitively, but the narrative flow remains clear and engaging.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "de110af312b25873590590fa899e32fdd140231ae95cce0118a6e4f6f7d04190",
+      "level": "B1",
+      "topicTags": [
+        "cooking",
+        "food",
+        "hobbies"
+      ],
+      "title": "The Bean Sprout Lasagna Soup",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 4,
+        "cefrFit": "B1",
+        "notes": "The story is well-structured and perfectly aligned with B1 level expectations. It uses clear transitions and appropriate descriptive language, though some phrases are slightly repetitive.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "e1b4435771a0be4c907d3f9e27ef3e28869a29992eb3a8ed7681d6e7e43c70b4",
+      "level": "B2",
+      "topicTags": [
+        "cooking",
+        "culture",
+        "food",
+        "health",
+        "hobbies"
+      ],
+      "title": "A Culinary Exchange: From Chia to Chimichurri",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 5,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B2",
+        "notes": "The story features sophisticated vocabulary and complex sentence structures that are highly appropriate for B2 learners. The narrative is logically organized with clear transitions, though the repetitive use of 'Because of this' makes it feel slightly instructional.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "f2034be72ae414f680c5bce912b22a660492a8196c8a77c70609be606c80c80f",
+      "level": "B1",
+      "topicTags": [
+        "adventure",
+        "humor",
+        "problem_solving",
+        "sports",
+        "teamwork",
+        "technology"
+      ],
+      "title": "The Grand Green Gambit",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B1",
+        "notes": "The story follows a clear narrative arc with appropriate B1-level vocabulary like 'malfunctioned' and 'recalibrated'. Cohesive devices are used frequently, though some phrases like 'Because of this' are slightly repetitive.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "f3a90c034961a572fd61a4fa1ee77157c07965f04fa8cc5e61dcdbc99331cb55",
+      "level": "A2",
+      "topicTags": [
+        "art",
+        "family",
+        "friendship",
+        "hobbies",
+        "nature",
+        "school"
+      ],
+      "title": "Lily and the White Lotus",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "A2",
+        "notes": "The story is very well-structured and follows a clear narrative arc suitable for A2 learners. The grammar is consistently in the simple present, and the vocabulary is accessible while introducing a few thematic words like 'mural' and 'exhibition'.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "facc2a3e168c6e70bf8d15106218d8e2c2b5e9680c9dd2e48d75844ba9d18721",
+      "level": "B1",
+      "topicTags": [
+        "adventure",
+        "community",
+        "creativity",
+        "games",
+        "teamwork",
+        "technology"
+      ],
+      "title": "Pixel Paladins: The Astro-Raiders Quest",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "B1",
+        "notes": "The story is well-structured and uses appropriate B1-level vocabulary and grammar. Transitions are clear, though slightly repetitive in phrasing. The content is engaging and perfectly suited for the target audience.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    },
+    {
+      "outlineId": "ffa0d55bedb3b0661ad1f23c62ea6db5ee1086170f1a9c1c7a91debfc72f833b",
+      "level": "C1",
+      "topicTags": [
+        "adventure",
+        "animals",
+        "creativity",
+        "games",
+        "mystery",
+        "technology"
+      ],
+      "title": "Aetherial Beasts: The Nexus Split",
+      "assessment": {
+        "coherence": 5,
+        "cohesion": 4,
+        "grammar": 5,
+        "vocabulary": 5,
+        "cefrFit": "C1",
+        "notes": "The text demonstrates a high level of lexical precision and complex sentence structures ideal for C1 learners. While the narrative is logically sound, the repetitive use of 'Because of this' as a cohesive device is slightly below the stylistic variety expected at this level.",
+        "flags": {
+          "tooHard": false,
+          "tooEasy": false,
+          "unsafe": false
+        }
+      },
+      "retried": false,
+      "previousAssessment": null
+    }
+  ]
+}

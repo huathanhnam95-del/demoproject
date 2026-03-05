@@ -14,6 +14,7 @@
     "audit:a2-onboarding": "node scripts/audit/run-a2-onboarding-audit.js --base-url http://localhost:8443"
   },
   "dependencies": {
+    "@google-cloud/vertexai": "^1.10.0",
     "@google/generative-ai": "^0.24.1",
     "@huggingface/inference": "^4.13.10",
     "axios": "^1.13.4",

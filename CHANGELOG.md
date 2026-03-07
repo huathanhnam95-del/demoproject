@@ -1,5 +1,11 @@
 # Changelog
 
+## [V1.5.1] - 2026-03-07
+
+### Fixed
+
+- **Security Hardening**: Enforced `isStudent` claim requirement for `crmSubmissions`, `crmClassrooms`, and Storage uploads to prevent authenticated-but-unlinked users from accessing or spamming student-specific services.
+
 ## [V1.5.0] - 2026-03-07
 
 ### Added
@@ -11,11 +17,11 @@
 
 ### Improved
 
-- **Phase**: Release V1.5.0
+- **Phase**: Release V1.5.1
 - **Backend Reliability**: Refactored student identity logic with Firestore atomic `arrayUnion` and unique code collision checks.
 - **UX Refresh**: Centralized custom claim handling in `updateAccountPanelState` for instantaneous UI updates without page reloads.
 - **Security**: Hardened Firestore rules for user-linked document isolation in `crmStudents`.
-- **Next Version**: `V1.5.1` (Bug fixes/refinement)
+- **Next Version**: `V1.5.2` (Bug fixes/refinement)
 
 ## [V1.4.0] - 2026-03-05
 

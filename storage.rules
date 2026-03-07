@@ -2,10 +2,11 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
     match /uploads/{classId}/{workId}/{uid}/{allPaths=**} {
-      // Students can read/write their own submissions
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      // Students can read/write their own submissions if they are verified students
+      allow read, write: if request.auth != null 
+                         && request.auth.uid == uid 
+                         && request.auth.token.isStudent == true;
       // Admins can read everything
-      // Note: Custom claims in storage rules don't always propagate instantly, but we can check if token.isAdmin == true
       allow read: if request.auth != null && request.auth.token.isAdmin == true;
     }
   }

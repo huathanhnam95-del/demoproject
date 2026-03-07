@@ -100,6 +100,8 @@
   <script src="js/logger.js"></script>
   <script src="js/modals.js"></script>
   <script src="pronunciation-analyzer/syllable-verifier.js?v=20260114_ui_v4"></script>
+  <!-- Load XLSX early to prevent ReferenceErrors in script.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <!-- Import Map for NPM Packages & Internal Modules -->
   <script type="importmap">
     {
@@ -122,7 +124,7 @@
     </div>
   </div>
 
-    <script>
+  <script>
     window.__belPreloaderDiagnostics = {
       resourceErrors: [],
       scriptErrors: [],
@@ -352,15 +354,17 @@
         </div>
       </div>
       <!-- Identity Merging (Join a Class) -->
-      <div id="join-class-section" class="join-class-section" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #eee; padding-left: 20px; padding-right: 20px;">
+      <div id="join-class-section" class="join-class-section"
+        style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #eee; padding-left: 20px; padding-right: 20px;">
         <h3 style="margin-bottom: 8px;">🎓 Join a Class</h3>
         <p class="text-muted" style="margin-bottom: 12px; font-size: 0.9rem;">
           Have a class code from your teacher? Enter it below to link your student profile.
         </p>
         <div style="display: flex; gap: 10px;">
-          <input type="text" id="join-class-code-input" placeholder="Enter 6-digit code" 
-                 style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; text-transform: uppercase;">
-          <button id="btn-join-class" class="panel-btn primary" style="width: auto; padding: 0 20px; margin: 0;">Join</button>
+          <input type="text" id="join-class-code-input" placeholder="Enter 6-digit code"
+            style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; text-transform: uppercase;">
+          <button id="btn-join-class" class="panel-btn primary"
+            style="width: auto; padding: 0 20px; margin: 0;">Join</button>
         </div>
         <div id="join-class-message" style="margin-top: 8px; font-size: 0.85rem; display: none;"></div>
       </div>
@@ -1116,7 +1120,7 @@
                   <h3>Collo-dictate</h3>
                   <p>Listen and type collocations.</p>
                   <button class="card-cta">Practice Now</button>
-                  <a class="whats-this-link"
+                  <a class="whats-this-link" style="display: none;"
                     onclick="event.stopPropagation(); window.startTutorial('collo-dictate', true);">What's this?</a>
                 </div>
               </div>

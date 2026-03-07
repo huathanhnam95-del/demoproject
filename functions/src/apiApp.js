@@ -57,6 +57,7 @@ const {
     forceLinkProfile,
     mergeCustomClaims
 } = require('./studentIdentity');
+const { FieldValue } = require('firebase-admin/firestore');
 
 // --- Student Endpoints ---
 
@@ -159,6 +160,104 @@ app.get(['/admin/status', '/api/admin/status'], authMiddleware, async (req, res)
         });
     } catch (e) {
         sendError(res, 500, 'ADMIN_CHECK_ERROR', 'Failed to check admin status.', e.message);
+    }
+});
+
+// --- Classroom Management Endpoints (Admin) ---
+
+// POST /api/admin/classrooms: Create a new Classroom
+app.post(['/admin/classrooms', '/api/admin/classrooms'], authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const { name, courseId, status } = req.body || {};
+        if (!name) return sendError(res, 400, 'VALIDATION_ERROR', 'Classroom name is required.');
+
+        const ref = db.collection('crmClassrooms').doc();
+        await ref.set({
+            name,
+            courseId: courseId || null,
+            status: status || 'draft',
+            createdAt: FieldValue.serverTimestamp(),
+            createdBy: req.user.uid
+        });
+
+        sendSuccess(res, { classroomId: ref.id }, 'Classroom created.');
+    } catch (e) {
+        sendError(res, 500, 'CREATE_CLASSROOM_ERROR', 'Failed to create classroom.', e.message);
+    }
+});
+
+// POST /api/admin/classrooms/:classId/modules: Add a Module to a Classroom
+app.post(['/admin/classrooms/:classId/modules', '/api/admin/classrooms/:classId/modules'], authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const { classId } = req.params;
+        const { title, orderIndex } = req.body || {};
+        if (!title) return sendError(res, 400, 'VALIDATION_ERROR', 'Module title is required.');
+
+        const ref = db.collection('crmClassrooms').doc(classId).collection('modules').doc();
+        await ref.set({
+            title,
+            orderIndex: orderIndex || Date.now(),
+            createdAt: FieldValue.serverTimestamp()
+        });
+
+        sendSuccess(res, { moduleId: ref.id }, 'Module created.');
+    } catch (e) {
+        sendError(res, 500, 'CREATE_MODULE_ERROR', 'Failed to create module.', e.message);
+    }
+});
+
+// POST /api/admin/classrooms/:classId/classwork: Add Classwork to a Classroom
+app.post(['/admin/classrooms/:classId/classwork', '/api/admin/classrooms/:classId/classwork'], authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const { classId } = req.params;
+        const work = req.body || {};
+        if (!work.title) return sendError(res, 400, 'VALIDATION_ERROR', 'Classwork title is required.');
+
+        const ref = db.collection('crmClassrooms').doc(classId).collection('classwork').doc();
+        await ref.set({
+            ...work,
+            createdAt: FieldValue.serverTimestamp()
+        });
+
+        sendSuccess(res, { classworkId: ref.id }, 'Classwork created.');
+    } catch (e) {
+        sendError(res, 500, 'CREATE_CLASSWORK_ERROR', 'Failed to create classwork.', e.message);
+    }
+});
+
+// GET /api/admin/classrooms/:classId/submissions: Fetch Submissions for Review Board
+app.get(['/admin/classrooms/:classId/submissions', '/api/admin/classrooms/:classId/submissions'], authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const { classId } = req.params;
+
+        const snap = await db.collection('crmSubmissions')
+            .where('classId', '==', classId)
+            .get();
+
+        const submissions = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        sendSuccess(res, { submissions });
+    } catch (e) {
+        sendError(res, 500, 'FETCH_SUBMISSIONS_ERROR', 'Failed to fetch submissions.', e.message);
+    }
+});
+
+// POST /api/admin/submissions/:submissionId/grade: Grade a Submission
+app.post(['/admin/submissions/:submissionId/grade', '/api/admin/submissions/:submissionId/grade'], authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const { submissionId } = req.params;
+        const { grade, feedback } = req.body || {};
+
+        await db.collection('crmSubmissions').doc(submissionId).update({
+            grade,
+            feedback,
+            gradedAt: FieldValue.serverTimestamp(),
+            gradedBy: req.user.uid,
+            status: 'graded'
+        });
+
+        sendSuccess(res, null, 'Submission graded.');
+    } catch (e) {
+        sendError(res, 500, 'GRADE_ERROR', 'Failed to grade submission.', e.message);
     }
 });
 

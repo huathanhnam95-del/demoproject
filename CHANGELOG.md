@@ -1,5 +1,12 @@
 # Changelog
 
+## [V1.5.2] - 2026-03-07
+
+### Fixed
+
+- **Classroom API**: Restored missing management routes (`create`, `modules`, `classwork`, `grade`) in `apiApp.js` that caused 404 errors in CRM Admin.
+- **XLSX Reference Error**: Added XLSX library CDN to `index.html` head to prevent `XLSX is not defined` crash during sentence database loading.
+
 ## [V1.5.1] - 2026-03-07
 
 ### Fixed

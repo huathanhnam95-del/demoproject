@@ -1,0 +1,43 @@
+{
+  "runId": "2026-03-06T08-26-20-786Z",
+  "createdAt": "2026-03-06T08:26:20.787Z",
+  "startedAt": "2026-03-06T08:26:20.786Z",
+  "baseUrl": "http://localhost:8797",
+  "dataset": {
+    "path": "C:\\Cursor AI\\scripts\\data\\2025-vn-adult-topics.json",
+    "total": 246
+  },
+  "simulation": {
+    "targetOutlines": 330,
+    "collectedOutlines": 330,
+    "attempts": 0,
+    "maxAttempts": 8250,
+    "branchMode": "mcq",
+    "levels": [
+      "A2",
+      "B1"
+    ],
+    "language": "en",
+    "keywordsPerOutline": 3,
+    "concurrency": 1,
+    "seed": 1772785579048,
+    "resumedFromExisting": 330
+  },
+  "health": {
+    "success": true,
+    "enabled": true,
+    "mode": "dev",
+    "model": "ai-studio:models/gemini-3.1-pro-preview",
+    "effectiveModel": "ai-studio:models/gemini-3.1-pro-preview",
+    "fallbackModel": "ai-studio:models/gemini-2.5-flash",
+    "fallbackReason": "",
+    "targets": [
+      "ai-studio:models/gemini-3.1-pro-preview",
+      "ai-studio:models/gemini-2.5-flash",
+      "vertex:gemini-2.5-pro",
+      "vertex:gemini-2.5-flash"
+    ]
+  },
+  "perOutline": [],
+  "errors": []
+}

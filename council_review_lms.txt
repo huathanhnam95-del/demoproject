@@ -1,0 +1,266 @@
+==================================================
+
+[ 🏛️ Architect ]
+This is **The Architect**.
+
+The core premise of **Decoupled Identity** (separating the Authentication User from the Domain Student Entity) is correct. It is the only way to scale for a B2B2C model (School -> Teacher -> Student).
+
+However, section **2.3 (Fallback Approach)** contains a critical security violation.
+
+Here is the architectural review, identifying vulnerabilities and mandating structural corrections.
+
+### 1. Security Directive: The "Manual Link" Vulnerability
+
+**The Flaw:**
+In your proposed Fallback Approach, an Admin manually inputs `Email A` to link it to a Student Profile.
+*   **Risk:** An Admin (malicious or incompetent) could link a Student Profile to the *wrong* personal email. A stranger could gain access to a student’s grades and PII without the student's consent.
+*   **Correction:** The Admin cannot *force* a link. They can only *facilitate* it.
+
+**The Fix (The "Handshake" Protocol):**
+Replace the "Manual Link" with a **Redemption Code Flow**.
+1.  Admin generates a 6-character alphanumeric code in the CRM (e.g., `TR7-9XP`) linked to the `StudentProfile`.
+2.  Admin verbally/physically gives this code to the student.
+3.  Student logs in to their personal account (`Email A`), goes to settings, and enters the code.
+4.  System verifies code $\rightarrow$ Links `user_id` to `StudentProfile`.
+
+### 2. Edge Case Analysis & Logic Gates
+
+You must implement logic gates for these scenarios to prevent data corruption:
+
+*   **The "Double Agent" (Pre-existing Link):**
+    *   *Scenario:* User clicks an invite link, but is already linked to *another* Student Profile (e.g., Math Class A and English Class B).
+    *   *Protocol:* The relationship must be `1 User : N Profiles`. Ensure the frontend iterates through an *array* of linked profiles, not a single field.
+*   **The "Ghost" (Account Deletion):**
+    *   *Scenario:* Student requests deletion of their personal account (`Email A`).
+    *   *Protocol:* Triggers a Cloud Function. The `user_id` is stripped from the `StudentProfile`, turning it back into a "Shadow Profile." The academic data remains intact for the School's records.
+*   **The "Hijacked Token" (Security):**
+    *   *Scenario:* Email B is compromised.
+    *   *Protocol:* Magic Links must have a short TTL (Time To Live - e.g., 48 hours) and be single-use. Once consumed, the token document must be destroyed or flagged `is_used: true`.
+
+### 3. Scalable Data Schema
+
+Do not pollute the `users` collection with domain data. Use strict separation.
+
+**Collection: `users` (Authentication)**
+```json
+{
+  "uid": "user_123",
+  "email": "personal@gmail.com",
+  // Array of pointers to domain entities
+  "linked_student_profiles": ["sp_999", "sp_888"],
+  "default_role": "student"
+}
+```
+
+**Collection: `student_profiles` (Domain Data)**
+```json
+{
+  "id": "sp_999",
+  "school_id": "school_abc",
+  "institutional_email": "student@school.edu",
+  "linked_user_id": "user_123", // The bond. Null if Shadow Profile.
+  "invite_token": {
+    "hash": "xyz...",
+    "expires_at": "timestamp"
+  },
+  "status": "active" // or "pending_claim"
+}
+```
+
+### 4. Implementation & File Structure
+
+Organize this logic within a dedicated module to prevent "God Functions."
+
+```text
+/functions
+  /src
+    /domains
+      /identity
+        /linking
+          - claim-student-profile.ts    // Handles Magic Link Logic
+          - redeem-access-code.ts       // Handles Manual Code Entry
+          - unlink-identity.ts          // Handles account deletion/separation
+    /triggers
+      - on-user-create.ts               // Auto-check for pending invites by email match
+```
+
+### 5. Frontend Scalability (The "My Courses" Logic)
+
+**Do not** rely on client-side queries to check for enrollment on every page load. It is slow and costly.
+
+**Mandate:** Use **Custom Claims** in the Firebase Auth ID Token.
+1.  When a link is established, a Cloud Function updates the User's Custom Claims: `claims: { student_access: true, enrolled_orgs: ['school_abc'] }`.
+2.  The frontend checks the ID Token. If `student_access == true`, render the "My Courses" button immediately. No database round-trip required.
+
+### Summary of Orders
+
+1.  **REJECT** the admin-forced manual linking. Replace with **Redemption Code**.
+2.  **ADOPT** `1 User : N Profiles` schema immediately to support multi-school/multi-class students.
+3.  **IMPLEMENT** Custom Claims for UI rendering performance.
+
+Execute.
+--------------------------------------------------
+
+[ 🔥 Challenger ]
+This design is porous. You’ve handed me a "happy path" scenario that falls apart the moment a human being actually interacts with it or a malicious actor decides to poke the API.
+
+I have five major objections. Fix them before you write a single line of code.
+
+### 1. SECURITY CRITICAL: The "Admin Manual Link" is a Privacy Nuke
+**Ref:** *Section 2, Fallback Approach*
+
+> *"Admin can manually input Email A... and forcibly links the Student Profile to that user_id."*
+
+**Why did you approve this?** You are allowing an Admin to perform a hostile account takeover or unauthorized association without the User's consent.
+*   **The Risk:** What stops a malicious (or clumsy) Admin from typing in `ceo@company.com` or a random user's email into a Student Profile? Suddenly, that innocent user logs in and sees "My Courses" for a class they didn't join, or worse, the Admin now has a backdoor into that User's account metadata via the `student_profile` link.
+*   **The Fix:** Admins can trigger an *invite*, but they cannot *force* a link. Only the authenticated owner of Email A can accept the link. Kill the "force link" capability immediately. It’s a GDPR/privacy lawsuit waiting to happen.
+
+### 2. LOGIC FLAW: The "Double Data" Collision
+**Ref:** *Section 2, Cross-Login Support*
+
+> *"System will pull the exact same practice data... from the central StudentProfile."*
+
+You are assuming the user (Email A) comes to the table with an empty plate.
+*   **The Scenario:** A student has been using your app for 6 months on their personal Email A. They have XP, saved recordings, and history. Now, they click the Magic Link to join the University Course (Email B).
+*   **The Bug:** Does the system **wipe** their personal history to show the University profile? Does it **merge** them? Or does the user now have to toggle between "Personal Context" and "School Context"?
+*   **The Fix:** Define the data hierarchy. If I link my account, do I lose access to my previous self-study data? The design is silent on data resolution.
+
+### 3. SECURITY: Token Hijacking & The "Forwarded Email"
+**Ref:** *Section 2, Core Mechanism*
+
+> *"User clicks the link, logs in... system links the Student Profile."*
+
+*   **The Edge Case:** The student forwards the university email to their mom, or the email is intercepted. Mom clicks the link and logs in with *her* account.
+*   **The Result:** Mom is now the student. The link is burned. The actual student is locked out.
+*   **The Fix:**
+    1.  The Magic Link must display a **Confirmation Screen**: "You are about to link Student Profile [Name] to Account [Email A]. Confirm?"
+    2.  If the link is claimed, subsequent clicks must show a specific "Already Claimed" error, not a generic failure.
+
+### 4. ARCHITECTURE: The "Many-to-One" Authentication Nightmare
+**Ref:** *Section 2, Cross-Login Support*
+
+> *"Student can log in using either email address... if both happen to be registered"*
+
+This is technically expensive and messy.
+*   **The Flaw:** If I have `User_UID_1` (Gmail) and `User_UID_2` (School Email), and they both point to `Student_Profile_X`, you now have to maintain two separate Auth records and sync permissions for both.
+*   **The Question:** If I change my password on Email A, does it affect Email B? No. If I delete my account on Email A, does the Student Profile get orphaned?
+*   **The Fix:** Stop trying to support "logging in with either." Pick a primary identity. If they link Email A, **Email A is the key.** Email B is just a notification channel. Don't encourage multiple active Auth UIDs for one human unless you have a robust identity federation system (which this document does not describe).
+
+### 5. UX: The "Invisible Door"
+**Ref:** *Section 3, LMS Access*
+
+> *"frontend will check their profile claims... button labeled 'My Courses' will dynamically appear"*
+
+*   **The Bug:** Frontend checks are cosmetic. What happens if I manually type `myapp.com/lms`?
+*   **The Risk:** If the backend security rules rely solely on the "Link" existing, but the "Link" was created erroneously (see Point 1), I’m in.
+*   **The Fix:** Explicitly state that `firestore.rules` must validate `request.auth.uid` against the `linked_user_ids` array on the `StudentProfile` document for *every* read/write operation in the LMS namespace. Frontend hiding is not security.
+
+### Summary of Demands
+1.  **Remove the Admin Forced Link.** Replace with an "Invite Resend."
+2.  **Define Data Merge Strategy.** What happens to pre-existing data on the personal account?
+3.  **Implement Link Confirmation UI.** Don't auto-link on click; require explicit user consent.
+4.  **Clarify the Primary Key.** Does the Student Profile store an array of `allowed_uids`? Be specific about the database schema.
+
+**Go back to the drawing board and answer these.**
+--------------------------------------------------
+
+[ ✨ Reviewer ]
+Here is the War Room review and synthesized implementation plan.
+
+### Executive Summary
+
+**Verdict:** **Approved with Critical Refinements.**
+
+The "Decoupled Identity" architecture is sound and essential for handling the dichotomy between institutional rostering and personal authentication. However, the **Manual Fallback** mechanism poses a significant privacy risk (human error), and the **Magic Link** flow assumes a unified browser context, which is often not the reality (e.g., student opens email on phone, works on laptop).
+
+We will refine the UX to include a **"Class Code"** entry method to bypass cross-device friction and add a **"Safety Handshake"** for the Admin fallback.
+
+---
+
+### 1. Critical Scrutiny & Refinements
+
+#### Issue A: The "Cross-Browser" Friction (Magic Link)
+**Scenario:** A student is logged into the Web App on Chrome. They receive the invite email on their iPhone Mail app. Clicking the link opens Safari (where they are not logged in). They face a login wall or a broken flow.
+**Refinement:** **The "Class Code" Alternative.**
+In addition to the link, the email will contain a simple 6-character alphanumeric code. The student can go to their Profile Settings in the Web App and manually "Enter Class Code" to link the account. This bypasses browser/device isolation issues.
+
+#### Issue B: The "Admin Typo" Risk (Manual Fallback)
+**Scenario:** The Admin intends to link `jon.doe@gmail.com` but types `john.doe@gmail.com`. The system silently links a stranger’s account to the student’s academic record.
+**Refinement:** **The Safety Handshake.**
+The Admin cannot "blindly" link. When they input `Email A`:
+1. The backend searches for the user.
+2. If found, it returns a **preview card** (Display Name + Avatar/Initials).
+3. The Admin must explicitly click **"Confirm Link"** after verifying visual identity.
+4. *Restriction:* This should only be allowed if the target User has *not* already linked a different profile.
+
+#### Issue C: Session State & Security
+**Scenario:** A user claims a profile, but their active session token doesn't reflect the new permissions (Custom Claims) until a token refresh.
+**Refinement:** **Client-Side Trigger.**
+Upon a successful claim (via Link or Code), the client must force a token refresh (`currentUser.getIdToken(true)`) so the "My Courses" button appears immediately without a page reload or logout.
+
+---
+
+### 2. Implementation Plan
+
+We will execute this in three distinct phases to ensure stability and security.
+
+#### Phase 1: The Shadow Schema & Admin Invite
+**Goal:** Create the destination data structures and the invite mechanism.
+
+1.  **Data Structure (`student_profiles` collection):**
+    *   `email_institutional` (string)
+    *   `linked_user_ids` (array of strings) - *Allows for future guardian access, though we focus on student now.*
+    *   `invite_token` (string, indexed) - *UUID or high-entropy string.*
+    *   `class_code` (string, 6-char, indexed) - *Human-readable alternative to token.*
+    *   `status` (enum: 'pending', 'active')
+2.  **Admin UI:**
+    *   Create "Add Student" modal.
+    *   Cloud Function `generateStudentInvite`: Creates profile, generates token/code, sends email via SendGrid/Postmark.
+    *   Email Template: "Click here to join [Class Name] OR enter code **X7Y-99Z** in your profile."
+
+#### Phase 2: The Claim Protocol (Frontend & Security)
+**Goal:** Allow the student to bridge the gap between their Auth User and the Student Profile.
+
+1.  **Route Handling (`/join`):**
+    *   Accepts `?token=...`.
+    *   If user is logged out: Redirect to Login, preserving the token in `localStorage`.
+    *   If user is logged in: Call `claimStudentProfile`.
+2.  **Profile UI ("Enter Code"):**
+    *   Input field in User Settings: "Join a Class".
+    *   Submits `class_code` to `claimStudentProfile`.
+3.  **Backend Logic (`claimStudentProfile`):**
+    *   Validate Token/Code.
+    *   **Atomic Transaction:**
+        *   Update `student_profiles`: Add `auth.uid` to `linked_user_ids`. Clear used token (security).
+        *   Update `users`: Set `active_student_profile_ref` to the profile ID.
+    *   Return success.
+4.  **Security Rules:**
+    *   `match /student_profiles/{profileId}`: Allow read/write if `request.auth.uid in resource.data.linked_user_ids`.
+
+#### Phase 3: The LMS View Switcher & Admin Fallback
+**Goal:** UX integration and resolving edge cases.
+
+1.  **The "My Courses" Toggle:**
+    *   Global App State listens to User Profile.
+    *   If `active_student_profile_ref` exists: Render "My Courses" button in Navbar.
+    *   Clicking navigates to `/lms/dashboard`.
+2.  **Admin Manual Link (The Handshake):**
+    *   Admin enters "Personal Email".
+    *   Callable Function `lookupUserPublicInfo(email)` returns `{ uid, displayName, photoUrl }` (only if user exists).
+    *   Admin reviews modal: "Link **Jane Doe** to this profile?"
+    *   On Confirm: Callable Function `adminForceLinkProfile(uid, profileId)` executes the linkage.
+
+### 3. Summary of User Flow (Refined)
+
+1.  **Admin** creates Student Profile (Email: `school@edu`).
+2.  **System** generates code `ABC-123` and emails `school@edu`.
+3.  **Student** (who uses `personal@gmail`) sees email on phone.
+4.  **Student** logs into Web App on laptop using `personal@gmail`.
+5.  **Student** enters `ABC-123` in settings.
+6.  **System** links `personal@gmail` to the `school@edu` profile data.
+7.  **"My Courses"** button appears instantly.
+
+This approach resolves the identity fragmentation with high UX tolerance for device switching and strict security regarding manual intervention.
+--------------------------------------------------
+
+✅ Council Adjourned. The Sovereign's vision is secured.

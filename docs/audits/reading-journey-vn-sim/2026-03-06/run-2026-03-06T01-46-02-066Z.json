@@ -1,0 +1,1034 @@
+{
+  "runId": "2026-03-06T01-46-02-066Z",
+  "createdAt": "2026-03-06T02:57:01.405Z",
+  "startedAt": "2026-03-06T01:46:02.066Z",
+  "baseUrl": "http://localhost:8797",
+  "dataset": {
+    "path": "C:\\Cursor AI\\scripts\\data\\2025-vn-adult-topics.json",
+    "total": 246
+  },
+  "simulation": {
+    "targetOutlines": 100,
+    "collectedOutlines": 100,
+    "attempts": 50,
+    "maxAttempts": 2500,
+    "branchMode": "mcq",
+    "levels": [
+      "A2",
+      "B1"
+    ],
+    "language": "en",
+    "keywordsPerOutline": 3,
+    "concurrency": 2,
+    "seed": 1772761560406,
+    "resumedFromExisting": 50
+  },
+  "health": {
+    "success": true,
+    "enabled": true,
+    "mode": "dev",
+    "model": "ai-studio:models/gemini-3.1-pro-preview",
+    "effectiveModel": "ai-studio:models/gemini-3.1-pro-preview",
+    "fallbackModel": "ai-studio:models/gemini-2.5-flash",
+    "fallbackReason": "",
+    "targets": [
+      "ai-studio:models/gemini-3.1-pro-preview",
+      "ai-studio:models/gemini-2.5-flash",
+      "vertex:gemini-2.5-pro",
+      "vertex:gemini-2.5-flash"
+    ]
+  },
+  "perOutline": [
+    {
+      "outlineId": "7428cfe41c6767c9fc0d396b899f14213e411e3a78bf4024bca14270e41bc21d",
+      "title": "The Gemini Garden Box",
+      "level": "B1",
+      "keywords": [
+        "Gemini",
+        "Tạo ảnh hộp đồ chơi",
+        "Đi giữa trời rực rỡ"
+      ],
+      "topicTags": [
+        "adventure",
+        "art",
+        "creativity",
+        "hobbies",
+        "nature",
+        "technology"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 6
+    },
+    {
+      "outlineId": "450d004ecc66214db93b261e487e1e7eb1b5f8b9ba3f657ee7e427d9277028e9",
+      "title": "Mai's New Language Journey in Da Nang",
+      "level": "A2",
+      "keywords": [
+        "học tiếng Anh cho người đi làm",
+        "Đà Nẵng",
+        "Đồng Nai"
+      ],
+      "topicTags": [
+        "culture",
+        "education",
+        "language_learning",
+        "travel",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 1
+    },
+    {
+      "outlineId": "a9dd31e0051fc5db73170429f3b3fc9b699af78532e3e1a25d7973c8f5c85352",
+      "title": "The Red Rain of Huế",
+      "level": "B1",
+      "keywords": [
+        "Huế",
+        "Mưa đỏ",
+        "Đà Nẵng"
+      ],
+      "topicTags": [
+        "adventure",
+        "culture",
+        "environment",
+        "travel",
+        "weather"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 10
+    },
+    {
+      "outlineId": "8cf85130d5ce5c1dca058c8a962b52fbbe6cc563e736714e395b44f2fc6f9ed1",
+      "title": "Linh's Sweet English Order",
+      "level": "A2",
+      "keywords": [
+        "đặt hàng online",
+        "học tiếng Anh qua phim",
+        "trà đào"
+      ],
+      "topicTags": [
+        "education",
+        "food",
+        "hobbies",
+        "language_learning",
+        "technology"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "6e74d72a0995bdadbfa14a7aab227013dcdbfcdd462518ad5ee61cea949622d3",
+      "title": "Linh's Tết Concert Challenge",
+      "level": "B1",
+      "keywords": [
+        "Tết",
+        "quản lý tài chính cá nhân",
+        "Hanoi concert"
+      ],
+      "topicTags": [
+        "art",
+        "culture",
+        "education",
+        "family",
+        "festival",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 3
+    },
+    {
+      "outlineId": "48af4549229f51c0707c1043ddc57957d7acdef4919c209e8afa943ca52431bb",
+      "title": "Snow in the Sun",
+      "level": "A2",
+      "keywords": [
+        "Tạo ảnh tuyết rơi",
+        "Video AI",
+        "Phan Thiết"
+      ],
+      "topicTags": [
+        "creativity",
+        "technology",
+        "travel"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 10
+    },
+    {
+      "outlineId": "21db82f2af82313888a22b3a0e1cdbb63edad258d3caa85aedd449cb14d32ed1",
+      "title": "The Gemini Coastal Challenge",
+      "level": "B1",
+      "keywords": [
+        "làm việc nhóm",
+        "Vũng Tàu",
+        "Gemini"
+      ],
+      "topicTags": [
+        "nature",
+        "teamwork",
+        "technology",
+        "travel"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 1
+    },
+    {
+      "outlineId": "c7de1a49302d99598713e77cf520f93d3c697b800a5139b3c9f7f5fadb681ed6",
+      "title": "Lena's New Start: Budgeting and Belonging",
+      "level": "B1",
+      "keywords": [
+        "chi tiêu hợp lý",
+        "giới thiệu bản thân",
+        "mạng xã hội"
+      ],
+      "topicTags": [
+        "community",
+        "friendship",
+        "language_learning",
+        "problem_solving",
+        "technology",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 4
+    },
+    {
+      "outlineId": "302646a4bc0f4553420480a30af2c3d039225784ec4df7f92f1d179136c7d123",
+      "title": "The Harmony of Home",
+      "level": "B1",
+      "keywords": [
+        "gia đình",
+        "Anh trai say hi",
+        "Đừng làm trái tim anh đau"
+      ],
+      "topicTags": [
+        "community",
+        "family",
+        "friendship"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 1
+    },
+    {
+      "outlineId": "2f0f19dbd2bc6501fc94664bd013891cc7e806140c9f96631e571f97b1f2fb58",
+      "title": "The Phu Quoc Grammar Storm",
+      "level": "B1",
+      "keywords": [
+        "Bão số 3",
+        "ngữ pháp cơ bản",
+        "Phú Quốc"
+      ],
+      "topicTags": [
+        "education",
+        "language_learning",
+        "nature",
+        "travel",
+        "weather"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 5
+    },
+    {
+      "outlineId": "4e31afe9f219a8520d8fa2db73238b61b7a6e2f78368149f8d58d33a65264dbb",
+      "title": "The Shimmering Peach Grove",
+      "level": "B1",
+      "keywords": [
+        "Dù cho tận thế",
+        "trà đào",
+        "thiền"
+      ],
+      "topicTags": [
+        "environment",
+        "food",
+        "health",
+        "hobbies",
+        "mystery"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 5
+    },
+    {
+      "outlineId": "4507b469793c3f8dd8485eb447811e6f16393bdca5dc261acb624afab7bcb439",
+      "title": "A Taste of Vietnamese: The Bún Bò Huế Challenge",
+      "level": "B1",
+      "keywords": [
+        "bún bò Huế",
+        "Grok",
+        "kế hoạch học 30 ngày"
+      ],
+      "topicTags": [
+        "culture",
+        "curiosity",
+        "education",
+        "food",
+        "language_learning"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 3
+    },
+    {
+      "outlineId": "794e6cd73551a06483cad01f297ee0b556f3f0efe3794e85a6226367a2ed773e",
+      "title": "A Lantern's Glow in An Giang",
+      "level": "B1",
+      "keywords": [
+        "An Giang",
+        "Đèn trung thu",
+        "Khom lưng"
+      ],
+      "topicTags": [
+        "community",
+        "creativity",
+        "culture",
+        "family",
+        "festival",
+        "travel"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 3
+    },
+    {
+      "outlineId": "0edbf268d4421ce1a1a6c3866af9a0e68b9bddd3b164488661f7f23e7ed6e3a0",
+      "title": "Lena's Healthy English Journey",
+      "level": "B1",
+      "keywords": [
+        "Dầu cà rốt",
+        "chăm sóc răng miệng",
+        "giới thiệu bản thân"
+      ],
+      "topicTags": [
+        "cooking",
+        "education",
+        "food",
+        "health",
+        "language_learning"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 11
+    },
+    {
+      "outlineId": "9d70efd37cbe154896a71ccf88cff6b9e6cc5506b4fdb449353232c3ee1cbee0",
+      "title": "The Brotherly Balance",
+      "level": "B1",
+      "keywords": [
+        "Anh trai say hi",
+        "Tạo ảnh polaroid",
+        "tập gym"
+      ],
+      "topicTags": [
+        "creativity",
+        "family",
+        "health",
+        "hobbies",
+        "sports"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 4
+    },
+    {
+      "outlineId": "2df554977ab50249f2794999c9c9ce140276502742a72589bbd4f1567707faac",
+      "title": "Linh's Ha Long Interview",
+      "level": "B1",
+      "keywords": [
+        "Quảng Ninh",
+        "giao tiếp trong gia đình",
+        "phỏng vấn tiếng Anh"
+      ],
+      "topicTags": [
+        "culture",
+        "family",
+        "language_learning",
+        "travel",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 3
+    },
+    {
+      "outlineId": "82380b9d283eb0c9efc53bba5337762cb3ad7e8097624ab1fcf7e3138c6c5628",
+      "title": "Linh's Special Card for Ms. Hoa",
+      "level": "B1",
+      "keywords": [
+        "Hải Phòng",
+        "gửi tiết kiệm ngân hàng",
+        "Thiệp 20/11"
+      ],
+      "topicTags": [
+        "creativity",
+        "culture",
+        "education",
+        "festival",
+        "travel",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 2
+    },
+    {
+      "outlineId": "1a17b1df05f2eabd7150db9938cb9e8fb02521973a5985df37d3822cb4957734",
+      "title": "Lena's Digital Shield",
+      "level": "B1",
+      "keywords": [
+        "quỹ dự phòng",
+        "bảo mật tài khoản",
+        "giảm stress"
+      ],
+      "topicTags": [
+        "health",
+        "problem_solving",
+        "technology",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 1
+    },
+    {
+      "outlineId": "08eeb4a0b6d943362aab48bd4ae89f8a1f7c0313d5a558f9e8c27fde04303a44",
+      "title": "Sweet Soup in the Storm",
+      "level": "B1",
+      "keywords": [
+        "quản lý dự án",
+        "chè đậu xanh",
+        "Bão số 6"
+      ],
+      "topicTags": [
+        "cooking",
+        "environment",
+        "food",
+        "problem_solving",
+        "weather",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 2
+    },
+    {
+      "outlineId": "541d6af651d1acaa884d49d12e95cbe79c985120589817b4d0f2e454d5971fc0",
+      "title": "The Digital Canvas",
+      "level": "B1",
+      "keywords": [
+        "giới thiệu bản thân",
+        "Sketch a rose",
+        "Tạo ảnh tuyết rơi"
+      ],
+      "topicTags": [
+        "art",
+        "creativity",
+        "language_learning",
+        "technology"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 3
+    },
+    {
+      "outlineId": "0a61e3af4bdf8517d8fe9074f7204c3516a6e076cf64f65382f0ea139cf2861d",
+      "title": "The Future Pitch",
+      "level": "A2",
+      "keywords": [
+        "Video AI",
+        "kỹ năng đàm phán",
+        "Tạo mô hình 3D"
+      ],
+      "topicTags": [
+        "creativity",
+        "problem_solving",
+        "science",
+        "technology",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "7998204def11d873d52573aa5baa394893267b828659db28a9ea5410e691bf6c",
+      "title": "The Lantern Engineer",
+      "level": "B1",
+      "keywords": [
+        "hoàn tiền",
+        "Phụ nữ trong các ngành STEM",
+        "Đèn trung thu"
+      ],
+      "topicTags": [
+        "culture",
+        "festival",
+        "problem_solving",
+        "science",
+        "technology",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 2
+    },
+    {
+      "outlineId": "08b5f4f98d4d00ea7d09a5e5c18c9773ea3d486d1fbdd1db58a251b16f2d6054",
+      "title": "The Community Yogurt Dream",
+      "level": "B1",
+      "keywords": [
+        "lưu trữ đám mây",
+        "sữa chua",
+        "thuê nhà"
+      ],
+      "topicTags": [
+        "community",
+        "family",
+        "food",
+        "technology"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 2
+    },
+    {
+      "outlineId": "1b2ae997c60a6f148a2159d287e07d7abca3208726e733d33cb18b633a8deeda",
+      "title": "Mai's Typhoon Challenge",
+      "level": "A2",
+      "keywords": [
+        "Bão số 3",
+        "gửi tiết kiệm ngân hàng",
+        "bánh xèo"
+      ],
+      "topicTags": [
+        "cooking",
+        "environment",
+        "food",
+        "weather",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 2
+    },
+    {
+      "outlineId": "a98e09c32a0cf9dcc8a73455f34d97adce76aae98dcae3062d73c9ab4c7ee873",
+      "title": "Detective Kien and the Remote Ruffle",
+      "level": "B1",
+      "keywords": [
+        "Đắk Lắk",
+        "Thám tử Kiên",
+        "làm việc từ xa"
+      ],
+      "topicTags": [
+        "curiosity",
+        "mystery",
+        "problem_solving",
+        "technology",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 1
+    },
+    {
+      "outlineId": "bddb09233f668cee12c2bc07edb5eae8c5c62c646b7bfcee17fb776eafe132e0",
+      "title": "A Stormy Supper",
+      "level": "B1",
+      "keywords": [
+        "hẹn hò",
+        "Bão số 1",
+        "đi chợ"
+      ],
+      "topicTags": [
+        "cooking",
+        "environment",
+        "food",
+        "friendship",
+        "nature",
+        "weather"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 3
+    },
+    {
+      "outlineId": "71ee53a7053a2f7486e509707eb4813ecbd1f1429e6eb47d0efa00f6a2463ed2",
+      "title": "The Lychee Tea Refreshment",
+      "level": "B1",
+      "keywords": [
+        "uống đủ nước",
+        "Đắk Lắk",
+        "Trà vải"
+      ],
+      "topicTags": [
+        "culture",
+        "food",
+        "health",
+        "travel"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 6
+    },
+    {
+      "outlineId": "83c5e6789b138a30bb145801e665d87553eebf2330c078596ccf4fb52c91b3a1",
+      "title": "The Nha Trang Culture Code",
+      "level": "B1",
+      "keywords": [
+        "văn hóa công ty",
+        "Nha Trang",
+        "ChatGPT"
+      ],
+      "topicTags": [
+        "culture",
+        "technology",
+        "travel",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 4
+    },
+    {
+      "outlineId": "969d2e54edf4936a4d3d270b233bf4e7f8d700dddc56ab41ee8078691328b394",
+      "title": "The Storm and the Smart Assistant",
+      "level": "B1",
+      "keywords": [
+        "Bão số 6",
+        "quản lý thời gian",
+        "chatbot AI"
+      ],
+      "topicTags": [
+        "problem_solving",
+        "technology",
+        "weather",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 4
+    },
+    {
+      "outlineId": "34b5464dd918ee80f871f8b07c7a8e1bde912497d82d296f1db1710dd78ff3a7",
+      "title": "The Silent Study and Sleepy Smiles",
+      "level": "B1",
+      "keywords": [
+        "ngủ đủ giấc",
+        "tiếng Anh giao tiếp",
+        "giao tiếp trong gia đình"
+      ],
+      "topicTags": [
+        "family",
+        "health",
+        "language_learning"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "f9c03b3ebe925cdfc4cacd08a23001bfaa3810db560d222d5c2d9a735ecd081a",
+      "title": "Linh's Digital Journey in Ho Chi Minh City",
+      "level": "B1",
+      "keywords": [
+        "Google Drive",
+        "TP Hồ Chí Minh",
+        "học kỹ năng mới"
+      ],
+      "topicTags": [
+        "culture",
+        "education",
+        "technology",
+        "travel"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 9
+    },
+    {
+      "outlineId": "b0d2756402207abbbbffbef9087b37446eee6d522b45eed9604e8600d0e9fee6",
+      "title": "The Vung Tau Teamwork Challenge",
+      "level": "B1",
+      "keywords": [
+        "phân chia việc nhà",
+        "Vũng Tàu",
+        "Đi giữa trời rực rỡ"
+      ],
+      "topicTags": [
+        "family",
+        "nature",
+        "teamwork",
+        "travel",
+        "weather"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 3
+    },
+    {
+      "outlineId": "5ddceade9b6edc9bfc1c4d6b8207623cd8ac02144148334700bb5ff496318e5d",
+      "title": "Linh's Crispy Legacy",
+      "level": "B1",
+      "keywords": [
+        "đánh giá sản phẩm",
+        "bánh xèo",
+        "MAMA 2025"
+      ],
+      "topicTags": [
+        "cooking",
+        "culture",
+        "festival",
+        "food"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 3
+    },
+    {
+      "outlineId": "491df0793693395effddac52af09135515a4fde312d79f9c255d5d75665f6a2d",
+      "title": "Leo's AI Art Challenge",
+      "level": "B1",
+      "keywords": [
+        "tạo ảnh AI",
+        "thẻ tín dụng",
+        "giao tiếp nơi công sở"
+      ],
+      "topicTags": [
+        "art",
+        "creativity",
+        "education",
+        "problem_solving",
+        "technology",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 3
+    },
+    {
+      "outlineId": "a3ee597969e618024781faecee8825fe4b3435bd949836bc52609165ab572191",
+      "title": "Linh's Haiphong Connection",
+      "level": "B1",
+      "keywords": [
+        "Cô gái này là của ai",
+        "freelance",
+        "Hải Phòng"
+      ],
+      "topicTags": [
+        "community",
+        "culture",
+        "travel",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 4
+    },
+    {
+      "outlineId": "28b0dfcae23316fe102b0af7a9b2e1627353f20ed9c2cbb894d31d63fe83b0e8",
+      "title": "The Mung Bean Mission",
+      "level": "B1",
+      "keywords": [
+        "học từ vựng theo chủ đề",
+        "Bộ tứ báo thủ",
+        "chè đậu xanh"
+      ],
+      "topicTags": [
+        "cooking",
+        "education",
+        "food",
+        "language_learning",
+        "problem_solving",
+        "teamwork"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 2
+    },
+    {
+      "outlineId": "b2daa20d9659628ae03950a71d59170aea5c820ae809b163355698c4dff69661",
+      "title": "The Polaroid Path to Confidence",
+      "level": "B1",
+      "keywords": [
+        "Tạo ảnh polaroid",
+        "MAMA 2025",
+        "kỹ năng thuyết trình"
+      ],
+      "topicTags": [
+        "art",
+        "creativity",
+        "culture",
+        "education",
+        "festival",
+        "hobbies"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 2
+    },
+    {
+      "outlineId": "2cfefff74abcec47803b31057803a6e3678aa5a02d2c81c5d357bd789de86204",
+      "title": "The Dak Lak Wedding Dream",
+      "level": "B1",
+      "keywords": [
+        "tiết kiệm tiền",
+        "kết hôn",
+        "Đắk Lắk"
+      ],
+      "topicTags": [
+        "culture",
+        "family",
+        "travel"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 6
+    },
+    {
+      "outlineId": "cbb23b7a898cebde08d8cffc5d32fb5dc19fdd5ec940467eccc566a74022db65",
+      "title": "Linh's Bún Bò Huế Triumph",
+      "level": "B1",
+      "keywords": [
+        "phát âm tiếng Anh",
+        "ứng dụng ngân hàng",
+        "bún bò Huế"
+      ],
+      "topicTags": [
+        "culture",
+        "food",
+        "language_learning",
+        "technology"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 2
+    },
+    {
+      "outlineId": "779dd1f2fee4ab9a6c9737e0cf2149ee502d3f91b015460182d49701fe9635ba",
+      "title": "The Taste of Heritage: A Vietnamese Journey",
+      "level": "B1",
+      "keywords": [
+        "Huế",
+        "DeepSeek",
+        "Cà Mau"
+      ],
+      "topicTags": [
+        "culture",
+        "food",
+        "nature",
+        "science",
+        "technology",
+        "travel"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 5
+    },
+    {
+      "outlineId": "9f4532fb86c6c089e1bff7d3d1254d851d60044c239e581b944622c8ef998c4b",
+      "title": "The Ascent: Lena's English Interview",
+      "level": "B1",
+      "keywords": [
+        "Tháp drill tự do",
+        "tiếng Anh công sở",
+        "phỏng vấn xin việc"
+      ],
+      "topicTags": [
+        "education",
+        "language_learning",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 7
+    },
+    {
+      "outlineId": "c9ddb6d5b6df8230a4b17a305d7493630d6c96c8e8edc5a7b4a7c01306063257",
+      "title": "Linh's Tết Journey to Cà Mau",
+      "level": "B1",
+      "keywords": [
+        "Tết",
+        "Cà Mau",
+        "Manifest"
+      ],
+      "topicTags": [
+        "culture",
+        "family",
+        "festival",
+        "food",
+        "nature",
+        "travel"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 3
+    },
+    {
+      "outlineId": "218c88cbdb4c5192c2d89eafafe7ca8c6bd20a257e9167bc919c13efcb8ddf93",
+      "title": "Linh's Countryside Connection",
+      "level": "B1",
+      "keywords": [
+        "đi bộ mỗi ngày",
+        "về quê",
+        "ứng dụng ngân hàng"
+      ],
+      "topicTags": [
+        "family",
+        "health",
+        "hobbies",
+        "technology",
+        "travel"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 13
+    },
+    {
+      "outlineId": "5e6b59bfb2bbb714f7ea02b3979f2b665111329957e541918bdbc326a4b8c538",
+      "title": "Linh's Ly Son 3D Dream",
+      "level": "B1",
+      "keywords": [
+        "Lý Sơn",
+        "Tạo mô hình 3D",
+        "làm việc từ xa"
+      ],
+      "topicTags": [
+        "creativity",
+        "nature",
+        "technology",
+        "travel",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 2
+    },
+    {
+      "outlineId": "f0752c526457c703c9d6429b510ce7769b5a3a1fc46684c9e074c33ef3649f14",
+      "title": "The English Wave of Quang Ninh",
+      "level": "B1",
+      "keywords": [
+        "viết email xin việc bằng tiếng Anh",
+        "Quảng Ninh",
+        "Sóng 25"
+      ],
+      "topicTags": [
+        "culture",
+        "education",
+        "language_learning",
+        "travel",
+        "work",
+        "writing"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 4
+    },
+    {
+      "outlineId": "67df9385f8718fa45986ab0c708d3610be1830e2696a7a258b7f8bc931ad3bb4",
+      "title": "Linh's Salted Coffee Dream",
+      "level": "B1",
+      "keywords": [
+        "cà phê muối",
+        "làm việc nhóm",
+        "hàng xóm"
+      ],
+      "topicTags": [
+        "community",
+        "cooking",
+        "food",
+        "friendship",
+        "teamwork"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 5
+    },
+    {
+      "outlineId": "84c18fa9b124dba4e5fc00306d61000c95ed545c1a90ba5c5da621eb72806011",
+      "title": "The Peach Tea Prank",
+      "level": "B1",
+      "keywords": [
+        "hàng xóm",
+        "trà đào",
+        "Nước mắt cá sấu"
+      ],
+      "topicTags": [
+        "community",
+        "food",
+        "friendship",
+        "humor"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 6
+    },
+    {
+      "outlineId": "df1db9fd3179c5330eb7d3db72a15eff14b14b573e83fea0ae52783089ef9c16",
+      "title": "Linh's Digital Dish: A Cơm Tấm Story",
+      "level": "B1",
+      "keywords": [
+        "Pixverse AI",
+        "cơm tấm",
+        "Tạo ảnh Gemini"
+      ],
+      "topicTags": [
+        "creativity",
+        "culture",
+        "food",
+        "technology"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 6
+    },
+    {
+      "outlineId": "f920b81f505207f9f68503030640ef3525d7d337704a1b33be4de346cc667d88",
+      "title": "Linh's Lowkey Tết Surprise",
+      "level": "B1",
+      "keywords": [
+        "Anh trai say hi",
+        "Lowkey",
+        "Tết"
+      ],
+      "topicTags": [
+        "culture",
+        "family",
+        "festival",
+        "food"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 3
+    },
+    {
+      "outlineId": "017b07e19acc52a37870d2ac70445bbabbe7455a069da39b5d956b643fd588ab",
+      "title": "Lina's Gratitude Feast",
+      "level": "B1",
+      "keywords": [
+        "đi chợ",
+        "lòng biết ơn",
+        "Tạo ảnh nền đỏ"
+      ],
+      "topicTags": [
+        "art",
+        "community",
+        "cooking",
+        "creativity",
+        "food"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 5
+    }
+  ],
+  "errors": []
+}

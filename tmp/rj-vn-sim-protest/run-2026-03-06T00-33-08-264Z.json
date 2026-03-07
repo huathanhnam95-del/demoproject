@@ -1,0 +1,65 @@
+{
+  "runId": "2026-03-06T00-33-08-264Z",
+  "createdAt": "2026-03-06T00:35:09.691Z",
+  "startedAt": "2026-03-06T00:33:08.264Z",
+  "baseUrl": "http://localhost:8795",
+  "dataset": {
+    "path": "C:\\Cursor AI\\scripts\\data\\2025-vn-adult-topics.json",
+    "total": 246
+  },
+  "simulation": {
+    "targetOutlines": 1,
+    "collectedOutlines": 1,
+    "attempts": 1,
+    "maxAttempts": 10,
+    "branchMode": "mcq",
+    "levels": [
+      "A2",
+      "B1"
+    ],
+    "language": "en",
+    "keywordsPerOutline": 3,
+    "concurrency": 1,
+    "seed": 1772757186629,
+    "resumedFromExisting": 0
+  },
+  "health": {
+    "success": true,
+    "enabled": true,
+    "mode": "dev",
+    "model": "ai-studio:models/gemini-3.1-pro-preview",
+    "effectiveModel": "ai-studio:models/gemini-3.1-pro-preview",
+    "fallbackModel": "ai-studio:models/gemini-2.5-flash",
+    "fallbackReason": "",
+    "targets": [
+      "ai-studio:models/gemini-3.1-pro-preview",
+      "ai-studio:models/gemini-2.5-flash",
+      "vertex:gemini-2.5-pro",
+      "vertex:gemini-2.5-flash"
+    ]
+  },
+  "perOutline": [
+    {
+      "outlineId": "073aa933c5d6ac579c799c619fe6ac98086a3f611ab64b32344a164d894e495b",
+      "title": "The Special Card",
+      "level": "A2",
+      "keywords": [
+        "đổi việc",
+        "Thiệp 20/11",
+        "ngữ pháp cơ bản"
+      ],
+      "topicTags": [
+        "art",
+        "culture",
+        "education",
+        "language_learning",
+        "school",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    }
+  ],
+  "errors": []
+}

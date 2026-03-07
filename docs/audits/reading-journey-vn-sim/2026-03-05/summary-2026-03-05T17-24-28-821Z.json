@@ -1,0 +1,32 @@
+{
+  "runId": "2026-03-05T17-24-28-821Z",
+  "createdAt": "2026-03-05T17:35:53.941Z",
+  "baseUrl": "http://localhost:8792",
+  "targetOutlines": 2,
+  "collectedOutlines": 2,
+  "attempts": 2,
+  "maxAttempts": 40,
+  "branchMode": "mcq",
+  "levels": [
+    "A2",
+    "B1"
+  ],
+  "language": "en",
+  "keywordsPerOutline": 3,
+  "concurrency": 1,
+  "seed": 1772731467646,
+  "resumedFromExisting": 0,
+  "totals": {
+    "outlines": 1,
+    "variants": 27,
+    "endedEarly": 0,
+    "wordCountIssues": 4
+  },
+  "errors": [
+    {
+      "type": "expand_failed",
+      "outlineId": "a6f8998dd8972def2f61fc0c7bf8d258ae76f3abf37deeb887d8e87d310f37d6",
+      "message": "fetch failed"
+    }
+  ]
+}

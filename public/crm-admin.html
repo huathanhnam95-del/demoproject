@@ -21,8 +21,7 @@
     <header class="crm-header">
       <div class="crm-header-left">
         <div class="crm-logo-box">
-          <img src="database/Logo.png" alt="BEL"
-            class="crm-logo-img">
+          <img src="database/Logo.png" alt="BEL" class="crm-logo-img">
         </div>
 
         <nav class="crm-nav" aria-label="CRM Main Navigation">
@@ -127,6 +126,17 @@
         <div class="crm-placeholder-card">Class Management content here.</div>
       </section>
 
+      <section class="crm-panel" data-panel="courses/class-management">
+        <div class="crm-panel-header">
+          <div>
+            <h2>Class Management</h2>
+            <p>Administer classrooms, syllabi, and student submissions.</p>
+          </div>
+          <button id="btn-new-classroom" class="crm-btn-primary">+ New Classroom</button>
+        </div>
+        <div class="crm-placeholder-card" id="class-management-grid">Classrooms will appear here.</div>
+      </section>
+
       <!-- Enquiry -->
       <section class="crm-panel" data-panel="enquiry">
         <div class="crm-panel-header">
@@ -157,6 +167,7 @@
           <button class="crm-sidebar-item active" data-tab="info">Info</button>
           <button class="crm-sidebar-item" data-tab="learning">Learning Profile</button>
           <button class="crm-sidebar-item" data-tab="courses">Courses</button>
+          <button class="crm-sidebar-item" data-tab="identity">Identity</button>
         </div>
         <div class="crm-modal-content">
           <!-- Info Section -->
@@ -280,7 +291,8 @@
               </div>
 
               <div class="crm-entrance-test-link-row">
-                <input id="entrance-test-link" class="crm-input" type="text" readonly placeholder="Generated link will appear here">
+                <input id="entrance-test-link" class="crm-input" type="text" readonly
+                  placeholder="Generated link will appear here">
                 <button id="btn-copy-entrance-test-link" class="crm-btn-secondary" type="button" disabled>Copy</button>
               </div>
 
@@ -293,6 +305,54 @@
           <!-- Courses Section -->
           <div id="student-courses" class="crm-tab-content" style="display: none;">
             <p class="text-muted">Courses information will be available here.</p>
+          </div>
+
+          <!-- Identity Section -->
+          <div id="student-identity" class="crm-tab-content" style="display: none;">
+            <div class="crm-section-header">
+              <h3>LMS Identity & Merging</h3>
+              <p class="text-muted">Link this CRM record to a real user account.</p>
+            </div>
+
+            <div class="crm-form-group" style="margin-top: 20px;">
+              <label>Class Code (For Student Self-Claim)</label>
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="text" id="crm-class-code-display" class="crm-input" readonly placeholder="No code generated">
+                <button id="btn-generate-class-code" class="crm-btn-secondary">Generate New</button>
+              </div>
+              <small class="text-muted">Share this 6-digit code with the student.</small>
+            </div>
+
+            <hr style="margin: 24px 0; border: 0; border-top: 1px solid #edf2f7;">
+
+            <div class="crm-form-group">
+              <label>Manual Link (Safety Handshake)</label>
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="email" id="crm-handshake-email" class="crm-input" placeholder="student@personal-email.com">
+                <button id="btn-lookup-handshake" class="crm-btn-secondary">Lookup</button>
+              </div>
+              <small class="text-muted">Search for the student's personal email (Email A).</small>
+            </div>
+
+            <!-- Preview Card -->
+            <div id="crm-handshake-preview" class="crm-preview-card" style="display: none; margin-top: 16px; padding: 16px; border: 1px solid #edf2f7; border-radius: 8px; background: #f8f9fa;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <img id="crm-handshake-avatar" src="" alt="Avatar" style="width: 48px; height: 48px; border-radius: 50%; background: #eee;">
+                <div>
+                  <div id="crm-handshake-name" style="font-weight: bold;">User Name</div>
+                  <div id="crm-handshake-uid" class="text-muted" style="font-size: 12px;">UID: ...</div>
+                </div>
+              </div>
+              <button id="btn-confirm-handshake" class="crm-btn-primary" style="width: 100%; margin-top: 16px;">Confirm Link</button>
+            </div>
+
+            <div id="crm-linked-accounts-list" style="margin-top: 20px;">
+              <label>Linked User IDs</label>
+              <ul id="crm-linked-uids-ul" style="list-style: none; padding: 0; margin-top: 8px;">
+                <!-- Dynamically populated -->
+                <li class="text-muted">No accounts linked yet.</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
@@ -331,8 +391,7 @@
               </div>
               <div class="crm-form-group">
                 <label for="course-code">Course Code</label>
-                <input type="text" id="course-code" name="course_code" class="crm-input"
-                  placeholder="e.g. PTE-101">
+                <input type="text" id="course-code" name="course_code" class="crm-input" placeholder="e.g. PTE-101">
               </div>
               <div class="crm-form-group">
                 <label for="course-label">Label</label>
@@ -397,6 +456,145 @@
     </div>
   </div>
 
+  <!-- New Classroom Modal -->
+  <div id="crm-classroom-modal" class="crm-modal-overlay" aria-hidden="true" style="display: none;">
+    <div class="crm-modal-container">
+      <div class="crm-modal-header">
+        <div class="crm-modal-title-row">
+          <h2 id="crm-classroom-title">New Classroom</h2>
+          <span id="crm-classroom-status-badge" class="crm-student-id-badge" style="display: none;">Draft</span>
+        </div>
+        <button id="btn-close-classroom-modal" class="crm-icon-btn text-dark" title="Close">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+        </button>
+      </div>
+      <div class="crm-modal-body">
+        <div class="crm-modal-sidebar">
+          <button class="crm-sidebar-item active" data-tab="settings">Settings</button>
+          <button class="crm-sidebar-item" data-tab="stream">Stream</button>
+          <button class="crm-sidebar-item" data-tab="modules">Modules</button>
+          <button class="crm-sidebar-item" data-tab="classwork">Classwork</button>
+          <button class="crm-sidebar-item" data-tab="review-board">Review Board</button>
+        </div>
+        <div class="crm-modal-content">
+          <!-- Settings Section -->          <div id="classroom-settings" class="crm-tab-content active">
+            <div class="crm-form-grid">
+              <div class="crm-form-group">
+                <label for="classroom-name">Classroom Name</label>
+                <input type="text" id="classroom-name" class="crm-input" placeholder="e.g. B1 Evening 2026">
+              </div>
+              <div class="crm-form-group">
+                <label for="classroom-course-id">Linked Course</label>
+                <select id="classroom-course-id" class="crm-input">
+                  <option value="">Select a Course...</option>
+                </select>
+              </div>
+              <div class="crm-form-group">
+                <label for="classroom-status">Status</label>
+                <select id="classroom-status" class="crm-input">
+                  <option value="draft">Draft</option>
+                  <option value="active">Active</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stream Section -->
+          <div id="classroom-stream" class="crm-tab-content" style="display: none;">
+            <div class="crm-panel-header" style="padding: 0 0 16px 0;">
+              <h3>Announcements</h3>
+            </div>
+            <div class="crm-form-group" style="margin-bottom: 24px; display: flex; gap: 10px;">
+              <input type="text" id="stream-post-content" class="crm-input" placeholder="Announce something to your class">
+              <button id="btn-post-announcement" class="crm-btn-primary">Post</button>
+            </div>
+            <div id="stream-posts-container" class="module-list-container">
+              <p class="text-muted">No announcements yet.</p>
+            </div>
+          </div>
+
+          <!-- Modules Section -->
+          <div id="classroom-modules" class="crm-tab-content" style="display: none;">
+            <div class="crm-panel-header" style="padding: 0 0 16px 0;">
+              <h3>Syllabus Modules</h3>
+              <button id="btn-add-module" class="crm-btn-secondary">+ Add Module</button>
+            </div>
+            <div id="modules-list-container" class="module-list-container">
+              <p class="text-muted">No modules created yet.</p>
+            </div>
+          </div>
+
+          <!-- Classwork Section -->
+          <div id="classroom-classwork" class="crm-tab-content" style="display: none;">
+            <div class="crm-panel-header" style="padding: 0 0 16px 0;">
+              <h3>Assignments & Materials</h3>
+              <button id="btn-add-classwork" class="crm-btn-secondary">+ Create Work</button>
+            </div>
+            <div id="classwork-composer" class="crm-form-grid"
+              style="display: none; background: #f8fbfa; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+              <div class="crm-form-group">
+                <label for="classwork-title">Title</label>
+                <input type="text" id="classwork-title" class="crm-input" placeholder="e.g. Unit 1 Speaking Task">
+              </div>
+              <div class="crm-form-group">
+                <label for="classwork-type">Type</label>
+                <select id="classwork-type" class="crm-input">
+                  <option value="assignment">Assignment</option>
+                  <option value="material">Material</option>
+                </select>
+              </div>
+              <div class="crm-form-group">
+                <label for="classwork-module">Module</label>
+                <select id="classwork-module" class="crm-input">
+                  <option value="">No Module</option>
+                </select>
+              </div>
+              <div class="crm-form-group crm-inline-switch">
+                <label for="classwork-voice">Allow Voice Recording</label>
+                <input type="checkbox" id="classwork-voice" checked>
+              </div>
+              <div class="crm-form-group">
+                <button id="btn-save-classwork-draft" class="crm-btn-primary">Save Draft</button>
+                <button id="btn-cancel-classwork" class="crm-btn-secondary">Cancel</button>
+              </div>
+            </div>
+            <div id="classwork-list-container" class="classwork-list-container">
+              <p class="text-muted">No classwork added yet.</p>
+            </div>
+          </div>
+
+          <!-- Review Board Section -->
+          <div id="classroom-review-board" class="crm-tab-content crm-kanban-board" style="display: none;">
+            <!-- Column: Missing (Dynamically calculated based on Due Date) -->
+            <div class="kanban-col">
+              <h4 class="kanban-col-header missing-col">Missing</h4>
+              <div id="kanban-missing-list" class="kanban-list"></div>
+            </div>
+            <!-- Column: Turned In -->
+            <div class="kanban-col">
+              <h4 class="kanban-col-header turnedin-col">Turned In</h4>
+              <div id="kanban-turnedin-list" class="kanban-list"></div>
+            </div>
+            <!-- Column: Graded -->
+            <div class="kanban-col">
+              <h4 class="kanban-col-header graded-col">Graded</h4>
+              <div id="kanban-graded-list" class="kanban-list"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="crm-modal-footer">
+        <button class="crm-btn-secondary" id="btn-cancel-classroom">Cancel</button>
+        <button class="crm-btn-primary" id="btn-save-classroom-settings">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Loading / Access Gate -->
   <div id="crm-loading" class="crm-loading-overlay" aria-live="polite">
     <div class="crm-loading-card">
@@ -411,6 +609,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
+  <script src="js/classroom-api.js"></script>
   <script src="crm-admin.js"></script>
 </body>
 

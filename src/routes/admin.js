@@ -528,4 +528,116 @@ router.post('/sync-database', adminLimiter, authMiddleware, syncLockMiddleware, 
     }
 });
 
+/**
+ * CRM: Create a new Classroom
+ */
+router.post('/classrooms', crmLimiter, authMiddleware, async (req, res) => {
+    try {
+        if (!db) return sendError(res, 500, 'SERVER_CONFIG_ERROR', 'Firebase Admin not initialized.');
+        const { name, courseId, status } = req.body || {};
+        if (!name) return sendError(res, 400, 'VALIDATION_ERROR', 'Classroom name is required.');
+
+        const ref = db.collection('crmClassrooms').doc();
+        await ref.set({
+            name,
+            courseId: courseId || null,
+            status: status || 'draft',
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            createdBy: req.user.uid
+        });
+
+        return sendSuccess(res, { classroomId: ref.id }, 'Classroom created.');
+    } catch (e) {
+        return sendError(res, 500, 'CREATE_CLASSROOM_ERROR', 'Failed to create classroom.', e.message);
+    }
+});
+
+/**
+ * CRM: Add a Module to a Classroom
+ */
+router.post('/classrooms/:classId/modules', crmLimiter, authMiddleware, async (req, res) => {
+    try {
+        if (!db) return sendError(res, 500, 'SERVER_CONFIG_ERROR', 'Firebase Admin not initialized.');
+        const { classId } = req.params;
+        const { title, orderIndex } = req.body || {};
+        if (!title) return sendError(res, 400, 'VALIDATION_ERROR', 'Module title is required.');
+
+        const ref = db.collection('crmClassrooms').doc(classId).collection('modules').doc();
+        await ref.set({
+            title,
+            orderIndex: orderIndex || Date.now(),
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        return sendSuccess(res, { moduleId: ref.id }, 'Module created.');
+    } catch (e) {
+        return sendError(res, 500, 'CREATE_MODULE_ERROR', 'Failed to create module.', e.message);
+    }
+});
+
+/**
+ * CRM: Add Classwork to a Classroom
+ */
+router.post('/classrooms/:classId/classwork', crmLimiter, authMiddleware, async (req, res) => {
+    try {
+        if (!db) return sendError(res, 500, 'SERVER_CONFIG_ERROR', 'Firebase Admin not initialized.');
+        const { classId } = req.params;
+        const work = req.body || {};
+        if (!work.title) return sendError(res, 400, 'VALIDATION_ERROR', 'Classwork title is required.');
+
+        const ref = db.collection('crmClassrooms').doc(classId).collection('classwork').doc();
+        await ref.set({
+            ...work,
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        return sendSuccess(res, { classworkId: ref.id }, 'Classwork created.');
+    } catch (e) {
+        return sendError(res, 500, 'CREATE_CLASSWORK_ERROR', 'Failed to create classwork.', e.message);
+    }
+});
+
+/**
+ * CRM: Fetch Submissions for Review Board
+ */
+router.get('/classrooms/:classId/submissions', crmLimiter, authMiddleware, async (req, res) => {
+    try {
+        if (!db) return sendError(res, 500, 'SERVER_CONFIG_ERROR', 'Firebase Admin not initialized.');
+        const { classId } = req.params;
+
+        // Fetch all submissions for this classroom from a top-level collection for easier management
+        const snap = await db.collection('crmSubmissions')
+            .where('classId', '==', classId)
+            .get();
+
+        const submissions = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        return sendSuccess(res, { submissions });
+    } catch (e) {
+        return sendError(res, 500, 'FETCH_SUBMISSIONS_ERROR', 'Failed to fetch submissions.', e.message);
+    }
+});
+
+/**
+ * CRM: Grade a Submission
+ */
+router.post('/submissions/:submissionId/grade', crmLimiter, authMiddleware, async (req, res) => {
+    try {
+        if (!db) return sendError(res, 500, 'SERVER_CONFIG_ERROR', 'Firebase Admin not initialized.');
+        const { submissionId } = req.params;
+        const { grade, feedback } = req.body || {};
+
+        await db.collection('crmSubmissions').doc(submissionId).update({
+            grade,
+            feedback,
+            gradedAt: admin.firestore.FieldValue.serverTimestamp(),
+            gradedBy: req.user.uid,
+            status: 'graded'
+        });
+
+        return sendSuccess(res, null, 'Submission graded.');
+    } catch (e) {
+        return sendError(res, 500, 'GRADE_ERROR', 'Failed to grade submission.', e.message);
+    }
+});
+
 module.exports = router;

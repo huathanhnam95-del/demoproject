@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Classroom | AI Language Learning</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="classroom.css">
+
+    <!-- Firebase compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+</head>
+
+<body>
+    <!-- Top Navigation -->
+    <header class="classroom-header">
+        <div class="header-brand">
+            <img src="logo.png" alt="Logo" class="brand-logo" onerror="this.style.display='none'">
+            <h1>Classroom</h1>
+        </div>
+        <div class="header-controls">
+            <select id="class-switcher" class="class-switcher">
+                <option value="">Enroll in a class...</option>
+            </select>
+            <div class="user-avatar" id="user-avatar-btn">U</div>
+        </div>
+    </header>
+
+    <!-- Main Content Layout -->
+    <main class="classroom-layout">
+        <aside class="classroom-sidebar">
+            <nav class="classroom-nav">
+                <button class="nav-tab active" data-tab="stream">Stream</button>
+                <button class="nav-tab" data-tab="modules">Modules</button>
+                <button class="nav-tab" data-tab="todo">To Do</button>
+            </nav>
+        </aside>
+
+        <div class="classroom-content">
+            <!-- Stream View -->
+            <section id="view-stream" class="view-panel active">
+                <h2>Recent Updates</h2>
+                <div id="stream-feed-container" class="feed-container">
+                    <p class="empty-state">No recent activity.</p>
+                </div>
+            </section>
+
+            <!-- Modules View -->
+            <section id="view-modules" class="view-panel" style="display: none;">
+                <h2>Course Modules</h2>
+                <div id="modules-container" class="modules-container">
+                    <p class="empty-state">No modules available.</p>
+                </div>
+            </section>
+
+            <!-- To Do View -->
+            <section id="view-todo" class="view-panel" style="display: none;">
+                <div class="todo-header">
+                    <h2>Your Work</h2>
+                    <div class="todo-filters">
+                        <button class="filter-btn active" data-filter="pending">Assigned</button>
+                        <button class="filter-btn" data-filter="missing">Missing</button>
+                        <button class="filter-btn" data-filter="done">Completed</button>
+                    </div>
+                </div>
+                <div id="todo-list-container" class="todo-list-container">
+                    <p class="empty-state">No tasks pending.</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Assignment Modal -->
+    <div id="assignment-modal" class="assignment-modal-overlay" style="display: none;">
+        <div class="assignment-modal-container">
+            <header class="assignment-header">
+                <div class="title-group">
+                    <div class="assignment-icon">📋</div>
+                    <div>
+                        <h2 id="assignment-title">Loading...</h2>
+                        <p id="assignment-meta" class="assignment-meta">Due: —</p>
+                    </div>
+                </div>
+                <button id="btn-close-assignment" class="close-btn">&times;</button>
+            </header>
+
+            <div class="assignment-body">
+                <div class="assignment-instructions">
+                    <h3>Instructions</h3>
+                    <p>Please complete this task and submit your work on the right panel.</p>
+                    <div id="media-preview-container" class="media-preview-container"
+                        style="display: none; padding: 12px 0;"></div>
+                </div>
+
+                <aside class="assignment-submission-panel">
+                    <div class="submission-card">
+                        <div class="submission-card-header">
+                            <h3>Your Work</h3>
+                            <span id="submission-status-badge" class="status-badge assigned">Assigned</span>
+                        </div>
+
+                        <!-- Voice Recorder UI -->
+                        <div id="audio-recorder-widget" class="audio-recorder-widget" style="display: none;">
+                            <button id="btn-record-voice" class="record-btn">
+                                <span class="icon">🎤</span> Tap to Record
+                            </button>
+                            <div id="recording-indicator" class="recording-indicator" style="display: none;">
+                                <div class="pulse-dot"></div> Recording...
+                                <span id="recording-timer">00:00</span>
+                            </div>
+                            <button id="btn-stop-record" class="stop-btn" style="display: none;">Stop</button>
+                        </div>
+
+                        <button id="btn-submit-work" class="submit-btn" disabled>Mark as Done</button>
+                        <p class="validation-note" id="validation-note" style="display: none;">Voice recording required.
+                        </p>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/classroom-api.js"></script>
+    <script src="js/classroom.js"></script>
+</body>
+
+</html>

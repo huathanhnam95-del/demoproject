@@ -1,0 +1,26 @@
+{
+  "runId": "2026-03-06T00-33-08-264Z",
+  "createdAt": "2026-03-06T00:35:09.692Z",
+  "baseUrl": "http://localhost:8795",
+  "targetOutlines": 1,
+  "collectedOutlines": 1,
+  "attempts": 1,
+  "maxAttempts": 10,
+  "branchMode": "mcq",
+  "levels": [
+    "A2",
+    "B1"
+  ],
+  "language": "en",
+  "keywordsPerOutline": 3,
+  "concurrency": 1,
+  "seed": 1772757186629,
+  "resumedFromExisting": 0,
+  "totals": {
+    "outlines": 1,
+    "variants": 27,
+    "endedEarly": 0,
+    "wordCountIssues": 0
+  },
+  "errors": []
+}

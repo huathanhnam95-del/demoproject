@@ -1,5 +1,22 @@
 # Changelog
 
+## [V1.5.0] - 2026-03-07
+
+### Added
+
+- **Student Account (LMS)**: New comprehensive Learning Management System integrated into the CRM for students.
+- **Identity Merging Protocol**: Secure "Decoupled Identity" system with Magic Link and 6-char Class Code claim flow.
+- **Safety Handshake**: Admin-facilitated manual user linking with visual identity verification.
+- **Classroom Feature**: Full implementation of Stream, Modules, and Classwork management for Admins and Students.
+
+### Improved
+
+- **Phase**: Release V1.5.0
+- **Backend Reliability**: Refactored student identity logic with Firestore atomic `arrayUnion` and unique code collision checks.
+- **UX Refresh**: Centralized custom claim handling in `updateAccountPanelState` for instantaneous UI updates without page reloads.
+- **Security**: Hardened Firestore rules for user-linked document isolation in `crmStudents`.
+- **Next Version**: `V1.5.1` (Bug fixes/refinement)
+
 ## [V1.4.0] - 2026-03-05
 
 ### Added

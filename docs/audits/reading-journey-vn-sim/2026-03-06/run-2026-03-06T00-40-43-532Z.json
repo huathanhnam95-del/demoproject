@@ -1,0 +1,85 @@
+{
+  "runId": "2026-03-06T00-40-43-532Z",
+  "createdAt": "2026-03-06T00:45:20.993Z",
+  "startedAt": "2026-03-06T00:40:43.533Z",
+  "baseUrl": "http://localhost:8797",
+  "dataset": {
+    "path": "C:\\Cursor AI\\scripts\\data\\2025-vn-adult-topics.json",
+    "total": 246
+  },
+  "simulation": {
+    "targetOutlines": 3,
+    "collectedOutlines": 3,
+    "attempts": 2,
+    "maxAttempts": 200,
+    "branchMode": "mcq",
+    "levels": [
+      "A2",
+      "B1"
+    ],
+    "language": "en",
+    "keywordsPerOutline": 3,
+    "concurrency": 1,
+    "seed": 1772757642406,
+    "resumedFromExisting": 1
+  },
+  "health": {
+    "success": true,
+    "enabled": true,
+    "mode": "dev",
+    "model": "ai-studio:models/gemini-3.1-pro-preview",
+    "effectiveModel": "ai-studio:models/gemini-3.1-pro-preview",
+    "fallbackModel": "ai-studio:models/gemini-2.5-flash",
+    "fallbackReason": "",
+    "targets": [
+      "ai-studio:models/gemini-3.1-pro-preview",
+      "ai-studio:models/gemini-2.5-flash",
+      "vertex:gemini-2.5-pro",
+      "vertex:gemini-2.5-flash"
+    ]
+  },
+  "perOutline": [
+    {
+      "outlineId": "9513d8cc5bddeb2cc91c9ed344fc95e16e09e451d6b09813d0b6871a06497aa5",
+      "title": "The Installment Avengers",
+      "level": "B1",
+      "keywords": [
+        "tập gym",
+        "trả góp",
+        "Bộ tứ báo thủ"
+      ],
+      "topicTags": [
+        "health",
+        "hobbies",
+        "problem_solving",
+        "sports",
+        "teamwork",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 3
+    },
+    {
+      "outlineId": "0530718619d11cc5da782541701b7498230809cb7dd6ae698f0332f4cd109e19",
+      "title": "Hai Phong's Healthy Heart",
+      "level": "A2",
+      "keywords": [
+        "Nỗi đau giữa hòa bình",
+        "dinh dưỡng",
+        "Hải Phòng"
+      ],
+      "topicTags": [
+        "community",
+        "culture",
+        "food",
+        "health",
+        "travel"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 1
+    }
+  ],
+  "errors": []
+}

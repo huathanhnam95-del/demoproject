@@ -258,6 +258,71 @@ function setupEventListeners() {
         await handleSignup();
       });
     }
+
+    // --- Join a Class ---
+    const btnJoinClass = document.getElementById('btn-join-class');
+    if (btnJoinClass) {
+      btnJoinClass.addEventListener('click', async () => {
+        const input = document.getElementById('join-class-code-input');
+        const message = document.getElementById('join-class-message');
+        const code = input ? input.value.trim() : '';
+
+        if (!code) return;
+
+        try {
+          btnJoinClass.disabled = true;
+          if (message) {
+            message.style.display = 'block';
+            message.textContent = 'Linking...';
+            message.style.color = '#666';
+          }
+
+          const idToken = await firebase.auth().currentUser.getIdToken();
+          const response = await fetch('/api/students/claim-profile', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${idToken}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ classCode: code })
+          });
+
+          const json = await response.json();
+          if (json.success) {
+            if (message) {
+              message.textContent = '✅ Profile linked! Updating dashboard...';
+              message.style.color = 'green';
+            }
+
+            // Force refresh token to get new custom claims
+            await firebase.auth().currentUser.getIdToken(true);
+
+            // Soft refresh: Update the UI state immediately instead of reloading
+            updateAccountPanelState();
+
+            // Clear input
+            if (input) input.value = '';
+
+            // Optional: Close modal after a short delay
+            setTimeout(() => {
+              const modal = document.getElementById('account-details-modal');
+              if (modal) modal.style.display = 'none';
+              if (message) message.style.display = 'none';
+            }, 2000);
+
+          } else {
+            throw new Error(json.message || 'Failed to claim profile.');
+          }
+        } catch (e) {
+          if (message) {
+            message.textContent = '❌ ' + e.message;
+            message.style.color = 'red';
+          }
+        } finally {
+          btnJoinClass.disabled = false;
+        }
+      });
+    }
   }
 
   // Initialize listeners immediately if DOM is ready, otherwise wait
@@ -590,6 +655,15 @@ function updateAccountPanelState() {
       });
     }
 
+    // Check for custom claims (isStudent, isAdmin)
+    user.getIdTokenResult().then(idTokenResult => {
+      const claims = idTokenResult.claims;
+      const classroomLink = document.getElementById('panel-classroom-link');
+      if (classroomLink) {
+        classroomLink.style.display = (claims.isStudent || claims.isAdmin) ? 'block' : 'none';
+      }
+    }).catch(err => log.warn('Failed to fetch custom claims:', err));
+
     // Load and display Practice Points
     loadPracticePoints(user.uid);
   } else if (isGuestMode) {
@@ -900,6 +974,16 @@ async function handleLogin() {
     // Clear form
     document.getElementById('login-email').value = '';
     document.getElementById('login-password').value = '';
+
+    // Classroom auto-redirect logic
+    const user = authFunctions.getCurrentUser();
+    if (user) {
+      const isAdmin = await resolveAdminAccess(user);
+      if (!isAdmin) {
+        window.location.href = 'classroom.html';
+        return; // Halt further script execution
+      }
+    }
   } else {
     errorDiv.textContent = result.error || 'Login failed';
     errorDiv.style.display = 'block';
@@ -1135,6 +1219,7 @@ function setupAuthStateListener() {
 
         // Update panel to show logged in state
         updateAccountPanelState();
+
 
         // Update Level Header Badge
         if (window.LevelSystem && window.LevelSystem.updateHeaderLevel) {

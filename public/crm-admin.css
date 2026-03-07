@@ -910,3 +910,141 @@ body {
 .crm-toast.error {
   background: #b91c1c;
 }
+
+/* ============================================
+   Classroom Management Sub-panels
+   ============================================ */
+
+.module-list-container,
+.classwork-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.module-list-item,
+.classwork-card {
+  background: #ffffff;
+  border: 1px solid #edf2f7;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.crm-inline-switch {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.crm-inline-switch input[type="checkbox"] {
+  width: auto;
+  transform: scale(1.2);
+  cursor: pointer;
+}
+
+/* Kanban Board Styles for Admin Review */
+.crm-kanban-board {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  min-height: 400px;
+  padding-bottom: 12px;
+}
+
+.kanban-col {
+  flex: 1;
+  min-width: 280px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border: 1px solid #edf2f7;
+}
+
+.kanban-col-header {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--crm-text-main);
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.kanban-col-header.missing-col {
+  border-color: #e53e3e;
+}
+
+.kanban-col-header.turnedin-col {
+  border-color: #d69e2e;
+}
+
+.kanban-col-header.graded-col {
+  border-color: #38a169;
+}
+
+.kanban-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.kanban-card {
+  background: #ffffff;
+  border: 1px solid #edf2f7;
+  border-radius: 6px;
+  padding: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.kanban-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  border-color: var(--crm-primary);
+}
+
+.kanban-card-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+}
+
+.kanban-card-meta {
+  font-size: 0.8rem;
+  color: var(--crm-text-muted);
+}
+/* Identity Merging Styles */
+.crm-preview-card {
+  transition: all 0.3s ease;
+}
+
+#crm-linked-uids-ul li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border: 1px solid #edf2f7;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
+.crm-tab-content {
+  display: none;
+}
+
+.crm-tab-content.active {
+  display: block;
+}
+

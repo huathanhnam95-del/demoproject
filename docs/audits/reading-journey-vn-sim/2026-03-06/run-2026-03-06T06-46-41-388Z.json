@@ -1,0 +1,637 @@
+{
+  "runId": "2026-03-06T06-46-41-388Z",
+  "createdAt": "2026-03-06T08:19:48.415Z",
+  "startedAt": "2026-03-06T06:46:41.389Z",
+  "baseUrl": "http://localhost:8797",
+  "dataset": {
+    "path": "C:\\Cursor AI\\scripts\\data\\2025-vn-adult-topics.json",
+    "total": 246
+  },
+  "simulation": {
+    "targetOutlines": 330,
+    "collectedOutlines": 330,
+    "attempts": 30,
+    "maxAttempts": 8250,
+    "branchMode": "mcq",
+    "levels": [
+      "A2",
+      "B1"
+    ],
+    "language": "en",
+    "keywordsPerOutline": 3,
+    "concurrency": 1,
+    "seed": 1772779599720,
+    "resumedFromExisting": 300
+  },
+  "health": {
+    "success": true,
+    "enabled": true,
+    "mode": "dev",
+    "model": "ai-studio:models/gemini-3.1-pro-preview",
+    "effectiveModel": "ai-studio:models/gemini-3.1-pro-preview",
+    "fallbackModel": "ai-studio:models/gemini-2.5-flash",
+    "fallbackReason": "",
+    "targets": [
+      "ai-studio:models/gemini-3.1-pro-preview",
+      "ai-studio:models/gemini-2.5-flash",
+      "vertex:gemini-2.5-pro",
+      "vertex:gemini-2.5-flash"
+    ]
+  },
+  "perOutline": [
+    {
+      "outlineId": "3855882b253ba9451126800f1d807909824fe15768f4baf4cecf0f10db7b60c4",
+      "title": "Grandma Lan's Sweet Solution",
+      "level": "A2",
+      "keywords": [
+        "Khúc bạch vải",
+        "đau lưng",
+        "Nỗi đau giữa hòa bình"
+      ],
+      "topicTags": [
+        "cooking",
+        "culture",
+        "food",
+        "health"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "21d5d1585b86aee45366f3efd9781aae40fbc7506fb84e1918834d2b35dbe76d",
+      "title": "The Vegetarian Curry of Can Tho",
+      "level": "B1",
+      "keywords": [
+        "bữa cơm gia đình",
+        "món chay",
+        "Cần Thơ"
+      ],
+      "topicTags": [
+        "cooking",
+        "culture",
+        "family",
+        "food",
+        "travel"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 1
+    },
+    {
+      "outlineId": "c2c187ceb7761d53de55354fcf8471b66c3e8b45ddd8219dc8fd6f1fcf0d9cdd",
+      "title": "An's 30-Day Challenge",
+      "level": "A2",
+      "keywords": [
+        "kế hoạch học 30 ngày",
+        "xác thực hai bước",
+        "Trà vải"
+      ],
+      "topicTags": [
+        "education",
+        "food",
+        "problem_solving",
+        "technology",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 3
+    },
+    {
+      "outlineId": "2d57e6c96e3eac75ff7d7260821ff97a97d7db6d47cc0f8a340d7e6af3220007",
+      "title": "The Model Campaign",
+      "level": "B1",
+      "keywords": [
+        "Tạo mô hình 3D",
+        "giải quyết mâu thuẫn",
+        "marketing online"
+      ],
+      "topicTags": [
+        "art",
+        "creativity",
+        "problem_solving",
+        "technology",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "f58ec6823d400d2c629150e3d6ab26e68651fa4c3c30e725fe40c069bc285698",
+      "title": "An's Coffee Presentation",
+      "level": "A2",
+      "keywords": [
+        "cà phê sữa đá",
+        "kỹ năng thuyết trình",
+        "Pixverse AI"
+      ],
+      "topicTags": [
+        "creativity",
+        "culture",
+        "education",
+        "food",
+        "technology",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 1
+    },
+    {
+      "outlineId": "2fe32940cb824ed3c5d4f35117e1aabb4966e9448bd17b66926a14edfe8808b0",
+      "title": "The Golden Yogurt",
+      "level": "B1",
+      "keywords": [
+        "Nụ hôn bạc tỷ",
+        "thẻ tín dụng",
+        "sữa chua"
+      ],
+      "topicTags": [
+        "culture",
+        "food",
+        "health",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 4
+    },
+    {
+      "outlineId": "4f232a473b1acc995910f6a295240f907fd715fd3f00ba7b9b36c10e05de3128",
+      "title": "Linh's Stormy Kitchen",
+      "level": "A2",
+      "keywords": [
+        "cơm tấm",
+        "đổi việc",
+        "Bão Yagi"
+      ],
+      "topicTags": [
+        "cooking",
+        "food",
+        "nature",
+        "weather",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "607681b1d0f0f9eed684bcc8bb6a725c25c3864696d5dd10c344a433c860baa6",
+      "title": "The Trauma Code Connection",
+      "level": "B1",
+      "keywords": [
+        "The trauma code",
+        "chăm sóc khách hàng",
+        "điện thoại mới"
+      ],
+      "topicTags": [
+        "health",
+        "problem_solving",
+        "science",
+        "technology",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "a97d0617277abc27e5bceebf305a42669d2845b6ba0e090d207d449ef196663b",
+      "title": "Mai's English CV Challenge",
+      "level": "A2",
+      "keywords": [
+        "điện thoại mới",
+        "hàng xóm",
+        "viết CV tiếng Anh"
+      ],
+      "topicTags": [
+        "community",
+        "language_learning",
+        "technology",
+        "work",
+        "writing"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "98c2f53ec2b8b00cc126bf7b19fd669b5fe85fd1d081bd1799c73615865ff0b7",
+      "title": "The Storm's Silver Lining in Hà Giang",
+      "level": "B1",
+      "keywords": [
+        "Bão số 3",
+        "Hà Giang",
+        "lãi suất ngân hàng"
+      ],
+      "topicTags": [
+        "environment",
+        "nature",
+        "travel",
+        "weather"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 2
+    },
+    {
+      "outlineId": "a64f15a323954bd29949b8511cfbb7857a66b2a05d46686703c597d6f3344a6a",
+      "title": "Linh's English Job Hunt",
+      "level": "A2",
+      "keywords": [
+        "viết email xin việc bằng tiếng Anh",
+        "thanh toán QR",
+        "viết CV"
+      ],
+      "topicTags": [
+        "language_learning",
+        "technology",
+        "work",
+        "writing"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "9b0d52511d3280bdad59fba148638496c150aed47f6e04f647be4333fbf5fd16",
+      "title": "The Đắk Lắk Discovery",
+      "level": "B1",
+      "keywords": [
+        "chi tiêu hợp lý",
+        "FOMO",
+        "Đắk Lắk"
+      ],
+      "topicTags": [
+        "culture",
+        "health",
+        "nature",
+        "problem_solving",
+        "travel"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "075881629db5d5e78d9256a6a657efec6528694a2820c4bf3b77112a83d49427",
+      "title": "Sapa's Hidden Joy",
+      "level": "A2",
+      "keywords": [
+        "Sa Pa",
+        "lòng biết ơn",
+        "FOMO"
+      ],
+      "topicTags": [
+        "adventure",
+        "community",
+        "culture",
+        "friendship",
+        "nature",
+        "travel"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 3
+    },
+    {
+      "outlineId": "7f5b838693eb921c91ce85d0dd4c1f0bbf792a59db40d33843c7ec477c8f1a4d",
+      "title": "The Secure Interview",
+      "level": "B1",
+      "keywords": [
+        "bảo mật tài khoản",
+        "phỏng vấn tiếng Anh",
+        "hẹn hò"
+      ],
+      "topicTags": [
+        "education",
+        "friendship",
+        "language_learning",
+        "problem_solving",
+        "technology",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 2
+    },
+    {
+      "outlineId": "c8c49cd295cb88c5a10d02c3f307dd408f00a75ea9f345a554c5e2244ffbeb05",
+      "title": "A Raise for Linh",
+      "level": "A2",
+      "keywords": [
+        "tăng lương",
+        "Trà vải",
+        "yoga"
+      ],
+      "topicTags": [
+        "food",
+        "health",
+        "hobbies",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 1
+    },
+    {
+      "outlineId": "2b4f6f56b85322bda103d8907838ef2c18c74354b8b6d9e3c0870b2f2eecd093",
+      "title": "Clara's Clever Cuts",
+      "level": "B1",
+      "keywords": [
+        "học kỹ năng mới",
+        "tiền điện nước",
+        "FOMO"
+      ],
+      "topicTags": [
+        "community",
+        "education",
+        "family",
+        "hobbies",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "5c51fdd44ba4a9dff222a5ac6fd0828da0c671d7cd3c18d31487e3151a568de9",
+      "title": "The Melody of Strength",
+      "level": "A2",
+      "keywords": [
+        "dinh dưỡng",
+        "Gai concert",
+        "Nỗi đau giữa hòa bình"
+      ],
+      "topicTags": [
+        "art",
+        "community",
+        "culture",
+        "food",
+        "health"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "e5526333cec00f5001fa5545029a246895255a7a450db8f5c5c76b0115350e14",
+      "title": "The Lychee Tea Interview",
+      "level": "B1",
+      "keywords": [
+        "phỏng vấn tiếng Anh",
+        "Tạo ảnh hộp đồ chơi",
+        "Trà vải"
+      ],
+      "topicTags": [
+        "art",
+        "creativity",
+        "food",
+        "hobbies",
+        "language_learning",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "be108db61bf5eaff25f7b52b582abb4e271140a14015464e0716055a75805423",
+      "title": "The Mộc Châu Storm",
+      "level": "A2",
+      "keywords": [
+        "Mộc Châu",
+        "Bão số 4",
+        "yoga"
+      ],
+      "topicTags": [
+        "health",
+        "nature",
+        "travel",
+        "weather"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "d37301e28d2a8b1e139e21fdf58f2d69699f142d03e3b63c3a2ca52bc2694532",
+      "title": "Lena's Walking Rewards",
+      "level": "B1",
+      "keywords": [
+        "đánh giá sản phẩm",
+        "ví điện tử",
+        "đi bộ mỗi ngày"
+      ],
+      "topicTags": [
+        "health",
+        "problem_solving",
+        "technology"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 2
+    },
+    {
+      "outlineId": "7d43b5930f8ff0d4b5ebce2e2c3fbbf0976fc7441496af754bdb52db8b6c7bd5",
+      "title": "Linh's Mountain Letter",
+      "level": "A2",
+      "keywords": [
+        "Tam Đảo",
+        "thư xin việc",
+        "hàng xóm"
+      ],
+      "topicTags": [
+        "community",
+        "nature",
+        "travel",
+        "work",
+        "writing"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 1
+    },
+    {
+      "outlineId": "5e28eb26f1183382ecf407c81470f5c1a28021a0d34abf42be94f33016d8447c",
+      "title": "The Gemini Garden",
+      "level": "B1",
+      "keywords": [
+        "ăn uống lành mạnh",
+        "Gemini",
+        "Đồng Nai"
+      ],
+      "topicTags": [
+        "food",
+        "health",
+        "space",
+        "travel"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 2
+    },
+    {
+      "outlineId": "e042b8345e6bdf8c744508b8c59da340b9afebf03fbb2afb3bdfc23a89705a2c",
+      "title": "Linh's Misty Mountain Art",
+      "level": "A2",
+      "keywords": [
+        "Shopee",
+        "Tạo ảnh Gemini",
+        "Sa Pa"
+      ],
+      "topicTags": [
+        "art",
+        "creativity",
+        "nature",
+        "technology",
+        "travel"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "4691725468f2c95cfa223626bde8ad9ed7c4385c8d82c05b3116d7edf877a35f",
+      "title": "The Gemini Connection",
+      "level": "B1",
+      "keywords": [
+        "đặt hàng online",
+        "Gemini",
+        "Nụ hôn bạc tỷ"
+      ],
+      "topicTags": [
+        "creativity",
+        "science",
+        "space",
+        "technology"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 1
+    },
+    {
+      "outlineId": "5be2fe61e37eafd6d62cd5541a4e2c5a5b68e512baeb6415f6d7a954baf59786",
+      "title": "The Quiet Bloom",
+      "level": "A2",
+      "keywords": [
+        "skincare cơ bản",
+        "MAMA 2025",
+        "Nỗi đau giữa hòa bình"
+      ],
+      "topicTags": [
+        "art",
+        "community",
+        "culture",
+        "health"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 2
+    },
+    {
+      "outlineId": "9c2bd15c3dcf3487c1e24448c14b7e0a260f83a2669d27fa78ef693cb0950bdc",
+      "title": "Typhoon Celeste: Anya's Forecast",
+      "level": "B1",
+      "keywords": [
+        "Phụ nữ trong các ngành STEM",
+        "Skip leg day",
+        "Bão số 2"
+      ],
+      "topicTags": [
+        "environment",
+        "health",
+        "science",
+        "sports",
+        "technology",
+        "weather"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 1
+    },
+    {
+      "outlineId": "2b0889f781245419111d6b1e3a68f330ffc82f1a32affc481549ce02586a63ae",
+      "title": "The Moon Blossom Lanterns",
+      "level": "A2",
+      "keywords": [
+        "Đà Nẵng",
+        "Cần Thơ",
+        "Nỗi đau giữa hòa bình"
+      ],
+      "topicTags": [
+        "adventure",
+        "community",
+        "culture",
+        "nature",
+        "travel"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "1e74d96dda63729d5e056d74d4e22ef18a6788449e6b160093a05b6bd8cd5d9b",
+      "title": "The Typhoon and the Harmony Concert",
+      "level": "B1",
+      "keywords": [
+        "làm việc nhóm",
+        "Bão số 4",
+        "Gai concert"
+      ],
+      "topicTags": [
+        "art",
+        "culture",
+        "environment",
+        "teamwork",
+        "weather"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 2
+    },
+    {
+      "outlineId": "cdfdb44c1aa9378eb08ec7daebf44dfa67e20695fd3694dc3c58d2b6df4e6279",
+      "title": "The Community Garden Spreadsheet",
+      "level": "A2",
+      "keywords": [
+        "giải quyết mâu thuẫn",
+        "Google Drive",
+        "Lowkey"
+      ],
+      "topicTags": [
+        "community",
+        "hobbies",
+        "problem_solving",
+        "technology",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 2
+    },
+    {
+      "outlineId": "ddaf169305cd804641fa70c3c799fc5ce13f4f61713fde68328cd8d026e187c2",
+      "title": "The Digital Balance",
+      "level": "B1",
+      "keywords": [
+        "thói quen tốt",
+        "chi tiêu hợp lý",
+        "mật khẩu mạnh"
+      ],
+      "topicTags": [
+        "education",
+        "health",
+        "problem_solving",
+        "technology"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    }
+  ],
+  "errors": []
+}

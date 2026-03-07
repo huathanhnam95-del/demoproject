@@ -1,0 +1,989 @@
+{
+  "runId": "2026-03-06T00-46-44-031Z",
+  "createdAt": "2026-03-06T01:44:59.146Z",
+  "startedAt": "2026-03-06T00:46:44.032Z",
+  "baseUrl": "http://localhost:8797",
+  "dataset": {
+    "path": "C:\\Cursor AI\\scripts\\data\\2025-vn-adult-topics.json",
+    "total": 246
+  },
+  "simulation": {
+    "targetOutlines": 50,
+    "collectedOutlines": 50,
+    "attempts": 47,
+    "maxAttempts": 1250,
+    "branchMode": "mcq",
+    "levels": [
+      "A2",
+      "B1"
+    ],
+    "language": "en",
+    "keywordsPerOutline": 3,
+    "concurrency": 2,
+    "seed": 1772758003415,
+    "resumedFromExisting": 3
+  },
+  "health": {
+    "success": true,
+    "enabled": true,
+    "mode": "dev",
+    "model": "ai-studio:models/gemini-3.1-pro-preview",
+    "effectiveModel": "ai-studio:models/gemini-3.1-pro-preview",
+    "fallbackModel": "ai-studio:models/gemini-2.5-flash",
+    "fallbackReason": "",
+    "targets": [
+      "ai-studio:models/gemini-3.1-pro-preview",
+      "ai-studio:models/gemini-2.5-flash",
+      "vertex:gemini-2.5-pro",
+      "vertex:gemini-2.5-flash"
+    ]
+  },
+  "perOutline": [
+    {
+      "outlineId": "c1ae78bd84cd1b33158f3abf2e83fd8f892d4fe4fa7b7e65d7ab08544a4eef22",
+      "title": "Mai's English Recipe Adventure",
+      "level": "A2",
+      "keywords": [
+        "nem rán",
+        "xác thực hai bước",
+        "học tiếng Anh qua truyện ngắn"
+      ],
+      "topicTags": [
+        "cooking",
+        "education",
+        "food",
+        "language_learning",
+        "technology"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "3caa60be788fe4e9a65b170fbf108168684b9c4d7e553a400b03721a85aa4255",
+      "title": "The Cà Mau Compass",
+      "level": "B1",
+      "keywords": [
+        "cân bằng công việc cuộc sống",
+        "mua nhà",
+        "Cà Mau"
+      ],
+      "topicTags": [
+        "family",
+        "health",
+        "problem_solving",
+        "travel",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 6
+    },
+    {
+      "outlineId": "f0e83847d0424e433819fe40503f6c6a27bc0f32ec11edb5995871590d133f6f",
+      "title": "Leo's Digital Dream",
+      "level": "A2",
+      "keywords": [
+        "kỷ luật bản thân",
+        "chuyển khoản",
+        "Tạo mô hình 3D"
+      ],
+      "topicTags": [
+        "art",
+        "creativity",
+        "education",
+        "problem_solving",
+        "technology",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 2
+    },
+    {
+      "outlineId": "3e66828bbbc7cedac23701b9a65088d8dd0e6e6247dc32bf68816cf826d163fe",
+      "title": "The Typhoon and the E-Wallet Plan",
+      "level": "B1",
+      "keywords": [
+        "Bão số 4",
+        "ví điện tử",
+        "kế hoạch học 30 ngày"
+      ],
+      "topicTags": [
+        "education",
+        "technology",
+        "weather"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 3
+    },
+    {
+      "outlineId": "6a18660457ed10a9cdd7cf77d9c95caca3a9a6b38423837a58a9d0bde2784fba",
+      "title": "Linh's Healthy Recipe Blog",
+      "level": "A2",
+      "keywords": [
+        "bánh flan",
+        "dạy viết",
+        "tập gym"
+      ],
+      "topicTags": [
+        "cooking",
+        "education",
+        "food",
+        "health",
+        "sports",
+        "writing"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "54c746e015a80dc7ca6c71d33cc6c7399ecaca7f615f2e72cd0535a8bcca4e91",
+      "title": "Linh's Healthy Storm",
+      "level": "B1",
+      "keywords": [
+        "Bão Trà Mi",
+        "ăn uống lành mạnh",
+        "Cà Mau"
+      ],
+      "topicTags": [
+        "food",
+        "health",
+        "nature",
+        "travel",
+        "weather"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 11
+    },
+    {
+      "outlineId": "909a5a9c5d748eaae1387ecae924ecf3e107dabd85438b0e232a0765eb0fd1f3",
+      "title": "The Old Photo Project",
+      "level": "A2",
+      "keywords": [
+        "tiếng Anh giao tiếp",
+        "nuôi dạy con",
+        "Phục chế ảnh cũ"
+      ],
+      "topicTags": [
+        "art",
+        "creativity",
+        "education",
+        "family",
+        "hobbies",
+        "language_learning"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 1
+    },
+    {
+      "outlineId": "784e5c2cb7000de6265aa43234e6649c9d4612824086909c5a3f60166c1e619e",
+      "title": "Lena's Healthy Plum Syrup",
+      "level": "A2",
+      "keywords": [
+        "chăm sóc da",
+        "Siro mận",
+        "ví điện tử"
+      ],
+      "topicTags": [
+        "cooking",
+        "food",
+        "health",
+        "hobbies",
+        "technology"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 2
+    },
+    {
+      "outlineId": "52a25c1d4e23fa41e78bd167c7427d9ac3413cd4fea0edd7012176c5fe4e5814",
+      "title": "Linh's Sweet Comfort",
+      "level": "A2",
+      "keywords": [
+        "học online",
+        "sốt",
+        "chè đậu xanh"
+      ],
+      "topicTags": [
+        "cooking",
+        "culture",
+        "education",
+        "food",
+        "health",
+        "technology"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 2
+    },
+    {
+      "outlineId": "25e9d1804c6be2d9dddb5838653472f70a88c33410cf97e554dc3752941ce899",
+      "title": "Linh's Sunny Spring Rolls",
+      "level": "A2",
+      "keywords": [
+        "Thiệp 20/11",
+        "nem rán",
+        "Đi giữa trời rực rỡ"
+      ],
+      "topicTags": [
+        "cooking",
+        "creativity",
+        "education",
+        "food",
+        "nature",
+        "weather"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "f2c2c30b2e2a3d72766ccb9a6106c6b2416f1fae280be643e08c1e734e4da63f",
+      "title": "Linh's Digital Journey",
+      "level": "A2",
+      "keywords": [
+        "viết email xin việc bằng tiếng Anh",
+        "Tràng An",
+        "Shopee"
+      ],
+      "topicTags": [
+        "language_learning",
+        "nature",
+        "technology",
+        "travel",
+        "work",
+        "writing"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 2
+    },
+    {
+      "outlineId": "f7d1c5a78c73504c67a1d8dee5ecfbe204e77e80b6b80e108fb3383291c60835",
+      "title": "The Salted Coffee Interview",
+      "level": "A2",
+      "keywords": [
+        "từ vựng công sở",
+        "cà phê muối",
+        "phỏng vấn xin việc"
+      ],
+      "topicTags": [
+        "food",
+        "language_learning",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 1
+    },
+    {
+      "outlineId": "e85b2ffeaece44ce55a679f04a683e842c30aa5417e8bf33d9b27b043d95a05e",
+      "title": "Linh's Saving Plan",
+      "level": "A2",
+      "keywords": [
+        "gửi tiết kiệm ngân hàng",
+        "cơm tấm",
+        "cài đặt ứng dụng"
+      ],
+      "topicTags": [
+        "culture",
+        "food",
+        "problem_solving",
+        "technology",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 2
+    },
+    {
+      "outlineId": "26e22ba72adc80341d5decda37d5ad6fa41a3dced4a900b1de53736ed7968672",
+      "title": "A Message Through the Rain",
+      "level": "A2",
+      "keywords": [
+        "Mưa lớn ở miền Bắc",
+        "mẫu email tiếng Anh",
+        "Dù cho tận thế"
+      ],
+      "topicTags": [
+        "curiosity",
+        "education",
+        "environment",
+        "language_learning",
+        "weather",
+        "writing"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 4
+    },
+    {
+      "outlineId": "1460773a64a8e983e2332f6a17ab2171d92412635d17485717c9c562b9624722",
+      "title": "Mama Elena's Sweet Connection",
+      "level": "A2",
+      "keywords": [
+        "MAMA 2025",
+        "TikTok Shop",
+        "trà đào"
+      ],
+      "topicTags": [
+        "art",
+        "community",
+        "cooking",
+        "culture",
+        "food",
+        "technology"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 3
+    },
+    {
+      "outlineId": "690ac2167fed0af278ea4fae36680a77fb3d094be221004acd302ebf0ee566f2",
+      "title": "The Billion-Dollar Flavor of Đắk Lắk",
+      "level": "A2",
+      "keywords": [
+        "Nụ hôn bạc tỷ",
+        "Đắk Lắk",
+        "học từ vựng theo chủ đề"
+      ],
+      "topicTags": [
+        "culture",
+        "education",
+        "language_learning",
+        "mystery",
+        "nature",
+        "travel"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 1
+    },
+    {
+      "outlineId": "a4b954e1cd3bf10b44f64fb71ba7b7b1b3cf02d58d33d60c9b74dea242d099a9",
+      "title": "Maya and the Storm Story",
+      "level": "A2",
+      "keywords": [
+        "Bão số 3",
+        "quỹ dự phòng",
+        "kỹ năng viết"
+      ],
+      "topicTags": [
+        "education",
+        "environment",
+        "problem_solving",
+        "weather",
+        "writing"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 4
+    },
+    {
+      "outlineId": "ed7b442de180b8af871405015615c18cb67d68822a8abd9fe9674e6812753e50",
+      "title": "Lena's New Home Search",
+      "level": "A2",
+      "keywords": [
+        "thuê nhà",
+        "DeepSeek",
+        "email"
+      ],
+      "topicTags": [
+        "community",
+        "problem_solving",
+        "technology",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 2
+    },
+    {
+      "outlineId": "373a46521f149d9f508e3b4b037572ba2f19ea7494e5736df7d9a634c25d5abf",
+      "title": "Linh's Quiet English Corner",
+      "level": "A2",
+      "keywords": [
+        "cà phê sữa đá",
+        "giảm stress",
+        "học tiếng Anh qua truyện ngắn"
+      ],
+      "topicTags": [
+        "education",
+        "food",
+        "health",
+        "hobbies",
+        "language_learning"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 1
+    },
+    {
+      "outlineId": "c15920b120cdb3751bc0654b7019f343208b2d83d616aa60483731e147eb8875",
+      "title": "Lien's Hà Giang Art Journey",
+      "level": "A2",
+      "keywords": [
+        "Hà Giang",
+        "MAMA 2025",
+        "freelance"
+      ],
+      "topicTags": [
+        "adventure",
+        "art",
+        "culture",
+        "nature",
+        "travel",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 4
+    },
+    {
+      "outlineId": "cb9729e7082cb8161aadce7688f8d382914a23a77ecf41652dc936267fdfdfab",
+      "title": "Linh's Da Nang Story",
+      "level": "A2",
+      "keywords": [
+        "Đà Nẵng",
+        "dạy viết",
+        "chatbot AI"
+      ],
+      "topicTags": [
+        "culture",
+        "education",
+        "technology",
+        "travel",
+        "writing"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 1
+    },
+    {
+      "outlineId": "2aeb3200679fcfff07ccdbc81db8588ef7258c07f5a3f23fd02949edeb902006",
+      "title": "The Artisan's Digital Hope",
+      "level": "A2",
+      "keywords": [
+        "mạng xã hội",
+        "Huế",
+        "Khom lưng"
+      ],
+      "topicTags": [
+        "community",
+        "culture",
+        "technology",
+        "travel",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 2
+    },
+    {
+      "outlineId": "b268b3bd944e8e8cd8bd066d04ea18e3592533d6c89cd3eecb08ff2a2935015d",
+      "title": "Detective Kien's App Mystery",
+      "level": "A2",
+      "keywords": [
+        "cài đặt ứng dụng",
+        "Anh trai vượt ngàn chông gai",
+        "Thám tử Kiên"
+      ],
+      "topicTags": [
+        "adventure",
+        "mystery",
+        "problem_solving",
+        "technology"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 3
+    },
+    {
+      "outlineId": "963a661dd2f3da0602fd9c1e4894f36fd5daae3d980d4ad45104c6447c9a6688",
+      "title": "Lena's Library Language Quest",
+      "level": "A2",
+      "keywords": [
+        "đọc sách mỗi ngày",
+        "mẹo học từ mới",
+        "Khi cuộc đời cho bạn quả quýt"
+      ],
+      "topicTags": [
+        "curiosity",
+        "education",
+        "hobbies",
+        "language_learning",
+        "problem_solving"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 7
+    },
+    {
+      "outlineId": "f161340c9b180750600520040acf55748e96fe603806f31c8d1dcd254bc34d77",
+      "title": "Leo's Locked Journal",
+      "level": "A2",
+      "keywords": [
+        "luyện đọc tiếng Anh",
+        "xác thực hai bước",
+        "viết nhật ký"
+      ],
+      "topicTags": [
+        "education",
+        "hobbies",
+        "language_learning",
+        "problem_solving",
+        "technology",
+        "writing"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "67be73a757fb06d78ce36cfee6b628a8b9e039fabb2a29e84e2ebc3fb54504c5",
+      "title": "Lena's Refund Email",
+      "level": "A2",
+      "keywords": [
+        "hoàn tiền",
+        "email",
+        "giới thiệu bản thân"
+      ],
+      "topicTags": [
+        "language_learning",
+        "problem_solving",
+        "work",
+        "writing"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "f52a77af1ea239c54a5c8529efe203bce02d31cade9dab821e5f7a6f6b9dd941",
+      "title": "Linh's Da Lat Dream Art",
+      "level": "A2",
+      "keywords": [
+        "trà sữa",
+        "Đà Lạt",
+        "tạo ảnh AI"
+      ],
+      "topicTags": [
+        "art",
+        "creativity",
+        "food",
+        "nature",
+        "technology",
+        "travel"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "12e2f536cf9feb000f23f16b97c112561982187c0ddacc83a9090eb828ac3c94",
+      "title": "The Sweet Taste of Savings",
+      "level": "A2",
+      "keywords": [
+        "Khúc bạch vải",
+        "FOMO",
+        "tiết kiệm tiền"
+      ],
+      "topicTags": [
+        "community",
+        "cooking",
+        "education",
+        "food",
+        "health",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "0729a326f833670b78c0255e30532a9a7fa42d35b9b720454c81db4dc9c5d7ac",
+      "title": "Linh's English Wave",
+      "level": "A2",
+      "keywords": [
+        "Sóng 25",
+        "tiếng Anh giao tiếp",
+        "phỏng vấn xin việc"
+      ],
+      "topicTags": [
+        "education",
+        "language_learning",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "7638138760fac2931428959e0e8192aa4ffd61c55f630688a40af214a6dec290",
+      "title": "Linh's Locked Recipe",
+      "level": "A2",
+      "keywords": [
+        "bún riêu",
+        "xác thực hai bước",
+        "chăm sóc da"
+      ],
+      "topicTags": [
+        "cooking",
+        "food",
+        "health",
+        "technology"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 3
+    },
+    {
+      "outlineId": "f1c8d6b97bbd58c5d4c1bf6d755a29f574fbb5ae1444ab71c0a40c0a49568a19",
+      "title": "The Stormy English Practice",
+      "level": "A2",
+      "keywords": [
+        "đặt đồ ăn",
+        "Bão số 2",
+        "luyện viết tiếng Anh"
+      ],
+      "topicTags": [
+        "food",
+        "language_learning",
+        "nature",
+        "weather",
+        "writing"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 1
+    },
+    {
+      "outlineId": "aae8cbf2a7d13d84c7caf02d6311ee5b9323cd5282eebfdb207a53d5339791c3",
+      "title": "Mai's Cao Bằng Adventure: A Writing Journey",
+      "level": "A2",
+      "keywords": [
+        "Vũng Tàu",
+        "luyện viết tiếng Anh",
+        "Cao Bằng"
+      ],
+      "topicTags": [
+        "culture",
+        "education",
+        "language_learning",
+        "nature",
+        "travel",
+        "writing"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 3
+    },
+    {
+      "outlineId": "a53549cd1a74b617a866688e950c8cb3ebc9aabdd34d469732f54fa39b300a76",
+      "title": "Linh's Zesty CV",
+      "level": "A2",
+      "keywords": [
+        "viết CV",
+        "Khi cuộc đời cho bạn quả quýt",
+        "Chúng ta của tương lai"
+      ],
+      "topicTags": [
+        "creativity",
+        "education",
+        "problem_solving",
+        "work",
+        "writing"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 1
+    },
+    {
+      "outlineId": "a54f761a7fd7b6457666bc12746582ac0cfafce8d152d9b365d90dfb1689128b",
+      "title": "Mai's Smart Pho",
+      "level": "A2",
+      "keywords": [
+        "tiền điện nước",
+        "dinh dưỡng",
+        "phở bò"
+      ],
+      "topicTags": [
+        "cooking",
+        "culture",
+        "family",
+        "food",
+        "health"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 1
+    },
+    {
+      "outlineId": "f7a195f052fd78bbdeb677c84269fed839e75f0bfd286f720bc6516bfcef71f9",
+      "title": "Lý Sơn's Healthy Journey",
+      "level": "A2",
+      "keywords": [
+        "Salad mayonnaise",
+        "Lý Sơn",
+        "đi bộ mỗi ngày"
+      ],
+      "topicTags": [
+        "cooking",
+        "food",
+        "health",
+        "hobbies",
+        "nature",
+        "travel"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 1
+    },
+    {
+      "outlineId": "303aa356fed0d96bf3bd664cf0e61fb4a6e1065df8676236636253cd1f1abc3c",
+      "title": "The Delivery Dilemma",
+      "level": "A2",
+      "keywords": [
+        "Nụ hôn bạc tỷ",
+        "đặt đồ ăn",
+        "quỹ dự phòng"
+      ],
+      "topicTags": [
+        "food",
+        "friendship",
+        "problem_solving",
+        "technology",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "83b1e195642b9fd16700a363e00ff63573009e1dc300a64aaad1db14b14fe5db",
+      "title": "The Hà Giang Craft Challenge",
+      "level": "A2",
+      "keywords": [
+        "Hà Giang",
+        "làm việc nhóm",
+        "đánh giá sản phẩm"
+      ],
+      "topicTags": [
+        "culture",
+        "nature",
+        "problem_solving",
+        "teamwork",
+        "travel",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 2
+    },
+    {
+      "outlineId": "da8f894920f0bca5bc58a9c55f0ec12dffa6ba2e82a0ed14b7dbd797efbc60d2",
+      "title": "The Hanoi Silk Fan Challenge",
+      "level": "A2",
+      "keywords": [
+        "Đừng làm trái tim anh đau",
+        "thanh toán QR",
+        "Hà Nội"
+      ],
+      "topicTags": [
+        "art",
+        "culture",
+        "technology",
+        "travel"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 7
+    },
+    {
+      "outlineId": "817759603fdeb34619262a082ce80adb856f0e8ba671da69e35ecc794bb6d8b7",
+      "title": "Leo's Budget Balance",
+      "level": "A2",
+      "keywords": [
+        "yoga",
+        "quản lý tài chính cá nhân",
+        "chăm sóc khách hàng"
+      ],
+      "topicTags": [
+        "education",
+        "health",
+        "hobbies",
+        "problem_solving",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 2
+    },
+    {
+      "outlineId": "89ee261202e1840af26481c04d5fcce48f923a2262c252c78961697bd959f6fb",
+      "title": "The Art of Clear Words",
+      "level": "A2",
+      "keywords": [
+        "Tạo ảnh nền đỏ",
+        "phát âm tiếng Anh",
+        "Đừng làm trái tim anh đau"
+      ],
+      "topicTags": [
+        "art",
+        "creativity",
+        "education",
+        "friendship",
+        "language_learning"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "834f5de4e65fd407ad03ad2d24bf3bdfc5050c7ca6c4b307adcd1b1e41223741",
+      "title": "Lina's Salt Coffee Dream in Nha Trang",
+      "level": "A2",
+      "keywords": [
+        "cà phê muối",
+        "quỹ dự phòng",
+        "Nha Trang"
+      ],
+      "topicTags": [
+        "cooking",
+        "culture",
+        "food",
+        "problem_solving",
+        "travel"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 3
+    },
+    {
+      "outlineId": "360b612302687aef4b87a031cd577d92f5b6188f7329d245d924de550492e119",
+      "title": "The Red Rain Recipe",
+      "level": "A2",
+      "keywords": [
+        "món chay",
+        "Đừng làm trái tim anh đau",
+        "Mưa đỏ"
+      ],
+      "topicTags": [
+        "cooking",
+        "food",
+        "friendship",
+        "nature",
+        "weather"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "7085f948e5669e17571f27ab97eac843aea66f203ee3e4c47c4074231f267bff",
+      "title": "Linh's New Balance",
+      "level": "A2",
+      "keywords": [
+        "đau vai gáy",
+        "quản lý tài chính cá nhân",
+        "TP Hồ Chí Minh"
+      ],
+      "topicTags": [
+        "culture",
+        "education",
+        "health",
+        "travel",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 1
+    },
+    {
+      "outlineId": "7774daf20907a3582b0b54c9892abc3bbcc424ae77acbda178e34a6454277bb6",
+      "title": "Linh's Matcha Storm",
+      "level": "A2",
+      "keywords": [
+        "Bão Yagi",
+        "vay tiêu dùng",
+        "Matcha latte"
+      ],
+      "topicTags": [
+        "cooking",
+        "culture",
+        "environment",
+        "food",
+        "weather",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 5
+    },
+    {
+      "outlineId": "8d75d4ef9b6fdda93461018740a11a615d36234343dbab526acd54d9065c1054",
+      "title": "A New Home, A New Language, A Big Storm",
+      "level": "A2",
+      "keywords": [
+        "học từ vựng theo chủ đề",
+        "thuê nhà",
+        "Bão Yagi"
+      ],
+      "topicTags": [
+        "community",
+        "education",
+        "environment",
+        "language_learning",
+        "weather"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "6b452af750e62bebf05b0048e1d44eede520b5b01e47c18e14d4bdca26b39993",
+      "title": "Lena's Good Habits",
+      "level": "A2",
+      "keywords": [
+        "thăng tiến",
+        "chuyển khoản",
+        "thói quen tốt"
+      ],
+      "topicTags": [
+        "education",
+        "health",
+        "problem_solving",
+        "work"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    },
+    {
+      "outlineId": "0637990fa1a6cccd27c4dd935e320ec237e687e7af5cc593f69abd4cb701f414",
+      "title": "The Summer Rain Trip",
+      "level": "A2",
+      "keywords": [
+        "Mưa lớn ở miền Bắc",
+        "Đồng Nai",
+        "MAMA 2025"
+      ],
+      "topicTags": [
+        "environment",
+        "family",
+        "nature",
+        "travel",
+        "weather"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 0
+    }
+  ],
+  "errors": []
+}

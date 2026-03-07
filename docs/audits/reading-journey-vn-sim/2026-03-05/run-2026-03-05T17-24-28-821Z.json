@@ -1,0 +1,70 @@
+{
+  "runId": "2026-03-05T17-24-28-821Z",
+  "createdAt": "2026-03-05T17:35:53.940Z",
+  "startedAt": "2026-03-05T17:24:28.821Z",
+  "baseUrl": "http://localhost:8792",
+  "dataset": {
+    "path": "C:\\Cursor AI\\scripts\\data\\2025-vn-adult-topics.json",
+    "total": 246
+  },
+  "simulation": {
+    "targetOutlines": 2,
+    "collectedOutlines": 2,
+    "attempts": 2,
+    "maxAttempts": 40,
+    "branchMode": "mcq",
+    "levels": [
+      "A2",
+      "B1"
+    ],
+    "language": "en",
+    "keywordsPerOutline": 3,
+    "concurrency": 1,
+    "seed": 1772731467646,
+    "resumedFromExisting": 0
+  },
+  "health": {
+    "success": true,
+    "enabled": true,
+    "mode": "dev",
+    "model": "ai-studio:models/gemini-3.1-pro-preview",
+    "effectiveModel": "ai-studio:models/gemini-3.1-pro-preview",
+    "fallbackModel": "ai-studio:models/gemini-2.5-flash",
+    "fallbackReason": "",
+    "targets": [
+      "ai-studio:models/gemini-3.1-pro-preview",
+      "ai-studio:models/gemini-2.5-flash",
+      "vertex:gemini-2.5-pro",
+      "vertex:gemini-2.5-flash"
+    ]
+  },
+  "perOutline": [
+    {
+      "outlineId": "68600141ee390bf32141af9b6e851a46bcad69a7ec7c20a7e1b69161d756519e",
+      "title": "Lena and the Salty Coffee Secret",
+      "level": "A2",
+      "keywords": [
+        "giảm stress",
+        "kỹ năng viết",
+        "cà phê muối"
+      ],
+      "topicTags": [
+        "creativity",
+        "education",
+        "food",
+        "health",
+        "writing"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 4
+    }
+  ],
+  "errors": [
+    {
+      "type": "expand_failed",
+      "outlineId": "a6f8998dd8972def2f61fc0c7bf8d258ae76f3abf37deeb887d8e87d310f37d6",
+      "message": "fetch failed"
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "runId": "2026-03-05T17-36-53-618Z",
+  "createdAt": "2026-03-05T17:52:43.631Z",
+  "startedAt": "2026-03-05T17:36:53.618Z",
+  "baseUrl": "http://localhost:8793",
+  "dataset": {
+    "path": "C:\\Cursor AI\\scripts\\data\\2025-vn-adult-topics.json",
+    "total": 246
+  },
+  "simulation": {
+    "targetOutlines": 1,
+    "collectedOutlines": 1,
+    "attempts": 1,
+    "maxAttempts": 20,
+    "branchMode": "mcq",
+    "levels": [
+      "A2",
+      "B1"
+    ],
+    "language": "en",
+    "keywordsPerOutline": 3,
+    "concurrency": 1,
+    "seed": 1772732212507,
+    "resumedFromExisting": 0
+  },
+  "health": {
+    "success": true,
+    "enabled": true,
+    "mode": "dev",
+    "model": "ai-studio:models/gemini-2.5-flash",
+    "effectiveModel": "ai-studio:models/gemini-2.5-flash",
+    "fallbackModel": "vertex:gemini-2.5-flash",
+    "fallbackReason": "",
+    "targets": [
+      "ai-studio:models/gemini-2.5-flash",
+      "vertex:gemini-2.5-flash"
+    ]
+  },
+  "perOutline": [
+    {
+      "outlineId": "f4fcea5d69b1f146f1f049545898c15aa8af668515178322b1bf2e329d1a242f",
+      "title": "Linh's Con Dao English Adventure",
+      "level": "A2",
+      "keywords": [
+        "luyện nói tiếng Anh",
+        "quản lý thời gian",
+        "Côn Đảo"
+      ],
+      "topicTags": [
+        "education",
+        "language_learning",
+        "nature",
+        "problem_solving",
+        "travel"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 4
+    }
+  ],
+  "errors": []
+}

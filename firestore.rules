@@ -147,5 +147,47 @@ service cloud.firestore {
       allow read: if true;
       allow create, update: if request.auth != null;
     }
+
+    // ============================================
+    // CRM STUDENTS (Identity Merging)
+    // ============================================
+    match /crmStudents/{studentId} {
+      // Allow read if user is admin OR if their uid is in the linked_user_ids array
+      allow read: if isAdmin() || (request.auth != null && request.auth.uid in resource.data.linked_user_ids);
+      allow write: if isAdmin();
+    }
+
+    // ============================================
+    // CLASSROOM FEATURE
+    // ============================================
+    match /crmClassrooms/{classId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+
+      match /modules/{moduleId} {
+        allow read: if request.auth != null;
+        allow write: if isAdmin();
+      }
+
+      match /classwork/{workId} {
+        allow read: if request.auth != null;
+        allow write: if isAdmin();
+      }
+
+      match /posts/{postId} {
+        allow read: if request.auth != null;
+        allow write: if isAdmin();
+      }
+    }
+
+    // ============================================
+    // SUBMISSIONS
+    // ============================================
+    match /crmSubmissions/{submissionId} {
+      // Students can create their own. Students can read/update their own. Admins can read/update all.
+      allow create: if request.auth != null && request.resource.data.studentUid == request.auth.uid;
+      allow read, update: if isAdmin() || (request.auth != null && resource.data.studentUid == request.auth.uid);
+      allow delete: if isAdmin();
+    }
   }
 }

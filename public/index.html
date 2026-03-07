@@ -351,6 +351,20 @@
           <span id="account-total-time" class="read-only">-</span>
         </div>
       </div>
+      <!-- Identity Merging (Join a Class) -->
+      <div id="join-class-section" class="join-class-section" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #eee; padding-left: 20px; padding-right: 20px;">
+        <h3 style="margin-bottom: 8px;">🎓 Join a Class</h3>
+        <p class="text-muted" style="margin-bottom: 12px; font-size: 0.9rem;">
+          Have a class code from your teacher? Enter it below to link your student profile.
+        </p>
+        <div style="display: flex; gap: 10px;">
+          <input type="text" id="join-class-code-input" placeholder="Enter 6-digit code" 
+                 style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; text-transform: uppercase;">
+          <button id="btn-join-class" class="panel-btn primary" style="width: auto; padding: 0 20px; margin: 0;">Join</button>
+        </div>
+        <div id="join-class-message" style="margin-top: 8px; font-size: 0.85rem; display: none;"></div>
+      </div>
+
       <div class="account-actions">
         <button id="change-password-btn" class="account-btn">Change Password</button>
         <button id="logout-btn" class="account-btn logout-btn">Logout</button>
@@ -864,6 +878,10 @@
           <a id="panel-crm-admin-link" href="crm-admin.html" class="panel-btn primary"
             style="display: none; text-decoration: none; text-align: center;">
             🗂️ CRM Admin
+          </a>
+          <a id="panel-classroom-link" href="classroom.html" class="panel-btn primary"
+            style="display: none; text-decoration: none; text-align: center;">
+            🎓 My Courses
           </a>
           <button id="panel-logout-btn" class="panel-btn danger">Logout</button>
         </div>

@@ -1,0 +1,162 @@
+{
+  "runId": "2026-03-06T02-57-32-842Z",
+  "createdAt": "2026-03-06T06:41:19.844Z",
+  "baseUrl": "http://localhost:8797",
+  "targetOutlines": 300,
+  "collectedOutlines": 300,
+  "attempts": 211,
+  "maxAttempts": 7500,
+  "branchMode": "mcq",
+  "levels": [
+    "A2",
+    "B1"
+  ],
+  "language": "en",
+  "keywordsPerOutline": 3,
+  "concurrency": 2,
+  "seed": 1772765851194,
+  "resumedFromExisting": 100,
+  "totals": {
+    "outlines": 181,
+    "variants": 4887,
+    "endedEarly": 0,
+    "wordCountIssues": 174
+  },
+  "errors": [
+    {
+      "type": "expand_failed",
+      "outlineId": "f213d6a2884caa5896f6b2fd37cde041b7977c54481d7acf4f63b6da76c1f58c",
+      "message": "Advance failed: HTTP 500 {\"success\":false,\"error\":\"ADVANCE_FAILED\",\"message\":\"Reading Journey advance failed\",\"details\":\"[VertexAI.ClientError]: got status: 429 Too Many Requests. {\\\"error\\\":{\\\"code\\\":429,\\\"message\\\":\\\"Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.\\\",\\\"status\\\":\\\"RESOURCE_EXHAUSTED\\\"}}\"}"
+    },
+    {
+      "type": "expand_failed",
+      "outlineId": "407658dfb17ffaef9a866c4c8460eee4be6d89393fe414a16f1b680907b46096",
+      "message": "Advance failed: HTTP 500 {\"success\":false,\"error\":\"ADVANCE_FAILED\",\"message\":\"Reading Journey advance failed\",\"details\":\"[VertexAI.ClientError]: got status: 429 Too Many Requests. {\\\"error\\\":{\\\"code\\\":429,\\\"message\\\":\\\"Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.\\\",\\\"status\\\":\\\"RESOURCE_EXHAUSTED\\\"}}\"}"
+    },
+    {
+      "type": "setup_failed",
+      "httpStatus": 500,
+      "payload": {
+        "success": false,
+        "error": "SETUP_FAILED",
+        "message": "Reading Journey setup failed",
+        "details": "[VertexAI.ClientError]: got status: 429 Too Many Requests. {\"error\":{\"code\":429,\"message\":\"Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.\",\"status\":\"RESOURCE_EXHAUSTED\"}}"
+      }
+    },
+    {
+      "type": "expand_failed",
+      "outlineId": "91825e13669caf073d1af5a46cab8ebfabac00626afb0bff4a51ff0e087ba90a",
+      "message": "Advance failed: HTTP 500 {\"success\":false,\"error\":\"ADVANCE_FAILED\",\"message\":\"Reading Journey advance failed\",\"details\":\"[VertexAI.ClientError]: got status: 429 Too Many Requests. {\\\"error\\\":{\\\"code\\\":429,\\\"message\\\":\\\"Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.\\\",\\\"status\\\":\\\"RESOURCE_EXHAUSTED\\\"}}\"}"
+    },
+    {
+      "type": "expand_failed",
+      "outlineId": "42cdbffbff955018f98c2cd26a88d7ee814f61942d7e2407f2d01ff44a954eef",
+      "message": "Advance failed: HTTP 500 {\"success\":false,\"error\":\"ADVANCE_FAILED\",\"message\":\"Reading Journey advance failed\",\"details\":\"[VertexAI.ClientError]: got status: 429 Too Many Requests. {\\\"error\\\":{\\\"code\\\":429,\\\"message\\\":\\\"Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.\\\",\\\"status\\\":\\\"RESOURCE_EXHAUSTED\\\"}}\"}"
+    },
+    {
+      "type": "expand_failed",
+      "outlineId": "c7639c6e2068fbb1e03f8ff463f79b53b0f29fa62da5e6440913be1a856cba49",
+      "message": "Advance failed: HTTP 500 {\"success\":false,\"error\":\"ADVANCE_FAILED\",\"message\":\"Reading Journey advance failed\",\"details\":\"[VertexAI.ClientError]: got status: 429 Too Many Requests. {\\\"error\\\":{\\\"code\\\":429,\\\"message\\\":\\\"Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.\\\",\\\"status\\\":\\\"RESOURCE_EXHAUSTED\\\"}}\"}"
+    },
+    {
+      "type": "expand_failed",
+      "outlineId": "22eabd5bea58f82e9fd9bfa630dd81cd497b6bcf3a60ba0f72f71d6508e6f48f",
+      "message": "Advance failed: HTTP 500 {\"success\":false,\"error\":\"ADVANCE_FAILED\",\"message\":\"Reading Journey advance failed\",\"details\":\"[VertexAI.ClientError]: got status: 429 Too Many Requests. {\\\"error\\\":{\\\"code\\\":429,\\\"message\\\":\\\"Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.\\\",\\\"status\\\":\\\"RESOURCE_EXHAUSTED\\\"}}\"}"
+    },
+    {
+      "type": "expand_failed",
+      "outlineId": "3328fc4587aa739225ddbc4c572daee7719fa5eb8a318a7daedd89309ca007fb",
+      "message": "Advance failed: HTTP 500 {\"success\":false,\"error\":\"ADVANCE_FAILED\",\"message\":\"Reading Journey advance failed\",\"details\":\"[VertexAI.ClientError]: got status: 429 Too Many Requests. {\\\"error\\\":{\\\"code\\\":429,\\\"message\\\":\\\"Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.\\\",\\\"status\\\":\\\"RESOURCE_EXHAUSTED\\\"}}\"}"
+    },
+    {
+      "type": "expand_failed",
+      "outlineId": "1da951d06fb3aca3bceda81257f8bf777675764423f51dd3414a746f4c232fdc",
+      "message": "Advance failed: HTTP 500 {\"success\":false,\"error\":\"ADVANCE_FAILED\",\"message\":\"Reading Journey advance failed\",\"details\":\"[VertexAI.ClientError]: got status: 429 Too Many Requests. {\\\"error\\\":{\\\"code\\\":429,\\\"message\\\":\\\"Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.\\\",\\\"status\\\":\\\"RESOURCE_EXHAUSTED\\\"}}\"}"
+    },
+    {
+      "type": "expand_failed",
+      "outlineId": "5197871bdbe15cc5ab15bfc49b4bae071f60dec03562fb1aa4ef80302803f163",
+      "message": "Advance failed: HTTP 500 {\"success\":false,\"error\":\"ADVANCE_FAILED\",\"message\":\"Reading Journey advance failed\",\"details\":\"[VertexAI.ClientError]: got status: 429 Too Many Requests. {\\\"error\\\":{\\\"code\\\":429,\\\"message\\\":\\\"Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.\\\",\\\"status\\\":\\\"RESOURCE_EXHAUSTED\\\"}}\"}"
+    },
+    {
+      "type": "expand_failed",
+      "outlineId": "5b580b4ad363b902fd67b23498263fd508865b9f12bae671ab58727c64efed34",
+      "message": "Advance failed: HTTP 500 {\"success\":false,\"error\":\"ADVANCE_FAILED\",\"message\":\"Reading Journey advance failed\",\"details\":\"[VertexAI.ClientError]: got status: 429 Too Many Requests. {\\\"error\\\":{\\\"code\\\":429,\\\"message\\\":\\\"Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.\\\",\\\"status\\\":\\\"RESOURCE_EXHAUSTED\\\"}}\"}"
+    },
+    {
+      "type": "expand_failed",
+      "outlineId": "6e417ae03715835b38a5bd2399d5c4d83108486f2a829b9a79949f7627fbb27f",
+      "message": "Advance failed: HTTP 500 {\"success\":false,\"error\":\"ADVANCE_FAILED\",\"message\":\"Reading Journey advance failed\",\"details\":\"[VertexAI.ClientError]: got status: 429 Too Many Requests. {\\\"error\\\":{\\\"code\\\":429,\\\"message\\\":\\\"Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.\\\",\\\"status\\\":\\\"RESOURCE_EXHAUSTED\\\"}}\"}"
+    },
+    {
+      "type": "setup_failed",
+      "httpStatus": 500,
+      "payload": {
+        "success": false,
+        "error": "SETUP_FAILED",
+        "message": "Reading Journey setup failed",
+        "details": "[VertexAI.ClientError]: got status: 429 Too Many Requests. {\"error\":{\"code\":429,\"message\":\"Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.\",\"status\":\"RESOURCE_EXHAUSTED\"}}"
+      }
+    },
+    {
+      "type": "expand_failed",
+      "outlineId": "4e6110c1b31c565ab4d069f2ea6c1182b9cf852979335f1c90bfa979106b9fbe",
+      "message": "Advance failed: HTTP 500 {\"success\":false,\"error\":\"ADVANCE_FAILED\",\"message\":\"Reading Journey advance failed\",\"details\":\"[VertexAI.ClientError]: got status: 429 Too Many Requests. {\\\"error\\\":{\\\"code\\\":429,\\\"message\\\":\\\"Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.\\\",\\\"status\\\":\\\"RESOURCE_EXHAUSTED\\\"}}\"}"
+    },
+    {
+      "type": "expand_failed",
+      "outlineId": "79cad4fd1fd9978ada5fcb24a8ca2077f3a2eab74c3bccdb1e7a8ea5122afece",
+      "message": "Advance failed: HTTP 500 {\"success\":false,\"error\":\"ADVANCE_FAILED\",\"message\":\"Reading Journey advance failed\",\"details\":\"[VertexAI.ClientError]: got status: 429 Too Many Requests. {\\\"error\\\":{\\\"code\\\":429,\\\"message\\\":\\\"Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.\\\",\\\"status\\\":\\\"RESOURCE_EXHAUSTED\\\"}}\"}"
+    },
+    {
+      "type": "expand_failed",
+      "outlineId": "6c2b63b34cffce6eec17357d0b8d81e0d1856229e5b36a2525f7f58a7605456c",
+      "message": "Advance failed: HTTP 500 {\"success\":false,\"error\":\"ADVANCE_FAILED\",\"message\":\"Reading Journey advance failed\",\"details\":\"[VertexAI.ClientError]: got status: 429 Too Many Requests. {\\\"error\\\":{\\\"code\\\":429,\\\"message\\\":\\\"Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.\\\",\\\"status\\\":\\\"RESOURCE_EXHAUSTED\\\"}}\"}"
+    },
+    {
+      "type": "expand_failed",
+      "outlineId": "270fef064e1c9d13abf042faf6ddf3b2f4062df9cdabe55cc7da6f95abc7cbc9",
+      "message": "Advance failed: HTTP 500 {\"success\":false,\"error\":\"ADVANCE_FAILED\",\"message\":\"Reading Journey advance failed\",\"details\":\"[VertexAI.ClientError]: got status: 429 Too Many Requests. {\\\"error\\\":{\\\"code\\\":429,\\\"message\\\":\\\"Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.\\\",\\\"status\\\":\\\"RESOURCE_EXHAUSTED\\\"}}\"}"
+    },
+    {
+      "type": "expand_failed",
+      "outlineId": "b96fd2b0b9f2418c4d37898e8ba137bb0edc716a314cff93e87e64c19f1d8901",
+      "message": "Advance failed: HTTP 500 {\"success\":false,\"error\":\"ADVANCE_FAILED\",\"message\":\"Reading Journey advance failed\",\"details\":\"[VertexAI.ClientError]: got status: 429 Too Many Requests. {\\\"error\\\":{\\\"code\\\":429,\\\"message\\\":\\\"Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.\\\",\\\"status\\\":\\\"RESOURCE_EXHAUSTED\\\"}}\"}"
+    },
+    {
+      "type": "expand_failed",
+      "outlineId": "b835a2225657c29da5a661f70caf1beaae6461606e3b00acea7f004339a78808",
+      "message": "Advance failed: HTTP 500 {\"success\":false,\"error\":\"ADVANCE_FAILED\",\"message\":\"Reading Journey advance failed\",\"details\":\"[VertexAI.ClientError]: got status: 429 Too Many Requests. {\\\"error\\\":{\\\"code\\\":429,\\\"message\\\":\\\"Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.\\\",\\\"status\\\":\\\"RESOURCE_EXHAUSTED\\\"}}\"}"
+    },
+    {
+      "type": "setup_failed",
+      "httpStatus": 500,
+      "payload": {
+        "success": false,
+        "error": "SETUP_FAILED",
+        "message": "Reading Journey setup failed",
+        "details": "[VertexAI.ClientError]: got status: 429 Too Many Requests. {\"error\":{\"code\":429,\"message\":\"Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.\",\"status\":\"RESOURCE_EXHAUSTED\"}}"
+      }
+    },
+    {
+      "type": "setup_failed",
+      "httpStatus": 500,
+      "payload": {
+        "success": false,
+        "error": "SETUP_FAILED",
+        "message": "Reading Journey setup failed",
+        "details": "[VertexAI.GoogleGenerativeAIError]: exception posting request to model"
+      }
+    },
+    {
+      "type": "expand_failed",
+      "outlineId": "153996b8843e9a442e8d6fc1f52d5ccae44b991e174863ed6536b8933bf389d1",
+      "message": "Advance failed: HTTP 500 {\"success\":false,\"error\":\"ADVANCE_FAILED\",\"message\":\"Reading Journey advance failed\",\"details\":\"[VertexAI.ClientError]: got status: 429 Too Many Requests. {\\\"error\\\":{\\\"code\\\":429,\\\"message\\\":\\\"Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.\\\",\\\"status\\\":\\\"RESOURCE_EXHAUSTED\\\"}}\"}"
+    },
+    {
+      "type": "expand_failed",
+      "outlineId": "346d25db8666f45ddd673c13ad05888a022150342b67957a216a76d77ba0928a",
+      "message": "Advance failed: HTTP 500 {\"success\":false,\"error\":\"ADVANCE_FAILED\",\"message\":\"Reading Journey advance failed\",\"details\":\"[VertexAI.ClientError]: got status: 429 Too Many Requests. {\\\"error\\\":{\\\"code\\\":429,\\\"message\\\":\\\"Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.\\\",\\\"status\\\":\\\"RESOURCE_EXHAUSTED\\\"}}\"}"
+    }
+  ]
+}

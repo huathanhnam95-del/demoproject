@@ -1,0 +1,288 @@
+﻿[dotenv@17.2.3] injecting env (14) from .env -- tip: ΓÜÖ∩╕Å  specify custom .env file path with { path: '/custom/path/.env' }
+
+≡ƒºá SUMMONING THE WAR ROOM COUNCIL...
+Sovereign's Command: "I want my Admin CRM to have a function that works just like how Google Classroom is functioning. I should be able to 1. Create a class 2. Create classworks/announcements Students should be able to 1. Join the class 2. See classworks 3. Be able to submit classworks Analyze, research and propose a feature plan for me first. No implementation plan yet."
+
+==================================================
+[34m[ ≡ƒÅ¢∩╕Å Architect ][0m
+This is the Architect. I have analyzed your directive. You are requesting the integration of a Learning Management System (LMS) module within your existing Admin CRM infrastructure.
+
+To replicate the efficiency of the Google Classroom model while maintaining the scalability required by The Sovereign, we must adhere to **Domain-Driven Design (DDD)** principles. We will not build a monolith; we will build a modular ecosystem.
+
+Here is the architectural feature plan.
+
+***
+
+### Phase 1: The Blueprint (Feature Specification)
+
+We will compartmentalize this system into three distinct domains: **Orchestration**, **Content Delivery**, and **Submission Pipeline**.
+
+#### 1. Domain: Orchestration (Class Management)
+This is the structural backbone. It governs relationships and access.
+
+*   **Class Provisioning:**
+    *   **Immutable Identity:** Every class generates a unique, alphanumeric UUID and a 6-character short-code (Join Code) for easy distribution.
+    *   **Metadata Layer:** Title, Section, Subject, and Room.
+    *   **State Management:** Active, Archived, or Deleted (Soft Delete).
+*   **Enrollment Protocol (RBAC):**
+    *   **Instructor Role:** Inherits permissions to CREATE, UPDATE, and DELETE content.
+    *   **Student Role:** Inherits permissions to READ content and CREATE submissions.
+    *   **The Handshake:** Students join via the 6-character short-code. This reduces admin overhead by offloading enrollment effort to the user.
+
+#### 2. Domain: Content Delivery (The Stream)
+The central communication hub. We differentiate between passive and active data.
+
+*   **Announcements (Passive):**
+    *   Rich-text stream items visible to all enrolled entities.
+    *   Support for external links and attachment metadata.
+*   **Classwork (Active):**
+    *   **The Artifact:** Contains instructions, due dates, point values, and reference materials.
+    *   **State Tracking:** Draft (Invisible), Scheduled (Time-gated), Published (Live).
+    *   **Versioning:** Edit history tracking to prevent "gaslighting" on assignment parameters.
+
+#### 3. Domain: Submission Pipeline (The Interaction)
+The highest load vector. This requires decoupled storage handling.
+
+*   **Student Workflow:**
+    *   **The Envelope:** A submission object tied to a specific User and specific Classwork ID.
+    *   **The Payload:** Support for file uploads (PDF, Docx, IMG). *Critical: Files are never stored in the database.*
+    *   **Status Flags:** `Assigned` -> `Missing` (Auto-triggered by date) -> `Turned In` -> `Returned`.
+*   **Instructor Workflow:**
+    *   **Review Interface:** Aggregated view of submissions filtered by Classwork ID.
+
+***
+
+### Phase 2: Architectural Data Model (Entity Relations)
+
+To ensure scalability, the database schema must favor efficient querying of relationships.
+
+1.  **`Classrooms` Table:** The root entity.
+2.  **`Enrollments` (Junction Table):**
+    *   Links `UserID` to `ClassroomID`.
+    *   Stores `Role` (Student/Teacher).
+    *   *Why:* Allows a user to be a Teacher in one class and a Student in another without schema friction.
+3.  **`StreamItems` (Polymorphic):**
+    *   Stores Announcements and Assignments.
+    *   Indexed by `ClassroomID` and `CreatedAt` for rapid timeline rendering.
+4.  **`Attachments` (The Pointer System):**
+    *   Stores file metadata (Name, Size, MIME Type) and the **Object Storage URL (S3)**.
+    *   *Never* store binary data in your SQL instance.
+
+***
+
+### Phase 3: Scalability & Best Practices
+
+1.  **Storage Decoupling:**
+    *   Use AWS S3, Google Cloud Storage, or Azure Blob for all classworks and submissions.
+    *   The CRM database only holds the *reference key* to the file. This keeps the database lean and fast.
+2.  **Asynchronous Processing:**
+    *   When a teacher posts an assignment to 5,000 students, do not trigger 5,000 notifications in the main thread.
+    *   Push this event to a Message Queue (RabbitMQ/Redis/SQS) to handle notifications in the background.
+3.  **Pagination Strategy:**
+    *   The "Stream" must use cursor-based pagination. Do not load "All Classwork" at once. Load the most recent 20 items.
+
+***
+
+### Phase 4: Proposed File Structure (DDD)
+
+Organize your backend to isolate this logic from the rest of your CRM.
+
+```text
+src/
+ΓööΓöÇΓöÇ modules/
+    ΓööΓöÇΓöÇ lms/ (Learning Management System)
+        Γö£ΓöÇΓöÇ domain/
+        Γöé   Γö£ΓöÇΓöÇ entities/ (Classroom, Assignment, Submission)
+        Γöé   ΓööΓöÇΓöÇ value-objects/ (Grade, JoinCode)
+        Γö£ΓöÇΓöÇ use-cases/
+        Γöé   Γö£ΓöÇΓöÇ CreateClassroom.ts
+        Γöé   Γö£ΓöÇΓöÇ JoinClassroom.ts
+        Γöé   Γö£ΓöÇΓöÇ PostAssignment.ts
+        Γöé   ΓööΓöÇΓöÇ SubmitWork.ts
+        Γö£ΓöÇΓöÇ infrastructure/
+        Γöé   Γö£ΓöÇΓöÇ persistence/ (Repositories)
+        Γöé   ΓööΓöÇΓöÇ storage/ (S3/Blob Adapters)
+        ΓööΓöÇΓöÇ interface/
+            Γö£ΓöÇΓöÇ controllers/
+            ΓööΓöÇΓöÇ dtos/ (Data Transfer Objects)
+```
+
+**Architect's Verdict:**
+Proceed with this Domain Model. It isolates the high-volume traffic of students from your core Admin CRM data while providing the exact utility requested.
+
+Awaiting your signal to proceed to the Implementation Plan.
+--------------------------------------------------
+[31m[ ≡ƒöÑ Challenger ][0m
+ItΓÇÖs 5 PM. IΓÇÖve looked at your "Google Classroom" request. ItΓÇÖs thin. Extremely thin.
+
+"Just like Google Classroom" is not a specification; itΓÇÖs a recipe for disaster. Google has thousands of engineers handling edge cases, security, and scalability. You have a vague idea. If we build exactly what you asked for, we will end up with a system that is insecure, unmanageable, and fundamentally broken within a week of launch.
+
+Here is the feature plan you requested, stripped of optimism and loaded with the necessary scrutiny.
+
+***
+
+### PHASE 1: THE INTERROGATION (Why?)
+Before we discuss features, justify the architecture.
+1.  **Why inside an Admin CRM?** CRMs are for customer relationships. This is an LMS (Learning Management System). Are you trying to shoehorn a Ferrari engine into a lawnmower? How does the "Student" entity relate to the CRM "Contact" entity?
+2.  **Why "Join" via the student side?** In a CRM context, you usually control the users. Why are we relying on users to self-enroll? That sounds like a permission management nightmare.
+
+***
+
+### PHASE 2: THE SCRUTINIZED FEATURE PLAN
+
+Here is your proposal, torn apart and rebuilt with actual constraints.
+
+#### 1. Class Management (The Container)
+**The Request:** "Create a class."
+**The ChallengerΓÇÖs Critique:** A "Class" isn't just a name.
+*   **The Flaw:** What happens when two admins create "Math 101"?
+*   **The Fix:**
+    *   **Unique Class Codes:** Must generate a randomized, unique alphanumeric string (e.g., `xy7-zp2`).
+    *   **Lifecycle States:** Classes need states: *Draft, Active, Archived, Deleted.* You cannot just "delete" a class that has student data in itΓÇöthatΓÇÖs a data integrity violation.
+    *   **Capacity Limits:** Can 50,000 students join? If you don't cap this, I can crash your server by bot-spamming joins.
+
+#### 2. Classwork & Announcements (The Feed)
+**The Request:** "Create classworks/announcements."
+**The ChallengerΓÇÖs Critique:** You are treating these as the same thing. They are not.
+*   **The Logic Gap:** Announcements are read-only. Classworks require a state change (assigned -> submitted -> graded).
+*   **The Security Risk (The Big One):** You want admins to upload files?
+    *   **The "Why":** If an admin uploads a malicious payload (SVG with embedded scripts or an EXE disguised as a PDF), and a student downloads it, you are liable.
+    *   **The Requirement:** You need strict MIME-type validation and a virus scanning protocol on the backend (e.g., ClamAV) before the file is committed to storage.
+*   **The Scheduling Bug:** What if I want to create work *now* but show it *later*? We need "Scheduled Posting" logic.
+
+#### 3. Student Enrollment (The Gatekeeper)
+**The Request:** "Join the class."
+**The ChallengerΓÇÖs Critique:** This is your biggest vulnerability.
+*   **The Access Control Flaw:** If I guess the Class Code, can I join? If a random user joins a confidential internal training class, that's a data breach.
+*   **The Fix:**
+    *   **Roster Validation:** The CRM must cross-reference the joining email against a whitelist or CRM contact list.
+    *   **Locking:** The Admin must have the ability to "Lock" the class to prevent new joins.
+    *   **Unenrollment:** You forgot this. What happens when a student quits? Do their submissions vanish? (Hint: They shouldn't).
+
+#### 4. The Submission Engine (The Workflow)
+**The Request:** "Be able to submit classworks."
+**The ChallengerΓÇÖs Critique:** "Submit" is too simple.
+*   **The Logic Flaw:**
+    *   Can I submit after the deadline? (Late logic).
+    *   Can I unsubmit and resubmit? (Version control).
+    *   What if I submit a 5GB video file? (Storage costs/DoS attack).
+*   **The Privacy Risk (IDOR):**
+    *   *Scenario:* Student A changes the ID in the URL from `/submission/100` to `/submission/101` and sees Student B's homework.
+    *   *The Demand:* Strict ownership checks on every single read request.
+
+***
+
+### PHASE 3: THE PROPOSED DATA MODEL (The Skeleton)
+
+If you still want to proceed, this is the minimum viable structure required to prevent the system from collapsing.
+
+**1. Entity: `Classroom`**
+*   `id` (UUID - not integer, integers are guessable)
+*   `access_code` (Unique, indexed)
+*   `instructor_id` (FK to Admin)
+*   `status` (Enum: Active/Archived)
+*   `settings` (JSON: Allow comments? Allow late work?)
+
+**2. Entity: `FeedItem` (Polymorphic)**
+*   `type` (Enum: Announcement / Assignment)
+*   `content_body` (Sanitized HTML - strip out `<script>` tags!)
+*   `due_date` (Timestamp - Timezones will be a nightmare, define UTC storage policy now).
+
+**3. Entity: `Enrollment`**
+*   `student_id`
+*   `class_id`
+*   *Constraint:* Unique Composite Key on (student_id, class_id) to prevent double joining.
+
+**4. Entity: `Submission`**
+*   `assignment_id`
+*   `student_id`
+*   `file_path` (Stored in S3/Blob, never on the app server)
+*   `submission_date`
+*   `status` (Enum: Turned In, Returned, Late)
+
+***
+
+### SUMMARY OF RISKS (Fix these or don't build it)
+
+1.  **Malware Uploads:** Both Admins and Students are uploading files. This is a security minefield.
+2.  **Broken Access Control:** Students viewing other students' grades or work.
+3.  **Data Orphans:** Deleting a class without handling the `Submission` dependencies.
+
+**Decision:** Do you have the resources to handle file storage security and complex permission logic? If not, strip the "File Upload" feature and stick to text-only links.
+
+What is your directive?
+--------------------------------------------------
+[32m[ Γ£¿ Reviewer ][0m
+Here is the synthesized **Feature Plan** from the War Room.
+
+After reviewing the requirements and simulating the architectural debate, we have stripped away the noise. We are not building a full-scale Learning Management System (LMS). We are building a lightweight **Collaboration Stream** within your CRM.
+
+The guiding UX principle here is **"The Feed."** Users are trained on social feeds; we will leverage that familiarity for zero-learning-curve adoption.
+
+### The Strategic Concept: "The Stream"
+Instead of complex folder structures or rigid hierarchies, the Class is treated as a timeline.
+*   **Admins** post to the Stream.
+*   **Students** react to the Stream (via submissions).
+
+---
+
+### Feature Plan: The "Classroom" Module
+
+#### 1. The Container (Class Management)
+*   **UX Focus:** Minimalist Card Interface.
+*   **Admin Action:**
+    *   **Create Class:** A simple modal requiring only `Name`, `Subject/Category`, and `Description`.
+    *   **The "Join Code" Generator:** Upon creation, the system generates a unique 6-character alphanumeric code (e.g., `XY7-B29`).
+*   **Student Action:**
+    *   **Join Class:** A prominent "Join" button on their dashboard. They enter the code, and the relationship is instantly bonded. This removes the administrative burden of manually adding users to classes.
+
+#### 2. The Instructor Suite (Admin/CRM View)
+The Admin view is the command center. It requires two distinct creation flows that feed into the same UI list.
+
+*   **The Stream View:** A vertical list of cards. Newest items on top.
+*   **Action 1: Create Announcement:**
+    *   **Fields:** Text Body, Attachments (PDF/Images).
+    *   **UX:** Simple text editor. No status tracking needed.
+*   **Action 2: Create Assignment:**
+    *   **Fields:** Title, Instructions, Due Date/Time, Attachments.
+    *   **Status Dashboard:** On the assignment card, the Admin sees a mini-dashboard: *"3 Assigned | 0 Turned In."* clicking this opens the submission review panel.
+
+#### 3. The Student Portal (Client View)
+Simplicity is paramount here. The student should never question "What do I do next?"
+
+*   **The Dashboard:** Shows joined classes as cards.
+*   **The To-Do List (UX Priority):** A dedicated sidebar or tab showing *only* assignments with pending status.
+*   **The Submission Flow:**
+    *   Student clicks an Assignment.
+    *   **State 1 (Pending):** Sees instructions. A drag-and-drop zone for files (or text input). Button says "Mark as Done" or "Submit."
+    *   **State 2 (Submitted):** UI locks. Button changes to "Unsubmit" (optional, for corrections) or "Submitted".
+    *   **State 3 (Returned/Graded):** Admin feedback is visible.
+
+#### 4. The Data & State Logic
+To ensure the CRM remains fast, we will utilize a flat status architecture for submissions.
+
+*   **Assignment Lifecycle:** `Draft` -> `Published` -> `Archived`.
+*   **Submission Lifecycle:** `Assigned` (Default) -> `Missing` (Post-due date) -> `Turned In` -> `Returned/Reviewed`.
+
+### The UX Wireframe Strategy
+
+To keep implementation simple, we propose a **Split-View Layout** for the Admin:
+
+1.  **Left Rail:** List of Classes.
+2.  **Main Stage:** The Stream (Feed of assignments/announcements).
+3.  **Right Rail (Contextual):**
+    *   If looking at the Stream: Shows Class Details & Join Code.
+    *   If looking at an Assignment: Shows list of Students and their status (Submitted vs. Assigned).
+
+### Why this works
+1.  **Scalability:** The "Join Code" mechanism allows you to onboard 10 or 10,000 students without Admin manual entry.
+2.  **Familiarity:** It mimics the Google Classroom/Facebook feed pattern, reducing support tickets.
+3.  **CRM Integration:** This data easily hooks into your existing CRM contact records (e.g., "View Client" -> "See Class Performance").
+
+**The Decision:**
+This plan is approved for the architecture phase. It prioritizes the "Join" workflow and the "Stream" UI to deliver maximum value with minimal friction.
+
+Shall we proceed to the **Implementation Plan** (Schema & Code Structure)?
+--------------------------------------------------
+
+Γ£à Council Adjourned. The Sovereign's vision is secured.

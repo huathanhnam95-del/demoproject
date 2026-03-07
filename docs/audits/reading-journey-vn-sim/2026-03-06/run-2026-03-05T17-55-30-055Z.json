@@ -1,0 +1,62 @@
+{
+  "runId": "2026-03-05T17-55-30-055Z",
+  "createdAt": "2026-03-05T17:57:46.787Z",
+  "startedAt": "2026-03-05T17:55:30.055Z",
+  "baseUrl": "http://localhost:8794",
+  "dataset": {
+    "path": "C:\\Cursor AI\\scripts\\data\\2025-vn-adult-topics.json",
+    "total": 246
+  },
+  "simulation": {
+    "targetOutlines": 1,
+    "collectedOutlines": 1,
+    "attempts": 1,
+    "maxAttempts": 20,
+    "branchMode": "mcq",
+    "levels": [
+      "A2",
+      "B1"
+    ],
+    "language": "en",
+    "keywordsPerOutline": 3,
+    "concurrency": 1,
+    "seed": 1772733328920,
+    "resumedFromExisting": 0
+  },
+  "health": {
+    "success": true,
+    "enabled": true,
+    "mode": "dev",
+    "model": "ai-studio:models/gemini-2.5-flash",
+    "effectiveModel": "ai-studio:models/gemini-2.5-flash",
+    "fallbackModel": "vertex:gemini-2.5-flash",
+    "fallbackReason": "",
+    "targets": [
+      "ai-studio:models/gemini-2.5-flash",
+      "vertex:gemini-2.5-flash"
+    ]
+  },
+  "perOutline": [
+    {
+      "outlineId": "1c761ea980e7cb64397e309841a25181674f9e7b322a43e8728b67e107e2eb3a",
+      "title": "The Festival Flan",
+      "level": "A2",
+      "keywords": [
+        "Đèn trung thu",
+        "chatbot AI",
+        "bánh flan"
+      ],
+      "topicTags": [
+        "cooking",
+        "culture",
+        "festival",
+        "food",
+        "technology"
+      ],
+      "variants": 27,
+      "endedEarly": 0,
+      "wordCountIssues": 1
+    }
+  ],
+  "errors": []
+}

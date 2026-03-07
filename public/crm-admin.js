@@ -43,7 +43,8 @@
   const modalState = {
     studentId: null,
     createdTestLinks: new Map(),
-    courseId: null
+    courseId: null,
+    classroomId: null
   };
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -96,6 +97,18 @@
     elements.btnCopyEntranceTestLink = document.getElementById('btn-copy-entrance-test-link');
     elements.entranceTestsList = document.getElementById('entrance-tests-list');
 
+    // Identity Elements
+    elements.inputClassCodeDisplay = document.getElementById('crm-class-code-display');
+    elements.btnGenerateClassCode = document.getElementById('btn-generate-class-code');
+    elements.inputHandshakeEmail = document.getElementById('crm-handshake-email');
+    elements.btnLookupHandshake = document.getElementById('btn-lookup-handshake');
+    elements.handshakePreview = document.getElementById('crm-handshake-preview');
+    elements.handshakeAvatar = document.getElementById('crm-handshake-avatar');
+    elements.handshakeName = document.getElementById('crm-handshake-name');
+    elements.handshakeUid = document.getElementById('crm-handshake-uid');
+    elements.btnConfirmHandshake = document.getElementById('btn-confirm-handshake');
+    elements.linkedUidsUl = document.getElementById('crm-linked-uids-ul');
+
     // New Course Elements
     elements.btnNewCourseTriggers = Array.from(document.querySelectorAll('.btn-new-course-trigger'));
     elements.courseModal = document.getElementById('crm-course-modal');
@@ -118,6 +131,50 @@
     elements.inputCourseCategory = document.getElementById('course-category');
     elements.inputCourseStatus = document.getElementById('course-status');
     elements.inputCourseDescription = document.getElementById('course-description');
+
+    // New Classroom Elements
+    elements.btnNewClassroomTriggers = Array.from(document.querySelectorAll('#btn-new-classroom'));
+    elements.classroomModal = document.getElementById('crm-classroom-modal');
+    elements.btnCloseClassroomModal = document.getElementById('btn-close-classroom-modal');
+    elements.btnCancelClassroom = document.getElementById('btn-cancel-classroom');
+    elements.btnSaveClassroomSettings = document.getElementById('btn-save-classroom-settings');
+    elements.classroomSidebarItems = elements.classroomModal
+      ? Array.from(elements.classroomModal.querySelectorAll('.crm-sidebar-item[data-tab]'))
+      : [];
+    elements.classroomTabContents = elements.classroomModal
+      ? Array.from(elements.classroomModal.querySelectorAll('.crm-tab-content'))
+      : [];
+
+    // Classroom Tab Specific Inputs
+    elements.inputClassroomName = document.getElementById('classroom-name');
+    elements.inputClassroomCourseId = document.getElementById('classroom-course-id');
+    elements.inputClassroomStatus = document.getElementById('classroom-status');
+    elements.classManagementGrid = document.getElementById('class-management-grid');
+    elements.classroomStatusBadge = document.getElementById('crm-classroom-status-badge');
+    elements.classroomTitle = document.getElementById('crm-classroom-title');
+
+    // Classroom Modules & Classwork
+    elements.btnAddModule = document.getElementById('btn-add-module');
+    elements.modulesListContainer = document.getElementById('modules-list-container');
+    elements.btnAddClasswork = document.getElementById('btn-add-classwork');
+    elements.classworkComposer = document.getElementById('classwork-composer');
+    elements.btnSaveClassworkDraft = document.getElementById('btn-save-classwork-draft');
+    elements.btnCancelClasswork = document.getElementById('btn-cancel-classwork');
+    elements.classworkListContainer = document.getElementById('classwork-list-container');
+    elements.inputClassworkTitle = document.getElementById('classwork-title');
+    elements.inputClassworkType = document.getElementById('classwork-type');
+    elements.inputClassworkModule = document.getElementById('classwork-module');
+    elements.inputClassworkVoice = document.getElementById('classwork-voice');
+
+    // Classroom Review Board
+    elements.kanbanMissingList = document.getElementById('kanban-missing-list');
+    elements.kanbanTurnedInList = document.getElementById('kanban-turnedin-list');
+    elements.kanbanGradedList = document.getElementById('kanban-graded-list');
+
+    // Stream
+    elements.btnPostAnnouncement = document.getElementById('btn-post-announcement');
+    elements.inputStreamPost = document.getElementById('stream-post-content');
+    elements.streamPostsContainer = document.getElementById('stream-posts-container');
   }
 
   async function init() {
@@ -148,6 +205,11 @@
     refreshStudentLists().catch((e) => {
       console.error('[CRM Admin] Failed to load student lists:', e);
       showToast(e?.message || 'Failed to load student list.', 'error');
+    });
+
+    refreshClassroomList().catch((e) => {
+      console.error('[CRM Admin] Failed to load classrooms:', e);
+      showToast(e?.message || 'Failed to load classrooms.', 'error');
     });
   }
 
@@ -265,6 +327,7 @@
 
     setupStudentModal();
     setupCourseModal();
+    setupClassroomModal();
   }
 
   function setupStudentModal() {
@@ -331,6 +394,79 @@
         }
       });
     }
+
+    // Identity Tab Listeners
+    if (elements.btnGenerateClassCode) {
+      elements.btnGenerateClassCode.addEventListener('click', async () => {
+        if (!modalState.studentId) {
+          await saveStudentProfile();
+        }
+        if (!modalState.studentId) return;
+
+        try {
+          const json = await apiFetchJson(`/api/admin/students/${encodeURIComponent(modalState.studentId)}/class-code`, {
+            method: 'POST'
+          });
+          if (elements.inputClassCodeDisplay) elements.inputClassCodeDisplay.value = json.classCode;
+          showToast('New class code generated.', 'success');
+        } catch (e) {
+          showToast(e.message, 'error');
+        }
+      });
+    }
+
+    if (elements.btnLookupHandshake) {
+      elements.btnLookupHandshake.addEventListener('click', async () => {
+        const email = elements.inputHandshakeEmail.value.trim();
+        if (!email) return;
+
+        try {
+          elements.btnLookupHandshake.disabled = true;
+          const json = await apiFetchJson(`/api/admin/users/lookup?email=${encodeURIComponent(email)}`, {
+            method: 'GET'
+          });
+
+          const user = json.user;
+          if (elements.handshakeName) elements.handshakeName.textContent = user.displayName;
+          if (elements.handshakeUid) elements.handshakeUid.textContent = `UID: ${user.uid}`;
+          if (elements.handshakeAvatar) elements.handshakeAvatar.src = user.photoURL || 'assets/default-avatar.png';
+
+          elements.btnConfirmHandshake.dataset.targetUid = user.uid;
+          elements.handshakePreview.style.display = 'block';
+        } catch (e) {
+          showToast(e.message, 'error');
+        } finally {
+          elements.btnLookupHandshake.disabled = false;
+        }
+      });
+    }
+
+    if (elements.btnConfirmHandshake) {
+      elements.btnConfirmHandshake.addEventListener('click', async () => {
+        const targetUid = elements.btnConfirmHandshake.dataset.targetUid;
+        if (!targetUid || !modalState.studentId) return;
+
+        try {
+          elements.btnConfirmHandshake.disabled = true;
+          await apiFetchJson(`/api/admin/students/${encodeURIComponent(modalState.studentId)}/force-link`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ targetUid })
+          });
+
+          showToast('User linked successfully.', 'success');
+          elements.handshakePreview.style.display = 'none';
+          elements.inputHandshakeEmail.value = '';
+
+          // Refresh identity to see new linked UID
+          await refreshStudentIdentity();
+        } catch (e) {
+          showToast(e.message, 'error');
+        } finally {
+          elements.btnConfirmHandshake.disabled = false;
+        }
+      });
+    }
   }
 
   function resetStudentModal() {
@@ -346,7 +482,9 @@
       elements.inputStudentPhone,
       elements.inputStudentEmail,
       elements.inputStudentZalo,
-      elements.inputStudentFacebook
+      elements.inputStudentFacebook,
+      elements.inputClassCodeDisplay,
+      elements.inputHandshakeEmail
     ];
     inputs.forEach((el) => {
       if (el) el.value = '';
@@ -362,6 +500,9 @@
     if (elements.entranceTestLinkInput) elements.entranceTestLinkInput.value = '';
     if (elements.btnCopyEntranceTestLink) elements.btnCopyEntranceTestLink.disabled = true;
     if (elements.entranceTestsList) elements.entranceTestsList.innerHTML = '<div class="crm-muted">No tests yet.</div>';
+
+    if (elements.handshakePreview) elements.handshakePreview.style.display = 'none';
+    if (elements.linkedUidsUl) elements.linkedUidsUl.innerHTML = '<li class="text-muted">No accounts linked yet.</li>';
 
     if (elements.btnSaveStudent) {
       elements.btnSaveStudent.disabled = false;
@@ -798,7 +939,38 @@
     }
 
     await refreshEntranceTestsList();
+    await refreshStudentIdentity();
     switchStudentTab('info');
+  }
+
+  async function refreshStudentIdentity() {
+    if (!modalState.studentId) return;
+    try {
+      // Re-fetch the student document to get class_code and linked_user_ids
+      const snap = await firebase.firestore().collection('crmStudents').doc(modalState.studentId).get();
+      if (!snap.exists) return;
+      const data = snap.data();
+
+      if (elements.inputClassCodeDisplay) {
+        elements.inputClassCodeDisplay.value = data.class_code || '';
+      }
+
+      if (elements.linkedUidsUl) {
+        const uids = data.linked_user_ids || [];
+        if (uids.length === 0) {
+          elements.linkedUidsUl.innerHTML = '<li class="text-muted">No accounts linked yet.</li>';
+        } else {
+          elements.linkedUidsUl.innerHTML = uids.map(uid => `
+            <li>
+              <span>${escapeHtml(uid)}</span>
+              <span class="crm-test-status submitted">Linked</span>
+            </li>
+          `).join('');
+        }
+      }
+    } catch (e) {
+      console.error('[CRM Admin] Failed to refresh identity:', e);
+    }
   }
 
   async function refreshStudentLists() {
@@ -1053,6 +1225,374 @@
   function hideGate() {
     if (!elements.gate) return;
     elements.gate.style.display = 'none';
+  }
+
+  function setupClassroomModal() {
+    if (!elements.classroomModal || elements.btnNewClassroomTriggers.length === 0) return;
+
+    const openClassroomModal = () => {
+      resetClassroomModal();
+      elements.classroomModal.style.display = 'flex';
+      elements.classroomModal.setAttribute('aria-hidden', 'false');
+    };
+
+    const closeClassroomModal = () => {
+      elements.classroomModal.style.display = 'none';
+      elements.classroomModal.setAttribute('aria-hidden', 'true');
+    };
+
+    elements.btnNewClassroomTriggers.forEach(btn => btn.addEventListener('click', openClassroomModal));
+    if (elements.btnCloseClassroomModal) elements.btnCloseClassroomModal.addEventListener('click', closeClassroomModal);
+    if (elements.btnCancelClassroom) elements.btnCancelClassroom.addEventListener('click', closeClassroomModal);
+
+    if (elements.btnSaveClassroomSettings) {
+      elements.btnSaveClassroomSettings.addEventListener('click', () => {
+        saveClassroomSettings().then(() => {
+          showToast('Settings saved successfully.', 'success');
+        }).catch(e => {
+          console.error('[CRM Admin] Save classroom failed:', e);
+          showToast(e?.message || 'Failed to save classroom.', 'error');
+        });
+      });
+    }
+
+    elements.classroomSidebarItems.forEach(btn => {
+      btn.addEventListener('click', () => {
+        switchClassroomTab(btn.dataset.tab);
+      });
+    });
+
+    if (elements.btnAddModule) {
+      elements.btnAddModule.addEventListener('click', async () => {
+        if (!modalState.classroomId) return showToast('Please save classroom settings first.', 'error');
+        const title = prompt('Enter module title:');
+        if (!title) return;
+        try {
+          await window.ClassroomAPI.createModule(modalState.classroomId, { title, orderIndex: Date.now() });
+          showToast('Module created.', 'success');
+          loadClassroomModules(modalState.classroomId);
+        } catch (e) { showToast(e.message, 'error'); }
+      });
+    }
+
+    if (elements.btnPostAnnouncement) {
+      elements.btnPostAnnouncement.addEventListener('click', async () => {
+        if (!modalState.classroomId) return showToast('Please save classroom settings first.', 'error');
+        const text = elements.inputStreamPost.value.trim();
+        if (!text) return;
+        try {
+          elements.btnPostAnnouncement.disabled = true;
+          await firebase.firestore().collection('crmClassrooms').doc(modalState.classroomId).collection('posts').add({
+            content: text,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            author: firebase.auth().currentUser.email || 'Admin'
+          });
+          elements.inputStreamPost.value = '';
+          showToast('Announcement posted.', 'success');
+          loadClassroomStream(modalState.classroomId);
+        } catch (e) { 
+          showToast(e.message, 'error'); 
+        } finally {
+          elements.btnPostAnnouncement.disabled = false;
+        }
+      });
+    }
+
+    if (elements.btnAddClasswork) {
+      elements.btnAddClasswork.addEventListener('click', () => {
+        if (!modalState.classroomId) return showToast('Please save classroom settings first.', 'error');
+        elements.classworkComposer.style.display = 'block';
+      });
+    }
+
+    if (elements.btnCancelClasswork) {
+      elements.btnCancelClasswork.addEventListener('click', () => {
+        elements.classworkComposer.style.display = 'none';
+      });
+    }
+
+    if (elements.btnSaveClassworkDraft) {
+      elements.btnSaveClassworkDraft.addEventListener('click', async () => {
+        if (!modalState.classroomId) return;
+        const payload = {
+          title: elements.inputClassworkTitle.value.trim(),
+          type: elements.inputClassworkType.value,
+          moduleId: elements.inputClassworkModule.value,
+          allowVoiceNote: elements.inputClassworkVoice.checked,
+          attemptLimit: 4
+        };
+        if (!payload.title) return showToast('Title is required', 'error');
+        try {
+          await window.ClassroomAPI.createClasswork(modalState.classroomId, payload);
+          showToast('Classwork created.', 'success');
+          elements.classworkComposer.style.display = 'none';
+          elements.inputClassworkTitle.value = '';
+          loadClassroomClasswork(modalState.classroomId);
+        } catch (e) { showToast(e.message, 'error'); }
+      });
+    }
+  }
+
+  function resetClassroomModal() {
+    modalState.classroomId = null;
+    switchClassroomTab('settings');
+    if (elements.inputClassroomName) elements.inputClassroomName.value = '';
+    if (elements.inputClassroomCourseId) elements.inputClassroomCourseId.value = '';
+    if (elements.inputClassroomStatus) elements.inputClassroomStatus.value = 'draft';
+    if (elements.classroomStatusBadge) {
+      elements.classroomStatusBadge.textContent = 'Draft';
+      elements.classroomStatusBadge.style.display = 'inline-flex';
+    }
+    if (elements.classroomTitle) elements.classroomTitle.textContent = 'New Classroom';
+    if (elements.modulesListContainer) elements.modulesListContainer.innerHTML = '<p class="text-muted">No modules yet.</p>';
+    if (elements.classworkListContainer) elements.classworkListContainer.innerHTML = '<p class="text-muted">No classwork yet.</p>';
+    if (elements.classworkComposer) elements.classworkComposer.style.display = 'none';
+  }
+
+  function switchClassroomTab(tabId) {
+    elements.classroomSidebarItems.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tabId));
+    elements.classroomTabContents.forEach(content => {
+      const isMatch = content.id === `classroom-${tabId}`;
+      content.style.display = isMatch ? (tabId === 'review-board' ? 'flex' : 'block') : 'none';
+      content.classList.toggle('active', isMatch);
+    });
+
+    if (tabId === 'review-board' && modalState.classroomId) {
+      loadReviewBoard(modalState.classroomId);
+    }
+    if (tabId === 'stream' && modalState.classroomId) {
+      loadClassroomStream(modalState.classroomId);
+    }
+  }
+
+  async function loadClassroomStream(classId) {
+    if (!elements.streamPostsContainer) return;
+    try {
+      const snap = await firebase.firestore().collection('crmClassrooms').doc(classId).collection('posts').orderBy('createdAt', 'desc').get();
+      if (snap.empty) {
+        elements.streamPostsContainer.innerHTML = '<p class="text-muted">No announcements yet.</p>';
+        return;
+      }
+      elements.streamPostsContainer.innerHTML = snap.docs.map(doc => {
+        const data = doc.data();
+        return `
+          <div class="stream-card" style="padding: 16px; margin-bottom: 12px; background: white; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <div style="font-size: 0.85rem; color: #718096; margin-bottom: 8px;">
+              <strong>${escapeHtml(data.author || 'Admin')}</strong> • ${formatDateTime(data.createdAt)}
+            </div>
+            <div>${escapeHtml(data.content)}</div>
+          </div>
+        `;
+      }).join('');
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function loadReviewBoard(classId) {
+    if (!elements.kanbanMissingList || !elements.kanbanTurnedInList || !elements.kanbanGradedList) return;
+
+    elements.kanbanTurnedInList.innerHTML = '<div class="crm-loading-spinner small"></div>';
+    elements.kanbanMissingList.innerHTML = '<div class="crm-loading-spinner small"></div>';
+
+    try {
+      const submissions = await window.ClassroomAPI.fetchSubmissions(classId);
+
+      const turnedIn = submissions.filter(s => s.status === 'turned-in');
+      const graded = submissions.filter(s => s.status === 'graded');
+
+      renderKanbanColumn(elements.kanbanTurnedInList, turnedIn, true);
+      renderKanbanColumn(elements.kanbanGradedList, graded, false);
+
+      // Fetch classworks and enrolled students to calculate "Missing"
+      const works = await window.ClassroomAPI.loadClasswork(classId);
+      const snap = await firebase.firestore().collection('crmStudents').get();
+      const students = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(s => s.linked_user_ids && s.linked_user_ids.length > 0);
+
+      const missing = [];
+      for (const w of works) {
+          for (const st of students) {
+              const stUids = st.linked_user_ids || [];
+              const hasSub = submissions.some(sub => sub.workId === w.id && stUids.includes(sub.studentUid));
+              if (!hasSub) {
+                  missing.push({
+                      id: `missing-${w.id}-${st.id}`,
+                      workId: w.id,
+                      workTitle: w.title,
+                      studentName: st.name || st.email || 'Student',
+                      studentUid: stUids[0] || 'Unknown',
+                      status: 'missing'
+                  });
+              }
+          }
+      }
+
+      renderKanbanColumn(elements.kanbanMissingList, missing, false);
+
+    } catch (e) {
+      console.error('[CRM Admin] Kanban load failed:', e);
+      showToast('Failed to load review board.', 'error');
+    }
+  }
+
+  function renderKanbanColumn(container, list, allowGrading) {
+    if (!list.length) {
+      container.innerHTML = '<p class="crm-muted" style="padding:10px;">None found.</p>';
+      return;
+    }
+
+    container.innerHTML = list.map(s => `
+      <div class="crm-kanban-card" data-sub-id="${s.id}">
+        <div class="card-user">
+          <strong>${escapeHtml(s.studentName || s.studentEmail || 'Student')}</strong>
+          <span class="text-muted" style="font-size:0.75rem;">UID: ${escapeHtml(s.studentUid)}</span>
+        </div>
+        <div class="card-work">
+          Work ID: ${escapeHtml(s.workId)}
+        </div>
+        ${s.audio ? `
+          <button class="btn-play-audio" data-path="${s.audio.storagePath}">▶ Listen Audio</button>
+        ` : ''}
+        ${allowGrading ? `
+          <div class="grading-actions" style="margin-top:10px;">
+            <input type="text" placeholder="Grade/Score" class="crm-input-small grade-val" style="margin-bottom:5px;">
+            <button class="crm-btn-primary small btn-grade-submit">Submit Grade</button>
+          </div>
+        ` : `
+          <div class="graded-status">
+            Grade: <strong>${escapeHtml(s.grade || 'N/A')}</strong>
+          </div>
+        `}
+      </div>
+    `).join('');
+
+    // Attach listeners
+    container.querySelectorAll('.btn-grade-submit').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const card = btn.closest('.crm-kanban-card');
+        const sid = card.dataset.subId;
+        const grade = card.querySelector('.grade-val').value.trim();
+        if (!grade) return showToast('Enter a grade first.', 'error');
+
+        try {
+          btn.disabled = true;
+          await window.ClassroomAPI.gradeSubmission(sid, { grade });
+          showToast('Graded.', 'success');
+          loadReviewBoard(modalState.classroomId);
+        } catch (e) {
+          showToast(e.message, 'error');
+          btn.disabled = false;
+        }
+      });
+    });
+
+    // Audio playback logic
+    container.querySelectorAll('.btn-play-audio').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const path = btn.dataset.path;
+        try {
+          btn.disabled = true;
+          const originalText = btn.textContent;
+          btn.textContent = 'Loading...';
+          const url = await firebase.storage().ref(path).getDownloadURL();
+          const audio = new Audio(url);
+          audio.play();
+          btn.textContent = 'Playing...';
+          audio.onended = () => {
+            btn.disabled = false;
+            btn.textContent = originalText;
+          };
+        } catch (e) {
+          console.error('[CRM Admin] Audio playback failed:', e);
+          showToast('Failed to load audio.', 'error');
+          btn.disabled = false;
+          btn.textContent = '▶ Listen Audio';
+        }
+      });
+    });
+  }
+
+  async function saveClassroomSettings() {
+    const payload = {
+      name: elements.inputClassroomName.value.trim(),
+      courseId: elements.inputClassroomCourseId.value,
+      status: elements.inputClassroomStatus.value
+    };
+    if (!payload.name) throw new Error('Classroom name is required.');
+
+    // For MVP, we only do creates
+    if (!modalState.classroomId) {
+      const res = await window.ClassroomAPI.createClassroom(payload);
+      modalState.classroomId = res.classroomId || res.id;
+      if (elements.classroomStatusBadge) elements.classroomStatusBadge.textContent = payload.status;
+      if (elements.classroomTitle) elements.classroomTitle.textContent = payload.name;
+    }
+    await refreshClassroomList();
+  }
+
+  async function refreshClassroomList() {
+    if (!elements.classManagementGrid) return;
+    try {
+      const classrooms = await window.ClassroomAPI.fetchClassrooms();
+      if (!classrooms.length) {
+        elements.classManagementGrid.innerHTML = '<div class="crm-muted">No classrooms found.</div>';
+        return;
+      }
+      elements.classManagementGrid.innerHTML = `
+        <div class="crm-table-container">
+          <table class="crm-table">
+            <thead>
+              <tr><th>Name</th><th>Course</th><th>Status</th><th>Modules</th></tr>
+            </thead>
+            <tbody>
+              ${classrooms.map(c => `
+                <tr>
+                  <td class="td-bold">${escapeHtml(c.name)}</td>
+                  <td>${escapeHtml(c.courseId || 'None')}</td>
+                  <td>${escapeHtml(c.status)}</td>
+                  <td>n/a</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    } catch (e) {
+      elements.classManagementGrid.innerHTML = '<div class="crm-muted">Failed to load classrooms.</div>';
+    }
+  }
+
+  async function loadClassroomModules(classId) {
+    if (!elements.modulesListContainer) return;
+    try {
+      const modules = await window.ClassroomAPI.loadModules(classId);
+      elements.modulesListContainer.innerHTML = modules.length ? modules.map(m => `
+        <div class="module-list-item">
+          <strong>${escapeHtml(m.title)}</strong>
+        </div>
+      `).join('') : '<p class="text-muted">No modules yet.</p>';
+
+      // Update the classwork select dropdown
+      if (elements.inputClassworkModule) {
+        elements.inputClassworkModule.innerHTML = '<option value="">No Module</option>' +
+          modules.map(m => `<option value="${m.id}">${escapeHtml(m.title)}</option>`).join('');
+      }
+    } catch (e) { }
+  }
+
+  async function loadClassroomClasswork(classId) {
+    if (!elements.classworkListContainer) return;
+    try {
+      const works = await window.ClassroomAPI.loadClasswork(classId);
+      elements.classworkListContainer.innerHTML = works.length ? works.map(w => `
+        <div class="classwork-card">
+          <div>
+            <strong>${escapeHtml(w.title)}</strong>
+            <div class="text-muted" style="font-size: 0.85rem; margin-top: 4px;">Type: ${escapeHtml(w.type)}</div>
+          </div>
+        </div>
+      `).join('') : '<p class="text-muted">No classwork yet.</p>';
+    } catch (e) { }
   }
 
   function showToast(message, type = 'info') {

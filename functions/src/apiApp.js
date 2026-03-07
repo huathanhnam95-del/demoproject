@@ -33,6 +33,91 @@ const authMiddleware = async (req, res, next) => {
     }
 };
 
+const adminMiddleware = async (req, res, next) => {
+    try {
+        const uid = req.user.uid;
+        const snap = await db.collection('users').doc(uid).get();
+        const data = snap.exists ? snap.data() : null;
+
+        if (data?.isAdmin) {
+            next();
+        } else {
+            return sendError(res, 403, 'FORBIDDEN', 'Admin access required.');
+        }
+    } catch (e) {
+        return sendError(res, 500, 'ADMIN_CHECK_ERROR', 'Failed to verify admin status.', e.message);
+    }
+};
+
+// --- Student Identity Logic ---
+const {
+    generateClassCode,
+    claimProfile,
+    lookupUserByEmail,
+    forceLinkProfile,
+    mergeCustomClaims
+} = require('./studentIdentity');
+
+// --- Student Endpoints ---
+
+// POST /api/students/claim-profile: Claim a profile via class code
+app.post(['/students/claim-profile', '/api/students/claim-profile'], authMiddleware, async (req, res) => {
+    try {
+        const { classCode } = req.body;
+        const result = await claimProfile(req.user.uid, classCode);
+        sendSuccess(res, result, 'Profile claimed successfully.');
+    } catch (e) {
+        sendError(res, 400, 'CLAIM_FAILED', e.message);
+    }
+});
+
+// --- Admin Student Management Endpoints ---
+
+// POST /api/admin/students/:studentId/class-code: Generate a new class code
+app.post(['/admin/students/:studentId/class-code', '/api/admin/students/:studentId/class-code'], authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const { studentId } = req.params;
+        const classCode = await generateClassCode();
+
+        await db.collection('crmStudents').doc(studentId).update({
+            class_code: classCode,
+            updatedAt: new Date().toISOString()
+        });
+
+        sendSuccess(res, { classCode }, 'Class code generated.');
+    } catch (e) {
+        sendError(res, 500, 'CODE_GEN_FAILED', 'Failed to generate class code.', e.message);
+    }
+});
+
+// GET /api/admin/users/lookup: Lookup user by email for manual linking
+app.get(['/admin/users/lookup', '/api/admin/users/lookup'], authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const { email } = req.query;
+        if (!email) return sendError(res, 400, 'MISSING_EMAIL', 'Email query parameter is required.');
+
+        const userData = await lookupUserByEmail(email);
+        sendSuccess(res, { user: userData });
+    } catch (e) {
+        sendError(res, 404, 'USER_NOT_FOUND', e.message);
+    }
+});
+
+// POST /api/admin/students/:studentId/force-link: Force link a user UID to a student record
+app.post(['/admin/students/:studentId/force-link', '/api/admin/students/:studentId/force-link'], authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const { studentId } = req.params;
+        const { targetUid } = req.body;
+
+        if (!targetUid) return sendError(res, 400, 'MISSING_UID', 'targetUid is required.');
+
+        const result = await forceLinkProfile(studentId, targetUid);
+        sendSuccess(res, result, 'User linked successfully.');
+    } catch (e) {
+        sendError(res, 500, 'LINK_FAILED', 'Failed to link user.', e.message);
+    }
+});
+
 // --- Config Endpoint ---
 app.get(['/config', '/api/config'], (req, res) => {
 
@@ -63,6 +148,7 @@ app.get(['/admin/status', '/api/admin/status'], authMiddleware, async (req, res)
         let bootstrapped = false;
         if (!data?.isAdmin && (req.user.email === 'huathanhnam95@gmail.com' || req.user.email === 'admin@example.com')) {
             await db.collection('users').doc(uid).set({ isAdmin: true }, { merge: true });
+            await mergeCustomClaims(uid, { isAdmin: true });
             bootstrapped = true;
         }
 

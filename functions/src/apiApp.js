@@ -119,6 +119,150 @@ app.post(['/admin/students/:studentId/force-link', '/api/admin/students/:student
     }
 });
 
+// POST /api/admin/students: Create a new Student Profile
+app.post(['/admin/students', '/api/admin/students'], authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const input = req.body || {};
+        const fields = {
+            name: String(input.name || '').trim() || null,
+            label: String(input.label || '').trim() || null,
+            phone: String(input.phone || '').trim() || null,
+            email: String(input.email || '').trim() || null,
+            zalo: String(input.zalo || '').trim() || null,
+            facebook: String(input.facebook || '').trim() || null
+        };
+
+        const hasAny = Object.values(fields).some(v => !!v);
+        if (!hasAny) {
+            return sendError(res, 400, 'VALIDATION_ERROR', 'Please fill at least 1 field in Info tab before saving.');
+        }
+
+        const ref = db.collection('crmStudents').doc();
+        await ref.set({
+            ...fields,
+            createdAt: FieldValue.serverTimestamp(),
+            createdBy: req.user.uid,
+            createdByEmail: req.user.email || null
+        });
+
+        sendSuccess(res, { studentId: ref.id }, 'Student profile created.');
+    } catch (e) {
+        sendError(res, 500, 'CREATE_STUDENT_ERROR', 'Failed to create student profile.', e.message);
+    }
+});
+
+// GET /api/admin/students: List student profiles
+app.get(['/admin/students', '/api/admin/students'], authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const requestedLimit = Number(req.query?.limit);
+        const limit = Number.isFinite(requestedLimit)
+            ? Math.min(500, Math.max(1, Math.floor(requestedLimit)))
+            : 200;
+
+        const snaps = await db
+            .collection('crmStudents')
+            .orderBy('createdAt', 'desc')
+            .limit(limit)
+            .get();
+
+        const students = snaps.docs.map((doc) => {
+            const data = doc.data() || {};
+            return {
+                studentId: doc.id,
+                name: data.name || null,
+                label: data.label || null,
+                phone: data.phone || null,
+                email: data.email || null,
+                zalo: data.zalo || null,
+                facebook: data.facebook || null,
+                createdAt: data.createdAt || null,
+                createdBy: data.createdBy || null,
+                createdByEmail: data.createdByEmail || null
+            };
+        });
+
+        sendSuccess(res, { students, count: students.length });
+    } catch (e) {
+        sendError(res, 500, 'LIST_STUDENTS_ERROR', 'Failed to list student profiles.', e.message);
+    }
+});
+
+// GET /api/admin/students/:studentId: Get a student profile
+app.get(['/admin/students/:studentId', '/api/admin/students/:studentId'], authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const studentId = String(req.params.studentId || '').trim();
+        if (!studentId || studentId === 'claim-profile') {
+            // "claim-profile" is handled by the non-admin endpoint, but just in case
+            return sendError(res, 400, 'VALIDATION_ERROR', 'Missing or invalid studentId.');
+        }
+
+        const snap = await db.collection('crmStudents').doc(studentId).get();
+        if (!snap.exists) {
+            return sendError(res, 404, 'STUDENT_NOT_FOUND', 'Student profile not found.');
+        }
+
+        const data = snap.data() || {};
+        sendSuccess(res, {
+            student: {
+                studentId,
+                name: data.name || null,
+                label: data.label || null,
+                phone: data.phone || null,
+                email: data.email || null,
+                zalo: data.zalo || null,
+                facebook: data.facebook || null,
+                createdAt: data.createdAt || null,
+                createdBy: data.createdBy || null,
+                createdByEmail: data.createdByEmail || null
+            }
+        });
+    } catch (e) {
+        sendError(res, 500, 'GET_STUDENT_ERROR', 'Failed to fetch student profile.', e.message);
+    }
+});
+
+// --- Admin Course Management Endpoints ---
+
+// POST /api/admin/courses: Create Course
+app.post(['/admin/courses', '/api/admin/courses'], authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const input = req.body || {};
+        const fields = {
+            name: String(input.name || '').trim(),
+            code: String(input.code || '').trim(),
+            label: String(input.label || '').trim(),
+            level: String(input.level || '').trim(),
+            category: String(input.category || '').trim(),
+            status: String(input.status || '').trim() || 'active',
+            description: String(input.description || '').trim()
+        };
+
+        if (!fields.name) {
+            return sendError(res, 400, 'VALIDATION_ERROR', 'Please provide a course name before saving.');
+        }
+
+        let teachers = [];
+        if (Array.isArray(input.teachers)) {
+            teachers = input.teachers
+                .map(t => String(t || '').trim().toLowerCase())
+                .filter(Boolean);
+        }
+
+        const ref = db.collection('crmCourses').doc();
+        await ref.set({
+            ...fields,
+            teachers,
+            createdAt: FieldValue.serverTimestamp(),
+            createdBy: req.user.uid,
+            createdByEmail: req.user.email || null
+        });
+
+        sendSuccess(res, { courseId: ref.id }, 'Course created.');
+    } catch (e) {
+        sendError(res, 500, 'CREATE_COURSE_ERROR', 'Failed to create course.', e.message);
+    }
+});
+
 // --- Config Endpoint ---
 app.get(['/config', '/api/config'], (req, res) => {
 

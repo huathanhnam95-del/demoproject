@@ -1582,6 +1582,23 @@
               Next →
             </button>
           </div>
+          <div id="recommendation-controls-type" class="recommendation-controls" style="display: none;">
+            <button id="recommended-btn-type" class="recommended-jump-btn" type="button" disabled>Recommended</button>
+            <span id="recommendation-summary-type" class="recommendation-summary is-hidden"></span>
+          </div>
+
+          <!-- Adaptive vs Manual Toggle -->
+          <div class="adaptive-toggle-container">
+            <div class="segmented-control mode-picker-toggle">
+              <input type="radio" name="mode-toggle-type" id="adaptive-type" value="adaptive" checked>
+              <label for="adaptive-type">🤖 Adaptive</label>
+              <input type="radio" name="mode-toggle-type" id="manual-type" value="manual">
+              <label for="manual-type">⚙️ Manual</label>
+            </div>
+            <div id="calibration-indicator-type" class="calibration-indicator" style="display: none;">
+              <span>Calibrating your level...</span>
+            </div>
+          </div>
 
           <!-- Filters Row: Status + Length side by side -->
           <div class="question-filters-row">
@@ -1825,6 +1842,23 @@
               Next →
             </button>
           </div>
+          <div id="recommendation-controls-speak" class="recommendation-controls" style="display: none;">
+            <button id="recommended-btn-speak" class="recommended-jump-btn" type="button" disabled>Recommended</button>
+            <span id="recommendation-summary-speak" class="recommendation-summary is-hidden"></span>
+          </div>
+
+          <!-- Adaptive vs Manual Toggle -->
+          <div class="adaptive-toggle-container">
+            <div class="segmented-control mode-picker-toggle">
+              <input type="radio" name="mode-toggle-speak" id="adaptive-speak" value="adaptive" checked>
+              <label for="adaptive-speak">🤖 Adaptive</label>
+              <input type="radio" name="mode-toggle-speak" id="manual-speak" value="manual">
+              <label for="manual-speak">⚙️ Manual</label>
+            </div>
+            <div id="calibration-indicator-speak" class="calibration-indicator" style="display: none;">
+              <span>Calibrating your level...</span>
+            </div>
+          </div>
 
           <!-- Filters Row: Status + Length side by side -->
           <div class="question-filters-row">
@@ -1970,6 +2004,23 @@
               Next →
             </button>
           </div>
+          <div id="recommendation-controls-extended" class="recommendation-controls" style="display: none;">
+            <button id="recommended-btn-extended" class="recommended-jump-btn" type="button" disabled>Recommended</button>
+            <span id="recommendation-summary-extended" class="recommendation-summary is-hidden"></span>
+          </div>
+          <!-- Adaptive vs Manual Toggle -->
+          <div class="adaptive-toggle-container">
+            <div class="segmented-control mode-picker-toggle">
+              <input type="radio" name="mode-toggle-extended" id="adaptive-extended" value="adaptive" checked>
+              <label for="adaptive-extended">🤖 Adaptive</label>
+              <input type="radio" name="mode-toggle-extended" id="manual-extended" value="manual">
+              <label for="manual-extended">⚙️ Manual</label>
+            </div>
+            <div id="calibration-indicator-extended" class="calibration-indicator" style="display: none;">
+              <span>Calibrating your level...</span>
+            </div>
+          </div>
+
           <div class="question-filters-row">
             <div id="difficulty-filter-container-extended" class="difficulty-filter-dropdown" style="display: none;">
               <button id="difficulty-filter-btn-extended" class="difficulty-filter-btn" type="button">
@@ -2187,6 +2238,10 @@
             <button id="next-btn-notes" class="nav-btn nav-btn-next" type="button" title="Next Question">
               Next →
             </button>
+          </div>
+          <div id="recommendation-controls-notes" class="recommendation-controls">
+            <button id="recommended-btn-notes" class="recommended-jump-btn" type="button" disabled>Recommended</button>
+            <span id="recommendation-summary-notes" class="recommendation-summary is-hidden"></span>
           </div>
 
           <!-- Filters Row: Status Filter -->
@@ -2494,6 +2549,7 @@
   <script src="js/modules/level-system.js"></script>
   <script src="shop-module.js"></script>
   <script src="difficulty-filter.js"></script>
+  <script type="module" src="js/question-recommendation-engine.js"></script>
   <script src="js/lazy-loader.js"></script>
   <script type="module" src="js/collo-dictate-mode.js"></script>
   <script type="module" src="js/reading-journey.js"></script>
@@ -2916,8 +2972,9 @@
       <h2>EVOLUTION COMPLETE</h2>
       <p>Type the command word shown on a card to choose it.</p>
       <div class="survival-modal-actions">
-        <button id="survival-reroll-btn" type="button" class="survival-reroll-btn" disabled>
-          Reroll (<span id="survival-reroll-count">0</span>)
+        <button id="survival-reroll-btn" type="button" class="survival-reroll-btn" style="pointer-events: none;"
+          disabled>
+          Type: REROLL (<span id="survival-reroll-count">0</span>)
         </button>
       </div>
       <div id="survival-upgrade-choices" class="upgrade-grid">
@@ -2942,7 +2999,8 @@
         <div id="survival-enemy-tutorial-text" class="survival-enemy-tutorial-text"></div>
       </div>
       <div class="survival-enemy-tutorial-actions">
-        <button id="survival-enemy-tutorial-continue" type="button" class="btn-primary">CONTINUE</button>
+        <button id="survival-enemy-tutorial-continue" type="button" class="btn-primary"
+          style="pointer-events: none;">Type: CONTINUE</button>
       </div>
     </div>
 
@@ -2954,8 +3012,8 @@
         <p>Wave: <span id="final-wave">0</span></p>
       </div>
       <div class="gameover-actions">
-        <button id="survival-retry-btn" class="btn-primary">RETRY</button>
-        <button id="survival-exit-btn" class="btn-secondary">EXIT</button>
+        <button id="survival-retry-btn" class="btn-primary" style="pointer-events: none;">Type: RETRY</button>
+        <button id="survival-exit-btn" class="btn-secondary" style="pointer-events: none;">Type: EXIT</button>
       </div>
     </div>
 
@@ -3046,7 +3104,8 @@
 
       const isPlaying = game.state === 'PLAYING';
       const isLevelUp = game.state === 'LEVEL_UP';
-      if (!isPlaying && !isLevelUp) return;
+      const isGameOver = game.state === 'GAME_OVER';
+      if (!isPlaying && !isLevelUp && !isGameOver) return;
 
       if (e.key === ' ' || e.code === 'Space') {
         // Prevent the page from scrolling while typing spaces in survival mode.

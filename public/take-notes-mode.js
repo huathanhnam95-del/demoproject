@@ -9,6 +9,8 @@
 (function () {
     'use strict';
 
+    const FIRESTORE_LOAD_TIMEOUT_MS = 8000;
+
     // State
     let entries = [];
     let filteredEntries = [];
@@ -18,6 +20,16 @@
     let isPlayerReady = false;
     let currentFilter = 'all'; // 'all', 'has-video', 'no-video'
     let isInitialized = false;
+    let notesRecommendationEngine = null;
+    let notesRecommendationIndex = null;
+    let recentRecommendedIds = [];
+
+    const REASON_LABELS = {
+        level_and_continuity: 'level + continuity fit',
+        difficulty_only: 'difficulty fit',
+        continuity_only: 'strong match',
+        fallback: 'best available match'
+    };
 
     // DOM Elements
     const elements = {};
@@ -82,6 +94,8 @@
         elements.totalQuestions = document.getElementById('total-questions-notes');
         elements.playBtn = document.getElementById('play-notes-btn');
         elements.score = document.getElementById('score-notes');
+        elements.recommendedBtn = document.getElementById('recommended-btn-notes');
+        elements.recommendationSummary = document.getElementById('recommendation-summary-notes');
 
         // Status filter
         elements.statusFilterBtn = document.getElementById('status-filter-btn-notes');
@@ -124,6 +138,9 @@
         if (elements.questionSelect) {
             elements.questionSelect.addEventListener('change', onQuestionSelectChange);
         }
+        if (elements.recommendedBtn) {
+            elements.recommendedBtn.addEventListener('click', applyRecommendedEntry);
+        }
 
         // Play button
         if (elements.playBtn) {
@@ -165,6 +182,133 @@
         }
     }
 
+    function ensureRecommendationEngine() {
+        if (notesRecommendationEngine) return notesRecommendationEngine;
+        const factory = window.QuestionRecommendationEngine?.createQuestionRecommendationEngine;
+        if (typeof factory !== 'function') return null;
+        notesRecommendationEngine = factory({ recentWindowSize: 10 });
+        return notesRecommendationEngine;
+    }
+
+    function buildRecommendationIndex() {
+        const engine = ensureRecommendationEngine();
+        if (!engine) {
+            notesRecommendationIndex = null;
+            return;
+        }
+        notesRecommendationIndex = engine.buildIndex('notes', entries);
+    }
+
+    function getNotesCefrLevel() {
+        if (!window.DifficultyManager || typeof window.DifficultyManager.getCurrentSettings !== 'function') {
+            return 1;
+        }
+        const settings = window.DifficultyManager.getCurrentSettings('type');
+        return Number(settings?.level) || 1;
+    }
+
+    function rememberRecommendedId(questionId) {
+        const numericId = Number.parseInt(String(questionId), 10);
+        if (!Number.isFinite(numericId)) return;
+        recentRecommendedIds = recentRecommendedIds.filter((id) => id !== numericId);
+        recentRecommendedIds.push(numericId);
+        recentRecommendedIds = recentRecommendedIds.slice(-10);
+    }
+
+    function getVisibleQuestionIds() {
+        return filteredEntries
+            .map((entry) => Number.parseInt(String(entry?.id), 10))
+            .filter((id) => Number.isFinite(id));
+    }
+
+    function getReasonLabel(reasonCode) {
+        return REASON_LABELS[reasonCode] || 'best available match';
+    }
+
+    function computeRecommendation() {
+        if (!currentEntry) return null;
+        const engine = ensureRecommendationEngine();
+        if (!engine) return null;
+
+        if (!notesRecommendationIndex) {
+            buildRecommendationIndex();
+        }
+        if (!notesRecommendationIndex) return null;
+
+        const currentQuestionId = Number.parseInt(String(currentEntry.id), 10);
+        if (!Number.isFinite(currentQuestionId)) return null;
+
+        return engine.recommendNext({
+            mode: 'notes',
+            currentQuestionId,
+            currentCefrLevel: getNotesCefrLevel(),
+            visibleQuestionIds: getVisibleQuestionIds(),
+            recentQuestionIds: recentRecommendedIds,
+            index: notesRecommendationIndex
+        });
+    }
+
+    function refreshRecommendationUI() {
+        if (!elements.recommendedBtn || !elements.recommendationSummary) return;
+        const recommendation = computeRecommendation();
+        const currentQuestionId = Number.parseInt(String(currentEntry?.id), 10);
+        const nextQuestionId = Number.parseInt(String(recommendation?.nextQuestionId), 10);
+
+        if (!recommendation || !Number.isFinite(nextQuestionId) || nextQuestionId === currentQuestionId) {
+            elements.recommendedBtn.disabled = true;
+            elements.recommendationSummary.textContent = 'No better match in current filters';
+            elements.recommendationSummary.classList.remove('is-hidden');
+            return;
+        }
+
+        elements.recommendedBtn.disabled = false;
+        elements.recommendationSummary.textContent = `Recommended next: #${nextQuestionId} - ${getReasonLabel(recommendation.reasonCode)}`;
+        elements.recommendationSummary.classList.remove('is-hidden');
+    }
+
+    function applyRecommendedEntry() {
+        const recommendation = computeRecommendation();
+        if (!recommendation) {
+            refreshRecommendationUI();
+            return;
+        }
+
+        const targetQuestionId = Number.parseInt(String(recommendation.nextQuestionId), 10);
+        if (!Number.isFinite(targetQuestionId)) {
+            refreshRecommendationUI();
+            return;
+        }
+
+        const targetIndex = filteredEntries.findIndex((entry) => {
+            return Number.parseInt(String(entry?.id), 10) === targetQuestionId;
+        });
+
+        if (targetIndex === -1) {
+            refreshRecommendationUI();
+            return;
+        }
+
+        rememberRecommendedId(targetQuestionId);
+        selectEntry(targetIndex);
+    }
+
+    async function withTimeout(promise, timeoutMs, errorMessage) {
+        let timeoutId = null;
+        const timeoutPromise = new Promise((_, reject) => {
+            timeoutId = setTimeout(() => {
+                reject(new Error(errorMessage));
+            }, timeoutMs);
+        });
+
+        try {
+            return await Promise.race([promise, timeoutPromise]);
+        } finally {
+            if (timeoutId !== null) {
+                clearTimeout(timeoutId);
+            }
+        }
+    }
+
     /**
      * Load entries from Firestore or Excel
      */
@@ -178,10 +322,25 @@
             if (typeof firebase !== 'undefined' && firebase.firestore) {
                 try {
                     const db = firebase.firestore();
-                    const snapshot = await db.collection('takeNotesEntries').get();
+                    const snapshot = await withTimeout(
+                        db.collection('takeNotesEntries').get(),
+                        FIRESTORE_LOAD_TIMEOUT_MS,
+                        'Firestore request timed out'
+                    );
 
                     if (!snapshot.empty) {
-                        entries = snapshot.docs.map(doc => doc.data());
+                        entries = snapshot.docs.map((doc) => {
+                            const data = doc.data() || {};
+                            let parsedLevel = parseInt(data.level, 10);
+                            if (isNaN(parsedLevel) || parsedLevel < 1 || parsedLevel > 3) parsedLevel = 1;
+
+                            return {
+                                id: String(data.id ?? doc.id ?? '').trim(),
+                                transcript: data.transcript ? String(data.transcript).trim() : '',
+                                level: parsedLevel,
+                                videoUrl: data.videoUrl ? String(data.videoUrl).trim() : ''
+                            };
+                        }).filter((entry) => entry.id.length > 0);
 
                         // Sort entries numerically by ID
                         entries.sort((a, b) => {
@@ -190,6 +349,7 @@
                             return (isNaN(idA) || isNaN(idB)) ? a.id.localeCompare(b.id) : idA - idB;
                         });
 
+                        buildRecommendationIndex();
                         applyFilter('all');
                         return;
                     }
@@ -235,12 +395,14 @@
                 return (isNaN(idA) || isNaN(idB)) ? a.id.localeCompare(b.id) : idA - idB;
             });
 
+            buildRecommendationIndex();
             applyFilter('all');
 
         } catch (error) {
             console.error('[TakeNotes] Error loading entries:', error);
             elements.questionSelect.innerHTML = '<option value="">Error loading</option>';
             if (elements.totalQuestions) elements.totalQuestions.textContent = '0';
+            refreshRecommendationUI();
         }
     }
 
@@ -312,6 +474,7 @@
         currentEntry = null;
         currentEntryIndex = -1;
         reset();
+        refreshRecommendationUI();
     }
 
     /**
@@ -389,6 +552,7 @@
 
         // Reset practice area
         reset();
+        refreshRecommendationUI();
 
     }
 
@@ -652,10 +816,12 @@
         }
     }
 
-    // Initialize when DOM is ready
-    document.addEventListener('DOMContentLoaded', () => {
+    // Initialize when DOM is ready; handle lazy-loaded script after DOMContentLoaded.
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
         init();
-    });
+    }
 
     // Public API
     window.TakeNotesMode = {

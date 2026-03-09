@@ -5,6 +5,15 @@
   let speakDatabase = [];
   let currentTypeQuestionId = 1;
   let currentSpeakQuestionId = 1;
+  let questionRecommendationEngine = null;
+  const recommendationIndexByMode = { type: null, speak: null, extended: null };
+  const recommendationRecentByMode = { type: [], speak: [], extended: [] };
+  const RECOMMENDATION_REASON_LABELS = {
+    level_and_continuity: 'level + continuity fit',
+    difficulty_only: 'difficulty fit',
+    continuity_only: 'strong match',
+    fallback: 'best available match'
+  };
   let extendedQuestionLoaded = false; // Flag to lazy-load extended question only when Fill tab is clicked
 
   // Progress cache: stores progress status for all questions per mode
@@ -943,7 +952,14 @@
    * @param {string} mode - 'type', 'speak', 'extended', 'watch', 'notes', 'pronounce'
    */
   window.switchToMode = async function (mode) {
-    // SPECIAL HANDLING: Survival Mode (Fullscreen overlay, not a tab)
+    if (!mode) return;
+
+    // Sync Adaptive UI state upon switching
+    if (typeof window.updateAdaptiveUI === 'function') {
+      window.updateAdaptiveUI(mode);
+    }
+
+    // Try to cleanup previous mode (safe if it doesn't exist)
     if (mode === 'survival') {
       if (typeof window.ensureSurvivalGameLoaded === 'function') {
         try {
@@ -1076,6 +1092,8 @@
       } else if (mode === 'speak' && speakDatabase.length > 0) {
         log.log(`[switchToMode] Switching to Speak mode, reloading question ${currentSpeakQuestionId}`);
         await loadQuestion('speak', currentSpeakQuestionId);
+      } else if (mode === 'notes' && window.TakeNotesMode && typeof window.TakeNotesMode.loadEntries === 'function') {
+        window.TakeNotesMode.loadEntries();
       }
 
       // 5. Check if this is the first time using this mode - trigger tutorial
@@ -2499,6 +2517,12 @@
   const audio = document.getElementById("audio");
   const questionSelectType = document.getElementById("question-select-type");
   const questionSelectSpeak = document.getElementById("question-select-speak");
+  const recommendationControlsType = document.getElementById("recommendation-controls-type");
+  const recommendationControlsSpeak = document.getElementById("recommendation-controls-speak");
+  const recommendedBtnType = document.getElementById("recommended-btn-type");
+  const recommendedBtnSpeak = document.getElementById("recommended-btn-speak");
+  const recommendationSummaryType = document.getElementById("recommendation-summary-type");
+  const recommendationSummarySpeak = document.getElementById("recommendation-summary-speak");
   const currentQuestionIdType = document.getElementById("current-question-id-type");
   const currentQuestionIdSpeak = document.getElementById("current-question-id-speak");
   const totalQuestionsType = document.getElementById("total-questions-type");
@@ -3918,6 +3942,9 @@
   };
 
   const questionSelectExtended = document.getElementById("question-select-extended");
+  const recommendationControlsExtended = document.getElementById("recommendation-controls-extended");
+  const recommendedBtnExtended = document.getElementById("recommended-btn-extended");
+  const recommendationSummaryExtended = document.getElementById("recommendation-summary-extended");
   const currentQuestionIdExtended = document.getElementById("current-question-id-extended");
   const totalQuestionsExtended = document.getElementById("total-questions-extended");
   const playPauseExtendedBtn = document.getElementById("play-pause-extended-btn");
@@ -5273,6 +5300,7 @@
     if (questionId && questionId !== currentExtendedQuestionId) {
       loadExtendedQuestion(questionId);
     }
+    refreshRecommendationUI('extended');
   });
 
   // Phrase length radio buttons - regenerate phrases when changed
@@ -6985,6 +7013,194 @@
     return true;
   };
 
+  const ensureRecommendationEngine = () => {
+    if (questionRecommendationEngine) return questionRecommendationEngine;
+    const factory = window.QuestionRecommendationEngine?.createQuestionRecommendationEngine;
+    if (typeof factory !== 'function') return null;
+    questionRecommendationEngine = factory({ recentWindowSize: 10 });
+    return questionRecommendationEngine;
+  };
+
+  const getRecommendationElements = (mode) => {
+    if (mode === 'type') {
+      return {
+        container: recommendationControlsType,
+        button: recommendedBtnType,
+        summary: recommendationSummaryType
+      };
+    }
+    if (mode === 'speak') {
+      return {
+        container: recommendationControlsSpeak,
+        button: recommendedBtnSpeak,
+        summary: recommendationSummarySpeak
+      };
+    }
+    if (mode === 'extended') {
+      return {
+        container: recommendationControlsExtended,
+        button: recommendedBtnExtended,
+        summary: recommendationSummaryExtended
+      };
+    }
+    return { container: null, button: null, summary: null };
+  };
+
+  const getQuestionSelectForMode = (mode) => {
+    if (mode === 'type') return questionSelectType;
+    if (mode === 'speak') return questionSelectSpeak;
+    if (mode === 'extended') return questionSelectExtended;
+    return null;
+  };
+
+  const getCurrentQuestionIdForMode = (mode) => {
+    if (mode === 'type') return currentTypeQuestionId;
+    if (mode === 'speak') return currentSpeakQuestionId;
+    if (mode === 'extended') return currentExtendedQuestionId;
+    return null;
+  };
+
+  const getDatabaseForMode = (mode) => {
+    if (mode === 'type') return typeDatabase;
+    if (mode === 'speak') return speakDatabase;
+    if (mode === 'extended') return extendedDatabase;
+    return [];
+  };
+
+  const getVisibleQuestionIds = (mode) => {
+    const select = getQuestionSelectForMode(mode);
+    if (!select) return [];
+    return Array.from(select.options)
+      .map((option) => Number.parseInt(option.value, 10))
+      .filter((id) => Number.isFinite(id));
+  };
+
+  const rememberRecommendedQuestion = (mode, questionId) => {
+    const numericId = Number.parseInt(String(questionId), 10);
+    if (!Number.isFinite(numericId)) return;
+    const recent = recommendationRecentByMode[mode] || [];
+    const deduped = recent.filter((id) => id !== numericId);
+    deduped.push(numericId);
+    recommendationRecentByMode[mode] = deduped.slice(-10);
+  };
+
+  const getCefrLevelForRecommendation = (mode) => {
+    if (!window.DifficultyManager || typeof window.DifficultyManager.getCurrentSettings !== 'function') {
+      return 1;
+    }
+    const settings = window.DifficultyManager.getCurrentSettings(mode);
+    return Number(settings?.level) || 1;
+  };
+
+  const rebuildRecommendationIndex = (mode) => {
+    const engine = ensureRecommendationEngine();
+    if (!engine) return null;
+    recommendationIndexByMode[mode] = engine.buildIndex(mode, getDatabaseForMode(mode));
+    return recommendationIndexByMode[mode];
+  };
+
+  const getRecommendationLabel = (reasonCode) => RECOMMENDATION_REASON_LABELS[reasonCode] || 'best available match';
+
+  const computeRecommendation = (mode) => {
+    const engine = ensureRecommendationEngine();
+    if (!engine) return null;
+
+    const visibleQuestionIds = getVisibleQuestionIds(mode);
+    if (visibleQuestionIds.length === 0) return null;
+
+    const currentQuestionId = getCurrentQuestionIdForMode(mode);
+    if (!Number.isFinite(Number(currentQuestionId))) return null;
+
+    const index = recommendationIndexByMode[mode] || rebuildRecommendationIndex(mode);
+    if (!index) return null;
+
+    return engine.recommendNext({
+      mode,
+      currentQuestionId,
+      currentCefrLevel: getCefrLevelForRecommendation(mode),
+      visibleQuestionIds,
+      recentQuestionIds: recommendationRecentByMode[mode] || [],
+      index
+    });
+  };
+
+  const renderRecommendationState = (mode, recommendation) => {
+    const { button, summary } = getRecommendationElements(mode);
+    if (!button || !summary) return;
+
+    const currentQuestionId = Number(getCurrentQuestionIdForMode(mode));
+    const nextQuestionId = Number(recommendation?.nextQuestionId);
+
+    if (!recommendation || !Number.isFinite(nextQuestionId) || nextQuestionId === currentQuestionId) {
+      button.disabled = true;
+      summary.textContent = 'No better match in current filters';
+      summary.classList.remove('is-hidden');
+      return;
+    }
+
+    button.disabled = false;
+    summary.textContent = `Recommended next: #${nextQuestionId} - ${getRecommendationLabel(recommendation.reasonCode)}`;
+    summary.classList.remove('is-hidden');
+  };
+
+  const refreshRecommendationUI = (mode) => {
+    const { container, button, summary } = getRecommendationElements(mode);
+    if (!container || !button || !summary) return;
+
+    const isAdaptive = !!window.DifficultyManager?.globalSettings?.autoAdjustEnabled;
+    if (isAdaptive) {
+      container.style.display = 'none';
+      button.disabled = true;
+      summary.classList.add('is-hidden');
+      return;
+    }
+
+    container.style.display = 'flex';
+    const recommendation = computeRecommendation(mode);
+    renderRecommendationState(mode, recommendation);
+  };
+
+  const applyRecommendedQuestion = (mode) => {
+    const recommendation = computeRecommendation(mode);
+    if (!recommendation) {
+      refreshRecommendationUI(mode);
+      return;
+    }
+
+    const targetQuestionId = Number.parseInt(String(recommendation.nextQuestionId), 10);
+    const currentQuestionId = Number(getCurrentQuestionIdForMode(mode));
+    if (!Number.isFinite(targetQuestionId) || targetQuestionId === currentQuestionId) {
+      refreshRecommendationUI(mode);
+      return;
+    }
+
+    const select = getQuestionSelectForMode(mode);
+    if (!select) return;
+
+    const existsInVisiblePool = Array.from(select.options).some((option) => Number.parseInt(option.value, 10) === targetQuestionId);
+    if (!existsInVisiblePool) {
+      refreshRecommendationUI(mode);
+      return;
+    }
+
+    rememberRecommendedQuestion(mode, targetQuestionId);
+    select.value = String(targetQuestionId);
+    select.dispatchEvent(new Event('change'));
+    requestAnimationFrame(() => refreshRecommendationUI(mode));
+  };
+
+  const initRecommendationButtons = () => {
+    if (recommendedBtnType) {
+      recommendedBtnType.addEventListener('click', () => applyRecommendedQuestion('type'));
+    }
+    if (recommendedBtnSpeak) {
+      recommendedBtnSpeak.addEventListener('click', () => applyRecommendedQuestion('speak'));
+    }
+    if (recommendedBtnExtended) {
+      recommendedBtnExtended.addEventListener('click', () => applyRecommendedQuestion('extended'));
+    }
+  };
+
   /**
    * Populate the question select dropdown for a mode
    * Shows tier status indicators and filters based on multi-select tier filter
@@ -7011,9 +7227,25 @@
       // Difficulty Filter (Fill mode)
       const difficultyContainer = document.getElementById('difficulty-filter-container-extended');
       const difficultyMenu = document.getElementById('difficulty-filter-menu-extended');
-      const selectedDifficultyOption = difficultyMenu?.querySelector('.filter-option.selected');
-      const difficultyValue = selectedDifficultyOption?.dataset.value || 'all';
-      const difficultyLevel = difficultyValue !== 'all' ? parseInt(difficultyValue, 10) : null;
+
+      let difficultyLevel = null;
+      const isAdaptiveMode = window.DifficultyManager && window.DifficultyManager.globalSettings.autoAdjustEnabled;
+
+      if (isAdaptiveMode) {
+        if (!window.DifficultyManager.isCalibrated("extended")) {
+          // Uncalibrated: Do not filter by difficulty so the user can choose or see a mix to calibrate naturally.
+          difficultyLevel = null;
+        } else {
+          // Calibrated: Use exact level
+          const currentSettings = window.DifficultyManager.getCurrentSettings("extended");
+          difficultyLevel = currentSettings ? currentSettings.level : null;
+        }
+      } else {
+        const selectedDifficultyOption = difficultyMenu?.querySelector('.filter-option.selected');
+        const difficultyValue = selectedDifficultyOption?.dataset.value || 'all';
+        difficultyLevel = difficultyValue !== 'all' ? parseInt(difficultyValue, 10) : null;
+      }
+
       const isDifficultyFilterActive = difficultyContainer && difficultyContainer.style.display !== 'none' && difficultyLevel !== null;
 
       select.innerHTML = "";
@@ -7045,6 +7277,8 @@
       } else {
         log.debug('[populateQuestionSelect] No Fill questions match current difficulty filter');
       }
+
+      refreshRecommendationUI('extended');
     } else {
       const database = mode === "type" ? typeDatabase : speakDatabase;
       const select = mode === "type" ? questionSelectType : questionSelectSpeak;
@@ -7077,9 +7311,23 @@
       // Get Difficulty Filter (Type and Speak modes)
       const difficultyContainer = document.getElementById(`difficulty-filter-container-${mode}`);
       const difficultyMenu = document.getElementById(`difficulty-filter-menu-${mode}`);
-      const selectedDifficultyOption = difficultyMenu?.querySelector('.filter-option.selected');
-      const difficultyValue = selectedDifficultyOption?.dataset.value || 'all';
-      const difficultyLevel = difficultyValue !== 'all' ? parseInt(difficultyValue, 10) : null;
+
+      let difficultyLevel = null;
+      const isAdaptiveMode = window.DifficultyManager && window.DifficultyManager.globalSettings.autoAdjustEnabled;
+
+      if (isAdaptiveMode) {
+        if (!window.DifficultyManager.isCalibrated(mode)) {
+          // Uncalibrated: Do not filter by difficulty so the user can see all options and calibrate smoothly.
+          difficultyLevel = null;
+        } else {
+          // Calibrated: Use exact level
+          const currentSettings = window.DifficultyManager.getCurrentSettings(mode);
+          difficultyLevel = currentSettings ? currentSettings.level : null;
+        }
+      } else {        const selectedDifficultyOption = difficultyMenu?.querySelector('.filter-option.selected');
+        const difficultyValue = selectedDifficultyOption?.dataset.value || 'all';
+        difficultyLevel = difficultyValue !== 'all' ? parseInt(difficultyValue, 10) : null;
+      }
 
       // Get progress cache for this mode
       const modeProgressCache = progressCache[mode] || {};
@@ -7173,6 +7421,8 @@
         // For now, keep current state but maybe warn user
         log.debug(`[populateQuestionSelect] No items match current filters for ${mode} mode`);
       }
+
+      refreshRecommendationUI(mode);
     }
   };
 
@@ -7181,6 +7431,9 @@
     typeDatabase = await loadDatabase("type");
     speakDatabase = await loadDatabase("speak");
     extendedDatabase = await loadDatabase("extended");
+    rebuildRecommendationIndex('type');
+    rebuildRecommendationIndex('speak');
+    rebuildRecommendationIndex('extended');
 
     // Load progress data for Type and Speak modes (cached for dropdown rendering)
     await loadAllProgressForMode("type");
@@ -7210,6 +7463,9 @@
 
     // Update left panel for Type mode (default active tab)
     await updateProgressPanel('type');
+    refreshRecommendationUI('type');
+    refreshRecommendationUI('speak');
+    refreshRecommendationUI('extended');
 
     // Global Readiness check: Wait briefly for auth-listener to trigger if user is signed in
     // This reduces the 'pop-in' effect of filters and SRS badges
@@ -7231,6 +7487,7 @@
       currentTypeQuestionId = questionId;
       currentQuestionIdType.textContent = questionId;
     }
+    refreshRecommendationUI('type');
   });
 
   questionSelectSpeak.addEventListener("change", (e) => {
@@ -7239,6 +7496,7 @@
       currentSpeakQuestionId = questionId;
       currentQuestionIdSpeak.textContent = questionId;
     }
+    refreshRecommendationUI('speak');
   });
 
   // ============================================
@@ -7498,6 +7756,7 @@
   setupResetProgressBtn('speak');
 
   // Initialize on page load
+  initRecommendationButtons();
   initializeDatabases();
 
   // ============================================
@@ -9034,6 +9293,65 @@
       });
     }
   }
+
+  // --- Adaptive Difficulty Toggles ---
+  function initAdaptiveToggles() {
+    const modes = ['type', 'speak', 'extended'];
+
+    window.updateAdaptiveUI = function (mode) {
+      if (!window.DifficultyManager) return;
+
+      const isAdaptive = window.DifficultyManager.globalSettings.autoAdjustEnabled;
+
+      const aRadio = document.getElementById(`adaptive-${mode}`);
+      const mRadio = document.getElementById(`manual-${mode}`);
+      if (aRadio) aRadio.checked = isAdaptive;
+      if (mRadio) mRadio.checked = !isAdaptive;
+
+      const diffContainer = document.getElementById(`difficulty-filter-container-${mode}`);
+      if (diffContainer) {
+        diffContainer.style.display = isAdaptive ? 'none' : 'block';
+      }
+
+      const calibIndicator = document.getElementById(`calibration-indicator-${mode}`);
+      if (calibIndicator) {
+        if (isAdaptive && !window.DifficultyManager.isCalibrated(mode)) {
+          calibIndicator.style.display = 'block';
+        } else {
+          calibIndicator.style.display = 'none';
+        }
+      }
+
+      refreshRecommendationUI(mode);
+    };
+
+    modes.forEach(mode => {
+      const adaptiveRadio = document.getElementById(`adaptive-${mode}`);
+      const manualRadio = document.getElementById(`manual-${mode}`);
+
+      const handleToggle = (isAdaptive) => {
+        if (!window.DifficultyManager) return;
+
+        window.DifficultyManager.globalSettings.autoAdjustEnabled = isAdaptive;
+        if (typeof window.DifficultyManager.saveProfile === 'function') {
+          window.DifficultyManager.saveProfile();
+        }
+
+        modes.forEach(m => window.updateAdaptiveUI(m));
+
+        if (typeof window.populateQuestionSelect === 'function') {
+          window.populateQuestionSelect(mode);
+        }
+      };
+
+      if (adaptiveRadio) adaptiveRadio.addEventListener('change', (e) => { if (e.target.checked) handleToggle(true); });
+      if (manualRadio) manualRadio.addEventListener('change', (e) => { if (e.target.checked) handleToggle(false); });
+    });
+
+    modes.forEach(m => window.updateAdaptiveUI(m));
+  }
+
+  document.addEventListener('DOMContentLoaded', initAdaptiveToggles);
 
   // Setup immediately if DOM is already loaded, otherwise wait
   if (document.readyState === 'loading') {

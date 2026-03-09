@@ -11,7 +11,10 @@
     "lint": "eslint .",
     "lint:entrance-crm": "eslint public/entrance-test.js public/crm-admin.js public/crm-entrance-test-result.js src/routes/entrance-tests.js src/routes/admin.js src/utils/firebase.js src/entrance-test/test36plus.js --quiet",
     "smoke:entrance-test": "node scripts/smoke-entrance-test.js --start-server --port 8787",
-    "audit:a2-onboarding": "node scripts/audit/run-a2-onboarding-audit.js --base-url http://localhost:8443"
+    "audit:a2-onboarding": "node scripts/audit/run-a2-onboarding-audit.js --base-url http://localhost:8443",
+    "test:preloader:browser": "node tests/browser/preloader-browser-check.js",
+    "test:preloader:browser:reduced": "node tests/browser/preloader-browser-check.js --reduced-motion",
+    "test:preloader:browser:mobile": "node tests/browser/preloader-browser-check.js --mobile-low"
   },
   "dependencies": {
     "@google-cloud/vertexai": "^1.10.0",

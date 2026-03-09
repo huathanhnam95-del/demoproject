@@ -106,6 +106,8 @@
   <script type="importmap">
     {
       "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
         "ts-fsrs": "https://esm.sh/ts-fsrs@4.5.1",
         "firebase-init": "./js/firebase-init.js"
       }
@@ -113,13 +115,19 @@
   </script>
   <!-- Load SRS Scheduler as Module for FSRS support -->
   <script type="module" src="/srs-scheduler.js"></script>
+  <!-- Cinematic 3D Preloader Module -->
+  <script type="module" src="js/preloader-3d.js"></script>
 </head>
 
 <body>
   <!-- App Preloader/Loading Screen -->
-  <div id="app-preloader" class="app-preloader">
-    <div class="preloader-content">
-      <div class="preloader-spinner"></div>
+  <div id="app-preloader" class="app-preloader cinematic-mode">
+    <div class="preloader-vignette" aria-hidden="true"></div>
+    <div class="preloader-aura" aria-hidden="true"></div>
+    <div id="three-container" class="three-container"></div>
+    <div class="preloader-overlay">
+      <div id="preloader-wordmark" class="preloader-wordmark" aria-hidden="true">BEL</div>
+      <p id="preloader-kicker" class="preloader-kicker">English in motion</p>
       <p id="preloader-text" class="preloader-text">Loading Practice Data...</p>
     </div>
   </div>
@@ -1583,7 +1591,9 @@
             </button>
           </div>
           <div id="recommendation-controls-type" class="recommendation-controls" style="display: none;">
-            <button id="recommended-btn-type" class="recommended-jump-btn" type="button" disabled>Recommended</button>
+            <button id="recommended-btn-type" class="recommended-jump-btn" type="button" disabled>
+              <span class="sparkle-icon">✨</span> Smart Jump
+            </button>
             <span id="recommendation-summary-type" class="recommendation-summary is-hidden"></span>
           </div>
 
@@ -1843,7 +1853,9 @@
             </button>
           </div>
           <div id="recommendation-controls-speak" class="recommendation-controls" style="display: none;">
-            <button id="recommended-btn-speak" class="recommended-jump-btn" type="button" disabled>Recommended</button>
+            <button id="recommended-btn-speak" class="recommended-jump-btn" type="button" disabled>
+              <span class="sparkle-icon">✨</span> Smart Jump
+            </button>
             <span id="recommendation-summary-speak" class="recommendation-summary is-hidden"></span>
           </div>
 
@@ -2005,7 +2017,9 @@
             </button>
           </div>
           <div id="recommendation-controls-extended" class="recommendation-controls" style="display: none;">
-            <button id="recommended-btn-extended" class="recommended-jump-btn" type="button" disabled>Recommended</button>
+            <button id="recommended-btn-extended" class="recommended-jump-btn" type="button" disabled>
+              <span class="sparkle-icon">✨</span> Smart Jump
+            </button>
             <span id="recommendation-summary-extended" class="recommendation-summary is-hidden"></span>
           </div>
           <!-- Adaptive vs Manual Toggle -->
@@ -2240,7 +2254,9 @@
             </button>
           </div>
           <div id="recommendation-controls-notes" class="recommendation-controls">
-            <button id="recommended-btn-notes" class="recommended-jump-btn" type="button" disabled>Recommended</button>
+            <button id="recommended-btn-notes" class="recommended-jump-btn" type="button" disabled>
+              <span class="sparkle-icon">✨</span> Smart Jump
+            </button>
             <span id="recommendation-summary-notes" class="recommendation-summary is-hidden"></span>
           </div>
 

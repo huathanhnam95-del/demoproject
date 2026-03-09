@@ -107,11 +107,71 @@ body {
   z-index: 9999;
   /* Always on top */
   transition: opacity 0.4s ease, visibility 0.4s;
+  overflow: hidden;
+}
+
+.app-preloader.cinematic-mode {
+  background:
+    radial-gradient(circle at 50% 26%, rgba(26, 115, 232, 0.2), rgba(7, 15, 28, 0) 32%),
+    radial-gradient(circle at 72% 68%, rgba(30, 142, 62, 0.08), rgba(0, 0, 0, 0) 24%),
+    radial-gradient(circle at 30% 72%, rgba(249, 171, 0, 0.08), rgba(0, 0, 0, 0) 22%),
+    linear-gradient(180deg, #0b1220 0%, #07111d 55%, #060c14 100%);
+  display: block;
+  /* Overrides flex for the 3D container */
 }
 
 .app-preloader.fade-out {
   opacity: 0;
   visibility: hidden;
+  pointer-events: none;
+}
+
+.three-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.preloader-vignette,
+.preloader-aura {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.preloader-vignette {
+  z-index: 2;
+  background:
+    radial-gradient(circle at center, rgba(7, 17, 29, 0) 34%, rgba(4, 10, 18, 0.76) 100%),
+    linear-gradient(180deg, rgba(2, 9, 18, 0.78) 0%, rgba(6, 15, 27, 0.14) 35%, rgba(2, 9, 18, 0.84) 100%);
+}
+
+.preloader-aura {
+  z-index: 0;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(26, 115, 232, 0.14), rgba(0, 0, 0, 0) 30%),
+    radial-gradient(circle at 48% 45%, rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0) 18%),
+    radial-gradient(circle at 62% 66%, rgba(30, 142, 62, 0.05), rgba(0, 0, 0, 0) 16%);
+  filter: blur(18px);
+}
+
+.preloader-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding: clamp(24px, 5vw, 56px);
+  gap: 12px;
+  width: 100%;
+  text-align: center;
+  box-sizing: border-box;
+  pointer-events: none;
 }
 
 .preloader-content {
@@ -131,17 +191,79 @@ body {
 }
 
 .preloader-text {
-  font-size: 1.1rem;
+  max-width: 38rem;
+  font-size: clamp(0.95rem, 1vw + 0.72rem, 1.1rem);
   font-weight: 500;
-
-  /* Global Replacement of Hardcoded Colors with Variables */
-  /* Note: This is a strategic targeted replacement for key UI elements */
-
-  color: var(--primary);
-  /* Replaces #6366f1 (indigo) to align with primary blue */
-
+  color: rgba(232, 239, 250, 0.84);
   margin: 0;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-shadow: 0 10px 24px rgba(1, 8, 18, 0.42);
+  pointer-events: auto;
+  line-height: 1.65;
+}
+
+.preloader-wordmark {
+  font-family: 'Lora', serif;
+  font-size: clamp(4.6rem, 10vw, 8.4rem);
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-indent: 0.22em;
+  color: rgba(244, 248, 255, 0.96);
+  text-shadow:
+    0 0 14px rgba(26, 115, 232, 0.18),
+    0 0 40px rgba(26, 115, 232, 0.12),
+    0 18px 38px rgba(0, 0, 0, 0.48);
+  opacity: 0.18;
+  transform: translateY(12px) scale(0.988);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  position: relative;
+}
+
+.app-preloader.preloader-fallback-active .preloader-wordmark,
+.app-preloader.three-ready .preloader-wordmark {
+  opacity: 0.9;
+  transform: translateY(0) scale(1);
+}
+
+.preloader-kicker {
+  margin: 0;
+  color: rgba(150, 197, 255, 0.82);
+  font-size: clamp(0.78rem, 0.45vw + 0.68rem, 0.95rem);
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  text-indent: 0.34em;
+  opacity: 0.96;
+  transition: opacity 0.6s ease;
+}
+
+.preloader-kicker::before,
+.preloader-kicker::after {
+  content: '';
+  display: inline-block;
+  width: clamp(38px, 6vw, 72px);
+  height: 1px;
+  margin: 0 0.9rem 0.22rem;
+  background: linear-gradient(90deg, rgba(26, 115, 232, 0), rgba(150, 197, 255, 0.7), rgba(26, 115, 232, 0));
+  vertical-align: middle;
+}
+
+.app-preloader.finishing .preloader-overlay {
+  will-change: opacity, transform, filter;
+}
+
+.app-preloader.reduced-motion .preloader-wordmark {
+  opacity: 0.88;
+  transform: none;
+}
+
+.app-preloader.reduced-motion .preloader-kicker::before,
+.app-preloader.reduced-motion .preloader-kicker::after {
+  opacity: 0.5;
+}
+
+.app-preloader.reduced-motion .preloader-text {
+  letter-spacing: 0.1em;
 }
 
 @keyframes spin {
@@ -151,6 +273,22 @@ body {
 
   100% {
     transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 640px) {
+  .preloader-overlay {
+    justify-content: center;
+    gap: 14px;
+  }
+
+  .preloader-wordmark {
+    letter-spacing: 0.18em;
+    text-indent: 0.18em;
+  }
+
+  .preloader-text {
+    letter-spacing: 0.1em;
   }
 }
 
@@ -4686,21 +4824,32 @@ textarea:focus {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 14px;
+  padding: 8px 16px;
   font-size: 0.85rem;
   font-weight: 700;
-  border: none;
+  border: 1px solid transparent;
   border-radius: 999px;
   cursor: pointer;
-  color: #ffffff;
-  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+  color: #6366f1;
+  /* AI Indigo styling */
+  background: linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
+    linear-gradient(135deg, #6366f1, #a855f7) border-box;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
   transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.sparkle-icon {
+  margin-right: 6px;
+  font-size: 1rem;
 }
 
 .recommended-jump-btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.35);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+  background: linear-gradient(var(--bg-hover), var(--bg-hover)) padding-box,
+    linear-gradient(135deg, #4f46e5, #9333ea) border-box;
 }
 
 .recommended-jump-btn:active:not(:disabled) {
@@ -4711,17 +4860,28 @@ textarea:focus {
   opacity: 0.55;
   cursor: not-allowed;
   box-shadow: none;
+  filter: grayscale(100%);
+  border-color: var(--border-light);
+  background: var(--bg-card);
+  color: var(--text-muted);
 }
 
 .recommendation-summary {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  background: var(--bg-hover);
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  border-radius: 999px;
-  padding: 6px 10px;
-  line-height: 1.2;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #64748b;
+  background: transparent;
+  border: none;
+  padding: 4px 8px;
+  font-style: italic;
+  display: flex;
+  align-items: center;
+}
+
+.recommendation-summary::before {
+  content: '↳';
+  margin-right: 4px;
+  color: #94a3b8;
 }
 
 .recommendation-summary.is-hidden {

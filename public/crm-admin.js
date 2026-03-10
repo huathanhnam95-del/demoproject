@@ -66,6 +66,7 @@
     elements.panels = Array.from(document.querySelectorAll('.crm-panel[data-panel]'));
     elements.potentialStudentsContainer = document.querySelector('[data-panel="students/potential"] .crm-placeholder-card');
     elements.studentDataContainer = document.querySelector('[data-panel="students/data"] .crm-placeholder-card');
+    elements.courseCatalogContainer = document.querySelector('[data-panel="courses/courses"] .crm-placeholder-card');
 
     // New Student Elements
     elements.btnNewStudentTriggers = Array.from(document.querySelectorAll('.btn-new-student-trigger'));
@@ -210,6 +211,11 @@
     refreshClassroomList().catch((e) => {
       console.error('[CRM Admin] Failed to load classrooms:', e);
       showToast(e?.message || 'Failed to load classrooms.', 'error');
+    });
+
+    refreshCourseCatalog().catch((e) => {
+      console.error('[CRM Admin] Failed to load course catalog:', e);
+      showToast(e?.message || 'Failed to load courses.', 'error');
     });
   }
 
@@ -609,6 +615,7 @@
       if (!courseId) throw new Error('Course ID missing from server response.');
 
       modalState.courseId = courseId;
+      await refreshCourseCatalog();
 
       showToast('Course saved.', 'success');
       resetCourseModal();
@@ -1337,7 +1344,12 @@
     modalState.classroomId = null;
     switchClassroomTab('settings');
     if (elements.inputClassroomName) elements.inputClassroomName.value = '';
-    if (elements.inputClassroomCourseId) elements.inputClassroomCourseId.value = '';
+    if (elements.inputClassroomCourseId) {
+      elements.inputClassroomCourseId.value = '';
+      populateClassroomCourseOptions().catch((e) => {
+        console.error('[CRM Admin] Failed to populate classroom course options:', e);
+      });
+    }
     if (elements.inputClassroomStatus) elements.inputClassroomStatus.value = 'draft';
     if (elements.classroomStatusBadge) {
       elements.classroomStatusBadge.textContent = 'Draft';
@@ -1533,7 +1545,11 @@
   async function refreshClassroomList() {
     if (!elements.classManagementGrid) return;
     try {
-      const classrooms = await window.ClassroomAPI.fetchClassrooms();
+      const [classrooms, courses] = await Promise.all([
+        window.ClassroomAPI.fetchClassrooms(),
+        fetchCoursesFromCatalog().catch(() => [])
+      ]);
+      const courseIndex = new Map(courses.map((course) => [String(course.id || ''), course]));
       if (!classrooms.length) {
         elements.classManagementGrid.innerHTML = '<div class="crm-muted">No classrooms found.</div>';
         return;
@@ -1548,7 +1564,7 @@
               ${classrooms.map(c => `
                 <tr>
                   <td class="td-bold">${escapeHtml(c.name)}</td>
-                  <td>${escapeHtml(c.courseId || 'None')}</td>
+                  <td>${escapeHtml(courseIndex.get(String(c.courseId || ''))?.name || c.courseId || 'None')}</td>
                   <td>${escapeHtml(c.status)}</td>
                   <td>n/a</td>
                 </tr>
@@ -1593,6 +1609,76 @@
         </div>
       `).join('') : '<p class="text-muted">No classwork yet.</p>';
     } catch (e) { }
+  }
+
+  async function fetchCoursesFromCatalog() {
+    if (window.CrmCourses && typeof window.CrmCourses.fetchCourses === 'function') {
+      return window.CrmCourses.fetchCourses();
+    }
+    if (window.ClassroomAPI && typeof window.ClassroomAPI.fetchCourses === 'function') {
+      return window.ClassroomAPI.fetchCourses();
+    }
+    throw new Error('Course catalog helpers are not available.');
+  }
+
+  async function populateClassroomCourseOptions(options = {}) {
+    if (!elements.inputClassroomCourseId) return [];
+
+    const selectedValue = String(options.selectedValue || elements.inputClassroomCourseId.value || '').trim();
+    if (window.CrmCourses && typeof window.CrmCourses.populateCourseSelect === 'function') {
+      return window.CrmCourses.populateCourseSelect(elements.inputClassroomCourseId, {
+        placeholder: 'Select a Course...',
+        selectedValue
+      });
+    }
+
+    const courses = await fetchCoursesFromCatalog();
+    elements.inputClassroomCourseId.innerHTML = '<option value="">Select a Course...</option>' + courses.map((course) => {
+      const label = course.code ? `${course.name} (${course.code})` : course.name;
+      return `<option value="${course.id}">${label}</option>`;
+    }).join('');
+    if (selectedValue) {
+      elements.inputClassroomCourseId.value = selectedValue;
+    }
+    return courses;
+  }
+
+  async function refreshCourseCatalog() {
+    const container = elements.courseCatalogContainer;
+    if (!container) return;
+
+    try {
+      const courses = await fetchCoursesFromCatalog();
+      await populateClassroomCourseOptions({ selectedValue: elements.inputClassroomCourseId?.value || '' });
+
+      if (!courses.length) {
+        container.innerHTML = '<div class="crm-muted">No courses found.</div>';
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="crm-table-container">
+          <table class="crm-table">
+            <thead>
+              <tr><th>Name</th><th>Code</th><th>Status</th><th>Teachers</th></tr>
+            </thead>
+            <tbody>
+              ${courses.map((course) => `
+                <tr>
+                  <td class="td-bold">${escapeHtml(course.name || 'Untitled')}</td>
+                  <td>${escapeHtml(course.code || '—')}</td>
+                  <td>${escapeHtml(course.status || 'active')}</td>
+                  <td>${escapeHtml((course.teachers || []).join(', ') || 'None')}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    } catch (error) {
+      console.error('[CRM Admin] Failed to refresh course catalog:', error);
+      container.innerHTML = '<div class="crm-muted">Failed to load courses.</div>';
+    }
   }
 
   function showToast(message, type = 'info') {

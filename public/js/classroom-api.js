@@ -33,6 +33,18 @@ window.ClassroomAPI = (function () {
         return classrooms;
     }
 
+    // Admin: Read CRM course catalog
+    async function fetchCourses() {
+        const db = getDb();
+        if (!db) throw new Error("Firebase DB not initialized");
+
+        const snapshot = await db.collection("crmCourses").get();
+        const courses = [];
+        snapshot.forEach(doc => courses.push({ id: doc.id, ...doc.data() }));
+        courses.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+        return courses;
+    }
+
     // Admin: Create classroom via API
     async function createClassroom(data) {
         const headers = await getHeaders();
@@ -176,6 +188,7 @@ window.ClassroomAPI = (function () {
     }
 
     return {
+        fetchCourses,
         fetchClassrooms,
         createClassroom,
         loadModules,

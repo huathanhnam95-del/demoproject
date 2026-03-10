@@ -1,14 +1,23 @@
-# Changelog
-
 ## [V1.5.4] - 2026-03-10
+
+### Added
+
+- **Reading Journey (UI Modernization)**: Complete 16-element UI redesign featuring "Calm Immersion" aesthetic with glassmorphism, Outfit typography, and immersive layout.
+- **Story Library (Pagination)**: Implemented client-side pagination (10 stories per page) with interactive navigation controls.
+- **Topic Filtering**: Added clickable topic chips above the library grid to filter stories by genre/tags.
 
 ### Fixed
 
+- **Reading Journey API**: Resolved `startStory` payload mismatch (interests string vs keywords array) and added robust response validation.
+- **Initialization Fix**: Corrected route-based initialization in `script.js` for reliable Reading Journey loading.
+- **Story Start Bug**: Prevented TypeError crash on story start by ensuring `data.beat` exists before rendering.
 - **Entrance Test PDF Export**: Corrected CSS selector mismatch and width constraints that caused content clipping and malformed layouts.
 - **Auto-Retry HUD**: Resolved multiple bugs including crash on null elements, global event handler pollution, and incorrect iframe scanning logic.
 
 ### Improved
 
+- **Reading Journey UX**: Unified interaction states for buttons (primary gradient vs outline), styled select dropdowns, and refined input fields.
+- **Preloader Logic**: Refined 2D/3D preloader transition and dismissal logic for smoother app entry (V1.5.4 refinement).
 - **Code Quality**: Performed comprehensive refactoring of `crm-entrance-test-result.js` and `auto_retry_v2.js`, extracting utility functions and breaking down monolithic rendering logic for better maintainability.
 - **PDF Generation**: Optimized PDF capture settings with better margins and high-quality scaling.
 

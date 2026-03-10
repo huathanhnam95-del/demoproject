@@ -19,7 +19,7 @@ function buildRecordId(sessionId, studentId, studentUid) {
 }
 
 module.exports = function registerAttendanceRoutes(router, deps) {
-    const { db, sendSuccess, sendError, requireAdminHandlers, serverTimestamp } = deps;
+    const { db, sendSuccess, sendError, requireAdminHandlers, serverTimestamp, writeAuditLog } = deps;
 
     router.post('/attendance/sessions', ...requireAdminHandlers, async (req, res) => {
         try {
@@ -30,6 +30,12 @@ module.exports = function registerAttendanceRoutes(router, deps) {
             const ref = db.collection(CRM_ATTENDANCE_SESSIONS).doc();
             await ref.set(session);
             const snap = await ref.get();
+            await writeAuditLog?.({
+                action: 'attendance.session.create',
+                entityType: 'attendance_session',
+                entityId: ref.id,
+                metadata: { classId: session.classId, sessionDate: session.sessionDate }
+            }, { user: req.user });
             return sendSuccess(res, {
                 sessionId: ref.id,
                 session: mapAttendanceSessionRecord(snap, ref.id)
@@ -82,6 +88,12 @@ module.exports = function registerAttendanceRoutes(router, deps) {
             await Promise.all(writes.map((write) =>
                 db.collection(CRM_ATTENDANCE_RECORDS).doc(write.id).set(write.data, { merge: true })
             ));
+            await writeAuditLog?.({
+                action: 'attendance.records.bulk_save',
+                entityType: 'attendance_record',
+                entityId: classId,
+                metadata: { classId, count: writes.length }
+            }, { user: req.user });
 
             return sendSuccess(res, { count: writes.length }, 'Attendance records saved.');
         } catch (error) {

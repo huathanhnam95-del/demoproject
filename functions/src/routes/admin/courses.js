@@ -8,7 +8,7 @@ const {
 } = require('../../crm/course-service');
 
 module.exports = function registerCourseRoutes(router, deps) {
-    const { db, sendSuccess, sendError, requireAdminHandlers, serverTimestamp } = deps;
+    const { db, sendSuccess, sendError, requireAdminHandlers, serverTimestamp, writeAuditLog } = deps;
 
     router.get('/courses', ...requireAdminHandlers, async (req, res) => {
         try {
@@ -39,6 +39,11 @@ module.exports = function registerCourseRoutes(router, deps) {
 
             const ref = db.collection(CRM_COURSES).doc();
             await ref.set(course);
+            await writeAuditLog?.({
+                action: 'course.create',
+                entityType: 'course',
+                entityId: ref.id
+            }, { user: req.user });
 
             return sendSuccess(res, { courseId: ref.id }, 'Course created.');
         } catch (error) {
@@ -67,6 +72,11 @@ module.exports = function registerCourseRoutes(router, deps) {
                 serverTimestamp
             });
             await ref.set(next, { merge: true });
+            await writeAuditLog?.({
+                action: 'course.update',
+                entityType: 'course',
+                entityId: courseId
+            }, { user: req.user });
 
             const updatedSnap = await ref.get();
             return sendSuccess(res, { course: mapCourseRecord(updatedSnap, courseId) }, 'Course updated.');

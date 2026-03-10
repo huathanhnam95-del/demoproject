@@ -3,6 +3,7 @@ const {
     USERS,
     CRM_CLASSROOMS,
     CRM_SUBMISSIONS,
+    CRM_AUDIT_LOGS,
     CLASSROOM_MODULES,
     CLASSROOM_CLASSWORK,
     CLASSROOM_MEMBERS
@@ -18,6 +19,11 @@ const registerLeadRoutes = require('./leads');
 const registerActivityRoutes = require('./activities');
 const registerEnrollmentRoutes = require('./enrollments');
 const registerAttendanceRoutes = require('./attendance');
+const registerFinanceRoutes = require('./finance');
+const registerAutomationRoutes = require('./automations');
+const registerReportingRoutes = require('./reporting');
+const registerGovernanceRoutes = require('./governance');
+const { buildAuditLogEntry } = require('../../crm/governance-service');
 const {
     buildClassroomCreateData,
     buildClassroomPatchData,
@@ -77,6 +83,22 @@ function ensureDependencies(deps) {
     }
 }
 
+function buildAuditLogger(deps) {
+    return async function writeAuditLog(entry, context = {}) {
+        try {
+            const payload = buildAuditLogEntry(entry, {
+                user: context.user || null,
+                serverTimestamp: deps.admin?.firestore?.FieldValue?.serverTimestamp
+                    ? () => deps.admin.firestore.FieldValue.serverTimestamp()
+                    : () => new Date()
+            });
+            await deps.db.collection(CRM_AUDIT_LOGS).doc().set(payload);
+        } catch (error) {
+            console.warn('[CRM Admin] Failed to write audit log:', error?.message || error);
+        }
+    };
+}
+
 module.exports = function createCrmRouter(rawDeps) {
     const deps = rawDeps || {};
     ensureDependencies(deps);
@@ -88,6 +110,7 @@ module.exports = function createCrmRouter(rawDeps) {
     const requireAdminHandlers = [deps.authMiddleware, deps.adminMiddleware].filter(Boolean);
     const serverTimestamp = resolveServerTimestampFactory(deps);
     const resolveAdminStatus = buildStatusResolver(deps);
+    const writeAuditLog = buildAuditLogger(deps);
 
     const routeDeps = {
         ...deps,
@@ -95,7 +118,8 @@ module.exports = function createCrmRouter(rawDeps) {
         sendError,
         requireAuthHandlers,
         requireAdminHandlers,
-        serverTimestamp
+        serverTimestamp,
+        writeAuditLog
     };
 
     router.get('/status', ...requireAuthHandlers, async (req, res) => {
@@ -132,6 +156,10 @@ module.exports = function createCrmRouter(rawDeps) {
     registerActivityRoutes(router, routeDeps);
     registerEnrollmentRoutes(router, routeDeps);
     registerAttendanceRoutes(router, routeDeps);
+    registerFinanceRoutes(router, routeDeps);
+    registerAutomationRoutes(router, routeDeps);
+    registerReportingRoutes(router, routeDeps);
+    registerGovernanceRoutes(router, routeDeps);
 
     router.post('/classrooms', ...requireAdminHandlers, async (req, res) => {
         try {
@@ -142,6 +170,12 @@ module.exports = function createCrmRouter(rawDeps) {
 
             const ref = deps.db.collection(CRM_CLASSROOMS).doc();
             await ref.set(classroom);
+            await writeAuditLog({
+                action: 'classroom.create',
+                entityType: 'classroom',
+                entityId: ref.id,
+                metadata: { courseId: classroom.courseId || null, status: classroom.status || null }
+            }, { user: req.user });
 
             return sendSuccess(res, { classroomId: ref.id }, 'Classroom created.');
         } catch (error) {
@@ -190,6 +224,12 @@ module.exports = function createCrmRouter(rawDeps) {
                 serverTimestamp
             });
             await ref.set(next, { merge: true });
+            await writeAuditLog({
+                action: 'classroom.update',
+                entityType: 'classroom',
+                entityId: classId,
+                metadata: { courseId: next.courseId || null, status: next.status || null }
+            }, { user: req.user });
 
             const updatedSnap = await ref.get();
             return sendSuccess(res, { classroom: mapClassroomRecord(updatedSnap, classId) }, 'Classroom updated.');
@@ -220,6 +260,12 @@ module.exports = function createCrmRouter(rawDeps) {
                 orderIndex,
                 createdAt: serverTimestamp()
             });
+            await writeAuditLog({
+                action: 'classroom.module.create',
+                entityType: 'module',
+                entityId: ref.id,
+                metadata: { classId, title }
+            }, { user: req.user });
 
             return sendSuccess(res, { moduleId: ref.id }, 'Module created.');
         } catch (error) {
@@ -243,6 +289,12 @@ module.exports = function createCrmRouter(rawDeps) {
                 ...work,
                 createdAt: serverTimestamp()
             });
+            await writeAuditLog({
+                action: 'classroom.classwork.create',
+                entityType: 'classwork',
+                entityId: ref.id,
+                metadata: { classId, title: work.title || null }
+            }, { user: req.user });
 
             return sendSuccess(res, { classworkId: ref.id }, 'Classwork created.');
         } catch (error) {
@@ -311,6 +363,12 @@ module.exports = function createCrmRouter(rawDeps) {
                 gradedBy: req.user.uid,
                 status: 'graded'
             });
+            await writeAuditLog({
+                action: 'submission.grade',
+                entityType: 'submission',
+                entityId: submissionId,
+                metadata: { grade: req.body?.grade ?? null }
+            }, { user: req.user });
 
             return sendSuccess(res, {}, 'Submission graded.');
         } catch (error) {

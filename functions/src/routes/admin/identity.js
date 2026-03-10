@@ -3,7 +3,7 @@ const {
 } = require('../../crm/collections');
 
 module.exports = function registerIdentityRoutes(router, deps) {
-    const { db, sendSuccess, sendError, requireAdminHandlers, identity } = deps;
+    const { db, sendSuccess, sendError, requireAdminHandlers, identity, writeAuditLog } = deps;
 
     router.post('/students/:studentId/class-code', ...requireAdminHandlers, async (req, res) => {
         try {
@@ -17,6 +17,12 @@ module.exports = function registerIdentityRoutes(router, deps) {
                 class_code: classCode,
                 updatedAt: new Date().toISOString()
             });
+            await writeAuditLog?.({
+                action: 'student.class_code.generate',
+                entityType: 'student',
+                entityId: studentId,
+                metadata: { classCode }
+            }, { user: req.user });
 
             return sendSuccess(res, { classCode }, 'Class code generated.');
         } catch (error) {
@@ -51,6 +57,12 @@ module.exports = function registerIdentityRoutes(router, deps) {
             }
 
             const result = await identity.forceLinkProfile(studentId, targetUid);
+            await writeAuditLog?.({
+                action: 'student.force_link',
+                entityType: 'student',
+                entityId: studentId,
+                metadata: { targetUid }
+            }, { user: req.user });
             return sendSuccess(res, result, 'User linked successfully.');
         } catch (error) {
             return sendError(res, 500, 'LINK_FAILED', 'Failed to link user.', error?.message || error);

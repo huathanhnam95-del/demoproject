@@ -11,7 +11,7 @@ const {
 const { mapStudentRecord } = require('../../crm/student-service');
 
 module.exports = function registerLeadRoutes(router, deps) {
-    const { db, sendSuccess, sendError, requireAdminHandlers, serverTimestamp } = deps;
+    const { db, sendSuccess, sendError, requireAdminHandlers, serverTimestamp, writeAuditLog } = deps;
 
     router.get('/leads', ...requireAdminHandlers, async (req, res) => {
         try {
@@ -47,6 +47,11 @@ module.exports = function registerLeadRoutes(router, deps) {
             });
             const ref = db.collection(CRM_LEADS).doc();
             await ref.set(lead);
+            await writeAuditLog?.({
+                action: 'lead.create',
+                entityType: 'lead',
+                entityId: ref.id
+            }, { user: req.user });
             return sendSuccess(res, { leadId: ref.id }, 'Lead created.');
         } catch (error) {
             if ((error?.message || '').includes('lead contact field')) {
@@ -75,6 +80,11 @@ module.exports = function registerLeadRoutes(router, deps) {
                 serverTimestamp
             });
             await ref.set(next, { merge: true });
+            await writeAuditLog?.({
+                action: 'lead.update',
+                entityType: 'lead',
+                entityId: leadId
+            }, { user: req.user });
             const updatedSnap = await ref.get();
             return sendSuccess(res, { lead: mapLeadRecord(updatedSnap, leadId) }, 'Lead updated.');
         } catch (error) {
@@ -118,6 +128,20 @@ module.exports = function registerLeadRoutes(router, deps) {
                 ...conversion.leadPatch,
                 studentId: studentRef.id
             }, { merge: true });
+            await Promise.all([
+                writeAuditLog?.({
+                    action: 'lead.convert',
+                    entityType: 'lead',
+                    entityId: leadId,
+                    metadata: { studentId: studentRef.id }
+                }, { user: req.user }),
+                writeAuditLog?.({
+                    action: 'student.create_from_lead',
+                    entityType: 'student',
+                    entityId: studentRef.id,
+                    metadata: { leadId }
+                }, { user: req.user })
+            ]);
 
             const studentSnap = await studentRef.get();
             const updatedLeadSnap = await leadRef.get();

@@ -961,6 +961,39 @@ body {
   margin-top: 14px;
 }
 
+.crm-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.crm-summary-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbfa 100%);
+}
+
+.crm-summary-card-label {
+  color: var(--crm-text-muted);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.crm-summary-card-value {
+  margin-top: 10px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--crm-text-main);
+}
+
+.crm-summary-card-footnote {
+  margin-top: 6px;
+  color: var(--crm-text-muted);
+  font-size: 0.82rem;
+}
+
 .crm-timeline-item,
 .crm-task-item {
   border: 1px solid #e2e8f0;

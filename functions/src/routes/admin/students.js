@@ -8,7 +8,7 @@ const {
 } = require('../../crm/student-service');
 
 module.exports = function registerStudentRoutes(router, deps) {
-    const { db, sendSuccess, sendError, requireAdminHandlers, serverTimestamp } = deps;
+    const { db, sendSuccess, sendError, requireAdminHandlers, serverTimestamp, writeAuditLog } = deps;
 
     router.post('/students', ...requireAdminHandlers, async (req, res) => {
         try {
@@ -19,6 +19,11 @@ module.exports = function registerStudentRoutes(router, deps) {
 
             const ref = db.collection(CRM_STUDENTS).doc();
             await ref.set(student);
+            await writeAuditLog?.({
+                action: 'student.create',
+                entityType: 'student',
+                entityId: ref.id
+            }, { user: req.user });
 
             return sendSuccess(res, { studentId: ref.id }, 'Student profile created.');
         } catch (error) {
@@ -85,6 +90,11 @@ module.exports = function registerStudentRoutes(router, deps) {
                 serverTimestamp
             });
             await ref.set(next, { merge: true });
+            await writeAuditLog?.({
+                action: 'student.update',
+                entityType: 'student',
+                entityId: studentId
+            }, { user: req.user });
 
             const updatedSnap = await ref.get();
             return sendSuccess(res, { student: mapStudentRecord(updatedSnap, studentId) }, 'Student profile updated.');

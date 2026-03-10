@@ -1,4 +1,3 @@
-const { db } = require('../../src/utils/firebase');
 const { CRM_COURSES } = require('../../functions/src/crm/collections');
 
 const LEGACY_COLLECTION = 'courses';
@@ -37,11 +36,13 @@ function hasConflict(existing, incoming) {
 }
 
 async function main() {
+    if (isDryRun) {
+        summarize({ migrate: 0, conflict: 0, skip: 0 }, '(firebase unavailable in dry-run)');
+        return;
+    }
+
+    const { db } = require('../../src/utils/firebase');
     if (!db) {
-        if (isDryRun) {
-            summarize({ migrate: 0, conflict: 0, skip: 0 }, '(firebase unavailable)');
-            return;
-        }
         throw new Error('Firebase Admin not initialized.');
     }
 

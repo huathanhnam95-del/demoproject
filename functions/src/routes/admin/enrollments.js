@@ -12,7 +12,7 @@ const {
 } = require('../../crm/enrollment-service');
 
 module.exports = function registerEnrollmentRoutes(router, deps) {
-    const { db, sendSuccess, sendError, requireAdminHandlers, serverTimestamp } = deps;
+    const { db, sendSuccess, sendError, requireAdminHandlers, serverTimestamp, writeAuditLog } = deps;
 
     router.post('/enrollments', ...requireAdminHandlers, async (req, res) => {
         try {
@@ -65,6 +65,15 @@ module.exports = function registerEnrollmentRoutes(router, deps) {
             }
 
             const snap = await ref.get();
+            await writeAuditLog?.({
+                action: 'enrollment.create',
+                entityType: 'enrollment',
+                entityId: ref.id,
+                metadata: {
+                    classId: enrollment.classId,
+                    studentId: enrollment.studentId
+                }
+            }, { user: req.user });
             return sendSuccess(res, {
                 enrollmentId: ref.id,
                 enrollment: mapEnrollmentRecord(snap, ref.id)
@@ -111,6 +120,16 @@ module.exports = function registerEnrollmentRoutes(router, deps) {
             }
 
             const updatedSnap = await ref.get();
+            await writeAuditLog?.({
+                action: 'enrollment.update',
+                entityType: 'enrollment',
+                entityId: enrollmentId,
+                metadata: {
+                    classId: next.classId,
+                    studentId: next.studentId,
+                    status: next.status
+                }
+            }, { user: req.user });
             return sendSuccess(res, {
                 enrollment: mapEnrollmentRecord(updatedSnap, enrollmentId)
             }, 'Enrollment updated.');

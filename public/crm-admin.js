@@ -51,7 +51,8 @@
     createdTestLinks: new Map(),
     courseId: null,
     classroomId: null,
-    leadId: null
+    leadId: null,
+    selectedInvoiceId: null
   };
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -100,6 +101,24 @@
     elements.inputLeadActivityBody = document.getElementById('lead-activity-body');
     elements.btnSaveLeadActivity = document.getElementById('btn-save-lead-activity');
     elements.leadActivityList = document.getElementById('lead-activity-list');
+    elements.inputTemplateName = document.getElementById('template-name');
+    elements.inputTemplateChannel = document.getElementById('template-channel');
+    elements.inputTemplateSubject = document.getElementById('template-subject');
+    elements.inputTemplateBody = document.getElementById('template-body');
+    elements.btnCreateTemplate = document.getElementById('btn-create-template');
+    elements.inputRuleName = document.getElementById('rule-name');
+    elements.inputRuleTriggerType = document.getElementById('rule-trigger-type');
+    elements.inputRuleTemplateId = document.getElementById('rule-template-id');
+    elements.btnCreateRule = document.getElementById('btn-create-rule');
+    elements.automationList = document.getElementById('automation-list');
+    elements.dashboardSummaryCards = document.getElementById('dashboard-summary-cards');
+    elements.dashboardFunnel = document.getElementById('dashboard-funnel');
+    elements.dashboardRevenue = document.getElementById('dashboard-revenue');
+    elements.dashboardDuplicates = document.getElementById('dashboard-duplicates');
+    elements.dashboardAuditLogs = document.getElementById('dashboard-audit-logs');
+    elements.inputMergePrimaryStudentId = document.getElementById('merge-primary-student-id');
+    elements.inputMergeDuplicateStudentIds = document.getElementById('merge-duplicate-student-ids');
+    elements.btnCreateMergeJob = document.getElementById('btn-create-merge-job');
 
     // New Student Elements
     elements.btnNewStudentTriggers = Array.from(document.querySelectorAll('.btn-new-student-trigger'));
@@ -128,6 +147,14 @@
     elements.inputScoreWriting = document.getElementById('score-writing');
     elements.inputStudentDueDate = document.getElementById('student-due-date');
     elements.inputStudentLevel = document.getElementById('student-level');
+    elements.inputTargetExam = document.getElementById('student-target-exam');
+    elements.inputTargetScore = document.getElementById('student-target-score');
+    elements.inputPreferredSchedule = document.getElementById('student-preferred-schedule');
+    elements.inputScoreHistory = document.getElementById('student-score-history');
+    elements.inputGuardianContacts = document.getElementById('student-guardian-contacts');
+    elements.inputCompanyContacts = document.getElementById('student-company-contacts');
+    elements.inputDocumentRefs = document.getElementById('student-document-refs');
+    elements.inputCounselingNotes = document.getElementById('student-counseling-notes');
     elements.studentTaskMeta = document.getElementById('student-task-meta');
     elements.studentTaskBadge = document.getElementById('student-task-badge');
     elements.inputStudentTaskTitle = document.getElementById('student-task-title');
@@ -140,6 +167,18 @@
     elements.inputStudentActivityBody = document.getElementById('student-activity-body');
     elements.btnSaveStudentActivity = document.getElementById('btn-save-student-activity');
     elements.studentActivityList = document.getElementById('student-activity-list');
+    elements.studentFinanceInvoiced = document.getElementById('student-finance-invoiced');
+    elements.studentFinancePaid = document.getElementById('student-finance-paid');
+    elements.studentFinanceOutstanding = document.getElementById('student-finance-outstanding');
+    elements.studentFinanceNextDue = document.getElementById('student-finance-next-due');
+    elements.inputInvoiceAmount = document.getElementById('invoice-amount');
+    elements.inputInvoiceDiscount = document.getElementById('invoice-discount');
+    elements.inputInvoiceDueDate = document.getElementById('invoice-due-date');
+    elements.btnCreateStudentInvoice = document.getElementById('btn-create-student-invoice');
+    elements.studentInvoiceList = document.getElementById('student-invoice-list');
+    elements.inputPaymentAmount = document.getElementById('payment-amount');
+    elements.inputPaymentMethod = document.getElementById('payment-method');
+    elements.btnRecordStudentPayment = document.getElementById('btn-record-student-payment');
 
     // Student ID Badge
     elements.studentIdBadge = document.getElementById('crm-student-id-badge');
@@ -294,6 +333,16 @@
     refreshAttendanceRiskSnapshot().catch((e) => {
       console.error('[CRM Admin] Failed to load attendance risk snapshot:', e);
       showToast(e?.message || 'Failed to load attendance summaries.', 'error');
+    });
+
+    refreshCommunicationsManager().catch((e) => {
+      console.error('[CRM Admin] Failed to load communications manager:', e);
+      showToast(e?.message || 'Failed to load communications manager.', 'error');
+    });
+
+    refreshDashboard().catch((e) => {
+      console.error('[CRM Admin] Failed to load dashboard:', e);
+      showToast(e?.message || 'Failed to load dashboard.', 'error');
     });
   }
 
@@ -574,6 +623,14 @@
       elements.inputScoreWriting,
       elements.inputStudentDueDate,
       elements.inputStudentLevel,
+      elements.inputTargetExam,
+      elements.inputTargetScore,
+      elements.inputPreferredSchedule,
+      elements.inputScoreHistory,
+      elements.inputGuardianContacts,
+      elements.inputCompanyContacts,
+      elements.inputDocumentRefs,
+      elements.inputCounselingNotes,
       elements.inputClassCodeDisplay,
       elements.inputHandshakeEmail
     ];
@@ -600,6 +657,7 @@
     applyReminderBadge(elements.studentTaskBadge, null);
     resetStudentTaskComposer();
     resetStudentActivityComposer();
+    resetStudentFinanceComposer();
 
     if (elements.btnSaveStudent) {
       elements.btnSaveStudent.disabled = false;
@@ -693,12 +751,24 @@
     if (elements.inputStudentActivityBody) elements.inputStudentActivityBody.value = '';
   }
 
-  function getStudentPayload() {
-    if (window.CrmStudents && typeof window.CrmStudents.buildPayload === 'function') {
-      return window.CrmStudents.buildPayload(elements);
-    }
+  function resetStudentFinanceComposer() {
+    modalState.selectedInvoiceId = null;
+    if (elements.inputInvoiceAmount) elements.inputInvoiceAmount.value = '';
+    if (elements.inputInvoiceDiscount) elements.inputInvoiceDiscount.value = '';
+    if (elements.inputInvoiceDueDate) elements.inputInvoiceDueDate.value = '';
+    if (elements.inputPaymentAmount) elements.inputPaymentAmount.value = '';
+    if (elements.inputPaymentMethod) elements.inputPaymentMethod.value = 'bank-transfer';
+    if (elements.studentInvoiceList) elements.studentInvoiceList.innerHTML = '<div class="crm-muted">No invoices yet.</div>';
+    if (elements.studentFinanceInvoiced) elements.studentFinanceInvoiced.textContent = '0';
+    if (elements.studentFinancePaid) elements.studentFinancePaid.textContent = '0';
+    if (elements.studentFinanceOutstanding) elements.studentFinanceOutstanding.textContent = '0';
+    if (elements.studentFinanceNextDue) elements.studentFinanceNextDue.textContent = '-';
+  }
 
-    return {
+  function getStudentPayload() {
+    const basePayload = window.CrmStudents && typeof window.CrmStudents.buildPayload === 'function'
+      ? window.CrmStudents.buildPayload(elements)
+      : {
       name: String(elements.inputStudentName?.value || '').trim(),
       label: String(elements.inputStudentLabel?.value || '').trim(),
       phone: String(elements.inputStudentPhone?.value || '').trim(),
@@ -714,6 +784,15 @@
         entryLevel: String(elements.inputStudentLevel?.value || '').trim(),
         testResultDueDate: String(elements.inputStudentDueDate?.value || '').trim()
       }
+    };
+
+    const overviewPayload = window.CrmStudent360 && typeof window.CrmStudent360.buildPayload === 'function'
+      ? window.CrmStudent360.buildPayload(elements)
+      : {};
+
+    return {
+      ...basePayload,
+      ...overviewPayload
     };
   }
 
@@ -920,6 +999,51 @@
         });
       });
     }
+
+    if (elements.btnCreateStudentInvoice) {
+      elements.btnCreateStudentInvoice.addEventListener('click', () => {
+        createInvoiceForStudent().catch((error) => {
+          console.error('[CRM Admin] Create student invoice failed:', error);
+          showToast(error?.message || 'Failed to create invoice.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnRecordStudentPayment) {
+      elements.btnRecordStudentPayment.addEventListener('click', () => {
+        recordPaymentForStudent().catch((error) => {
+          console.error('[CRM Admin] Record student payment failed:', error);
+          showToast(error?.message || 'Failed to record payment.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnCreateTemplate) {
+      elements.btnCreateTemplate.addEventListener('click', () => {
+        createCommunicationTemplate().catch((error) => {
+          console.error('[CRM Admin] Create template failed:', error);
+          showToast(error?.message || 'Failed to create template.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnCreateRule) {
+      elements.btnCreateRule.addEventListener('click', () => {
+        createAutomationRule().catch((error) => {
+          console.error('[CRM Admin] Create automation rule failed:', error);
+          showToast(error?.message || 'Failed to create automation rule.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnCreateMergeJob) {
+      elements.btnCreateMergeJob.addEventListener('click', () => {
+        createMergeJob().catch((error) => {
+          console.error('[CRM Admin] Create merge job failed:', error);
+          showToast(error?.message || 'Failed to create merge job.', 'error');
+        });
+      });
+    }
   }
 
   function buildQuery(params = {}) {
@@ -1051,6 +1175,7 @@
       elements.leadComposer.style.display = 'none';
       resetLeadComposer();
       await refreshLeadPipeline();
+      await refreshDashboard();
       showToast('Lead saved.', 'success');
     } catch (error) {
       if (elements.btnSaveLead) {
@@ -1102,6 +1227,7 @@
       await refreshStudentLists();
       await refreshStudentTimeline();
       await refreshEntranceTestsList();
+      await refreshDashboard();
       showToast(method === 'PATCH' ? 'Student profile updated.' : 'Student profile saved.', 'success');
     } catch (e) {
       if (modalState.studentId) {
@@ -1236,6 +1362,7 @@
             body: JSON.stringify({ status: 'done' })
           });
           await refreshOpenTaskSnapshot();
+          await refreshDashboard();
           showToast(scope === 'lead' ? 'Lead task completed.' : 'Student task completed.', 'success');
         } catch (error) {
           console.error('[CRM Admin] Complete task failed:', error);
@@ -1430,6 +1557,360 @@
     showToast('Student activity logged.', 'success');
   }
 
+  async function refreshStudentFinance() {
+    if (!modalState.studentId || !window.CrmFinance) return;
+    const json = await apiFetchJson(`/api/admin/finance/summary?studentId=${encodeURIComponent(modalState.studentId)}`, {
+      method: 'GET'
+    });
+    const totalInvoiced = Number(json.totalInvoiced || 0);
+    const totalPaid = Number(json.totalPaid || 0);
+    const totalOutstanding = Number(json.totalOutstanding || 0);
+    const nextDueDate = String(json.nextDueDate || '').trim() || '-';
+    const invoices = Array.isArray(json.invoices) ? json.invoices : [];
+
+    if (elements.studentFinanceInvoiced) elements.studentFinanceInvoiced.textContent = window.CrmFinance.formatMoney(totalInvoiced);
+    if (elements.studentFinancePaid) elements.studentFinancePaid.textContent = window.CrmFinance.formatMoney(totalPaid);
+    if (elements.studentFinanceOutstanding) elements.studentFinanceOutstanding.textContent = window.CrmFinance.formatMoney(totalOutstanding);
+    if (elements.studentFinanceNextDue) elements.studentFinanceNextDue.textContent = nextDueDate;
+
+    if (elements.studentInvoiceList) {
+      if (!invoices.length) {
+        elements.studentInvoiceList.innerHTML = '<div class="crm-muted">No invoices yet.</div>';
+      } else {
+        elements.studentInvoiceList.innerHTML = invoices.map((invoice) => `
+          <div class="crm-task-item">
+            <div class="crm-task-head">
+              <strong>Invoice ${escapeHtml(invoice.invoiceId || '')}</strong>
+              <span class="crm-task-priority medium">${escapeHtml(invoice.status || 'open')}</span>
+            </div>
+            <div class="crm-task-meta">Due ${escapeHtml(String(invoice.dueDate || '-'))}</div>
+            <div class="crm-timeline-meta" style="margin-top: 6px;">Net ${escapeHtml(window.CrmFinance.formatMoney(invoice.netAmount))} | Outstanding ${escapeHtml(window.CrmFinance.formatMoney(invoice.outstandingAmount))}</div>
+            <div class="crm-task-actions">
+              <button type="button" class="crm-btn-secondary btn-select-invoice" data-invoice-id="${escapeHtml(invoice.invoiceId || '')}">Select</button>
+            </div>
+          </div>
+        `).join('');
+
+        Array.from(elements.studentInvoiceList.querySelectorAll('.btn-select-invoice')).forEach((button) => {
+          button.addEventListener('click', () => {
+            modalState.selectedInvoiceId = String(button.dataset.invoiceId || '').trim();
+            showToast(`Selected ${modalState.selectedInvoiceId} for payment.`, 'success');
+          });
+        });
+      }
+    }
+  }
+
+  async function createInvoiceForStudent() {
+    if (!modalState.studentId) throw new Error('Save the student profile first.');
+    if (!window.CrmFinance || typeof window.CrmFinance.buildInvoicePayload !== 'function') {
+      throw new Error('Finance helpers are not available.');
+    }
+
+    const enrollmentSummary = dataCache.attendanceRiskByStudentId.get(String(modalState.studentId || '').trim()) || null;
+    const payload = window.CrmFinance.buildInvoicePayload({
+      inputInvoiceAmount: elements.inputInvoiceAmount,
+      inputInvoiceDiscount: elements.inputInvoiceDiscount,
+      inputInvoiceDueDate: elements.inputInvoiceDueDate
+    });
+
+    await apiFetchJson('/api/admin/invoices', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        studentId: modalState.studentId,
+        enrollmentId: enrollmentSummary?.enrollmentId || `manual-${modalState.studentId}`,
+        courseId: enrollmentSummary?.courseId || null,
+        ...payload
+      })
+    });
+
+    if (elements.inputInvoiceAmount) elements.inputInvoiceAmount.value = '';
+    if (elements.inputInvoiceDiscount) elements.inputInvoiceDiscount.value = '';
+    if (elements.inputInvoiceDueDate) elements.inputInvoiceDueDate.value = '';
+    await refreshStudentFinance();
+    await refreshDashboard();
+    showToast('Invoice created.', 'success');
+  }
+
+  async function recordPaymentForStudent() {
+    if (!modalState.studentId) throw new Error('Save the student profile first.');
+    if (!modalState.selectedInvoiceId) throw new Error('Select an invoice first.');
+    if (!window.CrmFinance || typeof window.CrmFinance.buildPaymentPayload !== 'function') {
+      throw new Error('Finance helpers are not available.');
+    }
+
+    const enrollmentSummary = dataCache.attendanceRiskByStudentId.get(String(modalState.studentId || '').trim()) || null;
+    const payload = window.CrmFinance.buildPaymentPayload({
+      inputPaymentAmount: elements.inputPaymentAmount,
+      inputPaymentMethod: elements.inputPaymentMethod
+    });
+
+    await apiFetchJson('/api/admin/payments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        invoiceId: modalState.selectedInvoiceId,
+        studentId: modalState.studentId,
+        enrollmentId: enrollmentSummary?.enrollmentId || `manual-${modalState.studentId}`,
+        ...payload
+      })
+    });
+
+    if (elements.inputPaymentAmount) elements.inputPaymentAmount.value = '';
+    await refreshStudentFinance();
+    await refreshDashboard();
+    showToast('Payment recorded.', 'success');
+  }
+
+  async function refreshCommunicationsManager() {
+    if (!window.CrmCommunications || !elements.automationList) return;
+
+    const [templatesJson, automationsJson] = await Promise.all([
+      apiFetchJson('/api/admin/templates', { method: 'GET' }),
+      apiFetchJson('/api/admin/automations', { method: 'GET' })
+    ]);
+
+    const templates = Array.isArray(templatesJson.templates) ? templatesJson.templates : [];
+    const rules = Array.isArray(automationsJson.rules) ? automationsJson.rules : [];
+    const queue = Array.isArray(automationsJson.queue) ? automationsJson.queue : [];
+
+    if (elements.inputRuleTemplateId) {
+      const current = String(elements.inputRuleTemplateId.value || '').trim();
+      elements.inputRuleTemplateId.innerHTML = '<option value="">Select a template...</option>' + templates.map((template) => `
+        <option value="${escapeHtml(template.templateId || '')}">${escapeHtml(template.name || template.templateId || 'Template')}</option>
+      `).join('');
+      if (current) {
+        elements.inputRuleTemplateId.value = current;
+      }
+    }
+
+    if (!rules.length) {
+      elements.automationList.innerHTML = '<div class="crm-muted">No automations yet.</div>';
+      return;
+    }
+
+    elements.automationList.innerHTML = rules.map((rule) => {
+      const relatedQueue = queue.filter((entry) => String(entry.ruleId || '') === String(rule.ruleId || ''));
+      return `
+        <div class="crm-task-item">
+          <div class="crm-task-head">
+            <strong>${escapeHtml(rule.name || 'Rule')}</strong>
+            <span class="crm-task-priority medium">${escapeHtml(rule.triggerType || '')}</span>
+          </div>
+          <div class="crm-timeline-meta">${escapeHtml(`Queue entries: ${relatedQueue.length}`)}</div>
+          <div class="crm-task-actions">
+            <button type="button" class="crm-btn-secondary btn-run-automation" data-rule-id="${escapeHtml(rule.ruleId || '')}">Run Now</button>
+          </div>
+          ${relatedQueue.length ? `<div class="crm-timeline-meta" style="margin-top:8px;">${escapeHtml(relatedQueue.slice(0, 3).map((entry) => window.CrmCommunications.formatQueueStatus(entry.status)).join(', '))}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+
+    Array.from(elements.automationList.querySelectorAll('.btn-run-automation')).forEach((button) => {
+      button.addEventListener('click', async () => {
+        const ruleId = String(button.dataset.ruleId || '').trim();
+        try {
+          button.disabled = true;
+          await apiFetchJson(`/api/admin/automations/${encodeURIComponent(ruleId)}/run-now`, {
+            method: 'POST'
+          });
+          await refreshCommunicationsManager();
+          showToast('Automation queued.', 'success');
+        } catch (error) {
+          console.error('[CRM Admin] Run automation failed:', error);
+          showToast(error?.message || 'Failed to run automation.', 'error');
+          button.disabled = false;
+        }
+      });
+    });
+  }
+
+  async function createCommunicationTemplate() {
+    if (!window.CrmCommunications || typeof window.CrmCommunications.buildTemplatePayload !== 'function') {
+      throw new Error('Communication helpers are not available.');
+    }
+
+    const payload = window.CrmCommunications.buildTemplatePayload({
+      inputTemplateName: elements.inputTemplateName,
+      inputTemplateChannel: elements.inputTemplateChannel,
+      inputTemplateSubject: elements.inputTemplateSubject,
+      inputTemplateBody: elements.inputTemplateBody
+    });
+
+    await apiFetchJson('/api/admin/templates', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (elements.inputTemplateName) elements.inputTemplateName.value = '';
+    if (elements.inputTemplateSubject) elements.inputTemplateSubject.value = '';
+    if (elements.inputTemplateBody) elements.inputTemplateBody.value = '';
+    await refreshCommunicationsManager();
+    showToast('Template created.', 'success');
+  }
+
+  async function createAutomationRule() {
+    if (!window.CrmCommunications || typeof window.CrmCommunications.buildRulePayload !== 'function') {
+      throw new Error('Communication helpers are not available.');
+    }
+
+    const payload = window.CrmCommunications.buildRulePayload({
+      inputRuleName: elements.inputRuleName,
+      inputRuleTriggerType: elements.inputRuleTriggerType,
+      inputRuleTemplateId: elements.inputRuleTemplateId
+    });
+
+    await apiFetchJson('/api/admin/automations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (elements.inputRuleName) elements.inputRuleName.value = '';
+    await refreshCommunicationsManager();
+    await refreshDashboard();
+    showToast('Automation rule created.', 'success');
+  }
+
+  async function refreshDashboard() {
+    if (!window.CrmDashboard) return;
+
+    const [summaryJson, funnelJson, revenueJson, duplicatesJson, auditJson] = await Promise.all([
+      apiFetchJson('/api/admin/dashboard/summary', { method: 'GET' }),
+      apiFetchJson('/api/admin/dashboard/funnel', { method: 'GET' }),
+      apiFetchJson('/api/admin/dashboard/revenue', { method: 'GET' }),
+      apiFetchJson('/api/admin/duplicates', { method: 'GET' }),
+      apiFetchJson('/api/admin/audit-logs', { method: 'GET' })
+    ]);
+
+    const summary = summaryJson.summary || {};
+    const funnel = funnelJson.funnel || {};
+    const revenue = Array.isArray(revenueJson.revenue) ? revenueJson.revenue : [];
+    const duplicates = Array.isArray(duplicatesJson.duplicates) ? duplicatesJson.duplicates : [];
+    const auditLogs = Array.isArray(auditJson.auditLogs) ? auditJson.auditLogs : [];
+
+    if (elements.dashboardSummaryCards) {
+      const cards = window.CrmDashboard.buildSummaryCards(summary);
+      elements.dashboardSummaryCards.innerHTML = cards.map((card) => `
+        <div class="crm-summary-card" data-card-key="${escapeHtml(card.key || '')}">
+          <div class="crm-summary-card-label">${escapeHtml(card.label || '')}</div>
+          <div class="crm-summary-card-value">${escapeHtml(card.value || '0')}</div>
+          <div class="crm-summary-card-footnote">${escapeHtml(card.footnote || '')}</div>
+        </div>
+      `).join('');
+    }
+
+    if (elements.dashboardFunnel) {
+      const rows = window.CrmDashboard.buildFunnelRows(funnel);
+      elements.dashboardFunnel.innerHTML = rows.map((row) => `
+        <div class="crm-task-item">
+          <div class="crm-task-head">
+            <strong>${escapeHtml(window.CrmDashboard.formatStageLabel(row.stage))}</strong>
+            <span class="crm-task-priority medium">${escapeHtml(String(row.count || 0))}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    if (elements.dashboardRevenue) {
+      if (!revenue.length) {
+        elements.dashboardRevenue.innerHTML = '<div class="crm-muted" style="padding: 18px;">No invoice activity yet.</div>';
+      } else {
+        elements.dashboardRevenue.innerHTML = `
+          <div class="crm-table-container">
+            <table class="crm-table">
+              <thead>
+                <tr>
+                  <th>Course</th>
+                  <th>Invoiced</th>
+                  <th>Collected</th>
+                  <th>Outstanding</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${revenue.map((row) => `
+                  <tr>
+                    <td>${escapeHtml(row.courseId || 'unassigned')}</td>
+                    <td>${escapeHtml(window.CrmDashboard.toMoney(row.invoicedAmount))}</td>
+                    <td>${escapeHtml(window.CrmDashboard.toMoney(row.collectedAmount))}</td>
+                    <td>${escapeHtml(window.CrmDashboard.toMoney(row.outstandingAmount))}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+    }
+
+    if (elements.dashboardDuplicates) {
+      if (!duplicates.length) {
+        elements.dashboardDuplicates.innerHTML = '<div class="crm-muted">No duplicate candidates found.</div>';
+      } else {
+        elements.dashboardDuplicates.innerHTML = duplicates.slice(0, 10).map((group) => {
+          const item = window.CrmGovernance
+            ? window.CrmGovernance.formatDuplicateGroup(group)
+            : {
+                title: String(group.kind || 'match'),
+                subtitle: String(group.key || ''),
+                detail: Array.isArray(group.studentIds) ? group.studentIds.join(', ') : ''
+              };
+          return `
+            <div class="crm-task-item">
+              <div class="crm-task-head">
+                <strong>${escapeHtml(item.title)}</strong>
+                <span class="crm-task-priority high">${escapeHtml(String((group.studentIds || []).length || 0))}</span>
+              </div>
+              <div class="crm-task-meta">${escapeHtml(item.subtitle)}</div>
+              <div class="crm-timeline-meta" style="margin-top: 6px;">${escapeHtml(item.detail)}</div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    if (elements.dashboardAuditLogs) {
+      if (!auditLogs.length) {
+        elements.dashboardAuditLogs.innerHTML = '<div class="crm-muted">No audit logs yet.</div>';
+      } else {
+        elements.dashboardAuditLogs.innerHTML = auditLogs.slice(0, 12).map((entry) => `
+          <div class="crm-timeline-item">
+            <div class="crm-timeline-head">
+              <span class="crm-activity-chip">${escapeHtml(window.CrmGovernance ? window.CrmGovernance.formatAuditAction(entry.action) : entry.action)}</span>
+              <span class="crm-timeline-meta">${escapeHtml(formatDateTime(entry.createdAt))}</span>
+            </div>
+            <strong>${escapeHtml(entry.entityType || 'entity')} / ${escapeHtml(entry.entityId || 'unknown')}</strong>
+            <div class="crm-timeline-meta" style="margin-top: 6px;">${escapeHtml(entry.actorEmail || entry.actorUid || 'system')}</div>
+          </div>
+        `).join('');
+      }
+    }
+  }
+
+  async function createMergeJob() {
+    if (!window.CrmGovernance || typeof window.CrmGovernance.buildMergeJobPayload !== 'function') {
+      throw new Error('Governance helpers are not available.');
+    }
+
+    const payload = window.CrmGovernance.buildMergeJobPayload({
+      inputMergePrimaryStudentId: elements.inputMergePrimaryStudentId,
+      inputMergeDuplicateStudentIds: elements.inputMergeDuplicateStudentIds
+    });
+
+    await apiFetchJson('/api/admin/merge-jobs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (elements.inputMergePrimaryStudentId) elements.inputMergePrimaryStudentId.value = '';
+    if (elements.inputMergeDuplicateStudentIds) elements.inputMergeDuplicateStudentIds.value = '';
+    await refreshDashboard();
+    showToast('Merge job created.', 'success');
+  }
+
   function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = String(str || '');
@@ -1606,12 +2087,18 @@
       if (window.CrmStudents && typeof window.CrmStudents.applyToForm === 'function') {
         window.CrmStudents.applyToForm(elements, student);
       }
+      if (window.CrmStudent360 && typeof window.CrmStudent360.applyToForm === 'function') {
+        window.CrmStudent360.applyToForm(elements, student);
+      }
     }
 
     fetchStudentProfile(id).then((fresh) => {
       if (!fresh) return;
       if (window.CrmStudents && typeof window.CrmStudents.applyToForm === 'function') {
         window.CrmStudents.applyToForm(elements, fresh);
+      }
+      if (window.CrmStudent360 && typeof window.CrmStudent360.applyToForm === 'function') {
+        window.CrmStudent360.applyToForm(elements, fresh);
       }
     }).catch((error) => {
       console.error('[CRM Admin] Failed to refresh student profile after open:', error);
@@ -1620,6 +2107,7 @@
     await refreshEntranceTestsList();
     await refreshStudentIdentity();
     await refreshStudentTimeline();
+    await refreshStudentFinance();
     switchStudentTab('info');
   }
 
@@ -1982,6 +2470,12 @@
       content.style.display = isMatch ? 'block' : 'none';
       content.classList.toggle('active', isMatch);
     });
+
+    if (tabId === 'finance' && modalState.studentId) {
+      refreshStudentFinance().catch((error) => {
+        console.error('[CRM Admin] Failed to refresh student finance:', error);
+      });
+    }
   }
 
   function switchCourseTab(tabId) {
@@ -2040,6 +2534,12 @@
     elements.panels.forEach((panel) => {
       panel.style.display = panel.dataset.panel === activePanel ? 'block' : 'none';
     });
+
+    if (activePanel === 'dashboard') {
+      refreshDashboard().catch((error) => {
+        console.error('[CRM Admin] Dashboard refresh failed:', error);
+      });
+    }
   }
 
   function showGateMessage(title, subtitle) {

@@ -25,7 +25,7 @@ function sortNewestFirst(left, right) {
 }
 
 module.exports = function registerActivityRoutes(router, deps) {
-    const { db, sendSuccess, sendError, requireAdminHandlers, serverTimestamp } = deps;
+    const { db, sendSuccess, sendError, requireAdminHandlers, serverTimestamp, writeAuditLog } = deps;
 
     router.get('/activities', ...requireAdminHandlers, async (req, res) => {
         try {
@@ -60,6 +60,16 @@ module.exports = function registerActivityRoutes(router, deps) {
             });
             const ref = db.collection(CRM_ACTIVITIES).doc();
             await ref.set(activity);
+            await writeAuditLog?.({
+                action: 'activity.create',
+                entityType: 'activity',
+                entityId: ref.id,
+                metadata: {
+                    leadId: activity.leadId || null,
+                    studentId: activity.studentId || null,
+                    classId: activity.classId || null
+                }
+            }, { user: req.user });
             return sendSuccess(res, { activityId: ref.id }, 'Activity created.');
         } catch (error) {
             const message = String(error?.message || '');
@@ -104,6 +114,16 @@ module.exports = function registerActivityRoutes(router, deps) {
             });
             const ref = db.collection(CRM_TASKS).doc();
             await ref.set(task);
+            await writeAuditLog?.({
+                action: 'task.create',
+                entityType: 'task',
+                entityId: ref.id,
+                metadata: {
+                    leadId: task.leadId || null,
+                    studentId: task.studentId || null,
+                    classId: task.classId || null
+                }
+            }, { user: req.user });
             return sendSuccess(res, { taskId: ref.id }, 'Task created.');
         } catch (error) {
             const message = String(error?.message || '');
@@ -132,6 +152,12 @@ module.exports = function registerActivityRoutes(router, deps) {
                 serverTimestamp
             });
             await ref.set(next, { merge: true });
+            await writeAuditLog?.({
+                action: 'task.update',
+                entityType: 'task',
+                entityId: taskId,
+                metadata: { status: next.status || null }
+            }, { user: req.user });
             const updatedSnap = await ref.get();
             return sendSuccess(res, { task: mapTaskRecord(updatedSnap, taskId) }, 'Task updated.');
         } catch (error) {

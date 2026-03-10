@@ -28,6 +28,61 @@ function normalizeLearningProfile(input, fallback = {}) {
     };
 }
 
+function normalizeTargets(input, fallback = {}) {
+    const source = input && typeof input === 'object' ? input : {};
+    const base = fallback && typeof fallback === 'object' ? fallback : {};
+    return {
+        exam: Object.prototype.hasOwnProperty.call(source, 'exam') ? cleanOptionalString(source.exam) : (base.exam ?? null),
+        score: Object.prototype.hasOwnProperty.call(source, 'score') ? cleanOptionalNumber(source.score) : (base.score ?? null)
+    };
+}
+
+function normalizeScoreHistory(input) {
+    if (!Array.isArray(input)) return [];
+    return input
+        .map((entry) => ({
+            date: cleanOptionalString(entry?.date),
+            score: cleanOptionalNumber(entry?.score)
+        }))
+        .filter((entry) => entry.date || entry.score !== null);
+}
+
+function normalizeContactList(input, keys) {
+    if (!Array.isArray(input)) return [];
+    return input
+        .map((entry) => {
+            const normalized = {};
+            keys.forEach((key) => {
+                normalized[key] = cleanOptionalString(entry?.[key]);
+            });
+            return normalized;
+        })
+        .filter((entry) => Object.values(entry).some(Boolean));
+}
+
+function normalizeContacts(input, fallback = {}) {
+    const source = input && typeof input === 'object' ? input : {};
+    const base = fallback && typeof fallback === 'object' ? fallback : {};
+    return {
+        guardians: Object.prototype.hasOwnProperty.call(source, 'guardians')
+            ? normalizeContactList(source.guardians, ['name', 'phone', 'email'])
+            : normalizeContactList(base.guardians, ['name', 'phone', 'email']),
+        companies: Object.prototype.hasOwnProperty.call(source, 'companies')
+            ? normalizeContactList(source.companies, ['name', 'email', 'phone'])
+            : normalizeContactList(base.companies, ['name', 'email', 'phone'])
+    };
+}
+
+function normalizeDocumentRefs(input) {
+    if (!Array.isArray(input)) return [];
+    return input
+        .map((entry) => ({
+            name: cleanOptionalString(entry?.name),
+            storagePath: cleanOptionalString(entry?.storagePath)
+        }))
+        .filter((entry) => entry.name || entry.storagePath);
+}
+
 function normalizeStudentCore(input, fallback = {}) {
     const source = input && typeof input === 'object' ? input : {};
     const base = fallback && typeof fallback === 'object' ? fallback : {};
@@ -54,7 +109,21 @@ function normalizeStudentCore(input, fallback = {}) {
         notes: Object.prototype.hasOwnProperty.call(source, 'notes')
             ? cleanOptionalString(source.notes)
             : (base.notes ?? null),
-        learningProfile: normalizeLearningProfile(source.learningProfile, base.learningProfile)
+        learningProfile: normalizeLearningProfile(source.learningProfile, base.learningProfile),
+        targets: normalizeTargets(source.targets, base.targets),
+        preferredSchedule: Object.prototype.hasOwnProperty.call(source, 'preferredSchedule')
+            ? cleanOptionalString(source.preferredSchedule)
+            : (base.preferredSchedule ?? null),
+        scoreHistory: Object.prototype.hasOwnProperty.call(source, 'scoreHistory')
+            ? normalizeScoreHistory(source.scoreHistory)
+            : normalizeScoreHistory(base.scoreHistory),
+        contacts: normalizeContacts(source.contacts, base.contacts),
+        documentRefs: Object.prototype.hasOwnProperty.call(source, 'documentRefs')
+            ? normalizeDocumentRefs(source.documentRefs)
+            : normalizeDocumentRefs(base.documentRefs),
+        counselingNotes: Object.prototype.hasOwnProperty.call(source, 'counselingNotes')
+            ? cleanOptionalString(source.counselingNotes)
+            : (base.counselingNotes ?? null)
     };
 }
 
@@ -76,7 +145,13 @@ function hasRecognizedPatch(input) {
         'leadId',
         'ownerUid',
         'notes',
-        'learningProfile'
+        'learningProfile',
+        'targets',
+        'preferredSchedule',
+        'scoreHistory',
+        'contacts',
+        'documentRefs',
+        'counselingNotes'
     ];
     return knownKeys.some((key) => Object.prototype.hasOwnProperty.call(input, key));
 }
@@ -109,6 +184,10 @@ function buildStudentPatchData(existing, input, context = {}) {
         ...existing,
         ...merged,
         learningProfile: merged.learningProfile,
+        targets: merged.targets,
+        scoreHistory: merged.scoreHistory,
+        contacts: merged.contacts,
+        documentRefs: merged.documentRefs,
         updatedAt: context.serverTimestamp ? context.serverTimestamp() : new Date(),
         updatedBy: context.user?.uid || null
     };
@@ -132,6 +211,12 @@ function mapStudentRecord(data, studentId) {
         ownerUid: source.ownerUid || null,
         notes: source.notes || null,
         learningProfile: normalizeLearningProfile(source.learningProfile),
+        targets: normalizeTargets(source.targets),
+        preferredSchedule: source.preferredSchedule || null,
+        scoreHistory: normalizeScoreHistory(source.scoreHistory),
+        contacts: normalizeContacts(source.contacts),
+        documentRefs: normalizeDocumentRefs(source.documentRefs),
+        counselingNotes: source.counselingNotes || null,
         class_code: source.class_code || null,
         linked_user_ids: Array.isArray(source.linked_user_ids) ? source.linked_user_ids : [],
         createdAt: source.createdAt || null,
@@ -147,5 +232,9 @@ module.exports = {
     buildStudentPatchData,
     mapStudentRecord,
     normalizeStudentCore,
-    normalizeLearningProfile
+    normalizeLearningProfile,
+    normalizeTargets,
+    normalizeScoreHistory,
+    normalizeContacts,
+    normalizeDocumentRefs
 };

@@ -30,7 +30,7 @@ function maybeAiLimiter(req, res, next) {
     return aiLimiter(req, res, next);
 }
 
-router.get('/reading-journey/health', (req, res) => {
+router.get('/health', (req, res) => {
     return sendSuccess(res, {
         enabled: true,
         model: gemini.getModelName(),
@@ -39,7 +39,7 @@ router.get('/reading-journey/health', (req, res) => {
     });
 });
 
-router.get('/reading-journey/outlines', async (req, res) => {
+router.get('/outlines', async (req, res) => {
     try {
         const rawOutlines = await listCachedOutlines();
         const outlines = rawOutlines.map((entry) => {
@@ -64,7 +64,7 @@ router.get('/reading-journey/outlines', async (req, res) => {
     }
 });
 
-router.post('/reading-journey/suggest-keywords', maybeAiLimiter, async (req, res) => {
+router.post('/suggest-keywords', maybeAiLimiter, async (req, res) => {
     try {
         const countRaw = Number(req.body?.count);
         const count = Number.isFinite(countRaw) ? Math.max(1, Math.min(10, Math.floor(countRaw))) : 5;
@@ -89,7 +89,7 @@ router.post('/reading-journey/suggest-keywords', maybeAiLimiter, async (req, res
     }
 });
 
-router.post('/reading-journey/setup', maybeAiLimiter, async (req, res) => {
+router.post('/setup', maybeAiLimiter, async (req, res) => {
     try {
         const level = gemini.normalizeLevel(req.body?.level);
         const language = String(req.body?.language || 'en').trim() || 'en';
@@ -110,7 +110,7 @@ router.post('/reading-journey/setup', maybeAiLimiter, async (req, res) => {
     }
 });
 
-router.post('/reading-journey/advance', maybeAiLimiter, async (req, res) => {
+router.post('/advance', maybeAiLimiter, async (req, res) => {
     try {
         const outlineId = String(req.body?.outlineId || '').trim();
         const currentBeatNumber = Number(req.body?.currentBeatNumber);

@@ -415,4 +415,8 @@ app.post(['/admin/submissions/:submissionId/grade', '/api/admin/submissions/:sub
     }
 });
 
+// --- Reading Journey Endpoints ---
+const readingJourneyRouter = require('./routes/reading-journey');
+app.use(['/reading-journey', '/api/reading-journey'], readingJourneyRouter);
+
 module.exports = app;

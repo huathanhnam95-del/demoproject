@@ -18,6 +18,7 @@
         "@google/generative-ai": "^0.24.1",
         "cors": "^2.8.6",
         "express": "^5.2.1",
+        "express-rate-limit": "^7.5.0",
         "firebase-admin": "^12.7.0",
         "firebase-functions": "^5.1.1"
     },

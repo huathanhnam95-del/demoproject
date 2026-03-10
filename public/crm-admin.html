@@ -37,21 +37,21 @@
               <ul class="crm-dropdown-menu">
                 <li><button data-sub="courses">Catalog</button></li>
                 <li><button data-sub="classes">Classes</button></li>
-                <li><button data-sub="zoom-links">Zoom Links</button></li>
-                <li><button data-sub="materials">Materials</button></li>
-                <li><button data-sub="planning">Planning</button></li>
-                <li><button data-sub="new-planning">New Planning</button></li>
-                <li><button data-sub="admission-calendar">Admission Calendar</button></li>
+                <li><button data-sub="zoom-links" data-coming-soon="true" disabled>Zoom Links</button></li>
+                <li><button data-sub="materials" data-coming-soon="true" disabled>Materials</button></li>
+                <li><button data-sub="planning" data-coming-soon="true" disabled>Planning</button></li>
+                <li><button data-sub="new-planning" data-coming-soon="true" disabled>New Planning</button></li>
+                <li><button data-sub="admission-calendar" data-coming-soon="true" disabled>Admission Calendar</button></li>
                 <li><button data-sub="class-management">Class Management</button></li>
               </ul>
             </li>
             <li><button class="crm-nav-item" data-main="enquiry" data-label="Enquiry">Enquiry</button></li>
-            <li><button class="crm-nav-item" data-main="staff" data-label="Staff Management">Staff Management</button>
+            <li><button class="crm-nav-item" data-main="staff" data-label="Staff Management" data-coming-soon="true" disabled>Staff Management</button>
             </li>
-            <li><button class="crm-nav-item" data-main="agents" data-label="Agent Management">Agent Management</button>
+            <li><button class="crm-nav-item" data-main="agents" data-label="Agent Management" data-coming-soon="true" disabled>Agent Management</button>
             </li>
-            <li><button class="crm-nav-item" data-main="settings" data-label="Settings">Settings</button></li>
-            <li><button class="crm-nav-item" data-main="chatbot" data-label="Chatbot Management">Chatbot
+            <li><button class="crm-nav-item" data-main="settings" data-label="Settings" data-coming-soon="true" disabled>Settings</button></li>
+            <li><button class="crm-nav-item" data-main="chatbot" data-label="Chatbot Management" data-coming-soon="true" disabled>Chatbot
                 Management</button></li>
           </ul>
         </nav>
@@ -608,8 +608,14 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
   <script src="js/classroom-api.js"></script>
+  <script src="js/crm/utils.js"></script>
+  <script src="js/crm/state.js"></script>
+  <script src="js/crm/dom.js"></script>
+  <script src="js/crm/courses.js"></script>
+  <script src="js/crm/index.js"></script>
   <script src="crm-admin.js"></script>
 </body>
 

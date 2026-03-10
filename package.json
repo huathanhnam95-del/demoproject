@@ -9,6 +9,7 @@
     "sync-rules": "node sync-points-rules.js points-rules.csv",
     "deploy": "firebase deploy --only hosting",
     "lint": "eslint .",
+    "lint:crm": "eslint \"public/crm-admin.js\" \"public/js/classroom-api.js\" \"public/js/crm/*.js\" \"functions/src/routes/admin/*.js\" \"functions/src/crm/*.js\" \"src/routes/admin.js\" --quiet",
     "lint:entrance-crm": "eslint public/entrance-test.js public/crm-admin.js public/crm-entrance-test-result.js src/routes/entrance-tests.js src/routes/admin.js src/utils/firebase.js src/entrance-test/test36plus.js --quiet",
     "smoke:entrance-test": "node scripts/smoke-entrance-test.js --start-server --port 8787",
     "audit:a2-onboarding": "node scripts/audit/run-a2-onboarding-audit.js --base-url http://localhost:8443",

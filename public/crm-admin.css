@@ -120,6 +120,31 @@ body {
   box-shadow: inset 0 -3px 0 #ffffff;
 }
 
+.crm-nav-item[disabled],
+.crm-dropdown-menu li button[disabled] {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
+.crm-nav-item[disabled]:hover,
+.crm-dropdown-menu li button[disabled]:hover {
+  background: transparent;
+  color: inherit;
+}
+
+.crm-coming-soon-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  color: inherit;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
 /* Dropdown */
 .crm-nav-dropdown {
   position: relative;
@@ -166,6 +191,10 @@ body {
 .crm-dropdown-menu li button:hover {
   background: #f8f9fa;
   color: var(--crm-primary);
+}
+
+.crm-dropdown-menu li button[disabled] .crm-coming-soon-badge {
+  background: rgba(15, 23, 42, 0.08);
 }
 
 /* Header Right Actions */

@@ -942,7 +942,9 @@
         if (elements.inputStudentEmail) elements.inputStudentEmail.value = String(fresh?.email || '');
         if (elements.inputStudentZalo) elements.inputStudentZalo.value = String(fresh?.zalo || '');
         if (elements.inputStudentFacebook) elements.inputStudentFacebook.value = String(fresh?.facebook || '');
-      }).catch(() => { });
+      }).catch((error) => {
+        console.error('[CRM Admin] Failed to refresh student profile after open:', error);
+      });
     }
 
     await refreshEntranceTestsList();
@@ -1593,7 +1595,10 @@
         elements.inputClassworkModule.innerHTML = '<option value="">No Module</option>' +
           modules.map(m => `<option value="${m.id}">${escapeHtml(m.title)}</option>`).join('');
       }
-    } catch (e) { }
+    } catch (e) {
+      console.error('[CRM Admin] Failed to load classroom modules:', e);
+      elements.modulesListContainer.innerHTML = '<p class="text-muted">Failed to load modules.</p>';
+    }
   }
 
   async function loadClassroomClasswork(classId) {
@@ -1608,7 +1613,10 @@
           </div>
         </div>
       `).join('') : '<p class="text-muted">No classwork yet.</p>';
-    } catch (e) { }
+    } catch (e) {
+      console.error('[CRM Admin] Failed to load classroom classwork:', e);
+      elements.classworkListContainer.innerHTML = '<p class="text-muted">Failed to load classwork.</p>';
+    }
   }
 
   async function fetchCoursesFromCatalog() {

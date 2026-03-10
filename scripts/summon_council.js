@@ -1,21 +1,22 @@
 
 /* eslint-disable no-console */
 
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { VertexAI } = require("@google-cloud/vertexai");
 const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
 // --- CONFIGURATION ---
-const API_KEY = process.env.GEMINI_API_KEY;
+const PROJECT_ID = process.env.FIREBASE_PROJECT_ID;
+const LOCATION = process.env.GOOGLE_CLOUD_LOCATION || 'us-central1';
 
-if (!API_KEY) {
-    console.error("❌ ERROR: GEMINI_API_KEY is missing in .env");
+if (!PROJECT_ID) {
+    console.error("❌ ERROR: FIREBASE_PROJECT_ID is missing in .env. Required for Vertex AI.");
     process.exit(1);
 }
 
-const genAI = new GoogleGenerativeAI(API_KEY);
-const MODEL_NAME = "gemini-3-pro-preview"; // Or gemini-pro
+const vertexAI = new VertexAI({ project: PROJECT_ID, location: LOCATION });
+const MODEL_NAME = "gemini-2.5-flash"; // Valid Vertex AI model
 
 // --- PERSONAS ---
 const PERSONAS = {
@@ -75,12 +76,15 @@ async function summonCouncil() {
     // 2. The Debate (Parallel Execution)
     const promises = Object.entries(PERSONAS).map(async ([key, persona]) => {
         try {
-            const model = genAI.getGenerativeModel({ model: MODEL_NAME });
+            const model = vertexAI.getGenerativeModel({ model: MODEL_NAME });
             const systemPrompt = `Role: ${persona.prompt}\n\nContext:\n${contextData}`;
 
             const result = await model.generateContent(`${systemPrompt}\n\nUser Question: ${userMessage}`);
             const response = await result.response;
-            return { key, text: response.text() };
+            const text = response.candidates && response.candidates[0] && response.candidates[0].content.parts[0].text
+                ? response.candidates[0].content.parts[0].text
+                : (typeof response.text === 'function' ? response.text() : JSON.stringify(response));
+            return { key, text };
         } catch (error) {
             return { key, text: `[Error querying ${persona.name}: ${error.message}]` };
         }

@@ -158,6 +158,14 @@ service cloud.firestore {
     }
 
     // ============================================
+    // COURSES
+    // ============================================
+    match /courses/{courseId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+
+    // ============================================
     // CLASSROOM FEATURE
     // ============================================
     match /crmClassrooms/{classId} {

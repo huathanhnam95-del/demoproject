@@ -97,9 +97,17 @@ window.ClassroomAPI = (function () {
 
         let audioData = null;
         if (audioBlob) {
+            if (!(audioBlob instanceof Blob)) {
+                console.error("submitAssignment: audioBlob is not a Blob", audioBlob);
+                throw new Error("Invalid audio data");
+            }
+            // Double check IDs are strings
+            const cId = String(classId);
+            const wId = String(workId);
+
             // Upload to storage: uploads/{classId}/{workId}/{uid}/{filename}
             const filename = `submission_${Date.now()}.webm`;
-            const path = `uploads/${classId}/${workId}/${uid}/${filename}`;
+            const path = `uploads/${cId}/${wId}/${uid}/${filename}`;
             const storageRef = firebase.storage().ref(path);
             await storageRef.put(audioBlob);
             audioData = {
@@ -140,12 +148,12 @@ window.ClassroomAPI = (function () {
         if (!db) throw new Error("Firebase DB not initialized");
         const auth = getAuth();
         if (!auth || !auth.currentUser) throw new Error("Not logged in");
-        
+
         const snapshot = await db.collection("crmSubmissions")
             .where("classId", "==", classId)
             .where("studentUid", "==", auth.currentUser.uid)
             .get();
-        
+
         const submissions = [];
         snapshot.forEach(doc => submissions.push({ id: doc.id, ...doc.data() }));
         return submissions;

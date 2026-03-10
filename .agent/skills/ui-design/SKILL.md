@@ -1,11 +1,28 @@
 ---
 name: ui-design
-description: UI design patterns and component best practices for building web applications. Use when creating new UI components, layouts, or visual interfaces.
+description: UI design patterns and component best practices for building web applications. Use when creating new UI components, layouts, or visual interfaces. Generates creative, polished visual designs with high aesthetic quality that avoid generic AI slop.
 ---
 
 # UI Design Skill
 
-This skill covers **User Interface design patterns** and component best practices for the dictation practice web app.
+This skill covers **User Interface design patterns**, **aesthetic direction**, and component best practices for web applications.
+
+---
+
+## Aesthetics & Design Thinking
+
+Create distinctive, production-grade interfaces that avoid generic "AI slop" aesthetics. Before coding, understand the context and commit to a **BOLD aesthetic direction**.
+
+### Core Aesthetic Guidelines
+
+- **Tone**: Pick an intentional flavor: brutally minimal, maximalist chaos, retro-futuristic, organic/natural, luxury/refined, brutalist, etc. Let this guide every choice.
+- **Typography**: Choose unexpected, characterful display fonts paired with a refined body font. **Do not default to Inter, Roboto, Arial, or system fonts.**
+- **Color & Theme**: Dominant colors with sharp accents outperform timid, evenly-distributed palettes. Avoid cliché purple gradients on white backgrounds.
+- **Motion**: Focus on high-impact moments. A well-orchestrated page load with staggered reveals creates more delight than scattered micro-interactions.
+- **Spatial Composition**: Use unexpected layouts. Embrace asymmetry, overlap, grid-breaking elements, and generous negative space (or intentional density).
+- **Backgrounds**: Create atmosphere and depth. Use gradient meshes, noise/grain textures, layered transparencies, and dramatic shadows rather than flat solid colors.
+
+**CRITICAL**: Match the code complexity to the aesthetic. Maximalist designs need elaborate CSS/animations; minimalist designs need restraint, precision, and perfect typography/spacing. Never converge on the same predictable layout across tasks.
 
 ---
 
@@ -568,6 +585,10 @@ Use this when diagnosing layering/click issues:
 
 ## Design Checklist
 
+- [ ] Choose a distinct aesthetic theme and stick to it (avoid generic UI slop)
+- [ ] Select bold, characterful typography (avoid Inter/Roboto defaults)
+- [ ] Add atmospheric backgrounds (noise, meshes, patterns) instead of flat colors
+- [ ] Ensure layout uses interesting composition (asymmetry, overlap, intentional spacing)
 - [ ] Use semantic HTML elements
 - [ ] Ensure color contrast meets WCAG AA (4.5:1)
 - [ ] Add focus states to all interactive elements

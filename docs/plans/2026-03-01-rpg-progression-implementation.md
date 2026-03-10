@@ -10,13 +10,13 @@ We will verify functionality by testing the UI in the browser and relying on the
 
 ## Phase 1: Mode Gating Removal
 
-#### Step 1: Unblock Core Practice Modes
+### Step 1: Unblock Core Practice Modes
 
 - **File:** `public/script.js`
 - **Action:** In `refreshLockedTabs`, remove the `window.shopModule.isModeUnlocked(tab.mode)` check for core modes. Force `isUnlocked = true` so 'Speak', 'Fill', 'Watch', 'Notes', 'Pronounce' are always available.
 - **Test:** Open `http://localhost:5000` as a Level 1 user (or guest) and verify all mode tabs are clickable and do not have the `.locked` class.
 
-#### Step 2: Remove Length Filter Lock (Optional/Cleanup)
+### Step 2: Remove Length Filter Lock (Optional/Cleanup)
 
 - **File:** `public/script.js`
 - **Action:** In `isLengthFilterUnlocked`, update logic to ensure Length Filter is only locked if the shop data dictates it, or remove the lock entirely depending on the updated game design. For now, leave as-is since it delegates to `shopModule.isModeUnlocked`.
@@ -26,19 +26,19 @@ We will verify functionality by testing the UI in the browser and relying on the
 
 ## Phase 2: Action Popover UI Foundation
 
-#### Step 3: Add Popover HTML Template
+### Step 3: Add Popover HTML Template
 
 - **File:** `public/index.html`
 - **Action:** Inside the `#hint-controls` wrapper (around line 1601), add a new `div` for the `action-popover-menu`. It should contain buttons for "Word Ghost (15c)", "First-Letter Peek (25c)", and show current calibration impact tooltips.
 - **Test:** Refresh page, inspect element to ensure the popover HTML exists and is hidden by default.
 
-#### Step 4: Add Popover CSS Styles
+### Step 4: Add Popover CSS Styles
 
 - **File:** `public/style-scaffolding.css`
 - **Action:** Add styling for `.action-popover-menu`, `.popover-item`, `.popover-cost`, and `.calibration-tooltip`. Ensure it positions correctly above the Hint button.
 - **Test:** Temporarily set `.action-popover-menu { display: block; }` and verify it looks good visually in the browser.
 
-#### Step 5: Wire Hint Button to Popover
+### Step 5: Wire Hint Button to Popover
 
 - **File:** `public/hint-system.js` (or `script.js` if logic is inline)
 - **Action:** Modify the `#hint-btn` click event listener. Instead of triggering the old sequential hint logic (`HintSystem.handleHintClick`), make it toggle the visibility of the new `.action-popover-menu`.
@@ -48,7 +48,7 @@ We will verify functionality by testing the UI in the browser and relying on the
 
 ## Phase 3: Hint Skills Implementation
 
-#### Step 6: Word Ghost Active Skill
+### Step 6: Word Ghost Active Skill
 
 - **File:** `public/hint-system.js`
 - **Action:** Add click listener to the "Word Ghost" popover item.
@@ -57,7 +57,7 @@ We will verify functionality by testing the UI in the browser and relying on the
   - On success: call `window.revealNextHint()` and calculate/apply the calibration penalty directly to the current attempt state before `DifficultyManager.adjustDifficulty` takes it.
 - **Test:** Click Word Ghost. Check the network tab for the function call. Verify coins are deducted in the UI header and a word is revealed.
 
-#### Step 7: First-Letter Peek Active Skill
+### Step 7: First-Letter Peek Active Skill
 
 - **File:** `public/hint-system.js`
 - **Action:** Add click listener to the "First-Letter Peek" popover item.
@@ -69,7 +69,7 @@ We will verify functionality by testing the UI in the browser and relying on the
 
 ## Phase 4: Audio Controls Calibration
 
-#### Step 8: Audio Slow-Mo Integration
+### Step 8: Audio Slow-Mo Integration
 
 - **File:** `public/script.js`
 - **Action:** Locate the `#speed-toggle-btn` logic.
@@ -78,7 +78,7 @@ We will verify functionality by testing the UI in the browser and relying on the
   - Only change the `audio.playbackRate` if the backend transaction succeeds.
 - **Test:** Click the 1.0x speed button to toggle to 0.75x. Verify the backend call is made, coins are deducted, and audio plays slower.
 
-#### Step 9: Inject Calibration Penalties to Tracker
+### Step 9: Inject Calibration Penalties to Tracker
 
 - **File:** `public/js/performance-tracker.js`
 - **Action:** Ensure that the calibration multipliers returned from `useActiveSkill` in Steps 6, 7, and 8 are accumulated into a `window.currentAttemptCalibMult` variable. Pass this variable into `DifficultyManager.adjustDifficulty(...)` on submit.

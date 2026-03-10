@@ -615,16 +615,14 @@
 }
 
 /* Tighten spacing in PDF mode */
-.crm-pdf-exporting .crm-admin {
+.crm-admin.crm-pdf-exporting {
   padding: 0 !important;
   margin-left: 0 !important;
   margin-right: auto !important;
   width: 190mm !important;
   max-width: 190mm !important;
-  overflow: hidden !important;
-  /* Force clip at container edge if needed, but width should match */
+  overflow: visible !important;
   background-color: #ffffff !important;
-  /* Ensure white bg */
 }
 
 .crm-pdf-exporting .crm-result-grid {

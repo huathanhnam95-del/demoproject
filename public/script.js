@@ -560,6 +560,22 @@
     const activePanel = document.querySelector('.dashboard-panel.active');
     const modePanels = document.querySelectorAll('.mode-panel');
 
+    // CHECK FOR READING JOURNEY ROUTE FIRST
+    const normalizedPath = (window.location.pathname || '/').replace(/\/+$/, '');
+    const isReadingJourneyRoute = normalizedPath === '/readingjourney';
+
+    if (isReadingJourneyRoute) {
+      // Initialize Reading Journey and hide main app layout
+      const rjRoot = document.getElementById('readingjourney-root');
+      if (rjRoot && typeof window.initReadingJourney === 'function') {
+        window.initReadingJourney(rjRoot);
+        const pageWrapper = document.getElementById('page-layout-wrapper');
+        if (pageWrapper) pageWrapper.style.display = 'none';
+        rjRoot.style.display = 'block';
+        return; // Skip standard practice mode initialization
+      }
+    }
+
     if (activePanel) {
       if (activePanel.id === 'panel-srs') {
         modePanels.forEach(p => p.style.display = 'none');
@@ -7324,7 +7340,8 @@
           const currentSettings = window.DifficultyManager.getCurrentSettings(mode);
           difficultyLevel = currentSettings ? currentSettings.level : null;
         }
-      } else {        const selectedDifficultyOption = difficultyMenu?.querySelector('.filter-option.selected');
+      } else {
+        const selectedDifficultyOption = difficultyMenu?.querySelector('.filter-option.selected');
         const difficultyValue = selectedDifficultyOption?.dataset.value || 'all';
         difficultyLevel = difficultyValue !== 'all' ? parseInt(difficultyValue, 10) : null;
       }
@@ -7467,17 +7484,11 @@
     refreshRecommendationUI('speak');
     refreshRecommendationUI('extended');
 
-    // Global Readiness check: Wait briefly for auth-listener to trigger if user is signed in
-    // This reduces the 'pop-in' effect of filters and SRS badges
-    setTimeout(() => {
-      const preloader = document.getElementById('app-preloader');
-      if (preloader) {
-        preloader.classList.add('fade-out');
-        setTimeout(() => {
-          preloader.style.display = 'none';
-        }, 500);
-      }
-    }, 800); // 800ms buffer for auth-dependent data from Firestore
+    // Signal the 2D preloader that the app is ready
+    // The preloader will wait its minimum duration (3s) before dismissing
+    if (typeof window.finishBelPreloader === 'function') {
+      window.finishBelPreloader();
+    }
   };
 
   // Question selector event listeners

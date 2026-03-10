@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 import {
   PRELOADER_DURATION_MS,
   getAnimationPhase,
@@ -13,62 +15,25 @@ const HIDE_DELAY_MS = 760;
 
 function createBodyMaterial() {
   return new THREE.MeshStandardMaterial({
-    color: 0xf5f8ff,
-    emissive: 0x14345e,
-    emissiveIntensity: 0.22,
-    metalness: 0.5,
-    roughness: 0.18
-  });
-}
-
-function createGlowMaterial() {
-  return new THREE.MeshBasicMaterial({
     color: 0x1a73e8,
-    transparent: true,
-    opacity: 0.12,
-    blending: THREE.AdditiveBlending,
-    side: THREE.BackSide,
-    depthWrite: false
+    emissive: 0x1a73e8,
+    emissiveIntensity: 0.12,
+    metalness: 0.85,
+    roughness: 0.25
   });
 }
 
 function createEdgeMaterial() {
   return new THREE.MeshStandardMaterial({
-    color: 0xffffff,
-    emissive: 0x7db4ff,
-    emissiveIntensity: 0.14,
-    metalness: 0.68,
-    roughness: 0.14
+    color: 0x8ab4f8,
+    emissive: 0x4285f4,
+    emissiveIntensity: 0.15,
+    metalness: 0.5,
+    roughness: 0.3
   });
 }
 
-function createRoundedRectGeometry(width, height, depth, radius) {
-  const shape = new THREE.Shape();
-  const halfWidth = width / 2;
-  const halfHeight = height / 2;
-  const cornerRadius = Math.min(radius, halfWidth, halfHeight);
-
-  shape.moveTo(-halfWidth + cornerRadius, -halfHeight);
-  shape.lineTo(halfWidth - cornerRadius, -halfHeight);
-  shape.quadraticCurveTo(halfWidth, -halfHeight, halfWidth, -halfHeight + cornerRadius);
-  shape.lineTo(halfWidth, halfHeight - cornerRadius);
-  shape.quadraticCurveTo(halfWidth, halfHeight, halfWidth - cornerRadius, halfHeight);
-  shape.lineTo(-halfWidth + cornerRadius, halfHeight);
-  shape.quadraticCurveTo(-halfWidth, halfHeight, -halfWidth, halfHeight - cornerRadius);
-  shape.lineTo(-halfWidth, -halfHeight + cornerRadius);
-  shape.quadraticCurveTo(-halfWidth, -halfHeight, -halfWidth + cornerRadius, -halfHeight);
-
-  const geometry = new THREE.ExtrudeGeometry(shape, {
-    depth,
-    bevelEnabled: true,
-    bevelSegments: 3,
-    bevelSize: Math.min(cornerRadius * 0.38, 0.09),
-    bevelThickness: Math.min(depth * 0.12, 0.1),
-    curveSegments: 14
-  });
-  geometry.center();
-  return geometry;
-}
+// createRoundedRectGeometry removed as we use TextGeometry now
 
 function createGlowTexture() {
   const canvas = document.createElement('canvas');
@@ -92,7 +57,7 @@ class Preloader3D {
     this.overlay = this.preloader?.querySelector('.preloader-overlay') || null;
     this.wordmark = document.getElementById('preloader-wordmark');
     this.status = document.getElementById('preloader-text');
-    this.kicker = document.getElementById('preloader-kicker');
+    this.progressBar = document.getElementById('preloader-progress-fill');
 
     if (!this.preloader || !this.container) {
       return;
@@ -152,34 +117,30 @@ class Preloader3D {
 
   setupScene() {
     this.scene = new THREE.Scene();
-    this.scene.fog = new THREE.FogExp2(0x09131f, 0.05);
+    this.scene.fog = new THREE.FogExp2(0x0f172a, 0.035);
 
     this.camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 100);
 
-    const ambient = new THREE.AmbientLight(0xf4f8ff, 0.82);
+    const ambient = new THREE.AmbientLight(0x1a1a2e, 0.2);
     this.scene.add(ambient);
 
-    this.keyLight = new THREE.DirectionalLight(0xb7d4ff, 2.9);
-    this.keyLight.position.set(-5.4, 5.6, 9.4);
+    this.keyLight = new THREE.DirectionalLight(0xffffff, 0.6);
+    this.keyLight.position.set(5, 8, 5);
     this.scene.add(this.keyLight);
 
-    this.fillLight = new THREE.PointLight(0x1a73e8, 24, 34, 2);
-    this.fillLight.position.set(5.4, 2.2, 8.2);
-    this.scene.add(this.fillLight);
+    const brandAccent = new THREE.PointLight(0x1a73e8, 1.2, 30, 2);
+    brandAccent.position.set(0, 2, 4);
+    this.scene.add(brandAccent);
 
-    this.rimLight = new THREE.PointLight(0xf9ab00, 10, 22, 2);
-    this.rimLight.position.set(-6.2, 3.1, -2.4);
-    this.scene.add(this.rimLight);
+    const fillLight = new THREE.DirectionalLight(0x8ab4f8, 0.3);
+    fillLight.position.set(-5, -2, -5);
+    this.scene.add(fillLight);
 
-    this.accentLight = new THREE.PointLight(0x1e8e3e, 5.5, 18, 2);
-    this.accentLight.position.set(0.8, -1.6, 7.6);
-    this.scene.add(this.accentLight);
-
-    this.logoGroup = this.createLogoGroup();
+    this.logoGroup = new THREE.Group();
     this.scene.add(this.logoGroup);
+    this.loadFontAndCreateText();
 
-    this.energyRing = this.createEnergyRing();
-    this.scene.add(this.energyRing);
+    this.energyRing = null;
 
     this.floor = this.createFloor();
     this.scene.add(this.floor);
@@ -190,40 +151,49 @@ class Preloader3D {
     }
 
     this.particles = this.createParticles();
-    this.scene.add(this.particles);
+    if (this.particles) {
+      this.scene.add(this.particles);
+    }
   }
 
-  createLogoGroup() {
-    const group = new THREE.Group();
-    const material = createBodyMaterial();
-    const glowMaterial = createGlowMaterial();
-    const edgeMaterial = createEdgeMaterial();
+  loadFontAndCreateText() {
+    const loader = new FontLoader();
+    loader.load('https://unpkg.com/three@0.160.0/examples/fonts/helvetiker_bold.typeface.json', (font) => {
+      const geometry = new TextGeometry('BEL', {
+        font: font,
+        size: 4.5,
+        height: 0.8,
+        curveSegments: 4,
+        bevelEnabled: true,
+        bevelThickness: 0.1,
+        bevelSize: 0.05,
+        bevelOffset: 0,
+        bevelSegments: 3
+      });
+      geometry.center();
 
-    const letterB = this.createLetterB(material, glowMaterial, edgeMaterial);
-    const letterE = this.createLetterE(material, glowMaterial, edgeMaterial);
-    const letterL = this.createLetterL(material, glowMaterial, edgeMaterial);
+      const material = createBodyMaterial();
+      const edgeMaterial = createEdgeMaterial();
 
-    letterB.position.x = -4.2;
-    letterE.position.x = 0;
-    letterL.position.x = 4.1;
+      const textMesh = new THREE.Mesh(geometry, [material, edgeMaterial]);
 
-    group.add(letterB, letterE, letterL);
+      this.logoGroup.add(textMesh);
 
-    const base = new THREE.Mesh(
-      new THREE.CylinderGeometry(5.9, 6.8, 0.45, 40),
-      new THREE.MeshStandardMaterial({
-        color: 0x10233b,
-        emissive: 0x123c72,
-        emissiveIntensity: 0.16,
-        metalness: 0.24,
-        roughness: 0.62
-      })
-    );
-    base.position.set(0, -3.35, -0.35);
-    group.add(base);
+      const base = new THREE.Mesh(
+        new THREE.CylinderGeometry(5.9, 6.8, 0.45, 40),
+        new THREE.MeshStandardMaterial({
+          color: 0x0f172a,
+          emissive: 0x1a73e8,
+          emissiveIntensity: 0.08,
+          metalness: 0.6,
+          roughness: 0.5
+        })
+      );
+      base.position.set(0, -3.35, -0.35);
+      this.logoGroup.add(base);
 
-    group.rotation.x = -0.08;
-    return group;
+      this.logoGroup.rotation.x = -0.08;
+    });
   }
 
   createFloor() {
@@ -232,9 +202,9 @@ class Preloader3D {
     const disc = new THREE.Mesh(
       new THREE.CircleGeometry(8.4, 64),
       new THREE.MeshBasicMaterial({
-        color: 0x0f2747,
+        color: 0x1a73e8,
         transparent: true,
-        opacity: 0.22
+        opacity: 0.06
       })
     );
     disc.rotation.x = -Math.PI / 2;
@@ -244,9 +214,9 @@ class Preloader3D {
     const glow = new THREE.Mesh(
       new THREE.RingGeometry(5.2, 8.6, 80),
       new THREE.MeshBasicMaterial({
-        color: 0x78adff,
+        color: 0x4285f4,
         transparent: true,
-        opacity: 0.08,
+        opacity: 0.1,
         blending: THREE.AdditiveBlending,
         side: THREE.DoubleSide
       })
@@ -267,7 +237,7 @@ class Preloader3D {
         map: texture,
         color: 0x1a73e8,
         transparent: true,
-        opacity: 0.16,
+        opacity: 0.2,
         blending: THREE.AdditiveBlending,
         depthWrite: false
       })
@@ -281,7 +251,7 @@ class Preloader3D {
         map: texture,
         color: 0x8fc2ff,
         transparent: true,
-        opacity: 0.08,
+        opacity: 0.25,
         blending: THREE.AdditiveBlending,
         depthWrite: false
       })
@@ -297,9 +267,9 @@ class Preloader3D {
     const ring = new THREE.Mesh(
       new THREE.TorusGeometry(7.4, 0.13, 18, 120),
       new THREE.MeshBasicMaterial({
-        color: 0x6eb0ff,
+        color: 0x4285f4,
         transparent: true,
-        opacity: 0.22,
+        opacity: 0.4,
         blending: THREE.AdditiveBlending
       })
     );
@@ -310,6 +280,9 @@ class Preloader3D {
 
   createParticles() {
     const count = this.qualityProfile.particleCount;
+    if (!count) {
+      return null;
+    }
     const positions = new Float32Array(count * 3);
 
     for (let index = 0; index < count; index += 1) {
@@ -325,83 +298,14 @@ class Preloader3D {
     return new THREE.Points(
       geometry,
       new THREE.PointsMaterial({
-        color: 0xd9e8ff,
-        size: 0.06,
+        color: 0x4285f4,
+        size: 0.08,
         transparent: true,
-        opacity: 0.46,
+        opacity: 0.4,
         blending: THREE.AdditiveBlending,
         depthWrite: false
       })
     );
-  }
-
-  createLetterB(material, glowMaterial, edgeMaterial) {
-    return this.createLetterFromSegments(
-      [
-        [-0.98, 0, 0.56, 3.82],
-        [0.28, 1.64, 2.34, 0.46],
-        [0.34, 0.14, 2.08, 0.4],
-        [0.28, -1.54, 2.28, 0.46],
-        [1.24, 0.94, 0.46, 1.42],
-        [1.2, -1.04, 0.46, 1.56]
-      ],
-      material,
-      glowMaterial,
-      edgeMaterial
-    );
-  }
-
-  createLetterE(material, glowMaterial, edgeMaterial) {
-    return this.createLetterFromSegments(
-      [
-        [-0.9, 0, 0.54, 3.82],
-        [0.34, 1.64, 2.42, 0.44],
-        [0.16, 0.14, 2.02, 0.36],
-        [0.3, -1.56, 2.46, 0.44]
-      ],
-      material,
-      glowMaterial,
-      edgeMaterial
-    );
-  }
-
-  createLetterL(material, glowMaterial, edgeMaterial) {
-    return this.createLetterFromSegments(
-      [
-        [-0.84, 0, 0.54, 3.82],
-        [0.44, -1.56, 2.4, 0.46]
-      ],
-      material,
-      glowMaterial,
-      edgeMaterial
-    );
-  }
-
-  createLetterFromSegments(segments, material, glowMaterial, edgeMaterial) {
-    const letter = new THREE.Group();
-
-    segments.forEach(([x, y, width, height]) => {
-      const geometry = createRoundedRectGeometry(width, height, 0.82, Math.min(width, height) * 0.18);
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.position.set(x, y, 0);
-      mesh.castShadow = false;
-      mesh.receiveShadow = false;
-      letter.add(mesh);
-
-      const glow = new THREE.Mesh(geometry, glowMaterial);
-      glow.position.copy(mesh.position);
-      glow.scale.set(1.08, 1.08, 1.28);
-      letter.add(glow);
-
-      const frontPlate = new THREE.Mesh(
-        createRoundedRectGeometry(Math.max(0.18, width - 0.08), Math.max(0.18, height - 0.08), 0.1, Math.min(width, height) * 0.14),
-        edgeMaterial
-      );
-      frontPlate.position.set(x, y, 0.38);
-      letter.add(frontPlate);
-    });
-
-    return letter;
   }
 
   enableFallback() {
@@ -410,6 +314,9 @@ class Preloader3D {
     this.preloader.classList.add('preloader-fallback-active');
     if (this.wordmark) {
       this.wordmark.setAttribute('data-ready', 'true');
+    }
+    if (this.progressBar) {
+      this.progressBar.style.width = '100%';
     }
   }
 
@@ -429,6 +336,17 @@ class Preloader3D {
     }
   }
 
+  updateProgressBar(elapsed) {
+    if (!this.progressBar) return;
+    const minMs = 3500; // Match PRELOADER_MIN_DURATION_MS
+    if (elapsed < minMs) {
+      const fakePct = Math.min((elapsed / minMs) * 100, 99);
+      this.progressBar.style.width = `${fakePct}%`;
+    } else {
+      this.progressBar.style.width = `100%`;
+    }
+  }
+
   animate(now = performance.now()) {
     if (this.isFinished || this.isFallback || !this.renderer) {
       return;
@@ -437,6 +355,8 @@ class Preloader3D {
     this.rafId = window.requestAnimationFrame((nextNow) => this.animate(nextNow));
 
     const elapsed = now - this.startTime;
+    this.updateProgressBar(elapsed);
+
     const progress = this.motionProfile.durationMs <= 0
       ? 1
       : Math.min(elapsed / this.animationDuration, 1);
@@ -446,48 +366,24 @@ class Preloader3D {
     this.camera.position.set(pose.position.x, pose.position.y, pose.position.z);
     this.camera.lookAt(pose.lookAt.x, pose.lookAt.y, pose.lookAt.z);
 
-    if (this.motionProfile.allowAmbientMotion) {
-      const drift = elapsed * 0.00055;
-      this.logoGroup.rotation.y = -0.18 + (Math.sin(drift * 0.55) * 0.06);
-      this.logoGroup.rotation.z = Math.sin(drift * 0.26) * 0.016;
-      this.logoGroup.position.y = Math.sin(drift * 0.78) * 0.08;
-      this.logoGroup.position.z = Math.cos(drift * 0.34) * 0.1;
+    this.logoGroup.rotation.y = -0.08;
+    this.logoGroup.rotation.z = 0;
+    this.logoGroup.position.y = 0;
+    this.logoGroup.position.z = 0;
+    this.floor.children[0].material.opacity = 0.18;
+    this.floor.children[1].material.opacity = 0.07;
 
-      this.energyRing.rotation.z += 0.0024;
-      this.energyRing.material.opacity = 0.14 + (Math.sin(drift * 1.1) * 0.03);
-
-      this.fillLight.position.x = 5.2 + (Math.sin(drift * 0.8) * 1.4);
-      this.fillLight.position.y = 2.4 + (Math.cos(drift * 1.25) * 0.45);
-      this.rimLight.position.x = -6.1 + (Math.cos(drift * 0.68) * 0.9);
-      this.rimLight.intensity = 8.5 + (Math.sin(drift * 1.05) * 1.2);
-      this.accentLight.intensity = 4.2 + (Math.cos(drift * 0.92) * 0.65);
-
-      this.particles.rotation.y += 0.00034;
-      this.particles.rotation.x = Math.sin(drift * 0.2) * 0.03;
-      this.floor.children[0].material.opacity = 0.18 + (Math.sin(drift * 0.8) * 0.02);
-      this.floor.children[1].material.opacity = 0.07 + (Math.cos(drift * 0.9) * 0.015);
-
-      if (this.atmosphereGlow) {
-        this.atmosphereGlow.children[0].material.opacity = 0.12 + (Math.sin(drift * 0.9) * 0.025);
-        this.atmosphereGlow.children[1].material.opacity = 0.06 + (Math.cos(drift * 1.15) * 0.02);
-        this.atmosphereGlow.rotation.z = Math.sin(drift * 0.16) * 0.04;
-      }
-    } else {
-      this.logoGroup.rotation.y = -0.12;
-      this.logoGroup.rotation.z = 0;
-      this.logoGroup.position.y = 0;
-      this.logoGroup.position.z = 0;
-      this.energyRing.material.opacity = 0.1;
+    if (this.atmosphereGlow) {
+      this.atmosphereGlow.children[0].material.opacity = 0.2;
+      this.atmosphereGlow.children[1].material.opacity = 0.25;
+      this.atmosphereGlow.rotation.z = 0;
     }
 
     if (phase === 'resolve') {
-      this.logoGroup.scale.setScalar(1.01 + ((progress - 0.82) * 0.18));
-      this.logoGroup.rotation.y *= 0.992;
-      if (this.kicker) {
-        this.kicker.style.opacity = String(Math.max(0.2, 1 - ((progress - 0.82) * 2.2)));
-      }
-    } else if (this.kicker) {
-      this.kicker.style.opacity = '0.96';
+      this.logoGroup.scale.setScalar(1.01 + ((progress - 0.82) * 0.12));
+      this.logoGroup.rotation.y = -0.06;
+    } else {
+      this.logoGroup.scale.setScalar(1);
     }
 
     this.renderer.render(this.scene, this.camera);
@@ -495,7 +391,8 @@ class Preloader3D {
     if (shouldFinishPreloader({
       progress,
       appReady: window._appReady,
-      logoReady: this.logoReady
+      logoReady: this.logoReady,
+      elapsed
     })) {
       this.finish();
     }
@@ -537,7 +434,9 @@ class Preloader3D {
     this.logoGroup.scale.setScalar(finishState.logoScale);
     this.logoGroup.rotation.y *= 0.94;
     this.logoGroup.position.y *= 0.94;
-    this.energyRing.material.opacity = finishState.ringOpacity;
+    if (this.energyRing) {
+      this.energyRing.material.opacity = finishState.ringOpacity;
+    }
     if (this.atmosphereGlow) {
       this.atmosphereGlow.children[0].material.opacity = Math.max(0, 0.12 - (elapsed * 0.12));
       this.atmosphereGlow.children[1].material.opacity = Math.max(0, 0.06 - (elapsed * 0.06));

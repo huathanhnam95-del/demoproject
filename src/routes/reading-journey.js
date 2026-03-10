@@ -11,7 +11,8 @@ const {
   computeOutlineCacheKey,
   computeBeatCacheKey,
   getCachedValue,
-  setCachedValue
+  setCachedValue,
+  listCachedOutlines
 } = require('../services/reading-journey/cache');
 
 const gemini = require('../services/reading-journey/gemini');
@@ -232,6 +233,47 @@ router.get('/reading-journey/health', (req, res) => {
     fallbackModel: gemini.getFallbackModelName(),
     fallbackReason: gemini.getForceFallbackReason() || ''
   });
+});
+
+router.get('/reading-journey/outlines', requireEnabled, async (req, res) => {
+  try {
+    const rawOutlines = await listCachedOutlines();
+
+    const outlines = rawOutlines.map((entry) => {
+      const value = entry.value || {};
+      const title = String(value.title || 'Untitled Story').trim();
+
+      // Parse level and topicTags from the cache key string
+      // Key format: v1|lang:en|level:B1|tags:adventure,mystery
+      let level = 'B1';
+      let topicTags = [];
+      const keyStr = String(entry.key || '');
+      for (const part of keyStr.split('|')) {
+        const idx = part.indexOf(':');
+        if (idx === -1) continue;
+        const k = part.slice(0, idx);
+        const v = part.slice(idx + 1);
+        if (k === 'level') level = v.toUpperCase() || 'B1';
+        if (k === 'tags') topicTags = v.split(',').map(t => t.trim()).filter(Boolean);
+      }
+
+      // Prefer stored topicTags from the value if available
+      if (Array.isArray(value.topicTags) && value.topicTags.length) {
+        topicTags = value.topicTags;
+      }
+
+      return {
+        outlineId: entry.id,
+        title,
+        level,
+        topicTags
+      };
+    });
+
+    return sendSuccess(res, { outlines });
+  } catch (e) {
+    return sendError(res, 500, 'LIST_FAILED', 'Failed to list outlines', e?.message || String(e));
+  }
 });
 
 router.post('/reading-journey/suggest-keywords', maybeAiLimiter, requireEnabled, async (req, res) => {

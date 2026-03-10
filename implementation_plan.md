@@ -1,100 +1,57 @@
-# SRS Scheduler Redesign Plan
+# SRS Scheduler Redesign Plan (Revised)
 
 ## Goal
 
-Optimize the scheduling engine of the web application to match the efficiency and reliability of industry-standard tools (Anki). This plan focuses **exclusively on the scheduler logic**, ensuring all other app functions (audio, recording, UI) remain intact.
+Optimize the scheduling engine of the web application to match the efficiency and reliability of industry-standard tools (Anki).
 
-## Core Strategy: The "Dual-Engine" Scheduler
+*Status update (March 2026): The core architectural redesign for the "Dual-Engine" scheduler (SM-2 + FSRS v4.5) has been successfully implemented in `public/srs-scheduler.js` and `public/srs-review.js`. The current focus is strictly on **Verification and Regression Testing**.*
 
-We will refactor the scheduling logic into a dedicated `SRSScheduler` module. This allows us to support two algorithms without cluttering the main UI code:
+## User Review Required
 
-1. **Engine A: Robust SM-2 (Default)** - High fidelity to Anki's classic algorithm (Hard/Easy multipliers, Learning Steps).
-2. **Engine B: FSRS v4.5 (Advanced)** - State-of-the-art efficiency using Machine Learning parameters (Difficulty, Stability, Retrievability).
+No immediate user review required for architectural choices, as the Dual-Engine is live. However, the proposed Automated Unit Testing approach requires confirmation before execution.
 
-## 1. Data Structure Optimization
+## Proposed Changes (Completed)
 
-We need to extend the card data model to support both engines without breaking existing data.
+The following components have been fully migrated and are actively running in production:
 
-### Card Object Extensions
+### Core Scheduling Logic
 
-```javascript
-{
-  // Existing Fields (Preserved)
-  id: "word_123",
-  interval: 1,         // Days
-  easeFactor: 2.5,     // SM-2 Multiplier
-  repetitions: 0,
-  
-  // NEW: Scheduler State
-  state: "learning",   // learning | reviewing | relearning | mastered
-  stepIndex: 0,        // For intra-day learning steps (0=1m, 1=10m)
-  
-  // NEW: FSRS Fields (Initialized on demand)
-  fsrs: {
-    difficulty: 5,     // 1-10
-    stability: 0,      // Days
-    retrievability: 1, // Probability
-    lastReview: timestamp
-  }
-}
-```
+#### [MODIFY] `public/srs-scheduler.js`
 
-## 2. Algorithm Specifications
+- Implements `calculateSM2` and `calculateFSRS` (via `ts-fsrs`) algorithms.
+- Unified single-entry calculation method `SRSScheduler.calculate()`.
+- Supports extraction of Retrievability and Stability for statistics.
 
-### Engine A: Robust SM-2 (The Anki Standard)
+### Controller & UI Integration
 
-Optimized to fix current "ease hell" and "linear growth" issues.
+#### [MODIFY] `public/srs-review.js`
 
-| Rating | Action | Interval Logic | Ease Factor Effect |
-| :--- | :--- | :--- | :--- |
-| **Again (1)** | Fail / Relearn | **Relearning**: Reset to Step 0 (1 min).<br>**Review**: Reset to Learning. | **-20%** (Min 130%) |
-| **Hard (2)** | Struggle | **Interval * 1.2** (Fixed 1.2x multiplier). | **-15%** (Min 130%) |
-| **Good (3)** | Pass | **Review**: `Interval * EaseFactor`.<br>**Learning**: Next Step (10m) or Graduate (1 day). | **No Change** |
-| **Easy (4)** | Easy Bonus | **Review**: `Interval * EaseFactor * 1.3` (1.3x Bonus).<br>**Learning**: Graduate immediately to 4 days. | **+15%** |
+- Delegated all scheduling math to `srs-scheduler.js`.
+- Implemented Settings UI to allow users to toggle between algorithms seamlessly.
+- Integrated `Chart.js` rendering for "Memory Health".
 
-**Configuration**:
+## Proposed Changes (Pending)
 
-* **Learning Steps**: `[1m, 10m]` (Intra-day reviews).
-* **Graduating Interval**: `1 day`.
-* **Easy Interval**: `4 days`.
+### Unit Testing Suite
 
-### Engine B: FSRS v4.5 (Performance Option)
+Currently, there are no dedicated automated tests for the complex temporal math inside `SRSScheduler` in the `tests/` directory.
 
-Optimizes retention by calculating: `Interval = Stability * 9 * (1/Retention - 1)`.
+#### [NEW] `tests/srs-scheduler.test.mjs`
 
-* **Difficulty (D)**: Updates on every review.
-* **Stability (S)**: Compounded memory strength.
-* **Handling**:
-  * **Good**: Increases Stability based on D.
-  * **Again**: Slashes Stability, Increases D significantly.
+Create a Node.js-compatible test script to verify both engines:
 
-## 3. Integration Plan
+- **SM-2 Tests**: Verify graduating interval (1d), easy interval (4d), hard multiplier (1.2x), and ease factor penalties.
+- **FSRS Tests**: Verify integration with `ts-fsrs` returns expected retrievability, stability, and difficulty floats given mock inputs.
+- **Mastery Scenarios**: Ensure words correctly graduate to the `mastered` state across both engines.
 
-We will implement this seamlessly into `srs-review.js`.
+## Verification Plan
 
-### Phase 1: The Scheduler Class
+### Automated Tests
 
-Create a clean wrapper for the logic.
+- Build and run `node tests/srs-scheduler.test.mjs` to ensure the core mathematical formulas do not regress during future updates.
 
-```javascript
-class SRSScheduler {
-    calculate(card, rating, algorithm = 'SM2') { ... }
-    _calculateSM2(card, rating) { ... }
-    _calculateFSRS(card, rating) { ... }
-}
-```
+### Manual Verification
 
-### Phase 2: Migration & Persistence
-
-* **Backward Compatibility**: The `calculate` method will check if `fsrs` fields exist. If not, it defaults to SM-2 or initializes them.
-* **No UI Breakage**: The function signature `calculateNextReview(quality, card)` in `srs-review.js` will simply delegate to `SRSScheduler`.
-
-### Phase 3: Mobile-Ready Constraints
-
-* **Performance**: Logic is lightweight JS (no heavy WASM required for basic FSRS).
-* **Offline First**: State is entirely JSON-serializable for LocalStorage/Firebase.
-
-## Verification
-
-1. **Unit Tests**: Run scenarios (New Card -> Again -> Good -> Good) and verify Intervals match Anki simulator.
-2. **Regression Check**: Ensure "Mastered" status still triggers correctly.
+- Launch the application locally using `node server.js`.
+- Open the SRS Review panel.
+- Verify that changing between SM-2 and FSRS algorithms in the Settings modal successfully persists and alters the next scheduled button intervals.

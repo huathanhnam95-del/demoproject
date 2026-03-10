@@ -116,7 +116,7 @@
           </div>
           <button id="btn-new-course" class="crm-btn-primary btn-new-course-trigger">+ New Course</button>
         </div>
-        <div class="crm-placeholder-card">Course Management content here.</div>
+        <div id="course-catalog-grid" class="crm-table-container">Course Management content here.</div>
       </section>
 
       <section class="crm-panel" data-panel="courses/classes">
@@ -317,7 +317,8 @@
             <div class="crm-form-group" style="margin-top: 20px;">
               <label>Class Code (For Student Self-Claim)</label>
               <div style="display: flex; gap: 10px; align-items: center;">
-                <input type="text" id="crm-class-code-display" class="crm-input" readonly placeholder="No code generated">
+                <input type="text" id="crm-class-code-display" class="crm-input" readonly
+                  placeholder="No code generated">
                 <button id="btn-generate-class-code" class="crm-btn-secondary">Generate New</button>
               </div>
               <small class="text-muted">Share this 6-digit code with the student.</small>
@@ -335,15 +336,18 @@
             </div>
 
             <!-- Preview Card -->
-            <div id="crm-handshake-preview" class="crm-preview-card" style="display: none; margin-top: 16px; padding: 16px; border: 1px solid #edf2f7; border-radius: 8px; background: #f8f9fa;">
+            <div id="crm-handshake-preview" class="crm-preview-card"
+              style="display: none; margin-top: 16px; padding: 16px; border: 1px solid #edf2f7; border-radius: 8px; background: #f8f9fa;">
               <div style="display: flex; align-items: center; gap: 12px;">
-                <img id="crm-handshake-avatar" src="" alt="Avatar" style="width: 48px; height: 48px; border-radius: 50%; background: #eee;">
+                <img id="crm-handshake-avatar" src="" alt="Avatar"
+                  style="width: 48px; height: 48px; border-radius: 50%; background: #eee;">
                 <div>
                   <div id="crm-handshake-name" style="font-weight: bold;">User Name</div>
                   <div id="crm-handshake-uid" class="text-muted" style="font-size: 12px;">UID: ...</div>
                 </div>
               </div>
-              <button id="btn-confirm-handshake" class="crm-btn-primary" style="width: 100%; margin-top: 16px;">Confirm Link</button>
+              <button id="btn-confirm-handshake" class="crm-btn-primary" style="width: 100%; margin-top: 16px;">Confirm
+                Link</button>
             </div>
 
             <div id="crm-linked-accounts-list" style="margin-top: 20px;">
@@ -480,7 +484,8 @@
           <button class="crm-sidebar-item" data-tab="review-board">Review Board</button>
         </div>
         <div class="crm-modal-content">
-          <!-- Settings Section -->          <div id="classroom-settings" class="crm-tab-content active">
+          <!-- Settings Section -->
+          <div id="classroom-settings" class="crm-tab-content active">
             <div class="crm-form-grid">
               <div class="crm-form-group">
                 <label for="classroom-name">Classroom Name</label>
@@ -509,7 +514,8 @@
               <h3>Announcements</h3>
             </div>
             <div class="crm-form-group" style="margin-bottom: 24px; display: flex; gap: 10px;">
-              <input type="text" id="stream-post-content" class="crm-input" placeholder="Announce something to your class">
+              <input type="text" id="stream-post-content" class="crm-input"
+                placeholder="Announce something to your class">
               <button id="btn-post-announcement" class="crm-btn-primary">Post</button>
             </div>
             <div id="stream-posts-container" class="module-list-container">
@@ -609,8 +615,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
-  <script src="js/classroom-api.js"></script>
-  <script src="crm-admin.js"></script>
+  <script src="js/classroom-api.js?v=1.5.4"></script>
+  <script src="crm-admin.js?v=1.5.4"></script>
 </body>
 
 </html>

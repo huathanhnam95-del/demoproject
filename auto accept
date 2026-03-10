@@ -3,6 +3,7 @@
     'use strict';
     const CFG = {
         scanIntervalMs: 250,
+        perElementCooldownMs: 1500,
         clickRun: true,
         log: false
     };
@@ -10,10 +11,11 @@
         timer: null,
         clicks: 0,
         lastActionAt: 0,
-        clickedElements: new WeakSet(),
+        clickedAtByElement: new WeakMap(),
         ui: null,
         dragging: false,
-        drag: { startX: 0, startY: 0, offX: 0, offY: 0 }
+        drag: { startX: 0, startY: 0, offX: 0, offY: 0 },
+        cleanupFns: []
     };
     function t(s) {
         return (s || '').replace(/\s+/g, ' ').trim();
@@ -47,17 +49,18 @@
     }
     function safeClick(el, reason) {
         const now = Date.now();
+        const lastClickedAt = state.clickedAtByElement.get(el) || 0;
         if (!el) return false;
         if (!isVisible(el)) return false;
         if (!isOnScreen(el)) return false;
         if (el.disabled) return false;
-        if (state.clickedElements.has(el)) return false;
+        if (now - lastClickedAt < CFG.perElementCooldownMs) return false;
         if (now - state.lastActionAt < 350) return false;
         try { el.scrollIntoView({ block: 'center', inline: 'center' }); } catch (_) { /* intentional ignore */ }
         try { el.focus(); } catch (_) { /* intentional ignore */ }
         try {
             el.click();
-            state.clickedElements.add(el);
+            state.clickedAtByElement.set(el, now);
             state.clicks += 1;
             state.lastActionAt = now;
             if (CFG.log) console.log('[auto-run]', reason, '| clicks:', state.clicks, '| label:', labelOf(el));
@@ -134,6 +137,11 @@
     }
     function removeHUD() {
         stop('removed');
+        state.dragging = false;
+        while (state.cleanupFns.length > 0) {
+            const fn = state.cleanupFns.pop();
+            try { fn(); } catch (_) { /* intentional ignore */ }
+        }
         if (state.ui) state.ui.remove();
         state.ui = null;
     }
@@ -170,7 +178,7 @@
         const right = document.createElement('div');
         right.style.cssText = 'display:flex; gap:6px; align-items:center;';
         const collapse = document.createElement('button');
-        collapse.textContent = '–';
+        collapse.textContent = '-';
         collapse.style.cssText = [
             'width:26px',
             'height:22px',
@@ -181,7 +189,7 @@
             'cursor:pointer'
         ].join(';');
         const close = document.createElement('button');
-        close.textContent = '×';
+        close.textContent = 'x';
         close.style.cssText = [
             'width:26px',
             'height:22px',
@@ -289,12 +297,16 @@
         hud.appendChild(header);
         hud.appendChild(body);
         document.body.appendChild(hud);
-        toggleBtn.addEventListener('click', () => toggle());
-        cbRun.addEventListener('change', () => {
+        function bind(target, event, handler, options) {
+            target.addEventListener(event, handler, options);
+            state.cleanupFns.push(() => target.removeEventListener(event, handler, options));
+        }
+        bind(toggleBtn, 'click', () => toggle());
+        bind(cbRun, 'change', () => {
             CFG.clickRun = !!cbRun.checked;
             refreshHUD();
         });
-        intervalInput.addEventListener('change', () => {
+        bind(intervalInput, 'change', () => {
             const v = Number(intervalInput.value);
             if (Number.isFinite(v) && v >= 50 && v <= 5000) {
                 CFG.scanIntervalMs = v;
@@ -308,10 +320,10 @@
             refreshHUD();
         });
         let collapsed = false;
-        collapse.addEventListener('click', () => {
+        bind(collapse, 'click', () => {
             collapsed = !collapsed;
             body.style.display = collapsed ? 'none' : 'block';
-            collapse.textContent = collapsed ? '+' : '–';
+            collapse.textContent = collapsed ? '+' : '-';
         });
         function keyHandler(e) {
             if (e.ctrlKey && e.altKey && (e.key === 'r' || e.key === 'R')) {
@@ -325,9 +337,8 @@
             delete window.__antigravityAutoRunToggle;
             delete window.__antigravityAutoRunHUD;
             delete window.__antigravityAutoRunRemoveHUD;
-            try { document.removeEventListener('keydown', keyHandler, true); } catch (_) { /* intentional ignore */ }
         }
-        close.addEventListener('click', cleanupAll);
+        bind(close, 'click', cleanupAll);
         function onMouseDown(e) {
             if (e.target === collapse || e.target === close || e.target === toggleBtn || e.target === cbRun || e.target === intervalInput) return;
             state.dragging = true;
@@ -350,10 +361,10 @@
         function onMouseUp() {
             state.dragging = false;
         }
-        header.addEventListener('mousedown', onMouseDown);
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
-        document.addEventListener('keydown', keyHandler, true);
+        bind(header, 'mousedown', onMouseDown);
+        bind(document, 'mousemove', onMouseMove);
+        bind(document, 'mouseup', onMouseUp);
+        bind(document, 'keydown', keyHandler, true);
         return hud;
     }
     if (window.__antigravityAutoRunRemoveHUD) {

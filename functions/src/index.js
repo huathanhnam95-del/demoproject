@@ -19,6 +19,7 @@ const { assessWriting } = require('./assessWriting');
 
 const { onRequest } = require('firebase-functions/v2/https');
 const apiApp = require('./apiApp');
+const { onUserSignUp } = require('./studentIdentity');
 
 module.exports = {
     submitAttempt,
@@ -27,5 +28,6 @@ module.exports = {
     useActiveSkill,
     migrateUserCoins,
     assessWriting,
-    api: onRequest({ region: 'us-central1' }, apiApp)
+    api: onRequest({ region: 'us-central1' }, apiApp),
+    onUserSignUp
 };

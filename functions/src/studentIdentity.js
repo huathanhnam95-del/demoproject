@@ -129,10 +129,69 @@ const forceLinkProfile = async (studentId, targetUid) => {
     return { success: true };
 };
 
+/**
+ * Automatically enrolls a matching Firebase Auth user by email.
+ * Grants the isStudent claim and links the UID to the crmStudent record.
+ * @param {string} email 
+ * @param {string} studentId
+ */
+const autoEnrollByEmail = async (email, studentId) => {
+    if (!email || !studentId) return { success: false, reason: 'Missing email or studentId' };
+
+    try {
+        const user = await getAuth().getUserByEmail(email);
+        if (user && user.uid) {
+            await forceLinkProfile(studentId, user.uid);
+            return { success: true, uid: user.uid };
+        }
+    } catch (e) {
+        if (e.code === 'auth/user-not-found') {
+            return { success: false, reason: 'User not found in Auth system yet.' };
+        }
+        console.error('[autoEnrollByEmail] Error:', e);
+        return { success: false, reason: e.message };
+    }
+    return { success: false, reason: 'Unknown error' };
+};
+
+/**
+ * Cloud Function Trigger: Runs when a new Firebase Auth user is created.
+ * Automatically checks if their email matches a crmStudent and enrolls them.
+ */
+const functions = require('firebase-functions');
+
+const onUserSignUp = functions.auth.user().onCreate(async (user) => {
+    if (!user || !user.email) return;
+
+    try {
+        const email = user.email.toLowerCase().trim();
+
+        // Find if this email exists in crmStudents
+        const snap = await db.collection('crmStudents')
+            .where('email', '==', email)
+            .limit(1)
+            .get();
+
+        if (!snap.empty) {
+            const studentId = snap.docs[0].id;
+            console.log(`[onUserSignUp] Found matching CRM Student (${studentId}) for new UID: ${user.uid}`);
+
+            // Note: We use the admin SDK methods directly here instead of autoEnrollByEmail 
+            // because we already have the UID from the event.
+            await forceLinkProfile(studentId, user.uid);
+            console.log(`[onUserSignUp] Successfully auto-enrolled ${email}`);
+        }
+    } catch (e) {
+        console.error('[onUserSignUp] Failed to auto-enroll new user:', e);
+    }
+});
+
 module.exports = {
     generateClassCode,
     claimProfile,
     lookupUserByEmail,
     forceLinkProfile,
-    mergeCustomClaims
+    mergeCustomClaims,
+    autoEnrollByEmail,
+    onUserSignUp
 };

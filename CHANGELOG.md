@@ -1,5 +1,23 @@
 # Changelog
 
+## [V1.5.4] - 2026-03-10
+
+### Fixed
+
+- **Entrance Test PDF Export**: Corrected CSS selector mismatch and width constraints that caused content clipping and malformed layouts.
+- **Auto-Retry HUD**: Resolved multiple bugs including crash on null elements, global event handler pollution, and incorrect iframe scanning logic.
+
+### Improved
+
+- **Code Quality**: Performed comprehensive refactoring of `crm-entrance-test-result.js` and `auto_retry_v2.js`, extracting utility functions and breaking down monolithic rendering logic for better maintainability.
+- **PDF Generation**: Optimized PDF capture settings with better margins and high-quality scaling.
+
+## [V1.5.3] - 2026-03-07
+
+### Fixed
+
+- **CRM Admin UI**: Restored basic CRM routing to `apiApp.js` for Student and Course profile creation/retrieval, resolving `404 Not Found` errors in the admin dashboard.
+
 ## [V1.5.2] - 2026-03-07
 
 ### Fixed

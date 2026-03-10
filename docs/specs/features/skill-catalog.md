@@ -8,7 +8,7 @@
 ## 1. Speaking Tree (9 Skills)
 
 | Skill ID | Title | Type | Icon | Status | Justification |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | `pron_rune` | Pronunciation Rune | Active | `pron_rune.png` | ✅ Active | Critical for speech prep; provides IPA/stress visual cues. |
 | `shadow_mode` | Shadow Mode | Active | `interpreter_mode` | ✅ Active | High-fidelity timing training (karaoke-style). |
 | `second_take` | Second Take | Active | `second_take.png` | ✅ Active | Fail-safe for STT/mic errors; prevents frustration. |
@@ -22,7 +22,7 @@
 ## 2. Reading Tree (9 Skills)
 
 | Skill ID | Title | Type | Icon | Status | Justification |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | `dict_peek` | Dict Peek | Active | `auto_stories` | ✅ Active | High pedagogical value for vocabulary lookup. |
 | `time_freeze` | Time Freeze | Active | `timer_off` | ✅ Active | Validated for Survival Mode high-intensity runs. |
 | `evidence_highlight` | Evidence Highlight | Active | `visibility` | 🚧 Coming Soon | Requires pre-computed metadata/LLM integration. |
@@ -36,7 +36,7 @@
 ## 3. Listening Tree (13 Skills)
 
 | Skill ID | Title | Type | Icon | Status | Justification |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | `slow_audio` | Slow Audio | Active | `slow_audio.png` | ✅ Active | Fundamental tool for phonemic awareness. |
 | `echo_loop` | Echo Loop | Active | `echo_loop.png` | ✅ Active | High value for phonological memory/drilling. |
 | `chunking` | Chunking | Active | `chunking.png` | ✅ Active | Essential for parsing long sentences into semantic units. |
@@ -54,9 +54,9 @@
 ## 4. Writing Tree (10 Skills)
 
 | Skill ID | Title | Type | Icon | Status | Justification |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | `word_ghost` | Word Ghost | Active | `word_ghost.png` | ✅ Active | Standardized ID; provides essential structural scaffolding. |
-| `first_letter_peek`| First Letters | Active | `hint_fl.png` | ✅ Active | High-value, timed hint that preserves effort. |
+| `first_letter_peek` | First Letters | Active | `hint_fl.png` | ✅ Active | High-value, timed hint that preserves effort. |
 | `hint_reveal` | Hint: Reveal | Active | `visibility` | ✅ Active | Ultimate progression safety net with high penalty. |
 | `punct_ghost` | Punct. Ghost | Active | `punct_ghost.png` | ✅ Active | Important for structural correctness in advanced writing. |
 | `typo_shield` | Typo Shield | Active | `typo_shield.png` | ✅ Active | Mitigation for UX frustration on high-speed tasks. |

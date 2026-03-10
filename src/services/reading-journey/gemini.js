@@ -120,6 +120,22 @@ function getEffectiveModelName() {
   return forceFallback ? getFallbackModelName() : getModelName();
 }
 
+/**
+ * Extract text from a Vertex AI response object.
+ * The @google-cloud/vertexai SDK (v1.x) does not expose response.text().
+ * Text lives at response.candidates[0].content.parts[0].text.
+ */
+function extractText(response) {
+  // Forward-compat: if a future SDK adds .text(), use it.
+  if (typeof response.text === 'function') return response.text();
+  // Vertex AI SDK v1.x structure
+  const parts = response?.candidates?.[0]?.content?.parts;
+  if (Array.isArray(parts) && parts.length > 0) {
+    return parts.map(p => p.text || '').join('');
+  }
+  throw new Error('No text found in Vertex AI response');
+}
+
 async function generateJson(prompt, { temperature = 0.7 } = {}) {
   const primaryModelName = getModelName();
   const fallbackModelName = getFallbackModelName();
@@ -145,7 +161,7 @@ async function generateJson(prompt, { temperature = 0.7 } = {}) {
         }
       });
       const response = await result.response;
-      text = response.text();
+      text = extractText(response);
     } catch (e) {
       if (!forceFallback && activeModelName === primaryModelName && fallbackModelName && fallbackModelName !== primaryModelName && shouldForceFallback(e)) {
         forceFallback = true;
@@ -163,7 +179,7 @@ async function generateJson(prompt, { temperature = 0.7 } = {}) {
             }
           });
           const response = await result.response;
-          text = response.text();
+          text = extractText(response);
         } catch (e2) {
           lastErr = e2;
           continue;

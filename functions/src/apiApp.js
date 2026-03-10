@@ -55,7 +55,8 @@ const {
     claimProfile,
     lookupUserByEmail,
     forceLinkProfile,
-    mergeCustomClaims
+    mergeCustomClaims,
+    autoEnrollByEmail
 } = require('./studentIdentity');
 const { FieldValue } = require('firebase-admin/firestore');
 
@@ -145,7 +146,16 @@ app.post(['/admin/students', '/api/admin/students'], authMiddleware, adminMiddle
             createdByEmail: req.user.email || null
         });
 
-        sendSuccess(res, { studentId: ref.id }, 'Student profile created.');
+        // Auto-enroll if the user already exists in Auth
+        let autoEnrolled = false;
+        if (fields.email) {
+            const enrollResult = await autoEnrollByEmail(fields.email, ref.id);
+            if (enrollResult.success) {
+                autoEnrolled = true;
+            }
+        }
+
+        sendSuccess(res, { studentId: ref.id, autoEnrolled }, 'Student profile created.');
     } catch (e) {
         sendError(res, 500, 'CREATE_STUDENT_ERROR', 'Failed to create student profile.', e.message);
     }

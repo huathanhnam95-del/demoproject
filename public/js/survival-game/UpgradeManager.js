@@ -534,8 +534,13 @@ export default class UpgradeManager {
     }
 
     handleTypingKey(key) {
-        const options = this.getActiveChoiceOptions();
-        if (!options || options.length === 0 || !key) return false;
+        const activeOptions = this.getActiveChoiceOptions();
+        if (!activeOptions || activeOptions.length === 0 || !key) return false;
+
+        const options = [...activeOptions];
+        if (this.rerolls > 0 && this.pendingLevelUps > 0 && this.modal && this.modal.style.display === 'block') {
+            options.push({ _choiceToken: 'REROLL', isReroll: true });
+        }
 
         if (key === 'Backspace') {
             if (this.choiceInput.length > 0) {
@@ -567,7 +572,9 @@ export default class UpgradeManager {
             const picked = matches[0];
             this.choiceInput = '';
             this.choiceInputTimer = 0;
-            if (this.modal && this.modal.style.display === 'block') {
+            if (picked.isReroll) {
+                this.rerollOptions();
+            } else if (this.modal && this.modal.style.display === 'block') {
                 this.selectUpgrade(picked);
             } else if (this.lootModal && this.lootModal.style.display === 'block') {
                 this.selectLootUpgrade(picked);

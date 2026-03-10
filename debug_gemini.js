@@ -1,33 +1,30 @@
 /* eslint-disable no-console */
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { VertexAI } = require('@google-cloud/vertexai');
 require('dotenv').config();
 
-const API_KEY = process.env.GEMINI_API_KEY;
+const PROJECT_ID = process.env.FIREBASE_PROJECT_ID;
+const LOCATION = process.env.GOOGLE_CLOUD_LOCATION || 'us-central1';
 
-if (!API_KEY) {
-    console.error('❌ ERROR: GEMINI_API_KEY is missing');
+if (!PROJECT_ID) {
+    console.error('❌ ERROR: FIREBASE_PROJECT_ID is missing');
     process.exit(1);
 }
 
-const genAI = new GoogleGenerativeAI(API_KEY);
+const vertexAI = new VertexAI({ project: PROJECT_ID, location: LOCATION });
 
 async function diagnose() {
-    console.log('--- DIAGNOSIS START ---');
+    console.log('--- DIAGNOSIS START (VERTEX AI) ---');
     try {
-        console.log('Listing available models...');
-        const result = await genAI.listModels();
-        const modelNames = result.models.map(m => m.name);
-        console.log('Available models:', JSON.stringify(modelNames, null, 2));
-
         const testModel = 'gemini-1.5-flash';
-        if (modelNames.includes('models/' + testModel) || modelNames.includes(testModel)) {
-            console.log(`\nTesting model: ${testModel}...`);
-            const model = genAI.getGenerativeModel({ model: testModel });
-            const testResult = await model.generateContent('Say hello');
-            console.log('Test result:', testResult.response.text());
-        } else {
-            console.log(`\n⚠️ Warning: ${testModel} not found in available models.`);
-        }
+        console.log(`\nTesting model: ${testModel}...`);
+
+        const model = vertexAI.getGenerativeModel({ model: testModel });
+        const testResult = await model.generateContent('Say hello');
+
+        // Vertex AI response structure is slightly different depending on version, 
+        // but typically has candidates[0].content.parts[0].text
+        console.log('Test result:', testResult.response.text());
+        console.log('✅ Vertex AI authentication successful!');
     } catch (e) {
         console.error('❌ DIAGNOSIS FAILURE:', e.message);
     }

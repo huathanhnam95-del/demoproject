@@ -20,15 +20,17 @@
     let isPlayerReady = false;
     let currentFilter = 'all'; // 'all', 'has-video', 'no-video'
     let isInitialized = false;
+    let hasLoadedEntries = false;
+    let loadEntriesPromise = null;
     let notesRecommendationEngine = null;
     let notesRecommendationIndex = null;
     let recentRecommendedIds = [];
 
     const REASON_LABELS = {
-        level_and_continuity: 'level + continuity fit',
-        difficulty_only: 'difficulty fit',
-        continuity_only: 'strong match',
-        fallback: 'best available match'
+        level_and_continuity: 'Smart Match',
+        difficulty_only: 'Difficulty Match',
+        continuity_only: 'Vocabulary Match',
+        fallback: 'Best Available Match'
     };
 
     // DOM Elements
@@ -200,11 +202,17 @@
     }
 
     function getNotesCefrLevel() {
-        if (!window.DifficultyManager || typeof window.DifficultyManager.getCurrentSettings !== 'function') {
-            return 1;
+        const filteredLevel = Number.parseInt(window.DifficultyFilter?.getCurrentDifficulty?.('notes'), 10);
+        if (Number.isFinite(filteredLevel) && filteredLevel >= 1 && filteredLevel <= 3) {
+            return filteredLevel * 2;
         }
-        const settings = window.DifficultyManager.getCurrentSettings('type');
-        return Number(settings?.level) || 1;
+
+        const currentLevel = Number.parseInt(String(currentEntry?.level), 10);
+        if (Number.isFinite(currentLevel) && currentLevel >= 1 && currentLevel <= 3) {
+            return currentLevel * 2;
+        }
+
+        return 1;
     }
 
     function rememberRecommendedId(questionId) {
@@ -223,6 +231,18 @@
 
     function getReasonLabel(reasonCode) {
         return REASON_LABELS[reasonCode] || 'best available match';
+    }
+
+    function formatRecommendationSummary(nextQuestionId, reasonCode) {
+        return `Recommended next: #${nextQuestionId} \u2022 ${getReasonLabel(reasonCode)}`;
+    }
+
+    function getPreferredEntryIndex() {
+        const currentEntryId = String(currentEntry?.id || '').trim();
+        if (!currentEntryId) return 0;
+
+        const existingIndex = filteredEntries.findIndex((entry) => String(entry?.id || '').trim() === currentEntryId);
+        return existingIndex >= 0 ? existingIndex : 0;
     }
 
     function computeRecommendation() {
@@ -262,7 +282,7 @@
         }
 
         elements.recommendedBtn.disabled = false;
-        elements.recommendationSummary.textContent = `Recommended next: #${nextQuestionId} - ${getReasonLabel(recommendation.reasonCode)}`;
+        elements.recommendationSummary.textContent = formatRecommendationSummary(nextQuestionId, recommendation.reasonCode);
         elements.recommendationSummary.classList.remove('is-hidden');
     }
 
@@ -314,95 +334,115 @@
      */
     async function loadEntries() {
         if (!elements.questionSelect) return;
+        if (loadEntriesPromise) return loadEntriesPromise;
 
-        elements.questionSelect.innerHTML = '<option value="">Loading...</option>';
+        if (hasLoadedEntries && entries.length > 0) {
+            applyFilter(currentFilter);
+            return;
+        }
 
-        try {
-            // Try to load from Firestore first
-            if (typeof firebase !== 'undefined' && firebase.firestore) {
-                try {
-                    const db = firebase.firestore();
-                    const snapshot = await withTimeout(
-                        db.collection('takeNotesEntries').get(),
-                        FIRESTORE_LOAD_TIMEOUT_MS,
-                        'Firestore request timed out'
-                    );
+        const pendingLoad = (async () => {
+            elements.questionSelect.innerHTML = '<option value="">Loading...</option>';
 
-                    if (!snapshot.empty) {
-                        entries = snapshot.docs.map((doc) => {
-                            const data = doc.data() || {};
-                            let parsedLevel = parseInt(data.level, 10);
-                            if (isNaN(parsedLevel) || parsedLevel < 1 || parsedLevel > 3) parsedLevel = 1;
+            try {
+                // Try to load from Firestore first
+                if (typeof firebase !== 'undefined' && firebase.firestore) {
+                    try {
+                        const db = firebase.firestore();
+                        const snapshot = await withTimeout(
+                            db.collection('takeNotesEntries').get(),
+                            FIRESTORE_LOAD_TIMEOUT_MS,
+                            'Firestore request timed out'
+                        );
 
-                            return {
-                                id: String(data.id ?? doc.id ?? '').trim(),
-                                transcript: data.transcript ? String(data.transcript).trim() : '',
-                                level: parsedLevel,
-                                videoUrl: data.videoUrl ? String(data.videoUrl).trim() : ''
-                            };
-                        }).filter((entry) => entry.id.length > 0);
+                        if (!snapshot.empty) {
+                            entries = snapshot.docs.map((doc) => {
+                                const data = doc.data() || {};
+                                let parsedLevel = parseInt(data.level, 10);
+                                if (isNaN(parsedLevel) || parsedLevel < 1 || parsedLevel > 3) parsedLevel = 1;
 
-                        // Sort entries numerically by ID
-                        entries.sort((a, b) => {
-                            const idA = parseInt(a.id, 10);
-                            const idB = parseInt(b.id, 10);
-                            return (isNaN(idA) || isNaN(idB)) ? a.id.localeCompare(b.id) : idA - idB;
-                        });
+                                return {
+                                    id: String(data.id ?? doc.id ?? '').trim(),
+                                    transcript: data.transcript ? String(data.transcript).trim() : '',
+                                    level: parsedLevel,
+                                    videoUrl: data.videoUrl ? String(data.videoUrl).trim() : ''
+                                };
+                            }).filter((entry) => entry.id.length > 0);
 
-                        buildRecommendationIndex();
-                        applyFilter('all');
-                        return;
+                            // Sort entries numerically by ID
+                            entries.sort((a, b) => {
+                                const idA = parseInt(a.id, 10);
+                                const idB = parseInt(b.id, 10);
+                                return (isNaN(idA) || isNaN(idB)) ? a.id.localeCompare(b.id) : idA - idB;
+                            });
+
+                            buildRecommendationIndex();
+                            applyFilter('all');
+                            hasLoadedEntries = true;
+                            return;
+                        }
+                    } catch (firestoreError) {
+                        console.warn('[TakeNotes] Firestore error, falling back to Excel:', firestoreError.message);
                     }
-                } catch (firestoreError) {
-                    console.warn('[TakeNotes] Firestore error, falling back to Excel:', firestoreError.message);
                 }
-            }
 
-            // Fallback: Load from Excel
-            const excelPath = 'database/Take%20Notes/RL/RL.xlsx';
+                // Fallback: Load from Excel
+                const excelPath = 'database/Take%20Notes/RL/RL.xlsx';
 
-            const response = await fetch(excelPath);
-            if (!response.ok) {
-                throw new Error(`Excel file not found (${response.status})`);
-            }
-
-            const arrayBuffer = await response.arrayBuffer();
-            const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-
-            entries = [];
-            for (let i = 1; i < data.length; i++) {
-                const row = data[i];
-                if (row[0]) {
-                    let parsedLevel = parseInt(row[3], 10);
-                    if (isNaN(parsedLevel) || parsedLevel < 1 || parsedLevel > 3) parsedLevel = 1;
-
-                    entries.push({
-                        id: String(row[0]).trim(),
-                        transcript: row[2] ? String(row[2]).trim() : '',
-                        level: parsedLevel,
-                        videoUrl: row[5] ? String(row[5]).trim() : ''
-                    });
+                const response = await fetch(excelPath);
+                if (!response.ok) {
+                    throw new Error(`Excel file not found (${response.status})`);
                 }
+
+                const arrayBuffer = await response.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+                entries = [];
+                for (let i = 1; i < data.length; i++) {
+                    const row = data[i];
+                    if (row[0]) {
+                        let parsedLevel = parseInt(row[3], 10);
+                        if (isNaN(parsedLevel) || parsedLevel < 1 || parsedLevel > 3) parsedLevel = 1;
+
+                        entries.push({
+                            id: String(row[0]).trim(),
+                            transcript: row[2] ? String(row[2]).trim() : '',
+                            level: parsedLevel,
+                            videoUrl: row[5] ? String(row[5]).trim() : ''
+                        });
+                    }
+                }
+
+
+                // Sort entries numerically by ID
+                entries.sort((a, b) => {
+                    const idA = parseInt(a.id, 10);
+                    const idB = parseInt(b.id, 10);
+                    return (isNaN(idA) || isNaN(idB)) ? a.id.localeCompare(b.id) : idA - idB;
+                });
+
+                buildRecommendationIndex();
+                applyFilter('all');
+                hasLoadedEntries = true;
+
+            } catch (error) {
+                hasLoadedEntries = false;
+                console.error('[TakeNotes] Error loading entries:', error);
+                elements.questionSelect.innerHTML = '<option value="">Error loading</option>';
+                if (elements.totalQuestions) elements.totalQuestions.textContent = '0';
+                refreshRecommendationUI();
             }
+        })();
 
-
-            // Sort entries numerically by ID
-            entries.sort((a, b) => {
-                const idA = parseInt(a.id, 10);
-                const idB = parseInt(b.id, 10);
-                return (isNaN(idA) || isNaN(idB)) ? a.id.localeCompare(b.id) : idA - idB;
-            });
-
-            buildRecommendationIndex();
-            applyFilter('all');
-
-        } catch (error) {
-            console.error('[TakeNotes] Error loading entries:', error);
-            elements.questionSelect.innerHTML = '<option value="">Error loading</option>';
-            if (elements.totalQuestions) elements.totalQuestions.textContent = '0';
-            refreshRecommendationUI();
+        loadEntriesPromise = pendingLoad;
+        try {
+            await pendingLoad;
+        } finally {
+            if (loadEntriesPromise === pendingLoad) {
+                loadEntriesPromise = null;
+            }
         }
     }
 
@@ -448,8 +488,8 @@
         } else {
             if (elements.playBtn) elements.playBtn.disabled = false;
             if (elements.questionSelect) elements.questionSelect.disabled = false;
-            currentEntryIndex = 0;
-            selectEntry(0);
+            currentEntryIndex = getPreferredEntryIndex();
+            selectEntry(currentEntryIndex);
         }
     }
 

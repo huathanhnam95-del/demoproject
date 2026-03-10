@@ -15,7 +15,7 @@
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
     rel="stylesheet" />
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-  <link rel="stylesheet" href="style.css?v=20260211_dragon_nest_v2">
+  <link rel="stylesheet" href="style.css?v=20260310_calm_immersion_v3">
   <link rel="stylesheet" href="srs-review.css">
   <link rel="stylesheet" href="srs-onboarding.css">
   <link rel="stylesheet" href="pronunciation-analyzer/style.css">
@@ -115,20 +115,18 @@
   </script>
   <!-- Load SRS Scheduler as Module for FSRS support -->
   <script type="module" src="/srs-scheduler.js"></script>
-  <!-- Cinematic 3D Preloader Module -->
-  <script type="module" src="js/preloader-3d.js"></script>
+  <!-- 2D Preloader Logic -->
+  <script src="js/preloader-2d.js"></script>
 </head>
 
 <body>
   <!-- App Preloader/Loading Screen -->
-  <div id="app-preloader" class="app-preloader cinematic-mode">
-    <div class="preloader-vignette" aria-hidden="true"></div>
-    <div class="preloader-aura" aria-hidden="true"></div>
-    <div id="three-container" class="three-container"></div>
-    <div class="preloader-overlay">
-      <div id="preloader-wordmark" class="preloader-wordmark" aria-hidden="true">BEL</div>
-      <p id="preloader-kicker" class="preloader-kicker">English in motion</p>
-      <p id="preloader-text" class="preloader-text">Loading Practice Data...</p>
+  <div id="app-preloader" class="app-preloader preloader-2d">
+    <div class="preloader-text-container">
+      <div class="preloader-text-stroke">Better English Learning</div>
+      <div class="preloader-text-fill-wrapper" id="preloader-text-fill-wrapper">
+        <div class="preloader-text-fill">Better English Learning</div>
+      </div>
     </div>
   </div>
 
@@ -166,23 +164,11 @@
       window.__belPreloaderDiagnostics.lastUpdatedAt = Date.now();
     });
 
-    // Failsafe: allow retry/dismiss if loading exceeds a reasonable wait time.
+    // Failsafe: keep diagnostics, but do not replace the approved preloader copy.
     setTimeout(() => {
       const preloader = document.getElementById('app-preloader');
       if (!preloader || preloader.style.display === 'none') return;
-
-      const text = document.getElementById('preloader-text');
-      if (!text) return;
-
-      const modulesLoaded = !!(window.firebaseAuthFunctions && window.firebaseFirestoreFunctions);
-      const diagnostics = window.__belPreloaderDiagnostics || { resourceErrors: [], scriptErrors: [] };
-      const hasErrors = (diagnostics.resourceErrors?.length || 0) > 0 || (diagnostics.scriptErrors?.length || 0) > 0;
-
-      if (!modulesLoaded || hasErrors) {
-        text.innerHTML = 'Loading is taking longer than expected.<br>If your network is unstable, retry loading or continue in limited mode.<br><span id="preloader-retry-btn" style="font-size:0.9em; color:#4dabf7; cursor:pointer; text-decoration:underline;">Retry loading</span> | <span id="preloader-dismiss-btn" style="font-size:0.9em; cursor:pointer; text-decoration:underline;">Continue</span>';
-      } else {
-        text.innerHTML = 'Still loading on this network.<br><span id="preloader-dismiss-btn" style="font-size:0.9em; cursor:pointer; text-decoration:underline;">Continue</span>';
-      }
+      preloader.classList.add('preloader-delayed');
     }, 9000);
   </script>
 
@@ -2568,7 +2554,7 @@
   <script type="module" src="js/question-recommendation-engine.js"></script>
   <script src="js/lazy-loader.js"></script>
   <script type="module" src="js/collo-dictate-mode.js"></script>
-  <script type="module" src="js/reading-journey.js"></script>
+  <script type="module" src="js/reading-journey.js?v=20260310_pagination_v1"></script>
   <script type="module" src="script.js"></script>
   <!-- Points Toast Notification Container -->
   <div id="points-toast-container" class="points-toast-container"></div>
@@ -3015,8 +3001,9 @@
         <div id="survival-enemy-tutorial-text" class="survival-enemy-tutorial-text"></div>
       </div>
       <div class="survival-enemy-tutorial-actions">
-        <button id="survival-enemy-tutorial-continue" type="button" class="btn-primary"
-          style="pointer-events: none;">Type: CONTINUE</button>
+        <div id="survival-enemy-tutorial-continue" class="survival-enemy-tutorial-prompt" aria-live="polite">
+          Type CONTINUE to continue
+        </div>
       </div>
     </div>
 

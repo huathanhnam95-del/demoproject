@@ -182,17 +182,6 @@ export default class EntityManager {
                 const distSq = (dx * dx) + (dy * dy);
 
                 if (distSq < hitRange * hitRange) {
-                    const shieldSource = enemy.isShielded ? enemy : (enemy.isShieldLinked ? enemy.linkedShield : null);
-                    if (shieldSource && shieldSource.isShielded && !shieldSource.shieldOpen) {
-                        enemy.lastBlockTime = this.game.runTime;
-                        this.game.screenFlash = Math.min(1, (this.game.screenFlash || 0) + 0.12);
-                        this.game.screenFlashKind = 'block';
-                        this.game.audioManager.playHit();
-                        this.spawnHitSpark(enemy.x, enemy.y, enemy.color);
-                        this.releaseProjectile(i);
-                        break;
-                    }
-
                     // Hit!
                     this.applyEnemyDamage(enemy, p.damage, {
                         sourceColor: p.color,

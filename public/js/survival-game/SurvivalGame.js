@@ -11,19 +11,24 @@ import Renderer from './Renderer.js';
 import AudioManager from './AudioManager.js';
 import RhythmController from './RhythmController.js';
 import { GameStates, GameConfig } from './GameConfig.js';
+import {
+    canSpawnShieldedEnemy,
+    pickSpawnEnemyType,
+    updateEnemyIntroState
+} from './SurvivalBalance.js';
 
-const ENEMY_TUTORIALS = { 
-    drone: { 
-        title: 'DRONE', 
-        image: 'assets/survival-tutorial/enemy-drone.svg', 
+const ENEMY_TUTORIALS = {
+    drone: {
+        title: 'DRONE',
+        image: 'assets/survival-tutorial/enemy-drone.svg',
         bodyHtml: ` 
             <strong>Basic enemy.</strong> Drones move steadily toward you. 
             <div class="survival-enemy-tutorial-bullets"> 
                 <div>\u2022 Type its word to deal damage.</div> 
                 <div>\u2022 Clear nearby drones first to stay safe.</div> 
             </div> 
-        ` 
-    }, 
+        `
+    },
     armor: {
         title: 'ARMOR',
         image: 'assets/survival-tutorial/enemy-armor.svg',
@@ -57,9 +62,9 @@ const ENEMY_TUTORIALS = {
             </div>
         `
     },
-    rusher: { 
-        title: 'RUSHER', 
-        image: 'assets/survival-tutorial/enemy-rusher.svg', 
+    rusher: {
+        title: 'RUSHER',
+        image: 'assets/survival-tutorial/enemy-rusher.svg',
         bodyHtml: ` 
             <strong>Fast and fragile.</strong> Rushers close the distance quickly. 
             <div class="survival-enemy-tutorial-bullets">
@@ -68,9 +73,9 @@ const ENEMY_TUTORIALS = {
             </div>
         `
     },
-    turret: { 
-        title: 'TURRET', 
-        image: 'assets/survival-tutorial/enemy-turret.svg', 
+    turret: {
+        title: 'TURRET',
+        image: 'assets/survival-tutorial/enemy-turret.svg',
         bodyHtml: ` 
             <strong>Ranged threat.</strong> Turrets stop at a distance and fire shots. 
             <div class="survival-enemy-tutorial-bullets">
@@ -79,9 +84,9 @@ const ENEMY_TUTORIALS = {
             </div>
         `
     },
-    tank: { 
-        title: 'TANK', 
-        image: 'assets/survival-tutorial/enemy-tank.svg', 
+    tank: {
+        title: 'TANK',
+        image: 'assets/survival-tutorial/enemy-tank.svg',
         bodyHtml: ` 
             <strong>Slow but dangerous.</strong> Tanks have high health and hit harder. 
             <div class="survival-enemy-tutorial-bullets">
@@ -90,16 +95,16 @@ const ENEMY_TUTORIALS = {
             </div>
         `
     },
-    splitter: { 
-        title: 'SPLITTER', 
-        image: 'assets/survival-tutorial/enemy-splitter.svg', 
+    splitter: {
+        title: 'SPLITTER',
+        image: 'assets/survival-tutorial/enemy-splitter.svg',
         bodyHtml: ` 
             <strong>Splits on death.</strong> Splitters break into smaller drones when destroyed. 
             <div class="survival-enemy-tutorial-bullets"> 
                 <div>\u2022 Finish them early to avoid getting swarmed.</div> 
                 <div>\u2022 The mini-drones have short words \u2192 clear them fast.</div> 
             </div> 
-        ` 
+        `
     },
     mini_drone: {
         title: 'MINI DRONE',
@@ -127,15 +132,15 @@ const ENEMY_TUTORIALS = {
         title: 'SHIELD',
         image: 'assets/survival-tutorial/enemy-shielded.svg',
         bodyHtml: `
-            <strong>Blue shield = untargetable.</strong> Shielded enemies are only vulnerable when the shield opens.
+            <strong>Blue shield = timing check.</strong> Shielded enemies still block typing while the ring is closed, but your shots are no longer eaten by the shield.
             <div class="survival-enemy-tutorial-bullets">
-                <div>\u2022 If the blue ring is closed, you can\u2019t type or damage them.</div>
-                <div>\u2022 Shielded enemies can protect nearby enemies with blue links.</div>
+                <div>\u2022 If the blue ring is closed, you need to wait before typing them.</div>
+                <div>\u2022 Shielded enemies can protect fewer nearby enemies with blue links.</div>
                 <div>\u2022 Wait for the opening, then burst them down.</div>
             </div>
         `
     }
-}; 
+};
 
 export default class SurvivalGame {
     constructor() {
@@ -157,6 +162,8 @@ export default class SurvivalGame {
         this.screenFlash = 0;
         this.screenFlashKind = null;
         this._lastHpRounded = null;
+        this.modalInput = '';
+        this.modalInputTimer = 0;
 
         // Game State
         this.state = GameStates.MENU;
@@ -210,6 +217,7 @@ export default class SurvivalGame {
         this.enemyTutorialSeen = this.loadEnemyTutorialSeen();
         this.enemyTutorialQueue = [];
         this.enemyTutorialActiveType = '';
+        this.enemyIntroState = this.createEnemyIntroState();
 
         // Systems
         this.audioManager = new AudioManager();
@@ -261,7 +269,7 @@ export default class SurvivalGame {
             enemyTutorialTitle: document.getElementById('survival-enemy-tutorial-title'),
             enemyTutorialText: document.getElementById('survival-enemy-tutorial-text'),
             enemyTutorialImage: document.getElementById('survival-enemy-tutorial-image'),
-            enemyTutorialContinueBtn: document.getElementById('survival-enemy-tutorial-continue')
+            enemyTutorialContinuePrompt: document.getElementById('survival-enemy-tutorial-continue')
         };
 
         if (!overlay) console.warn('SurvivalGame: overlay missing');
@@ -437,6 +445,14 @@ export default class SurvivalGame {
         return 'survival_enemy_tutorial_seen';
     }
 
+    createEnemyIntroState() {
+        return {
+            stableTime: 0,
+            introducedTypes: ['drone'],
+            unlockedType: ''
+        };
+    }
+
     loadEnemyTutorialSeen() {
         const key = this.getEnemyTutorialStorageKey();
         try {
@@ -488,16 +504,23 @@ export default class SurvivalGame {
     }
 
     bindEnemyTutorialControls() {
-        const btn = this.ui?.enemyTutorialContinueBtn;
-        if (!btn || btn.dataset.boundClick) return;
-        btn.dataset.boundClick = '1';
-        btn.addEventListener('click', () => this.closeEnemyTutorial());
+        this.syncEnemyTutorialPrompt();
     }
 
-    onEnemySpawned(enemy) { 
-        if (!enemy || enemy.isDead) return false; 
-        if (enemy.isBoss) return false; 
-        if (enemy.isItem) return false; 
+    syncEnemyTutorialPrompt(targetWord = 'CONTINUE') {
+        const prompt = this.ui?.enemyTutorialContinuePrompt;
+        if (!prompt) return;
+        const command = String(targetWord || 'CONTINUE').replace(/[^a-z]/gi, '').toUpperCase() || 'CONTINUE';
+        const typed = String(this.modalInput || '').replace(/[^a-z]/gi, '').toUpperCase();
+        prompt.textContent = typed
+            ? `Type ${command} to continue [${typed}]`
+            : `Type ${command} to continue`;
+    }
+
+    onEnemySpawned(enemy) {
+        if (!enemy || enemy.isDead) return false;
+        if (enemy.isBoss) return false;
+        if (enemy.isItem) return false;
         let queued = false;
 
         queued = this.queueEnemyTutorial(enemy.type) || queued;
@@ -508,7 +531,7 @@ export default class SurvivalGame {
         if (enemy.armor && enemy.armor > 0) queued = this.queueEnemyTutorial('armor') || queued;
 
         return queued;
-    } 
+    }
 
     queueEnemyTutorial(type) {
         const token = String(type || '').trim().toLowerCase();
@@ -564,6 +587,9 @@ export default class SurvivalGame {
             this.ui.enemyTutorialImage.alt = spec.title ? `${spec.title} enemy` : 'Enemy';
         }
 
+        this.modalInput = '';
+        this.modalInputTimer = 0;
+        this.syncEnemyTutorialPrompt('CONTINUE');
         modal.style.display = 'block';
         this.pause(GameStates.LEVEL_UP);
         return true;
@@ -573,6 +599,9 @@ export default class SurvivalGame {
         const modal = this.ui?.enemyTutorialModal;
         if (modal) modal.style.display = 'none';
         this.enemyTutorialActiveType = '';
+        this.modalInput = '';
+        this.modalInputTimer = 0;
+        this.syncEnemyTutorialPrompt('CONTINUE');
         this.resume();
         return true;
     }
@@ -939,12 +968,16 @@ export default class SurvivalGame {
         this.entityManager.player.shieldCharges = 0;
         this._lastHpRounded = null;
         this.pickupToast = null;
+        this.modalInput = '';
+        this.modalInputTimer = 0;
         this.resetCommandInput();
         this.recentAimTarget = null;
         this.recentAimTargetTimer = 0;
         this.enemyTutorialQueue = [];
         this.enemyTutorialActiveType = '';
+        this.enemyIntroState = this.createEnemyIntroState();
         if (this.ui?.enemyTutorialModal) this.ui.enemyTutorialModal.style.display = 'none';
+        this.syncEnemyTutorialPrompt('CONTINUE');
         this.omenLevel = this.loadOmenLevel();
         this.omenConfig = GameConfig.OMEN.LEVELS[this.omenLevel] || GameConfig.OMEN.LEVELS[0];
         const interval = this.getSpawnInterval();
@@ -1029,6 +1062,7 @@ export default class SurvivalGame {
         this.entityManager.update(deltaTime);
         this.weaponSystem.update(deltaTime);
         this.typingSystem.update(deltaTime);
+        this.updateEnemyIntroductions(simDelta);
         this.updateTrialState();
         if (this.state === GameStates.GAME_OVER) {
             this.handleGameOver();
@@ -1084,6 +1118,32 @@ export default class SurvivalGame {
 
     nextWave() {
         this.wave++;
+    }
+
+    getEnemyIntroMetrics() {
+        const typingSystem = this.typingSystem;
+        const loadState = this.getSpawnLoadState(0);
+        return {
+            wave: this.wave,
+            wpm: typingSystem && typeof typingSystem.getRecentWpm === 'function'
+                ? typingSystem.getRecentWpm()
+                : 0,
+            combo: Number.isFinite(typingSystem?.combo) ? typingSystem.combo : 0,
+            mistakePenalty: Number.isFinite(typingSystem?.mistakePenalty) ? typingSystem.mistakePenalty : 0,
+            loadRatio: Number.isFinite(loadState?.projectedLoadRatio) ? loadState.projectedLoadRatio : Infinity
+        };
+    }
+
+    updateEnemyIntroductions(deltaTime) {
+        const nextState = updateEnemyIntroState(
+            this.enemyIntroState,
+            this.getEnemyIntroMetrics(),
+            deltaTime,
+            GameConfig.ENEMIES?.INTRO || {},
+            GameConfig.SPLITTER || {}
+        );
+        this.enemyIntroState = nextState;
+        return nextState.unlockedType || '';
     }
 
     handleGameOver() {
@@ -1385,6 +1445,57 @@ export default class SurvivalGame {
         return false;
     }
 
+    handleModalTyping(key, actions = {}) {
+        const commandEntries = Object.entries(actions)
+            .map(([word, handler]) => [
+                String(word || '').replace(/[^a-z]/gi, '').toUpperCase(),
+                handler
+            ])
+            .filter(([word, handler]) => word && typeof handler === 'function');
+        if (commandEntries.length === 0) return false;
+
+        if (key === 'Backspace') {
+            this.modalInput = String(this.modalInput || '').slice(0, -1);
+            this.modalInputTimer = this.modalInput ? 1.5 : 0;
+            if (typeof this.syncEnemyTutorialPrompt === 'function' && this.enemyTutorialActiveType) {
+                this.syncEnemyTutorialPrompt('CONTINUE');
+            }
+            return true;
+        }
+
+        if (typeof key !== 'string' || key.length !== 1 || !/^[a-z]$/i.test(key)) {
+            return false;
+        }
+
+        const maxLen = commandEntries.reduce((max, [word]) => Math.max(max, word.length), 0);
+        const nextChar = key.toUpperCase();
+        const baseInput = String(this.modalInput || '');
+        let nextInput = `${baseInput}${nextChar}`.slice(-maxLen);
+        let matching = commandEntries.filter(([word]) => word.startsWith(nextInput));
+
+        if (matching.length === 0) {
+            nextInput = commandEntries.some(([word]) => word.startsWith(nextChar)) ? nextChar : '';
+            matching = commandEntries.filter(([word]) => word.startsWith(nextInput));
+        }
+
+        this.modalInput = nextInput;
+        this.modalInputTimer = nextInput ? 1.5 : 0;
+        if (typeof this.syncEnemyTutorialPrompt === 'function' && this.enemyTutorialActiveType) {
+            this.syncEnemyTutorialPrompt('CONTINUE');
+        }
+
+        const exact = matching.find(([word]) => word === nextInput);
+        if (!exact) return true;
+
+        this.modalInput = '';
+        this.modalInputTimer = 0;
+        if (typeof this.syncEnemyTutorialPrompt === 'function' && this.enemyTutorialActiveType) {
+            this.syncEnemyTutorialPrompt('CONTINUE');
+        }
+        exact[1]();
+        return true;
+    }
+
     getEstimatedSpawnWordLength() {
         const minutes = this.runTime / 60;
         const omenBonus = this.omenConfig?.wordLenBonus || 0;
@@ -1535,39 +1646,12 @@ export default class SurvivalGame {
         const word = this.getWordForDifficulty();
         if (!word) return null;
 
-        let type = 'drone';
-        const rand = Math.random();
-
-        const introCfg = GameConfig.ENEMIES?.INTRO || {};
-        const rusherWave = Number.isFinite(introCfg.RUSHER_WAVE) ? introCfg.RUSHER_WAVE : 3;
-        const turretWave = Number.isFinite(introCfg.TURRET_WAVE) ? introCfg.TURRET_WAVE : 5;
-        const tankWave = Number.isFinite(introCfg.TANK_WAVE) ? introCfg.TANK_WAVE : 7;
-
-        const splitterCfg = GameConfig.SPLITTER || {};
-        const splitterUnlock = Number.isFinite(splitterCfg.UNLOCK_WAVE) ? splitterCfg.UNLOCK_WAVE : 9;
-        const splitterStart = Number.isFinite(splitterCfg.CHANCE_START) ? splitterCfg.CHANCE_START : 0.06;
-        const splitterMax = Number.isFinite(splitterCfg.CHANCE_MAX) ? splitterCfg.CHANCE_MAX : 0.12;
-        const splitterRamp = 0.004;
-        const splitterChance = this.wave >= splitterUnlock
-            ? Math.max(0, Math.min(splitterMax, splitterStart + (this.wave - splitterUnlock) * splitterRamp))
-            : 0;
-
-        if (splitterChance > 0 && rand < splitterChance) {
-            type = 'splitter';
-        } else {
-            const r = splitterChance > 0 ? (rand - splitterChance) / (1 - splitterChance) : rand;
-            if (this.wave >= tankWave) {
-                if (r < 0.12) type = 'tank';
-                else if (r < 0.30) type = 'turret';
-                else if (r < 0.55) type = 'rusher';
-            } else if (this.wave >= turretWave) {
-                if (r < 0.15) type = 'turret';
-                else if (r < 0.40) type = 'rusher';
-            } else if (this.wave >= rusherWave) {
-                if (r < 0.25) type = 'rusher';
-            }
-        }
-
+        const type = pickSpawnEnemyType({
+            wave: this.wave,
+            introducedTypes: this.enemyIntroState?.introducedTypes,
+            introConfig: GameConfig.ENEMIES?.INTRO || {},
+            splitterConfig: GameConfig.SPLITTER || {}
+        });
         const traits = this.rollTraits();
         return this.entityManager.spawnEnemy(word, type, traits);
     }
@@ -1580,16 +1664,35 @@ export default class SurvivalGame {
         }
     }
 
-    handleInput(key) { 
-        // Enemy tutorial popups should be modal: ignore typing/shortcuts while they are visible.
-        if (this.enemyTutorialActiveType) return;
+    handleInput(key) {
+        // Enemy tutorial popups should be modal: intercept typing for 'CONTINUE'
+        if (this.enemyTutorialActiveType) {
+            this.handleModalTyping(key, {
+                'CONTINUE': () => this.closeEnemyTutorial()
+            });
+            return;
+        }
 
-        if (this.state === GameStates.PLAYING) { 
+        if (this.state === GameStates.GAME_OVER) {
+            this.handleModalTyping(key, {
+                'RETRY': () => {
+                    const btn = document.getElementById('survival-retry-btn');
+                    if (btn) btn.click();
+                },
+                'EXIT': () => {
+                    const btn = document.getElementById('survival-exit-btn');
+                    if (btn) btn.click();
+                }
+            });
+            return;
+        }
+
+        if (this.state === GameStates.PLAYING) {
             // Keyboard shortcuts for track control (kept out of the typing system). 
-            if (key === '[') { 
-                this.stepPlaylist(-1); 
-                return; 
-            } 
+            if (key === '[') {
+                this.stepPlaylist(-1);
+                return;
+            }
             if (key === ']') {
                 this.stepPlaylist(1);
                 return;
@@ -1630,9 +1733,13 @@ export default class SurvivalGame {
         this.state = GameStates.MENU;
         this.resetCommandInput();
         this.setAudioPanelOpen(false);
+        this.modalInput = '';
+        this.modalInputTimer = 0;
         this.enemyTutorialQueue = [];
         this.enemyTutorialActiveType = '';
+        this.enemyIntroState = this.createEnemyIntroState();
         if (this.ui?.enemyTutorialModal) this.ui.enemyTutorialModal.style.display = 'none';
+        this.syncEnemyTutorialPrompt('CONTINUE');
         if (this.rafId !== null) {
             cancelAnimationFrame(this.rafId);
             this.rafId = null;
@@ -1835,11 +1942,18 @@ export default class SurvivalGame {
         const traits = {};
         const multiplier = this.omenConfig.traitChanceMult;
         const { ARMOR, STEALTH, SHIELD, BUFFER } = GameConfig.ENEMIES.TRAITS;
+        const shieldMaxActive = Number.isFinite(SHIELD.MAX_ACTIVE) ? SHIELD.MAX_ACTIVE : 2;
 
         const traitPool = [];
         if (this.wave >= ARMOR.UNLOCK_WAVE && Math.random() < ARMOR.BASE_CHANCE * multiplier) traitPool.push('armor');
         if (this.wave >= STEALTH.UNLOCK_WAVE && Math.random() < STEALTH.BASE_CHANCE * multiplier) traitPool.push('stealth');
-        if (this.wave >= SHIELD.UNLOCK_WAVE && Math.random() < SHIELD.BASE_CHANCE * multiplier) traitPool.push('shield');
+        if (
+            this.wave >= SHIELD.UNLOCK_WAVE
+            && canSpawnShieldedEnemy(this.getActiveShieldedEnemyCount(), shieldMaxActive)
+            && Math.random() < SHIELD.BASE_CHANCE * multiplier
+        ) {
+            traitPool.push('shield');
+        }
         if (this.wave >= BUFFER.UNLOCK_WAVE && Math.random() < BUFFER.BASE_CHANCE * multiplier) traitPool.push('buffer');
 
         if (traitPool.length === 0) return traits;
@@ -1847,6 +1961,17 @@ export default class SurvivalGame {
         const picked = traitPool[Math.floor(Math.random() * traitPool.length)];
         traits[picked] = true;
         return traits;
+    }
+
+    getActiveShieldedEnemyCount() {
+        const enemies = this.entityManager?.enemies || [];
+        let count = 0;
+        for (const enemy of enemies) {
+            if (!enemy || enemy.isDead) continue;
+            if (!enemy.isShielded) continue;
+            count++;
+        }
+        return count;
     }
 
     async loadOxfordWordList() {

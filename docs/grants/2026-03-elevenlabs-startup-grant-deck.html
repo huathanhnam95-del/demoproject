@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BEL x ElevenLabs Startup Grant Deck</title>
+  <style>
+    @page {
+      size: 13.333in 7.5in;
+      margin: 0;
+    }
+
+    :root {
+      --paper: #f6f1e8;
+      --paper-strong: #efe6d8;
+      --ink: #13222c;
+      --muted: #596b76;
+      --blue: #0e6ba8;
+      --blue-soft: #d7ecf8;
+      --green: #1f8a70;
+      --green-soft: #dcefe6;
+      --orange: #c76a2b;
+      --orange-soft: #f6e4d6;
+      --line: rgba(19, 34, 44, 0.14);
+      --shadow: 0 22px 60px rgba(19, 34, 44, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background: #ddd7ce;
+      color: var(--ink);
+      font-family: Aptos, "Segoe UI", sans-serif;
+    }
+
+    body {
+      counter-reset: slide;
+    }
+
+    .slide {
+      position: relative;
+      width: 13.333in;
+      height: 7.5in;
+      padding: 0.48in 0.58in;
+      overflow: hidden;
+      page-break-after: always;
+      background:
+        radial-gradient(circle at top right, rgba(14, 107, 168, 0.14), transparent 28%),
+        radial-gradient(circle at bottom left, rgba(31, 138, 112, 0.12), transparent 26%),
+        linear-gradient(180deg, var(--paper) 0%, #fbf8f1 100%);
+    }
+
+    .slide::after {
+      counter-increment: slide;
+      content: "0" counter(slide);
+      position: absolute;
+      right: 0.58in;
+      bottom: 0.34in;
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      color: rgba(19, 34, 44, 0.45);
+    }
+
+    .eyebrow {
+      display: inline-block;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(19, 34, 44, 0.08);
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 38px;
+      line-height: 1.06;
+      letter-spacing: -0.03em;
+    }
+
+    h2 {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 28px;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    .subhead {
+      font-size: 18px;
+      line-height: 1.4;
+      color: var(--muted);
+    }
+
+    .meta {
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+
+    .rule {
+      height: 1px;
+      background: var(--line);
+      margin: 16px 0 18px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: 24px;
+      height: calc(100% - 34px);
+      align-items: stretch;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .stack {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .spread {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.82);
+      border: 1px solid rgba(19, 34, 44, 0.08);
+      border-radius: 22px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .card.soft-blue {
+      background: linear-gradient(180deg, rgba(215, 236, 248, 0.95), rgba(255, 255, 255, 0.85));
+    }
+
+    .card.soft-green {
+      background: linear-gradient(180deg, rgba(220, 239, 230, 0.96), rgba(255, 255, 255, 0.84));
+    }
+
+    .card.soft-orange {
+      background: linear-gradient(180deg, rgba(246, 228, 214, 0.96), rgba(255, 255, 255, 0.84));
+    }
+
+    .kicker {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--blue);
+      margin-bottom: 10px;
+    }
+
+    .kicker.green {
+      color: var(--green);
+    }
+
+    .kicker.orange {
+      color: var(--orange);
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--ink);
+      line-height: 1.38;
+      font-size: 16px;
+    }
+
+    li + li {
+      margin-top: 8px;
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stat .num {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 32px;
+      line-height: 1;
+    }
+
+    .stat .label {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .hero-image,
+    .thumb img,
+    .feature-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      border-radius: 18px;
+      border: 1px solid rgba(19, 34, 44, 0.1);
+    }
+
+    .hero-frame {
+      height: 100%;
+      min-height: 5.6in;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.58);
+      border: 1px solid rgba(19, 34, 44, 0.08);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .thumb {
+      height: 2.14in;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .thumb-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+    }
+
+    .milestone {
+      padding: 14px 12px;
+      border-radius: 18px;
+      border: 1px solid rgba(19, 34, 44, 0.08);
+      background: rgba(255, 255, 255, 0.72);
+      text-align: center;
+    }
+
+    .milestone .date {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 8px;
+    }
+
+    .milestone .copy {
+      font-size: 13px;
+      line-height: 1.32;
+    }
+
+    .three-up {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .band {
+      padding: 16px 18px;
+      border-radius: 18px;
+      min-height: 1.35in;
+      border: 1px solid rgba(19, 34, 44, 0.08);
+      background: rgba(255, 255, 255, 0.82);
+      box-shadow: var(--shadow);
+    }
+
+    .band h3 {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+      color: var(--blue);
+    }
+
+    .band p {
+      font-size: 15px;
+      line-height: 1.4;
+    }
+
+    .quote {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 24px;
+      line-height: 1.28;
+      letter-spacing: -0.01em;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(19, 34, 44, 0.08);
+      font-size: 13px;
+      color: var(--ink);
+    }
+
+    .footer-note {
+      position: absolute;
+      left: 0.58in;
+      bottom: 0.32in;
+      font-size: 11px;
+      color: rgba(19, 34, 44, 0.52);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .link {
+      color: var(--blue);
+      text-decoration: none;
+    }
+
+    .mini {
+      font-size: 12px;
+      line-height: 1.38;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <section class="slide">
+    <div class="grid-2">
+      <div class="spread">
+        <div class="stack">
+          <div class="eyebrow">ElevenLabs Startup Grant</div>
+          <div class="stack" style="gap: 12px;">
+            <h1>BEL turns passive English study into active, voice-led practice.</h1>
+            <p class="subhead">A live learner-first platform where students do more than watch and listen. They speak, type, review, and retain language through structured output.</p>
+          </div>
+          <div class="rule"></div>
+          <div class="three-up">
+            <div class="card soft-blue">
+              <div class="kicker">Status</div>
+              <p class="quote">Live product</p>
+            </div>
+            <div class="card soft-green">
+              <div class="kicker green">Focus</div>
+              <p class="quote">Input to output to retention</p>
+            </div>
+            <div class="card soft-orange">
+              <div class="kicker orange">Why ElevenLabs</div>
+              <p class="quote">Scale voice-led learning content</p>
+            </div>
+          </div>
+        </div>
+        <div class="stack">
+          <p class="meta">BEL / Better English Learning</p>
+          <div class="tag-row">
+            <span class="tag">Listening</span>
+            <span class="tag">Speaking</span>
+            <span class="tag">Reading</span>
+            <span class="tag">Writing</span>
+            <span class="tag">Vocabulary + SRS</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-frame">
+        <img class="hero-image" src="assets/cover-landing.png" alt="BEL landing page">
+      </div>
+    </div>
+    <div class="footer-note">BEL x ElevenLabs</div>
+  </section>
+
+  <section class="slide">
+    <div class="spread">
+      <div class="stack">
+        <div class="eyebrow">Problem</div>
+        <h2>Most English learning still leaves learners consuming language instead of producing it.</h2>
+      </div>
+      <div class="grid-3">
+        <div class="card soft-orange">
+          <div class="kicker orange">For learners</div>
+          <ul>
+            <li>Passive videos and audio are easy to consume but harder to retain.</li>
+            <li>Students need more frequent output: speak, type, answer, repeat.</li>
+          </ul>
+        </div>
+        <div class="card soft-blue">
+          <div class="kicker">For teachers</div>
+          <ul>
+            <li>High-quality narrated content is expensive to produce repeatedly.</li>
+            <li>Manual voice production slows lesson creation and consistency.</li>
+          </ul>
+        </div>
+        <div class="card soft-green">
+          <div class="kicker green">For the product</div>
+          <ul>
+            <li>Without a scalable voice layer, listening and reading practice stay narrow.</li>
+            <li>Engagement drops when content depth cannot keep pace with learner demand.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="kicker">BEL thesis</div>
+        <p class="quote">Every passive learning step should become an active language production step.</p>
+      </div>
+    </div>
+    <div class="footer-note">One core pain: not enough output, not enough scalable voice</div>
+  </section>
+
+  <section class="slide">
+    <div class="spread">
+      <div class="stack">
+        <div class="eyebrow">Product</div>
+        <h2>BEL closes the loop from input to output to feedback to retention.</h2>
+      </div>
+      <div class="grid-2" style="height: 5.66in;">
+        <div class="stack">
+          <div class="card soft-blue">
+            <div class="kicker">Core practice</div>
+            <ul>
+              <li>Type, Speak, Fill, Watch, Notes, Pronounce, Writing Challenge, Survival</li>
+              <li>Adaptive difficulty and scoring make each session actionable</li>
+              <li>Pronunciation analysis adds high-signal speaking feedback</li>
+            </ul>
+          </div>
+          <div class="card soft-green">
+            <div class="kicker green">Retention system</div>
+            <ul>
+              <li>Vocabulary Book plus spaced repetition review</li>
+              <li>Weak words move into structured review instead of being lost</li>
+              <li>Reading Journey extends the voice-led content layer</li>
+            </ul>
+          </div>
+        </div>
+        <div class="grid-4">
+          <div class="thumb">
+            <div class="thumb-label">Dashboard</div>
+            <img src="assets/screen-dashboard.png" alt="BEL dashboard">
+          </div>
+          <div class="thumb">
+            <div class="thumb-label">Type Mode</div>
+            <img src="assets/screen-type.png" alt="BEL type mode">
+          </div>
+          <div class="thumb">
+            <div class="thumb-label">Pronunciation Feedback</div>
+            <img src="assets/feedback-demo.png" alt="Pronunciation feedback">
+          </div>
+          <div class="thumb">
+            <div class="thumb-label">SRS Review</div>
+            <img src="assets/srs-vietnamese.png" alt="SRS review screen">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-note">Product proof from live UI and documented feature set</div>
+  </section>
+
+  <section class="slide">
+    <div class="spread">
+      <div class="stack">
+        <div class="eyebrow">Wedge</div>
+        <h2>BEL leads with learners, then expands through tutors and classrooms.</h2>
+      </div>
+      <div class="three-up">
+        <div class="band">
+          <h3>Target User</h3>
+          <p>Output-focused English learners, with current A2 / PTE-first positioning on the live landing flow.</p>
+        </div>
+        <div class="band">
+          <h3>Acquisition</h3>
+          <p>Tutor network, student-facing content, and a live product demo that maps directly to real practice tasks.</p>
+        </div>
+        <div class="band">
+          <h3>Monetization Direction</h3>
+          <p>Learner subscriptions and services first, with classroom workflows increasing retention and expansion value.</p>
+        </div>
+      </div>
+      <div class="grid-2" style="height: 4.1in;">
+        <div class="card soft-green">
+          <div class="kicker green">Why this can win</div>
+          <ul>
+            <li>Learner app is the main story, not an admin tool looking for users.</li>
+            <li>Educator distribution and classroom operations create a practical second layer.</li>
+            <li>BEL can combine practice depth, feedback, and voice content in one loop.</li>
+          </ul>
+        </div>
+        <div class="card" style="padding: 12px;">
+          <div class="thumb-label" style="margin-bottom: 8px;">Expansion proof: CRM / LMS layer</div>
+          <img class="feature-image" src="assets/crm-admin.png" alt="BEL CRM admin screen">
+        </div>
+      </div>
+    </div>
+    <div class="footer-note">Learner-first wedge, classroom as expansion</div>
+  </section>
+
+  <section class="slide">
+    <div class="spread">
+      <div class="stack">
+        <div class="eyebrow">Proof</div>
+        <h2>BEL already looks like a shipped product, not a concept deck.</h2>
+      </div>
+      <div class="timeline">
+        <div class="milestone">
+          <div class="date">2026-02-06</div>
+          <div class="copy">Server-authoritative scoring and secure core loop</div>
+        </div>
+        <div class="milestone">
+          <div class="date">2026-02-11</div>
+          <div class="copy">Skill tree and progression UX expanded</div>
+        </div>
+        <div class="milestone">
+          <div class="date">2026-03-03</div>
+          <div class="copy">Localized landing and CRM launch</div>
+        </div>
+        <div class="milestone">
+          <div class="date">2026-03-04</div>
+          <div class="copy">Production rollout and deployment hardening</div>
+        </div>
+        <div class="milestone">
+          <div class="date">2026-03-05</div>
+          <div class="copy">Reading Journey and new dictation mode</div>
+        </div>
+        <div class="milestone">
+          <div class="date">2026-03-07</div>
+          <div class="copy">Classroom, LMS, and admin fixes shipped</div>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="card soft-blue">
+          <div class="kicker">Product depth</div>
+          <p class="quote">8+</p>
+          <p class="mini">documented learner modes plus vocabulary, SRS, pronunciation, CRM, and LMS layers</p>
+        </div>
+        <div class="card soft-green">
+          <div class="kicker green">Operational proof</div>
+          <p class="quote">Desktop + Pixel 5</p>
+          <p class="mini">full learner and admin onboarding flows completed in audit evidence</p>
+        </div>
+        <div class="card soft-orange">
+          <div class="kicker orange">Team footprint</div>
+          <p class="quote">26 tutors</p>
+          <p class="mini">with about 10 people working on the company / project</p>
+        </div>
+      </div>
+      <div class="mini">Sources: product overview, changelog, and 2026-03-01 onboarding audit artifacts.</div>
+    </div>
+    <div class="footer-note">Evidence-first: live UI, releases, audit coverage, team facts</div>
+  </section>
+
+  <section class="slide">
+    <div class="spread">
+      <div class="stack">
+        <div class="eyebrow">Why ElevenLabs</div>
+        <h2>ElevenLabs is the voice layer that makes BEL's next content step scalable.</h2>
+      </div>
+      <div class="grid-2" style="height: 5.55in;">
+        <div class="stack">
+          <div class="card soft-blue">
+            <div class="kicker">Already happening</div>
+            <ul>
+              <li>BEL already uses ElevenLabs for student-facing voice content.</li>
+              <li>The team has a new podcast-style student channel built with ElevenLabs audio.</li>
+              <li>YouTube: <a class="link" href="https://www.youtube.com/@EnglishwithBEL">youtube.com/@EnglishwithBEL</a></li>
+            </ul>
+          </div>
+          <div class="card soft-orange">
+            <div class="kicker orange">Grant unlock</div>
+            <ul>
+              <li>Narrated lessons and guided listening prompts</li>
+              <li>Audiobook-style reading content and read-along practice</li>
+              <li>Faster voice production across lessons, stories, and channels</li>
+            </ul>
+          </div>
+        </div>
+        <div class="stack">
+          <div class="card soft-green" style="flex: 1;">
+            <div class="kicker green">Content pipeline</div>
+            <div class="band" style="margin-bottom: 12px;">
+              <h3>1. Lesson / story source</h3>
+              <p>Teacher-created or AI-assisted content for listening and reading practice.</p>
+            </div>
+            <div class="band" style="margin-bottom: 12px;">
+              <h3>2. ElevenLabs voice layer</h3>
+              <p>Natural narration, character voices, and scalable audio production.</p>
+            </div>
+            <div class="band">
+              <h3>3. BEL practice loop</h3>
+              <p>Students listen, respond, speak, review vocabulary, and repeat inside the product.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-note">Voice is not cosmetic here; it is core product leverage</div>
+  </section>
+
+  <section class="slide">
+    <div class="spread">
+      <div class="stack">
+        <div class="eyebrow">Team</div>
+        <h2>BEL is being built by educators with execution proof, not by a generic AI team.</h2>
+      </div>
+      <div class="grid-2" style="height: 5.5in;">
+        <div class="stack">
+          <div class="card soft-green">
+            <div class="kicker green">Operating facts</div>
+            <div class="three-up">
+              <div class="stat">
+                <div class="num">10</div>
+                <div class="label">people working on the company / project</div>
+              </div>
+              <div class="stat">
+                <div class="num">26</div>
+                <div class="label">tutors in the wider teaching operation</div>
+              </div>
+              <div class="stat">
+                <div class="num">1</div>
+                <div class="label">learner-first product spanning study, feedback, and classroom tools</div>
+              </div>
+            </div>
+          </div>
+          <div class="card soft-blue">
+            <div class="kicker">Why this team matters</div>
+            <ul>
+              <li>Direct learner and tutor context informs what gets built.</li>
+              <li>The team already ships product, operations, and content in parallel.</li>
+              <li>That combination is well suited to a voice-first learning product.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card soft-orange">
+          <div class="kicker orange">Reviewer takeaway</div>
+          <p class="quote">BEL understands the teaching problem, the learner problem, and the production problem.</p>
+          <div class="rule"></div>
+          <ul>
+            <li>Not just an AI wrapper</li>
+            <li>Not just a tutoring business</li>
+            <li>A product plus educator network with a clear voice-content use case</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer-note">Educator-built, product-executing, voice-ready</div>
+  </section>
+
+  <section class="slide">
+    <div class="spread">
+      <div class="stack">
+        <div class="eyebrow">Closing</div>
+        <h2>With ElevenLabs, BEL can make active English practice feel more human and more scalable.</h2>
+      </div>
+      <div class="grid-3">
+        <div class="card soft-blue">
+          <div class="kicker">Today</div>
+          <p class="quote">Live product</p>
+          <p class="mini">Active practice across listening, speaking, reading, writing, vocabulary, and retention loops.</p>
+        </div>
+        <div class="card soft-green">
+          <div class="kicker green">Next</div>
+          <p class="quote">Voice-led content</p>
+          <p class="mini">Narrated lessons, audiobook-style reading, richer prompts, and scalable student content.</p>
+        </div>
+        <div class="card soft-orange">
+          <div class="kicker orange">Ask</div>
+          <p class="quote">Back BEL now</p>
+          <p class="mini">ElevenLabs support would accelerate the product's strongest content and engagement lever.</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="kicker">Final message</div>
+        <p class="quote">BEL already has the learning loop. ElevenLabs can help it build the voice layer that makes that loop more engaging, more immersive, and easier to scale.</p>
+      </div>
+    </div>
+    <div class="footer-note">BEL / Better English Learning</div>
+  </section>
+</body>
+</html>

@@ -61,5 +61,13 @@ function makeProfile(level, scores, assisted = false) {
   assert.equal(result, null);
 }
 
-console.log('✅ DifficultyLogic tests passed');
+// 5) isCalibrated checks
+{
+  const uncalibratedProfile = makeProfile(1, Array.from({ length: 5 }, () => 0.8));
+  assert.equal(logic.isCalibrated(uncalibratedProfile), false, 'Should be false before grace period');
 
+  const calibratedProfile = makeProfile(1, Array.from({ length: 10 }, () => 0.8));
+  assert.equal(logic.isCalibrated(calibratedProfile), true, 'Should be true after grace period');
+}
+
+console.log('✅ DifficultyLogic tests passed');

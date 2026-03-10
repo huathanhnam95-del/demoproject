@@ -1,4 +1,5 @@
 export const PRELOADER_DURATION_MS = 6200;
+export const PRELOADER_MIN_DURATION_MS = 3500;
 
 export function clampProgress(progress) {
   const numeric = Number(progress);
@@ -10,10 +11,11 @@ export function clampProgress(progress) {
 
 export function getAnimationPhase(progress) {
   const normalized = clampProgress(progress);
-  if (normalized < 0.33) {
+  // Slightly stretch the hero phase to cover the 3.5s minimum time gracefully
+  if (normalized < 0.25) {
     return 'approach';
   }
-  if (normalized < 0.82) {
+  if (normalized < 0.85) {
     return 'hero';
   }
   return 'resolve';
@@ -32,7 +34,7 @@ export function getCameraPose(progress) {
   const phase = getAnimationPhase(normalized);
 
   if (phase === 'approach') {
-    const local = easeInOutCubic(normalized / 0.33);
+    const local = easeInOutCubic(normalized / 0.25);
     return {
       position: {
         x: -10.8 + (local * 5.4),
@@ -48,7 +50,7 @@ export function getCameraPose(progress) {
   }
 
   if (phase === 'hero') {
-    const local = easeInOutCubic((normalized - 0.33) / 0.49);
+    const local = easeInOutCubic((normalized - 0.25) / 0.6);
     return {
       position: {
         x: -4 + (local * 4.9),
@@ -63,7 +65,7 @@ export function getCameraPose(progress) {
     };
   }
 
-  const local = easeInOutCubic((normalized - 0.82) / 0.18);
+  const local = easeInOutCubic((normalized - 0.85) / 0.15);
   return {
     position: {
       x: 0.28 - (local * 0.28),
@@ -78,8 +80,11 @@ export function getCameraPose(progress) {
   };
 }
 
-export function shouldFinishPreloader({ progress, appReady, logoReady }) {
-  return clampProgress(progress) >= 1 && !!appReady && !!logoReady;
+export function shouldFinishPreloader({ progress, appReady, logoReady, elapsed }) {
+  const hasMetMinDuration = elapsed >= PRELOADER_MIN_DURATION_MS;
+  const hasLoadedAssets = !!appReady && !!logoReady;
+  const isAnimationFinished = clampProgress(progress) >= 1;
+  return (hasLoadedAssets && hasMetMinDuration) || isAnimationFinished;
 }
 
 export function getFinishState(progress) {
@@ -115,7 +120,7 @@ export function getPreloaderQualityProfile({ devicePixelRatio, memoryGb, viewpor
 
   if (memory <= 2 || width < 480) {
     return {
-      particleCount: 70,
+      particleCount: 0,
       enableAtmosphere: false,
       pixelRatioCap: 1
     };
@@ -123,14 +128,14 @@ export function getPreloaderQualityProfile({ devicePixelRatio, memoryGb, viewpor
 
   if (memory <= 4 || width < 900) {
     return {
-      particleCount: 110,
+      particleCount: 0,
       enableAtmosphere: true,
       pixelRatioCap: Math.min(1.25, dpr)
     };
   }
 
   return {
-    particleCount: 180,
+    particleCount: 0,
     enableAtmosphere: true,
     pixelRatioCap: Math.min(1.75, dpr)
   };

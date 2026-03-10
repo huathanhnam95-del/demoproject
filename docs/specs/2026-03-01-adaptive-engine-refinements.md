@@ -1,6 +1,6 @@
 # Harness Spec: Adaptive Engine Refinements & Pending Web App Work
 
-**(Status: Executed on 2026-03-01)**
+> **Status: Executed on 2026-03-01**
 
 ## What
 

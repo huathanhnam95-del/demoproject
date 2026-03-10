@@ -19,6 +19,16 @@ export class DifficultyLogic {
     }
 
     /**
+     * Check if the user has accumulated enough history to be considered calibrated.
+     */
+    isCalibrated(profile) {
+        if (!profile) return false;
+        const attempts = profile.attemptsAtLevel || 0;
+        const historyLen = profile.history ? profile.history.length : 0;
+        return (attempts >= this.config.GRACE_PERIOD_ATTEMPTS) || (historyLen >= this.config.GRACE_PERIOD_ATTEMPTS);
+    }
+
+    /**
      * Process a new score and determine if difficulty should change.
      * @param {Object} profile - User's difficulty profile for a mode.
      * @param {number} score - Performance score (0.0 - 1.0).

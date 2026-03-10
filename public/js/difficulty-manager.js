@@ -55,7 +55,6 @@ const DifficultyManager = (function () {
         }
 
         updateIndicator();
-        console.log('Main DifficultyManager Initialized (Modular)');
     }
 
     function loadProfile() {
@@ -241,8 +240,19 @@ const DifficultyManager = (function () {
         ui.updateBadge(activeMode, settings.level, !globalSettings.autoAdjustEnabled);
     }
 
+    function isCalibrated(mode) {
+        if (!isInitialized) init();
+        const profile = userDifficultyProfile[mode];
+        if (!profile) return false;
+
+        // If they have toggled manual mode, consider them calibrated (so it doesn't force a random level)
+        // Note: globalSettings.autoAdjustEnabled might be false.
+
+        return logic.isCalibrated(profile);
+    }
+
     // Public API
-    return {
+    const api = {
         init,
         // Back-compat: public/script.js expects this to exist.
         // Semantics: feature availability (not whether auto-adjust is toggled on).
@@ -252,10 +262,20 @@ const DifficultyManager = (function () {
         openSettings,
         setManualLevel,
         seedLevel,
+        isCalibrated,
+        saveProfile,
         // Expose state getters for debugging
         getProfile: (mode) => userDifficultyProfile[mode],
         getGlobalSettings: () => globalSettings
     };
+
+    // Add back-compat property for script.js and auth-ui.js
+    Object.defineProperty(api, 'globalSettings', {
+        get: () => globalSettings,
+        set: (val) => { globalSettings = val; }
+    });
+
+    return api;
 })();
 
 // Assign to window

@@ -3,6 +3,8 @@
  * Bridges AudioAnalysis and game logic.
  * Maps audio intensity to enemy speed and injects beat-driven spawns.
  */
+import { GameConfig } from './GameConfig.js';
+
 export default class RhythmController {
     constructor(game) {
         this.game = game;
@@ -79,13 +81,14 @@ export default class RhythmController {
             : null;
         const loadRatio = loadState ? loadState.projectedLoadRatio : 0;
         const spawnLoadScale = Math.max(0.1, 1 - Math.max(0, loadRatio - 0.6));
-        const chance = Math.min(0.9, (0.04 + Math.pow(intensity, 2) * 0.86) * spawnLoadScale);
+        const beatSpawnChanceMult = GameConfig.BALANCE?.ENEMY_BEAT_SPAWN_CHANCE_MULT || 1;
+        const chance = Math.min(0.9, (0.04 + Math.pow(intensity, 2) * 0.86) * spawnLoadScale * beatSpawnChanceMult);
 
         if (Math.random() < chance && this.game.canSpawnEnemy()) {
             const first = this.game.spawnEnemy();
 
             // Double spawn on very intense beats (>0.75 intensity, 25% chance).
-            if (first && intensity > 0.75 && Math.random() < 0.25 && this.game.canSpawnEnemy()) {
+            if (first && intensity > 0.75 && Math.random() < (0.25 * beatSpawnChanceMult) && this.game.canSpawnEnemy()) {
                 this.game.spawnEnemy();
             }
         }

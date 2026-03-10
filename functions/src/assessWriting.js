@@ -11,11 +11,15 @@
  */
 
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { VertexAI } = require('@google-cloud/vertexai');
 const admin = require('firebase-admin');
 
-// Initialize Gemini
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Initialize Vertex AI
+// GCLOUD_PROJECT is automatically populated in Firebase Functions environments.
+const project = process.env.GCLOUD_PROJECT || process.env.FIREBASE_PROJECT_ID;
+const location = process.env.GOOGLE_CLOUD_LOCATION || 'us-central1';
+
+const vertexAI = new VertexAI({ project, location });
 const db = admin.firestore();
 
 const assessWriting = onCall({ maxInstances: 10 }, async (request) => {
@@ -56,7 +60,7 @@ const assessWriting = onCall({ maxInstances: 10 }, async (request) => {
 
     try {
         // 3. Perform Gemini Analysis (Using FLASH for efficiency)
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = vertexAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const systemPrompt = `
         You are an advanced AI writing assistant (Grammarly Pro style). 

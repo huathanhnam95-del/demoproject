@@ -146,6 +146,40 @@ async function setCachedValue({ collection, id, key, value, ttlMs }) {
   }
 }
 
+const COLLECTION_OUTLINES = 'reading_journey_outlines_v1';
+
+async function listCachedOutlines() {
+  const now = Date.now();
+  const results = [];
+
+  if (!db) {
+    const mem = getMemoryCollection(COLLECTION_OUTLINES);
+    if (!mem) return results;
+    for (const [id, record] of mem.entries()) {
+      if (Number(record.expiresAtMs) <= now) continue;
+      const value = record.value;
+      if (!value || typeof value !== 'object') continue;
+      results.push({ id, key: record.key || '', value });
+    }
+    return results;
+  }
+
+  try {
+    const snap = await db.collection(COLLECTION_OUTLINES).get();
+    for (const doc of snap.docs) {
+      const data = doc.data() || {};
+      if (Number(data.expiresAtMs) <= now) continue;
+      const value = data.value;
+      if (!value || typeof value !== 'object') continue;
+      results.push({ id: doc.id, key: data.key || '', value });
+    }
+  } catch (e) {
+    console.warn('[reading-journey-cache] listCachedOutlines failed:', e?.message || e);
+  }
+
+  return results;
+}
+
 module.exports = {
   normalizeKeywords,
   normalizeTopicTags,
@@ -156,5 +190,6 @@ module.exports = {
   computeOutlineCacheKey,
   computeBeatCacheKey,
   getCachedValue,
-  setCachedValue
+  setCachedValue,
+  listCachedOutlines
 };

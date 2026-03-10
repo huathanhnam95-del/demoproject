@@ -7,7 +7,6 @@ import { config } from './config.js';
 export class PraatAPI {
     constructor(backendUrl = null) {
         this.backendUrl = backendUrl || config.backendUrl;
-        console.log('PraatAPI using backend:', this.backendUrl);
     }
 
     // detectBackendUrl removed - using config.js source of truth
@@ -118,6 +117,10 @@ export class PraatAPI {
     }
 
     async checkHealth() {
+        if (config.features && typeof config.features.usePraatBackend !== 'undefined' && !config.features.usePraatBackend) {
+            return false;
+        }
+
         try {
             const response = await fetch(`${this.backendUrl}/health`, {
                 method: 'GET',

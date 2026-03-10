@@ -170,6 +170,7 @@
     elements.kanbanMissingList = document.getElementById('kanban-missing-list');
     elements.kanbanTurnedInList = document.getElementById('kanban-turnedin-list');
     elements.kanbanGradedList = document.getElementById('kanban-graded-list');
+    elements.courseCatalogGrid = document.getElementById('course-catalog-grid');
 
     // Stream
     elements.btnPostAnnouncement = document.getElementById('btn-post-announcement');
@@ -210,6 +211,11 @@
     refreshClassroomList().catch((e) => {
       console.error('[CRM Admin] Failed to load classrooms:', e);
       showToast(e?.message || 'Failed to load classrooms.', 'error');
+    });
+
+    refreshCourseList().catch((e) => {
+      console.error('[CRM Admin] Failed to load courses:', e);
+      showToast(e?.message || 'Failed to load course catalog.', 'error');
     });
   }
 
@@ -1230,8 +1236,12 @@
   function setupClassroomModal() {
     if (!elements.classroomModal || elements.btnNewClassroomTriggers.length === 0) return;
 
-    const openClassroomModal = () => {
+    const openClassroomModal = (classId = null) => {
       resetClassroomModal();
+      if (classId) {
+        modalState.classroomId = classId;
+        openClassroom(classId);
+      }
       elements.classroomModal.style.display = 'flex';
       elements.classroomModal.setAttribute('aria-hidden', 'false');
     };
@@ -1290,8 +1300,8 @@
           elements.inputStreamPost.value = '';
           showToast('Announcement posted.', 'success');
           loadClassroomStream(modalState.classroomId);
-        } catch (e) { 
-          showToast(e.message, 'error'); 
+        } catch (e) {
+          showToast(e.message, 'error');
         } finally {
           elements.btnPostAnnouncement.disabled = false;
         }
@@ -1411,20 +1421,20 @@
 
       const missing = [];
       for (const w of works) {
-          for (const st of students) {
-              const stUids = st.linked_user_ids || [];
-              const hasSub = submissions.some(sub => sub.workId === w.id && stUids.includes(sub.studentUid));
-              if (!hasSub) {
-                  missing.push({
-                      id: `missing-${w.id}-${st.id}`,
-                      workId: w.id,
-                      workTitle: w.title,
-                      studentName: st.name || st.email || 'Student',
-                      studentUid: stUids[0] || 'Unknown',
-                      status: 'missing'
-                  });
-              }
+        for (const st of students) {
+          const stUids = st.linked_user_ids || [];
+          const hasSub = submissions.some(sub => sub.workId === w.id && stUids.includes(sub.studentUid));
+          if (!hasSub) {
+            missing.push({
+              id: `missing-${w.id}-${st.id}`,
+              workId: w.id,
+              workTitle: w.title,
+              studentName: st.name || st.email || 'Student',
+              studentUid: stUids[0] || 'Unknown',
+              status: 'missing'
+            });
           }
+        }
       }
 
       renderKanbanColumn(elements.kanbanMissingList, missing, false);
@@ -1542,7 +1552,7 @@
         <div class="crm-table-container">
           <table class="crm-table">
             <thead>
-              <tr><th>Name</th><th>Course</th><th>Status</th><th>Modules</th></tr>
+              <tr><th>Name</th><th>Course</th><th>Status</th><th>Modules</th><th>Action</th></tr>
             </thead>
             <tbody>
               ${classrooms.map(c => `
@@ -1551,14 +1561,100 @@
                   <td>${escapeHtml(c.courseId || 'None')}</td>
                   <td>${escapeHtml(c.status)}</td>
                   <td>n/a</td>
+                  <td>
+                    <button class="crm-btn-secondary small btn-open-classroom" data-id="${c.id}">Open</button>
+                  </td>
                 </tr>
               `).join('')}
             </tbody>
           </table>
         </div>
       `;
+
+      elements.classManagementGrid.querySelectorAll('.btn-open-classroom').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const cid = btn.dataset.id;
+          // We need a globally accessible way to open it. 
+          // Since setupClassroomModal handles it, we can trigger the new logic.
+          resetClassroomModal();
+          modalState.classroomId = cid;
+          openClassroom(cid);
+          elements.classroomModal.style.display = 'flex';
+          elements.classroomModal.setAttribute('aria-hidden', 'false');
+        });
+      });
+
     } catch (e) {
       elements.classManagementGrid.innerHTML = '<div class="crm-muted">Failed to load classrooms.</div>';
+    }
+  }
+
+  async function openClassroom(classId) {
+    try {
+      showToast('Loading classroom data...');
+      const db = firebase.firestore();
+      const snap = await db.collection('crmClassrooms').doc(classId).get();
+      if (!snap.exists) return;
+
+      const data = snap.data();
+      if (elements.inputClassroomName) elements.inputClassroomName.value = data.name || '';
+      if (elements.inputClassroomCourseId) elements.inputClassroomCourseId.value = data.courseId || '';
+      if (elements.inputClassroomStatus) elements.inputClassroomStatus.value = data.status || 'draft';
+      if (elements.classroomTitle) elements.classroomTitle.textContent = data.name || 'Classroom';
+      if (elements.classroomStatusBadge) {
+        elements.classroomStatusBadge.textContent = data.status;
+        elements.classroomStatusBadge.className = `crm-student-id-badge ${data.status}`;
+      }
+
+      // Load sub-content
+      loadClassroomModules(classId);
+      loadClassroomClasswork(classId);
+      loadClassroomStream(classId);
+      loadReviewBoard(classId);
+
+    } catch (e) {
+      console.error(e);
+      showToast('Failed to load classroom details.', 'error');
+    }
+  }
+
+  async function refreshCourseList() {
+    if (!elements.courseCatalogGrid) return;
+    try {
+      const snap = await firebase.firestore().collection('courses').get();
+      const courses = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // Populate Linked Course dropdown in Classroom modal
+      if (elements.inputClassroomCourseId) {
+        elements.inputClassroomCourseId.innerHTML = '<option value="">Select a Course...</option>' +
+          courses.map(c => `<option value="${c.id}">${escapeHtml(c.name)} (${escapeHtml(c.code)})</option>`).join('');
+      }
+
+      if (!courses.length) {
+        elements.courseCatalogGrid.innerHTML = '<div class="crm-muted">No courses found.</div>';
+        return;
+      }
+
+      elements.courseCatalogGrid.innerHTML = `
+        <table class="crm-table">
+          <thead>
+            <tr><th>Name</th><th>Code</th><th>Level</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            ${courses.map(c => `
+              <tr>
+                <td class="td-bold">${escapeHtml(c.name)}</td>
+                <td>${escapeHtml(c.code)}</td>
+                <td>${escapeHtml(c.level || 'n/a')}</td>
+                <td><span class="status-pill ${c.status}">${escapeHtml(c.status)}</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    } catch (e) {
+      console.error('[CRM Admin] Course list refresh failed:', e);
+      elements.courseCatalogGrid.innerHTML = '<div class="crm-muted">Error loading courses.</div>';
     }
   }
 

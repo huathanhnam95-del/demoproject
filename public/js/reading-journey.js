@@ -45,6 +45,7 @@
     renderShell(root);
     applyFocusMode(root);
     attachPreReadingListeners(root);
+    loadStoryLibrary();
   };
 
   function renderShell(root) {
@@ -58,10 +59,10 @@
           </div>
         </header>
 
-        <main id="rj-main-container">
+        <main id="rj-main-container" class="rj-main-container">
           <div id="rj-alert" class="rj-alert" style="display:none;"></div>
           
-          <section id="rj-setup" class="rj-card rj-setup-card">
+          <section id="rj-setup" class="rj-card rj-setup-card rj-glass">
             <h2 class="rj-card__title">Start your story</h2>
             <div class="rj-form">
               <div class="rj-form-group">
@@ -85,39 +86,50 @@
               </div>
             </div>
             <p id="rj-setup-hint" class="rj-muted rj-mt-sm">Visit /readingjourney to access this mode.</p>
+
+            <div class="rj-library" id="rj-library">
+              <div class="rj-library__divider"></div>
+              <h3 class="rj-library__heading">📚 Story Library</h3>
+              <p class="rj-muted" style="margin-top:0">Browse and read pre-generated stories</p>
+              <div id="rj-library-grid" class="rj-library__grid">
+                <div class="rj-muted" style="text-align:center;padding:20px 0">Loading stories...</div>
+              </div>
+            </div>
           </section>
 
-          <section id="rj-story" class="rj-card" style="display:none;">
-            <div class="rj-story__header">
-              <div class="rj-title-group">
-                <h2 id="rj-story-title" class="rj-title__name">Elena's Legacy Lasagna</h2>
-                <div id="rj-story-meta" class="rj-muted">Beat 1/5 · Level B2</div>
+          <section id="rj-story" class="rj-story-container" style="display:none;">
+            <div class="rj-card rj-glass rj-story-header-card">
+              <div class="rj-story__header">
+                <div class="rj-title-group">
+                  <h2 id="rj-story-title" class="rj-title__name">Elena's Legacy Lasagna</h2>
+                  <div id="rj-story-meta" class="rj-muted">Beat 1/5 · Level B2</div>
+                </div>
+                <div class="rj-story__controls">
+                  <button id="rj-focus-toggle" class="rj-icon-btn" title="Focus Mode">⬛</button>
+                  <button id="rj-highlight-toggle" class="rj-icon-btn ${highlightEnabled ? 'rj-icon-btn--active' : ''}" title="Toggle Highlights">🔆</button>
+                  <div class="rj-mode-toggle">
+                    <button id="rj-mode-manual" class="rj-mode-btn" type="button">Manual</button>
+                    <button id="rj-mode-auto" class="rj-mode-btn" type="button">Auto</button>
+                  </div>
+                </div>
               </div>
-              <div class="rj-story__controls">
-                <button id="rj-focus-toggle" class="rj-icon-btn" title="Focus Mode">⬛</button>
-                <button id="rj-highlight-toggle" class="rj-icon-btn ${highlightEnabled ? 'rj-icon-btn--active' : ''}" title="Toggle Highlights">🔆</button>
-                <div class="rj-mode-toggle">
-                  <button id="rj-mode-manual" class="rj-mode-btn" type="button">Manual</button>
-                  <button id="rj-mode-auto" class="rj-mode-btn" type="button">Auto</button>
+
+              <div id="rj-progress-wrap" class="rj-progress-wrap">
+                <div id="rj-progress-bar" class="rj-progress-bar"></div>
+                <div id="rj-progress-dots" class="rj-progress-dots"></div>
+              </div>
+
+              <div id="rj-speed-row" class="rj-speed-row" style="display:none;">
+                <span class="rj-speed-label">Reading pace</span>
+                <div class="rj-speed-btns">
+                  <button class="rj-speed-btn" data-speed="slow">Slow</button>
+                  <button class="rj-speed-btn" data-speed="normal">Normal</button>
+                  <button class="rj-speed-btn" data-speed="fast">Fast</button>
                 </div>
               </div>
             </div>
 
-            <div id="rj-progress-wrap" class="rj-progress-wrap">
-              <div id="rj-progress-bar" class="rj-progress-bar"></div>
-              <div id="rj-progress-dots" class="rj-progress-dots"></div>
-            </div>
-
-            <div id="rj-speed-row" class="rj-speed-row" style="display:none;">
-              <span class="rj-speed-label">Reading pace</span>
-              <div class="rj-speed-btns">
-                <button class="rj-speed-btn" data-speed="slow">Slow</button>
-                <button class="rj-speed-btn" data-speed="normal">Normal</button>
-                <button class="rj-speed-btn" data-speed="fast">Fast</button>
-              </div>
-            </div>
-
-            <div class="rj-segment-card" id="rj-segment-card">
+            <div class="rj-canvas" id="rj-canvas">
               <div class="rj-segment" id="rj-segment"></div>
               <div id="rj-choice-wrap" class="rj-choice" style="display:none;">
                 <div id="rj-choice-question" class="rj-choice__question"></div>
@@ -135,7 +147,7 @@
             </div>
           </section>
 
-          <section id="rj-complete" class="rj-card" style="display:none;"></section>
+          <section id="rj-complete" class="rj-card rj-glass" style="display:none;"></section>
           
           <aside class="rj-transcript" id="rj-transcript-wrap" style="display:none;">
             <h3 class="rj-transcript__title">Story Path</h3>
@@ -146,7 +158,17 @@
     `;
 
     root.classList.add('readingjourney-root');
+    root.classList.add('rj-theme-modern');
     if (lsPref('dark', 'off') === 'on') root.classList.add('rj-dark');
+
+    // Load Outfit font for premium UI typography
+    if (!document.querySelector('link[href*="Outfit"]')) {
+      const fontLink = document.createElement('link');
+      fontLink.rel = 'stylesheet';
+      fontLink.href = 'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap';
+      document.head.appendChild(fontLink);
+    }
+
     syncModeButtons();
   }
 
@@ -366,6 +388,10 @@
     const interests = document.getElementById('rj-interests').value;
     if (!interests.trim()) return showAlert('Enter some interests first!');
 
+    // Convert comma-separated string to array of trimmed keywords
+    const keywords = interests.split(',').map(k => k.trim()).filter(Boolean);
+    if (keywords.length === 0) return showAlert('Enter some interests first!');
+
     state.level = document.getElementById('rj-level').value;
     state.status = 'LOADING';
     document.getElementById('rj-setup').style.display = 'none';
@@ -377,10 +403,16 @@
       const res = await fetch('/api/reading-journey/setup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ interests, level: state.level })
+        body: JSON.stringify({ keywords, level: state.level })
       });
       const data = await res.json();
-      state.title = data.title;
+
+      if (!res.ok || !data.beat) {
+        throw new Error(data.detail || data.message || 'Setup failed');
+      }
+
+      state.title = data.setup?.title || 'Reading Journey';
+      state.outlineId = data.setup?.outlineId || '';
       state.beatNumber = 1;
       state.transcript = [];
       state.choicesMade = [];
@@ -608,6 +640,196 @@
   function selectChoice(idx) {
     const cards = document.querySelectorAll('.rj-choice-card');
     if (cards[idx]) cards[idx].click();
+  }
+
+  // ── Story Library (Pagination + Topic Filtering) ──────────────────────────
+  const STORIES_PER_PAGE = 10;
+  let allOutlines = [];
+  let filteredOutlines = [];
+  let activeFilters = new Set();
+  let libraryPage = 1;
+
+  async function loadStoryLibrary() {
+    const grid = document.getElementById('rj-library-grid');
+    if (!grid) return;
+
+    try {
+      const res = await fetch('/api/reading-journey/outlines');
+      const data = await res.json();
+      allOutlines = data.outlines || [];
+
+      if (allOutlines.length === 0) {
+        grid.innerHTML = '<div class="rj-library__empty">No stories available yet. Create one above!</div>';
+        return;
+      }
+
+      filteredOutlines = [...allOutlines];
+      renderTagFilters();
+      renderLibraryPage();
+    } catch (err) {
+      grid.innerHTML = '<div class="rj-library__empty">Could not load stories.</div>';
+    }
+  }
+
+  function collectAllTags() {
+    const tagSet = new Set();
+    allOutlines.forEach(o => (o.topicTags || []).forEach(t => tagSet.add(t)));
+    return [...tagSet].sort();
+  }
+
+  function renderTagFilters() {
+    const library = document.getElementById('rj-library');
+    if (!library) return;
+
+    // Remove existing filter bar if any
+    const existing = library.querySelector('.rj-filter-bar');
+    if (existing) existing.remove();
+
+    const allTags = collectAllTags();
+    if (allTags.length === 0) return;
+
+    const bar = document.createElement('div');
+    bar.className = 'rj-filter-bar';
+
+    const label = document.createElement('span');
+    label.className = 'rj-filter-bar__label';
+    label.textContent = 'Filter by topic:';
+    bar.appendChild(label);
+
+    const chipWrap = document.createElement('div');
+    chipWrap.className = 'rj-filter-bar__chips';
+
+    allTags.forEach(tag => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'rj-filter-chip' + (activeFilters.has(tag) ? ' rj-filter-chip--active' : '');
+      chip.textContent = tag.replace(/_/g, ' ');
+      chip.addEventListener('click', () => toggleTagFilter(tag));
+      chipWrap.appendChild(chip);
+    });
+
+    bar.appendChild(chipWrap);
+
+    // Insert filter bar before the grid
+    const grid = document.getElementById('rj-library-grid');
+    library.insertBefore(bar, grid);
+  }
+
+  function toggleTagFilter(tag) {
+    if (activeFilters.has(tag)) {
+      activeFilters.delete(tag);
+    } else {
+      activeFilters.add(tag);
+    }
+
+    // Re-filter outlines
+    if (activeFilters.size === 0) {
+      filteredOutlines = [...allOutlines];
+    } else {
+      filteredOutlines = allOutlines.filter(o => {
+        const tags = o.topicTags || [];
+        return [...activeFilters].some(f => tags.includes(f));
+      });
+    }
+
+    libraryPage = 1;
+    renderTagFilters();
+    renderLibraryPage();
+  }
+
+  function renderLibraryPage() {
+    const grid = document.getElementById('rj-library-grid');
+    if (!grid) return;
+
+    const totalPages = Math.max(1, Math.ceil(filteredOutlines.length / STORIES_PER_PAGE));
+    if (libraryPage > totalPages) libraryPage = totalPages;
+
+    const start = (libraryPage - 1) * STORIES_PER_PAGE;
+    const pageItems = filteredOutlines.slice(start, start + STORIES_PER_PAGE);
+
+    grid.innerHTML = '';
+
+    if (pageItems.length === 0) {
+      grid.innerHTML = '<div class="rj-library__empty">No stories match the selected filters.</div>';
+      renderPaginationControls(0, 0);
+      return;
+    }
+
+    pageItems.forEach((outline) => {
+      const card = document.createElement('div');
+      card.className = 'rj-library-card rj-fadein';
+      card.setAttribute('role', 'button');
+      card.setAttribute('tabindex', '0');
+
+      const levelColors = { A1: '#10b981', A2: '#10b981', B1: '#3b82f6', B2: '#6366f1', C1: '#8b5cf6', C2: '#a855f7' };
+      const bgColor = levelColors[outline.level] || '#3b82f6';
+
+      const tagsHtml = (outline.topicTags || []).slice(0, 4)
+        .map(t => `<span class="rj-library-card__tag">${t.replace(/_/g, ' ')}</span>`)
+        .join('');
+
+      card.innerHTML = `
+        <div class="rj-library-card__level" style="background:${bgColor}">${outline.level}</div>
+        <div class="rj-library-card__body">
+          <div class="rj-library-card__title">${outline.title}</div>
+          <div class="rj-library-card__tags">${tagsHtml}</div>
+        </div>
+        <div class="rj-library-card__arrow">→</div>
+      `;
+
+      const startLibraryStory = () => {
+        const tags = outline.topicTags || [];
+        document.getElementById('rj-interests').value = tags.map(t => t.replace(/_/g, ' ')).join(', ');
+        document.getElementById('rj-level').value = outline.level;
+        startStory();
+      };
+
+      card.addEventListener('click', startLibraryStory);
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); startLibraryStory(); }
+      });
+
+      grid.appendChild(card);
+    });
+
+    renderPaginationControls(totalPages, filteredOutlines.length);
+  }
+
+  function renderPaginationControls(totalPages, totalItems) {
+    const library = document.getElementById('rj-library');
+    if (!library) return;
+
+    // Remove existing pagination
+    const existing = library.querySelector('.rj-pagination');
+    if (existing) existing.remove();
+
+    if (totalPages <= 1) return;
+
+    const nav = document.createElement('div');
+    nav.className = 'rj-pagination';
+
+    const prevBtn = document.createElement('button');
+    prevBtn.type = 'button';
+    prevBtn.className = 'rj-pagination__btn';
+    prevBtn.textContent = '← Prev';
+    prevBtn.disabled = libraryPage <= 1;
+    prevBtn.addEventListener('click', () => { libraryPage--; renderLibraryPage(); });
+
+    const info = document.createElement('span');
+    info.className = 'rj-pagination__info';
+    info.textContent = `Page ${libraryPage} of ${totalPages} (${totalItems} stories)`;
+
+    const nextBtn = document.createElement('button');
+    nextBtn.type = 'button';
+    nextBtn.className = 'rj-pagination__btn';
+    nextBtn.textContent = 'Next →';
+    nextBtn.disabled = libraryPage >= totalPages;
+    nextBtn.addEventListener('click', () => { libraryPage++; renderLibraryPage(); });
+
+    nav.appendChild(prevBtn);
+    nav.appendChild(info);
+    nav.appendChild(nextBtn);
+    library.appendChild(nav);
   }
 
 })();

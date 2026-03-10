@@ -35,7 +35,7 @@ export const config = {
         useNativeReference: true,
         showComparison: true,
         saveToDatabase: true,
-        usePraatBackend: true
+        usePraatBackend: false
     },
 
     // Cache Settings

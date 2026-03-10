@@ -1,0 +1,69 @@
+﻿[dotenv@17.2.3] injecting env (14) from .env -- tip: ΓÜÖ∩╕Å  override existing env vars with { override: true }
+
+≡ƒºá SUMMONING THE WAR ROOM COUNCIL...
+Sovereign's Command: "Please review the implementation plan for the Adaptive Question Selection feature located at C:\Users\Admin\.gemini\antigravity\brain\c2d41f20-eb19-4c8f-80c4-b92c6c7de993\implementation_plan.md."
+
+==================================================
+[34m[ ≡ƒÅ¢∩╕Å Architect ][0m
+This is the Architect.
+
+**Status:** Access Denied.
+**Reason:** Security protocols prevent my direct interface with local sector storage (`C:\Users\...`).
+
+**Immediate Action Required:**
+Inject the raw contents of `implementation_plan.md` directly into this channel.
+
+---
+
+**Pre-Review Directives**
+While you retrieve the data, know that I will evaluate the "Adaptive Question Selection" system against the **Sovereign Standard** for galactic scalability. Ensure your plan addresses the following core architectural pillars:
+
+### 1. The Algorithm Engine (The Brain)
+*   **Vectorization:** Are questions stored as embeddings (e.g., Pinecone, Milvus) for semantic retrieval, or are you using rigid SQL queries? Galactic scale requires semantic search.
+*   **Adaptivity Loop:** Does the selection logic utilize a Reinforcement Learning (RL) feedback loop based on user performance?
+*   **Decoupling:** The selection logic must be a microservice, strictly decoupled from the Presentation Layer.
+
+### 2. State & Storage (The Memory)
+*   **Hot vs. Cold Path:**
+    *   *Hot:* User session state and immediate question queue must reside in high-throughput memory (Redis Cluster).
+    *   *Cold:* Historical performance data and question banks belong in a sharded NoSQL database (ScyllaDB/Cassandra) for infinite horizontal scaling.
+*   **Consistency:** Eventual consistency is acceptable for analytics; strong consistency is required for the immediate question queue.
+
+### 3. Resilience & Latency (The Shield)
+*   **Circuit Breakers:** If the AI Selection Service hangs, does the system fall back to a pre-computed "Default Path" to prevent user-facing latency?
+*   **Latency Budget:** Question retrieval must occur under 100ms.
+
+**Paste the plan. We build immediately.**
+--------------------------------------------------
+[31m[ ≡ƒöÑ Challenger ][0m
+**YouΓÇÖre wasting my time.**
+
+Do I look like I have access to your local file system? I cannot read files located at `C:\Users\Admin\...`. That is your local machine, not my environment.
+
+If you want this implementation plan torn apart, **paste the text content of `implementation_plan.md` into the chat immediately.**
+
+**While you are retrieving that, answer these preliminary questions. The mere existence of that file path raises red flags:**
+
+1.  **Directory Structure:** Why is this project buried inside a `.gemini` hidden folder? Is this temporary cache code or a legitimate repository? If this is production code living in a temp directory, we have a massive deployment risk.
+2.  **Hardcoded UUIDs:** That path contains a UUID (`c2d41f20...`). Is the system relying on dynamic path generation? If the implementation plan relies on absolute paths like this, itΓÇÖs going to break the moment we move to a CI/CD pipeline.
+3.  **"Adaptive" Logic:** Define "Adaptive" before you paste the text. Adaptive usually translates to "unpredictable" or "computationally expensive." Does it use heuristics? ML? Randomization? If I see a `random()` function acting as "AI," IΓÇÖm rejecting the plan immediately.
+
+**Paste the content. Now.**
+--------------------------------------------------
+[32m[ Γ£¿ Reviewer ][0m
+Sovereign,
+
+My reach does not extend to the local file system artifacts residing at `C:\Users\Admin\...`. I cannot read the document directly.
+
+**Action Required:**
+Please **paste the contents** of `implementation_plan.md` into this console.
+
+Once the text is before me, I will apply the War Room standard:
+1.  **Synthesize:** I will check if the logic holds together or if there are conflicting architectural decisions.
+2.  **Simplify:** I will ruthlessly cut feature bloat. "Adaptive" systems often over-engineer the algorithm at the cost of the user experience.
+3.  **UX Focus:** I will ensure the transition between questions feels seamless and magical, not jarring or opaque.
+
+Await your input.
+--------------------------------------------------
+
+Γ£à Council Adjourned. The Sovereign's vision is secured.

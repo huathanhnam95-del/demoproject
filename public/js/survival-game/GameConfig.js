@@ -10,11 +10,11 @@ export const GameConfig = {
         COLOR: '#4dabf7'
     },
     ENEMIES: {
-        BASE_SPEED: 50,
+        BASE_SPEED: 42,
         BASE_HEALTH: 10,
-        BASE_DAMAGE: 10,
-        HEALTH_PER_CHAR: 1.5,
-        MAX_ACTIVE: 80,
+        BASE_DAMAGE: 8,
+        HEALTH_PER_CHAR: 1.2,
+        MAX_ACTIVE: 60,
         TYPES: {
             DRONE: { speedMult: 1, hpMult: 1, size: 15, color: '#b24c4c' },
             RUSHER: { speedMult: 1.6, hpMult: 0.5, size: 12, color: '#c66d6d' },
@@ -40,7 +40,8 @@ export const GameConfig = {
                 UNLOCK_WAVE: 6,
                 BASE_CHANCE: 0.08,
                 CYCLE_TIME: 2.2,
-                OPEN_FRACTION: 0.35
+                OPEN_FRACTION: 0.35,
+                MAX_ACTIVE: 2
             },
             BUFFER: {
                 UNLOCK_WAVE: 7,
@@ -56,31 +57,36 @@ export const GameConfig = {
             SHOT_SPEED: 360
         },
         SHIELD_LINK: {
-            RADIUS: 140
+            RADIUS: 70
         },
         INTRO: {
             // Gradual enemy type introduction (waves are 20s by default).
             RUSHER_WAVE: 3,
             TURRET_WAVE: 5,
-            TANK_WAVE: 7
+            TANK_WAVE: 7,
+            STABLE_SECONDS_REQUIRED: 24,
+            STABLE_WPM_MIN: 28,
+            STABLE_COMBO_MIN: 12,
+            STABLE_LOAD_MAX: 0.72,
+            STABLE_DECAY_PER_SECOND: 1.5
         }
     },
     WAVES: {
         FIRST_SPAWN_DELAY: 5.0,
-        INITIAL_SPAWN_TIMER: 2.0,
-        MIN_SPAWN_TIMER: 0.4,
-        DIFFICULTY_SCALING: 0.8,
-        TIMER_SCALING: 0.12,
-        TIME_SCALING: 0.04,
+        INITIAL_SPAWN_TIMER: 3.0,
+        MIN_SPAWN_TIMER: 0.9,
+        DIFFICULTY_SCALING: 0.5,
+        TIMER_SCALING: 0.05,
+        TIME_SCALING: 0.015,
         WAVE_DURATION: 20
     },
     WORDS: {
         MIN_START: 4,
         MAX_START: 6,
         MIN_CAP: 6,
-        MAX_CAP: 12,
-        PER_WAVE: 0.3,
-        PER_MINUTE: 0.6,
+        MAX_CAP: 10,
+        PER_WAVE: 0.2,
+        PER_MINUTE: 0.4,
         WICKED_CHANCE_START: 0.05,
         WICKED_CHANCE_PER_WAVE: 0.02
     },
@@ -96,8 +102,9 @@ export const GameConfig = {
         DEATH_GRACE_SECONDS: 0.25
     },
     BALANCE: {
-        ENEMY_SPEED_MULT: 0.8,
-        ENEMY_SPAWN_INTERVAL_MULT: 1.25,
+        ENEMY_SPEED_MULT: 0.52,
+        ENEMY_SPAWN_INTERVAL_MULT: 1.68,
+        ENEMY_BEAT_SPAWN_CHANCE_MULT: 0.8,
         ENEMY_OVERLAP_PADDING: 10,
         ENEMY_OVERLAP_PUSH: 70
     },
@@ -108,13 +115,13 @@ export const GameConfig = {
         STORAGE_KEY: 'survival_strict_mode'
     },
     DIFFICULTY_CAP: {
-        MAX_HUMAN_WPM: 120,
+        MAX_HUMAN_WPM: 100,
         CHARS_PER_WORD: 5,
-        SAFETY_FACTOR: 0.82,
-        TARGET_TTC_SECONDS: 5.2,
-        MIN_TTC_SECONDS: 2.4,
-        MIN_ACTIVE_ENEMIES: 5,
-        MAX_ACTIVE_ENEMIES: 26,
+        SAFETY_FACTOR: 0.75,
+        TARGET_TTC_SECONDS: 6.0,
+        MIN_TTC_SECONDS: 3.5,
+        MIN_ACTIVE_ENEMIES: 4,
+        MAX_ACTIVE_ENEMIES: 15,
         COMMAND_WORDS: ['BACK', 'NEXT'],
         // Backwards-compat alias (prefer GameConfig.DIFFICULTY.STRICT_MODE).
         STRICT_MODE: false

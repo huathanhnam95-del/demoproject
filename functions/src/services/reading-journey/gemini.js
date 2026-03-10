@@ -1,8 +1,8 @@
 const { VertexAI } = require('@google-cloud/vertexai');
 const { safeJsonParse, countWords, trimToMaxWords } = require('./json');
 
-const DEFAULT_MODEL = 'gemini-1.5-pro';
-const DEFAULT_FALLBACK_MODEL = 'gemini-1.5-flash';
+const DEFAULT_MODEL = 'gemini-2.0-flash';
+const DEFAULT_FALLBACK_MODEL = 'gemini-2.0-flash-lite';
 const ALLOWED_LEVELS = new Set(['A2', 'B1', 'B2', 'C1']);
 
 const MAX_INTERACTIVE_BEATS = 5;
@@ -89,6 +89,7 @@ async function generateJson(prompt, { temperature = 0.7 } = {}) {
             const response = await result.response;
             return safeJsonParse(extractText(response));
         } catch (e) {
+            console.error(`[Reading Journey] Vertex AI error (model=${activeModelName}, attempt=${attempt}):`, String(e?.message || e).slice(0, 500));
             if (!forceFallback && activeModelName === primaryModelName && fallbackModelName && shouldForceFallback(e)) {
                 forceFallback = true;
                 forceFallbackReason = String(e?.message || e);

@@ -16,6 +16,7 @@ const {
 } = require('./studentIdentity');
 
 const app = express();
+app.set('trust proxy', true); // Cloud Functions runs behind Google's load balancer
 app.use(cors({ origin: true }));
 app.use(express.json());
 

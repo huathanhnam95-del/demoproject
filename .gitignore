@@ -56,3 +56,7 @@ node_modules
 .survivalmode/audio/*.wav
 docs/audits/**/*.mp4
 docs/audits/**/*.webm
+
+# Temporary / cloned repos
+tmp_skills_repo/
+_tmp/

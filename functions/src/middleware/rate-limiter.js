@@ -10,6 +10,7 @@ const aiLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    validate: false, // Cloud Functions runs behind Google's proxy — skip X-Forwarded-For validation
 });
 
 module.exports = aiLimiter;

@@ -25,9 +25,12 @@ function getModelName() { return normalizeScalar(process.env.READING_JOURNEY_GEM
 function getFallbackModelName() { return normalizeScalar(process.env.READING_JOURNEY_GEMINI_FALLBACK_MODEL) || DEFAULT_FALLBACK_MODEL; }
 
 function getClient() {
-    const project = normalizeScalar(process.env.FIREBASE_PROJECT_ID);
+    const project = normalizeScalar(process.env.FIREBASE_PROJECT_ID)
+        || normalizeScalar(process.env.GCLOUD_PROJECT)
+        || normalizeScalar(process.env.GCP_PROJECT)
+        || normalizeScalar(process.env.GOOGLE_CLOUD_PROJECT);
     const location = normalizeScalar(process.env.GOOGLE_CLOUD_LOCATION) || 'us-central1';
-    if (!project) throw new Error('Missing FIREBASE_PROJECT_ID for Vertex AI');
+    if (!project) throw new Error('Missing project ID for Vertex AI — set FIREBASE_PROJECT_ID or GCLOUD_PROJECT');
     return new VertexAI({ project, location });
 }
 

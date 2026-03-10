@@ -25,12 +25,14 @@ window.ClassroomAPI = (function () {
 
     // Admin: Read local classroom docs
     async function fetchClassrooms() {
-        const db = getDb();
-        if (!db) throw new Error("Firebase DB not initialized");
-        const snapshot = await db.collection("crmClassrooms").get();
-        const classrooms = [];
-        snapshot.forEach(doc => classrooms.push({ id: doc.id, ...doc.data() }));
-        return classrooms;
+        const headers = await getHeaders();
+        const res = await fetch('/api/admin/classrooms', {
+            method: 'GET',
+            headers
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        const json = await res.json();
+        return json.classrooms || [];
     }
 
     // Admin: Read CRM course catalog
@@ -50,6 +52,17 @@ window.ClassroomAPI = (function () {
         const headers = await getHeaders();
         const res = await fetch('/api/admin/classrooms', {
             method: 'POST',
+            headers,
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function updateClassroom(classId, data) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/classrooms/${classId}`, {
+            method: 'PATCH',
             headers,
             body: JSON.stringify(data)
         });
@@ -175,6 +188,16 @@ window.ClassroomAPI = (function () {
         return json.submissions || [];
     }
 
+    async function fetchReviewBoard(classId) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/classrooms/${classId}/review-board`, {
+            method: 'GET',
+            headers
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
     // Admin: Grade submission
     async function gradeSubmission(submissionId, data) {
         const headers = await getHeaders();
@@ -191,6 +214,7 @@ window.ClassroomAPI = (function () {
         fetchCourses,
         fetchClassrooms,
         createClassroom,
+        updateClassroom,
         loadModules,
         createModule,
         loadClasswork,
@@ -198,6 +222,7 @@ window.ClassroomAPI = (function () {
         submitAssignment,
         fetchMySubmissions,
         fetchSubmissions,
+        fetchReviewBoard,
         gradeSubmission
     };
 })();

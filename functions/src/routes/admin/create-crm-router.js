@@ -4,7 +4,8 @@ const {
     CRM_CLASSROOMS,
     CRM_SUBMISSIONS,
     CLASSROOM_MODULES,
-    CLASSROOM_CLASSWORK
+    CLASSROOM_CLASSWORK,
+    CLASSROOM_MEMBERS
 } = require('../../crm/collections');
 const {
     sendSuccess: defaultSendSuccess,
@@ -13,6 +14,13 @@ const {
 const registerStudentRoutes = require('./students');
 const registerCourseRoutes = require('./courses');
 const registerIdentityRoutes = require('./identity');
+const {
+    buildClassroomCreateData,
+    buildClassroomPatchData,
+    computeMissingReviewItems,
+    mapClassroomMembers,
+    mapClassroomRecord
+} = require('../../crm/course-service');
 
 function resolveServerTimestampFactory(deps) {
     if (typeof deps.serverTimestamp === 'function') {
@@ -119,26 +127,69 @@ module.exports = function createCrmRouter(rawDeps) {
 
     router.post('/classrooms', ...requireAdminHandlers, async (req, res) => {
         try {
-            const name = String(req.body?.name || '').trim();
-            const courseId = String(req.body?.courseId || '').trim() || null;
-            const status = String(req.body?.status || '').trim() || 'draft';
-
-            if (!name) {
-                return sendError(res, 400, 'VALIDATION_ERROR', 'Classroom name is required.');
-            }
+            const classroom = buildClassroomCreateData(req.body || {}, {
+                user: req.user,
+                serverTimestamp
+            });
 
             const ref = deps.db.collection(CRM_CLASSROOMS).doc();
-            await ref.set({
-                name,
-                courseId,
-                status,
-                createdAt: serverTimestamp(),
-                createdBy: req.user.uid
-            });
+            await ref.set(classroom);
 
             return sendSuccess(res, { classroomId: ref.id }, 'Classroom created.');
         } catch (error) {
+            if ((error?.message || '').includes('Classroom name')) {
+                return sendError(res, 400, 'VALIDATION_ERROR', error.message);
+            }
             return sendError(res, 500, 'CREATE_CLASSROOM_ERROR', 'Failed to create classroom.', error?.message || error);
+        }
+    });
+
+    router.get('/classrooms', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const requestedLimit = Number(req.query?.limit);
+            const limit = Number.isFinite(requestedLimit)
+                ? Math.min(500, Math.max(1, Math.floor(requestedLimit)))
+                : 200;
+
+            const snaps = await deps.db
+                .collection(CRM_CLASSROOMS)
+                .orderBy('createdAt', 'desc')
+                .limit(limit)
+                .get();
+
+            const classrooms = snaps.docs.map((doc) => mapClassroomRecord(doc, doc.id));
+            return sendSuccess(res, { classrooms, count: classrooms.length });
+        } catch (error) {
+            return sendError(res, 500, 'LIST_CLASSROOMS_ERROR', 'Failed to list classrooms.', error?.message || error);
+        }
+    });
+
+    router.patch('/classrooms/:classId', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const classId = String(req.params.classId || '').trim();
+            if (!classId) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'Missing classId.');
+            }
+
+            const ref = deps.db.collection(CRM_CLASSROOMS).doc(classId);
+            const snap = await ref.get();
+            if (!snap.exists) {
+                return sendError(res, 404, 'CLASSROOM_NOT_FOUND', 'Classroom not found.');
+            }
+
+            const next = buildClassroomPatchData(snap.data() || {}, req.body || {}, {
+                user: req.user,
+                serverTimestamp
+            });
+            await ref.set(next, { merge: true });
+
+            const updatedSnap = await ref.get();
+            return sendSuccess(res, { classroom: mapClassroomRecord(updatedSnap, classId) }, 'Classroom updated.');
+        } catch (error) {
+            if ((error?.message || '').includes('Classroom name') || (error?.message || '').includes('No classroom fields')) {
+                return sendError(res, 400, 'VALIDATION_ERROR', error.message);
+            }
+            return sendError(res, 500, 'UPDATE_CLASSROOM_ERROR', 'Failed to update classroom.', error?.message || error);
         }
     });
 
@@ -203,6 +254,38 @@ module.exports = function createCrmRouter(rawDeps) {
             return sendSuccess(res, { submissions });
         } catch (error) {
             return sendError(res, 500, 'FETCH_SUBMISSIONS_ERROR', 'Failed to fetch submissions.', error?.message || error);
+        }
+    });
+
+    router.get('/classrooms/:classId/review-board', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const classId = String(req.params.classId || '').trim();
+            if (!classId) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'Missing classId.');
+            }
+
+            const [submissionsSnap, classworkSnap, membersSnap] = await Promise.all([
+                deps.db.collection(CRM_SUBMISSIONS).where('classId', '==', classId).get(),
+                deps.db.collection(CRM_CLASSROOMS).doc(classId).collection(CLASSROOM_CLASSWORK).get(),
+                deps.db.collection(CRM_CLASSROOMS).doc(classId).collection(CLASSROOM_MEMBERS).get()
+            ]);
+
+            const submissions = submissionsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+            const classworks = classworkSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+            const members = mapClassroomMembers(membersSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+            const missing = computeMissingReviewItems({
+                classworks,
+                submissions,
+                members
+            });
+
+            return sendSuccess(res, {
+                submissions,
+                missing,
+                members
+            });
+        } catch (error) {
+            return sendError(res, 500, 'FETCH_REVIEW_BOARD_ERROR', 'Failed to fetch review board.', error?.message || error);
         }
     });
 

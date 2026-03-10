@@ -1,69 +1,11 @@
 const {
     CRM_COURSES
 } = require('../../crm/collections');
-
-function cleanOptionalString(value, fallback = null) {
-    const normalized = String(value || '').trim();
-    return normalized || fallback;
-}
-
-function sanitizeTeachers(rawTeachers) {
-    if (!Array.isArray(rawTeachers)) return [];
-    return rawTeachers
-        .map((teacher) => String(teacher || '').trim().toLowerCase())
-        .filter(Boolean);
-}
-
-function sanitizeCourseCreatePayload(input) {
-    return {
-        name: cleanOptionalString(input.name, ''),
-        code: cleanOptionalString(input.code),
-        label: cleanOptionalString(input.label),
-        level: cleanOptionalString(input.level),
-        category: cleanOptionalString(input.category),
-        status: cleanOptionalString(input.status, 'active') || 'active',
-        description: cleanOptionalString(input.description),
-        teachers: sanitizeTeachers(input.teachers)
-    };
-}
-
-function sanitizeCoursePatchPayload(input) {
-    const patch = {};
-
-    for (const key of ['name', 'code', 'label', 'level', 'category', 'status', 'description']) {
-        if (Object.prototype.hasOwnProperty.call(input, key)) {
-            patch[key] = key === 'name'
-                ? cleanOptionalString(input[key], '')
-                : cleanOptionalString(input[key]);
-        }
-    }
-
-    if (Object.prototype.hasOwnProperty.call(input, 'teachers')) {
-        patch.teachers = sanitizeTeachers(input.teachers);
-    }
-
-    return patch;
-}
-
-function mapCourse(doc) {
-    const data = doc.data() || {};
-    return {
-        courseId: doc.id,
-        name: data.name || '',
-        code: data.code || null,
-        label: data.label || null,
-        level: data.level || null,
-        category: data.category || null,
-        status: data.status || 'active',
-        description: data.description || null,
-        teachers: Array.isArray(data.teachers) ? data.teachers : [],
-        createdAt: data.createdAt || null,
-        createdBy: data.createdBy || null,
-        createdByEmail: data.createdByEmail || null,
-        updatedAt: data.updatedAt || null,
-        updatedBy: data.updatedBy || null
-    };
-}
+const {
+    buildCourseCreateData,
+    buildCoursePatchData,
+    mapCourseRecord
+} = require('../../crm/course-service');
 
 module.exports = function registerCourseRoutes(router, deps) {
     const { db, sendSuccess, sendError, requireAdminHandlers, serverTimestamp } = deps;
@@ -81,7 +23,7 @@ module.exports = function registerCourseRoutes(router, deps) {
                 .limit(limit)
                 .get();
 
-            const courses = snaps.docs.map(mapCourse);
+            const courses = snaps.docs.map((doc) => mapCourseRecord(doc, doc.id));
             return sendSuccess(res, { courses, count: courses.length });
         } catch (error) {
             return sendError(res, 500, 'LIST_COURSES_ERROR', 'Failed to list courses.', error?.message || error);
@@ -90,21 +32,19 @@ module.exports = function registerCourseRoutes(router, deps) {
 
     router.post('/courses', ...requireAdminHandlers, async (req, res) => {
         try {
-            const fields = sanitizeCourseCreatePayload(req.body || {});
-            if (!fields.name) {
-                return sendError(res, 400, 'VALIDATION_ERROR', 'Please provide a course name before saving.');
-            }
+            const course = buildCourseCreateData(req.body || {}, {
+                user: req.user,
+                serverTimestamp
+            });
 
             const ref = db.collection(CRM_COURSES).doc();
-            await ref.set({
-                ...fields,
-                createdAt: serverTimestamp(),
-                createdBy: req.user.uid,
-                createdByEmail: req.user.email || null
-            });
+            await ref.set(course);
 
             return sendSuccess(res, { courseId: ref.id }, 'Course created.');
         } catch (error) {
+            if ((error?.message || '').includes('course name')) {
+                return sendError(res, 400, 'VALIDATION_ERROR', error.message);
+            }
             return sendError(res, 500, 'CREATE_COURSE_ERROR', 'Failed to create course.', error?.message || error);
         }
     });
@@ -116,30 +56,24 @@ module.exports = function registerCourseRoutes(router, deps) {
                 return sendError(res, 400, 'VALIDATION_ERROR', 'Missing or invalid courseId.');
             }
 
-            const patch = sanitizeCoursePatchPayload(req.body || {});
-            if (Object.keys(patch).length === 0) {
-                return sendError(res, 400, 'VALIDATION_ERROR', 'No course fields provided for update.');
-            }
-
-            if (Object.prototype.hasOwnProperty.call(patch, 'name') && !patch.name) {
-                return sendError(res, 400, 'VALIDATION_ERROR', 'Please provide a course name before saving.');
-            }
-
             const ref = db.collection(CRM_COURSES).doc(courseId);
             const snap = await ref.get();
             if (!snap.exists) {
                 return sendError(res, 404, 'COURSE_NOT_FOUND', 'Course not found.');
             }
 
-            await ref.set({
-                ...patch,
-                updatedAt: serverTimestamp(),
-                updatedBy: req.user.uid
-            }, { merge: true });
+            const next = buildCoursePatchData(snap.data() || {}, req.body || {}, {
+                user: req.user,
+                serverTimestamp
+            });
+            await ref.set(next, { merge: true });
 
             const updatedSnap = await ref.get();
-            return sendSuccess(res, { course: mapCourse(updatedSnap) }, 'Course updated.');
+            return sendSuccess(res, { course: mapCourseRecord(updatedSnap, courseId) }, 'Course updated.');
         } catch (error) {
+            if ((error?.message || '').includes('course name') || (error?.message || '').includes('No course fields')) {
+                return sendError(res, 400, 'VALIDATION_ERROR', error.message);
+            }
             return sendError(res, 500, 'UPDATE_COURSE_ERROR', 'Failed to update course.', error?.message || error);
         }
     });

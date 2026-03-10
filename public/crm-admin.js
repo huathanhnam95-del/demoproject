@@ -624,6 +624,57 @@
     };
   }
 
+  function setCourseTeachers(emails) {
+    if (!elements.courseTeachersList) return;
+    elements.courseTeachersList.innerHTML = '';
+
+    const teacherList = Array.isArray(emails) ? emails.filter(Boolean) : [];
+    if (!teacherList.length) {
+      const placeholder = document.createElement('li');
+      placeholder.className = 'text-muted';
+      placeholder.dataset.empty = 'true';
+      placeholder.textContent = 'No teachers added yet.';
+      elements.courseTeachersList.appendChild(placeholder);
+      return;
+    }
+
+    teacherList.forEach((email) => {
+      const li = document.createElement('li');
+      li.className = 'crm-tag-item';
+      li.dataset.email = email;
+
+      const span = document.createElement('span');
+      span.textContent = email;
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'crm-tag-remove';
+      removeBtn.textContent = '×';
+      removeBtn.addEventListener('click', () => {
+        li.remove();
+        if (elements.courseTeachersList.children.length === 0) {
+          setCourseTeachers([]);
+        }
+      });
+
+      li.appendChild(span);
+      li.appendChild(removeBtn);
+      elements.courseTeachersList.appendChild(li);
+    });
+  }
+
+  function applyCourseToForm(course) {
+    modalState.courseId = String(course?.id || course?.courseId || '').trim() || null;
+    if (elements.inputCourseName) elements.inputCourseName.value = String(course?.name || '');
+    if (elements.inputCourseCode) elements.inputCourseCode.value = String(course?.code || '');
+    if (elements.inputCourseLabel) elements.inputCourseLabel.value = String(course?.label || '');
+    if (elements.inputCourseLevel) elements.inputCourseLevel.value = String(course?.level || '');
+    if (elements.inputCourseCategory) elements.inputCourseCategory.value = String(course?.category || '');
+    if (elements.inputCourseStatus) elements.inputCourseStatus.value = String(course?.status || 'active');
+    if (elements.inputCourseDescription) elements.inputCourseDescription.value = String(course?.description || '');
+    setCourseTeachers(course?.teachers || []);
+  }
+
   async function saveCourse() {
     const payload = getCoursePayload();
     if (!payload.name) {
@@ -636,19 +687,23 @@
     }
 
     try {
-      const json = await apiFetchJson('/api/admin/courses', {
-        method: 'POST',
+      const path = modalState.courseId
+        ? `/api/admin/courses/${encodeURIComponent(modalState.courseId)}`
+        : '/api/admin/courses';
+      const method = modalState.courseId ? 'PATCH' : 'POST';
+      const json = await apiFetchJson(path, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
-      const courseId = String(json.courseId || '').trim();
+      const courseId = String(json.courseId || json.course?.courseId || modalState.courseId || '').trim();
       if (!courseId) throw new Error('Course ID missing from server response.');
 
       modalState.courseId = courseId;
       await refreshCourseCatalog();
 
-      showToast('Course saved.', 'success');
+      showToast(method === 'PATCH' ? 'Course updated.' : 'Course saved.', 'success');
       resetCourseModal();
     } catch (e) {
       if (elements.btnSaveCourse) {
@@ -927,6 +982,18 @@
     elements.studentModal.setAttribute('aria-hidden', 'false');
   }
 
+  function openCourseModal() {
+    if (!elements.courseModal) return;
+    elements.courseModal.style.display = 'flex';
+    elements.courseModal.setAttribute('aria-hidden', 'false');
+  }
+
+  function openClassroomModal() {
+    if (!elements.classroomModal) return;
+    elements.classroomModal.style.display = 'flex';
+    elements.classroomModal.setAttribute('aria-hidden', 'false');
+  }
+
   async function openStudentProfile(studentId, cachedStudent = null) {
     const id = String(studentId || '').trim();
     if (!id) throw new Error('Missing student ID.');
@@ -1077,10 +1144,9 @@
   function setupCourseModal() {
     if (!elements.courseModal || elements.btnNewCourseTriggers.length === 0) return;
 
-    const openCourseModal = () => {
+    const openFreshCourseModal = () => {
       resetCourseModal();
-      elements.courseModal.style.display = 'flex';
-      elements.courseModal.setAttribute('aria-hidden', 'false');
+      openCourseModal();
     };
 
     const closeCourseModal = () => {
@@ -1089,7 +1155,7 @@
     };
 
     elements.btnNewCourseTriggers.forEach((btn) => {
-      btn.addEventListener('click', openCourseModal);
+      btn.addEventListener('click', openFreshCourseModal);
     });
 
     if (elements.btnCloseCourseModal) {
@@ -1267,10 +1333,9 @@
   function setupClassroomModal() {
     if (!elements.classroomModal || elements.btnNewClassroomTriggers.length === 0) return;
 
-    const openClassroomModal = () => {
+    const openFreshClassroomModal = () => {
       resetClassroomModal();
-      elements.classroomModal.style.display = 'flex';
-      elements.classroomModal.setAttribute('aria-hidden', 'false');
+      openClassroomModal();
     };
 
     const closeClassroomModal = () => {
@@ -1278,7 +1343,7 @@
       elements.classroomModal.setAttribute('aria-hidden', 'true');
     };
 
-    elements.btnNewClassroomTriggers.forEach(btn => btn.addEventListener('click', openClassroomModal));
+    elements.btnNewClassroomTriggers.forEach(btn => btn.addEventListener('click', openFreshClassroomModal));
     if (elements.btnCloseClassroomModal) elements.btnCloseClassroomModal.addEventListener('click', closeClassroomModal);
     if (elements.btnCancelClassroom) elements.btnCancelClassroom.addEventListener('click', closeClassroomModal);
 
@@ -1438,37 +1503,15 @@
     elements.kanbanMissingList.innerHTML = '<div class="crm-loading-spinner small"></div>';
 
     try {
-      const submissions = await window.ClassroomAPI.fetchSubmissions(classId);
+      const board = await window.ClassroomAPI.fetchReviewBoard(classId);
+      const submissions = Array.isArray(board?.submissions) ? board.submissions : [];
 
       const turnedIn = submissions.filter(s => s.status === 'turned-in');
       const graded = submissions.filter(s => s.status === 'graded');
+      const missing = Array.isArray(board?.missing) ? board.missing : [];
 
       renderKanbanColumn(elements.kanbanTurnedInList, turnedIn, true);
       renderKanbanColumn(elements.kanbanGradedList, graded, false);
-
-      // Fetch classworks and enrolled students to calculate "Missing"
-      const works = await window.ClassroomAPI.loadClasswork(classId);
-      const snap = await firebase.firestore().collection('crmStudents').get();
-      const students = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(s => s.linked_user_ids && s.linked_user_ids.length > 0);
-
-      const missing = [];
-      for (const w of works) {
-          for (const st of students) {
-              const stUids = st.linked_user_ids || [];
-              const hasSub = submissions.some(sub => sub.workId === w.id && stUids.includes(sub.studentUid));
-              if (!hasSub) {
-                  missing.push({
-                      id: `missing-${w.id}-${st.id}`,
-                      workId: w.id,
-                      workTitle: w.title,
-                      studentName: st.name || st.email || 'Student',
-                      studentUid: stUids[0] || 'Unknown',
-                      status: 'missing'
-                  });
-              }
-          }
-      }
-
       renderKanbanColumn(elements.kanbanMissingList, missing, false);
 
     } catch (e) {
@@ -1555,20 +1598,21 @@
   }
 
   async function saveClassroomSettings() {
-    const payload = {
-      name: elements.inputClassroomName.value.trim(),
-      courseId: elements.inputClassroomCourseId.value,
-      status: elements.inputClassroomStatus.value
-    };
+    const payload = window.CrmClassrooms && typeof window.CrmClassrooms.buildPayload === 'function'
+      ? window.CrmClassrooms.buildPayload(elements)
+      : {
+          name: elements.inputClassroomName.value.trim(),
+          courseId: elements.inputClassroomCourseId.value,
+          status: elements.inputClassroomStatus.value
+        };
     if (!payload.name) throw new Error('Classroom name is required.');
 
-    // For MVP, we only do creates
-    if (!modalState.classroomId) {
-      const res = await window.ClassroomAPI.createClassroom(payload);
-      modalState.classroomId = res.classroomId || res.id;
-      if (elements.classroomStatusBadge) elements.classroomStatusBadge.textContent = payload.status;
-      if (elements.classroomTitle) elements.classroomTitle.textContent = payload.name;
-    }
+    const res = modalState.classroomId
+      ? await window.ClassroomAPI.updateClassroom(modalState.classroomId, payload)
+      : await window.ClassroomAPI.createClassroom(payload);
+    modalState.classroomId = String(res.classroomId || res.classroom?.classroomId || modalState.classroomId || '').trim();
+    if (elements.classroomStatusBadge) elements.classroomStatusBadge.textContent = payload.status;
+    if (elements.classroomTitle) elements.classroomTitle.textContent = payload.name;
     await refreshClassroomList();
   }
 
@@ -1593,7 +1637,11 @@
             <tbody>
               ${classrooms.map(c => `
                 <tr>
-                  <td class="td-bold">${escapeHtml(c.name)}</td>
+                  <td class="td-bold">
+                    <button type="button" class="crm-student-link crm-classroom-link" data-classroom-id="${escapeHtml(c.classroomId || c.id || '')}">
+                      ${escapeHtml(c.name)}
+                    </button>
+                  </td>
                   <td>${escapeHtml(courseIndex.get(String(c.courseId || ''))?.name || c.courseId || 'None')}</td>
                   <td>${escapeHtml(c.status)}</td>
                   <td>n/a</td>
@@ -1603,6 +1651,32 @@
           </table>
         </div>
       `;
+
+      const classroomIndex = new Map(classrooms.map((classroom) => [String(classroom.classroomId || classroom.id || ''), classroom]));
+      Array.from(elements.classManagementGrid.querySelectorAll('button.crm-classroom-link[data-classroom-id]')).forEach((button) => {
+        button.addEventListener('click', async () => {
+          const classroomId = String(button.dataset.classroomId || '').trim();
+          const classroom = classroomIndex.get(classroomId);
+          if (!classroom) return;
+
+          resetClassroomModal();
+          await populateClassroomCourseOptions({ selectedValue: classroom.courseId || '' });
+          if (window.CrmClassrooms && typeof window.CrmClassrooms.applyToForm === 'function') {
+            window.CrmClassrooms.applyToForm(elements, classroom);
+          }
+          modalState.classroomId = classroomId;
+          if (elements.classroomStatusBadge) {
+            elements.classroomStatusBadge.textContent = classroom.status || 'draft';
+            elements.classroomStatusBadge.style.display = 'inline-flex';
+          }
+          if (elements.classroomTitle) {
+            elements.classroomTitle.textContent = classroom.name || 'Classroom';
+          }
+          openClassroomModal();
+          await loadClassroomModules(classroomId);
+          await loadClassroomClasswork(classroomId);
+        });
+      });
     } catch (e) {
       elements.classManagementGrid.innerHTML = '<div class="crm-muted">Failed to load classrooms.</div>';
     }
@@ -1701,7 +1775,11 @@
             <tbody>
               ${courses.map((course) => `
                 <tr>
-                  <td class="td-bold">${escapeHtml(course.name || 'Untitled')}</td>
+                  <td class="td-bold">
+                    <button type="button" class="crm-student-link crm-course-link" data-course-id="${escapeHtml(course.id || course.courseId || '')}">
+                      ${escapeHtml(course.name || 'Untitled')}
+                    </button>
+                  </td>
                   <td>${escapeHtml(course.code || '—')}</td>
                   <td>${escapeHtml(course.status || 'active')}</td>
                   <td>${escapeHtml((course.teachers || []).join(', ') || 'None')}</td>
@@ -1711,6 +1789,19 @@
           </table>
         </div>
       `;
+
+      const courseIndex = new Map(courses.map((course) => [String(course.id || course.courseId || ''), course]));
+      Array.from(container.querySelectorAll('button.crm-course-link[data-course-id]')).forEach((button) => {
+        button.addEventListener('click', () => {
+          const courseId = String(button.dataset.courseId || '').trim();
+          const course = courseIndex.get(courseId);
+          if (!course) return;
+
+          resetCourseModal();
+          applyCourseToForm(course);
+          openCourseModal();
+        });
+      });
     } catch (error) {
       console.error('[CRM Admin] Failed to refresh course catalog:', error);
       container.innerHTML = '<div class="crm-muted">Failed to load courses.</div>';

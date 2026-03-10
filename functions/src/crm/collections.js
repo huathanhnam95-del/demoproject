@@ -7,6 +7,7 @@ const ENTRANCE_TESTS = 'entranceTests';
 
 const CLASSROOM_MODULES = 'modules';
 const CLASSROOM_CLASSWORK = 'classwork';
+const CLASSROOM_MEMBERS = 'members';
 
 module.exports = {
     USERS,
@@ -16,5 +17,6 @@ module.exports = {
     CRM_SUBMISSIONS,
     ENTRANCE_TESTS,
     CLASSROOM_MODULES,
-    CLASSROOM_CLASSWORK
+    CLASSROOM_CLASSWORK,
+    CLASSROOM_MEMBERS
 };

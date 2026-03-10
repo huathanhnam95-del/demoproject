@@ -40,11 +40,17 @@
 
   const state = { ...DEFAULT_ROUTE };
   const elements = {};
+  const dataCache = {
+    leads: [],
+    students: [],
+    openTasks: []
+  };
   const modalState = {
     studentId: null,
     createdTestLinks: new Map(),
     courseId: null,
-    classroomId: null
+    classroomId: null,
+    leadId: null
   };
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -79,6 +85,20 @@
     elements.inputLeadSource = document.getElementById('lead-source');
     elements.inputLeadStage = document.getElementById('lead-stage');
     elements.inputLeadProbability = document.getElementById('lead-probability');
+    elements.leadWorkspace = document.getElementById('lead-workspace');
+    elements.leadWorkspaceTitle = document.getElementById('lead-workspace-title');
+    elements.leadWorkspaceMeta = document.getElementById('lead-workspace-meta');
+    elements.leadWorkspaceBadge = document.getElementById('lead-workspace-badge');
+    elements.inputLeadTaskTitle = document.getElementById('lead-task-title');
+    elements.inputLeadTaskDueAt = document.getElementById('lead-task-due-at');
+    elements.inputLeadTaskPriority = document.getElementById('lead-task-priority');
+    elements.btnSaveLeadTask = document.getElementById('btn-save-lead-task');
+    elements.leadTaskList = document.getElementById('lead-task-list');
+    elements.inputLeadActivityType = document.getElementById('lead-activity-type');
+    elements.inputLeadActivitySubject = document.getElementById('lead-activity-subject');
+    elements.inputLeadActivityBody = document.getElementById('lead-activity-body');
+    elements.btnSaveLeadActivity = document.getElementById('btn-save-lead-activity');
+    elements.leadActivityList = document.getElementById('lead-activity-list');
 
     // New Student Elements
     elements.btnNewStudentTriggers = Array.from(document.querySelectorAll('.btn-new-student-trigger'));
@@ -107,6 +127,18 @@
     elements.inputScoreWriting = document.getElementById('score-writing');
     elements.inputStudentDueDate = document.getElementById('student-due-date');
     elements.inputStudentLevel = document.getElementById('student-level');
+    elements.studentTaskMeta = document.getElementById('student-task-meta');
+    elements.studentTaskBadge = document.getElementById('student-task-badge');
+    elements.inputStudentTaskTitle = document.getElementById('student-task-title');
+    elements.inputStudentTaskDueAt = document.getElementById('student-task-due-at');
+    elements.inputStudentTaskPriority = document.getElementById('student-task-priority');
+    elements.btnSaveStudentTask = document.getElementById('btn-save-student-task');
+    elements.studentTaskList = document.getElementById('student-task-list');
+    elements.inputStudentActivityType = document.getElementById('student-activity-type');
+    elements.inputStudentActivitySubject = document.getElementById('student-activity-subject');
+    elements.inputStudentActivityBody = document.getElementById('student-activity-body');
+    elements.btnSaveStudentActivity = document.getElementById('btn-save-student-activity');
+    elements.studentActivityList = document.getElementById('student-activity-list');
 
     // Student ID Badge
     elements.studentIdBadge = document.getElementById('crm-student-id-badge');
@@ -220,6 +252,7 @@
     hideGate();
     setupTabs();
     setupLeadComposer();
+    setupActivitySurfaces();
     applyRouteFromHash();
     render();
 
@@ -241,6 +274,11 @@
     refreshLeadPipeline().catch((e) => {
       console.error('[CRM Admin] Failed to load leads:', e);
       showToast(e?.message || 'Failed to load leads.', 'error');
+    });
+
+    refreshOpenTaskSnapshot().catch((e) => {
+      console.error('[CRM Admin] Failed to load task reminders:', e);
+      showToast(e?.message || 'Failed to load task reminders.', 'error');
     });
   }
 
@@ -541,6 +579,12 @@
 
     if (elements.handshakePreview) elements.handshakePreview.style.display = 'none';
     if (elements.linkedUidsUl) elements.linkedUidsUl.innerHTML = '<li class="text-muted">No accounts linked yet.</li>';
+    if (elements.studentTaskList) elements.studentTaskList.innerHTML = '<div class="crm-muted">No tasks yet.</div>';
+    if (elements.studentActivityList) elements.studentActivityList.innerHTML = '<div class="crm-muted">No activity yet.</div>';
+    if (elements.studentTaskMeta) elements.studentTaskMeta.textContent = 'Save the profile to schedule follow-ups.';
+    applyReminderBadge(elements.studentTaskBadge, null);
+    resetStudentTaskComposer();
+    resetStudentActivityComposer();
 
     if (elements.btnSaveStudent) {
       elements.btnSaveStudent.disabled = false;
@@ -608,6 +652,30 @@
       elements.btnSaveLead.disabled = false;
       elements.btnSaveLead.textContent = 'Save Lead';
     }
+  }
+
+  function resetLeadTaskComposer() {
+    if (elements.inputLeadTaskTitle) elements.inputLeadTaskTitle.value = '';
+    if (elements.inputLeadTaskDueAt) elements.inputLeadTaskDueAt.value = '';
+    if (elements.inputLeadTaskPriority) elements.inputLeadTaskPriority.value = 'medium';
+  }
+
+  function resetLeadActivityComposer() {
+    if (elements.inputLeadActivityType) elements.inputLeadActivityType.value = 'note';
+    if (elements.inputLeadActivitySubject) elements.inputLeadActivitySubject.value = '';
+    if (elements.inputLeadActivityBody) elements.inputLeadActivityBody.value = '';
+  }
+
+  function resetStudentTaskComposer() {
+    if (elements.inputStudentTaskTitle) elements.inputStudentTaskTitle.value = '';
+    if (elements.inputStudentTaskDueAt) elements.inputStudentTaskDueAt.value = '';
+    if (elements.inputStudentTaskPriority) elements.inputStudentTaskPriority.value = 'medium';
+  }
+
+  function resetStudentActivityComposer() {
+    if (elements.inputStudentActivityType) elements.inputStudentActivityType.value = 'note';
+    if (elements.inputStudentActivitySubject) elements.inputStudentActivitySubject.value = '';
+    if (elements.inputStudentActivityBody) elements.inputStudentActivityBody.value = '';
   }
 
   function getStudentPayload() {
@@ -801,6 +869,121 @@
     }
   }
 
+  function setupActivitySurfaces() {
+    if (elements.btnSaveLeadTask) {
+      elements.btnSaveLeadTask.addEventListener('click', () => {
+        createTaskForLead().catch((error) => {
+          console.error('[CRM Admin] Save lead task failed:', error);
+          showToast(error?.message || 'Failed to save lead task.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnSaveLeadActivity) {
+      elements.btnSaveLeadActivity.addEventListener('click', () => {
+        createActivityForLead().catch((error) => {
+          console.error('[CRM Admin] Save lead activity failed:', error);
+          showToast(error?.message || 'Failed to save lead activity.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnSaveStudentTask) {
+      elements.btnSaveStudentTask.addEventListener('click', () => {
+        createTaskForStudent().catch((error) => {
+          console.error('[CRM Admin] Save student task failed:', error);
+          showToast(error?.message || 'Failed to save student task.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnSaveStudentActivity) {
+      elements.btnSaveStudentActivity.addEventListener('click', () => {
+        createActivityForStudent().catch((error) => {
+          console.error('[CRM Admin] Save student activity failed:', error);
+          showToast(error?.message || 'Failed to save student activity.', 'error');
+        });
+      });
+    }
+  }
+
+  function buildQuery(params = {}) {
+    const search = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== null && value !== undefined && String(value).trim() !== '') {
+        search.set(key, String(value).trim());
+      }
+    });
+    return search.toString();
+  }
+
+  async function fetchTasks(params = {}) {
+    const query = buildQuery(params);
+    const path = query ? `/api/admin/tasks?${query}` : '/api/admin/tasks';
+    const json = await apiFetchJson(path, { method: 'GET' });
+    return Array.isArray(json.tasks) ? json.tasks : [];
+  }
+
+  async function fetchActivities(params = {}) {
+    const query = buildQuery(params);
+    const path = query ? `/api/admin/activities?${query}` : '/api/admin/activities';
+    const json = await apiFetchJson(path, { method: 'GET' });
+    return Array.isArray(json.activities) ? json.activities : [];
+  }
+
+  function filterTasksForEntity(entity) {
+    if (!entity) return [];
+    return dataCache.openTasks.filter((task) => {
+      if (entity.leadId) return String(task.leadId || '') === String(entity.leadId);
+      if (entity.studentId) return String(task.studentId || '') === String(entity.studentId);
+      if (entity.classId) return String(task.classId || '') === String(entity.classId);
+      return false;
+    });
+  }
+
+  function getReminderSummary(entity) {
+    if (!window.CrmActivities || typeof window.CrmActivities.summarizeTasks !== 'function') {
+      return null;
+    }
+    return window.CrmActivities.summarizeTasks(filterTasksForEntity(entity), new Date());
+  }
+
+  function applyReminderBadge(element, summary) {
+    if (!element || !window.CrmActivities) return;
+    const safeSummary = summary || { overdueCount: 0, nextActionAt: null };
+    element.className = `crm-reminder-badge ${window.CrmActivities.getBadgeTone(safeSummary)}`;
+    element.textContent = window.CrmActivities.getBadgeLabel(safeSummary);
+  }
+
+  function renderReminderBadgeMarkup(summary) {
+    if (!window.CrmActivities) return '';
+    const safeSummary = summary || { overdueCount: 0, nextActionAt: null };
+    return `<span class="crm-reminder-badge ${escapeHtml(window.CrmActivities.getBadgeTone(safeSummary))}">${escapeHtml(window.CrmActivities.getBadgeLabel(safeSummary))}</span>`;
+  }
+
+  async function refreshOpenTaskSnapshot() {
+    dataCache.openTasks = await fetchTasks({ status: 'open', limit: 300 });
+
+    if (dataCache.students.length) {
+      const buckets = window.CrmStudents.splitStudents(dataCache.students);
+      renderStudentsTable(elements.potentialStudentsContainer, buckets.potential, 'No potential students yet.');
+      renderStudentsTable(elements.studentDataContainer, buckets.studentData, 'No students in database yet.');
+    }
+
+    if (dataCache.leads.length) {
+      renderLeadStageBoard(dataCache.leads);
+      renderLeadTable(dataCache.leads);
+    }
+
+    if (modalState.studentId) {
+      await refreshStudentTimeline();
+    }
+
+    if (modalState.leadId) {
+      await refreshLeadWorkspace();
+    }
+  }
+
   async function saveLead() {
     if (!window.CrmLeads || typeof window.CrmLeads.buildPayload !== 'function') {
       throw new Error('Lead helpers are not available.');
@@ -875,6 +1058,7 @@
       }
 
       await refreshStudentLists();
+      await refreshStudentTimeline();
       await refreshEntranceTestsList();
       showToast(method === 'PATCH' ? 'Student profile updated.' : 'Student profile saved.', 'success');
     } catch (e) {
@@ -955,6 +1139,255 @@
     return d.toLocaleString();
   }
 
+  function formatDueAtForMeta(ts) {
+    const d = tsToDate(ts);
+    if (!d) return 'No due date';
+    return `Due ${d.toLocaleString()}`;
+  }
+
+  function renderTaskList(container, tasks, options = {}) {
+    if (!container) return;
+    const list = Array.isArray(tasks) ? [...tasks] : [];
+    if (!list.length) {
+      container.innerHTML = `<div class="crm-muted">${escapeHtml(options.emptyMessage || 'No tasks yet.')}</div>`;
+      return;
+    }
+
+    list.sort((left, right) => {
+      const leftDue = tsToDate(left?.dueAt)?.getTime() || Number.MAX_SAFE_INTEGER;
+      const rightDue = tsToDate(right?.dueAt)?.getTime() || Number.MAX_SAFE_INTEGER;
+      if (leftDue !== rightDue) return leftDue - rightDue;
+      return (tsToDate(right?.createdAt)?.getTime() || 0) - (tsToDate(left?.createdAt)?.getTime() || 0);
+    });
+
+    container.innerHTML = list.map((task) => {
+      const priority = window.CrmActivities
+        ? window.CrmActivities.formatPriorityLabel(task.priority)
+        : String(task.priority || 'medium');
+      const isOpen = String(task.status || 'open') === 'open';
+      return `
+        <div class="crm-task-item">
+          <div class="crm-task-head">
+            <strong>${escapeHtml(task.title || 'Untitled task')}</strong>
+            <span class="crm-task-priority ${escapeHtml(priority)}">${escapeHtml(priority)}</span>
+          </div>
+          <div class="crm-task-meta">${escapeHtml(formatDueAtForMeta(task.dueAt))}</div>
+          ${task.notes ? `<div class="crm-timeline-meta" style="margin-top: 6px;">${escapeHtml(task.notes)}</div>` : ''}
+          ${isOpen ? `
+            <div class="crm-task-actions">
+              <button type="button" class="crm-btn-secondary btn-task-done" data-task-id="${escapeHtml(task.taskId || '')}" data-scope="${escapeHtml(options.scope || '')}">Mark Done</button>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }).join('');
+
+    Array.from(container.querySelectorAll('.btn-task-done')).forEach((button) => {
+      button.addEventListener('click', async () => {
+        const taskId = String(button.dataset.taskId || '').trim();
+        const scope = String(button.dataset.scope || '').trim();
+        try {
+          button.disabled = true;
+          await apiFetchJson(`/api/admin/tasks/${encodeURIComponent(taskId)}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'done' })
+          });
+          await refreshOpenTaskSnapshot();
+          showToast(scope === 'lead' ? 'Lead task completed.' : 'Student task completed.', 'success');
+        } catch (error) {
+          console.error('[CRM Admin] Complete task failed:', error);
+          showToast(error?.message || 'Failed to update task.', 'error');
+          button.disabled = false;
+        }
+      });
+    });
+  }
+
+  function renderActivityList(container, activities, emptyMessage) {
+    if (!container) return;
+    const list = Array.isArray(activities) ? [...activities] : [];
+    if (!list.length) {
+      container.innerHTML = `<div class="crm-muted">${escapeHtml(emptyMessage || 'No activity yet.')}</div>`;
+      return;
+    }
+
+    list.sort((left, right) => (tsToDate(right?.createdAt)?.getTime() || 0) - (tsToDate(left?.createdAt)?.getTime() || 0));
+
+    container.innerHTML = list.map((activity) => `
+      <div class="crm-timeline-item">
+        <div class="crm-timeline-head">
+          <span class="crm-activity-chip">${escapeHtml(window.CrmActivities ? window.CrmActivities.formatTypeLabel(activity.type) : String(activity.type || 'Note'))}</span>
+          <span class="crm-timeline-meta">${escapeHtml(formatDateTime(activity.createdAt))}</span>
+        </div>
+        <strong>${escapeHtml(activity.subject || 'Untitled activity')}</strong>
+        ${activity.body ? `<div class="crm-timeline-meta" style="margin-top: 6px;">${escapeHtml(activity.body)}</div>` : ''}
+      </div>
+    `).join('');
+  }
+
+  async function refreshLeadWorkspace() {
+    if (!modalState.leadId) {
+      if (elements.leadWorkspace) elements.leadWorkspace.style.display = 'none';
+      return;
+    }
+
+    const lead = dataCache.leads.find((item) => String(item.leadId || '') === String(modalState.leadId)) || null;
+    const [tasks, activities] = await Promise.all([
+      fetchTasks({ leadId: modalState.leadId, limit: 50 }),
+      fetchActivities({ leadId: modalState.leadId, limit: 50 })
+    ]);
+
+    if (elements.leadWorkspace) elements.leadWorkspace.style.display = 'grid';
+    if (elements.leadWorkspaceTitle) {
+      elements.leadWorkspaceTitle.textContent = lead?.name || lead?.email || 'Lead Workspace';
+    }
+    if (elements.leadWorkspaceMeta) {
+      elements.leadWorkspaceMeta.textContent = [lead?.stage, lead?.source, lead?.email || lead?.phone || lead?.zalo]
+        .filter(Boolean)
+        .join(' | ') || 'Manage next actions and communication.';
+    }
+
+    applyReminderBadge(elements.leadWorkspaceBadge, getReminderSummary({ leadId: modalState.leadId }));
+    renderTaskList(elements.leadTaskList, tasks, {
+      emptyMessage: 'No lead tasks yet.',
+      scope: 'lead'
+    });
+    renderActivityList(elements.leadActivityList, activities, 'No lead activity yet.');
+  }
+
+  async function refreshStudentTimeline() {
+    if (!modalState.studentId) {
+      if (elements.studentTaskMeta) {
+        elements.studentTaskMeta.textContent = 'Save the profile to schedule follow-ups.';
+      }
+      applyReminderBadge(elements.studentTaskBadge, null);
+      return;
+    }
+
+    const [tasks, activities] = await Promise.all([
+      fetchTasks({ studentId: modalState.studentId, limit: 50 }),
+      fetchActivities({ studentId: modalState.studentId, limit: 50 })
+    ]);
+
+    const summary = getReminderSummary({ studentId: modalState.studentId });
+    if (elements.studentTaskMeta) {
+      elements.studentTaskMeta.textContent = summary?.nextActionAt
+        ? formatDueAtForMeta(summary.nextActionAt)
+        : 'No scheduled follow-up yet.';
+    }
+    applyReminderBadge(elements.studentTaskBadge, summary);
+    renderTaskList(elements.studentTaskList, tasks, {
+      emptyMessage: 'No tasks yet.',
+      scope: 'student'
+    });
+    renderActivityList(elements.studentActivityList, activities, 'No activity yet.');
+  }
+
+  async function createTaskForLead() {
+    if (!modalState.leadId) throw new Error('Select a lead first.');
+    if (!window.CrmActivities || typeof window.CrmActivities.buildTaskPayload !== 'function') {
+      throw new Error('Activity helpers are not available.');
+    }
+
+    const payload = window.CrmActivities.buildTaskPayload({
+      inputTaskTitle: elements.inputLeadTaskTitle,
+      inputTaskDueAt: elements.inputLeadTaskDueAt,
+      inputTaskPriority: elements.inputLeadTaskPriority
+    });
+
+    await apiFetchJson('/api/admin/tasks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        leadId: modalState.leadId,
+        ...payload
+      })
+    });
+
+    resetLeadTaskComposer();
+    await refreshOpenTaskSnapshot();
+    showToast('Lead task added.', 'success');
+  }
+
+  async function createActivityForLead() {
+    if (!modalState.leadId) throw new Error('Select a lead first.');
+    if (!window.CrmActivities || typeof window.CrmActivities.buildActivityPayload !== 'function') {
+      throw new Error('Activity helpers are not available.');
+    }
+
+    const payload = window.CrmActivities.buildActivityPayload({
+      inputActivityType: elements.inputLeadActivityType,
+      inputActivitySubject: elements.inputLeadActivitySubject,
+      inputActivityBody: elements.inputLeadActivityBody
+    });
+
+    await apiFetchJson('/api/admin/activities', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        leadId: modalState.leadId,
+        ...payload
+      })
+    });
+
+    resetLeadActivityComposer();
+    await refreshLeadWorkspace();
+    showToast('Lead activity logged.', 'success');
+  }
+
+  async function createTaskForStudent() {
+    if (!modalState.studentId) throw new Error('Save the student profile first.');
+    if (!window.CrmActivities || typeof window.CrmActivities.buildTaskPayload !== 'function') {
+      throw new Error('Activity helpers are not available.');
+    }
+
+    const payload = window.CrmActivities.buildTaskPayload({
+      inputTaskTitle: elements.inputStudentTaskTitle,
+      inputTaskDueAt: elements.inputStudentTaskDueAt,
+      inputTaskPriority: elements.inputStudentTaskPriority
+    });
+
+    await apiFetchJson('/api/admin/tasks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        studentId: modalState.studentId,
+        ...payload
+      })
+    });
+
+    resetStudentTaskComposer();
+    await refreshOpenTaskSnapshot();
+    showToast('Student task added.', 'success');
+  }
+
+  async function createActivityForStudent() {
+    if (!modalState.studentId) throw new Error('Save the student profile first.');
+    if (!window.CrmActivities || typeof window.CrmActivities.buildActivityPayload !== 'function') {
+      throw new Error('Activity helpers are not available.');
+    }
+
+    const payload = window.CrmActivities.buildActivityPayload({
+      inputActivityType: elements.inputStudentActivityType,
+      inputActivitySubject: elements.inputStudentActivitySubject,
+      inputActivityBody: elements.inputStudentActivityBody
+    });
+
+    await apiFetchJson('/api/admin/activities', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        studentId: modalState.studentId,
+        ...payload
+      })
+    });
+
+    resetStudentActivityComposer();
+    await refreshStudentTimeline();
+    showToast('Student activity logged.', 'success');
+  }
+
   function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = String(str || '');
@@ -1004,7 +1437,10 @@
       return `
         <tr>
           <td class="td-bold">
-            <button type="button" class="crm-student-link" data-student-id="${escapeHtml(studentId)}">${escapeHtml(displayName)}</button>
+            <div class="crm-name-cell">
+              <button type="button" class="crm-student-link" data-student-id="${escapeHtml(studentId)}">${escapeHtml(displayName)}</button>
+              ${renderReminderBadgeMarkup(getReminderSummary({ studentId }))}
+            </div>
           </td>
           <td>${escapeHtml(label)}</td>
           <td>${escapeHtml(contact)}</td>
@@ -1140,6 +1576,7 @@
 
     await refreshEntranceTestsList();
     await refreshStudentIdentity();
+    await refreshStudentTimeline();
     switchStudentTab('info');
   }
 
@@ -1190,6 +1627,8 @@
       ? window.CrmStudents.splitStudents(students)
       : { potential: students, studentData: [] };
 
+    dataCache.students = students;
+
     renderStudentsTable(elements.potentialStudentsContainer, buckets.potential, 'No potential students yet.');
     renderStudentsTable(elements.studentDataContainer, buckets.studentData, 'No students in database yet.');
   }
@@ -1230,7 +1669,12 @@
                 const stageOptions = window.CrmLeads.getSelectableStages(lead.stage);
                 return `
               <tr>
-                <td class="td-bold">${escapeHtml(lead.name || lead.email || 'Unnamed lead')}</td>
+                <td class="td-bold">
+                  <div class="crm-name-cell">
+                    <button type="button" class="crm-student-link crm-lead-link" data-lead-id="${escapeHtml(lead.leadId)}">${escapeHtml(lead.name || lead.email || 'Unnamed lead')}</button>
+                    ${renderReminderBadgeMarkup(getReminderSummary({ leadId: lead.leadId }))}
+                  </div>
+                </td>
                 <td>${escapeHtml(lead.email || lead.phone || lead.zalo || '—')}</td>
                 <td>${escapeHtml(lead.source || '—')}</td>
                 <td>
@@ -1255,6 +1699,22 @@
         </table>
       </div>
     `;
+
+    const leadIndex = new Map(leads.map((lead) => [String(lead.leadId || '').trim(), lead]));
+
+    Array.from(elements.leadListContainer.querySelectorAll('.crm-lead-link[data-lead-id]')).forEach((button) => {
+      button.addEventListener('click', () => {
+        modalState.leadId = String(button.dataset.leadId || '').trim();
+        const lead = leadIndex.get(modalState.leadId) || null;
+        if (elements.leadWorkspaceTitle) {
+          elements.leadWorkspaceTitle.textContent = lead?.name || lead?.email || 'Lead Workspace';
+        }
+        refreshLeadWorkspace().catch((error) => {
+          console.error('[CRM Admin] Open lead workspace failed:', error);
+          showToast(error?.message || 'Failed to load lead workspace.', 'error');
+        });
+      });
+    });
 
     Array.from(elements.leadListContainer.querySelectorAll('.btn-update-lead-stage')).forEach((button) => {
       button.addEventListener('click', async () => {
@@ -1303,8 +1763,15 @@
   async function refreshLeadPipeline() {
     const json = await apiFetchJson('/api/admin/leads?limit=200', { method: 'GET' });
     const leads = Array.isArray(json.leads) ? json.leads : [];
+    dataCache.leads = leads;
     renderLeadStageBoard(leads);
     renderLeadTable(leads);
+    if (modalState.leadId && !leads.find((lead) => String(lead.leadId || '') === String(modalState.leadId))) {
+      modalState.leadId = null;
+      if (elements.leadWorkspace) elements.leadWorkspace.style.display = 'none';
+    } else if (modalState.leadId) {
+      await refreshLeadWorkspace();
+    }
   }
 
   function renderEntranceTests(tests) {

@@ -189,6 +189,76 @@
         </div>
         <div id="lead-stage-board" class="crm-lead-board"></div>
         <div id="lead-list-container" class="crm-placeholder-card">Leads will appear here.</div>
+        <div id="lead-workspace" class="crm-workspace-grid" style="display: none;">
+          <section class="crm-workspace-card">
+            <div class="crm-section-header">
+              <div>
+                <h3 id="lead-workspace-title">Lead Workspace</h3>
+                <p id="lead-workspace-meta" class="crm-muted">Select a lead to review next actions and history.</p>
+              </div>
+              <span id="lead-workspace-badge" class="crm-reminder-badge quiet">No reminders</span>
+            </div>
+            <div class="crm-form-grid crm-compact-grid">
+              <div class="crm-form-group">
+                <label for="lead-task-title">Next Task</label>
+                <input type="text" id="lead-task-title" class="crm-input" placeholder="Call, email, schedule test">
+              </div>
+              <div class="crm-form-group">
+                <label for="lead-task-due-at">Due At</label>
+                <input type="datetime-local" id="lead-task-due-at" class="crm-input">
+              </div>
+              <div class="crm-form-group">
+                <label for="lead-task-priority">Priority</label>
+                <select id="lead-task-priority" class="crm-input">
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
+            </div>
+            <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
+              <button id="btn-save-lead-task" class="crm-btn-primary" type="button">Add Task</button>
+            </div>
+            <div id="lead-task-list" class="crm-stack-list">
+              <div class="crm-muted">Select a lead to view tasks.</div>
+            </div>
+          </section>
+          <section class="crm-workspace-card">
+            <div class="crm-section-header">
+              <div>
+                <h3>Activity Timeline</h3>
+                <p class="crm-muted">Notes, calls, and communication history.</p>
+              </div>
+            </div>
+            <div class="crm-form-grid crm-compact-grid">
+              <div class="crm-form-group">
+                <label for="lead-activity-type">Type</label>
+                <select id="lead-activity-type" class="crm-input">
+                  <option value="note">Note</option>
+                  <option value="call">Call</option>
+                  <option value="email">Email</option>
+                  <option value="zalo">Zalo</option>
+                  <option value="facebook">Facebook</option>
+                  <option value="meeting">Meeting</option>
+                </select>
+              </div>
+              <div class="crm-form-group">
+                <label for="lead-activity-subject">Subject</label>
+                <input type="text" id="lead-activity-subject" class="crm-input" placeholder="What happened">
+              </div>
+            </div>
+            <div class="crm-form-group">
+              <label for="lead-activity-body">Details</label>
+              <textarea id="lead-activity-body" class="crm-input" rows="3" placeholder="Summary, commitments, blockers"></textarea>
+            </div>
+            <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
+              <button id="btn-save-lead-activity" class="crm-btn-secondary" type="button">Log Activity</button>
+            </div>
+            <div id="lead-activity-list" class="crm-stack-list">
+              <div class="crm-muted">Select a lead to view activity.</div>
+            </div>
+          </section>
+        </div>
       </section>
     </main>
   </div>
@@ -244,6 +314,76 @@
                 <input type="text" id="student-facebook" name="facebook" class="crm-input"
                   placeholder="Enter Facebook name">
               </div>
+            </div>
+            <div id="student-activity-hub" class="crm-workspace-grid" style="margin-top: 24px;">
+              <section class="crm-workspace-card">
+                <div class="crm-section-header">
+                  <div>
+                    <h3>Next Actions</h3>
+                    <p id="student-task-meta" class="crm-muted">Save the profile to schedule follow-ups.</p>
+                  </div>
+                  <span id="student-task-badge" class="crm-reminder-badge quiet">No reminders</span>
+                </div>
+                <div class="crm-form-grid crm-compact-grid">
+                  <div class="crm-form-group">
+                    <label for="student-task-title">Task</label>
+                    <input type="text" id="student-task-title" class="crm-input" placeholder="Counseling call, payment reminder">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="student-task-due-at">Due At</label>
+                    <input type="datetime-local" id="student-task-due-at" class="crm-input">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="student-task-priority">Priority</label>
+                    <select id="student-task-priority" class="crm-input">
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                      <option value="low">Low</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
+                  <button id="btn-save-student-task" class="crm-btn-primary" type="button">Add Task</button>
+                </div>
+                <div id="student-task-list" class="crm-stack-list">
+                  <div class="crm-muted">No tasks yet.</div>
+                </div>
+              </section>
+              <section class="crm-workspace-card">
+                <div class="crm-section-header">
+                  <div>
+                    <h3>Timeline</h3>
+                    <p class="crm-muted">Keep counselor and teacher context in one place.</p>
+                  </div>
+                </div>
+                <div class="crm-form-grid crm-compact-grid">
+                  <div class="crm-form-group">
+                    <label for="student-activity-type">Type</label>
+                    <select id="student-activity-type" class="crm-input">
+                      <option value="note">Note</option>
+                      <option value="call">Call</option>
+                      <option value="email">Email</option>
+                      <option value="zalo">Zalo</option>
+                      <option value="facebook">Facebook</option>
+                      <option value="meeting">Meeting</option>
+                    </select>
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="student-activity-subject">Subject</label>
+                    <input type="text" id="student-activity-subject" class="crm-input" placeholder="Counseling outcome">
+                  </div>
+                </div>
+                <div class="crm-form-group">
+                  <label for="student-activity-body">Details</label>
+                  <textarea id="student-activity-body" class="crm-input" rows="3" placeholder="Notes, commitments, concerns"></textarea>
+                </div>
+                <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
+                  <button id="btn-save-student-activity" class="crm-btn-secondary" type="button">Log Activity</button>
+                </div>
+                <div id="student-activity-list" class="crm-stack-list">
+                  <div class="crm-muted">No activity yet.</div>
+                </div>
+              </section>
             </div>
           </div>
 
@@ -664,6 +804,7 @@
   <script src="js/crm/students.js"></script>
   <script src="js/crm/classrooms.js"></script>
   <script src="js/crm/leads.js"></script>
+  <script src="js/crm/activities.js"></script>
   <script src="js/crm/index.js"></script>
   <script src="crm-admin.js"></script>
 </body>

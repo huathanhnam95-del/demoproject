@@ -3,6 +3,8 @@ const CRM_LEADS = 'crmLeads';
 const CRM_STUDENTS = 'crmStudents';
 const CRM_COURSES = 'crmCourses';
 const CRM_CLASSROOMS = 'crmClassrooms';
+const CRM_TASKS = 'crmTasks';
+const CRM_ACTIVITIES = 'crmActivities';
 const CRM_SUBMISSIONS = 'crmSubmissions';
 const ENTRANCE_TESTS = 'entranceTests';
 
@@ -16,6 +18,8 @@ module.exports = {
     CRM_STUDENTS,
     CRM_COURSES,
     CRM_CLASSROOMS,
+    CRM_TASKS,
+    CRM_ACTIVITIES,
     CRM_SUBMISSIONS,
     ENTRANCE_TESTS,
     CLASSROOM_MODULES,

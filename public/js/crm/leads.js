@@ -56,10 +56,24 @@ window.CrmLeads = (function () {
         return counts;
     }
 
+    function isConvertedLead(lead) {
+        return String(lead?.stage || '').trim() === 'converted' || !!lead?.studentId;
+    }
+
+    function getSelectableStages(currentStage) {
+        const normalized = String(currentStage || '').trim();
+        if (normalized && !STAGES.includes(normalized)) {
+            return [...STAGES, normalized];
+        }
+        return [...STAGES];
+    }
+
     return {
         STAGES,
         buildPayload,
         formatStageLabel,
+        getSelectableStages,
+        isConvertedLead,
         summarize
     };
 })();

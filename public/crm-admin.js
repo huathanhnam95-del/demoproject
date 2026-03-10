@@ -1225,13 +1225,17 @@
           </thead>
           <tbody>
             ${leads.map((lead) => `
+              ${(() => {
+                const isConverted = window.CrmLeads.isConvertedLead(lead);
+                const stageOptions = window.CrmLeads.getSelectableStages(lead.stage);
+                return `
               <tr>
                 <td class="td-bold">${escapeHtml(lead.name || lead.email || 'Unnamed lead')}</td>
                 <td>${escapeHtml(lead.email || lead.phone || lead.zalo || '—')}</td>
                 <td>${escapeHtml(lead.source || '—')}</td>
                 <td>
-                  <select class="crm-input crm-inline-select lead-stage-select" data-lead-id="${escapeHtml(lead.leadId)}">
-                    ${window.CrmLeads.STAGES.map((stage) => `
+                  <select class="crm-input crm-inline-select lead-stage-select" data-lead-id="${escapeHtml(lead.leadId)}" ${isConverted ? 'disabled' : ''}>
+                    ${stageOptions.map((stage) => `
                       <option value="${stage}" ${stage === lead.stage ? 'selected' : ''}>${escapeHtml(window.CrmLeads.formatStageLabel(stage))}</option>
                     `).join('')}
                   </select>
@@ -1239,11 +1243,13 @@
                 <td>${escapeHtml(lead.probability == null ? '—' : `${lead.probability}%`)}</td>
                 <td>
                   <div class="crm-inline-fields">
-                    <button type="button" class="crm-btn-secondary btn-update-lead-stage" data-lead-id="${escapeHtml(lead.leadId)}">Update</button>
+                    <button type="button" class="crm-btn-secondary btn-update-lead-stage" data-lead-id="${escapeHtml(lead.leadId)}" ${isConverted ? 'disabled' : ''}>Update</button>
                     <button type="button" class="crm-btn-primary btn-convert-lead" data-lead-id="${escapeHtml(lead.leadId)}" ${lead.studentId ? 'disabled' : ''}>${lead.studentId ? 'Converted' : 'Convert'}</button>
                   </div>
                 </td>
               </tr>
+            `;
+              })()}
             `).join('')}
           </tbody>
         </table>

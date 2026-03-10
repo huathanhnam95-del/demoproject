@@ -28,6 +28,11 @@ module.exports = function registerLeadRoutes(router, deps) {
 
             const snaps = await query.get();
             const leads = snaps.docs.map((doc) => mapLeadRecord(doc, doc.id));
+            leads.sort((left, right) => {
+                const leftTs = left.createdAt?.toMillis ? left.createdAt.toMillis() : 0;
+                const rightTs = right.createdAt?.toMillis ? right.createdAt.toMillis() : 0;
+                return rightTs - leftTs;
+            });
             return sendSuccess(res, { leads, count: leads.length });
         } catch (error) {
             return sendError(res, 500, 'LIST_LEADS_ERROR', 'Failed to list leads.', error?.message || error);

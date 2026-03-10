@@ -121,6 +121,123 @@ const crmRouter = createCrmRouter({
         generateClassCode,
         lookupUserByEmail,
         forceLinkProfile
+    },
+    registerExtraRoutes(router, deps) {
+        const crypto = require('crypto');
+
+        function hashTokenToTestId(token) {
+            return crypto.createHash('sha256').update(String(token || '')).digest('hex');
+        }
+
+        function getBaseUrl(req) {
+            const fromEnv = String(process.env.PUBLIC_BASE_URL || '').trim();
+            if (fromEnv) return fromEnv.replace(/\/+$/, '');
+            const proto = (req.headers['x-forwarded-proto'] || req.protocol || 'http').toString().split(',')[0].trim();
+            return `${proto}://${req.get('host')}`;
+        }
+
+        // POST /students/:studentId/entrance-tests — create a new entrance test
+        router.post('/students/:studentId/entrance-tests', ...deps.requireAdminHandlers, async (req, res) => {
+            try {
+                const studentId = String(req.params.studentId || '').trim();
+                if (!studentId) return deps.sendError(res, 400, 'VALIDATION_ERROR', 'Missing studentId.');
+
+                const studentSnap = await deps.db.collection('crmStudents').doc(studentId).get();
+                if (!studentSnap.exists) return deps.sendError(res, 404, 'STUDENT_NOT_FOUND', 'Student profile not found.');
+
+                let token = null;
+                let testId = null;
+                for (let i = 0; i < 5; i++) {
+                    const nextToken = crypto.randomBytes(32).toString('base64url');
+                    const nextTestId = hashTokenToTestId(nextToken);
+                    const existing = await deps.db.collection('entranceTests').doc(nextTestId).get();
+                    if (!existing.exists) { token = nextToken; testId = nextTestId; break; }
+                }
+
+                if (!token || !testId) return deps.sendError(res, 500, 'TOKEN_ERROR', 'Failed to generate a unique token.');
+
+                await deps.db.collection('entranceTests').doc(testId).set({
+                    studentId,
+                    version: 'v3.6+',
+                    status: 'created',
+                    createdAt: deps.serverTimestamp(),
+                    createdBy: req.user.uid,
+                    createdByEmail: req.user.email || null,
+                    startedAt: null,
+                    submittedAt: null
+                });
+
+                const baseUrl = getBaseUrl(req);
+                return deps.sendSuccess(res, {
+                    testId,
+                    testLink: `${baseUrl}/entrance-test.html?token=${encodeURIComponent(token)}`,
+                    resultLink: `${baseUrl}/crm-entrance-test-result.html?testId=${encodeURIComponent(testId)}`
+                }, 'Entrance test link created.');
+            } catch (error) {
+                return deps.sendError(res, 500, 'CREATE_TEST_ERROR', 'Failed to create entrance test link.', error?.message || error);
+            }
+        });
+
+        // GET /students/:studentId/entrance-tests — list entrance tests for a student
+        router.get('/students/:studentId/entrance-tests', ...deps.requireAdminHandlers, async (req, res) => {
+            try {
+                const studentId = String(req.params.studentId || '').trim();
+                if (!studentId) return deps.sendError(res, 400, 'VALIDATION_ERROR', 'Missing studentId.');
+
+                const snaps = await deps.db.collection('entranceTests').where('studentId', '==', studentId).get();
+                const tests = snaps.docs.map((doc) => {
+                    const data = doc.data() || {};
+                    return {
+                        testId: doc.id,
+                        version: data.version || null,
+                        status: data.status || null,
+                        createdAt: data.createdAt || null,
+                        startedAt: data.startedAt || null,
+                        submittedAt: data.submittedAt || null
+                    };
+                });
+
+                tests.sort((a, b) => {
+                    const aMs = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+                    const bMs = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+                    return bMs - aMs;
+                });
+
+                const baseUrl = getBaseUrl(req);
+                const testsWithLinks = tests.map((t) => ({
+                    ...t,
+                    resultLink: `${baseUrl}/crm-entrance-test-result.html?testId=${encodeURIComponent(t.testId)}`
+                }));
+
+                return deps.sendSuccess(res, { tests: testsWithLinks });
+            } catch (error) {
+                return deps.sendError(res, 500, 'LIST_TESTS_ERROR', 'Failed to list entrance tests.', error?.message || error);
+            }
+        });
+
+        // GET /entrance-tests/:testId — get entrance test details
+        router.get('/entrance-tests/:testId', ...deps.requireAdminHandlers, async (req, res) => {
+            try {
+                const testId = String(req.params.testId || '').trim();
+                if (!testId || testId.length < 20) return deps.sendError(res, 400, 'VALIDATION_ERROR', 'Invalid testId.');
+
+                const testSnap = await deps.db.collection('entranceTests').doc(testId).get();
+                if (!testSnap.exists) return deps.sendError(res, 404, 'TEST_NOT_FOUND', 'Entrance test not found.');
+
+                const test = testSnap.data() || {};
+                const studentId = String(test.studentId || '').trim();
+                const studentSnap = studentId ? await deps.db.collection('crmStudents').doc(studentId).get() : null;
+                const student = studentSnap && studentSnap.exists ? (studentSnap.data() || {}) : null;
+
+                return deps.sendSuccess(res, {
+                    testId,
+                    test,
+                    student: student ? { id: studentId, ...student } : null
+                });
+            } catch (error) {
+                return deps.sendError(res, 500, 'GET_TEST_ERROR', 'Failed to fetch entrance test details.', error?.message || error);
+            }
+        });
     }
 });
 

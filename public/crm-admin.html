@@ -37,21 +37,21 @@
               <ul class="crm-dropdown-menu">
                 <li><button data-sub="courses">Catalog</button></li>
                 <li><button data-sub="classes">Classes</button></li>
-                <li><button data-sub="zoom-links">Zoom Links</button></li>
-                <li><button data-sub="materials">Materials</button></li>
-                <li><button data-sub="planning">Planning</button></li>
-                <li><button data-sub="new-planning">New Planning</button></li>
-                <li><button data-sub="admission-calendar">Admission Calendar</button></li>
+                <li><button data-sub="zoom-links" data-coming-soon="true" disabled>Zoom Links</button></li>
+                <li><button data-sub="materials" data-coming-soon="true" disabled>Materials</button></li>
+                <li><button data-sub="planning" data-coming-soon="true" disabled>Planning</button></li>
+                <li><button data-sub="new-planning" data-coming-soon="true" disabled>New Planning</button></li>
+                <li><button data-sub="admission-calendar" data-coming-soon="true" disabled>Admission Calendar</button></li>
                 <li><button data-sub="class-management">Class Management</button></li>
               </ul>
             </li>
             <li><button class="crm-nav-item" data-main="enquiry" data-label="Enquiry">Enquiry</button></li>
-            <li><button class="crm-nav-item" data-main="staff" data-label="Staff Management">Staff Management</button>
+            <li><button class="crm-nav-item" data-main="staff" data-label="Staff Management" data-coming-soon="true" disabled>Staff Management</button>
             </li>
-            <li><button class="crm-nav-item" data-main="agents" data-label="Agent Management">Agent Management</button>
+            <li><button class="crm-nav-item" data-main="agents" data-label="Agent Management" data-coming-soon="true" disabled>Agent Management</button>
             </li>
-            <li><button class="crm-nav-item" data-main="settings" data-label="Settings">Settings</button></li>
-            <li><button class="crm-nav-item" data-main="chatbot" data-label="Chatbot Management">Chatbot
+            <li><button class="crm-nav-item" data-main="settings" data-label="Settings" data-coming-soon="true" disabled>Settings</button></li>
+            <li><button class="crm-nav-item" data-main="chatbot" data-label="Chatbot Management" data-coming-soon="true" disabled>Chatbot
                 Management</button></li>
           </ul>
         </nav>
@@ -77,10 +77,92 @@
     <!-- Content -->
     <main class="crm-content" aria-live="polite">
       <!-- Dashboard -->
-      <section class="crm-panel dashboard-empty" data-panel="dashboard">
-        <div class="crm-placeholder-card">
-          <h3>Welcome to CRM Admin</h3>
-          <p>The dashboard is ready. Select a module from the navigation to get started.</p>
+      <section class="crm-panel" data-panel="dashboard">
+        <div class="crm-panel-header">
+          <div>
+            <h2>CRM Dashboard</h2>
+            <p>Conversion, revenue, duplicate detection, and audit visibility.</p>
+          </div>
+        </div>
+        <div class="crm-dashboard-layout">
+          <div class="crm-side-col">
+            <section class="crm-workspace-card">
+              <div class="crm-section-header">
+                <div>
+                  <h3>Summary</h3>
+                  <p class="crm-muted">Operational KPIs across leads, finance, and delivery.</p>
+                </div>
+              </div>
+              <div id="dashboard-summary-cards" class="crm-summary-grid">
+                <div class="crm-muted">Loading dashboard summary...</div>
+              </div>
+            </section>
+            <section class="crm-workspace-card">
+              <div class="crm-section-header">
+                <div>
+                  <h3>Funnel</h3>
+                  <p class="crm-muted">Lead distribution by standardized CRM lifecycle stage.</p>
+                </div>
+              </div>
+              <div id="dashboard-funnel" class="crm-stack-list">
+                <div class="crm-muted">Loading funnel metrics...</div>
+              </div>
+            </section>
+            <section class="crm-workspace-card">
+              <div class="crm-section-header">
+                <div>
+                  <h3>Revenue By Course</h3>
+                  <p class="crm-muted">Invoice, collection, and outstanding totals by course.</p>
+                </div>
+              </div>
+              <div id="dashboard-revenue" class="crm-table-host">
+                <div class="crm-muted" style="padding: 18px;">Loading revenue metrics...</div>
+              </div>
+            </section>
+          </div>
+          <div class="crm-side-col">
+            <section class="crm-workspace-card">
+              <div class="crm-section-header">
+                <div>
+                  <h3>Duplicate Detection</h3>
+                  <p class="crm-muted">Potential duplicate students based on shared email or phone.</p>
+                </div>
+              </div>
+              <div id="dashboard-duplicates" class="crm-stack-list">
+                <div class="crm-muted">Loading duplicate candidates...</div>
+              </div>
+            </section>
+            <section class="crm-workspace-card">
+              <div class="crm-section-header">
+                <div>
+                  <h3>Create Merge Job</h3>
+                  <p class="crm-muted">Queue a supervised merge job for duplicate student records.</p>
+                </div>
+              </div>
+              <div class="crm-form-group">
+                <label for="merge-primary-student-id">Primary Student ID</label>
+                <input type="text" id="merge-primary-student-id" class="crm-input" placeholder="student-1">
+              </div>
+              <div class="crm-form-group">
+                <label for="merge-duplicate-student-ids">Duplicate Student IDs</label>
+                <textarea id="merge-duplicate-student-ids" class="crm-input" rows="3" placeholder="student-2, student-3"></textarea>
+              </div>
+              <div class="crm-inline-fields" style="justify-content: flex-end;">
+                <button id="btn-create-merge-job" class="crm-btn-secondary" type="button">Create Merge Job</button>
+              </div>
+            </section>
+            <section class="crm-workspace-card">
+              <div class="crm-section-header">
+                <div>
+                  <h3>Audit Log</h3>
+                  <p class="crm-muted">Recent admin mutations across CRM records.</p>
+                </div>
+              </div>
+              <div id="dashboard-audit-logs" class="crm-stack-list">
+                <div class="crm-muted">Loading audit logs...</div>
+              </div>
+            </section>
+          </div>
         </div>
       </section>
 
@@ -116,7 +198,7 @@
           </div>
           <button id="btn-new-course" class="crm-btn-primary btn-new-course-trigger">+ New Course</button>
         </div>
-        <div id="course-catalog-grid" class="crm-table-container">Course Management content here.</div>
+        <div class="crm-placeholder-card">Course Management content here.</div>
       </section>
 
       <section class="crm-panel" data-panel="courses/classes">
@@ -140,9 +222,194 @@
       <!-- Enquiry -->
       <section class="crm-panel" data-panel="enquiry">
         <div class="crm-panel-header">
-          <h2>Enquiry Tracking</h2>
+          <div>
+            <h2>Enquiry Tracking</h2>
+            <p>Manage leads before they convert into enrolled students.</p>
+          </div>
+          <button id="btn-new-lead" class="crm-btn-primary">+ New Lead</button>
         </div>
-        <div class="crm-placeholder-card">Enquiry forms and pipeline.</div>
+        <div id="lead-composer" class="crm-placeholder-card" style="display: none; text-align: left;">
+          <div class="crm-form-grid">
+            <div class="crm-form-group">
+              <label for="lead-name">Full Name</label>
+              <input type="text" id="lead-name" class="crm-input" placeholder="Lead name">
+            </div>
+            <div class="crm-form-group">
+              <label for="lead-email">Email</label>
+              <input type="email" id="lead-email" class="crm-input" placeholder="lead@example.com">
+            </div>
+            <div class="crm-form-group">
+              <label for="lead-phone">Phone</label>
+              <input type="text" id="lead-phone" class="crm-input" placeholder="Phone number">
+            </div>
+            <div class="crm-form-group">
+              <label for="lead-source">Source</label>
+              <input type="text" id="lead-source" class="crm-input" placeholder="e.g. facebook, referral">
+            </div>
+            <div class="crm-form-group">
+              <label for="lead-stage">Stage</label>
+              <select id="lead-stage" class="crm-input">
+                <option value="new">New</option>
+                <option value="contacted">Contacted</option>
+                <option value="test_scheduled">Test Scheduled</option>
+                <option value="test_completed">Test Completed</option>
+                <option value="counseling">Counseling</option>
+                <option value="trial">Trial</option>
+                <option value="won">Won</option>
+                <option value="lost">Lost</option>
+              </select>
+            </div>
+            <div class="crm-form-group">
+              <label for="lead-probability">Probability</label>
+              <input type="number" id="lead-probability" class="crm-input" min="0" max="100" placeholder="0-100">
+            </div>
+          </div>
+          <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
+            <button id="btn-cancel-lead" class="crm-btn-secondary" type="button">Cancel</button>
+            <button id="btn-save-lead" class="crm-btn-primary" type="button">Save Lead</button>
+          </div>
+        </div>
+        <div id="lead-stage-board" class="crm-lead-board"></div>
+        <div id="lead-list-container" class="crm-placeholder-card">Leads will appear here.</div>
+        <div id="lead-workspace" class="crm-workspace-grid" style="display: none;">
+          <section class="crm-workspace-card">
+            <div class="crm-section-header">
+              <div>
+                <h3 id="lead-workspace-title">Lead Workspace</h3>
+                <p id="lead-workspace-meta" class="crm-muted">Select a lead to review next actions and history.</p>
+              </div>
+              <span id="lead-workspace-badge" class="crm-reminder-badge quiet">No reminders</span>
+            </div>
+            <div class="crm-form-grid crm-compact-grid">
+              <div class="crm-form-group">
+                <label for="lead-task-title">Next Task</label>
+                <input type="text" id="lead-task-title" class="crm-input" placeholder="Call, email, schedule test">
+              </div>
+              <div class="crm-form-group">
+                <label for="lead-task-due-at">Due At</label>
+                <input type="datetime-local" id="lead-task-due-at" class="crm-input">
+              </div>
+              <div class="crm-form-group">
+                <label for="lead-task-priority">Priority</label>
+                <select id="lead-task-priority" class="crm-input">
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
+            </div>
+            <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
+              <button id="btn-save-lead-task" class="crm-btn-primary" type="button">Add Task</button>
+            </div>
+            <div id="lead-task-list" class="crm-stack-list">
+              <div class="crm-muted">Select a lead to view tasks.</div>
+            </div>
+          </section>
+          <section class="crm-workspace-card">
+            <div class="crm-section-header">
+              <div>
+                <h3>Activity Timeline</h3>
+                <p class="crm-muted">Notes, calls, and communication history.</p>
+              </div>
+            </div>
+            <div class="crm-form-grid crm-compact-grid">
+              <div class="crm-form-group">
+                <label for="lead-activity-type">Type</label>
+                <select id="lead-activity-type" class="crm-input">
+                  <option value="note">Note</option>
+                  <option value="call">Call</option>
+                  <option value="email">Email</option>
+                  <option value="zalo">Zalo</option>
+                  <option value="facebook">Facebook</option>
+                  <option value="meeting">Meeting</option>
+                </select>
+              </div>
+              <div class="crm-form-group">
+                <label for="lead-activity-subject">Subject</label>
+                <input type="text" id="lead-activity-subject" class="crm-input" placeholder="What happened">
+              </div>
+            </div>
+            <div class="crm-form-group">
+              <label for="lead-activity-body">Details</label>
+              <textarea id="lead-activity-body" class="crm-input" rows="3" placeholder="Summary, commitments, blockers"></textarea>
+            </div>
+            <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
+              <button id="btn-save-lead-activity" class="crm-btn-secondary" type="button">Log Activity</button>
+            </div>
+            <div id="lead-activity-list" class="crm-stack-list">
+              <div class="crm-muted">Select a lead to view activity.</div>
+            </div>
+          </section>
+        </div>
+        <div class="crm-workspace-grid">
+          <section class="crm-workspace-card">
+            <div class="crm-section-header">
+              <div>
+                <h3>Templates</h3>
+                <p class="crm-muted">Provider-agnostic reminder templates.</p>
+              </div>
+            </div>
+            <div class="crm-form-grid crm-compact-grid">
+              <div class="crm-form-group">
+                <label for="template-name">Name</label>
+                <input type="text" id="template-name" class="crm-input" placeholder="Payment Reminder">
+              </div>
+              <div class="crm-form-group">
+                <label for="template-channel">Channel</label>
+                <select id="template-channel" class="crm-input">
+                  <option value="email">Email</option>
+                  <option value="manual">Manual</option>
+                </select>
+              </div>
+              <div class="crm-form-group">
+                <label for="template-subject">Subject</label>
+                <input type="text" id="template-subject" class="crm-input" placeholder="Subject">
+              </div>
+            </div>
+            <div class="crm-form-group">
+              <label for="template-body">Body</label>
+              <textarea id="template-body" class="crm-input" rows="3" placeholder="Message body"></textarea>
+            </div>
+            <div class="crm-inline-fields" style="justify-content: flex-end;">
+              <button id="btn-create-template" class="crm-btn-primary" type="button">Create Template</button>
+            </div>
+          </section>
+          <section class="crm-workspace-card">
+            <div class="crm-section-header">
+              <div>
+                <h3>Automations</h3>
+                <p class="crm-muted">Run rules into the communication queue.</p>
+              </div>
+            </div>
+            <div class="crm-form-grid crm-compact-grid">
+              <div class="crm-form-group">
+                <label for="rule-name">Rule Name</label>
+                <input type="text" id="rule-name" class="crm-input" placeholder="Unpaid invoice follow-up">
+              </div>
+              <div class="crm-form-group">
+                <label for="rule-trigger-type">Trigger</label>
+                <select id="rule-trigger-type" class="crm-input">
+                  <option value="overdue_next_action">Overdue next action</option>
+                  <option value="upcoming_test_result_due">Upcoming test result due</option>
+                  <option value="unpaid_invoice">Unpaid invoice</option>
+                  <option value="attendance_intervention">Attendance intervention</option>
+                </select>
+              </div>
+              <div class="crm-form-group">
+                <label for="rule-template-id">Template</label>
+                <select id="rule-template-id" class="crm-input">
+                  <option value="">Select a template...</option>
+                </select>
+              </div>
+            </div>
+            <div class="crm-inline-fields" style="justify-content: flex-end;">
+              <button id="btn-create-rule" class="crm-btn-secondary" type="button">Create Rule</button>
+            </div>
+            <div id="automation-list" class="crm-stack-list" style="margin-top: 16px;">
+              <div class="crm-muted">No automations yet.</div>
+            </div>
+          </section>
+        </div>
       </section>
     </main>
   </div>
@@ -166,7 +433,9 @@
         <div class="crm-modal-sidebar">
           <button class="crm-sidebar-item active" data-tab="info">Info</button>
           <button class="crm-sidebar-item" data-tab="learning">Learning Profile</button>
+          <button class="crm-sidebar-item" data-tab="overview">Student 360</button>
           <button class="crm-sidebar-item" data-tab="courses">Courses</button>
+          <button class="crm-sidebar-item" data-tab="finance">Finance</button>
           <button class="crm-sidebar-item" data-tab="identity">Identity</button>
         </div>
         <div class="crm-modal-content">
@@ -198,6 +467,76 @@
                 <input type="text" id="student-facebook" name="facebook" class="crm-input"
                   placeholder="Enter Facebook name">
               </div>
+            </div>
+            <div id="student-activity-hub" class="crm-workspace-grid" style="margin-top: 24px;">
+              <section class="crm-workspace-card">
+                <div class="crm-section-header">
+                  <div>
+                    <h3>Next Actions</h3>
+                    <p id="student-task-meta" class="crm-muted">Save the profile to schedule follow-ups.</p>
+                  </div>
+                  <span id="student-task-badge" class="crm-reminder-badge quiet">No reminders</span>
+                </div>
+                <div class="crm-form-grid crm-compact-grid">
+                  <div class="crm-form-group">
+                    <label for="student-task-title">Task</label>
+                    <input type="text" id="student-task-title" class="crm-input" placeholder="Counseling call, payment reminder">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="student-task-due-at">Due At</label>
+                    <input type="datetime-local" id="student-task-due-at" class="crm-input">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="student-task-priority">Priority</label>
+                    <select id="student-task-priority" class="crm-input">
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                      <option value="low">Low</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
+                  <button id="btn-save-student-task" class="crm-btn-primary" type="button">Add Task</button>
+                </div>
+                <div id="student-task-list" class="crm-stack-list">
+                  <div class="crm-muted">No tasks yet.</div>
+                </div>
+              </section>
+              <section class="crm-workspace-card">
+                <div class="crm-section-header">
+                  <div>
+                    <h3>Timeline</h3>
+                    <p class="crm-muted">Keep counselor and teacher context in one place.</p>
+                  </div>
+                </div>
+                <div class="crm-form-grid crm-compact-grid">
+                  <div class="crm-form-group">
+                    <label for="student-activity-type">Type</label>
+                    <select id="student-activity-type" class="crm-input">
+                      <option value="note">Note</option>
+                      <option value="call">Call</option>
+                      <option value="email">Email</option>
+                      <option value="zalo">Zalo</option>
+                      <option value="facebook">Facebook</option>
+                      <option value="meeting">Meeting</option>
+                    </select>
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="student-activity-subject">Subject</label>
+                    <input type="text" id="student-activity-subject" class="crm-input" placeholder="Counseling outcome">
+                  </div>
+                </div>
+                <div class="crm-form-group">
+                  <label for="student-activity-body">Details</label>
+                  <textarea id="student-activity-body" class="crm-input" rows="3" placeholder="Notes, commitments, concerns"></textarea>
+                </div>
+                <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
+                  <button id="btn-save-student-activity" class="crm-btn-secondary" type="button">Log Activity</button>
+                </div>
+                <div id="student-activity-list" class="crm-stack-list">
+                  <div class="crm-muted">No activity yet.</div>
+                </div>
+              </section>
             </div>
           </div>
 
@@ -302,9 +641,139 @@
             </div>
           </div>
 
+          <div id="student-overview" class="crm-tab-content" style="display: none;">
+            <div class="crm-form-grid">
+              <div class="crm-form-group">
+                <label for="student-target-exam">Target Exam</label>
+                <input type="text" id="student-target-exam" class="crm-input" placeholder="PTE, IELTS, TOEIC">
+              </div>
+              <div class="crm-form-group">
+                <label for="student-target-score">Target Score</label>
+                <input type="number" id="student-target-score" class="crm-input" placeholder="79">
+              </div>
+              <div class="crm-form-group">
+                <label for="student-preferred-schedule">Preferred Schedule</label>
+                <input type="text" id="student-preferred-schedule" class="crm-input" placeholder="Weeknights, weekends">
+              </div>
+            </div>
+            <div class="crm-form-group">
+              <label for="student-score-history">Score History</label>
+              <textarea id="student-score-history" class="crm-input" rows="3" placeholder="YYYY-MM-DD|58"></textarea>
+            </div>
+            <div class="crm-form-grid">
+              <div class="crm-form-group">
+                <label for="student-guardian-contacts">Guardian Contacts</label>
+                <textarea id="student-guardian-contacts" class="crm-input" rows="3" placeholder="Name|Phone|Email"></textarea>
+              </div>
+              <div class="crm-form-group">
+                <label for="student-company-contacts">Company Contacts</label>
+                <textarea id="student-company-contacts" class="crm-input" rows="3" placeholder="Company|Email|Phone"></textarea>
+              </div>
+            </div>
+            <div class="crm-form-group">
+              <label for="student-document-refs">Document Refs</label>
+              <textarea id="student-document-refs" class="crm-input" rows="3" placeholder="Passport|crmStudents/student-1/docs/passport.pdf"></textarea>
+            </div>
+            <div class="crm-form-group">
+              <label for="student-counseling-notes">Counseling Notes</label>
+              <textarea id="student-counseling-notes" class="crm-input" rows="4" placeholder="Key counseling history, objections, preferences"></textarea>
+            </div>
+          </div>
+
           <!-- Courses Section -->
           <div id="student-courses" class="crm-tab-content" style="display: none;">
             <p class="text-muted">Courses information will be available here.</p>
+          </div>
+
+          <div id="student-finance" class="crm-tab-content" style="display: none;">
+            <div class="crm-workspace-grid" style="margin-top: 0;">
+              <section class="crm-workspace-card">
+                <div class="crm-section-header">
+                  <div>
+                    <h3>Finance Summary</h3>
+                    <p class="crm-muted">Track invoiced, paid, outstanding, and next due date.</p>
+                  </div>
+                </div>
+                <div class="crm-form-grid crm-compact-grid">
+                  <div class="crm-form-group">
+                    <label>Invoiced</label>
+                    <div id="student-finance-invoiced" class="crm-placeholder-card">0</div>
+                  </div>
+                  <div class="crm-form-group">
+                    <label>Paid</label>
+                    <div id="student-finance-paid" class="crm-placeholder-card">0</div>
+                  </div>
+                  <div class="crm-form-group">
+                    <label>Outstanding</label>
+                    <div id="student-finance-outstanding" class="crm-placeholder-card">0</div>
+                  </div>
+                  <div class="crm-form-group">
+                    <label>Next Due</label>
+                    <div id="student-finance-next-due" class="crm-placeholder-card">-</div>
+                  </div>
+                </div>
+              </section>
+              <section class="crm-workspace-card">
+                <div class="crm-section-header">
+                  <div>
+                    <h3>Invoice</h3>
+                    <p class="crm-muted">Create invoices and track partial payments.</p>
+                  </div>
+                </div>
+                <div class="crm-form-group">
+                  <label for="student-finance-enrollment">Enrollment Context</label>
+                  <select id="student-finance-enrollment" class="crm-input">
+                    <option value="">No enrollment selected</option>
+                  </select>
+                  <small id="student-finance-enrollment-meta" class="text-muted">Choose the enrollment this invoice belongs to.</small>
+                </div>
+                <div class="crm-form-grid crm-compact-grid">
+                  <div class="crm-form-group">
+                    <label for="invoice-amount">Amount</label>
+                    <input type="number" id="invoice-amount" class="crm-input" min="0" placeholder="0">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="invoice-discount">Discount</label>
+                    <input type="number" id="invoice-discount" class="crm-input" min="0" placeholder="0">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="invoice-due-date">Due Date</label>
+                    <input type="date" id="invoice-due-date" class="crm-input">
+                  </div>
+                </div>
+                <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
+                  <button id="btn-create-student-invoice" class="crm-btn-primary" type="button">Create Invoice</button>
+                </div>
+                <div id="student-invoice-list" class="crm-stack-list">
+                  <div class="crm-muted">No invoices yet.</div>
+                </div>
+              </section>
+              <section class="crm-workspace-card">
+                <div class="crm-section-header">
+                  <div>
+                    <h3>Payment</h3>
+                    <p class="crm-muted">Record payment against the latest selected invoice.</p>
+                  </div>
+                </div>
+                <div class="crm-form-grid crm-compact-grid">
+                  <div class="crm-form-group">
+                    <label for="payment-amount">Amount</label>
+                    <input type="number" id="payment-amount" class="crm-input" min="0" placeholder="0">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="payment-method">Method</label>
+                    <select id="payment-method" class="crm-input">
+                      <option value="bank-transfer">Bank Transfer</option>
+                      <option value="cash">Cash</option>
+                      <option value="card">Card</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
+                  <button id="btn-record-student-payment" class="crm-btn-secondary" type="button">Record Payment</button>
+                </div>
+              </section>
+            </div>
           </div>
 
           <!-- Identity Section -->
@@ -317,8 +786,7 @@
             <div class="crm-form-group" style="margin-top: 20px;">
               <label>Class Code (For Student Self-Claim)</label>
               <div style="display: flex; gap: 10px; align-items: center;">
-                <input type="text" id="crm-class-code-display" class="crm-input" readonly
-                  placeholder="No code generated">
+                <input type="text" id="crm-class-code-display" class="crm-input" readonly placeholder="No code generated">
                 <button id="btn-generate-class-code" class="crm-btn-secondary">Generate New</button>
               </div>
               <small class="text-muted">Share this 6-digit code with the student.</small>
@@ -336,18 +804,15 @@
             </div>
 
             <!-- Preview Card -->
-            <div id="crm-handshake-preview" class="crm-preview-card"
-              style="display: none; margin-top: 16px; padding: 16px; border: 1px solid #edf2f7; border-radius: 8px; background: #f8f9fa;">
+            <div id="crm-handshake-preview" class="crm-preview-card" style="display: none; margin-top: 16px; padding: 16px; border: 1px solid #edf2f7; border-radius: 8px; background: #f8f9fa;">
               <div style="display: flex; align-items: center; gap: 12px;">
-                <img id="crm-handshake-avatar" src="" alt="Avatar"
-                  style="width: 48px; height: 48px; border-radius: 50%; background: #eee;">
+                <img id="crm-handshake-avatar" src="" alt="Avatar" style="width: 48px; height: 48px; border-radius: 50%; background: #eee;">
                 <div>
                   <div id="crm-handshake-name" style="font-weight: bold;">User Name</div>
                   <div id="crm-handshake-uid" class="text-muted" style="font-size: 12px;">UID: ...</div>
                 </div>
               </div>
-              <button id="btn-confirm-handshake" class="crm-btn-primary" style="width: 100%; margin-top: 16px;">Confirm
-                Link</button>
+              <button id="btn-confirm-handshake" class="crm-btn-primary" style="width: 100%; margin-top: 16px;">Confirm Link</button>
             </div>
 
             <div id="crm-linked-accounts-list" style="margin-top: 20px;">
@@ -475,17 +940,17 @@
           </svg>
         </button>
       </div>
-      <div class="crm-modal-body">
+        <div class="crm-modal-body">
         <div class="crm-modal-sidebar">
           <button class="crm-sidebar-item active" data-tab="settings">Settings</button>
+          <button class="crm-sidebar-item" data-tab="attendance">Attendance</button>
           <button class="crm-sidebar-item" data-tab="stream">Stream</button>
           <button class="crm-sidebar-item" data-tab="modules">Modules</button>
           <button class="crm-sidebar-item" data-tab="classwork">Classwork</button>
           <button class="crm-sidebar-item" data-tab="review-board">Review Board</button>
         </div>
         <div class="crm-modal-content">
-          <!-- Settings Section -->
-          <div id="classroom-settings" class="crm-tab-content active">
+          <!-- Settings Section -->          <div id="classroom-settings" class="crm-tab-content active">
             <div class="crm-form-grid">
               <div class="crm-form-group">
                 <label for="classroom-name">Classroom Name</label>
@@ -508,14 +973,69 @@
             </div>
           </div>
 
+          <div id="classroom-attendance" class="crm-tab-content" style="display: none;">
+            <div class="crm-workspace-grid" style="margin-top: 0;">
+              <section class="crm-workspace-card">
+                <div class="crm-section-header">
+                  <div>
+                    <h3>Enroll Student</h3>
+                    <p class="crm-muted">Sync classroom member access and reporting enrollment.</p>
+                  </div>
+                </div>
+                <div class="crm-form-grid crm-compact-grid">
+                  <div class="crm-form-group">
+                    <label for="attendance-student-select">Student</label>
+                    <select id="attendance-student-select" class="crm-input">
+                      <option value="">Select a student...</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
+                  <button id="btn-enroll-student" class="crm-btn-primary" type="button">Enroll</button>
+                </div>
+                <div id="attendance-enrollment-meta" class="crm-muted" style="margin-top: 12px;">No enrollments yet.</div>
+              </section>
+              <section class="crm-workspace-card">
+                <div class="crm-section-header">
+                  <div>
+                    <h3>Create Session</h3>
+                    <p class="crm-muted">Open a dated attendance register for this classroom.</p>
+                  </div>
+                </div>
+                <div class="crm-form-grid crm-compact-grid">
+                  <div class="crm-form-group">
+                    <label for="attendance-session-date">Session Date</label>
+                    <input type="date" id="attendance-session-date" class="crm-input">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="attendance-session-title">Title</label>
+                    <input type="text" id="attendance-session-title" class="crm-input" placeholder="e.g. Session 1">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="attendance-session-select">Active Session</label>
+                    <select id="attendance-session-select" class="crm-input">
+                      <option value="">Select a session...</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
+                  <button id="btn-create-attendance-session" class="crm-btn-secondary" type="button">Create Session</button>
+                  <button id="btn-save-attendance-records" class="crm-btn-primary" type="button">Save Attendance</button>
+                </div>
+              </section>
+            </div>
+            <div id="attendance-roster-container" class="crm-table-host" style="margin-top: 20px;">
+              <div class="crm-muted">No attendance roster yet.</div>
+            </div>
+          </div>
+
           <!-- Stream Section -->
           <div id="classroom-stream" class="crm-tab-content" style="display: none;">
             <div class="crm-panel-header" style="padding: 0 0 16px 0;">
               <h3>Announcements</h3>
             </div>
             <div class="crm-form-group" style="margin-bottom: 24px; display: flex; gap: 10px;">
-              <input type="text" id="stream-post-content" class="crm-input"
-                placeholder="Announce something to your class">
+              <input type="text" id="stream-post-content" class="crm-input" placeholder="Announce something to your class">
               <button id="btn-post-announcement" class="crm-btn-primary">Post</button>
             </div>
             <div id="stream-posts-container" class="module-list-container">
@@ -614,9 +1134,26 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
-  <script src="js/classroom-api.js?v=1.5.4"></script>
-  <script src="crm-admin.js?v=1.5.4"></script>
+  <script src="js/classroom-api.js"></script>
+  <script src="js/crm/utils.js"></script>
+  <script src="js/crm/state.js"></script>
+  <script src="js/crm/dom.js"></script>
+  <script src="js/crm/courses.js"></script>
+  <script src="js/crm/students.js"></script>
+  <script src="js/crm/student-360.js"></script>
+  <script src="js/crm/classrooms.js"></script>
+  <script src="js/crm/leads.js"></script>
+  <script src="js/crm/activities.js"></script>
+  <script src="js/crm/enrollments.js"></script>
+  <script src="js/crm/attendance.js"></script>
+  <script src="js/crm/finance.js"></script>
+  <script src="js/crm/communications.js"></script>
+  <script src="js/crm/dashboard.js"></script>
+  <script src="js/crm/governance.js"></script>
+  <script src="js/crm/index.js"></script>
+  <script src="crm-admin.js"></script>
 </body>
 
 </html>

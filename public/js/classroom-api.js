@@ -25,12 +25,26 @@ window.ClassroomAPI = (function () {
 
     // Admin: Read local classroom docs
     async function fetchClassrooms() {
+        const headers = await getHeaders();
+        const res = await fetch('/api/admin/classrooms', {
+            method: 'GET',
+            headers
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        const json = await res.json();
+        return json.classrooms || [];
+    }
+
+    // Admin: Read CRM course catalog
+    async function fetchCourses() {
         const db = getDb();
         if (!db) throw new Error("Firebase DB not initialized");
-        const snapshot = await db.collection("crmClassrooms").get();
-        const classrooms = [];
-        snapshot.forEach(doc => classrooms.push({ id: doc.id, ...doc.data() }));
-        return classrooms;
+
+        const snapshot = await db.collection("crmCourses").get();
+        const courses = [];
+        snapshot.forEach(doc => courses.push({ id: doc.id, ...doc.data() }));
+        courses.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+        return courses;
     }
 
     // Admin: Create classroom via API
@@ -38,6 +52,17 @@ window.ClassroomAPI = (function () {
         const headers = await getHeaders();
         const res = await fetch('/api/admin/classrooms', {
             method: 'POST',
+            headers,
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function updateClassroom(classId, data) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/classrooms/${classId}`, {
+            method: 'PATCH',
             headers,
             body: JSON.stringify(data)
         });
@@ -171,6 +196,66 @@ window.ClassroomAPI = (function () {
         return json.submissions || [];
     }
 
+    async function fetchReviewBoard(classId) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/classrooms/${classId}/review-board`, {
+            method: 'GET',
+            headers
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function createEnrollment(data) {
+        const headers = await getHeaders();
+        const res = await fetch('/api/admin/enrollments', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function createAttendanceSession(data) {
+        const headers = await getHeaders();
+        const res = await fetch('/api/admin/attendance/sessions', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function saveAttendanceRecords(data) {
+        const headers = await getHeaders();
+        const res = await fetch('/api/admin/attendance/records/bulk', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function fetchAttendanceSummary(params = {}) {
+        const headers = await getHeaders();
+        const search = new URLSearchParams();
+        Object.entries(params).forEach(([key, value]) => {
+            if (value !== null && value !== undefined && String(value).trim() !== '') {
+                search.set(key, String(value).trim());
+            }
+        });
+        const suffix = search.toString() ? `?${search.toString()}` : '';
+        const res = await fetch(`/api/admin/attendance/summary${suffix}`, {
+            method: 'GET',
+            headers
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
     // Admin: Grade submission
     async function gradeSubmission(submissionId, data) {
         const headers = await getHeaders();
@@ -184,8 +269,10 @@ window.ClassroomAPI = (function () {
     }
 
     return {
+        fetchCourses,
         fetchClassrooms,
         createClassroom,
+        updateClassroom,
         loadModules,
         createModule,
         loadClasswork,
@@ -193,6 +280,11 @@ window.ClassroomAPI = (function () {
         submitAssignment,
         fetchMySubmissions,
         fetchSubmissions,
+        fetchReviewBoard,
+        createEnrollment,
+        createAttendanceSession,
+        saveAttendanceRecords,
+        fetchAttendanceSummary,
         gradeSubmission
     };
 })();

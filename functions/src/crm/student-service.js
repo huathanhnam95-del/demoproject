@@ -42,6 +42,12 @@ function normalizeStudentCore(input, fallback = {}) {
         lifecycleStage: Object.prototype.hasOwnProperty.call(source, 'lifecycleStage')
             ? normalizeLifecycleStage(source.lifecycleStage)
             : normalizeLifecycleStage(base.lifecycleStage),
+        acquisitionSource: Object.prototype.hasOwnProperty.call(source, 'acquisitionSource')
+            ? cleanOptionalString(source.acquisitionSource)
+            : (base.acquisitionSource ?? null),
+        leadId: Object.prototype.hasOwnProperty.call(source, 'leadId')
+            ? cleanOptionalString(source.leadId)
+            : (base.leadId ?? null),
         ownerUid: Object.prototype.hasOwnProperty.call(source, 'ownerUid')
             ? cleanOptionalString(source.ownerUid)
             : (base.ownerUid ?? null),
@@ -66,6 +72,8 @@ function hasRecognizedPatch(input) {
         'zalo',
         'facebook',
         'lifecycleStage',
+        'acquisitionSource',
+        'leadId',
         'ownerUid',
         'notes',
         'learningProfile'
@@ -119,6 +127,8 @@ function mapStudentRecord(data, studentId) {
         zalo: source.zalo || null,
         facebook: source.facebook || null,
         lifecycleStage: normalizeLifecycleStage(source.lifecycleStage),
+        acquisitionSource: source.acquisitionSource || null,
+        leadId: source.leadId || null,
         ownerUid: source.ownerUid || null,
         notes: source.notes || null,
         learningProfile: normalizeLearningProfile(source.learningProfile),

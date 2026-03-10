@@ -140,9 +140,55 @@
       <!-- Enquiry -->
       <section class="crm-panel" data-panel="enquiry">
         <div class="crm-panel-header">
-          <h2>Enquiry Tracking</h2>
+          <div>
+            <h2>Enquiry Tracking</h2>
+            <p>Manage leads before they convert into enrolled students.</p>
+          </div>
+          <button id="btn-new-lead" class="crm-btn-primary">+ New Lead</button>
         </div>
-        <div class="crm-placeholder-card">Enquiry forms and pipeline.</div>
+        <div id="lead-composer" class="crm-placeholder-card" style="display: none; text-align: left;">
+          <div class="crm-form-grid">
+            <div class="crm-form-group">
+              <label for="lead-name">Full Name</label>
+              <input type="text" id="lead-name" class="crm-input" placeholder="Lead name">
+            </div>
+            <div class="crm-form-group">
+              <label for="lead-email">Email</label>
+              <input type="email" id="lead-email" class="crm-input" placeholder="lead@example.com">
+            </div>
+            <div class="crm-form-group">
+              <label for="lead-phone">Phone</label>
+              <input type="text" id="lead-phone" class="crm-input" placeholder="Phone number">
+            </div>
+            <div class="crm-form-group">
+              <label for="lead-source">Source</label>
+              <input type="text" id="lead-source" class="crm-input" placeholder="e.g. facebook, referral">
+            </div>
+            <div class="crm-form-group">
+              <label for="lead-stage">Stage</label>
+              <select id="lead-stage" class="crm-input">
+                <option value="new">New</option>
+                <option value="contacted">Contacted</option>
+                <option value="test_scheduled">Test Scheduled</option>
+                <option value="test_completed">Test Completed</option>
+                <option value="counseling">Counseling</option>
+                <option value="trial">Trial</option>
+                <option value="won">Won</option>
+                <option value="lost">Lost</option>
+              </select>
+            </div>
+            <div class="crm-form-group">
+              <label for="lead-probability">Probability</label>
+              <input type="number" id="lead-probability" class="crm-input" min="0" max="100" placeholder="0-100">
+            </div>
+          </div>
+          <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
+            <button id="btn-cancel-lead" class="crm-btn-secondary" type="button">Cancel</button>
+            <button id="btn-save-lead" class="crm-btn-primary" type="button">Save Lead</button>
+          </div>
+        </div>
+        <div id="lead-stage-board" class="crm-lead-board"></div>
+        <div id="lead-list-container" class="crm-placeholder-card">Leads will appear here.</div>
       </section>
     </main>
   </div>
@@ -617,6 +663,7 @@
   <script src="js/crm/courses.js"></script>
   <script src="js/crm/students.js"></script>
   <script src="js/crm/classrooms.js"></script>
+  <script src="js/crm/leads.js"></script>
   <script src="js/crm/index.js"></script>
   <script src="crm-admin.js"></script>
 </body>

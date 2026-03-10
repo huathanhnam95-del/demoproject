@@ -14,6 +14,7 @@ const {
 const registerStudentRoutes = require('./students');
 const registerCourseRoutes = require('./courses');
 const registerIdentityRoutes = require('./identity');
+const registerLeadRoutes = require('./leads');
 const {
     buildClassroomCreateData,
     buildClassroomPatchData,
@@ -124,6 +125,7 @@ module.exports = function createCrmRouter(rawDeps) {
     registerStudentRoutes(router, routeDeps);
     registerCourseRoutes(router, routeDeps);
     registerIdentityRoutes(router, routeDeps);
+    registerLeadRoutes(router, routeDeps);
 
     router.post('/classrooms', ...requireAdminHandlers, async (req, res) => {
         try {

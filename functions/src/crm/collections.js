@@ -1,4 +1,5 @@
 const USERS = 'users';
+const CRM_LEADS = 'crmLeads';
 const CRM_STUDENTS = 'crmStudents';
 const CRM_COURSES = 'crmCourses';
 const CRM_CLASSROOMS = 'crmClassrooms';
@@ -11,6 +12,7 @@ const CLASSROOM_MEMBERS = 'members';
 
 module.exports = {
     USERS,
+    CRM_LEADS,
     CRM_STUDENTS,
     CRM_COURSES,
     CRM_CLASSROOMS,

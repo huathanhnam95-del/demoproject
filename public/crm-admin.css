@@ -908,6 +908,33 @@ body {
   color: #e53e3e;
 }
 
+.crm-lead-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.crm-lead-stage-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  text-align: left;
+  box-shadow: var(--crm-shadow);
+}
+
+.crm-lead-stage-card strong {
+  display: block;
+  font-size: 1.35rem;
+  margin-top: 6px;
+  color: var(--crm-text-main);
+}
+
+.crm-inline-select {
+  min-width: 150px;
+}
+
 .crm-toast {
   position: fixed;
   right: 20px;

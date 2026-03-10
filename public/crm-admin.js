@@ -67,6 +67,18 @@
     elements.potentialStudentsContainer = document.querySelector('[data-panel="students/potential"] .crm-placeholder-card');
     elements.studentDataContainer = document.querySelector('[data-panel="students/data"] .crm-placeholder-card');
     elements.courseCatalogContainer = document.querySelector('[data-panel="courses/courses"] .crm-placeholder-card');
+    elements.btnNewLead = document.getElementById('btn-new-lead');
+    elements.btnSaveLead = document.getElementById('btn-save-lead');
+    elements.btnCancelLead = document.getElementById('btn-cancel-lead');
+    elements.leadComposer = document.getElementById('lead-composer');
+    elements.leadStageBoard = document.getElementById('lead-stage-board');
+    elements.leadListContainer = document.getElementById('lead-list-container');
+    elements.inputLeadName = document.getElementById('lead-name');
+    elements.inputLeadEmail = document.getElementById('lead-email');
+    elements.inputLeadPhone = document.getElementById('lead-phone');
+    elements.inputLeadSource = document.getElementById('lead-source');
+    elements.inputLeadStage = document.getElementById('lead-stage');
+    elements.inputLeadProbability = document.getElementById('lead-probability');
 
     // New Student Elements
     elements.btnNewStudentTriggers = Array.from(document.querySelectorAll('.btn-new-student-trigger'));
@@ -207,6 +219,7 @@
     // Ready
     hideGate();
     setupTabs();
+    setupLeadComposer();
     applyRouteFromHash();
     render();
 
@@ -223,6 +236,11 @@
     refreshCourseCatalog().catch((e) => {
       console.error('[CRM Admin] Failed to load course catalog:', e);
       showToast(e?.message || 'Failed to load courses.', 'error');
+    });
+
+    refreshLeadPipeline().catch((e) => {
+      console.error('[CRM Admin] Failed to load leads:', e);
+      showToast(e?.message || 'Failed to load leads.', 'error');
     });
   }
 
@@ -572,6 +590,26 @@
     }
   }
 
+  function resetLeadComposer() {
+    const inputs = [
+      elements.inputLeadName,
+      elements.inputLeadEmail,
+      elements.inputLeadPhone,
+      elements.inputLeadSource,
+      elements.inputLeadProbability
+    ];
+    inputs.forEach((input) => {
+      if (input) input.value = '';
+    });
+    if (elements.inputLeadStage) {
+      elements.inputLeadStage.value = 'new';
+    }
+    if (elements.btnSaveLead) {
+      elements.btnSaveLead.disabled = false;
+      elements.btnSaveLead.textContent = 'Save Lead';
+    }
+  }
+
   function getStudentPayload() {
     if (window.CrmStudents && typeof window.CrmStudents.buildPayload === 'function') {
       return window.CrmStudents.buildPayload(elements);
@@ -734,6 +772,68 @@
       throw err;
     }
     return json;
+  }
+
+  function setupLeadComposer() {
+    if (!elements.leadComposer) return;
+
+    if (elements.btnNewLead) {
+      elements.btnNewLead.addEventListener('click', () => {
+        resetLeadComposer();
+        elements.leadComposer.style.display = 'block';
+      });
+    }
+
+    if (elements.btnCancelLead) {
+      elements.btnCancelLead.addEventListener('click', () => {
+        elements.leadComposer.style.display = 'none';
+        resetLeadComposer();
+      });
+    }
+
+    if (elements.btnSaveLead) {
+      elements.btnSaveLead.addEventListener('click', () => {
+        saveLead().catch((error) => {
+          console.error('[CRM Admin] Save lead failed:', error);
+          showToast(error?.message || 'Failed to save lead.', 'error');
+        });
+      });
+    }
+  }
+
+  async function saveLead() {
+    if (!window.CrmLeads || typeof window.CrmLeads.buildPayload !== 'function') {
+      throw new Error('Lead helpers are not available.');
+    }
+
+    const payload = window.CrmLeads.buildPayload(elements);
+    if (!payload.name && !payload.email && !payload.phone) {
+      throw new Error('Please fill at least 1 lead contact field before saving.');
+    }
+
+    if (elements.btnSaveLead) {
+      elements.btnSaveLead.disabled = true;
+      elements.btnSaveLead.textContent = 'Saving...';
+    }
+
+    try {
+      await apiFetchJson('/api/admin/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      elements.leadComposer.style.display = 'none';
+      resetLeadComposer();
+      await refreshLeadPipeline();
+      showToast('Lead saved.', 'success');
+    } catch (error) {
+      if (elements.btnSaveLead) {
+        elements.btnSaveLead.disabled = false;
+        elements.btnSaveLead.textContent = 'Save Lead';
+      }
+      throw error;
+    }
   }
 
   async function saveStudentProfile() {
@@ -1092,6 +1192,113 @@
 
     renderStudentsTable(elements.potentialStudentsContainer, buckets.potential, 'No potential students yet.');
     renderStudentsTable(elements.studentDataContainer, buckets.studentData, 'No students in database yet.');
+  }
+
+  function renderLeadStageBoard(leads) {
+    if (!elements.leadStageBoard) return;
+    if (!window.CrmLeads || typeof window.CrmLeads.summarize !== 'function') {
+      elements.leadStageBoard.innerHTML = '';
+      return;
+    }
+
+    const counts = window.CrmLeads.summarize(leads);
+    elements.leadStageBoard.innerHTML = window.CrmLeads.STAGES.map((stage) => `
+      <div class="crm-lead-stage-card">
+        <div class="text-muted">${escapeHtml(window.CrmLeads.formatStageLabel(stage))}</div>
+        <strong>${escapeHtml(String(counts[stage] || 0))}</strong>
+      </div>
+    `).join('');
+  }
+
+  function renderLeadTable(leads) {
+    if (!elements.leadListContainer) return;
+    if (!Array.isArray(leads) || !leads.length) {
+      elements.leadListContainer.innerHTML = 'No leads yet.';
+      return;
+    }
+
+    elements.leadListContainer.innerHTML = `
+      <div class="crm-table-container">
+        <table class="crm-table">
+          <thead>
+            <tr><th>Name</th><th>Contact</th><th>Source</th><th>Stage</th><th>Probability</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            ${leads.map((lead) => `
+              <tr>
+                <td class="td-bold">${escapeHtml(lead.name || lead.email || 'Unnamed lead')}</td>
+                <td>${escapeHtml(lead.email || lead.phone || lead.zalo || '—')}</td>
+                <td>${escapeHtml(lead.source || '—')}</td>
+                <td>
+                  <select class="crm-input crm-inline-select lead-stage-select" data-lead-id="${escapeHtml(lead.leadId)}">
+                    ${window.CrmLeads.STAGES.map((stage) => `
+                      <option value="${stage}" ${stage === lead.stage ? 'selected' : ''}>${escapeHtml(window.CrmLeads.formatStageLabel(stage))}</option>
+                    `).join('')}
+                  </select>
+                </td>
+                <td>${escapeHtml(lead.probability == null ? '—' : `${lead.probability}%`)}</td>
+                <td>
+                  <div class="crm-inline-fields">
+                    <button type="button" class="crm-btn-secondary btn-update-lead-stage" data-lead-id="${escapeHtml(lead.leadId)}">Update</button>
+                    <button type="button" class="crm-btn-primary btn-convert-lead" data-lead-id="${escapeHtml(lead.leadId)}" ${lead.studentId ? 'disabled' : ''}>${lead.studentId ? 'Converted' : 'Convert'}</button>
+                  </div>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    Array.from(elements.leadListContainer.querySelectorAll('.btn-update-lead-stage')).forEach((button) => {
+      button.addEventListener('click', async () => {
+        const leadId = String(button.dataset.leadId || '').trim();
+        const select = elements.leadListContainer.querySelector(`.lead-stage-select[data-lead-id="${leadId}"]`);
+        const stage = String(select?.value || '').trim();
+        try {
+          button.disabled = true;
+          await apiFetchJson(`/api/admin/leads/${encodeURIComponent(leadId)}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ stage })
+          });
+          await refreshLeadPipeline();
+          showToast('Lead updated.', 'success');
+        } catch (error) {
+          console.error('[CRM Admin] Update lead stage failed:', error);
+          showToast(error?.message || 'Failed to update lead.', 'error');
+          button.disabled = false;
+        }
+      });
+    });
+
+    Array.from(elements.leadListContainer.querySelectorAll('.btn-convert-lead')).forEach((button) => {
+      button.addEventListener('click', async () => {
+        const leadId = String(button.dataset.leadId || '').trim();
+        try {
+          button.disabled = true;
+          await apiFetchJson(`/api/admin/leads/${encodeURIComponent(leadId)}/convert`, {
+            method: 'POST'
+          });
+          await Promise.all([
+            refreshLeadPipeline(),
+            refreshStudentLists()
+          ]);
+          showToast('Lead converted to student.', 'success');
+        } catch (error) {
+          console.error('[CRM Admin] Convert lead failed:', error);
+          showToast(error?.message || 'Failed to convert lead.', 'error');
+          button.disabled = false;
+        }
+      });
+    });
+  }
+
+  async function refreshLeadPipeline() {
+    const json = await apiFetchJson('/api/admin/leads?limit=200', { method: 'GET' });
+    const leads = Array.isArray(json.leads) ? json.leads : [];
+    renderLeadStageBoard(leads);
+    renderLeadTable(leads);
   }
 
   function renderEntranceTests(tests) {

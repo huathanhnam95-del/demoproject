@@ -2,7 +2,8 @@ const assert = require('assert');
 const {
     buildDashboardSummary,
     buildFunnelMetrics,
-    buildRevenueByCourse
+    buildRevenueByCourse,
+    buildAttendanceRiskRows
 } = require('../../functions/src/crm/reporting-service');
 const {
     CRM_ROLES,
@@ -64,6 +65,24 @@ const revenue = buildRevenueByCourse({
 
 assert.strictEqual(revenue[0].courseId, 'course-1');
 assert.strictEqual(revenue[0].collectedAmount, 600);
+
+const attendanceRiskRows = buildAttendanceRiskRows({
+    enrollments: [
+        { enrollmentId: 'enrollment-1', studentId: 'student-1', classId: 'class-1', courseId: 'course-1', status: 'active', studentName: 'Alice' }
+    ],
+    records: [
+        { recordId: 'record-1', studentId: 'student-1', classId: 'class-1', status: 'absent', interventionFlag: false },
+        { recordId: 'record-2', studentId: 'student-1', classId: 'class-1', status: 'present', interventionFlag: false }
+    ],
+    students: [
+        { studentId: 'student-1', learningProfile: { overall: 55 } }
+    ]
+});
+
+assert.strictEqual(attendanceRiskRows.length, 1);
+assert.strictEqual(attendanceRiskRows[0].courseId, 'course-1');
+assert.strictEqual(attendanceRiskRows[0].atRisk.isAtRisk, true);
+assert.deepStrictEqual(attendanceRiskRows[0].atRisk.reasons.sort(), ['low_attendance', 'low_score']);
 
 const audit = buildAuditLogEntry({
     actorUid: 'admin-1',

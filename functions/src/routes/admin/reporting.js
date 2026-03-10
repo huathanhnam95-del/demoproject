@@ -9,7 +9,8 @@ const {
 const {
     buildDashboardSummary,
     buildFunnelMetrics,
-    buildRevenueByCourse
+    buildRevenueByCourse,
+    buildAttendanceRiskRows
 } = require('../../crm/reporting-service');
 
 module.exports = function registerReportingRoutes(router, deps) {
@@ -30,13 +31,10 @@ module.exports = function registerReportingRoutes(router, deps) {
                 leads: leadSnap.docs.map((doc) => ({ leadId: doc.id, ...doc.data() })),
                 students: studentSnap.docs.map((doc) => ({ studentId: doc.id, ...doc.data() })),
                 enrollments: enrollmentSnap.docs.map((doc) => ({ enrollmentId: doc.id, ...doc.data() })),
-                attendance: attendanceSnap.docs.map((doc) => {
-                    const data = doc.data() || {};
-                    return {
-                        recordId: doc.id,
-                        studentId: data.studentId || null,
-                        atRisk: { isAtRisk: !!data.interventionFlag }
-                    };
+                attendance: buildAttendanceRiskRows({
+                    enrollments: enrollmentSnap.docs.map((doc) => ({ enrollmentId: doc.id, ...doc.data() })),
+                    records: attendanceSnap.docs.map((doc) => ({ recordId: doc.id, ...doc.data() })),
+                    students: studentSnap.docs.map((doc) => ({ studentId: doc.id, ...doc.data() }))
                 }),
                 invoices: invoiceSnap.docs.map((doc) => ({ invoiceId: doc.id, ...doc.data() })),
                 payments: paymentSnap.docs.map((doc) => ({ paymentId: doc.id, ...doc.data() }))

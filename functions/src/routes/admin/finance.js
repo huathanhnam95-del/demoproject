@@ -164,11 +164,14 @@ module.exports = function registerFinanceRoutes(router, deps) {
             const paymentQuery = studentId
                 ? db.collection(CRM_PAYMENTS).where('studentId', '==', studentId)
                 : db.collection(CRM_PAYMENTS);
+            const commissionQuery = studentId
+                ? db.collection(CRM_COMMISSIONS).where('studentId', '==', studentId)
+                : db.collection(CRM_COMMISSIONS);
 
             const [invoiceSnap, paymentSnap, commissionSnap] = await Promise.all([
                 invoiceQuery.get(),
                 paymentQuery.get(),
-                db.collection(CRM_COMMISSIONS).get()
+                commissionQuery.get()
             ]);
 
             const invoices = invoiceSnap.docs.map((doc) => mapInvoiceRecord(doc, doc.id));

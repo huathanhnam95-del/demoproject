@@ -211,6 +211,8 @@ function summarizeAttendanceByStudent({ enrollments, records }) {
             studentUid: enrollment.studentUid || null,
             studentName: enrollment.studentName || 'Student',
             classId: enrollment.classId || null,
+            courseId: enrollment.courseId || null,
+            status: enrollment.status || 'active',
             totalSessions,
             presentCount,
             absentCount,

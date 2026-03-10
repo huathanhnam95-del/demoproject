@@ -4,7 +4,9 @@ const {
     CRM_AUTOMATION_QUEUE,
     CRM_LEADS,
     CRM_STUDENTS,
-    CRM_INVOICES
+    CRM_INVOICES,
+    CRM_ENROLLMENTS,
+    CRM_ATTENDANCE_RECORDS
 } = require('../../crm/collections');
 const {
     buildTemplateCreateData,
@@ -12,6 +14,7 @@ const {
     generateQueueEntries,
     evaluateRuleTargets
 } = require('../../crm/automation-service');
+const { buildAttendanceRiskRows } = require('../../crm/reporting-service');
 
 module.exports = function registerAutomationRoutes(router, deps) {
     const { db, sendSuccess, sendError, requireAdminHandlers, serverTimestamp, writeAuditLog } = deps;
@@ -104,20 +107,28 @@ module.exports = function registerAutomationRoutes(router, deps) {
             }
             const template = { templateId: templateSnap.id, ...templateSnap.data() };
 
-            const [leadSnap, studentSnap, invoiceSnap, queueSnap] = await Promise.all([
+            const [leadSnap, studentSnap, invoiceSnap, enrollmentSnap, attendanceSnap, queueSnap] = await Promise.all([
                 db.collection(CRM_LEADS).get(),
                 db.collection(CRM_STUDENTS).get(),
                 db.collection(CRM_INVOICES).get(),
+                db.collection(CRM_ENROLLMENTS).get(),
+                db.collection(CRM_ATTENDANCE_RECORDS).get(),
                 db.collection(CRM_AUTOMATION_QUEUE).get()
             ]);
+            const students = studentSnap.docs.map((doc) => ({ studentId: doc.id, ...doc.data() }));
+            const attendance = buildAttendanceRiskRows({
+                enrollments: enrollmentSnap.docs.map((doc) => ({ enrollmentId: doc.id, ...doc.data() })),
+                records: attendanceSnap.docs.map((doc) => ({ recordId: doc.id, ...doc.data() })),
+                students
+            });
 
             const targets = evaluateRuleTargets({
                 rule,
                 datasets: {
                     leads: leadSnap.docs.map((doc) => ({ leadId: doc.id, ...doc.data() })),
-                    students: studentSnap.docs.map((doc) => ({ studentId: doc.id, ...doc.data() })),
+                    students,
                     invoices: invoiceSnap.docs.map((doc) => ({ invoiceId: doc.id, ...doc.data() })),
-                    attendance: []
+                    attendance
                 },
                 now: new Date()
             });

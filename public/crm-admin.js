@@ -52,7 +52,8 @@
     courseId: null,
     classroomId: null,
     leadId: null,
-    selectedInvoiceId: null
+    selectedInvoiceId: null,
+    financeEnrollments: []
   };
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -174,6 +175,8 @@
     elements.inputInvoiceAmount = document.getElementById('invoice-amount');
     elements.inputInvoiceDiscount = document.getElementById('invoice-discount');
     elements.inputInvoiceDueDate = document.getElementById('invoice-due-date');
+    elements.inputStudentFinanceEnrollment = document.getElementById('student-finance-enrollment');
+    elements.studentFinanceEnrollmentMeta = document.getElementById('student-finance-enrollment-meta');
     elements.btnCreateStudentInvoice = document.getElementById('btn-create-student-invoice');
     elements.studentInvoiceList = document.getElementById('student-invoice-list');
     elements.inputPaymentAmount = document.getElementById('payment-amount');
@@ -753,9 +756,17 @@
 
   function resetStudentFinanceComposer() {
     modalState.selectedInvoiceId = null;
+    modalState.financeEnrollments = [];
     if (elements.inputInvoiceAmount) elements.inputInvoiceAmount.value = '';
     if (elements.inputInvoiceDiscount) elements.inputInvoiceDiscount.value = '';
     if (elements.inputInvoiceDueDate) elements.inputInvoiceDueDate.value = '';
+    if (elements.inputStudentFinanceEnrollment) {
+      elements.inputStudentFinanceEnrollment.innerHTML = '<option value="">No enrollment selected</option>';
+      elements.inputStudentFinanceEnrollment.value = '';
+    }
+    if (elements.studentFinanceEnrollmentMeta) {
+      elements.studentFinanceEnrollmentMeta.textContent = 'Choose the enrollment this invoice belongs to.';
+    }
     if (elements.inputPaymentAmount) elements.inputPaymentAmount.value = '';
     if (elements.inputPaymentMethod) elements.inputPaymentMethod.value = 'bank-transfer';
     if (elements.studentInvoiceList) elements.studentInvoiceList.innerHTML = '<div class="crm-muted">No invoices yet.</div>';
@@ -1559,14 +1570,43 @@
 
   async function refreshStudentFinance() {
     if (!modalState.studentId || !window.CrmFinance) return;
-    const json = await apiFetchJson(`/api/admin/finance/summary?studentId=${encodeURIComponent(modalState.studentId)}`, {
-      method: 'GET'
-    });
+    const [json, attendanceJson] = await Promise.all([
+      apiFetchJson(`/api/admin/finance/summary?studentId=${encodeURIComponent(modalState.studentId)}`, {
+        method: 'GET'
+      }),
+      window.ClassroomAPI && typeof window.ClassroomAPI.fetchAttendanceSummary === 'function'
+        ? window.ClassroomAPI.fetchAttendanceSummary({ studentId: modalState.studentId })
+        : Promise.resolve({ students: [] })
+    ]);
     const totalInvoiced = Number(json.totalInvoiced || 0);
     const totalPaid = Number(json.totalPaid || 0);
     const totalOutstanding = Number(json.totalOutstanding || 0);
     const nextDueDate = String(json.nextDueDate || '').trim() || '-';
     const invoices = Array.isArray(json.invoices) ? json.invoices : [];
+    const enrollmentRows = Array.isArray(attendanceJson?.students) ? attendanceJson.students : [];
+    const activeEnrollments = enrollmentRows.filter((row) => String(row.status || '') === 'active');
+    const availableEnrollments = activeEnrollments.length ? activeEnrollments : enrollmentRows;
+
+    modalState.financeEnrollments = availableEnrollments;
+
+    if (elements.inputStudentFinanceEnrollment) {
+      const currentValue = String(elements.inputStudentFinanceEnrollment.value || '').trim();
+      elements.inputStudentFinanceEnrollment.innerHTML = '<option value="">No enrollment selected</option>' + availableEnrollments.map((row) => `
+        <option value="${escapeHtml(row.enrollmentId || '')}">${escapeHtml([row.classId || 'class?', row.courseId || 'course?', row.status || 'status?'].join(' • '))}</option>
+      `).join('');
+
+      if (currentValue && availableEnrollments.some((row) => String(row.enrollmentId || '') === currentValue)) {
+        elements.inputStudentFinanceEnrollment.value = currentValue;
+      } else if (availableEnrollments.length === 1) {
+        elements.inputStudentFinanceEnrollment.value = String(availableEnrollments[0].enrollmentId || '');
+      }
+    }
+
+    if (elements.studentFinanceEnrollmentMeta) {
+      elements.studentFinanceEnrollmentMeta.textContent = availableEnrollments.length
+        ? `Loaded ${availableEnrollments.length} enrollment context${availableEnrollments.length === 1 ? '' : 's'} for this student.`
+        : 'No enrollment found. Invoice creation will use a manual fallback context.';
+    }
 
     if (elements.studentFinanceInvoiced) elements.studentFinanceInvoiced.textContent = window.CrmFinance.formatMoney(totalInvoiced);
     if (elements.studentFinancePaid) elements.studentFinancePaid.textContent = window.CrmFinance.formatMoney(totalPaid);
@@ -1601,13 +1641,43 @@
     }
   }
 
+  function resolveStudentFinanceEnrollmentContext() {
+    const enrollments = Array.isArray(modalState.financeEnrollments) ? modalState.financeEnrollments : [];
+    const selectedEnrollmentId = String(elements.inputStudentFinanceEnrollment?.value || '').trim();
+    if (!enrollments.length) {
+      return {
+        enrollmentId: `manual-${modalState.studentId}`,
+        courseId: null
+      };
+    }
+
+    if (selectedEnrollmentId) {
+      const selected = enrollments.find((row) => String(row.enrollmentId || '') === selectedEnrollmentId);
+      if (selected) {
+        return {
+          enrollmentId: selected.enrollmentId || `manual-${modalState.studentId}`,
+          courseId: selected.courseId || null
+        };
+      }
+    }
+
+    if (enrollments.length === 1) {
+      return {
+        enrollmentId: enrollments[0].enrollmentId || `manual-${modalState.studentId}`,
+        courseId: enrollments[0].courseId || null
+      };
+    }
+
+    throw new Error('Select the enrollment context first.');
+  }
+
   async function createInvoiceForStudent() {
     if (!modalState.studentId) throw new Error('Save the student profile first.');
     if (!window.CrmFinance || typeof window.CrmFinance.buildInvoicePayload !== 'function') {
       throw new Error('Finance helpers are not available.');
     }
 
-    const enrollmentSummary = dataCache.attendanceRiskByStudentId.get(String(modalState.studentId || '').trim()) || null;
+    const financeContext = resolveStudentFinanceEnrollmentContext();
     const payload = window.CrmFinance.buildInvoicePayload({
       inputInvoiceAmount: elements.inputInvoiceAmount,
       inputInvoiceDiscount: elements.inputInvoiceDiscount,
@@ -1619,8 +1689,8 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         studentId: modalState.studentId,
-        enrollmentId: enrollmentSummary?.enrollmentId || `manual-${modalState.studentId}`,
-        courseId: enrollmentSummary?.courseId || null,
+        enrollmentId: financeContext.enrollmentId,
+        courseId: financeContext.courseId,
         ...payload
       })
     });
@@ -1640,7 +1710,7 @@
       throw new Error('Finance helpers are not available.');
     }
 
-    const enrollmentSummary = dataCache.attendanceRiskByStudentId.get(String(modalState.studentId || '').trim()) || null;
+    const financeContext = resolveStudentFinanceEnrollmentContext();
     const payload = window.CrmFinance.buildPaymentPayload({
       inputPaymentAmount: elements.inputPaymentAmount,
       inputPaymentMethod: elements.inputPaymentMethod
@@ -1652,7 +1722,7 @@
       body: JSON.stringify({
         invoiceId: modalState.selectedInvoiceId,
         studentId: modalState.studentId,
-        enrollmentId: enrollmentSummary?.enrollmentId || `manual-${modalState.studentId}`,
+        enrollmentId: financeContext.enrollmentId,
         ...payload
       })
     });

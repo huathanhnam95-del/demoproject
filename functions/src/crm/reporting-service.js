@@ -1,3 +1,8 @@
+const {
+    summarizeAttendanceByStudent,
+    computeAtRiskStatus
+} = require('./enrollment-service');
+
 function toNumber(value) {
     const normalized = Number(value);
     return Number.isFinite(normalized) ? normalized : 0;
@@ -76,8 +81,31 @@ function buildDashboardSummary({ leads, students, enrollments, attendance, invoi
     };
 }
 
+function buildAttendanceRiskRows({ enrollments, records, students }) {
+    const enrollmentList = Array.isArray(enrollments) ? enrollments : [];
+    const recordList = Array.isArray(records) ? records : [];
+    const studentList = Array.isArray(students) ? students : [];
+    const studentIndex = new Map(studentList.map((student) => [String(student?.studentId || '').trim(), student]));
+
+    return summarizeAttendanceByStudent({
+        enrollments: enrollmentList,
+        records: recordList
+    }).map((summary) => {
+        const student = studentIndex.get(String(summary.studentId || '').trim()) || {};
+        return {
+            ...summary,
+            learningProfile: student.learningProfile || null,
+            atRisk: computeAtRiskStatus({
+                attendanceSummary: summary,
+                learningProfile: student.learningProfile || {}
+            })
+        };
+    });
+}
+
 module.exports = {
     buildDashboardSummary,
     buildFunnelMetrics,
-    buildRevenueByCourse
+    buildRevenueByCourse,
+    buildAttendanceRiskRows
 };

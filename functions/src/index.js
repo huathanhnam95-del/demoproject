@@ -27,21 +27,26 @@ const {
     CRM_TEMPLATES,
     CRM_LEADS,
     CRM_STUDENTS,
-    CRM_INVOICES
+    CRM_INVOICES,
+    CRM_ENROLLMENTS,
+    CRM_ATTENDANCE_RECORDS
 } = require('./crm/collections');
 const {
     evaluateRuleTargets,
     generateQueueEntries
 } = require('./crm/automation-service');
+const { buildAttendanceRiskRows } = require('./crm/reporting-service');
 
 async function runCrmAutomationQueue() {
     const db = getFirestore();
-    const [ruleSnap, templateSnap, leadSnap, studentSnap, invoiceSnap, queueSnap] = await Promise.all([
+    const [ruleSnap, templateSnap, leadSnap, studentSnap, invoiceSnap, enrollmentSnap, attendanceSnap, queueSnap] = await Promise.all([
         db.collection(CRM_AUTOMATION_RULES).where('active', '==', true).get(),
         db.collection(CRM_TEMPLATES).get(),
         db.collection(CRM_LEADS).get(),
         db.collection(CRM_STUDENTS).get(),
         db.collection(CRM_INVOICES).get(),
+        db.collection(CRM_ENROLLMENTS).get(),
+        db.collection(CRM_ATTENDANCE_RECORDS).get(),
         db.collection(CRM_AUTOMATION_QUEUE).get()
     ]);
 
@@ -50,6 +55,11 @@ async function runCrmAutomationQueue() {
     const leads = leadSnap.docs.map((doc) => ({ leadId: doc.id, ...doc.data() }));
     const students = studentSnap.docs.map((doc) => ({ studentId: doc.id, ...doc.data() }));
     const invoices = invoiceSnap.docs.map((doc) => ({ invoiceId: doc.id, ...doc.data() }));
+    const attendance = buildAttendanceRiskRows({
+        enrollments: enrollmentSnap.docs.map((doc) => ({ enrollmentId: doc.id, ...doc.data() })),
+        records: attendanceSnap.docs.map((doc) => ({ recordId: doc.id, ...doc.data() })),
+        students
+    });
 
     const writes = [];
     ruleSnap.docs.forEach((doc) => {
@@ -58,7 +68,7 @@ async function runCrmAutomationQueue() {
         if (!template) return;
         const targets = evaluateRuleTargets({
             rule,
-            datasets: { leads, students, invoices, attendance: [] },
+            datasets: { leads, students, invoices, attendance },
             now: new Date()
         });
         const queueEntries = generateQueueEntries({

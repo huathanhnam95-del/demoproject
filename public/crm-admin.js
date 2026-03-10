@@ -88,6 +88,13 @@
     elements.inputStudentEmail = document.getElementById('student-email');
     elements.inputStudentZalo = document.getElementById('student-zalo');
     elements.inputStudentFacebook = document.getElementById('student-facebook');
+    elements.inputScoreOverall = document.getElementById('score-overall');
+    elements.inputScoreListening = document.getElementById('score-listening');
+    elements.inputScoreReading = document.getElementById('score-reading');
+    elements.inputScoreSpeaking = document.getElementById('score-speaking');
+    elements.inputScoreWriting = document.getElementById('score-writing');
+    elements.inputStudentDueDate = document.getElementById('student-due-date');
+    elements.inputStudentLevel = document.getElementById('student-level');
 
     // Student ID Badge
     elements.studentIdBadge = document.getElementById('crm-student-id-badge');
@@ -489,6 +496,13 @@
       elements.inputStudentEmail,
       elements.inputStudentZalo,
       elements.inputStudentFacebook,
+      elements.inputScoreOverall,
+      elements.inputScoreListening,
+      elements.inputScoreReading,
+      elements.inputScoreSpeaking,
+      elements.inputScoreWriting,
+      elements.inputStudentDueDate,
+      elements.inputStudentLevel,
       elements.inputClassCodeDisplay,
       elements.inputHandshakeEmail
     ];
@@ -558,19 +572,36 @@
     }
   }
 
-  function getStudentInfoPayload() {
+  function getStudentPayload() {
+    if (window.CrmStudents && typeof window.CrmStudents.buildPayload === 'function') {
+      return window.CrmStudents.buildPayload(elements);
+    }
+
     return {
       name: String(elements.inputStudentName?.value || '').trim(),
       label: String(elements.inputStudentLabel?.value || '').trim(),
       phone: String(elements.inputStudentPhone?.value || '').trim(),
       email: String(elements.inputStudentEmail?.value || '').trim(),
       zalo: String(elements.inputStudentZalo?.value || '').trim(),
-      facebook: String(elements.inputStudentFacebook?.value || '').trim()
+      facebook: String(elements.inputStudentFacebook?.value || '').trim(),
+      learningProfile: {
+        overall: null,
+        listening: null,
+        reading: null,
+        speaking: null,
+        writing: null,
+        entryLevel: String(elements.inputStudentLevel?.value || '').trim(),
+        testResultDueDate: String(elements.inputStudentDueDate?.value || '').trim()
+      }
     };
   }
 
   function hasAnyInfoField(payload) {
-    return Object.values(payload || {}).some(v => !!String(v || '').trim());
+    if (window.CrmStudents && typeof window.CrmStudents.hasAnyInfoField === 'function') {
+      return window.CrmStudents.hasAnyInfoField(payload);
+    }
+    return [payload?.name, payload?.label, payload?.phone, payload?.email, payload?.zalo, payload?.facebook]
+      .some(v => !!String(v || '').trim());
   }
 
   function getCourseTeachers() {
@@ -651,9 +682,7 @@
   }
 
   async function saveStudentProfile() {
-    if (modalState.studentId) return;
-
-    const payload = getStudentInfoPayload();
+    const payload = getStudentPayload();
     if (!hasAnyInfoField(payload)) {
       throw new Error('Please fill at least 1 field in Info tab before saving.');
     }
@@ -663,13 +692,17 @@
       elements.btnSaveStudent.textContent = 'Saving...';
     }
     try {
-      const json = await apiFetchJson('/api/admin/students', {
-        method: 'POST',
+      const path = modalState.studentId
+        ? `/api/admin/students/${encodeURIComponent(modalState.studentId)}`
+        : '/api/admin/students';
+      const method = modalState.studentId ? 'PATCH' : 'POST';
+      const json = await apiFetchJson(path, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
-      const studentId = String(json.studentId || '').trim();
+      const studentId = String(json.studentId || json.student?.studentId || modalState.studentId || '').trim();
       if (!studentId) throw new Error('Student ID missing from server response.');
 
       modalState.studentId = studentId;
@@ -682,18 +715,18 @@
       if (elements.btnAddEntranceTest) elements.btnAddEntranceTest.disabled = false;
 
       if (elements.btnSaveStudent) {
-        elements.btnSaveStudent.disabled = true;
-        elements.btnSaveStudent.textContent = 'Saved';
+        elements.btnSaveStudent.disabled = false;
+        elements.btnSaveStudent.textContent = 'Save Student';
       }
 
       await refreshStudentLists();
       await refreshEntranceTestsList();
-      showToast('Student profile saved.', 'success');
+      showToast(method === 'PATCH' ? 'Student profile updated.' : 'Student profile saved.', 'success');
     } catch (e) {
       if (modalState.studentId) {
         if (elements.btnSaveStudent) {
-          elements.btnSaveStudent.disabled = true;
-          elements.btnSaveStudent.textContent = 'Saved';
+          elements.btnSaveStudent.disabled = false;
+          elements.btnSaveStudent.textContent = 'Save Student';
         }
         if (elements.btnAddEntranceTest) {
           elements.btnAddEntranceTest.disabled = false;
@@ -910,8 +943,8 @@
     }
 
     if (elements.btnSaveStudent) {
-      elements.btnSaveStudent.disabled = true;
-      elements.btnSaveStudent.textContent = 'Saved';
+      elements.btnSaveStudent.disabled = false;
+      elements.btnSaveStudent.textContent = 'Save Student';
     }
 
     if (elements.btnAddEntranceTest) {
@@ -924,28 +957,19 @@
     if (!student) {
       showToast('Student details are not available yet. Please refresh and try again.', 'error');
     } else {
-      if (elements.inputStudentName) elements.inputStudentName.value = String(student?.name || '');
-      if (elements.inputStudentLabel) elements.inputStudentLabel.value = String(student?.label || '');
-      if (elements.inputStudentPhone) elements.inputStudentPhone.value = String(student?.phone || '');
-      if (elements.inputStudentEmail) elements.inputStudentEmail.value = String(student?.email || '');
-      if (elements.inputStudentZalo) elements.inputStudentZalo.value = String(student?.zalo || '');
-      if (elements.inputStudentFacebook) elements.inputStudentFacebook.value = String(student?.facebook || '');
+      if (window.CrmStudents && typeof window.CrmStudents.applyToForm === 'function') {
+        window.CrmStudents.applyToForm(elements, student);
+      }
     }
 
-    // Optional: refresh full profile if the endpoint exists (ignore failures to avoid noisy console errors)
-    if (!cachedStudent) {
-      fetchStudentProfile(id).then((fresh) => {
-        if (!fresh) return;
-        if (elements.inputStudentName) elements.inputStudentName.value = String(fresh?.name || '');
-        if (elements.inputStudentLabel) elements.inputStudentLabel.value = String(fresh?.label || '');
-        if (elements.inputStudentPhone) elements.inputStudentPhone.value = String(fresh?.phone || '');
-        if (elements.inputStudentEmail) elements.inputStudentEmail.value = String(fresh?.email || '');
-        if (elements.inputStudentZalo) elements.inputStudentZalo.value = String(fresh?.zalo || '');
-        if (elements.inputStudentFacebook) elements.inputStudentFacebook.value = String(fresh?.facebook || '');
-      }).catch((error) => {
-        console.error('[CRM Admin] Failed to refresh student profile after open:', error);
-      });
-    }
+    fetchStudentProfile(id).then((fresh) => {
+      if (!fresh) return;
+      if (window.CrmStudents && typeof window.CrmStudents.applyToForm === 'function') {
+        window.CrmStudents.applyToForm(elements, fresh);
+      }
+    }).catch((error) => {
+      console.error('[CRM Admin] Failed to refresh student profile after open:', error);
+    });
 
     await refreshEntranceTestsList();
     await refreshStudentIdentity();
@@ -995,8 +1019,12 @@
       }
     }
 
-    renderStudentsTable(elements.potentialStudentsContainer, students, 'No potential students yet.');
-    renderStudentsTable(elements.studentDataContainer, students, 'No students in database yet.');
+    const buckets = window.CrmStudents && typeof window.CrmStudents.splitStudents === 'function'
+      ? window.CrmStudents.splitStudents(students)
+      : { potential: students, studentData: [] };
+
+    renderStudentsTable(elements.potentialStudentsContainer, buckets.potential, 'No potential students yet.');
+    renderStudentsTable(elements.studentDataContainer, buckets.studentData, 'No students in database yet.');
   }
 
   function renderEntranceTests(tests) {

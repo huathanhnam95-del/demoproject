@@ -657,9 +657,10 @@
           </svg>
         </button>
       </div>
-      <div class="crm-modal-body">
+        <div class="crm-modal-body">
         <div class="crm-modal-sidebar">
           <button class="crm-sidebar-item active" data-tab="settings">Settings</button>
+          <button class="crm-sidebar-item" data-tab="attendance">Attendance</button>
           <button class="crm-sidebar-item" data-tab="stream">Stream</button>
           <button class="crm-sidebar-item" data-tab="modules">Modules</button>
           <button class="crm-sidebar-item" data-tab="classwork">Classwork</button>
@@ -686,6 +687,62 @@
                   <option value="archived">Archived</option>
                 </select>
               </div>
+            </div>
+          </div>
+
+          <div id="classroom-attendance" class="crm-tab-content" style="display: none;">
+            <div class="crm-workspace-grid" style="margin-top: 0;">
+              <section class="crm-workspace-card">
+                <div class="crm-section-header">
+                  <div>
+                    <h3>Enroll Student</h3>
+                    <p class="crm-muted">Sync classroom member access and reporting enrollment.</p>
+                  </div>
+                </div>
+                <div class="crm-form-grid crm-compact-grid">
+                  <div class="crm-form-group">
+                    <label for="attendance-student-select">Student</label>
+                    <select id="attendance-student-select" class="crm-input">
+                      <option value="">Select a student...</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
+                  <button id="btn-enroll-student" class="crm-btn-primary" type="button">Enroll</button>
+                </div>
+                <div id="attendance-enrollment-meta" class="crm-muted" style="margin-top: 12px;">No enrollments yet.</div>
+              </section>
+              <section class="crm-workspace-card">
+                <div class="crm-section-header">
+                  <div>
+                    <h3>Create Session</h3>
+                    <p class="crm-muted">Open a dated attendance register for this classroom.</p>
+                  </div>
+                </div>
+                <div class="crm-form-grid crm-compact-grid">
+                  <div class="crm-form-group">
+                    <label for="attendance-session-date">Session Date</label>
+                    <input type="date" id="attendance-session-date" class="crm-input">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="attendance-session-title">Title</label>
+                    <input type="text" id="attendance-session-title" class="crm-input" placeholder="e.g. Session 1">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="attendance-session-select">Active Session</label>
+                    <select id="attendance-session-select" class="crm-input">
+                      <option value="">Select a session...</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
+                  <button id="btn-create-attendance-session" class="crm-btn-secondary" type="button">Create Session</button>
+                  <button id="btn-save-attendance-records" class="crm-btn-primary" type="button">Save Attendance</button>
+                </div>
+              </section>
+            </div>
+            <div id="attendance-roster-container" class="crm-table-host" style="margin-top: 20px;">
+              <div class="crm-muted">No attendance roster yet.</div>
             </div>
           </div>
 
@@ -805,6 +862,8 @@
   <script src="js/crm/classrooms.js"></script>
   <script src="js/crm/leads.js"></script>
   <script src="js/crm/activities.js"></script>
+  <script src="js/crm/enrollments.js"></script>
+  <script src="js/crm/attendance.js"></script>
   <script src="js/crm/index.js"></script>
   <script src="crm-admin.js"></script>
 </body>

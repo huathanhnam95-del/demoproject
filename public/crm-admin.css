@@ -1058,6 +1058,27 @@ body {
   align-items: flex-start;
 }
 
+.crm-attendance-select {
+  min-width: 110px;
+}
+
+.crm-risk-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+  background: #dcfce7;
+  color: #166534;
+}
+
+.crm-risk-badge.risk {
+  background: #fef3c7;
+  color: #b45309;
+}
+
 .crm-toast {
   position: fixed;
   right: 20px;

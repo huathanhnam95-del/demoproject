@@ -43,7 +43,8 @@
   const dataCache = {
     leads: [],
     students: [],
-    openTasks: []
+    openTasks: [],
+    attendanceRiskByStudentId: new Map()
   };
   const modalState = {
     studentId: null,
@@ -204,6 +205,15 @@
     elements.classManagementGrid = document.getElementById('class-management-grid');
     elements.classroomStatusBadge = document.getElementById('crm-classroom-status-badge');
     elements.classroomTitle = document.getElementById('crm-classroom-title');
+    elements.inputAttendanceStudentSelect = document.getElementById('attendance-student-select');
+    elements.btnEnrollStudent = document.getElementById('btn-enroll-student');
+    elements.attendanceEnrollmentMeta = document.getElementById('attendance-enrollment-meta');
+    elements.inputAttendanceSessionDate = document.getElementById('attendance-session-date');
+    elements.inputAttendanceSessionTitle = document.getElementById('attendance-session-title');
+    elements.inputAttendanceSessionSelect = document.getElementById('attendance-session-select');
+    elements.btnCreateAttendanceSession = document.getElementById('btn-create-attendance-session');
+    elements.btnSaveAttendanceRecords = document.getElementById('btn-save-attendance-records');
+    elements.attendanceRosterContainer = document.getElementById('attendance-roster-container');
 
     // Classroom Modules & Classwork
     elements.btnAddModule = document.getElementById('btn-add-module');
@@ -279,6 +289,11 @@
     refreshOpenTaskSnapshot().catch((e) => {
       console.error('[CRM Admin] Failed to load task reminders:', e);
       showToast(e?.message || 'Failed to load task reminders.', 'error');
+    });
+
+    refreshAttendanceRiskSnapshot().catch((e) => {
+      console.error('[CRM Admin] Failed to load attendance risk snapshot:', e);
+      showToast(e?.message || 'Failed to load attendance summaries.', 'error');
     });
   }
 
@@ -961,6 +976,15 @@
     return `<span class="crm-reminder-badge ${escapeHtml(window.CrmActivities.getBadgeTone(safeSummary))}">${escapeHtml(window.CrmActivities.getBadgeLabel(safeSummary))}</span>`;
   }
 
+  function renderRiskBadgeMarkup(studentId) {
+    const key = String(studentId || '').trim();
+    if (!key) return '';
+    const summary = dataCache.attendanceRiskByStudentId.get(key);
+    if (!summary) return '';
+    const isAtRisk = !!summary.atRisk?.isAtRisk;
+    return `<span class="crm-risk-badge ${isAtRisk ? 'risk' : ''}">${escapeHtml(isAtRisk ? 'At Risk' : 'Stable')}</span>`;
+  }
+
   async function refreshOpenTaskSnapshot() {
     dataCache.openTasks = await fetchTasks({ status: 'open', limit: 300 });
 
@@ -981,6 +1005,24 @@
 
     if (modalState.leadId) {
       await refreshLeadWorkspace();
+    }
+  }
+
+  async function refreshAttendanceRiskSnapshot() {
+    if (!window.ClassroomAPI || typeof window.ClassroomAPI.fetchAttendanceSummary !== 'function') {
+      return;
+    }
+
+    const json = await window.ClassroomAPI.fetchAttendanceSummary();
+    const rows = Array.isArray(json?.students) ? json.students : [];
+    dataCache.attendanceRiskByStudentId = new Map(
+      rows.map((row) => [String(row.studentId || '').trim(), row])
+    );
+
+    if (dataCache.students.length) {
+      const buckets = window.CrmStudents.splitStudents(dataCache.students);
+      renderStudentsTable(elements.potentialStudentsContainer, buckets.potential, 'No potential students yet.');
+      renderStudentsTable(elements.studentDataContainer, buckets.studentData, 'No students in database yet.');
     }
   }
 
@@ -1440,6 +1482,7 @@
             <div class="crm-name-cell">
               <button type="button" class="crm-student-link" data-student-id="${escapeHtml(studentId)}">${escapeHtml(displayName)}</button>
               ${renderReminderBadgeMarkup(getReminderSummary({ studentId }))}
+              ${renderRiskBadgeMarkup(studentId)}
             </div>
           </td>
           <td>${escapeHtml(label)}</td>
@@ -1631,6 +1674,7 @@
 
     renderStudentsTable(elements.potentialStudentsContainer, buckets.potential, 'No potential students yet.');
     renderStudentsTable(elements.studentDataContainer, buckets.studentData, 'No students in database yet.');
+    await populateAttendanceStudentOptions();
   }
 
   function renderLeadStageBoard(leads) {
@@ -2113,6 +2157,33 @@
         } catch (e) { showToast(e.message, 'error'); }
       });
     }
+
+    if (elements.btnEnrollStudent) {
+      elements.btnEnrollStudent.addEventListener('click', () => {
+        enrollStudentIntoClassroom().catch((e) => {
+          console.error('[CRM Admin] Enroll student failed:', e);
+          showToast(e?.message || 'Failed to enroll student.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnCreateAttendanceSession) {
+      elements.btnCreateAttendanceSession.addEventListener('click', () => {
+        createAttendanceSessionForClassroom().catch((e) => {
+          console.error('[CRM Admin] Create attendance session failed:', e);
+          showToast(e?.message || 'Failed to create attendance session.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnSaveAttendanceRecords) {
+      elements.btnSaveAttendanceRecords.addEventListener('click', () => {
+        saveAttendanceRecordsForClassroom().catch((e) => {
+          console.error('[CRM Admin] Save attendance failed:', e);
+          showToast(e?.message || 'Failed to save attendance records.', 'error');
+        });
+      });
+    }
   }
 
   function resetClassroomModal() {
@@ -2134,6 +2205,12 @@
     if (elements.modulesListContainer) elements.modulesListContainer.innerHTML = '<p class="text-muted">No modules yet.</p>';
     if (elements.classworkListContainer) elements.classworkListContainer.innerHTML = '<p class="text-muted">No classwork yet.</p>';
     if (elements.classworkComposer) elements.classworkComposer.style.display = 'none';
+    if (elements.inputAttendanceStudentSelect) elements.inputAttendanceStudentSelect.innerHTML = '<option value="">Select a student...</option>';
+    if (elements.attendanceEnrollmentMeta) elements.attendanceEnrollmentMeta.textContent = 'No enrollments yet.';
+    if (elements.inputAttendanceSessionDate) elements.inputAttendanceSessionDate.value = '';
+    if (elements.inputAttendanceSessionTitle) elements.inputAttendanceSessionTitle.value = '';
+    if (elements.inputAttendanceSessionSelect) elements.inputAttendanceSessionSelect.innerHTML = '<option value="">Select a session...</option>';
+    if (elements.attendanceRosterContainer) elements.attendanceRosterContainer.innerHTML = '<div class="crm-muted">No attendance roster yet.</div>';
   }
 
   function switchClassroomTab(tabId) {
@@ -2150,6 +2227,177 @@
     if (tabId === 'stream' && modalState.classroomId) {
       loadClassroomStream(modalState.classroomId);
     }
+    if (tabId === 'attendance' && modalState.classroomId) {
+      loadClassroomAttendance(modalState.classroomId);
+    }
+  }
+
+  async function populateAttendanceStudentOptions() {
+    if (!elements.inputAttendanceStudentSelect) return;
+    const options = dataCache.students.map((student) => {
+      const label = student.name || student.email || student.studentId || 'Student';
+      return `<option value="${escapeHtml(student.studentId || '')}">${escapeHtml(label)}</option>`;
+    }).join('');
+    elements.inputAttendanceStudentSelect.innerHTML = '<option value="">Select a student...</option>' + options;
+  }
+
+  function renderAttendanceRoster(summaryRows) {
+    if (!elements.attendanceRosterContainer) return;
+    const rows = Array.isArray(summaryRows) ? summaryRows : [];
+    const selectedSessionId = String(elements.inputAttendanceSessionSelect?.value || '').trim();
+
+    if (!rows.length) {
+      elements.attendanceRosterContainer.innerHTML = '<div class="crm-muted">No enrollments yet.</div>';
+      return;
+    }
+
+    elements.attendanceRosterContainer.innerHTML = `
+      <div class="crm-table-container">
+        <table class="crm-table">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Attendance</th>
+              <th>Risk</th>
+              <th>Status</th>
+              <th>Reason</th>
+              <th>Intervention</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map((row) => `
+              <tr class="attendance-row" data-student-id="${escapeHtml(row.studentId || '')}" data-student-uid="${escapeHtml(row.studentUid || '')}">
+                <td class="td-bold">${escapeHtml(row.studentName || 'Student')}</td>
+                <td>${escapeHtml(`${Math.round(Number(row.attendanceRate || 0) * 100)}% (${row.presentCount || 0}/${row.totalSessions || 0})`)}</td>
+                <td>${renderRiskBadgeMarkup(row.studentId)}</td>
+                <td>
+                  <select class="crm-input crm-inline-select crm-attendance-select attendance-status" ${selectedSessionId ? '' : 'disabled'}>
+                    <option value="present">Present</option>
+                    <option value="late">Late</option>
+                    <option value="absent">Absent</option>
+                  </select>
+                </td>
+                <td><input type="text" class="crm-input attendance-reason" placeholder="Reason" ${selectedSessionId ? '' : 'disabled'}></td>
+                <td style="text-align:center;"><input type="checkbox" class="attendance-intervention" ${selectedSessionId ? '' : 'disabled'}></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  async function loadClassroomAttendance(classId) {
+    if (!window.ClassroomAPI || typeof window.ClassroomAPI.fetchAttendanceSummary !== 'function') return;
+
+    await populateAttendanceStudentOptions();
+    const summary = await window.ClassroomAPI.fetchAttendanceSummary({ classId });
+    const sessions = Array.isArray(summary?.sessions) ? summary.sessions : [];
+    const students = Array.isArray(summary?.students) ? summary.students : [];
+
+    if (elements.inputAttendanceSessionSelect) {
+      const currentValue = String(elements.inputAttendanceSessionSelect.value || '').trim();
+      elements.inputAttendanceSessionSelect.innerHTML = '<option value="">Select a session...</option>' + sessions.map((session) => `
+        <option value="${escapeHtml(session.sessionId || '')}">${escapeHtml(session.title || session.sessionDate || 'Session')}</option>
+      `).join('');
+      if (currentValue) {
+        elements.inputAttendanceSessionSelect.value = currentValue;
+      }
+    }
+
+    if (elements.attendanceEnrollmentMeta) {
+      elements.attendanceEnrollmentMeta.textContent = students.length
+        ? `${students.length} active enrollment${students.length === 1 ? '' : 's'} in this classroom.`
+        : 'No enrollments yet.';
+    }
+
+    dataCache.attendanceRiskByStudentId = new Map(
+      [
+        ...Array.from(dataCache.attendanceRiskByStudentId.entries()),
+        ...students.map((row) => [String(row.studentId || '').trim(), row])
+      ]
+    );
+
+    renderAttendanceRoster(students);
+  }
+
+  async function enrollStudentIntoClassroom() {
+    if (!modalState.classroomId) throw new Error('Save classroom settings first.');
+    const studentId = String(elements.inputAttendanceStudentSelect?.value || '').trim();
+    if (!studentId) throw new Error('Select a student first.');
+    const student = dataCache.students.find((item) => String(item.studentId || '') === studentId);
+    if (!student) throw new Error('Selected student is not available.');
+
+    const payload = window.CrmEnrollments && typeof window.CrmEnrollments.buildEnrollmentPayload === 'function'
+      ? window.CrmEnrollments.buildEnrollmentPayload(elements, student)
+      : {
+          studentId,
+          studentUid: student.linked_user_ids?.[0] || null,
+          studentName: student.name || null,
+          studentEmail: student.email || null
+        };
+
+    await window.ClassroomAPI.createEnrollment({
+      ...payload,
+      classId: modalState.classroomId,
+      courseId: String(elements.inputClassroomCourseId?.value || '').trim() || null
+    });
+
+    await Promise.all([
+      loadClassroomAttendance(modalState.classroomId),
+      refreshAttendanceRiskSnapshot()
+    ]);
+    showToast('Student enrolled.', 'success');
+  }
+
+  async function createAttendanceSessionForClassroom() {
+    if (!modalState.classroomId) throw new Error('Save classroom settings first.');
+    if (!window.CrmAttendance || typeof window.CrmAttendance.buildSessionPayload !== 'function') {
+      throw new Error('Attendance helpers are not available.');
+    }
+
+    const payload = window.CrmAttendance.buildSessionPayload({
+      inputAttendanceSessionDate: elements.inputAttendanceSessionDate,
+      inputAttendanceSessionTitle: elements.inputAttendanceSessionTitle
+    });
+
+    const json = await window.ClassroomAPI.createAttendanceSession({
+      classId: modalState.classroomId,
+      ...payload
+    });
+
+    const sessionId = String(json.sessionId || json.session?.sessionId || '').trim();
+    await loadClassroomAttendance(modalState.classroomId);
+    if (sessionId && elements.inputAttendanceSessionSelect) {
+      elements.inputAttendanceSessionSelect.value = sessionId;
+    }
+    showToast('Attendance session created.', 'success');
+  }
+
+  async function saveAttendanceRecordsForClassroom() {
+    if (!modalState.classroomId) throw new Error('Save classroom settings first.');
+    const sessionId = String(elements.inputAttendanceSessionSelect?.value || '').trim();
+    if (!sessionId) throw new Error('Select an attendance session first.');
+    if (!window.CrmAttendance || typeof window.CrmAttendance.buildBulkRecordPayload !== 'function') {
+      throw new Error('Attendance helpers are not available.');
+    }
+
+    const rows = Array.from(document.querySelectorAll('#attendance-roster-container .attendance-row'));
+    const records = window.CrmAttendance.buildBulkRecordPayload(rows).map((record) => ({
+      sessionId,
+      ...record
+    }));
+
+    await window.ClassroomAPI.saveAttendanceRecords({
+      classId: modalState.classroomId,
+      records
+    });
+
+    await Promise.all([
+      loadClassroomAttendance(modalState.classroomId),
+      refreshAttendanceRiskSnapshot()
+    ]);
+    showToast('Attendance saved.', 'success');
   }
 
   async function loadClassroomStream(classId) {

@@ -198,6 +198,56 @@ window.ClassroomAPI = (function () {
         return res.json();
     }
 
+    async function createEnrollment(data) {
+        const headers = await getHeaders();
+        const res = await fetch('/api/admin/enrollments', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function createAttendanceSession(data) {
+        const headers = await getHeaders();
+        const res = await fetch('/api/admin/attendance/sessions', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function saveAttendanceRecords(data) {
+        const headers = await getHeaders();
+        const res = await fetch('/api/admin/attendance/records/bulk', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function fetchAttendanceSummary(params = {}) {
+        const headers = await getHeaders();
+        const search = new URLSearchParams();
+        Object.entries(params).forEach(([key, value]) => {
+            if (value !== null && value !== undefined && String(value).trim() !== '') {
+                search.set(key, String(value).trim());
+            }
+        });
+        const suffix = search.toString() ? `?${search.toString()}` : '';
+        const res = await fetch(`/api/admin/attendance/summary${suffix}`, {
+            method: 'GET',
+            headers
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
     // Admin: Grade submission
     async function gradeSubmission(submissionId, data) {
         const headers = await getHeaders();
@@ -223,6 +273,10 @@ window.ClassroomAPI = (function () {
         fetchMySubmissions,
         fetchSubmissions,
         fetchReviewBoard,
+        createEnrollment,
+        createAttendanceSession,
+        saveAttendanceRecords,
+        fetchAttendanceSummary,
         gradeSubmission
     };
 })();

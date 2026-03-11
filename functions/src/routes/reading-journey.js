@@ -89,6 +89,37 @@ router.post('/suggest-keywords', maybeAiLimiter, async (req, res) => {
     }
 });
 
+/**
+ * Normalize the raw Gemini beat response to match what the frontend expects.
+ * Frontend reads: beat.content, beat.choices, beat.choiceQuestion, beat.highlights,
+ *                 beat.shouldEnd, beat.questionType, beat.productionPrompt
+ * Gemini returns: segment (not content), choiceQuestion.options (not choices at top level)
+ */
+function normalizeBeat(raw) {
+    if (!raw || typeof raw !== 'object') return raw;
+    const beat = { ...raw };
+    // Map segment -> content (frontend reads beat.content)
+    if (beat.segment && !beat.content) {
+        beat.content = beat.segment;
+    }
+    // Map text/paragraph/body -> content as fallback
+    if (!beat.content) {
+        beat.content = beat.text || beat.paragraph || beat.body || beat.story || '';
+    }
+    // Ensure choices array exists at top level for MCQ beats
+    if (!Array.isArray(beat.choices) && beat.choiceQuestion?.options) {
+        beat.choices = beat.choiceQuestion.options.map(opt => ({
+            id: opt.id || opt.choice_id || '',
+            text: opt.label || opt.text || ''
+        }));
+    }
+    // Normalize highlights to array of strings
+    if (!Array.isArray(beat.highlights)) {
+        beat.highlights = [];
+    }
+    return beat;
+}
+
 router.post('/setup', maybeAiLimiter, async (req, res) => {
     try {
         const level = gemini.normalizeLevel(req.body?.level);
@@ -103,6 +134,7 @@ router.post('/setup', maybeAiLimiter, async (req, res) => {
         await setCachedValue({ collection: COLLECTION_OUTLINES, id: outlineKey.id, key: outlineKey.key, value: outline, ttlMs });
         const beatKey = computeBeatCacheKey({ outlineId: outlineKey.id, beatNumber: 1, path: [] });
         let beat = await gemini.generateBeat({ outline, beatNumber: 1, path: [], questionType: 'mcq', storySoFar: '', level, language });
+        beat = normalizeBeat(beat);
         await setCachedValue({ collection: COLLECTION_BEATS, id: beatKey.id, key: beatKey.key, value: beat, ttlMs });
         return sendSuccess(res, { setup: { outlineId: outlineKey.id, title: outline.title, level, topicTags: outlineKey.normalizedTopicTags, characters: outline.characters, beatOutline: outline.beatOutline }, beat: { beatNumber: 1, path: [], ...beat } });
     } catch (e) {
@@ -124,6 +156,7 @@ router.post('/advance', maybeAiLimiter, async (req, res) => {
         const nextPath = [...path, choiceId.toLowerCase()];
         const beatKey = computeBeatCacheKey({ outlineId, beatNumber: nextBeatNumber, path: nextPath });
         let beat = await gemini.generateBeat({ outline, beatNumber: nextBeatNumber, path: nextPath, questionType: nextBeatNumber <= MAX_INTERACTIVE_BEATS ? 'mcq' : 'end', storySoFar: '', level, language });
+        beat = normalizeBeat(beat);
         await setCachedValue({ collection: COLLECTION_BEATS, id: beatKey.id, key: beatKey.key, value: beat, ttlMs: resolveTtlMs() });
         return sendSuccess(res, { beat: { beatNumber: nextBeatNumber, path: nextPath, ...beat } });
     } catch (e) {

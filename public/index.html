@@ -21,6 +21,7 @@
   <link rel="stylesheet" href="pronunciation-analyzer/style.css">
   <link rel="stylesheet" href="pronunciation-analyzer/syllable-verifier.css">
   <link rel="stylesheet" href="style-scaffolding.css?v=20260123_mode_fix">
+  <link rel="stylesheet" href="style-practice-compact.css?v=20260311_compact_v1">
   <!-- Scripts moved to end of body for performance -->
   <script>
     const IS_PROD = !['localhost', '127.0.0.1'].includes(location.hostname);
@@ -1564,24 +1565,6 @@
             </div>
           </div>
 
-          <!-- Navigation Row: Back + Dropdown + Next -->
-          <div class="question-nav-row">
-            <button id="back-btn-type" class="nav-btn nav-btn-back" type="button" title="Previous Question">
-              ← Back
-            </button>
-            <select id="question-select-type" class="question-select question-select-narrow">
-              <option value="1">Loading...</option>
-            </select>
-            <button id="next-btn-type" class="nav-btn nav-btn-next" type="button" title="Next Question">
-              Next →
-            </button>
-          </div>
-          <div id="recommendation-controls-type" class="recommendation-controls" style="display: none;">
-            <button id="recommended-btn-type" class="recommended-jump-btn" type="button" disabled>
-              <span class="sparkle-icon">✨</span> Smart Jump
-            </button>
-            <span id="recommendation-summary-type" class="recommendation-summary is-hidden"></span>
-          </div>
 
           <!-- Adaptive vs Manual Toggle -->
           <div class="adaptive-toggle-container">
@@ -1688,11 +1671,25 @@
             </div>
           </div>
         </div>
-        <div class="question-total">
-          <span>Total number of questions: <span id="total-questions-type">1</span></span>
-        </div>
+
+        <!-- PLAYER BAR: Navigation + Playback + Info (Glassmorphism Island) -->
         <div class="unified-controls">
           <div class="control-toolbar">
+
+            <!-- Navigation Island (moved from control panel per mockup) -->
+            <div class="question-nav-row">
+              <button id="back-btn-type" class="nav-btn nav-btn-back" type="button" title="Previous Question">
+                ← Back
+              </button>
+              <select id="question-select-type" class="question-select question-select-narrow">
+                <option value="1">Loading...</option>
+              </select>
+              <button id="next-btn-type" class="nav-btn nav-btn-next" type="button" title="Next Question">
+                Next →
+              </button>
+            </div>
+
+            <!-- Play Controls -->
             <div class="function-group">
               <button id="play-btn" class="modern-btn modern-btn--play" type="button">Play</button>
               <button id="check-btn" class="modern-btn modern-btn--check" type="button"
@@ -1701,6 +1698,7 @@
                 style="display: none;">Retry</button>
             </div>
 
+            <!-- Utility Pills -->
             <div class="utility-group">
               <div class="audio-tools">
                 <button id="speed-toggle-btn" class="tool-btn" title="Playback Speed">1.0x</button>
@@ -1735,7 +1733,19 @@
                 </div>
               </div>
             </div>
+
+            <!-- Total Count -->
+            <span class="question-total"><span id="total-questions-type">1</span> total questions</span>
           </div>
+
+          <!-- Smart Jump (inside player bar area) -->
+          <div id="recommendation-controls-type" class="recommendation-controls" style="display: none;">
+            <button id="recommended-btn-type" class="recommended-jump-btn" type="button" disabled>
+              <span class="sparkle-icon">✨</span> Smart Jump
+            </button>
+            <span id="recommendation-summary-type" class="recommendation-summary is-hidden"></span>
+          </div>
+
           <div id="auto-hints-type" class="auto-hints-type-drawer" style="display: none;"></div>
         </div>
         <div id="score" class="score">Points: 0</div>
@@ -2554,7 +2564,7 @@
   <script type="module" src="js/question-recommendation-engine.js"></script>
   <script src="js/lazy-loader.js"></script>
   <script type="module" src="js/collo-dictate-mode.js"></script>
-  <script type="module" src="js/reading-journey.js?v=20260310_pagination_v1"></script>
+  <script type="module" src="js/reading-journey.js?v=20260311_gemini_fix_v1"></script>
   <script type="module" src="script.js"></script>
   <!-- Points Toast Notification Container -->
   <div id="points-toast-container" class="points-toast-container"></div>

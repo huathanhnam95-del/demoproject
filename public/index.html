@@ -1541,31 +1541,27 @@
       </div>
 
       <div id="mode-type" class="mode-panel" style="display: none;">
-        <div class="question-selector">
-          <div class="question-id-display">
-            <label for="question-select-type">Question ID:</label>
-            <span id="current-question-id-type" class="current-question-id">1</span>
+        <!-- [MINIMAL-UI] 1. Branded Workspace Header -->
+        <div class="question-selector minimal-header">
+          <div class="breadcrumb-mini">
+            <span class="breadcrumb-parent">Standard</span>
+            <span class="breadcrumb-separator">/</span>
+            <span class="breadcrumb-current">Type Mode</span>
           </div>
-
-          <!-- Progress Bar UI (logged-in users only) -->
-          <div id="progress-bar-type" class="progress-bar-container" style="display: none;">
-            <div class="progress-bar-track">
-              <div id="progress-bar-fill-type" class="progress-bar-fill" style="width: 0%;"></div>
+          <div class="header-right">
+            <div class="question-id-display">
+              <span id="current-question-id-type" class="current-question-id">1</span>
+              <span class="total-questions-slash">/</span>
+              <span id="total-questions-type" class="brand-text-muted">1</span>
             </div>
-            <div class="progress-bar-labels">
-              <span class="progress-label" data-step="0">0%</span>
-              <span class="progress-label" data-step="1">33%</span>
-              <span class="progress-label" data-step="2">66%</span>
-              <span id="progress-target-type" class="progress-label progress-target" data-step="3">Completed</span>
-            </div>
-            <div class="progress-tier-info">
-              <span id="progress-tier-type" class="progress-tier-badge tier-none">Not Started</span>
-              <button id="reset-progress-type-btn" class="reset-progress-btn" style="display: none;">Reset
-                Progress</button>
-            </div>
+            <button id="question-list-btn-type" class="question-list-trigger" title="View all questions">
+              <span class="list-icon">☰</span> Questions
+            </button>
           </div>
+        </div>
 
-
+        <!-- [MINIMAL-UI] 2. Pill-based Toolbars -->
+        <div class="toolbars-row">
           <!-- Adaptive vs Manual Toggle -->
           <div class="adaptive-toggle-container">
             <div class="segmented-control mode-picker-toggle">
@@ -1575,185 +1571,87 @@
               <label for="manual-type">⚙️ Manual</label>
             </div>
             <div id="calibration-indicator-type" class="calibration-indicator" style="display: none;">
-              <span>Calibrating your level...</span>
+              <span>Calibrating...</span>
             </div>
           </div>
 
-          <!-- Filters Row: Status + Length side by side -->
-          <div class="question-filters-row">
+          <!-- Status Filter Pills -->
+          <div class="pill-filters">
             <div class="status-filter-dropdown" id="status-filter-container-type">
               <button id="status-filter-btn-type" class="status-filter-btn" type="button">
-                <span id="status-filter-label-type">Filter by Status</span>
+                <span id="status-filter-label-type">Filter</span>
                 <span class="filter-arrow">▼</span>
               </button>
               <div id="status-filter-menu-type" class="status-filter-menu" style="display: none;">
                 <div class="filter-option selected" data-value="not-started" data-filter-id="filter-not-started-type">
-                  <span class="filter-option-icon">○</span>
-                  <span class="filter-option-text">Not Started</span>
+                  <span class="filter-option-icon">○</span> <span class="filter-option-text">Not Started</span>
                 </div>
                 <div class="filter-option selected" data-value="in-progress" data-filter-id="filter-in-progress-type">
-                  <span class="filter-option-icon">◐</span>
-                  <span class="filter-option-text">In Progress</span>
+                  <span class="filter-option-icon">◐</span> <span class="filter-option-text">In Progress</span>
                 </div>
                 <div class="filter-option selected" data-value="completed" data-filter-id="filter-completed-type">
-                  <span class="filter-option-icon">✓</span>
-                  <span class="filter-option-text">Completed</span>
-                </div>
-                <div class="filter-option selected" data-value="consolidated" data-filter-id="filter-consolidated-type">
-                  <span class="filter-option-icon">✓✓</span>
-                  <span class="filter-option-text">Consolidated</span>
-                </div>
-                <div class="filter-option selected" data-value="mastered" data-filter-id="filter-mastered-type">
-                  <span class="filter-option-icon">★</span>
-                  <span class="filter-option-text">Mastered</span>
+                  <span class="filter-option-icon">✓</span> <span class="filter-option-text">Completed</span>
                 </div>
               </div>
             </div>
 
-            <!-- Unlockable Sentence Length Filter -->
+            <!-- Optional Length Filter -->
             <div id="length-filter-container-type" class="length-filter-dropdown" style="display: none;">
               <button id="length-filter-btn-type" class="length-filter-btn" type="button">
-                <span id="length-filter-label-type">Filter by Length</span>
+                <span id="length-filter-label-type">Length</span>
                 <span class="filter-arrow">▼</span>
               </button>
-              <div id="length-filter-menu-type" class="length-filter-menu" style="display: none;">
-                <div class="filter-option selected" data-value="all">
-                  <span class="filter-option-icon">📏</span>
-                  <span class="filter-option-text">All Lengths</span>
-                </div>
-                <div class="filter-option" data-value="5-8">
-                  <span class="filter-option-icon">📝</span>
-                  <span class="filter-option-text">5-8 words <span class="length-tag short">Short</span></span>
-                </div>
-                <div class="filter-option" data-value="9">
-                  <span class="filter-option-icon">📝</span>
-                  <span class="filter-option-text">9 words</span>
-                </div>
-                <div class="filter-option" data-value="10">
-                  <span class="filter-option-icon">📝</span>
-                  <span class="filter-option-text">10 words</span>
-                </div>
-                <div class="filter-option" data-value="11">
-                  <span class="filter-option-icon">📝</span>
-                  <span class="filter-option-text">11 words</span>
-                </div>
-                <div class="filter-option" data-value="12-15">
-                  <span class="filter-option-icon">📝</span>
-                  <span class="filter-option-text">12-15 words <span class="length-tag long">Long</span></span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Unlockable Difficulty Filter (Type mode) -->
-            <div id="difficulty-filter-container-type" class="difficulty-filter-dropdown" style="display: none;">
-              <button id="difficulty-filter-btn-type" class="difficulty-filter-btn" type="button">
-                <span id="difficulty-filter-label-type">Filter by Difficulty</span>
-                <span class="filter-arrow">▼</span>
-              </button>
-              <div id="difficulty-filter-menu-type" class="difficulty-filter-menu" style="display: none;">
-                <div class="filter-option selected" data-value="all">
-                  <span class="filter-option-icon">🎚️</span>
-                  <span class="filter-option-text">All Levels</span>
-                </div>
-                <div class="filter-option" data-value="1">
-                  <span class="filter-option-icon">🥉</span>
-                  <span class="filter-option-text">Level 1 <span class="difficulty-tag easy">Easy</span></span>
-                </div>
-                <div class="filter-option" data-value="2">
-                  <span class="filter-option-icon">🥈</span>
-                  <span class="filter-option-text">Level 2 <span class="difficulty-tag medium">Medium</span></span>
-                </div>
-                <div class="filter-option" data-value="3">
-                  <span class="filter-option-icon">🥇</span>
-                  <span class="filter-option-text">Level 3 <span class="difficulty-tag hard">Hard</span></span>
-                </div>
-              </div>
             </div>
           </div>
         </div>
 
-        <!-- PLAYER BAR: Navigation + Playback + Info (Glassmorphism Island) -->
-        <div class="unified-controls">
+        <!-- [MINIMAL-UI] 3. Unified Interaction Area -->
+        <div class="unified-controls interaction-card">
           <div class="control-toolbar">
-
-            <!-- Navigation Island (moved from control panel per mockup) -->
-            <div class="question-nav-row">
-              <button id="back-btn-type" class="nav-btn nav-btn-back" type="button" title="Previous Question">
-                ← Back
-              </button>
-              <select id="question-select-type" class="question-select question-select-narrow">
-                <option value="1">Loading...</option>
-              </select>
-              <button id="next-btn-type" class="nav-btn nav-btn-next" type="button" title="Next Question">
-                Next →
-              </button>
-            </div>
-
-            <!-- Play Controls -->
-            <div class="function-group">
-              <button id="play-btn" class="modern-btn modern-btn--play" type="button">Play</button>
-              <button id="check-btn" class="modern-btn modern-btn--check" type="button"
-                style="display: none;">Check</button>
-              <button id="retry-btn" class="modern-btn modern-btn--retry" type="button"
-                style="display: none;">Retry</button>
-            </div>
-
-            <!-- Utility Pills -->
-            <div class="utility-group">
-              <div class="audio-tools">
-                <button id="speed-toggle-btn" class="tool-btn" title="Playback Speed">1.0x</button>
-                <button id="loop-btn" class="tool-btn" title="Loop Audio">🔁</button>
-                <button id="chunking-btn" class="tool-btn" title="Segment Audio (Cost: 4c)"
-                  style="display: none;">➗</button>
-              </div>
-              <span id="replay-counter-type" class="badge-status badge-replay"
-                title="Audio replays remaining for this question"></span>
+            <!-- Play Button Branded -->
+            <div class="playback-zone">
+              <button id="play-btn" class="modern-btn modern-btn--play" type="button">Play Audio</button>
+              
               <div id="hint-controls" class="hint-controls">
                 <button id="hint-btn" class="hint-badge-btn" title="Get a hint">
                   <span class="hint-icon">💡</span> Hint
                   <span id="hint-cost-badge" class="hint-cost"></span>
                 </button>
-                <!-- RPG Action Popover -->
                 <div id="action-popover-menu" class="action-popover-menu" style="display: none;">
-                  <button id="skill-word-ghost" class="popover-item" title="Impact: -0.15x Calibration">
-                    <span class="popover-icon">👻</span>
-                    <span class="popover-label">Word Ghost</span>
-                    <span class="popover-cost">15c</span>
-                  </button>
-                  <button id="skill-first-letter" class="popover-item" title="Impact: -0.35x Calibration">
-                    <span class="popover-icon">👁️</span>
-                    <span class="popover-label">First-Letter Peek</span>
-                    <span class="popover-cost">25c</span>
-                  </button>
-                  <button id="skill-transcript-glimpse" class="popover-item" title="Impact: -0.60x Calibration">
-                    <span class="popover-icon">📜</span>
-                    <span class="popover-label">Flash Transcript</span>
-                    <span class="popover-cost">8c</span>
-                  </button>
+                  <!-- Skills popover items -->
                 </div>
               </div>
             </div>
 
-            <!-- Total Count -->
-            <span class="question-total"><span id="total-questions-type">1</span> total questions</span>
-          </div>
+            <!-- Interaction Textarea -->
+            <div class="textarea-zone">
+              <textarea id="answer-input" rows="4" placeholder="Type what you hear..." disabled></textarea>
+              <div class="feedback-under-input">
+                <button id="check-btn" class="modern-btn modern-btn--check" type="button" style="display: none;">Check Answer</button>
+                <button id="retry-btn" class="modern-btn modern-btn--retry" type="button" style="display: none;">Retry</button>
+              </div>
+            </div>
 
-          <!-- Smart Jump (inside player bar area) -->
+            <!-- Secondary Utility Pills -->
+            <div class="utility-group-minimal">
+              <div class="audio-tools">
+                <button id="speed-toggle-btn" class="tool-btn" title="Speed">1.0x</button>
+                <button id="loop-btn" class="tool-btn" title="Loop">🔁</button>
+              </div>
+              <span id="replay-counter-type" class="replay-pill" title="Replays remaining"></span>
+              <div id="score" class="score-pill">0 Points</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- [MINIMAL-UI] 4. Branded Navigation Island -->
+        <div class="question-nav-row branded-nav-island">
+          <button id="back-btn-type" class="nav-btn nav-btn-back" type="button">← Prev</button>
+          
           <div id="recommendation-controls-type" class="recommendation-controls" style="display: none;">
             <button id="recommended-btn-type" class="recommended-jump-btn" type="button" disabled>
               <span class="sparkle-icon">✨</span> Smart Jump
             </button>
-            <span id="recommendation-summary-type" class="recommendation-summary is-hidden"></span>
-          </div>
-
-          <div id="auto-hints-type" class="auto-hints-type-drawer" style="display: none;"></div>
-        </div>
-        <div id="score" class="score">Points: 0</div>
-
-
-
-        <label class="input-label" for="answer-input">Type what you hear:</label>
-        <textarea id="answer-input" rows="4" placeholder="Start typing..." disabled></textarea>
 
         <!-- Hint System Controls -->
 
@@ -1812,50 +1710,27 @@
       </div>
 
       <div id="mode-speak" class="mode-panel" style="display: none;">
-        <div class="question-selector">
-          <div class="question-id-display">
-            <label for="question-select-speak">Question ID:</label>
-            <span id="current-question-id-speak" class="current-question-id">1</span>
+        <!-- [MINIMAL-UI] 1. Branded Workspace Header -->
+        <div class="question-selector minimal-header">
+          <div class="breadcrumb-mini">
+            <span class="breadcrumb-parent">Standard</span>
+            <span class="breadcrumb-separator">/</span>
+            <span class="breadcrumb-current">Speak Mode</span>
           </div>
-
-          <!-- Progress Bar UI (logged-in users only) -->
-          <div id="progress-bar-speak" class="progress-bar-container" style="display: none;">
-            <div class="progress-bar-track">
-              <div id="progress-bar-fill-speak" class="progress-bar-fill" style="width: 0%;"></div>
+          <div class="header-right">
+            <div class="question-id-display">
+              <span id="current-question-id-speak" class="current-question-id">1</span>
+              <span class="total-questions-slash">/</span>
+              <span id="total-questions-speak" class="brand-text-muted">1</span>
             </div>
-            <div class="progress-bar-labels">
-              <span class="progress-label" data-step="0">0%</span>
-              <span class="progress-label" data-step="1">33%</span>
-              <span class="progress-label" data-step="2">66%</span>
-              <span id="progress-target-speak" class="progress-label progress-target" data-step="3">Completed</span>
-            </div>
-            <div class="progress-tier-info">
-              <span id="progress-tier-speak" class="progress-tier-badge tier-none">Not Started</span>
-              <button id="reset-progress-speak-btn" class="reset-progress-btn" style="display: none;">Reset
-                Progress</button>
-            </div>
-          </div>
-
-          <!-- Navigation Row: Back + Dropdown + Next -->
-          <div class="question-nav-row">
-            <button id="back-btn-speak" class="nav-btn nav-btn-back" type="button" title="Previous Question">
-              ← Back
-            </button>
-            <select id="question-select-speak" class="question-select question-select-narrow">
-              <option value="1">Loading...</option>
-            </select>
-            <button id="next-btn-speak" class="nav-btn nav-btn-next" type="button" title="Next Question">
-              Next →
+            <button id="question-list-btn-speak" class="question-list-trigger" title="View all questions">
+              <span class="list-icon">☰</span> Questions
             </button>
           </div>
-          <div id="recommendation-controls-speak" class="recommendation-controls" style="display: none;">
-            <button id="recommended-btn-speak" class="recommended-jump-btn" type="button" disabled>
-              <span class="sparkle-icon">✨</span> Smart Jump
-            </button>
-            <span id="recommendation-summary-speak" class="recommendation-summary is-hidden"></span>
-          </div>
+        </div>
 
-          <!-- Adaptive vs Manual Toggle -->
+        <!-- [MINIMAL-UI] 2. Pill-based Toolbars -->
+        <div class="toolbars-row">
           <div class="adaptive-toggle-container">
             <div class="segmented-control mode-picker-toggle">
               <input type="radio" name="mode-toggle-speak" id="adaptive-speak" value="adaptive" checked>
@@ -1864,161 +1739,111 @@
               <label for="manual-speak">⚙️ Manual</label>
             </div>
             <div id="calibration-indicator-speak" class="calibration-indicator" style="display: none;">
-              <span>Calibrating your level...</span>
+              <span>Calibrating...</span>
             </div>
           </div>
 
-          <!-- Filters Row: Status + Length side by side -->
-          <div class="question-filters-row">
+          <div class="pill-filters">
             <div class="status-filter-dropdown" id="status-filter-container-speak">
               <button id="status-filter-btn-speak" class="status-filter-btn" type="button">
-                <span id="status-filter-label-speak">Filter by Status</span>
+                <span id="status-filter-label-speak">Filter</span>
                 <span class="filter-arrow">▼</span>
               </button>
               <div id="status-filter-menu-speak" class="status-filter-menu" style="display: none;">
                 <div class="filter-option selected" data-value="not-started" data-filter-id="filter-not-started-speak">
-                  <span class="filter-option-icon">○</span>
-                  <span class="filter-option-text">Not Started</span>
+                  <span class="filter-option-icon">○</span> <span class="filter-option-text">Not Started</span>
                 </div>
                 <div class="filter-option selected" data-value="in-progress" data-filter-id="filter-in-progress-speak">
-                  <span class="filter-option-icon">◐</span>
-                  <span class="filter-option-text">In Progress</span>
+                  <span class="filter-option-icon">◐</span> <span class="filter-option-text">In Progress</span>
                 </div>
                 <div class="filter-option selected" data-value="completed" data-filter-id="filter-completed-speak">
-                  <span class="filter-option-icon">✓</span>
-                  <span class="filter-option-text">Completed</span>
-                </div>
-                <div class="filter-option selected" data-value="consolidated"
-                  data-filter-id="filter-consolidated-speak">
-                  <span class="filter-option-icon">✓✓</span>
-                  <span class="filter-option-text">Consolidated</span>
-                </div>
-                <div class="filter-option selected" data-value="mastered" data-filter-id="filter-mastered-speak">
-                  <span class="filter-option-icon">★</span>
-                  <span class="filter-option-text">Mastered</span>
+                  <span class="filter-option-icon">✓</span> <span class="filter-option-text">Completed</span>
                 </div>
               </div>
             </div>
 
-            <!-- Unlockable Sentence Length Filter (Speak mode) -->
             <div id="length-filter-container-speak" class="length-filter-dropdown" style="display: none;">
               <button id="length-filter-btn-speak" class="length-filter-btn" type="button">
-                <span id="length-filter-label-speak">Filter by Length</span>
+                <span id="length-filter-label-speak">Length</span>
                 <span class="filter-arrow">▼</span>
               </button>
-              <div id="length-filter-menu-speak" class="length-filter-menu" style="display: none;">
-                <div class="filter-option selected" data-value="all">
-                  <span class="filter-option-icon">📏</span>
-                  <span class="filter-option-text">All Lengths</span>
-                </div>
-                <div class="filter-option" data-value="4-7">
-                  <span class="filter-option-icon">📝</span>
-                  <span class="filter-option-text">4-7 words <span class="length-tag short">Short</span></span>
-                </div>
-                <div class="filter-option" data-value="8-9">
-                  <span class="filter-option-icon">📝</span>
-                  <span class="filter-option-text">8-9 words</span>
-                </div>
-                <div class="filter-option" data-value="10-11">
-                  <span class="filter-option-icon">📝</span>
-                  <span class="filter-option-text">10-11 words</span>
-                </div>
-                <div class="filter-option" data-value="12-13">
-                  <span class="filter-option-icon">📝</span>
-                  <span class="filter-option-text">12-13 words <span class="length-tag long">Long</span></span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Unlockable Difficulty Filter (Speak mode) -->
-            <div id="difficulty-filter-container-speak" class="difficulty-filter-dropdown" style="display: none;">
-              <button id="difficulty-filter-btn-speak" class="difficulty-filter-btn" type="button">
-                <span id="difficulty-filter-label-speak">Filter by Difficulty</span>
-                <span class="filter-arrow">▼</span>
-              </button>
-              <div id="difficulty-filter-menu-speak" class="difficulty-filter-menu" style="display: none;">
-                <div class="filter-option selected" data-value="all">
-                  <span class="filter-option-icon">🎚️</span>
-                  <span class="filter-option-text">All Levels</span>
-                </div>
-                <div class="filter-option" data-value="1">
-                  <span class="filter-option-icon">🥉</span>
-                  <span class="filter-option-text">Level 1 <span class="difficulty-tag easy">Easy</span></span>
-                </div>
-                <div class="filter-option" data-value="2">
-                  <span class="filter-option-icon">🥈</span>
-                  <span class="filter-option-text">Level 2 <span class="difficulty-tag medium">Medium</span></span>
-                </div>
-                <div class="filter-option" data-value="3">
-                  <span class="filter-option-icon">🥇</span>
-                  <span class="filter-option-text">Level 3 <span class="difficulty-tag hard">Hard</span></span>
-                </div>
-              </div>
             </div>
           </div>
         </div>
-        <div class="question-total">
-          <span>Total number of questions: <span id="total-questions-speak">1</span></span>
-        </div>
-        <div class="unified-controls">
+
+        <!-- [MINIMAL-UI] 3. Unified Interaction Area (Recording focused) -->
+        <div class="unified-controls interaction-card interaction-card--recording">
           <div class="control-toolbar">
-            <div class="function-group">
-              <button id="play-btn-speak" class="modern-btn modern-btn--play" type="button">Play</button>
-              <button id="record-btn" class="modern-btn modern-btn--record" type="button">Start Recording</button>
-              <button id="check-btn-speak" class="modern-btn modern-btn--check" type="button"
-                style="display: none;">Check</button>
-              <button id="retry-btn-speak" class="modern-btn modern-btn--retry" type="button"
-                style="display: none;">Retry</button>
+            <div class="playback-zone">
+              <button id="play-btn-speak" class="modern-btn modern-btn--play" type="button">Play Sample</button>
+              
+              <div id="pron-rune-display" class="pron-rune-display" style="display: none;">
+                <span class="pron-rune-label">🔮 IPA:</span>
+                <span id="pron-rune-text" class="pron-rune-text"></span>
+              </div>
             </div>
 
-            <div class="utility-group">
-              <button id="shadow-mode-btn" class="tool-btn" title="Shadow Mode (Cost: 5c)"
-                style="display: none;">🎙️</button>
-              <span id="replay-counter-speak" class="badge-status badge-replay"
-                title="Audio replays remaining for this question"></span>
+            <div class="recording-zone">
+              <div id="transcription-display" class="transcription-display-minimal">
+                <div id="transcription-text" class="transcription-text">Ready to record...</div>
+                <div id="recording-status" class="recording-status"></div>
+              </div>
+              
+              <div class="feedback-under-input">
+                <button id="record-btn" class="modern-btn modern-btn--record" type="button">Start Recording</button>
+                <button id="check-btn-speak" class="modern-btn modern-btn--check" type="button" style="display: none;">Check Accuracy</button>
+                <button id="retry-btn-speak" class="modern-btn modern-btn--retry" type="button" style="display: none;">Retry</button>
+              </div>
+            </div>
+
+            <div class="utility-group-minimal">
+              <button id="shadow-mode-btn" class="tool-btn" title="Shadow Mode">🎙️</button>
+              <span id="replay-counter-speak" class="replay-pill" title="Replays remaining"></span>
+              <div id="score-speak" class="score-pill">0 Points</div>
             </div>
           </div>
         </div>
-        <div id="score-speak" class="score">Points: 0</div>
 
+        <!-- [MINIMAL-UI] 4. Branded Navigation Island -->
+        <div class="question-nav-row branded-nav-island">
+          <button id="back-btn-speak" class="nav-btn nav-btn-back" type="button">← Prev</button>
+          
+          <div id="recommendation-controls-speak" class="recommendation-controls" style="display: none;">
+            <button id="recommended-btn-speak" class="recommended-jump-btn" type="button" disabled>
+              <span class="sparkle-icon">✨</span> Smart Jump
+            </button>
+          </div>
 
+          <select id="question-select-speak" class="question-select-minimal">
+            <option value="1">Question 1</option>
+          </select>
 
-        <div id="pron-rune-display" class="pron-rune-display" style="display: none;">
-          <span class="pron-rune-label">🔮 IPA Guide:</span>
-          <span id="pron-rune-text" class="pron-rune-text"></span>
-        </div>
-        <span class="input-label">Speak what you hear:</span>
-        <div id="transcription-display" class="transcription-display">
-          <div id="transcription-text" class="transcription-text">Click "Start Recording" and speak...</div>
-          <div id="recording-status" class="recording-status"></div>
+          <button id="next-btn-speak" class="nav-btn nav-btn-next" type="button">Next →</button>
         </div>
       </div>
 
       <div id="mode-extended" class="mode-panel" style="display: none;">
-        <div class="question-selector">
-          <div class="question-id-display">
-            <label for="question-select-extended">Question ID:</label>
-            <span id="current-question-id-extended" class="current-question-id">1</span>
+        <!-- [MINIMAL-UI] 1. Branded Workspace Header -->
+        <div class="question-selector minimal-header">
+          <div class="breadcrumb-mini">
+            <span class="breadcrumb-parent">Standard</span>
+            <span class="breadcrumb-separator">/</span>
+            <span class="breadcrumb-current">Extended Mode</span>
           </div>
-          <!-- Navigation Row: Back + Dropdown + Next -->
-          <div class="question-nav-row">
-            <button id="back-btn-extended" class="nav-btn nav-btn-back" type="button" title="Previous Question">
-              ← Back
-            </button>
-            <select id="question-select-extended" class="question-select question-select-narrow">
-              <option value="1">Loading...</option>
-            </select>
-            <button id="next-btn-extended" class="nav-btn nav-btn-next" type="button" title="Next Question">
-              Next →
+          <div class="header-right">
+            <div class="question-id-display">
+              <span id="current-question-id-extended" class="current-question-id">1</span>
+              <span class="total-questions-slash">/</span>
+              <span id="total-questions-extended" class="brand-text-muted">1</span>
+            </div>
+            <button id="question-list-btn-extended" class="question-list-trigger" title="View all questions">
+              <span class="list-icon">☰</span> Questions
             </button>
           </div>
-          <div id="recommendation-controls-extended" class="recommendation-controls" style="display: none;">
-            <button id="recommended-btn-extended" class="recommended-jump-btn" type="button" disabled>
-              <span class="sparkle-icon">✨</span> Smart Jump
-            </button>
-            <span id="recommendation-summary-extended" class="recommendation-summary is-hidden"></span>
-          </div>
-          <!-- Adaptive vs Manual Toggle -->
+        </div>
+
+        <!-- [MINIMAL-UI] 2. Pill-based Toolbars -->
+        <div class="toolbars-row">
           <div class="adaptive-toggle-container">
             <div class="segmented-control mode-picker-toggle">
               <input type="radio" name="mode-toggle-extended" id="adaptive-extended" value="adaptive" checked>
@@ -2027,14 +1852,14 @@
               <label for="manual-extended">⚙️ Manual</label>
             </div>
             <div id="calibration-indicator-extended" class="calibration-indicator" style="display: none;">
-              <span>Calibrating your level...</span>
+              <span>Calibrating...</span>
             </div>
           </div>
 
-          <div class="question-filters-row">
+          <div class="pill-filters">
             <div id="difficulty-filter-container-extended" class="difficulty-filter-dropdown" style="display: none;">
               <button id="difficulty-filter-btn-extended" class="difficulty-filter-btn" type="button">
-                <span id="difficulty-filter-label-extended">Filter by Difficulty</span>
+                <span id="difficulty-filter-label-extended">Difficulty</span>
                 <span class="filter-arrow">▼</span>
               </button>
               <div id="difficulty-filter-menu-extended" class="difficulty-filter-menu" style="display: none;">
@@ -2057,10 +1882,13 @@
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- [MINIMAL-UI] 3. Interaction Card wrapping content phases -->
+        <div class="interaction-card">
           <div class="question-total">
             <span>Total number of questions: <span id="total-questions-extended">1</span></span>
           </div>
-        </div>
 
         <div id="reading-phase" class="reading-phase">
           <div class="reading-timer">
@@ -2162,6 +1990,21 @@
             </div>
             <div id="check-result-phrases" class="check-result-box" style="display: none;"></div>
           </div>
+        </div>
+        </div> <!-- close interaction-card -->
+
+        <!-- [MINIMAL-UI] 4. Branded Navigation Island -->
+        <div class="question-nav-row branded-nav-island">
+          <button id="back-btn-extended" class="nav-btn nav-btn-back" type="button">← Prev</button>
+          <div id="recommendation-controls-extended" class="recommendation-controls" style="display: none;">
+            <button id="recommended-btn-extended" class="recommended-jump-btn" type="button" disabled>
+              <span class="sparkle-icon">✨</span> Smart Jump
+            </button>
+          </div>
+          <select id="question-select-extended" class="question-select-minimal">
+            <option value="1">Question 1</option>
+          </select>
+          <button id="next-btn-extended" class="nav-btn nav-btn-next" type="button">Next →</button>
         </div>
       </div>
 
@@ -2564,7 +2407,7 @@
   <script type="module" src="js/question-recommendation-engine.js"></script>
   <script src="js/lazy-loader.js"></script>
   <script type="module" src="js/collo-dictate-mode.js"></script>
-  <script type="module" src="js/reading-journey.js?v=20260311_gemini_fix_v1"></script>
+  <script type="module" src="js/reading-journey.js?v=20260311_advance_fix_v2"></script>
   <script type="module" src="script.js"></script>
   <!-- Points Toast Notification Container -->
   <div id="points-toast-container" class="points-toast-container"></div>

@@ -2,7 +2,14 @@
  * Reading Journey UX Enhancement System (Phase 1-4)
  * Refined & Debugged Version 1.1
  */
+import {
+  filterOutlinesByTags,
+  formatTopicTagLabel,
+  normalizeOutlineRecord
+} from './reading-journey-topic-utils.js';
+
 (function () {
+
   let state = {
     status: 'SETUP', // SETUP, LOADING, READING, CHOICE_PENDING, COMPLETE
     currentBeat: null,
@@ -523,9 +530,12 @@
     storyView.classList.add('rj-skeleton-active');
 
     const payload = {
+      outlineId: state.outlineId,
+      currentBeatNumber: state.beatNumber,
+      path: state.currentBeat?.path || [],
       choiceId: state.choiceId,
+      level: state.level,
       userResponse: document.getElementById('rj-prod-input').value,
-      beatNumber: state.beatNumber,
       history: state.transcript
     };
 
@@ -538,7 +548,7 @@
       const data = await res.json();
 
       // Save to transcript
-      state.transcript.push(state.currentBeat.content);
+      state.transcript.push(state.currentBeat.segment || state.currentBeat.content || '');
       state.choicesMade.push(state.currentBeat.icon || '📖');
 
       if (data.isComplete) {
@@ -660,7 +670,7 @@
     try {
       const res = await fetch('/api/reading-journey/outlines');
       const data = await res.json();
-      allOutlines = data.outlines || [];
+      allOutlines = (data.outlines || []).map((outline) => normalizeOutlineRecord(outline));
 
       if (allOutlines.length === 0) {
         grid.innerHTML = '<div class="rj-library__empty">No stories available yet. Create one above!</div>';
@@ -697,7 +707,7 @@
 
     const label = document.createElement('span');
     label.className = 'rj-filter-bar__label';
-    label.textContent = 'Filter by topic:';
+    label.textContent = 'Filter by topic (match all):';
     bar.appendChild(label);
 
     const chipWrap = document.createElement('div');
@@ -707,7 +717,7 @@
       const chip = document.createElement('button');
       chip.type = 'button';
       chip.className = 'rj-filter-chip' + (activeFilters.has(tag) ? ' rj-filter-chip--active' : '');
-      chip.textContent = tag.replace(/_/g, ' ');
+      chip.textContent = formatTopicTagLabel(tag);
       chip.addEventListener('click', () => toggleTagFilter(tag));
       chipWrap.appendChild(chip);
     });
@@ -730,10 +740,7 @@
     if (activeFilters.size === 0) {
       filteredOutlines = [...allOutlines];
     } else {
-      filteredOutlines = allOutlines.filter(o => {
-        const tags = o.topicTags || [];
-        return [...activeFilters].some(f => tags.includes(f));
-      });
+      filteredOutlines = filterOutlinesByTags(allOutlines, [...activeFilters]);
     }
 
     libraryPage = 1;
@@ -769,7 +776,7 @@
       const bgColor = levelColors[outline.level] || '#3b82f6';
 
       const tagsHtml = (outline.topicTags || []).slice(0, 4)
-        .map(t => `<span class="rj-library-card__tag">${t.replace(/_/g, ' ')}</span>`)
+        .map(t => `<span class="rj-library-card__tag">${formatTopicTagLabel(t)}</span>`)
         .join('');
 
       card.innerHTML = `
@@ -783,7 +790,7 @@
 
       const startLibraryStory = () => {
         const tags = outline.topicTags || [];
-        document.getElementById('rj-interests').value = tags.map(t => t.replace(/_/g, ' ')).join(', ');
+        document.getElementById('rj-interests').value = tags.map((tag) => formatTopicTagLabel(tag)).join(', ');
         document.getElementById('rj-level').value = outline.level;
         startStory();
       };

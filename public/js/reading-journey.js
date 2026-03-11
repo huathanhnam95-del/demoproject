@@ -443,7 +443,7 @@
     if (metaEl) metaEl.textContent = `Beat ${state.beatNumber}/5 · Level ${state.level}`;
 
     // Split text into sentences for animated reveal
-    const rawText = beat.content || '';
+    const rawText = beat.segment || beat.content || beat.text || '';
     const sentences = rawText.match(/[^.!?]+[.!?]+(?:\s|$)|[^.!?]+$/g) || [rawText];
     segmentEl.innerHTML = sentences.map(s => `<span class="rj-sentence" data-text="${s.trim().replace(/"/g, '&quot;')}">${s}</span>`).join('');
 
@@ -476,21 +476,25 @@
       } else {
         choiceWrap.style.display = 'block';
         choiceWrap.classList.add('rj-fadein');
-        document.getElementById('rj-choice-question').textContent = beat.choiceQuestion || 'How should the story continue?';
+        const choiceQuestionText = (typeof beat.choiceQuestion === 'object' ? beat.choiceQuestion?.question : beat.choiceQuestion) || 'How should the story continue?';
+        document.getElementById('rj-choice-question').textContent = choiceQuestionText;
         const optEl = document.getElementById('rj-choice-options');
         optEl.innerHTML = '';
-        (beat.choices || []).forEach((c, i) => {
+        const choiceItems = beat.choices || (beat.choiceQuestion?.options) || [];
+        choiceItems.forEach((c, i) => {
+          const choiceId = c.id || c.choice_id || '';
+          const choiceText = c.text || c.label || '';
           const card = document.createElement('div');
           card.className = 'rj-choice-card';
           card.innerHTML = `
             <div class="rj-choice-badge">${String.fromCharCode(65 + i)}</div>
-            <div class="rj-choice-text">${c.text}</div>
+            <div class="rj-choice-text">${choiceText}</div>
           `;
           card.onclick = () => {
             document.querySelectorAll('.rj-choice-card').forEach(x => x.classList.remove('rj-choice-card--selected'));
             card.classList.add('rj-choice-card--selected');
-            state.choiceId = c.id;
-            state.choiceText = c.text;
+            state.choiceId = choiceId;
+            state.choiceText = choiceText;
           };
           optEl.appendChild(card);
         });

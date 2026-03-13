@@ -2548,6 +2548,7 @@ h1 {
 
 .mode-panel.active {
   display: block !important;
+  opacity: 1 !important;
   animation: fadeIn 0.4s ease-out;
 }
 

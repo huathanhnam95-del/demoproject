@@ -42,8 +42,6 @@ function parseArgs(argv) {
     dryRun: false,
     limit: 0,
     concurrency: 2,
-    minCoherence: 4,
-    minCohesion: 4,
     outputRoot: '',
     deleteLegacyBeats: true,
     keepLegacyBeats: false
@@ -69,16 +67,6 @@ function parseArgs(argv) {
       i += 1;
       continue;
     }
-    if (arg === '--min-coherence') {
-      args.minCoherence = Number(argv[i + 1]);
-      i += 1;
-      continue;
-    }
-    if (arg === '--min-cohesion') {
-      args.minCohesion = Number(argv[i + 1]);
-      i += 1;
-      continue;
-    }
     if (arg === '--output-root') {
       args.outputRoot = String(argv[i + 1] || '');
       i += 1;
@@ -97,8 +85,6 @@ function parseArgs(argv) {
 
   if (!Number.isFinite(args.limit) || args.limit < 0) args.limit = 0;
   if (!Number.isFinite(args.concurrency) || args.concurrency < 1 || args.concurrency > 6) args.concurrency = 2;
-  if (!Number.isFinite(args.minCoherence) || args.minCoherence < 1 || args.minCoherence > 5) args.minCoherence = 4;
-  if (!Number.isFinite(args.minCohesion) || args.minCohesion < 1 || args.minCohesion > 5) args.minCohesion = 4;
 
   if (args.dryRun) args.apply = false;
 
@@ -348,10 +334,9 @@ async function generateStoryForOutline({
   level,
   language,
   ttlMs,
-  apply,
-  minCoherence,
-  minCohesion
+  apply
 }) {
+  const rubric = require('../src/services/reading-journey/rubric');
   const beats = [];
   const segments = [];
 
@@ -399,21 +384,23 @@ async function generateStoryForOutline({
 
     const finalBeat = beats[beats.length - 1] || {};
     const storyText = buildStoryText({ segments, endWrap: finalBeat.endWrap });
-    const assessment = await withRetry(() => gemini.assessStory({ storyText, level }));
-    return { storyText, assessment };
+    const scoreResult = await withRetry(() => gemini.assessAndScore({ storyText, level }));
+    return { storyText, ...scoreResult };
   }
 
   const primary = await generateOnce({ temperature: 0.55 });
-  const needsRetry = (primary.assessment.coherence < minCoherence) || (primary.assessment.cohesion < minCohesion);
-  if (!needsRetry) {
+  if (primary.passed) {
     return { ...primary, retried: false };
   }
 
+  // eslint-disable-next-line no-console
+  console.log(`  ↳ FAILED (avg=${primary.weightedAverage}, criticals=[${primary.criticalFailures.join(',')}]). Retrying...`);
   const retry = await generateOnce({ temperature: 0.3 });
   return {
     ...retry,
     retried: true,
-    previousAssessment: primary.assessment
+    previousAssessment: primary.assessment,
+    previousWeightedAverage: primary.weightedAverage
   };
 }
 
@@ -479,9 +466,7 @@ async function main() {
       level: item.level,
       language: item.language,
       ttlMs,
-      apply,
-      minCoherence: args.minCoherence,
-      minCohesion: args.minCohesion
+      apply
     });
 
     beatWrites += ENDING_BEAT_NUMBER;
@@ -493,14 +478,19 @@ async function main() {
       topicTags: item.topicTags,
       title: item.title,
       assessment: result.assessment,
+      weightedAverage: result.weightedAverage,
+      passed: result.passed,
+      criticalFailures: result.criticalFailures,
       retried: result.retried,
-      previousAssessment: result.previousAssessment || null
+      previousAssessment: result.previousAssessment || null,
+      previousWeightedAverage: result.previousWeightedAverage || null
     };
   });
 
   const summary = {
-    coherenceAvg: Number((perOutline.reduce((sum, o) => sum + Number(o.assessment?.coherence || 0), 0) / Math.max(1, perOutline.length)).toFixed(2)),
-    cohesionAvg: Number((perOutline.reduce((sum, o) => sum + Number(o.assessment?.cohesion || 0), 0) / Math.max(1, perOutline.length)).toFixed(2)),
+    weightedAvgMean: Number((perOutline.reduce((sum, o) => sum + Number(o.weightedAverage || 0), 0) / Math.max(1, perOutline.length)).toFixed(2)),
+    passedCount: perOutline.filter((o) => o.passed).length,
+    failedCount: perOutline.filter((o) => !o.passed).length,
     retriedCount: perOutline.filter((o) => o.retried).length,
     tooHardCount: perOutline.filter((o) => o.assessment?.flags?.tooHard).length,
     tooEasyCount: perOutline.filter((o) => o.assessment?.flags?.tooEasy).length,

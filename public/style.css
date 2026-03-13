@@ -163,6 +163,47 @@ body {
   width: max-content;
 }
 
+/* ── Slogan Fade Animation ── */
+.preloader-slogan {
+  position: absolute;
+  bottom: 38%;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(1.2rem, 2.8vw, 1.8rem);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: #1a1a1a;
+}
+
+.preloader-slogan__line {
+  display: inline;
+  opacity: 0;
+}
+
+/* "Not the best." — fades in at 1.2s and stays */
+.preloader-slogan__line--1 {
+  animation: sloganFadeIn 2s ease-in-out 1.2s forwards;
+}
+
+/* "Just better." — fades in at 4s and stays */
+.preloader-slogan__line--2 {
+  animation: sloganFadeIn 2s ease-in-out 4s forwards;
+}
+
+@keyframes sloganFadeInOut {
+  0%   { opacity: 0; }
+  20%  { opacity: 1; }
+  60%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes sloganFadeIn {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+
 
 .app-preloader.reduced-motion .preloader-wordmark {
   opacity: 0.88;

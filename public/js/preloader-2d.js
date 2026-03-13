@@ -1,6 +1,6 @@
 // Quick lightweight script for the 2D Preloader
 
-const PRELOADER_MIN_DURATION_MS = 3000;
+const PRELOADER_MIN_DURATION_MS = 6500;
 
 document.addEventListener('DOMContentLoaded', () => {
     const preloader = document.getElementById('app-preloader');

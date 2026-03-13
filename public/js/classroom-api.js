@@ -35,14 +35,16 @@ window.ClassroomAPI = (function () {
         return json.classrooms || [];
     }
 
-    // Admin: Read CRM course catalog
+    // Admin: Read CRM course catalog (via server API to avoid Firestore permission issues)
     async function fetchCourses() {
-        const db = getDb();
-        if (!db) throw new Error("Firebase DB not initialized");
-
-        const snapshot = await db.collection("crmCourses").get();
-        const courses = [];
-        snapshot.forEach(doc => courses.push({ id: doc.id, ...doc.data() }));
+        const headers = await getHeaders();
+        const res = await fetch('/api/admin/courses', {
+            method: 'GET',
+            headers
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        const json = await res.json();
+        const courses = json.courses || [];
         courses.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
         return courses;
     }

@@ -44,6 +44,12 @@
     // ============================================
 
     function initSmoothScroll() {
+        function getStickyOffset() {
+            const siteHeaderHeight = document.querySelector('.site-header')?.offsetHeight || 0;
+            const sectionNavHeight = document.getElementById('nav')?.offsetHeight || 0;
+            return siteHeaderHeight + sectionNavHeight;
+        }
+
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 const targetId = this.getAttribute('href');
@@ -52,8 +58,8 @@
                 const targetElement = document.querySelector(targetId);
                 if (targetElement) {
                     e.preventDefault();
-                    const navHeight = document.querySelector('.nav')?.offsetHeight || 0;
-                    const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - navHeight - 20;
+                    const stickyOffset = getStickyOffset();
+                    const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - stickyOffset - 20;
 
                     window.scrollTo({
                         top: targetPosition,

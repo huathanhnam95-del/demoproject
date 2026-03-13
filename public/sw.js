@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'bel-offline-v4';
+const CACHE_VERSION = 'bel-offline-v6';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -9,7 +9,10 @@ const SHELL_URLS = [
   '/landing/index.html',
   '/offline.html',
   '/style.css',
-  '/landing/landing.css'
+  '/landing/landing.css',
+  '/dictionary-service.js',
+  '/collocations.json',
+  '/arpabet-ipa-map.js'
 ];
 
 self.addEventListener('install', (event) => {

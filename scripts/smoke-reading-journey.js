@@ -62,6 +62,10 @@ function pickChoiceId(beat) {
   return String(first?.id || '').trim();
 }
 
+function normalizeScalar(value) {
+  return String(value ?? '').trim();
+}
+
 function getQuestionType(beat) {
   const direct = String(beat?.questionType || '').trim().toLowerCase();
   if (direct) return direct;
@@ -69,6 +73,31 @@ function getQuestionType(beat) {
   if (beat?.choiceQuestion) return 'mcq';
   if (beat?.productionPrompt) return 'open';
   return 'mcq';
+}
+
+function validateQuizDeck(quiz) {
+  assert(Array.isArray(quiz?.questions), 'Quiz response must include questions');
+  assert(Array.isArray(quiz?.storySnapshot?.paragraphs), 'Quiz response must include storySnapshot.paragraphs');
+  assert(quiz.questions.length === 5, `Expected 5 quiz questions, got ${quiz.questions.length}`);
+  assert(quiz.storySnapshot.paragraphs.length > 0, 'Quiz storySnapshot must contain at least one paragraph');
+
+  const paragraphCount = quiz.storySnapshot.paragraphs.length;
+  const vocabularyCount = quiz.questions.filter((question) => normalizeScalar(question?.skill).toLowerCase() === 'vocabulary').length;
+  const comprehensionCount = quiz.questions.filter((question) => normalizeScalar(question?.skill).toLowerCase() === 'comprehension').length;
+  const interactiveCount = quiz.questions.filter((question) => ['click_word_meaning', 'tap_evidence'].includes(normalizeScalar(question?.type))).length;
+
+  assert(vocabularyCount >= 1, 'Quiz must include at least one vocabulary item');
+  assert(comprehensionCount >= 1, 'Quiz must include at least one comprehension item');
+  assert(interactiveCount >= 1, 'Quiz must include at least one interactive text-location item');
+
+  quiz.questions.forEach((question) => {
+    const type = normalizeScalar(question?.type);
+    if (type === 'click_word_meaning' || type === 'tap_evidence') {
+      const paragraphIndex = Number(question?.target?.paragraphIndex);
+      assert(Number.isInteger(paragraphIndex), `Question ${question.id} missing target.paragraphIndex`);
+      assert(paragraphIndex >= 0 && paragraphIndex < paragraphCount, `Question ${question.id} has invalid paragraphIndex ${paragraphIndex}`);
+    }
+  });
 }
 
 function startLocalServer({ port }) {
@@ -202,6 +231,21 @@ async function runSmoke(baseUrl, { fresh = false } = {}) {
   assert(interactive.filter((t) => t === 'mcq').length === 3, `Expected 3 mcq beats, got ${interactive.join(',')}`);
   assert(currentBeatNumber === 6, `Expected to end at beat 6, ended at ${currentBeatNumber}`);
   assert(segments.length === 6, `Expected 6 segments (5 turns + ending), got ${segments.length}`);
+
+  const quiz = await fetchJson(`${rootUrl}/api/reading-journey/quiz`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      outlineId,
+      path,
+      level: 'B1'
+    })
+  });
+
+  assert(quiz.response.ok, `Quiz failed: HTTP ${quiz.response.status} ${JSON.stringify(quiz.json)}`);
+  assert(quiz.json?.success === true, `Quiz failed: ${JSON.stringify(quiz.json)}`);
+  validateQuizDeck(quiz.json);
+  console.log('Reading Journey quiz mix:', quiz.json.questions.map((question) => question.type).join(', '));
 
   console.log('✅ Reading Journey smoke passed.');
 }

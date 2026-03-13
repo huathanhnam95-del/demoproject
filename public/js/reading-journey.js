@@ -7,17 +7,36 @@ import {
   formatTopicTagLabel,
   normalizeOutlineRecord
 } from './reading-journey-topic-utils.js';
+import {
+  tokenizeStorySnapshot
+} from './reading-journey-quiz-utils.js';
+import { queueQuizMisses } from './reading-journey-quiz-storage.js';
+import { gradeQuizResults } from './reading-journey-quiz-results.js';
+import {
+  applyClickWordSelection,
+  applyEvidenceSelection,
+  buildQuizInteractionMarkup,
+  buildQuizQuestionMarkup,
+  buildQuizResultsMarkup,
+  createEmptyAssessmentState,
+  ensureAnswerState,
+  getCurrentQuizQuestion,
+  isQuestionReady,
+  normalizeAssessmentToken
+} from './reading-journey-assessment.js';
 
 (function () {
 
   let state = {
     status: 'SETUP', // SETUP, LOADING, READING, CHOICE_PENDING, COMPLETE
     currentBeat: null,
+    currentBeatRecorded: false,
     beatNumber: 0,
     title: '',
     transcript: [], // Array of story segments
     choicesMade: [], // History of icons/choices
-    level: 'B1'
+    level: 'B1',
+    assessment: createEmptyAssessmentState()
   };
 
   let revealState = {
@@ -44,6 +63,43 @@ import {
     el.textContent = msg;
     el.style.display = show ? 'block' : 'none';
     if (show) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      '\'': '&#39;'
+    }[char] || char));
+  }
+
+  function resetAssessmentState() {
+    state.assessment = createEmptyAssessmentState();
+  }
+
+  function getBeatDisplayText(beat) {
+    const segment = String(beat?.segment || beat?.content || beat?.text || '').trim();
+    const endWrap = String(beat?.endWrap || '').trim();
+    return [segment, endWrap].filter(Boolean).join(' ');
+  }
+
+  function recordCurrentBeat() {
+    if (!state.currentBeat || state.currentBeatRecorded) return;
+
+    const beatText = getBeatDisplayText(state.currentBeat);
+    if (beatText) {
+      state.transcript.push(beatText);
+    }
+    state.choicesMade.push(state.currentBeat.icon || '📖');
+    state.currentBeatRecorded = true;
+    updateTranscriptList();
+  }
+
+  function getCurrentStoryText() {
+    const fullText = state.transcript.join('\n\n');
+    return fullText.trim();
   }
 
   // ── Initialization ─────────────────────────────────────────────────────────
@@ -401,6 +457,7 @@ import {
 
     state.level = document.getElementById('rj-level').value;
     state.status = 'LOADING';
+    resetAssessmentState();
     document.getElementById('rj-setup').style.display = 'none';
     const storyView = document.getElementById('rj-story');
     storyView.style.display = 'block';
@@ -423,6 +480,7 @@ import {
       state.beatNumber = 1;
       state.transcript = [];
       state.choicesMade = [];
+      state.currentBeatRecorded = false;
       storyView.classList.remove('rj-skeleton-active');
       renderBeat(data.beat);
     } catch (err) {
@@ -435,6 +493,10 @@ import {
 
   function renderBeat(beat) {
     state.currentBeat = beat;
+    state.currentBeatRecorded = false;
+    state.beatNumber = Number(beat?.beatNumber) || state.beatNumber || 1;
+    state.choiceId = null;
+    state.choiceText = '';
     state.status = 'READING';
     revealState.allDone = false;
     revealState.onComplete = onAllSentencesDone;
@@ -447,10 +509,14 @@ import {
     const transcriptWrap = document.getElementById('rj-transcript-wrap');
 
     if (titleEl) titleEl.textContent = state.title;
-    if (metaEl) metaEl.textContent = `Beat ${state.beatNumber}/5 · Level ${state.level}`;
+    if (metaEl) {
+      metaEl.textContent = beat.shouldEnd
+        ? `Final scene · Level ${state.level}`
+        : `Beat ${Math.max(1, Math.min(5, state.beatNumber))}/5 · Level ${state.level}`;
+    }
 
     // Split text into sentences for animated reveal
-    const rawText = beat.segment || beat.content || beat.text || '';
+    const rawText = getBeatDisplayText(beat);
     const sentences = rawText.match(/[^.!?]+[.!?]+(?:\s|$)|[^.!?]+$/g) || [rawText];
     segmentEl.innerHTML = sentences.map(s => `<span class="rj-sentence" data-text="${s.trim().replace(/"/g, '&quot;')}">${s}</span>`).join('');
 
@@ -475,11 +541,18 @@ import {
       applyHighlightsToSegment(segmentEl, beat.highlights);
       if (highlightEnabled) animateHighlights(segmentEl, true);
 
+      if (beat.shouldEnd) {
+        return;
+      }
+
       const qType = (beat.questionType || '').toLowerCase();
       if (qType === 'open' || beat.productionPrompt) {
         prodWrap.style.display = 'block';
         prodWrap.classList.add('rj-fadein');
-        document.getElementById('rj-prod-prompt').textContent = beat.productionPrompt || 'Write your response:';
+        const productionPromptText = typeof beat.productionPrompt === 'object'
+          ? beat.productionPrompt?.question
+          : beat.productionPrompt;
+        document.getElementById('rj-prod-prompt').textContent = productionPromptText || 'Write your response:';
       } else {
         choiceWrap.style.display = 'block';
         choiceWrap.classList.add('rj-fadein');
@@ -518,6 +591,11 @@ import {
     }
 
     if (state.status === 'CHOICE_PENDING') {
+      if (state.currentBeat?.shouldEnd) {
+        showComplete();
+        return;
+      }
+
       if (!state.choiceId && !document.getElementById('rj-prod-input').value) {
         return showAlert('Please choose an option or write a response.');
       }
@@ -535,7 +613,7 @@ import {
       path: state.currentBeat?.path || [],
       choiceId: state.choiceId,
       level: state.level,
-      userResponse: document.getElementById('rj-prod-input').value,
+      productionText: document.getElementById('rj-prod-input').value,
       history: state.transcript
     };
 
@@ -547,19 +625,16 @@ import {
       });
       const data = await res.json();
 
-      // Save to transcript
-      state.transcript.push(state.currentBeat.segment || state.currentBeat.content || '');
-      state.choicesMade.push(state.currentBeat.icon || '📖');
+      recordCurrentBeat();
 
       if (data.isComplete) {
-        showComplete(data);
+        storyView.classList.remove('rj-skeleton-active');
+        showComplete();
       } else {
-        state.beatNumber++;
         state.choiceId = null;
         document.getElementById('rj-prod-input').value = '';
         storyView.classList.remove('rj-skeleton-active');
         renderBeat(data.beat);
-        updateTranscriptList();
       }
     } catch (err) {
       showAlert('Error advancing story.');
@@ -570,13 +645,14 @@ import {
   function updateProgressBar() {
     const bar = document.getElementById('rj-progress-bar');
     const dots = document.getElementById('rj-progress-dots');
-    const pct = (state.beatNumber / 5) * 100;
+    const safeBeatNumber = Math.max(1, Math.min(5, Number(state.beatNumber) || 1));
+    const pct = (safeBeatNumber / 5) * 100;
     bar.style.width = pct + '%';
 
     dots.innerHTML = '';
     for (let i = 1; i <= 5; i++) {
       const dot = document.createElement('div');
-      dot.className = `rj-progress-dot ${i < state.beatNumber ? 'rj-progress-dot--done' : (i === state.beatNumber ? 'rj-progress-dot--active' : '')}`;
+      dot.className = `rj-progress-dot ${i < safeBeatNumber ? 'rj-progress-dot--done' : (i === safeBeatNumber ? 'rj-progress-dot--active' : '')}`;
       dots.appendChild(dot);
     }
     document.getElementById('rj-shell').style.setProperty('--rj-accent', getLevelColor(state.level));
@@ -597,32 +673,240 @@ import {
     `).join('');
   }
 
-  function showComplete(data) {
-    state.status = 'COMPLETE';
+  function copyCurrentStory() {
+    const fullText = getCurrentStoryText();
+    if (!fullText || !navigator.clipboard?.writeText) return;
+    navigator.clipboard.writeText(fullText).then(() => {
+      const note = document.getElementById('rj-complete-note');
+      if (note) note.textContent = 'Story copied to clipboard.';
+    }).catch(() => {
+      const note = document.getElementById('rj-complete-note');
+      if (note) note.textContent = 'Could not copy the story on this device.';
+    });
+  }
+
+  function announceQuizStatus(message) {
+    const status = document.getElementById('rj-quiz-status');
+    if (status) status.textContent = message || '';
+  }
+
+  function handleClickWordSelection(question, token) {
+    const answer = ensureAnswerState(state.assessment, question);
+    applyClickWordSelection(answer, question, token);
+    renderQuizQuestion();
+  }
+
+  function handleEvidenceSelection(question, paragraphIndex) {
+    const answer = ensureAnswerState(state.assessment, question);
+    applyEvidenceSelection(answer, question, paragraphIndex);
+    renderQuizQuestion();
+  }
+
+  function renderQuizPassage(container, question, answer) {
+    const tokenized = state.assessment.tokenizedStory;
+    if (!container || !tokenized) return;
+
+    const acceptedSurfaceForms = Array.isArray(question?.target?.acceptedSurfaceForms)
+      ? question.target.acceptedSurfaceForms.map((value) => normalizeAssessmentToken(value)).filter(Boolean)
+      : [normalizeAssessmentToken(question?.target?.word)];
+
+    tokenized.paragraphs.forEach((paragraph, paragraphIndex) => {
+      const paragraphEl = document.createElement('p');
+      paragraphEl.className = 'rj-quiz-passage__paragraph';
+      if (answer.hintParagraphIndex === paragraphIndex) paragraphEl.classList.add('rj-quiz-passage__paragraph--hint');
+
+      if (question.type === 'tap_evidence') {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'rj-quiz-passage__tap';
+        button.dataset.paragraphIndex = String(paragraphIndex);
+        if (answer.selectedParagraphIndex === paragraphIndex && answer.correct) {
+          button.classList.add('rj-quiz-passage__tap--correct');
+        }
+        if (answer.selectedParagraphIndex === paragraphIndex && answer.wrongTokenId === `paragraph-${paragraphIndex}`) {
+          button.classList.add('rj-quiz-passage__tap--wrong');
+        }
+        if (answer.resolved && !answer.correct && Number(question?.target?.paragraphIndex) === paragraphIndex) {
+          button.classList.add('rj-quiz-passage__tap--correct');
+        }
+        button.textContent = paragraph.text;
+        button.addEventListener('click', () => handleEvidenceSelection(question, paragraphIndex));
+        paragraphEl.appendChild(button);
+      } else {
+        paragraph.tokens.forEach((token, tokenIndex) => {
+          const tokenButton = document.createElement('button');
+          tokenButton.type = 'button';
+          tokenButton.className = 'rj-quiz-token';
+          tokenButton.dataset.tokenId = token.id;
+          tokenButton.textContent = token.text;
+
+          if (answer.selectedTokenId === token.id && answer.correct) tokenButton.classList.add('rj-quiz-token--correct');
+          if (answer.wrongTokenId === token.id) tokenButton.classList.add('rj-quiz-token--wrong');
+          if (answer.resolved && !answer.correct && acceptedSurfaceForms.includes(token.normalized)) {
+            tokenButton.classList.add('rj-quiz-token--correct');
+          }
+
+          tokenButton.addEventListener('click', () => handleClickWordSelection(question, token));
+          paragraphEl.appendChild(tokenButton);
+
+          if (tokenIndex < paragraph.tokens.length - 1) {
+            paragraphEl.appendChild(document.createTextNode(' '));
+          }
+        });
+      }
+
+      container.appendChild(paragraphEl);
+    });
+  }
+
+  function renderQuizResults() {
     const completeView = document.getElementById('rj-complete');
-    document.getElementById('rj-story').style.display = 'none';
-    document.getElementById('rj-transcript-wrap').style.display = 'none';
-    completeView.style.display = 'block';
+    if (!completeView) return;
+
+    completeView.innerHTML = buildQuizResultsMarkup({
+      level: state.level,
+      results: state.assessment.results,
+      reviewWrite: state.assessment.reviewWrite
+    });
+
+    document.getElementById('rj-retry-quiz-btn')?.addEventListener('click', () => {
+      state.assessment.currentQuestionIndex = 0;
+      state.assessment.answers = {};
+      state.assessment.results = [];
+      state.assessment.reviewWrite = null;
+      renderQuizQuestion();
+    });
+    document.getElementById('rj-next-story-btn')?.addEventListener('click', () => location.reload());
+    document.getElementById('rj-copy-btn')?.addEventListener('click', copyCurrentStory);
+  }
+
+  function submitAssessmentQuiz() {
+    state.assessment.results = gradeQuizResults({
+      questions: state.assessment.deck?.questions,
+      answers: state.assessment.answers,
+      storySnapshot: state.assessment.deck?.storySnapshot
+    });
+    state.assessment.reviewWrite = queueQuizMisses(state.assessment.results, {
+      quizId: state.assessment.deck?.quizId,
+      level: state.level,
+      storyTitle: state.title
+    });
+    renderQuizResults();
+  }
+
+  function renderQuizQuestion() {
+    const completeView = document.getElementById('rj-complete');
+    const question = getCurrentQuizQuestion(state.assessment);
+    if (!completeView || !question) {
+      renderQuizResults();
+      return;
+    }
+
+    const answer = ensureAnswerState(state.assessment, question);
+    if (question.type === 'sequence_events' && (!Array.isArray(answer.order) || answer.order.length === 0)) {
+      answer.order = Array.isArray(question.items) ? question.items.map((item) => item.id) : [];
+    }
+
+    const questionNumber = state.assessment.currentQuestionIndex + 1;
+    const totalQuestions = state.assessment.deck.questions.length;
+
+    completeView.innerHTML = buildQuizQuestionMarkup({
+      title: state.title,
+      level: state.level,
+      question,
+      questionNumber,
+      totalQuestions,
+      answer,
+      interactionMarkup: buildQuizInteractionMarkup(question, answer)
+    });
+
+    const interaction = document.getElementById('rj-quiz-interaction');
+    if (!interaction) return;
+
+    if (question.type === 'click_word_meaning' || question.type === 'tap_evidence') {
+      renderQuizPassage(document.getElementById('rj-quiz-passage-body'), question, answer);
+    } else if (question.type === 'mcq_main_idea') {
+      interaction.querySelectorAll('input[name="rj-quiz-option"]').forEach((input) => {
+        input.addEventListener('change', () => {
+          answer.selectedOptionId = input.value;
+          renderQuizQuestion();
+        });
+      });
+    } else if (question.type === 'short_answer') {
+      const input = document.getElementById('rj-quiz-short-answer');
+      input?.addEventListener('input', () => {
+        answer.text = input.value;
+        document.getElementById('rj-quiz-next-btn')?.toggleAttribute('disabled', !isQuestionReady(question, answer));
+      });
+    } else if (question.type === 'sequence_events') {
+      interaction.querySelectorAll('[data-move]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const itemId = button.getAttribute('data-item-id');
+          const direction = button.getAttribute('data-move');
+          const currentIndex = answer.order.indexOf(itemId);
+          const nextIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+          if (currentIndex < 0 || nextIndex < 0 || nextIndex >= answer.order.length) return;
+          const nextOrder = [...answer.order];
+          [nextOrder[currentIndex], nextOrder[nextIndex]] = [nextOrder[nextIndex], nextOrder[currentIndex]];
+          answer.order = nextOrder;
+          renderQuizQuestion();
+        });
+      });
+    }
+
+    document.getElementById('rj-quiz-exit-btn')?.addEventListener('click', () => renderCompletionSummary({ skipped: true }));
+    document.getElementById('rj-quiz-next-btn')?.addEventListener('click', () => {
+      if (!isQuestionReady(question, answer)) return;
+      if (state.assessment.currentQuestionIndex === totalQuestions - 1) {
+        submitAssessmentQuiz();
+        return;
+      }
+      state.assessment.currentQuestionIndex += 1;
+      renderQuizQuestion();
+    });
+
+    announceQuizStatus(answer.feedback || '');
+  }
+
+  function renderCompletionSummary({ skipped = false, note = '' } = {}) {
+    const completeView = document.getElementById('rj-complete');
+    if (!completeView) return;
+
+    const completionNote = note || (skipped
+      ? 'Assessment skipped for now. You can come back to it before starting a new story.'
+      : 'Check your understanding with a short mix of comprehension and vocabulary questions.');
 
     completeView.innerHTML = `
       <div class="rj-complete__hero">
-        <div class="rj-complete__badge">🏆</div>
+        <div class="rj-complete__badge">OK</div>
         <h2>Journey Complete!</h2>
-        <p class="rj-muted">You've successfully finished "${state.title}"</p>
+        <p class="rj-muted">You've successfully finished "${escapeHtml(state.title)}"</p>
       </div>
 
       <div class="rj-report">
         <div class="rj-report__row">
           <span class="rj-report__label">Topic</span>
-          <span class="rj-report__val">${state.title}</span>
+          <span class="rj-report__val">${escapeHtml(state.title)}</span>
         </div>
         <div class="rj-report__row">
           <span class="rj-report__label">Level</span>
-          <span class="rj-report__val">${state.level}</span>
+          <span class="rj-report__val">${escapeHtml(state.level)}</span>
         </div>
         <div class="rj-report__row">
           <span class="rj-report__label">Date</span>
           <span class="rj-report__val">${new Date().toLocaleDateString()}</span>
+        </div>
+      </div>
+
+      <div class="rj-complete__assessment">
+        <div>
+          <div class="rj-quiz__eyebrow">Reader's Notebook</div>
+          <h3 class="rj-complete__assessment-title">Learning check</h3>
+          <p id="rj-complete-note" class="rj-muted">${escapeHtml(completionNote)}</p>
+        </div>
+        <div class="rj-complete__assessment-meta">
+          <span class="rj-complete__level">${escapeHtml(state.level)}</span>
+          <span class="rj-complete__count">5 quick prompts</span>
         </div>
       </div>
 
@@ -634,21 +918,76 @@ import {
               <span class="rj-path-icon">${icon}</span>
               <span class="rj-path-beat">Beat ${i + 1}</span>
             </div>
-            ${i < state.choicesMade.length - 1 ? '<div class="rj-path-arrow">→</div>' : ''}
+            ${i < state.choicesMade.length - 1 ? '<div class="rj-path-arrow">?</div>' : ''}
           `).join('')}
         </div>
       </div>
 
       <div class="rj-complete__actions">
-        <button class="rj-btn rj-btn--primary" onclick="location.reload()">New Journey</button>
-        <button class="rj-btn rj-btn--outline" id="rj-copy-btn">Copy Story</button>
+        <button class="rj-btn rj-btn--primary" type="button" id="rj-launch-quiz-btn">Check Understanding</button>
+        <button class="rj-btn rj-btn--outline" type="button" id="rj-skip-quiz-btn">Skip for now</button>
+        <button class="rj-btn rj-btn--outline" type="button" id="rj-copy-btn">Copy Story</button>
+        <button class="rj-btn rj-btn--outline" type="button" id="rj-new-journey-btn">New Journey</button>
       </div>
     `;
 
-    document.getElementById('rj-copy-btn').onclick = () => {
-      const fullText = state.transcript.join('\n\n');
-      navigator.clipboard.writeText(fullText).then(() => alert('Story copied!'));
-    };
+    document.getElementById('rj-launch-quiz-btn')?.addEventListener('click', () => startAssessmentQuiz());
+    document.getElementById('rj-skip-quiz-btn')?.addEventListener('click', () => renderCompletionSummary({ skipped: true }));
+    document.getElementById('rj-copy-btn')?.addEventListener('click', copyCurrentStory);
+    document.getElementById('rj-new-journey-btn')?.addEventListener('click', () => location.reload());
+  }
+
+  async function startAssessmentQuiz() {
+    const completeView = document.getElementById('rj-complete');
+    if (!completeView || state.assessment.loading) return;
+
+    state.assessment.loading = true;
+    completeView.innerHTML = `
+      <div class="rj-quiz rj-quiz--loading">
+        <div class="rj-complete__hero">
+          <div class="rj-complete__badge">OK</div>
+          <h2>Preparing your quiz</h2>
+          <p class="rj-muted">Pulling key ideas and vocabulary from the story you just finished.</p>
+        </div>
+      </div>
+    `;
+
+    try {
+      const res = await fetch('/api/reading-journey/quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          outlineId: state.outlineId,
+          path: state.currentBeat?.path || [],
+          level: state.level
+        })
+      });
+      const data = await res.json();
+      if (!res.ok || !Array.isArray(data.questions) || !data.storySnapshot) {
+        throw new Error(data?.message || 'Quiz generation failed');
+      }
+
+      state.assessment = {
+        ...createEmptyAssessmentState(),
+        loading: true,
+        deck: data,
+        tokenizedStory: tokenizeStorySnapshot(data.storySnapshot)
+      };
+      renderQuizQuestion();
+    } catch (err) {
+      renderCompletionSummary({ note: 'Could not generate the quiz. You can still copy the story or start a new journey.' });
+    } finally {
+      state.assessment.loading = false;
+    }
+  }
+  function showComplete() {
+    state.status = 'COMPLETE';
+    recordCurrentBeat();
+    const completeView = document.getElementById('rj-complete');
+    document.getElementById('rj-story').style.display = 'none';
+    document.getElementById('rj-transcript-wrap').style.display = 'none';
+    completeView.style.display = 'block';
+    renderCompletionSummary();
   }
 
   function selectChoice(idx) {
@@ -844,3 +1183,4 @@ import {
   }
 
 })();
+

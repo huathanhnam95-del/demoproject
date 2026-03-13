@@ -367,6 +367,14 @@ async function generateBeat({
     '- If questionType is "end", set shouldEnd=true and include endWrap (20 to 30 words).',
     '- Otherwise set shouldEnd=false.',
     '- Keep content PG and classroom-safe. No real celebrities, politicians, or brands.',
+    `Vocabulary constraints for ${safeLevel}:`,
+    safeLevel === 'A2'
+      ? '- Use ONLY common, everyday words (top 2000 frequency). Avoid abstract nouns, idioms, and any B1+ vocabulary. Prefer short sentences (8-12 words).'
+      : safeLevel === 'B1'
+        ? '- Use mostly common words. A few intermediate words are OK only if surrounding context makes the meaning clear. Avoid B2+ vocabulary like "persistence", "resolution", or "affirmed".'
+        : safeLevel === 'B2'
+          ? '- Use a mix of common and intermediate vocabulary. Some complex words in context are fine. Avoid rare/academic words.'
+          : '- Full range of vocabulary is acceptable for advanced learners. Use precise, varied word choices.',
     'Continuity rules:',
     '- Continue directly from the story so far; keep the same setting and characters.',
     '- Maintain clear cause-and-effect across beats; avoid sudden topic shifts.',
@@ -381,6 +389,12 @@ async function generateBeat({
     `- Characters: ${characterText || '(none)'}`,
     `- Locked milestone for this beat (${milestoneBeat}/${MAX_INTERACTIVE_BEATS}): ${milestone}`,
     `- User choices so far (IDs): ${safePath.join(', ') || '(none yet)'}`,
+    'Choice narrative guide (use the MOST RECENT choice to shape this beat\'s tone):',
+    '- investigate: The character actively searches, examines closely, or discovers something new. Show physical action and sensory detail.',
+    '- ask: The character talks to someone, asks questions, or learns new information through dialogue. Include direct speech.',
+    '- wait: The character pauses and observes carefully, noticing a subtle clue, overhearing something, or having a realization.',
+    '  CRITICAL for "wait": waiting MUST still advance the plot. The character must notice, discover, or realize something',
+    '  that changes the situation. Pure inaction or repetition of previous events is NEVER acceptable.',
     'Now generate this beat.'
   ];
 
@@ -542,38 +556,20 @@ async function assessStory({ storyText, level = 'B1' }) {
   const text = normalizeScalar(storyText);
   if (!text) throw new Error('Missing storyText');
 
-  const prompt = [
-    'Return raw JSON only.',
-    'You are evaluating an English learner reading story.',
-    `Target CEFR level: ${safeLevel}.`,
-    'Score each category from 1 to 5 (5 is best).',
-    'Evaluate: coherence, cohesion, grammar, vocabulary.',
-    'Also estimate cefrFit (A2|B1|B2|C1).',
-    'Flags:',
-    '- tooHard: true if vocabulary/grammar is above target by a lot',
-    '- tooEasy: true if far below target',
-    '- unsafe: true if content is not classroom-safe',
-    'Keep notes short (1-3 sentences).',
-    'JSON schema:',
-    '{',
-    '  "coherence": 1,',
-    '  "cohesion": 1,',
-    '  "grammar": 1,',
-    '  "vocabulary": 1,',
-    '  "cefrFit": "B1",',
-    '  "notes": "string",',
-    '  "flags": { "tooHard": false, "tooEasy": false, "unsafe": false }',
-    '}',
-    'Story text:',
-    text.slice(0, 6000)
-  ].join('\n');
+  const rubric = require('./rubric');
+  const basePrompt = rubric.getAssessmentPrompt(safeLevel);
+  const prompt = `${basePrompt}\n\nStory text:\n${text.slice(0, 6000)}`;
 
   const json = await generateJson(prompt, { temperature: 0.2 });
   return {
-    coherence: Number(json?.coherence) || 1,
-    cohesion: Number(json?.cohesion) || 1,
-    grammar: Number(json?.grammar) || 1,
-    vocabulary: Number(json?.vocabulary) || 1,
+    plot: Math.max(1, Math.min(10, Number(json?.plot) || 1)),
+    character: Math.max(1, Math.min(10, Number(json?.character) || 1)),
+    vocabulary: Math.max(1, Math.min(10, Number(json?.vocabulary) || 1)),
+    grammar: Math.max(1, Math.min(10, Number(json?.grammar) || 1)),
+    pacing: Math.max(1, Math.min(10, Number(json?.pacing) || 1)),
+    emotion: Math.max(1, Math.min(10, Number(json?.emotion) || 1)),
+    setting: Math.max(1, Math.min(10, Number(json?.setting) || 1)),
+    coherence: Math.max(1, Math.min(10, Number(json?.coherence) || 1)),
     cefrFit: normalizeScalar(json?.cefrFit) || safeLevel,
     notes: normalizeScalar(json?.notes) || '',
     flags: {
@@ -581,6 +577,82 @@ async function assessStory({ storyText, level = 'B1' }) {
       tooEasy: Boolean(json?.flags?.tooEasy),
       unsafe: Boolean(json?.flags?.unsafe)
     }
+  };
+}
+
+/**
+ * Assess a story and compute its weighted score using the rubric.
+ * Returns the raw assessment plus pass/fail verdict.
+ */
+async function assessAndScore({ storyText, level = 'B1' }) {
+  const rubric = require('./rubric');
+  const assessment = await assessStory({ storyText, level });
+  const result = rubric.computeWeightedScore(assessment, level, assessment.flags);
+  return {
+    assessment,
+    weightedAverage: result.weightedAverage,
+    passed: result.passed,
+    criticalFailures: result.criticalFailures,
+    flagFailures: result.flagFailures,
+    perCriterion: result.perCriterion
+  };
+}
+
+async function generateAssessmentQuizDraft({
+  outline,
+  outlineId,
+  level = 'B1',
+  storySnapshot,
+  beatOutline,
+  highlights
+} = {}) {
+  const safeLevel = normalizeLevel(level);
+  const title = normalizeScalar(outline?.title) || 'Reading Journey';
+  const paragraphs = Array.isArray(storySnapshot?.paragraphs) ? storySnapshot.paragraphs : [];
+  const storyText = paragraphs.map((paragraph, index) => `P${index + 1}: ${normalizeScalar(paragraph?.text)}`).filter(Boolean).join('\n');
+  const beats = Array.isArray(beatOutline)
+    ? beatOutline.map((beat) => `Beat ${Number(beat?.beat) || '?'}: ${normalizeScalar(beat?.milestone)}`).filter(Boolean).join('\n')
+    : '';
+  const flattenedHighlights = (Array.isArray(highlights) ? highlights : [])
+    .flatMap((group) => (Array.isArray(group) ? group : [group]))
+    .map((value) => normalizeScalar(value))
+    .filter(Boolean)
+    .slice(0, 20)
+    .join(', ');
+
+  const prompt = [
+    'Return raw JSON only.',
+    'You are creating a post-story English reading assessment.',
+    `Title: ${title}`,
+    `Outline ID: ${normalizeScalar(outlineId) || 'unknown'}`,
+    `Target CEFR: ${safeLevel}`,
+    'Rules:',
+    '- Return exactly 5 questions.',
+    '- Include at least 1 vocabulary item and at least 1 comprehension item.',
+    '- Include at least 1 interactive text-location question of type click_word_meaning or tap_evidence.',
+    '- Allowed types: mcq_main_idea, click_word_meaning, tap_evidence, sequence_events, short_answer.',
+    '- Every answer must be defensible from the story text.',
+    '- For click_word_meaning, target.word must appear exactly in the story text and target.paragraphIndex must be valid.',
+    '- For tap_evidence, target.paragraphIndex must be valid and target.evidenceAnchors must quote short evidence snippets.',
+    '- At A2, use no more than 1 short_answer question.',
+    'Story paragraphs:',
+    storyText || '(none)',
+    'Beat outline:',
+    beats || '(none)',
+    `Highlights: ${flattenedHighlights || '(none)'}`,
+    'JSON schema:',
+    '{ "questions": [',
+    '  { "id": "q1", "type": "mcq_main_idea", "skill": "comprehension", "prompt": "string", "options": [{"id":"a","text":"..."},{"id":"b","text":"..."},{"id":"c","text":"..."},{"id":"d","text":"..."}], "correctOptionId": "a" },',
+    '  { "id": "q2", "type": "click_word_meaning", "skill": "vocabulary", "prompt": "string", "target": { "word": "string", "paragraphIndex": 0, "acceptedSurfaceForms": ["string"] } },',
+    '  { "id": "q3", "type": "tap_evidence", "skill": "comprehension", "prompt": "string", "target": { "paragraphIndex": 0, "evidenceAnchors": ["string"] } },',
+    '  { "id": "q4", "type": "sequence_events", "skill": "comprehension", "prompt": "string", "items": [{"id":"a","text":"..."}], "correctOrder": ["a"] },',
+    '  { "id": "q5", "type": "short_answer", "skill": "comprehension", "prompt": "string", "rubric": { "focus": "string", "requireEvidence": false }, "idealAnswers": ["string"] }',
+    '] }'
+  ].join('\n');
+
+  const json = await generateJson(prompt, { temperature: 0.3 });
+  return {
+    questions: Array.isArray(json?.questions) ? json.questions : []
   };
 }
 
@@ -594,5 +666,7 @@ module.exports = {
   generateTopicTags,
   generateOutline,
   generateBeat,
-  assessStory
+  generateAssessmentQuizDraft,
+  assessStory,
+  assessAndScore
 };

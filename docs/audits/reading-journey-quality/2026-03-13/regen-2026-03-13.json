@@ -1,0 +1,10 @@
+{
+  "date": "2026-03-13",
+  "mode": "dry-run",
+  "model": "gemini-3.1-pro-preview",
+  "summary": {
+    "improved": 20,
+    "stillFailing": 6,
+    "errors": 1
+  }
+}

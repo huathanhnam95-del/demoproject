@@ -16,6 +16,7 @@ const {
 } = require('../services/reading-journey/cache');
 
 const gemini = require('../services/reading-journey/gemini');
+const { buildAssessmentQuiz } = require('../services/reading-journey/quiz-builder');
 const { countWords } = require('../services/reading-journey/json');
 
 const COLLECTION_KEYWORD_TAGS = 'reading_journey_keyword_tags_v1';
@@ -27,6 +28,7 @@ const ENDING_BEAT_NUMBER = MAX_INTERACTIVE_BEATS + 1;
 const OPEN_BEAT_COUNT = 2;
 const CANONICAL_CHOICE_IDS = Object.freeze(['investigate', 'ask', 'wait']);
 const CANONICAL_CHOICE_ID_SET = new Set(CANONICAL_CHOICE_IDS);
+const topicUtilsPromise = import('../../public/js/reading-journey-topic-utils.js');
 
 function isLocalRequest(req) {
   const remoteAddress = String(req.socket?.remoteAddress || '').trim().toLowerCase();
@@ -158,6 +160,56 @@ async function buildStorySoFar({ outlineId, beatNumber, path }) {
   return parts.join('\n');
 }
 
+async function loadCompletedStoryArtifacts({ outlineId, path, level }) {
+  const safePath = Array.isArray(path) ? path.map((v) => String(v || '').trim()).filter(Boolean) : [];
+  if (!outlineId) {
+    return { error: { status: 400, code: 'INVALID_ARGUMENT', message: 'outlineId is required' } };
+  }
+  if (safePath.length !== MAX_INTERACTIVE_BEATS) {
+    return { error: { status: 400, code: 'INVALID_ARGUMENT', message: `path must be a completed path with exactly ${MAX_INTERACTIVE_BEATS} choices` } };
+  }
+
+  const outline = await getCachedValue({ collection: COLLECTION_OUTLINES, id: outlineId });
+  if (!outline || typeof outline !== 'object') {
+    return { error: { status: 400, code: 'NOT_FOUND', message: 'Outline not found (try /setup again)' } };
+  }
+
+  const segments = [];
+  const highlights = [];
+
+  for (let beatNumber = 1; beatNumber <= MAX_INTERACTIVE_BEATS; beatNumber += 1) {
+    const slice = safePath.slice(0, Math.max(0, beatNumber - 1));
+    const key = computeBeatCacheKey({ outlineId, beatNumber, path: slice });
+    // eslint-disable-next-line no-await-in-loop
+    const beat = await getCachedValue({ collection: COLLECTION_BEATS, id: key.id });
+    const segment = String(beat?.segment || '').trim();
+    if (!beat || typeof beat !== 'object' || !segment) {
+      return { error: { status: 400, code: 'NOT_FOUND', message: `Completed story beat ${beatNumber} is not available` } };
+    }
+
+    segments.push(segment);
+    highlights.push(Array.isArray(beat.highlights) ? beat.highlights : []);
+  }
+
+  const endingKey = computeBeatCacheKey({ outlineId, beatNumber: ENDING_BEAT_NUMBER, path: safePath });
+  const endingBeat = await getCachedValue({ collection: COLLECTION_BEATS, id: endingKey.id });
+  const endWrap = String(endingBeat?.endWrap || '').trim();
+  if (!endingBeat || typeof endingBeat !== 'object' || !endWrap) {
+    return { error: { status: 400, code: 'NOT_FOUND', message: 'Completed story ending is not available' } };
+  }
+
+  return {
+    outline,
+    outlineId,
+    level,
+    path: safePath,
+    segments,
+    highlights,
+    endWrap,
+    beatOutline: Array.isArray(outline?.beatOutline) ? outline.beatOutline : []
+  };
+}
+
 function isValidBeatPayload(beat, { beatNumber, questionType }) {
   if (!beat || typeof beat !== 'object') return false;
   if (Number(beat.formatVersion) !== 2) return false;
@@ -221,6 +273,8 @@ function requireEnabled(req, res, next) {
   next();
 }
 
+// ── Routes ──────────────────────────────────────────────────────────────────────
+
 router.get('/reading-journey/health', (req, res) => {
   if (!isReadingJourneyEnabled(req)) {
     return sendError(res, 404, 'NOT_FOUND', 'Not found');
@@ -237,38 +291,9 @@ router.get('/reading-journey/health', (req, res) => {
 
 router.get('/reading-journey/outlines', requireEnabled, async (req, res) => {
   try {
+    const topicUtils = await topicUtilsPromise;
     const rawOutlines = await listCachedOutlines();
-
-    const outlines = rawOutlines.map((entry) => {
-      const value = entry.value || {};
-      const title = String(value.title || 'Untitled Story').trim();
-
-      // Parse level and topicTags from the cache key string
-      // Key format: v1|lang:en|level:B1|tags:adventure,mystery
-      let level = 'B1';
-      let topicTags = [];
-      const keyStr = String(entry.key || '');
-      for (const part of keyStr.split('|')) {
-        const idx = part.indexOf(':');
-        if (idx === -1) continue;
-        const k = part.slice(0, idx);
-        const v = part.slice(idx + 1);
-        if (k === 'level') level = v.toUpperCase() || 'B1';
-        if (k === 'tags') topicTags = v.split(',').map(t => t.trim()).filter(Boolean);
-      }
-
-      // Prefer stored topicTags from the value if available
-      if (Array.isArray(value.topicTags) && value.topicTags.length) {
-        topicTags = value.topicTags;
-      }
-
-      return {
-        outlineId: entry.id,
-        title,
-        level,
-        topicTags
-      };
-    });
+    const outlines = rawOutlines.map((entry) => topicUtils.parseOutlineMeta(entry));
 
     return sendSuccess(res, { outlines });
   } catch (e) {
@@ -492,6 +517,14 @@ router.post('/reading-journey/advance', maybeAiLimiter, requireEnabled, async (r
       });
     }
 
+    // Fire-and-forget: assess the completed story after the ending beat is cached.
+    if (nextBeatNumber === ENDING_BEAT_NUMBER) {
+      deferredStoryAssessment({ outlineId, path: nextPath, level }).catch((err) => {
+        // eslint-disable-next-line no-console
+        console.warn('[reading-journey] deferred assessment failed:', err?.message || err);
+      });
+    }
+
     return sendSuccess(res, {
       beat: {
         beatNumber: nextBeatNumber,
@@ -504,6 +537,102 @@ router.post('/reading-journey/advance', maybeAiLimiter, requireEnabled, async (r
   }
 });
 
+// ── Deferred Story Assessment ───────────────────────────────────────────────────
+
+/**
+ * Fire-and-forget assessment of a completed story.
+ * Collects all beat segments, scores with the 8-criterion rubric,
+ * and stores qualityScore on the outline Firestore doc.
+ */
+router.post('/reading-journey/quiz', maybeAiLimiter, requireEnabled, async (req, res) => {
+  try {
+    const outlineId = String(req.body?.outlineId || '').trim();
+    const path = Array.isArray(req.body?.path) ? req.body.path.map((v) => String(v || '').trim()).filter(Boolean) : [];
+    const level = gemini.normalizeLevel(req.body?.level);
+
+    if (!outlineId) return sendError(res, 400, 'INVALID_ARGUMENT', 'outlineId is required');
+
+    const loaded = await loadCompletedStoryArtifacts({ outlineId, path, level });
+    if (loaded.error) {
+      return sendError(res, loaded.error.status, loaded.error.code, loaded.error.message);
+    }
+
+    const quiz = await buildAssessmentQuiz({
+      outline: loaded.outline,
+      outlineId: loaded.outlineId,
+      level: loaded.level,
+      segments: loaded.segments,
+      endWrap: loaded.endWrap,
+      beatOutline: loaded.beatOutline,
+      highlights: loaded.highlights
+    });
+
+    const recommendedReviewCount = quiz.questions.filter((question) =>
+      question.skill === 'vocabulary'
+      || question.type === 'tap_evidence'
+      || question.type === 'click_word_meaning'
+    ).length;
+
+    return sendSuccess(res, {
+      quizId: quiz.quizId,
+      outlineId: quiz.outlineId,
+      level: quiz.level,
+      storySnapshot: quiz.storySnapshot,
+      questions: quiz.questions,
+      recommendedReviewCount
+    });
+  } catch (e) {
+    return sendError(res, 500, 'QUIZ_FAILED', 'Reading Journey quiz generation failed', e?.message || String(e));
+  }
+});
+
+async function deferredStoryAssessment({ outlineId, path, level }) {
+  const segments = [];
+  let endWrap = '';
+
+  for (let b = 1; b <= ENDING_BEAT_NUMBER; b += 1) {
+    const slice = Array.isArray(path) ? path.slice(0, Math.max(0, b - 1)) : [];
+    const key = computeBeatCacheKey({ outlineId, beatNumber: b, path: slice });
+    // eslint-disable-next-line no-await-in-loop
+    const beat = await getCachedValue({ collection: COLLECTION_BEATS, id: key.id });
+    if (beat && typeof beat === 'object') {
+      const seg = String(beat.segment || '').trim();
+      if (seg) segments.push(seg);
+      if (b === ENDING_BEAT_NUMBER && beat.endWrap) {
+        endWrap = String(beat.endWrap).trim();
+      }
+    }
+  }
+
+  const storyText = segments.join(' ') + (endWrap ? ` ${endWrap}` : '');
+  if (!storyText.trim()) return;
+
+  const scoreResult = await gemini.assessAndScore({ storyText, level });
+
+  // Store the quality score on the outline doc (merge, don't overwrite).
+  const qualityScore = {
+    assessedAt: Date.now(),
+    weightedAverage: scoreResult.weightedAverage,
+    passed: scoreResult.passed,
+    criticalFailures: scoreResult.criticalFailures,
+    flagFailures: scoreResult.flagFailures,
+    scores: scoreResult.assessment,
+    needsRegeneration: !scoreResult.passed
+  };
+
+  await setCachedValue({
+    collection: COLLECTION_OUTLINES,
+    id: outlineId,
+    value: { qualityScore },
+    ttlMs: resolveTtlMs()
+  });
+
+  // eslint-disable-next-line no-console
+  console.log(`[reading-journey] assessed story ${outlineId}: avg=${scoreResult.weightedAverage} passed=${scoreResult.passed}`);
+}
+
+// ── Assess Story Endpoint ───────────────────────────────────────────────────────
+
 router.post('/reading-journey/assess-story', maybeAiLimiter, requireEnabled, async (req, res) => {
   try {
     const level = gemini.normalizeLevel(req.body?.level);
@@ -511,8 +640,13 @@ router.post('/reading-journey/assess-story', maybeAiLimiter, requireEnabled, asy
     if (!storyText) return sendError(res, 400, 'INVALID_ARGUMENT', 'storyText is required');
     if (storyText.length > 30_000) return sendError(res, 400, 'INVALID_ARGUMENT', 'storyText too long');
 
-    const assessment = await gemini.assessStory({ storyText, level });
-    return sendSuccess(res, { assessment });
+    const result = await gemini.assessAndScore({ storyText, level });
+    return sendSuccess(res, {
+      assessment: result.assessment,
+      weightedAverage: result.weightedAverage,
+      passed: result.passed,
+      criticalFailures: result.criticalFailures
+    });
   } catch (e) {
     return sendError(res, 500, 'ASSESS_FAILED', 'Story assessment failed', e?.message || String(e));
   }

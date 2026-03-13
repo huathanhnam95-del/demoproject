@@ -1,12 +1,18 @@
 window.CrmCourses = (function () {
-    function getDb() {
-        return typeof firebase !== 'undefined' ? firebase.firestore() : null;
+    async function getAuthHeaders() {
+        const auth = typeof firebase !== 'undefined' ? firebase.auth() : null;
+        if (!auth || !auth.currentUser) return { 'Content-Type': 'application/json' };
+        const token = await auth.currentUser.getIdToken();
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        };
     }
 
-    function normalizeCourse(doc) {
-        const data = doc.data ? doc.data() : doc;
+    function normalizeCourse(raw) {
+        const data = raw.data ? raw.data() : raw;
         return {
-            id: doc.id || data.id || null,
+            id: raw.id || data.id || data.courseId || null,
             name: data.name || '',
             code: data.code || null,
             label: data.label || null,
@@ -19,11 +25,11 @@ window.CrmCourses = (function () {
     }
 
     async function fetchCourses() {
-        const db = getDb();
-        if (!db) throw new Error('Firebase DB not initialized');
-
-        const snapshot = await db.collection('crmCourses').get();
-        const courses = snapshot.docs.map(normalizeCourse);
+        const headers = await getAuthHeaders();
+        const res = await fetch('/api/admin/courses', { method: 'GET', headers });
+        if (!res.ok) throw new Error(`Failed to fetch courses (HTTP ${res.status})`);
+        const json = await res.json();
+        const courses = (json.courses || []).map(normalizeCourse);
         courses.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
         return courses;
     }

@@ -1,6 +1,5 @@
 const axios = require('axios');
 const https = require('https');
-const rax = require('retry-axios');
 
 const aiClient = axios.create({
     baseURL: 'https://router.huggingface.co/v1/chat/completions',
@@ -12,19 +11,5 @@ const aiClient = axios.create({
         'Accept': 'application/json'
     }
 });
-
-aiClient.defaults.raxConfig = {
-    instance: aiClient,
-    retry: 3,
-    noResponseRetries: 3,
-    retryDelay: 1000,
-    backoffType: 'exponential',
-    onRetryAttempt: err => {
-        const cfg = rax.getConfig(err);
-        console.log(`[AI-Retry] Attempt ${cfg.currentRetryAttempt} for ${err.config.url}`);
-    }
-};
-
-rax.attach(aiClient);
 
 module.exports = aiClient;

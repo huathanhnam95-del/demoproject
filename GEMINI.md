@@ -26,16 +26,68 @@ This file guides the agent's understanding of the project structure and context.
 - **Explicit updates (#update)**: If the user types `#update`, you must update the Current Status with a brief summary of the active step.
 - **Automation**: DO NOT wait for the user to remind you. This is an automatic required step before and after executing work.
 
+## GSD Auto-Integration (MANDATORY)
+
+Every task MUST follow the GSD (Get Stuff Done) methodology automatically. This is not optional.
+
+### Step 1: Classify the Task
+
+When a new task is created, immediately classify it:
+
+| Type | Examples | GSD Flow |
+|------|----------|----------|
+| **Quick Fix** | Bug fix, typo, config change, simple edit | Execute → Verify → Done |
+| **Feature** | New functionality, UI change, new endpoint, new page | Plan → Execute → Verify → Done |
+| **Investigation** | Debugging, research, performance issue, unknown cause | Research → Diagnose → Fix → Verify → Done |
+
+### Step 2: Run the GSD Flow
+
+**Quick Fix:**
+1. Execute the fix directly
+2. Verify empirically (run the app, check output, confirm the fix)
+3. Mark done
+
+**Feature (MUST plan before coding):**
+1. **Plan** — State what files will change, what the deliverable is, and what success looks like (2-3 sentences minimum)
+2. **Execute** — Implement with atomic commits per logical unit
+3. **Verify** — Run the app, test the feature, confirm it works. Screenshot or terminal proof preferred
+4. Mark done
+
+**Investigation:**
+1. **Research** — Reproduce the issue, gather evidence, read logs/errors
+2. **Diagnose** — Identify root cause with evidence
+3. **Fix** — Apply targeted fix
+4. **Verify** — Confirm the issue is resolved with proof
+5. Mark done
+
+### GSD Core Rules (Always Enforced)
+
+- 🔒 **No code without a plan** — For Features, state the plan before writing any code. Even a 2-line inline plan counts.
+- ✅ **Empirical verification required** — Never claim "done" without running verification. No "it should work" — prove it works.
+- 🧹 **Context hygiene** — After 3 failed debugging attempts on the same issue, stop → document what was tried → recommend a fresh approach or session.
+- 💾 **State tracking** — Always update TASK_TRACKER.csv at task creation and completion.
+- 🔄 **Atomic commits** — Each logical change gets its own commit with a descriptive message.
+
+### Full GSD Mode (Optional)
+
+For large multi-phase projects, the user can invoke the full GSD workflow explicitly:
+- `/map` → Analyze codebase and create ARCHITECTURE.md
+- `/plan N` → Decompose phase N into executable plans
+- `/execute N` → Wave-based execution of phase plans
+- `/verify N` → Validate against spec with empirical evidence
+
+These full workflows use the `.gsd/` directory structure. The auto-integration above is the lightweight version that applies on every task.
+
 ## Triggers & Protocols
 
-- **#council**: When the user types `#council [query]`, run `node scripts/summon_council.js "[query]"` and present the output.
+- **#council**: When the user types `#council [query]`, run `node scripts/summon_council.js "[query]" --out council_latest.txt` and then read the file `council_latest.txt` to present the full council output. The script auto-saves to a timestamped file if `--out` is omitted, but always use `--out` to have a predictable filename.
 - **#hproto**: When the user types `#hproto`, immediately initiate the [Harness Engineering Protocol](.agent/workflows/harness-protocol.md) and guide the user through the Spec -> Plan -> Execute -> Verify loop.
 
 ## Versioning & Commits
 
 - **Versioning Rule**: ALWAYS name commits and pushes with explicit version tags.
 - **Changelog Rule**: ALWAYS add a changelog summarizing all updates before pushing.
-- **Next Version**: `V1.5.6`
+- **Next Version**: `V1.5.8`
 - **SemVer Protocol**:
   - **Minor Push (Bug fixes, small edits)**: Increment the LAST digit (e.g., `1.0.0` -> `1.0.1`).
   - **Major Push (New functions, big updates)**: Increment the MIDDLE digit (e.g., `1.0.0` -> `1.1.0`).

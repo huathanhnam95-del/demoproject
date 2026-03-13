@@ -21,6 +21,8 @@
   <link rel="stylesheet" href="pronunciation-analyzer/style.css">
   <link rel="stylesheet" href="pronunciation-analyzer/syllable-verifier.css">
   <link rel="stylesheet" href="style-scaffolding.css?v=20260123_mode_fix">
+  <link rel="stylesheet" href="/site-header.css">
+  <script src="/js/site-header.js" defer></script>
   <!-- Scripts moved to end of body for performance -->
   <script>
     const IS_PROD = !['localhost', '127.0.0.1'].includes(location.hostname);
@@ -115,14 +117,21 @@
   <script type="module" src="/srs-scheduler.js"></script>
 </head>
 
-<body>
+<body data-site-section="practice" data-site-locale="en">
   <!-- App Preloader/Loading Screen -->
-  <div id="app-preloader" class="app-preloader">
-    <div class="preloader-content">
-      <div class="preloader-spinner"></div>
-      <p id="preloader-text" class="preloader-text">Loading Practice Data...</p>
+  <div id="app-preloader" class="app-preloader preloader-2d">
+    <div class="preloader-text-container">
+      <div class="preloader-text-stroke">Better English Learning</div>
+      <div class="preloader-text-fill-wrapper" id="preloader-text-fill-wrapper">
+        <div class="preloader-text-fill">Better English Learning</div>
+      </div>
+    </div>
+    <div class="preloader-slogan">
+      <span class="preloader-slogan__line preloader-slogan__line--1">Not the best.</span>
+      <span class="preloader-slogan__line preloader-slogan__line--2">Just better.</span>
     </div>
   </div>
+  <script src="js/preloader-2d.js"></script>
 
   <script>
     window.__belPreloaderDiagnostics = {

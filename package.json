@@ -16,7 +16,9 @@
     "audit:a2-onboarding": "node scripts/audit/run-a2-onboarding-audit.js --base-url http://localhost:8443",
     "test:preloader:browser": "node tests/browser/preloader-browser-check.js",
     "test:preloader:browser:reduced": "node tests/browser/preloader-browser-check.js --reduced-motion",
-    "test:preloader:browser:mobile": "node tests/browser/preloader-browser-check.js --mobile-low"
+    "test:preloader:browser:mobile": "node tests/browser/preloader-browser-check.js --mobile-low",
+    "test:reading-journey:quiz:browser": "node tests/browser/reading-journey-quiz-browser-check.js",
+    "test:site-header:browser": "node tests/browser/site-header-about-check.js"
   },
   "dependencies": {
     "@google-cloud/vertexai": "^1.10.0",
@@ -24,6 +26,8 @@
     "@huggingface/inference": "^4.13.10",
     "axios": "^1.13.4",
     "chart.js": "^4.5.1",
+    "cheerio": "^1.2.0",
+    "compression": "^1.8.1",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "exceljs": "^4.4.0",
@@ -31,6 +35,7 @@
     "express-rate-limit": "^8.2.1",
     "firebase-admin": "^13.6.0",
     "openai": "^6.16.0",
+    "opossum": "^9.0.0",
     "pitchfinder": "^2.3.4",
     "retry-axios": "^4.0.1",
     "ts-fsrs": "^5.2.3",

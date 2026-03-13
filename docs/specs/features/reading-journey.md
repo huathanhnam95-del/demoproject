@@ -89,3 +89,15 @@ Access is intentionally hidden: users can only enter by visiting `/readingjourne
   - `node tests/reading-journey-cache-keys.test.js`
   - `node tests/reading-journey-json-parse.test.js`
   - `node scripts/smoke-reading-journey.js` (setup + 4 advances; asserts response shape and word counts)
+
+## 6. Promotion Gate
+
+Reading Journey remains a hidden prototype until the assessment path is validated. The current post-story quiz is formative, not exam-secure, so client-side grading is acceptable only while the feature stays behind the hidden route.
+
+Do not promote this work into `functions/src/` or public navigation until:
+
+- browser test passes for the completion-to-quiz flow
+- smoke test passes for story generation and `POST /api/reading-journey/quiz`
+- no critical accessibility blockers remain
+- review queue survives reload and keeps its missed-item schedule
+- generated decks stay valid across the supported CEFR bands

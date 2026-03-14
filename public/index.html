@@ -128,7 +128,7 @@
     </div>
     <div class="preloader-slogan">
       <span class="preloader-slogan__line preloader-slogan__line--1">Not the best.</span>
-      <span class="preloader-slogan__line preloader-slogan__line--2">Just better.</span>
+      <span class="preloader-slogan__line preloader-slogan__line--2">But better.</span>
     </div>
   </div>
   <script src="js/preloader-2d.js"></script>
@@ -1766,7 +1766,24 @@
       <div id="mode-collo-dictate" class="mode-panel" style="display: none;">
         <div class="collo-dictate-header">
           <h2>Collo-dictate</h2>
-          <p class="collo-dictate-sub">Listen and type collocations (from collocations.json).</p>
+          <p class="collo-dictate-sub">Listen and type common word pairs & phrases — sharpen your ear for natural English combinations.</p>
+        </div>
+
+        <div class="collo-search-container" role="search" aria-label="Search collocations">
+          <div class="collo-search-wrapper">
+            <span class="collo-search-icon" aria-hidden="true">🔍</span>
+            <input type="text" id="collo-search-input" class="collo-search-input"
+              placeholder="Search collocations (e.g. play, make, take...)"
+              aria-label="Search collocations by keyword"
+              autocomplete="off" autocorrect="off" spellcheck="false" />
+            <span id="collo-search-count" class="collo-search-count" aria-live="polite"></span>
+            <button type="button" id="collo-search-clear" class="collo-search-clear" aria-label="Clear search" title="Clear search (Esc)">×</button>
+          </div>
+          <p class="collo-search-hint">Matches words starting with your search term across 2,466 Pearson PTE collocations</p>
+        </div>
+        <div id="collo-search-no-results" class="collo-search-no-results" style="display: none;">
+          <span class="collo-search-no-results-icon" aria-hidden="true">📭</span>
+          Sorry, your word or phrase is not found within Pearson's official PTE Academic Collocation list.
         </div>
 
         <div class="unified-controls">

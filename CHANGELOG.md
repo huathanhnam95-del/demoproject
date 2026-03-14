@@ -1,3 +1,74 @@
+## [V1.5.8] - 2026-03-14
+
+### Added
+
+- **Pronunciation Analyzer AI Summary**: AI Teacher's Note with Gemini-powered pronunciation feedback and syllable breakdown.
+- **Collo-dictate Search UX**: Accessibility improvements (ARIA attributes), clear button, constrained width, and context-aware "no results" message.
+- **GStack Workflows**: Integrated `/ceo-review`, `/diff-qa`, and `/ship` workflows into GSD system with auto-trigger rules.
+- **Landing Page Images**: Added hero lifestyle, screenshot assets (pitch analyzer, speak mode, type mode, dashboard, daily review), and AI-generated concept art.
+- **About Page Updates**: Refreshed About Us page styling and content.
+
+### Improved
+
+- **Note Difficulty Reclassification**: Multi-factor algorithm replacing Flesch-Kincaid for more balanced difficulty distribution across levels.
+- **Fill Mode Extended Profiles**: Enabled progression beyond Level 1 with extended difficulty profiles.
+- **Landing Page Round 2**: Implemented feedback-driven refinements to landing page layout and content.
+- **Pronounce Mode**: Mobile compatibility, Praat Cloud Run backend integration, and corrected pronunciation practice panel.
+- **Loader Slogan**: Refined font size and animation timing for dual-phrase slogan.
+
+### Fixed
+
+- **Difficulty Manager**: Fixed extended profiles and synced updated classifications to Firestore.
+
+## [V1.5.7] - 2026-03-13
+
+### Added
+
+- **Whisk Thumbnails**: AI-generated thumbnails for all practice modes via Google Whisk integration.
+- **Dual API Layer**: Google AI Studio (free) as primary with Vertex AI (paid) fallback for story generation.
+- **Service Worker**: Background caching and offline resilience via service worker registration.
+- **Background AI Workers**: Offloaded AI processing to web workers for non-blocking UI.
+- **Service Abstraction Layer**: Unified service interfaces for swappable backend implementations.
+- **Pearson-inspired Landing Page Mockup**: Modern landing page design with glassmorphism and 3D depth effects.
+
+### Fixed
+
+- **Practice Mode UI**: Restored all practice modes after 3-island layout broke critical DOM IDs; reverted to stable HTML.
+- **Speak Mode Invisible Panel**: Fixed CSS aliases, HTML nesting, and JS temporal dead zone issues.
+- **Landing Page Header**: Removed duplicate site-header and fixed nav element overlap.
+- **Note Mode Difficulty**: Corrected difficulty categorization for Note/Take Notes practice mode.
+
+### Improved
+
+- **Loading Page Slogan**: Added animated dual-phrase slogan ("Not the best." / "Just better.") with smooth fade transitions.
+- **Practice Mode Thumbnails**: Replaced SVG placeholders with generated AI thumbnails for visual polish.
+
+## [V1.5.6] - 2026-03-10
+
+### Added
+
+- **CRM Standardization**: Merged CRM standardization branch into main with unified admin interfaces.
+- **Entrance Test Routes**: Added entrance-test routes to Cloud Functions apiApp for production CRM.
+
+### Fixed
+
+- **Rate Limiter**: Fixed ERR_ERL_UNEXPECTED_X_FORWARDED_FOR in Cloud Functions.
+- **Story Generation Pipeline**: Ported full Gemini prompts from src/ to functions/, aligned frontend renderBeat with Gemini response fields, normalized beat responses, switched to gemini-2.0-flash model.
+- **Service Worker Cache**: Bumped cache versions (v4) and JS version tags to bust stale caches.
+- **Reading Journey advanceBeat**: Added missing outlineId/path/level to payload.
+
+## [V1.5.5] - 2026-03-11
+
+### Added
+
+- **Hyper-Minimal Branded UI**: Redesigned all practice modes with a clean, branded aesthetic.
+- **Story Quality Rating System**: 8-criterion rubric with auto-assessment for reading journey stories.
+- **Scalability Quick Wins**: Compression, caching headers, and resilience improvements for production performance.
+
+### Improved
+
+- **Production Performance**: Investigated and optimized page load times and asset delivery.
+
 ## [V1.5.4] - 2026-03-10
 
 ### Added

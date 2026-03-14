@@ -55,6 +55,22 @@ export const DifficultyConfig = {
             4: { typoTolerance: 1, showDef: true },
             5: { typoTolerance: 0, showDef: false },
             6: { typoTolerance: 0, showDef: false }
+        },
+        extended: {
+            1: { maxReplays: 5, showHints: true },
+            2: { maxReplays: 5, showHints: true },
+            3: { maxReplays: 5, showHints: false },
+            4: { maxReplays: 5, showHints: false },
+            5: { maxReplays: 5, showHints: false },
+            6: { maxReplays: 5, showHints: false }
+        },
+        notes: {
+            1: { maxReplays: 5, showTranscript: true },
+            2: { maxReplays: 4, showTranscript: true },
+            3: { maxReplays: 3, showTranscript: false },
+            4: { maxReplays: 3, showTranscript: false },
+            5: { maxReplays: 2, showTranscript: false },
+            6: { maxReplays: 2, showTranscript: false }
         }
     },
     STORAGE_KEY: 'difficulty_profile'

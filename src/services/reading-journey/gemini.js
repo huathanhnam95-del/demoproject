@@ -1,9 +1,18 @@
 const { VertexAI } = require('@google-cloud/vertexai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { safeJsonParse, countWords, trimToMaxWords } = require('./json');
 
-// Default to the highest-capability Gemini model currently available in Vertex AI.
+// Default to the highest-capability Gemini model currently available.
 // Can be overridden via READING_JOURNEY_GEMINI_MODEL in .env.
 const DEFAULT_MODEL = 'gemini-1.5-pro';
+
+// ── Dual Provider Layer ─────────────────────────────────────────
+// Provider priority: Google AI Studio (free) → Vertex AI (paid, GCP credit).
+// When AI Studio hits 429/quota limits, we switch to Vertex AI for the session.
+const PROVIDER_AI_STUDIO = 'google-ai-studio';
+const PROVIDER_VERTEX_AI = 'vertex-ai';
+let activeProvider = null;          // set lazily on first call
+let providerSwitchReason = '';
 
 // Fallback when the primary model is unavailable (quota/rate limits, model not found, etc.).
 // Can be overridden via READING_JOURNEY_GEMINI_FALLBACK_MODEL in .env.
@@ -70,49 +79,112 @@ function getFallbackModelName() {
   return fromEnv || DEFAULT_FALLBACK_MODEL;
 }
 
-function getClient() {
+// ── Provider: Google AI Studio (free tier) ──────────────────────
+let cachedAIStudioClient = null;
+const aiStudioModelCache = new Map();
+
+function getAIStudioClient() {
+  if (cachedAIStudioClient) return cachedAIStudioClient;
+  const apiKey = normalizeScalar(process.env.GEMINI_API_KEY);
+  if (!apiKey) return null; // AI Studio unavailable
+  cachedAIStudioClient = new GoogleGenerativeAI(apiKey);
+  return cachedAIStudioClient;
+}
+
+function getAIStudioModel(name) {
+  const modelName = normalizeScalar(name) || DEFAULT_MODEL;
+  const cached = aiStudioModelCache.get(modelName);
+  if (cached) return cached;
+  const client = getAIStudioClient();
+  if (!client) return null;
+  const model = client.getGenerativeModel({ model: modelName });
+  aiStudioModelCache.set(modelName, model);
+  return model;
+}
+
+// ── Provider: Vertex AI (paid, GCP credit) ──────────────────────
+let cachedVertexClient = null;
+const vertexModelCache = new Map();
+
+function getVertexClient() {
+  if (cachedVertexClient) return cachedVertexClient;
   const project = normalizeScalar(process.env.FIREBASE_PROJECT_ID);
   const location = normalizeScalar(process.env.GOOGLE_CLOUD_LOCATION) || 'us-central1';
-
   if (!project) {
     throw new Error('Missing FIREBASE_PROJECT_ID for Vertex AI');
   }
-
-  return new VertexAI({ project, location });
+  cachedVertexClient = new VertexAI({ project, location });
+  return cachedVertexClient;
 }
 
-let cachedClient = null;
-const modelCacheByName = new Map();
+function getVertexModel(name) {
+  const modelName = normalizeScalar(name) || DEFAULT_MODEL;
+  const cached = vertexModelCache.get(modelName);
+  if (cached) return cached;
+  const client = getVertexClient();
+  const model = client.getGenerativeModel({ model: modelName });
+  vertexModelCache.set(modelName, model);
+  return model;
+}
 
-function getCachedClient() {
-  if (cachedClient) return cachedClient;
-  cachedClient = getClient();
-  return cachedClient;
+// ── Unified model getter ────────────────────────────────────────
+function resolveActiveProvider() {
+  if (activeProvider) return activeProvider;
+  const apiKey = normalizeScalar(process.env.GEMINI_API_KEY);
+  activeProvider = apiKey ? PROVIDER_AI_STUDIO : PROVIDER_VERTEX_AI;
+  console.log('[Reading Journey] Provider: ' + activeProvider);
+  return activeProvider;
 }
 
 function getModelForName(name) {
-  const modelName = normalizeScalar(name) || DEFAULT_MODEL;
-  const cached = modelCacheByName.get(modelName);
-  if (cached) return cached;
-  const client = getCachedClient();
-  const model = client.getGenerativeModel({ model: modelName });
-  modelCacheByName.set(modelName, model);
-  return model;
+  const provider = resolveActiveProvider();
+  if (provider === PROVIDER_AI_STUDIO) {
+    const model = getAIStudioModel(name);
+    if (model) return model;
+    activeProvider = PROVIDER_VERTEX_AI;
+    console.log('[Reading Journey] AI Studio unavailable, using Vertex AI');
+  }
+  return getVertexModel(name);
 }
 
 function getModel() {
   return getModelForName(getModelName());
 }
 
+function getActiveProviderName() {
+  return resolveActiveProvider();
+}
+
 let forceFallback = false;
 let forceFallbackReason = '';
+
+function isRateLimitError(err) {
+  const msg = String(err?.message || err || '');
+  if (!msg) return false;
+  if (msg.includes('429') || msg.toLowerCase().includes('quota exceeded')) return true;
+  if (msg.toLowerCase().includes('resource exhausted')) return true;
+  if (msg.toLowerCase().includes('rate limit')) return true;
+  return false;
+}
 
 function shouldForceFallback(err) {
   const msg = String(err?.message || err || '');
   if (!msg) return false;
-  if (msg.includes('[429') || msg.toLowerCase().includes('quota exceeded')) return true;
+  if (isRateLimitError(err)) return true;
   if (msg.includes('[404') || msg.toLowerCase().includes('not found')) return true;
   if (msg.toLowerCase().includes('not supported')) return true;
+  return false;
+}
+
+/** Switch from AI Studio → Vertex AI when rate-limited. */
+function switchToVertexIfNeeded(err) {
+  if (activeProvider === PROVIDER_AI_STUDIO && isRateLimitError(err)) {
+    activeProvider = PROVIDER_VERTEX_AI;
+    providerSwitchReason = String(err?.message || err).slice(0, 120);
+    console.log('[Reading Journey] ⚡ AI Studio rate-limited → switching to Vertex AI');
+    console.log('[Reading Journey]   Reason: ' + providerSwitchReason);
+    return true;
+  }
   return false;
 }
 
@@ -163,11 +235,18 @@ async function generateJson(prompt, { temperature = 0.7 } = {}) {
       const response = await result.response;
       text = extractText(response);
     } catch (e) {
+      // Provider-level fallback: AI Studio (free) → Vertex AI (paid)
+      const switchedProvider = switchToVertexIfNeeded(e);
+
+      // Model-level fallback: primary model → fallback model
       if (!forceFallback && activeModelName === primaryModelName && fallbackModelName && fallbackModelName !== primaryModelName && shouldForceFallback(e)) {
         forceFallback = true;
         forceFallbackReason = String(e?.message || e);
         activeModelName = fallbackModelName;
+      }
 
+      if (switchedProvider || forceFallback) {
+        // Retry with switched provider and/or fallback model
         try {
           const model = getModelForName(activeModelName);
           // eslint-disable-next-line no-await-in-loop
@@ -662,6 +741,7 @@ module.exports = {
   getModelName,
   getFallbackModelName,
   getEffectiveModelName,
+  getActiveProviderName,
   getForceFallbackReason: () => forceFallbackReason,
   generateTopicTags,
   generateOutline,

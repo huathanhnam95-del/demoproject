@@ -5,6 +5,7 @@ import { StressVisualizer } from './stress-visualizer.js';
 import { PraatAPI } from './praat-api.js';
 import { WordReferenceService } from './word-reference-service.js';
 import { config } from './config.js';
+import { AISummaryService } from './ai-summary-service.js';
 
 class PronunciationApp {
     constructor() {
@@ -12,11 +13,12 @@ class PronunciationApp {
         this.pitchAnalyzer = new PitchAnalyzer();
         this.syllableDetector = new SyllableDetector();
         this.praatAPI = new PraatAPI(config.backendUrl);
-        this.usePraatBackend = false; // Toggle: false = local JS, true = Praat backend
+        this.usePraatBackend = config.features.usePraatBackend || false; // Respect config, will be confirmed by health check
         this.visualizer = null; // init after DOM load
 
         // Native reference service
         this.wordRefService = new WordReferenceService();
+        this.aiSummaryService = new AISummaryService();
         this.currentWordRef = null;  // Current word reference data
         this.nativePattern = null;   // Native stress pattern for comparison
 
@@ -68,12 +70,17 @@ class PronunciationApp {
     }
 
     async checkPraatBackend() {
-        const isAvailable = await this.praatAPI.checkHealth();
-        if (isAvailable) {
-            Logger.log('✅ Praat backend available - using server-side analysis');
-            this.usePraatBackend = true;
-        } else {
-            Logger.log('ℹ️ Praat backend not available - using local JS analysis');
+        try {
+            const isAvailable = await this.praatAPI.checkHealth();
+            if (isAvailable) {
+                Logger.log('✅ Praat backend available - using server-side analysis');
+                this.usePraatBackend = true;
+            } else {
+                Logger.log('ℹ️ Praat backend not available - falling back to local JS analysis');
+                this.usePraatBackend = false;
+            }
+        } catch (e) {
+            Logger.log('ℹ️ Praat health check failed - using local JS analysis');
             this.usePraatBackend = false;
         }
     }
@@ -408,10 +415,23 @@ class PronunciationApp {
 
         } catch (err) {
             Logger.error(err);
+            // If Praat backend failed, try falling back to local JS
+            if (this.usePraatBackend && this.audioCapture.audioChunks?.length > 0) {
+                Logger.log('⚠️ Praat backend error, falling back to local JS analysis');
+                this.usePraatBackend = false;
+                this.statusIndicator.textContent = "Retrying with local analysis...";
+                try {
+                    await this.stopRecording();
+                    return;
+                } catch (retryErr) {
+                    Logger.error('Local fallback also failed:', retryErr);
+                }
+            }
             this.resultsSummary.innerHTML = `
-                <div style="color: #dc2626;">
+                <div style="color: #dc2626; font-size: 0.95rem; padding: 12px;">
                     ⚠️ Analysis error: ${err.message}
-                    ${this.usePraatBackend ? '<br><br>Make sure the Python backend is running:<br><code>cd backend && python server.py</code>' : ''}
+                    <br><br>
+                    <span style="color: #6b7280; font-size: 0.85rem;">Try recording again. If the issue persists, please check your internet connection.</span>
                 </div>
             `;
             this.statusIndicator.textContent = "Error";
@@ -670,6 +690,42 @@ class PronunciationApp {
                     </div>
                 </div>
 
+                <!-- User Syllable Breakdown -->
+                <div style="margin-bottom: 20px; padding: 16px; background: #f0f9ff; border-radius: 12px; border: 1px solid #bae6fd;">
+                    <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 12px; color: #0c4a6e;">🎤 Your Syllable Breakdown:</div>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                            <thead>
+                                <tr style="background: #e0f2fe; color: #075985;">
+                                    <th style="padding: 8px 10px; text-align: left; border-bottom: 2px solid #7dd3fc;">Syllable</th>
+                                    <th style="padding: 8px 10px; text-align: center; border-bottom: 2px solid #7dd3fc;">Start</th>
+                                    <th style="padding: 8px 10px; text-align: center; border-bottom: 2px solid #7dd3fc;">Duration</th>
+                                    <th style="padding: 8px 10px; text-align: center; border-bottom: 2px solid #7dd3fc;">Pitch</th>
+                                    <th style="padding: 8px 10px; text-align: center; border-bottom: 2px solid #7dd3fc;">Energy</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${userSyllables.map((s, i) => {
+                                    const label = this.getSyllableLabels()?.[i] || `Syl ${i + 1}`;
+                                    const isStressed = comparison.syllables?.[i]?.isStressed || (comparison.userStressedSyllable === i + 1);
+                                    const startTime = s.startTime != null ? s.startTime.toFixed(3) + 's' : '-';
+                                    const duration = s.duration != null ? s.duration.toFixed(3) + 's' : '-';
+                                    const pitch = s.maxPitch > 0 ? Math.round(s.maxPitch) + ' Hz' : '<span style="color:#9ca3af">—</span>';
+                                    const energy = (s.intensity || s.maxEnergy) > 0 ? (s.intensity || s.maxEnergy).toFixed(1) : '<span style="color:#9ca3af">—</span>';
+                                    const stressBadge = isStressed ? ' <span style="background:#fbbf24;color:#78350f;font-size:0.7rem;padding:1px 5px;border-radius:4px;font-weight:600;">STRESS</span>' : '';
+                                    return `<tr style="border-bottom: 1px solid #e0f2fe;">
+                                        <td style="padding: 6px 10px; font-weight: 600; color: #1e40af;">${label}${stressBadge}</td>
+                                        <td style="padding: 6px 10px; text-align: center; color: #475569;">${startTime}</td>
+                                        <td style="padding: 6px 10px; text-align: center; color: #475569; font-weight: 500;">${duration}</td>
+                                        <td style="padding: 6px 10px; text-align: center; color: #3b82f6;">${pitch}</td>
+                                        <td style="padding: 6px 10px; text-align: center; color: #10b981;">${energy}</td>
+                                    </tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 ${tipsHtml}
 
                 <!-- Performance Summary Section -->
@@ -721,6 +777,15 @@ class PronunciationApp {
                             <span style="color: #64748b; margin-left: 4px;">${comparison.intensityScore >= 80 ? 'Your stress emphasis and relative loudness are clear.' : comparison.intensityScore >= 60 ? 'You have some emphasis, but it could be more distinct.' : 'Try to emphasize the stressed syllable with a bit more volume.'}</span>
                         </div>
                     </div>
+
+                    <!-- AI Teacher Summary -->
+                    <div id="pa-ai-summary" style="margin-top: 16px; padding: 14px; background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%); border-radius: 10px; border: 1px solid #fde68a; font-size: 0.9rem; color: #713f12; line-height: 1.6;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <span style="font-size: 1.1rem;">🧑‍🏫</span>
+                            <span style="font-weight: 700; color: #92400e;">Teacher's Note</span>
+                        </div>
+                        <div id="pa-ai-summary-text" style="color: #78350f;">Generating personalized feedback...</div>
+                    </div>
                 </div>
         `;
 
@@ -739,6 +804,29 @@ class PronunciationApp {
 
         html += '</div>';
         this.resultsSummary.innerHTML = html;
+
+        // Trigger AI summary asynchronously
+        this._loadAISummary(comparison, userSyllables);
+    }
+
+    /**
+     * Load AI-generated teacher summary asynchronously
+     */
+    async _loadAISummary(comparison, userSyllables) {
+        const summaryEl = document.getElementById('pa-ai-summary-text');
+        if (!summaryEl) return;
+
+        try {
+            const word = this.wordInput?.value?.trim() || 'unknown';
+            const ipa = this.ipaDisplay?.textContent || '';
+            const summary = await this.aiSummaryService.generateSummary(word, comparison, userSyllables, ipa);
+            summaryEl.textContent = summary;
+        } catch (err) {
+            console.warn('AI summary failed:', err);
+            // Use built-in template as fallback
+            const word = this.wordInput?.value?.trim() || 'the word';
+            summaryEl.textContent = this.aiSummaryService._generateTemplateSummary(word, comparison, userSyllables);
+        }
     }
 
     /**

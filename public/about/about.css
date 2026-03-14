@@ -220,6 +220,100 @@ a {
   font-weight: 700;
 }
 
+/* ============================================
+   About Page - Image Elements
+   ============================================ */
+
+/* Hero visual: Dashboard + Lifestyle side-by-side */
+.about-hero__visual {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 20px;
+  margin-top: 8px;
+}
+
+.about-hero__img-frame {
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid var(--about-border);
+  background: var(--about-surface);
+  box-shadow: var(--about-shadow);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.about-hero__img-frame:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.14);
+}
+
+.about-hero__img {
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+
+.about-hero__img-frame--lifestyle .about-hero__img {
+  object-position: center;
+}
+
+/* Problem section visual */
+.about-visual-banner {
+  margin: 24px 0;
+}
+
+.about-visual-frame {
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid var(--about-border);
+  background: var(--about-surface);
+  box-shadow: var(--about-shadow);
+  transition: transform 0.3s ease;
+}
+
+.about-visual-frame:hover {
+  transform: translateY(-3px);
+}
+
+.about-visual-img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  display: block;
+}
+
+.about-visual-caption {
+  padding: 14px 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--about-muted);
+  text-align: center;
+  background: rgba(248, 250, 252, 0.9);
+  border-top: 1px solid var(--about-border);
+}
+
+/* Feature card images */
+.feature-card__img-wrap {
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.feature-card__img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.feature-card:hover .feature-card__img {
+  transform: scale(1.04);
+}
+
 @media (max-width: 960px) {
   .about-shell {
     width: min(100% - 28px, 860px);
@@ -231,6 +325,22 @@ a {
   .audience-list,
   .execution-grid {
     grid-template-columns: 1fr;
+  }
+
+  .about-hero__visual {
+    grid-template-columns: 1fr;
+  }
+
+  .about-hero__img {
+    height: 220px;
+  }
+
+  .about-visual-img {
+    height: 200px;
+  }
+
+  .feature-card__img {
+    height: 140px;
   }
 }
 

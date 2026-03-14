@@ -48,6 +48,12 @@ async function summonCouncil() {
         args.splice(outIndex, 2);
     }
 
+    // Auto-generate output file if --out not specified
+    if (!outFile) {
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        outFile = path.join(__dirname, '..', `council_output_${timestamp}.txt`);
+    }
+
     const userMessage = args[0];
     const contextFiles = args.slice(1);
 
@@ -92,9 +98,11 @@ async function summonCouncil() {
 
     const results = await Promise.all(promises);
 
-    // 3. Output
+    // 3. Output — always save to file, only preview in terminal
+    const PREVIEW_LENGTH = 200;
     console.log("\n" + "=".repeat(50));
-    let fileOutput = "=".repeat(50) + "\n\n";
+    let fileOutput = `Council Query: "${userMessage}"\n`;
+    fileOutput += "=".repeat(50) + "\n\n";
 
     // Order: Architect -> Challenger -> Reviewer
     const order = ['architect', 'challenger', 'reviewer'];
@@ -102,26 +110,31 @@ async function summonCouncil() {
     for (const roleKey of order) {
         const result = results.find(r => r.key === roleKey);
         const persona = PERSONAS[roleKey];
+        const fullText = result.text.trim();
 
+        // Terminal: short preview only
+        const preview = fullText.length > PREVIEW_LENGTH
+            ? fullText.substring(0, PREVIEW_LENGTH) + '... [truncated, see output file]'
+            : fullText;
         console.log(`${persona.color}[ ${persona.name} ]\x1b[0m`);
-        console.log(result.text.trim());
+        console.log(preview);
         console.log("-".repeat(50));
 
+        // File: full response
         fileOutput += `[ ${persona.name} ]\n`;
-        fileOutput += result.text.trim() + "\n";
+        fileOutput += fullText + "\n";
         fileOutput += "-".repeat(50) + "\n\n";
     }
 
-    console.log("\n✅ Council Adjourned. The Sovereign's vision is secured.");
     fileOutput += "✅ Council Adjourned. The Sovereign's vision is secured.\n";
 
-    if (outFile) {
-        try {
-            fs.writeFileSync(outFile, fileOutput, 'utf-8');
-            console.log(`\n📄 Council output saved to: ${outFile}`);
-        } catch (err) {
-            console.error(`\n❌ Failed to save output to ${outFile}:`, err.message);
-        }
+    try {
+        fs.writeFileSync(outFile, fileOutput, 'utf-8');
+        console.log(`\n✅ Council Adjourned. Full output saved to: ${outFile}`);
+    } catch (err) {
+        console.error(`\n❌ Failed to save output to ${outFile}:`, err.message);
+        // Fallback: dump full output to console if file write fails
+        console.log(fileOutput);
     }
 }
 

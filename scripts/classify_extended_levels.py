@@ -1,6 +1,19 @@
 """
 Classify Fill mode (extended) items into difficulty levels 1..3.
 
+ALGORITHM DOCUMENTATION:
+  Three factors determine difficulty, each based on the gap-fill answers:
+    1. Concept Rarity  — zipf frequency of gap words (rare = harder)
+    2. Collocation Rarity — zipf frequency of word bigrams around gaps
+    3. Cognitive Load  — number of gaps in the sentence (more = harder)
+
+  Thresholds (see CONCEPT_* and COLL_* constants below) are calibrated
+  from corpus analysis. Unlike the Note mode classifier (percentile-based),
+  this one uses absolute thresholds derived from word frequency data.
+
+  Expected distribution: ~49% L1, ~26% L2, ~25% L3
+  (Distribution depends on the specific items in index.json)
+
 Usage:
   python scripts/classify_extended_levels.py --dry-run
   python scripts/classify_extended_levels.py --write

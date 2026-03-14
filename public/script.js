@@ -3914,10 +3914,9 @@
       const pronounceModeBtn = document.querySelector('.mode-switch-btn[onclick*="pronounce"]');
       if (pronounceModeBtn) pronounceModeBtn.classList.add('active');
 
-      // Show Pronunciation Panel
+      // Hide Speak mode's Pronunciation Practice panel (it belongs to Speak, not Pronounce)
       if (pronunciationPanel) {
-        pronunciationPanel.style.display = 'block';
-        // pronunciationPanel.scrollIntoView({ behavior: 'smooth' }); // Disable auto-scroll
+        pronunciationPanel.style.display = 'none';
       }
 
       // Stop any active recordings

@@ -5,14 +5,14 @@
 
 export const config = {
     // Backend URL - Cloud Run (set to false to use localhost for local dev)
-    forceCloudRun: false,
+    forceCloudRun: true,
 
     backendUrl: (() => {
         const cloudRunUrl = 'https://praat-api-1071929245506.us-central1.run.app';
 
         // ALWAYS use Cloud Run if forceCloudRun is true
         // Access the forceCloudRun value from the outer scope
-        const forceCloud = false; // Must match forceCloudRun above
+        const forceCloud = true; // Must match forceCloudRun above
 
         if (forceCloud) {
             return cloudRunUrl;
@@ -35,9 +35,13 @@ export const config = {
         useNativeReference: true,
         showComparison: true,
         saveToDatabase: true,
-        usePraatBackend: false
+        usePraatBackend: true
     },
 
     // Cache Settings
-    sessionCacheEnabled: true
+    sessionCacheEnabled: true,
+
+    // Google AI Studio / Gemini API Key (for AI-generated pronunciation feedback)
+    // Get yours at: https://aistudio.google.com/apikey
+    geminiApiKey: 'AIzaSyB-7-Z_akwDLmHj40KD-5W1t6qKJbTfqZs'
 };

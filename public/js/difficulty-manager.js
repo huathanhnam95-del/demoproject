@@ -20,7 +20,9 @@ const DifficultyManager = (function () {
     let userDifficultyProfile = {
         type: null,
         speak: null,
-        srs: null
+        srs: null,
+        extended: null,
+        notes: null
     };
 
     // --- Modules ---
@@ -81,7 +83,7 @@ const DifficultyManager = (function () {
         }
 
         // Ensure defaults
-        ['type', 'speak', 'srs'].forEach(mode => {
+        ['type', 'speak', 'srs', 'extended', 'notes'].forEach(mode => {
             if (!userDifficultyProfile[mode]) {
                 userDifficultyProfile[mode] = logic.makeDefaultProfile();
             }
@@ -234,6 +236,8 @@ const DifficultyManager = (function () {
         // Simple heuristic for active mode (can be improved)
         let activeMode = 'type';
         if (document.querySelector('#tab-speak.active')) activeMode = 'speak';
+        else if (document.querySelector('#tab-extended.active')) activeMode = 'extended';
+        else if (document.querySelector('#tab-notes.active')) activeMode = 'notes';
         else if (document.querySelector('#tab-srs.active')) activeMode = 'srs';
 
         const settings = getCurrentSettings(activeMode); // Resolve level
@@ -266,7 +270,28 @@ const DifficultyManager = (function () {
         saveProfile,
         // Expose state getters for debugging
         getProfile: (mode) => userDifficultyProfile[mode],
-        getGlobalSettings: () => globalSettings
+        getGlobalSettings: () => globalSettings,
+        /**
+         * Returns a human-readable explanation of how the current difficulty
+         * level was determined for a given mode. Useful for admin/debug views.
+         */
+        getDebugExplanation: (mode) => {
+            const profile = userDifficultyProfile[mode];
+            const settings = getCurrentSettings(mode);
+            const calibrated = profile ? logic.isCalibrated(profile) : false;
+            return {
+                mode,
+                currentLevel: settings.level,
+                levelName: DifficultyConfig.LEVELS.NAMES[settings.level] || `Level ${settings.level}`,
+                source: globalSettings.autoAdjustEnabled ? 'auto' : 'manual',
+                calibrated,
+                attemptsAtLevel: profile?.attemptsAtLevel || 0,
+                graceRemaining: Math.max(0, DifficultyConfig.GRACE_PERIOD_ATTEMPTS - (profile?.attemptsAtLevel || 0)),
+                historySize: profile?.history?.length || 0,
+                autoAdjustEnabled: globalSettings.autoAdjustEnabled,
+                sensitivity: globalSettings.adjustmentSensitivity
+            };
+        }
     };
 
     // Add back-compat property for script.js and auth-ui.js

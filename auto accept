@@ -52,11 +52,11 @@
         const lastClickedAt = state.clickedAtByElement.get(el) || 0;
         if (!el) return false;
         if (!isVisible(el)) return false;
-        if (!isOnScreen(el)) return false;
         if (el.disabled) return false;
         if (now - lastClickedAt < CFG.perElementCooldownMs) return false;
         if (now - state.lastActionAt < 350) return false;
-        try { el.scrollIntoView({ block: 'center', inline: 'center' }); } catch (_) { /* intentional ignore */ }
+        // Scroll into view FIRST — handles off-screen buttons
+        try { el.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' }); } catch (_) { /* intentional ignore */ }
         try { el.focus(); } catch (_) { /* intentional ignore */ }
         try {
             el.click();
@@ -75,14 +75,29 @@
     function scoreRunLabel(labLower) {
         if (!labLower) return -1;
         if (labLower.includes('always run')) return -1;
+        
+        // Exact matches
         if (labLower === 'run') return 100;
+        if (labLower === 'accept') return 100;
+        if (labLower === 'always allow') return 100;
+        if (labLower === 'allow') return 100;
+        
+        // Prefix matches
         if (labLower.startsWith('run')) return 80;
+        if (labLower.startsWith('accept')) return 80;
+        if (labLower.startsWith('always allow')) return 80;
+        if (labLower.startsWith('allow')) return 80;
+        
+        // Substring match for split buttons (like 'Always Allow ^')
+        if (labLower.includes('always allow')) return 60;
+        
         return -1;
     }
     function findBestRunButton() {
+        // Don't filter by isOnScreen — off-screen buttons are valid targets
+        // safeClick will scrollIntoView before clicking
         const candidates = Array.from(document.querySelectorAll('button, [role="button"], a[role="button"]'))
-            .filter(isVisible)
-            .filter(isOnScreen);
+            .filter(isVisible);
         let bestRun = null;
         let bestScore = -1;
         for (const el of candidates) {

@@ -58,6 +58,11 @@ const ColloDictateMode = (() => {
    *  input: HTMLTextAreaElement,
    *  feedback: HTMLElement,
    *  audio: HTMLAudioElement,
+   *  searchInput: HTMLInputElement,
+   *  searchCountEl: HTMLElement,
+   *  searchClearBtn: HTMLButtonElement,
+   *  searchHintEl: HTMLElement,
+   *  noResultsEl: HTMLElement,
    * }} */
   let els = null;
 
@@ -156,16 +161,60 @@ const ColloDictateMode = (() => {
     const value = String(els.lengthSelect.value || 'any');
     if (value === 'any') {
       filtered = phrases.slice();
-      return;
+    } else {
+      const target = Number.parseInt(value, 10);
+      if (!Number.isFinite(target) || target <= 0) {
+        filtered = phrases.slice();
+      } else {
+        filtered = phrases.filter((p) => countNormalizedWords(p) === target);
+      }
     }
 
-    const target = Number.parseInt(value, 10);
-    if (!Number.isFinite(target) || target <= 0) {
-      filtered = phrases.slice();
-      return;
+    // Apply search keyword filter on top of length filter
+    const searchTerm = normalizeForCompare(els.searchInput?.value || '');
+    if (searchTerm) {
+      const searchWords = searchTerm.split(' ');
+      filtered = filtered.filter((p) => {
+        const normalized = normalizeForCompare(p);
+        const phraseWords = normalized.split(' ');
+        if (searchWords.length > 1) {
+          // Multi-word search: use exact substring match
+          return normalized.includes(searchTerm);
+        }
+        // Single-word search: match if any word in the phrase STARTS with the search term
+        // So "play" matches "play a role" but NOT "display data"
+        return phraseWords.some((w) => w.startsWith(searchTerm));
+      });
     }
 
-    filtered = phrases.filter((p) => countNormalizedWords(p) === target);
+    // Update search UI
+    updateSearchUI(searchTerm);
+  }
+
+  function updateSearchUI(searchTerm) {
+    if (!els) return;
+    const hasSearch = !!searchTerm;
+
+    // Show/hide match count badge
+    if (hasSearch) {
+      els.searchCountEl.textContent = `${filtered.length} match${filtered.length !== 1 ? 'es' : ''}`;
+      els.searchCountEl.classList.add('visible');
+    } else {
+      els.searchCountEl.classList.remove('visible');
+    }
+
+    // Show/hide clear button
+    if (els.searchClearBtn) {
+      els.searchClearBtn.classList.toggle('visible', hasSearch);
+    }
+
+    // Show/hide search hint
+    if (els.searchHintEl) {
+      els.searchHintEl.classList.toggle('visible', hasSearch);
+    }
+
+    // Show/hide no-results message
+    els.noResultsEl.style.display = (hasSearch && filtered.length === 0) ? 'block' : 'none';
   }
 
   async function ensurePhrasesLoaded() {
@@ -218,7 +267,11 @@ const ColloDictateMode = (() => {
     invalidatePlayback();
 
     if (filtered.length === 0) {
-      setFeedback('wrong', 'No phrases available for the selected length filter.');
+      const searchTerm = normalizeForCompare(els.searchInput?.value || '');
+      const msg = searchTerm
+        ? `No collocations found matching "<strong>${els.searchInput.value.trim()}</strong>" with the current filters.`
+        : 'No phrases available for the selected length filter.';
+      setFeedback('wrong', msg);
       els.input.value = '';
       els.input.disabled = true;
       els.checkBtn.disabled = true;
@@ -424,6 +477,11 @@ const ColloDictateMode = (() => {
     const input = document.getElementById('collo-answer-input');
     const feedback = document.getElementById('collo-feedback');
     const audio = document.getElementById('audio-collo-dictate');
+    const searchInput = document.getElementById('collo-search-input');
+    const searchCountEl = document.getElementById('collo-search-count');
+    const searchClearBtn = document.getElementById('collo-search-clear');
+    const searchHintEl = document.querySelector('.collo-search-hint');
+    const noResultsEl = document.getElementById('collo-search-no-results');
 
     if (
       !panel ||
@@ -459,7 +517,12 @@ const ColloDictateMode = (() => {
       statsEl,
       input,
       feedback,
-      audio
+      audio,
+      searchInput,
+      searchCountEl,
+      searchClearBtn,
+      searchHintEl,
+      noResultsEl
     };
 
     // Initial UI state
@@ -496,6 +559,51 @@ const ColloDictateMode = (() => {
       currentPhrase = '';
       goNext();
     });
+
+    // Search input: debounced filter + keyboard handling
+    let searchDebounce = null;
+    if (searchInput) {
+      // Prevent Enter from triggering form submit or other actions
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+        }
+        // Escape clears the search
+        if (e.key === 'Escape') {
+          searchInput.value = '';
+          searchInput.dispatchEvent(new Event('input'));
+          searchInput.blur();
+        }
+      });
+
+      searchInput.addEventListener('input', () => {
+        clearTimeout(searchDebounce);
+        searchDebounce = setTimeout(() => {
+          applyFilter();
+          history = [];
+          historyIndex = -1;
+          currentPhrase = '';
+          updateNavUI();
+          updateScoreUI();
+          updateQuestionMetaUI();
+          clearFeedback();
+          if (filtered.length > 0) {
+            goNext();
+          } else {
+            setCurrentPhrase('');
+          }
+        }, 250);
+      });
+    }
+
+    // Clear button click handler
+    if (searchClearBtn && searchInput) {
+      searchClearBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        searchInput.dispatchEvent(new Event('input'));
+        searchInput.focus();
+      });
+    }
 
     input.addEventListener('input', () => {
       const hasText = normalizeForCompare(input.value).length > 0;

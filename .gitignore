@@ -12,7 +12,6 @@ database/speak/audio/
 *.xlsx
 !database/**/*.xlsx
 
-
 # OS files
 .DS_Store
 Thumbs.db
@@ -44,11 +43,6 @@ merriam-webster api key
 *.tmp
 *.temp
 
-node_modules
-node_modules
-node_modules
-node_modules
-
 # Gemini Agent Folder
 .gemini/
 
@@ -60,3 +54,30 @@ docs/audits/**/*.webm
 # Temporary / cloned repos
 tmp_skills_repo/
 _tmp/
+tmp/
+
+# Scratch scripts (one-off fix/rebuild scripts)
+fix.js
+fix.py
+fix-*.js
+fix_*.py
+rebuild.js
+rebuild-*.js
+master-rebuild.js
+restore-*.js
+update_ui.js
+update_ui_cheerio.js
+append-task.js
+append_plan.js
+run_mockup_council.js
+generate_replacements.py
+extract_modes.py
+fix_practice_modes.py
+fix_type_header.py
+
+# Temporary HTML mode files
+mode_*_new.html
+mode_*_old.html
+
+# Council output files
+council_*.txt

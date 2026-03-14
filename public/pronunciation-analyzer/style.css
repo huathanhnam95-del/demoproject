@@ -494,6 +494,55 @@
 
 /* Mobile Responsive */
 @media (max-width: 640px) {
+    .pa-container {
+        padding: 12px;
+        margin: 8px auto;
+        border-radius: 8px;
+    }
+
+    .pa-title {
+        font-size: 1.15rem;
+    }
+
+    .pa-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+
+    .pa-controls {
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .pa-btn {
+        padding: 12px 20px;
+        font-size: 1rem;
+        min-height: 44px; /* Touch target */
+        flex: 1;
+        text-align: center;
+    }
+
+    .pa-btn-record,
+    .pa-btn-stop {
+        min-width: 100px;
+    }
+
+    .pa-word-input-container {
+        max-width: 100%;
+    }
+
+    #pa-word-input {
+        font-size: 1rem;
+        padding: 12px;
+    }
+
+    .pa-search-btn {
+        padding: 12px 14px;
+        min-height: 44px;
+    }
+
     .pa-reference-audio {
         flex-direction: column;
         align-items: stretch;
@@ -501,10 +550,73 @@
 
     .pa-reference-audio audio {
         width: 100%;
+        min-width: unset;
+    }
+
+    .pa-chart-card {
+        height: 250px;
+    }
+
+    .pa-chart-card canvas {
+        max-height: 210px;
     }
 
     .pa-score-grid {
         grid-template-columns: 1fr;
+    }
+
+    .pa-results {
+        padding: 10px;
+        font-size: 0.9rem;
+    }
+
+    /* Syllable tabs scrollable on mobile */
+    .pa-syllable-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        flex-wrap: nowrap;
+        padding-bottom: 4px;
+    }
+
+    .pa-syl-tab {
+        white-space: nowrap;
+        flex-shrink: 0;
+        padding: 10px 14px;
+        min-height: 44px;
+    }
+
+    .pa-feedback-row {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .pa-feedback-content {
+        padding: 12px;
+    }
+
+    /* Word form buttons */
+    .pa-word-form-btn {
+        padding: 10px 14px;
+        min-height: 44px;
+    }
+
+    /* Inline syllable breakdown table */
+    .pa-comparison-result table {
+        font-size: 0.78rem;
+    }
+    .pa-comparison-result th,
+    .pa-comparison-result td {
+        padding: 5px 6px !important;
+    }
+
+    .pa-merged-info-box {
+        padding: 12px;
+    }
+
+    .pa-info-row {
+        flex-direction: column;
+        gap: 2px;
+        align-items: flex-start;
     }
 }
 

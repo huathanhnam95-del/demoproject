@@ -11,7 +11,7 @@
 ## Active State
 
 - **Status**: Active Development
-- **Phase**: Release V1.5.5
+- **Phase**: Release V1.5.8
 
 ## Instructions
 
@@ -48,10 +48,13 @@ When a new task is created, immediately classify it:
 3. Mark done
 
 **Feature (MUST plan before coding):**
-1. **Plan** — State what files will change, what the deliverable is, and what success looks like (2-3 sentences minimum)
-2. **Execute** — Implement with atomic commits per logical unit
-3. **Verify** — Run the app, test the feature, confirm it works. Screenshot or terminal proof preferred
-4. Mark done
+1. **CEO Review** (medium+ features only) — Auto-run `/ceo-review` to challenge the premise and find the 10-star version. Skip for small features or when user says "just build it".
+2. **Plan** — State what files will change, what the deliverable is, and what success looks like (2-3 sentences minimum)
+3. **Execute** — Implement with atomic commits per logical unit
+4. **Diff-QA** (if UI changes) — Auto-suggest `/diff-qa` to verify affected pages in browser
+5. **Verify** — Run the app, test the feature, confirm it works. Screenshot or terminal proof preferred
+6. Mark done
+7. **Ship** (optional) — Run `/ship` to automate version bump, changelog, and push
 
 **Investigation:**
 1. **Research** — Reproduce the issue, gather evidence, read logs/errors
@@ -78,6 +81,21 @@ For large multi-phase projects, the user can invoke the full GSD workflow explic
 
 These full workflows use the `.gsd/` directory structure. The auto-integration above is the lightweight version that applies on every task.
 
+### GStack-Inspired Workflows (Auto-Integrated)
+
+These workflows add product thinking, automated QA, and release automation:
+
+| Command | When | Description |
+|---------|------|-------------|
+| `/ceo-review` | **Auto** for medium+ features | Challenge the premise. Find the 10-star product. Gate planning with product vision. |
+| `/diff-qa` | **Suggest** after UI changes | Analyze git diff → identify affected routes → run targeted browser tests → health score. |
+| `/ship` | **Manual** when ready to release | Sync main → run tests → version bump → changelog → push. One command, zero friction. |
+
+**Auto-trigger rules:**
+- 🎯 `/ceo-review` triggers automatically when a Feature task is medium+ (new page/mode/flow, 3+ files, new user behavior). User can skip with "just build it".
+- 🧪 `/diff-qa` is suggested after any HTML/CSS/JS UI changes. User can skip with "skip qa".
+- 🚀 `/ship` is always manual — invoke when implementation and verification are complete.
+
 ## Triggers & Protocols
 
 - **#council**: When the user types `#council [query]`, run `node scripts/summon_council.js "[query]" --out council_latest.txt` and then read the file `council_latest.txt` to present the full council output. The script auto-saves to a timestamped file if `--out` is omitted, but always use `--out` to have a predictable filename.
@@ -87,7 +105,7 @@ These full workflows use the `.gsd/` directory structure. The auto-integration a
 
 - **Versioning Rule**: ALWAYS name commits and pushes with explicit version tags.
 - **Changelog Rule**: ALWAYS add a changelog summarizing all updates before pushing.
-- **Next Version**: `V1.5.8`
+- **Next Version**: `V1.5.9`
 - **SemVer Protocol**:
   - **Minor Push (Bug fixes, small edits)**: Increment the LAST digit (e.g., `1.0.0` -> `1.0.1`).
   - **Major Push (New functions, big updates)**: Increment the MIDDLE digit (e.g., `1.0.0` -> `1.1.0`).

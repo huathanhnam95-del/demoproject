@@ -15,10 +15,11 @@
     const CFG = {
         scanIntervalMs: 500,
         debounceMs: 200,
-        maxLabelLength: 20,
+        maxLabelLength: 40,
         clickRetry: true,
         log: false,
-        patterns: ['retry', 'try again', 'restart', 'regenerate'],
+        patterns: ['retry', 'try again', 'restart', 'regenerate', 'run', 'accept', 'run command'],
+        scrollIntervalMs: 1500, // How often to auto-scroll chat pane
         hudId: '__cursor_auto_retry_hud__',
         zIndex: 999999,
     };
@@ -44,14 +45,32 @@
         return (s || '').replace(/\s+/g, ' ').trim().toLowerCase();
     }
 
-    /** Check if an element is visible in the viewport. */
-    function isVisible(el) {
+    /** Check if an element is rendered (has dimensions and not display:none). */
+    function isRendered(el) {
         if (!el || el.nodeType !== 1) return false;
         const rect = el.getBoundingClientRect();
         if (rect.width <= 0 || rect.height <= 0) return false;
         const style = window.getComputedStyle(el);
         if (!style) return true;
         return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+    }
+
+    /** Check if an element is within the visible viewport. */
+    function isInViewport(el) {
+        const rect = el.getBoundingClientRect();
+        return (
+            rect.top >= 0 &&
+            rect.left >= 0 &&
+            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+            rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+        );
+    }
+
+    /** Scroll the element into view if it exists but is off-screen. */
+    function scrollToElement(el) {
+        try {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } catch (_) { /* ignore */ }
     }
 
     /** Extract a combined label from element text, aria-label, and title. */
@@ -72,9 +91,14 @@
     /** Safely click a button with guard checks. Returns true on success. */
     function safeClick(el, reason) {
         if (!el || el.disabled || state.clickedElements.has(el)) return false;
-        if (!isVisible(el)) return false;
+        if (!isRendered(el)) return false;
 
         try {
+            // Scroll into view first if off-screen
+            if (!isInViewport(el)) {
+                scrollToElement(el);
+                if (CFG.log) console.log(`[Auto-Retry] 📜 Scrolled to: ${reason}`);
+            }
             el.click();
             state.clickedElements.add(el);
             state.clicks++;
@@ -93,13 +117,55 @@
     // ==================== SEARCH LOGIC ====================
 
     /**
-     * Scan a document for retry buttons and click the first match.
+     * Scroll the chat/conversation pane to the bottom so new buttons are visible.
+     * Tries multiple selectors to find the scrollable container.
+     */
+    function scrollChatToBottom() {
+        // Common scrollable container selectors in Cursor/VS Code
+        const selectors = [
+            '.monaco-scrollable-element',
+            '[class*="chat"] [class*="scroll"]',
+            '[class*="conversation"]',
+            '[class*="response"]',
+            '.overflow-y-auto',
+            '[style*="overflow"]',
+        ];
+        for (const sel of selectors) {
+            try {
+                const containers = document.querySelectorAll(sel);
+                for (const c of containers) {
+                    if (c.scrollHeight > c.clientHeight + 100) {
+                        c.scrollTop = c.scrollHeight;
+                    }
+                }
+            } catch (_) { /* ignore */ }
+        }
+
+        // Also try iframes
+        for (const iframe of document.querySelectorAll('iframe')) {
+            try {
+                const iDoc = iframe.contentDocument || iframe.contentWindow?.document;
+                if (!iDoc) continue;
+                for (const sel of selectors) {
+                    const containers = iDoc.querySelectorAll(sel);
+                    for (const c of containers) {
+                        if (c.scrollHeight > c.clientHeight + 100) {
+                            c.scrollTop = c.scrollHeight;
+                        }
+                    }
+                }
+            } catch (_) { /* ignore cross-origin */ }
+        }
+    }
+
+    /**
+     * Scan a document for retry/accept/run buttons and click the first match.
      * @param {Document} doc – document to scan
      * @returns {boolean} true if a button was clicked
      */
     function scanDocument(doc) {
         if (!doc?.body) return false;
-        const buttons = doc.querySelectorAll('button, [role="button"]');
+        const buttons = doc.querySelectorAll('button, [role="button"], a[class*="btn"], div[class*="btn"]');
         for (const btn of buttons) {
             const label = labelOf(btn);
             if (isRetryLabel(label) && safeClick(btn, label)) return true;
@@ -107,11 +173,14 @@
         return false;
     }
 
-    /** Main scan: top-level document + all same-origin iframes. */
+    /** Main scan: scroll down first, then search top-level document + all iframes. */
     function findAndClickRetry() {
         const now = Date.now();
         if (now - state.lastScannedAt < CFG.debounceMs) return;
         state.lastScannedAt = now;
+
+        // 0. Scroll the chat pane to the bottom to reveal new buttons
+        scrollChatToBottom();
 
         // 1. Search top-level document
         if (scanDocument(document)) return;

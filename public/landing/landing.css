@@ -2789,3 +2789,49 @@ body.dark-mode .engine-list strong {
 .lang-divider {
     color: var(--border-light);
 }
+
+/* --- Round 2 Feedback Enhancements --- */
+
+/* Enhance typography for Personalization cards */
+.engine-card h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--text-main);
+}
+.engine-list li {
+    font-size: 1.05rem;
+    font-weight: 500;
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
+.engine-list li strong {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+/* Adjust hero layout: move dashboard mockup down relative to lifestyle image */
+@media (min-width: 1025px) {
+    .hero-visual {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .hero-lifestyle-wrap {
+        order: 1;
+        width: 100%;
+        margin-top: 0;
+        z-index: 1;
+        position: relative;
+    }
+    .hero-lifestyle-img {
+        height: 380px; /* Make person picture larger/taller */
+        object-position: center 20%;
+    }
+    .hero-mockup {
+        order: 2;
+        margin-top: -120px; /* Overlap 50% from the bottom of the picture */
+        z-index: 2;
+        width: 90%; /* slightly smaller to fit nicely over the image */
+    }
+}

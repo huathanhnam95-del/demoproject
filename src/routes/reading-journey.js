@@ -273,6 +273,18 @@ function requireEnabled(req, res, next) {
   next();
 }
 
+function requireAdminOrSecret(req, res, next) {
+  const secret = process.env.READING_JOURNEY_ADMIN_SECRET;
+  const authHeader = req.headers.authorization || '';
+  if (secret && authHeader === `Bearer ${secret}`) {
+    return next();
+  }
+  if (req.user && req.user.role === 'admin') {
+    return next();
+  }
+  return sendError(res, 403, 'PERMISSION_DENIED', 'Admin access required');
+}
+
 // ── Routes ──────────────────────────────────────────────────────────────────────
 
 router.get('/reading-journey/health', (req, res) => {
@@ -649,6 +661,24 @@ router.post('/reading-journey/assess-story', maybeAiLimiter, requireEnabled, asy
     });
   } catch (e) {
     return sendError(res, 500, 'ASSESS_FAILED', 'Story assessment failed', e?.message || String(e));
+  }
+});
+
+const { generateStoryThumbnail } = require('../services/reading-journey/thumbnail-service');
+router.post('/reading-journey/generate-thumbnail', requireAdminOrSecret, requireEnabled, async (req, res) => {
+  try {
+    const storyId = String(req.body?.storyId || '').trim();
+    if (!storyId) return sendError(res, 400, 'INVALID_ARGUMENT', 'storyId is required');
+
+    const isDryRun = Boolean(req.body?.dryRun);
+    const result = await generateStoryThumbnail(storyId, { dryRun: isDryRun });
+
+    return sendSuccess(res, {
+      record: result.record,
+      hasImage: !!result.buffer
+    });
+  } catch (e) {
+    return sendError(res, 500, 'GENERATE_THUMBNAIL_FAILED', 'Failed to generate thumbnail', e?.message || String(e));
   }
 });
 

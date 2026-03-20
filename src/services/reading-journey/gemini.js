@@ -735,6 +735,49 @@ async function generateAssessmentQuizDraft({
   };
 }
 
+async function generateThumbnailSceneSummaryJson({ outline, beats, temperature = 0.4 }) {
+  const title = normalizeScalar(outline?.title) || 'Reading Journey';
+  const logline = normalizeScalar(outline?.premise) || normalizeScalar(outline?.logline) || '';
+  const characters = Array.isArray(outline?.characters) ? outline.characters : [];
+  const setting = normalizeScalar(outline?.setting) || '';
+  
+  const beatsText = Array.isArray(beats) 
+    ? beats.map(b => `Beat ${b.id || b.beat}: ${normalizeScalar(b.content || b.segment || b.milestone)}`).filter(Boolean).join('\n')
+    : '';
+
+  const charText = characters.map(c => `${c.name} (${c.role})`).join(', ');
+
+  const prompt = [
+    'Return raw JSON only.',
+    'You are a visual storyboarding assistant summarizing an English reading story for a single thumbnail illustration.',
+    `Title: ${title}`,
+    `Logline: ${logline}`,
+    `Characters: ${charText}`,
+    `Setting: ${setting}`,
+    'Story Beats:',
+    beatsText || '(none)',
+    'Task:',
+    '1. Pick exactly ONE highly visual, representative moment from the story (preferably early or mid-story).',
+    '2. Ensure the moment is spoiler-safe. Do not reveal the ultimate ending if it gives away the whole story. If you use a climactic end-state moment, mark spoilerLevel as "safe_story_detail" or "full", otherwise use "safe_library".',
+    '3. Extract ONLY the specific characters, setting details, time of day, and key props actually needed for this single visual scene.',
+    '4. Describe the emotionalTone of this specific moment.',
+    '5. Indicate which sourceBeats this moment connects to.',
+    'JSON schema:',
+    '{',
+    '  "thumbnailMoment": "string (1-2 sentences)",',
+    '  "characters": ["string (names only)"],',
+    '  "setting": "string (visual description)",',
+    '  "timeOfDay": "string",',
+    '  "keyProps": ["string"],',
+    '  "emotionalTone": "string",',
+    '  "spoilerLevel": "safe_library" | "safe_story_detail" | "full",',
+    '  "sourceBeats": ["string (beat ID)"]',
+    '}'
+  ].join('\n');
+
+  return await generateJson(prompt, { temperature });
+}
+
 module.exports = {
   TOPIC_TAG_TAXONOMY,
   normalizeLevel,
@@ -747,6 +790,7 @@ module.exports = {
   generateOutline,
   generateBeat,
   generateAssessmentQuizDraft,
+  generateThumbnailSceneSummaryJson,
   assessStory,
   assessAndScore
 };

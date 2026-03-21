@@ -15,9 +15,10 @@ function loadBrowserHelper(relativePath, globalName) {
     const sandbox = { window: {} };
     vm.createContext(sandbox);
     vm.runInContext(source, sandbox);
-    return sandbox.window[globalName];
+    return sandbox.window[globalName] || sandbox[globalName];
 }
 
+loadBrowserHelper('public/js/crm/finance-workflow.js', 'CrmFinanceWorkflow');
 const helper = loadBrowserHelper('public/js/crm/finance.js', 'CrmFinance');
 const context = {
     user: {

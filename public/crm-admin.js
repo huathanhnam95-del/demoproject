@@ -1,4 +1,4 @@
-/**
+﻿/**
  * CRM Admin
  * Admin-only shell for Student + Course management.
  * (Data + LMS features added later.)
@@ -60,6 +60,19 @@
     liveSessions: [],
     liveSessionId: null
   };
+  let studentFinanceController = null;
+  let liveDeliveryController = null;
+  let classroomWorkspaceController = null;
+  let classroomModalController = null;
+  let studentWorkspaceController = null;
+  let taskActivityWorkspaceController = null;
+  let studentModalController = null;
+  let courseModalController = null;
+  let leadWorkspaceController = null;
+  let communicationsController = null;
+  let dashboardController = null;
+  let studentDirectoryController = null;
+  let activitySurfacesController = null;
 
   document.addEventListener('DOMContentLoaded', () => {
     cacheElements();
@@ -334,13 +347,13 @@
   }
 
   async function init() {
-    showGateMessage('Checking admin access…', 'Please wait');
+    showGateMessage('Checking admin accessâ€¦', 'Please wait');
 
     await initFirebaseFromServer();
 
     const user = await waitForAuthUser({ timeoutMs: 6500 });
     if (!user) {
-      showGateMessage('Please log in as admin first.', 'Redirecting to the app…');
+      showGateMessage('Please log in as admin first.', 'Redirecting to the appâ€¦');
       setTimeout(() => (window.location.href = 'index.html'), 1800);
       return;
     }
@@ -354,6 +367,226 @@
 
     // Ready
     hideGate();
+    dashboardController = window.CrmDashboardWorkspace && typeof window.CrmDashboardWorkspace.createController === 'function'
+      ? window.CrmDashboardWorkspace.createController({
+        elements,
+        showToast,
+        apiFetchJson,
+        formatDateTime,
+        escapeHtml
+      })
+      : null;
+    communicationsController = window.CrmCommunicationsWorkspace && typeof window.CrmCommunicationsWorkspace.createController === 'function'
+      ? window.CrmCommunicationsWorkspace.createController({
+        elements,
+        showToast,
+        apiFetchJson,
+        refreshDashboard,
+        escapeHtml
+      })
+      : null;
+    studentDirectoryController = window.CrmStudentDirectoryWorkspace && typeof window.CrmStudentDirectoryWorkspace.createController === 'function'
+      ? window.CrmStudentDirectoryWorkspace.createController({
+        elements,
+        dataCache,
+        apiFetchJson,
+        populateAttendanceStudentOptions,
+        openStudentProfile,
+        showToast,
+        getReminderSummary,
+        renderReminderBadgeMarkup,
+        renderRiskBadgeMarkup,
+        escapeHtml,
+        formatDateTime
+      })
+      : null;
+    activitySurfacesController = window.CrmActivitySurfaces && typeof window.CrmActivitySurfaces.createController === 'function'
+      ? window.CrmActivitySurfaces.createController({
+        elements,
+        createTaskForLead,
+        createActivityForLead,
+        createTaskForStudent,
+        createActivityForStudent,
+        createInvoiceForStudent,
+        recordPaymentForStudent,
+        createCommunicationTemplate,
+        createAutomationRule,
+        createMergeJob,
+        showToast
+      })
+      : null;
+    studentFinanceController = window.CrmStudentFinance && typeof window.CrmStudentFinance.createController === 'function'
+      ? window.CrmStudentFinance.createController({
+        apiFetchJson,
+        elements,
+        modalState,
+        getCurrentStudentProfile,
+        renderStudentSchedulePrompt,
+        refreshDashboard,
+        showToast,
+        escapeHtml
+      })
+      : null;
+    liveDeliveryController = window.CrmLiveDelivery && typeof window.CrmLiveDelivery.createController === 'function'
+      ? window.CrmLiveDelivery.createController({
+        elements,
+        modalState,
+        escapeHtml,
+        formatDateTime,
+        formatDateTimeLocalValue,
+        renderClassroomSchedulePrompt
+      })
+      : null;
+    classroomWorkspaceController = window.CrmClassroomWorkspace && typeof window.CrmClassroomWorkspace.createController === 'function'
+      ? window.CrmClassroomWorkspace.createController({
+        elements,
+        modalState,
+        dataCache,
+        showToast,
+        escapeHtml,
+        formatDateTime,
+        openClassroomModal,
+        resetClassroomModal,
+        refreshAttendanceRiskSnapshot,
+        loadLiveSessions,
+        getPrimaryLiveSession,
+        getSelectedLiveSession,
+        collectLiveSessionPayload,
+        renderLiveDeliverySummary,
+        renderAttendanceWorkflowGuidance,
+        renderClassroomSchedulePrompt,
+        renderClassworkWorkflowGuidance
+      })
+      : null;
+    studentWorkspaceController = window.CrmStudentWorkspace && typeof window.CrmStudentWorkspace.createController === 'function'
+      ? window.CrmStudentWorkspace.createController({
+        elements,
+        modalState,
+        dataCache,
+        showToast,
+        apiFetchJson,
+        fetchStudentProfile,
+        openStudentModal,
+        resetStudentModal,
+        refreshStudentFinance,
+        refreshStudentLists,
+        refreshDashboard,
+        refreshEntranceTestsList,
+        switchStudentTab,
+        getStudentPayload,
+        hasAnyInfoField,
+        fetchTasks,
+        fetchActivities,
+        applyReminderBadge,
+        getReminderSummary,
+        renderTaskList,
+        renderActivityList,
+        escapeHtml
+      })
+      : null;
+    taskActivityWorkspaceController = window.CrmTaskActivityWorkspace && typeof window.CrmTaskActivityWorkspace.createController === 'function'
+      ? window.CrmTaskActivityWorkspace.createController({
+        elements,
+        dataCache,
+        modalState,
+        showToast,
+        apiFetchJson,
+        fetchTasks,
+        fetchActivities,
+        refreshStudentTimeline,
+        refreshLeadWorkspace,
+        refreshStudentLists,
+        refreshDashboard,
+        renderStudentsTable,
+        renderLeadStageBoard,
+        renderLeadTable,
+        resetLeadTaskComposer,
+        resetLeadActivityComposer,
+        resetStudentTaskComposer,
+        resetStudentActivityComposer
+      })
+      : null;
+    classroomModalController = window.CrmClassroomModal && typeof window.CrmClassroomModal.createController === 'function'
+      ? window.CrmClassroomModal.createController({
+        elements,
+        modalState,
+        showToast,
+        openClassroomModal,
+        saveClassroomSettings,
+        loadClassroomModules,
+        loadClassroomClasswork,
+        loadClassroomStream,
+        loadClassroomAttendance,
+        loadReviewBoard,
+        loadLiveSessions,
+        renderClassroomSchedulePrompt,
+        renderAttendanceWorkflowGuidance,
+        renderClassworkWorkflowGuidance,
+        enrollStudentIntoClassroom,
+        createAttendanceSessionForClassroom,
+        saveAttendanceRecordsForClassroom,
+        resetLiveSessionForm,
+        renderLiveDeliverySummary,
+        saveLiveSession,
+        startSelectedLiveSession,
+        endSelectedLiveSession,
+        getSelectedLiveSession,
+        copyToClipboard,
+        refreshAttendanceClassroomFitNote,
+        populateClassroomCourseOptions
+      })
+      : null;
+    studentModalController = window.CrmStudentModal && typeof window.CrmStudentModal.createController === 'function'
+      ? window.CrmStudentModal.createController({
+        elements,
+        modalState,
+        showToast,
+        refreshStudentFinance,
+        saveStudentProfile,
+        createRecommendedEnrollment,
+        renderStudentClassroomMatches,
+        createEntranceTest,
+        copyToClipboard,
+        apiFetchJson,
+        refreshStudentIdentity,
+        applyReminderBadge,
+        resetStudentTaskComposer,
+        resetStudentActivityComposer,
+        resetStudentFinanceComposer,
+        renderStudentSchedulePrompt
+      })
+      : null;
+    courseModalController = window.CrmCourseModal && typeof window.CrmCourseModal.createController === 'function'
+      ? window.CrmCourseModal.createController({
+        elements,
+        modalState,
+        showToast,
+        apiFetchJson,
+        refreshCourseCatalog,
+        getCoursePayload,
+        openCourseModal,
+        setCourseTeachers
+      })
+      : null;
+    leadWorkspaceController = window.CrmLeadWorkspace && typeof window.CrmLeadWorkspace.createController === 'function'
+      ? window.CrmLeadWorkspace.createController({
+        elements,
+        dataCache,
+        modalState,
+        showToast,
+        apiFetchJson,
+        refreshDashboard,
+        refreshStudentLists,
+        fetchTasks,
+        fetchActivities,
+        applyReminderBadge,
+        getReminderSummary,
+        renderTaskList,
+        renderActivityList,
+        renderReminderBadgeMarkup,
+        escapeHtml
+      })
+      : null;
     setupTabs();
     setupLeadComposer();
     setupActivitySurfaces();
@@ -519,301 +752,24 @@
   }
 
   function setupStudentModal() {
-    if (elements.btnNewStudentTriggers.length === 0) return;
-
-    // Open Modal
-    elements.btnNewStudentTriggers.forEach(btn => {
-      btn.addEventListener('click', () => {
-        elements.studentModal.style.display = 'flex';
-        elements.studentModal.setAttribute('aria-hidden', 'false');
-        resetStudentModal();
-      });
-    });
-
-    // Close Modal Func
-    const closeStudentModal = () => {
-      elements.studentModal.style.display = 'none';
-      elements.studentModal.setAttribute('aria-hidden', 'true');
-      // Reset tabs to info
-      switchStudentTab('info');
-    };
-
-    if (elements.btnCloseStudentModal) elements.btnCloseStudentModal.addEventListener('click', closeStudentModal);
-    if (elements.btnCancelStudent) elements.btnCancelStudent.addEventListener('click', closeStudentModal);
-
-    // Tab Switching
-    elements.studentSidebarItems.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const targetTab = btn.dataset.tab;
-        switchStudentTab(targetTab);
-      });
-    });
-
-    // Save Student
-    if (elements.btnSaveStudent) {
-      elements.btnSaveStudent.addEventListener('click', () => {
-        saveStudentProfile().catch((e) => {
-          console.error('[CRM Admin] Save student failed:', e);
-          showToast(e?.message || 'Failed to save student.', 'error');
-        });
-      });
-    }
-
-    if (elements.btnCreateRecommendedEnrollment) {
-      elements.btnCreateRecommendedEnrollment.addEventListener('click', () => {
-        createRecommendedEnrollment().catch((e) => {
-          console.error('[CRM Admin] Create recommended enrollment failed:', e);
-          showToast(e?.message || 'Failed to create enrollment from recommendation.', 'error');
-        });
-      });
-    }
-
-    if (elements.studentSchedulePrompt) {
-      elements.studentSchedulePrompt.addEventListener('click', (evt) => {
-        const btn = evt.target instanceof HTMLElement ? evt.target.closest('[data-action="edit-student-schedule"]') : null;
-        if (!btn) return;
-        switchStudentTab('info');
-        setTimeout(() => {
-          if (elements.inputPreferredLearningDays) {
-            elements.inputPreferredLearningDays.focus();
-          } else if (elements.inputPreferredLearningHours) {
-            elements.inputPreferredLearningHours.focus();
-          }
-        }, 0);
-      });
-    }
-
-    if (elements.inputStudentClassroomMatchSelect) {
-      elements.inputStudentClassroomMatchSelect.addEventListener('change', () => {
-        renderStudentClassroomMatches({
-          matches: Array.isArray(modalState.classroomMatches) ? modalState.classroomMatches : [],
-          classroomCount: Array.isArray(modalState.classroomMatches) ? modalState.classroomMatches.length : 0,
-          recommendedClassroom: Array.isArray(modalState.classroomMatches) ? modalState.classroomMatches[0] || null : null
-        });
-      });
-    }
-
-    // Add Entrance Test
-    if (elements.btnAddEntranceTest) {
-      elements.btnAddEntranceTest.addEventListener('click', () => {
-        createEntranceTest().catch((e) => {
-          console.error('[CRM Admin] Create entrance test failed:', e);
-          showToast(e?.message || 'Failed to create entrance test.', 'error');
-        });
-      });
-    }
-
-    // Copy Entrance Test Link
-    if (elements.btnCopyEntranceTestLink) {
-      elements.btnCopyEntranceTestLink.addEventListener('click', async () => {
-        try {
-          const link = String(elements.entranceTestLinkInput?.value || '').trim();
-          if (!link) return;
-          await copyToClipboard(link);
-          showToast('Link copied.', 'success');
-        } catch (e) {
-          showToast(e?.message || 'Failed to copy link.', 'error');
-        }
-      });
-    }
-
-    // Identity Tab Listeners
-    if (elements.btnGenerateClassCode) {
-      elements.btnGenerateClassCode.addEventListener('click', async () => {
-        if (!modalState.studentId) {
-          await saveStudentProfile();
-        }
-        if (!modalState.studentId) return;
-
-        try {
-          const json = await apiFetchJson(`/api/admin/students/${encodeURIComponent(modalState.studentId)}/class-code`, {
-            method: 'POST'
-          });
-          if (elements.inputClassCodeDisplay) elements.inputClassCodeDisplay.value = json.classCode;
-          showToast('New class code generated.', 'success');
-        } catch (e) {
-          showToast(e.message, 'error');
-        }
-      });
-    }
-
-    if (elements.btnLookupHandshake) {
-      elements.btnLookupHandshake.addEventListener('click', async () => {
-        const email = elements.inputHandshakeEmail.value.trim();
-        if (!email) return;
-
-        try {
-          elements.btnLookupHandshake.disabled = true;
-          const json = await apiFetchJson(`/api/admin/users/lookup?email=${encodeURIComponent(email)}`, {
-            method: 'GET'
-          });
-
-          const user = json.user;
-          if (elements.handshakeName) elements.handshakeName.textContent = user.displayName;
-          if (elements.handshakeUid) elements.handshakeUid.textContent = `UID: ${user.uid}`;
-          if (elements.handshakeAvatar) elements.handshakeAvatar.src = user.photoURL || 'assets/default-avatar.png';
-
-          elements.btnConfirmHandshake.dataset.targetUid = user.uid;
-          elements.handshakePreview.style.display = 'block';
-        } catch (e) {
-          showToast(e.message, 'error');
-        } finally {
-          elements.btnLookupHandshake.disabled = false;
-        }
-      });
-    }
-
-    if (elements.btnConfirmHandshake) {
-      elements.btnConfirmHandshake.addEventListener('click', async () => {
-        const targetUid = elements.btnConfirmHandshake.dataset.targetUid;
-        if (!targetUid || !modalState.studentId) return;
-
-        try {
-          elements.btnConfirmHandshake.disabled = true;
-          await apiFetchJson(`/api/admin/students/${encodeURIComponent(modalState.studentId)}/force-link`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ targetUid })
-          });
-
-          showToast('User linked successfully.', 'success');
-          elements.handshakePreview.style.display = 'none';
-          elements.inputHandshakeEmail.value = '';
-
-          // Refresh identity to see new linked UID
-          await refreshStudentIdentity();
-        } catch (e) {
-          showToast(e.message, 'error');
-        } finally {
-          elements.btnConfirmHandshake.disabled = false;
-        }
-      });
-    }
+    if (!studentModalController) return;
+    return studentModalController.setupStudentModal();
   }
 
   function resetStudentModal() {
-    modalState.studentId = null;
-    modalState.studentProfile = null;
-    modalState.createdTestLinks = new Map();
-    modalState.classroomMatches = [];
-
-    switchStudentTab('info');
-
-    // Clear inputs
-    const inputs = [
-      elements.inputStudentName,
-      elements.inputStudentLabel,
-      elements.inputStudentPhone,
-      elements.inputStudentEmail,
-      elements.inputStudentZalo,
-      elements.inputStudentFacebook,
-      elements.inputScoreOverall,
-      elements.inputScoreListening,
-      elements.inputScoreReading,
-      elements.inputScoreSpeaking,
-      elements.inputScoreWriting,
-      elements.inputStudentDueDate,
-      elements.inputStudentLevel,
-      elements.inputTargetExam,
-      elements.inputTargetScore,
-      elements.inputPreferredSchedule,
-      elements.inputScoreHistory,
-      elements.inputGuardianContacts,
-      elements.inputCompanyContacts,
-      elements.inputDocumentRefs,
-      elements.inputCounselingNotes,
-      elements.inputClassCodeDisplay,
-      elements.inputHandshakeEmail
-    ];
-    inputs.forEach((el) => {
-      if (el) el.value = '';
-    });
-
-    // Reset UI state
-    if (elements.studentIdBadge) {
-      elements.studentIdBadge.style.display = 'none';
-      elements.studentIdBadge.textContent = 'ID: —';
-    }
-
-    if (elements.btnAddEntranceTest) elements.btnAddEntranceTest.disabled = false;
-    if (elements.entranceTestLinkInput) elements.entranceTestLinkInput.value = '';
-    if (elements.btnCopyEntranceTestLink) elements.btnCopyEntranceTestLink.disabled = true;
-    if (elements.entranceTestsList) elements.entranceTestsList.innerHTML = '<div class="crm-muted">No tests yet.</div>';
-
-    if (elements.handshakePreview) elements.handshakePreview.style.display = 'none';
-    if (elements.linkedUidsUl) elements.linkedUidsUl.innerHTML = '<li class="text-muted">No accounts linked yet.</li>';
-    if (elements.studentTaskList) elements.studentTaskList.innerHTML = '<div class="crm-muted">No tasks yet.</div>';
-    if (elements.studentActivityList) elements.studentActivityList.innerHTML = '<div class="crm-muted">No activity yet.</div>';
-    if (elements.studentTaskMeta) elements.studentTaskMeta.textContent = 'Save the profile to schedule follow-ups.';
-    applyReminderBadge(elements.studentTaskBadge, null);
-    resetStudentTaskComposer();
-    resetStudentActivityComposer();
-    resetStudentFinanceComposer();
-    if (elements.studentClassroomMatchSummary) elements.studentClassroomMatchSummary.innerHTML = '<div class="crm-muted">Loading classroom recommendations...</div>';
-    if (elements.inputStudentClassroomMatchSelect) {
-      elements.inputStudentClassroomMatchSelect.innerHTML = '<option value="">No classroom selected</option>';
-      elements.inputStudentClassroomMatchSelect.value = '';
-    }
-    if (elements.studentClassroomMatchMeta) {
-      elements.studentClassroomMatchMeta.textContent = 'Select the suggested classroom or choose another match.';
-    }
-    if (elements.studentClassroomMatchWarning) {
-      elements.studentClassroomMatchWarning.textContent = '';
-      elements.studentClassroomMatchWarning.style.color = '';
-    }
-    if (elements.btnCreateRecommendedEnrollment) {
-      elements.btnCreateRecommendedEnrollment.disabled = true;
-    }
-
-    if (elements.btnSaveStudent) {
-      elements.btnSaveStudent.disabled = false;
-      elements.btnSaveStudent.textContent = 'Save Student';
-    }
+    if (!studentModalController) return;
+    return studentModalController.resetStudentModal();
   }
 
   function resetCourseModal() {
-    modalState.courseId = null;
-
-    // Default to Info tab
-    switchCourseTab('info');
-
-    // Clear course info inputs
-    const infoInputs = [
-      elements.inputCourseName,
-      elements.inputCourseCode,
-      elements.inputCourseLabel,
-      elements.inputCourseLevel,
-      elements.inputCourseCategory,
-      elements.inputCourseDescription
-    ];
-    infoInputs.forEach((el) => {
-      if (el) el.value = '';
-    });
-
-    if (elements.inputCourseStatus) {
-      elements.inputCourseStatus.value = elements.inputCourseStatus.options[0]?.value || 'active';
-    }
-
-    // Clear teachers input + list
-    if (elements.courseTeacherEmailInput) {
-      elements.courseTeacherEmailInput.value = '';
-    }
-    if (elements.courseTeachersList) {
-      elements.courseTeachersList.innerHTML = '';
-      const placeholder = document.createElement('li');
-      placeholder.className = 'text-muted';
-      placeholder.dataset.empty = 'true';
-      placeholder.textContent = 'No teachers added yet.';
-      elements.courseTeachersList.appendChild(placeholder);
-    }
-
-    if (elements.btnSaveCourse) {
-      elements.btnSaveCourse.disabled = false;
-      elements.btnSaveCourse.textContent = 'Save Course';
-    }
+    if (!courseModalController) return;
+    return courseModalController.resetCourseModal();
   }
 
   function resetLeadComposer() {
+    if (leadWorkspaceController) {
+      return leadWorkspaceController.resetLeadComposer();
+    }
     const inputs = [
       elements.inputLeadName,
       elements.inputLeadEmail,
@@ -846,12 +802,18 @@
   }
 
   function resetLeadTaskComposer() {
+    if (leadWorkspaceController) {
+      return leadWorkspaceController.resetLeadTaskComposer();
+    }
     if (elements.inputLeadTaskTitle) elements.inputLeadTaskTitle.value = '';
     if (elements.inputLeadTaskDueAt) elements.inputLeadTaskDueAt.value = '';
     if (elements.inputLeadTaskPriority) elements.inputLeadTaskPriority.value = 'medium';
   }
 
   function resetLeadActivityComposer() {
+    if (leadWorkspaceController) {
+      return leadWorkspaceController.resetLeadActivityComposer();
+    }
     if (elements.inputLeadActivityType) elements.inputLeadActivityType.value = 'note';
     if (elements.inputLeadActivitySubject) elements.inputLeadActivitySubject.value = '';
     if (elements.inputLeadActivityBody) elements.inputLeadActivityBody.value = '';
@@ -975,7 +937,7 @@
       const removeBtn = document.createElement('button');
       removeBtn.type = 'button';
       removeBtn.className = 'crm-tag-remove';
-      removeBtn.textContent = '×';
+      removeBtn.textContent = 'Ã—';
       removeBtn.addEventListener('click', () => {
         li.remove();
         if (elements.courseTeachersList.children.length === 0) {
@@ -1002,42 +964,8 @@
   }
 
   async function saveCourse() {
-    const payload = getCoursePayload();
-    if (!payload.name) {
-      throw new Error('Please enter a Course Name before saving.');
-    }
-
-    if (elements.btnSaveCourse) {
-      elements.btnSaveCourse.disabled = true;
-      elements.btnSaveCourse.textContent = 'Saving...';
-    }
-
-    try {
-      const path = modalState.courseId
-        ? `/api/admin/courses/${encodeURIComponent(modalState.courseId)}`
-        : '/api/admin/courses';
-      const method = modalState.courseId ? 'PATCH' : 'POST';
-      const json = await apiFetchJson(path, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      const courseId = String(json.courseId || json.course?.courseId || modalState.courseId || '').trim();
-      if (!courseId) throw new Error('Course ID missing from server response.');
-
-      modalState.courseId = courseId;
-      await refreshCourseCatalog();
-
-      showToast(method === 'PATCH' ? 'Course updated.' : 'Course saved.', 'success');
-      resetCourseModal();
-    } catch (e) {
-      if (elements.btnSaveCourse) {
-        elements.btnSaveCourse.disabled = false;
-        elements.btnSaveCourse.textContent = 'Save Course';
-      }
-      throw e;
-    }
+    if (!courseModalController) throw new Error('Course modal helpers are not available.');
+    return courseModalController.saveCourse();
   }
 
   async function apiFetchJson(path, options = {}) {
@@ -1063,6 +991,9 @@
   }
 
   function setupLeadComposer() {
+    if (leadWorkspaceController) {
+      return leadWorkspaceController.setupLeadComposer();
+    }
     if (!elements.leadComposer) return;
 
     if (elements.btnNewLead) {
@@ -1090,86 +1021,8 @@
   }
 
   function setupActivitySurfaces() {
-    if (elements.btnSaveLeadTask) {
-      elements.btnSaveLeadTask.addEventListener('click', () => {
-        createTaskForLead().catch((error) => {
-          console.error('[CRM Admin] Save lead task failed:', error);
-          showToast(error?.message || 'Failed to save lead task.', 'error');
-        });
-      });
-    }
-
-    if (elements.btnSaveLeadActivity) {
-      elements.btnSaveLeadActivity.addEventListener('click', () => {
-        createActivityForLead().catch((error) => {
-          console.error('[CRM Admin] Save lead activity failed:', error);
-          showToast(error?.message || 'Failed to save lead activity.', 'error');
-        });
-      });
-    }
-
-    if (elements.btnSaveStudentTask) {
-      elements.btnSaveStudentTask.addEventListener('click', () => {
-        createTaskForStudent().catch((error) => {
-          console.error('[CRM Admin] Save student task failed:', error);
-          showToast(error?.message || 'Failed to save student task.', 'error');
-        });
-      });
-    }
-
-    if (elements.btnSaveStudentActivity) {
-      elements.btnSaveStudentActivity.addEventListener('click', () => {
-        createActivityForStudent().catch((error) => {
-          console.error('[CRM Admin] Save student activity failed:', error);
-          showToast(error?.message || 'Failed to save student activity.', 'error');
-        });
-      });
-    }
-
-    if (elements.btnCreateStudentInvoice) {
-      elements.btnCreateStudentInvoice.addEventListener('click', () => {
-        createInvoiceForStudent().catch((error) => {
-          console.error('[CRM Admin] Create student invoice failed:', error);
-          showToast(error?.message || 'Failed to create invoice.', 'error');
-        });
-      });
-    }
-
-    if (elements.btnRecordStudentPayment) {
-      elements.btnRecordStudentPayment.addEventListener('click', () => {
-        recordPaymentForStudent().catch((error) => {
-          console.error('[CRM Admin] Record student payment failed:', error);
-          showToast(error?.message || 'Failed to record payment.', 'error');
-        });
-      });
-    }
-
-    if (elements.btnCreateTemplate) {
-      elements.btnCreateTemplate.addEventListener('click', () => {
-        createCommunicationTemplate().catch((error) => {
-          console.error('[CRM Admin] Create template failed:', error);
-          showToast(error?.message || 'Failed to create template.', 'error');
-        });
-      });
-    }
-
-    if (elements.btnCreateRule) {
-      elements.btnCreateRule.addEventListener('click', () => {
-        createAutomationRule().catch((error) => {
-          console.error('[CRM Admin] Create automation rule failed:', error);
-          showToast(error?.message || 'Failed to create automation rule.', 'error');
-        });
-      });
-    }
-
-    if (elements.btnCreateMergeJob) {
-      elements.btnCreateMergeJob.addEventListener('click', () => {
-        createMergeJob().catch((error) => {
-          console.error('[CRM Admin] Create merge job failed:', error);
-          showToast(error?.message || 'Failed to create merge job.', 'error');
-        });
-      });
-    }
+    if (!activitySurfacesController) return;
+    return activitySurfacesController.setupActivitySurfaces();
   }
 
   function buildQuery(params = {}) {
@@ -1236,590 +1089,33 @@
   }
 
   async function refreshOpenTaskSnapshot() {
-    dataCache.openTasks = await fetchTasks({ status: 'open', limit: 300 });
-
-    if (dataCache.students.length) {
-      const buckets = window.CrmStudents.splitStudents(dataCache.students);
-      renderStudentsTable(elements.potentialStudentsContainer, buckets.potential, 'No potential students yet.');
-      renderStudentsTable(elements.studentDataContainer, buckets.studentData, 'No students in database yet.');
-    }
-
-    if (dataCache.leads.length) {
-      renderLeadStageBoard(dataCache.leads);
-      renderLeadTable(dataCache.leads);
-    }
-
-    if (modalState.studentId) {
-      await refreshStudentTimeline();
-    }
-
-    if (modalState.leadId) {
-      await refreshLeadWorkspace();
-    }
-  }
-
-  async function refreshAttendanceRiskSnapshot() {
-    if (!window.ClassroomAPI || typeof window.ClassroomAPI.fetchAttendanceSummary !== 'function') {
-      return;
-    }
-
-    const json = await window.ClassroomAPI.fetchAttendanceSummary();
-    const rows = Array.isArray(json?.students) ? json.students : [];
-    dataCache.attendanceRiskByStudentId = new Map(
-      rows.map((row) => [String(row.studentId || '').trim(), row])
-    );
-
-    if (dataCache.students.length) {
-      const buckets = window.CrmStudents.splitStudents(dataCache.students);
-      renderStudentsTable(elements.potentialStudentsContainer, buckets.potential, 'No potential students yet.');
-      renderStudentsTable(elements.studentDataContainer, buckets.studentData, 'No students in database yet.');
-    }
-  }
-
-  async function saveLead() {
-    if (!window.CrmLeads || typeof window.CrmLeads.buildPayload !== 'function') {
-      throw new Error('Lead helpers are not available.');
-    }
-
-    const payload = window.CrmLeads.buildPayload(elements);
-    if (!window.CrmLeads.hasAnyContact(payload)) {
-      throw new Error('Please fill at least 1 lead contact field before saving.');
-    }
-
-    if (elements.btnSaveLead) {
-      elements.btnSaveLead.disabled = true;
-      elements.btnSaveLead.textContent = 'Saving...';
-    }
-
-    try {
-      await apiFetchJson('/api/admin/leads', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      elements.leadComposer.style.display = 'none';
-      resetLeadComposer();
-      await refreshLeadPipeline();
-      await refreshDashboard();
-      showToast('Lead saved.', 'success');
-    } catch (error) {
-      if (elements.btnSaveLead) {
-        elements.btnSaveLead.disabled = false;
-        elements.btnSaveLead.textContent = 'Save Lead';
-      }
-      throw error;
-    }
-  }
-
-  async function saveStudentProfile() {
-    const payload = getStudentPayload();
-    if (!hasAnyInfoField(payload)) {
-      throw new Error('Please fill at least 1 field in Info tab before saving.');
-    }
-
-    if (elements.btnSaveStudent) {
-      elements.btnSaveStudent.disabled = true;
-      elements.btnSaveStudent.textContent = 'Saving...';
-    }
-    try {
-      const path = modalState.studentId
-        ? `/api/admin/students/${encodeURIComponent(modalState.studentId)}`
-        : '/api/admin/students';
-      const method = modalState.studentId ? 'PATCH' : 'POST';
-      const json = await apiFetchJson(path, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      const studentId = String(json.studentId || json.student?.studentId || modalState.studentId || '').trim();
-      if (!studentId) throw new Error('Student ID missing from server response.');
-
-      modalState.studentId = studentId;
-      modalState.studentProfile = json.student || {
-        ...payload,
-        studentId
-      };
-
-      if (elements.studentIdBadge) {
-        elements.studentIdBadge.textContent = `ID: ${studentId}`;
-        elements.studentIdBadge.style.display = 'inline-flex';
-      }
-
-      if (elements.btnAddEntranceTest) elements.btnAddEntranceTest.disabled = false;
-
-      if (elements.btnSaveStudent) {
-        elements.btnSaveStudent.disabled = false;
-        elements.btnSaveStudent.textContent = 'Save Student';
-      }
-
-      await refreshStudentLists();
-      await refreshStudentTimeline();
-      await refreshEntranceTestsList();
-      await refreshStudentFinance().catch((error) => {
-        console.error('[CRM Admin] Failed to refresh student finance after save:', error);
-      });
-      await refreshDashboard();
-      showToast(method === 'PATCH' ? 'Student profile updated.' : 'Student profile saved.', 'success');
-    } catch (e) {
-      if (modalState.studentId) {
-        if (elements.btnSaveStudent) {
-          elements.btnSaveStudent.disabled = false;
-          elements.btnSaveStudent.textContent = 'Save Student';
-        }
-        if (elements.btnAddEntranceTest) {
-          elements.btnAddEntranceTest.disabled = false;
-        }
-      } else if (elements.btnSaveStudent) {
-        elements.btnSaveStudent.disabled = false;
-        elements.btnSaveStudent.textContent = 'Save Student';
-      }
-      throw e;
-    }
-  }
-
-  async function createEntranceTest() {
-    if (!modalState.studentId) {
-      await saveStudentProfile();
-    }
-
-    if (!modalState.studentId) {
-      throw new Error('Please fill at least 1 field before creating a test link.');
-    }
-
-    if (elements.btnAddEntranceTest) {
-      elements.btnAddEntranceTest.disabled = true;
-      elements.btnAddEntranceTest.textContent = 'Creating...';
-    }
-    try {
-      const json = await apiFetchJson(`/api/admin/students/${encodeURIComponent(modalState.studentId)}/entrance-tests`, {
-        method: 'POST'
-      });
-
-      const testLink = String(json.testLink || '').trim();
-      const testId = String(json.testId || '').trim();
-      if (!testLink || !testId) throw new Error('Test link missing from server response.');
-
-      modalState.createdTestLinks.set(testId, testLink);
-
-      if (elements.entranceTestLinkInput) elements.entranceTestLinkInput.value = testLink;
-      if (elements.btnCopyEntranceTestLink) elements.btnCopyEntranceTestLink.disabled = false;
-
-      await refreshEntranceTestsList();
-      showToast('Entrance test link created.', 'success');
-    } finally {
-      if (elements.btnAddEntranceTest) {
-        elements.btnAddEntranceTest.disabled = false;
-        elements.btnAddEntranceTest.textContent = 'Add new test';
-      }
-    }
-  }
-
-  function tsToDate(ts) {
-    if (!ts) return null;
-    if (typeof ts === 'string') {
-      const d = new Date(ts);
-      return Number.isFinite(d.getTime()) ? d : null;
-    }
-    if (typeof ts === 'number') {
-      const d = new Date(ts);
-      return Number.isFinite(d.getTime()) ? d : null;
-    }
-    if (typeof ts === 'object') {
-      if (typeof ts.toMillis === 'function') return new Date(ts.toMillis());
-      if (typeof ts._seconds === 'number') return new Date(ts._seconds * 1000);
-      if (typeof ts.seconds === 'number') return new Date(ts.seconds * 1000);
-    }
-    return null;
-  }
-
-  function formatDateTime(ts) {
-    const d = tsToDate(ts);
-    if (!d) return '—';
-    return d.toLocaleString();
-  }
-
-  function formatDateTimeLocalValue(ts) {
-    const d = tsToDate(ts);
-    if (!d) return '';
-    const offset = d.getTimezoneOffset();
-    const local = new Date(d.getTime() - (offset * 60000));
-    return local.toISOString().slice(0, 16);
-  }
-
-  function formatDueAtForMeta(ts) {
-    const d = tsToDate(ts);
-    if (!d) return 'No due date';
-    return `Due ${d.toLocaleString()}`;
-  }
-
-  function renderTaskList(container, tasks, options = {}) {
-    if (!container) return;
-    const list = Array.isArray(tasks) ? [...tasks] : [];
-    if (!list.length) {
-      container.innerHTML = `<div class="crm-muted">${escapeHtml(options.emptyMessage || 'No tasks yet.')}</div>`;
-      return;
-    }
-
-    list.sort((left, right) => {
-      const leftDue = tsToDate(left?.dueAt)?.getTime() || Number.MAX_SAFE_INTEGER;
-      const rightDue = tsToDate(right?.dueAt)?.getTime() || Number.MAX_SAFE_INTEGER;
-      if (leftDue !== rightDue) return leftDue - rightDue;
-      return (tsToDate(right?.createdAt)?.getTime() || 0) - (tsToDate(left?.createdAt)?.getTime() || 0);
-    });
-
-    container.innerHTML = list.map((task) => {
-      const priority = window.CrmActivities
-        ? window.CrmActivities.formatPriorityLabel(task.priority)
-        : String(task.priority || 'medium');
-      const isOpen = String(task.status || 'open') === 'open';
-      return `
-        <div class="crm-task-item">
-          <div class="crm-task-head">
-            <strong>${escapeHtml(task.title || 'Untitled task')}</strong>
-            <span class="crm-task-priority ${escapeHtml(priority)}">${escapeHtml(priority)}</span>
-          </div>
-          <div class="crm-task-meta">${escapeHtml(formatDueAtForMeta(task.dueAt))}</div>
-          ${task.notes ? `<div class="crm-timeline-meta" style="margin-top: 6px;">${escapeHtml(task.notes)}</div>` : ''}
-          ${isOpen ? `
-            <div class="crm-task-actions">
-              <button type="button" class="crm-btn-secondary btn-task-done" data-task-id="${escapeHtml(task.taskId || '')}" data-scope="${escapeHtml(options.scope || '')}">Mark Done</button>
-            </div>
-          ` : ''}
-        </div>
-      `;
-    }).join('');
-
-    Array.from(container.querySelectorAll('.btn-task-done')).forEach((button) => {
-      button.addEventListener('click', async () => {
-        const taskId = String(button.dataset.taskId || '').trim();
-        const scope = String(button.dataset.scope || '').trim();
-        try {
-          button.disabled = true;
-          await apiFetchJson(`/api/admin/tasks/${encodeURIComponent(taskId)}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: 'done' })
-          });
-          await refreshOpenTaskSnapshot();
-          await refreshDashboard();
-          showToast(scope === 'lead' ? 'Lead task completed.' : 'Student task completed.', 'success');
-        } catch (error) {
-          console.error('[CRM Admin] Complete task failed:', error);
-          showToast(error?.message || 'Failed to update task.', 'error');
-          button.disabled = false;
-        }
-      });
-    });
-  }
-
-  function renderActivityList(container, activities, emptyMessage) {
-    if (!container) return;
-    const list = Array.isArray(activities) ? [...activities] : [];
-    if (!list.length) {
-      container.innerHTML = `<div class="crm-muted">${escapeHtml(emptyMessage || 'No activity yet.')}</div>`;
-      return;
-    }
-
-    list.sort((left, right) => (tsToDate(right?.createdAt)?.getTime() || 0) - (tsToDate(left?.createdAt)?.getTime() || 0));
-
-    container.innerHTML = list.map((activity) => `
-      <div class="crm-timeline-item">
-        <div class="crm-timeline-head">
-          <span class="crm-activity-chip">${escapeHtml(window.CrmActivities ? window.CrmActivities.formatTypeLabel(activity.type) : String(activity.type || 'Note'))}</span>
-          <span class="crm-timeline-meta">${escapeHtml(formatDateTime(activity.createdAt))}</span>
-        </div>
-        <strong>${escapeHtml(activity.subject || 'Untitled activity')}</strong>
-        ${activity.body ? `<div class="crm-timeline-meta" style="margin-top: 6px;">${escapeHtml(activity.body)}</div>` : ''}
-      </div>
-    `).join('');
-  }
-
-  async function refreshLeadWorkspace() {
-    if (!modalState.leadId) {
-      if (elements.leadWorkspace) elements.leadWorkspace.style.display = 'none';
-      renderLeadContextSummary(null);
-      return;
-    }
-
-    const lead = dataCache.leads.find((item) => String(item.leadId || '') === String(modalState.leadId)) || null;
-    const [tasks, activities] = await Promise.all([
-      fetchTasks({ leadId: modalState.leadId, limit: 50 }),
-      fetchActivities({ leadId: modalState.leadId, limit: 50 })
-    ]);
-
-    if (elements.leadWorkspace) elements.leadWorkspace.style.display = 'grid';
-    if (elements.leadWorkspaceTitle) {
-      elements.leadWorkspaceTitle.textContent = lead?.name || lead?.email || 'Lead Workspace';
-    }
-    if (elements.leadWorkspaceMeta) {
-      elements.leadWorkspaceMeta.textContent = [
-        lead?.stage,
-        lead?.source,
-        lead?.email || lead?.phone || lead?.zalo || lead?.facebookDisplayName || lead?.facebook || lead?.facebookProfileUrl,
-        lead?.messengerStatus
-      ]
-        .filter(Boolean)
-        .join(' | ') || 'Manage next actions and communication.';
-    }
-
-    applyReminderBadge(elements.leadWorkspaceBadge, getReminderSummary({ leadId: modalState.leadId }));
-    renderLeadContextSummary(lead);
-    renderTaskList(elements.leadTaskList, tasks, {
-      emptyMessage: 'No lead tasks yet.',
-      scope: 'lead'
-    });
-    renderActivityList(elements.leadActivityList, activities, 'No lead activity yet.');
-  }
-
-  async function refreshStudentTimeline() {
-    if (!modalState.studentId) {
-      if (elements.studentTaskMeta) {
-        elements.studentTaskMeta.textContent = 'Save the profile to schedule follow-ups.';
-      }
-      applyReminderBadge(elements.studentTaskBadge, null);
-      return;
-    }
-
-    const [tasks, activities] = await Promise.all([
-      fetchTasks({ studentId: modalState.studentId, limit: 50 }),
-      fetchActivities({ studentId: modalState.studentId, limit: 50 })
-    ]);
-
-    const summary = getReminderSummary({ studentId: modalState.studentId });
-    if (elements.studentTaskMeta) {
-      elements.studentTaskMeta.textContent = summary?.nextActionAt
-        ? formatDueAtForMeta(summary.nextActionAt)
-        : 'No scheduled follow-up yet.';
-    }
-    applyReminderBadge(elements.studentTaskBadge, summary);
-    renderTaskList(elements.studentTaskList, tasks, {
-      emptyMessage: 'No tasks yet.',
-      scope: 'student'
-    });
-    renderActivityList(elements.studentActivityList, activities, 'No activity yet.');
+    if (!taskActivityWorkspaceController) return;
+    return taskActivityWorkspaceController.refreshOpenTaskSnapshot();
   }
 
   async function createTaskForLead() {
-    if (!modalState.leadId) throw new Error('Select a lead first.');
-    if (!window.CrmActivities || typeof window.CrmActivities.buildTaskPayload !== 'function') {
-      throw new Error('Activity helpers are not available.');
-    }
-
-    const payload = window.CrmActivities.buildTaskPayload({
-      inputTaskTitle: elements.inputLeadTaskTitle,
-      inputTaskDueAt: elements.inputLeadTaskDueAt,
-      inputTaskPriority: elements.inputLeadTaskPriority
-    });
-
-    await apiFetchJson('/api/admin/tasks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        leadId: modalState.leadId,
-        ...payload
-      })
-    });
-
-    resetLeadTaskComposer();
-    await refreshOpenTaskSnapshot();
-    showToast('Lead task added.', 'success');
+    if (!taskActivityWorkspaceController) throw new Error('Task/activity helpers are not available.');
+    return taskActivityWorkspaceController.createTaskForLead();
   }
 
   async function createActivityForLead() {
-    if (!modalState.leadId) throw new Error('Select a lead first.');
-    if (!window.CrmActivities || typeof window.CrmActivities.buildActivityPayload !== 'function') {
-      throw new Error('Activity helpers are not available.');
-    }
-
-    const payload = window.CrmActivities.buildActivityPayload({
-      inputActivityType: elements.inputLeadActivityType,
-      inputActivitySubject: elements.inputLeadActivitySubject,
-      inputActivityBody: elements.inputLeadActivityBody
-    });
-
-    await apiFetchJson('/api/admin/activities', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        leadId: modalState.leadId,
-        ...payload
-      })
-    });
-
-    resetLeadActivityComposer();
-    await refreshLeadWorkspace();
-    showToast('Lead activity logged.', 'success');
+    if (!taskActivityWorkspaceController) throw new Error('Task/activity helpers are not available.');
+    return taskActivityWorkspaceController.createActivityForLead();
   }
 
   async function createTaskForStudent() {
-    if (!modalState.studentId) throw new Error('Save the student profile first.');
-    if (!window.CrmActivities || typeof window.CrmActivities.buildTaskPayload !== 'function') {
-      throw new Error('Activity helpers are not available.');
-    }
-
-    const payload = window.CrmActivities.buildTaskPayload({
-      inputTaskTitle: elements.inputStudentTaskTitle,
-      inputTaskDueAt: elements.inputStudentTaskDueAt,
-      inputTaskPriority: elements.inputStudentTaskPriority
-    });
-
-    await apiFetchJson('/api/admin/tasks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        studentId: modalState.studentId,
-        ...payload
-      })
-    });
-
-    resetStudentTaskComposer();
-    await refreshOpenTaskSnapshot();
-    showToast('Student task added.', 'success');
+    if (!taskActivityWorkspaceController) throw new Error('Task/activity helpers are not available.');
+    return taskActivityWorkspaceController.createTaskForStudent();
   }
 
   async function createActivityForStudent() {
-    if (!modalState.studentId) throw new Error('Save the student profile first.');
-    if (!window.CrmActivities || typeof window.CrmActivities.buildActivityPayload !== 'function') {
-      throw new Error('Activity helpers are not available.');
-    }
-
-    const payload = window.CrmActivities.buildActivityPayload({
-      inputActivityType: elements.inputStudentActivityType,
-      inputActivitySubject: elements.inputStudentActivitySubject,
-      inputActivityBody: elements.inputStudentActivityBody
-    });
-
-    await apiFetchJson('/api/admin/activities', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        studentId: modalState.studentId,
-        ...payload
-      })
-    });
-
-    resetStudentActivityComposer();
-    await refreshStudentTimeline();
-    showToast('Student activity logged.', 'success');
+    if (!taskActivityWorkspaceController) throw new Error('Task/activity helpers are not available.');
+    return taskActivityWorkspaceController.createActivityForStudent();
   }
 
   async function refreshStudentFinance() {
-    if (!modalState.studentId) return;
-
-    const financeSummaryPromise = window.CrmFinance
-      ? apiFetchJson(`/api/admin/finance/summary?studentId=${encodeURIComponent(modalState.studentId)}`, {
-        method: 'GET'
-      })
-      : Promise.resolve({
-        totalInvoiced: 0,
-        totalPaid: 0,
-        totalOutstanding: 0,
-        nextDueDate: '-',
-        invoices: []
-      });
-    const attendanceSummaryPromise = window.ClassroomAPI && typeof window.ClassroomAPI.fetchAttendanceSummary === 'function'
-      ? window.ClassroomAPI.fetchAttendanceSummary({ studentId: modalState.studentId })
-      : Promise.resolve({ students: [] });
-    const [json, attendanceJson] = await Promise.all([
-      financeSummaryPromise,
-      attendanceSummaryPromise
-    ]);
-
-    const totalInvoiced = Number(json.totalInvoiced || 0);
-    const totalPaid = Number(json.totalPaid || 0);
-    const totalOutstanding = Number(json.totalOutstanding || 0);
-    const nextDueDate = String(json.nextDueDate || '').trim() || '-';
-    const invoices = Array.isArray(json.invoices) ? json.invoices : [];
-    const enrollmentRows = Array.isArray(attendanceJson?.students) ? attendanceJson.students : [];
-    const activeEnrollments = enrollmentRows.filter((row) => String(row.status || '') === 'active');
-    const availableEnrollments = activeEnrollments.length ? activeEnrollments : enrollmentRows;
-    const currentEnrollmentId = String(elements.inputStudentFinanceEnrollment?.value || '').trim();
-    const currentEnrollment = currentEnrollmentId
-      ? availableEnrollments.find((row) => String(row.enrollmentId || '') === currentEnrollmentId)
-      : null;
-    const classroomMatchCourseId = String(currentEnrollment?.courseId || availableEnrollments[0]?.courseId || '').trim();
-
-    const classroomMatchesPromise = window.ClassroomAPI && typeof window.ClassroomAPI.fetchClassroomMatches === 'function'
-      ? window.ClassroomAPI.fetchClassroomMatches(modalState.studentId, classroomMatchCourseId ? { courseId: classroomMatchCourseId } : {}).catch((error) => {
-        console.error('[CRM Admin] Failed to load classroom matches:', error);
-        return { matches: [], recommendedClassroom: null, classroomCount: 0, courseId: null };
-      })
-      : Promise.resolve({ matches: [], recommendedClassroom: null, classroomCount: 0, courseId: null });
-
-    const classroomMatchesJson = await classroomMatchesPromise;
-    const financeWorkflow = window.CrmFinance && typeof window.CrmFinance.deriveWorkflowState === 'function'
-      ? window.CrmFinance.deriveWorkflowState({
-        invoices,
-        enrollments: availableEnrollments,
-        matches: Array.isArray(classroomMatchesJson?.matches) ? classroomMatchesJson.matches : []
-      })
-      : {
-        nextAction: 'collect_payment',
-        requiresPayment: true,
-        primaryClassroomId: null,
-        activeEnrollmentId: null,
-        message: 'Finance workflow guidance is unavailable.'
-      };
-
-    modalState.financeEnrollments = availableEnrollments;
-    modalState.financeWorkflow = financeWorkflow;
-
-    if (elements.inputStudentFinanceEnrollment) {
-      const currentValue = String(elements.inputStudentFinanceEnrollment.value || '').trim();
-      elements.inputStudentFinanceEnrollment.innerHTML = '<option value="">No enrollment selected</option>' + availableEnrollments.map((row) => `
-        <option value="${escapeHtml(row.enrollmentId || '')}">${escapeHtml([row.classId || 'class?', row.courseId || 'course?', row.status || 'status?'].join(' • '))}</option>
-      `).join('');
-
-      if (currentValue && availableEnrollments.some((row) => String(row.enrollmentId || '') === currentValue)) {
-        elements.inputStudentFinanceEnrollment.value = currentValue;
-      } else if (availableEnrollments.length === 1) {
-        elements.inputStudentFinanceEnrollment.value = String(availableEnrollments[0].enrollmentId || '');
-      }
-    }
-
-    if (elements.studentFinanceEnrollmentMeta) {
-      elements.studentFinanceEnrollmentMeta.textContent = availableEnrollments.length
-        ? `Loaded ${availableEnrollments.length} enrollment context${availableEnrollments.length === 1 ? '' : 's'} for this student.`
-        : 'No enrollment linked yet. You can bill first, then assign the student after payment confirmation.';
-    }
-
-    if (elements.studentFinanceInvoiced) elements.studentFinanceInvoiced.textContent = window.CrmFinance ? window.CrmFinance.formatMoney(totalInvoiced) : String(totalInvoiced);
-    if (elements.studentFinancePaid) elements.studentFinancePaid.textContent = window.CrmFinance ? window.CrmFinance.formatMoney(totalPaid) : String(totalPaid);
-    if (elements.studentFinanceOutstanding) elements.studentFinanceOutstanding.textContent = window.CrmFinance ? window.CrmFinance.formatMoney(totalOutstanding) : String(totalOutstanding);
-    if (elements.studentFinanceNextDue) elements.studentFinanceNextDue.textContent = nextDueDate;
-
-    renderStudentClassroomMatches(classroomMatchesJson);
-    renderStudentFinanceWorkflow(financeWorkflow);
-    renderStudentSchedulePrompt();
-
-    if (elements.studentInvoiceList) {
-      if (!invoices.length) {
-        elements.studentInvoiceList.innerHTML = '<div class="crm-muted">No invoices yet.</div>';
-      } else {
-        elements.studentInvoiceList.innerHTML = invoices.map((invoice) => `
-          <div class="crm-task-item">
-            <div class="crm-task-head">
-              <strong>Invoice ${escapeHtml(invoice.invoiceId || '')}</strong>
-              <span class="crm-task-priority medium">${escapeHtml(invoice.status || 'open')}</span>
-            </div>
-            <div class="crm-task-meta">Due ${escapeHtml(String(invoice.dueDate || '-'))}</div>
-            <div class="crm-timeline-meta" style="margin-top: 6px;">Net ${escapeHtml(window.CrmFinance ? window.CrmFinance.formatMoney(invoice.netAmount) : String(invoice.netAmount || 0))} | Outstanding ${escapeHtml(window.CrmFinance ? window.CrmFinance.formatMoney(invoice.outstandingAmount) : String(invoice.outstandingAmount || 0))}</div>
-            <div class="crm-task-actions">
-              <button type="button" class="crm-btn-secondary btn-select-invoice" data-invoice-id="${escapeHtml(invoice.invoiceId || '')}">Select</button>
-            </div>
-          </div>
-        `).join('');
-
-        Array.from(elements.studentInvoiceList.querySelectorAll('.btn-select-invoice')).forEach((button) => {
-          button.addEventListener('click', () => {
-            modalState.selectedInvoiceId = String(button.dataset.invoiceId || '').trim();
-            showToast(`Selected ${modalState.selectedInvoiceId} for payment.`, 'success');
-          });
-        });
-      }
-    }
+    if (!studentFinanceController) return;
+    return studentFinanceController.refreshStudentFinance();
   }
 
   function getCurrentStudentProfile() {
@@ -1830,103 +1126,15 @@
     return dataCache.students.find((student) => String(student.studentId || '') === String(modalState.studentId || '')) || null;
   }
 
-  function getSelectedClassroomMatch() {
-    const matches = Array.isArray(modalState.classroomMatches) ? modalState.classroomMatches : [];
-    const selectedId = String(elements.inputStudentClassroomMatchSelect?.value || '').trim();
-    return matches.find((match) => String(match.classroomId || '') === selectedId) || matches[0] || null;
-  }
 
   function renderStudentFinanceWorkflow(workflow) {
-    if (!elements.studentFinanceWorkflowBadge || !elements.studentFinanceWorkflowNote) return;
-    const state = workflow || {};
-    const action = String(state.nextAction || 'collect_payment');
-    const tone = action === 'collect_payment'
-      ? 'low'
-      : 'medium';
-
-    elements.studentFinanceWorkflowBadge.className = `crm-task-priority ${tone}`;
-    elements.studentFinanceWorkflowBadge.textContent = action.replace(/_/g, ' ');
-    elements.studentFinanceWorkflowNote.textContent = String(state.message || 'Follow the finance workflow guidance.');
+    if (!studentFinanceController) return;
+    return studentFinanceController.renderStudentFinanceWorkflow(workflow);
   }
 
   function renderStudentClassroomMatches(matchPayload = {}) {
-    const matches = Array.isArray(matchPayload.matches) ? matchPayload.matches : [];
-    modalState.classroomMatches = matches;
-
-    if (elements.studentClassroomMatchSummary) {
-      if (!matches.length) {
-        elements.studentClassroomMatchSummary.innerHTML = '<div class="crm-muted">No active classrooms found.</div>';
-      } else {
-        elements.studentClassroomMatchSummary.innerHTML = matches.slice(0, 4).map((match) => {
-          const reasons = Array.isArray(match.reasons) ? match.reasons : [];
-          const warnings = Array.isArray(match.warnings) ? match.warnings : [];
-          const dayText = Array.isArray(match.meetingDays) && match.meetingDays.length ? `Days: ${match.meetingDays.join(', ')}` : '';
-          const hourText = Array.isArray(match.meetingHours) && match.meetingHours.length ? `Hours: ${match.meetingHours.join(', ')}` : '';
-          const metadata = [match.courseId || 'No course', dayText, hourText].filter(Boolean).join(' | ');
-          return `
-            <div class="crm-task-item" data-classroom-id="${escapeHtml(match.classroomId || '')}">
-              <div class="crm-task-head">
-                <strong>${escapeHtml(match.name || 'Classroom')}</strong>
-                <span class="crm-task-priority ${match.recommended ? 'medium' : 'low'}">${escapeHtml(`${Number(match.fitScore || 0)}% fit`)}</span>
-              </div>
-              <div class="crm-task-meta">${escapeHtml(metadata)}</div>
-              ${reasons.length ? `<div class="crm-timeline-meta" style="margin-top: 6px;">${escapeHtml(reasons.join(' • '))}</div>` : ''}
-              ${warnings.length ? `<div class="crm-muted" style="margin-top: 6px;">${escapeHtml(warnings.join(' • '))}</div>` : ''}
-            </div>
-          `;
-        }).join('');
-      }
-    }
-
-    if (elements.inputStudentClassroomMatchSelect) {
-      const currentValue = String(elements.inputStudentClassroomMatchSelect.value || '').trim();
-      const recommendedId = String(matchPayload.recommendedClassroom?.classroomId || matches[0]?.classroomId || '').trim();
-      elements.inputStudentClassroomMatchSelect.innerHTML = '<option value="">No classroom selected</option>' + matches.map((match) => `
-        <option value="${escapeHtml(match.classroomId || '')}">${escapeHtml([match.name || 'Classroom', match.courseId || 'course?', `${Number(match.fitScore || 0)}% fit`].join(' • '))}${match.recommended ? ' (recommended)' : ''}</option>
-      `).join('');
-      if (currentValue && matches.some((match) => String(match.classroomId || '') === currentValue)) {
-        elements.inputStudentClassroomMatchSelect.value = currentValue;
-      } else if (recommendedId) {
-        elements.inputStudentClassroomMatchSelect.value = recommendedId;
-      }
-    }
-
-    if (elements.studentClassroomMatchMeta) {
-      const classroomCount = Number(matchPayload.classroomCount || matches.length || 0);
-      const recommended = matchPayload.recommendedClassroom || matches[0] || null;
-      elements.studentClassroomMatchMeta.textContent = classroomCount
-        ? `Ranked ${classroomCount} active classroom${classroomCount === 1 ? '' : 's'}. Recommended: ${recommended?.name || 'Classroom'} (${Number(recommended?.fitScore || 0)}%).`
-        : 'No active classrooms found for this student.';
-    }
-
-    const selected = getSelectedClassroomMatch();
-    if (elements.studentClassroomMatchWarning) {
-      if (!selected) {
-        elements.studentClassroomMatchWarning.textContent = '';
-        elements.studentClassroomMatchWarning.style.color = '';
-      } else if (modalState.financeWorkflow?.nextAction === 'start_attendance') {
-        elements.studentClassroomMatchWarning.textContent = 'Student already has an active enrollment. Continue with attendance and class delivery.';
-        elements.studentClassroomMatchWarning.style.color = '#15803d';
-      } else if (modalState.financeWorkflow?.requiresPayment) {
-        elements.studentClassroomMatchWarning.textContent = 'Payment confirmation is required before creating the enrollment.';
-        elements.studentClassroomMatchWarning.style.color = '#b45309';
-      } else if (selected.recommended) {
-        elements.studentClassroomMatchWarning.textContent = `Recommended match confirmed: ${selected.name || 'Classroom'} (${Number(selected.fitScore || 0)}% fit).`;
-        elements.studentClassroomMatchWarning.style.color = '#15803d';
-      } else {
-        const top = matches[0] || null;
-        elements.studentClassroomMatchWarning.textContent = top
-          ? `Manual override selected. Top recommendation is ${top.name || 'Classroom'} (${Number(top.fitScore || 0)}% fit).`
-          : 'Manual override selected.';
-        elements.studentClassroomMatchWarning.style.color = '#b45309';
-      }
-    }
-
-    if (elements.btnCreateRecommendedEnrollment) {
-      elements.btnCreateRecommendedEnrollment.disabled = !selected
-        || !!modalState.financeWorkflow?.requiresPayment
-        || modalState.financeWorkflow?.nextAction === 'start_attendance';
-    }
+    if (!studentFinanceController) return;
+    return studentFinanceController.renderStudentClassroomMatches(matchPayload);
   }
 
   function normalizeScheduleList(value) {
@@ -2014,656 +1222,106 @@
   }
 
   function getPrimaryLiveSession(sessions = []) {
-    const rows = Array.isArray(sessions) ? sessions : [];
-    return rows.find((row) => row && row.status === 'live')
-      || rows.find((row) => row && row.status === 'scheduled')
-      || rows[0]
-      || null;
+    if (!liveDeliveryController) return null;
+    return liveDeliveryController.getPrimaryLiveSession(sessions);
   }
 
   function getSelectedLiveSession() {
-    const selectedId = String(modalState.liveSessionId || '').trim();
-    if (selectedId === '__new__') {
-      return null;
-    }
-    const sessions = Array.isArray(modalState.liveSessions) ? modalState.liveSessions : [];
-    if (selectedId) {
-      const selected = sessions.find((row) => String(row?.sessionId || '') === selectedId);
-      if (selected) return selected;
-    }
-    return getPrimaryLiveSession(sessions);
+    if (!liveDeliveryController) return null;
+    return liveDeliveryController.getSelectedLiveSession();
   }
 
   function resetLiveSessionForm() {
-    modalState.liveSessionId = '__new__';
-    if (elements.inputLiveSessionTitle) elements.inputLiveSessionTitle.value = '';
-    if (elements.inputLiveSessionStatus) elements.inputLiveSessionStatus.value = 'draft';
-    if (elements.inputLiveSessionStartAt) elements.inputLiveSessionStartAt.value = '';
-    if (elements.inputLiveSessionEndAt) elements.inputLiveSessionEndAt.value = '';
-    if (elements.inputLiveSessionMeetingUrl) elements.inputLiveSessionMeetingUrl.value = '';
-    if (elements.inputLiveSessionHostUrl) elements.inputLiveSessionHostUrl.value = '';
-    if (elements.inputLiveSessionMeetingId) elements.inputLiveSessionMeetingId.value = '';
-    if (elements.inputLiveSessionPasscode) elements.inputLiveSessionPasscode.value = '';
-    if (elements.inputLiveSessionNotes) elements.inputLiveSessionNotes.value = '';
+    if (!liveDeliveryController) return;
+    return liveDeliveryController.resetLiveSessionForm();
   }
 
   function applyLiveSessionToForm(session) {
-    if (!session) {
-      resetLiveSessionForm();
-      return;
-    }
-
-    modalState.liveSessionId = String(session.sessionId || '').trim() || null;
-    if (elements.inputLiveSessionTitle) elements.inputLiveSessionTitle.value = session.title || '';
-    if (elements.inputLiveSessionStatus) elements.inputLiveSessionStatus.value = session.status || 'draft';
-    if (elements.inputLiveSessionStartAt) elements.inputLiveSessionStartAt.value = formatDateTimeLocalValue(session.scheduledStartAt);
-    if (elements.inputLiveSessionEndAt) elements.inputLiveSessionEndAt.value = formatDateTimeLocalValue(session.scheduledEndAt);
-    if (elements.inputLiveSessionMeetingUrl) elements.inputLiveSessionMeetingUrl.value = session.meetingUrl || '';
-    if (elements.inputLiveSessionHostUrl) elements.inputLiveSessionHostUrl.value = session.hostUrl || '';
-    if (elements.inputLiveSessionMeetingId) elements.inputLiveSessionMeetingId.value = session.meetingId || '';
-    if (elements.inputLiveSessionPasscode) elements.inputLiveSessionPasscode.value = session.passcode || '';
-    if (elements.inputLiveSessionNotes) elements.inputLiveSessionNotes.value = session.notes || '';
+    if (!liveDeliveryController) return;
+    return liveDeliveryController.applyLiveSessionToForm(session);
   }
 
   function collectLiveSessionPayload() {
-    return {
-      title: String(elements.inputLiveSessionTitle?.value || '').trim(),
-      status: String(elements.inputLiveSessionStatus?.value || 'draft').trim() || 'draft',
-      scheduledStartAt: String(elements.inputLiveSessionStartAt?.value || '').trim() || null,
-      scheduledEndAt: String(elements.inputLiveSessionEndAt?.value || '').trim() || null,
-      meetingUrl: String(elements.inputLiveSessionMeetingUrl?.value || '').trim() || null,
-      hostUrl: String(elements.inputLiveSessionHostUrl?.value || '').trim() || null,
-      meetingId: String(elements.inputLiveSessionMeetingId?.value || '').trim() || null,
-      passcode: String(elements.inputLiveSessionPasscode?.value || '').trim() || null,
-      notes: String(elements.inputLiveSessionNotes?.value || '').trim() || null
-    };
+    if (!liveDeliveryController) return {};
+    return liveDeliveryController.collectLiveSessionPayload();
   }
 
   function renderLiveSessionList(sessions = []) {
-    if (!elements.liveSessionList) return;
-    const rows = Array.isArray(sessions) ? sessions : [];
-    if (!rows.length) {
-      elements.liveSessionList.innerHTML = '<div class="crm-muted">No live sessions yet.</div>';
-      return;
-    }
-
-    const selectedId = String((getSelectedLiveSession() || {}).sessionId || '').trim();
-    elements.liveSessionList.innerHTML = rows.map((session) => {
-      const isSelected = String(session.sessionId || '') === selectedId;
-      const tone = session.status === 'live'
-        ? 'submitted'
-        : session.status === 'scheduled'
-          ? 'created'
-          : session.status === 'ended'
-            ? 'graded'
-            : 'draft';
-      const reasons = [];
-      if (session.scheduledStartAt) reasons.push(`Start ${formatDateTime(session.scheduledStartAt)}`);
-      if (session.meetingId) reasons.push(`Meeting ID ${session.meetingId}`);
-      return `
-        <button type="button" class="crm-task-item crm-live-session-card ${isSelected ? 'active' : ''}" data-live-session-id="${escapeHtml(session.sessionId || '')}" style="text-align:left; width:100%;">
-          <div class="crm-task-head">
-            <strong>${escapeHtml(session.title || 'Untitled session')}</strong>
-            <span class="crm-test-status ${tone}">${escapeHtml(session.status || 'draft')}</span>
-          </div>
-          <div class="crm-task-meta">${escapeHtml(reasons.join(' • ') || 'No schedule details yet.')}</div>
-          ${session.notes ? `<div class="crm-timeline-meta" style="margin-top:6px;">${escapeHtml(session.notes)}</div>` : ''}
-        </button>
-      `;
-    }).join('');
-
-    Array.from(elements.liveSessionList.querySelectorAll('[data-live-session-id]')).forEach((button) => {
-      button.addEventListener('click', () => {
-        modalState.liveSessionId = String(button.dataset.liveSessionId || '').trim() || null;
-        applyLiveSessionToForm(getSelectedLiveSession());
-        renderLiveDeliverySummary(modalState.liveSessions);
-        renderLiveSessionList(modalState.liveSessions);
-        renderAttendanceWorkflowGuidance();
-        renderClassworkWorkflowGuidance();
-      });
-    });
+    if (!liveDeliveryController) return;
+    return liveDeliveryController.renderLiveSessionList(sessions);
   }
 
   function renderLiveDeliverySummary(sessions = []) {
-    if (!elements.liveDeliverySummary) return;
-    const selected = getSelectedLiveSession() || getPrimaryLiveSession(sessions);
-    if (!selected) {
-      elements.liveDeliverySummary.innerHTML = '<div class="crm-muted">Create a live session before class starts.</div>';
-      if (elements.btnStartLiveSession) elements.btnStartLiveSession.disabled = true;
-      if (elements.btnEndLiveSession) elements.btnEndLiveSession.disabled = true;
-      if (elements.btnCopyLiveJoinLink) elements.btnCopyLiveJoinLink.disabled = true;
-      if (elements.btnCopyLiveHostLink) elements.btnCopyLiveHostLink.disabled = true;
-      return;
-    }
-
-    const guidance = selected.status === 'live'
-      ? 'Session is live. Take attendance and manage class from the Attendance tab.'
-      : selected.status === 'scheduled'
-        ? 'Session is scheduled. Start the session when class begins.'
-        : selected.status === 'ended'
-          ? 'Session has ended. Move to classwork and review submissions.'
-          : selected.status === 'cancelled'
-            ? 'Session is cancelled. Create or reschedule another session before class.'
-            : 'Draft session. Add the meeting link and schedule before class starts.';
-
-    elements.liveDeliverySummary.innerHTML = `
-      <div class="crm-task-item">
-        <div class="crm-task-head">
-          <strong>${escapeHtml(selected.title || 'Untitled session')}</strong>
-          <span class="crm-test-status ${escapeHtml(selected.status === 'live' ? 'submitted' : selected.status === 'scheduled' ? 'created' : selected.status === 'ended' ? 'graded' : 'draft')}">${escapeHtml(selected.status || 'draft')}</span>
-        </div>
-        <div class="crm-task-meta">${escapeHtml(guidance)}</div>
-        <div class="crm-timeline-meta" style="margin-top: 8px;">Join link: ${selected.meetingUrl ? escapeHtml(selected.meetingUrl) : 'Not set'}</div>
-        ${selected.hostUrl ? `<div class="crm-timeline-meta" style="margin-top: 6px;">Host link: ${escapeHtml(selected.hostUrl)}</div>` : ''}
-      </div>
-    `;
-
-    if (elements.btnStartLiveSession) elements.btnStartLiveSession.disabled = selected.status !== 'scheduled';
-    if (elements.btnEndLiveSession) elements.btnEndLiveSession.disabled = selected.status !== 'live';
-    if (elements.btnCopyLiveJoinLink) elements.btnCopyLiveJoinLink.disabled = !selected.meetingUrl;
-    if (elements.btnCopyLiveHostLink) elements.btnCopyLiveHostLink.disabled = !selected.hostUrl;
+    if (!liveDeliveryController) return;
+    return liveDeliveryController.renderLiveDeliverySummary(sessions);
   }
 
   function renderAttendanceWorkflowGuidance() {
-    if (!elements.attendanceLiveSessionNote) return;
-    const selected = getSelectedLiveSession();
-    if (!selected) {
-      elements.attendanceLiveSessionNote.textContent = 'Create a live session before class starts.';
-      return;
-    }
-    if (selected.status === 'scheduled') {
-      elements.attendanceLiveSessionNote.textContent = `Next step: Start session when class begins. Scheduled for ${formatDateTime(selected.scheduledStartAt)}.`;
-      return;
-    }
-    if (selected.status === 'live') {
-      elements.attendanceLiveSessionNote.textContent = 'Next step: Take attendance and manage class while the session is live.';
-      return;
-    }
-    if (selected.status === 'ended') {
-      elements.attendanceLiveSessionNote.textContent = 'Last live session ended. Next step: assign homework or review submissions.';
-      return;
-    }
-    if (selected.status === 'cancelled') {
-      elements.attendanceLiveSessionNote.textContent = 'Current session is cancelled. Create another session before taking attendance.';
-      return;
-    }
-    elements.attendanceLiveSessionNote.textContent = 'Draft live session found. Add the meeting link and schedule before class starts.';
+    if (!liveDeliveryController) return;
+    return liveDeliveryController.renderAttendanceWorkflowGuidance();
   }
 
   function renderClassworkWorkflowGuidance() {
-    if (!elements.classworkLiveSessionNote) return;
-    const selected = getSelectedLiveSession();
-    if (!selected) {
-      elements.classworkLiveSessionNote.textContent = 'Create or complete a live session before assigning follow-up work.';
-      return;
-    }
-    if (selected.status === 'ended') {
-      elements.classworkLiveSessionNote.textContent = 'Live session ended. Next step: assign homework and review student submissions.';
-      return;
-    }
-    if (selected.status === 'live') {
-      elements.classworkLiveSessionNote.textContent = 'Class is currently live. Finish delivery first, then assign follow-up work.';
-      return;
-    }
-    if (selected.status === 'scheduled') {
-      elements.classworkLiveSessionNote.textContent = 'Upcoming session scheduled. Use classwork for prep materials or wait until the session ends for homework.';
-      return;
-    }
-    elements.classworkLiveSessionNote.textContent = 'Live delivery has not been finalized yet. Confirm the session before relying on this classwork cycle.';
+    if (!liveDeliveryController) return;
+    return liveDeliveryController.renderClassworkWorkflowGuidance();
   }
 
   async function loadLiveSessions(classId, options = {}) {
-    if (!window.ClassroomAPI || typeof window.ClassroomAPI.fetchLiveSessions !== 'function') return [];
-    if (!classId) return [];
-
-    const previousSelection = String(options.sessionId || modalState.liveSessionId || '').trim();
-    const sessions = await window.ClassroomAPI.fetchLiveSessions(classId);
-    modalState.liveSessions = Array.isArray(sessions) ? sessions : [];
-
-    const nextSelection = previousSelection && previousSelection !== '__new__'
-      && modalState.liveSessions.find((row) => String(row?.sessionId || '') === previousSelection)
-      ? previousSelection
-      : String(getPrimaryLiveSession(modalState.liveSessions)?.sessionId || '').trim();
-    modalState.liveSessionId = nextSelection || null;
-
-    applyLiveSessionToForm(getSelectedLiveSession());
-    renderLiveDeliverySummary(modalState.liveSessions);
-    renderLiveSessionList(modalState.liveSessions);
-    renderAttendanceWorkflowGuidance();
-    renderClassworkWorkflowGuidance();
-    return modalState.liveSessions;
+    if (!liveDeliveryController) return [];
+    return liveDeliveryController.loadLiveSessions(classId, options);
   }
 
   async function refreshAttendanceClassroomFitNote() {
-    if (!elements.attendanceClassroomFitNote) return;
-    const studentId = String(elements.inputAttendanceStudentSelect?.value || '').trim();
-    if (!studentId) {
-      elements.attendanceClassroomFitNote.textContent = 'Select a student to see schedule fit guidance.';
-      elements.attendanceClassroomFitNote.style.color = '';
-      renderClassroomSchedulePrompt();
-      return;
+    if (classroomWorkspaceController && typeof classroomWorkspaceController.refreshAttendanceClassroomFitNote === 'function') {
+      return classroomWorkspaceController.refreshAttendanceClassroomFitNote();
     }
-
-    if (!window.ClassroomAPI || typeof window.ClassroomAPI.fetchClassroomMatches !== 'function') {
-      elements.attendanceClassroomFitNote.textContent = 'Schedule fit guidance is unavailable.';
-      elements.attendanceClassroomFitNote.style.color = '';
-      renderClassroomSchedulePrompt();
-      return;
-    }
-
-    const classroomCourseId = String(elements.inputClassroomCourseId?.value || '').trim();
-    const json = await window.ClassroomAPI.fetchClassroomMatches(
-      studentId,
-      classroomCourseId ? { courseId: classroomCourseId } : {}
-    ).catch((error) => {
-      console.error('[CRM Admin] Failed to load attendance fit guidance:', error);
-      return { matches: [], recommendedClassroom: null };
-    });
-    const matches = Array.isArray(json.matches) ? json.matches : [];
-    const current = matches.find((match) => String(match.classroomId || '') === String(modalState.classroomId || '')) || null;
-    const top = matches[0] || null;
-
-    if (!matches.length) {
-      elements.attendanceClassroomFitNote.textContent = 'No active classrooms are available to compare.';
-      elements.attendanceClassroomFitNote.style.color = '';
-      renderClassroomSchedulePrompt();
-      return;
-    }
-
-    if (!current) {
-      elements.attendanceClassroomFitNote.textContent = `Top recommendation is ${top?.name || 'another classroom'} (${Number(top?.fitScore || 0)}% fit).`;
-      elements.attendanceClassroomFitNote.style.color = '#b45309';
-      renderClassroomSchedulePrompt();
-      return;
-    }
-
-    if (current.recommended) {
-      elements.attendanceClassroomFitNote.textContent = `This classroom is the top recommendation for ${top?.name || 'this student'} (${Number(current.fitScore || 0)}% fit).`;
-      elements.attendanceClassroomFitNote.style.color = '#15803d';
-      renderClassroomSchedulePrompt();
-      return;
-    }
-
-    elements.attendanceClassroomFitNote.textContent = `This classroom fits at ${Number(current.fitScore || 0)}% versus ${Number(top?.fitScore || 0)}% for the top recommendation (${top?.name || 'another classroom'}).`;
-    elements.attendanceClassroomFitNote.style.color = '#b45309';
-    renderClassroomSchedulePrompt();
+    if (!liveDeliveryController) return;
+    return liveDeliveryController.refreshAttendanceClassroomFitNote();
   }
 
   async function createRecommendedEnrollment() {
-    if (!modalState.studentId) throw new Error('Save the student profile first.');
-    if (modalState.financeWorkflow?.requiresPayment) {
-      throw new Error('Confirm payment before assigning the student to a classroom.');
-    }
-    const match = getSelectedClassroomMatch();
-    if (!match) throw new Error('Select a classroom recommendation first.');
-    if (!window.ClassroomAPI || typeof window.ClassroomAPI.createEnrollment !== 'function') {
-      throw new Error('Enrollment helpers are not available.');
-    }
-
-    const student = getCurrentStudentProfile();
-    const linkedUserId = Array.isArray(student?.linked_user_ids) && student.linked_user_ids.length
-      ? String(student.linked_user_ids[0] || '').trim()
-      : null;
-
-    const json = await window.ClassroomAPI.createEnrollment({
-      studentId: modalState.studentId,
-      studentUid: linkedUserId,
-      studentName: student?.name || null,
-      studentEmail: student?.email || null,
-      classId: match.classroomId,
-      courseId: match.courseId || null,
-      notes: `Recommended classroom match: ${match.name || match.classroomId || 'Classroom'} (${Number(match.fitScore || 0)}% fit).`
-    });
-
-    const enrollmentId = String(json.enrollmentId || json.enrollment?.enrollmentId || '').trim();
-    if (enrollmentId && elements.inputStudentFinanceEnrollment) {
-      elements.inputStudentFinanceEnrollment.value = enrollmentId;
-    }
-
-    await refreshStudentFinance();
-    await refreshDashboard();
-    showToast(`Enrollment created for ${match.name || 'recommended classroom'}.`, 'success');
+    if (!studentFinanceController) throw new Error('Student finance helpers are not available.');
+    return studentFinanceController.createRecommendedEnrollment();
   }
 
   function resolveStudentFinanceContext() {
-    const enrollments = Array.isArray(modalState.financeEnrollments) ? modalState.financeEnrollments : [];
-    const selectedEnrollmentId = String(elements.inputStudentFinanceEnrollment?.value || '').trim();
-    if (!enrollments.length) {
-      const selectedMatch = getSelectedClassroomMatch();
-      return {
-        enrollmentId: null,
-        courseId: selectedMatch?.courseId || null
-      };
-    }
-
-    if (selectedEnrollmentId) {
-      const selected = enrollments.find((row) => String(row.enrollmentId || '') === selectedEnrollmentId);
-      if (selected) {
-        return {
-          enrollmentId: selected.enrollmentId || null,
-          courseId: selected.courseId || null
-        };
-      }
-    }
-
-    if (enrollments.length === 1) {
-      return {
-        enrollmentId: enrollments[0].enrollmentId || null,
-        courseId: enrollments[0].courseId || null
-      };
-    }
-
-    throw new Error('Select the enrollment context first.');
+    if (!studentFinanceController) throw new Error('Student finance helpers are not available.');
+    return studentFinanceController.resolveStudentFinanceContext();
   }
 
   async function createInvoiceForStudent() {
-    if (!modalState.studentId) throw new Error('Save the student profile first.');
-    if (!window.CrmFinance || typeof window.CrmFinance.buildInvoicePayload !== 'function') {
-      throw new Error('Finance helpers are not available.');
-    }
-
-    const financeContext = resolveStudentFinanceContext();
-    const payload = window.CrmFinance.buildInvoicePayload({
-      inputInvoiceAmount: elements.inputInvoiceAmount,
-      inputInvoiceDiscount: elements.inputInvoiceDiscount,
-      inputInvoiceDueDate: elements.inputInvoiceDueDate
-    });
-
-    await apiFetchJson('/api/admin/invoices', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        studentId: modalState.studentId,
-        enrollmentId: financeContext.enrollmentId,
-        courseId: financeContext.courseId,
-        ...payload
-      })
-    });
-
-    if (elements.inputInvoiceAmount) elements.inputInvoiceAmount.value = '';
-    if (elements.inputInvoiceDiscount) elements.inputInvoiceDiscount.value = '';
-    if (elements.inputInvoiceDueDate) elements.inputInvoiceDueDate.value = '';
-    await refreshStudentFinance();
-    await refreshDashboard();
-    showToast('Invoice created.', 'success');
+    if (!studentFinanceController) throw new Error('Student finance helpers are not available.');
+    return studentFinanceController.createInvoiceForStudent();
   }
 
   async function recordPaymentForStudent() {
-    if (!modalState.studentId) throw new Error('Save the student profile first.');
-    if (!modalState.selectedInvoiceId) throw new Error('Select an invoice first.');
-    if (!window.CrmFinance || typeof window.CrmFinance.buildPaymentPayload !== 'function') {
-      throw new Error('Finance helpers are not available.');
-    }
-
-    const financeContext = resolveStudentFinanceContext();
-    const payload = window.CrmFinance.buildPaymentPayload({
-      inputPaymentAmount: elements.inputPaymentAmount,
-      inputPaymentMethod: elements.inputPaymentMethod
-    });
-
-    await apiFetchJson('/api/admin/payments', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        invoiceId: modalState.selectedInvoiceId,
-        studentId: modalState.studentId,
-        enrollmentId: financeContext.enrollmentId,
-        ...payload
-      })
-    });
-
-    if (elements.inputPaymentAmount) elements.inputPaymentAmount.value = '';
-    await refreshStudentFinance();
-    await refreshDashboard();
-    showToast('Payment recorded.', 'success');
+    if (!studentFinanceController) throw new Error('Student finance helpers are not available.');
+    return studentFinanceController.recordPaymentForStudent();
   }
 
   async function refreshCommunicationsManager() {
-    if (!window.CrmCommunications || !elements.automationList) return;
-
-    const [templatesJson, automationsJson] = await Promise.all([
-      apiFetchJson('/api/admin/templates', { method: 'GET' }),
-      apiFetchJson('/api/admin/automations', { method: 'GET' })
-    ]);
-
-    const templates = Array.isArray(templatesJson.templates) ? templatesJson.templates : [];
-    const rules = Array.isArray(automationsJson.rules) ? automationsJson.rules : [];
-    const queue = Array.isArray(automationsJson.queue) ? automationsJson.queue : [];
-
-    if (elements.inputRuleTemplateId) {
-      const current = String(elements.inputRuleTemplateId.value || '').trim();
-      elements.inputRuleTemplateId.innerHTML = '<option value="">Select a template...</option>' + templates.map((template) => `
-        <option value="${escapeHtml(template.templateId || '')}">${escapeHtml(template.name || template.templateId || 'Template')}</option>
-      `).join('');
-      if (current) {
-        elements.inputRuleTemplateId.value = current;
-      }
-    }
-
-    if (!rules.length) {
-      elements.automationList.innerHTML = '<div class="crm-muted">No automations yet.</div>';
-      return;
-    }
-
-    elements.automationList.innerHTML = rules.map((rule) => {
-      const relatedQueue = queue.filter((entry) => String(entry.ruleId || '') === String(rule.ruleId || ''));
-      return `
-        <div class="crm-task-item">
-          <div class="crm-task-head">
-            <strong>${escapeHtml(rule.name || 'Rule')}</strong>
-            <span class="crm-task-priority medium">${escapeHtml(rule.triggerType || '')}</span>
-          </div>
-          <div class="crm-timeline-meta">${escapeHtml(`Queue entries: ${relatedQueue.length}`)}</div>
-          <div class="crm-task-actions">
-            <button type="button" class="crm-btn-secondary btn-run-automation" data-rule-id="${escapeHtml(rule.ruleId || '')}">Run Now</button>
-          </div>
-          ${relatedQueue.length ? `<div class="crm-timeline-meta" style="margin-top:8px;">${escapeHtml(relatedQueue.slice(0, 3).map((entry) => window.CrmCommunications.formatQueueStatus(entry.status)).join(', '))}</div>` : ''}
-        </div>
-      `;
-    }).join('');
-
-    Array.from(elements.automationList.querySelectorAll('.btn-run-automation')).forEach((button) => {
-      button.addEventListener('click', async () => {
-        const ruleId = String(button.dataset.ruleId || '').trim();
-        try {
-          button.disabled = true;
-          await apiFetchJson(`/api/admin/automations/${encodeURIComponent(ruleId)}/run-now`, {
-            method: 'POST'
-          });
-          await refreshCommunicationsManager();
-          showToast('Automation queued.', 'success');
-        } catch (error) {
-          console.error('[CRM Admin] Run automation failed:', error);
-          showToast(error?.message || 'Failed to run automation.', 'error');
-          button.disabled = false;
-        }
-      });
-    });
+    if (!communicationsController) return;
+    return communicationsController.refreshCommunicationsManager();
   }
 
   async function createCommunicationTemplate() {
-    if (!window.CrmCommunications || typeof window.CrmCommunications.buildTemplatePayload !== 'function') {
-      throw new Error('Communication helpers are not available.');
-    }
-
-    const payload = window.CrmCommunications.buildTemplatePayload({
-      inputTemplateName: elements.inputTemplateName,
-      inputTemplateChannel: elements.inputTemplateChannel,
-      inputTemplateSubject: elements.inputTemplateSubject,
-      inputTemplateBody: elements.inputTemplateBody
-    });
-
-    await apiFetchJson('/api/admin/templates', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (elements.inputTemplateName) elements.inputTemplateName.value = '';
-    if (elements.inputTemplateSubject) elements.inputTemplateSubject.value = '';
-    if (elements.inputTemplateBody) elements.inputTemplateBody.value = '';
-    await refreshCommunicationsManager();
-    showToast('Template created.', 'success');
+    if (!communicationsController) throw new Error('Communication helpers are not available.');
+    return communicationsController.createCommunicationTemplate();
   }
 
   async function createAutomationRule() {
-    if (!window.CrmCommunications || typeof window.CrmCommunications.buildRulePayload !== 'function') {
-      throw new Error('Communication helpers are not available.');
-    }
-
-    const payload = window.CrmCommunications.buildRulePayload({
-      inputRuleName: elements.inputRuleName,
-      inputRuleTriggerType: elements.inputRuleTriggerType,
-      inputRuleTemplateId: elements.inputRuleTemplateId
-    });
-
-    await apiFetchJson('/api/admin/automations', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (elements.inputRuleName) elements.inputRuleName.value = '';
-    await refreshCommunicationsManager();
-    await refreshDashboard();
-    showToast('Automation rule created.', 'success');
+    if (!communicationsController) throw new Error('Communication helpers are not available.');
+    return communicationsController.createAutomationRule();
   }
 
   async function refreshDashboard() {
-    if (!window.CrmDashboard) return;
-
-    const [summaryJson, funnelJson, revenueJson, duplicatesJson, auditJson] = await Promise.all([
-      apiFetchJson('/api/admin/dashboard/summary', { method: 'GET' }),
-      apiFetchJson('/api/admin/dashboard/funnel', { method: 'GET' }),
-      apiFetchJson('/api/admin/dashboard/revenue', { method: 'GET' }),
-      apiFetchJson('/api/admin/duplicates', { method: 'GET' }),
-      apiFetchJson('/api/admin/audit-logs', { method: 'GET' })
-    ]);
-
-    const summary = summaryJson.summary || {};
-    const funnel = funnelJson.funnel || {};
-    const revenue = Array.isArray(revenueJson.revenue) ? revenueJson.revenue : [];
-    const duplicates = Array.isArray(duplicatesJson.duplicates) ? duplicatesJson.duplicates : [];
-    const auditLogs = Array.isArray(auditJson.auditLogs) ? auditJson.auditLogs : [];
-
-    if (elements.dashboardSummaryCards) {
-      const cards = window.CrmDashboard.buildSummaryCards(summary);
-      elements.dashboardSummaryCards.innerHTML = cards.map((card) => `
-        <div class="crm-summary-card" data-card-key="${escapeHtml(card.key || '')}">
-          <div class="crm-summary-card-label">${escapeHtml(card.label || '')}</div>
-          <div class="crm-summary-card-value">${escapeHtml(card.value || '0')}</div>
-          <div class="crm-summary-card-footnote">${escapeHtml(card.footnote || '')}</div>
-        </div>
-      `).join('');
-    }
-
-    if (elements.dashboardFunnel) {
-      const rows = window.CrmDashboard.buildFunnelRows(funnel);
-      elements.dashboardFunnel.innerHTML = rows.map((row) => `
-        <div class="crm-task-item">
-          <div class="crm-task-head">
-            <strong>${escapeHtml(window.CrmDashboard.formatStageLabel(row.stage))}</strong>
-            <span class="crm-task-priority medium">${escapeHtml(String(row.count || 0))}</span>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    if (elements.dashboardRevenue) {
-      if (!revenue.length) {
-        elements.dashboardRevenue.innerHTML = '<div class="crm-muted" style="padding: 18px;">No invoice activity yet.</div>';
-      } else {
-        elements.dashboardRevenue.innerHTML = `
-          <div class="crm-table-container">
-            <table class="crm-table">
-              <thead>
-                <tr>
-                  <th>Course</th>
-                  <th>Invoiced</th>
-                  <th>Collected</th>
-                  <th>Outstanding</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${revenue.map((row) => `
-                  <tr>
-                    <td>${escapeHtml(row.courseId || 'unassigned')}</td>
-                    <td>${escapeHtml(window.CrmDashboard.toMoney(row.invoicedAmount))}</td>
-                    <td>${escapeHtml(window.CrmDashboard.toMoney(row.collectedAmount))}</td>
-                    <td>${escapeHtml(window.CrmDashboard.toMoney(row.outstandingAmount))}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        `;
-      }
-    }
-
-    if (elements.dashboardDuplicates) {
-      if (!duplicates.length) {
-        elements.dashboardDuplicates.innerHTML = '<div class="crm-muted">No duplicate candidates found.</div>';
-      } else {
-        elements.dashboardDuplicates.innerHTML = duplicates.slice(0, 10).map((group) => {
-          const item = window.CrmGovernance
-            ? window.CrmGovernance.formatDuplicateGroup(group)
-            : {
-                title: String(group.kind || 'match'),
-                subtitle: String(group.key || ''),
-                detail: Array.isArray(group.studentIds) ? group.studentIds.join(', ') : ''
-              };
-          return `
-            <div class="crm-task-item">
-              <div class="crm-task-head">
-                <strong>${escapeHtml(item.title)}</strong>
-                <span class="crm-task-priority high">${escapeHtml(String((group.studentIds || []).length || 0))}</span>
-              </div>
-              <div class="crm-task-meta">${escapeHtml(item.subtitle)}</div>
-              <div class="crm-timeline-meta" style="margin-top: 6px;">${escapeHtml(item.detail)}</div>
-            </div>
-          `;
-        }).join('');
-      }
-    }
-
-    if (elements.dashboardAuditLogs) {
-      if (!auditLogs.length) {
-        elements.dashboardAuditLogs.innerHTML = '<div class="crm-muted">No audit logs yet.</div>';
-      } else {
-        elements.dashboardAuditLogs.innerHTML = auditLogs.slice(0, 12).map((entry) => `
-          <div class="crm-timeline-item">
-            <div class="crm-timeline-head">
-              <span class="crm-activity-chip">${escapeHtml(window.CrmGovernance ? window.CrmGovernance.formatAuditAction(entry.action) : entry.action)}</span>
-              <span class="crm-timeline-meta">${escapeHtml(formatDateTime(entry.createdAt))}</span>
-            </div>
-            <strong>${escapeHtml(entry.entityType || 'entity')} / ${escapeHtml(entry.entityId || 'unknown')}</strong>
-            <div class="crm-timeline-meta" style="margin-top: 6px;">${escapeHtml(entry.actorEmail || entry.actorUid || 'system')}</div>
-          </div>
-        `).join('');
-      }
-    }
+    if (!dashboardController) return;
+    return dashboardController.refreshDashboard();
   }
 
   async function createMergeJob() {
-    if (!window.CrmGovernance || typeof window.CrmGovernance.buildMergeJobPayload !== 'function') {
-      throw new Error('Governance helpers are not available.');
-    }
-
-    const payload = window.CrmGovernance.buildMergeJobPayload({
-      inputMergePrimaryStudentId: elements.inputMergePrimaryStudentId,
-      inputMergeDuplicateStudentIds: elements.inputMergeDuplicateStudentIds
-    });
-
-    await apiFetchJson('/api/admin/merge-jobs', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (elements.inputMergePrimaryStudentId) elements.inputMergePrimaryStudentId.value = '';
-    if (elements.inputMergeDuplicateStudentIds) elements.inputMergeDuplicateStudentIds.value = '';
-    await refreshDashboard();
-    showToast('Merge job created.', 'success');
+    if (!dashboardController) throw new Error('Dashboard helpers are not available.');
+    return dashboardController.createMergeJob();
   }
 
   function escapeHtml(str) {
@@ -2672,57 +1330,10 @@
     return div.innerHTML;
   }
 
-  function studentDisplayName(student) {
-    const name = String(student?.name || '').trim();
-    if (name) return name;
-    const email = String(student?.email || '').trim();
-    if (email) return email;
-    const phone = String(student?.phone || '').trim();
-    if (phone) return phone;
-    return 'Unnamed student';
-  }
-
-  function studentContact(student) {
-    const email = String(student?.email || '').trim();
-    const phone = String(student?.phone || '').trim();
-    if (email && phone) return `${email} • ${phone}`;
-    if (email) return email;
-    if (phone) return phone;
-    const zalo = String(student?.zalo || '').trim();
-    if (zalo) return `Zalo: ${zalo}`;
-    return '—';
-  }
-
-  function formatLeadList(values) {
-    return (Array.isArray(values) ? values : [])
-      .map((value) => String(value || '').trim())
-      .filter(Boolean)
-      .join(', ');
-  }
-
-  function leadPrimaryContact(lead) {
-    const email = String(lead?.email || '').trim();
-    const phone = String(lead?.phone || '').trim();
-    if (email && phone) return `${email} / ${phone}`;
-    if (email) return email;
-    if (phone) return phone;
-    const zalo = String(lead?.zalo || '').trim();
-    if (zalo) return `Zalo: ${zalo}`;
-    const facebookDisplayName = String(lead?.facebookDisplayName || lead?.facebook || '').trim();
-    if (facebookDisplayName) return `Facebook: ${facebookDisplayName}`;
-    const facebookProfileUrl = String(lead?.facebookProfileUrl || '').trim();
-    if (facebookProfileUrl) return facebookProfileUrl;
-    return '-';
-  }
-
-  function leadSourceSummary(lead) {
-    return [lead?.source, lead?.messengerStatus]
-      .map((value) => String(value || '').trim())
-      .filter(Boolean)
-      .join(' / ') || '-';
-  }
-
   function renderLeadContextSummary(lead) {
+    if (leadWorkspaceController) {
+      return leadWorkspaceController.renderLeadContextSummary(lead);
+    }
     if (!elements.leadContextSummary) return;
     if (!lead) {
       elements.leadContextSummary.innerHTML = '<div class="crm-muted">Structured intake details will appear here.</div>';
@@ -2734,8 +1345,8 @@
       ['Real Name', lead?.realName],
       ['Date of Birth', lead?.dateOfBirth],
       ['Learning Needs', lead?.learningNeeds],
-      ['Preferred Days', formatLeadList(lead?.preferredLearningDays)],
-      ['Preferred Hours', formatLeadList(lead?.preferredLearningHours)],
+      ['Preferred Days', (Array.isArray(lead?.preferredLearningDays) ? lead.preferredLearningDays : []).map((value) => String(value || '').trim()).filter(Boolean).join(', ')],
+      ['Preferred Hours', (Array.isArray(lead?.preferredLearningHours) ? lead.preferredLearningHours : []).map((value) => String(value || '').trim()).filter(Boolean).join(', ')],
       ['Messenger', [lead?.messengerStatus, lead?.messengerLastContactAt, lead?.messengerThreadUrl].filter(Boolean).join(' / ')]
     ].filter(([, value]) => String(value || '').trim());
 
@@ -2752,95 +1363,13 @@
   }
 
   function renderStudentsTable(container, students, emptyMessage) {
-    if (!container) return;
-
-    const list = Array.isArray(students) ? students : [];
-    if (list.length === 0) {
-      container.classList.add('crm-placeholder-card');
-      container.classList.remove('crm-table-host');
-      container.innerHTML = `<div class="crm-muted">${escapeHtml(emptyMessage || 'No students yet.')}</div>`;
-      return;
-    }
-
-    container.classList.remove('crm-placeholder-card');
-    container.classList.add('crm-table-host');
-
-    const rows = list.map((student) => {
-      const studentId = String(student.studentId || '').trim();
-      const displayName = studentDisplayName(student);
-      const label = String(student.label || '').trim() || '—';
-      const contact = studentContact(student);
-      return `
-        <tr>
-          <td class="td-bold">
-            <div class="crm-name-cell">
-              <button type="button" class="crm-student-link" data-student-id="${escapeHtml(studentId)}">${escapeHtml(displayName)}</button>
-              ${renderReminderBadgeMarkup(getReminderSummary({ studentId }))}
-              ${renderRiskBadgeMarkup(studentId)}
-            </div>
-          </td>
-          <td>${escapeHtml(label)}</td>
-          <td>${escapeHtml(contact)}</td>
-          <td>${formatDateTime(student.createdAt)}</td>
-          <td><code>${escapeHtml(studentId)}</code></td>
-        </tr>
-      `;
-    }).join('');
-
-    container.innerHTML = `
-      <div class="crm-table-container">
-        <table class="crm-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Label</th>
-              <th>Contact</th>
-              <th>Created</th>
-              <th>Student ID</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows}
-          </tbody>
-        </table>
-      </div>
-    `;
-
-    const studentIndex = new Map(list.map((s) => [String(s.studentId || '').trim(), s]));
-
-    Array.from(container.querySelectorAll('button.crm-student-link[data-student-id]')).forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const id = String(btn.dataset.studentId || '').trim();
-        const cached = studentIndex.get(id) || null;
-        openStudentProfile(id, cached).catch((e) => {
-          console.error('[CRM Admin] Open student profile failed:', e);
-          showToast(e?.message || 'Failed to open student profile.', 'error');
-        });
-      });
-    });
+    if (!studentDirectoryController) return;
+    return studentDirectoryController.renderStudentsTable(container, students, emptyMessage);
   }
 
   async function fetchStudentsFromFirestore(limit) {
-    const rowLimit = Number.isFinite(limit) ? Math.max(1, Math.min(500, Math.floor(limit))) : 200;
-    const snap = await firebase.firestore()
-      .collection('crmStudents')
-      .orderBy('createdAt', 'desc')
-      .limit(rowLimit)
-      .get();
-
-    return snap.docs.map((doc) => {
-      const data = doc.data() || {};
-      return {
-        studentId: doc.id,
-        name: data.name || null,
-        label: data.label || null,
-        phone: data.phone || null,
-        email: data.email || null,
-        zalo: data.zalo || null,
-        facebook: data.facebook || null,
-        createdAt: data.createdAt || null
-      };
-    });
+    if (!studentDirectoryController) return [];
+    return studentDirectoryController.fetchStudentsFromFirestore(limit);
   }
 
   async function fetchStudentProfile(studentId) {
@@ -2872,257 +1401,33 @@
   }
 
   async function openStudentProfile(studentId, cachedStudent = null) {
-    const id = String(studentId || '').trim();
-    if (!id) throw new Error('Missing student ID.');
-
-    openStudentModal();
-    resetStudentModal();
-
-    modalState.studentId = id;
-    modalState.studentProfile = cachedStudent || null;
-    modalState.createdTestLinks = new Map();
-
-    if (elements.studentIdBadge) {
-      elements.studentIdBadge.textContent = `ID: ${id}`;
-      elements.studentIdBadge.style.display = 'inline-flex';
-    }
-
-    if (elements.btnSaveStudent) {
-      elements.btnSaveStudent.disabled = false;
-      elements.btnSaveStudent.textContent = 'Save Student';
-    }
-
-    if (elements.btnAddEntranceTest) {
-      elements.btnAddEntranceTest.disabled = false;
-      elements.btnAddEntranceTest.textContent = 'Add new test';
-    }
-
-    const student = cachedStudent || null;
-
-    if (!student) {
-      showToast('Student details are not available yet. Please refresh and try again.', 'error');
-    } else {
-      if (window.CrmStudents && typeof window.CrmStudents.applyToForm === 'function') {
-        window.CrmStudents.applyToForm(elements, student);
-      }
-      if (window.CrmStudent360 && typeof window.CrmStudent360.applyToForm === 'function') {
-        window.CrmStudent360.applyToForm(elements, student);
-      }
-    }
-
-    fetchStudentProfile(id).then((fresh) => {
-      if (!fresh) return;
-      modalState.studentProfile = fresh;
-      if (window.CrmStudents && typeof window.CrmStudents.applyToForm === 'function') {
-        window.CrmStudents.applyToForm(elements, fresh);
-      }
-      if (window.CrmStudent360 && typeof window.CrmStudent360.applyToForm === 'function') {
-        window.CrmStudent360.applyToForm(elements, fresh);
-      }
-    }).catch((error) => {
-      console.error('[CRM Admin] Failed to refresh student profile after open:', error);
-    });
-
-    await refreshEntranceTestsList();
-    await refreshStudentIdentity();
-    await refreshStudentTimeline();
-    await refreshStudentFinance();
-    switchStudentTab('info');
+    if (!studentWorkspaceController) return;
+    return studentWorkspaceController.openStudentProfile(studentId, cachedStudent);
   }
 
   async function refreshStudentIdentity() {
-    if (!modalState.studentId) return;
-    try {
-      // Re-fetch the student document to get class_code and linked_user_ids
-      const snap = await firebase.firestore().collection('crmStudents').doc(modalState.studentId).get();
-      if (!snap.exists) return;
-      const data = snap.data();
-
-      if (elements.inputClassCodeDisplay) {
-        elements.inputClassCodeDisplay.value = data.class_code || '';
-      }
-
-      if (elements.linkedUidsUl) {
-        const uids = data.linked_user_ids || [];
-        if (uids.length === 0) {
-          elements.linkedUidsUl.innerHTML = '<li class="text-muted">No accounts linked yet.</li>';
-        } else {
-          elements.linkedUidsUl.innerHTML = uids.map(uid => `
-            <li>
-              <span>${escapeHtml(uid)}</span>
-              <span class="crm-test-status submitted">Linked</span>
-            </li>
-          `).join('');
-        }
-      }
-    } catch (e) {
-      console.error('[CRM Admin] Failed to refresh identity:', e);
-    }
+    if (!studentWorkspaceController) return;
+    return studentWorkspaceController.refreshStudentIdentity();
   }
 
   async function refreshStudentLists() {
-    let students = [];
-    try {
-      const json = await apiFetchJson('/api/admin/students?limit=200', { method: 'GET' });
-      students = Array.isArray(json.students) ? json.students : [];
-    } catch (error) {
-      if (Number(error?.status) === 404) {
-        students = await fetchStudentsFromFirestore(200);
-      } else {
-        throw error;
-      }
-    }
-
-    const buckets = window.CrmStudents && typeof window.CrmStudents.splitStudents === 'function'
-      ? window.CrmStudents.splitStudents(students)
-      : { potential: students, studentData: [] };
-
-    dataCache.students = students;
-
-    renderStudentsTable(elements.potentialStudentsContainer, buckets.potential, 'No potential students yet.');
-    renderStudentsTable(elements.studentDataContainer, buckets.studentData, 'No students in database yet.');
-    await populateAttendanceStudentOptions();
+    if (!studentDirectoryController) return;
+    return studentDirectoryController.refreshStudentLists();
   }
 
   function renderLeadStageBoard(leads) {
-    if (!elements.leadStageBoard) return;
-    if (!window.CrmLeads || typeof window.CrmLeads.summarize !== 'function') {
-      elements.leadStageBoard.innerHTML = '';
-      return;
-    }
-
-    const counts = window.CrmLeads.summarize(leads);
-    elements.leadStageBoard.innerHTML = window.CrmLeads.STAGES.map((stage) => `
-      <div class="crm-lead-stage-card">
-        <div class="text-muted">${escapeHtml(window.CrmLeads.formatStageLabel(stage))}</div>
-        <strong>${escapeHtml(String(counts[stage] || 0))}</strong>
-      </div>
-    `).join('');
+    if (!leadWorkspaceController) return;
+    return leadWorkspaceController.renderLeadStageBoard(leads);
   }
 
   function renderLeadTable(leads) {
-    if (!elements.leadListContainer) return;
-    if (!Array.isArray(leads) || !leads.length) {
-      elements.leadListContainer.innerHTML = 'No leads yet.';
-      return;
-    }
-
-    elements.leadListContainer.innerHTML = `
-      <div class="crm-table-container">
-        <table class="crm-table">
-          <thead>
-            <tr><th>Name</th><th>Contact</th><th>Source</th><th>Stage</th><th>Probability</th><th>Actions</th></tr>
-          </thead>
-          <tbody>
-            ${leads.map((lead) => `
-              ${(() => {
-                const isConverted = window.CrmLeads.isConvertedLead(lead);
-                const stageOptions = window.CrmLeads.getSelectableStages(lead.stage);
-                return `
-              <tr>
-                <td class="td-bold">
-                  <div class="crm-name-cell">
-                    <button type="button" class="crm-student-link crm-lead-link" data-lead-id="${escapeHtml(lead.leadId)}">${escapeHtml(lead.name || lead.email || 'Unnamed lead')}</button>
-                    ${renderReminderBadgeMarkup(getReminderSummary({ leadId: lead.leadId }))}
-                  </div>
-                </td>
-                <td>${escapeHtml(leadPrimaryContact(lead))}</td>
-                <td>${escapeHtml(leadSourceSummary(lead))}</td>
-                <td>
-                  <select class="crm-input crm-inline-select lead-stage-select" data-lead-id="${escapeHtml(lead.leadId)}" ${isConverted ? 'disabled' : ''}>
-                    ${stageOptions.map((stage) => `
-                      <option value="${stage}" ${stage === lead.stage ? 'selected' : ''}>${escapeHtml(window.CrmLeads.formatStageLabel(stage))}</option>
-                    `).join('')}
-                  </select>
-                </td>
-                <td>${escapeHtml(lead.probability == null ? '—' : `${lead.probability}%`)}</td>
-                <td>
-                  <div class="crm-inline-fields">
-                    <button type="button" class="crm-btn-secondary btn-update-lead-stage" data-lead-id="${escapeHtml(lead.leadId)}" ${isConverted ? 'disabled' : ''}>Update</button>
-                    <button type="button" class="crm-btn-primary btn-convert-lead" data-lead-id="${escapeHtml(lead.leadId)}" ${lead.studentId ? 'disabled' : ''}>${lead.studentId ? 'Converted' : 'Convert'}</button>
-                  </div>
-                </td>
-              </tr>
-            `;
-              })()}
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-    `;
-
-    const leadIndex = new Map(leads.map((lead) => [String(lead.leadId || '').trim(), lead]));
-
-    Array.from(elements.leadListContainer.querySelectorAll('.crm-lead-link[data-lead-id]')).forEach((button) => {
-      button.addEventListener('click', () => {
-        modalState.leadId = String(button.dataset.leadId || '').trim();
-        const lead = leadIndex.get(modalState.leadId) || null;
-        if (elements.leadWorkspaceTitle) {
-          elements.leadWorkspaceTitle.textContent = lead?.name || lead?.email || 'Lead Workspace';
-        }
-        refreshLeadWorkspace().catch((error) => {
-          console.error('[CRM Admin] Open lead workspace failed:', error);
-          showToast(error?.message || 'Failed to load lead workspace.', 'error');
-        });
-      });
-    });
-
-    Array.from(elements.leadListContainer.querySelectorAll('.btn-update-lead-stage')).forEach((button) => {
-      button.addEventListener('click', async () => {
-        const leadId = String(button.dataset.leadId || '').trim();
-        const select = elements.leadListContainer.querySelector(`.lead-stage-select[data-lead-id="${leadId}"]`);
-        const stage = String(select?.value || '').trim();
-        try {
-          button.disabled = true;
-          await apiFetchJson(`/api/admin/leads/${encodeURIComponent(leadId)}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ stage })
-          });
-          await refreshLeadPipeline();
-          showToast('Lead updated.', 'success');
-        } catch (error) {
-          console.error('[CRM Admin] Update lead stage failed:', error);
-          showToast(error?.message || 'Failed to update lead.', 'error');
-          button.disabled = false;
-        }
-      });
-    });
-
-    Array.from(elements.leadListContainer.querySelectorAll('.btn-convert-lead')).forEach((button) => {
-      button.addEventListener('click', async () => {
-        const leadId = String(button.dataset.leadId || '').trim();
-        try {
-          button.disabled = true;
-          await apiFetchJson(`/api/admin/leads/${encodeURIComponent(leadId)}/convert`, {
-            method: 'POST'
-          });
-          await Promise.all([
-            refreshLeadPipeline(),
-            refreshStudentLists()
-          ]);
-          showToast('Lead converted to student.', 'success');
-        } catch (error) {
-          console.error('[CRM Admin] Convert lead failed:', error);
-          showToast(error?.message || 'Failed to convert lead.', 'error');
-          button.disabled = false;
-        }
-      });
-    });
+    if (!leadWorkspaceController) return;
+    return leadWorkspaceController.renderLeadTable(leads);
   }
 
   async function refreshLeadPipeline() {
-    const json = await apiFetchJson('/api/admin/leads?limit=200', { method: 'GET' });
-    const leads = Array.isArray(json.leads) ? json.leads : [];
-    dataCache.leads = leads;
-    renderLeadStageBoard(leads);
-    renderLeadTable(leads);
-    if (modalState.leadId && !leads.find((lead) => String(lead.leadId || '') === String(modalState.leadId))) {
-      modalState.leadId = null;
-      if (elements.leadWorkspace) elements.leadWorkspace.style.display = 'none';
-    } else if (modalState.leadId) {
-      await refreshLeadWorkspace();
-    }
+    if (!leadWorkspaceController) return;
+    return leadWorkspaceController.refreshLeadPipeline();
   }
 
   function renderEntranceTests(tests) {
@@ -3140,7 +1445,7 @@
       const testLink = String(modalState.createdTestLinks.get(testId) || '').trim();
       const resultLink = String(t.resultLink || '').trim();
 
-      return `\n        <tr>\n          <td><span class="crm-test-status ${status}">${statusLabel}</span></td>\n          <td>${formatDateTime(t.createdAt)}</td>\n          <td>${formatDateTime(t.startedAt)}</td>\n          <td>${formatDateTime(t.submittedAt)}</td>\n          <td>${testLink ? `<a class="crm-test-link" href="${escapeHtml(testLink)}" target="_blank" rel="noopener">Open</a>` : 'Unavailable'}</td>\n          <td>${resultLink ? `<a class="crm-test-link" href="${escapeHtml(resultLink)}" target="_blank" rel="noopener">View</a>` : '—'}</td>\n        </tr>\n      `;
+      return `\n        <tr>\n          <td><span class="crm-test-status ${status}">${statusLabel}</span></td>\n          <td>${formatDateTime(t.createdAt)}</td>\n          <td>${formatDateTime(t.startedAt)}</td>\n          <td>${formatDateTime(t.submittedAt)}</td>\n          <td>${testLink ? `<a class="crm-test-link" href="${escapeHtml(testLink)}" target="_blank" rel="noopener">Open</a>` : 'Unavailable'}</td>\n          <td>${resultLink ? `<a class="crm-test-link" href="${escapeHtml(resultLink)}" target="_blank" rel="noopener">View</a>` : 'â€”'}</td>\n        </tr>\n      `;
     }).join('');
 
     elements.entranceTestsList.innerHTML = `\n      <table class="crm-entrance-tests-table">\n        <thead>\n          <tr>\n            <th>Status</th>\n            <th>Start Date</th>\n            <th>Started</th>\n            <th>Submission Date</th>\n            <th>Test Link</th>\n            <th>Result</th>\n          </tr>\n        </thead>\n        <tbody>\n          ${rows}\n        </tbody>\n      </table>\n    `;
@@ -3173,143 +1478,18 @@
   }
 
   function setupCourseModal() {
-    if (!elements.courseModal || elements.btnNewCourseTriggers.length === 0) return;
-
-    const openFreshCourseModal = () => {
-      resetCourseModal();
-      openCourseModal();
-    };
-
-    const closeCourseModal = () => {
-      elements.courseModal.style.display = 'none';
-      elements.courseModal.setAttribute('aria-hidden', 'true');
-    };
-
-    elements.btnNewCourseTriggers.forEach((btn) => {
-      btn.addEventListener('click', openFreshCourseModal);
-    });
-
-    if (elements.btnCloseCourseModal) {
-      elements.btnCloseCourseModal.addEventListener('click', closeCourseModal);
-    }
-    if (elements.btnCancelCourse) {
-      elements.btnCancelCourse.addEventListener('click', closeCourseModal);
-    }
-
-    if (elements.btnSaveCourse) {
-      elements.btnSaveCourse.addEventListener('click', () => {
-        saveCourse()
-          .then(() => {
-            closeCourseModal();
-          })
-          .catch((e) => {
-            console.error('[CRM Admin] Save course failed:', e);
-            showToast(e?.message || 'Failed to save course.', 'error');
-          });
-      });
-    }
-
-    // Tab Switching
-    elements.courseSidebarItems.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const targetTab = btn.dataset.tab;
-        switchCourseTab(targetTab);
-      });
-    });
-
-    // Teacher list management
-    if (elements.btnAddCourseTeacher && elements.courseTeacherEmailInput && elements.courseTeachersList) {
-      const handleAddTeacher = () => {
-        const rawEmail = elements.courseTeacherEmailInput.value.trim();
-        if (!rawEmail) return;
-
-        const email = rawEmail.toLowerCase();
-        const existing = Array.from(
-          elements.courseTeachersList.querySelectorAll('li[data-email]')
-        ).some((li) => li.dataset.email === email);
-        if (existing) {
-          elements.courseTeacherEmailInput.value = '';
-          return;
-        }
-
-        const emptyNode = elements.courseTeachersList.querySelector('li[data-empty]');
-        if (emptyNode) {
-          emptyNode.remove();
-        }
-
-        const li = document.createElement('li');
-        li.className = 'crm-tag-item';
-        li.dataset.email = email;
-
-        const span = document.createElement('span');
-        span.textContent = email;
-
-        const removeBtn = document.createElement('button');
-        removeBtn.type = 'button';
-        removeBtn.className = 'crm-tag-remove';
-        removeBtn.textContent = '✕';
-        removeBtn.addEventListener('click', () => {
-          li.remove();
-          if (elements.courseTeachersList.children.length === 0) {
-            const placeholder = document.createElement('li');
-            placeholder.className = 'text-muted';
-            placeholder.dataset.empty = 'true';
-            placeholder.textContent = 'No teachers added yet.';
-            elements.courseTeachersList.appendChild(placeholder);
-          }
-        });
-
-        li.appendChild(span);
-        li.appendChild(removeBtn);
-        elements.courseTeachersList.appendChild(li);
-
-        elements.courseTeacherEmailInput.value = '';
-        elements.courseTeacherEmailInput.focus();
-      };
-
-      elements.btnAddCourseTeacher.addEventListener('click', handleAddTeacher);
-      elements.courseTeacherEmailInput.addEventListener('keydown', (evt) => {
-        if (evt.key === 'Enter') {
-          evt.preventDefault();
-          handleAddTeacher();
-        }
-      });
-    }
+    if (!courseModalController) return;
+    return courseModalController.setupCourseModal();
   }
 
   function switchStudentTab(tabId) {
-    // Update Sidebar
-    elements.studentSidebarItems.forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.tab === tabId);
-    });
-
-    // Update Content
-    elements.studentTabContents.forEach(content => {
-      const isMatch = content.id === `student-${tabId}`;
-      content.style.display = isMatch ? 'block' : 'none';
-      content.classList.toggle('active', isMatch);
-    });
-
-    if (tabId === 'finance' && modalState.studentId) {
-      refreshStudentFinance().catch((error) => {
-        console.error('[CRM Admin] Failed to refresh student finance:', error);
-      });
-    }
-    if (tabId === 'info') {
-      renderStudentSchedulePrompt();
-    }
+    if (!studentModalController) return;
+    return studentModalController.switchStudentTab(tabId);
   }
 
   function switchCourseTab(tabId) {
-    elements.courseSidebarItems.forEach((btn) => {
-      btn.classList.toggle('active', btn.dataset.tab === tabId);
-    });
-
-    elements.courseTabContents.forEach((content) => {
-      const isMatch = content.id === `course-${tabId}`;
-      content.style.display = isMatch ? 'block' : 'none';
-      content.classList.toggle('active', isMatch);
-    });
+    if (!courseModalController) return;
+    return courseModalController.switchCourseTab(tabId);
   }
 
   function isValidSub(main, sub) {
@@ -3382,941 +1562,118 @@
   }
 
   function setupClassroomModal() {
-    if (!elements.classroomModal || elements.btnNewClassroomTriggers.length === 0) return;
-
-    const openFreshClassroomModal = () => {
-      resetClassroomModal();
-      openClassroomModal();
-    };
-
-    const closeClassroomModal = () => {
-      elements.classroomModal.style.display = 'none';
-      elements.classroomModal.setAttribute('aria-hidden', 'true');
-    };
-
-    elements.btnNewClassroomTriggers.forEach(btn => btn.addEventListener('click', openFreshClassroomModal));
-    if (elements.btnCloseClassroomModal) elements.btnCloseClassroomModal.addEventListener('click', closeClassroomModal);
-    if (elements.btnCancelClassroom) elements.btnCancelClassroom.addEventListener('click', closeClassroomModal);
-
-    if (elements.btnSaveClassroomSettings) {
-      elements.btnSaveClassroomSettings.addEventListener('click', () => {
-        saveClassroomSettings().then(() => {
-          showToast('Settings saved successfully.', 'success');
-        }).catch(e => {
-          console.error('[CRM Admin] Save classroom failed:', e);
-          showToast(e?.message || 'Failed to save classroom.', 'error');
-        });
-      });
-    }
-
-    elements.classroomSidebarItems.forEach(btn => {
-      btn.addEventListener('click', () => {
-        switchClassroomTab(btn.dataset.tab);
-      });
-    });
-
-    if (elements.btnAddModule) {
-      elements.btnAddModule.addEventListener('click', async () => {
-        if (!modalState.classroomId) return showToast('Please save classroom settings first.', 'error');
-        const title = prompt('Enter module title:');
-        if (!title) return;
-        try {
-          await window.ClassroomAPI.createModule(modalState.classroomId, { title, orderIndex: Date.now() });
-          showToast('Module created.', 'success');
-          loadClassroomModules(modalState.classroomId);
-        } catch (e) { showToast(e.message, 'error'); }
-      });
-    }
-
-    if (elements.btnPostAnnouncement) {
-      elements.btnPostAnnouncement.addEventListener('click', async () => {
-        if (!modalState.classroomId) return showToast('Please save classroom settings first.', 'error');
-        const text = elements.inputStreamPost.value.trim();
-        if (!text) return;
-        try {
-          elements.btnPostAnnouncement.disabled = true;
-          await firebase.firestore().collection('crmClassrooms').doc(modalState.classroomId).collection('posts').add({
-            content: text,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            author: firebase.auth().currentUser.email || 'Admin'
-          });
-          elements.inputStreamPost.value = '';
-          showToast('Announcement posted.', 'success');
-          loadClassroomStream(modalState.classroomId);
-        } catch (e) { 
-          showToast(e.message, 'error'); 
-        } finally {
-          elements.btnPostAnnouncement.disabled = false;
-        }
-      });
-    }
-
-    if (elements.btnAddClasswork) {
-      elements.btnAddClasswork.addEventListener('click', () => {
-        if (!modalState.classroomId) return showToast('Please save classroom settings first.', 'error');
-        elements.classworkComposer.style.display = 'block';
-      });
-    }
-
-    if (elements.btnCancelClasswork) {
-      elements.btnCancelClasswork.addEventListener('click', () => {
-        elements.classworkComposer.style.display = 'none';
-      });
-    }
-
-    if (elements.btnSaveClassworkDraft) {
-      elements.btnSaveClassworkDraft.addEventListener('click', async () => {
-        if (!modalState.classroomId) return;
-        const payload = {
-          title: elements.inputClassworkTitle.value.trim(),
-          type: elements.inputClassworkType.value,
-          moduleId: elements.inputClassworkModule.value,
-          allowVoiceNote: elements.inputClassworkVoice.checked,
-          attemptLimit: 4
-        };
-        if (!payload.title) return showToast('Title is required', 'error');
-        try {
-          await window.ClassroomAPI.createClasswork(modalState.classroomId, payload);
-          showToast('Classwork created.', 'success');
-          elements.classworkComposer.style.display = 'none';
-          elements.inputClassworkTitle.value = '';
-          loadClassroomClasswork(modalState.classroomId);
-        } catch (e) { showToast(e.message, 'error'); }
-      });
-    }
-
-    if (elements.btnEnrollStudent) {
-      elements.btnEnrollStudent.addEventListener('click', () => {
-        enrollStudentIntoClassroom().catch((e) => {
-          console.error('[CRM Admin] Enroll student failed:', e);
-          showToast(e?.message || 'Failed to enroll student.', 'error');
-        });
-      });
-    }
-
-    if (elements.btnCreateAttendanceSession) {
-      elements.btnCreateAttendanceSession.addEventListener('click', () => {
-        createAttendanceSessionForClassroom().catch((e) => {
-          console.error('[CRM Admin] Create attendance session failed:', e);
-          showToast(e?.message || 'Failed to create attendance session.', 'error');
-        });
-      });
-    }
-
-    if (elements.btnSaveAttendanceRecords) {
-      elements.btnSaveAttendanceRecords.addEventListener('click', () => {
-        saveAttendanceRecordsForClassroom().catch((e) => {
-          console.error('[CRM Admin] Save attendance failed:', e);
-          showToast(e?.message || 'Failed to save attendance records.', 'error');
-        });
-      });
-    }
-
-    if (elements.btnCreateLiveSession) {
-      elements.btnCreateLiveSession.addEventListener('click', () => {
-        resetLiveSessionForm();
-        renderLiveDeliverySummary(modalState.liveSessions);
-      });
-    }
-
-    if (elements.btnSaveLiveSession) {
-      elements.btnSaveLiveSession.addEventListener('click', () => {
-        saveLiveSession().catch((e) => {
-          console.error('[CRM Admin] Save live session failed:', e);
-          showToast(e?.message || 'Failed to save live session.', 'error');
-        });
-      });
-    }
-
-    if (elements.btnStartLiveSession) {
-      elements.btnStartLiveSession.addEventListener('click', () => {
-        startSelectedLiveSession().catch((e) => {
-          console.error('[CRM Admin] Start live session failed:', e);
-          showToast(e?.message || 'Failed to start live session.', 'error');
-        });
-      });
-    }
-
-    if (elements.btnEndLiveSession) {
-      elements.btnEndLiveSession.addEventListener('click', () => {
-        endSelectedLiveSession().catch((e) => {
-          console.error('[CRM Admin] End live session failed:', e);
-          showToast(e?.message || 'Failed to end live session.', 'error');
-        });
-      });
-    }
-
-    if (elements.btnCopyLiveJoinLink) {
-      elements.btnCopyLiveJoinLink.addEventListener('click', async () => {
-        const session = getSelectedLiveSession();
-        const meetingUrl = String(session?.meetingUrl || '').trim();
-        if (!meetingUrl) return showToast('No join link available.', 'error');
-        await copyToClipboard(meetingUrl);
-        showToast('Join link copied.', 'success');
-      });
-    }
-
-    if (elements.btnCopyLiveHostLink) {
-      elements.btnCopyLiveHostLink.addEventListener('click', async () => {
-        const session = getSelectedLiveSession();
-        const hostUrl = String(session?.hostUrl || '').trim();
-        if (!hostUrl) return showToast('No host link available.', 'error');
-        await copyToClipboard(hostUrl);
-        showToast('Host link copied.', 'success');
-      });
-    }
-
-    if (elements.inputAttendanceStudentSelect) {
-      elements.inputAttendanceStudentSelect.addEventListener('change', () => {
-        refreshAttendanceClassroomFitNote().catch((error) => {
-          console.error('[CRM Admin] Failed to refresh classroom fit note:', error);
-        });
-      });
-    }
-
-    if (elements.attendanceSchedulePrompt) {
-      elements.attendanceSchedulePrompt.addEventListener('click', (evt) => {
-        const btn = evt.target instanceof HTMLElement ? evt.target.closest('[data-action="edit-classroom-schedule"]') : null;
-        if (!btn) return;
-        switchClassroomTab('settings');
-        setTimeout(() => {
-          if (elements.inputClassroomMeetingDays) {
-            elements.inputClassroomMeetingDays.focus();
-          } else if (elements.inputClassroomMeetingHours) {
-            elements.inputClassroomMeetingHours.focus();
-          }
-        }, 0);
-      });
-    }
+    if (!classroomModalController) return;
+    return classroomModalController.setupClassroomModal();
   }
 
   function resetClassroomModal() {
-    modalState.classroomId = null;
-    modalState.liveSessions = [];
-    modalState.liveSessionId = null;
-    switchClassroomTab('settings');
-    if (elements.inputClassroomName) elements.inputClassroomName.value = '';
-    if (elements.inputClassroomCourseId) {
-      elements.inputClassroomCourseId.value = '';
-      populateClassroomCourseOptions().catch((e) => {
-        console.error('[CRM Admin] Failed to populate classroom course options:', e);
-      });
-    }
-    if (elements.inputClassroomStatus) elements.inputClassroomStatus.value = 'draft';
-    if (elements.classroomStatusBadge) {
-      elements.classroomStatusBadge.textContent = 'Draft';
-      elements.classroomStatusBadge.style.display = 'inline-flex';
-    }
-    if (elements.classroomTitle) elements.classroomTitle.textContent = 'New Classroom';
-    if (elements.modulesListContainer) elements.modulesListContainer.innerHTML = '<p class="text-muted">No modules yet.</p>';
-    if (elements.classworkListContainer) elements.classworkListContainer.innerHTML = '<p class="text-muted">No classwork yet.</p>';
-    if (elements.classworkComposer) elements.classworkComposer.style.display = 'none';
-    if (elements.liveDeliverySummary) elements.liveDeliverySummary.innerHTML = '<div class="crm-muted">Create a live session before class starts.</div>';
-    if (elements.liveSessionList) elements.liveSessionList.innerHTML = '<div class="crm-muted">No live sessions yet.</div>';
-    resetLiveSessionForm();
-    if (elements.inputAttendanceStudentSelect) elements.inputAttendanceStudentSelect.innerHTML = '<option value="">Select a student...</option>';
-    if (elements.attendanceLiveSessionNote) elements.attendanceLiveSessionNote.textContent = 'Create a live session before class starts.';
-    if (elements.attendanceClassroomFitNote) {
-      elements.attendanceClassroomFitNote.textContent = 'Select a student to see schedule fit guidance.';
-      elements.attendanceClassroomFitNote.style.color = '';
-    }
-    if (elements.attendanceEnrollmentMeta) elements.attendanceEnrollmentMeta.textContent = 'No enrollments yet.';
-    if (elements.inputAttendanceSessionDate) elements.inputAttendanceSessionDate.value = '';
-    if (elements.inputAttendanceSessionTitle) elements.inputAttendanceSessionTitle.value = '';
-    if (elements.inputAttendanceSessionSelect) elements.inputAttendanceSessionSelect.innerHTML = '<option value="">Select a session...</option>';
-    if (elements.attendanceRosterContainer) elements.attendanceRosterContainer.innerHTML = '<div class="crm-muted">No attendance roster yet.</div>';
-    if (elements.classworkLiveSessionNote) elements.classworkLiveSessionNote.textContent = 'Create or complete a live session before assigning follow-up work.';
+    if (!classroomModalController) return;
+    return classroomModalController.resetClassroomModal();
   }
 
   function switchClassroomTab(tabId) {
-    elements.classroomSidebarItems.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tabId));
-    elements.classroomTabContents.forEach(content => {
-      const isMatch = content.id === `classroom-${tabId}`;
-      content.style.display = isMatch ? (tabId === 'review-board' ? 'flex' : 'block') : 'none';
-      content.classList.toggle('active', isMatch);
-    });
-
-    if (tabId === 'review-board' && modalState.classroomId) {
-      loadReviewBoard(modalState.classroomId);
-    }
-    if (tabId === 'stream' && modalState.classroomId) {
-      loadClassroomStream(modalState.classroomId);
-    }
-    if (tabId === 'live' && modalState.classroomId) {
-      loadLiveSessions(modalState.classroomId).catch((error) => {
-        console.error('[CRM Admin] Failed to load live sessions:', error);
-      });
-    }
-    if (tabId === 'attendance' && modalState.classroomId) {
-      loadClassroomAttendance(modalState.classroomId);
-    }
-    if (tabId === 'attendance' || tabId === 'settings') {
-      renderClassroomSchedulePrompt();
-    }
-    if (tabId === 'attendance') {
-      renderAttendanceWorkflowGuidance();
-    }
-    if (tabId === 'classwork') {
-      renderClassworkWorkflowGuidance();
-    }
+    if (!classroomModalController) return;
+    return classroomModalController.switchClassroomTab(tabId);
   }
 
   async function populateAttendanceStudentOptions() {
-    if (!elements.inputAttendanceStudentSelect) return;
-    const options = dataCache.students.map((student) => {
-      const label = student.name || student.email || student.studentId || 'Student';
-      return `<option value="${escapeHtml(student.studentId || '')}">${escapeHtml(label)}</option>`;
-    }).join('');
-    elements.inputAttendanceStudentSelect.innerHTML = '<option value="">Select a student...</option>' + options;
+    if (!classroomWorkspaceController) return;
+    return classroomWorkspaceController.populateAttendanceStudentOptions();
   }
 
   function renderAttendanceRoster(summaryRows) {
-    if (!elements.attendanceRosterContainer) return;
-    const rows = Array.isArray(summaryRows) ? summaryRows : [];
-    const selectedSessionId = String(elements.inputAttendanceSessionSelect?.value || '').trim();
-
-    if (!rows.length) {
-      elements.attendanceRosterContainer.innerHTML = '<div class="crm-muted">No enrollments yet.</div>';
-      return;
-    }
-
-    elements.attendanceRosterContainer.innerHTML = `
-      <div class="crm-table-container">
-        <table class="crm-table">
-          <thead>
-            <tr>
-              <th>Student</th>
-              <th>Attendance</th>
-              <th>Risk</th>
-              <th>Status</th>
-              <th>Reason</th>
-              <th>Intervention</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows.map((row) => `
-              <tr class="attendance-row" data-student-id="${escapeHtml(row.studentId || '')}" data-student-uid="${escapeHtml(row.studentUid || '')}">
-                <td class="td-bold">${escapeHtml(row.studentName || 'Student')}</td>
-                <td>${escapeHtml(`${Math.round(Number(row.attendanceRate || 0) * 100)}% (${row.presentCount || 0}/${row.totalSessions || 0})`)}</td>
-                <td>${renderRiskBadgeMarkup(row.studentId)}</td>
-                <td>
-                  <select class="crm-input crm-inline-select crm-attendance-select attendance-status" ${selectedSessionId ? '' : 'disabled'}>
-                    <option value="present">Present</option>
-                    <option value="late">Late</option>
-                    <option value="absent">Absent</option>
-                  </select>
-                </td>
-                <td><input type="text" class="crm-input attendance-reason" placeholder="Reason" ${selectedSessionId ? '' : 'disabled'}></td>
-                <td style="text-align:center;"><input type="checkbox" class="attendance-intervention" ${selectedSessionId ? '' : 'disabled'}></td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-    `;
+    if (!classroomWorkspaceController) return;
+    return classroomWorkspaceController.renderAttendanceRoster(summaryRows);
   }
 
   async function loadClassroomAttendance(classId) {
-    if (!window.ClassroomAPI || typeof window.ClassroomAPI.fetchAttendanceSummary !== 'function') return;
-
-    await populateAttendanceStudentOptions();
-    renderAttendanceWorkflowGuidance();
-    const summary = await window.ClassroomAPI.fetchAttendanceSummary({ classId });
-    const sessions = Array.isArray(summary?.sessions) ? summary.sessions : [];
-    const students = Array.isArray(summary?.students) ? summary.students : [];
-
-    if (elements.inputAttendanceSessionSelect) {
-      const currentValue = String(elements.inputAttendanceSessionSelect.value || '').trim();
-      elements.inputAttendanceSessionSelect.innerHTML = '<option value="">Select a session...</option>' + sessions.map((session) => `
-        <option value="${escapeHtml(session.sessionId || '')}">${escapeHtml(session.title || session.sessionDate || 'Session')}</option>
-      `).join('');
-      if (currentValue) {
-        elements.inputAttendanceSessionSelect.value = currentValue;
-      }
-    }
-
-    if (elements.attendanceEnrollmentMeta) {
-      elements.attendanceEnrollmentMeta.textContent = students.length
-        ? `${students.length} active enrollment${students.length === 1 ? '' : 's'} in this classroom.`
-        : 'No enrollments yet.';
-    }
-
-    dataCache.attendanceRiskByStudentId = new Map(
-      [
-        ...Array.from(dataCache.attendanceRiskByStudentId.entries()),
-        ...students.map((row) => [String(row.studentId || '').trim(), row])
-      ]
-    );
-
-    renderAttendanceRoster(students);
-    await refreshAttendanceClassroomFitNote();
+    if (!classroomWorkspaceController) return;
+    return classroomWorkspaceController.loadClassroomAttendance(classId);
   }
 
   async function enrollStudentIntoClassroom() {
-    if (!modalState.classroomId) throw new Error('Save classroom settings first.');
-    const studentId = String(elements.inputAttendanceStudentSelect?.value || '').trim();
-    if (!studentId) throw new Error('Select a student first.');
-    const student = dataCache.students.find((item) => String(item.studentId || '') === studentId);
-    if (!student) throw new Error('Selected student is not available.');
-
-    const payload = window.CrmEnrollments && typeof window.CrmEnrollments.buildEnrollmentPayload === 'function'
-      ? window.CrmEnrollments.buildEnrollmentPayload(elements, student)
-      : {
-          studentId,
-          studentUid: student.linked_user_ids?.[0] || null,
-          studentName: student.name || null,
-          studentEmail: student.email || null
-        };
-
-    await window.ClassroomAPI.createEnrollment({
-      ...payload,
-      classId: modalState.classroomId,
-      courseId: String(elements.inputClassroomCourseId?.value || '').trim() || null
-    });
-
-    await Promise.all([
-      loadClassroomAttendance(modalState.classroomId),
-      refreshAttendanceRiskSnapshot()
-    ]);
-    showToast('Student enrolled.', 'success');
+    if (!classroomWorkspaceController) return;
+    return classroomWorkspaceController.enrollStudentIntoClassroom();
   }
 
   async function createAttendanceSessionForClassroom() {
-    if (!modalState.classroomId) throw new Error('Save classroom settings first.');
-    if (!window.CrmAttendance || typeof window.CrmAttendance.buildSessionPayload !== 'function') {
-      throw new Error('Attendance helpers are not available.');
-    }
-
-    const payload = window.CrmAttendance.buildSessionPayload({
-      inputAttendanceSessionDate: elements.inputAttendanceSessionDate,
-      inputAttendanceSessionTitle: elements.inputAttendanceSessionTitle
-    });
-
-    const json = await window.ClassroomAPI.createAttendanceSession({
-      classId: modalState.classroomId,
-      ...payload
-    });
-
-    const sessionId = String(json.sessionId || json.session?.sessionId || '').trim();
-    await loadClassroomAttendance(modalState.classroomId);
-    if (sessionId && elements.inputAttendanceSessionSelect) {
-      elements.inputAttendanceSessionSelect.value = sessionId;
-    }
-    showToast('Attendance session created.', 'success');
+    if (!classroomWorkspaceController) return;
+    return classroomWorkspaceController.createAttendanceSessionForClassroom();
   }
 
   async function saveAttendanceRecordsForClassroom() {
-    if (!modalState.classroomId) throw new Error('Save classroom settings first.');
-    const sessionId = String(elements.inputAttendanceSessionSelect?.value || '').trim();
-    if (!sessionId) throw new Error('Select an attendance session first.');
-    if (!window.CrmAttendance || typeof window.CrmAttendance.buildBulkRecordPayload !== 'function') {
-      throw new Error('Attendance helpers are not available.');
-    }
-
-    const rows = Array.from(document.querySelectorAll('#attendance-roster-container .attendance-row'));
-    const records = window.CrmAttendance.buildBulkRecordPayload(rows).map((record) => ({
-      sessionId,
-      ...record
-    }));
-
-    await window.ClassroomAPI.saveAttendanceRecords({
-      classId: modalState.classroomId,
-      records
-    });
-
-    await Promise.all([
-      loadClassroomAttendance(modalState.classroomId),
-      refreshAttendanceRiskSnapshot()
-    ]);
-    showToast('Attendance saved.', 'success');
+    if (!classroomWorkspaceController) return;
+    return classroomWorkspaceController.saveAttendanceRecordsForClassroom();
   }
 
   async function saveLiveSession() {
-    if (!modalState.classroomId) throw new Error('Save classroom settings first.');
-    if (!window.ClassroomAPI || typeof window.ClassroomAPI.createLiveSession !== 'function') {
-      throw new Error('Live session helpers are not available.');
-    }
-
-    const payload = collectLiveSessionPayload();
-    if (!payload.title) throw new Error('Live session title is required.');
-
-    const selectedSessionId = String(modalState.liveSessionId || '').trim();
-    const hasExistingSelection = selectedSessionId && selectedSessionId !== '__new__';
-    if (hasExistingSelection) {
-      await window.ClassroomAPI.updateLiveSession(modalState.classroomId, selectedSessionId, payload);
-    } else {
-      const json = await window.ClassroomAPI.createLiveSession(modalState.classroomId, payload);
-      modalState.liveSessionId = String(json.sessionId || json.session?.sessionId || '').trim() || null;
-    }
-
-    await loadLiveSessions(modalState.classroomId, { sessionId: modalState.liveSessionId });
-    await refreshZoomLinksOverview().catch(() => {});
-    showToast(hasExistingSelection ? 'Live session updated.' : 'Live session created.', 'success');
+    if (!classroomWorkspaceController) return;
+    return classroomWorkspaceController.saveLiveSession();
   }
 
   async function startSelectedLiveSession() {
-    if (!modalState.classroomId) throw new Error('Save classroom settings first.');
-    const session = getSelectedLiveSession();
-    if (!session?.sessionId) throw new Error('Select a scheduled session first.');
-    await window.ClassroomAPI.startLiveSession(modalState.classroomId, session.sessionId);
-    await loadLiveSessions(modalState.classroomId, { sessionId: session.sessionId });
-    await refreshZoomLinksOverview().catch(() => {});
-    showToast('Live session started.', 'success');
+    if (!classroomWorkspaceController) return;
+    return classroomWorkspaceController.startSelectedLiveSession();
   }
 
   async function endSelectedLiveSession() {
-    if (!modalState.classroomId) throw new Error('Save classroom settings first.');
-    const session = getSelectedLiveSession();
-    if (!session?.sessionId) throw new Error('Select a live session first.');
-    await window.ClassroomAPI.endLiveSession(modalState.classroomId, session.sessionId);
-    await loadLiveSessions(modalState.classroomId, { sessionId: session.sessionId });
-    await refreshZoomLinksOverview().catch(() => {});
-    showToast('Live session ended.', 'success');
-  }
-
-  async function openExistingClassroom(classroom) {
-    if (!classroom) return;
-    const classroomId = String(classroom.classroomId || classroom.id || '').trim();
-    if (!classroomId) return;
-
-    resetClassroomModal();
-    await populateClassroomCourseOptions({ selectedValue: classroom.courseId || '' });
-    if (window.CrmClassrooms && typeof window.CrmClassrooms.applyToForm === 'function') {
-      window.CrmClassrooms.applyToForm(elements, classroom);
-    }
-    modalState.classroomId = classroomId;
-    if (elements.classroomStatusBadge) {
-      elements.classroomStatusBadge.textContent = classroom.status || 'draft';
-      elements.classroomStatusBadge.style.display = 'inline-flex';
-    }
-    if (elements.classroomTitle) {
-      elements.classroomTitle.textContent = classroom.name || 'Classroom';
-    }
-    openClassroomModal();
-    await Promise.all([
-      loadClassroomModules(classroomId),
-      loadClassroomClasswork(classroomId),
-      loadLiveSessions(classroomId)
-    ]);
-  }
-
-  async function refreshZoomLinksOverview() {
-    if (!elements.zoomLinksGrid || !window.ClassroomAPI || typeof window.ClassroomAPI.fetchClassrooms !== 'function') {
-      return;
-    }
-
-    const classrooms = await window.ClassroomAPI.fetchClassrooms();
-    const activeClassrooms = classrooms.filter((row) => {
-      const status = String(row?.status || '').trim().toLowerCase();
-      return status !== 'archived';
-    });
-
-    if (!activeClassrooms.length) {
-      elements.zoomLinksGrid.innerHTML = '<section class="crm-workspace-card"><div class="crm-muted">No classrooms available for live delivery yet.</div></section>';
-      return;
-    }
-
-    const rows = await Promise.all(activeClassrooms.map(async (classroom) => {
-      const classroomId = String(classroom.classroomId || classroom.id || '').trim();
-      const sessions = classroomId
-        ? await window.ClassroomAPI.fetchLiveSessions(classroomId).catch(() => [])
-        : [];
-      return {
-        classroom,
-        session: getPrimaryLiveSession(sessions)
-      };
-    }));
-
-    elements.zoomLinksGrid.innerHTML = rows.map(({ classroom, session }) => {
-      const label = session
-        ? `${session.status || 'draft'} • ${session.scheduledStartAt ? formatDateTime(session.scheduledStartAt) : 'No start time'}`
-        : 'No live session yet';
-      return `
-        <section class="crm-workspace-card">
-          <div class="crm-section-header">
-            <div>
-              <h3>${escapeHtml(classroom.name || 'Classroom')}</h3>
-              <p class="crm-muted">${escapeHtml(label)}</p>
-            </div>
-          </div>
-          <div class="crm-stack-list">
-            <div class="crm-muted">${escapeHtml(session?.title || 'Create a live session before class starts.')}</div>
-            <div class="crm-timeline-meta">${escapeHtml(session?.meetingUrl || 'No join link saved yet.')}</div>
-          </div>
-          <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
-            <button type="button" class="crm-btn-primary btn-open-live-classroom" data-classroom-id="${escapeHtml(classroom.classroomId || classroom.id || '')}">Open Classroom</button>
-          </div>
-        </section>
-      `;
-    }).join('');
-
-    const classroomIndex = new Map(activeClassrooms.map((row) => [String(row.classroomId || row.id || '').trim(), row]));
-    Array.from(elements.zoomLinksGrid.querySelectorAll('.btn-open-live-classroom[data-classroom-id]')).forEach((button) => {
-      button.addEventListener('click', () => {
-        const classroomId = String(button.dataset.classroomId || '').trim();
-        const classroom = classroomIndex.get(classroomId);
-        openExistingClassroom(classroom).catch((error) => {
-          console.error('[CRM Admin] Failed to open classroom from live delivery overview:', error);
-          showToast(error?.message || 'Failed to open classroom.', 'error');
-        });
-      });
-    });
+    if (!classroomWorkspaceController) return;
+    return classroomWorkspaceController.endSelectedLiveSession();
   }
 
   async function loadClassroomStream(classId) {
-    if (!elements.streamPostsContainer) return;
-    try {
-      const snap = await firebase.firestore().collection('crmClassrooms').doc(classId).collection('posts').orderBy('createdAt', 'desc').get();
-      if (snap.empty) {
-        elements.streamPostsContainer.innerHTML = '<p class="text-muted">No announcements yet.</p>';
-        return;
-      }
-      elements.streamPostsContainer.innerHTML = snap.docs.map(doc => {
-        const data = doc.data();
-        return `
-          <div class="stream-card" style="padding: 16px; margin-bottom: 12px; background: white; border: 1px solid #e2e8f0; border-radius: 8px;">
-            <div style="font-size: 0.85rem; color: #718096; margin-bottom: 8px;">
-              <strong>${escapeHtml(data.author || 'Admin')}</strong> • ${formatDateTime(data.createdAt)}
-            </div>
-            <div>${escapeHtml(data.content)}</div>
-          </div>
-        `;
-      }).join('');
-    } catch (e) {
-      console.error(e);
-    }
+    if (!classroomWorkspaceController) return;
+    return classroomWorkspaceController.loadClassroomStream(classId);
   }
 
   async function loadReviewBoard(classId) {
-    if (!elements.kanbanMissingList || !elements.kanbanTurnedInList || !elements.kanbanGradedList) return;
-
-    elements.kanbanTurnedInList.innerHTML = '<div class="crm-loading-spinner small"></div>';
-    elements.kanbanMissingList.innerHTML = '<div class="crm-loading-spinner small"></div>';
-
-    try {
-      const board = await window.ClassroomAPI.fetchReviewBoard(classId);
-      const submissions = Array.isArray(board?.submissions) ? board.submissions : [];
-
-      const turnedIn = submissions.filter(s => s.status === 'turned-in');
-      const needsRevision = submissions.filter(s => s.status === 'needs-revision');
-      const graded = submissions.filter(s => s.status === 'graded');
-      const missing = Array.isArray(board?.missing) ? board.missing : [];
-
-      renderKanbanColumn(elements.kanbanTurnedInList, turnedIn, 'turned-in');
-      renderKanbanColumn(elements.kanbanNeedsRevisionList, needsRevision, 'needs-revision');
-      renderKanbanColumn(elements.kanbanGradedList, graded, 'graded');
-      renderKanbanColumn(elements.kanbanMissingList, missing, false);
-
-    } catch (e) {
-      console.error('[CRM Admin] Kanban load failed:', e);
-      showToast('Failed to load review board.', 'error');
-    }
-  }
-
-  function renderKanbanColumn(container, list, allowGrading) {
-    if (!list.length) {
-      container.innerHTML = '<p class="crm-muted" style="padding:10px;">None found.</p>';
-      return;
-    }
-
-    container.innerHTML = list.map(s => `
-      <div class="crm-kanban-card" data-sub-id="${s.id}">
-        <div class="card-user">
-          <strong>${escapeHtml(s.studentName || s.studentEmail || 'Student')}</strong>
-          <span class="text-muted" style="font-size:0.75rem;">UID: ${escapeHtml(s.studentUid)}</span>
-        </div>
-        <div class="card-work">
-          Work ID: ${escapeHtml(s.workId)}
-        </div>
-        ${s.audio ? `
-          <button class="btn-play-audio" data-path="${s.audio.storagePath}">▶ Listen Audio</button>
-        ` : ''}
-        ${allowGrading === 'turned-in' ? `
-          <div class="grading-actions" style="margin-top:10px;">
-            <input type="text" placeholder="Grade/Score" class="crm-input-small grade-val" style="margin-bottom:5px;">
-            <textarea placeholder="Feedback for student" class="crm-input-small revision-feedback" style="margin-bottom:5px; min-height:72px;"></textarea>
-            <button class="crm-btn-primary small btn-grade-submit" style="margin-bottom:5px;">Submit Grade</button>
-            <button class="crm-btn-secondary small btn-return-revision">Return for Revision</button>
-          </div>
-        ` : allowGrading === 'needs-revision' ? `
-          <div class="graded-status" style="margin-top:10px;">
-            <strong>Waiting for student resubmission</strong>
-            ${s.feedback ? `<div style="margin-top:6px; color:var(--crm-text-muted);">${escapeHtml(s.feedback)}</div>` : ''}
-          </div>
-        ` : allowGrading === false ? `
-          <div class="graded-status" style="margin-top:10px;">
-            <strong>Missing</strong>
-          </div>
-        ` : `
-          <div class="graded-status">
-            Grade: <strong>${escapeHtml(s.grade || 'N/A')}</strong>
-            ${s.feedback ? `<div style="margin-top:6px; color:var(--crm-text-muted);">${escapeHtml(s.feedback)}</div>` : ''}
-          </div>
-        `}
-      </div>
-    `).join('');
-
-    // Attach listeners
-    container.querySelectorAll('.btn-grade-submit').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const card = btn.closest('.crm-kanban-card');
-        const sid = card.dataset.subId;
-        const grade = card.querySelector('.grade-val').value.trim();
-        if (!grade) return showToast('Enter a grade first.', 'error');
-
-        try {
-          btn.disabled = true;
-          await window.ClassroomAPI.gradeSubmission(sid, { grade });
-          showToast('Graded.', 'success');
-          loadReviewBoard(modalState.classroomId);
-        } catch (e) {
-          showToast(e.message, 'error');
-          btn.disabled = false;
-        }
-      });
-    });
-
-    container.querySelectorAll('.btn-return-revision').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const card = btn.closest('.crm-kanban-card');
-        const sid = card.dataset.subId;
-        const feedback = card.querySelector('.revision-feedback').value.trim();
-        if (!feedback) return showToast('Add feedback before returning for revision.', 'error');
-
-        try {
-          btn.disabled = true;
-          await window.ClassroomAPI.returnSubmissionForRevision(sid, { feedback });
-          showToast('Returned for revision.', 'success');
-          loadReviewBoard(modalState.classroomId);
-        } catch (e) {
-          showToast(e.message, 'error');
-          btn.disabled = false;
-        }
-      });
-    });
-
-    // Audio playback logic
-    container.querySelectorAll('.btn-play-audio').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const path = btn.dataset.path;
-        try {
-          btn.disabled = true;
-          const originalText = btn.textContent;
-          btn.textContent = 'Loading...';
-          const url = await firebase.storage().ref(path).getDownloadURL();
-          const audio = new Audio(url);
-          audio.play();
-          btn.textContent = 'Playing...';
-          audio.onended = () => {
-            btn.disabled = false;
-            btn.textContent = originalText;
-          };
-        } catch (e) {
-          console.error('[CRM Admin] Audio playback failed:', e);
-          showToast('Failed to load audio.', 'error');
-          btn.disabled = false;
-          btn.textContent = '▶ Listen Audio';
-        }
-      });
-    });
+    if (!classroomWorkspaceController) return;
+    return classroomWorkspaceController.loadReviewBoard(classId);
   }
 
   async function saveClassroomSettings() {
-    const payload = window.CrmClassrooms && typeof window.CrmClassrooms.buildPayload === 'function'
-      ? window.CrmClassrooms.buildPayload(elements)
-      : {
-          name: elements.inputClassroomName.value.trim(),
-          courseId: elements.inputClassroomCourseId.value,
-          status: elements.inputClassroomStatus.value
-        };
-    if (!payload.name) throw new Error('Classroom name is required.');
-
-    const res = modalState.classroomId
-      ? await window.ClassroomAPI.updateClassroom(modalState.classroomId, payload)
-      : await window.ClassroomAPI.createClassroom(payload);
-    modalState.classroomId = String(res.classroomId || res.classroom?.classroomId || modalState.classroomId || '').trim();
-    if (elements.classroomStatusBadge) elements.classroomStatusBadge.textContent = payload.status;
-    if (elements.classroomTitle) elements.classroomTitle.textContent = payload.name;
-    await refreshClassroomList();
-    await refreshZoomLinksOverview().catch(() => {});
-    renderClassroomSchedulePrompt();
+    if (!classroomWorkspaceController) throw new Error('Classroom workspace helpers are not available.');
+    return classroomWorkspaceController.saveClassroomSettings();
   }
 
   async function refreshClassroomList() {
-    if (!elements.classManagementGrid) return;
-    try {
-      const [classrooms, courses] = await Promise.all([
-        window.ClassroomAPI.fetchClassrooms(),
-        fetchCoursesFromCatalog().catch(() => [])
-      ]);
-      const courseIndex = new Map(courses.map((course) => [String(course.id || ''), course]));
-      if (!classrooms.length) {
-        elements.classManagementGrid.innerHTML = '<div class="crm-muted">No classrooms found.</div>';
-        return;
-      }
-      elements.classManagementGrid.innerHTML = `
-        <div class="crm-table-container">
-          <table class="crm-table">
-            <thead>
-              <tr><th>Name</th><th>Course</th><th>Status</th><th>Modules</th></tr>
-            </thead>
-            <tbody>
-              ${classrooms.map(c => `
-                <tr>
-                  <td class="td-bold">
-                    <button type="button" class="crm-student-link crm-classroom-link" data-classroom-id="${escapeHtml(c.classroomId || c.id || '')}">
-                      ${escapeHtml(c.name)}
-                    </button>
-                  </td>
-                  <td>${escapeHtml(courseIndex.get(String(c.courseId || ''))?.name || c.courseId || 'None')}</td>
-                  <td>${escapeHtml(c.status)}</td>
-                  <td>n/a</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-      `;
-
-      const classroomIndex = new Map(classrooms.map((classroom) => [String(classroom.classroomId || classroom.id || ''), classroom]));
-      Array.from(elements.classManagementGrid.querySelectorAll('button.crm-classroom-link[data-classroom-id]')).forEach((button) => {
-        button.addEventListener('click', async () => {
-          const classroomId = String(button.dataset.classroomId || '').trim();
-          const classroom = classroomIndex.get(classroomId);
-          if (!classroom) return;
-          await openExistingClassroom(classroom);
-        });
-      });
-    } catch (e) {
-      elements.classManagementGrid.innerHTML = '<div class="crm-muted">Failed to load classrooms.</div>';
-    }
+    if (!classroomWorkspaceController) return;
+    return classroomWorkspaceController.refreshClassroomList();
   }
 
   async function loadClassroomModules(classId) {
-    if (!elements.modulesListContainer) return;
-    try {
-      const modules = await window.ClassroomAPI.loadModules(classId);
-      elements.modulesListContainer.innerHTML = modules.length ? modules.map(m => `
-        <div class="module-list-item">
-          <strong>${escapeHtml(m.title)}</strong>
-        </div>
-      `).join('') : '<p class="text-muted">No modules yet.</p>';
-
-      // Update the classwork select dropdown
-      if (elements.inputClassworkModule) {
-        elements.inputClassworkModule.innerHTML = '<option value="">No Module</option>' +
-          modules.map(m => `<option value="${m.id}">${escapeHtml(m.title)}</option>`).join('');
-      }
-    } catch (e) {
-      console.error('[CRM Admin] Failed to load classroom modules:', e);
-      elements.modulesListContainer.innerHTML = '<p class="text-muted">Failed to load modules.</p>';
-    }
+    if (!classroomWorkspaceController) return;
+    return classroomWorkspaceController.loadClassroomModules(classId);
   }
 
   async function loadClassroomClasswork(classId) {
-    if (!elements.classworkListContainer) return;
-    renderClassworkWorkflowGuidance();
-    try {
-      const works = await window.ClassroomAPI.loadClasswork(classId);
-      elements.classworkListContainer.innerHTML = works.length ? works.map(w => `
-        <div class="classwork-card">
-          <div>
-            <strong>${escapeHtml(w.title)}</strong>
-            <div class="text-muted" style="font-size: 0.85rem; margin-top: 4px;">Type: ${escapeHtml(w.type)}</div>
-          </div>
-        </div>
-      `).join('') : '<p class="text-muted">No classwork yet.</p>';
-    } catch (e) {
-      console.error('[CRM Admin] Failed to load classroom classwork:', e);
-      elements.classworkListContainer.innerHTML = '<p class="text-muted">Failed to load classwork.</p>';
-    }
+    if (!classroomWorkspaceController) return;
+    return classroomWorkspaceController.loadClassroomClasswork(classId);
+  }
+
+  async function openExistingClassroom(classroom) {
+    if (!classroomWorkspaceController) return;
+    return classroomWorkspaceController.openExistingClassroom(classroom);
+  }
+
+  async function refreshZoomLinksOverview() {
+    if (!classroomWorkspaceController) return;
+    return classroomWorkspaceController.refreshZoomLinksOverview();
   }
 
   async function fetchCoursesFromCatalog() {
-    if (window.CrmCourses && typeof window.CrmCourses.fetchCourses === 'function') {
-      return window.CrmCourses.fetchCourses();
-    }
-    if (window.ClassroomAPI && typeof window.ClassroomAPI.fetchCourses === 'function') {
-      return window.ClassroomAPI.fetchCourses();
-    }
-    throw new Error('Course catalog helpers are not available.');
+    if (!classroomWorkspaceController) return [];
+    return classroomWorkspaceController.fetchCoursesFromCatalog();
   }
 
   async function populateClassroomCourseOptions(options = {}) {
-    if (!elements.inputClassroomCourseId) return [];
-
-    const selectedValue = String(options.selectedValue || elements.inputClassroomCourseId.value || '').trim();
-    if (window.CrmCourses && typeof window.CrmCourses.populateCourseSelect === 'function') {
-      return window.CrmCourses.populateCourseSelect(elements.inputClassroomCourseId, {
-        placeholder: 'Select a Course...',
-        selectedValue
-      });
-    }
-
-    const courses = await fetchCoursesFromCatalog();
-    elements.inputClassroomCourseId.innerHTML = '<option value="">Select a Course...</option>' + courses.map((course) => {
-      const label = course.code ? `${course.name} (${course.code})` : course.name;
-      return `<option value="${course.id}">${label}</option>`;
-    }).join('');
-    if (selectedValue) {
-      elements.inputClassroomCourseId.value = selectedValue;
-    }
-    return courses;
+    if (!classroomWorkspaceController) return [];
+    return classroomWorkspaceController.populateClassroomCourseOptions(options);
   }
 
   async function refreshCourseCatalog() {
-    const container = elements.courseCatalogContainer;
-    if (!container) return;
-
-    try {
-      const courses = await fetchCoursesFromCatalog();
-      await populateClassroomCourseOptions({ selectedValue: elements.inputClassroomCourseId?.value || '' });
-
-      if (!courses.length) {
-        container.innerHTML = '<div class="crm-muted">No courses found.</div>';
-        return;
-      }
-
-      container.innerHTML = `
-        <div class="crm-table-container">
-          <table class="crm-table">
-            <thead>
-              <tr><th>Name</th><th>Code</th><th>Status</th><th>Teachers</th></tr>
-            </thead>
-            <tbody>
-              ${courses.map((course) => `
-                <tr>
-                  <td class="td-bold">
-                    <button type="button" class="crm-student-link crm-course-link" data-course-id="${escapeHtml(course.id || course.courseId || '')}">
-                      ${escapeHtml(course.name || 'Untitled')}
-                    </button>
-                  </td>
-                  <td>${escapeHtml(course.code || '—')}</td>
-                  <td>${escapeHtml(course.status || 'active')}</td>
-                  <td>${escapeHtml((course.teachers || []).join(', ') || 'None')}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-      `;
-
-      const courseIndex = new Map(courses.map((course) => [String(course.id || course.courseId || ''), course]));
-      Array.from(container.querySelectorAll('button.crm-course-link[data-course-id]')).forEach((button) => {
-        button.addEventListener('click', () => {
-          const courseId = String(button.dataset.courseId || '').trim();
-          const course = courseIndex.get(courseId);
-          if (!course) return;
-
-          resetCourseModal();
-          applyCourseToForm(course);
-          openCourseModal();
-        });
-      });
-    } catch (error) {
-      console.error('[CRM Admin] Failed to refresh course catalog:', error);
-      container.innerHTML = '<div class="crm-muted">Failed to load courses.</div>';
-    }
+    if (!classroomWorkspaceController) return;
+    return classroomWorkspaceController.refreshCourseCatalog();
   }
 
   function showToast(message, type = 'info') {

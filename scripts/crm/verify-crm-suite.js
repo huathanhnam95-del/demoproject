@@ -61,6 +61,7 @@ function main() {
         ['node', ['tests/crm/lead-entrance-stage-sync.test.js']],
         ['node', ['tests/crm/activity-service.test.js']],
         ['node', ['tests/crm/enrollment-attendance.test.js']],
+        ['node', ['tests/crm/finance-workflow-shared.test.js']],
         ['node', ['tests/crm/finance-service.test.js']],
         ['node', ['tests/crm/finance-enrollment-handoff.test.js']],
         ['node', ['tests/crm/student-360.test.js']],

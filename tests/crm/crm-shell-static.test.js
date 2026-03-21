@@ -50,6 +50,33 @@ assert(
     html.includes('firebase-storage-compat.js'),
     'CRM admin page must load firebase-storage-compat.'
 );
+assert(
+    html.includes('student-classroom-match-summary') &&
+    html.includes('btn-create-recommended-enrollment'),
+    'CRM admin page must render the classroom recommendation panel.'
+);
+assert(
+    html.includes('student-preferred-learning-days') &&
+    html.includes('student-preferred-learning-hours') &&
+    html.includes('classroom-meeting-days') &&
+    html.includes('classroom-meeting-hours'),
+    'CRM admin page must expose structured schedule inputs for students and classrooms.'
+);
+assert(
+    html.includes('data-panel="courses/zoom-links"') &&
+    html.includes('classroom-live') &&
+    html.includes('live-session-list') &&
+    html.includes('btn-start-live-session') &&
+    html.includes('btn-end-live-session'),
+    'CRM admin page must expose the live delivery panel and live-session controls.'
+);
+assert(
+    js.includes('loadLiveSessions') &&
+    js.includes('renderLiveDeliverySummary') &&
+    js.includes('renderAttendanceWorkflowGuidance') &&
+    js.includes('renderClassworkWorkflowGuidance'),
+    'crm-admin.js must implement live-session loading and deterministic workflow guidance.'
+);
 
 assert(
     !/catch\s*\(\s*[^)]*\s*\)\s*\{\s*\}/.test(js),

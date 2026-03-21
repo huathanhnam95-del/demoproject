@@ -62,12 +62,21 @@ expectRoute(routes, 'GET /status');
 expectRoute(routes, 'GET /students');
 expectRoute(routes, 'POST /students');
 expectRoute(routes, 'PATCH /students/:studentId');
+expectRoute(routes, 'GET /students/:studentId/classroom-matches');
 expectRoute(routes, 'GET /courses');
 expectRoute(routes, 'POST /courses');
 expectRoute(routes, 'PATCH /courses/:courseId');
 expectRoute(routes, 'POST /students/:studentId/class-code');
 expectRoute(routes, 'GET /users/lookup');
 expectRoute(routes, 'POST /students/:studentId/force-link');
+expectRoute(routes, 'POST /classrooms/:classId/submissions');
+expectRoute(routes, 'GET /classrooms/:classId/live-sessions');
+expectRoute(routes, 'POST /classrooms/:classId/live-sessions');
+expectRoute(routes, 'PATCH /classrooms/:classId/live-sessions/:sessionId');
+expectRoute(routes, 'POST /classrooms/:classId/live-sessions/:sessionId/start');
+expectRoute(routes, 'POST /classrooms/:classId/live-sessions/:sessionId/end');
+expectRoute(routes, 'POST /submissions/:submissionId/return-for-revision');
+expectRoute(routes, 'POST /submissions/:submissionId/grade');
 
 for (const relativePath of [
     'functions/src/routes/admin/students.js',

@@ -2,6 +2,7 @@ const admin = require('firebase-admin');
 const { Storage } = require('@google-cloud/storage');
 const path = require('path');
 const fs = require('fs');
+const { resolveServiceAccountPath } = require('./service-account-path');
 
 let db = null;
 let bucket = null;
@@ -98,8 +99,9 @@ async function getStorageBucket() {
         }
 
         try {
+            const serviceAccountPath = resolveServiceAccountPath(process.cwd());
             const storage = new Storage({
-                keyFilename: path.join(process.cwd(), 'serviceAccountKey.json'),
+                keyFilename: serviceAccountPath || path.join(process.cwd(), 'serviceAccountKey.json'),
                 projectId: projectId || undefined
             });
             const [buckets] = await storage.getBuckets();
@@ -133,8 +135,8 @@ async function getStorageBucket() {
 }
 
 try {
-    const serviceAccountPath = path.join(process.cwd(), 'serviceAccountKey.json');
-    if (fs.existsSync(serviceAccountPath)) {
+    const serviceAccountPath = resolveServiceAccountPath(process.cwd());
+    if (serviceAccountPath && fs.existsSync(serviceAccountPath)) {
         const serviceAccount = require(serviceAccountPath);
         projectId = String(serviceAccount.project_id || process.env.FIREBASE_PROJECT_ID || '').trim();
         const storageBucketEnv = process.env.FIREBASE_STORAGE_BUCKET || '';

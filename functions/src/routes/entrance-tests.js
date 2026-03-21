@@ -1,10 +1,10 @@
 const express = require('express');
 const axios = require('axios');
 const https = require('https');
-const { db, admin, getStorageBucket } = require('../utils/firebase');
-const { sendError, sendSuccess } = require('../utils/response-helper');
-const { CRM_LEADS } = require('../../functions/src/crm/collections');
-const { buildLeadStageSyncPatch } = require('../../functions/src/crm/lead-service');
+const { db, admin, getStorageBucket } = require('../utils/firebase_admin_init');
+const { sendError, sendSuccess } = require('../crm/http-contracts');
+const { CRM_LEADS } = require('../crm/collections');
+const { buildLeadStageSyncPatch } = require('../crm/lead-service');
 const {
     TEST_36PLUS,
     TEST_VERSION,
@@ -63,8 +63,8 @@ function sanitizeProgressDraft(rawProgress) {
 }
 
 function getSpeakingQuestionById(questionId) {
-    const speaking = TEST_36PLUS.sections.find(s => s.id === 'speaking');
-    const q = speaking?.questions?.find(x => x.id === questionId) || null;
+    const speaking = TEST_36PLUS.sections.find((s) => s.id === 'speaking');
+    const q = speaking?.questions?.find((x) => x.id === questionId) || null;
     return q;
 }
 
@@ -96,7 +96,6 @@ async function transcribeAudio(buffer, contentType) {
     return res.data.text;
 }
 
-// Validate link + return test session (no login)
 router.get('/session', async (req, res) => {
     try {
         if (!db) return sendError(res, 500, 'SERVER_CONFIG_ERROR', 'Firebase Admin not initialized.');
@@ -123,7 +122,6 @@ router.get('/session', async (req, res) => {
             return sendError(res, 410, 'TEST_LINK_USED', 'This link has already been used.');
         }
 
-        // Mark started (idempotent)
         if (!data.startedAt) {
             await ref.set({
                 status: 'started',
@@ -140,7 +138,6 @@ router.get('/session', async (req, res) => {
     }
 });
 
-// Save draft progress while test is in progress (no login, token-gated)
 router.post('/progress', async (req, res) => {
     try {
         if (!db) return sendError(res, 500, 'SERVER_CONFIG_ERROR', 'Firebase Admin not initialized.');
@@ -208,7 +205,6 @@ router.post('/progress', async (req, res) => {
     }
 });
 
-// Upload and score a speaking recording (no login, token-gated)
 router.post('/speaking/upload', express.raw({ type: () => true, limit: '25mb' }), async (req, res) => {
     try {
         if (!db) return sendError(res, 500, 'SERVER_CONFIG_ERROR', 'Firebase Admin not initialized.');
@@ -279,7 +275,6 @@ router.post('/speaking/upload', express.raw({ type: () => true, limit: '25mb' })
             console.warn('[EntranceTest] ASR failed:', asrError);
         }
 
-        // Mark started if not already
         const updatePayload = {
             status: data.status === 'created' ? 'started' : (data.status || 'started'),
             startedAt: data.startedAt || admin.firestore.FieldValue.serverTimestamp(),
@@ -316,7 +311,6 @@ router.post('/speaking/upload', express.raw({ type: () => true, limit: '25mb' })
     }
 });
 
-// Submit the whole test (no login, token-gated) - single-use
 router.post('/submit', async (req, res) => {
     try {
         if (!db) return sendError(res, 500, 'SERVER_CONFIG_ERROR', 'Firebase Admin not initialized.');

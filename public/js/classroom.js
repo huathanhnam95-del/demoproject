@@ -48,6 +48,7 @@
     let timerInterval = null;
     let startTime = 0;
     let activeWorkId = null;
+    let currentSubmission = null;
 
     function formatTime(seconds) {
         const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -231,8 +232,9 @@
     async function submitWork() {
         if (!activeWorkId || !activeClassId) return;
 
+        const isResubmission = currentSubmission?.status === 'needs-revision';
         elements.btnSubmit.disabled = true;
-        elements.btnSubmit.textContent = "Submitting...";
+        elements.btnSubmit.textContent = isResubmission ? 'Resubmitting...' : 'Submitting...';
 
         try {
             const result = await window.ClassroomAPI.submitAssignment(
@@ -242,10 +244,10 @@
             );
 
             if (result.success) {
-                elements.btnSubmit.textContent = "Submitted";
+                elements.btnSubmit.textContent = isResubmission ? 'Resubmitted' : 'Submitted';
                 elements.btnSubmit.style.background = "var(--accent-done)";
                 elements.statusBadge.className = 'status-badge done';
-                elements.statusBadge.textContent = "Turned In";
+                elements.statusBadge.textContent = isResubmission ? 'Resubmitted' : 'Turned In';
                 elements.btnRecord.style.display = 'none';
 
                 setTimeout(() => {
@@ -257,7 +259,7 @@
             console.error('[Classroom] Submission error:', e);
             alert("Error submitting work: " + e.message);
             elements.btnSubmit.disabled = false;
-            elements.btnSubmit.textContent = "Mark as Done";
+            elements.btnSubmit.textContent = isResubmission ? 'Resubmit Work' : 'Mark as Done';
         }
     }
 
@@ -355,13 +357,29 @@
           </div>
         </div>
       `;
+                } else if (sub && sub.status === 'needs-revision') {
+                    return `
+        <div class="todo-card needs-revision" data-work-id="${escapeHtml(w.id)}">
+          <div>
+            <h3>${escapeHtml(w.title)}</h3>
+            <div class="todo-card-meta">Assigned â€¢ ${escapeHtml(w.type)}</div>
+            <div style="margin-top: 8px; font-weight: 600; color: #b91c1c;">Needs Revision</div>
+            ${sub.feedback ? `
+              <div style="margin-top: 8px; font-size: 0.9rem; color: var(--crm-text-muted);">
+                ${escapeHtml(sub.feedback)}
+              </div>
+            ` : ''}
+          </div>
+          <button class="filter-btn" style="border:1px solid var(--crm-border); color:#b91c1c;">Resubmit</button>
+        </div>
+      `;
                 } else if (sub) {
                     return `
         <div class="todo-card turned-in" data-work-id="${escapeHtml(w.id)}">
           <div>
             <h3>${escapeHtml(w.title)}</h3>
             <div class="todo-card-meta">Assigned • ${escapeHtml(w.type)}</div>
-            <div style="margin-top: 8px; font-weight: 500; color: var(--accent-done);">✓ Turned In</div>
+            <div style="margin-top: 8px; font-weight: 500; color: var(--accent-done);">${sub.revisionCount > 1 ? '✓ Resubmitted' : '✓ Turned In'}</div>
           </div>
         </div>
       `;
@@ -384,7 +402,7 @@
                     const wId = card.dataset.workId;
                     const work = works.find(x => x.id === wId);
                     if (work && !card.classList.contains('graded') && !card.classList.contains('turned-in')) {
-                        openAssignment(work);
+                        openAssignment(work, mySubmissions.find(s => s.workId === wId) || null);
                     }
                 });
             });
@@ -393,25 +411,42 @@
         }
     }
 
-    function openAssignment(work) {
+    function openAssignment(work, submission = null) {
         activeWorkId = work.id;
+        currentSubmission = submission;
         elements.modalTitle.textContent = work.title;
         elements.mediaPreview.style.display = 'none';
         elements.mediaPreview.innerHTML = '';
         elements.btnSubmit.disabled = true;
-        elements.btnSubmit.textContent = "Mark as Done";
+        elements.btnSubmit.textContent = submission?.status === 'needs-revision' ? "Resubmit Work" : "Mark as Done";
         elements.btnSubmit.style.background = "";
-        elements.validationNote.style.display = work.allowVoiceNote ? 'block' : 'none';
+        if (submission?.status === 'needs-revision' && submission.feedback) {
+            elements.validationNote.innerHTML = `
+        <div style="padding:10px; border-radius:8px; background:#fff1f2; color:#9f1239; border:1px solid #fecdd3;">
+          <strong>Teacher feedback:</strong> ${escapeHtml(submission.feedback)}
+        </div>
+      `;
+            elements.validationNote.style.display = 'block';
+        } else {
+            elements.validationNote.textContent = '';
+            elements.validationNote.style.display = work.allowVoiceNote ? 'block' : 'none';
+        }
 
-        elements.statusBadge.className = 'status-badge assigned';
-        elements.statusBadge.textContent = 'Assigned';
+        elements.statusBadge.className = submission?.status === 'needs-revision'
+            ? 'status-badge needs-revision'
+            : (submission ? 'status-badge done' : 'status-badge assigned');
+        elements.statusBadge.textContent = submission?.status === 'needs-revision'
+            ? 'Needs Revision'
+            : (submission ? 'Turned In' : 'Assigned');
 
         currentAudioBlob = null;
 
         if (work.allowVoiceNote) {
             elements.audioWidget.style.display = 'block';
             elements.btnRecord.style.display = 'inline-flex';
-            elements.btnRecord.innerHTML = '<span class="icon">🎤</span> Tap to Record';
+            elements.btnRecord.innerHTML = submission?.status === 'needs-revision'
+                ? '<span class="icon">🎤</span> Re-Record'
+                : '<span class="icon">🎤</span> Tap to Record';
         } else {
             elements.audioWidget.style.display = 'none';
             elements.btnSubmit.disabled = false; // can submit immediately if no constraints
@@ -430,6 +465,7 @@
         elements.btnStop.style.display = 'none';
         elements.modal.style.display = 'none';
         activeWorkId = null;
+        currentSubmission = null;
     }
 
     function escapeHtml(str) {

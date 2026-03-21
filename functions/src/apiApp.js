@@ -6,7 +6,11 @@ const {
     sendSuccess,
     sendError
 } = require('./crm/http-contracts');
+const { CRM_LEADS } = require('./crm/collections');
+const { buildLeadStageSyncPatch } = require('./crm/lead-service');
 const createCrmRouter = require('./routes/admin/create-crm-router');
+const entranceTestRoutes = require('./routes/entrance-tests');
+const { TEST_VERSION } = require('./entrance-test/test36plus');
 const {
     generateClassCode,
     claimProfile,
@@ -143,9 +147,6 @@ const crmRouter = createCrmRouter({
                 const studentId = String(req.params.studentId || '').trim();
                 if (!studentId) return deps.sendError(res, 400, 'VALIDATION_ERROR', 'Missing studentId.');
 
-                const studentSnap = await deps.db.collection('crmStudents').doc(studentId).get();
-                if (!studentSnap.exists) return deps.sendError(res, 404, 'STUDENT_NOT_FOUND', 'Student profile not found.');
-
                 let token = null;
                 let testId = null;
                 for (let i = 0; i < 5; i++) {
@@ -157,15 +158,42 @@ const crmRouter = createCrmRouter({
 
                 if (!token || !testId) return deps.sendError(res, 500, 'TOKEN_ERROR', 'Failed to generate a unique token.');
 
-                await deps.db.collection('entranceTests').doc(testId).set({
-                    studentId,
-                    version: 'v3.6+',
-                    status: 'created',
-                    createdAt: deps.serverTimestamp(),
-                    createdBy: req.user.uid,
-                    createdByEmail: req.user.email || null,
-                    startedAt: null,
-                    submittedAt: null
+                const studentRef = deps.db.collection('crmStudents').doc(studentId);
+                const testRef = deps.db.collection('entranceTests').doc(testId);
+                await deps.db.runTransaction(async (tx) => {
+                    const studentSnap = await tx.get(studentRef);
+                    if (!studentSnap.exists) {
+                        throw new Error('STUDENT_NOT_FOUND');
+                    }
+
+                    const leadId = String(studentSnap.data()?.leadId || '').trim();
+                    const leadRef = leadId ? deps.db.collection(CRM_LEADS).doc(leadId) : null;
+                    const leadSnap = leadRef ? await tx.get(leadRef) : null;
+                    const existingTestSnap = await tx.get(testRef);
+                    if (existingTestSnap.exists) {
+                        throw new Error('TOKEN_ERROR');
+                    }
+
+                    tx.set(testRef, {
+                        studentId,
+                        version: TEST_VERSION,
+                        status: 'created',
+                        createdAt: deps.serverTimestamp(),
+                        createdBy: req.user.uid,
+                        createdByEmail: req.user.email || null,
+                        startedAt: null,
+                        submittedAt: null
+                    });
+
+                    if (leadRef && leadSnap?.exists) {
+                        const leadPatch = buildLeadStageSyncPatch(leadSnap.data() || {}, 'test_scheduled', {
+                            user: req.user,
+                            serverTimestamp: deps.serverTimestamp
+                        });
+                        if (leadPatch) {
+                            tx.set(leadRef, leadPatch, { merge: true });
+                        }
+                    }
                 });
 
                 const baseUrl = getBaseUrl(req);
@@ -175,6 +203,9 @@ const crmRouter = createCrmRouter({
                     resultLink: `${baseUrl}/crm-entrance-test-result.html?testId=${encodeURIComponent(testId)}`
                 }, 'Entrance test link created.');
             } catch (error) {
+                if (error?.message === 'STUDENT_NOT_FOUND') {
+                    return deps.sendError(res, 404, 'STUDENT_NOT_FOUND', 'Student profile not found.');
+                }
                 return deps.sendError(res, 500, 'CREATE_TEST_ERROR', 'Failed to create entrance test link.', error?.message || error);
             }
         });
@@ -244,6 +275,7 @@ const crmRouter = createCrmRouter({
 
 app.use('/admin', crmRouter);
 app.use('/api/admin', crmRouter);
+app.use('/api/entrance-tests', entranceTestRoutes);
 
 app.get(['/config', '/api/config'], (req, res) => {
     return res.json({

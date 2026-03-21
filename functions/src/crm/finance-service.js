@@ -33,8 +33,8 @@ function buildInvoiceCreateData(input, context = {}) {
     const studentId = cleanOptionalString(input?.studentId);
     const enrollmentId = cleanOptionalString(input?.enrollmentId);
     const amount = normalizeMoney(input?.amount);
-    if (!studentId || !enrollmentId || amount <= 0) {
-        throw new Error('Invoice requires studentId, enrollmentId, and a positive amount.');
+    if (!studentId || amount <= 0) {
+        throw new Error('Invoice requires studentId and a positive amount.');
     }
 
     const discountAmount = normalizeMoney(input?.discountAmount);
@@ -96,8 +96,8 @@ function buildPaymentCreateData(input, context = {}) {
     const studentId = cleanOptionalString(input?.studentId);
     const enrollmentId = cleanOptionalString(input?.enrollmentId);
     const amount = normalizeMoney(input?.amount);
-    if (!invoiceId || !studentId || !enrollmentId || amount <= 0) {
-        throw new Error('Payment requires invoiceId, studentId, enrollmentId, and a positive amount.');
+    if (!invoiceId || !studentId || amount <= 0) {
+        throw new Error('Payment requires invoiceId, studentId, and a positive amount.');
     }
 
     return {
@@ -112,6 +112,43 @@ function buildPaymentCreateData(input, context = {}) {
         createdAt: context.serverTimestamp ? context.serverTimestamp() : new Date(),
         createdBy: context.user?.uid || null,
         createdByEmail: context.user?.email || null
+    };
+}
+
+function buildPaidEnrollmentSyncPatch({ invoice, enrollment, student }, context = {}) {
+    if (cleanOptionalString(invoice?.status) !== 'paid') {
+        return null;
+    }
+    if (!enrollment || typeof enrollment !== 'object') {
+        return null;
+    }
+
+    const studentLinkedUserId = Array.isArray(student?.linked_user_ids) && student.linked_user_ids.length > 0
+        ? cleanOptionalString(student.linked_user_ids[0])
+        : null;
+    const studentUid = cleanOptionalString(enrollment.studentUid) || studentLinkedUserId;
+    const studentName = cleanOptionalString(enrollment.studentName) || cleanOptionalString(student?.name);
+    const studentEmail = cleanOptionalString(enrollment.studentEmail) || cleanOptionalString(student?.email);
+
+    const enrollmentPatch = {
+        status: 'active'
+    };
+    if (studentUid) {
+        enrollmentPatch.studentUid = studentUid;
+    }
+    if (studentName) {
+        enrollmentPatch.studentName = studentName;
+    }
+    if (studentEmail) {
+        enrollmentPatch.studentEmail = studentEmail;
+    }
+
+    return {
+        enrollmentPatch,
+        studentPatch: {
+            lifecycleStage: 'enrolled'
+        },
+        studentUid
     };
 }
 
@@ -170,6 +207,59 @@ function summarizeFinance({ invoices, payments }) {
     };
 }
 
+function deriveFinanceWorkflowState({ invoices, enrollments, matches }) {
+    const invoiceList = Array.isArray(invoices) ? invoices : [];
+    const enrollmentList = Array.isArray(enrollments) ? enrollments : [];
+    const matchList = Array.isArray(matches) ? matches : [];
+
+    const activeEnrollment = enrollmentList.find((enrollment) => String(enrollment?.status || '') === 'active') || null;
+    const outstandingInvoices = invoiceList.filter((invoice) => normalizeMoney(invoice?.outstandingAmount) > 0);
+    const settledInvoices = invoiceList.filter((invoice) => String(invoice?.status || '') === 'paid' || normalizeMoney(invoice?.outstandingAmount) === 0);
+    const recommendedMatch = matchList.find((match) => !!match?.recommended) || matchList[0] || null;
+
+    if (activeEnrollment) {
+        return {
+            nextAction: 'start_attendance',
+            requiresPayment: false,
+            primaryClassroomId: activeEnrollment?.classId || recommendedMatch?.classroomId || null,
+            activeEnrollmentId: activeEnrollment?.enrollmentId || null,
+            message: 'Student already has an active enrollment. Move into attendance and live class operations.'
+        };
+    }
+
+    if (outstandingInvoices.length > 0 || invoiceList.length === 0) {
+        return {
+            nextAction: 'collect_payment',
+            requiresPayment: true,
+            primaryClassroomId: recommendedMatch?.classroomId || null,
+            activeEnrollmentId: activeEnrollment?.enrollmentId || null,
+            message: invoiceList.length
+                ? 'Record payment confirmation before assigning the student to a classroom.'
+                : 'Create an invoice and confirm payment before classroom assignment.'
+        };
+    }
+
+    if (settledInvoices.length > 0 && matchList.length > 1) {
+        return {
+            nextAction: 'select_classroom',
+            requiresPayment: false,
+            primaryClassroomId: recommendedMatch?.classroomId || null,
+            activeEnrollmentId: null,
+            message: 'Payment is confirmed. Choose the best classroom before creating the enrollment.'
+        };
+    }
+
+    return {
+        nextAction: 'assign_classroom',
+        requiresPayment: false,
+        primaryClassroomId: recommendedMatch?.classroomId || null,
+        activeEnrollmentId: null,
+        message: recommendedMatch
+            ? 'Payment is confirmed. Create the enrollment for the recommended classroom.'
+            : 'Payment is confirmed. Pick a classroom, then create the enrollment.'
+    };
+}
+
 function mapInvoiceRecord(doc, invoiceId) {
     const data = doc && typeof doc.data === 'function' ? doc.data() : (doc || {});
     return {
@@ -218,9 +308,11 @@ module.exports = {
     buildInvoiceCreateData,
     buildInvoicePatchData,
     buildPaymentCreateData,
+    buildPaidEnrollmentSyncPatch,
     applyPaymentToInvoice,
     buildCommissionRecords,
     summarizeFinance,
+    deriveFinanceWorkflowState,
     mapInvoiceRecord,
     mapPaymentRecord
 };

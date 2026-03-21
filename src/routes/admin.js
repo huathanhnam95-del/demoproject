@@ -1,6 +1,8 @@
 const path = require('path');
 const crypto = require('crypto');
 const createCrmRouter = require('../../functions/src/routes/admin/create-crm-router');
+const { CRM_LEADS } = require('../../functions/src/crm/collections');
+const { buildLeadStageSyncPatch } = require('../../functions/src/crm/lead-service');
 const { admin, db, getStorageBucket } = require('../utils/firebase');
 const { sendError, sendSuccess } = require('../utils/response-helper');
 const authMiddleware = require('../middleware/auth');
@@ -169,23 +171,18 @@ function registerLocalOnlyRoutes(router, deps) {
         }
     });
 
-    router.post('/students/:studentId/entrance-tests', authMiddleware, async (req, res) => {
-        try {
-            const studentId = String(req.params.studentId || '').trim();
-            if (!studentId) {
-                return sendError(res, 400, 'VALIDATION_ERROR', 'Missing studentId.');
-            }
+        router.post('/students/:studentId/entrance-tests', authMiddleware, async (req, res) => {
+            try {
+                const studentId = String(req.params.studentId || '').trim();
+                if (!studentId) {
+                    return sendError(res, 400, 'VALIDATION_ERROR', 'Missing studentId.');
+                }
 
-            const studentSnap = await db.collection('crmStudents').doc(studentId).get();
-            if (!studentSnap.exists) {
-                return sendError(res, 404, 'STUDENT_NOT_FOUND', 'Student profile not found.');
-            }
+                let token = null;
+                let testId = null;
 
-            let token = null;
-            let testId = null;
-
-            for (let attempt = 0; attempt < 5; attempt += 1) {
-                const nextToken = crypto.randomBytes(32).toString('base64url');
+                for (let attempt = 0; attempt < 5; attempt += 1) {
+                    const nextToken = crypto.randomBytes(32).toString('base64url');
                 const nextTestId = hashTokenToTestId(nextToken);
                 const existing = await db.collection('entranceTests').doc(nextTestId).get();
                 if (!existing.exists) {
@@ -195,32 +192,62 @@ function registerLocalOnlyRoutes(router, deps) {
                 }
             }
 
-            if (!token || !testId) {
-                return sendError(res, 500, 'TOKEN_ERROR', 'Failed to generate a unique token.');
+                if (!token || !testId) {
+                    return sendError(res, 500, 'TOKEN_ERROR', 'Failed to generate a unique token.');
+                }
+
+                const studentRef = db.collection('crmStudents').doc(studentId);
+                const testRef = db.collection('entranceTests').doc(testId);
+                await db.runTransaction(async (tx) => {
+                    const studentSnap = await tx.get(studentRef);
+                    if (!studentSnap.exists) {
+                        throw new Error('STUDENT_NOT_FOUND');
+                    }
+
+                    const leadId = String(studentSnap.data()?.leadId || '').trim();
+                    const leadRef = leadId ? db.collection(CRM_LEADS).doc(leadId) : null;
+                    const leadSnap = leadRef ? await tx.get(leadRef) : null;
+                    const existingTestSnap = await tx.get(testRef);
+                    if (existingTestSnap.exists) {
+                        throw new Error('TOKEN_ERROR');
+                    }
+
+                    tx.set(testRef, {
+                        studentId,
+                        version: TEST_VERSION,
+                        status: 'created',
+                        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                        createdBy: req.user.uid,
+                        createdByEmail: req.user.email || null,
+                        startedAt: null,
+                        submittedAt: null
+                    });
+
+                    if (leadRef && leadSnap?.exists) {
+                        const leadPatch = buildLeadStageSyncPatch(leadSnap.data() || {}, 'test_scheduled', {
+                            user: req.user,
+                            serverTimestamp: () => admin.firestore.FieldValue.serverTimestamp()
+                        });
+                        if (leadPatch) {
+                            tx.set(leadRef, leadPatch, { merge: true });
+                        }
+                    }
+                });
+
+                const baseUrl = getBaseUrl(req);
+                return sendSuccess(res, {
+                    testId,
+                    testLink: `${baseUrl}/entrance-test.html?token=${encodeURIComponent(token)}`,
+                    resultLink: `${baseUrl}/crm-entrance-test-result.html?testId=${encodeURIComponent(testId)}`
+                }, 'Entrance test link created.');
+            } catch (error) {
+                if (error?.message === 'STUDENT_NOT_FOUND') {
+                    return sendError(res, 404, 'STUDENT_NOT_FOUND', 'Student profile not found.');
+                }
+                console.error('[CRM] Create entrance test failed:', error);
+                return sendError(res, 500, 'CREATE_TEST_ERROR', 'Failed to create entrance test link.', error?.message || error);
             }
-
-            await db.collection('entranceTests').doc(testId).set({
-                studentId,
-                version: TEST_VERSION,
-                status: 'created',
-                createdAt: admin.firestore.FieldValue.serverTimestamp(),
-                createdBy: req.user.uid,
-                createdByEmail: req.user.email || null,
-                startedAt: null,
-                submittedAt: null
-            });
-
-            const baseUrl = getBaseUrl(req);
-            return sendSuccess(res, {
-                testId,
-                testLink: `${baseUrl}/entrance-test.html?token=${encodeURIComponent(token)}`,
-                resultLink: `${baseUrl}/crm-entrance-test-result.html?testId=${encodeURIComponent(testId)}`
-            }, 'Entrance test link created.');
-        } catch (error) {
-            console.error('[CRM] Create entrance test failed:', error);
-            return sendError(res, 500, 'CREATE_TEST_ERROR', 'Failed to create entrance test link.', error?.message || error);
-        }
-    });
+        });
 
     router.get('/students/:studentId/entrance-tests', authMiddleware, async (req, res) => {
         try {

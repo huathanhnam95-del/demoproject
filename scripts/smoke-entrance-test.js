@@ -4,6 +4,7 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
+let firestoreDb = null;
 
 function parseArgs(argv) {
     const out = {};
@@ -42,6 +43,35 @@ async function waitForServer(baseUrl, timeoutMs) {
 
 function assert(condition, message) {
     if (!condition) throw new Error(message);
+}
+
+function getFirestoreDb() {
+    if (firestoreDb) return firestoreDb;
+
+    const worktreeRoot = path.resolve(__dirname, '..');
+    const repoRoot = path.resolve(__dirname, '..', '..', '..');
+    const previousCwd = process.cwd();
+
+    try {
+        process.chdir(repoRoot);
+        const rootFirebase = require(path.join(repoRoot, 'src', 'utils', 'firebase'));
+        firestoreDb = rootFirebase.db || null;
+    } catch (error) {
+        firestoreDb = null;
+    } finally {
+        process.chdir(previousCwd);
+    }
+
+    if (firestoreDb) return firestoreDb;
+
+    try {
+        const localFirebase = require(path.join(worktreeRoot, 'src', 'utils', 'firebase'));
+        firestoreDb = localFirebase.db || null;
+    } catch (error) {
+        firestoreDb = null;
+    }
+
+    return firestoreDb;
 }
 
 async function fetchJson(url, options = {}) {
@@ -106,6 +136,7 @@ function buildResponses(session) {
 }
 
 async function runSmoke(baseUrl, args) {
+    const db = getFirestoreDb();
     const apiKey = String(process.env.FIREBASE_API_KEY || '').trim();
     const adminEmail = String(args['admin-email'] || process.env.ADMIN_EMAIL || '').trim();
     const adminPassword = resolveAdminPassword(args);
@@ -113,6 +144,7 @@ async function runSmoke(baseUrl, args) {
     assert(apiKey, 'Missing FIREBASE_API_KEY in environment.');
     assert(adminEmail, 'Missing ADMIN_EMAIL (or --admin-email).');
     assert(adminPassword, 'Missing admin password (set ADMIN_PASSWORD or --admin-password).');
+    assert(db, 'Missing Firestore admin initialization for smoke test.');
 
     const signInUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${encodeURIComponent(apiKey)}`;
     const signIn = await fetchJson(signInUrl, {
@@ -123,10 +155,23 @@ async function runSmoke(baseUrl, args) {
     assert(signIn.response.ok && signIn.json?.idToken, `Firebase sign-in failed: ${JSON.stringify(signIn.json)}`);
     const idToken = String(signIn.json.idToken);
 
+    const leadRef = db.collection('crmLeads').doc();
+    await leadRef.set({
+        name: `Smoke Lead ${Date.now()}`,
+        email: `smoke-${Date.now()}@example.com`,
+        stage: 'contacted',
+        createdAt: new Date(),
+        updatedAt: new Date()
+    });
+
     const createStudent = await fetchJson(`${baseUrl}/api/admin/students`, {
         method: 'POST',
         headers: getHeaders(idToken, true),
-        body: JSON.stringify({ name: `Smoke ${Date.now()}` })
+        body: JSON.stringify({
+            name: `Smoke ${Date.now()}`,
+            email: `smoke-student-${Date.now()}@example.com`,
+            leadId: leadRef.id
+        })
     });
     assert(createStudent.response.ok && createStudent.json?.success, `Create student failed: ${JSON.stringify(createStudent.json)}`);
     const studentId = String(createStudent.json.studentId || '');
@@ -140,6 +185,13 @@ async function runSmoke(baseUrl, args) {
     const testId = String(createTest.json.testId || '');
     const testLink = String(createTest.json.testLink || '');
     assert(testId && testLink, 'Missing testId/testLink.');
+
+    const leadAfterCreate = await leadRef.get();
+    assert(leadAfterCreate.exists, 'Lead document missing after test creation.');
+    assert(
+        String(leadAfterCreate.data()?.stage || '') === 'test_scheduled',
+        `Expected lead stage=test_scheduled after creation, got ${leadAfterCreate.data()?.stage}`
+    );
 
     const token = new URL(testLink).searchParams.get('token');
     assert(token, 'Missing token in testLink.');
@@ -204,6 +256,12 @@ async function runSmoke(baseUrl, args) {
         body: JSON.stringify({ token, responses })
     });
     assert(submit.response.ok && submit.json?.success, `Submit failed: ${JSON.stringify(submit.json)}`);
+
+    const leadAfterSubmit = await leadRef.get();
+    assert(
+        String(leadAfterSubmit.data()?.stage || '') === 'test_completed',
+        `Expected lead stage=test_completed after submission, got ${leadAfterSubmit.data()?.stage}`
+    );
 
     const submitAgain = await fetchJson(`${baseUrl}/api/entrance-tests/submit`, {
         method: 'POST',

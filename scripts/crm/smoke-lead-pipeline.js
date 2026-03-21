@@ -31,9 +31,19 @@ const payload = helper.buildPayload({
     inputLeadName: { value: 'Lead Nguyen' },
     inputLeadEmail: { value: 'lead@example.com' },
     inputLeadPhone: { value: '0123' },
+    inputLeadFacebookDisplayName: { value: 'Lead Nguyen FB' },
+    inputLeadFacebookProfileUrl: { value: 'https://facebook.com/lead.nguyen' },
+    inputLeadRealName: { value: 'Nguyen Van Lead' },
+    inputLeadDateOfBirth: { value: '2001-05-20' },
     inputLeadSource: { value: 'facebook' },
     inputLeadStage: { value: 'new' },
-    inputLeadProbability: { value: '35' }
+    inputLeadProbability: { value: '35' },
+    inputLeadLearningNeeds: { value: 'Needs evening IELTS speaking support' },
+    inputLeadPreferredLearningDays: { value: 'Tuesday, Thursday' },
+    inputLeadPreferredLearningHours: { value: '19:00-21:00, 20:00-22:00' },
+    inputLeadMessengerThreadUrl: { value: 'https://m.me/t/lead-nguyen' },
+    inputLeadMessengerLastContactAt: { value: '2026-03-11T09:15' },
+    inputLeadMessengerStatus: { value: 'awaiting_reply' }
 });
 
 const created = buildLeadCreateData(payload, context);
@@ -47,8 +57,15 @@ const mappedLead = mapLeadRecord({ id: 'lead-1', ...progressed });
 const mappedStudent = mapStudentRecord({ id: 'student-1', ...conversion.student });
 
 assert.strictEqual(mappedLead.stage, 'counseling');
+assert.strictEqual(mappedLead.facebookDisplayName, 'Lead Nguyen FB');
+assert.strictEqual(mappedLead.facebookProfileUrl, 'https://facebook.com/lead.nguyen');
+assert.deepStrictEqual(Array.from(mappedLead.preferredLearningDays || []), ['Tuesday', 'Thursday']);
+assert.deepStrictEqual(Array.from(mappedLead.preferredLearningHours || []), ['19:00-21:00', '20:00-22:00']);
+assert.strictEqual(mappedLead.messengerStatus, 'awaiting_reply');
 assert.strictEqual(mappedStudent.lifecycleStage, 'enrolled');
 assert.strictEqual(mappedStudent.acquisitionSource, 'facebook');
+assert.strictEqual(mappedStudent.facebook, 'Lead Nguyen FB');
 assert.strictEqual(helper.summarize([mappedLead]).counseling, 1);
+assert.strictEqual(helper.hasAnyContact(payload), true);
 
 console.log('lead pipeline smoke passed');

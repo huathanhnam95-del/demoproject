@@ -16,6 +16,9 @@ const context = {
 const created = buildStudentCreateData({
     name: 'Alice Nguyen',
     email: 'alice@example.com',
+    preferredLearningDays: ['Tuesday', 'Thursday'],
+    preferredLearningHours: ['19:00-21:00'],
+    preferredSchedule: 'Weeknights',
     learningProfile: {
         overall: '88',
         listening: '86',
@@ -31,6 +34,9 @@ assert.strictEqual(created.name, 'Alice Nguyen');
 assert.strictEqual(created.email, 'alice@example.com');
 assert.strictEqual(created.lifecycleStage, 'potential');
 assert.strictEqual(created.ownerUid, 'admin-1');
+assert.deepStrictEqual(created.preferredLearningDays, ['Tuesday', 'Thursday']);
+assert.deepStrictEqual(created.preferredLearningHours, ['19:00-21:00']);
+assert.strictEqual(created.preferredSchedule, 'Weeknights');
 assert.deepStrictEqual(created.learningProfile, {
     overall: 88,
     listening: 86,
@@ -43,6 +49,8 @@ assert.deepStrictEqual(created.learningProfile, {
 
 const patched = buildStudentPatchData(created, {
     label: 'High Priority',
+    preferredLearningDays: ['Saturday'],
+    preferredLearningHours: ['09:00-11:00'],
     learningProfile: {
         speaking: '90',
         testResultDueDate: '2026-03-25'
@@ -51,6 +59,8 @@ const patched = buildStudentPatchData(created, {
 
 assert.strictEqual(patched.label, 'High Priority');
 assert.strictEqual(patched.name, 'Alice Nguyen');
+assert.deepStrictEqual(patched.preferredLearningDays, ['Saturday']);
+assert.deepStrictEqual(patched.preferredLearningHours, ['09:00-11:00']);
 assert.strictEqual(patched.learningProfile.listening, 86);
 assert.strictEqual(patched.learningProfile.speaking, 90);
 assert.strictEqual(patched.learningProfile.testResultDueDate, '2026-03-25');
@@ -65,6 +75,8 @@ const mapped = mapStudentRecord({
 assert.strictEqual(mapped.studentId, 'student-1');
 assert.strictEqual(mapped.lifecycleStage, 'potential');
 assert.strictEqual(mapped.learningProfile.entryLevel, 'B1');
+assert.deepStrictEqual(mapped.preferredLearningDays, ['Saturday']);
+assert.deepStrictEqual(mapped.preferredLearningHours, ['09:00-11:00']);
 
 assert.throws(
     () => buildStudentCreateData({}, context),

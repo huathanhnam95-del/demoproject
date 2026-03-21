@@ -22,6 +22,7 @@ const ENTRANCE_TESTS = 'entranceTests';
 const CLASSROOM_MODULES = 'modules';
 const CLASSROOM_CLASSWORK = 'classwork';
 const CLASSROOM_MEMBERS = 'members';
+const CLASSROOM_LIVE_SESSIONS = 'liveSessions';
 
 module.exports = {
     USERS,
@@ -46,5 +47,6 @@ module.exports = {
     ENTRANCE_TESTS,
     CLASSROOM_MODULES,
     CLASSROOM_CLASSWORK,
-    CLASSROOM_MEMBERS
+    CLASSROOM_MEMBERS,
+    CLASSROOM_LIVE_SESSIONS
 };

@@ -48,12 +48,17 @@
   };
   const modalState = {
     studentId: null,
+    studentProfile: null,
     createdTestLinks: new Map(),
     courseId: null,
     classroomId: null,
     leadId: null,
     selectedInvoiceId: null,
-    financeEnrollments: []
+    financeEnrollments: [],
+    financeWorkflow: null,
+    classroomMatches: [],
+    liveSessions: [],
+    liveSessionId: null
   };
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -76,6 +81,7 @@
     elements.potentialStudentsContainer = document.querySelector('[data-panel="students/potential"] .crm-placeholder-card');
     elements.studentDataContainer = document.querySelector('[data-panel="students/data"] .crm-placeholder-card');
     elements.courseCatalogContainer = document.querySelector('[data-panel="courses/courses"] .crm-placeholder-card');
+    elements.zoomLinksGrid = document.getElementById('zoom-links-grid');
     elements.btnNewLead = document.getElementById('btn-new-lead');
     elements.btnSaveLead = document.getElementById('btn-save-lead');
     elements.btnCancelLead = document.getElementById('btn-cancel-lead');
@@ -85,13 +91,24 @@
     elements.inputLeadName = document.getElementById('lead-name');
     elements.inputLeadEmail = document.getElementById('lead-email');
     elements.inputLeadPhone = document.getElementById('lead-phone');
+    elements.inputLeadFacebookDisplayName = document.getElementById('lead-facebook-display-name');
+    elements.inputLeadFacebookProfileUrl = document.getElementById('lead-facebook-profile-url');
+    elements.inputLeadRealName = document.getElementById('lead-real-name');
+    elements.inputLeadDateOfBirth = document.getElementById('lead-date-of-birth');
     elements.inputLeadSource = document.getElementById('lead-source');
     elements.inputLeadStage = document.getElementById('lead-stage');
     elements.inputLeadProbability = document.getElementById('lead-probability');
+    elements.inputLeadLearningNeeds = document.getElementById('lead-learning-needs');
+    elements.inputLeadPreferredLearningDays = document.getElementById('lead-preferred-learning-days');
+    elements.inputLeadPreferredLearningHours = document.getElementById('lead-preferred-learning-hours');
+    elements.inputLeadMessengerThreadUrl = document.getElementById('lead-messenger-thread-url');
+    elements.inputLeadMessengerLastContactAt = document.getElementById('lead-messenger-last-contact-at');
+    elements.inputLeadMessengerStatus = document.getElementById('lead-messenger-status');
     elements.leadWorkspace = document.getElementById('lead-workspace');
     elements.leadWorkspaceTitle = document.getElementById('lead-workspace-title');
     elements.leadWorkspaceMeta = document.getElementById('lead-workspace-meta');
     elements.leadWorkspaceBadge = document.getElementById('lead-workspace-badge');
+    elements.leadContextSummary = document.getElementById('lead-context-summary');
     elements.inputLeadTaskTitle = document.getElementById('lead-task-title');
     elements.inputLeadTaskDueAt = document.getElementById('lead-task-due-at');
     elements.inputLeadTaskPriority = document.getElementById('lead-task-priority');
@@ -151,11 +168,19 @@
     elements.inputTargetExam = document.getElementById('student-target-exam');
     elements.inputTargetScore = document.getElementById('student-target-score');
     elements.inputPreferredSchedule = document.getElementById('student-preferred-schedule');
+    elements.inputPreferredLearningDays = document.getElementById('student-preferred-learning-days');
+    elements.inputPreferredLearningHours = document.getElementById('student-preferred-learning-hours');
     elements.inputScoreHistory = document.getElementById('student-score-history');
     elements.inputGuardianContacts = document.getElementById('student-guardian-contacts');
     elements.inputCompanyContacts = document.getElementById('student-company-contacts');
     elements.inputDocumentRefs = document.getElementById('student-document-refs');
     elements.inputCounselingNotes = document.getElementById('student-counseling-notes');
+    elements.studentClassroomMatchSummary = document.getElementById('student-classroom-match-summary');
+    elements.inputStudentClassroomMatchSelect = document.getElementById('student-classroom-match-select');
+    elements.studentClassroomMatchMeta = document.getElementById('student-classroom-match-meta');
+    elements.studentClassroomMatchWarning = document.getElementById('student-classroom-match-warning');
+    elements.studentSchedulePrompt = document.getElementById('student-schedule-prompt');
+    elements.btnCreateRecommendedEnrollment = document.getElementById('btn-create-recommended-enrollment');
     elements.studentTaskMeta = document.getElementById('student-task-meta');
     elements.studentTaskBadge = document.getElementById('student-task-badge');
     elements.inputStudentTaskTitle = document.getElementById('student-task-title');
@@ -172,6 +197,9 @@
     elements.studentFinancePaid = document.getElementById('student-finance-paid');
     elements.studentFinanceOutstanding = document.getElementById('student-finance-outstanding');
     elements.studentFinanceNextDue = document.getElementById('student-finance-next-due');
+    elements.studentFinanceWorkflowPanel = document.getElementById('student-finance-workflow-panel');
+    elements.studentFinanceWorkflowBadge = document.getElementById('student-finance-workflow-badge');
+    elements.studentFinanceWorkflowNote = document.getElementById('student-finance-workflow-note');
     elements.inputInvoiceAmount = document.getElementById('invoice-amount');
     elements.inputInvoiceDiscount = document.getElementById('invoice-discount');
     elements.inputInvoiceDueDate = document.getElementById('invoice-due-date');
@@ -244,10 +272,32 @@
     elements.inputClassroomName = document.getElementById('classroom-name');
     elements.inputClassroomCourseId = document.getElementById('classroom-course-id');
     elements.inputClassroomStatus = document.getElementById('classroom-status');
+    elements.inputClassroomMeetingDays = document.getElementById('classroom-meeting-days');
+    elements.inputClassroomMeetingHours = document.getElementById('classroom-meeting-hours');
     elements.classManagementGrid = document.getElementById('class-management-grid');
     elements.classroomStatusBadge = document.getElementById('crm-classroom-status-badge');
     elements.classroomTitle = document.getElementById('crm-classroom-title');
+    elements.liveDeliverySummary = document.getElementById('live-delivery-summary');
+    elements.liveSessionList = document.getElementById('live-session-list');
+    elements.inputLiveSessionTitle = document.getElementById('live-session-title');
+    elements.inputLiveSessionStatus = document.getElementById('live-session-status');
+    elements.inputLiveSessionStartAt = document.getElementById('live-session-start-at');
+    elements.inputLiveSessionEndAt = document.getElementById('live-session-end-at');
+    elements.inputLiveSessionMeetingUrl = document.getElementById('live-session-meeting-url');
+    elements.inputLiveSessionHostUrl = document.getElementById('live-session-host-url');
+    elements.inputLiveSessionMeetingId = document.getElementById('live-session-meeting-id');
+    elements.inputLiveSessionPasscode = document.getElementById('live-session-passcode');
+    elements.inputLiveSessionNotes = document.getElementById('live-session-notes');
+    elements.btnCreateLiveSession = document.getElementById('btn-create-live-session');
+    elements.btnSaveLiveSession = document.getElementById('btn-save-live-session');
+    elements.btnStartLiveSession = document.getElementById('btn-start-live-session');
+    elements.btnEndLiveSession = document.getElementById('btn-end-live-session');
+    elements.btnCopyLiveJoinLink = document.getElementById('btn-copy-live-join-link');
+    elements.btnCopyLiveHostLink = document.getElementById('btn-copy-live-host-link');
     elements.inputAttendanceStudentSelect = document.getElementById('attendance-student-select');
+    elements.attendanceLiveSessionNote = document.getElementById('attendance-live-session-note');
+    elements.attendanceClassroomFitNote = document.getElementById('attendance-classroom-fit-note');
+    elements.attendanceSchedulePrompt = document.getElementById('attendance-schedule-prompt');
     elements.btnEnrollStudent = document.getElementById('btn-enroll-student');
     elements.attendanceEnrollmentMeta = document.getElementById('attendance-enrollment-meta');
     elements.inputAttendanceSessionDate = document.getElementById('attendance-session-date');
@@ -265,6 +315,7 @@
     elements.btnSaveClassworkDraft = document.getElementById('btn-save-classwork-draft');
     elements.btnCancelClasswork = document.getElementById('btn-cancel-classwork');
     elements.classworkListContainer = document.getElementById('classwork-list-container');
+    elements.classworkLiveSessionNote = document.getElementById('classwork-live-session-note');
     elements.inputClassworkTitle = document.getElementById('classwork-title');
     elements.inputClassworkType = document.getElementById('classwork-type');
     elements.inputClassworkModule = document.getElementById('classwork-module');
@@ -273,6 +324,7 @@
     // Classroom Review Board
     elements.kanbanMissingList = document.getElementById('kanban-missing-list');
     elements.kanbanTurnedInList = document.getElementById('kanban-turnedin-list');
+    elements.kanbanNeedsRevisionList = document.getElementById('kanban-needsrevision-list');
     elements.kanbanGradedList = document.getElementById('kanban-graded-list');
 
     // Stream
@@ -507,6 +559,40 @@
       });
     }
 
+    if (elements.btnCreateRecommendedEnrollment) {
+      elements.btnCreateRecommendedEnrollment.addEventListener('click', () => {
+        createRecommendedEnrollment().catch((e) => {
+          console.error('[CRM Admin] Create recommended enrollment failed:', e);
+          showToast(e?.message || 'Failed to create enrollment from recommendation.', 'error');
+        });
+      });
+    }
+
+    if (elements.studentSchedulePrompt) {
+      elements.studentSchedulePrompt.addEventListener('click', (evt) => {
+        const btn = evt.target instanceof HTMLElement ? evt.target.closest('[data-action="edit-student-schedule"]') : null;
+        if (!btn) return;
+        switchStudentTab('info');
+        setTimeout(() => {
+          if (elements.inputPreferredLearningDays) {
+            elements.inputPreferredLearningDays.focus();
+          } else if (elements.inputPreferredLearningHours) {
+            elements.inputPreferredLearningHours.focus();
+          }
+        }, 0);
+      });
+    }
+
+    if (elements.inputStudentClassroomMatchSelect) {
+      elements.inputStudentClassroomMatchSelect.addEventListener('change', () => {
+        renderStudentClassroomMatches({
+          matches: Array.isArray(modalState.classroomMatches) ? modalState.classroomMatches : [],
+          classroomCount: Array.isArray(modalState.classroomMatches) ? modalState.classroomMatches.length : 0,
+          recommendedClassroom: Array.isArray(modalState.classroomMatches) ? modalState.classroomMatches[0] || null : null
+        });
+      });
+    }
+
     // Add Entrance Test
     if (elements.btnAddEntranceTest) {
       elements.btnAddEntranceTest.addEventListener('click', () => {
@@ -607,7 +693,9 @@
 
   function resetStudentModal() {
     modalState.studentId = null;
+    modalState.studentProfile = null;
     modalState.createdTestLinks = new Map();
+    modalState.classroomMatches = [];
 
     switchStudentTab('info');
 
@@ -661,6 +749,21 @@
     resetStudentTaskComposer();
     resetStudentActivityComposer();
     resetStudentFinanceComposer();
+    if (elements.studentClassroomMatchSummary) elements.studentClassroomMatchSummary.innerHTML = '<div class="crm-muted">Loading classroom recommendations...</div>';
+    if (elements.inputStudentClassroomMatchSelect) {
+      elements.inputStudentClassroomMatchSelect.innerHTML = '<option value="">No classroom selected</option>';
+      elements.inputStudentClassroomMatchSelect.value = '';
+    }
+    if (elements.studentClassroomMatchMeta) {
+      elements.studentClassroomMatchMeta.textContent = 'Select the suggested classroom or choose another match.';
+    }
+    if (elements.studentClassroomMatchWarning) {
+      elements.studentClassroomMatchWarning.textContent = '';
+      elements.studentClassroomMatchWarning.style.color = '';
+    }
+    if (elements.btnCreateRecommendedEnrollment) {
+      elements.btnCreateRecommendedEnrollment.disabled = true;
+    }
 
     if (elements.btnSaveStudent) {
       elements.btnSaveStudent.disabled = false;
@@ -715,14 +818,26 @@
       elements.inputLeadName,
       elements.inputLeadEmail,
       elements.inputLeadPhone,
+      elements.inputLeadFacebookDisplayName,
+      elements.inputLeadFacebookProfileUrl,
+      elements.inputLeadRealName,
+      elements.inputLeadDateOfBirth,
       elements.inputLeadSource,
-      elements.inputLeadProbability
+      elements.inputLeadProbability,
+      elements.inputLeadLearningNeeds,
+      elements.inputLeadPreferredLearningDays,
+      elements.inputLeadPreferredLearningHours,
+      elements.inputLeadMessengerThreadUrl,
+      elements.inputLeadMessengerLastContactAt
     ];
     inputs.forEach((input) => {
       if (input) input.value = '';
     });
     if (elements.inputLeadStage) {
       elements.inputLeadStage.value = 'new';
+    }
+    if (elements.inputLeadMessengerStatus) {
+      elements.inputLeadMessengerStatus.value = '';
     }
     if (elements.btnSaveLead) {
       elements.btnSaveLead.disabled = false;
@@ -1167,7 +1282,7 @@
     }
 
     const payload = window.CrmLeads.buildPayload(elements);
-    if (!payload.name && !payload.email && !payload.phone) {
+    if (!window.CrmLeads.hasAnyContact(payload)) {
       throw new Error('Please fill at least 1 lead contact field before saving.');
     }
 
@@ -1222,6 +1337,10 @@
       if (!studentId) throw new Error('Student ID missing from server response.');
 
       modalState.studentId = studentId;
+      modalState.studentProfile = json.student || {
+        ...payload,
+        studentId
+      };
 
       if (elements.studentIdBadge) {
         elements.studentIdBadge.textContent = `ID: ${studentId}`;
@@ -1238,6 +1357,9 @@
       await refreshStudentLists();
       await refreshStudentTimeline();
       await refreshEntranceTestsList();
+      await refreshStudentFinance().catch((error) => {
+        console.error('[CRM Admin] Failed to refresh student finance after save:', error);
+      });
       await refreshDashboard();
       showToast(method === 'PATCH' ? 'Student profile updated.' : 'Student profile saved.', 'success');
     } catch (e) {
@@ -1316,6 +1438,14 @@
     const d = tsToDate(ts);
     if (!d) return '—';
     return d.toLocaleString();
+  }
+
+  function formatDateTimeLocalValue(ts) {
+    const d = tsToDate(ts);
+    if (!d) return '';
+    const offset = d.getTimezoneOffset();
+    const local = new Date(d.getTime() - (offset * 60000));
+    return local.toISOString().slice(0, 16);
   }
 
   function formatDueAtForMeta(ts) {
@@ -1409,6 +1539,7 @@
   async function refreshLeadWorkspace() {
     if (!modalState.leadId) {
       if (elements.leadWorkspace) elements.leadWorkspace.style.display = 'none';
+      renderLeadContextSummary(null);
       return;
     }
 
@@ -1423,12 +1554,18 @@
       elements.leadWorkspaceTitle.textContent = lead?.name || lead?.email || 'Lead Workspace';
     }
     if (elements.leadWorkspaceMeta) {
-      elements.leadWorkspaceMeta.textContent = [lead?.stage, lead?.source, lead?.email || lead?.phone || lead?.zalo]
+      elements.leadWorkspaceMeta.textContent = [
+        lead?.stage,
+        lead?.source,
+        lead?.email || lead?.phone || lead?.zalo || lead?.facebookDisplayName || lead?.facebook || lead?.facebookProfileUrl,
+        lead?.messengerStatus
+      ]
         .filter(Boolean)
         .join(' | ') || 'Manage next actions and communication.';
     }
 
     applyReminderBadge(elements.leadWorkspaceBadge, getReminderSummary({ leadId: modalState.leadId }));
+    renderLeadContextSummary(lead);
     renderTaskList(elements.leadTaskList, tasks, {
       emptyMessage: 'No lead tasks yet.',
       scope: 'lead'
@@ -1569,15 +1706,27 @@
   }
 
   async function refreshStudentFinance() {
-    if (!modalState.studentId || !window.CrmFinance) return;
-    const [json, attendanceJson] = await Promise.all([
-      apiFetchJson(`/api/admin/finance/summary?studentId=${encodeURIComponent(modalState.studentId)}`, {
+    if (!modalState.studentId) return;
+
+    const financeSummaryPromise = window.CrmFinance
+      ? apiFetchJson(`/api/admin/finance/summary?studentId=${encodeURIComponent(modalState.studentId)}`, {
         method: 'GET'
-      }),
-      window.ClassroomAPI && typeof window.ClassroomAPI.fetchAttendanceSummary === 'function'
-        ? window.ClassroomAPI.fetchAttendanceSummary({ studentId: modalState.studentId })
-        : Promise.resolve({ students: [] })
+      })
+      : Promise.resolve({
+        totalInvoiced: 0,
+        totalPaid: 0,
+        totalOutstanding: 0,
+        nextDueDate: '-',
+        invoices: []
+      });
+    const attendanceSummaryPromise = window.ClassroomAPI && typeof window.ClassroomAPI.fetchAttendanceSummary === 'function'
+      ? window.ClassroomAPI.fetchAttendanceSummary({ studentId: modalState.studentId })
+      : Promise.resolve({ students: [] });
+    const [json, attendanceJson] = await Promise.all([
+      financeSummaryPromise,
+      attendanceSummaryPromise
     ]);
+
     const totalInvoiced = Number(json.totalInvoiced || 0);
     const totalPaid = Number(json.totalPaid || 0);
     const totalOutstanding = Number(json.totalOutstanding || 0);
@@ -1586,8 +1735,36 @@
     const enrollmentRows = Array.isArray(attendanceJson?.students) ? attendanceJson.students : [];
     const activeEnrollments = enrollmentRows.filter((row) => String(row.status || '') === 'active');
     const availableEnrollments = activeEnrollments.length ? activeEnrollments : enrollmentRows;
+    const currentEnrollmentId = String(elements.inputStudentFinanceEnrollment?.value || '').trim();
+    const currentEnrollment = currentEnrollmentId
+      ? availableEnrollments.find((row) => String(row.enrollmentId || '') === currentEnrollmentId)
+      : null;
+    const classroomMatchCourseId = String(currentEnrollment?.courseId || availableEnrollments[0]?.courseId || '').trim();
+
+    const classroomMatchesPromise = window.ClassroomAPI && typeof window.ClassroomAPI.fetchClassroomMatches === 'function'
+      ? window.ClassroomAPI.fetchClassroomMatches(modalState.studentId, classroomMatchCourseId ? { courseId: classroomMatchCourseId } : {}).catch((error) => {
+        console.error('[CRM Admin] Failed to load classroom matches:', error);
+        return { matches: [], recommendedClassroom: null, classroomCount: 0, courseId: null };
+      })
+      : Promise.resolve({ matches: [], recommendedClassroom: null, classroomCount: 0, courseId: null });
+
+    const classroomMatchesJson = await classroomMatchesPromise;
+    const financeWorkflow = window.CrmFinance && typeof window.CrmFinance.deriveWorkflowState === 'function'
+      ? window.CrmFinance.deriveWorkflowState({
+        invoices,
+        enrollments: availableEnrollments,
+        matches: Array.isArray(classroomMatchesJson?.matches) ? classroomMatchesJson.matches : []
+      })
+      : {
+        nextAction: 'collect_payment',
+        requiresPayment: true,
+        primaryClassroomId: null,
+        activeEnrollmentId: null,
+        message: 'Finance workflow guidance is unavailable.'
+      };
 
     modalState.financeEnrollments = availableEnrollments;
+    modalState.financeWorkflow = financeWorkflow;
 
     if (elements.inputStudentFinanceEnrollment) {
       const currentValue = String(elements.inputStudentFinanceEnrollment.value || '').trim();
@@ -1605,13 +1782,17 @@
     if (elements.studentFinanceEnrollmentMeta) {
       elements.studentFinanceEnrollmentMeta.textContent = availableEnrollments.length
         ? `Loaded ${availableEnrollments.length} enrollment context${availableEnrollments.length === 1 ? '' : 's'} for this student.`
-        : 'No enrollment found. Invoice creation will use a manual fallback context.';
+        : 'No enrollment linked yet. You can bill first, then assign the student after payment confirmation.';
     }
 
-    if (elements.studentFinanceInvoiced) elements.studentFinanceInvoiced.textContent = window.CrmFinance.formatMoney(totalInvoiced);
-    if (elements.studentFinancePaid) elements.studentFinancePaid.textContent = window.CrmFinance.formatMoney(totalPaid);
-    if (elements.studentFinanceOutstanding) elements.studentFinanceOutstanding.textContent = window.CrmFinance.formatMoney(totalOutstanding);
+    if (elements.studentFinanceInvoiced) elements.studentFinanceInvoiced.textContent = window.CrmFinance ? window.CrmFinance.formatMoney(totalInvoiced) : String(totalInvoiced);
+    if (elements.studentFinancePaid) elements.studentFinancePaid.textContent = window.CrmFinance ? window.CrmFinance.formatMoney(totalPaid) : String(totalPaid);
+    if (elements.studentFinanceOutstanding) elements.studentFinanceOutstanding.textContent = window.CrmFinance ? window.CrmFinance.formatMoney(totalOutstanding) : String(totalOutstanding);
     if (elements.studentFinanceNextDue) elements.studentFinanceNextDue.textContent = nextDueDate;
+
+    renderStudentClassroomMatches(classroomMatchesJson);
+    renderStudentFinanceWorkflow(financeWorkflow);
+    renderStudentSchedulePrompt();
 
     if (elements.studentInvoiceList) {
       if (!invoices.length) {
@@ -1624,7 +1805,7 @@
               <span class="crm-task-priority medium">${escapeHtml(invoice.status || 'open')}</span>
             </div>
             <div class="crm-task-meta">Due ${escapeHtml(String(invoice.dueDate || '-'))}</div>
-            <div class="crm-timeline-meta" style="margin-top: 6px;">Net ${escapeHtml(window.CrmFinance.formatMoney(invoice.netAmount))} | Outstanding ${escapeHtml(window.CrmFinance.formatMoney(invoice.outstandingAmount))}</div>
+            <div class="crm-timeline-meta" style="margin-top: 6px;">Net ${escapeHtml(window.CrmFinance ? window.CrmFinance.formatMoney(invoice.netAmount) : String(invoice.netAmount || 0))} | Outstanding ${escapeHtml(window.CrmFinance ? window.CrmFinance.formatMoney(invoice.outstandingAmount) : String(invoice.outstandingAmount || 0))}</div>
             <div class="crm-task-actions">
               <button type="button" class="crm-btn-secondary btn-select-invoice" data-invoice-id="${escapeHtml(invoice.invoiceId || '')}">Select</button>
             </div>
@@ -1641,13 +1822,517 @@
     }
   }
 
-  function resolveStudentFinanceEnrollmentContext() {
+  function getCurrentStudentProfile() {
+    if (modalState.studentProfile && String(modalState.studentProfile.studentId || modalState.studentId || '') === String(modalState.studentId || '')) {
+      return modalState.studentProfile;
+    }
+
+    return dataCache.students.find((student) => String(student.studentId || '') === String(modalState.studentId || '')) || null;
+  }
+
+  function getSelectedClassroomMatch() {
+    const matches = Array.isArray(modalState.classroomMatches) ? modalState.classroomMatches : [];
+    const selectedId = String(elements.inputStudentClassroomMatchSelect?.value || '').trim();
+    return matches.find((match) => String(match.classroomId || '') === selectedId) || matches[0] || null;
+  }
+
+  function renderStudentFinanceWorkflow(workflow) {
+    if (!elements.studentFinanceWorkflowBadge || !elements.studentFinanceWorkflowNote) return;
+    const state = workflow || {};
+    const action = String(state.nextAction || 'collect_payment');
+    const tone = action === 'collect_payment'
+      ? 'low'
+      : 'medium';
+
+    elements.studentFinanceWorkflowBadge.className = `crm-task-priority ${tone}`;
+    elements.studentFinanceWorkflowBadge.textContent = action.replace(/_/g, ' ');
+    elements.studentFinanceWorkflowNote.textContent = String(state.message || 'Follow the finance workflow guidance.');
+  }
+
+  function renderStudentClassroomMatches(matchPayload = {}) {
+    const matches = Array.isArray(matchPayload.matches) ? matchPayload.matches : [];
+    modalState.classroomMatches = matches;
+
+    if (elements.studentClassroomMatchSummary) {
+      if (!matches.length) {
+        elements.studentClassroomMatchSummary.innerHTML = '<div class="crm-muted">No active classrooms found.</div>';
+      } else {
+        elements.studentClassroomMatchSummary.innerHTML = matches.slice(0, 4).map((match) => {
+          const reasons = Array.isArray(match.reasons) ? match.reasons : [];
+          const warnings = Array.isArray(match.warnings) ? match.warnings : [];
+          const dayText = Array.isArray(match.meetingDays) && match.meetingDays.length ? `Days: ${match.meetingDays.join(', ')}` : '';
+          const hourText = Array.isArray(match.meetingHours) && match.meetingHours.length ? `Hours: ${match.meetingHours.join(', ')}` : '';
+          const metadata = [match.courseId || 'No course', dayText, hourText].filter(Boolean).join(' | ');
+          return `
+            <div class="crm-task-item" data-classroom-id="${escapeHtml(match.classroomId || '')}">
+              <div class="crm-task-head">
+                <strong>${escapeHtml(match.name || 'Classroom')}</strong>
+                <span class="crm-task-priority ${match.recommended ? 'medium' : 'low'}">${escapeHtml(`${Number(match.fitScore || 0)}% fit`)}</span>
+              </div>
+              <div class="crm-task-meta">${escapeHtml(metadata)}</div>
+              ${reasons.length ? `<div class="crm-timeline-meta" style="margin-top: 6px;">${escapeHtml(reasons.join(' • '))}</div>` : ''}
+              ${warnings.length ? `<div class="crm-muted" style="margin-top: 6px;">${escapeHtml(warnings.join(' • '))}</div>` : ''}
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    if (elements.inputStudentClassroomMatchSelect) {
+      const currentValue = String(elements.inputStudentClassroomMatchSelect.value || '').trim();
+      const recommendedId = String(matchPayload.recommendedClassroom?.classroomId || matches[0]?.classroomId || '').trim();
+      elements.inputStudentClassroomMatchSelect.innerHTML = '<option value="">No classroom selected</option>' + matches.map((match) => `
+        <option value="${escapeHtml(match.classroomId || '')}">${escapeHtml([match.name || 'Classroom', match.courseId || 'course?', `${Number(match.fitScore || 0)}% fit`].join(' • '))}${match.recommended ? ' (recommended)' : ''}</option>
+      `).join('');
+      if (currentValue && matches.some((match) => String(match.classroomId || '') === currentValue)) {
+        elements.inputStudentClassroomMatchSelect.value = currentValue;
+      } else if (recommendedId) {
+        elements.inputStudentClassroomMatchSelect.value = recommendedId;
+      }
+    }
+
+    if (elements.studentClassroomMatchMeta) {
+      const classroomCount = Number(matchPayload.classroomCount || matches.length || 0);
+      const recommended = matchPayload.recommendedClassroom || matches[0] || null;
+      elements.studentClassroomMatchMeta.textContent = classroomCount
+        ? `Ranked ${classroomCount} active classroom${classroomCount === 1 ? '' : 's'}. Recommended: ${recommended?.name || 'Classroom'} (${Number(recommended?.fitScore || 0)}%).`
+        : 'No active classrooms found for this student.';
+    }
+
+    const selected = getSelectedClassroomMatch();
+    if (elements.studentClassroomMatchWarning) {
+      if (!selected) {
+        elements.studentClassroomMatchWarning.textContent = '';
+        elements.studentClassroomMatchWarning.style.color = '';
+      } else if (modalState.financeWorkflow?.nextAction === 'start_attendance') {
+        elements.studentClassroomMatchWarning.textContent = 'Student already has an active enrollment. Continue with attendance and class delivery.';
+        elements.studentClassroomMatchWarning.style.color = '#15803d';
+      } else if (modalState.financeWorkflow?.requiresPayment) {
+        elements.studentClassroomMatchWarning.textContent = 'Payment confirmation is required before creating the enrollment.';
+        elements.studentClassroomMatchWarning.style.color = '#b45309';
+      } else if (selected.recommended) {
+        elements.studentClassroomMatchWarning.textContent = `Recommended match confirmed: ${selected.name || 'Classroom'} (${Number(selected.fitScore || 0)}% fit).`;
+        elements.studentClassroomMatchWarning.style.color = '#15803d';
+      } else {
+        const top = matches[0] || null;
+        elements.studentClassroomMatchWarning.textContent = top
+          ? `Manual override selected. Top recommendation is ${top.name || 'Classroom'} (${Number(top.fitScore || 0)}% fit).`
+          : 'Manual override selected.';
+        elements.studentClassroomMatchWarning.style.color = '#b45309';
+      }
+    }
+
+    if (elements.btnCreateRecommendedEnrollment) {
+      elements.btnCreateRecommendedEnrollment.disabled = !selected
+        || !!modalState.financeWorkflow?.requiresPayment
+        || modalState.financeWorkflow?.nextAction === 'start_attendance';
+    }
+  }
+
+  function normalizeScheduleList(value) {
+    if (Array.isArray(value)) {
+      return value.map((item) => String(item || '').trim()).filter(Boolean);
+    }
+
+    return String(value || '')
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  function renderSchedulePrompt(container, config = {}) {
+    if (!container) return;
+
+    const message = String(config.message || '').trim();
+    if (!message) {
+      container.innerHTML = '';
+      container.style.display = 'none';
+      return;
+    }
+
+    container.style.display = 'block';
+    container.innerHTML = `
+      <div style="padding: 12px 14px; border: 1px solid #f59e0b; border-radius: 12px; background: #fffbeb;">
+        <div style="font-weight: 600; color: #92400e;">${escapeHtml(config.title || 'Schedule setup needed')}</div>
+        <div style="margin-top: 4px; color: #92400e;">${escapeHtml(message)}</div>
+        <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 10px;">
+          <button type="button" class="crm-btn-secondary" data-action="${escapeHtml(config.action || 'edit')}">${escapeHtml(config.buttonLabel || 'Edit')}</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderStudentSchedulePrompt() {
+    if (!elements.studentSchedulePrompt) return;
+    const student = getCurrentStudentProfile();
+    const days = normalizeScheduleList(student?.preferredLearningDays);
+    const hours = normalizeScheduleList(student?.preferredLearningHours);
+    const missingDays = !days.length;
+    const missingHours = !hours.length;
+
+    if (!missingDays && !missingHours) {
+      renderSchedulePrompt(elements.studentSchedulePrompt, {});
+      return;
+    }
+
+    const missingParts = [
+      missingDays ? 'preferred learning days' : '',
+      missingHours ? 'preferred learning hours' : ''
+    ].filter(Boolean);
+
+    renderSchedulePrompt(elements.studentSchedulePrompt, {
+      title: 'Student schedule incomplete',
+      message: `Fill ${missingParts.join(' and ')} in the Info tab to improve class matching.`,
+      buttonLabel: 'Edit student schedule',
+      action: 'edit-student-schedule'
+    });
+  }
+
+  function renderClassroomSchedulePrompt() {
+    if (!elements.attendanceSchedulePrompt) return;
+    const days = normalizeScheduleList(elements.inputClassroomMeetingDays?.value);
+    const hours = normalizeScheduleList(elements.inputClassroomMeetingHours?.value);
+    const missingDays = !days.length;
+    const missingHours = !hours.length;
+
+    if (!missingDays && !missingHours) {
+      renderSchedulePrompt(elements.attendanceSchedulePrompt, {});
+      return;
+    }
+
+    const missingParts = [
+      missingDays ? 'meeting days' : '',
+      missingHours ? 'meeting hours' : ''
+    ].filter(Boolean);
+
+    renderSchedulePrompt(elements.attendanceSchedulePrompt, {
+      title: 'Classroom schedule incomplete',
+      message: `Fill ${missingParts.join(' and ')} in the Settings tab to improve fit guidance.`,
+      buttonLabel: 'Edit classroom schedule',
+      action: 'edit-classroom-schedule'
+    });
+  }
+
+  function getPrimaryLiveSession(sessions = []) {
+    const rows = Array.isArray(sessions) ? sessions : [];
+    return rows.find((row) => row && row.status === 'live')
+      || rows.find((row) => row && row.status === 'scheduled')
+      || rows[0]
+      || null;
+  }
+
+  function getSelectedLiveSession() {
+    const selectedId = String(modalState.liveSessionId || '').trim();
+    if (selectedId === '__new__') {
+      return null;
+    }
+    const sessions = Array.isArray(modalState.liveSessions) ? modalState.liveSessions : [];
+    if (selectedId) {
+      const selected = sessions.find((row) => String(row?.sessionId || '') === selectedId);
+      if (selected) return selected;
+    }
+    return getPrimaryLiveSession(sessions);
+  }
+
+  function resetLiveSessionForm() {
+    modalState.liveSessionId = '__new__';
+    if (elements.inputLiveSessionTitle) elements.inputLiveSessionTitle.value = '';
+    if (elements.inputLiveSessionStatus) elements.inputLiveSessionStatus.value = 'draft';
+    if (elements.inputLiveSessionStartAt) elements.inputLiveSessionStartAt.value = '';
+    if (elements.inputLiveSessionEndAt) elements.inputLiveSessionEndAt.value = '';
+    if (elements.inputLiveSessionMeetingUrl) elements.inputLiveSessionMeetingUrl.value = '';
+    if (elements.inputLiveSessionHostUrl) elements.inputLiveSessionHostUrl.value = '';
+    if (elements.inputLiveSessionMeetingId) elements.inputLiveSessionMeetingId.value = '';
+    if (elements.inputLiveSessionPasscode) elements.inputLiveSessionPasscode.value = '';
+    if (elements.inputLiveSessionNotes) elements.inputLiveSessionNotes.value = '';
+  }
+
+  function applyLiveSessionToForm(session) {
+    if (!session) {
+      resetLiveSessionForm();
+      return;
+    }
+
+    modalState.liveSessionId = String(session.sessionId || '').trim() || null;
+    if (elements.inputLiveSessionTitle) elements.inputLiveSessionTitle.value = session.title || '';
+    if (elements.inputLiveSessionStatus) elements.inputLiveSessionStatus.value = session.status || 'draft';
+    if (elements.inputLiveSessionStartAt) elements.inputLiveSessionStartAt.value = formatDateTimeLocalValue(session.scheduledStartAt);
+    if (elements.inputLiveSessionEndAt) elements.inputLiveSessionEndAt.value = formatDateTimeLocalValue(session.scheduledEndAt);
+    if (elements.inputLiveSessionMeetingUrl) elements.inputLiveSessionMeetingUrl.value = session.meetingUrl || '';
+    if (elements.inputLiveSessionHostUrl) elements.inputLiveSessionHostUrl.value = session.hostUrl || '';
+    if (elements.inputLiveSessionMeetingId) elements.inputLiveSessionMeetingId.value = session.meetingId || '';
+    if (elements.inputLiveSessionPasscode) elements.inputLiveSessionPasscode.value = session.passcode || '';
+    if (elements.inputLiveSessionNotes) elements.inputLiveSessionNotes.value = session.notes || '';
+  }
+
+  function collectLiveSessionPayload() {
+    return {
+      title: String(elements.inputLiveSessionTitle?.value || '').trim(),
+      status: String(elements.inputLiveSessionStatus?.value || 'draft').trim() || 'draft',
+      scheduledStartAt: String(elements.inputLiveSessionStartAt?.value || '').trim() || null,
+      scheduledEndAt: String(elements.inputLiveSessionEndAt?.value || '').trim() || null,
+      meetingUrl: String(elements.inputLiveSessionMeetingUrl?.value || '').trim() || null,
+      hostUrl: String(elements.inputLiveSessionHostUrl?.value || '').trim() || null,
+      meetingId: String(elements.inputLiveSessionMeetingId?.value || '').trim() || null,
+      passcode: String(elements.inputLiveSessionPasscode?.value || '').trim() || null,
+      notes: String(elements.inputLiveSessionNotes?.value || '').trim() || null
+    };
+  }
+
+  function renderLiveSessionList(sessions = []) {
+    if (!elements.liveSessionList) return;
+    const rows = Array.isArray(sessions) ? sessions : [];
+    if (!rows.length) {
+      elements.liveSessionList.innerHTML = '<div class="crm-muted">No live sessions yet.</div>';
+      return;
+    }
+
+    const selectedId = String((getSelectedLiveSession() || {}).sessionId || '').trim();
+    elements.liveSessionList.innerHTML = rows.map((session) => {
+      const isSelected = String(session.sessionId || '') === selectedId;
+      const tone = session.status === 'live'
+        ? 'submitted'
+        : session.status === 'scheduled'
+          ? 'created'
+          : session.status === 'ended'
+            ? 'graded'
+            : 'draft';
+      const reasons = [];
+      if (session.scheduledStartAt) reasons.push(`Start ${formatDateTime(session.scheduledStartAt)}`);
+      if (session.meetingId) reasons.push(`Meeting ID ${session.meetingId}`);
+      return `
+        <button type="button" class="crm-task-item crm-live-session-card ${isSelected ? 'active' : ''}" data-live-session-id="${escapeHtml(session.sessionId || '')}" style="text-align:left; width:100%;">
+          <div class="crm-task-head">
+            <strong>${escapeHtml(session.title || 'Untitled session')}</strong>
+            <span class="crm-test-status ${tone}">${escapeHtml(session.status || 'draft')}</span>
+          </div>
+          <div class="crm-task-meta">${escapeHtml(reasons.join(' • ') || 'No schedule details yet.')}</div>
+          ${session.notes ? `<div class="crm-timeline-meta" style="margin-top:6px;">${escapeHtml(session.notes)}</div>` : ''}
+        </button>
+      `;
+    }).join('');
+
+    Array.from(elements.liveSessionList.querySelectorAll('[data-live-session-id]')).forEach((button) => {
+      button.addEventListener('click', () => {
+        modalState.liveSessionId = String(button.dataset.liveSessionId || '').trim() || null;
+        applyLiveSessionToForm(getSelectedLiveSession());
+        renderLiveDeliverySummary(modalState.liveSessions);
+        renderLiveSessionList(modalState.liveSessions);
+        renderAttendanceWorkflowGuidance();
+        renderClassworkWorkflowGuidance();
+      });
+    });
+  }
+
+  function renderLiveDeliverySummary(sessions = []) {
+    if (!elements.liveDeliverySummary) return;
+    const selected = getSelectedLiveSession() || getPrimaryLiveSession(sessions);
+    if (!selected) {
+      elements.liveDeliverySummary.innerHTML = '<div class="crm-muted">Create a live session before class starts.</div>';
+      if (elements.btnStartLiveSession) elements.btnStartLiveSession.disabled = true;
+      if (elements.btnEndLiveSession) elements.btnEndLiveSession.disabled = true;
+      if (elements.btnCopyLiveJoinLink) elements.btnCopyLiveJoinLink.disabled = true;
+      if (elements.btnCopyLiveHostLink) elements.btnCopyLiveHostLink.disabled = true;
+      return;
+    }
+
+    const guidance = selected.status === 'live'
+      ? 'Session is live. Take attendance and manage class from the Attendance tab.'
+      : selected.status === 'scheduled'
+        ? 'Session is scheduled. Start the session when class begins.'
+        : selected.status === 'ended'
+          ? 'Session has ended. Move to classwork and review submissions.'
+          : selected.status === 'cancelled'
+            ? 'Session is cancelled. Create or reschedule another session before class.'
+            : 'Draft session. Add the meeting link and schedule before class starts.';
+
+    elements.liveDeliverySummary.innerHTML = `
+      <div class="crm-task-item">
+        <div class="crm-task-head">
+          <strong>${escapeHtml(selected.title || 'Untitled session')}</strong>
+          <span class="crm-test-status ${escapeHtml(selected.status === 'live' ? 'submitted' : selected.status === 'scheduled' ? 'created' : selected.status === 'ended' ? 'graded' : 'draft')}">${escapeHtml(selected.status || 'draft')}</span>
+        </div>
+        <div class="crm-task-meta">${escapeHtml(guidance)}</div>
+        <div class="crm-timeline-meta" style="margin-top: 8px;">Join link: ${selected.meetingUrl ? escapeHtml(selected.meetingUrl) : 'Not set'}</div>
+        ${selected.hostUrl ? `<div class="crm-timeline-meta" style="margin-top: 6px;">Host link: ${escapeHtml(selected.hostUrl)}</div>` : ''}
+      </div>
+    `;
+
+    if (elements.btnStartLiveSession) elements.btnStartLiveSession.disabled = selected.status !== 'scheduled';
+    if (elements.btnEndLiveSession) elements.btnEndLiveSession.disabled = selected.status !== 'live';
+    if (elements.btnCopyLiveJoinLink) elements.btnCopyLiveJoinLink.disabled = !selected.meetingUrl;
+    if (elements.btnCopyLiveHostLink) elements.btnCopyLiveHostLink.disabled = !selected.hostUrl;
+  }
+
+  function renderAttendanceWorkflowGuidance() {
+    if (!elements.attendanceLiveSessionNote) return;
+    const selected = getSelectedLiveSession();
+    if (!selected) {
+      elements.attendanceLiveSessionNote.textContent = 'Create a live session before class starts.';
+      return;
+    }
+    if (selected.status === 'scheduled') {
+      elements.attendanceLiveSessionNote.textContent = `Next step: Start session when class begins. Scheduled for ${formatDateTime(selected.scheduledStartAt)}.`;
+      return;
+    }
+    if (selected.status === 'live') {
+      elements.attendanceLiveSessionNote.textContent = 'Next step: Take attendance and manage class while the session is live.';
+      return;
+    }
+    if (selected.status === 'ended') {
+      elements.attendanceLiveSessionNote.textContent = 'Last live session ended. Next step: assign homework or review submissions.';
+      return;
+    }
+    if (selected.status === 'cancelled') {
+      elements.attendanceLiveSessionNote.textContent = 'Current session is cancelled. Create another session before taking attendance.';
+      return;
+    }
+    elements.attendanceLiveSessionNote.textContent = 'Draft live session found. Add the meeting link and schedule before class starts.';
+  }
+
+  function renderClassworkWorkflowGuidance() {
+    if (!elements.classworkLiveSessionNote) return;
+    const selected = getSelectedLiveSession();
+    if (!selected) {
+      elements.classworkLiveSessionNote.textContent = 'Create or complete a live session before assigning follow-up work.';
+      return;
+    }
+    if (selected.status === 'ended') {
+      elements.classworkLiveSessionNote.textContent = 'Live session ended. Next step: assign homework and review student submissions.';
+      return;
+    }
+    if (selected.status === 'live') {
+      elements.classworkLiveSessionNote.textContent = 'Class is currently live. Finish delivery first, then assign follow-up work.';
+      return;
+    }
+    if (selected.status === 'scheduled') {
+      elements.classworkLiveSessionNote.textContent = 'Upcoming session scheduled. Use classwork for prep materials or wait until the session ends for homework.';
+      return;
+    }
+    elements.classworkLiveSessionNote.textContent = 'Live delivery has not been finalized yet. Confirm the session before relying on this classwork cycle.';
+  }
+
+  async function loadLiveSessions(classId, options = {}) {
+    if (!window.ClassroomAPI || typeof window.ClassroomAPI.fetchLiveSessions !== 'function') return [];
+    if (!classId) return [];
+
+    const previousSelection = String(options.sessionId || modalState.liveSessionId || '').trim();
+    const sessions = await window.ClassroomAPI.fetchLiveSessions(classId);
+    modalState.liveSessions = Array.isArray(sessions) ? sessions : [];
+
+    const nextSelection = previousSelection && previousSelection !== '__new__'
+      && modalState.liveSessions.find((row) => String(row?.sessionId || '') === previousSelection)
+      ? previousSelection
+      : String(getPrimaryLiveSession(modalState.liveSessions)?.sessionId || '').trim();
+    modalState.liveSessionId = nextSelection || null;
+
+    applyLiveSessionToForm(getSelectedLiveSession());
+    renderLiveDeliverySummary(modalState.liveSessions);
+    renderLiveSessionList(modalState.liveSessions);
+    renderAttendanceWorkflowGuidance();
+    renderClassworkWorkflowGuidance();
+    return modalState.liveSessions;
+  }
+
+  async function refreshAttendanceClassroomFitNote() {
+    if (!elements.attendanceClassroomFitNote) return;
+    const studentId = String(elements.inputAttendanceStudentSelect?.value || '').trim();
+    if (!studentId) {
+      elements.attendanceClassroomFitNote.textContent = 'Select a student to see schedule fit guidance.';
+      elements.attendanceClassroomFitNote.style.color = '';
+      renderClassroomSchedulePrompt();
+      return;
+    }
+
+    if (!window.ClassroomAPI || typeof window.ClassroomAPI.fetchClassroomMatches !== 'function') {
+      elements.attendanceClassroomFitNote.textContent = 'Schedule fit guidance is unavailable.';
+      elements.attendanceClassroomFitNote.style.color = '';
+      renderClassroomSchedulePrompt();
+      return;
+    }
+
+    const classroomCourseId = String(elements.inputClassroomCourseId?.value || '').trim();
+    const json = await window.ClassroomAPI.fetchClassroomMatches(
+      studentId,
+      classroomCourseId ? { courseId: classroomCourseId } : {}
+    ).catch((error) => {
+      console.error('[CRM Admin] Failed to load attendance fit guidance:', error);
+      return { matches: [], recommendedClassroom: null };
+    });
+    const matches = Array.isArray(json.matches) ? json.matches : [];
+    const current = matches.find((match) => String(match.classroomId || '') === String(modalState.classroomId || '')) || null;
+    const top = matches[0] || null;
+
+    if (!matches.length) {
+      elements.attendanceClassroomFitNote.textContent = 'No active classrooms are available to compare.';
+      elements.attendanceClassroomFitNote.style.color = '';
+      renderClassroomSchedulePrompt();
+      return;
+    }
+
+    if (!current) {
+      elements.attendanceClassroomFitNote.textContent = `Top recommendation is ${top?.name || 'another classroom'} (${Number(top?.fitScore || 0)}% fit).`;
+      elements.attendanceClassroomFitNote.style.color = '#b45309';
+      renderClassroomSchedulePrompt();
+      return;
+    }
+
+    if (current.recommended) {
+      elements.attendanceClassroomFitNote.textContent = `This classroom is the top recommendation for ${top?.name || 'this student'} (${Number(current.fitScore || 0)}% fit).`;
+      elements.attendanceClassroomFitNote.style.color = '#15803d';
+      renderClassroomSchedulePrompt();
+      return;
+    }
+
+    elements.attendanceClassroomFitNote.textContent = `This classroom fits at ${Number(current.fitScore || 0)}% versus ${Number(top?.fitScore || 0)}% for the top recommendation (${top?.name || 'another classroom'}).`;
+    elements.attendanceClassroomFitNote.style.color = '#b45309';
+    renderClassroomSchedulePrompt();
+  }
+
+  async function createRecommendedEnrollment() {
+    if (!modalState.studentId) throw new Error('Save the student profile first.');
+    if (modalState.financeWorkflow?.requiresPayment) {
+      throw new Error('Confirm payment before assigning the student to a classroom.');
+    }
+    const match = getSelectedClassroomMatch();
+    if (!match) throw new Error('Select a classroom recommendation first.');
+    if (!window.ClassroomAPI || typeof window.ClassroomAPI.createEnrollment !== 'function') {
+      throw new Error('Enrollment helpers are not available.');
+    }
+
+    const student = getCurrentStudentProfile();
+    const linkedUserId = Array.isArray(student?.linked_user_ids) && student.linked_user_ids.length
+      ? String(student.linked_user_ids[0] || '').trim()
+      : null;
+
+    const json = await window.ClassroomAPI.createEnrollment({
+      studentId: modalState.studentId,
+      studentUid: linkedUserId,
+      studentName: student?.name || null,
+      studentEmail: student?.email || null,
+      classId: match.classroomId,
+      courseId: match.courseId || null,
+      notes: `Recommended classroom match: ${match.name || match.classroomId || 'Classroom'} (${Number(match.fitScore || 0)}% fit).`
+    });
+
+    const enrollmentId = String(json.enrollmentId || json.enrollment?.enrollmentId || '').trim();
+    if (enrollmentId && elements.inputStudentFinanceEnrollment) {
+      elements.inputStudentFinanceEnrollment.value = enrollmentId;
+    }
+
+    await refreshStudentFinance();
+    await refreshDashboard();
+    showToast(`Enrollment created for ${match.name || 'recommended classroom'}.`, 'success');
+  }
+
+  function resolveStudentFinanceContext() {
     const enrollments = Array.isArray(modalState.financeEnrollments) ? modalState.financeEnrollments : [];
     const selectedEnrollmentId = String(elements.inputStudentFinanceEnrollment?.value || '').trim();
     if (!enrollments.length) {
+      const selectedMatch = getSelectedClassroomMatch();
       return {
-        enrollmentId: `manual-${modalState.studentId}`,
-        courseId: null
+        enrollmentId: null,
+        courseId: selectedMatch?.courseId || null
       };
     }
 
@@ -1655,7 +2340,7 @@
       const selected = enrollments.find((row) => String(row.enrollmentId || '') === selectedEnrollmentId);
       if (selected) {
         return {
-          enrollmentId: selected.enrollmentId || `manual-${modalState.studentId}`,
+          enrollmentId: selected.enrollmentId || null,
           courseId: selected.courseId || null
         };
       }
@@ -1663,7 +2348,7 @@
 
     if (enrollments.length === 1) {
       return {
-        enrollmentId: enrollments[0].enrollmentId || `manual-${modalState.studentId}`,
+        enrollmentId: enrollments[0].enrollmentId || null,
         courseId: enrollments[0].courseId || null
       };
     }
@@ -1677,7 +2362,7 @@
       throw new Error('Finance helpers are not available.');
     }
 
-    const financeContext = resolveStudentFinanceEnrollmentContext();
+    const financeContext = resolveStudentFinanceContext();
     const payload = window.CrmFinance.buildInvoicePayload({
       inputInvoiceAmount: elements.inputInvoiceAmount,
       inputInvoiceDiscount: elements.inputInvoiceDiscount,
@@ -1710,7 +2395,7 @@
       throw new Error('Finance helpers are not available.');
     }
 
-    const financeContext = resolveStudentFinanceEnrollmentContext();
+    const financeContext = resolveStudentFinanceContext();
     const payload = window.CrmFinance.buildPaymentPayload({
       inputPaymentAmount: elements.inputPaymentAmount,
       inputPaymentMethod: elements.inputPaymentMethod
@@ -2008,6 +2693,64 @@
     return '—';
   }
 
+  function formatLeadList(values) {
+    return (Array.isArray(values) ? values : [])
+      .map((value) => String(value || '').trim())
+      .filter(Boolean)
+      .join(', ');
+  }
+
+  function leadPrimaryContact(lead) {
+    const email = String(lead?.email || '').trim();
+    const phone = String(lead?.phone || '').trim();
+    if (email && phone) return `${email} / ${phone}`;
+    if (email) return email;
+    if (phone) return phone;
+    const zalo = String(lead?.zalo || '').trim();
+    if (zalo) return `Zalo: ${zalo}`;
+    const facebookDisplayName = String(lead?.facebookDisplayName || lead?.facebook || '').trim();
+    if (facebookDisplayName) return `Facebook: ${facebookDisplayName}`;
+    const facebookProfileUrl = String(lead?.facebookProfileUrl || '').trim();
+    if (facebookProfileUrl) return facebookProfileUrl;
+    return '-';
+  }
+
+  function leadSourceSummary(lead) {
+    return [lead?.source, lead?.messengerStatus]
+      .map((value) => String(value || '').trim())
+      .filter(Boolean)
+      .join(' / ') || '-';
+  }
+
+  function renderLeadContextSummary(lead) {
+    if (!elements.leadContextSummary) return;
+    if (!lead) {
+      elements.leadContextSummary.innerHTML = '<div class="crm-muted">Structured intake details will appear here.</div>';
+      return;
+    }
+
+    const rows = [
+      ['Facebook', [lead?.facebookDisplayName || lead?.facebook, lead?.facebookProfileUrl].filter(Boolean).join(' / ')],
+      ['Real Name', lead?.realName],
+      ['Date of Birth', lead?.dateOfBirth],
+      ['Learning Needs', lead?.learningNeeds],
+      ['Preferred Days', formatLeadList(lead?.preferredLearningDays)],
+      ['Preferred Hours', formatLeadList(lead?.preferredLearningHours)],
+      ['Messenger', [lead?.messengerStatus, lead?.messengerLastContactAt, lead?.messengerThreadUrl].filter(Boolean).join(' / ')]
+    ].filter(([, value]) => String(value || '').trim());
+
+    if (!rows.length) {
+      elements.leadContextSummary.innerHTML = '<div class="crm-muted">No structured intake context captured yet.</div>';
+      return;
+    }
+
+    elements.leadContextSummary.innerHTML = rows.map(([label, value]) => `
+      <div>
+        <strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}
+      </div>
+    `).join('');
+  }
+
   function renderStudentsTable(container, students, emptyMessage) {
     if (!container) return;
 
@@ -2122,6 +2865,10 @@
     if (!elements.classroomModal) return;
     elements.classroomModal.style.display = 'flex';
     elements.classroomModal.setAttribute('aria-hidden', 'false');
+    renderClassroomSchedulePrompt();
+    renderLiveDeliverySummary(modalState.liveSessions);
+    renderAttendanceWorkflowGuidance();
+    renderClassworkWorkflowGuidance();
   }
 
   async function openStudentProfile(studentId, cachedStudent = null) {
@@ -2132,6 +2879,7 @@
     resetStudentModal();
 
     modalState.studentId = id;
+    modalState.studentProfile = cachedStudent || null;
     modalState.createdTestLinks = new Map();
 
     if (elements.studentIdBadge) {
@@ -2164,6 +2912,7 @@
 
     fetchStudentProfile(id).then((fresh) => {
       if (!fresh) return;
+      modalState.studentProfile = fresh;
       if (window.CrmStudents && typeof window.CrmStudents.applyToForm === 'function') {
         window.CrmStudents.applyToForm(elements, fresh);
       }
@@ -2277,8 +3026,8 @@
                     ${renderReminderBadgeMarkup(getReminderSummary({ leadId: lead.leadId }))}
                   </div>
                 </td>
-                <td>${escapeHtml(lead.email || lead.phone || lead.zalo || '—')}</td>
-                <td>${escapeHtml(lead.source || '—')}</td>
+                <td>${escapeHtml(leadPrimaryContact(lead))}</td>
+                <td>${escapeHtml(leadSourceSummary(lead))}</td>
                 <td>
                   <select class="crm-input crm-inline-select lead-stage-select" data-lead-id="${escapeHtml(lead.leadId)}" ${isConverted ? 'disabled' : ''}>
                     ${stageOptions.map((stage) => `
@@ -2546,6 +3295,9 @@
         console.error('[CRM Admin] Failed to refresh student finance:', error);
       });
     }
+    if (tabId === 'info') {
+      renderStudentSchedulePrompt();
+    }
   }
 
   function switchCourseTab(tabId) {
@@ -2608,6 +3360,11 @@
     if (activePanel === 'dashboard') {
       refreshDashboard().catch((error) => {
         console.error('[CRM Admin] Dashboard refresh failed:', error);
+      });
+    }
+    if (activePanel === 'courses/zoom-links') {
+      refreshZoomLinksOverview().catch((error) => {
+        console.error('[CRM Admin] Live delivery overview refresh failed:', error);
       });
     }
   }
@@ -2754,10 +3511,89 @@
         });
       });
     }
+
+    if (elements.btnCreateLiveSession) {
+      elements.btnCreateLiveSession.addEventListener('click', () => {
+        resetLiveSessionForm();
+        renderLiveDeliverySummary(modalState.liveSessions);
+      });
+    }
+
+    if (elements.btnSaveLiveSession) {
+      elements.btnSaveLiveSession.addEventListener('click', () => {
+        saveLiveSession().catch((e) => {
+          console.error('[CRM Admin] Save live session failed:', e);
+          showToast(e?.message || 'Failed to save live session.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnStartLiveSession) {
+      elements.btnStartLiveSession.addEventListener('click', () => {
+        startSelectedLiveSession().catch((e) => {
+          console.error('[CRM Admin] Start live session failed:', e);
+          showToast(e?.message || 'Failed to start live session.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnEndLiveSession) {
+      elements.btnEndLiveSession.addEventListener('click', () => {
+        endSelectedLiveSession().catch((e) => {
+          console.error('[CRM Admin] End live session failed:', e);
+          showToast(e?.message || 'Failed to end live session.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnCopyLiveJoinLink) {
+      elements.btnCopyLiveJoinLink.addEventListener('click', async () => {
+        const session = getSelectedLiveSession();
+        const meetingUrl = String(session?.meetingUrl || '').trim();
+        if (!meetingUrl) return showToast('No join link available.', 'error');
+        await copyToClipboard(meetingUrl);
+        showToast('Join link copied.', 'success');
+      });
+    }
+
+    if (elements.btnCopyLiveHostLink) {
+      elements.btnCopyLiveHostLink.addEventListener('click', async () => {
+        const session = getSelectedLiveSession();
+        const hostUrl = String(session?.hostUrl || '').trim();
+        if (!hostUrl) return showToast('No host link available.', 'error');
+        await copyToClipboard(hostUrl);
+        showToast('Host link copied.', 'success');
+      });
+    }
+
+    if (elements.inputAttendanceStudentSelect) {
+      elements.inputAttendanceStudentSelect.addEventListener('change', () => {
+        refreshAttendanceClassroomFitNote().catch((error) => {
+          console.error('[CRM Admin] Failed to refresh classroom fit note:', error);
+        });
+      });
+    }
+
+    if (elements.attendanceSchedulePrompt) {
+      elements.attendanceSchedulePrompt.addEventListener('click', (evt) => {
+        const btn = evt.target instanceof HTMLElement ? evt.target.closest('[data-action="edit-classroom-schedule"]') : null;
+        if (!btn) return;
+        switchClassroomTab('settings');
+        setTimeout(() => {
+          if (elements.inputClassroomMeetingDays) {
+            elements.inputClassroomMeetingDays.focus();
+          } else if (elements.inputClassroomMeetingHours) {
+            elements.inputClassroomMeetingHours.focus();
+          }
+        }, 0);
+      });
+    }
   }
 
   function resetClassroomModal() {
     modalState.classroomId = null;
+    modalState.liveSessions = [];
+    modalState.liveSessionId = null;
     switchClassroomTab('settings');
     if (elements.inputClassroomName) elements.inputClassroomName.value = '';
     if (elements.inputClassroomCourseId) {
@@ -2775,12 +3611,21 @@
     if (elements.modulesListContainer) elements.modulesListContainer.innerHTML = '<p class="text-muted">No modules yet.</p>';
     if (elements.classworkListContainer) elements.classworkListContainer.innerHTML = '<p class="text-muted">No classwork yet.</p>';
     if (elements.classworkComposer) elements.classworkComposer.style.display = 'none';
+    if (elements.liveDeliverySummary) elements.liveDeliverySummary.innerHTML = '<div class="crm-muted">Create a live session before class starts.</div>';
+    if (elements.liveSessionList) elements.liveSessionList.innerHTML = '<div class="crm-muted">No live sessions yet.</div>';
+    resetLiveSessionForm();
     if (elements.inputAttendanceStudentSelect) elements.inputAttendanceStudentSelect.innerHTML = '<option value="">Select a student...</option>';
+    if (elements.attendanceLiveSessionNote) elements.attendanceLiveSessionNote.textContent = 'Create a live session before class starts.';
+    if (elements.attendanceClassroomFitNote) {
+      elements.attendanceClassroomFitNote.textContent = 'Select a student to see schedule fit guidance.';
+      elements.attendanceClassroomFitNote.style.color = '';
+    }
     if (elements.attendanceEnrollmentMeta) elements.attendanceEnrollmentMeta.textContent = 'No enrollments yet.';
     if (elements.inputAttendanceSessionDate) elements.inputAttendanceSessionDate.value = '';
     if (elements.inputAttendanceSessionTitle) elements.inputAttendanceSessionTitle.value = '';
     if (elements.inputAttendanceSessionSelect) elements.inputAttendanceSessionSelect.innerHTML = '<option value="">Select a session...</option>';
     if (elements.attendanceRosterContainer) elements.attendanceRosterContainer.innerHTML = '<div class="crm-muted">No attendance roster yet.</div>';
+    if (elements.classworkLiveSessionNote) elements.classworkLiveSessionNote.textContent = 'Create or complete a live session before assigning follow-up work.';
   }
 
   function switchClassroomTab(tabId) {
@@ -2797,8 +3642,22 @@
     if (tabId === 'stream' && modalState.classroomId) {
       loadClassroomStream(modalState.classroomId);
     }
+    if (tabId === 'live' && modalState.classroomId) {
+      loadLiveSessions(modalState.classroomId).catch((error) => {
+        console.error('[CRM Admin] Failed to load live sessions:', error);
+      });
+    }
     if (tabId === 'attendance' && modalState.classroomId) {
       loadClassroomAttendance(modalState.classroomId);
+    }
+    if (tabId === 'attendance' || tabId === 'settings') {
+      renderClassroomSchedulePrompt();
+    }
+    if (tabId === 'attendance') {
+      renderAttendanceWorkflowGuidance();
+    }
+    if (tabId === 'classwork') {
+      renderClassworkWorkflowGuidance();
     }
   }
 
@@ -2861,6 +3720,7 @@
     if (!window.ClassroomAPI || typeof window.ClassroomAPI.fetchAttendanceSummary !== 'function') return;
 
     await populateAttendanceStudentOptions();
+    renderAttendanceWorkflowGuidance();
     const summary = await window.ClassroomAPI.fetchAttendanceSummary({ classId });
     const sessions = Array.isArray(summary?.sessions) ? summary.sessions : [];
     const students = Array.isArray(summary?.students) ? summary.students : [];
@@ -2889,6 +3749,7 @@
     );
 
     renderAttendanceRoster(students);
+    await refreshAttendanceClassroomFitNote();
   }
 
   async function enrollStudentIntoClassroom() {
@@ -2970,6 +3831,138 @@
     showToast('Attendance saved.', 'success');
   }
 
+  async function saveLiveSession() {
+    if (!modalState.classroomId) throw new Error('Save classroom settings first.');
+    if (!window.ClassroomAPI || typeof window.ClassroomAPI.createLiveSession !== 'function') {
+      throw new Error('Live session helpers are not available.');
+    }
+
+    const payload = collectLiveSessionPayload();
+    if (!payload.title) throw new Error('Live session title is required.');
+
+    const selectedSessionId = String(modalState.liveSessionId || '').trim();
+    const hasExistingSelection = selectedSessionId && selectedSessionId !== '__new__';
+    if (hasExistingSelection) {
+      await window.ClassroomAPI.updateLiveSession(modalState.classroomId, selectedSessionId, payload);
+    } else {
+      const json = await window.ClassroomAPI.createLiveSession(modalState.classroomId, payload);
+      modalState.liveSessionId = String(json.sessionId || json.session?.sessionId || '').trim() || null;
+    }
+
+    await loadLiveSessions(modalState.classroomId, { sessionId: modalState.liveSessionId });
+    await refreshZoomLinksOverview().catch(() => {});
+    showToast(hasExistingSelection ? 'Live session updated.' : 'Live session created.', 'success');
+  }
+
+  async function startSelectedLiveSession() {
+    if (!modalState.classroomId) throw new Error('Save classroom settings first.');
+    const session = getSelectedLiveSession();
+    if (!session?.sessionId) throw new Error('Select a scheduled session first.');
+    await window.ClassroomAPI.startLiveSession(modalState.classroomId, session.sessionId);
+    await loadLiveSessions(modalState.classroomId, { sessionId: session.sessionId });
+    await refreshZoomLinksOverview().catch(() => {});
+    showToast('Live session started.', 'success');
+  }
+
+  async function endSelectedLiveSession() {
+    if (!modalState.classroomId) throw new Error('Save classroom settings first.');
+    const session = getSelectedLiveSession();
+    if (!session?.sessionId) throw new Error('Select a live session first.');
+    await window.ClassroomAPI.endLiveSession(modalState.classroomId, session.sessionId);
+    await loadLiveSessions(modalState.classroomId, { sessionId: session.sessionId });
+    await refreshZoomLinksOverview().catch(() => {});
+    showToast('Live session ended.', 'success');
+  }
+
+  async function openExistingClassroom(classroom) {
+    if (!classroom) return;
+    const classroomId = String(classroom.classroomId || classroom.id || '').trim();
+    if (!classroomId) return;
+
+    resetClassroomModal();
+    await populateClassroomCourseOptions({ selectedValue: classroom.courseId || '' });
+    if (window.CrmClassrooms && typeof window.CrmClassrooms.applyToForm === 'function') {
+      window.CrmClassrooms.applyToForm(elements, classroom);
+    }
+    modalState.classroomId = classroomId;
+    if (elements.classroomStatusBadge) {
+      elements.classroomStatusBadge.textContent = classroom.status || 'draft';
+      elements.classroomStatusBadge.style.display = 'inline-flex';
+    }
+    if (elements.classroomTitle) {
+      elements.classroomTitle.textContent = classroom.name || 'Classroom';
+    }
+    openClassroomModal();
+    await Promise.all([
+      loadClassroomModules(classroomId),
+      loadClassroomClasswork(classroomId),
+      loadLiveSessions(classroomId)
+    ]);
+  }
+
+  async function refreshZoomLinksOverview() {
+    if (!elements.zoomLinksGrid || !window.ClassroomAPI || typeof window.ClassroomAPI.fetchClassrooms !== 'function') {
+      return;
+    }
+
+    const classrooms = await window.ClassroomAPI.fetchClassrooms();
+    const activeClassrooms = classrooms.filter((row) => {
+      const status = String(row?.status || '').trim().toLowerCase();
+      return status !== 'archived';
+    });
+
+    if (!activeClassrooms.length) {
+      elements.zoomLinksGrid.innerHTML = '<section class="crm-workspace-card"><div class="crm-muted">No classrooms available for live delivery yet.</div></section>';
+      return;
+    }
+
+    const rows = await Promise.all(activeClassrooms.map(async (classroom) => {
+      const classroomId = String(classroom.classroomId || classroom.id || '').trim();
+      const sessions = classroomId
+        ? await window.ClassroomAPI.fetchLiveSessions(classroomId).catch(() => [])
+        : [];
+      return {
+        classroom,
+        session: getPrimaryLiveSession(sessions)
+      };
+    }));
+
+    elements.zoomLinksGrid.innerHTML = rows.map(({ classroom, session }) => {
+      const label = session
+        ? `${session.status || 'draft'} • ${session.scheduledStartAt ? formatDateTime(session.scheduledStartAt) : 'No start time'}`
+        : 'No live session yet';
+      return `
+        <section class="crm-workspace-card">
+          <div class="crm-section-header">
+            <div>
+              <h3>${escapeHtml(classroom.name || 'Classroom')}</h3>
+              <p class="crm-muted">${escapeHtml(label)}</p>
+            </div>
+          </div>
+          <div class="crm-stack-list">
+            <div class="crm-muted">${escapeHtml(session?.title || 'Create a live session before class starts.')}</div>
+            <div class="crm-timeline-meta">${escapeHtml(session?.meetingUrl || 'No join link saved yet.')}</div>
+          </div>
+          <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
+            <button type="button" class="crm-btn-primary btn-open-live-classroom" data-classroom-id="${escapeHtml(classroom.classroomId || classroom.id || '')}">Open Classroom</button>
+          </div>
+        </section>
+      `;
+    }).join('');
+
+    const classroomIndex = new Map(activeClassrooms.map((row) => [String(row.classroomId || row.id || '').trim(), row]));
+    Array.from(elements.zoomLinksGrid.querySelectorAll('.btn-open-live-classroom[data-classroom-id]')).forEach((button) => {
+      button.addEventListener('click', () => {
+        const classroomId = String(button.dataset.classroomId || '').trim();
+        const classroom = classroomIndex.get(classroomId);
+        openExistingClassroom(classroom).catch((error) => {
+          console.error('[CRM Admin] Failed to open classroom from live delivery overview:', error);
+          showToast(error?.message || 'Failed to open classroom.', 'error');
+        });
+      });
+    });
+  }
+
   async function loadClassroomStream(classId) {
     if (!elements.streamPostsContainer) return;
     try {
@@ -3005,11 +3998,13 @@
       const submissions = Array.isArray(board?.submissions) ? board.submissions : [];
 
       const turnedIn = submissions.filter(s => s.status === 'turned-in');
+      const needsRevision = submissions.filter(s => s.status === 'needs-revision');
       const graded = submissions.filter(s => s.status === 'graded');
       const missing = Array.isArray(board?.missing) ? board.missing : [];
 
-      renderKanbanColumn(elements.kanbanTurnedInList, turnedIn, true);
-      renderKanbanColumn(elements.kanbanGradedList, graded, false);
+      renderKanbanColumn(elements.kanbanTurnedInList, turnedIn, 'turned-in');
+      renderKanbanColumn(elements.kanbanNeedsRevisionList, needsRevision, 'needs-revision');
+      renderKanbanColumn(elements.kanbanGradedList, graded, 'graded');
       renderKanbanColumn(elements.kanbanMissingList, missing, false);
 
     } catch (e) {
@@ -3036,14 +4031,26 @@
         ${s.audio ? `
           <button class="btn-play-audio" data-path="${s.audio.storagePath}">▶ Listen Audio</button>
         ` : ''}
-        ${allowGrading ? `
+        ${allowGrading === 'turned-in' ? `
           <div class="grading-actions" style="margin-top:10px;">
             <input type="text" placeholder="Grade/Score" class="crm-input-small grade-val" style="margin-bottom:5px;">
-            <button class="crm-btn-primary small btn-grade-submit">Submit Grade</button>
+            <textarea placeholder="Feedback for student" class="crm-input-small revision-feedback" style="margin-bottom:5px; min-height:72px;"></textarea>
+            <button class="crm-btn-primary small btn-grade-submit" style="margin-bottom:5px;">Submit Grade</button>
+            <button class="crm-btn-secondary small btn-return-revision">Return for Revision</button>
+          </div>
+        ` : allowGrading === 'needs-revision' ? `
+          <div class="graded-status" style="margin-top:10px;">
+            <strong>Waiting for student resubmission</strong>
+            ${s.feedback ? `<div style="margin-top:6px; color:var(--crm-text-muted);">${escapeHtml(s.feedback)}</div>` : ''}
+          </div>
+        ` : allowGrading === false ? `
+          <div class="graded-status" style="margin-top:10px;">
+            <strong>Missing</strong>
           </div>
         ` : `
           <div class="graded-status">
             Grade: <strong>${escapeHtml(s.grade || 'N/A')}</strong>
+            ${s.feedback ? `<div style="margin-top:6px; color:var(--crm-text-muted);">${escapeHtml(s.feedback)}</div>` : ''}
           </div>
         `}
       </div>
@@ -3061,6 +4068,25 @@
           btn.disabled = true;
           await window.ClassroomAPI.gradeSubmission(sid, { grade });
           showToast('Graded.', 'success');
+          loadReviewBoard(modalState.classroomId);
+        } catch (e) {
+          showToast(e.message, 'error');
+          btn.disabled = false;
+        }
+      });
+    });
+
+    container.querySelectorAll('.btn-return-revision').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const card = btn.closest('.crm-kanban-card');
+        const sid = card.dataset.subId;
+        const feedback = card.querySelector('.revision-feedback').value.trim();
+        if (!feedback) return showToast('Add feedback before returning for revision.', 'error');
+
+        try {
+          btn.disabled = true;
+          await window.ClassroomAPI.returnSubmissionForRevision(sid, { feedback });
+          showToast('Returned for revision.', 'success');
           loadReviewBoard(modalState.classroomId);
         } catch (e) {
           showToast(e.message, 'error');
@@ -3112,6 +4138,8 @@
     if (elements.classroomStatusBadge) elements.classroomStatusBadge.textContent = payload.status;
     if (elements.classroomTitle) elements.classroomTitle.textContent = payload.name;
     await refreshClassroomList();
+    await refreshZoomLinksOverview().catch(() => {});
+    renderClassroomSchedulePrompt();
   }
 
   async function refreshClassroomList() {
@@ -3156,23 +4184,7 @@
           const classroomId = String(button.dataset.classroomId || '').trim();
           const classroom = classroomIndex.get(classroomId);
           if (!classroom) return;
-
-          resetClassroomModal();
-          await populateClassroomCourseOptions({ selectedValue: classroom.courseId || '' });
-          if (window.CrmClassrooms && typeof window.CrmClassrooms.applyToForm === 'function') {
-            window.CrmClassrooms.applyToForm(elements, classroom);
-          }
-          modalState.classroomId = classroomId;
-          if (elements.classroomStatusBadge) {
-            elements.classroomStatusBadge.textContent = classroom.status || 'draft';
-            elements.classroomStatusBadge.style.display = 'inline-flex';
-          }
-          if (elements.classroomTitle) {
-            elements.classroomTitle.textContent = classroom.name || 'Classroom';
-          }
-          openClassroomModal();
-          await loadClassroomModules(classroomId);
-          await loadClassroomClasswork(classroomId);
+          await openExistingClassroom(classroom);
         });
       });
     } catch (e) {
@@ -3203,6 +4215,7 @@
 
   async function loadClassroomClasswork(classId) {
     if (!elements.classworkListContainer) return;
+    renderClassworkWorkflowGuidance();
     try {
       const works = await window.ClassroomAPI.loadClasswork(classId);
       elements.classworkListContainer.innerHTML = works.length ? works.map(w => `

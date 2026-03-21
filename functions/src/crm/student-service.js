@@ -1,3 +1,5 @@
+const { hydrateStudentSchedule } = require('./schedule-normalizer');
+
 function cleanOptionalString(value) {
     const normalized = String(value || '').trim();
     return normalized || null;
@@ -7,6 +9,24 @@ function cleanOptionalNumber(value) {
     if (value === null || value === undefined || value === '') return null;
     const normalized = Number(value);
     return Number.isFinite(normalized) ? normalized : null;
+}
+
+function cleanOptionalArray(value) {
+    if (value === null || value === undefined || value === '') return [];
+    const list = Array.isArray(value) ? value : String(value).split(',');
+    const seen = new Set();
+    const output = [];
+
+    for (const entry of list) {
+        const normalized = cleanOptionalString(entry);
+        if (!normalized) continue;
+        const key = normalized.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        output.push(normalized);
+    }
+
+    return output;
 }
 
 function normalizeLifecycleStage(value, fallback = 'potential') {
@@ -114,6 +134,12 @@ function normalizeStudentCore(input, fallback = {}) {
         preferredSchedule: Object.prototype.hasOwnProperty.call(source, 'preferredSchedule')
             ? cleanOptionalString(source.preferredSchedule)
             : (base.preferredSchedule ?? null),
+        preferredLearningDays: Object.prototype.hasOwnProperty.call(source, 'preferredLearningDays')
+            ? cleanOptionalArray(source.preferredLearningDays)
+            : cleanOptionalArray(base.preferredLearningDays),
+        preferredLearningHours: Object.prototype.hasOwnProperty.call(source, 'preferredLearningHours')
+            ? cleanOptionalArray(source.preferredLearningHours)
+            : cleanOptionalArray(base.preferredLearningHours),
         scoreHistory: Object.prototype.hasOwnProperty.call(source, 'scoreHistory')
             ? normalizeScoreHistory(source.scoreHistory)
             : normalizeScoreHistory(base.scoreHistory),
@@ -148,6 +174,8 @@ function hasRecognizedPatch(input) {
         'learningProfile',
         'targets',
         'preferredSchedule',
+        'preferredLearningDays',
+        'preferredLearningHours',
         'scoreHistory',
         'contacts',
         'documentRefs',
@@ -157,10 +185,14 @@ function hasRecognizedPatch(input) {
 }
 
 function buildStudentCreateData(input, context = {}) {
-    const student = normalizeStudentCore(input, {
+    const baseStudent = normalizeStudentCore(input, {
         lifecycleStage: 'potential',
         ownerUid: context.user?.uid || null
     });
+    const student = {
+        ...baseStudent,
+        ...hydrateStudentSchedule(baseStudent)
+    };
 
     if (!hasAnyInfoField(student)) {
         throw new Error('Please fill at least 1 field in Info tab before saving.');
@@ -179,7 +211,11 @@ function buildStudentPatchData(existing, input, context = {}) {
         throw new Error('No student fields provided for update.');
     }
 
-    const merged = normalizeStudentCore(input, existing);
+    const mergedBase = normalizeStudentCore(input, existing);
+    const merged = {
+        ...mergedBase,
+        ...hydrateStudentSchedule(mergedBase)
+    };
     return {
         ...existing,
         ...merged,
@@ -196,6 +232,7 @@ function buildStudentPatchData(existing, input, context = {}) {
 function mapStudentRecord(data, studentId) {
     const source = data && typeof data.data === 'function' ? data.data() : (data || {});
     const id = studentId || data?.id || null;
+    const hydrated = hydrateStudentSchedule(source);
 
     return {
         studentId: id,
@@ -212,7 +249,9 @@ function mapStudentRecord(data, studentId) {
         notes: source.notes || null,
         learningProfile: normalizeLearningProfile(source.learningProfile),
         targets: normalizeTargets(source.targets),
-        preferredSchedule: source.preferredSchedule || null,
+        preferredSchedule: hydrated.preferredSchedule,
+        preferredLearningDays: hydrated.preferredLearningDays,
+        preferredLearningHours: hydrated.preferredLearningHours,
         scoreHistory: normalizeScoreHistory(source.scoreHistory),
         contacts: normalizeContacts(source.contacts),
         documentRefs: normalizeDocumentRefs(source.documentRefs),
@@ -236,5 +275,6 @@ module.exports = {
     normalizeTargets,
     normalizeScoreHistory,
     normalizeContacts,
-    normalizeDocumentRefs
+    normalizeDocumentRefs,
+    cleanOptionalArray
 };

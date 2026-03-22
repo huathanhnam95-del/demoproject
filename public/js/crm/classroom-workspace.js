@@ -9,6 +9,7 @@ window.CrmClassroomWorkspace = (function () {
             formatDateTime,
             openClassroomModal,
             resetClassroomModal,
+            populateAttendanceStudentOptions: externalPopulateAttendanceStudentOptions,
             refreshAttendanceRiskSnapshot,
             loadLiveSessions,
             getSelectedLiveSession,
@@ -70,6 +71,28 @@ window.CrmClassroomWorkspace = (function () {
                 </table>
               </div>
             `;
+        }
+
+        async function populateAttendanceStudentOptions() {
+            if (!elements.inputAttendanceStudentSelect) return;
+            if (typeof externalPopulateAttendanceStudentOptions === 'function' && externalPopulateAttendanceStudentOptions !== populateAttendanceStudentOptions) {
+                return externalPopulateAttendanceStudentOptions();
+            }
+
+            const currentValue = String(elements.inputAttendanceStudentSelect.value || '').trim();
+            const students = Array.isArray(dataCache.students) ? dataCache.students : [];
+            const options = students.map((student) => {
+                const studentId = String(student?.studentId || student?.id || '').trim();
+                const label = String(student?.name || student?.email || student?.phone || studentId || 'Unnamed student').trim();
+                if (!studentId) return '';
+                return `<option value="${escapeHtml(studentId)}">${escapeHtml(label)}</option>`;
+            }).filter(Boolean);
+
+            elements.inputAttendanceStudentSelect.innerHTML = '<option value="">Select a student...</option>' + options.join('');
+
+            if (currentValue && students.some((student) => String(student?.studentId || student?.id || '').trim() === currentValue)) {
+                elements.inputAttendanceStudentSelect.value = currentValue;
+            }
         }
 
         async function refreshAttendanceClassroomFitNote() {

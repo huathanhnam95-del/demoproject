@@ -183,6 +183,10 @@ window.CrmStudentWorkspace = (function () {
 
                 if (elements.entranceTestLinkInput) elements.entranceTestLinkInput.value = testLink;
                 if (elements.btnCopyEntranceTestLink) elements.btnCopyEntranceTestLink.disabled = false;
+                if (elements.btnOpenEntranceTestLink) elements.btnOpenEntranceTestLink.disabled = false;
+                if (elements.entranceTestLinkNote) {
+                    elements.entranceTestLinkNote.textContent = 'Latest single-use learner link is ready to send. It will stop working after submission.';
+                }
 
                 await refreshEntranceTestsList();
                 showToast('Entrance test link created.', 'success');

@@ -138,6 +138,11 @@ assert(
     'CRM admin page must expose structured schedule inputs for students and classrooms.'
 );
 assert(
+    html.includes('btn-open-entrance-test-link') &&
+    html.includes('entrance-test-link-note'),
+    'CRM admin page must expose clear entrance-test handoff controls and status messaging.'
+);
+assert(
     html.includes('data-panel="courses/zoom-links"') &&
     html.includes('classroom-live') &&
     html.includes('live-session-list') &&
@@ -221,6 +226,26 @@ assert(
     js.includes('window.CrmActivitySurfaces') &&
     js.includes('activitySurfacesController'),
     'crm-admin.js must delegate activity surface wiring through the activity surfaces helper.'
+);
+assert(
+    js.includes('async function refreshAttendanceRiskSnapshot()'),
+    'crm-admin.js must define the shared attendance risk snapshot helper required during shell init and classroom updates.'
+);
+assert(
+    js.includes('function renderTaskList(') &&
+    js.includes('function renderActivityList('),
+    'crm-admin.js must define shared task/activity renderers required by the lead and student workspace controllers.'
+);
+assert(
+    js.includes('function renderEntranceTests(') &&
+    js.includes('btnOpenEntranceTestLink') &&
+    js.includes('entranceTestLinkNote'),
+    'crm-admin.js must keep entrance-test link rendering and handoff messaging wired into the student workflow.'
+);
+assert(
+    js.includes('function formatDateTime(') &&
+    js.includes('function formatDateTimeLocalValue('),
+    'crm-admin.js must define shared date formatting helpers required by extracted CRM controllers.'
 );
 
 assert(

@@ -196,6 +196,16 @@ async function runSmoke(baseUrl, args) {
     const token = new URL(testLink).searchParams.get('token');
     assert(token, 'Missing token in testLink.');
 
+    const listBeforeSubmit = await fetchJson(`${baseUrl}/api/admin/students/${encodeURIComponent(studentId)}/entrance-tests`, {
+        method: 'GET',
+        headers: getHeaders(idToken, false)
+    });
+    assert(listBeforeSubmit.response.ok && listBeforeSubmit.json?.success, `List tests before submit failed: ${JSON.stringify(listBeforeSubmit.json)}`);
+    const testsBeforeSubmit = Array.isArray(listBeforeSubmit.json.tests) ? listBeforeSubmit.json.tests : [];
+    const listedBeforeSubmit = testsBeforeSubmit.find((item) => item?.testId === testId);
+    assert(listedBeforeSubmit, 'Created test not found in pre-submit list.');
+    assert(String(listedBeforeSubmit.testLink || '').includes('/entrance-test.html?token='), 'Pre-submit list must expose the learner test link.');
+
     const session = await fetchJson(`${baseUrl}/api/entrance-tests/session?token=${encodeURIComponent(token)}`);
     assert(session.response.ok && session.json?.success && session.json?.session, `Session failed: ${JSON.stringify(session.json)}`);
 
@@ -282,6 +292,7 @@ async function runSmoke(baseUrl, args) {
     const listed = tests.find((item) => item?.testId === testId);
     assert(listed, 'Created test not found in list.');
     assert(String(listed.status || '').toLowerCase() === 'submitted', `Expected submitted status, got ${listed.status}`);
+    assert(!String(listed.testLink || '').trim(), 'Submitted test must not expose an active learner link.');
 
     const details = await fetchJson(`${baseUrl}/api/admin/entrance-tests/${encodeURIComponent(testId)}`, {
         method: 'GET',

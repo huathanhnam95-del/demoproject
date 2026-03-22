@@ -363,6 +363,7 @@ router.post('/submit', async (req, res) => {
 
             tx.set(ref, {
                 status: 'submitted',
+                deliveryToken: null,
                 startedAt: data.startedAt || admin.firestore.FieldValue.serverTimestamp(),
                 submittedAt: admin.firestore.FieldValue.serverTimestamp(),
                 responses: responses || null,

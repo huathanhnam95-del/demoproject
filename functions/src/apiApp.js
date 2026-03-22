@@ -178,6 +178,7 @@ const crmRouter = createCrmRouter({
                         studentId,
                         version: TEST_VERSION,
                         status: 'created',
+                        deliveryToken: token,
                         createdAt: deps.serverTimestamp(),
                         createdBy: req.user.uid,
                         createdByEmail: req.user.email || null,
@@ -219,13 +220,18 @@ const crmRouter = createCrmRouter({
                 const snaps = await deps.db.collection('entranceTests').where('studentId', '==', studentId).get();
                 const tests = snaps.docs.map((doc) => {
                     const data = doc.data() || {};
+                    const status = data.status || null;
+                    const deliveryToken = String(data.deliveryToken || '').trim();
                     return {
                         testId: doc.id,
                         version: data.version || null,
-                        status: data.status || null,
+                        status,
                         createdAt: data.createdAt || null,
                         startedAt: data.startedAt || null,
-                        submittedAt: data.submittedAt || null
+                        submittedAt: data.submittedAt || null,
+                        deliveryToken: (status === 'created' || status === 'started') && deliveryToken
+                            ? deliveryToken
+                            : null
                     };
                 });
 
@@ -236,10 +242,21 @@ const crmRouter = createCrmRouter({
                 });
 
                 const baseUrl = getBaseUrl(req);
-                const testsWithLinks = tests.map((t) => ({
-                    ...t,
-                    resultLink: `${baseUrl}/crm-entrance-test-result.html?testId=${encodeURIComponent(t.testId)}`
-                }));
+                const testsWithLinks = tests.map((t) => {
+                    const deliveryToken = String(t.deliveryToken || '').trim();
+                    return {
+                        testId: t.testId,
+                        version: t.version,
+                        status: t.status,
+                        createdAt: t.createdAt,
+                        startedAt: t.startedAt,
+                        submittedAt: t.submittedAt,
+                        testLink: deliveryToken
+                            ? `${baseUrl}/entrance-test.html?token=${encodeURIComponent(deliveryToken)}`
+                            : null,
+                        resultLink: `${baseUrl}/crm-entrance-test-result.html?testId=${encodeURIComponent(t.testId)}`
+                    };
+                });
 
                 return deps.sendSuccess(res, { tests: testsWithLinks });
             } catch (error) {

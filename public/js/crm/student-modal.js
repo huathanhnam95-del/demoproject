@@ -86,6 +86,10 @@ window.CrmStudentModal = (function () {
             if (elements.btnAddEntranceTest) elements.btnAddEntranceTest.disabled = false;
             if (elements.entranceTestLinkInput) elements.entranceTestLinkInput.value = '';
             if (elements.btnCopyEntranceTestLink) elements.btnCopyEntranceTestLink.disabled = true;
+            if (elements.btnOpenEntranceTestLink) elements.btnOpenEntranceTestLink.disabled = true;
+            if (elements.entranceTestLinkNote) {
+                elements.entranceTestLinkNote.textContent = 'Create a test to generate a single-use learner link you can send.';
+            }
             if (elements.entranceTestsList) elements.entranceTestsList.innerHTML = '<div class="crm-muted">No tests yet.</div>';
 
             if (elements.handshakePreview) elements.handshakePreview.style.display = 'none';
@@ -207,6 +211,14 @@ window.CrmStudentModal = (function () {
                     } catch (e) {
                         showToast(e?.message || 'Failed to copy link.', 'error');
                     }
+                });
+            }
+
+            if (elements.btnOpenEntranceTestLink) {
+                elements.btnOpenEntranceTestLink.addEventListener('click', () => {
+                    const link = String(elements.entranceTestLinkInput?.value || '').trim();
+                    if (!link) return;
+                    window.open(link, '_blank', 'noopener');
                 });
             }
 

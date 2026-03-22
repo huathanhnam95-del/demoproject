@@ -231,6 +231,8 @@
     elements.btnAddEntranceTest = document.getElementById('btn-add-entrance-test');
     elements.entranceTestLinkInput = document.getElementById('entrance-test-link');
     elements.btnCopyEntranceTestLink = document.getElementById('btn-copy-entrance-test-link');
+    elements.btnOpenEntranceTestLink = document.getElementById('btn-open-entrance-test-link');
+    elements.entranceTestLinkNote = document.getElementById('entrance-test-link-note');
     elements.entranceTestsList = document.getElementById('entrance-tests-list');
 
     // Identity Elements
@@ -1088,9 +1090,96 @@
     return `<span class="crm-risk-badge ${isAtRisk ? 'risk' : ''}">${escapeHtml(isAtRisk ? 'At Risk' : 'Stable')}</span>`;
   }
 
+  function renderTaskList(container, tasks, options = {}) {
+    if (!container) return;
+    const rows = Array.isArray(tasks) ? tasks : [];
+    const emptyMessage = String(options.emptyMessage || 'No tasks yet.');
+
+    if (!rows.length) {
+      container.innerHTML = `<div class="crm-muted">${escapeHtml(emptyMessage)}</div>`;
+      return;
+    }
+
+    container.innerHTML = rows.map((task) => {
+      const title = String(task?.title || 'Untitled task').trim() || 'Untitled task';
+      const priority = window.CrmActivities && typeof window.CrmActivities.formatPriorityLabel === 'function'
+        ? window.CrmActivities.formatPriorityLabel(task?.priority)
+        : String(task?.priority || 'medium').trim().toLowerCase();
+      const dueAt = formatDateTime(task?.dueAt);
+      const status = String(task?.status || 'open').trim() || 'open';
+
+      return `
+        <div class="crm-list-card">
+          <div class="crm-list-card-title">${escapeHtml(title)}</div>
+          <div class="crm-timeline-meta">${escapeHtml(`Priority: ${priority} | Due: ${dueAt} | Status: ${status}`)}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderActivityList(container, activities, emptyMessage = 'No activity yet.') {
+    if (!container) return;
+    const rows = Array.isArray(activities) ? activities : [];
+    const fallback = String(emptyMessage || 'No activity yet.');
+
+    if (!rows.length) {
+      container.innerHTML = `<div class="crm-muted">${escapeHtml(fallback)}</div>`;
+      return;
+    }
+
+    container.innerHTML = rows.map((activity) => {
+      const typeLabel = window.CrmActivities && typeof window.CrmActivities.formatTypeLabel === 'function'
+        ? window.CrmActivities.formatTypeLabel(activity?.type)
+        : String(activity?.type || 'Note').trim() || 'Note';
+      const subject = String(activity?.subject || '').trim();
+      const body = String(activity?.body || '').trim();
+      const actor = String(activity?.authorName || activity?.createdByName || activity?.createdBy || '').trim();
+      const meta = [typeLabel, actor, formatDateTime(activity?.createdAt)].filter(Boolean).join(' | ');
+
+      return `
+        <div class="crm-list-card">
+          <div class="crm-list-card-title">${escapeHtml(subject || typeLabel)}</div>
+          <div class="crm-timeline-meta">${escapeHtml(meta)}</div>
+          ${body ? `<div class="crm-list-card-body">${escapeHtml(body)}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
   async function refreshOpenTaskSnapshot() {
     if (!taskActivityWorkspaceController) return;
     return taskActivityWorkspaceController.refreshOpenTaskSnapshot();
+  }
+
+  async function refreshLeadWorkspace() {
+    if (!leadWorkspaceController) return;
+    return leadWorkspaceController.refreshLeadWorkspace();
+  }
+
+  async function refreshStudentTimeline() {
+    if (!studentWorkspaceController) return;
+    return studentWorkspaceController.refreshStudentTimeline();
+  }
+
+  async function saveStudentProfile() {
+    if (!studentWorkspaceController) throw new Error('Student workspace helpers are not available.');
+    return studentWorkspaceController.saveStudentProfile();
+  }
+
+  async function createEntranceTest() {
+    if (!studentWorkspaceController) throw new Error('Student workspace helpers are not available.');
+    return studentWorkspaceController.createEntranceTest();
+  }
+
+  async function refreshAttendanceRiskSnapshot() {
+    if (!window.ClassroomAPI || typeof window.ClassroomAPI.fetchAttendanceSummary !== 'function') return;
+    const summary = await window.ClassroomAPI.fetchAttendanceSummary({});
+    const students = Array.isArray(summary?.students) ? summary.students : [];
+    dataCache.attendanceRiskByStudentId = new Map(
+      students
+        .map((row) => [String(row?.studentId || '').trim(), row])
+        .filter(([studentId]) => studentId)
+    );
   }
 
   async function createTaskForLead() {
@@ -1324,6 +1413,43 @@
     return dashboardController.createMergeJob();
   }
 
+  function normalizeDateValue(value) {
+    if (!value) return null;
+    if (value instanceof Date) {
+      return Number.isNaN(value.getTime()) ? null : value;
+    }
+    if (typeof value?.toDate === 'function') {
+      const next = value.toDate();
+      return next instanceof Date && !Number.isNaN(next.getTime()) ? next : null;
+    }
+    if (typeof value === 'number') {
+      const next = new Date(value);
+      return Number.isNaN(next.getTime()) ? null : next;
+    }
+    if (typeof value === 'string') {
+      const next = new Date(value);
+      return Number.isNaN(next.getTime()) ? null : next;
+    }
+    return null;
+  }
+
+  function formatDateTime(value) {
+    const normalized = normalizeDateValue(value);
+    if (!normalized) return '-';
+    return normalized.toLocaleString('en-US');
+  }
+
+  function formatDateTimeLocalValue(value) {
+    const normalized = normalizeDateValue(value);
+    if (!normalized) return '';
+    const year = normalized.getFullYear();
+    const month = String(normalized.getMonth() + 1).padStart(2, '0');
+    const day = String(normalized.getDate()).padStart(2, '0');
+    const hours = String(normalized.getHours()).padStart(2, '0');
+    const minutes = String(normalized.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  }
+
   function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = String(str || '');
@@ -1435,20 +1561,43 @@
 
     if (!Array.isArray(tests) || tests.length === 0) {
       elements.entranceTestsList.innerHTML = '<div class="crm-muted">No tests yet.</div>';
+      if (elements.entranceTestLinkInput) elements.entranceTestLinkInput.value = '';
+      if (elements.btnCopyEntranceTestLink) elements.btnCopyEntranceTestLink.disabled = true;
+      if (elements.btnOpenEntranceTestLink) elements.btnOpenEntranceTestLink.disabled = true;
+      if (elements.entranceTestLinkNote) {
+        elements.entranceTestLinkNote.textContent = 'Create a test to generate a single-use learner link you can send.';
+      }
       return;
     }
+
+    const activeLinkTest = tests.find((test) => {
+      const status = String(test?.status || '').trim().toLowerCase();
+      return !!String(test?.testLink || '').trim() && status !== 'submitted' && status !== 'revoked';
+    }) || null;
 
     const rows = tests.map((t) => {
       const testId = String(t.testId || '').trim();
       const status = String(t.status || 'created').toLowerCase();
       const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
-      const testLink = String(modalState.createdTestLinks.get(testId) || '').trim();
+      const listedTestLink = String(t.testLink || '').trim();
+      if (listedTestLink) modalState.createdTestLinks.set(testId, listedTestLink);
+      const testLink = String(listedTestLink || modalState.createdTestLinks.get(testId) || '').trim();
       const resultLink = String(t.resultLink || '').trim();
 
       return `\n        <tr>\n          <td><span class="crm-test-status ${status}">${statusLabel}</span></td>\n          <td>${formatDateTime(t.createdAt)}</td>\n          <td>${formatDateTime(t.startedAt)}</td>\n          <td>${formatDateTime(t.submittedAt)}</td>\n          <td>${testLink ? `<a class="crm-test-link" href="${escapeHtml(testLink)}" target="_blank" rel="noopener">Open</a>` : 'Unavailable'}</td>\n          <td>${resultLink ? `<a class="crm-test-link" href="${escapeHtml(resultLink)}" target="_blank" rel="noopener">View</a>` : 'â€”'}</td>\n        </tr>\n      `;
     }).join('');
 
     elements.entranceTestsList.innerHTML = `\n      <table class="crm-entrance-tests-table">\n        <thead>\n          <tr>\n            <th>Status</th>\n            <th>Start Date</th>\n            <th>Started</th>\n            <th>Submission Date</th>\n            <th>Test Link</th>\n            <th>Result</th>\n          </tr>\n        </thead>\n        <tbody>\n          ${rows}\n        </tbody>\n      </table>\n    `;
+
+    const latestLink = String(activeLinkTest?.testLink || '').trim();
+    if (elements.entranceTestLinkInput) elements.entranceTestLinkInput.value = latestLink;
+    if (elements.btnCopyEntranceTestLink) elements.btnCopyEntranceTestLink.disabled = !latestLink;
+    if (elements.btnOpenEntranceTestLink) elements.btnOpenEntranceTestLink.disabled = !latestLink;
+    if (elements.entranceTestLinkNote) {
+      elements.entranceTestLinkNote.textContent = latestLink
+        ? 'Latest single-use learner link is ready to send. It will stop working after submission.'
+        : 'Latest entrance test link has already been used. Create a new test to send another link.';
+    }
   }
 
   async function refreshEntranceTestsList() {

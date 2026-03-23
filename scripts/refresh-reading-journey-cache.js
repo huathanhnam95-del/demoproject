@@ -30,7 +30,7 @@ const COLLECTION_KEYWORD_TAGS = 'reading_journey_keyword_tags_v1';
 const COLLECTION_OUTLINES = 'reading_journey_outlines_v1';
 const COLLECTION_BEATS = 'reading_journey_beats_v1';
 
-const MAX_INTERACTIVE_BEATS = 5;
+const MAX_INTERACTIVE_BEATS = 3;
 const ENDING_BEAT_NUMBER = MAX_INTERACTIVE_BEATS + 1;
 
 const CANONICAL_CHOICES = Object.freeze(['investigate', 'ask', 'wait']);
@@ -160,25 +160,10 @@ function parseOutlineKey(key) {
   return { language, level, topicTags };
 }
 
-function computeOpenBeatNumbers(outlineId) {
-  const base = String(outlineId || '').trim();
-  if (!base) return [2, 4];
-  const hash = crypto.createHash('sha256').update(`reading_journey_plan_v1|${base}`).digest();
-
-  const picked = new Set();
-  for (let i = 0; i < hash.length && picked.size < 2; i += 1) {
-    const beat = (hash[i] % MAX_INTERACTIVE_BEATS) + 1;
-    picked.add(beat);
-  }
-
-  const beats = Array.from(picked);
-  while (beats.length < 2) {
-    const beat = ((beats.length + 1) % MAX_INTERACTIVE_BEATS) + 1;
-    if (!beats.includes(beat)) beats.push(beat);
-  }
-
-  beats.sort((a, b) => a - b);
-  return beats;
+function computeOpenBeatNumbers() {
+  // Fixed layout: beat 3 is always the open-ended question.
+  // Beat 1 = MCQ (3 opts), Beat 2 = MCQ (2 opts), Beat 3 = Open, Beat 4 = Ending.
+  return [3];
 }
 
 function getQuestionTypeForBeat(outlineId, beatNumber) {
@@ -284,7 +269,7 @@ async function refreshOutlines({ ttlMs, apply, limit }) {
       setting: String(existing.setting || fresh.setting || ''),
       topicTags: meta.topicTags,
       characters: Array.isArray(existing.characters) && existing.characters.length ? existing.characters : fresh.characters,
-      beatOutline: Array.isArray(existing.beatOutline) && existing.beatOutline.length === 5 ? existing.beatOutline : fresh.beatOutline
+      beatOutline: Array.isArray(existing.beatOutline) && existing.beatOutline.length === MAX_INTERACTIVE_BEATS ? existing.beatOutline : fresh.beatOutline
     };
 
     if (apply) {

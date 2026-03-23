@@ -25,8 +25,22 @@ function normalizeScalar(value) {
   return String(value ?? '').trim();
 }
 
+function normalizeText(value) {
+  return normalizeScalar(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9\s']/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function normalizeLevel(level) {
   return gemini.normalizeLevel(level);
+}
+
+function normalizeBeatOutline(beatOutline) {
+  return (Array.isArray(beatOutline) ? beatOutline : [])
+    .map((beat) => normalizeText(beat?.milestone || beat))
+    .filter(Boolean);
 }
 
 function splitSentences(text) {
@@ -238,11 +252,11 @@ function buildFallbackQuestions({ outlineId, outline, storySnapshot, beatOutline
   ];
 }
 
-function questionExistsInStory(question, storySnapshot) {
-  const storyText = (storySnapshot.paragraphs || []).map((paragraph) => paragraph.text).join(' ').toLowerCase();
+function questionExistsInStory(question, storySnapshot, beatOutline) {
+  const storyText = normalizeText((storySnapshot.paragraphs || []).map((paragraph) => paragraph.text).join(' '));
 
   if (question.type === QUESTION_TYPES.CLICK_WORD_MEANING) {
-    const targetWord = normalizeScalar(question?.target?.word).toLowerCase();
+    const targetWord = normalizeText(question?.target?.word);
     const paragraphIndex = Number(question?.target?.paragraphIndex);
     return Boolean(targetWord)
       && Number.isInteger(paragraphIndex)
@@ -258,13 +272,22 @@ function questionExistsInStory(question, storySnapshot) {
       && paragraphIndex < storySnapshot.paragraphs.length;
   }
 
+  if (question.type === QUESTION_TYPES.SEQUENCE_EVENTS) {
+    const items = Array.isArray(question?.items) ? question.items : [];
+    const expectedMilestones = normalizeBeatOutline(beatOutline).slice(0, items.length);
+    const itemTexts = items.map((item) => normalizeText(item?.text));
+    return expectedMilestones.length > 0
+      && itemTexts.length === expectedMilestones.length
+      && itemTexts.every((text, index) => text === expectedMilestones[index]);
+  }
+
   return true;
 }
 
-function sanitizeQuestion(question, storySnapshot) {
+function sanitizeQuestion(question, storySnapshot, beatOutline) {
   const result = validateQuizQuestion(question);
   if (!result.valid) return null;
-  if (!questionExistsInStory(question, storySnapshot)) return null;
+  if (!questionExistsInStory(question, storySnapshot, beatOutline)) return null;
   return { ...question };
 }
 
@@ -311,7 +334,7 @@ async function buildAssessmentQuiz({
   const usedTypes = new Set();
 
   draftQuestions.forEach((question) => {
-    const sanitized = sanitizeQuestion(question, storySnapshot);
+    const sanitized = sanitizeQuestion(question, storySnapshot, beatOutline);
     if (!sanitized) return;
     if (usedTypes.has(sanitized.type)) return;
     if (safeLevel === 'A2' && sanitized.type === QUESTION_TYPES.SHORT_ANSWER) {

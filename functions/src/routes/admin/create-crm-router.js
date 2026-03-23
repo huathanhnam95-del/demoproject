@@ -2,6 +2,7 @@ const express = require('express');
 const {
     USERS,
     CRM_CLASSROOMS,
+    CRM_SCHEDULED_SESSIONS,
     CRM_SUBMISSIONS,
     CRM_AUDIT_LOGS,
     CLASSROOM_MODULES,
@@ -19,6 +20,7 @@ const registerLeadRoutes = require('./leads');
 const registerActivityRoutes = require('./activities');
 const registerEnrollmentRoutes = require('./enrollments');
 const registerAttendanceRoutes = require('./attendance');
+const registerSchedulingRoutes = require('./scheduling');
 const registerFinanceRoutes = require('./finance');
 const registerAutomationRoutes = require('./automations');
 const registerReportingRoutes = require('./reporting');
@@ -29,8 +31,13 @@ const {
     buildClassroomPatchData,
     computeMissingReviewItems,
     mapClassroomMembers,
-    mapClassroomRecord
+    mapClassroomRecord,
+    normalizeScheduleConfig
 } = require('../../crm/course-service');
+const {
+    buildScheduleSummary,
+    normalizeScheduledSession
+} = require('../../crm/scheduling-service');
 
 function resolveServerTimestampFactory(deps) {
     if (typeof deps.serverTimestamp === 'function') {
@@ -99,6 +106,53 @@ function buildAuditLogger(deps) {
     };
 }
 
+function nextScheduleVersion(scheduleConfig) {
+    return Math.max(Number(scheduleConfig?.scheduleVersion || 0) + 1, 1);
+}
+
+async function syncClassroomScheduleState(db, classId, options = {}) {
+    const classroomRef = db.collection(CRM_CLASSROOMS).doc(classId);
+    const classroomSnap = options.classroomSnap || await classroomRef.get();
+    if (!classroomSnap.exists) return null;
+
+    const classroom = classroomSnap.data() || {};
+    const baseScheduleConfig = classroom.scheduleConfig || null;
+    const scheduleConfig = options.scheduleConfigPatch
+        ? normalizeScheduleConfig(options.scheduleConfigPatch, {
+            existing: baseScheduleConfig,
+            preserveExistingTargetSessionCount: options.preserveExistingTargetSessionCount !== false
+        })
+        : baseScheduleConfig;
+
+    if (!scheduleConfig?.totalInstructionMinutes || !scheduleConfig?.sessionMinutes) {
+        return null;
+    }
+
+    const sessions = options.sessions || (await db.collection(CRM_SCHEDULED_SESSIONS).where('classId', '==', classId).get())
+        .docs
+        .map((doc) => normalizeScheduledSession({ sessionId: doc.id, ...doc.data() }));
+    const effectiveScheduleConfig = options.bumpVersion
+        ? { ...scheduleConfig, scheduleVersion: nextScheduleVersion(scheduleConfig) }
+        : scheduleConfig;
+    const scheduleSummary = buildScheduleSummary({
+        totalInstructionMinutes: effectiveScheduleConfig.totalInstructionMinutes,
+        sessionMinutes: effectiveScheduleConfig.sessionMinutes,
+        targetSessionCount: effectiveScheduleConfig.targetSessionCount,
+        sessions
+    });
+
+    await classroomRef.set({
+        ...(options.rootPatch || {}),
+        scheduleConfig: effectiveScheduleConfig,
+        scheduleSummary
+    }, { merge: true });
+
+    return {
+        scheduleConfig: effectiveScheduleConfig,
+        scheduleSummary
+    };
+}
+
 module.exports = function createCrmRouter(rawDeps) {
     const deps = rawDeps || {};
     ensureDependencies(deps);
@@ -156,6 +210,7 @@ module.exports = function createCrmRouter(rawDeps) {
     registerActivityRoutes(router, routeDeps);
     registerEnrollmentRoutes(router, routeDeps);
     registerAttendanceRoutes(router, routeDeps);
+    registerSchedulingRoutes(router, routeDeps);
     registerFinanceRoutes(router, routeDeps);
     registerAutomationRoutes(router, routeDeps);
     registerReportingRoutes(router, routeDeps);
@@ -223,7 +278,22 @@ module.exports = function createCrmRouter(rawDeps) {
                 user: req.user,
                 serverTimestamp
             });
-            await ref.set(next, { merge: true });
+            if (next.scheduleConfig) {
+                await syncClassroomScheduleState(deps.db, classId, {
+                    classroomSnap: snap,
+                    scheduleConfigPatch: next.scheduleConfig,
+                    bumpVersion: true,
+                    rootPatch: {
+                        ...Object.fromEntries(
+                            Object.entries(next).filter(([key]) => key !== 'scheduleConfig' && key !== 'scheduleSummary')
+                        ),
+                        updatedAt: serverTimestamp(),
+                        updatedBy: req.user?.uid || null
+                    }
+                });
+            } else {
+                await ref.set(next, { merge: true });
+            }
             await writeAuditLog({
                 action: 'classroom.update',
                 entityType: 'classroom',

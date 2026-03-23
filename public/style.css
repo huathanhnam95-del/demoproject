@@ -593,9 +593,23 @@ h1 {
 .tutorial-grid,
 .growth-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 24px;
   margin-bottom: 32px;
+}
+
+@media (max-width: 900px) {
+  .tutorial-grid,
+  .growth-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 500px) {
+  .tutorial-grid,
+  .growth-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Modern Card Design - Premium (Buttery Smooth) */
@@ -4555,41 +4569,72 @@ textarea:focus {
 }
 
 .panel-btn {
+  box-sizing: border-box;
   width: 100%;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.9rem;
+  padding: 12px 16px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  text-decoration: none;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  background: transparent;
+  color: var(--text-main);
+  position: relative;
+  overflow: hidden;
 }
 
+.panel-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.panel-btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+/* Primary: Light tinted blue that becomes solid and lifts on hover */
 .panel-btn.primary {
-  background: var(--primary);
-  color: #ffffff;
+  background: rgba(37, 99, 235, 0.08);
+  color: #1d4ed8; /* Darker blue text */
 }
 
 .panel-btn.primary:hover {
-  background: var(--primary-hover);
+  background: var(--primary);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
+  border-color: transparent;
 }
 
+/* Secondary: Fully transparent, subtle hover */
 .panel-btn.secondary {
-  background: #f3f4f6;
-  color: var(--text-main);
+  color: #4b5563; /* Gray */
 }
 
 .panel-btn.secondary:hover {
-  background: #e5e7eb;
+  background: #f3f4f6;
+  color: var(--text-main);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
+/* Danger: Light tinted red that turns solid on hover */
 .panel-btn.danger {
-  background: #dc2626;
-  color: #ffffff;
+  background: rgba(220, 38, 38, 0.08);
+  color: #dc2626;
 }
 
 .panel-btn.danger:hover {
-  background: #b91c1c;
+  background: #dc2626;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.25);
 }
 
 .panel-guest-info,
@@ -11914,7 +11959,7 @@ textarea:focus {
   font-size: 0.95rem;
 }
 
-.tutorial-grid {
+.dashboard-slider-wrapper .tutorial-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
   gap: 8px;

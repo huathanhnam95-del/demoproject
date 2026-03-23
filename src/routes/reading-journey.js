@@ -17,17 +17,19 @@ const {
 
 const gemini = require('../services/reading-journey/gemini');
 const { buildAssessmentQuiz } = require('../services/reading-journey/quiz-builder');
+const { normalizeBeatForClient } = require('../services/reading-journey/beat-client-shape');
 const { countWords } = require('../services/reading-journey/json');
 
 const COLLECTION_KEYWORD_TAGS = 'reading_journey_keyword_tags_v1';
 const COLLECTION_OUTLINES = 'reading_journey_outlines_v1';
 const COLLECTION_BEATS = 'reading_journey_beats_v1';
 
-const MAX_INTERACTIVE_BEATS = 5;
+const MAX_INTERACTIVE_BEATS = 3;
 const ENDING_BEAT_NUMBER = MAX_INTERACTIVE_BEATS + 1;
-const OPEN_BEAT_COUNT = 2;
+const OPEN_BEAT_COUNT = 1;
 const CANONICAL_CHOICE_IDS = Object.freeze(['investigate', 'ask', 'wait']);
 const CANONICAL_CHOICE_ID_SET = new Set(CANONICAL_CHOICE_IDS);
+const ADVANCE_ROUTE_PATHS = ['/reading-journey/advance', '/reading_journey/advance'];
 const topicUtilsPromise = import('../../public/js/reading-journey-topic-utils.js');
 
 function isLocalRequest(req) {
@@ -69,10 +71,11 @@ function maybeAiLimiter(req, res, next) {
   return aiLimiter(req, res, next);
 }
 
-function hasValidChoiceQuestion(choiceQuestion) {
+function hasValidChoiceQuestion(choiceQuestion, { expectedOptionCount } = {}) {
   if (!choiceQuestion || typeof choiceQuestion !== 'object') return false;
   const options = Array.isArray(choiceQuestion.options) ? choiceQuestion.options : [];
-  if (options.length !== 3) return false;
+  const requiredCount = Number(expectedOptionCount) || 3;
+  if (options.length !== requiredCount) return false;
   for (const opt of options) {
     const id = String(opt?.id || '').trim();
     const label = String(opt?.label || '').trim();
@@ -107,6 +110,12 @@ function getQuestionTypeForBeat(outlineId, beatNumber) {
   if (!Number.isFinite(safeBeat) || safeBeat < 1 || safeBeat > MAX_INTERACTIVE_BEATS) return 'mcq';
   const openBeats = computeOpenBeatNumbers(outlineId);
   return openBeats.includes(safeBeat) ? 'open' : 'mcq';
+}
+
+function getChoiceIdsForBeat(beatNumber) {
+  const safeBeat = Number(beatNumber);
+  if (safeBeat === 1) return ['investigate', 'ask', 'wait'];
+  return ['investigate', 'ask'];
 }
 
 function classifyChoiceFromOpenText(text) {
@@ -233,15 +242,18 @@ function isValidBeatPayload(beat, { beatNumber, questionType }) {
     if (shouldEnd) return false;
 
     if (expectedType === 'mcq') {
-      if (!hasValidChoiceQuestion(beat.choiceQuestion)) return false;
+      const expectedChoiceIds = getChoiceIdsForBeat(safeBeat);
+      const expectedCount = expectedChoiceIds.length;
+      if (!hasValidChoiceQuestion(beat.choiceQuestion, { expectedOptionCount: expectedCount })) return false;
       const ids = (beat.choiceQuestion?.options || [])
         .map((o) => String(o?.id || '').trim().toLowerCase())
         .filter(Boolean);
-      if (ids.length !== 3) return false;
+      if (ids.length !== expectedCount) return false;
       const unique = new Set(ids);
-      if (unique.size !== 3) return false;
+      if (unique.size !== expectedCount) return false;
+      const allowedSet = new Set(expectedChoiceIds);
       for (const id of unique) {
-        if (!CANONICAL_CHOICE_ID_SET.has(id)) return false;
+        if (!allowedSet.has(id)) return false;
       }
       return true;
     }
@@ -249,7 +261,7 @@ function isValidBeatPayload(beat, { beatNumber, questionType }) {
     if (expectedType === 'open') {
       const question = String(beat.productionPrompt?.question || '').trim();
       if (!question) return false;
-      if (beat.choiceQuestion) return false;
+      // Note: choiceQuestion may be present on open beats from older cache entries — that's OK
       return true;
     }
 
@@ -364,72 +376,102 @@ router.post('/reading-journey/setup', maybeAiLimiter, requireEnabled, async (req
     }
 
     const ttlMs = resolveTtlMs();
+    let topicTags = null;
+    let outline = null;
+    let outlineId = null;
+    let primaryOk = false;
 
-    // 1) Topic tags (cache by hashed keywords; do not store raw keywords in cache records)
-    const keywordTagsKey = computeKeywordTagsCacheKey({ keywords, language });
-    const keywordTagsRecord = await getCachedValue({ collection: COLLECTION_KEYWORD_TAGS, id: keywordTagsKey.id });
-    const cachedTags = Array.isArray(keywordTagsRecord)
-      ? keywordTagsRecord
-      : (Array.isArray(keywordTagsRecord?.topicTags) ? keywordTagsRecord.topicTags : null);
-    const cachedTagsVersion = Array.isArray(keywordTagsRecord)
-      ? 1
-      : Number(keywordTagsRecord?.formatVersion) || 0;
+    try {
+      // 1) Topic tags (cache by hashed keywords; do not store raw keywords in cache records)
+      const keywordTagsKey = computeKeywordTagsCacheKey({ keywords, language });
+      const keywordTagsRecord = await getCachedValue({ collection: COLLECTION_KEYWORD_TAGS, id: keywordTagsKey.id });
+      const cachedTags = Array.isArray(keywordTagsRecord)
+        ? keywordTagsRecord
+        : (Array.isArray(keywordTagsRecord?.topicTags) ? keywordTagsRecord.topicTags : null);
+      const cachedTagsVersion = Array.isArray(keywordTagsRecord)
+        ? 1
+        : Number(keywordTagsRecord?.formatVersion) || 0;
 
-    let topicTags = cachedTags;
-    const needFreshTags = !Array.isArray(topicTags) || topicTags.length < 3 || cachedTagsVersion !== 2;
-    if (needFreshTags) {
-      topicTags = await gemini.generateTopicTags({ keywords, level, language });
-      await setCachedValue({
-        collection: COLLECTION_KEYWORD_TAGS,
-        id: keywordTagsKey.id,
-        value: { formatVersion: 2, topicTags },
-        ttlMs
-      });
+      topicTags = cachedTags;
+      const needFreshTags = !Array.isArray(topicTags) || topicTags.length < 3 || cachedTagsVersion !== 2;
+      if (needFreshTags) {
+        topicTags = await gemini.generateTopicTags({ keywords, level, language });
+        await setCachedValue({
+          collection: COLLECTION_KEYWORD_TAGS,
+          id: keywordTagsKey.id,
+          value: { formatVersion: 2, topicTags },
+          ttlMs
+        });
+      }
+
+      // 2) Outline (cache by level + topicTags)
+      const outlineKey = computeOutlineCacheKey({ language, level, topicTags });
+      outline = await getCachedValue({ collection: COLLECTION_OUTLINES, id: outlineKey.id });
+      outlineId = outlineKey.id;
+
+      if (!outline || typeof outline !== 'object' || Number(outline.formatVersion) !== 2) {
+        outline = await gemini.generateOutline({ keywords, topicTags: outlineKey.normalizedTopicTags, level, language });
+        await setCachedValue({
+          collection: COLLECTION_OUTLINES,
+          id: outlineKey.id,
+          key: outlineKey.key,
+          value: outline,
+          ttlMs
+        });
+      }
+      primaryOk = true;
+    } catch (apiErr) {
+      // eslint-disable-next-line no-console
+      console.warn('[reading-journey] API unavailable, falling back to cached outline:', apiErr?.message || apiErr);
     }
 
-    // 2) Outline (cache by level + topicTags)
-    const outlineKey = computeOutlineCacheKey({ language, level, topicTags });
-    let outline = await getCachedValue({ collection: COLLECTION_OUTLINES, id: outlineKey.id });
-
-    if (!outline || typeof outline !== 'object' || Number(outline.formatVersion) !== 2) {
-      outline = await gemini.generateOutline({ keywords, topicTags: outlineKey.normalizedTopicTags, level, language });
-      await setCachedValue({
-        collection: COLLECTION_OUTLINES,
-        id: outlineKey.id,
-        key: outlineKey.key,
-        value: outline,
-        ttlMs
-      });
+    // Fallback: pick a random cached outline when API is unavailable
+    if (!primaryOk || !outline || typeof outline !== 'object') {
+      const allOutlines = await listCachedOutlines();
+      if (!allOutlines.length) {
+        return sendError(res, 503, 'NO_OUTLINES', 'No cached outlines available and AI service is down');
+      }
+      const pick = allOutlines[Math.floor(Math.random() * allOutlines.length)];
+      outlineId = pick.id;
+      outline = pick.value;
+      // eslint-disable-next-line no-console
+      console.log('[reading-journey] Fallback: using cached outline "' + (outline?.title || '?') + '" (' + outlineId + ')');
     }
 
     // 3) Beat 1 (cache by outlineId + beat + path)
-    const questionType = getQuestionTypeForBeat(outlineKey.id, 1);
-    const beatKey = computeBeatCacheKey({ outlineId: outlineKey.id, beatNumber: 1, path: [] });
+    const questionType = getQuestionTypeForBeat(outlineId, 1);
+    const beatKey = computeBeatCacheKey({ outlineId, beatNumber: 1, path: [] });
     let beat = await getCachedValue({ collection: COLLECTION_BEATS, id: beatKey.id });
     if (!isValidBeatPayload(beat, { beatNumber: 1, questionType })) {
-      beat = await gemini.generateBeat({ outline, beatNumber: 1, path: [], questionType, storySoFar: '', level, language });
-      await setCachedValue({
-        collection: COLLECTION_BEATS,
-        id: beatKey.id,
-        key: beatKey.key,
-        value: beat,
-        ttlMs
-      });
+      try {
+        beat = await gemini.generateBeat({ outline, beatNumber: 1, path: [], questionType, storySoFar: '', level, language, choiceIds: getChoiceIdsForBeat(1) });
+        await setCachedValue({
+          collection: COLLECTION_BEATS,
+          id: beatKey.id,
+          key: beatKey.key,
+          value: beat,
+          ttlMs
+        });
+      } catch (beatErr) {
+        // eslint-disable-next-line no-console
+        console.warn('[reading-journey] Beat generation also failed:', beatErr?.message || beatErr);
+        return sendError(res, 503, 'BEAT_UNAVAILABLE', 'Could not load or generate beat 1');
+      }
     }
 
     return sendSuccess(res, {
       setup: {
-        outlineId: outlineKey.id,
+        outlineId,
         title: String(outline?.title || 'Reading Journey'),
         level,
-        topicTags: outlineKey.normalizedTopicTags,
+        topicTags: Array.isArray(topicTags) ? topicTags : [],
         characters: Array.isArray(outline?.characters) ? outline.characters : [],
         beatOutline: Array.isArray(outline?.beatOutline) ? outline.beatOutline : []
       },
       beat: {
         beatNumber: 1,
         path: [],
-        ...beat
+        ...normalizeBeatForClient(beat)
       }
     });
   } catch (e) {
@@ -437,13 +479,13 @@ router.post('/reading-journey/setup', maybeAiLimiter, requireEnabled, async (req
   }
 });
 
-router.post('/reading-journey/advance', maybeAiLimiter, requireEnabled, async (req, res) => {
+router.post(ADVANCE_ROUTE_PATHS, maybeAiLimiter, requireEnabled, async (req, res) => {
   try {
     const outlineId = String(req.body?.outlineId || '').trim();
     const currentBeatNumber = Number(req.body?.currentBeatNumber);
-    const path = Array.isArray(req.body?.path) ? req.body.path.map((v) => String(v || '').trim()).filter(Boolean) : [];
+    const rawPath = Array.isArray(req.body?.path) ? req.body.path.map((v) => String(v || '').trim()).filter(Boolean) : [];
     const choiceId = String(req.body?.choiceId || '').trim();
-    const productionText = String(req.body?.productionText || '').trim();
+    const productionText = String(req.body?.productionText || req.body?.userResponse || '').trim();
 
     const level = gemini.normalizeLevel(req.body?.level);
     const language = String(req.body?.language || 'en').trim() || 'en';
@@ -452,29 +494,38 @@ router.post('/reading-journey/advance', maybeAiLimiter, requireEnabled, async (r
     if (!Number.isFinite(currentBeatNumber) || currentBeatNumber < 1 || currentBeatNumber > MAX_INTERACTIVE_BEATS) {
       return sendError(res, 400, 'INVALID_ARGUMENT', `currentBeatNumber must be 1..${MAX_INTERACTIVE_BEATS}`);
     }
-    if (path.length !== currentBeatNumber - 1) {
-      return sendError(res, 400, 'INVALID_ARGUMENT', 'path length must equal currentBeatNumber - 1');
-    }
 
-    const currentQuestionType = getQuestionTypeForBeat(outlineId, currentBeatNumber);
     let resolvedChoiceId = '';
 
-    if (currentQuestionType === 'mcq') {
-      if (!choiceId || choiceId.length > 60) {
-        return sendError(res, 400, 'INVALID_ARGUMENT', 'choiceId is required');
-      }
+    // Accept either choiceId (MCQ) or productionText (open) — the frontend
+    // renders based on cached beat data which may differ from hash-computed type
+    if (choiceId && choiceId.length <= 60) {
       resolvedChoiceId = choiceId.toLowerCase();
       if (!CANONICAL_CHOICE_ID_SET.has(resolvedChoiceId)) {
         return sendError(res, 400, 'INVALID_ARGUMENT', 'choiceId must be one of: investigate, ask, wait');
       }
-    } else {
-      if (!productionText) {
-        return sendError(res, 400, 'INVALID_ARGUMENT', 'productionText is required');
-      }
+    } else if (productionText) {
       if (productionText.length > 800) {
         return sendError(res, 400, 'INVALID_ARGUMENT', 'productionText too long');
       }
       resolvedChoiceId = classifyChoiceFromOpenText(productionText);
+    } else {
+      return sendError(res, 400, 'INVALID_ARGUMENT', 'choiceId or productionText is required');
+    }
+
+    // Legacy clients may append the just-selected choice into path before sending
+    // the request. Normalize that form back to the canonical "previous choices only"
+    // contract before validating the current beat state.
+    let path = rawPath;
+    if (rawPath.length === currentBeatNumber && resolvedChoiceId) {
+      const trailingChoiceId = String(rawPath[rawPath.length - 1] || '').trim().toLowerCase();
+      if (trailingChoiceId === resolvedChoiceId) {
+        path = rawPath.slice(0, -1);
+      }
+    }
+
+    if (path.length !== currentBeatNumber - 1) {
+      return sendError(res, 400, 'INVALID_ARGUMENT', 'path length must equal currentBeatNumber - 1');
     }
 
     const ttlMs = resolveTtlMs();
@@ -485,7 +536,7 @@ router.post('/reading-journey/advance', maybeAiLimiter, requireEnabled, async (r
     }
 
     // Validate choiceId against current beat cache if available (best-effort).
-    if (currentQuestionType === 'mcq') {
+    if (choiceId && CANONICAL_CHOICE_ID_SET.has(resolvedChoiceId)) {
       try {
         const currentBeatKey = computeBeatCacheKey({ outlineId, beatNumber: currentBeatNumber, path });
         const currentBeat = await getCachedValue({ collection: COLLECTION_BEATS, id: currentBeatKey.id });
@@ -510,23 +561,55 @@ router.post('/reading-journey/advance', maybeAiLimiter, requireEnabled, async (r
     const beatKey = computeBeatCacheKey({ outlineId, beatNumber: nextBeatNumber, path: nextPath });
     let beat = await getCachedValue({ collection: COLLECTION_BEATS, id: beatKey.id });
     if (!isValidBeatPayload(beat, { beatNumber: nextBeatNumber, questionType: nextQuestionType })) {
-      const storySoFar = await buildStorySoFar({ outlineId, beatNumber: nextBeatNumber, path: nextPath });
-      beat = await gemini.generateBeat({
-        outline,
-        beatNumber: nextBeatNumber,
-        path: nextPath,
-        questionType: nextQuestionType,
-        storySoFar,
-        level,
-        language
-      });
-      await setCachedValue({
-        collection: COLLECTION_BEATS,
-        id: beatKey.id,
-        key: beatKey.key,
-        value: beat,
-        ttlMs
-      });
+      // Procedural beats are path-independent — try all 6 engine path combos
+      // Engine uses B1_CHOICES=[investigate,ask,wait] × B2_CHOICES=[investigate,ask]
+      const B1 = ['investigate', 'ask', 'wait'];
+      const B2 = ['investigate', 'ask'];
+      const triedIds = new Set([beatKey.id]);
+      outer: for (const b1 of B1) {
+        for (const b2 of B2) {
+          const candidatePath = [];
+          for (let prevBn = 1; prevBn < nextBeatNumber; prevBn++) {
+            candidatePath.push(prevBn === 1 ? b1 : b2);
+          }
+          const candidateKey = computeBeatCacheKey({ outlineId, beatNumber: nextBeatNumber, path: candidatePath });
+          if (triedIds.has(candidateKey.id)) continue;
+          triedIds.add(candidateKey.id);
+          const candidateBeat = await getCachedValue({ collection: COLLECTION_BEATS, id: candidateKey.id });
+          if (isValidBeatPayload(candidateBeat, { beatNumber: nextBeatNumber, questionType: nextQuestionType })) {
+            beat = candidateBeat;
+            // Re-cache under user's actual path for future hits
+            await setCachedValue({ collection: COLLECTION_BEATS, id: beatKey.id, key: beatKey.key, value: beat, ttlMs });
+            break outer;
+          }
+        }
+      }
+    }
+    if (!isValidBeatPayload(beat, { beatNumber: nextBeatNumber, questionType: nextQuestionType })) {
+      try {
+        const storySoFar = await buildStorySoFar({ outlineId, beatNumber: nextBeatNumber, path: nextPath });
+        beat = await gemini.generateBeat({
+          outline,
+          beatNumber: nextBeatNumber,
+          path: nextPath,
+          questionType: nextQuestionType,
+          storySoFar,
+          level,
+          language,
+          choiceIds: getChoiceIdsForBeat(nextBeatNumber)
+        });
+        await setCachedValue({
+          collection: COLLECTION_BEATS,
+          id: beatKey.id,
+          key: beatKey.key,
+          value: beat,
+          ttlMs
+        });
+      } catch (genErr) {
+        // eslint-disable-next-line no-console
+        console.warn('[reading-journey] advance: beat generation failed:', genErr?.message || genErr);
+        return sendError(res, 503, 'BEAT_UNAVAILABLE', 'Could not generate the next beat');
+      }
     }
 
     // Fire-and-forget: assess the completed story after the ending beat is cached.
@@ -541,7 +624,7 @@ router.post('/reading-journey/advance', maybeAiLimiter, requireEnabled, async (r
       beat: {
         beatNumber: nextBeatNumber,
         path: nextPath,
-        ...beat
+        ...normalizeBeatForClient(beat)
       }
     });
   } catch (e) {

@@ -19,7 +19,7 @@ let providerSwitchReason = '';
 const DEFAULT_FALLBACK_MODEL = 'gemini-1.5-flash';
 const ALLOWED_LEVELS = new Set(['A2', 'B1', 'B2', 'C1']);
 
-const MAX_INTERACTIVE_BEATS = 5;
+const MAX_INTERACTIVE_BEATS = 3;
 const ENDING_BEAT_NUMBER = MAX_INTERACTIVE_BEATS + 1;
 
 const OPEN_PRODUCTION_PROMPT = 'In 1–2 sentences: summarize what happened, then say what you do next (investigate, ask, or wait) and why.';
@@ -326,9 +326,9 @@ async function generateOutline({ keywords, topicTags, level = 'B1', language = '
     '- Do not use real celebrities, politicians, or brands as characters.',
     '- Avoid graphic violence, explicit sexual content, and hate.',
     'Design rules:',
-    '- Create a locked 5-beat outline. Each beat must have a clear milestone.',
+    '- Create a locked 3-beat outline. Each beat must have a clear milestone.',
     '- Choose one setting (place + time) and keep it consistent across all beats.',
-    '- Keep one central problem/goal that develops and resolves in beat 5.',
+    '- Keep one central problem/goal that develops and resolves in beat 3.',
     '- Each beat must clearly follow from the previous beat (cause-and-effect).',
     '- Keep milestones simple and coherent (no random topic shifts).',
     `User keywords (inspiration): ${keywordText || '(none)'}`,
@@ -343,9 +343,7 @@ async function generateOutline({ keywords, topicTags, level = 'B1', language = '
     '  "beatOutline": [',
     '    {"beat":1,"milestone":"..."},',
     '    {"beat":2,"milestone":"..."},',
-    '    {"beat":3,"milestone":"..."},',
-    '    {"beat":4,"milestone":"..."},',
-    '    {"beat":5,"milestone":"..."}',
+    '    {"beat":3,"milestone":"..."}',
     '  ]',
     '}'
   ].join('\n');
@@ -367,10 +365,10 @@ async function generateOutline({ keywords, topicTags, level = 'B1', language = '
 
   const normalizedBeats = beatOutline
     .map((b) => ({ beat: Number(b?.beat), milestone: normalizeScalar(b?.milestone) }))
-    .filter((b) => Number.isFinite(b.beat) && b.beat >= 1 && b.beat <= 5 && b.milestone)
+    .filter((b) => Number.isFinite(b.beat) && b.beat >= 1 && b.beat <= MAX_INTERACTIVE_BEATS && b.milestone)
     .sort((a, b) => a.beat - b.beat);
 
-  if (normalizedBeats.length !== 5) {
+  if (normalizedBeats.length !== MAX_INTERACTIVE_BEATS) {
     throw new Error('Invalid beatOutline from Gemini');
   }
 
@@ -401,7 +399,8 @@ async function generateBeat({
   storySoFar,
   level = 'B1',
   language = 'en',
-  temperature
+  temperature,
+  choiceIds
 } = {}) {
   const safeLevel = normalizeLevel(level);
   const safeLanguage = normalizeScalar(language) || 'en';
@@ -481,11 +480,17 @@ async function generateBeat({
     promptParts.push('Story so far (continue from this, do not restart):', storyContext);
   }
 
+  // Determine which choice IDs to use for this beat.
+  const effectiveChoiceIds = Array.isArray(choiceIds) && choiceIds.length > 0
+    ? choiceIds
+    : CANONICAL_CHOICE_IDS;
+
   if (safeQuestionType === 'mcq') {
+    const choiceIdList = effectiveChoiceIds.join(', ');
     promptParts.push(
       'MCQ rules:',
-      '- Include choiceQuestion with exactly 3 options.',
-      '- Use ONLY these option IDs: investigate, ask, wait.',
+      `- Include choiceQuestion with exactly ${effectiveChoiceIds.length} options.`,
+      `- Use ONLY these option IDs: ${choiceIdList}.`,
       '- Each option.label must be 6-12 words, CEFR-appropriate, and fit the current milestone.',
       '- Do NOT include productionPrompt.'
     );
@@ -512,7 +517,7 @@ async function generateBeat({
     '  "segment": "string",',
     '  "recap": "string",',
     '  "highlights": ["word or phrase", "...up to 6 items"],',
-    '  "choiceQuestion": { "question": "What do you do next?", "options": [ {"id":"investigate","label":"..."}, {"id":"ask","label":"..."}, {"id":"wait","label":"..."} ] },',
+    '  "choiceQuestion": { "question": "What do you do next?", "options": [ ' + effectiveChoiceIds.map(id => `{"id":"${id}","label":"..."}`).join(', ') + ' ] },',
     '  "productionPrompt": { "question": "string" },',
     '  "shouldEnd": true/false,',
     '  "endWrap": "string"',
@@ -553,7 +558,7 @@ async function generateBeat({
       id: normalizeScalar(opt?.id).toLowerCase(),
       label: normalizeScalar(opt?.label)
     }))
-    .filter((opt) => CANONICAL_CHOICE_IDS.includes(opt.id) && opt.label)
+    .filter((opt) => effectiveChoiceIds.includes(opt.id) && opt.label)
     .slice(0, 6);
 
   const optionById = new Map();
@@ -564,9 +569,9 @@ async function generateBeat({
     wait: 'Wait quietly, watch closely, and stay calm.'
   };
 
-  const canonicalOptions = CANONICAL_CHOICE_IDS.map((id) => ({
+  const canonicalOptions = effectiveChoiceIds.map((id) => ({
     id,
-    label: optionById.get(id)?.label || fallbackById[id]
+    label: optionById.get(id)?.label || fallbackById[id] || `Choose ${id}`
   }));
 
   const normalizedChoiceQuestion = (safeQuestionType === 'mcq' && !shouldEnd)

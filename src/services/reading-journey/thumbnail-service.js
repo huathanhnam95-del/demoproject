@@ -44,7 +44,13 @@ async function generateStoryThumbnail(storyId, options = {}) {
     }
 
     // 5. Persist to Storage and Firestore (mocked for dryRun)
-    const storagePath = `reading-journey/thumbnails/${storyId}/thumb_${Date.now()}.jpg`;
+    const db = require('../../utils/firebase').db;
+    const fs = require('fs/promises');
+    const path = require('path');
+    
+    // Save to public folder so the browser can serve it statically
+    const publicPath = path.join(__dirname, '..', '..', '..', 'public', 'reading-journey', 'thumbnails');
+    const fileName = `${storyId}.jpg`;
     
     const record = {
         storyId,
@@ -53,13 +59,27 @@ async function generateStoryThumbnail(storyId, options = {}) {
         auditSpec,
         auditResult: lastAuditResult,
         attempts: lastImageResponse.attempt,
-        imageStoragePath: storagePath,
+        imageStoragePath: `/reading-journey/thumbnails/${fileName}`,
         finalModel: lastImageResponse.model,
         isFallback: false
     };
 
     if (!options.dryRun) {
-        // Real upload and database write logic goes here
+        try {
+            await fs.mkdir(publicPath, { recursive: true });
+            await fs.writeFile(path.join(publicPath, fileName), lastImageResponse.imageBytes);
+            
+            // Write to Firestore db
+            const firestore = db;
+            if (firestore) {
+                await firestore.collection('reading_journey_outlines_v1').doc(storyId).update({
+                    thumbnailRecord: record
+                });
+                console.log(`[ThumbnailService] Successfully updated Firestore for ${storyId}`);
+            }
+        } catch (e) {
+            console.error(`[ThumbnailService] Error saving artifact for ${storyId}:`, e.message);
+        }
     }
 
     return {

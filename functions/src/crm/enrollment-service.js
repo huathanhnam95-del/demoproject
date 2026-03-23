@@ -97,12 +97,35 @@ function buildAttendanceSessionCreateData(input, context = {}) {
     return {
         classId,
         sessionDate,
+        scheduledSessionId: cleanOptionalString(payload.scheduledSessionId),
+        attendanceState: cleanOptionalString(payload.attendanceState, 'draft') || 'draft',
         title: cleanOptionalString(payload.title) || sessionDate,
         notes: cleanOptionalString(payload.notes),
         createdAt: context.serverTimestamp ? context.serverTimestamp() : new Date(),
         createdBy: context.user?.uid || null,
         createdByEmail: context.user?.email || null
     };
+}
+
+function buildScheduledAttendanceOpenData(input, context = {}) {
+    const payload = input && typeof input === 'object' ? input : {};
+    const scheduledSessionId = cleanOptionalString(payload.scheduledSessionId);
+    const classId = cleanOptionalString(payload.classId);
+    const sessionDate = cleanOptionalString(payload.sessionDate)
+        || cleanOptionalString(payload.scheduledLocalDate)
+        || cleanOptionalString(payload.scheduledStartAt)?.slice(0, 10);
+    if (!scheduledSessionId || !classId || !sessionDate) {
+        throw new Error('Opening attendance requires a scheduled session, classId, and session date.');
+    }
+
+    return buildAttendanceSessionCreateData({
+        classId,
+        sessionDate,
+        scheduledSessionId,
+        attendanceState: 'draft',
+        title: cleanOptionalString(payload.title) || (payload.contractUnitIndex ? `Session ${payload.contractUnitIndex}` : sessionDate),
+        notes: cleanOptionalString(payload.notes)
+    }, context);
 }
 
 function buildAttendanceRecordWriteData(input, context = {}) {
@@ -154,6 +177,8 @@ function mapAttendanceSessionRecord(doc, sessionId) {
         sessionId: sessionId || doc?.id || null,
         classId: data.classId || null,
         sessionDate: data.sessionDate || null,
+        scheduledSessionId: data.scheduledSessionId || null,
+        attendanceState: data.attendanceState || 'draft',
         title: data.title || null,
         notes: data.notes || null,
         createdAt: data.createdAt || null,
@@ -254,6 +279,7 @@ module.exports = {
     buildEnrollmentPatchData,
     buildClassroomMemberData,
     buildAttendanceSessionCreateData,
+    buildScheduledAttendanceOpenData,
     buildAttendanceRecordWriteData,
     mapEnrollmentRecord,
     mapAttendanceSessionRecord,

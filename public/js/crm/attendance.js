@@ -10,6 +10,14 @@ window.CrmAttendance = (function () {
         };
     }
 
+    function buildScheduledSessionOpenPayload(session) {
+        return {
+            scheduledSessionId: String(session?.scheduledSessionId || session?.sessionId || '').trim(),
+            classId: String(session?.classId || '').trim(),
+            title: String(session?.title || '').trim() || null
+        };
+    }
+
     function buildBulkRecordPayload(rows) {
         return (rows || []).map((row) => ({
             studentId: String(row?.dataset?.studentId || '').trim(),
@@ -27,6 +35,7 @@ window.CrmAttendance = (function () {
 
     return {
         buildSessionPayload,
+        buildScheduledSessionOpenPayload,
         buildBulkRecordPayload,
         formatRiskLabel
     };

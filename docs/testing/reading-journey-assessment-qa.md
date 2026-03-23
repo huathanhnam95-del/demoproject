@@ -15,7 +15,7 @@ Use this checklist when validating the hidden Reading Journey post-story assessm
 
 ## Desktop Flow
 
-- Start a Reading Journey story and complete all five interactive beats plus the ending beat.
+- Start a Reading Journey story and complete all three interactive beats plus the ending beat.
 - Confirm the completion screen shows:
   - `Check Understanding`
   - `Skip for now`
@@ -25,6 +25,7 @@ Use this checklist when validating the hidden Reading Journey post-story assessm
   - story title context
   - CEFR level
   - `Question X of 5`
+- Confirm the quiz status region is visibly present before answering anything.
 - Complete the full quiz and confirm the result view shows:
   - score percent
   - strengths
@@ -52,6 +53,7 @@ Use this checklist when validating the hidden Reading Journey post-story assessm
   - sequence controls
   - footer buttons
 - Confirm the live status message updates after correct and incorrect interactions.
+- Confirm that same status message is readable on screen without using a screen reader.
 
 ## Retry Hint Behavior
 
@@ -94,3 +96,11 @@ Use this checklist when validating the hidden Reading Journey post-story assessm
 - Expected result:
   - `Reading Journey quiz mix: ...`
   - `Reading Journey smoke passed.`
+
+## Regenerated Corpus Check
+
+- Run:
+  - `node tests/reading-journey-quiz-regenerated-corpus.test.js`
+- Expected result:
+  - regenerated stories still produce grounded text-location and sequence items
+  - stale draft targets are replaced before the quiz reaches the browser

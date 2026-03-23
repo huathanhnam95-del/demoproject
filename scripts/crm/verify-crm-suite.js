@@ -60,6 +60,7 @@ function main() {
         ['node', ['tests/crm/student-360.test.js']],
         ['node', ['tests/crm/automation-service.test.js']],
         ['node', ['tests/crm/reporting-governance.test.js']],
+        ['node', ['tests/browser/crm-scheduler-browser-check.js']],
         ['node', ['scripts/crm/migrate-courses-to-crmCourses.js', '--dry-run']],
         ['node', ['scripts/crm/export-crm-data.js', '--dry-run']],
         ['node', ['scripts/crm/import-crm-data.js', '--dry-run']],

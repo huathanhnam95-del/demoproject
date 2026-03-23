@@ -203,9 +203,45 @@
 
       <section class="crm-panel" data-panel="courses/classes">
         <div class="crm-panel-header">
-          <h2>Class Attendance</h2>
+          <div>
+            <h2>Class Scheduling</h2>
+            <p>Drag active classes onto the calendar to seed, add, replace, or reschedule sessions.</p>
+          </div>
+          <div class="crm-inline-fields">
+            <button id="btn-refresh-scheduler" class="crm-btn-secondary" type="button">Refresh</button>
+            <button id="btn-seed-scheduler" class="crm-btn-primary" type="button">Seed Schedule</button>
+          </div>
         </div>
-        <div class="crm-placeholder-card">Class Management content here.</div>
+        <div id="scheduler-workspace" class="scheduler-workspace">
+          <aside id="scheduler-class-rail" class="scheduler-rail">
+            <div class="scheduler-rail-header">
+              <h3>Active Classes</h3>
+              <p>Drag a class card onto the calendar.</p>
+            </div>
+            <div id="scheduler-class-list" class="scheduler-class-list">
+              <div class="crm-muted">No classes loaded yet.</div>
+            </div>
+          </aside>
+          <section class="scheduler-center">
+            <div class="scheduler-toolbar">
+              <div class="crm-form-group">
+                <label for="scheduler-teacher-filter">Teacher Filter</label>
+                <input type="text" id="scheduler-teacher-filter" class="crm-input" placeholder="Teacher UID">
+              </div>
+              <div class="crm-form-group">
+                <label for="scheduler-from-date">From</label>
+                <input type="date" id="scheduler-from-date" class="crm-input">
+              </div>
+              <div class="crm-form-group">
+                <label for="scheduler-to-date">To</label>
+                <input type="date" id="scheduler-to-date" class="crm-input">
+              </div>
+            </div>
+            <div id="scheduler-calendar" class="scheduler-calendar">
+              <div class="crm-muted">Scheduler calendar will appear here.</div>
+            </div>
+          </section>
+        </div>
       </section>
 
       <section class="crm-panel" data-panel="courses/class-management">
@@ -890,6 +926,25 @@
                 <textarea id="course-description" name="course_description" class="crm-input" rows="4"
                   placeholder="Short description for counselors and students"></textarea>
               </div>
+              <div class="crm-form-group">
+                <label for="course-total-hours">Total Instruction Hours</label>
+                <input type="number" id="course-total-hours" name="course_total_hours" class="crm-input" min="0.5"
+                  step="0.5" placeholder="e.g. 24">
+              </div>
+              <div class="crm-form-group">
+                <label for="course-default-session-minutes">Default Session Minutes</label>
+                <input type="number" id="course-default-session-minutes" name="course_default_session_minutes" class="crm-input"
+                  min="30" step="15" placeholder="e.g. 120">
+              </div>
+              <div class="crm-form-group">
+                <label for="course-duration-step">Duration Step Minutes</label>
+                <input type="number" id="course-duration-step" name="course_duration_step" class="crm-input"
+                  min="15" step="15" placeholder="e.g. 30">
+              </div>
+              <div class="crm-form-group">
+                <label for="course-timezone">Timezone</label>
+                <input type="text" id="course-timezone" name="course_timezone" class="crm-input" placeholder="e.g. Asia/Bangkok">
+              </div>
             </div>
           </div>
 
@@ -940,9 +995,10 @@
           </svg>
         </button>
       </div>
-        <div class="crm-modal-body">
+      <div class="crm-modal-body">
         <div class="crm-modal-sidebar">
           <button class="crm-sidebar-item active" data-tab="settings">Settings</button>
+          <button class="crm-sidebar-item" data-tab="scheduling">Scheduling</button>
           <button class="crm-sidebar-item" data-tab="attendance">Attendance</button>
           <button class="crm-sidebar-item" data-tab="stream">Stream</button>
           <button class="crm-sidebar-item" data-tab="modules">Modules</button>
@@ -970,6 +1026,111 @@
                   <option value="archived">Archived</option>
                 </select>
               </div>
+            </div>
+          </div>
+
+          <div id="classroom-scheduling" class="crm-tab-content" style="display: none;">
+            <div class="crm-workspace-grid" style="margin-top: 0;">
+              <section class="crm-workspace-card">
+                <div class="crm-section-header">
+                  <div>
+                    <h3>Scheduling Setup</h3>
+                    <p class="crm-muted">Define the class template before generating or editing sessions.</p>
+                  </div>
+                </div>
+                <div class="crm-form-grid crm-compact-grid">
+                  <div class="crm-form-group">
+                    <label for="classroom-total-hours">Total Instruction Hours</label>
+                    <input type="number" id="classroom-total-hours" class="crm-input" min="0.5" step="0.5" placeholder="e.g. 24">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="classroom-primary-teacher">Primary Teacher UID</label>
+                    <input type="text" id="classroom-primary-teacher" class="crm-input" placeholder="Teacher UID">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="classroom-session-minutes">Session Minutes</label>
+                    <input type="number" id="classroom-session-minutes" class="crm-input" min="30" step="15" placeholder="120">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="classroom-schedule-timezone">Timezone</label>
+                    <input type="text" id="classroom-schedule-timezone" class="crm-input" placeholder="Asia/Bangkok">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="classroom-seed-start-date">Seed Start Date</label>
+                    <input type="date" id="classroom-seed-start-date" class="crm-input">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="classroom-seed-start-time">Seed Start Time</label>
+                    <input type="time" id="classroom-seed-start-time" class="crm-input">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="classroom-seed-weekdays">Seed Weekdays</label>
+                    <input type="text" id="classroom-seed-weekdays" class="crm-input" placeholder="mon,wed,fri">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="classroom-allowed-start-time">Allowed Start Time</label>
+                    <input type="time" id="classroom-allowed-start-time" class="crm-input">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="classroom-allowed-end-time">Allowed End Time</label>
+                    <input type="time" id="classroom-allowed-end-time" class="crm-input">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="classroom-duration-step">Duration Step Minutes</label>
+                    <input type="number" id="classroom-duration-step" class="crm-input" min="15" step="15" placeholder="30">
+                  </div>
+                </div>
+                <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
+                  <button id="btn-save-classroom-scheduling" class="crm-btn-primary" type="button">Generate Schedule</button>
+                </div>
+                <div class="classroom-regeneration-panel">
+                  <div class="crm-section-header">
+                    <div>
+                      <h3>Regenerate Future Schedule</h3>
+                      <p class="crm-muted">Preview a future-only duration change before replacing unlocked contracted sessions.</p>
+                    </div>
+                  </div>
+                  <div class="crm-form-grid crm-compact-grid">
+                    <div class="crm-form-group">
+                      <label for="classroom-regenerate-from-date">Regenerate From Date</label>
+                      <input type="date" id="classroom-regenerate-from-date" class="crm-input">
+                    </div>
+                    <div class="crm-form-group">
+                      <label for="classroom-regenerate-session-minutes">New Session Minutes</label>
+                      <input type="number" id="classroom-regenerate-session-minutes" class="crm-input" min="30" step="15" placeholder="120">
+                    </div>
+                    <div class="crm-form-group">
+                      <label for="classroom-regenerate-weekdays">Seed Weekdays</label>
+                      <input type="text" id="classroom-regenerate-weekdays" class="crm-input" placeholder="mon,wed,fri">
+                    </div>
+                    <div class="crm-form-group">
+                      <label for="classroom-regenerate-start-time">Seed Start Time</label>
+                      <input type="time" id="classroom-regenerate-start-time" class="crm-input">
+                    </div>
+                  </div>
+                  <div class="crm-inline-fields classroom-regeneration-actions">
+                    <button id="btn-preview-classroom-regeneration" class="crm-btn-secondary" type="button">Preview Regeneration</button>
+                    <button id="btn-apply-classroom-regeneration" class="crm-btn-primary" type="button" disabled>Apply Regeneration</button>
+                  </div>
+                  <div id="classroom-regeneration-preview" class="classroom-regeneration-preview crm-muted">
+                    Preview regeneration to review preserved sessions, blocked reasons, and the next contracted target count.
+                  </div>
+                </div>
+              </section>
+              <section class="crm-workspace-card">
+                <div class="crm-section-header">
+                  <div>
+                    <h3>Schedule Summary</h3>
+                    <p class="crm-muted">Live counters recalculate when sessions are added, replaced, or removed.</p>
+                  </div>
+                </div>
+                <div id="classroom-schedule-summary" class="crm-summary-grid">
+                  <div class="crm-summary-card">
+                    <div class="crm-summary-card-label">Assigned</div>
+                    <div class="crm-summary-card-value">0/0</div>
+                  </div>
+                </div>
+              </section>
             </div>
           </div>
 
@@ -1121,6 +1282,122 @@
     </div>
   </div>
 
+  <!-- Scheduler Action Modal -->
+  <div id="scheduler-action-modal" class="crm-modal-overlay scheduler-action-modal" role="dialog" aria-modal="true" aria-labelledby="scheduler-action-title" aria-hidden="true" style="display: none;">
+    <div class="crm-modal-container scheduler-action-container">
+      <div class="crm-modal-header">
+        <div class="crm-modal-title-row">
+          <h2 id="scheduler-action-title">Schedule Class Session</h2>
+          <span id="scheduler-action-badge" class="crm-student-id-badge">Add</span>
+        </div>
+        <button id="btn-close-scheduler-action-modal" class="crm-icon-btn text-dark" title="Close">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+        </button>
+      </div>
+      <div class="crm-modal-body scheduler-action-body">
+        <div class="scheduler-action-sidebar">
+          <div class="scheduler-action-summary-card">
+            <div class="scheduler-action-summary-row">
+              <span>Class</span>
+              <strong id="scheduler-action-class-name">-</strong>
+            </div>
+            <div class="scheduler-action-summary-row">
+              <span>Target Slot</span>
+              <strong id="scheduler-action-target-datetime">-</strong>
+            </div>
+            <div class="scheduler-action-summary-row">
+              <span>Teacher</span>
+              <strong id="scheduler-action-teacher">-</strong>
+            </div>
+            <div class="scheduler-action-summary-row">
+              <span>Contract</span>
+              <strong id="scheduler-action-contract-summary">-</strong>
+            </div>
+          </div>
+          <div class="scheduler-action-note crm-muted">
+            Choose whether the drop should create a new session or replace an existing one.
+          </div>
+        </div>
+        <div class="scheduler-action-content">
+          <div class="scheduler-action-switcher" role="group" aria-label="Scheduler action type">
+            <button id="scheduler-action-add-button" type="button" class="scheduler-action-switcher-btn active" aria-pressed="true">Add session</button>
+            <button id="scheduler-action-replace-button" type="button" class="scheduler-action-switcher-btn" aria-pressed="false">Replace session</button>
+          </div>
+
+          <section id="scheduler-action-add-panel" class="scheduler-action-panel">
+            <div class="crm-section-header" style="padding: 0 0 12px 0;">
+              <div>
+                <h3>Add Session</h3>
+                <p class="crm-muted">Create one session now, or repeat weekly on the dropped slot.</p>
+              </div>
+            </div>
+            <div class="scheduler-action-option-list">
+              <label class="scheduler-action-option">
+                <input id="scheduler-action-add-once" type="radio" name="scheduler-action-add-kind" checked>
+                <div>
+                  <strong>One session</strong>
+                  <span>Schedule a single session on the selected day and time.</span>
+                </div>
+              </label>
+              <label class="scheduler-action-option">
+                <input id="scheduler-action-add-recurring" type="radio" name="scheduler-action-add-kind">
+                <div>
+                  <strong>Repeat weekly</strong>
+                  <span>Repeat the same session each week for the selected count.</span>
+                </div>
+              </label>
+            </div>
+            <div class="crm-form-grid scheduler-action-grid">
+              <div class="crm-form-group">
+                <label for="scheduler-action-recurring-count">Weekly Occurrences</label>
+                <input id="scheduler-action-recurring-count" type="number" class="crm-input" min="2" max="12" step="1" value="2">
+              </div>
+            </div>
+            <div id="scheduler-action-add-preview" class="scheduler-action-preview-grid">
+              <div class="scheduler-action-preview-card">
+                <span>Requested</span>
+                <strong id="scheduler-action-preview-requested">0</strong>
+              </div>
+              <div class="scheduler-action-preview-card">
+                <span>Valid</span>
+                <strong id="scheduler-action-preview-valid">0</strong>
+              </div>
+              <div class="scheduler-action-preview-card">
+                <span>Skipped</span>
+                <strong id="scheduler-action-preview-skipped">0</strong>
+              </div>
+              <div class="scheduler-action-preview-card">
+                <span>Overflow</span>
+                <strong id="scheduler-action-preview-overflow">0</strong>
+              </div>
+            </div>
+            <p id="scheduler-action-add-warning" class="scheduler-action-warning crm-muted"></p>
+          </section>
+
+          <section id="scheduler-action-replace-panel" class="scheduler-action-panel" style="display: none;">
+            <div class="crm-section-header" style="padding: 0 0 12px 0;">
+              <div>
+                <h3>Replace Session</h3>
+                <p class="crm-muted">Pick a future unlocked session to remove and replace with the dropped slot.</p>
+              </div>
+            </div>
+            <p id="scheduler-action-replace-summary" class="scheduler-action-warning crm-muted"></p>
+            <div id="scheduler-action-replace-list" class="scheduler-action-list">
+              <div class="crm-muted">No eligible future sessions found.</div>
+            </div>
+          </section>
+        </div>
+      </div>
+      <div class="crm-modal-footer">
+        <button id="btn-cancel-scheduler-action" class="crm-btn-secondary" type="button">Cancel</button>
+        <button id="btn-confirm-scheduler-action" class="crm-btn-primary" type="button">Confirm Add</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Loading / Access Gate -->
   <div id="crm-loading" class="crm-loading-overlay" aria-live="polite">
     <div class="crm-loading-card">
@@ -1150,6 +1427,7 @@
   <script src="js/crm/attendance.js"></script>
   <script src="js/crm/finance.js"></script>
   <script src="js/crm/communications.js"></script>
+  <script src="js/crm/scheduler-workspace.js"></script>
   <script src="js/crm/dashboard.js"></script>
   <script src="js/crm/governance.js"></script>
   <script src="js/crm/index.js"></script>

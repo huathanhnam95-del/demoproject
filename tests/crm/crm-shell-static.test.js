@@ -52,8 +52,44 @@ assert(
 );
 
 assert(
+    html.includes('id="scheduler-workspace"'),
+    'CRM admin page must expose the scheduler workspace container in courses/classes.'
+);
+assert(
+    html.includes('id="scheduler-calendar"'),
+    'CRM admin page must expose the scheduler calendar surface.'
+);
+assert(
+    html.includes('id="scheduler-class-rail"'),
+    'CRM admin page must expose the scheduler right rail for draggable class cards.'
+);
+assert(
+    html.includes('id="course-total-hours"') &&
+    html.includes('id="course-default-session-minutes"') &&
+    html.includes('id="course-timezone"'),
+    'Course modal must expose delivery template scheduling fields.'
+);
+assert(
+    html.includes('id="classroom-primary-teacher"') &&
+    html.includes('id="classroom-session-minutes"') &&
+    html.includes('id="classroom-seed-start-date"'),
+    'Classroom modal must expose scheduling setup fields.'
+);
+assert(
+    html.includes('data-tab="scheduling"') &&
+    html.includes('id="classroom-scheduling"'),
+    'Classroom modal must provide a dedicated scheduling tab.'
+);
+
+assert(
     !/catch\s*\(\s*[^)]*\s*\)\s*\{\s*\}/.test(js),
     'crm-admin.js must not contain empty catch blocks.'
+);
+
+assert(
+    js.includes('loadSchedulerWorkspace') &&
+    js.includes('refreshSchedulerWorkspace'),
+    'crm-admin.js must wire scheduler workspace lifecycle helpers.'
 );
 
 assert(

@@ -46,11 +46,15 @@
     openTasks: [],
     attendanceRiskByStudentId: new Map()
   };
+  let schedulerController = null;
   const modalState = {
     studentId: null,
     createdTestLinks: new Map(),
     courseId: null,
     classroomId: null,
+    classroomScheduleVersion: null,
+    classroomRecord: null,
+    regenerationPreview: null,
     leadId: null,
     selectedInvoiceId: null,
     financeEnrollments: []
@@ -226,6 +230,10 @@
     elements.inputCourseCategory = document.getElementById('course-category');
     elements.inputCourseStatus = document.getElementById('course-status');
     elements.inputCourseDescription = document.getElementById('course-description');
+    elements.inputCourseTotalHours = document.getElementById('course-total-hours');
+    elements.inputCourseDefaultSessionMinutes = document.getElementById('course-default-session-minutes');
+    elements.inputCourseDurationStep = document.getElementById('course-duration-step');
+    elements.inputCourseTimezone = document.getElementById('course-timezone');
 
     // New Classroom Elements
     elements.btnNewClassroomTriggers = Array.from(document.querySelectorAll('#btn-new-classroom'));
@@ -244,6 +252,24 @@
     elements.inputClassroomName = document.getElementById('classroom-name');
     elements.inputClassroomCourseId = document.getElementById('classroom-course-id');
     elements.inputClassroomStatus = document.getElementById('classroom-status');
+    elements.inputClassroomTotalHours = document.getElementById('classroom-total-hours');
+    elements.inputClassroomPrimaryTeacher = document.getElementById('classroom-primary-teacher');
+    elements.inputClassroomSessionMinutes = document.getElementById('classroom-session-minutes');
+    elements.inputClassroomScheduleTimezone = document.getElementById('classroom-schedule-timezone');
+    elements.inputClassroomSeedStartDate = document.getElementById('classroom-seed-start-date');
+    elements.inputClassroomSeedStartTime = document.getElementById('classroom-seed-start-time');
+    elements.inputClassroomSeedWeekdays = document.getElementById('classroom-seed-weekdays');
+    elements.inputClassroomAllowedStartTime = document.getElementById('classroom-allowed-start-time');
+    elements.inputClassroomAllowedEndTime = document.getElementById('classroom-allowed-end-time');
+    elements.inputClassroomDurationStep = document.getElementById('classroom-duration-step');
+    elements.btnSaveClassroomScheduling = document.getElementById('btn-save-classroom-scheduling');
+    elements.inputClassroomRegenerateFromDate = document.getElementById('classroom-regenerate-from-date');
+    elements.inputClassroomRegenerateSessionMinutes = document.getElementById('classroom-regenerate-session-minutes');
+    elements.inputClassroomRegenerateWeekdays = document.getElementById('classroom-regenerate-weekdays');
+    elements.inputClassroomRegenerateStartTime = document.getElementById('classroom-regenerate-start-time');
+    elements.btnPreviewClassroomRegeneration = document.getElementById('btn-preview-classroom-regeneration');
+    elements.btnApplyClassroomRegeneration = document.getElementById('btn-apply-classroom-regeneration');
+    elements.classroomRegenerationPreview = document.getElementById('classroom-regeneration-preview');
     elements.classManagementGrid = document.getElementById('class-management-grid');
     elements.classroomStatusBadge = document.getElementById('crm-classroom-status-badge');
     elements.classroomTitle = document.getElementById('crm-classroom-title');
@@ -256,6 +282,40 @@
     elements.btnCreateAttendanceSession = document.getElementById('btn-create-attendance-session');
     elements.btnSaveAttendanceRecords = document.getElementById('btn-save-attendance-records');
     elements.attendanceRosterContainer = document.getElementById('attendance-roster-container');
+    elements.schedulerWorkspace = document.getElementById('scheduler-workspace');
+    elements.schedulerCalendar = document.getElementById('scheduler-calendar');
+    elements.schedulerClassRail = document.getElementById('scheduler-class-rail');
+    elements.schedulerClassList = document.getElementById('scheduler-class-list');
+    elements.btnRefreshScheduler = document.getElementById('btn-refresh-scheduler');
+    elements.btnSeedScheduler = document.getElementById('btn-seed-scheduler');
+    elements.inputSchedulerTeacherFilter = document.getElementById('scheduler-teacher-filter');
+    elements.inputSchedulerFromDate = document.getElementById('scheduler-from-date');
+    elements.inputSchedulerToDate = document.getElementById('scheduler-to-date');
+    elements.classroomScheduleSummary = document.getElementById('classroom-schedule-summary');
+    elements.schedulerActionModal = document.getElementById('scheduler-action-modal');
+    elements.btnCloseSchedulerActionModal = document.getElementById('btn-close-scheduler-action-modal');
+    elements.btnCancelSchedulerAction = document.getElementById('btn-cancel-scheduler-action');
+    elements.btnConfirmSchedulerAction = document.getElementById('btn-confirm-scheduler-action');
+    elements.schedulerActionTitle = document.getElementById('scheduler-action-title');
+    elements.schedulerActionBadge = document.getElementById('scheduler-action-badge');
+    elements.schedulerActionClassName = document.getElementById('scheduler-action-class-name');
+    elements.schedulerActionTargetDateTime = document.getElementById('scheduler-action-target-datetime');
+    elements.schedulerActionTeacher = document.getElementById('scheduler-action-teacher');
+    elements.schedulerActionContractSummary = document.getElementById('scheduler-action-contract-summary');
+    elements.schedulerActionAddButton = document.getElementById('scheduler-action-add-button');
+    elements.schedulerActionReplaceButton = document.getElementById('scheduler-action-replace-button');
+    elements.schedulerActionAddPanel = document.getElementById('scheduler-action-add-panel');
+    elements.schedulerActionReplacePanel = document.getElementById('scheduler-action-replace-panel');
+    elements.schedulerActionAddOnce = document.getElementById('scheduler-action-add-once');
+    elements.schedulerActionAddRecurring = document.getElementById('scheduler-action-add-recurring');
+    elements.schedulerActionRecurringCount = document.getElementById('scheduler-action-recurring-count');
+    elements.schedulerActionAddWarning = document.getElementById('scheduler-action-add-warning');
+    elements.schedulerActionPreviewRequested = document.getElementById('scheduler-action-preview-requested');
+    elements.schedulerActionPreviewValid = document.getElementById('scheduler-action-preview-valid');
+    elements.schedulerActionPreviewSkipped = document.getElementById('scheduler-action-preview-skipped');
+    elements.schedulerActionPreviewOverflow = document.getElementById('scheduler-action-preview-overflow');
+    elements.schedulerActionReplaceSummary = document.getElementById('scheduler-action-replace-summary');
+    elements.schedulerActionReplaceList = document.getElementById('scheduler-action-replace-list');
 
     // Classroom Modules & Classwork
     elements.btnAddModule = document.getElementById('btn-add-module');
@@ -305,6 +365,17 @@
     setupTabs();
     setupLeadComposer();
     setupActivitySurfaces();
+    schedulerController = window.CrmSchedulerWorkspace && typeof window.CrmSchedulerWorkspace.createController === 'function'
+      ? window.CrmSchedulerWorkspace.createController({
+          elements,
+          modalState,
+          showToast,
+          escapeHtml
+        })
+      : null;
+    if (schedulerController && typeof schedulerController.init === 'function') {
+      schedulerController.init();
+    }
     applyRouteFromHash();
     render();
 
@@ -681,7 +752,11 @@
       elements.inputCourseLabel,
       elements.inputCourseLevel,
       elements.inputCourseCategory,
-      elements.inputCourseDescription
+      elements.inputCourseDescription,
+      elements.inputCourseTotalHours,
+      elements.inputCourseDefaultSessionMinutes,
+      elements.inputCourseDurationStep,
+      elements.inputCourseTimezone
     ];
     infoInputs.forEach((el) => {
       if (el) el.value = '';
@@ -823,6 +898,9 @@
   }
 
   function getCoursePayload() {
+    const totalHours = Number(elements.inputCourseTotalHours?.value || 0);
+    const defaultSessionMinutes = Number(elements.inputCourseDefaultSessionMinutes?.value || 0);
+    const durationStepMinutes = Number(elements.inputCourseDurationStep?.value || 30);
     return {
       name: String(elements.inputCourseName?.value || '').trim(),
       code: String(elements.inputCourseCode?.value || '').trim(),
@@ -831,7 +909,13 @@
       category: String(elements.inputCourseCategory?.value || '').trim(),
       status: String(elements.inputCourseStatus?.value || '').trim() || 'active',
       description: String(elements.inputCourseDescription?.value || '').trim(),
-      teachers: getCourseTeachers()
+      teachers: getCourseTeachers(),
+      deliveryTemplate: {
+        totalInstructionMinutes: Number.isFinite(totalHours) && totalHours > 0 ? Math.round(totalHours * 60) : null,
+        defaultSessionMinutes: Number.isFinite(defaultSessionMinutes) && defaultSessionMinutes > 0 ? Math.round(defaultSessionMinutes) : null,
+        timezone: String(elements.inputCourseTimezone?.value || '').trim() || null,
+        durationStepMinutes: Number.isFinite(durationStepMinutes) && durationStepMinutes > 0 ? Math.round(durationStepMinutes) : 30
+      }
     };
   }
 
@@ -883,6 +967,19 @@
     if (elements.inputCourseCategory) elements.inputCourseCategory.value = String(course?.category || '');
     if (elements.inputCourseStatus) elements.inputCourseStatus.value = String(course?.status || 'active');
     if (elements.inputCourseDescription) elements.inputCourseDescription.value = String(course?.description || '');
+    if (elements.inputCourseTotalHours) {
+      const minutes = Number(course?.deliveryTemplate?.totalInstructionMinutes || 0);
+      elements.inputCourseTotalHours.value = minutes > 0 ? String((minutes / 60).toFixed(minutes % 60 === 0 ? 0 : 1)) : '';
+    }
+    if (elements.inputCourseDefaultSessionMinutes) {
+      elements.inputCourseDefaultSessionMinutes.value = String(course?.deliveryTemplate?.defaultSessionMinutes || '');
+    }
+    if (elements.inputCourseDurationStep) {
+      elements.inputCourseDurationStep.value = String(course?.deliveryTemplate?.durationStepMinutes || 30);
+    }
+    if (elements.inputCourseTimezone) {
+      elements.inputCourseTimezone.value = String(course?.deliveryTemplate?.timezone || '');
+    }
     setCourseTeachers(course?.teachers || []);
   }
 
@@ -2610,6 +2707,22 @@
         console.error('[CRM Admin] Dashboard refresh failed:', error);
       });
     }
+
+    if (activePanel === 'courses/classes') {
+      refreshSchedulerWorkspace().catch((error) => {
+        console.error('[CRM Admin] Scheduler refresh failed:', error);
+      });
+    }
+  }
+
+  function loadSchedulerWorkspace() {
+    if (!schedulerController || typeof schedulerController.load !== 'function') return Promise.resolve();
+    return schedulerController.load();
+  }
+
+  function refreshSchedulerWorkspace() {
+    if (!schedulerController || typeof schedulerController.refresh !== 'function') return Promise.resolve();
+    return schedulerController.refresh();
   }
 
   function showGateMessage(title, subtitle) {
@@ -2648,6 +2761,39 @@
         }).catch(e => {
           console.error('[CRM Admin] Save classroom failed:', e);
           showToast(e?.message || 'Failed to save classroom.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnSaveClassroomScheduling) {
+      elements.btnSaveClassroomScheduling.addEventListener('click', () => {
+        saveClassroomSettings().then(() => {
+          showToast('Scheduling setup saved.', 'success');
+        }).catch(e => {
+          console.error('[CRM Admin] Save classroom scheduling failed:', e);
+          showToast(e?.message || 'Failed to save classroom scheduling.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnPreviewClassroomRegeneration) {
+      elements.btnPreviewClassroomRegeneration.addEventListener('click', () => {
+        previewClassroomRegeneration().then(() => {
+          showToast('Regeneration preview ready.', 'success');
+        }).catch((e) => {
+          console.error('[CRM Admin] Preview classroom regeneration failed:', e);
+          showToast(e?.message || 'Failed to preview regeneration.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnApplyClassroomRegeneration) {
+      elements.btnApplyClassroomRegeneration.addEventListener('click', () => {
+        applyClassroomRegeneration().then(() => {
+          showToast('Future schedule regenerated.', 'success');
+        }).catch((e) => {
+          console.error('[CRM Admin] Apply classroom regeneration failed:', e);
+          showToast(e?.message || 'Failed to regenerate future schedule.', 'error');
         });
       });
     }
@@ -2758,6 +2904,9 @@
 
   function resetClassroomModal() {
     modalState.classroomId = null;
+    modalState.classroomScheduleVersion = null;
+    modalState.classroomRecord = null;
+    modalState.regenerationPreview = null;
     switchClassroomTab('settings');
     if (elements.inputClassroomName) elements.inputClassroomName.value = '';
     if (elements.inputClassroomCourseId) {
@@ -2767,6 +2916,21 @@
       });
     }
     if (elements.inputClassroomStatus) elements.inputClassroomStatus.value = 'draft';
+    if (elements.inputClassroomTotalHours) elements.inputClassroomTotalHours.value = '';
+    if (elements.inputClassroomPrimaryTeacher) elements.inputClassroomPrimaryTeacher.value = '';
+    if (elements.inputClassroomSessionMinutes) elements.inputClassroomSessionMinutes.value = '';
+    if (elements.inputClassroomScheduleTimezone) elements.inputClassroomScheduleTimezone.value = '';
+    if (elements.inputClassroomSeedStartDate) elements.inputClassroomSeedStartDate.value = '';
+    if (elements.inputClassroomSeedStartTime) elements.inputClassroomSeedStartTime.value = '';
+    if (elements.inputClassroomSeedWeekdays) elements.inputClassroomSeedWeekdays.value = '';
+    if (elements.inputClassroomAllowedStartTime) elements.inputClassroomAllowedStartTime.value = '';
+    if (elements.inputClassroomAllowedEndTime) elements.inputClassroomAllowedEndTime.value = '';
+    if (elements.inputClassroomDurationStep) elements.inputClassroomDurationStep.value = '';
+    if (elements.inputClassroomRegenerateFromDate) elements.inputClassroomRegenerateFromDate.value = '';
+    if (elements.inputClassroomRegenerateSessionMinutes) elements.inputClassroomRegenerateSessionMinutes.value = '';
+    if (elements.inputClassroomRegenerateWeekdays) elements.inputClassroomRegenerateWeekdays.value = '';
+    if (elements.inputClassroomRegenerateStartTime) elements.inputClassroomRegenerateStartTime.value = '';
+    if (elements.btnApplyClassroomRegeneration) elements.btnApplyClassroomRegeneration.disabled = true;
     if (elements.classroomStatusBadge) {
       elements.classroomStatusBadge.textContent = 'Draft';
       elements.classroomStatusBadge.style.display = 'inline-flex';
@@ -2781,6 +2945,17 @@
     if (elements.inputAttendanceSessionTitle) elements.inputAttendanceSessionTitle.value = '';
     if (elements.inputAttendanceSessionSelect) elements.inputAttendanceSessionSelect.innerHTML = '<option value="">Select a session...</option>';
     if (elements.attendanceRosterContainer) elements.attendanceRosterContainer.innerHTML = '<div class="crm-muted">No attendance roster yet.</div>';
+    if (elements.classroomScheduleSummary) {
+      elements.classroomScheduleSummary.innerHTML = `
+        <div class="crm-summary-card">
+          <div class="crm-summary-card-label">Assigned</div>
+          <div class="crm-summary-card-value">0/0</div>
+        </div>
+      `;
+    }
+    if (elements.classroomRegenerationPreview) {
+      elements.classroomRegenerationPreview.innerHTML = 'Preview regeneration to review preserved sessions, blocked reasons, and the next contracted target count.';
+    }
   }
 
   function switchClassroomTab(tabId) {
@@ -2799,6 +2974,140 @@
     }
     if (tabId === 'attendance' && modalState.classroomId) {
       loadClassroomAttendance(modalState.classroomId);
+    }
+  }
+
+  function parseWeekdayTokens(value) {
+    const map = {
+      sun: 0,
+      sunday: 0,
+      mon: 1,
+      monday: 1,
+      tue: 2,
+      tues: 2,
+      tuesday: 2,
+      wed: 3,
+      wednesday: 3,
+      thu: 4,
+      thur: 4,
+      thursday: 4,
+      fri: 5,
+      friday: 5,
+      sat: 6,
+      saturday: 6
+    };
+    return Array.from(new Set(String(value || '')
+      .split(',')
+      .map((item) => map[String(item || '').trim().toLowerCase()])
+      .filter((item) => Number.isInteger(item))
+    )).sort((left, right) => left - right);
+  }
+
+  function renderClassroomScheduleSummary(summary) {
+    if (!elements.classroomScheduleSummary) return;
+    const next = summary || {};
+    const assigned = Number(next.contractedAssignedCount || 0);
+    const target = Number(next.contractedTargetCount || 0);
+    const remaining = Number(next.remainingToScheduleCount || 0);
+    const overflow = Number(next.overflowCount || 0);
+    elements.classroomScheduleSummary.innerHTML = `
+      <div class="crm-summary-card">
+        <div class="crm-summary-card-label">Assigned</div>
+        <div class="crm-summary-card-value">${escapeHtml(`${assigned}/${target}`)}</div>
+      </div>
+      <div class="crm-summary-card">
+        <div class="crm-summary-card-label">Remaining</div>
+        <div class="crm-summary-card-value">${escapeHtml(String(remaining))}</div>
+      </div>
+      <div class="crm-summary-card">
+        <div class="crm-summary-card-label">Overflow</div>
+        <div class="crm-summary-card-value">${escapeHtml(String(overflow))}</div>
+      </div>
+    `;
+  }
+
+  function renderRegenerationPreview(preview) {
+    if (!elements.classroomRegenerationPreview) return;
+    const data = preview || null;
+    if (!data) {
+      elements.classroomRegenerationPreview.innerHTML = 'Preview regeneration to review preserved sessions, blocked reasons, and the next contracted target count.';
+      if (elements.btnApplyClassroomRegeneration) elements.btnApplyClassroomRegeneration.disabled = true;
+      return;
+    }
+
+    const blockedList = Array.isArray(data.blockedSessions) && data.blockedSessions.length
+      ? `<ul class="classroom-regeneration-list">${data.blockedSessions.slice(0, 6).map((session) => `
+          <li>${escapeHtml([session.reasonCode, session.scheduledLocalDate, session.scheduledLocalTime].filter(Boolean).join(' • '))}</li>
+        `).join('')}</ul>`
+      : '';
+    const warnings = Array.isArray(data.warnings) && data.warnings.length
+      ? `<ul class="classroom-regeneration-list">${data.warnings.map((warning) => `<li>${escapeHtml(warning)}</li>`).join('')}</ul>`
+      : '<div class="crm-muted">No warnings.</div>';
+    const guidance = Array.isArray(data.remediationGuidance) && data.remediationGuidance.length
+      ? `<ul class="classroom-regeneration-list">${data.remediationGuidance.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`
+      : '<div class="crm-muted">No remediation required.</div>';
+
+    elements.classroomRegenerationPreview.innerHTML = `
+      ${data.canCommit ? '' : '<div class="classroom-regeneration-alert">Regeneration is currently blocked.</div>'}
+      <div class="classroom-regeneration-preview-grid">
+        <div class="classroom-regeneration-preview-card">
+          <span>Preserved Contracted</span>
+          <strong>${escapeHtml(String(data.preservedContractedCount || 0))}</strong>
+        </div>
+        <div class="classroom-regeneration-preview-card">
+          <span>Preserved Minutes</span>
+          <strong>${escapeHtml(String(data.preservedContractedMinutes || 0))}</strong>
+        </div>
+        <div class="classroom-regeneration-preview-card">
+          <span>Preserved Overflow</span>
+          <strong>${escapeHtml(String(data.preservedOverflowCount || 0))}</strong>
+        </div>
+        <div class="classroom-regeneration-preview-card">
+          <span>Future Sessions to Create</span>
+          <strong>${escapeHtml(String(data.generatedFutureContractedCount || 0))}</strong>
+        </div>
+        <div class="classroom-regeneration-preview-card">
+          <span>Future Sessions to Cancel</span>
+          <strong>${escapeHtml(String(data.cancelledFutureContractedCount || 0))}</strong>
+        </div>
+        <div class="classroom-regeneration-preview-card">
+          <span>Next Target Count</span>
+          <strong>${escapeHtml(String(data.nextTargetSessionCount || 0))}</strong>
+        </div>
+      </div>
+      <div>
+        <strong>Warnings</strong>
+        ${warnings}
+      </div>
+      <div>
+        <strong>Blocked Sessions</strong>
+        ${blockedList || '<div class="crm-muted">No blocking sessions.</div>'}
+      </div>
+      <div>
+        <strong>Remediation Guidance</strong>
+        ${guidance}
+      </div>
+    `;
+    if (elements.btnApplyClassroomRegeneration) {
+      elements.btnApplyClassroomRegeneration.disabled = !data.canCommit;
+    }
+  }
+
+  function hydrateRegenerationInputs(classroom) {
+    const scheduleConfig = classroom?.scheduleConfig || {};
+    if (elements.inputClassroomRegenerateFromDate) {
+      elements.inputClassroomRegenerateFromDate.value = String(scheduleConfig.seedStartDate || '');
+    }
+    if (elements.inputClassroomRegenerateSessionMinutes) {
+      elements.inputClassroomRegenerateSessionMinutes.value = String(scheduleConfig.sessionMinutes || '');
+    }
+    if (elements.inputClassroomRegenerateWeekdays) {
+      elements.inputClassroomRegenerateWeekdays.value = Array.isArray(scheduleConfig.seedWeekdays)
+        ? scheduleConfig.seedWeekdays.join(',')
+        : '';
+    }
+    if (elements.inputClassroomRegenerateStartTime) {
+      elements.inputClassroomRegenerateStartTime.value = String(scheduleConfig.seedStartTime || '');
     }
   }
 
@@ -3109,9 +3418,70 @@
       ? await window.ClassroomAPI.updateClassroom(modalState.classroomId, payload)
       : await window.ClassroomAPI.createClassroom(payload);
     modalState.classroomId = String(res.classroomId || res.classroom?.classroomId || modalState.classroomId || '').trim();
+    if (res.classroom) {
+      modalState.classroomRecord = res.classroom;
+      modalState.classroomScheduleVersion = Number(res.classroom?.scheduleConfig?.scheduleVersion || 1) || 1;
+      renderClassroomScheduleSummary(res.classroom.scheduleSummary || null);
+      hydrateRegenerationInputs(res.classroom);
+    } else if (payload.scheduleConfig) {
+      modalState.classroomRecord = {
+        ...(modalState.classroomRecord || {}),
+        classroomId: modalState.classroomId,
+        name: payload.name,
+        scheduleConfig: {
+          ...payload.scheduleConfig,
+          scheduleVersion: Number(modalState.classroomScheduleVersion || 1) || 1
+        }
+      };
+      modalState.classroomScheduleVersion = Number(modalState.classroomRecord.scheduleConfig.scheduleVersion || 1) || 1;
+      hydrateRegenerationInputs(modalState.classroomRecord);
+    }
     if (elements.classroomStatusBadge) elements.classroomStatusBadge.textContent = payload.status;
     if (elements.classroomTitle) elements.classroomTitle.textContent = payload.name;
     await refreshClassroomList();
+    await refreshSchedulerWorkspace().catch(() => {});
+  }
+
+  function buildRegenerationRequestPayload() {
+    if (!modalState.classroomId) throw new Error('Save classroom settings first.');
+    return {
+      regenerateFromDate: String(elements.inputClassroomRegenerateFromDate?.value || '').trim(),
+      sessionMinutes: Number(elements.inputClassroomRegenerateSessionMinutes?.value || 0) || null,
+      seedWeekdays: parseWeekdayTokens(elements.inputClassroomRegenerateWeekdays?.value || ''),
+      seedStartTime: String(elements.inputClassroomRegenerateStartTime?.value || '').trim(),
+      expectedScheduleVersion: Number(modalState.classroomScheduleVersion || 0) || null
+    };
+  }
+
+  async function previewClassroomRegeneration() {
+    const payload = buildRegenerationRequestPayload();
+    const res = await window.ClassroomAPI.previewClassroomScheduleRegeneration(modalState.classroomId, payload);
+    modalState.regenerationPreview = res;
+    modalState.classroomScheduleVersion = Number(res.classroomScheduleVersion || modalState.classroomScheduleVersion || 1) || 1;
+    renderRegenerationPreview(res);
+  }
+
+  async function applyClassroomRegeneration() {
+    const payload = buildRegenerationRequestPayload();
+    if (!modalState.regenerationPreview) {
+      throw new Error('Preview regeneration before applying it.');
+    }
+    const res = await window.ClassroomAPI.regenerateClassroomSchedule(modalState.classroomId, payload);
+    modalState.regenerationPreview = null;
+    if (res.scheduleConfig) {
+      modalState.classroomScheduleVersion = Number(res.scheduleConfig.scheduleVersion || modalState.classroomScheduleVersion || 1) || 1;
+      if (modalState.classroomRecord) {
+        modalState.classroomRecord = {
+          ...modalState.classroomRecord,
+          scheduleConfig: res.scheduleConfig,
+          scheduleSummary: res.scheduleSummary || modalState.classroomRecord.scheduleSummary || null
+        };
+      }
+    }
+    renderClassroomScheduleSummary(res.scheduleSummary || null);
+    renderRegenerationPreview(null);
+    await refreshClassroomList();
+    await refreshSchedulerWorkspace().catch(() => {});
   }
 
   async function refreshClassroomList() {
@@ -3163,6 +3533,9 @@
             window.CrmClassrooms.applyToForm(elements, classroom);
           }
           modalState.classroomId = classroomId;
+          modalState.classroomRecord = classroom;
+          modalState.classroomScheduleVersion = Number(classroom?.scheduleConfig?.scheduleVersion || 1) || 1;
+          modalState.regenerationPreview = null;
           if (elements.classroomStatusBadge) {
             elements.classroomStatusBadge.textContent = classroom.status || 'draft';
             elements.classroomStatusBadge.style.display = 'inline-flex';
@@ -3170,6 +3543,9 @@
           if (elements.classroomTitle) {
             elements.classroomTitle.textContent = classroom.name || 'Classroom';
           }
+          renderClassroomScheduleSummary(classroom.scheduleSummary || null);
+          hydrateRegenerationInputs(classroom);
+          renderRegenerationPreview(null);
           openClassroomModal();
           await loadClassroomModules(classroomId);
           await loadClassroomClasswork(classroomId);

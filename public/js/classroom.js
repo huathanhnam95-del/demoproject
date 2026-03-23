@@ -265,9 +265,12 @@
         if (!window.ClassroomAPI) return;
         try {
             const classrooms = await window.ClassroomAPI.fetchClassrooms();
-            elements.classSwitcher.innerHTML = classrooms.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            elements.classSwitcher.innerHTML = classrooms.map((c) => {
+                const classId = c.id || c.classroomId;
+                return `<option value="${escapeHtml(classId)}">${escapeHtml(c.name)}</option>`;
+            }).join('');
             if (classrooms.length > 0) {
-                activeClassId = classrooms[0].id;
+                activeClassId = classrooms[0].id || classrooms[0].classroomId;
                 loadClassData();
             }
         } catch (e) {

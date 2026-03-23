@@ -49,26 +49,14 @@ function buildStatusResolver(deps) {
         return deps.resolveAdminStatus;
     }
 
-    return async ({ db, req }) => {
-        let bootstrapped = false;
-        try {
-            await db.collection(USERS).doc(String(req.user.uid)).set({
-                isAdmin: true,
-                email: req.user.email || null,
-                adminBootstrappedAt: new Date()
-            }, { merge: true });
-            bootstrapped = true;
-        } catch (error) {
-            console.warn('[CRM Admin] Failed to bootstrap isAdmin flag:', error?.message || error);
-        }
-
-        return {
-            isAdmin: true,
-            uid: req.user.uid,
-            email: req.user.email || null,
-            bootstrapped
-        };
-    };
+    // Safe default: deny-by-default unless the host app explicitly provides a resolver.
+    // This prevents accidental deployments where everyone is treated as admin.
+    return async ({ req }) => ({
+        isAdmin: false,
+        uid: req?.user?.uid || null,
+        email: req?.user?.email || null,
+        bootstrapped: false
+    });
 }
 
 function ensureDependencies(deps) {

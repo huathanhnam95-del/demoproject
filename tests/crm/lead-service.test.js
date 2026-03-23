@@ -65,6 +65,7 @@ const conversion = buildLeadConversion({
 });
 
 assert.strictEqual(conversion.student.acquisitionSource, 'facebook');
+assert.strictEqual(conversion.student.facebook, 'lead.fb');
 assert.strictEqual(conversion.student.leadId, 'lead-1');
 assert.strictEqual(conversion.student.lifecycleStage, 'enrolled');
 assert.strictEqual(conversion.leadPatch.stage, 'converted');

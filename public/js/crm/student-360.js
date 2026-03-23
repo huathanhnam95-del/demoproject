@@ -10,6 +10,23 @@ window.CrmStudent360 = (function () {
         return Number.isFinite(value) ? value : null;
     }
 
+    function getListValue(element) {
+        const raw = getValue(element);
+        if (!raw) return [];
+        const seen = new Set();
+        const values = [];
+        raw.split(',')
+            .map((item) => item.trim())
+            .filter(Boolean)
+            .forEach((item) => {
+                const key = item.toLowerCase();
+                if (seen.has(key)) return;
+                seen.add(key);
+                values.push(item);
+            });
+        return values;
+    }
+
     function parseDelimitedRows(value, shape) {
         return String(value || '')
             .split('\n')
@@ -26,12 +43,22 @@ window.CrmStudent360 = (function () {
     }
 
     function buildPayload(elements) {
+        const preferredLearningDays = getListValue(elements.inputPreferredLearningDays);
+        const preferredLearningHours = getListValue(elements.inputPreferredLearningHours);
+        const manualPreferredSchedule = getValue(elements.inputPreferredSchedule);
+        const structuredPreferredSchedule = [
+            preferredLearningDays.length ? `Days: ${preferredLearningDays.join(', ')}` : '',
+            preferredLearningHours.length ? `Hours: ${preferredLearningHours.join(', ')}` : ''
+        ].filter(Boolean).join(' | ');
+
         return {
             targets: {
                 exam: getValue(elements.inputTargetExam),
                 score: getNumberValue(elements.inputTargetScore)
             },
-            preferredSchedule: getValue(elements.inputPreferredSchedule),
+            preferredSchedule: manualPreferredSchedule || structuredPreferredSchedule,
+            preferredLearningDays,
+            preferredLearningHours,
             scoreHistory: parseDelimitedRows(getValue(elements.inputScoreHistory), ['date', 'score'])
                 .map((entry) => ({ date: entry.date, score: entry.score ? Number(entry.score) : null })),
             contacts: {
@@ -49,10 +76,23 @@ window.CrmStudent360 = (function () {
             .join('\n');
     }
 
+    function formatList(rows) {
+        return Array.isArray(rows) ? rows.map((row) => String(row || '').trim()).filter(Boolean).join(', ') : '';
+    }
+
     function applyToForm(elements, student) {
         if (elements.inputTargetExam) elements.inputTargetExam.value = String(student?.targets?.exam || '');
         if (elements.inputTargetScore) elements.inputTargetScore.value = student?.targets?.score ?? '';
-        if (elements.inputPreferredSchedule) elements.inputPreferredSchedule.value = String(student?.preferredSchedule || '');
+        if (elements.inputPreferredSchedule) {
+            const preferredSchedule = String(student?.preferredSchedule || '').trim();
+            const fallbackSchedule = [
+                student?.preferredLearningDays?.length ? `Days: ${formatList(student.preferredLearningDays)}` : '',
+                student?.preferredLearningHours?.length ? `Hours: ${formatList(student.preferredLearningHours)}` : ''
+            ].filter(Boolean).join(' | ');
+            elements.inputPreferredSchedule.value = preferredSchedule || fallbackSchedule;
+        }
+        if (elements.inputPreferredLearningDays) elements.inputPreferredLearningDays.value = formatList(student?.preferredLearningDays);
+        if (elements.inputPreferredLearningHours) elements.inputPreferredLearningHours.value = formatList(student?.preferredLearningHours);
         if (elements.inputScoreHistory) elements.inputScoreHistory.value = formatDelimitedRows(student?.scoreHistory, ['date', 'score']);
         if (elements.inputGuardianContacts) elements.inputGuardianContacts.value = formatDelimitedRows(student?.contacts?.guardians, ['name', 'phone', 'email']);
         if (elements.inputCompanyContacts) elements.inputCompanyContacts.value = formatDelimitedRows(student?.contacts?.companies, ['name', 'email', 'phone']);

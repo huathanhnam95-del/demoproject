@@ -1,3 +1,9 @@
+require('../../../public/js/crm/finance-workflow');
+
+const {
+    deriveFinanceWorkflowState
+} = globalThis.CrmFinanceWorkflow || {};
+
 const COMMISSION_STATUSES = ['pending', 'approved', 'paid'];
 
 function cleanOptionalString(value) {
@@ -33,8 +39,8 @@ function buildInvoiceCreateData(input, context = {}) {
     const studentId = cleanOptionalString(input?.studentId);
     const enrollmentId = cleanOptionalString(input?.enrollmentId);
     const amount = normalizeMoney(input?.amount);
-    if (!studentId || !enrollmentId || amount <= 0) {
-        throw new Error('Invoice requires studentId, enrollmentId, and a positive amount.');
+    if (!studentId || amount <= 0) {
+        throw new Error('Invoice requires studentId and a positive amount.');
     }
 
     const discountAmount = normalizeMoney(input?.discountAmount);
@@ -96,8 +102,8 @@ function buildPaymentCreateData(input, context = {}) {
     const studentId = cleanOptionalString(input?.studentId);
     const enrollmentId = cleanOptionalString(input?.enrollmentId);
     const amount = normalizeMoney(input?.amount);
-    if (!invoiceId || !studentId || !enrollmentId || amount <= 0) {
-        throw new Error('Payment requires invoiceId, studentId, enrollmentId, and a positive amount.');
+    if (!invoiceId || !studentId || amount <= 0) {
+        throw new Error('Payment requires invoiceId, studentId, and a positive amount.');
     }
 
     return {
@@ -112,6 +118,43 @@ function buildPaymentCreateData(input, context = {}) {
         createdAt: context.serverTimestamp ? context.serverTimestamp() : new Date(),
         createdBy: context.user?.uid || null,
         createdByEmail: context.user?.email || null
+    };
+}
+
+function buildPaidEnrollmentSyncPatch({ invoice, enrollment, student }, context = {}) {
+    if (cleanOptionalString(invoice?.status) !== 'paid') {
+        return null;
+    }
+    if (!enrollment || typeof enrollment !== 'object') {
+        return null;
+    }
+
+    const studentLinkedUserId = Array.isArray(student?.linked_user_ids) && student.linked_user_ids.length > 0
+        ? cleanOptionalString(student.linked_user_ids[0])
+        : null;
+    const studentUid = cleanOptionalString(enrollment.studentUid) || studentLinkedUserId;
+    const studentName = cleanOptionalString(enrollment.studentName) || cleanOptionalString(student?.name);
+    const studentEmail = cleanOptionalString(enrollment.studentEmail) || cleanOptionalString(student?.email);
+
+    const enrollmentPatch = {
+        status: 'active'
+    };
+    if (studentUid) {
+        enrollmentPatch.studentUid = studentUid;
+    }
+    if (studentName) {
+        enrollmentPatch.studentName = studentName;
+    }
+    if (studentEmail) {
+        enrollmentPatch.studentEmail = studentEmail;
+    }
+
+    return {
+        enrollmentPatch,
+        studentPatch: {
+            lifecycleStage: 'enrolled'
+        },
+        studentUid
     };
 }
 
@@ -218,9 +261,11 @@ module.exports = {
     buildInvoiceCreateData,
     buildInvoicePatchData,
     buildPaymentCreateData,
+    buildPaidEnrollmentSyncPatch,
     applyPaymentToInvoice,
     buildCommissionRecords,
     summarizeFinance,
+    deriveFinanceWorkflowState,
     mapInvoiceRecord,
     mapPaymentRecord
 };

@@ -23,20 +23,8 @@ window.ClassroomAPI = (function () {
         };
     }
 
-    // Student: List classrooms I am enrolled in (membership-based).
+    // Admin: Read local classroom docs
     async function fetchClassrooms() {
-        const headers = await getHeaders();
-        const res = await fetch('/api/classrooms', {
-            method: 'GET',
-            headers
-        });
-        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-        const json = await res.json();
-        return json.classrooms || [];
-    }
-
-    // Admin: List all classrooms (admin-only).
-    async function fetchAdminClassrooms() {
         const headers = await getHeaders();
         const res = await fetch('/api/admin/classrooms', {
             method: 'GET',
@@ -47,13 +35,8 @@ window.ClassroomAPI = (function () {
         return json.classrooms || [];
     }
 
-    // Admin: Read CRM course catalog (crmCourses-backed) via server API to avoid Firestore permission issues.
+    // Admin: Read CRM course catalog from crmCourses via server API to avoid Firestore permission issues.
     async function fetchCourses() {
-        const crmCoursesApi = window.CrmCourses;
-        if (crmCoursesApi && typeof crmCoursesApi.fetchCourses === 'function') {
-            return crmCoursesApi.fetchCourses();
-        }
-
         const headers = await getHeaders();
         const res = await fetch('/api/admin/courses', {
             method: 'GET',
@@ -162,28 +145,21 @@ window.ClassroomAPI = (function () {
         }
 
         const headers = await getHeaders();
-        // Since we don't have a dedicated student submission endpoint yet, 
-        // and we want to keep it simple, we'll write directly to a top-level collection 
-        // but we'll use a server endpoint if possible for security.
-        // For Phase 3, let's add a submission endpoint to a new route if needed, 
-        // OR reuse admin.js if we allow students (unlikely safe).
-        // Let's assume we have a /api/classrooms/:id/submit route.
-        // FOR NOW: We'll use Firestore directly for the submission write if rules allow, 
-        // otherwise I need to add a student route.
-
-        const db = getDb();
-        const submissionRef = db.collection('crmSubmissions').doc();
-        await submissionRef.set({
-            classId,
-            workId,
-            studentUid: uid,
-            studentEmail: auth.currentUser.email,
-            audio: audioData,
-            status: 'turned-in',
-            submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+        const res = await fetch(`/api/admin/classrooms/${classId}/submissions`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+                workId,
+                audio: audioData
+            })
         });
 
-        return { success: true, submissionId: submissionRef.id };
+        if (!res.ok) {
+            const message = await res.text().catch(() => '');
+            throw new Error(message || `HTTP Error: ${res.status}`);
+        }
+
+        return res.json();
     }
 
     // Student: Fetch my submissions
@@ -218,6 +194,75 @@ window.ClassroomAPI = (function () {
     async function fetchReviewBoard(classId) {
         const headers = await getHeaders();
         const res = await fetch(`/api/admin/classrooms/${classId}/review-board`, {
+            method: 'GET',
+            headers
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function fetchLiveSessions(classId) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/classrooms/${classId}/live-sessions`, {
+            method: 'GET',
+            headers
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        const json = await res.json();
+        return json.sessions || [];
+    }
+
+    async function createLiveSession(classId, data) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/classrooms/${classId}/live-sessions`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function updateLiveSession(classId, sessionId, data) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/classrooms/${classId}/live-sessions/${sessionId}`, {
+            method: 'PATCH',
+            headers,
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function startLiveSession(classId, sessionId) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/classrooms/${classId}/live-sessions/${sessionId}/start`, {
+            method: 'POST',
+            headers
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function endLiveSession(classId, sessionId) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/classrooms/${classId}/live-sessions/${sessionId}/end`, {
+            method: 'POST',
+            headers
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function fetchClassroomMatches(studentId, params = {}) {
+        const headers = await getHeaders();
+        const search = new URLSearchParams();
+        if (params && Object.prototype.hasOwnProperty.call(params, 'courseId')) {
+            const courseId = String(params.courseId || '').trim();
+            if (courseId) search.set('courseId', courseId);
+        }
+        const suffix = search.toString() ? `?${search.toString()}` : '';
+        const res = await fetch(`/api/admin/students/${encodeURIComponent(studentId)}/classroom-matches${suffix}`, {
             method: 'GET',
             headers
         });
@@ -287,16 +332,31 @@ window.ClassroomAPI = (function () {
         return res.json();
     }
 
+    async function returnSubmissionForRevision(submissionId, data) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/submissions/${submissionId}/return-for-revision`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
     return {
         fetchCourses,
         fetchClassrooms,
-        fetchAdminClassrooms,
         createClassroom,
         updateClassroom,
         loadModules,
         createModule,
         loadClasswork,
         createClasswork,
+        fetchLiveSessions,
+        createLiveSession,
+        updateLiveSession,
+        startLiveSession,
+        endLiveSession,
         submitAssignment,
         fetchMySubmissions,
         fetchSubmissions,
@@ -305,6 +365,8 @@ window.ClassroomAPI = (function () {
         createAttendanceSession,
         saveAttendanceRecords,
         fetchAttendanceSummary,
-        gradeSubmission
+        fetchClassroomMatches,
+        gradeSubmission,
+        returnSubmissionForRevision
     };
 })();

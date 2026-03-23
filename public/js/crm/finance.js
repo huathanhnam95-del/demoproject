@@ -29,9 +29,18 @@ window.CrmFinance = (function () {
         return String(Number(value || 0));
     }
 
+    function deriveWorkflowState(payload) {
+        const workflow = window.CrmFinanceWorkflow;
+        if (!workflow || typeof workflow.deriveFinanceWorkflowState !== 'function') {
+            throw new Error('Finance workflow helpers are not available.');
+        }
+        return workflow.deriveFinanceWorkflowState(payload || {});
+    }
+
     return {
         buildInvoicePayload,
         buildPaymentPayload,
-        formatMoney
+        formatMoney,
+        deriveWorkflowState
     };
 })();

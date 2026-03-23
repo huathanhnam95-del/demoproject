@@ -6,7 +6,8 @@ const {
     CRM_AUDIT_LOGS,
     CLASSROOM_MODULES,
     CLASSROOM_CLASSWORK,
-    CLASSROOM_MEMBERS
+    CLASSROOM_MEMBERS,
+    CLASSROOM_LIVE_SESSIONS
 } = require('../../crm/collections');
 const {
     sendSuccess: defaultSendSuccess,
@@ -31,6 +32,20 @@ const {
     mapClassroomMembers,
     mapClassroomRecord
 } = require('../../crm/course-service');
+const {
+    buildHomeworkSubmissionCreateData,
+    buildHomeworkSubmissionDocId,
+    buildHomeworkSubmissionReturnPatch,
+    buildHomeworkSubmissionResubmissionPatch
+} = require('../../crm/homework-service');
+const {
+    buildLiveSessionCreateData,
+    buildLiveSessionPatchData,
+    buildLiveSessionStartPatch,
+    buildLiveSessionEndPatch,
+    mapLiveSessionRecord,
+    sortLiveSessions
+} = require('../../crm/live-session-service');
 
 function resolveServerTimestampFactory(deps) {
     if (typeof deps.serverTimestamp === 'function') {
@@ -290,6 +305,206 @@ module.exports = function createCrmRouter(rawDeps) {
         }
     });
 
+    router.get('/classrooms/:classId/live-sessions', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const classId = String(req.params.classId || '').trim();
+            if (!classId) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'Missing classId.');
+            }
+
+            const classroomSnap = await deps.db.collection(CRM_CLASSROOMS).doc(classId).get();
+            if (!classroomSnap.exists) {
+                return sendError(res, 404, 'CLASSROOM_NOT_FOUND', 'Classroom not found.');
+            }
+
+            const snap = await deps.db.collection(CRM_CLASSROOMS)
+                .doc(classId)
+                .collection(CLASSROOM_LIVE_SESSIONS)
+                .get();
+
+            const sessions = sortLiveSessions(snap.docs.map((doc) => mapLiveSessionRecord(doc, doc.id)));
+            return sendSuccess(res, { sessions, count: sessions.length });
+        } catch (error) {
+            return sendError(res, 500, 'LIST_LIVE_SESSIONS_ERROR', 'Failed to fetch live sessions.', error?.message || error);
+        }
+    });
+
+    router.post('/classrooms/:classId/live-sessions', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const classId = String(req.params.classId || '').trim();
+            if (!classId) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'Missing classId.');
+            }
+
+            const classroomRef = deps.db.collection(CRM_CLASSROOMS).doc(classId);
+            const classroomSnap = await classroomRef.get();
+            if (!classroomSnap.exists) {
+                return sendError(res, 404, 'CLASSROOM_NOT_FOUND', 'Classroom not found.');
+            }
+
+            const classroom = classroomSnap.data() || {};
+            const payload = buildLiveSessionCreateData({
+                ...(req.body || {}),
+                classId,
+                courseId: req.body?.courseId || classroom.courseId || null
+            }, {
+                user: req.user,
+                serverTimestamp
+            });
+
+            const ref = classroomRef.collection(CLASSROOM_LIVE_SESSIONS).doc();
+            await ref.set(payload);
+            await writeAuditLog({
+                action: 'classroom.live-session.create',
+                entityType: 'live-session',
+                entityId: ref.id,
+                metadata: {
+                    classId,
+                    courseId: payload.courseId || null,
+                    status: payload.status || null
+                }
+            }, { user: req.user });
+
+            const createdSnap = await ref.get();
+            return sendSuccess(res, {
+                sessionId: ref.id,
+                session: mapLiveSessionRecord(createdSnap, ref.id)
+            }, 'Live session created.');
+        } catch (error) {
+            if ((error?.message || '').includes('Live session') || (error?.message || '').includes('meetingUrl') || (error?.message || '').includes('scheduledStartAt') || (error?.message || '').includes('status')) {
+                return sendError(res, 400, 'VALIDATION_ERROR', error.message);
+            }
+            return sendError(res, 500, 'CREATE_LIVE_SESSION_ERROR', 'Failed to create live session.', error?.message || error);
+        }
+    });
+
+    router.patch('/classrooms/:classId/live-sessions/:sessionId', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const classId = String(req.params.classId || '').trim();
+            const sessionId = String(req.params.sessionId || '').trim();
+            if (!classId || !sessionId) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'Missing classId or sessionId.');
+            }
+
+            const ref = deps.db.collection(CRM_CLASSROOMS)
+                .doc(classId)
+                .collection(CLASSROOM_LIVE_SESSIONS)
+                .doc(sessionId);
+            const snap = await ref.get();
+            if (!snap.exists) {
+                return sendError(res, 404, 'LIVE_SESSION_NOT_FOUND', 'Live session not found.');
+            }
+
+            const next = buildLiveSessionPatchData(snap.data() || {}, req.body || {}, {
+                user: req.user,
+                serverTimestamp
+            });
+            await ref.set(next, { merge: true });
+            await writeAuditLog({
+                action: 'classroom.live-session.update',
+                entityType: 'live-session',
+                entityId: sessionId,
+                metadata: {
+                    classId,
+                    courseId: next.courseId || null,
+                    status: next.status || null
+                }
+            }, { user: req.user });
+
+            const updatedSnap = await ref.get();
+            return sendSuccess(res, {
+                session: mapLiveSessionRecord(updatedSnap, sessionId)
+            }, 'Live session updated.');
+        } catch (error) {
+            if ((error?.message || '').includes('Live session') || (error?.message || '').includes('transition') || (error?.message || '').includes('meetingUrl') || (error?.message || '').includes('scheduledStartAt') || (error?.message || '').includes('status')) {
+                return sendError(res, 400, 'VALIDATION_ERROR', error.message);
+            }
+            return sendError(res, 500, 'UPDATE_LIVE_SESSION_ERROR', 'Failed to update live session.', error?.message || error);
+        }
+    });
+
+    router.post('/classrooms/:classId/live-sessions/:sessionId/start', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const classId = String(req.params.classId || '').trim();
+            const sessionId = String(req.params.sessionId || '').trim();
+            if (!classId || !sessionId) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'Missing classId or sessionId.');
+            }
+
+            const ref = deps.db.collection(CRM_CLASSROOMS)
+                .doc(classId)
+                .collection(CLASSROOM_LIVE_SESSIONS)
+                .doc(sessionId);
+            const snap = await ref.get();
+            if (!snap.exists) {
+                return sendError(res, 404, 'LIVE_SESSION_NOT_FOUND', 'Live session not found.');
+            }
+
+            const patch = buildLiveSessionStartPatch(snap.data() || {}, {
+                user: req.user,
+                serverTimestamp
+            });
+            await ref.set(patch, { merge: true });
+            await writeAuditLog({
+                action: 'classroom.live-session.start',
+                entityType: 'live-session',
+                entityId: sessionId,
+                metadata: { classId }
+            }, { user: req.user });
+
+            const updatedSnap = await ref.get();
+            return sendSuccess(res, {
+                session: mapLiveSessionRecord(updatedSnap, sessionId)
+            }, 'Live session started.');
+        } catch (error) {
+            if ((error?.message || '').includes('scheduled')) {
+                return sendError(res, 400, 'VALIDATION_ERROR', error.message);
+            }
+            return sendError(res, 500, 'START_LIVE_SESSION_ERROR', 'Failed to start live session.', error?.message || error);
+        }
+    });
+
+    router.post('/classrooms/:classId/live-sessions/:sessionId/end', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const classId = String(req.params.classId || '').trim();
+            const sessionId = String(req.params.sessionId || '').trim();
+            if (!classId || !sessionId) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'Missing classId or sessionId.');
+            }
+
+            const ref = deps.db.collection(CRM_CLASSROOMS)
+                .doc(classId)
+                .collection(CLASSROOM_LIVE_SESSIONS)
+                .doc(sessionId);
+            const snap = await ref.get();
+            if (!snap.exists) {
+                return sendError(res, 404, 'LIVE_SESSION_NOT_FOUND', 'Live session not found.');
+            }
+
+            const patch = buildLiveSessionEndPatch(snap.data() || {}, {
+                user: req.user,
+                serverTimestamp
+            });
+            await ref.set(patch, { merge: true });
+            await writeAuditLog({
+                action: 'classroom.live-session.end',
+                entityType: 'live-session',
+                entityId: sessionId,
+                metadata: { classId }
+            }, { user: req.user });
+
+            const updatedSnap = await ref.get();
+            return sendSuccess(res, {
+                session: mapLiveSessionRecord(updatedSnap, sessionId)
+            }, 'Live session ended.');
+        } catch (error) {
+            if ((error?.message || '').includes('live')) {
+                return sendError(res, 400, 'VALIDATION_ERROR', error.message);
+            }
+            return sendError(res, 500, 'END_LIVE_SESSION_ERROR', 'Failed to end live session.', error?.message || error);
+        }
+    });
+
     router.get('/classrooms/:classId/submissions', ...requireAdminHandlers, async (req, res) => {
         try {
             const classId = String(req.params.classId || '').trim();
@@ -302,6 +517,81 @@ module.exports = function createCrmRouter(rawDeps) {
             return sendSuccess(res, { submissions });
         } catch (error) {
             return sendError(res, 500, 'FETCH_SUBMISSIONS_ERROR', 'Failed to fetch submissions.', error?.message || error);
+        }
+    });
+
+    router.post('/classrooms/:classId/submissions', ...requireAuthHandlers, async (req, res) => {
+        try {
+            const classId = String(req.params.classId || '').trim();
+            const workId = String(req.body?.workId || '').trim();
+            if (!classId) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'Missing classId.');
+            }
+            if (!workId) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'Missing workId.');
+            }
+
+            const studentUid = String(req.user?.uid || '').trim();
+            if (!studentUid) {
+                return sendError(res, 401, 'UNAUTHORIZED', 'Authentication required.');
+            }
+
+            const querySnap = await deps.db.collection(CRM_SUBMISSIONS)
+                .where('classId', '==', classId)
+                .where('workId', '==', workId)
+                .where('studentUid', '==', studentUid)
+                .limit(1)
+                .get();
+
+            const existingDoc = querySnap.empty ? null : querySnap.docs[0];
+            const existingData = existingDoc ? (existingDoc.data() || {}) : null;
+
+            if (existingData?.status === 'graded') {
+                return sendError(res, 409, 'ALREADY_GRADED', 'This homework has already been graded.');
+            }
+
+            if (existingData?.status === 'turned-in') {
+                return sendError(res, 409, 'ALREADY_SUBMITTED', 'Homework is already turned in.');
+            }
+
+            const context = {
+                user: req.user,
+                serverTimestamp
+            };
+            const payload = existingData
+                ? buildHomeworkSubmissionResubmissionPatch(existingData, {
+                    audio: req.body?.audio || null
+                }, context)
+                : buildHomeworkSubmissionCreateData({
+                    classId,
+                    workId,
+                    studentUid,
+                    studentEmail: req.user.email || null,
+                    audio: req.body?.audio || null
+                }, context);
+            const submissionId = existingDoc?.id || buildHomeworkSubmissionDocId({ classId, workId, studentUid });
+            const ref = deps.db.collection(CRM_SUBMISSIONS).doc(submissionId);
+
+            await ref.set(payload, { merge: !!existingDoc });
+            await writeAuditLog({
+                action: existingData ? 'submission.resubmit' : 'submission.submit',
+                entityType: 'submission',
+                entityId: submissionId,
+                metadata: {
+                    classId,
+                    workId,
+                    status: payload.status || null,
+                    revisionCount: payload.revisionCount || 1
+                }
+            }, { user: req.user });
+
+            return sendSuccess(res, {
+                submissionId,
+                status: payload.status || null,
+                revisionCount: payload.revisionCount || 1
+            }, existingData ? 'Homework resubmitted.' : 'Homework submitted.');
+        } catch (error) {
+            return sendError(res, 500, 'SUBMIT_HOMEWORK_ERROR', 'Failed to submit homework.', error?.message || error);
         }
     });
 
@@ -334,6 +624,46 @@ module.exports = function createCrmRouter(rawDeps) {
             });
         } catch (error) {
             return sendError(res, 500, 'FETCH_REVIEW_BOARD_ERROR', 'Failed to fetch review board.', error?.message || error);
+        }
+    });
+
+    router.post('/submissions/:submissionId/return-for-revision', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const submissionId = String(req.params.submissionId || '').trim();
+            if (!submissionId) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'Missing submissionId.');
+            }
+
+            const ref = deps.db.collection(CRM_SUBMISSIONS).doc(submissionId);
+            const snap = await ref.get();
+            if (!snap.exists) {
+                return sendError(res, 404, 'SUBMISSION_NOT_FOUND', 'Submission not found.');
+            }
+
+            const patch = buildHomeworkSubmissionReturnPatch(snap.data() || {}, {
+                feedback: req.body?.feedback ?? null
+            }, {
+                user: req.user,
+                serverTimestamp
+            });
+
+            await ref.set(patch, { merge: true });
+            await writeAuditLog({
+                action: 'submission.return_for_revision',
+                entityType: 'submission',
+                entityId: submissionId,
+                metadata: {
+                    feedback: patch.feedback || null
+                }
+            }, { user: req.user });
+
+            return sendSuccess(res, {
+                submissionId,
+                status: patch.status,
+                revisionCount: Number(snap.data()?.revisionCount || 1)
+            }, 'Submission returned for revision.');
+        } catch (error) {
+            return sendError(res, 500, 'RETURN_FOR_REVISION_ERROR', 'Failed to return submission for revision.', error?.message || error);
         }
     });
 

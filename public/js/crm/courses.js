@@ -28,6 +28,7 @@ window.CrmCourses = (function () {
     }
 
     async function fetchCourses() {
+        // crmCourses is the backing source for the CRM course catalog.
         const headers = await getAuthHeaders();
         const res = await fetch('/api/admin/courses', { method: 'GET', headers });
         if (!res.ok) throw new Error(`Failed to fetch courses (HTTP ${res.status})`);

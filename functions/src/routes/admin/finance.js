@@ -1,18 +1,30 @@
 const {
     CRM_INVOICES,
     CRM_PAYMENTS,
-    CRM_COMMISSIONS
+    CRM_COMMISSIONS,
+    CRM_ENROLLMENTS,
+    CRM_STUDENTS,
+    CRM_CLASSROOMS,
+    CLASSROOM_MEMBERS
 } = require('../../crm/collections');
 const {
     buildInvoiceCreateData,
     buildInvoicePatchData,
     buildPaymentCreateData,
+    buildPaidEnrollmentSyncPatch,
     applyPaymentToInvoice,
     buildCommissionRecords,
     summarizeFinance,
     mapInvoiceRecord,
     mapPaymentRecord
 } = require('../../crm/finance-service');
+const {
+    buildEnrollmentPatchData,
+    buildClassroomMemberData
+} = require('../../crm/enrollment-service');
+const {
+    buildStudentPatchData
+} = require('../../crm/student-service');
 
 module.exports = function registerFinanceRoutes(router, deps) {
     const { db, sendSuccess, sendError, requireAdminHandlers, serverTimestamp, writeAuditLog } = deps;
@@ -109,14 +121,80 @@ module.exports = function registerFinanceRoutes(router, deps) {
                 return sendError(res, 404, 'INVOICE_NOT_FOUND', 'Invoice not found.');
             }
 
+            const invoice = mapInvoiceRecord(invoiceSnap, payment.invoiceId);
+            if (String(invoice.studentId || '') !== String(payment.studentId || '')) {
+                return sendError(res, 400, 'PAYMENT_MISMATCH', 'Payment student must match the invoice student.');
+            }
+            const effectiveEnrollmentId = String(payment.enrollmentId || invoice.enrollmentId || '').trim();
+            if (invoice.enrollmentId && effectiveEnrollmentId && String(invoice.enrollmentId || '') !== effectiveEnrollmentId) {
+                return sendError(res, 400, 'PAYMENT_MISMATCH', 'Payment enrollment must match the invoice enrollment.');
+            }
+            payment.enrollmentId = effectiveEnrollmentId || null;
+
+            let enrollmentRef = null;
+            let enrollment = null;
+            if (payment.enrollmentId) {
+                enrollmentRef = db.collection(CRM_ENROLLMENTS).doc(payment.enrollmentId);
+                const enrollmentSnap = await enrollmentRef.get();
+                if (!enrollmentSnap.exists) {
+                    return sendError(res, 404, 'ENROLLMENT_NOT_FOUND', 'Enrollment not found.');
+                }
+                enrollment = enrollmentSnap.data() || {};
+                if (String(enrollment.studentId || '') !== String(payment.studentId || '')) {
+                    return sendError(res, 400, 'PAYMENT_MISMATCH', 'Payment student must match the enrollment student.');
+                }
+            }
+
+            const studentRef = db.collection(CRM_STUDENTS).doc(payment.studentId);
+            const studentSnap = await studentRef.get();
+            if (!studentSnap.exists) {
+                return sendError(res, 404, 'STUDENT_NOT_FOUND', 'Student not found.');
+            }
+
             const paymentRef = db.collection(CRM_PAYMENTS).doc();
             await paymentRef.set(payment);
 
-            const invoice = mapInvoiceRecord(invoiceSnap, payment.invoiceId);
             const paymentSnap = await db.collection(CRM_PAYMENTS).where('invoiceId', '==', payment.invoiceId).get();
             const payments = paymentSnap.docs.map((doc) => mapPaymentRecord(doc, doc.id));
             const updatedInvoice = applyPaymentToInvoice(invoice, payments);
             await invoiceRef.set(updatedInvoice, { merge: true });
+
+            let updatedEnrollment = enrollment;
+            let updatedStudent = studentSnap.data() || {};
+            let enrollmentActivated = false;
+            if (updatedInvoice.status === 'paid' && enrollmentRef && enrollment) {
+                const syncPatch = buildPaidEnrollmentSyncPatch({
+                    invoice: updatedInvoice,
+                    enrollment,
+                    student: studentSnap.data() || {}
+                }, {
+                    user: req.user,
+                    serverTimestamp
+                });
+
+                if (syncPatch) {
+                    updatedEnrollment = buildEnrollmentPatchData(enrollment, syncPatch.enrollmentPatch, {
+                        user: req.user,
+                        serverTimestamp
+                    });
+                    await enrollmentRef.set(updatedEnrollment, { merge: true });
+
+                    if (updatedEnrollment.studentUid && updatedEnrollment.classId) {
+                        await db.collection(CRM_CLASSROOMS)
+                            .doc(updatedEnrollment.classId)
+                            .collection(CLASSROOM_MEMBERS)
+                            .doc(updatedEnrollment.studentUid)
+                            .set(buildClassroomMemberData(updatedEnrollment), { merge: true });
+                    }
+
+                    updatedStudent = buildStudentPatchData(studentSnap.data() || {}, syncPatch.studentPatch, {
+                        user: req.user,
+                        serverTimestamp
+                    });
+                    await studentRef.set(updatedStudent, { merge: true });
+                    enrollmentActivated = true;
+                }
+            }
 
             const commissions = buildCommissionRecords({
                 invoiceId: payment.invoiceId,
@@ -137,7 +215,9 @@ module.exports = function registerFinanceRoutes(router, deps) {
                 metadata: {
                     invoiceId: payment.invoiceId,
                     studentId: payment.studentId,
-                    commissionsCreated: commissions.length
+                    commissionsCreated: commissions.length,
+                    enrollmentActivated,
+                    invoiceStatus: updatedInvoice.status
                 }
             }, { user: req.user });
 
@@ -145,7 +225,10 @@ module.exports = function registerFinanceRoutes(router, deps) {
                 paymentId: paymentRef.id,
                 payment,
                 invoice: updatedInvoice,
-                commissionsCreated: commissions.length
+                commissionsCreated: commissions.length,
+                enrollmentActivated,
+                enrollment: enrollmentActivated ? updatedEnrollment : null,
+                student: enrollmentActivated ? updatedStudent : null
             }, 'Payment recorded.');
         } catch (error) {
             if ((error?.message || '').includes('Payment requires')) {

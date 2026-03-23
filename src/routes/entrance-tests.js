@@ -3,6 +3,8 @@ const axios = require('axios');
 const https = require('https');
 const { db, admin, getStorageBucket } = require('../utils/firebase');
 const { sendError, sendSuccess } = require('../utils/response-helper');
+const { CRM_LEADS } = require('../../functions/src/crm/collections');
+const { buildLeadStageSyncPatch } = require('../../functions/src/crm/lead-service');
 const {
     TEST_36PLUS,
     TEST_VERSION,
@@ -345,6 +347,25 @@ router.post('/submit', async (req, res) => {
             }
 
             const scoring = scoreSubmission(responses);
+            const studentId = String(data.studentId || '').trim();
+            if (studentId) {
+                const studentRef = db.collection('crmStudents').doc(studentId);
+                const studentSnap = await tx.get(studentRef);
+                const leadId = studentSnap.exists ? String(studentSnap.data()?.leadId || '').trim() : '';
+                if (leadId) {
+                    const leadRef = db.collection(CRM_LEADS).doc(leadId);
+                    const leadSnap = await tx.get(leadRef);
+                    if (leadSnap.exists) {
+                        const leadPatch = buildLeadStageSyncPatch(leadSnap.data() || {}, 'test_completed', {
+                            user: { uid: 'public-entrance-test', email: null },
+                            serverTimestamp: () => admin.firestore.FieldValue.serverTimestamp()
+                        });
+                        if (leadPatch) {
+                            tx.set(leadRef, leadPatch, { merge: true });
+                        }
+                    }
+                }
+            }
 
             tx.set(ref, {
                 status: 'submitted',

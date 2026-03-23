@@ -21,15 +21,85 @@ window.CrmLeads = (function () {
         return Number.isFinite(value) ? value : null;
     }
 
+    function getListValue(element) {
+        const raw = getValue(element);
+        if (!raw) return [];
+        return raw
+            .split(',')
+            .map((part) => part.trim())
+            .filter(Boolean);
+    }
+
     function buildPayload(elements) {
+        const facebookDisplayName = getValue(elements.inputLeadFacebookDisplayName);
         return {
             name: getValue(elements.inputLeadName),
             email: getValue(elements.inputLeadEmail),
             phone: getValue(elements.inputLeadPhone),
+            facebook: facebookDisplayName || null,
+            facebookDisplayName,
+            facebookProfileUrl: getValue(elements.inputLeadFacebookProfileUrl),
+            realName: getValue(elements.inputLeadRealName),
+            dateOfBirth: getValue(elements.inputLeadDateOfBirth),
+            learningNeeds: getValue(elements.inputLeadLearningNeeds),
+            preferredLearningDays: getListValue(elements.inputLeadPreferredLearningDays),
+            preferredLearningHours: getListValue(elements.inputLeadPreferredLearningHours),
+            messengerThreadUrl: getValue(elements.inputLeadMessengerThreadUrl),
+            messengerLastContactAt: getValue(elements.inputLeadMessengerLastContactAt),
+            messengerStatus: getValue(elements.inputLeadMessengerStatus),
             source: getValue(elements.inputLeadSource),
             stage: getValue(elements.inputLeadStage) || 'new',
             probability: getNumberValue(elements.inputLeadProbability)
         };
+    }
+
+    function buildStudentPayloadFromLead(lead) {
+        const preferredDays = Array.isArray(lead?.preferredLearningDays) ? lead.preferredLearningDays : [];
+        const preferredHours = Array.isArray(lead?.preferredLearningHours) ? lead.preferredLearningHours : [];
+        const preferredScheduleParts = [];
+        if (preferredDays.length) preferredScheduleParts.push(`Days: ${preferredDays.join(', ')}`);
+        if (preferredHours.length) preferredScheduleParts.push(`Hours: ${preferredHours.join(', ')}`);
+
+        const notesParts = [
+            String(lead?.learningNeeds || '').trim(),
+            String(lead?.dateOfBirth || '').trim() ? `DOB: ${String(lead.dateOfBirth).trim()}` : null,
+            String(lead?.facebookProfileUrl || '').trim() ? `Facebook URL: ${String(lead.facebookProfileUrl).trim()}` : null,
+            String(lead?.notes || '').trim()
+        ].filter(Boolean);
+
+        const counselingParts = [
+            String(lead?.messengerStatus || '').trim() ? `Messenger: ${String(lead.messengerStatus).trim()}` : null,
+            String(lead?.messengerLastContactAt || '').trim() ? `Last contact: ${String(lead.messengerLastContactAt).trim()}` : null,
+            String(lead?.messengerThreadUrl || '').trim() ? `Thread: ${String(lead.messengerThreadUrl).trim()}` : null
+        ].filter(Boolean);
+
+        const name = String(lead?.realName || lead?.name || lead?.facebookDisplayName || lead?.facebook || lead?.facebookProfileUrl || '').trim();
+        const facebook = String(lead?.facebookDisplayName || lead?.facebook || lead?.facebookProfileUrl || '').trim();
+
+        return {
+            name,
+            label: String(lead?.label || lead?.facebookDisplayName || '').trim(),
+            phone: String(lead?.phone || '').trim(),
+            email: String(lead?.email || '').trim(),
+            zalo: String(lead?.zalo || '').trim(),
+            facebook,
+            acquisitionSource: String(lead?.source || '').trim(),
+            lifecycleStage: 'potential',
+            notes: notesParts.join(' | '),
+            preferredSchedule: preferredScheduleParts.join(' | '),
+            counselingNotes: counselingParts.join(' | ')
+        };
+    }
+
+    function hasAnyContact(payload) {
+        return [
+            payload?.name,
+            payload?.email,
+            payload?.phone,
+            payload?.facebook,
+            payload?.facebookDisplayName,
+            payload?.facebookProfileUrl
+        ].some(Boolean);
     }
 
     function formatStageLabel(stage) {
@@ -71,8 +141,10 @@ window.CrmLeads = (function () {
     return {
         STAGES,
         buildPayload,
+        buildStudentPayloadFromLead,
         formatStageLabel,
         getSelectableStages,
+        hasAnyContact,
         isConvertedLead,
         summarize
     };

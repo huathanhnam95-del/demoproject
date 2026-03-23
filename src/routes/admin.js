@@ -1,6 +1,8 @@
 const path = require('path');
 const crypto = require('crypto');
 const createCrmRouter = require('../../functions/src/routes/admin/create-crm-router');
+const { CRM_LEADS } = require('../../functions/src/crm/collections');
+const { buildLeadStageSyncPatch } = require('../../functions/src/crm/lead-service');
 const { admin, db, getStorageBucket } = require('../utils/firebase');
 const { sendError, sendSuccess } = require('../utils/response-helper');
 const authMiddleware = require('../middleware/auth');
@@ -82,19 +84,26 @@ async function forceLinkProfile(studentId, targetUid) {
 }
 
 function registerLocalOnlyRoutes(router, deps) {
+    const localDb = deps.db || db;
+    const localAdmin = deps.admin || admin;
+    const localAuthMiddleware = deps.authMiddleware || authMiddleware;
+    const localSendSuccess = deps.sendSuccess || sendSuccess;
+    const localSendError = deps.sendError || sendError;
+    const localGetStorageBucket = deps.getStorageBucket || getStorageBucket;
+    const localServerTimestamp = deps.serverTimestamp || (() => localAdmin.firestore.FieldValue.serverTimestamp());
     let isSyncing = false;
 
-    router.post('/sync-database', authMiddleware, async (req, res) => {
+    router.post('/sync-database', localAuthMiddleware, async (req, res) => {
         const type = String(req.body?.type || '').trim();
 
         if (isSyncing) {
-            return sendError(res, 429, 'SYNC_IN_PROGRESS', 'A database synchronization is already in progress.');
+            return localSendError(res, 429, 'SYNC_IN_PROGRESS', 'A database synchronization is already in progress.');
         }
         if (!['watch', 'notes'].includes(type)) {
-            return sendError(res, 400, 'INVALID_TYPE', 'Sync type must be "watch" or "notes".');
+            return localSendError(res, 400, 'INVALID_TYPE', 'Sync type must be "watch" or "notes".');
         }
-        if (!db) {
-            return sendError(res, 500, 'SERVER_CONFIG_ERROR', 'Firebase Admin not initialized.');
+        if (!localDb) {
+            return localSendError(res, 500, 'SERVER_CONFIG_ERROR', 'Firebase Admin not initialized.');
         }
 
         isSyncing = true;
@@ -106,7 +115,7 @@ function registerLocalOnlyRoutes(router, deps) {
                 const filePath = path.join(process.cwd(), 'public', 'database', 'watch', 'Videos.xlsx');
                 await workbook.xlsx.readFile(filePath);
                 const worksheet = workbook.getWorksheet(1);
-                const batch = db.batch();
+                const batch = localDb.batch();
                 let count = 0;
 
                 worksheet.eachRow((row, rowNumber) => {
@@ -131,13 +140,13 @@ function registerLocalOnlyRoutes(router, deps) {
                 });
 
                 await batch.commit();
-                return sendSuccess(res, { count }, `Synced ${count} videos.`);
+            return localSendSuccess(res, { count }, `Synced ${count} videos.`);
             }
 
             const filePath = path.join(process.cwd(), 'public', 'database', 'Take Notes', 'RL', 'RL.xlsx');
             await workbook.xlsx.readFile(filePath);
             const worksheet = workbook.getWorksheet(1);
-            const batch = db.batch();
+                const batch = localDb.batch();
             let count = 0;
 
             worksheet.eachRow((row, rowNumber) => {
@@ -160,34 +169,29 @@ function registerLocalOnlyRoutes(router, deps) {
             });
 
             await batch.commit();
-            return sendSuccess(res, { count }, `Synced ${count} notes.`);
+            return localSendSuccess(res, { count }, `Synced ${count} notes.`);
         } catch (error) {
             console.error('[Admin-Sync] Full Error:', error);
-            return sendError(res, 500, 'SYNC_ERROR', 'Failed to sync database.', error?.message || error);
+            return localSendError(res, 500, 'SYNC_ERROR', 'Failed to sync database.', error?.message || error);
         } finally {
             isSyncing = false;
         }
     });
 
-    router.post('/students/:studentId/entrance-tests', authMiddleware, async (req, res) => {
-        try {
-            const studentId = String(req.params.studentId || '').trim();
-            if (!studentId) {
-                return sendError(res, 400, 'VALIDATION_ERROR', 'Missing studentId.');
-            }
+        router.post('/students/:studentId/entrance-tests', localAuthMiddleware, async (req, res) => {
+            try {
+                const studentId = String(req.params.studentId || '').trim();
+                if (!studentId) {
+                    return localSendError(res, 400, 'VALIDATION_ERROR', 'Missing studentId.');
+                }
 
-            const studentSnap = await db.collection('crmStudents').doc(studentId).get();
-            if (!studentSnap.exists) {
-                return sendError(res, 404, 'STUDENT_NOT_FOUND', 'Student profile not found.');
-            }
+                let token = null;
+                let testId = null;
 
-            let token = null;
-            let testId = null;
-
-            for (let attempt = 0; attempt < 5; attempt += 1) {
-                const nextToken = crypto.randomBytes(32).toString('base64url');
+                for (let attempt = 0; attempt < 5; attempt += 1) {
+                    const nextToken = crypto.randomBytes(32).toString('base64url');
                 const nextTestId = hashTokenToTestId(nextToken);
-                const existing = await db.collection('entranceTests').doc(nextTestId).get();
+                    const existing = await localDb.collection('entranceTests').doc(nextTestId).get();
                 if (!existing.exists) {
                     token = nextToken;
                     testId = nextTestId;
@@ -195,50 +199,86 @@ function registerLocalOnlyRoutes(router, deps) {
                 }
             }
 
-            if (!token || !testId) {
-                return sendError(res, 500, 'TOKEN_ERROR', 'Failed to generate a unique token.');
+                if (!token || !testId) {
+                    return localSendError(res, 500, 'TOKEN_ERROR', 'Failed to generate a unique token.');
+                }
+
+                const studentRef = localDb.collection('crmStudents').doc(studentId);
+                const testRef = localDb.collection('entranceTests').doc(testId);
+                await localDb.runTransaction(async (tx) => {
+                    const studentSnap = await tx.get(studentRef);
+                    if (!studentSnap.exists) {
+                        throw new Error('STUDENT_NOT_FOUND');
+                    }
+
+                    const leadId = String(studentSnap.data()?.leadId || '').trim();
+                    const leadRef = leadId ? db.collection(CRM_LEADS).doc(leadId) : null;
+                    const leadSnap = leadRef ? await tx.get(leadRef) : null;
+                    const existingTestSnap = await tx.get(testRef);
+                    if (existingTestSnap.exists) {
+                        throw new Error('TOKEN_ERROR');
+                    }
+
+                    tx.set(testRef, {
+                        studentId,
+                        version: TEST_VERSION,
+                        status: 'created',
+                        deliveryToken: token,
+                        createdAt: localServerTimestamp(),
+                        createdBy: req.user.uid,
+                        createdByEmail: req.user.email || null,
+                        startedAt: null,
+                        submittedAt: null
+                    });
+
+                    if (leadRef && leadSnap?.exists) {
+                        const leadPatch = buildLeadStageSyncPatch(leadSnap.data() || {}, 'test_scheduled', {
+                            user: req.user,
+                            serverTimestamp: localServerTimestamp
+                        });
+                        if (leadPatch) {
+                            tx.set(leadRef, leadPatch, { merge: true });
+                        }
+                    }
+                });
+
+                const baseUrl = getBaseUrl(req);
+                return localSendSuccess(res, {
+                    testId,
+                    testLink: `${baseUrl}/entrance-test.html?token=${encodeURIComponent(token)}`,
+                    resultLink: `${baseUrl}/crm-entrance-test-result.html?testId=${encodeURIComponent(testId)}`
+                }, 'Entrance test link created.');
+            } catch (error) {
+                if (error?.message === 'STUDENT_NOT_FOUND') {
+                    return localSendError(res, 404, 'STUDENT_NOT_FOUND', 'Student profile not found.');
+                }
+                console.error('[CRM] Create entrance test failed:', error);
+                return localSendError(res, 500, 'CREATE_TEST_ERROR', 'Failed to create entrance test link.', error?.message || error);
             }
+        });
 
-            await db.collection('entranceTests').doc(testId).set({
-                studentId,
-                version: TEST_VERSION,
-                status: 'created',
-                createdAt: admin.firestore.FieldValue.serverTimestamp(),
-                createdBy: req.user.uid,
-                createdByEmail: req.user.email || null,
-                startedAt: null,
-                submittedAt: null
-            });
-
-            const baseUrl = getBaseUrl(req);
-            return sendSuccess(res, {
-                testId,
-                testLink: `${baseUrl}/entrance-test.html?token=${encodeURIComponent(token)}`,
-                resultLink: `${baseUrl}/crm-entrance-test-result.html?testId=${encodeURIComponent(testId)}`
-            }, 'Entrance test link created.');
-        } catch (error) {
-            console.error('[CRM] Create entrance test failed:', error);
-            return sendError(res, 500, 'CREATE_TEST_ERROR', 'Failed to create entrance test link.', error?.message || error);
-        }
-    });
-
-    router.get('/students/:studentId/entrance-tests', authMiddleware, async (req, res) => {
+    router.get('/students/:studentId/entrance-tests', localAuthMiddleware, async (req, res) => {
         try {
             const studentId = String(req.params.studentId || '').trim();
             if (!studentId) {
-                return sendError(res, 400, 'VALIDATION_ERROR', 'Missing studentId.');
+                return localSendError(res, 400, 'VALIDATION_ERROR', 'Missing studentId.');
             }
 
-            const snaps = await db.collection('entranceTests').where('studentId', '==', studentId).get();
+            const snaps = await localDb.collection('entranceTests').where('studentId', '==', studentId).get();
             const tests = snaps.docs.map((doc) => {
                 const data = doc.data() || {};
+                const status = data.status || null;
+                const deliveryToken = String(data.deliveryToken || '').trim();
                 return {
                     testId: doc.id,
                     version: data.version || null,
-                    status: data.status || null,
+                    status,
                     createdAt: data.createdAt || null,
                     startedAt: data.startedAt || null,
-                    submittedAt: data.submittedAt || null
+                    submittedAt: data.submittedAt || null,
+                    deliveryToken: (status === 'created' || status === 'started') && deliveryToken
+                        ? deliveryToken
+                        : null
                 };
             });
 
@@ -249,36 +289,47 @@ function registerLocalOnlyRoutes(router, deps) {
             });
 
             const baseUrl = getBaseUrl(req);
-            const testsWithLinks = tests.map((test) => ({
-                ...test,
-                resultLink: `${baseUrl}/crm-entrance-test-result.html?testId=${encodeURIComponent(test.testId)}`
-            }));
+            const testsWithLinks = tests.map((test) => {
+                const deliveryToken = String(test.deliveryToken || '').trim();
+                return {
+                    testId: test.testId,
+                    version: test.version,
+                    status: test.status,
+                    createdAt: test.createdAt,
+                    startedAt: test.startedAt,
+                    submittedAt: test.submittedAt,
+                    testLink: deliveryToken
+                        ? `${baseUrl}/entrance-test.html?token=${encodeURIComponent(deliveryToken)}`
+                        : null,
+                    resultLink: `${baseUrl}/crm-entrance-test-result.html?testId=${encodeURIComponent(test.testId)}`
+                };
+            });
 
-            return sendSuccess(res, { tests: testsWithLinks });
+            return localSendSuccess(res, { tests: testsWithLinks });
         } catch (error) {
             console.error('[CRM] List entrance tests failed:', error);
-            return sendError(res, 500, 'LIST_TESTS_ERROR', 'Failed to list entrance tests.', error?.message || error);
+            return localSendError(res, 500, 'LIST_TESTS_ERROR', 'Failed to list entrance tests.', error?.message || error);
         }
     });
 
-    router.get('/entrance-tests/:testId', authMiddleware, async (req, res) => {
+    router.get('/entrance-tests/:testId', localAuthMiddleware, async (req, res) => {
         try {
             const testId = String(req.params.testId || '').trim();
             if (!testId || testId.length < 20) {
-                return sendError(res, 400, 'VALIDATION_ERROR', 'Invalid testId.');
+                return localSendError(res, 400, 'VALIDATION_ERROR', 'Invalid testId.');
             }
 
-            const testSnap = await db.collection('entranceTests').doc(testId).get();
+            const testSnap = await localDb.collection('entranceTests').doc(testId).get();
             if (!testSnap.exists) {
-                return sendError(res, 404, 'TEST_NOT_FOUND', 'Entrance test not found.');
+                return localSendError(res, 404, 'TEST_NOT_FOUND', 'Entrance test not found.');
             }
 
             const test = testSnap.data() || {};
             const studentId = String(test.studentId || '').trim();
-            const studentSnap = studentId ? await db.collection('crmStudents').doc(studentId).get() : null;
+            const studentSnap = studentId ? await localDb.collection('crmStudents').doc(studentId).get() : null;
             const student = studentSnap && studentSnap.exists ? (studentSnap.data() || {}) : null;
 
-            return sendSuccess(res, {
+            return localSendSuccess(res, {
                 testId,
                 test,
                 student: student ? { id: studentId, ...student } : null,
@@ -286,26 +337,26 @@ function registerLocalOnlyRoutes(router, deps) {
             });
         } catch (error) {
             console.error('[CRM] Get entrance test failed:', error);
-            return sendError(res, 500, 'GET_TEST_ERROR', 'Failed to fetch entrance test details.', error?.message || error);
+            return localSendError(res, 500, 'GET_TEST_ERROR', 'Failed to fetch entrance test details.', error?.message || error);
         }
     });
 
-    router.get('/entrance-tests/:testId/speaking/:questionId/audio-url', authMiddleware, async (req, res) => {
+    router.get('/entrance-tests/:testId/speaking/:questionId/audio-url', localAuthMiddleware, async (req, res) => {
         try {
-            const bucket = await getStorageBucket();
+            const bucket = await localGetStorageBucket();
             if (!bucket) {
-                return sendError(res, 500, 'SERVER_CONFIG_ERROR', 'Firebase Storage not initialized.');
+                return localSendError(res, 500, 'SERVER_CONFIG_ERROR', 'Firebase Storage not initialized.');
             }
 
             const testId = String(req.params.testId || '').trim();
             const questionId = String(req.params.questionId || '').trim();
             if (!testId || !questionId) {
-                return sendError(res, 400, 'VALIDATION_ERROR', 'Missing testId or questionId.');
+                return localSendError(res, 400, 'VALIDATION_ERROR', 'Missing testId or questionId.');
             }
 
-            const testSnap = await db.collection('entranceTests').doc(testId).get();
+            const testSnap = await localDb.collection('entranceTests').doc(testId).get();
             if (!testSnap.exists) {
-                return sendError(res, 404, 'TEST_NOT_FOUND', 'Entrance test not found.');
+                return localSendError(res, 404, 'TEST_NOT_FOUND', 'Entrance test not found.');
             }
 
             const test = testSnap.data() || {};
@@ -313,25 +364,25 @@ function registerLocalOnlyRoutes(router, deps) {
             const entry = speaking[questionId] || null;
             const storagePath = entry?.audio?.storagePath || null;
             if (!storagePath) {
-                return sendError(res, 404, 'AUDIO_NOT_FOUND', 'Speaking audio not found for this question.');
+                return localSendError(res, 404, 'AUDIO_NOT_FOUND', 'Speaking audio not found for this question.');
             }
 
             const bucketName = String(entry?.audio?.bucketName || '').trim();
-            const targetBucket = bucketName ? admin.storage().bucket(bucketName) : bucket;
+            const targetBucket = bucketName ? localAdmin.storage().bucket(bucketName) : bucket;
             const [url] = await targetBucket.file(storagePath).getSignedUrl({
                 action: 'read',
                 expires: Date.now() + 10 * 60 * 1000
             });
 
-            return sendSuccess(res, { url });
+            return localSendSuccess(res, { url });
         } catch (error) {
             console.error('[CRM] Audio URL failed:', error);
-            return sendError(res, 500, 'AUDIO_URL_ERROR', 'Failed to generate audio URL.', error?.message || error);
+            return localSendError(res, 500, 'AUDIO_URL_ERROR', 'Failed to generate audio URL.', error?.message || error);
         }
     });
 }
 
-module.exports = createCrmRouter({
+const localAdminRouter = createCrmRouter({
     db,
     admin,
     authMiddleware,
@@ -352,3 +403,7 @@ module.exports = createCrmRouter({
     },
     registerExtraRoutes: registerLocalOnlyRoutes
 });
+
+module.exports = localAdminRouter;
+module.exports.createLocalAdminRouter = createCrmRouter;
+module.exports.registerLocalOnlyRoutes = registerLocalOnlyRoutes;

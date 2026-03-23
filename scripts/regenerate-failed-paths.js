@@ -33,7 +33,7 @@ const { safeJsonParse, countWords, trimToMaxWords } = require('../src/services/r
 
 const COLLECTION_OUTLINES = 'reading_journey_outlines_v1';
 const COLLECTION_BEATS = 'reading_journey_beats_v1';
-const MAX_INTERACTIVE_BEATS = 5;
+const MAX_INTERACTIVE_BEATS = 3;
 const ENDING_BEAT_NUMBER = MAX_INTERACTIVE_BEATS + 1;
 const CANONICAL_CHOICE_IDS = ['investigate', 'ask', 'wait'];
 const PROGRESS_FILE = path.join(__dirname, '..', 'docs', 'audits', 'reading-journey-quality', 'progress.json');
@@ -180,20 +180,10 @@ async function createModelWrapper(modelName) {
 
 // ── Beat helpers ────────────────────────────────────────────────────────────────
 
-function computeOpenBeatNumbers(outlineId) {
-  const base = String(outlineId || '').trim();
-  if (!base) return [2, 4];
-  const hash = crypto.createHash('sha256').update(`reading_journey_plan_v1|${base}`).digest();
-  const picked = new Set();
-  for (let i = 0; i < hash.length && picked.size < 2; i += 1) {
-    picked.add((hash[i] % MAX_INTERACTIVE_BEATS) + 1);
-  }
-  const beats = Array.from(picked);
-  while (beats.length < 2) {
-    const beat = ((beats.length + 1) % MAX_INTERACTIVE_BEATS) + 1;
-    if (!beats.includes(beat)) beats.push(beat);
-  }
-  return beats.sort((a, b) => a - b);
+function computeOpenBeatNumbers() {
+  // Fixed layout: beat 3 is always the open-ended question.
+  // Beat 1 = MCQ (3 opts), Beat 2 = MCQ (2 opts), Beat 3 = Open, Beat 4 = Ending.
+  return [3];
 }
 
 function getQuestionTypeForBeat(outlineId, beatNumber) {
@@ -281,10 +271,13 @@ function buildBeatPrompt({ outline, beatNumber, pathArr, questionType, storySoFa
   }
 
   if (safeQuestionType === 'mcq') {
+    const beat2ChoiceIds = ['investigate', 'ask'];
+    const effectiveChoiceIds = beatNumber === 2 ? beat2ChoiceIds : CANONICAL_CHOICE_IDS;
+    const choiceIdList = effectiveChoiceIds.join(', ');
     parts.push(
       'MCQ rules:',
-      '- Include choiceQuestion with exactly 3 options.',
-      '- Use ONLY these option IDs: investigate, ask, wait.',
+      `- Include choiceQuestion with exactly ${effectiveChoiceIds.length} options.`,
+      `- Use ONLY these option IDs: ${choiceIdList}.`,
       '- Each option.label must be 6-12 words, CEFR-appropriate, and fit the current milestone.',
       '- Do NOT include productionPrompt.'
     );
@@ -348,7 +341,7 @@ async function regeneratePath({ wrapper, outlineId, outline, level, pathChoices,
       highlights: Array.isArray(json?.highlights) ? json.highlights.map(h => normalizeScalar(h)).filter(h => h.length > 0 && h.length <= 40).slice(0, 6) : [],
       choiceQuestion: questionType === 'mcq' && json?.choiceQuestion ? {
         question: normalizeScalar(json.choiceQuestion.question) || 'What do you do next?',
-        options: CANONICAL_CHOICE_IDS.map(id => ({
+        options: (beatNumber === 2 ? ['investigate', 'ask'] : CANONICAL_CHOICE_IDS).map(id => ({
           id,
           label: (Array.isArray(json.choiceQuestion.options) ? json.choiceQuestion.options : [])
             .find(o => normalizeScalar(o?.id).toLowerCase() === id)?.label || `${id.charAt(0).toUpperCase() + id.slice(1)} and see what happens.`

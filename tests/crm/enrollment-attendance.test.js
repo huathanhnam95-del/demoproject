@@ -6,6 +6,7 @@ const {
     buildClassroomMemberData,
     buildAttendanceSessionCreateData,
     buildAttendanceRecordWriteData,
+    buildScheduledAttendanceOpenData,
     summarizeAttendanceByStudent,
     computeAtRiskStatus
 } = require('../../functions/src/crm/enrollment-service');
@@ -52,11 +53,24 @@ assert.strictEqual(patchedEnrollment.updatedBy, 'admin-1');
 const session = buildAttendanceSessionCreateData({
     classId: 'class-1',
     sessionDate: '2026-03-10',
-    title: 'Session 1'
+    title: 'Session 1',
+    scheduledSessionId: 'scheduled-session-1'
 }, context);
 
 assert.strictEqual(session.classId, 'class-1');
 assert.strictEqual(session.sessionDate, '2026-03-10');
+assert.strictEqual(session.scheduledSessionId, 'scheduled-session-1');
+
+const scheduledAttendance = buildScheduledAttendanceOpenData({
+    scheduledSessionId: 'scheduled-session-1',
+    classId: 'class-1',
+    scheduledStartAt: '2026-03-10T11:00:00.000Z',
+    contractUnitIndex: 1
+}, context);
+
+assert.strictEqual(scheduledAttendance.scheduledSessionId, 'scheduled-session-1');
+assert.strictEqual(scheduledAttendance.attendanceState, 'draft');
+assert.strictEqual(scheduledAttendance.title, 'Session 1');
 
 const attendanceRecord = buildAttendanceRecordWriteData({
     sessionId: 'session-1',
@@ -112,6 +126,11 @@ assert.throws(
 assert.throws(
     () => buildAttendanceRecordWriteData({ sessionId: 'session-1', studentId: 'student-1', status: 'unknown' }, context),
     /Invalid attendance status/
+);
+
+assert.throws(
+    () => buildScheduledAttendanceOpenData({ classId: 'class-1' }, context),
+    /scheduled session/i
 );
 
 console.log('enrollment attendance service passed');

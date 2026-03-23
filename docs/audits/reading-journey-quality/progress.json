@@ -1,37 +1,53 @@
 {
-  "startedAt": 1773400942631,
+  "startedAt": 1774013334081,
   "status": "running",
-  "mode": "regenerate",
+  "mode": "regen-full-tree",
   "batch": {
     "offset": 0,
-    "limit": 1,
-    "totalFailed": 107
+    "limit": 5,
+    "totalOutlines": 410
   },
   "current": {
     "outlineIndex": 1,
-    "outlineTitle": "The Special Card",
-    "outlineLevel": "B1",
-    "pathIndex": 2,
-    "totalPaths": 27,
-    "pathLabel": "investigate→investigate→investigate→wait→ask"
+    "outlineTitle": "A Trip to Remember",
+    "outlineLevel": "A2",
+    "pathIndex": 5,
+    "totalPaths": 6,
+    "pathLabel": "wait→investigate"
   },
   "totals": {
-    "improved": 1,
-    "stillFailing": 0,
+    "passed": 4,
+    "failed": 0,
     "errors": 0
   },
   "completedOutlines": [],
   "recentPaths": [
     {
-      "pathLabel": "investigate→investigate→investigate→wait→investigate",
-      "score": 5.8,
-      "passed": false,
-      "oldScore": 5.21,
-      "outline": "The Special Card",
-      "improved": true
+      "pathLabel": "ask→ask",
+      "score": 6.96,
+      "passed": true,
+      "outline": "A Trip to Remember"
+    },
+    {
+      "pathLabel": "ask→investigate",
+      "score": 6.86,
+      "passed": true,
+      "outline": "A Trip to Remember"
+    },
+    {
+      "pathLabel": "investigate→ask",
+      "score": 8.48,
+      "passed": true,
+      "outline": "A Trip to Remember"
+    },
+    {
+      "pathLabel": "investigate→investigate",
+      "score": 7.74,
+      "passed": true,
+      "outline": "A Trip to Remember"
     }
   ],
   "provider": "vertex-ai",
   "model": "gemini-3.1-pro-preview",
-  "updatedAt": 1773402767464
+  "updatedAt": 1774014727451
 }

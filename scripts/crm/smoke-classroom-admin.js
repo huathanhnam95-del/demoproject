@@ -28,8 +28,30 @@ const context = {
 };
 
 const payload = classroomHelper.buildPayload({
+    inputClassroomTotalHours: { value: '24' },
+    inputClassroomPrimaryTeacher: { value: 'teacher-1' },
+    inputClassroomSessionMinutes: { value: '90' },
+    inputClassroomScheduleTimezone: { value: 'Asia/Bangkok' },
+    inputClassroomSeedStartDate: { value: '2026-03-10' },
+    inputClassroomSeedStartTime: { value: '09:00' },
+    inputClassroomSeedWeekdays: { value: '1,3,5' },
+    inputClassroomAllowedStartTime: { value: '07:00' },
+    inputClassroomAllowedEndTime: { value: '21:00' },
+    inputClassroomDurationStep: { value: '30' },
     inputClassroomName: { value: 'B1 Evening 2026' },
-    inputClassroomCourseId: { value: 'course-1' },
+    inputClassroomCourseId: {
+        value: 'course-1',
+        selectedOptions: [
+            {
+                dataset: {
+                    totalMinutes: '1440',
+                    defaultSessionMinutes: '90',
+                    durationStepMinutes: '30',
+                    timezone: 'Asia/Bangkok'
+                }
+            }
+        ]
+    },
     inputClassroomStatus: { value: 'active' }
 });
 

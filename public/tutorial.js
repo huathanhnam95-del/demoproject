@@ -287,8 +287,6 @@
                 // Ultra-resilient validation: Always pass on the second click to prevent blockage
                 validate: function () {
                     this.failCount = (this.failCount || 0) + 1;
-                    console.log(`Tutorial Step 3 click ${this.failCount}`);
-
                     const transcriptionText = document.getElementById('transcription-text');
                     const text = transcriptionText ? transcriptionText.textContent.trim() : "";
                     const invalidStates = ["Listening...", "Starting...", "Click 'Start Recording' and speak...", "Please say something to continue...", ""];
@@ -1026,6 +1024,42 @@
                 interactive: false
             }
         ],
+        'read-aloud': [
+            {
+                target: null,
+                icon: '📖',
+                title: 'Read Aloud Mode',
+                text: 'Read a short prompt aloud and compare what the browser hears against the original text.',
+                position: 'center',
+                nextLabel: 'Show Me →',
+                beforeShow: () => {
+                    const tab = document.getElementById('tab-read-aloud');
+                    if (tab) tab.click();
+                }
+            },
+            {
+                target: '.ra-prompt-box',
+                icon: '📝',
+                title: 'Read The Prompt',
+                text: 'Use the prompt box to preview the sentence before you begin recording.',
+                position: 'bottom'
+            },
+            {
+                target: '.ra-status-bar',
+                icon: '⏱️',
+                title: 'Prep And Record',
+                text: 'Watch the prep and record timers so you know when to start and when the attempt ends.',
+                position: 'bottom'
+            },
+            {
+                target: '.ra-controls',
+                icon: '🎙️',
+                title: 'Control The Attempt',
+                text: 'Use Skip for a new prompt and the action button to begin, finish, or move to the next prompt.',
+                position: 'top',
+                nextLabel: 'Finish Tutorial ✓'
+            }
+        ],
         survival: [
             {
                 target: null,
@@ -1147,6 +1181,10 @@
         if (mode === 'pronounce') return {
             complete: 'pronounceTutorialCompleted',
             replay: 'pronounceTutorialReplay'
+        };
+        if (mode === 'read-aloud') return {
+            complete: 'readAloudTutorialCompleted',
+            replay: 'readAloudTutorialReplay'
         };
         if (mode === 'survival') return {
             complete: 'survivalTutorialCompleted',
@@ -1324,19 +1362,15 @@
     function startTutorial(mode = 'type', force = false) {
         if (force) clearPendingAutoStart();
         if (!force && !shouldShowTutorial(mode)) {
-            console.log(`Tutorial for ${mode} mode skipped (Completed & No Replay).`);
             return;
         }
 
         if (!force && shouldDelayAutoStart(mode)) {
-            console.log(`[Tutorial] Delaying auto-start for ${mode} until entry/auth flow completes.`);
             queueAutoStart(mode);
             return;
         }
 
         clearPendingAutoStart();
-
-        console.log(`Starting tutorial for ${mode} mode...`);
         currentMode = mode;
         initElements();
 
@@ -1492,7 +1526,6 @@
         if (step.beforeShow) {
             const result = step.beforeShow();
             if (result === 'skip') {
-                console.log(`[Tutorial] Skipping step ${index} (${step.title})`);
                 showStep(index + 1);
                 return;
             }
@@ -1838,7 +1871,6 @@
         if (menuSpeak) menuSpeak.style.display = 'none';
         if (dropdownSpeak) dropdownSpeak.classList.remove('open');
 
-        console.log(`Tutorial for ${currentMode} mode completed!`);
         try {
             window.dispatchEvent(new CustomEvent('tutorial:end', { detail: { mode: currentMode } }));
         } catch (_) {
@@ -1853,7 +1885,6 @@
         const { complete, replay } = getKeys(mode);
         localStorage.removeItem(complete);
         localStorage.removeItem(replay);
-        console.log(`Tutorial for ${mode} mode reset.`);
     }
 
     /**
@@ -1878,7 +1909,6 @@
 
                 toggle.addEventListener('change', (e) => {
                     setReplayPreference(mode, e.target.checked);
-                    console.log(`Tutorial replay for ${mode}: ${e.target.checked}`);
                 });
             }
         }

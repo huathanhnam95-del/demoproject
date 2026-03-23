@@ -70,6 +70,36 @@
         });
     }
 
+    function initMobileNav() {
+        const nav = document.getElementById('nav');
+        const navLinks = document.getElementById('nav-links');
+        const menuButton = document.querySelector('.nav-menu-toggle');
+
+        if (!nav || !navLinks || !menuButton) return;
+
+        function setMenuState(isOpen) {
+            nav.classList.toggle('nav--menu-open', isOpen);
+            menuButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        }
+
+        menuButton.addEventListener('click', () => {
+            const isOpen = menuButton.getAttribute('aria-expanded') !== 'true';
+            setMenuState(isOpen);
+        });
+
+        navLinks.querySelectorAll('a').forEach((link) => {
+            link.addEventListener('click', () => {
+                setMenuState(false);
+            });
+        });
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                setMenuState(false);
+            }
+        }, { passive: true });
+    }
+
     // ============================================
     // Navigation Scroll Effect
     // ============================================
@@ -198,6 +228,7 @@
     // ============================================
 
     function init() {
+        initMobileNav();
         initScrollAnimations();
         initSmoothScroll();
         initNavScroll();

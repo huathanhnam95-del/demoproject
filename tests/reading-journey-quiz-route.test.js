@@ -59,7 +59,7 @@ async function stopServer(server) {
   const originalLimiter = require.cache[limiterPath];
 
   const outlineId = 'outline-quiz-test';
-  const completedPath = ['investigate', 'ask', 'wait', 'investigate', 'ask'];
+  const completedPath = ['investigate', 'ask', 'wait'];
   const cacheRecords = new Map();
 
   function beatId(beatNumber, pathItems) {
@@ -78,15 +78,15 @@ async function stopServer(server) {
     ]
   });
 
-  for (let beat = 1; beat <= 5; beat += 1) {
+  for (let beat = 1; beat <= 3; beat += 1) {
     const slice = completedPath.slice(0, Math.max(0, beat - 1));
     cacheRecords.set(beatId(beat, slice), {
       formatVersion: 2,
-      questionType: beat === 2 || beat === 4 ? 'open' : 'mcq',
+      questionType: beat === 2 ? 'open' : 'mcq',
       segment: `Beat ${beat} segment with enough story detail to test canonical reconstruction and ensure the router reads from cache instead of the request payload for its final quiz generation path in this hidden prototype flow.`,
       recap: `Beat ${beat} recap`,
       shouldEnd: false,
-      choiceQuestion: beat === 2 || beat === 4 ? null : {
+      choiceQuestion: beat === 2 ? null : {
         question: 'What do you do next?',
         options: [
           { id: 'investigate', label: 'Investigate the clue carefully.' },
@@ -94,12 +94,12 @@ async function stopServer(server) {
           { id: 'wait', label: 'Wait and observe quietly.' }
         ]
       },
-      productionPrompt: beat === 2 || beat === 4 ? { question: 'Explain your choice.' } : null,
+      productionPrompt: beat === 2 ? { question: 'Explain your choice.' } : null,
       highlights: ['note', 'clue', 'envelope']
     });
   }
 
-  cacheRecords.set(beatId(6, completedPath), {
+  cacheRecords.set(beatId(4, completedPath), {
     formatVersion: 2,
     questionType: 'end',
     segment: 'Final ending beat segment with enough words to satisfy the canonical story reconstruction logic before the assessment quiz is requested from the backend route for this completed story path today.',
@@ -233,13 +233,13 @@ async function stopServer(server) {
     const incompletePath = await fetch(`${baseUrl}/api/reading-journey/quiz`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ outlineId, path: completedPath.slice(0, 4), level: 'B1' })
+      body: JSON.stringify({ outlineId, path: completedPath.slice(0, 2), level: 'B1' })
     });
     const incompletePathJson = await incompletePath.json();
     assert.strictEqual(incompletePath.status, 400, 'quiz route should reject incomplete paths');
     assert.match(incompletePathJson.message, /completed path/i, 'incomplete path error should explain completion requirement');
 
-    const endingBeatKey = beatId(6, completedPath);
+    const endingBeatKey = beatId(4, completedPath);
     const endingBeat = cacheRecords.get(endingBeatKey);
     cacheRecords.delete(endingBeatKey);
     const missingEnding = await fetch(`${baseUrl}/api/reading-journey/quiz`, {
@@ -248,7 +248,7 @@ async function stopServer(server) {
       body: JSON.stringify({ outlineId, path: completedPath, level: 'B1' })
     });
     const missingEndingJson = await missingEnding.json();
-    assert.strictEqual(missingEnding.status, 400, 'quiz route should reject stories without the ending beat');
+    assert.strictEqual(missingEnding.status, 404, 'quiz route should reject stories without the ending beat');
     assert.strictEqual(missingEndingJson.error, 'NOT_FOUND', 'missing ending beat should return NOT_FOUND');
     cacheRecords.set(endingBeatKey, endingBeat);
 
@@ -273,7 +273,7 @@ async function stopServer(server) {
 
     assert.strictEqual(builderCalls.length, 1, 'quiz builder should be called exactly once for the successful request');
     assert.strictEqual(builderCalls[0].outlineId, outlineId, 'quiz builder should receive the outline id');
-    assert.strictEqual(builderCalls[0].segments.length, 5, 'quiz builder should receive canonical story segments from cache');
+    assert.strictEqual(builderCalls[0].segments.length, 3, 'quiz builder should receive canonical story segments from cache');
     assert.ok(
       builderCalls[0].segments.every((segment) => !segment.includes('browser supplied')),
       'quiz route should ignore browser-supplied transcript/story text and rebuild from cache'
@@ -283,6 +283,8 @@ async function stopServer(server) {
       /quiet honesty/i,
       'quiz route should pass the ending wrap from the cached final beat'
     );
+    assert.strictEqual(builderCalls[0].beatOutline.length, 5, 'quiz route should pass the cached beat outline to the builder');
+    assert.strictEqual(builderCalls[0].highlights.length, 3, 'quiz route should pass per-beat highlights to the builder');
   } finally {
     await stopServer(server);
     if (originalRoute) require.cache[routePath] = originalRoute; else delete require.cache[routePath];

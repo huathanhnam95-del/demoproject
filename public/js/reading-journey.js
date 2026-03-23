@@ -53,6 +53,24 @@ import {
   let focusMode = false;
   let highlightEnabled = lsPref('highlight', 'off') === 'on';
 
+  let zenTimer = null;
+  function resetZenTimer() {
+    const root = document.getElementById('rj-main-container');
+    if (!root) return;
+    root.classList.remove('rj-zen-mode');
+    if (zenTimer) clearTimeout(zenTimer);
+    if (state.status === 'READING' || state.status === 'CHOICE_PENDING') {
+      zenTimer = setTimeout(() => {
+        root.classList.add('rj-zen-mode');
+      }, 3000);
+    }
+  }
+
+  // Activity listeners for Zen Mode
+  window.addEventListener('mousemove', resetZenTimer);
+  window.addEventListener('keydown', resetZenTimer);
+  window.addEventListener('touchstart', resetZenTimer);
+
   // ── Utils ──────────────────────────────────────────────────────────────────
   function lsPref(key, def) { return localStorage.getItem('rj_' + key) || def; }
   function lsSet(key, val) { localStorage.setItem('rj_' + key, val); }
@@ -192,10 +210,11 @@ import {
               </div>
             </div>
 
-            <div class="rj-canvas" id="rj-canvas">
+            <div class="rj-canvas rj-card rj-glass" id="rj-canvas">
               <div class="rj-segment" id="rj-segment"></div>
               <div id="rj-choice-wrap" class="rj-choice" style="display:none;">
                 <div id="rj-choice-question" class="rj-choice__question"></div>
+                <p id="rj-choice-hint" class="rj-choice__hint" style="display:none; color: var(--rj-text-muted); font-size: 0.9em; margin-bottom: 12px;">Select an option below.</p>
                 <div id="rj-choice-options" class="rj-choice__options"></div>
               </div>
               <div id="rj-prod-wrap" class="rj-prod" style="display:none;">
@@ -243,13 +262,10 @@ import {
     }
   }
 
-  function getAutoDelay(text) {
-    const words = text.split(/\s+/).length;
-    const base = 1200;
-    const perWord = 150;
-    const speeds = { slow: 1.5, normal: 1, fast: 0.6 };
-    const mult = speeds[revealState.speed] || 1;
-    return (base + words * perWord) * mult;
+  function getAutoDelay() {
+    // Delay per word in ms
+    const speeds = { slow: 400, normal: 250, fast: 100 };
+    return speeds[revealState.speed] || 250;
   }
 
   function revealNextSentence() {
@@ -261,7 +277,7 @@ import {
 
     const span = revealState.sentences[revealState.revealed];
     if (span) {
-      span.classList.add('rj-sentence--visible');
+      span.classList.add('rj-word--visible');
     }
     revealState.revealed++;
 
@@ -272,14 +288,14 @@ import {
     }
 
     if (revealState.mode === 'auto') {
-      const delay = getAutoDelay(span?.dataset?.text || '');
+      const delay = getAutoDelay();
       revealState.autoTimer = setTimeout(revealNextSentence, delay);
     }
   }
 
   function skipToFullReveal() {
     clearAutoTimer();
-    revealState.sentences.forEach(s => s.classList.add('rj-sentence--visible'));
+    revealState.sentences.forEach(s => s.classList.add('rj-word--visible'));
     revealState.revealed = revealState.total;
     revealState.allDone = true;
     if (typeof revealState.onComplete === 'function') revealState.onComplete();
@@ -289,8 +305,8 @@ import {
   function applyHighlightsToSegment(segmentEl, highlights) {
     if (!highlights || !highlights.length) return;
 
-    // We iterate children (sentences) to safely replace text inside spans
-    const sentences = segmentEl.querySelectorAll('.rj-sentence');
+    // We iterate children (words) to safely replace text inside spans
+    const sentences = segmentEl.querySelectorAll('.rj-word');
     sentences.forEach(span => {
       let text = span.innerHTML;
       highlights.forEach(term => {
@@ -435,13 +451,15 @@ import {
       btn.textContent = shouldEnd ? 'Finish Journey' : 'Continue →';
       btn.classList.add('rj-btn--primary');
       if (hintEl) {
-        hintEl.textContent = shouldEnd ? 'Journey complete.' : 'Select an option below.';
+        hintEl.textContent = shouldEnd ? 'Journey complete.' : '';
+        hintEl.style.display = shouldEnd ? 'block' : 'none';
       }
     } else {
       btn.textContent = revealState.mode === 'manual' ? 'Tap to reveal' : 'Skip reveal';
       btn.classList.remove('rj-btn--primary');
       if (hintEl) {
         hintEl.textContent = revealState.mode === 'manual' ? 'Tap Continue or press Space to read...' : 'Story unfolding...';
+        hintEl.style.display = 'block';
       }
     }
   }
@@ -512,26 +530,41 @@ import {
     if (metaEl) {
       metaEl.textContent = beat.shouldEnd
         ? `Final scene · Level ${state.level}`
-        : `Beat ${Math.max(1, Math.min(5, state.beatNumber))}/5 · Level ${state.level}`;
+        : `Level ${state.level}`;
     }
 
-    // Split text into sentences for animated reveal
+    // Split text into words for animated reveal
     const rawText = getBeatDisplayText(beat);
-    const sentences = rawText.match(/[^.!?]+[.!?]+(?:\s|$)|[^.!?]+$/g) || [rawText];
-    segmentEl.innerHTML = sentences.map(s => `<span class="rj-sentence" data-text="${s.trim().replace(/"/g, '&quot;')}">${s}</span>`).join('');
+    const words = rawText.split(/(\s+)/).filter(Boolean); // Keep spaces
+    
+    const applyNewText = () => {
+      segmentEl.innerHTML = words.map(w => {
+        if (!w.trim()) return w; // render space directly without span
+        return `<span class="rj-word" data-text="${w.replace(/"/g, '&quot;')}">${w}</span>`;
+      }).join('');
+      
+      segmentEl.classList.remove('rj-fade-out');
 
-    revealState.sentences = Array.from(segmentEl.querySelectorAll('.rj-sentence'));
-    revealState.total = revealState.sentences.length;
-    revealState.revealed = 0;
+      revealState.sentences = Array.from(segmentEl.querySelectorAll('.rj-word'));
+      revealState.total = revealState.sentences.length;
+      revealState.revealed = 0;
 
-    choiceWrap.style.display = 'none';
-    prodWrap.style.display = 'none';
-    transcriptWrap.style.display = focusMode ? 'none' : 'block';
-    updateContinueBtn(false, beat.shouldEnd);
-    updateProgressBar();
+      choiceWrap.style.display = 'none';
+      prodWrap.style.display = 'none';
+      transcriptWrap.style.display = focusMode ? 'none' : 'block';
+      updateContinueBtn(false, beat.shouldEnd);
+      updateProgressBar();
 
-    if (revealState.mode === 'auto') {
-      revealNextSentence();
+      if (revealState.mode === 'auto') {
+        revealNextSentence();
+      }
+    };
+
+    if (segmentEl.innerHTML.trim() !== '') {
+      segmentEl.classList.add('rj-fade-out');
+      setTimeout(applyNewText, 300);
+    } else {
+      applyNewText();
     }
 
     function onAllSentencesDone() {
@@ -558,6 +591,10 @@ import {
         choiceWrap.classList.add('rj-fadein');
         const choiceQuestionText = (typeof beat.choiceQuestion === 'object' ? beat.choiceQuestion?.question : beat.choiceQuestion) || 'How should the story continue?';
         document.getElementById('rj-choice-question').textContent = choiceQuestionText;
+        
+        const choiceHint = document.getElementById('rj-choice-hint');
+        if (choiceHint) choiceHint.style.display = 'block';
+        
         const optEl = document.getElementById('rj-choice-options');
         optEl.innerHTML = '';
         const choiceItems = beat.choices || (beat.choiceQuestion?.options) || [];
@@ -579,7 +616,11 @@ import {
           optEl.appendChild(card);
         });
       }
+      resetZenTimer(); // Ensure Zen Timer starts after reveal is done or choice is pending
     }
+    
+    // Also start Zen Timer right away for reading phase
+    resetZenTimer();
   }
 
   async function handleContinue() {
@@ -603,9 +644,13 @@ import {
     }
   }
 
+  let isAdvancing = false;
   async function advanceBeat() {
+    if (isAdvancing) return;
+    
     const storyView = document.getElementById('rj-story');
     storyView.classList.add('rj-skeleton-active');
+    isAdvancing = true;
 
     const payload = {
       outlineId: state.outlineId,
@@ -629,32 +674,28 @@ import {
 
       if (data.isComplete) {
         storyView.classList.remove('rj-skeleton-active');
+        isAdvancing = false;
         showComplete();
       } else {
         state.choiceId = null;
         document.getElementById('rj-prod-input').value = '';
         storyView.classList.remove('rj-skeleton-active');
+        isAdvancing = false;
         renderBeat(data.beat);
       }
     } catch (err) {
       showAlert('Error advancing story.');
       storyView.classList.remove('rj-skeleton-active');
+      isAdvancing = false;
     }
   }
 
   function updateProgressBar() {
     const bar = document.getElementById('rj-progress-bar');
-    const dots = document.getElementById('rj-progress-dots');
     const safeBeatNumber = Math.max(1, Math.min(5, Number(state.beatNumber) || 1));
     const pct = (safeBeatNumber / 5) * 100;
-    bar.style.width = pct + '%';
+    if (bar) bar.style.width = pct + '%';
 
-    dots.innerHTML = '';
-    for (let i = 1; i <= 5; i++) {
-      const dot = document.createElement('div');
-      dot.className = `rj-progress-dot ${i < safeBeatNumber ? 'rj-progress-dot--done' : (i === safeBeatNumber ? 'rj-progress-dot--active' : '')}`;
-      dots.appendChild(dot);
-    }
     document.getElementById('rj-shell').style.setProperty('--rj-accent', getLevelColor(state.level));
   }
 

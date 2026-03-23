@@ -16,15 +16,46 @@ const {
 } = require('../services/reading-journey/cache');
 
 const gemini = require('../services/reading-journey/gemini');
+const { normalizeBeatForClient } = require('../services/reading-journey/beat-client-shape');
 const { countWords } = require('../services/reading-journey/json');
 
 const COLLECTION_KEYWORD_TAGS = 'reading_journey_keyword_tags_v1';
 const COLLECTION_OUTLINES = 'reading_journey_outlines_v1';
 const COLLECTION_BEATS = 'reading_journey_beats_v1';
 
-const MAX_INTERACTIVE_BEATS = 5;
+const MAX_INTERACTIVE_BEATS = 3;
 const ENDING_BEAT_NUMBER = MAX_INTERACTIVE_BEATS + 1;
-const OPEN_BEAT_COUNT = 2;
+const OPEN_BEAT_COUNT = 1;
+
+const CANONICAL_CHOICE_IDS = Object.freeze(['investigate', 'ask', 'wait']);
+const BEAT_2_CHOICE_IDS = Object.freeze(['investigate', 'ask']);
+
+function getChoiceIdsForBeat(beatNumber) {
+    return Number(beatNumber) === 2 ? BEAT_2_CHOICE_IDS : CANONICAL_CHOICE_IDS;
+}
+
+function getQuestionTypeForBeat(beatNumber) {
+    const safeBeat = Number(beatNumber);
+    if (!Number.isFinite(safeBeat) || safeBeat < 1 || safeBeat > MAX_INTERACTIVE_BEATS) return 'mcq';
+    return safeBeat === 3 ? 'open' : 'mcq';
+}
+
+function classifyChoiceFromOpenText(text) {
+    const raw = String(text || '').toLowerCase();
+    if (!raw) return 'investigate';
+
+    if (/\b(ask|asked|asking|tell|told|talk|talked|call|called|text|message|help|question)\b/.test(raw)) {
+        return 'ask';
+    }
+    if (/\b(wait|waiting|stay|stayed|watch|watched|observe|observed|listen|listened|pause|paused|leave|left|back)\b/.test(raw)) {
+        return 'wait';
+    }
+    if (/\b(investigate|look|looked|check|checked|explore|explored|search|searched|follow|followed|go|went|enter|entered)\b/.test(raw)) {
+        return 'investigate';
+    }
+
+    return 'investigate';
+}
 
 function maybeAiLimiter(req, res, next) {
     return aiLimiter(req, res, next);
@@ -133,32 +164,46 @@ router.post('/setup', maybeAiLimiter, async (req, res) => {
         let outline = await gemini.generateOutline({ keywords, topicTags: outlineKey.normalizedTopicTags, level, language });
         await setCachedValue({ collection: COLLECTION_OUTLINES, id: outlineKey.id, key: outlineKey.key, value: outline, ttlMs });
         const beatKey = computeBeatCacheKey({ outlineId: outlineKey.id, beatNumber: 1, path: [] });
-        let beat = await gemini.generateBeat({ outline, beatNumber: 1, path: [], questionType: 'mcq', storySoFar: '', level, language });
+        const questionType = getQuestionTypeForBeat(1);
+        let beat = await gemini.generateBeat({ outline, beatNumber: 1, path: [], questionType, storySoFar: '', level, language, choiceIds: getChoiceIdsForBeat(1) });
         beat = normalizeBeat(beat);
         await setCachedValue({ collection: COLLECTION_BEATS, id: beatKey.id, key: beatKey.key, value: beat, ttlMs });
-        return sendSuccess(res, { setup: { outlineId: outlineKey.id, title: outline.title, level, topicTags: outlineKey.normalizedTopicTags, characters: outline.characters, beatOutline: outline.beatOutline }, beat: { beatNumber: 1, path: [], ...beat } });
+        return sendSuccess(res, { setup: { outlineId: outlineKey.id, title: outline.title, level, topicTags: outlineKey.normalizedTopicTags, characters: outline.characters, beatOutline: outline.beatOutline }, beat: { beatNumber: 1, path: [], ...normalizeBeatForClient(beat) } });
     } catch (e) {
         return sendError(res, 500, 'SETUP_FAILED', 'Reading Journey setup failed', e?.message || String(e));
     }
 });
 
-router.post('/advance', maybeAiLimiter, async (req, res) => {
+router.post(['/advance', '/reading_journey/advance'], maybeAiLimiter, async (req, res) => {
     try {
         const outlineId = String(req.body?.outlineId || '').trim();
         const currentBeatNumber = Number(req.body?.currentBeatNumber);
-        const path = Array.isArray(req.body?.path) ? req.body.path.map((v) => String(v || '').trim()).filter(Boolean) : [];
+        const rawPath = Array.isArray(req.body?.path) ? req.body.path.map((v) => String(v || '').trim()).filter(Boolean) : [];
         const choiceId = String(req.body?.choiceId || '').trim();
+        const productionText = String(req.body?.productionText || req.body?.userResponse || '').trim();
         const level = gemini.normalizeLevel(req.body?.level);
         const language = String(req.body?.language || 'en').trim() || 'en';
+        let resolvedChoiceId = choiceId.toLowerCase();
+        if (!resolvedChoiceId && productionText) {
+            resolvedChoiceId = classifyChoiceFromOpenText(productionText);
+        }
+        let path = rawPath;
+        if (rawPath.length === currentBeatNumber && resolvedChoiceId) {
+            const trailingChoiceId = String(rawPath[rawPath.length - 1] || '').trim().toLowerCase();
+            if (trailingChoiceId === resolvedChoiceId) {
+                path = rawPath.slice(0, -1);
+            }
+        }
         const outline = await getCachedValue({ collection: COLLECTION_OUTLINES, id: outlineId });
         if (!outline) return sendError(res, 400, 'NOT_FOUND', 'Story not found');
         const nextBeatNumber = currentBeatNumber + 1;
-        const nextPath = [...path, choiceId.toLowerCase()];
+        const nextPath = [...path, resolvedChoiceId];
         const beatKey = computeBeatCacheKey({ outlineId, beatNumber: nextBeatNumber, path: nextPath });
-        let beat = await gemini.generateBeat({ outline, beatNumber: nextBeatNumber, path: nextPath, questionType: nextBeatNumber <= MAX_INTERACTIVE_BEATS ? 'mcq' : 'end', storySoFar: '', level, language });
+        const nextQuestionType = nextBeatNumber <= MAX_INTERACTIVE_BEATS ? getQuestionTypeForBeat(nextBeatNumber) : 'end';
+        let beat = await gemini.generateBeat({ outline, beatNumber: nextBeatNumber, path: nextPath, questionType: nextQuestionType, storySoFar: '', level, language, choiceIds: getChoiceIdsForBeat(nextBeatNumber) });
         beat = normalizeBeat(beat);
         await setCachedValue({ collection: COLLECTION_BEATS, id: beatKey.id, key: beatKey.key, value: beat, ttlMs: resolveTtlMs() });
-        return sendSuccess(res, { beat: { beatNumber: nextBeatNumber, path: nextPath, ...beat } });
+        return sendSuccess(res, { beat: { beatNumber: nextBeatNumber, path: nextPath, ...normalizeBeatForClient(beat) } });
     } catch (e) {
         return sendError(res, 500, 'ADVANCE_FAILED', 'Advance failed', e?.message || String(e));
     }

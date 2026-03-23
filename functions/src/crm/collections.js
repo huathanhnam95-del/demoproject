@@ -8,6 +8,7 @@ const CRM_ACTIVITIES = 'crmActivities';
 const CRM_ENROLLMENTS = 'crmEnrollments';
 const CRM_ATTENDANCE_SESSIONS = 'crmAttendanceSessions';
 const CRM_ATTENDANCE_RECORDS = 'crmAttendanceRecords';
+const CRM_SCHEDULED_SESSIONS = 'crmScheduledSessions';
 const CRM_INVOICES = 'crmInvoices';
 const CRM_PAYMENTS = 'crmPayments';
 const CRM_COMMISSIONS = 'crmCommissions';
@@ -35,6 +36,7 @@ module.exports = {
     CRM_ENROLLMENTS,
     CRM_ATTENDANCE_SESSIONS,
     CRM_ATTENDANCE_RECORDS,
+    CRM_SCHEDULED_SESSIONS,
     CRM_INVOICES,
     CRM_PAYMENTS,
     CRM_COMMISSIONS,

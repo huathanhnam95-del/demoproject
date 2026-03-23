@@ -1297,6 +1297,31 @@
                     onclick="event.stopPropagation(); window.startTutorial('pronounce', true);">What's this?</a>
                 </div>
               </div>
+
+              <!-- 8. Read Aloud Mode Card -->
+              <div id="mode-btn-read-aloud" class="modern-card transition-card mode-switch-btn"
+                onclick="window.switchToMode('read-aloud')" tabindex="0" role="button" aria-label="Read Aloud mode">
+                <span class="badge new">New</span>
+                <div class="card-visual visual-read-aloud">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
+                      <rect x="16" y="12" width="32" height="40" rx="4" stroke="currentColor" stroke-width="2" fill="var(--visual-bg)" />
+                      <line x1="24" y1="22" x2="40" y2="22" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                      <line x1="24" y1="30" x2="40" y2="30" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                      <line x1="24" y1="38" x2="32" y2="38" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                      <path d="M52 28a8 8 0 0 1 0 16" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" />
+                      <path d="M58 24a14 14 0 0 1 0 24" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" opacity="0.5" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Read Aloud</h3>
+                  <p>Read text aloud to check your accuracy.</p>
+                  <button class="card-cta">Practice Now</button>
+                  <a class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('read-aloud', true);">What's this?</a>
+                </div>
+              </div>
             </div>
             <div class="whats-this-container-compact">
               <button id="what-is-this-btn" class="btn-secondary btn-compact">
@@ -1461,6 +1486,7 @@
           <button id="tab-watch" class="tab-btn" type="button">Watch</button>
           <button id="tab-notes" class="tab-btn" type="button">Note</button>
           <button id="tab-pronounce" class="tab-btn" type="button">Pronounce</button>
+          <button id="tab-read-aloud" class="tab-btn" type="button">Read Aloud</button>
         </div>
       </div>
 
@@ -2467,6 +2493,75 @@
         <div id="same-vocab-sentences-speak" class="same-vocab-sentences"></div>
       </section>
 
+      <!-- Read Aloud Mode Panel -->
+      <div id="mode-read-aloud" class="mode-panel" style="display: none;">
+        <!-- Filter/Config Bar -->
+        <div class="question-selector" style="border-bottom: none; justify-content: flex-end; padding: 10px 20px;">
+          <button id="length-trigger-read-aloud" class="length-filter-btn" type="button" style="background: white; border: 1px solid var(--border-light); padding: 8px 16px; border-radius: 20px; font-weight: 500; cursor: pointer;">
+            <span id="length-text-read-aloud">🔀 Mixed Mode (Any length)</span>
+          </button>
+        </div>
+
+        <!-- Read Aloud UI Area -->
+        <div class="read-aloud-container" style="max-width: 900px; margin: 0 auto; padding: 20px;">
+          <!-- Timers -->
+          <div class="ra-status-bar" style="display: flex; gap: 20px; justify-content: center; margin-bottom: 20px;">
+            <div class="ra-timer-box" id="ra-prep-timer-box" style="text-align: center;">
+              <div class="ra-timer-label" style="font-size: 0.85rem; color: var(--text-muted); font-weight: bold; text-transform: uppercase;">Prep Time</div>
+              <div class="ra-timer-value" id="ra-prep-time" style="font-size: 2rem; font-weight: bold; color: var(--brand-primary);">00:40</div>
+            </div>
+            <div class="ra-timer-box" id="ra-record-timer-box" style="text-align: center; opacity: 0.4;">
+              <div class="ra-timer-label" style="font-size: 0.85rem; color: var(--text-muted); font-weight: bold; text-transform: uppercase;">Record Time</div>
+              <div class="ra-timer-value" id="ra-record-time" style="font-size: 2rem; font-weight: bold; color: var(--danger, #ef4444);">00:40</div>
+            </div>
+          </div>
+
+          <!-- Prompt Area -->
+          <div class="ra-prompt-box" style="background: var(--bg-secondary); padding: 30px; border-radius: 12px; margin-bottom: 20px; font-size: 1.15rem; line-height: 1.6; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); min-height: 120px; display: flex; align-items: center; justify-content: center;">
+            <p id="ra-text-prompt" class="ra-text" style="margin: 0;">Loading text...</p>
+          </div>
+
+          <!-- Audio Player (ElevenLabs) -->
+          <div id="ra-audio-player" class="ra-audio-player" style="display: none; margin-bottom: 20px; padding: 15px; background: var(--bg-secondary); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;">
+              <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">🔊 Listen</span>
+              <div class="ra-toggle-group" style="display: flex; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-light);">
+                <button id="ra-voice-male" class="ra-toggle-btn ra-toggle-active" type="button" style="padding: 6px 14px; font-size: 0.85rem; border: none; cursor: pointer; background: var(--brand-primary); color: #fff; font-weight: 600;">♂ Male</button>
+                <button id="ra-voice-female" class="ra-toggle-btn" type="button" style="padding: 6px 14px; font-size: 0.85rem; border: none; cursor: pointer; background: var(--bg-tertiary, #f0f0f0); color: var(--text-primary); font-weight: 500;">♀ Female</button>
+              </div>
+              <div class="ra-toggle-group" style="display: flex; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-light);">
+                <button id="ra-speed-100" class="ra-toggle-btn ra-toggle-active" type="button" style="padding: 6px 14px; font-size: 0.85rem; border: none; cursor: pointer; background: var(--brand-primary); color: #fff; font-weight: 600;">Normal</button>
+                <button id="ra-speed-80" class="ra-toggle-btn" type="button" style="padding: 6px 14px; font-size: 0.85rem; border: none; cursor: pointer; background: var(--bg-tertiary, #f0f0f0); color: var(--text-primary); font-weight: 500;">Slow</button>
+              </div>
+              <button id="ra-play-audio-btn" class="modern-btn modern-btn--play" type="button" style="min-width: 80px; padding: 6px 16px; font-size: 0.9rem;">▶ Play</button>
+            </div>
+            <audio id="ra-elevenlabs-audio" preload="auto"></audio>
+          </div>
+
+          <!-- Results -->
+          <div id="ra-result-box" class="ra-result" style="display: none; margin-bottom: 20px; text-align: center; padding: 20px; border: 2px solid var(--border-light); border-radius: 12px; background: rgba(16, 185, 129, 0.05);">
+            <div class="ra-accuracy-score" style="font-size: 2.5rem; font-weight: 800; color: var(--success, #10b981);">
+              <span id="ra-accuracy-value">--</span>%
+            </div>
+            <div class="ra-accuracy-label" style="text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 15px;">Accuracy</div>
+            <div id="ra-transcript-feedback" class="ra-feedback-text" style="font-size: 1.1rem; line-height: 1.5;"></div>
+          </div>
+
+          <!-- Status and Controls -->
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
+            <div id="ra-status-message" class="ra-status-msg" style="font-weight: 500; color: var(--text-muted); min-height: 24px;">Status message</div>
+            <div class="unified-controls" style="margin-top: 5px; width: 100%; display: flex; justify-content: center; background: transparent; padding: 0; box-shadow: none;">
+              <div class="control-toolbar" style="justify-content: center;">
+                <div class="function-group">
+                  <button id="ra-next-btn" class="modern-btn modern-btn--skip" type="button" title="Skip to next">Skip</button>
+                  <button id="ra-record-btn" class="modern-btn modern-btn--check" type="button" disabled>...</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </main>
 
     <!-- Watch Mode Question Panel (sibling of white card, NOT inside it) -->
@@ -3166,6 +3261,7 @@
 
   </script>
   <script src="js/sw-register.js"></script>
+  <script src="read-aloud-mode.js"></script>
 </body>
 
 </html>

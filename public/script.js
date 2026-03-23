@@ -1110,6 +1110,14 @@
         await loadQuestion('speak', currentSpeakQuestionId);
       } else if (mode === 'notes' && window.TakeNotesMode && typeof window.TakeNotesMode.loadEntries === 'function') {
         window.TakeNotesMode.loadEntries();
+      } else if (mode === 'read-aloud') {
+        // Hide the type-mode question box that bleeds through
+        const typeQuestionBox = document.getElementById('mode-type');
+        if (typeQuestionBox) typeQuestionBox.style.display = 'none';
+        // Trigger ReadAloud mode init
+        if (window.ReadAloudMode && typeof window.ReadAloudMode.onEnter === 'function') {
+          window.ReadAloudMode.onEnter();
+        }
       }
 
       // 5. Check if this is the first time using this mode - trigger tutorial

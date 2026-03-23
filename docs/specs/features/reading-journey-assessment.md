@@ -69,6 +69,7 @@ Reading Journey Assessment adds a post-story learning check after a user finishe
 - Correct answer:
   - show success state
   - show the answer and a short explanation
+- keep the quiz status region visible on screen while also announcing updates through `aria-live`
 - Incorrect answer on `click_word_meaning` or `tap_evidence`:
   - show soft error state
   - provide one scaffolded retry
@@ -109,6 +110,10 @@ Response:
 - `recommendedReviewCount`
 
 The backend reconstructs the story from cached beats. The browser does not send the full transcript.
+Question validation must stay grounded in the reconstructed story artifacts:
+- `click_word_meaning` target words must exist in the returned story snapshot
+- `tap_evidence` paragraph indices must exist in the returned story snapshot
+- `sequence_events` items must match the regenerated beat outline for the same story path
 
 ## 10. Non-Goals
 
@@ -128,5 +133,6 @@ Do not mirror this assessment flow into `functions/src/` or expose it beyond the
 - no critical accessibility blockers remain for keyboard-only text selection and live-region feedback
 - the local review queue survives reload and preserves missed-item scheduling
 - generated decks remain valid across `A2`, `B1`, `B2`, and `C1`
+- regenerated-corpus tests pass against committed outline fixtures
 
 If any of those checks fail, keep the feature behind the current hidden-route prototype gate.

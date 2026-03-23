@@ -77,3 +77,17 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 87,2026-03-14,Integrate GStack workflows: /ceo-review + /ship + /diff-qa into GSD,Done,2026-03-14
 88,2026-03-14,Implement Round 2 Feedback for Landing Page,Done,2026-03-14
 89,2026-03-14,Production push V1.5.8 - all pending changes,Done,2026-03-14
+90,2026-03-20,Reduce story choices from 5 to 3 beats (243 to 6 paths),Postponed - waiting for future updates,2026-03-21
+91,2026-03-22,Reading Journey UI Refinements,Done,2026-03-22
+92,2026-03-22,Aligning Home and About heroes,Done,2026-03-22
+93,2026-03-21,Fix user profile panel UI UI alignment,Done,2026-03-21
+94,2026-03-22,CRM Full Workflow Browser Test Plan Execution,Done,2026-03-22
+95,2026-03-22,Rewrite About Us and Home pages with concise text and HD generated images,Done,2026-03-22
+96,2026-03-22,Execute 2026-03-22-crm-browser-fix-reverification-plan.md,Done,2026-03-22
+97,2026-03-22,Implement Read Aloud practice mode,Done,2026-03-22
+98,2026-03-22,Create Excel BaiTapTongHopSo5 with formulas and summary tables,Done,2026-03-22
+99,2026-03-22,Fix Bar Chart to include Doanh Thu and Doanh So,Done,2026-03-22
+100,2026-03-22,Read Aloud UI fixes and audio player integration,Done,2026-03-22
+101,2026-03-23,Execute CRM browser retest plan on crm-workflow-fixes branch,Done,2026-03-23
+102,2026-03-23,Execute Read Aloud browser testing plan,Done,2026-03-23
+103,2026-03-23,Redesign sidebar buttons to be modern and sleek,In Progress,

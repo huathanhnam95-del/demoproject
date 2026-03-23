@@ -23,7 +23,7 @@ const path = require('path');
 const { spawn } = require('child_process');
 
 const CANONICAL_CHOICES = Object.freeze(['investigate', 'ask', 'wait']);
-const MAX_INTERACTIVE_BEATS = 5;
+const MAX_INTERACTIVE_BEATS = 3;
 
 function todayFolder() {
   const d = new Date();

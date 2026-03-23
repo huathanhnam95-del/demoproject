@@ -610,8 +610,8 @@ function updateAccountPanelState() {
     // First, check cache for immediate visibility if previously verified
     const wasAdmin = getCachedAdminAccess(user.uid);
     if (wasAdmin) {
-      if (watchAdminLink) watchAdminLink.style.display = 'block';
-      if (crmAdminLink) crmAdminLink.style.display = 'block';
+      if (watchAdminLink) watchAdminLink.style.display = 'flex';
+      if (crmAdminLink) crmAdminLink.style.display = 'flex';
     } else {
       // Default to hidden while resolving or if not admin
       if (watchAdminLink) watchAdminLink.style.display = 'none';
@@ -620,8 +620,8 @@ function updateAccountPanelState() {
 
     if (watchAdminLink || crmAdminLink) {
       resolveAdminAccess(user).then(isAdmin => {
-        if (watchAdminLink) watchAdminLink.style.display = isAdmin ? 'block' : 'none';
-        if (crmAdminLink) crmAdminLink.style.display = isAdmin ? 'block' : 'none';
+        if (watchAdminLink) watchAdminLink.style.display = isAdmin ? 'flex' : 'none';
+        if (crmAdminLink) crmAdminLink.style.display = isAdmin ? 'flex' : 'none';
 
         if (isAdmin) {
           // Seed cache for admin user to ensure full access
@@ -660,7 +660,7 @@ function updateAccountPanelState() {
       const claims = idTokenResult.claims;
       const classroomLink = document.getElementById('panel-classroom-link');
       if (classroomLink) {
-        classroomLink.style.display = (claims.isStudent || claims.isAdmin) ? 'block' : 'none';
+        classroomLink.style.display = (claims.isStudent || claims.isAdmin) ? 'flex' : 'none';
       }
     }).catch(err => log.warn('Failed to fetch custom claims:', err));
 

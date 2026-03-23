@@ -593,9 +593,23 @@ h1 {
 .tutorial-grid,
 .growth-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 24px;
   margin-bottom: 32px;
+}
+
+@media (max-width: 900px) {
+  .tutorial-grid,
+  .growth-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 500px) {
+  .tutorial-grid,
+  .growth-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Modern Card Design - Premium (Buttery Smooth) */
@@ -11945,7 +11959,7 @@ textarea:focus {
   font-size: 0.95rem;
 }
 
-.tutorial-grid {
+.dashboard-slider-wrapper .tutorial-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
   gap: 8px;

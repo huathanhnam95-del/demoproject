@@ -1,4 +1,4 @@
-﻿/**
+/**
  * CRM Admin
  * Admin-only shell for Student + Course management.
  * (Data + LMS features added later.)
@@ -46,33 +46,19 @@
     openTasks: [],
     attendanceRiskByStudentId: new Map()
   };
+  let schedulerController = null;
   const modalState = {
     studentId: null,
-    studentProfile: null,
     createdTestLinks: new Map(),
     courseId: null,
     classroomId: null,
+    classroomScheduleVersion: null,
+    classroomRecord: null,
+    regenerationPreview: null,
     leadId: null,
     selectedInvoiceId: null,
-    financeEnrollments: [],
-    financeWorkflow: null,
-    classroomMatches: [],
-    liveSessions: [],
-    liveSessionId: null
+    financeEnrollments: []
   };
-  let studentFinanceController = null;
-  let liveDeliveryController = null;
-  let classroomWorkspaceController = null;
-  let classroomModalController = null;
-  let studentWorkspaceController = null;
-  let taskActivityWorkspaceController = null;
-  let studentModalController = null;
-  let courseModalController = null;
-  let leadWorkspaceController = null;
-  let communicationsController = null;
-  let dashboardController = null;
-  let studentDirectoryController = null;
-  let activitySurfacesController = null;
 
   document.addEventListener('DOMContentLoaded', () => {
     cacheElements();
@@ -94,7 +80,6 @@
     elements.potentialStudentsContainer = document.querySelector('[data-panel="students/potential"] .crm-placeholder-card');
     elements.studentDataContainer = document.querySelector('[data-panel="students/data"] .crm-placeholder-card');
     elements.courseCatalogContainer = document.querySelector('[data-panel="courses/courses"] .crm-placeholder-card');
-    elements.zoomLinksGrid = document.getElementById('zoom-links-grid');
     elements.btnNewLead = document.getElementById('btn-new-lead');
     elements.btnSaveLead = document.getElementById('btn-save-lead');
     elements.btnCancelLead = document.getElementById('btn-cancel-lead');
@@ -104,24 +89,13 @@
     elements.inputLeadName = document.getElementById('lead-name');
     elements.inputLeadEmail = document.getElementById('lead-email');
     elements.inputLeadPhone = document.getElementById('lead-phone');
-    elements.inputLeadFacebookDisplayName = document.getElementById('lead-facebook-display-name');
-    elements.inputLeadFacebookProfileUrl = document.getElementById('lead-facebook-profile-url');
-    elements.inputLeadRealName = document.getElementById('lead-real-name');
-    elements.inputLeadDateOfBirth = document.getElementById('lead-date-of-birth');
     elements.inputLeadSource = document.getElementById('lead-source');
     elements.inputLeadStage = document.getElementById('lead-stage');
     elements.inputLeadProbability = document.getElementById('lead-probability');
-    elements.inputLeadLearningNeeds = document.getElementById('lead-learning-needs');
-    elements.inputLeadPreferredLearningDays = document.getElementById('lead-preferred-learning-days');
-    elements.inputLeadPreferredLearningHours = document.getElementById('lead-preferred-learning-hours');
-    elements.inputLeadMessengerThreadUrl = document.getElementById('lead-messenger-thread-url');
-    elements.inputLeadMessengerLastContactAt = document.getElementById('lead-messenger-last-contact-at');
-    elements.inputLeadMessengerStatus = document.getElementById('lead-messenger-status');
     elements.leadWorkspace = document.getElementById('lead-workspace');
     elements.leadWorkspaceTitle = document.getElementById('lead-workspace-title');
     elements.leadWorkspaceMeta = document.getElementById('lead-workspace-meta');
     elements.leadWorkspaceBadge = document.getElementById('lead-workspace-badge');
-    elements.leadContextSummary = document.getElementById('lead-context-summary');
     elements.inputLeadTaskTitle = document.getElementById('lead-task-title');
     elements.inputLeadTaskDueAt = document.getElementById('lead-task-due-at');
     elements.inputLeadTaskPriority = document.getElementById('lead-task-priority');
@@ -181,19 +155,11 @@
     elements.inputTargetExam = document.getElementById('student-target-exam');
     elements.inputTargetScore = document.getElementById('student-target-score');
     elements.inputPreferredSchedule = document.getElementById('student-preferred-schedule');
-    elements.inputPreferredLearningDays = document.getElementById('student-preferred-learning-days');
-    elements.inputPreferredLearningHours = document.getElementById('student-preferred-learning-hours');
     elements.inputScoreHistory = document.getElementById('student-score-history');
     elements.inputGuardianContacts = document.getElementById('student-guardian-contacts');
     elements.inputCompanyContacts = document.getElementById('student-company-contacts');
     elements.inputDocumentRefs = document.getElementById('student-document-refs');
     elements.inputCounselingNotes = document.getElementById('student-counseling-notes');
-    elements.studentClassroomMatchSummary = document.getElementById('student-classroom-match-summary');
-    elements.inputStudentClassroomMatchSelect = document.getElementById('student-classroom-match-select');
-    elements.studentClassroomMatchMeta = document.getElementById('student-classroom-match-meta');
-    elements.studentClassroomMatchWarning = document.getElementById('student-classroom-match-warning');
-    elements.studentSchedulePrompt = document.getElementById('student-schedule-prompt');
-    elements.btnCreateRecommendedEnrollment = document.getElementById('btn-create-recommended-enrollment');
     elements.studentTaskMeta = document.getElementById('student-task-meta');
     elements.studentTaskBadge = document.getElementById('student-task-badge');
     elements.inputStudentTaskTitle = document.getElementById('student-task-title');
@@ -210,9 +176,6 @@
     elements.studentFinancePaid = document.getElementById('student-finance-paid');
     elements.studentFinanceOutstanding = document.getElementById('student-finance-outstanding');
     elements.studentFinanceNextDue = document.getElementById('student-finance-next-due');
-    elements.studentFinanceWorkflowPanel = document.getElementById('student-finance-workflow-panel');
-    elements.studentFinanceWorkflowBadge = document.getElementById('student-finance-workflow-badge');
-    elements.studentFinanceWorkflowNote = document.getElementById('student-finance-workflow-note');
     elements.inputInvoiceAmount = document.getElementById('invoice-amount');
     elements.inputInvoiceDiscount = document.getElementById('invoice-discount');
     elements.inputInvoiceDueDate = document.getElementById('invoice-due-date');
@@ -231,8 +194,6 @@
     elements.btnAddEntranceTest = document.getElementById('btn-add-entrance-test');
     elements.entranceTestLinkInput = document.getElementById('entrance-test-link');
     elements.btnCopyEntranceTestLink = document.getElementById('btn-copy-entrance-test-link');
-    elements.btnOpenEntranceTestLink = document.getElementById('btn-open-entrance-test-link');
-    elements.entranceTestLinkNote = document.getElementById('entrance-test-link-note');
     elements.entranceTestsList = document.getElementById('entrance-tests-list');
 
     // Identity Elements
@@ -269,6 +230,10 @@
     elements.inputCourseCategory = document.getElementById('course-category');
     elements.inputCourseStatus = document.getElementById('course-status');
     elements.inputCourseDescription = document.getElementById('course-description');
+    elements.inputCourseTotalHours = document.getElementById('course-total-hours');
+    elements.inputCourseDefaultSessionMinutes = document.getElementById('course-default-session-minutes');
+    elements.inputCourseDurationStep = document.getElementById('course-duration-step');
+    elements.inputCourseTimezone = document.getElementById('course-timezone');
 
     // New Classroom Elements
     elements.btnNewClassroomTriggers = Array.from(document.querySelectorAll('#btn-new-classroom'));
@@ -287,32 +252,28 @@
     elements.inputClassroomName = document.getElementById('classroom-name');
     elements.inputClassroomCourseId = document.getElementById('classroom-course-id');
     elements.inputClassroomStatus = document.getElementById('classroom-status');
-    elements.inputClassroomMeetingDays = document.getElementById('classroom-meeting-days');
-    elements.inputClassroomMeetingHours = document.getElementById('classroom-meeting-hours');
+    elements.inputClassroomTotalHours = document.getElementById('classroom-total-hours');
+    elements.inputClassroomPrimaryTeacher = document.getElementById('classroom-primary-teacher');
+    elements.inputClassroomSessionMinutes = document.getElementById('classroom-session-minutes');
+    elements.inputClassroomScheduleTimezone = document.getElementById('classroom-schedule-timezone');
+    elements.inputClassroomSeedStartDate = document.getElementById('classroom-seed-start-date');
+    elements.inputClassroomSeedStartTime = document.getElementById('classroom-seed-start-time');
+    elements.inputClassroomSeedWeekdays = document.getElementById('classroom-seed-weekdays');
+    elements.inputClassroomAllowedStartTime = document.getElementById('classroom-allowed-start-time');
+    elements.inputClassroomAllowedEndTime = document.getElementById('classroom-allowed-end-time');
+    elements.inputClassroomDurationStep = document.getElementById('classroom-duration-step');
+    elements.btnSaveClassroomScheduling = document.getElementById('btn-save-classroom-scheduling');
+    elements.inputClassroomRegenerateFromDate = document.getElementById('classroom-regenerate-from-date');
+    elements.inputClassroomRegenerateSessionMinutes = document.getElementById('classroom-regenerate-session-minutes');
+    elements.inputClassroomRegenerateWeekdays = document.getElementById('classroom-regenerate-weekdays');
+    elements.inputClassroomRegenerateStartTime = document.getElementById('classroom-regenerate-start-time');
+    elements.btnPreviewClassroomRegeneration = document.getElementById('btn-preview-classroom-regeneration');
+    elements.btnApplyClassroomRegeneration = document.getElementById('btn-apply-classroom-regeneration');
+    elements.classroomRegenerationPreview = document.getElementById('classroom-regeneration-preview');
     elements.classManagementGrid = document.getElementById('class-management-grid');
     elements.classroomStatusBadge = document.getElementById('crm-classroom-status-badge');
     elements.classroomTitle = document.getElementById('crm-classroom-title');
-    elements.liveDeliverySummary = document.getElementById('live-delivery-summary');
-    elements.liveSessionList = document.getElementById('live-session-list');
-    elements.inputLiveSessionTitle = document.getElementById('live-session-title');
-    elements.inputLiveSessionStatus = document.getElementById('live-session-status');
-    elements.inputLiveSessionStartAt = document.getElementById('live-session-start-at');
-    elements.inputLiveSessionEndAt = document.getElementById('live-session-end-at');
-    elements.inputLiveSessionMeetingUrl = document.getElementById('live-session-meeting-url');
-    elements.inputLiveSessionHostUrl = document.getElementById('live-session-host-url');
-    elements.inputLiveSessionMeetingId = document.getElementById('live-session-meeting-id');
-    elements.inputLiveSessionPasscode = document.getElementById('live-session-passcode');
-    elements.inputLiveSessionNotes = document.getElementById('live-session-notes');
-    elements.btnCreateLiveSession = document.getElementById('btn-create-live-session');
-    elements.btnSaveLiveSession = document.getElementById('btn-save-live-session');
-    elements.btnStartLiveSession = document.getElementById('btn-start-live-session');
-    elements.btnEndLiveSession = document.getElementById('btn-end-live-session');
-    elements.btnCopyLiveJoinLink = document.getElementById('btn-copy-live-join-link');
-    elements.btnCopyLiveHostLink = document.getElementById('btn-copy-live-host-link');
     elements.inputAttendanceStudentSelect = document.getElementById('attendance-student-select');
-    elements.attendanceLiveSessionNote = document.getElementById('attendance-live-session-note');
-    elements.attendanceClassroomFitNote = document.getElementById('attendance-classroom-fit-note');
-    elements.attendanceSchedulePrompt = document.getElementById('attendance-schedule-prompt');
     elements.btnEnrollStudent = document.getElementById('btn-enroll-student');
     elements.attendanceEnrollmentMeta = document.getElementById('attendance-enrollment-meta');
     elements.inputAttendanceSessionDate = document.getElementById('attendance-session-date');
@@ -321,6 +282,40 @@
     elements.btnCreateAttendanceSession = document.getElementById('btn-create-attendance-session');
     elements.btnSaveAttendanceRecords = document.getElementById('btn-save-attendance-records');
     elements.attendanceRosterContainer = document.getElementById('attendance-roster-container');
+    elements.schedulerWorkspace = document.getElementById('scheduler-workspace');
+    elements.schedulerCalendar = document.getElementById('scheduler-calendar');
+    elements.schedulerClassRail = document.getElementById('scheduler-class-rail');
+    elements.schedulerClassList = document.getElementById('scheduler-class-list');
+    elements.btnRefreshScheduler = document.getElementById('btn-refresh-scheduler');
+    elements.btnSeedScheduler = document.getElementById('btn-seed-scheduler');
+    elements.inputSchedulerTeacherFilter = document.getElementById('scheduler-teacher-filter');
+    elements.inputSchedulerFromDate = document.getElementById('scheduler-from-date');
+    elements.inputSchedulerToDate = document.getElementById('scheduler-to-date');
+    elements.classroomScheduleSummary = document.getElementById('classroom-schedule-summary');
+    elements.schedulerActionModal = document.getElementById('scheduler-action-modal');
+    elements.btnCloseSchedulerActionModal = document.getElementById('btn-close-scheduler-action-modal');
+    elements.btnCancelSchedulerAction = document.getElementById('btn-cancel-scheduler-action');
+    elements.btnConfirmSchedulerAction = document.getElementById('btn-confirm-scheduler-action');
+    elements.schedulerActionTitle = document.getElementById('scheduler-action-title');
+    elements.schedulerActionBadge = document.getElementById('scheduler-action-badge');
+    elements.schedulerActionClassName = document.getElementById('scheduler-action-class-name');
+    elements.schedulerActionTargetDateTime = document.getElementById('scheduler-action-target-datetime');
+    elements.schedulerActionTeacher = document.getElementById('scheduler-action-teacher');
+    elements.schedulerActionContractSummary = document.getElementById('scheduler-action-contract-summary');
+    elements.schedulerActionAddButton = document.getElementById('scheduler-action-add-button');
+    elements.schedulerActionReplaceButton = document.getElementById('scheduler-action-replace-button');
+    elements.schedulerActionAddPanel = document.getElementById('scheduler-action-add-panel');
+    elements.schedulerActionReplacePanel = document.getElementById('scheduler-action-replace-panel');
+    elements.schedulerActionAddOnce = document.getElementById('scheduler-action-add-once');
+    elements.schedulerActionAddRecurring = document.getElementById('scheduler-action-add-recurring');
+    elements.schedulerActionRecurringCount = document.getElementById('scheduler-action-recurring-count');
+    elements.schedulerActionAddWarning = document.getElementById('scheduler-action-add-warning');
+    elements.schedulerActionPreviewRequested = document.getElementById('scheduler-action-preview-requested');
+    elements.schedulerActionPreviewValid = document.getElementById('scheduler-action-preview-valid');
+    elements.schedulerActionPreviewSkipped = document.getElementById('scheduler-action-preview-skipped');
+    elements.schedulerActionPreviewOverflow = document.getElementById('scheduler-action-preview-overflow');
+    elements.schedulerActionReplaceSummary = document.getElementById('scheduler-action-replace-summary');
+    elements.schedulerActionReplaceList = document.getElementById('scheduler-action-replace-list');
 
     // Classroom Modules & Classwork
     elements.btnAddModule = document.getElementById('btn-add-module');
@@ -330,7 +325,6 @@
     elements.btnSaveClassworkDraft = document.getElementById('btn-save-classwork-draft');
     elements.btnCancelClasswork = document.getElementById('btn-cancel-classwork');
     elements.classworkListContainer = document.getElementById('classwork-list-container');
-    elements.classworkLiveSessionNote = document.getElementById('classwork-live-session-note');
     elements.inputClassworkTitle = document.getElementById('classwork-title');
     elements.inputClassworkType = document.getElementById('classwork-type');
     elements.inputClassworkModule = document.getElementById('classwork-module');
@@ -339,7 +333,6 @@
     // Classroom Review Board
     elements.kanbanMissingList = document.getElementById('kanban-missing-list');
     elements.kanbanTurnedInList = document.getElementById('kanban-turnedin-list');
-    elements.kanbanNeedsRevisionList = document.getElementById('kanban-needsrevision-list');
     elements.kanbanGradedList = document.getElementById('kanban-graded-list');
 
     // Stream
@@ -349,13 +342,13 @@
   }
 
   async function init() {
-    showGateMessage('Checking admin accessâ€¦', 'Please wait');
+    showGateMessage('Checking admin access…', 'Please wait');
 
     await initFirebaseFromServer();
 
     const user = await waitForAuthUser({ timeoutMs: 6500 });
     if (!user) {
-      showGateMessage('Please log in as admin first.', 'Redirecting to the appâ€¦');
+      showGateMessage('Please log in as admin first.', 'Redirecting to the app…');
       setTimeout(() => (window.location.href = 'index.html'), 1800);
       return;
     }
@@ -369,229 +362,20 @@
 
     // Ready
     hideGate();
-    dashboardController = window.CrmDashboardWorkspace && typeof window.CrmDashboardWorkspace.createController === 'function'
-      ? window.CrmDashboardWorkspace.createController({
-        elements,
-        showToast,
-        apiFetchJson,
-        formatDateTime,
-        escapeHtml
-      })
-      : null;
-    communicationsController = window.CrmCommunicationsWorkspace && typeof window.CrmCommunicationsWorkspace.createController === 'function'
-      ? window.CrmCommunicationsWorkspace.createController({
-        elements,
-        showToast,
-        apiFetchJson,
-        refreshDashboard,
-        escapeHtml
-      })
-      : null;
-    studentDirectoryController = window.CrmStudentDirectoryWorkspace && typeof window.CrmStudentDirectoryWorkspace.createController === 'function'
-      ? window.CrmStudentDirectoryWorkspace.createController({
-        elements,
-        dataCache,
-        apiFetchJson,
-        populateAttendanceStudentOptions,
-        openStudentProfile,
-        showToast,
-        getReminderSummary,
-        renderReminderBadgeMarkup,
-        renderRiskBadgeMarkup,
-        escapeHtml,
-        formatDateTime
-      })
-      : null;
-    activitySurfacesController = window.CrmActivitySurfaces && typeof window.CrmActivitySurfaces.createController === 'function'
-      ? window.CrmActivitySurfaces.createController({
-        elements,
-        createTaskForLead,
-        createActivityForLead,
-        createTaskForStudent,
-        createActivityForStudent,
-        createInvoiceForStudent,
-        recordPaymentForStudent,
-        createCommunicationTemplate,
-        createAutomationRule,
-        createMergeJob,
-        showToast
-      })
-      : null;
-    studentFinanceController = window.CrmStudentFinance && typeof window.CrmStudentFinance.createController === 'function'
-      ? window.CrmStudentFinance.createController({
-        apiFetchJson,
-        elements,
-        modalState,
-        getCurrentStudentProfile,
-        renderStudentSchedulePrompt,
-        refreshDashboard,
-        showToast,
-        escapeHtml
-      })
-      : null;
-    liveDeliveryController = window.CrmLiveDelivery && typeof window.CrmLiveDelivery.createController === 'function'
-      ? window.CrmLiveDelivery.createController({
-        elements,
-        modalState,
-        escapeHtml,
-        formatDateTime,
-        formatDateTimeLocalValue,
-        renderClassroomSchedulePrompt
-      })
-      : null;
-    classroomWorkspaceController = window.CrmClassroomWorkspace && typeof window.CrmClassroomWorkspace.createController === 'function'
-      ? window.CrmClassroomWorkspace.createController({
-        elements,
-        modalState,
-        dataCache,
-        showToast,
-        escapeHtml,
-        formatDateTime,
-        openClassroomModal,
-        resetClassroomModal,
-        refreshAttendanceRiskSnapshot,
-        loadLiveSessions,
-        getPrimaryLiveSession,
-        getSelectedLiveSession,
-        collectLiveSessionPayload,
-        renderLiveDeliverySummary,
-        renderAttendanceWorkflowGuidance,
-        renderClassroomSchedulePrompt,
-        renderClassworkWorkflowGuidance
-      })
-      : null;
-    studentWorkspaceController = window.CrmStudentWorkspace && typeof window.CrmStudentWorkspace.createController === 'function'
-      ? window.CrmStudentWorkspace.createController({
-        elements,
-        modalState,
-        dataCache,
-        showToast,
-        apiFetchJson,
-        fetchStudentProfile,
-        openStudentModal,
-        resetStudentModal,
-        refreshStudentFinance,
-        refreshStudentLists,
-        refreshDashboard,
-        refreshEntranceTestsList,
-        switchStudentTab,
-        getStudentPayload,
-        hasAnyInfoField,
-        fetchTasks,
-        fetchActivities,
-        applyReminderBadge,
-        getReminderSummary,
-        renderTaskList,
-        renderActivityList,
-        escapeHtml
-      })
-      : null;
-    taskActivityWorkspaceController = window.CrmTaskActivityWorkspace && typeof window.CrmTaskActivityWorkspace.createController === 'function'
-      ? window.CrmTaskActivityWorkspace.createController({
-        elements,
-        dataCache,
-        modalState,
-        showToast,
-        apiFetchJson,
-        fetchTasks,
-        fetchActivities,
-        refreshStudentTimeline,
-        refreshLeadWorkspace,
-        refreshStudentLists,
-        refreshDashboard,
-        renderStudentsTable,
-        renderLeadStageBoard,
-        renderLeadTable,
-        resetLeadTaskComposer,
-        resetLeadActivityComposer,
-        resetStudentTaskComposer,
-        resetStudentActivityComposer
-      })
-      : null;
-    classroomModalController = window.CrmClassroomModal && typeof window.CrmClassroomModal.createController === 'function'
-      ? window.CrmClassroomModal.createController({
-        elements,
-        modalState,
-        showToast,
-        openClassroomModal,
-        saveClassroomSettings,
-        loadClassroomModules,
-        loadClassroomClasswork,
-        loadClassroomStream,
-        loadClassroomAttendance,
-        loadReviewBoard,
-        loadLiveSessions,
-        renderClassroomSchedulePrompt,
-        renderAttendanceWorkflowGuidance,
-        renderClassworkWorkflowGuidance,
-        enrollStudentIntoClassroom,
-        createAttendanceSessionForClassroom,
-        saveAttendanceRecordsForClassroom,
-        resetLiveSessionForm,
-        renderLiveDeliverySummary,
-        saveLiveSession,
-        startSelectedLiveSession,
-        endSelectedLiveSession,
-        getSelectedLiveSession,
-        copyToClipboard,
-        refreshAttendanceClassroomFitNote,
-        populateClassroomCourseOptions
-      })
-      : null;
-    studentModalController = window.CrmStudentModal && typeof window.CrmStudentModal.createController === 'function'
-      ? window.CrmStudentModal.createController({
-        elements,
-        modalState,
-        showToast,
-        refreshStudentFinance,
-        saveStudentProfile,
-        createRecommendedEnrollment,
-        renderStudentClassroomMatches,
-        createEntranceTest,
-        copyToClipboard,
-        apiFetchJson,
-        refreshStudentIdentity,
-        applyReminderBadge,
-        resetStudentTaskComposer,
-        resetStudentActivityComposer,
-        resetStudentFinanceComposer,
-        renderStudentSchedulePrompt
-      })
-      : null;
-    courseModalController = window.CrmCourseModal && typeof window.CrmCourseModal.createController === 'function'
-      ? window.CrmCourseModal.createController({
-        elements,
-        modalState,
-        showToast,
-        apiFetchJson,
-        refreshCourseCatalog,
-        getCoursePayload,
-        openCourseModal,
-        setCourseTeachers
-      })
-      : null;
-    leadWorkspaceController = window.CrmLeadWorkspace && typeof window.CrmLeadWorkspace.createController === 'function'
-      ? window.CrmLeadWorkspace.createController({
-        elements,
-        dataCache,
-        modalState,
-        showToast,
-        apiFetchJson,
-        refreshDashboard,
-        refreshStudentLists,
-        fetchTasks,
-        fetchActivities,
-        applyReminderBadge,
-        getReminderSummary,
-        renderTaskList,
-        renderActivityList,
-        renderReminderBadgeMarkup,
-        escapeHtml
-      })
-      : null;
     setupTabs();
     setupLeadComposer();
     setupActivitySurfaces();
+    schedulerController = window.CrmSchedulerWorkspace && typeof window.CrmSchedulerWorkspace.createController === 'function'
+      ? window.CrmSchedulerWorkspace.createController({
+          elements,
+          modalState,
+          showToast,
+          escapeHtml
+        })
+      : null;
+    if (schedulerController && typeof schedulerController.init === 'function') {
+      schedulerController.init();
+    }
     applyRouteFromHash();
     render();
 
@@ -754,48 +538,266 @@
   }
 
   function setupStudentModal() {
-    if (!studentModalController) return;
-    return studentModalController.setupStudentModal();
+    if (elements.btnNewStudentTriggers.length === 0) return;
+
+    // Open Modal
+    elements.btnNewStudentTriggers.forEach(btn => {
+      btn.addEventListener('click', () => {
+        elements.studentModal.style.display = 'flex';
+        elements.studentModal.setAttribute('aria-hidden', 'false');
+        resetStudentModal();
+      });
+    });
+
+    // Close Modal Func
+    const closeStudentModal = () => {
+      elements.studentModal.style.display = 'none';
+      elements.studentModal.setAttribute('aria-hidden', 'true');
+      // Reset tabs to info
+      switchStudentTab('info');
+    };
+
+    if (elements.btnCloseStudentModal) elements.btnCloseStudentModal.addEventListener('click', closeStudentModal);
+    if (elements.btnCancelStudent) elements.btnCancelStudent.addEventListener('click', closeStudentModal);
+
+    // Tab Switching
+    elements.studentSidebarItems.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetTab = btn.dataset.tab;
+        switchStudentTab(targetTab);
+      });
+    });
+
+    // Save Student
+    if (elements.btnSaveStudent) {
+      elements.btnSaveStudent.addEventListener('click', () => {
+        saveStudentProfile().catch((e) => {
+          console.error('[CRM Admin] Save student failed:', e);
+          showToast(e?.message || 'Failed to save student.', 'error');
+        });
+      });
+    }
+
+    // Add Entrance Test
+    if (elements.btnAddEntranceTest) {
+      elements.btnAddEntranceTest.addEventListener('click', () => {
+        createEntranceTest().catch((e) => {
+          console.error('[CRM Admin] Create entrance test failed:', e);
+          showToast(e?.message || 'Failed to create entrance test.', 'error');
+        });
+      });
+    }
+
+    // Copy Entrance Test Link
+    if (elements.btnCopyEntranceTestLink) {
+      elements.btnCopyEntranceTestLink.addEventListener('click', async () => {
+        try {
+          const link = String(elements.entranceTestLinkInput?.value || '').trim();
+          if (!link) return;
+          await copyToClipboard(link);
+          showToast('Link copied.', 'success');
+        } catch (e) {
+          showToast(e?.message || 'Failed to copy link.', 'error');
+        }
+      });
+    }
+
+    // Identity Tab Listeners
+    if (elements.btnGenerateClassCode) {
+      elements.btnGenerateClassCode.addEventListener('click', async () => {
+        if (!modalState.studentId) {
+          await saveStudentProfile();
+        }
+        if (!modalState.studentId) return;
+
+        try {
+          const json = await apiFetchJson(`/api/admin/students/${encodeURIComponent(modalState.studentId)}/class-code`, {
+            method: 'POST'
+          });
+          if (elements.inputClassCodeDisplay) elements.inputClassCodeDisplay.value = json.classCode;
+          showToast('New class code generated.', 'success');
+        } catch (e) {
+          showToast(e.message, 'error');
+        }
+      });
+    }
+
+    if (elements.btnLookupHandshake) {
+      elements.btnLookupHandshake.addEventListener('click', async () => {
+        const email = elements.inputHandshakeEmail.value.trim();
+        if (!email) return;
+
+        try {
+          elements.btnLookupHandshake.disabled = true;
+          const json = await apiFetchJson(`/api/admin/users/lookup?email=${encodeURIComponent(email)}`, {
+            method: 'GET'
+          });
+
+          const user = json.user;
+          if (elements.handshakeName) elements.handshakeName.textContent = user.displayName;
+          if (elements.handshakeUid) elements.handshakeUid.textContent = `UID: ${user.uid}`;
+          if (elements.handshakeAvatar) elements.handshakeAvatar.src = user.photoURL || 'assets/default-avatar.png';
+
+          elements.btnConfirmHandshake.dataset.targetUid = user.uid;
+          elements.handshakePreview.style.display = 'block';
+        } catch (e) {
+          showToast(e.message, 'error');
+        } finally {
+          elements.btnLookupHandshake.disabled = false;
+        }
+      });
+    }
+
+    if (elements.btnConfirmHandshake) {
+      elements.btnConfirmHandshake.addEventListener('click', async () => {
+        const targetUid = elements.btnConfirmHandshake.dataset.targetUid;
+        if (!targetUid || !modalState.studentId) return;
+
+        try {
+          elements.btnConfirmHandshake.disabled = true;
+          await apiFetchJson(`/api/admin/students/${encodeURIComponent(modalState.studentId)}/force-link`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ targetUid })
+          });
+
+          showToast('User linked successfully.', 'success');
+          elements.handshakePreview.style.display = 'none';
+          elements.inputHandshakeEmail.value = '';
+
+          // Refresh identity to see new linked UID
+          await refreshStudentIdentity();
+        } catch (e) {
+          showToast(e.message, 'error');
+        } finally {
+          elements.btnConfirmHandshake.disabled = false;
+        }
+      });
+    }
   }
 
   function resetStudentModal() {
-    if (!studentModalController) return;
-    return studentModalController.resetStudentModal();
+    modalState.studentId = null;
+    modalState.createdTestLinks = new Map();
+
+    switchStudentTab('info');
+
+    // Clear inputs
+    const inputs = [
+      elements.inputStudentName,
+      elements.inputStudentLabel,
+      elements.inputStudentPhone,
+      elements.inputStudentEmail,
+      elements.inputStudentZalo,
+      elements.inputStudentFacebook,
+      elements.inputScoreOverall,
+      elements.inputScoreListening,
+      elements.inputScoreReading,
+      elements.inputScoreSpeaking,
+      elements.inputScoreWriting,
+      elements.inputStudentDueDate,
+      elements.inputStudentLevel,
+      elements.inputTargetExam,
+      elements.inputTargetScore,
+      elements.inputPreferredSchedule,
+      elements.inputScoreHistory,
+      elements.inputGuardianContacts,
+      elements.inputCompanyContacts,
+      elements.inputDocumentRefs,
+      elements.inputCounselingNotes,
+      elements.inputClassCodeDisplay,
+      elements.inputHandshakeEmail
+    ];
+    inputs.forEach((el) => {
+      if (el) el.value = '';
+    });
+
+    // Reset UI state
+    if (elements.studentIdBadge) {
+      elements.studentIdBadge.style.display = 'none';
+      elements.studentIdBadge.textContent = 'ID: —';
+    }
+
+    if (elements.btnAddEntranceTest) elements.btnAddEntranceTest.disabled = false;
+    if (elements.entranceTestLinkInput) elements.entranceTestLinkInput.value = '';
+    if (elements.btnCopyEntranceTestLink) elements.btnCopyEntranceTestLink.disabled = true;
+    if (elements.entranceTestsList) elements.entranceTestsList.innerHTML = '<div class="crm-muted">No tests yet.</div>';
+
+    if (elements.handshakePreview) elements.handshakePreview.style.display = 'none';
+    if (elements.linkedUidsUl) elements.linkedUidsUl.innerHTML = '<li class="text-muted">No accounts linked yet.</li>';
+    if (elements.studentTaskList) elements.studentTaskList.innerHTML = '<div class="crm-muted">No tasks yet.</div>';
+    if (elements.studentActivityList) elements.studentActivityList.innerHTML = '<div class="crm-muted">No activity yet.</div>';
+    if (elements.studentTaskMeta) elements.studentTaskMeta.textContent = 'Save the profile to schedule follow-ups.';
+    applyReminderBadge(elements.studentTaskBadge, null);
+    resetStudentTaskComposer();
+    resetStudentActivityComposer();
+    resetStudentFinanceComposer();
+
+    if (elements.btnSaveStudent) {
+      elements.btnSaveStudent.disabled = false;
+      elements.btnSaveStudent.textContent = 'Save Student';
+    }
   }
 
   function resetCourseModal() {
-    if (!courseModalController) return;
-    return courseModalController.resetCourseModal();
+    modalState.courseId = null;
+
+    // Default to Info tab
+    switchCourseTab('info');
+
+    // Clear course info inputs
+    const infoInputs = [
+      elements.inputCourseName,
+      elements.inputCourseCode,
+      elements.inputCourseLabel,
+      elements.inputCourseLevel,
+      elements.inputCourseCategory,
+      elements.inputCourseDescription,
+      elements.inputCourseTotalHours,
+      elements.inputCourseDefaultSessionMinutes,
+      elements.inputCourseDurationStep,
+      elements.inputCourseTimezone
+    ];
+    infoInputs.forEach((el) => {
+      if (el) el.value = '';
+    });
+
+    if (elements.inputCourseStatus) {
+      elements.inputCourseStatus.value = elements.inputCourseStatus.options[0]?.value || 'active';
+    }
+
+    // Clear teachers input + list
+    if (elements.courseTeacherEmailInput) {
+      elements.courseTeacherEmailInput.value = '';
+    }
+    if (elements.courseTeachersList) {
+      elements.courseTeachersList.innerHTML = '';
+      const placeholder = document.createElement('li');
+      placeholder.className = 'text-muted';
+      placeholder.dataset.empty = 'true';
+      placeholder.textContent = 'No teachers added yet.';
+      elements.courseTeachersList.appendChild(placeholder);
+    }
+
+    if (elements.btnSaveCourse) {
+      elements.btnSaveCourse.disabled = false;
+      elements.btnSaveCourse.textContent = 'Save Course';
+    }
   }
 
   function resetLeadComposer() {
-    if (leadWorkspaceController) {
-      return leadWorkspaceController.resetLeadComposer();
-    }
     const inputs = [
       elements.inputLeadName,
       elements.inputLeadEmail,
       elements.inputLeadPhone,
-      elements.inputLeadFacebookDisplayName,
-      elements.inputLeadFacebookProfileUrl,
-      elements.inputLeadRealName,
-      elements.inputLeadDateOfBirth,
       elements.inputLeadSource,
-      elements.inputLeadProbability,
-      elements.inputLeadLearningNeeds,
-      elements.inputLeadPreferredLearningDays,
-      elements.inputLeadPreferredLearningHours,
-      elements.inputLeadMessengerThreadUrl,
-      elements.inputLeadMessengerLastContactAt
+      elements.inputLeadProbability
     ];
     inputs.forEach((input) => {
       if (input) input.value = '';
     });
     if (elements.inputLeadStage) {
       elements.inputLeadStage.value = 'new';
-    }
-    if (elements.inputLeadMessengerStatus) {
-      elements.inputLeadMessengerStatus.value = '';
     }
     if (elements.btnSaveLead) {
       elements.btnSaveLead.disabled = false;
@@ -804,18 +806,12 @@
   }
 
   function resetLeadTaskComposer() {
-    if (leadWorkspaceController) {
-      return leadWorkspaceController.resetLeadTaskComposer();
-    }
     if (elements.inputLeadTaskTitle) elements.inputLeadTaskTitle.value = '';
     if (elements.inputLeadTaskDueAt) elements.inputLeadTaskDueAt.value = '';
     if (elements.inputLeadTaskPriority) elements.inputLeadTaskPriority.value = 'medium';
   }
 
   function resetLeadActivityComposer() {
-    if (leadWorkspaceController) {
-      return leadWorkspaceController.resetLeadActivityComposer();
-    }
     if (elements.inputLeadActivityType) elements.inputLeadActivityType.value = 'note';
     if (elements.inputLeadActivitySubject) elements.inputLeadActivitySubject.value = '';
     if (elements.inputLeadActivityBody) elements.inputLeadActivityBody.value = '';
@@ -902,6 +898,9 @@
   }
 
   function getCoursePayload() {
+    const totalHours = Number(elements.inputCourseTotalHours?.value || 0);
+    const defaultSessionMinutes = Number(elements.inputCourseDefaultSessionMinutes?.value || 0);
+    const durationStepMinutes = Number(elements.inputCourseDurationStep?.value || 30);
     return {
       name: String(elements.inputCourseName?.value || '').trim(),
       code: String(elements.inputCourseCode?.value || '').trim(),
@@ -910,7 +909,13 @@
       category: String(elements.inputCourseCategory?.value || '').trim(),
       status: String(elements.inputCourseStatus?.value || '').trim() || 'active',
       description: String(elements.inputCourseDescription?.value || '').trim(),
-      teachers: getCourseTeachers()
+      teachers: getCourseTeachers(),
+      deliveryTemplate: {
+        totalInstructionMinutes: Number.isFinite(totalHours) && totalHours > 0 ? Math.round(totalHours * 60) : null,
+        defaultSessionMinutes: Number.isFinite(defaultSessionMinutes) && defaultSessionMinutes > 0 ? Math.round(defaultSessionMinutes) : null,
+        timezone: String(elements.inputCourseTimezone?.value || '').trim() || null,
+        durationStepMinutes: Number.isFinite(durationStepMinutes) && durationStepMinutes > 0 ? Math.round(durationStepMinutes) : 30
+      }
     };
   }
 
@@ -939,7 +944,7 @@
       const removeBtn = document.createElement('button');
       removeBtn.type = 'button';
       removeBtn.className = 'crm-tag-remove';
-      removeBtn.textContent = 'Ã—';
+      removeBtn.textContent = '×';
       removeBtn.addEventListener('click', () => {
         li.remove();
         if (elements.courseTeachersList.children.length === 0) {
@@ -962,12 +967,59 @@
     if (elements.inputCourseCategory) elements.inputCourseCategory.value = String(course?.category || '');
     if (elements.inputCourseStatus) elements.inputCourseStatus.value = String(course?.status || 'active');
     if (elements.inputCourseDescription) elements.inputCourseDescription.value = String(course?.description || '');
+    if (elements.inputCourseTotalHours) {
+      const minutes = Number(course?.deliveryTemplate?.totalInstructionMinutes || 0);
+      elements.inputCourseTotalHours.value = minutes > 0 ? String((minutes / 60).toFixed(minutes % 60 === 0 ? 0 : 1)) : '';
+    }
+    if (elements.inputCourseDefaultSessionMinutes) {
+      elements.inputCourseDefaultSessionMinutes.value = String(course?.deliveryTemplate?.defaultSessionMinutes || '');
+    }
+    if (elements.inputCourseDurationStep) {
+      elements.inputCourseDurationStep.value = String(course?.deliveryTemplate?.durationStepMinutes || 30);
+    }
+    if (elements.inputCourseTimezone) {
+      elements.inputCourseTimezone.value = String(course?.deliveryTemplate?.timezone || '');
+    }
     setCourseTeachers(course?.teachers || []);
   }
 
   async function saveCourse() {
-    if (!courseModalController) throw new Error('Course modal helpers are not available.');
-    return courseModalController.saveCourse();
+    const payload = getCoursePayload();
+    if (!payload.name) {
+      throw new Error('Please enter a Course Name before saving.');
+    }
+
+    if (elements.btnSaveCourse) {
+      elements.btnSaveCourse.disabled = true;
+      elements.btnSaveCourse.textContent = 'Saving...';
+    }
+
+    try {
+      const path = modalState.courseId
+        ? `/api/admin/courses/${encodeURIComponent(modalState.courseId)}`
+        : '/api/admin/courses';
+      const method = modalState.courseId ? 'PATCH' : 'POST';
+      const json = await apiFetchJson(path, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const courseId = String(json.courseId || json.course?.courseId || modalState.courseId || '').trim();
+      if (!courseId) throw new Error('Course ID missing from server response.');
+
+      modalState.courseId = courseId;
+      await refreshCourseCatalog();
+
+      showToast(method === 'PATCH' ? 'Course updated.' : 'Course saved.', 'success');
+      resetCourseModal();
+    } catch (e) {
+      if (elements.btnSaveCourse) {
+        elements.btnSaveCourse.disabled = false;
+        elements.btnSaveCourse.textContent = 'Save Course';
+      }
+      throw e;
+    }
   }
 
   async function apiFetchJson(path, options = {}) {
@@ -993,9 +1045,6 @@
   }
 
   function setupLeadComposer() {
-    if (leadWorkspaceController) {
-      return leadWorkspaceController.setupLeadComposer();
-    }
     if (!elements.leadComposer) return;
 
     if (elements.btnNewLead) {
@@ -1023,8 +1072,86 @@
   }
 
   function setupActivitySurfaces() {
-    if (!activitySurfacesController) return;
-    return activitySurfacesController.setupActivitySurfaces();
+    if (elements.btnSaveLeadTask) {
+      elements.btnSaveLeadTask.addEventListener('click', () => {
+        createTaskForLead().catch((error) => {
+          console.error('[CRM Admin] Save lead task failed:', error);
+          showToast(error?.message || 'Failed to save lead task.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnSaveLeadActivity) {
+      elements.btnSaveLeadActivity.addEventListener('click', () => {
+        createActivityForLead().catch((error) => {
+          console.error('[CRM Admin] Save lead activity failed:', error);
+          showToast(error?.message || 'Failed to save lead activity.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnSaveStudentTask) {
+      elements.btnSaveStudentTask.addEventListener('click', () => {
+        createTaskForStudent().catch((error) => {
+          console.error('[CRM Admin] Save student task failed:', error);
+          showToast(error?.message || 'Failed to save student task.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnSaveStudentActivity) {
+      elements.btnSaveStudentActivity.addEventListener('click', () => {
+        createActivityForStudent().catch((error) => {
+          console.error('[CRM Admin] Save student activity failed:', error);
+          showToast(error?.message || 'Failed to save student activity.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnCreateStudentInvoice) {
+      elements.btnCreateStudentInvoice.addEventListener('click', () => {
+        createInvoiceForStudent().catch((error) => {
+          console.error('[CRM Admin] Create student invoice failed:', error);
+          showToast(error?.message || 'Failed to create invoice.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnRecordStudentPayment) {
+      elements.btnRecordStudentPayment.addEventListener('click', () => {
+        recordPaymentForStudent().catch((error) => {
+          console.error('[CRM Admin] Record student payment failed:', error);
+          showToast(error?.message || 'Failed to record payment.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnCreateTemplate) {
+      elements.btnCreateTemplate.addEventListener('click', () => {
+        createCommunicationTemplate().catch((error) => {
+          console.error('[CRM Admin] Create template failed:', error);
+          showToast(error?.message || 'Failed to create template.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnCreateRule) {
+      elements.btnCreateRule.addEventListener('click', () => {
+        createAutomationRule().catch((error) => {
+          console.error('[CRM Admin] Create automation rule failed:', error);
+          showToast(error?.message || 'Failed to create automation rule.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnCreateMergeJob) {
+      elements.btnCreateMergeJob.addEventListener('click', () => {
+        createMergeJob().catch((error) => {
+          console.error('[CRM Admin] Create merge job failed:', error);
+          showToast(error?.message || 'Failed to create merge job.', 'error');
+        });
+      });
+    }
   }
 
   function buildQuery(params = {}) {
@@ -1090,364 +1217,865 @@
     return `<span class="crm-risk-badge ${isAtRisk ? 'risk' : ''}">${escapeHtml(isAtRisk ? 'At Risk' : 'Stable')}</span>`;
   }
 
-  function renderTaskList(container, tasks, options = {}) {
-    if (!container) return;
-    const rows = Array.isArray(tasks) ? tasks : [];
-    const emptyMessage = String(options.emptyMessage || 'No tasks yet.');
-
-    if (!rows.length) {
-      container.innerHTML = `<div class="crm-muted">${escapeHtml(emptyMessage)}</div>`;
-      return;
-    }
-
-    container.innerHTML = rows.map((task) => {
-      const title = String(task?.title || 'Untitled task').trim() || 'Untitled task';
-      const priority = window.CrmActivities && typeof window.CrmActivities.formatPriorityLabel === 'function'
-        ? window.CrmActivities.formatPriorityLabel(task?.priority)
-        : String(task?.priority || 'medium').trim().toLowerCase();
-      const dueAt = formatDateTime(task?.dueAt);
-      const status = String(task?.status || 'open').trim() || 'open';
-
-      return `
-        <div class="crm-list-card">
-          <div class="crm-list-card-title">${escapeHtml(title)}</div>
-          <div class="crm-timeline-meta">${escapeHtml(`Priority: ${priority} | Due: ${dueAt} | Status: ${status}`)}</div>
-        </div>
-      `;
-    }).join('');
-  }
-
-  function renderActivityList(container, activities, emptyMessage = 'No activity yet.') {
-    if (!container) return;
-    const rows = Array.isArray(activities) ? activities : [];
-    const fallback = String(emptyMessage || 'No activity yet.');
-
-    if (!rows.length) {
-      container.innerHTML = `<div class="crm-muted">${escapeHtml(fallback)}</div>`;
-      return;
-    }
-
-    container.innerHTML = rows.map((activity) => {
-      const typeLabel = window.CrmActivities && typeof window.CrmActivities.formatTypeLabel === 'function'
-        ? window.CrmActivities.formatTypeLabel(activity?.type)
-        : String(activity?.type || 'Note').trim() || 'Note';
-      const subject = String(activity?.subject || '').trim();
-      const body = String(activity?.body || '').trim();
-      const actor = String(activity?.authorName || activity?.createdByName || activity?.createdBy || '').trim();
-      const meta = [typeLabel, actor, formatDateTime(activity?.createdAt)].filter(Boolean).join(' | ');
-
-      return `
-        <div class="crm-list-card">
-          <div class="crm-list-card-title">${escapeHtml(subject || typeLabel)}</div>
-          <div class="crm-timeline-meta">${escapeHtml(meta)}</div>
-          ${body ? `<div class="crm-list-card-body">${escapeHtml(body)}</div>` : ''}
-        </div>
-      `;
-    }).join('');
-  }
-
   async function refreshOpenTaskSnapshot() {
-    if (!taskActivityWorkspaceController) return;
-    return taskActivityWorkspaceController.refreshOpenTaskSnapshot();
-  }
+    dataCache.openTasks = await fetchTasks({ status: 'open', limit: 300 });
 
-  async function refreshLeadWorkspace() {
-    if (!leadWorkspaceController) return;
-    return leadWorkspaceController.refreshLeadWorkspace();
-  }
+    if (dataCache.students.length) {
+      const buckets = window.CrmStudents.splitStudents(dataCache.students);
+      renderStudentsTable(elements.potentialStudentsContainer, buckets.potential, 'No potential students yet.');
+      renderStudentsTable(elements.studentDataContainer, buckets.studentData, 'No students in database yet.');
+    }
 
-  async function refreshStudentTimeline() {
-    if (!studentWorkspaceController) return;
-    return studentWorkspaceController.refreshStudentTimeline();
-  }
+    if (dataCache.leads.length) {
+      renderLeadStageBoard(dataCache.leads);
+      renderLeadTable(dataCache.leads);
+    }
 
-  async function saveStudentProfile() {
-    if (!studentWorkspaceController) throw new Error('Student workspace helpers are not available.');
-    return studentWorkspaceController.saveStudentProfile();
-  }
+    if (modalState.studentId) {
+      await refreshStudentTimeline();
+    }
 
-  async function createEntranceTest() {
-    if (!studentWorkspaceController) throw new Error('Student workspace helpers are not available.');
-    return studentWorkspaceController.createEntranceTest();
+    if (modalState.leadId) {
+      await refreshLeadWorkspace();
+    }
   }
 
   async function refreshAttendanceRiskSnapshot() {
-    if (!window.ClassroomAPI || typeof window.ClassroomAPI.fetchAttendanceSummary !== 'function') return;
-    const summary = await window.ClassroomAPI.fetchAttendanceSummary({});
-    const students = Array.isArray(summary?.students) ? summary.students : [];
+    if (!window.ClassroomAPI || typeof window.ClassroomAPI.fetchAttendanceSummary !== 'function') {
+      return;
+    }
+
+    const json = await window.ClassroomAPI.fetchAttendanceSummary();
+    const rows = Array.isArray(json?.students) ? json.students : [];
     dataCache.attendanceRiskByStudentId = new Map(
-      students
-        .map((row) => [String(row?.studentId || '').trim(), row])
-        .filter(([studentId]) => studentId)
+      rows.map((row) => [String(row.studentId || '').trim(), row])
     );
+
+    if (dataCache.students.length) {
+      const buckets = window.CrmStudents.splitStudents(dataCache.students);
+      renderStudentsTable(elements.potentialStudentsContainer, buckets.potential, 'No potential students yet.');
+      renderStudentsTable(elements.studentDataContainer, buckets.studentData, 'No students in database yet.');
+    }
   }
 
-  async function createTaskForLead() {
-    if (!taskActivityWorkspaceController) throw new Error('Task/activity helpers are not available.');
-    return taskActivityWorkspaceController.createTaskForLead();
-  }
-
-  async function createActivityForLead() {
-    if (!taskActivityWorkspaceController) throw new Error('Task/activity helpers are not available.');
-    return taskActivityWorkspaceController.createActivityForLead();
-  }
-
-  async function createTaskForStudent() {
-    if (!taskActivityWorkspaceController) throw new Error('Task/activity helpers are not available.');
-    return taskActivityWorkspaceController.createTaskForStudent();
-  }
-
-  async function createActivityForStudent() {
-    if (!taskActivityWorkspaceController) throw new Error('Task/activity helpers are not available.');
-    return taskActivityWorkspaceController.createActivityForStudent();
-  }
-
-  async function refreshStudentFinance() {
-    if (!studentFinanceController) return;
-    return studentFinanceController.refreshStudentFinance();
-  }
-
-  function getCurrentStudentProfile() {
-    if (modalState.studentProfile && String(modalState.studentProfile.studentId || modalState.studentId || '') === String(modalState.studentId || '')) {
-      return modalState.studentProfile;
+  async function saveLead() {
+    if (!window.CrmLeads || typeof window.CrmLeads.buildPayload !== 'function') {
+      throw new Error('Lead helpers are not available.');
     }
 
-    return dataCache.students.find((student) => String(student.studentId || '') === String(modalState.studentId || '')) || null;
-  }
-
-
-  function renderStudentFinanceWorkflow(workflow) {
-    if (!studentFinanceController) return;
-    return studentFinanceController.renderStudentFinanceWorkflow(workflow);
-  }
-
-  function renderStudentClassroomMatches(matchPayload = {}) {
-    if (!studentFinanceController) return;
-    return studentFinanceController.renderStudentClassroomMatches(matchPayload);
-  }
-
-  function normalizeScheduleList(value) {
-    if (Array.isArray(value)) {
-      return value.map((item) => String(item || '').trim()).filter(Boolean);
+    const payload = window.CrmLeads.buildPayload(elements);
+    if (!payload.name && !payload.email && !payload.phone) {
+      throw new Error('Please fill at least 1 lead contact field before saving.');
     }
 
-    return String(value || '')
-      .split(',')
-      .map((item) => item.trim())
-      .filter(Boolean);
-  }
-
-  function renderSchedulePrompt(container, config = {}) {
-    if (!container) return;
-
-    const message = String(config.message || '').trim();
-    if (!message) {
-      container.innerHTML = '';
-      container.style.display = 'none';
-      return;
+    if (elements.btnSaveLead) {
+      elements.btnSaveLead.disabled = true;
+      elements.btnSaveLead.textContent = 'Saving...';
     }
 
-    container.style.display = 'block';
-    container.innerHTML = `
-      <div style="padding: 12px 14px; border: 1px solid #f59e0b; border-radius: 12px; background: #fffbeb;">
-        <div style="font-weight: 600; color: #92400e;">${escapeHtml(config.title || 'Schedule setup needed')}</div>
-        <div style="margin-top: 4px; color: #92400e;">${escapeHtml(message)}</div>
-        <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 10px;">
-          <button type="button" class="crm-btn-secondary" data-action="${escapeHtml(config.action || 'edit')}">${escapeHtml(config.buttonLabel || 'Edit')}</button>
-        </div>
-      </div>
-    `;
+    try {
+      await apiFetchJson('/api/admin/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      elements.leadComposer.style.display = 'none';
+      resetLeadComposer();
+      await refreshLeadPipeline();
+      await refreshDashboard();
+      showToast('Lead saved.', 'success');
+    } catch (error) {
+      if (elements.btnSaveLead) {
+        elements.btnSaveLead.disabled = false;
+        elements.btnSaveLead.textContent = 'Save Lead';
+      }
+      throw error;
+    }
   }
 
-  function renderStudentSchedulePrompt() {
-    if (!elements.studentSchedulePrompt) return;
-    const student = getCurrentStudentProfile();
-    const days = normalizeScheduleList(student?.preferredLearningDays);
-    const hours = normalizeScheduleList(student?.preferredLearningHours);
-    const missingDays = !days.length;
-    const missingHours = !hours.length;
-
-    if (!missingDays && !missingHours) {
-      renderSchedulePrompt(elements.studentSchedulePrompt, {});
-      return;
+  async function saveStudentProfile() {
+    const payload = getStudentPayload();
+    if (!hasAnyInfoField(payload)) {
+      throw new Error('Please fill at least 1 field in Info tab before saving.');
     }
 
-    const missingParts = [
-      missingDays ? 'preferred learning days' : '',
-      missingHours ? 'preferred learning hours' : ''
-    ].filter(Boolean);
+    if (elements.btnSaveStudent) {
+      elements.btnSaveStudent.disabled = true;
+      elements.btnSaveStudent.textContent = 'Saving...';
+    }
+    try {
+      const path = modalState.studentId
+        ? `/api/admin/students/${encodeURIComponent(modalState.studentId)}`
+        : '/api/admin/students';
+      const method = modalState.studentId ? 'PATCH' : 'POST';
+      const json = await apiFetchJson(path, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
 
-    renderSchedulePrompt(elements.studentSchedulePrompt, {
-      title: 'Student schedule incomplete',
-      message: `Fill ${missingParts.join(' and ')} in the Info tab to improve class matching.`,
-      buttonLabel: 'Edit student schedule',
-      action: 'edit-student-schedule'
-    });
+      const studentId = String(json.studentId || json.student?.studentId || modalState.studentId || '').trim();
+      if (!studentId) throw new Error('Student ID missing from server response.');
+
+      modalState.studentId = studentId;
+
+      if (elements.studentIdBadge) {
+        elements.studentIdBadge.textContent = `ID: ${studentId}`;
+        elements.studentIdBadge.style.display = 'inline-flex';
+      }
+
+      if (elements.btnAddEntranceTest) elements.btnAddEntranceTest.disabled = false;
+
+      if (elements.btnSaveStudent) {
+        elements.btnSaveStudent.disabled = false;
+        elements.btnSaveStudent.textContent = 'Save Student';
+      }
+
+      await refreshStudentLists();
+      await refreshStudentTimeline();
+      await refreshEntranceTestsList();
+      await refreshDashboard();
+      showToast(method === 'PATCH' ? 'Student profile updated.' : 'Student profile saved.', 'success');
+    } catch (e) {
+      if (modalState.studentId) {
+        if (elements.btnSaveStudent) {
+          elements.btnSaveStudent.disabled = false;
+          elements.btnSaveStudent.textContent = 'Save Student';
+        }
+        if (elements.btnAddEntranceTest) {
+          elements.btnAddEntranceTest.disabled = false;
+        }
+      } else if (elements.btnSaveStudent) {
+        elements.btnSaveStudent.disabled = false;
+        elements.btnSaveStudent.textContent = 'Save Student';
+      }
+      throw e;
+    }
   }
 
-  function renderClassroomSchedulePrompt() {
-    if (!elements.attendanceSchedulePrompt) return;
-    const days = normalizeScheduleList(elements.inputClassroomMeetingDays?.value);
-    const hours = normalizeScheduleList(elements.inputClassroomMeetingHours?.value);
-    const missingDays = !days.length;
-    const missingHours = !hours.length;
-
-    if (!missingDays && !missingHours) {
-      renderSchedulePrompt(elements.attendanceSchedulePrompt, {});
-      return;
+  async function createEntranceTest() {
+    if (!modalState.studentId) {
+      await saveStudentProfile();
     }
 
-    const missingParts = [
-      missingDays ? 'meeting days' : '',
-      missingHours ? 'meeting hours' : ''
-    ].filter(Boolean);
-
-    renderSchedulePrompt(elements.attendanceSchedulePrompt, {
-      title: 'Classroom schedule incomplete',
-      message: `Fill ${missingParts.join(' and ')} in the Settings tab to improve fit guidance.`,
-      buttonLabel: 'Edit classroom schedule',
-      action: 'edit-classroom-schedule'
-    });
-  }
-
-  function getPrimaryLiveSession(sessions = []) {
-    if (!liveDeliveryController) return null;
-    return liveDeliveryController.getPrimaryLiveSession(sessions);
-  }
-
-  function getSelectedLiveSession() {
-    if (!liveDeliveryController) return null;
-    return liveDeliveryController.getSelectedLiveSession();
-  }
-
-  function resetLiveSessionForm() {
-    if (!liveDeliveryController) return;
-    return liveDeliveryController.resetLiveSessionForm();
-  }
-
-  function applyLiveSessionToForm(session) {
-    if (!liveDeliveryController) return;
-    return liveDeliveryController.applyLiveSessionToForm(session);
-  }
-
-  function collectLiveSessionPayload() {
-    if (!liveDeliveryController) return {};
-    return liveDeliveryController.collectLiveSessionPayload();
-  }
-
-  function renderLiveSessionList(sessions = []) {
-    if (!liveDeliveryController) return;
-    return liveDeliveryController.renderLiveSessionList(sessions);
-  }
-
-  function renderLiveDeliverySummary(sessions = []) {
-    if (!liveDeliveryController) return;
-    return liveDeliveryController.renderLiveDeliverySummary(sessions);
-  }
-
-  function renderAttendanceWorkflowGuidance() {
-    if (!liveDeliveryController) return;
-    return liveDeliveryController.renderAttendanceWorkflowGuidance();
-  }
-
-  function renderClassworkWorkflowGuidance() {
-    if (!liveDeliveryController) return;
-    return liveDeliveryController.renderClassworkWorkflowGuidance();
-  }
-
-  async function loadLiveSessions(classId, options = {}) {
-    if (!liveDeliveryController) return [];
-    return liveDeliveryController.loadLiveSessions(classId, options);
-  }
-
-  async function refreshAttendanceClassroomFitNote() {
-    if (classroomWorkspaceController && typeof classroomWorkspaceController.refreshAttendanceClassroomFitNote === 'function') {
-      return classroomWorkspaceController.refreshAttendanceClassroomFitNote();
+    if (!modalState.studentId) {
+      throw new Error('Please fill at least 1 field before creating a test link.');
     }
-    if (!liveDeliveryController) return;
-    return liveDeliveryController.refreshAttendanceClassroomFitNote();
-  }
 
-  async function createRecommendedEnrollment() {
-    if (!studentFinanceController) throw new Error('Student finance helpers are not available.');
-    return studentFinanceController.createRecommendedEnrollment();
-  }
-
-  function resolveStudentFinanceContext() {
-    if (!studentFinanceController) throw new Error('Student finance helpers are not available.');
-    return studentFinanceController.resolveStudentFinanceContext();
-  }
-
-  async function createInvoiceForStudent() {
-    if (!studentFinanceController) throw new Error('Student finance helpers are not available.');
-    return studentFinanceController.createInvoiceForStudent();
-  }
-
-  async function recordPaymentForStudent() {
-    if (!studentFinanceController) throw new Error('Student finance helpers are not available.');
-    return studentFinanceController.recordPaymentForStudent();
-  }
-
-  async function refreshCommunicationsManager() {
-    if (!communicationsController) return;
-    return communicationsController.refreshCommunicationsManager();
-  }
-
-  async function createCommunicationTemplate() {
-    if (!communicationsController) throw new Error('Communication helpers are not available.');
-    return communicationsController.createCommunicationTemplate();
-  }
-
-  async function createAutomationRule() {
-    if (!communicationsController) throw new Error('Communication helpers are not available.');
-    return communicationsController.createAutomationRule();
-  }
-
-  async function refreshDashboard() {
-    if (!dashboardController) return;
-    return dashboardController.refreshDashboard();
-  }
-
-  async function createMergeJob() {
-    if (!dashboardController) throw new Error('Dashboard helpers are not available.');
-    return dashboardController.createMergeJob();
-  }
-
-  function normalizeDateValue(value) {
-    if (!value) return null;
-    if (value instanceof Date) {
-      return Number.isNaN(value.getTime()) ? null : value;
+    if (elements.btnAddEntranceTest) {
+      elements.btnAddEntranceTest.disabled = true;
+      elements.btnAddEntranceTest.textContent = 'Creating...';
     }
-    if (typeof value?.toDate === 'function') {
-      const next = value.toDate();
-      return next instanceof Date && !Number.isNaN(next.getTime()) ? next : null;
+    try {
+      const json = await apiFetchJson(`/api/admin/students/${encodeURIComponent(modalState.studentId)}/entrance-tests`, {
+        method: 'POST'
+      });
+
+      const testLink = String(json.testLink || '').trim();
+      const testId = String(json.testId || '').trim();
+      if (!testLink || !testId) throw new Error('Test link missing from server response.');
+
+      modalState.createdTestLinks.set(testId, testLink);
+
+      if (elements.entranceTestLinkInput) elements.entranceTestLinkInput.value = testLink;
+      if (elements.btnCopyEntranceTestLink) elements.btnCopyEntranceTestLink.disabled = false;
+
+      await refreshEntranceTestsList();
+      showToast('Entrance test link created.', 'success');
+    } finally {
+      if (elements.btnAddEntranceTest) {
+        elements.btnAddEntranceTest.disabled = false;
+        elements.btnAddEntranceTest.textContent = 'Add new test';
+      }
     }
-    if (typeof value === 'number') {
-      const next = new Date(value);
-      return Number.isNaN(next.getTime()) ? null : next;
+  }
+
+  function tsToDate(ts) {
+    if (!ts) return null;
+    if (typeof ts === 'string') {
+      const d = new Date(ts);
+      return Number.isFinite(d.getTime()) ? d : null;
     }
-    if (typeof value === 'string') {
-      const next = new Date(value);
-      return Number.isNaN(next.getTime()) ? null : next;
+    if (typeof ts === 'number') {
+      const d = new Date(ts);
+      return Number.isFinite(d.getTime()) ? d : null;
+    }
+    if (typeof ts === 'object') {
+      if (typeof ts.toMillis === 'function') return new Date(ts.toMillis());
+      if (typeof ts._seconds === 'number') return new Date(ts._seconds * 1000);
+      if (typeof ts.seconds === 'number') return new Date(ts.seconds * 1000);
     }
     return null;
   }
 
-  function formatDateTime(value) {
-    const normalized = normalizeDateValue(value);
-    if (!normalized) return '-';
-    return normalized.toLocaleString('en-US');
+  function formatDateTime(ts) {
+    const d = tsToDate(ts);
+    if (!d) return '—';
+    return d.toLocaleString();
   }
 
-  function formatDateTimeLocalValue(value) {
-    const normalized = normalizeDateValue(value);
-    if (!normalized) return '';
-    const year = normalized.getFullYear();
-    const month = String(normalized.getMonth() + 1).padStart(2, '0');
-    const day = String(normalized.getDate()).padStart(2, '0');
-    const hours = String(normalized.getHours()).padStart(2, '0');
-    const minutes = String(normalized.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  function formatDueAtForMeta(ts) {
+    const d = tsToDate(ts);
+    if (!d) return 'No due date';
+    return `Due ${d.toLocaleString()}`;
+  }
+
+  function renderTaskList(container, tasks, options = {}) {
+    if (!container) return;
+    const list = Array.isArray(tasks) ? [...tasks] : [];
+    if (!list.length) {
+      container.innerHTML = `<div class="crm-muted">${escapeHtml(options.emptyMessage || 'No tasks yet.')}</div>`;
+      return;
+    }
+
+    list.sort((left, right) => {
+      const leftDue = tsToDate(left?.dueAt)?.getTime() || Number.MAX_SAFE_INTEGER;
+      const rightDue = tsToDate(right?.dueAt)?.getTime() || Number.MAX_SAFE_INTEGER;
+      if (leftDue !== rightDue) return leftDue - rightDue;
+      return (tsToDate(right?.createdAt)?.getTime() || 0) - (tsToDate(left?.createdAt)?.getTime() || 0);
+    });
+
+    container.innerHTML = list.map((task) => {
+      const priority = window.CrmActivities
+        ? window.CrmActivities.formatPriorityLabel(task.priority)
+        : String(task.priority || 'medium');
+      const isOpen = String(task.status || 'open') === 'open';
+      return `
+        <div class="crm-task-item">
+          <div class="crm-task-head">
+            <strong>${escapeHtml(task.title || 'Untitled task')}</strong>
+            <span class="crm-task-priority ${escapeHtml(priority)}">${escapeHtml(priority)}</span>
+          </div>
+          <div class="crm-task-meta">${escapeHtml(formatDueAtForMeta(task.dueAt))}</div>
+          ${task.notes ? `<div class="crm-timeline-meta" style="margin-top: 6px;">${escapeHtml(task.notes)}</div>` : ''}
+          ${isOpen ? `
+            <div class="crm-task-actions">
+              <button type="button" class="crm-btn-secondary btn-task-done" data-task-id="${escapeHtml(task.taskId || '')}" data-scope="${escapeHtml(options.scope || '')}">Mark Done</button>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }).join('');
+
+    Array.from(container.querySelectorAll('.btn-task-done')).forEach((button) => {
+      button.addEventListener('click', async () => {
+        const taskId = String(button.dataset.taskId || '').trim();
+        const scope = String(button.dataset.scope || '').trim();
+        try {
+          button.disabled = true;
+          await apiFetchJson(`/api/admin/tasks/${encodeURIComponent(taskId)}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'done' })
+          });
+          await refreshOpenTaskSnapshot();
+          await refreshDashboard();
+          showToast(scope === 'lead' ? 'Lead task completed.' : 'Student task completed.', 'success');
+        } catch (error) {
+          console.error('[CRM Admin] Complete task failed:', error);
+          showToast(error?.message || 'Failed to update task.', 'error');
+          button.disabled = false;
+        }
+      });
+    });
+  }
+
+  function renderActivityList(container, activities, emptyMessage) {
+    if (!container) return;
+    const list = Array.isArray(activities) ? [...activities] : [];
+    if (!list.length) {
+      container.innerHTML = `<div class="crm-muted">${escapeHtml(emptyMessage || 'No activity yet.')}</div>`;
+      return;
+    }
+
+    list.sort((left, right) => (tsToDate(right?.createdAt)?.getTime() || 0) - (tsToDate(left?.createdAt)?.getTime() || 0));
+
+    container.innerHTML = list.map((activity) => `
+      <div class="crm-timeline-item">
+        <div class="crm-timeline-head">
+          <span class="crm-activity-chip">${escapeHtml(window.CrmActivities ? window.CrmActivities.formatTypeLabel(activity.type) : String(activity.type || 'Note'))}</span>
+          <span class="crm-timeline-meta">${escapeHtml(formatDateTime(activity.createdAt))}</span>
+        </div>
+        <strong>${escapeHtml(activity.subject || 'Untitled activity')}</strong>
+        ${activity.body ? `<div class="crm-timeline-meta" style="margin-top: 6px;">${escapeHtml(activity.body)}</div>` : ''}
+      </div>
+    `).join('');
+  }
+
+  async function refreshLeadWorkspace() {
+    if (!modalState.leadId) {
+      if (elements.leadWorkspace) elements.leadWorkspace.style.display = 'none';
+      return;
+    }
+
+    const lead = dataCache.leads.find((item) => String(item.leadId || '') === String(modalState.leadId)) || null;
+    const [tasks, activities] = await Promise.all([
+      fetchTasks({ leadId: modalState.leadId, limit: 50 }),
+      fetchActivities({ leadId: modalState.leadId, limit: 50 })
+    ]);
+
+    if (elements.leadWorkspace) elements.leadWorkspace.style.display = 'grid';
+    if (elements.leadWorkspaceTitle) {
+      elements.leadWorkspaceTitle.textContent = lead?.name || lead?.email || 'Lead Workspace';
+    }
+    if (elements.leadWorkspaceMeta) {
+      elements.leadWorkspaceMeta.textContent = [lead?.stage, lead?.source, lead?.email || lead?.phone || lead?.zalo]
+        .filter(Boolean)
+        .join(' | ') || 'Manage next actions and communication.';
+    }
+
+    applyReminderBadge(elements.leadWorkspaceBadge, getReminderSummary({ leadId: modalState.leadId }));
+    renderTaskList(elements.leadTaskList, tasks, {
+      emptyMessage: 'No lead tasks yet.',
+      scope: 'lead'
+    });
+    renderActivityList(elements.leadActivityList, activities, 'No lead activity yet.');
+  }
+
+  async function refreshStudentTimeline() {
+    if (!modalState.studentId) {
+      if (elements.studentTaskMeta) {
+        elements.studentTaskMeta.textContent = 'Save the profile to schedule follow-ups.';
+      }
+      applyReminderBadge(elements.studentTaskBadge, null);
+      return;
+    }
+
+    const [tasks, activities] = await Promise.all([
+      fetchTasks({ studentId: modalState.studentId, limit: 50 }),
+      fetchActivities({ studentId: modalState.studentId, limit: 50 })
+    ]);
+
+    const summary = getReminderSummary({ studentId: modalState.studentId });
+    if (elements.studentTaskMeta) {
+      elements.studentTaskMeta.textContent = summary?.nextActionAt
+        ? formatDueAtForMeta(summary.nextActionAt)
+        : 'No scheduled follow-up yet.';
+    }
+    applyReminderBadge(elements.studentTaskBadge, summary);
+    renderTaskList(elements.studentTaskList, tasks, {
+      emptyMessage: 'No tasks yet.',
+      scope: 'student'
+    });
+    renderActivityList(elements.studentActivityList, activities, 'No activity yet.');
+  }
+
+  async function createTaskForLead() {
+    if (!modalState.leadId) throw new Error('Select a lead first.');
+    if (!window.CrmActivities || typeof window.CrmActivities.buildTaskPayload !== 'function') {
+      throw new Error('Activity helpers are not available.');
+    }
+
+    const payload = window.CrmActivities.buildTaskPayload({
+      inputTaskTitle: elements.inputLeadTaskTitle,
+      inputTaskDueAt: elements.inputLeadTaskDueAt,
+      inputTaskPriority: elements.inputLeadTaskPriority
+    });
+
+    await apiFetchJson('/api/admin/tasks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        leadId: modalState.leadId,
+        ...payload
+      })
+    });
+
+    resetLeadTaskComposer();
+    await refreshOpenTaskSnapshot();
+    showToast('Lead task added.', 'success');
+  }
+
+  async function createActivityForLead() {
+    if (!modalState.leadId) throw new Error('Select a lead first.');
+    if (!window.CrmActivities || typeof window.CrmActivities.buildActivityPayload !== 'function') {
+      throw new Error('Activity helpers are not available.');
+    }
+
+    const payload = window.CrmActivities.buildActivityPayload({
+      inputActivityType: elements.inputLeadActivityType,
+      inputActivitySubject: elements.inputLeadActivitySubject,
+      inputActivityBody: elements.inputLeadActivityBody
+    });
+
+    await apiFetchJson('/api/admin/activities', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        leadId: modalState.leadId,
+        ...payload
+      })
+    });
+
+    resetLeadActivityComposer();
+    await refreshLeadWorkspace();
+    showToast('Lead activity logged.', 'success');
+  }
+
+  async function createTaskForStudent() {
+    if (!modalState.studentId) throw new Error('Save the student profile first.');
+    if (!window.CrmActivities || typeof window.CrmActivities.buildTaskPayload !== 'function') {
+      throw new Error('Activity helpers are not available.');
+    }
+
+    const payload = window.CrmActivities.buildTaskPayload({
+      inputTaskTitle: elements.inputStudentTaskTitle,
+      inputTaskDueAt: elements.inputStudentTaskDueAt,
+      inputTaskPriority: elements.inputStudentTaskPriority
+    });
+
+    await apiFetchJson('/api/admin/tasks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        studentId: modalState.studentId,
+        ...payload
+      })
+    });
+
+    resetStudentTaskComposer();
+    await refreshOpenTaskSnapshot();
+    showToast('Student task added.', 'success');
+  }
+
+  async function createActivityForStudent() {
+    if (!modalState.studentId) throw new Error('Save the student profile first.');
+    if (!window.CrmActivities || typeof window.CrmActivities.buildActivityPayload !== 'function') {
+      throw new Error('Activity helpers are not available.');
+    }
+
+    const payload = window.CrmActivities.buildActivityPayload({
+      inputActivityType: elements.inputStudentActivityType,
+      inputActivitySubject: elements.inputStudentActivitySubject,
+      inputActivityBody: elements.inputStudentActivityBody
+    });
+
+    await apiFetchJson('/api/admin/activities', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        studentId: modalState.studentId,
+        ...payload
+      })
+    });
+
+    resetStudentActivityComposer();
+    await refreshStudentTimeline();
+    showToast('Student activity logged.', 'success');
+  }
+
+  async function refreshStudentFinance() {
+    if (!modalState.studentId || !window.CrmFinance) return;
+    const [json, attendanceJson] = await Promise.all([
+      apiFetchJson(`/api/admin/finance/summary?studentId=${encodeURIComponent(modalState.studentId)}`, {
+        method: 'GET'
+      }),
+      window.ClassroomAPI && typeof window.ClassroomAPI.fetchAttendanceSummary === 'function'
+        ? window.ClassroomAPI.fetchAttendanceSummary({ studentId: modalState.studentId })
+        : Promise.resolve({ students: [] })
+    ]);
+    const totalInvoiced = Number(json.totalInvoiced || 0);
+    const totalPaid = Number(json.totalPaid || 0);
+    const totalOutstanding = Number(json.totalOutstanding || 0);
+    const nextDueDate = String(json.nextDueDate || '').trim() || '-';
+    const invoices = Array.isArray(json.invoices) ? json.invoices : [];
+    const enrollmentRows = Array.isArray(attendanceJson?.students) ? attendanceJson.students : [];
+    const activeEnrollments = enrollmentRows.filter((row) => String(row.status || '') === 'active');
+    const availableEnrollments = activeEnrollments.length ? activeEnrollments : enrollmentRows;
+
+    modalState.financeEnrollments = availableEnrollments;
+
+    if (elements.inputStudentFinanceEnrollment) {
+      const currentValue = String(elements.inputStudentFinanceEnrollment.value || '').trim();
+      elements.inputStudentFinanceEnrollment.innerHTML = '<option value="">No enrollment selected</option>' + availableEnrollments.map((row) => `
+        <option value="${escapeHtml(row.enrollmentId || '')}">${escapeHtml([row.classId || 'class?', row.courseId || 'course?', row.status || 'status?'].join(' • '))}</option>
+      `).join('');
+
+      if (currentValue && availableEnrollments.some((row) => String(row.enrollmentId || '') === currentValue)) {
+        elements.inputStudentFinanceEnrollment.value = currentValue;
+      } else if (availableEnrollments.length === 1) {
+        elements.inputStudentFinanceEnrollment.value = String(availableEnrollments[0].enrollmentId || '');
+      }
+    }
+
+    if (elements.studentFinanceEnrollmentMeta) {
+      elements.studentFinanceEnrollmentMeta.textContent = availableEnrollments.length
+        ? `Loaded ${availableEnrollments.length} enrollment context${availableEnrollments.length === 1 ? '' : 's'} for this student.`
+        : 'No enrollment found. Invoice creation will use a manual fallback context.';
+    }
+
+    if (elements.studentFinanceInvoiced) elements.studentFinanceInvoiced.textContent = window.CrmFinance.formatMoney(totalInvoiced);
+    if (elements.studentFinancePaid) elements.studentFinancePaid.textContent = window.CrmFinance.formatMoney(totalPaid);
+    if (elements.studentFinanceOutstanding) elements.studentFinanceOutstanding.textContent = window.CrmFinance.formatMoney(totalOutstanding);
+    if (elements.studentFinanceNextDue) elements.studentFinanceNextDue.textContent = nextDueDate;
+
+    if (elements.studentInvoiceList) {
+      if (!invoices.length) {
+        elements.studentInvoiceList.innerHTML = '<div class="crm-muted">No invoices yet.</div>';
+      } else {
+        elements.studentInvoiceList.innerHTML = invoices.map((invoice) => `
+          <div class="crm-task-item">
+            <div class="crm-task-head">
+              <strong>Invoice ${escapeHtml(invoice.invoiceId || '')}</strong>
+              <span class="crm-task-priority medium">${escapeHtml(invoice.status || 'open')}</span>
+            </div>
+            <div class="crm-task-meta">Due ${escapeHtml(String(invoice.dueDate || '-'))}</div>
+            <div class="crm-timeline-meta" style="margin-top: 6px;">Net ${escapeHtml(window.CrmFinance.formatMoney(invoice.netAmount))} | Outstanding ${escapeHtml(window.CrmFinance.formatMoney(invoice.outstandingAmount))}</div>
+            <div class="crm-task-actions">
+              <button type="button" class="crm-btn-secondary btn-select-invoice" data-invoice-id="${escapeHtml(invoice.invoiceId || '')}">Select</button>
+            </div>
+          </div>
+        `).join('');
+
+        Array.from(elements.studentInvoiceList.querySelectorAll('.btn-select-invoice')).forEach((button) => {
+          button.addEventListener('click', () => {
+            modalState.selectedInvoiceId = String(button.dataset.invoiceId || '').trim();
+            showToast(`Selected ${modalState.selectedInvoiceId} for payment.`, 'success');
+          });
+        });
+      }
+    }
+  }
+
+  function resolveStudentFinanceEnrollmentContext() {
+    const enrollments = Array.isArray(modalState.financeEnrollments) ? modalState.financeEnrollments : [];
+    const selectedEnrollmentId = String(elements.inputStudentFinanceEnrollment?.value || '').trim();
+    if (!enrollments.length) {
+      return {
+        enrollmentId: `manual-${modalState.studentId}`,
+        courseId: null
+      };
+    }
+
+    if (selectedEnrollmentId) {
+      const selected = enrollments.find((row) => String(row.enrollmentId || '') === selectedEnrollmentId);
+      if (selected) {
+        return {
+          enrollmentId: selected.enrollmentId || `manual-${modalState.studentId}`,
+          courseId: selected.courseId || null
+        };
+      }
+    }
+
+    if (enrollments.length === 1) {
+      return {
+        enrollmentId: enrollments[0].enrollmentId || `manual-${modalState.studentId}`,
+        courseId: enrollments[0].courseId || null
+      };
+    }
+
+    throw new Error('Select the enrollment context first.');
+  }
+
+  async function createInvoiceForStudent() {
+    if (!modalState.studentId) throw new Error('Save the student profile first.');
+    if (!window.CrmFinance || typeof window.CrmFinance.buildInvoicePayload !== 'function') {
+      throw new Error('Finance helpers are not available.');
+    }
+
+    const financeContext = resolveStudentFinanceEnrollmentContext();
+    const payload = window.CrmFinance.buildInvoicePayload({
+      inputInvoiceAmount: elements.inputInvoiceAmount,
+      inputInvoiceDiscount: elements.inputInvoiceDiscount,
+      inputInvoiceDueDate: elements.inputInvoiceDueDate
+    });
+
+    await apiFetchJson('/api/admin/invoices', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        studentId: modalState.studentId,
+        enrollmentId: financeContext.enrollmentId,
+        courseId: financeContext.courseId,
+        ...payload
+      })
+    });
+
+    if (elements.inputInvoiceAmount) elements.inputInvoiceAmount.value = '';
+    if (elements.inputInvoiceDiscount) elements.inputInvoiceDiscount.value = '';
+    if (elements.inputInvoiceDueDate) elements.inputInvoiceDueDate.value = '';
+    await refreshStudentFinance();
+    await refreshDashboard();
+    showToast('Invoice created.', 'success');
+  }
+
+  async function recordPaymentForStudent() {
+    if (!modalState.studentId) throw new Error('Save the student profile first.');
+    if (!modalState.selectedInvoiceId) throw new Error('Select an invoice first.');
+    if (!window.CrmFinance || typeof window.CrmFinance.buildPaymentPayload !== 'function') {
+      throw new Error('Finance helpers are not available.');
+    }
+
+    const financeContext = resolveStudentFinanceEnrollmentContext();
+    const payload = window.CrmFinance.buildPaymentPayload({
+      inputPaymentAmount: elements.inputPaymentAmount,
+      inputPaymentMethod: elements.inputPaymentMethod
+    });
+
+    await apiFetchJson('/api/admin/payments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        invoiceId: modalState.selectedInvoiceId,
+        studentId: modalState.studentId,
+        enrollmentId: financeContext.enrollmentId,
+        ...payload
+      })
+    });
+
+    if (elements.inputPaymentAmount) elements.inputPaymentAmount.value = '';
+    await refreshStudentFinance();
+    await refreshDashboard();
+    showToast('Payment recorded.', 'success');
+  }
+
+  async function refreshCommunicationsManager() {
+    if (!window.CrmCommunications || !elements.automationList) return;
+
+    const [templatesJson, automationsJson] = await Promise.all([
+      apiFetchJson('/api/admin/templates', { method: 'GET' }),
+      apiFetchJson('/api/admin/automations', { method: 'GET' })
+    ]);
+
+    const templates = Array.isArray(templatesJson.templates) ? templatesJson.templates : [];
+    const rules = Array.isArray(automationsJson.rules) ? automationsJson.rules : [];
+    const queue = Array.isArray(automationsJson.queue) ? automationsJson.queue : [];
+
+    if (elements.inputRuleTemplateId) {
+      const current = String(elements.inputRuleTemplateId.value || '').trim();
+      elements.inputRuleTemplateId.innerHTML = '<option value="">Select a template...</option>' + templates.map((template) => `
+        <option value="${escapeHtml(template.templateId || '')}">${escapeHtml(template.name || template.templateId || 'Template')}</option>
+      `).join('');
+      if (current) {
+        elements.inputRuleTemplateId.value = current;
+      }
+    }
+
+    if (!rules.length) {
+      elements.automationList.innerHTML = '<div class="crm-muted">No automations yet.</div>';
+      return;
+    }
+
+    elements.automationList.innerHTML = rules.map((rule) => {
+      const relatedQueue = queue.filter((entry) => String(entry.ruleId || '') === String(rule.ruleId || ''));
+      return `
+        <div class="crm-task-item">
+          <div class="crm-task-head">
+            <strong>${escapeHtml(rule.name || 'Rule')}</strong>
+            <span class="crm-task-priority medium">${escapeHtml(rule.triggerType || '')}</span>
+          </div>
+          <div class="crm-timeline-meta">${escapeHtml(`Queue entries: ${relatedQueue.length}`)}</div>
+          <div class="crm-task-actions">
+            <button type="button" class="crm-btn-secondary btn-run-automation" data-rule-id="${escapeHtml(rule.ruleId || '')}">Run Now</button>
+          </div>
+          ${relatedQueue.length ? `<div class="crm-timeline-meta" style="margin-top:8px;">${escapeHtml(relatedQueue.slice(0, 3).map((entry) => window.CrmCommunications.formatQueueStatus(entry.status)).join(', '))}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+
+    Array.from(elements.automationList.querySelectorAll('.btn-run-automation')).forEach((button) => {
+      button.addEventListener('click', async () => {
+        const ruleId = String(button.dataset.ruleId || '').trim();
+        try {
+          button.disabled = true;
+          await apiFetchJson(`/api/admin/automations/${encodeURIComponent(ruleId)}/run-now`, {
+            method: 'POST'
+          });
+          await refreshCommunicationsManager();
+          showToast('Automation queued.', 'success');
+        } catch (error) {
+          console.error('[CRM Admin] Run automation failed:', error);
+          showToast(error?.message || 'Failed to run automation.', 'error');
+          button.disabled = false;
+        }
+      });
+    });
+  }
+
+  async function createCommunicationTemplate() {
+    if (!window.CrmCommunications || typeof window.CrmCommunications.buildTemplatePayload !== 'function') {
+      throw new Error('Communication helpers are not available.');
+    }
+
+    const payload = window.CrmCommunications.buildTemplatePayload({
+      inputTemplateName: elements.inputTemplateName,
+      inputTemplateChannel: elements.inputTemplateChannel,
+      inputTemplateSubject: elements.inputTemplateSubject,
+      inputTemplateBody: elements.inputTemplateBody
+    });
+
+    await apiFetchJson('/api/admin/templates', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (elements.inputTemplateName) elements.inputTemplateName.value = '';
+    if (elements.inputTemplateSubject) elements.inputTemplateSubject.value = '';
+    if (elements.inputTemplateBody) elements.inputTemplateBody.value = '';
+    await refreshCommunicationsManager();
+    showToast('Template created.', 'success');
+  }
+
+  async function createAutomationRule() {
+    if (!window.CrmCommunications || typeof window.CrmCommunications.buildRulePayload !== 'function') {
+      throw new Error('Communication helpers are not available.');
+    }
+
+    const payload = window.CrmCommunications.buildRulePayload({
+      inputRuleName: elements.inputRuleName,
+      inputRuleTriggerType: elements.inputRuleTriggerType,
+      inputRuleTemplateId: elements.inputRuleTemplateId
+    });
+
+    await apiFetchJson('/api/admin/automations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (elements.inputRuleName) elements.inputRuleName.value = '';
+    await refreshCommunicationsManager();
+    await refreshDashboard();
+    showToast('Automation rule created.', 'success');
+  }
+
+  async function refreshDashboard() {
+    if (!window.CrmDashboard) return;
+
+    const [summaryJson, funnelJson, revenueJson, duplicatesJson, auditJson] = await Promise.all([
+      apiFetchJson('/api/admin/dashboard/summary', { method: 'GET' }),
+      apiFetchJson('/api/admin/dashboard/funnel', { method: 'GET' }),
+      apiFetchJson('/api/admin/dashboard/revenue', { method: 'GET' }),
+      apiFetchJson('/api/admin/duplicates', { method: 'GET' }),
+      apiFetchJson('/api/admin/audit-logs', { method: 'GET' })
+    ]);
+
+    const summary = summaryJson.summary || {};
+    const funnel = funnelJson.funnel || {};
+    const revenue = Array.isArray(revenueJson.revenue) ? revenueJson.revenue : [];
+    const duplicates = Array.isArray(duplicatesJson.duplicates) ? duplicatesJson.duplicates : [];
+    const auditLogs = Array.isArray(auditJson.auditLogs) ? auditJson.auditLogs : [];
+
+    if (elements.dashboardSummaryCards) {
+      const cards = window.CrmDashboard.buildSummaryCards(summary);
+      elements.dashboardSummaryCards.innerHTML = cards.map((card) => `
+        <div class="crm-summary-card" data-card-key="${escapeHtml(card.key || '')}">
+          <div class="crm-summary-card-label">${escapeHtml(card.label || '')}</div>
+          <div class="crm-summary-card-value">${escapeHtml(card.value || '0')}</div>
+          <div class="crm-summary-card-footnote">${escapeHtml(card.footnote || '')}</div>
+        </div>
+      `).join('');
+    }
+
+    if (elements.dashboardFunnel) {
+      const rows = window.CrmDashboard.buildFunnelRows(funnel);
+      elements.dashboardFunnel.innerHTML = rows.map((row) => `
+        <div class="crm-task-item">
+          <div class="crm-task-head">
+            <strong>${escapeHtml(window.CrmDashboard.formatStageLabel(row.stage))}</strong>
+            <span class="crm-task-priority medium">${escapeHtml(String(row.count || 0))}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    if (elements.dashboardRevenue) {
+      if (!revenue.length) {
+        elements.dashboardRevenue.innerHTML = '<div class="crm-muted" style="padding: 18px;">No invoice activity yet.</div>';
+      } else {
+        elements.dashboardRevenue.innerHTML = `
+          <div class="crm-table-container">
+            <table class="crm-table">
+              <thead>
+                <tr>
+                  <th>Course</th>
+                  <th>Invoiced</th>
+                  <th>Collected</th>
+                  <th>Outstanding</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${revenue.map((row) => `
+                  <tr>
+                    <td>${escapeHtml(row.courseId || 'unassigned')}</td>
+                    <td>${escapeHtml(window.CrmDashboard.toMoney(row.invoicedAmount))}</td>
+                    <td>${escapeHtml(window.CrmDashboard.toMoney(row.collectedAmount))}</td>
+                    <td>${escapeHtml(window.CrmDashboard.toMoney(row.outstandingAmount))}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+    }
+
+    if (elements.dashboardDuplicates) {
+      if (!duplicates.length) {
+        elements.dashboardDuplicates.innerHTML = '<div class="crm-muted">No duplicate candidates found.</div>';
+      } else {
+        elements.dashboardDuplicates.innerHTML = duplicates.slice(0, 10).map((group) => {
+          const item = window.CrmGovernance
+            ? window.CrmGovernance.formatDuplicateGroup(group)
+            : {
+                title: String(group.kind || 'match'),
+                subtitle: String(group.key || ''),
+                detail: Array.isArray(group.studentIds) ? group.studentIds.join(', ') : ''
+              };
+          return `
+            <div class="crm-task-item">
+              <div class="crm-task-head">
+                <strong>${escapeHtml(item.title)}</strong>
+                <span class="crm-task-priority high">${escapeHtml(String((group.studentIds || []).length || 0))}</span>
+              </div>
+              <div class="crm-task-meta">${escapeHtml(item.subtitle)}</div>
+              <div class="crm-timeline-meta" style="margin-top: 6px;">${escapeHtml(item.detail)}</div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    if (elements.dashboardAuditLogs) {
+      if (!auditLogs.length) {
+        elements.dashboardAuditLogs.innerHTML = '<div class="crm-muted">No audit logs yet.</div>';
+      } else {
+        elements.dashboardAuditLogs.innerHTML = auditLogs.slice(0, 12).map((entry) => `
+          <div class="crm-timeline-item">
+            <div class="crm-timeline-head">
+              <span class="crm-activity-chip">${escapeHtml(window.CrmGovernance ? window.CrmGovernance.formatAuditAction(entry.action) : entry.action)}</span>
+              <span class="crm-timeline-meta">${escapeHtml(formatDateTime(entry.createdAt))}</span>
+            </div>
+            <strong>${escapeHtml(entry.entityType || 'entity')} / ${escapeHtml(entry.entityId || 'unknown')}</strong>
+            <div class="crm-timeline-meta" style="margin-top: 6px;">${escapeHtml(entry.actorEmail || entry.actorUid || 'system')}</div>
+          </div>
+        `).join('');
+      }
+    }
+  }
+
+  async function createMergeJob() {
+    if (!window.CrmGovernance || typeof window.CrmGovernance.buildMergeJobPayload !== 'function') {
+      throw new Error('Governance helpers are not available.');
+    }
+
+    const payload = window.CrmGovernance.buildMergeJobPayload({
+      inputMergePrimaryStudentId: elements.inputMergePrimaryStudentId,
+      inputMergeDuplicateStudentIds: elements.inputMergeDuplicateStudentIds
+    });
+
+    await apiFetchJson('/api/admin/merge-jobs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (elements.inputMergePrimaryStudentId) elements.inputMergePrimaryStudentId.value = '';
+    if (elements.inputMergeDuplicateStudentIds) elements.inputMergeDuplicateStudentIds.value = '';
+    await refreshDashboard();
+    showToast('Merge job created.', 'success');
   }
 
   function escapeHtml(str) {
@@ -1456,46 +2084,117 @@
     return div.innerHTML;
   }
 
-  function renderLeadContextSummary(lead) {
-    if (leadWorkspaceController) {
-      return leadWorkspaceController.renderLeadContextSummary(lead);
-    }
-    if (!elements.leadContextSummary) return;
-    if (!lead) {
-      elements.leadContextSummary.innerHTML = '<div class="crm-muted">Structured intake details will appear here.</div>';
-      return;
-    }
+  function studentDisplayName(student) {
+    const name = String(student?.name || '').trim();
+    if (name) return name;
+    const email = String(student?.email || '').trim();
+    if (email) return email;
+    const phone = String(student?.phone || '').trim();
+    if (phone) return phone;
+    return 'Unnamed student';
+  }
 
-    const rows = [
-      ['Facebook', [lead?.facebookDisplayName || lead?.facebook, lead?.facebookProfileUrl].filter(Boolean).join(' / ')],
-      ['Real Name', lead?.realName],
-      ['Date of Birth', lead?.dateOfBirth],
-      ['Learning Needs', lead?.learningNeeds],
-      ['Preferred Days', (Array.isArray(lead?.preferredLearningDays) ? lead.preferredLearningDays : []).map((value) => String(value || '').trim()).filter(Boolean).join(', ')],
-      ['Preferred Hours', (Array.isArray(lead?.preferredLearningHours) ? lead.preferredLearningHours : []).map((value) => String(value || '').trim()).filter(Boolean).join(', ')],
-      ['Messenger', [lead?.messengerStatus, lead?.messengerLastContactAt, lead?.messengerThreadUrl].filter(Boolean).join(' / ')]
-    ].filter(([, value]) => String(value || '').trim());
-
-    if (!rows.length) {
-      elements.leadContextSummary.innerHTML = '<div class="crm-muted">No structured intake context captured yet.</div>';
-      return;
-    }
-
-    elements.leadContextSummary.innerHTML = rows.map(([label, value]) => `
-      <div>
-        <strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}
-      </div>
-    `).join('');
+  function studentContact(student) {
+    const email = String(student?.email || '').trim();
+    const phone = String(student?.phone || '').trim();
+    if (email && phone) return `${email} • ${phone}`;
+    if (email) return email;
+    if (phone) return phone;
+    const zalo = String(student?.zalo || '').trim();
+    if (zalo) return `Zalo: ${zalo}`;
+    return '—';
   }
 
   function renderStudentsTable(container, students, emptyMessage) {
-    if (!studentDirectoryController) return;
-    return studentDirectoryController.renderStudentsTable(container, students, emptyMessage);
+    if (!container) return;
+
+    const list = Array.isArray(students) ? students : [];
+    if (list.length === 0) {
+      container.classList.add('crm-placeholder-card');
+      container.classList.remove('crm-table-host');
+      container.innerHTML = `<div class="crm-muted">${escapeHtml(emptyMessage || 'No students yet.')}</div>`;
+      return;
+    }
+
+    container.classList.remove('crm-placeholder-card');
+    container.classList.add('crm-table-host');
+
+    const rows = list.map((student) => {
+      const studentId = String(student.studentId || '').trim();
+      const displayName = studentDisplayName(student);
+      const label = String(student.label || '').trim() || '—';
+      const contact = studentContact(student);
+      return `
+        <tr>
+          <td class="td-bold">
+            <div class="crm-name-cell">
+              <button type="button" class="crm-student-link" data-student-id="${escapeHtml(studentId)}">${escapeHtml(displayName)}</button>
+              ${renderReminderBadgeMarkup(getReminderSummary({ studentId }))}
+              ${renderRiskBadgeMarkup(studentId)}
+            </div>
+          </td>
+          <td>${escapeHtml(label)}</td>
+          <td>${escapeHtml(contact)}</td>
+          <td>${formatDateTime(student.createdAt)}</td>
+          <td><code>${escapeHtml(studentId)}</code></td>
+        </tr>
+      `;
+    }).join('');
+
+    container.innerHTML = `
+      <div class="crm-table-container">
+        <table class="crm-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Label</th>
+              <th>Contact</th>
+              <th>Created</th>
+              <th>Student ID</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    const studentIndex = new Map(list.map((s) => [String(s.studentId || '').trim(), s]));
+
+    Array.from(container.querySelectorAll('button.crm-student-link[data-student-id]')).forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = String(btn.dataset.studentId || '').trim();
+        const cached = studentIndex.get(id) || null;
+        openStudentProfile(id, cached).catch((e) => {
+          console.error('[CRM Admin] Open student profile failed:', e);
+          showToast(e?.message || 'Failed to open student profile.', 'error');
+        });
+      });
+    });
   }
 
   async function fetchStudentsFromFirestore(limit) {
-    if (!studentDirectoryController) return [];
-    return studentDirectoryController.fetchStudentsFromFirestore(limit);
+    const rowLimit = Number.isFinite(limit) ? Math.max(1, Math.min(500, Math.floor(limit))) : 200;
+    const snap = await firebase.firestore()
+      .collection('crmStudents')
+      .orderBy('createdAt', 'desc')
+      .limit(rowLimit)
+      .get();
+
+    return snap.docs.map((doc) => {
+      const data = doc.data() || {};
+      return {
+        studentId: doc.id,
+        name: data.name || null,
+        label: data.label || null,
+        phone: data.phone || null,
+        email: data.email || null,
+        zalo: data.zalo || null,
+        facebook: data.facebook || null,
+        createdAt: data.createdAt || null
+      };
+    });
   }
 
   async function fetchStudentProfile(studentId) {
@@ -1520,40 +2219,258 @@
     if (!elements.classroomModal) return;
     elements.classroomModal.style.display = 'flex';
     elements.classroomModal.setAttribute('aria-hidden', 'false');
-    renderClassroomSchedulePrompt();
-    renderLiveDeliverySummary(modalState.liveSessions);
-    renderAttendanceWorkflowGuidance();
-    renderClassworkWorkflowGuidance();
   }
 
   async function openStudentProfile(studentId, cachedStudent = null) {
-    if (!studentWorkspaceController) return;
-    return studentWorkspaceController.openStudentProfile(studentId, cachedStudent);
+    const id = String(studentId || '').trim();
+    if (!id) throw new Error('Missing student ID.');
+
+    openStudentModal();
+    resetStudentModal();
+
+    modalState.studentId = id;
+    modalState.createdTestLinks = new Map();
+
+    if (elements.studentIdBadge) {
+      elements.studentIdBadge.textContent = `ID: ${id}`;
+      elements.studentIdBadge.style.display = 'inline-flex';
+    }
+
+    if (elements.btnSaveStudent) {
+      elements.btnSaveStudent.disabled = false;
+      elements.btnSaveStudent.textContent = 'Save Student';
+    }
+
+    if (elements.btnAddEntranceTest) {
+      elements.btnAddEntranceTest.disabled = false;
+      elements.btnAddEntranceTest.textContent = 'Add new test';
+    }
+
+    const student = cachedStudent || null;
+
+    if (!student) {
+      showToast('Student details are not available yet. Please refresh and try again.', 'error');
+    } else {
+      if (window.CrmStudents && typeof window.CrmStudents.applyToForm === 'function') {
+        window.CrmStudents.applyToForm(elements, student);
+      }
+      if (window.CrmStudent360 && typeof window.CrmStudent360.applyToForm === 'function') {
+        window.CrmStudent360.applyToForm(elements, student);
+      }
+    }
+
+    fetchStudentProfile(id).then((fresh) => {
+      if (!fresh) return;
+      if (window.CrmStudents && typeof window.CrmStudents.applyToForm === 'function') {
+        window.CrmStudents.applyToForm(elements, fresh);
+      }
+      if (window.CrmStudent360 && typeof window.CrmStudent360.applyToForm === 'function') {
+        window.CrmStudent360.applyToForm(elements, fresh);
+      }
+    }).catch((error) => {
+      console.error('[CRM Admin] Failed to refresh student profile after open:', error);
+    });
+
+    await refreshEntranceTestsList();
+    await refreshStudentIdentity();
+    await refreshStudentTimeline();
+    await refreshStudentFinance();
+    switchStudentTab('info');
   }
 
   async function refreshStudentIdentity() {
-    if (!studentWorkspaceController) return;
-    return studentWorkspaceController.refreshStudentIdentity();
+    if (!modalState.studentId) return;
+    try {
+      // Re-fetch the student document to get class_code and linked_user_ids
+      const snap = await firebase.firestore().collection('crmStudents').doc(modalState.studentId).get();
+      if (!snap.exists) return;
+      const data = snap.data();
+
+      if (elements.inputClassCodeDisplay) {
+        elements.inputClassCodeDisplay.value = data.class_code || '';
+      }
+
+      if (elements.linkedUidsUl) {
+        const uids = data.linked_user_ids || [];
+        if (uids.length === 0) {
+          elements.linkedUidsUl.innerHTML = '<li class="text-muted">No accounts linked yet.</li>';
+        } else {
+          elements.linkedUidsUl.innerHTML = uids.map(uid => `
+            <li>
+              <span>${escapeHtml(uid)}</span>
+              <span class="crm-test-status submitted">Linked</span>
+            </li>
+          `).join('');
+        }
+      }
+    } catch (e) {
+      console.error('[CRM Admin] Failed to refresh identity:', e);
+    }
   }
 
   async function refreshStudentLists() {
-    if (!studentDirectoryController) return;
-    return studentDirectoryController.refreshStudentLists();
+    let students = [];
+    try {
+      const json = await apiFetchJson('/api/admin/students?limit=200', { method: 'GET' });
+      students = Array.isArray(json.students) ? json.students : [];
+    } catch (error) {
+      if (Number(error?.status) === 404) {
+        students = await fetchStudentsFromFirestore(200);
+      } else {
+        throw error;
+      }
+    }
+
+    const buckets = window.CrmStudents && typeof window.CrmStudents.splitStudents === 'function'
+      ? window.CrmStudents.splitStudents(students)
+      : { potential: students, studentData: [] };
+
+    dataCache.students = students;
+
+    renderStudentsTable(elements.potentialStudentsContainer, buckets.potential, 'No potential students yet.');
+    renderStudentsTable(elements.studentDataContainer, buckets.studentData, 'No students in database yet.');
+    await populateAttendanceStudentOptions();
   }
 
   function renderLeadStageBoard(leads) {
-    if (!leadWorkspaceController) return;
-    return leadWorkspaceController.renderLeadStageBoard(leads);
+    if (!elements.leadStageBoard) return;
+    if (!window.CrmLeads || typeof window.CrmLeads.summarize !== 'function') {
+      elements.leadStageBoard.innerHTML = '';
+      return;
+    }
+
+    const counts = window.CrmLeads.summarize(leads);
+    elements.leadStageBoard.innerHTML = window.CrmLeads.STAGES.map((stage) => `
+      <div class="crm-lead-stage-card">
+        <div class="text-muted">${escapeHtml(window.CrmLeads.formatStageLabel(stage))}</div>
+        <strong>${escapeHtml(String(counts[stage] || 0))}</strong>
+      </div>
+    `).join('');
   }
 
   function renderLeadTable(leads) {
-    if (!leadWorkspaceController) return;
-    return leadWorkspaceController.renderLeadTable(leads);
+    if (!elements.leadListContainer) return;
+    if (!Array.isArray(leads) || !leads.length) {
+      elements.leadListContainer.innerHTML = 'No leads yet.';
+      return;
+    }
+
+    elements.leadListContainer.innerHTML = `
+      <div class="crm-table-container">
+        <table class="crm-table">
+          <thead>
+            <tr><th>Name</th><th>Contact</th><th>Source</th><th>Stage</th><th>Probability</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            ${leads.map((lead) => `
+              ${(() => {
+                const isConverted = window.CrmLeads.isConvertedLead(lead);
+                const stageOptions = window.CrmLeads.getSelectableStages(lead.stage);
+                return `
+              <tr>
+                <td class="td-bold">
+                  <div class="crm-name-cell">
+                    <button type="button" class="crm-student-link crm-lead-link" data-lead-id="${escapeHtml(lead.leadId)}">${escapeHtml(lead.name || lead.email || 'Unnamed lead')}</button>
+                    ${renderReminderBadgeMarkup(getReminderSummary({ leadId: lead.leadId }))}
+                  </div>
+                </td>
+                <td>${escapeHtml(lead.email || lead.phone || lead.zalo || '—')}</td>
+                <td>${escapeHtml(lead.source || '—')}</td>
+                <td>
+                  <select class="crm-input crm-inline-select lead-stage-select" data-lead-id="${escapeHtml(lead.leadId)}" ${isConverted ? 'disabled' : ''}>
+                    ${stageOptions.map((stage) => `
+                      <option value="${stage}" ${stage === lead.stage ? 'selected' : ''}>${escapeHtml(window.CrmLeads.formatStageLabel(stage))}</option>
+                    `).join('')}
+                  </select>
+                </td>
+                <td>${escapeHtml(lead.probability == null ? '—' : `${lead.probability}%`)}</td>
+                <td>
+                  <div class="crm-inline-fields">
+                    <button type="button" class="crm-btn-secondary btn-update-lead-stage" data-lead-id="${escapeHtml(lead.leadId)}" ${isConverted ? 'disabled' : ''}>Update</button>
+                    <button type="button" class="crm-btn-primary btn-convert-lead" data-lead-id="${escapeHtml(lead.leadId)}" ${lead.studentId ? 'disabled' : ''}>${lead.studentId ? 'Converted' : 'Convert'}</button>
+                  </div>
+                </td>
+              </tr>
+            `;
+              })()}
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    const leadIndex = new Map(leads.map((lead) => [String(lead.leadId || '').trim(), lead]));
+
+    Array.from(elements.leadListContainer.querySelectorAll('.crm-lead-link[data-lead-id]')).forEach((button) => {
+      button.addEventListener('click', () => {
+        modalState.leadId = String(button.dataset.leadId || '').trim();
+        const lead = leadIndex.get(modalState.leadId) || null;
+        if (elements.leadWorkspaceTitle) {
+          elements.leadWorkspaceTitle.textContent = lead?.name || lead?.email || 'Lead Workspace';
+        }
+        refreshLeadWorkspace().catch((error) => {
+          console.error('[CRM Admin] Open lead workspace failed:', error);
+          showToast(error?.message || 'Failed to load lead workspace.', 'error');
+        });
+      });
+    });
+
+    Array.from(elements.leadListContainer.querySelectorAll('.btn-update-lead-stage')).forEach((button) => {
+      button.addEventListener('click', async () => {
+        const leadId = String(button.dataset.leadId || '').trim();
+        const select = elements.leadListContainer.querySelector(`.lead-stage-select[data-lead-id="${leadId}"]`);
+        const stage = String(select?.value || '').trim();
+        try {
+          button.disabled = true;
+          await apiFetchJson(`/api/admin/leads/${encodeURIComponent(leadId)}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ stage })
+          });
+          await refreshLeadPipeline();
+          showToast('Lead updated.', 'success');
+        } catch (error) {
+          console.error('[CRM Admin] Update lead stage failed:', error);
+          showToast(error?.message || 'Failed to update lead.', 'error');
+          button.disabled = false;
+        }
+      });
+    });
+
+    Array.from(elements.leadListContainer.querySelectorAll('.btn-convert-lead')).forEach((button) => {
+      button.addEventListener('click', async () => {
+        const leadId = String(button.dataset.leadId || '').trim();
+        try {
+          button.disabled = true;
+          await apiFetchJson(`/api/admin/leads/${encodeURIComponent(leadId)}/convert`, {
+            method: 'POST'
+          });
+          await Promise.all([
+            refreshLeadPipeline(),
+            refreshStudentLists()
+          ]);
+          showToast('Lead converted to student.', 'success');
+        } catch (error) {
+          console.error('[CRM Admin] Convert lead failed:', error);
+          showToast(error?.message || 'Failed to convert lead.', 'error');
+          button.disabled = false;
+        }
+      });
+    });
   }
 
   async function refreshLeadPipeline() {
-    if (!leadWorkspaceController) return;
-    return leadWorkspaceController.refreshLeadPipeline();
+    const json = await apiFetchJson('/api/admin/leads?limit=200', { method: 'GET' });
+    const leads = Array.isArray(json.leads) ? json.leads : [];
+    dataCache.leads = leads;
+    renderLeadStageBoard(leads);
+    renderLeadTable(leads);
+    if (modalState.leadId && !leads.find((lead) => String(lead.leadId || '') === String(modalState.leadId))) {
+      modalState.leadId = null;
+      if (elements.leadWorkspace) elements.leadWorkspace.style.display = 'none';
+    } else if (modalState.leadId) {
+      await refreshLeadWorkspace();
+    }
   }
 
   function renderEntranceTests(tests) {
@@ -1561,43 +2478,20 @@
 
     if (!Array.isArray(tests) || tests.length === 0) {
       elements.entranceTestsList.innerHTML = '<div class="crm-muted">No tests yet.</div>';
-      if (elements.entranceTestLinkInput) elements.entranceTestLinkInput.value = '';
-      if (elements.btnCopyEntranceTestLink) elements.btnCopyEntranceTestLink.disabled = true;
-      if (elements.btnOpenEntranceTestLink) elements.btnOpenEntranceTestLink.disabled = true;
-      if (elements.entranceTestLinkNote) {
-        elements.entranceTestLinkNote.textContent = 'Create a test to generate a single-use learner link you can send.';
-      }
       return;
     }
-
-    const activeLinkTest = tests.find((test) => {
-      const status = String(test?.status || '').trim().toLowerCase();
-      return !!String(test?.testLink || '').trim() && status !== 'submitted' && status !== 'revoked';
-    }) || null;
 
     const rows = tests.map((t) => {
       const testId = String(t.testId || '').trim();
       const status = String(t.status || 'created').toLowerCase();
       const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
-      const listedTestLink = String(t.testLink || '').trim();
-      if (listedTestLink) modalState.createdTestLinks.set(testId, listedTestLink);
-      const testLink = String(listedTestLink || modalState.createdTestLinks.get(testId) || '').trim();
+      const testLink = String(modalState.createdTestLinks.get(testId) || '').trim();
       const resultLink = String(t.resultLink || '').trim();
 
-      return `\n        <tr>\n          <td><span class="crm-test-status ${status}">${statusLabel}</span></td>\n          <td>${formatDateTime(t.createdAt)}</td>\n          <td>${formatDateTime(t.startedAt)}</td>\n          <td>${formatDateTime(t.submittedAt)}</td>\n          <td>${testLink ? `<a class="crm-test-link" href="${escapeHtml(testLink)}" target="_blank" rel="noopener">Open</a>` : 'Unavailable'}</td>\n          <td>${resultLink ? `<a class="crm-test-link" href="${escapeHtml(resultLink)}" target="_blank" rel="noopener">View</a>` : 'â€”'}</td>\n        </tr>\n      `;
+      return `\n        <tr>\n          <td><span class="crm-test-status ${status}">${statusLabel}</span></td>\n          <td>${formatDateTime(t.createdAt)}</td>\n          <td>${formatDateTime(t.startedAt)}</td>\n          <td>${formatDateTime(t.submittedAt)}</td>\n          <td>${testLink ? `<a class="crm-test-link" href="${escapeHtml(testLink)}" target="_blank" rel="noopener">Open</a>` : 'Unavailable'}</td>\n          <td>${resultLink ? `<a class="crm-test-link" href="${escapeHtml(resultLink)}" target="_blank" rel="noopener">View</a>` : '—'}</td>\n        </tr>\n      `;
     }).join('');
 
     elements.entranceTestsList.innerHTML = `\n      <table class="crm-entrance-tests-table">\n        <thead>\n          <tr>\n            <th>Status</th>\n            <th>Start Date</th>\n            <th>Started</th>\n            <th>Submission Date</th>\n            <th>Test Link</th>\n            <th>Result</th>\n          </tr>\n        </thead>\n        <tbody>\n          ${rows}\n        </tbody>\n      </table>\n    `;
-
-    const latestLink = String(activeLinkTest?.testLink || '').trim();
-    if (elements.entranceTestLinkInput) elements.entranceTestLinkInput.value = latestLink;
-    if (elements.btnCopyEntranceTestLink) elements.btnCopyEntranceTestLink.disabled = !latestLink;
-    if (elements.btnOpenEntranceTestLink) elements.btnOpenEntranceTestLink.disabled = !latestLink;
-    if (elements.entranceTestLinkNote) {
-      elements.entranceTestLinkNote.textContent = latestLink
-        ? 'Latest single-use learner link is ready to send. It will stop working after submission.'
-        : 'Latest entrance test link has already been used. Create a new test to send another link.';
-    }
   }
 
   async function refreshEntranceTestsList() {
@@ -1627,18 +2521,140 @@
   }
 
   function setupCourseModal() {
-    if (!courseModalController) return;
-    return courseModalController.setupCourseModal();
+    if (!elements.courseModal || elements.btnNewCourseTriggers.length === 0) return;
+
+    const openFreshCourseModal = () => {
+      resetCourseModal();
+      openCourseModal();
+    };
+
+    const closeCourseModal = () => {
+      elements.courseModal.style.display = 'none';
+      elements.courseModal.setAttribute('aria-hidden', 'true');
+    };
+
+    elements.btnNewCourseTriggers.forEach((btn) => {
+      btn.addEventListener('click', openFreshCourseModal);
+    });
+
+    if (elements.btnCloseCourseModal) {
+      elements.btnCloseCourseModal.addEventListener('click', closeCourseModal);
+    }
+    if (elements.btnCancelCourse) {
+      elements.btnCancelCourse.addEventListener('click', closeCourseModal);
+    }
+
+    if (elements.btnSaveCourse) {
+      elements.btnSaveCourse.addEventListener('click', () => {
+        saveCourse()
+          .then(() => {
+            closeCourseModal();
+          })
+          .catch((e) => {
+            console.error('[CRM Admin] Save course failed:', e);
+            showToast(e?.message || 'Failed to save course.', 'error');
+          });
+      });
+    }
+
+    // Tab Switching
+    elements.courseSidebarItems.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const targetTab = btn.dataset.tab;
+        switchCourseTab(targetTab);
+      });
+    });
+
+    // Teacher list management
+    if (elements.btnAddCourseTeacher && elements.courseTeacherEmailInput && elements.courseTeachersList) {
+      const handleAddTeacher = () => {
+        const rawEmail = elements.courseTeacherEmailInput.value.trim();
+        if (!rawEmail) return;
+
+        const email = rawEmail.toLowerCase();
+        const existing = Array.from(
+          elements.courseTeachersList.querySelectorAll('li[data-email]')
+        ).some((li) => li.dataset.email === email);
+        if (existing) {
+          elements.courseTeacherEmailInput.value = '';
+          return;
+        }
+
+        const emptyNode = elements.courseTeachersList.querySelector('li[data-empty]');
+        if (emptyNode) {
+          emptyNode.remove();
+        }
+
+        const li = document.createElement('li');
+        li.className = 'crm-tag-item';
+        li.dataset.email = email;
+
+        const span = document.createElement('span');
+        span.textContent = email;
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'crm-tag-remove';
+        removeBtn.textContent = '✕';
+        removeBtn.addEventListener('click', () => {
+          li.remove();
+          if (elements.courseTeachersList.children.length === 0) {
+            const placeholder = document.createElement('li');
+            placeholder.className = 'text-muted';
+            placeholder.dataset.empty = 'true';
+            placeholder.textContent = 'No teachers added yet.';
+            elements.courseTeachersList.appendChild(placeholder);
+          }
+        });
+
+        li.appendChild(span);
+        li.appendChild(removeBtn);
+        elements.courseTeachersList.appendChild(li);
+
+        elements.courseTeacherEmailInput.value = '';
+        elements.courseTeacherEmailInput.focus();
+      };
+
+      elements.btnAddCourseTeacher.addEventListener('click', handleAddTeacher);
+      elements.courseTeacherEmailInput.addEventListener('keydown', (evt) => {
+        if (evt.key === 'Enter') {
+          evt.preventDefault();
+          handleAddTeacher();
+        }
+      });
+    }
   }
 
   function switchStudentTab(tabId) {
-    if (!studentModalController) return;
-    return studentModalController.switchStudentTab(tabId);
+    // Update Sidebar
+    elements.studentSidebarItems.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tabId);
+    });
+
+    // Update Content
+    elements.studentTabContents.forEach(content => {
+      const isMatch = content.id === `student-${tabId}`;
+      content.style.display = isMatch ? 'block' : 'none';
+      content.classList.toggle('active', isMatch);
+    });
+
+    if (tabId === 'finance' && modalState.studentId) {
+      refreshStudentFinance().catch((error) => {
+        console.error('[CRM Admin] Failed to refresh student finance:', error);
+      });
+    }
   }
 
   function switchCourseTab(tabId) {
-    if (!courseModalController) return;
-    return courseModalController.switchCourseTab(tabId);
+    elements.courseSidebarItems.forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.tab === tabId);
+    });
+
+    elements.courseTabContents.forEach((content) => {
+      const isMatch = content.id === `course-${tabId}`;
+      content.style.display = isMatch ? 'block' : 'none';
+      content.classList.toggle('active', isMatch);
+    });
   }
 
   function isValidSub(main, sub) {
@@ -1691,11 +2707,22 @@
         console.error('[CRM Admin] Dashboard refresh failed:', error);
       });
     }
-    if (activePanel === 'courses/zoom-links') {
-      refreshZoomLinksOverview().catch((error) => {
-        console.error('[CRM Admin] Live delivery overview refresh failed:', error);
+
+    if (activePanel === 'courses/classes') {
+      refreshSchedulerWorkspace().catch((error) => {
+        console.error('[CRM Admin] Scheduler refresh failed:', error);
       });
     }
+  }
+
+  function loadSchedulerWorkspace() {
+    if (!schedulerController || typeof schedulerController.load !== 'function') return Promise.resolve();
+    return schedulerController.load();
+  }
+
+  function refreshSchedulerWorkspace() {
+    if (!schedulerController || typeof schedulerController.refresh !== 'function') return Promise.resolve();
+    return schedulerController.refresh();
   }
 
   function showGateMessage(title, subtitle) {
@@ -1711,118 +2738,948 @@
   }
 
   function setupClassroomModal() {
-    if (!classroomModalController) return;
-    return classroomModalController.setupClassroomModal();
+    if (!elements.classroomModal || elements.btnNewClassroomTriggers.length === 0) return;
+
+    const openFreshClassroomModal = () => {
+      resetClassroomModal();
+      openClassroomModal();
+    };
+
+    const closeClassroomModal = () => {
+      elements.classroomModal.style.display = 'none';
+      elements.classroomModal.setAttribute('aria-hidden', 'true');
+    };
+
+    elements.btnNewClassroomTriggers.forEach(btn => btn.addEventListener('click', openFreshClassroomModal));
+    if (elements.btnCloseClassroomModal) elements.btnCloseClassroomModal.addEventListener('click', closeClassroomModal);
+    if (elements.btnCancelClassroom) elements.btnCancelClassroom.addEventListener('click', closeClassroomModal);
+
+    if (elements.btnSaveClassroomSettings) {
+      elements.btnSaveClassroomSettings.addEventListener('click', () => {
+        saveClassroomSettings().then(() => {
+          showToast('Settings saved successfully.', 'success');
+        }).catch(e => {
+          console.error('[CRM Admin] Save classroom failed:', e);
+          showToast(e?.message || 'Failed to save classroom.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnSaveClassroomScheduling) {
+      elements.btnSaveClassroomScheduling.addEventListener('click', () => {
+        saveClassroomSettings().then(() => {
+          showToast('Scheduling setup saved.', 'success');
+        }).catch(e => {
+          console.error('[CRM Admin] Save classroom scheduling failed:', e);
+          showToast(e?.message || 'Failed to save classroom scheduling.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnPreviewClassroomRegeneration) {
+      elements.btnPreviewClassroomRegeneration.addEventListener('click', () => {
+        previewClassroomRegeneration().then(() => {
+          showToast('Regeneration preview ready.', 'success');
+        }).catch((e) => {
+          console.error('[CRM Admin] Preview classroom regeneration failed:', e);
+          showToast(e?.message || 'Failed to preview regeneration.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnApplyClassroomRegeneration) {
+      elements.btnApplyClassroomRegeneration.addEventListener('click', () => {
+        applyClassroomRegeneration().then(() => {
+          showToast('Future schedule regenerated.', 'success');
+        }).catch((e) => {
+          console.error('[CRM Admin] Apply classroom regeneration failed:', e);
+          showToast(e?.message || 'Failed to regenerate future schedule.', 'error');
+        });
+      });
+    }
+
+    elements.classroomSidebarItems.forEach(btn => {
+      btn.addEventListener('click', () => {
+        switchClassroomTab(btn.dataset.tab);
+      });
+    });
+
+    if (elements.btnAddModule) {
+      elements.btnAddModule.addEventListener('click', async () => {
+        if (!modalState.classroomId) return showToast('Please save classroom settings first.', 'error');
+        const title = prompt('Enter module title:');
+        if (!title) return;
+        try {
+          await window.ClassroomAPI.createModule(modalState.classroomId, { title, orderIndex: Date.now() });
+          showToast('Module created.', 'success');
+          loadClassroomModules(modalState.classroomId);
+        } catch (e) { showToast(e.message, 'error'); }
+      });
+    }
+
+    if (elements.btnPostAnnouncement) {
+      elements.btnPostAnnouncement.addEventListener('click', async () => {
+        if (!modalState.classroomId) return showToast('Please save classroom settings first.', 'error');
+        const text = elements.inputStreamPost.value.trim();
+        if (!text) return;
+        try {
+          elements.btnPostAnnouncement.disabled = true;
+          await firebase.firestore().collection('crmClassrooms').doc(modalState.classroomId).collection('posts').add({
+            content: text,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            author: firebase.auth().currentUser.email || 'Admin'
+          });
+          elements.inputStreamPost.value = '';
+          showToast('Announcement posted.', 'success');
+          loadClassroomStream(modalState.classroomId);
+        } catch (e) { 
+          showToast(e.message, 'error'); 
+        } finally {
+          elements.btnPostAnnouncement.disabled = false;
+        }
+      });
+    }
+
+    if (elements.btnAddClasswork) {
+      elements.btnAddClasswork.addEventListener('click', () => {
+        if (!modalState.classroomId) return showToast('Please save classroom settings first.', 'error');
+        elements.classworkComposer.style.display = 'block';
+      });
+    }
+
+    if (elements.btnCancelClasswork) {
+      elements.btnCancelClasswork.addEventListener('click', () => {
+        elements.classworkComposer.style.display = 'none';
+      });
+    }
+
+    if (elements.btnSaveClassworkDraft) {
+      elements.btnSaveClassworkDraft.addEventListener('click', async () => {
+        if (!modalState.classroomId) return;
+        const payload = {
+          title: elements.inputClassworkTitle.value.trim(),
+          type: elements.inputClassworkType.value,
+          moduleId: elements.inputClassworkModule.value,
+          allowVoiceNote: elements.inputClassworkVoice.checked,
+          attemptLimit: 4
+        };
+        if (!payload.title) return showToast('Title is required', 'error');
+        try {
+          await window.ClassroomAPI.createClasswork(modalState.classroomId, payload);
+          showToast('Classwork created.', 'success');
+          elements.classworkComposer.style.display = 'none';
+          elements.inputClassworkTitle.value = '';
+          loadClassroomClasswork(modalState.classroomId);
+        } catch (e) { showToast(e.message, 'error'); }
+      });
+    }
+
+    if (elements.btnEnrollStudent) {
+      elements.btnEnrollStudent.addEventListener('click', () => {
+        enrollStudentIntoClassroom().catch((e) => {
+          console.error('[CRM Admin] Enroll student failed:', e);
+          showToast(e?.message || 'Failed to enroll student.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnCreateAttendanceSession) {
+      elements.btnCreateAttendanceSession.addEventListener('click', () => {
+        createAttendanceSessionForClassroom().catch((e) => {
+          console.error('[CRM Admin] Create attendance session failed:', e);
+          showToast(e?.message || 'Failed to create attendance session.', 'error');
+        });
+      });
+    }
+
+    if (elements.btnSaveAttendanceRecords) {
+      elements.btnSaveAttendanceRecords.addEventListener('click', () => {
+        saveAttendanceRecordsForClassroom().catch((e) => {
+          console.error('[CRM Admin] Save attendance failed:', e);
+          showToast(e?.message || 'Failed to save attendance records.', 'error');
+        });
+      });
+    }
   }
 
   function resetClassroomModal() {
-    if (!classroomModalController) return;
-    return classroomModalController.resetClassroomModal();
+    modalState.classroomId = null;
+    modalState.classroomScheduleVersion = null;
+    modalState.classroomRecord = null;
+    modalState.regenerationPreview = null;
+    switchClassroomTab('settings');
+    if (elements.inputClassroomName) elements.inputClassroomName.value = '';
+    if (elements.inputClassroomCourseId) {
+      elements.inputClassroomCourseId.value = '';
+      populateClassroomCourseOptions().catch((e) => {
+        console.error('[CRM Admin] Failed to populate classroom course options:', e);
+      });
+    }
+    if (elements.inputClassroomStatus) elements.inputClassroomStatus.value = 'draft';
+    if (elements.inputClassroomTotalHours) elements.inputClassroomTotalHours.value = '';
+    if (elements.inputClassroomPrimaryTeacher) elements.inputClassroomPrimaryTeacher.value = '';
+    if (elements.inputClassroomSessionMinutes) elements.inputClassroomSessionMinutes.value = '';
+    if (elements.inputClassroomScheduleTimezone) elements.inputClassroomScheduleTimezone.value = '';
+    if (elements.inputClassroomSeedStartDate) elements.inputClassroomSeedStartDate.value = '';
+    if (elements.inputClassroomSeedStartTime) elements.inputClassroomSeedStartTime.value = '';
+    if (elements.inputClassroomSeedWeekdays) elements.inputClassroomSeedWeekdays.value = '';
+    if (elements.inputClassroomAllowedStartTime) elements.inputClassroomAllowedStartTime.value = '';
+    if (elements.inputClassroomAllowedEndTime) elements.inputClassroomAllowedEndTime.value = '';
+    if (elements.inputClassroomDurationStep) elements.inputClassroomDurationStep.value = '';
+    if (elements.inputClassroomRegenerateFromDate) elements.inputClassroomRegenerateFromDate.value = '';
+    if (elements.inputClassroomRegenerateSessionMinutes) elements.inputClassroomRegenerateSessionMinutes.value = '';
+    if (elements.inputClassroomRegenerateWeekdays) elements.inputClassroomRegenerateWeekdays.value = '';
+    if (elements.inputClassroomRegenerateStartTime) elements.inputClassroomRegenerateStartTime.value = '';
+    if (elements.btnApplyClassroomRegeneration) elements.btnApplyClassroomRegeneration.disabled = true;
+    if (elements.classroomStatusBadge) {
+      elements.classroomStatusBadge.textContent = 'Draft';
+      elements.classroomStatusBadge.style.display = 'inline-flex';
+    }
+    if (elements.classroomTitle) elements.classroomTitle.textContent = 'New Classroom';
+    if (elements.modulesListContainer) elements.modulesListContainer.innerHTML = '<p class="text-muted">No modules yet.</p>';
+    if (elements.classworkListContainer) elements.classworkListContainer.innerHTML = '<p class="text-muted">No classwork yet.</p>';
+    if (elements.classworkComposer) elements.classworkComposer.style.display = 'none';
+    if (elements.inputAttendanceStudentSelect) elements.inputAttendanceStudentSelect.innerHTML = '<option value="">Select a student...</option>';
+    if (elements.attendanceEnrollmentMeta) elements.attendanceEnrollmentMeta.textContent = 'No enrollments yet.';
+    if (elements.inputAttendanceSessionDate) elements.inputAttendanceSessionDate.value = '';
+    if (elements.inputAttendanceSessionTitle) elements.inputAttendanceSessionTitle.value = '';
+    if (elements.inputAttendanceSessionSelect) elements.inputAttendanceSessionSelect.innerHTML = '<option value="">Select a session...</option>';
+    if (elements.attendanceRosterContainer) elements.attendanceRosterContainer.innerHTML = '<div class="crm-muted">No attendance roster yet.</div>';
+    if (elements.classroomScheduleSummary) {
+      elements.classroomScheduleSummary.innerHTML = `
+        <div class="crm-summary-card">
+          <div class="crm-summary-card-label">Assigned</div>
+          <div class="crm-summary-card-value">0/0</div>
+        </div>
+      `;
+    }
+    if (elements.classroomRegenerationPreview) {
+      elements.classroomRegenerationPreview.innerHTML = 'Preview regeneration to review preserved sessions, blocked reasons, and the next contracted target count.';
+    }
   }
 
   function switchClassroomTab(tabId) {
-    if (!classroomModalController) return;
-    return classroomModalController.switchClassroomTab(tabId);
+    elements.classroomSidebarItems.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tabId));
+    elements.classroomTabContents.forEach(content => {
+      const isMatch = content.id === `classroom-${tabId}`;
+      content.style.display = isMatch ? (tabId === 'review-board' ? 'flex' : 'block') : 'none';
+      content.classList.toggle('active', isMatch);
+    });
+
+    if (tabId === 'review-board' && modalState.classroomId) {
+      loadReviewBoard(modalState.classroomId);
+    }
+    if (tabId === 'stream' && modalState.classroomId) {
+      loadClassroomStream(modalState.classroomId);
+    }
+    if (tabId === 'attendance' && modalState.classroomId) {
+      loadClassroomAttendance(modalState.classroomId);
+    }
+  }
+
+  function parseWeekdayTokens(value) {
+    const map = {
+      sun: 0,
+      sunday: 0,
+      mon: 1,
+      monday: 1,
+      tue: 2,
+      tues: 2,
+      tuesday: 2,
+      wed: 3,
+      wednesday: 3,
+      thu: 4,
+      thur: 4,
+      thursday: 4,
+      fri: 5,
+      friday: 5,
+      sat: 6,
+      saturday: 6
+    };
+    return Array.from(new Set(String(value || '')
+      .split(',')
+      .map((item) => map[String(item || '').trim().toLowerCase()])
+      .filter((item) => Number.isInteger(item))
+    )).sort((left, right) => left - right);
+  }
+
+  function renderClassroomScheduleSummary(summary) {
+    if (!elements.classroomScheduleSummary) return;
+    const next = summary || {};
+    const assigned = Number(next.contractedAssignedCount || 0);
+    const target = Number(next.contractedTargetCount || 0);
+    const remaining = Number(next.remainingToScheduleCount || 0);
+    const overflow = Number(next.overflowCount || 0);
+    elements.classroomScheduleSummary.innerHTML = `
+      <div class="crm-summary-card">
+        <div class="crm-summary-card-label">Assigned</div>
+        <div class="crm-summary-card-value">${escapeHtml(`${assigned}/${target}`)}</div>
+      </div>
+      <div class="crm-summary-card">
+        <div class="crm-summary-card-label">Remaining</div>
+        <div class="crm-summary-card-value">${escapeHtml(String(remaining))}</div>
+      </div>
+      <div class="crm-summary-card">
+        <div class="crm-summary-card-label">Overflow</div>
+        <div class="crm-summary-card-value">${escapeHtml(String(overflow))}</div>
+      </div>
+    `;
+  }
+
+  function renderRegenerationPreview(preview) {
+    if (!elements.classroomRegenerationPreview) return;
+    const data = preview || null;
+    if (!data) {
+      elements.classroomRegenerationPreview.innerHTML = 'Preview regeneration to review preserved sessions, blocked reasons, and the next contracted target count.';
+      if (elements.btnApplyClassroomRegeneration) elements.btnApplyClassroomRegeneration.disabled = true;
+      return;
+    }
+
+    const blockedList = Array.isArray(data.blockedSessions) && data.blockedSessions.length
+      ? `<ul class="classroom-regeneration-list">${data.blockedSessions.slice(0, 6).map((session) => `
+          <li>${escapeHtml([session.reasonCode, session.scheduledLocalDate, session.scheduledLocalTime].filter(Boolean).join(' • '))}</li>
+        `).join('')}</ul>`
+      : '';
+    const warnings = Array.isArray(data.warnings) && data.warnings.length
+      ? `<ul class="classroom-regeneration-list">${data.warnings.map((warning) => `<li>${escapeHtml(warning)}</li>`).join('')}</ul>`
+      : '<div class="crm-muted">No warnings.</div>';
+    const guidance = Array.isArray(data.remediationGuidance) && data.remediationGuidance.length
+      ? `<ul class="classroom-regeneration-list">${data.remediationGuidance.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`
+      : '<div class="crm-muted">No remediation required.</div>';
+
+    elements.classroomRegenerationPreview.innerHTML = `
+      ${data.canCommit ? '' : '<div class="classroom-regeneration-alert">Regeneration is currently blocked.</div>'}
+      <div class="classroom-regeneration-preview-grid">
+        <div class="classroom-regeneration-preview-card">
+          <span>Preserved Contracted</span>
+          <strong>${escapeHtml(String(data.preservedContractedCount || 0))}</strong>
+        </div>
+        <div class="classroom-regeneration-preview-card">
+          <span>Preserved Minutes</span>
+          <strong>${escapeHtml(String(data.preservedContractedMinutes || 0))}</strong>
+        </div>
+        <div class="classroom-regeneration-preview-card">
+          <span>Preserved Overflow</span>
+          <strong>${escapeHtml(String(data.preservedOverflowCount || 0))}</strong>
+        </div>
+        <div class="classroom-regeneration-preview-card">
+          <span>Future Sessions to Create</span>
+          <strong>${escapeHtml(String(data.generatedFutureContractedCount || 0))}</strong>
+        </div>
+        <div class="classroom-regeneration-preview-card">
+          <span>Future Sessions to Cancel</span>
+          <strong>${escapeHtml(String(data.cancelledFutureContractedCount || 0))}</strong>
+        </div>
+        <div class="classroom-regeneration-preview-card">
+          <span>Next Target Count</span>
+          <strong>${escapeHtml(String(data.nextTargetSessionCount || 0))}</strong>
+        </div>
+      </div>
+      <div>
+        <strong>Warnings</strong>
+        ${warnings}
+      </div>
+      <div>
+        <strong>Blocked Sessions</strong>
+        ${blockedList || '<div class="crm-muted">No blocking sessions.</div>'}
+      </div>
+      <div>
+        <strong>Remediation Guidance</strong>
+        ${guidance}
+      </div>
+    `;
+    if (elements.btnApplyClassroomRegeneration) {
+      elements.btnApplyClassroomRegeneration.disabled = !data.canCommit;
+    }
+  }
+
+  function hydrateRegenerationInputs(classroom) {
+    const scheduleConfig = classroom?.scheduleConfig || {};
+    if (elements.inputClassroomRegenerateFromDate) {
+      elements.inputClassroomRegenerateFromDate.value = String(scheduleConfig.seedStartDate || '');
+    }
+    if (elements.inputClassroomRegenerateSessionMinutes) {
+      elements.inputClassroomRegenerateSessionMinutes.value = String(scheduleConfig.sessionMinutes || '');
+    }
+    if (elements.inputClassroomRegenerateWeekdays) {
+      elements.inputClassroomRegenerateWeekdays.value = Array.isArray(scheduleConfig.seedWeekdays)
+        ? scheduleConfig.seedWeekdays.join(',')
+        : '';
+    }
+    if (elements.inputClassroomRegenerateStartTime) {
+      elements.inputClassroomRegenerateStartTime.value = String(scheduleConfig.seedStartTime || '');
+    }
   }
 
   async function populateAttendanceStudentOptions() {
-    if (!classroomWorkspaceController) return;
-    return classroomWorkspaceController.populateAttendanceStudentOptions();
+    if (!elements.inputAttendanceStudentSelect) return;
+    const options = dataCache.students.map((student) => {
+      const label = student.name || student.email || student.studentId || 'Student';
+      return `<option value="${escapeHtml(student.studentId || '')}">${escapeHtml(label)}</option>`;
+    }).join('');
+    elements.inputAttendanceStudentSelect.innerHTML = '<option value="">Select a student...</option>' + options;
   }
 
   function renderAttendanceRoster(summaryRows) {
-    if (!classroomWorkspaceController) return;
-    return classroomWorkspaceController.renderAttendanceRoster(summaryRows);
+    if (!elements.attendanceRosterContainer) return;
+    const rows = Array.isArray(summaryRows) ? summaryRows : [];
+    const selectedSessionId = String(elements.inputAttendanceSessionSelect?.value || '').trim();
+
+    if (!rows.length) {
+      elements.attendanceRosterContainer.innerHTML = '<div class="crm-muted">No enrollments yet.</div>';
+      return;
+    }
+
+    elements.attendanceRosterContainer.innerHTML = `
+      <div class="crm-table-container">
+        <table class="crm-table">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Attendance</th>
+              <th>Risk</th>
+              <th>Status</th>
+              <th>Reason</th>
+              <th>Intervention</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map((row) => `
+              <tr class="attendance-row" data-student-id="${escapeHtml(row.studentId || '')}" data-student-uid="${escapeHtml(row.studentUid || '')}">
+                <td class="td-bold">${escapeHtml(row.studentName || 'Student')}</td>
+                <td>${escapeHtml(`${Math.round(Number(row.attendanceRate || 0) * 100)}% (${row.presentCount || 0}/${row.totalSessions || 0})`)}</td>
+                <td>${renderRiskBadgeMarkup(row.studentId)}</td>
+                <td>
+                  <select class="crm-input crm-inline-select crm-attendance-select attendance-status" ${selectedSessionId ? '' : 'disabled'}>
+                    <option value="present">Present</option>
+                    <option value="late">Late</option>
+                    <option value="absent">Absent</option>
+                  </select>
+                </td>
+                <td><input type="text" class="crm-input attendance-reason" placeholder="Reason" ${selectedSessionId ? '' : 'disabled'}></td>
+                <td style="text-align:center;"><input type="checkbox" class="attendance-intervention" ${selectedSessionId ? '' : 'disabled'}></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
   }
 
   async function loadClassroomAttendance(classId) {
-    if (!classroomWorkspaceController) return;
-    return classroomWorkspaceController.loadClassroomAttendance(classId);
+    if (!window.ClassroomAPI || typeof window.ClassroomAPI.fetchAttendanceSummary !== 'function') return;
+
+    await populateAttendanceStudentOptions();
+    const summary = await window.ClassroomAPI.fetchAttendanceSummary({ classId });
+    const sessions = Array.isArray(summary?.sessions) ? summary.sessions : [];
+    const students = Array.isArray(summary?.students) ? summary.students : [];
+
+    if (elements.inputAttendanceSessionSelect) {
+      const currentValue = String(elements.inputAttendanceSessionSelect.value || '').trim();
+      elements.inputAttendanceSessionSelect.innerHTML = '<option value="">Select a session...</option>' + sessions.map((session) => `
+        <option value="${escapeHtml(session.sessionId || '')}">${escapeHtml(session.title || session.sessionDate || 'Session')}</option>
+      `).join('');
+      if (currentValue) {
+        elements.inputAttendanceSessionSelect.value = currentValue;
+      }
+    }
+
+    if (elements.attendanceEnrollmentMeta) {
+      elements.attendanceEnrollmentMeta.textContent = students.length
+        ? `${students.length} active enrollment${students.length === 1 ? '' : 's'} in this classroom.`
+        : 'No enrollments yet.';
+    }
+
+    dataCache.attendanceRiskByStudentId = new Map(
+      [
+        ...Array.from(dataCache.attendanceRiskByStudentId.entries()),
+        ...students.map((row) => [String(row.studentId || '').trim(), row])
+      ]
+    );
+
+    renderAttendanceRoster(students);
   }
 
   async function enrollStudentIntoClassroom() {
-    if (!classroomWorkspaceController) return;
-    return classroomWorkspaceController.enrollStudentIntoClassroom();
+    if (!modalState.classroomId) throw new Error('Save classroom settings first.');
+    const studentId = String(elements.inputAttendanceStudentSelect?.value || '').trim();
+    if (!studentId) throw new Error('Select a student first.');
+    const student = dataCache.students.find((item) => String(item.studentId || '') === studentId);
+    if (!student) throw new Error('Selected student is not available.');
+
+    const payload = window.CrmEnrollments && typeof window.CrmEnrollments.buildEnrollmentPayload === 'function'
+      ? window.CrmEnrollments.buildEnrollmentPayload(elements, student)
+      : {
+          studentId,
+          studentUid: student.linked_user_ids?.[0] || null,
+          studentName: student.name || null,
+          studentEmail: student.email || null
+        };
+
+    await window.ClassroomAPI.createEnrollment({
+      ...payload,
+      classId: modalState.classroomId,
+      courseId: String(elements.inputClassroomCourseId?.value || '').trim() || null
+    });
+
+    await Promise.all([
+      loadClassroomAttendance(modalState.classroomId),
+      refreshAttendanceRiskSnapshot()
+    ]);
+    showToast('Student enrolled.', 'success');
   }
 
   async function createAttendanceSessionForClassroom() {
-    if (!classroomWorkspaceController) return;
-    return classroomWorkspaceController.createAttendanceSessionForClassroom();
+    if (!modalState.classroomId) throw new Error('Save classroom settings first.');
+    if (!window.CrmAttendance || typeof window.CrmAttendance.buildSessionPayload !== 'function') {
+      throw new Error('Attendance helpers are not available.');
+    }
+
+    const payload = window.CrmAttendance.buildSessionPayload({
+      inputAttendanceSessionDate: elements.inputAttendanceSessionDate,
+      inputAttendanceSessionTitle: elements.inputAttendanceSessionTitle
+    });
+
+    const json = await window.ClassroomAPI.createAttendanceSession({
+      classId: modalState.classroomId,
+      ...payload
+    });
+
+    const sessionId = String(json.sessionId || json.session?.sessionId || '').trim();
+    await loadClassroomAttendance(modalState.classroomId);
+    if (sessionId && elements.inputAttendanceSessionSelect) {
+      elements.inputAttendanceSessionSelect.value = sessionId;
+    }
+    showToast('Attendance session created.', 'success');
   }
 
   async function saveAttendanceRecordsForClassroom() {
-    if (!classroomWorkspaceController) return;
-    return classroomWorkspaceController.saveAttendanceRecordsForClassroom();
-  }
+    if (!modalState.classroomId) throw new Error('Save classroom settings first.');
+    const sessionId = String(elements.inputAttendanceSessionSelect?.value || '').trim();
+    if (!sessionId) throw new Error('Select an attendance session first.');
+    if (!window.CrmAttendance || typeof window.CrmAttendance.buildBulkRecordPayload !== 'function') {
+      throw new Error('Attendance helpers are not available.');
+    }
 
-  async function saveLiveSession() {
-    if (!classroomWorkspaceController) return;
-    return classroomWorkspaceController.saveLiveSession();
-  }
+    const rows = Array.from(document.querySelectorAll('#attendance-roster-container .attendance-row'));
+    const records = window.CrmAttendance.buildBulkRecordPayload(rows).map((record) => ({
+      sessionId,
+      ...record
+    }));
 
-  async function startSelectedLiveSession() {
-    if (!classroomWorkspaceController) return;
-    return classroomWorkspaceController.startSelectedLiveSession();
-  }
+    await window.ClassroomAPI.saveAttendanceRecords({
+      classId: modalState.classroomId,
+      records
+    });
 
-  async function endSelectedLiveSession() {
-    if (!classroomWorkspaceController) return;
-    return classroomWorkspaceController.endSelectedLiveSession();
+    await Promise.all([
+      loadClassroomAttendance(modalState.classroomId),
+      refreshAttendanceRiskSnapshot()
+    ]);
+    showToast('Attendance saved.', 'success');
   }
 
   async function loadClassroomStream(classId) {
-    if (!classroomWorkspaceController) return;
-    return classroomWorkspaceController.loadClassroomStream(classId);
+    if (!elements.streamPostsContainer) return;
+    try {
+      const snap = await firebase.firestore().collection('crmClassrooms').doc(classId).collection('posts').orderBy('createdAt', 'desc').get();
+      if (snap.empty) {
+        elements.streamPostsContainer.innerHTML = '<p class="text-muted">No announcements yet.</p>';
+        return;
+      }
+      elements.streamPostsContainer.innerHTML = snap.docs.map(doc => {
+        const data = doc.data();
+        return `
+          <div class="stream-card" style="padding: 16px; margin-bottom: 12px; background: white; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <div style="font-size: 0.85rem; color: #718096; margin-bottom: 8px;">
+              <strong>${escapeHtml(data.author || 'Admin')}</strong> • ${formatDateTime(data.createdAt)}
+            </div>
+            <div>${escapeHtml(data.content)}</div>
+          </div>
+        `;
+      }).join('');
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   async function loadReviewBoard(classId) {
-    if (!classroomWorkspaceController) return;
-    return classroomWorkspaceController.loadReviewBoard(classId);
+    if (!elements.kanbanMissingList || !elements.kanbanTurnedInList || !elements.kanbanGradedList) return;
+
+    elements.kanbanTurnedInList.innerHTML = '<div class="crm-loading-spinner small"></div>';
+    elements.kanbanMissingList.innerHTML = '<div class="crm-loading-spinner small"></div>';
+
+    try {
+      const board = await window.ClassroomAPI.fetchReviewBoard(classId);
+      const submissions = Array.isArray(board?.submissions) ? board.submissions : [];
+
+      const turnedIn = submissions.filter(s => s.status === 'turned-in');
+      const graded = submissions.filter(s => s.status === 'graded');
+      const missing = Array.isArray(board?.missing) ? board.missing : [];
+
+      renderKanbanColumn(elements.kanbanTurnedInList, turnedIn, true);
+      renderKanbanColumn(elements.kanbanGradedList, graded, false);
+      renderKanbanColumn(elements.kanbanMissingList, missing, false);
+
+    } catch (e) {
+      console.error('[CRM Admin] Kanban load failed:', e);
+      showToast('Failed to load review board.', 'error');
+    }
+  }
+
+  function renderKanbanColumn(container, list, allowGrading) {
+    if (!list.length) {
+      container.innerHTML = '<p class="crm-muted" style="padding:10px;">None found.</p>';
+      return;
+    }
+
+    container.innerHTML = list.map(s => `
+      <div class="crm-kanban-card" data-sub-id="${s.id}">
+        <div class="card-user">
+          <strong>${escapeHtml(s.studentName || s.studentEmail || 'Student')}</strong>
+          <span class="text-muted" style="font-size:0.75rem;">UID: ${escapeHtml(s.studentUid)}</span>
+        </div>
+        <div class="card-work">
+          Work ID: ${escapeHtml(s.workId)}
+        </div>
+        ${s.audio ? `
+          <button class="btn-play-audio" data-path="${s.audio.storagePath}">▶ Listen Audio</button>
+        ` : ''}
+        ${allowGrading ? `
+          <div class="grading-actions" style="margin-top:10px;">
+            <input type="text" placeholder="Grade/Score" class="crm-input-small grade-val" style="margin-bottom:5px;">
+            <button class="crm-btn-primary small btn-grade-submit">Submit Grade</button>
+          </div>
+        ` : `
+          <div class="graded-status">
+            Grade: <strong>${escapeHtml(s.grade || 'N/A')}</strong>
+          </div>
+        `}
+      </div>
+    `).join('');
+
+    // Attach listeners
+    container.querySelectorAll('.btn-grade-submit').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const card = btn.closest('.crm-kanban-card');
+        const sid = card.dataset.subId;
+        const grade = card.querySelector('.grade-val').value.trim();
+        if (!grade) return showToast('Enter a grade first.', 'error');
+
+        try {
+          btn.disabled = true;
+          await window.ClassroomAPI.gradeSubmission(sid, { grade });
+          showToast('Graded.', 'success');
+          loadReviewBoard(modalState.classroomId);
+        } catch (e) {
+          showToast(e.message, 'error');
+          btn.disabled = false;
+        }
+      });
+    });
+
+    // Audio playback logic
+    container.querySelectorAll('.btn-play-audio').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const path = btn.dataset.path;
+        try {
+          btn.disabled = true;
+          const originalText = btn.textContent;
+          btn.textContent = 'Loading...';
+          const url = await firebase.storage().ref(path).getDownloadURL();
+          const audio = new Audio(url);
+          audio.play();
+          btn.textContent = 'Playing...';
+          audio.onended = () => {
+            btn.disabled = false;
+            btn.textContent = originalText;
+          };
+        } catch (e) {
+          console.error('[CRM Admin] Audio playback failed:', e);
+          showToast('Failed to load audio.', 'error');
+          btn.disabled = false;
+          btn.textContent = '▶ Listen Audio';
+        }
+      });
+    });
   }
 
   async function saveClassroomSettings() {
-    if (!classroomWorkspaceController) throw new Error('Classroom workspace helpers are not available.');
-    return classroomWorkspaceController.saveClassroomSettings();
+    const payload = window.CrmClassrooms && typeof window.CrmClassrooms.buildPayload === 'function'
+      ? window.CrmClassrooms.buildPayload(elements)
+      : {
+          name: elements.inputClassroomName.value.trim(),
+          courseId: elements.inputClassroomCourseId.value,
+          status: elements.inputClassroomStatus.value
+        };
+    if (!payload.name) throw new Error('Classroom name is required.');
+
+    const res = modalState.classroomId
+      ? await window.ClassroomAPI.updateClassroom(modalState.classroomId, payload)
+      : await window.ClassroomAPI.createClassroom(payload);
+    modalState.classroomId = String(res.classroomId || res.classroom?.classroomId || modalState.classroomId || '').trim();
+    if (res.classroom) {
+      modalState.classroomRecord = res.classroom;
+      modalState.classroomScheduleVersion = Number(res.classroom?.scheduleConfig?.scheduleVersion || 1) || 1;
+      renderClassroomScheduleSummary(res.classroom.scheduleSummary || null);
+      hydrateRegenerationInputs(res.classroom);
+    } else if (payload.scheduleConfig) {
+      modalState.classroomRecord = {
+        ...(modalState.classroomRecord || {}),
+        classroomId: modalState.classroomId,
+        name: payload.name,
+        scheduleConfig: {
+          ...payload.scheduleConfig,
+          scheduleVersion: Number(modalState.classroomScheduleVersion || 1) || 1
+        }
+      };
+      modalState.classroomScheduleVersion = Number(modalState.classroomRecord.scheduleConfig.scheduleVersion || 1) || 1;
+      hydrateRegenerationInputs(modalState.classroomRecord);
+    }
+    if (elements.classroomStatusBadge) elements.classroomStatusBadge.textContent = payload.status;
+    if (elements.classroomTitle) elements.classroomTitle.textContent = payload.name;
+    await refreshClassroomList();
+    await refreshSchedulerWorkspace().catch(() => {});
+  }
+
+  function buildRegenerationRequestPayload() {
+    if (!modalState.classroomId) throw new Error('Save classroom settings first.');
+    return {
+      regenerateFromDate: String(elements.inputClassroomRegenerateFromDate?.value || '').trim(),
+      sessionMinutes: Number(elements.inputClassroomRegenerateSessionMinutes?.value || 0) || null,
+      seedWeekdays: parseWeekdayTokens(elements.inputClassroomRegenerateWeekdays?.value || ''),
+      seedStartTime: String(elements.inputClassroomRegenerateStartTime?.value || '').trim(),
+      expectedScheduleVersion: Number(modalState.classroomScheduleVersion || 0) || null
+    };
+  }
+
+  async function previewClassroomRegeneration() {
+    const payload = buildRegenerationRequestPayload();
+    const res = await window.ClassroomAPI.previewClassroomScheduleRegeneration(modalState.classroomId, payload);
+    modalState.regenerationPreview = res;
+    modalState.classroomScheduleVersion = Number(res.classroomScheduleVersion || modalState.classroomScheduleVersion || 1) || 1;
+    renderRegenerationPreview(res);
+  }
+
+  async function applyClassroomRegeneration() {
+    const payload = buildRegenerationRequestPayload();
+    if (!modalState.regenerationPreview) {
+      throw new Error('Preview regeneration before applying it.');
+    }
+    const res = await window.ClassroomAPI.regenerateClassroomSchedule(modalState.classroomId, payload);
+    modalState.regenerationPreview = null;
+    if (res.scheduleConfig) {
+      modalState.classroomScheduleVersion = Number(res.scheduleConfig.scheduleVersion || modalState.classroomScheduleVersion || 1) || 1;
+      if (modalState.classroomRecord) {
+        modalState.classroomRecord = {
+          ...modalState.classroomRecord,
+          scheduleConfig: res.scheduleConfig,
+          scheduleSummary: res.scheduleSummary || modalState.classroomRecord.scheduleSummary || null
+        };
+      }
+    }
+    renderClassroomScheduleSummary(res.scheduleSummary || null);
+    renderRegenerationPreview(null);
+    await refreshClassroomList();
+    await refreshSchedulerWorkspace().catch(() => {});
   }
 
   async function refreshClassroomList() {
-    if (!classroomWorkspaceController) return;
-    return classroomWorkspaceController.refreshClassroomList();
+    if (!elements.classManagementGrid) return;
+    try {
+      const [classrooms, courses] = await Promise.all([
+        window.ClassroomAPI.fetchClassrooms(),
+        fetchCoursesFromCatalog().catch(() => [])
+      ]);
+      const courseIndex = new Map(courses.map((course) => [String(course.id || ''), course]));
+      if (!classrooms.length) {
+        elements.classManagementGrid.innerHTML = '<div class="crm-muted">No classrooms found.</div>';
+        return;
+      }
+      elements.classManagementGrid.innerHTML = `
+        <div class="crm-table-container">
+          <table class="crm-table">
+            <thead>
+              <tr><th>Name</th><th>Course</th><th>Status</th><th>Modules</th></tr>
+            </thead>
+            <tbody>
+              ${classrooms.map(c => `
+                <tr>
+                  <td class="td-bold">
+                    <button type="button" class="crm-student-link crm-classroom-link" data-classroom-id="${escapeHtml(c.classroomId || c.id || '')}">
+                      ${escapeHtml(c.name)}
+                    </button>
+                  </td>
+                  <td>${escapeHtml(courseIndex.get(String(c.courseId || ''))?.name || c.courseId || 'None')}</td>
+                  <td>${escapeHtml(c.status)}</td>
+                  <td>n/a</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      const classroomIndex = new Map(classrooms.map((classroom) => [String(classroom.classroomId || classroom.id || ''), classroom]));
+      Array.from(elements.classManagementGrid.querySelectorAll('button.crm-classroom-link[data-classroom-id]')).forEach((button) => {
+        button.addEventListener('click', async () => {
+          const classroomId = String(button.dataset.classroomId || '').trim();
+          const classroom = classroomIndex.get(classroomId);
+          if (!classroom) return;
+
+          resetClassroomModal();
+          await populateClassroomCourseOptions({ selectedValue: classroom.courseId || '' });
+          if (window.CrmClassrooms && typeof window.CrmClassrooms.applyToForm === 'function') {
+            window.CrmClassrooms.applyToForm(elements, classroom);
+          }
+          modalState.classroomId = classroomId;
+          modalState.classroomRecord = classroom;
+          modalState.classroomScheduleVersion = Number(classroom?.scheduleConfig?.scheduleVersion || 1) || 1;
+          modalState.regenerationPreview = null;
+          if (elements.classroomStatusBadge) {
+            elements.classroomStatusBadge.textContent = classroom.status || 'draft';
+            elements.classroomStatusBadge.style.display = 'inline-flex';
+          }
+          if (elements.classroomTitle) {
+            elements.classroomTitle.textContent = classroom.name || 'Classroom';
+          }
+          renderClassroomScheduleSummary(classroom.scheduleSummary || null);
+          hydrateRegenerationInputs(classroom);
+          renderRegenerationPreview(null);
+          openClassroomModal();
+          await loadClassroomModules(classroomId);
+          await loadClassroomClasswork(classroomId);
+        });
+      });
+    } catch (e) {
+      elements.classManagementGrid.innerHTML = '<div class="crm-muted">Failed to load classrooms.</div>';
+    }
   }
 
   async function loadClassroomModules(classId) {
-    if (!classroomWorkspaceController) return;
-    return classroomWorkspaceController.loadClassroomModules(classId);
+    if (!elements.modulesListContainer) return;
+    try {
+      const modules = await window.ClassroomAPI.loadModules(classId);
+      elements.modulesListContainer.innerHTML = modules.length ? modules.map(m => `
+        <div class="module-list-item">
+          <strong>${escapeHtml(m.title)}</strong>
+        </div>
+      `).join('') : '<p class="text-muted">No modules yet.</p>';
+
+      // Update the classwork select dropdown
+      if (elements.inputClassworkModule) {
+        elements.inputClassworkModule.innerHTML = '<option value="">No Module</option>' +
+          modules.map(m => `<option value="${m.id}">${escapeHtml(m.title)}</option>`).join('');
+      }
+    } catch (e) {
+      console.error('[CRM Admin] Failed to load classroom modules:', e);
+      elements.modulesListContainer.innerHTML = '<p class="text-muted">Failed to load modules.</p>';
+    }
   }
 
   async function loadClassroomClasswork(classId) {
-    if (!classroomWorkspaceController) return;
-    return classroomWorkspaceController.loadClassroomClasswork(classId);
-  }
-
-  async function openExistingClassroom(classroom) {
-    if (!classroomWorkspaceController) return;
-    return classroomWorkspaceController.openExistingClassroom(classroom);
-  }
-
-  async function refreshZoomLinksOverview() {
-    if (!classroomWorkspaceController) return;
-    return classroomWorkspaceController.refreshZoomLinksOverview();
+    if (!elements.classworkListContainer) return;
+    try {
+      const works = await window.ClassroomAPI.loadClasswork(classId);
+      elements.classworkListContainer.innerHTML = works.length ? works.map(w => `
+        <div class="classwork-card">
+          <div>
+            <strong>${escapeHtml(w.title)}</strong>
+            <div class="text-muted" style="font-size: 0.85rem; margin-top: 4px;">Type: ${escapeHtml(w.type)}</div>
+          </div>
+        </div>
+      `).join('') : '<p class="text-muted">No classwork yet.</p>';
+    } catch (e) {
+      console.error('[CRM Admin] Failed to load classroom classwork:', e);
+      elements.classworkListContainer.innerHTML = '<p class="text-muted">Failed to load classwork.</p>';
+    }
   }
 
   async function fetchCoursesFromCatalog() {
-    if (!classroomWorkspaceController) return [];
-    return classroomWorkspaceController.fetchCoursesFromCatalog();
+    if (window.CrmCourses && typeof window.CrmCourses.fetchCourses === 'function') {
+      return window.CrmCourses.fetchCourses();
+    }
+    if (window.ClassroomAPI && typeof window.ClassroomAPI.fetchCourses === 'function') {
+      return window.ClassroomAPI.fetchCourses();
+    }
+    throw new Error('Course catalog helpers are not available.');
   }
 
   async function populateClassroomCourseOptions(options = {}) {
-    if (!classroomWorkspaceController) return [];
-    return classroomWorkspaceController.populateClassroomCourseOptions(options);
+    if (!elements.inputClassroomCourseId) return [];
+
+    const selectedValue = String(options.selectedValue || elements.inputClassroomCourseId.value || '').trim();
+    if (window.CrmCourses && typeof window.CrmCourses.populateCourseSelect === 'function') {
+      return window.CrmCourses.populateCourseSelect(elements.inputClassroomCourseId, {
+        placeholder: 'Select a Course...',
+        selectedValue
+      });
+    }
+
+    const courses = await fetchCoursesFromCatalog();
+    elements.inputClassroomCourseId.innerHTML = '<option value="">Select a Course...</option>' + courses.map((course) => {
+      const label = course.code ? `${course.name} (${course.code})` : course.name;
+      return `<option value="${course.id}">${label}</option>`;
+    }).join('');
+    if (selectedValue) {
+      elements.inputClassroomCourseId.value = selectedValue;
+    }
+    return courses;
   }
 
   async function refreshCourseCatalog() {
-    if (!classroomWorkspaceController) return;
-    return classroomWorkspaceController.refreshCourseCatalog();
+    const container = elements.courseCatalogContainer;
+    if (!container) return;
+
+    try {
+      const courses = await fetchCoursesFromCatalog();
+      await populateClassroomCourseOptions({ selectedValue: elements.inputClassroomCourseId?.value || '' });
+
+      if (!courses.length) {
+        container.innerHTML = '<div class="crm-muted">No courses found.</div>';
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="crm-table-container">
+          <table class="crm-table">
+            <thead>
+              <tr><th>Name</th><th>Code</th><th>Status</th><th>Teachers</th></tr>
+            </thead>
+            <tbody>
+              ${courses.map((course) => `
+                <tr>
+                  <td class="td-bold">
+                    <button type="button" class="crm-student-link crm-course-link" data-course-id="${escapeHtml(course.id || course.courseId || '')}">
+                      ${escapeHtml(course.name || 'Untitled')}
+                    </button>
+                  </td>
+                  <td>${escapeHtml(course.code || '—')}</td>
+                  <td>${escapeHtml(course.status || 'active')}</td>
+                  <td>${escapeHtml((course.teachers || []).join(', ') || 'None')}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      const courseIndex = new Map(courses.map((course) => [String(course.id || course.courseId || ''), course]));
+      Array.from(container.querySelectorAll('button.crm-course-link[data-course-id]')).forEach((button) => {
+        button.addEventListener('click', () => {
+          const courseId = String(button.dataset.courseId || '').trim();
+          const course = courseIndex.get(courseId);
+          if (!course) return;
+
+          resetCourseModal();
+          applyCourseToForm(course);
+          openCourseModal();
+        });
+      });
+    } catch (error) {
+      console.error('[CRM Admin] Failed to refresh course catalog:', error);
+      container.innerHTML = '<div class="crm-muted">Failed to load courses.</div>';
+    }
   }
 
   function showToast(message, type = 'info') {

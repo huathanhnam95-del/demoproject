@@ -35,7 +35,7 @@ window.ClassroomAPI = (function () {
         return json.classrooms || [];
     }
 
-    // Admin: Read CRM course catalog from crmCourses via server API to avoid Firestore permission issues.
+    // Admin: Read CRM course catalog (crmCourses via server API to avoid Firestore permission issues)
     async function fetchCourses() {
         const headers = await getHeaders();
         const res = await fetch('/api/admin/courses', {
@@ -145,21 +145,28 @@ window.ClassroomAPI = (function () {
         }
 
         const headers = await getHeaders();
-        const res = await fetch(`/api/admin/classrooms/${classId}/submissions`, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({
-                workId,
-                audio: audioData
-            })
+        // Since we don't have a dedicated student submission endpoint yet, 
+        // and we want to keep it simple, we'll write directly to a top-level collection 
+        // but we'll use a server endpoint if possible for security.
+        // For Phase 3, let's add a submission endpoint to a new route if needed, 
+        // OR reuse admin.js if we allow students (unlikely safe).
+        // Let's assume we have a /api/classrooms/:id/submit route.
+        // FOR NOW: We'll use Firestore directly for the submission write if rules allow, 
+        // otherwise I need to add a student route.
+
+        const db = getDb();
+        const submissionRef = db.collection('crmSubmissions').doc();
+        await submissionRef.set({
+            classId,
+            workId,
+            studentUid: uid,
+            studentEmail: auth.currentUser.email,
+            audio: audioData,
+            status: 'turned-in',
+            submittedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        if (!res.ok) {
-            const message = await res.text().catch(() => '');
-            throw new Error(message || `HTTP Error: ${res.status}`);
-        }
-
-        return res.json();
+        return { success: true, submissionId: submissionRef.id };
     }
 
     // Student: Fetch my submissions
@@ -194,75 +201,6 @@ window.ClassroomAPI = (function () {
     async function fetchReviewBoard(classId) {
         const headers = await getHeaders();
         const res = await fetch(`/api/admin/classrooms/${classId}/review-board`, {
-            method: 'GET',
-            headers
-        });
-        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-        return res.json();
-    }
-
-    async function fetchLiveSessions(classId) {
-        const headers = await getHeaders();
-        const res = await fetch(`/api/admin/classrooms/${classId}/live-sessions`, {
-            method: 'GET',
-            headers
-        });
-        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-        const json = await res.json();
-        return json.sessions || [];
-    }
-
-    async function createLiveSession(classId, data) {
-        const headers = await getHeaders();
-        const res = await fetch(`/api/admin/classrooms/${classId}/live-sessions`, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(data)
-        });
-        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-        return res.json();
-    }
-
-    async function updateLiveSession(classId, sessionId, data) {
-        const headers = await getHeaders();
-        const res = await fetch(`/api/admin/classrooms/${classId}/live-sessions/${sessionId}`, {
-            method: 'PATCH',
-            headers,
-            body: JSON.stringify(data)
-        });
-        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-        return res.json();
-    }
-
-    async function startLiveSession(classId, sessionId) {
-        const headers = await getHeaders();
-        const res = await fetch(`/api/admin/classrooms/${classId}/live-sessions/${sessionId}/start`, {
-            method: 'POST',
-            headers
-        });
-        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-        return res.json();
-    }
-
-    async function endLiveSession(classId, sessionId) {
-        const headers = await getHeaders();
-        const res = await fetch(`/api/admin/classrooms/${classId}/live-sessions/${sessionId}/end`, {
-            method: 'POST',
-            headers
-        });
-        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-        return res.json();
-    }
-
-    async function fetchClassroomMatches(studentId, params = {}) {
-        const headers = await getHeaders();
-        const search = new URLSearchParams();
-        if (params && Object.prototype.hasOwnProperty.call(params, 'courseId')) {
-            const courseId = String(params.courseId || '').trim();
-            if (courseId) search.set('courseId', courseId);
-        }
-        const suffix = search.toString() ? `?${search.toString()}` : '';
-        const res = await fetch(`/api/admin/students/${encodeURIComponent(studentId)}/classroom-matches${suffix}`, {
             method: 'GET',
             headers
         });
@@ -320,10 +258,37 @@ window.ClassroomAPI = (function () {
         return res.json();
     }
 
-    // Admin: Grade submission
-    async function gradeSubmission(submissionId, data) {
+    async function fetchSchedulerWorkspace(params = {}) {
         const headers = await getHeaders();
-        const res = await fetch(`/api/admin/submissions/${submissionId}/grade`, {
+        const search = new URLSearchParams();
+        Object.entries(params).forEach(([key, value]) => {
+            if (value !== null && value !== undefined && String(value).trim() !== '') {
+                search.set(key, String(value).trim());
+            }
+        });
+        const suffix = search.toString() ? `?${search.toString()}` : '';
+        const res = await fetch(`/api/admin/scheduler/workspace${suffix}`, {
+            method: 'GET',
+            headers
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function updateClassroomScheduleConfig(classId, data) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/classrooms/${classId}/schedule-config`, {
+            method: 'PATCH',
+            headers,
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function seedClassroomSessions(classId, data) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/classrooms/${classId}/sessions/seed`, {
             method: 'POST',
             headers,
             body: JSON.stringify(data)
@@ -332,9 +297,125 @@ window.ClassroomAPI = (function () {
         return res.json();
     }
 
-    async function returnSubmissionForRevision(submissionId, data) {
+    async function addClassroomSession(classId, data) {
         const headers = await getHeaders();
-        const res = await fetch(`/api/admin/submissions/${submissionId}/return-for-revision`, {
+        const res = await fetch(`/api/admin/classrooms/${classId}/sessions/add`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function previewClassroomSessionAdd(classId, data) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/classrooms/${classId}/sessions/add-preview`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function addClassroomSessionBatch(classId, data) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/classrooms/${classId}/sessions/add-batch`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function replaceClassroomSession(classId, data) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/classrooms/${classId}/sessions/replace`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function previewClassroomSessionReplace(classId, data) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/classrooms/${classId}/sessions/replace-preview`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function rescheduleScheduledSession(sessionId, data) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/sessions/${sessionId}/reschedule`, {
+            method: 'PATCH',
+            headers,
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function cancelScheduledSession(sessionId) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/sessions/${sessionId}/cancel`, {
+            method: 'POST',
+            headers
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function previewClassroomScheduleRegeneration(classId, data) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/classrooms/${classId}/schedule/regenerate-preview`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) {
+            const json = await res.json().catch(() => null);
+            throw new Error(json?.message || `HTTP Error: ${res.status}`);
+        }
+        return res.json();
+    }
+
+    async function regenerateClassroomSchedule(classId, data) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/classrooms/${classId}/schedule/regenerate`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) {
+            const json = await res.json().catch(() => null);
+            throw new Error(json?.message || `HTTP Error: ${res.status}`);
+        }
+        return res.json();
+    }
+
+    async function openScheduledAttendanceSession(scheduledSessionId) {
+        const headers = await getHeaders();
+        const res = await fetch('/api/admin/attendance/sessions/open-from-scheduled', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ scheduledSessionId })
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    // Admin: Grade submission
+    async function gradeSubmission(submissionId, data) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/submissions/${submissionId}/grade`, {
             method: 'POST',
             headers,
             body: JSON.stringify(data)
@@ -352,11 +433,6 @@ window.ClassroomAPI = (function () {
         createModule,
         loadClasswork,
         createClasswork,
-        fetchLiveSessions,
-        createLiveSession,
-        updateLiveSession,
-        startLiveSession,
-        endLiveSession,
         submitAssignment,
         fetchMySubmissions,
         fetchSubmissions,
@@ -365,8 +441,19 @@ window.ClassroomAPI = (function () {
         createAttendanceSession,
         saveAttendanceRecords,
         fetchAttendanceSummary,
-        fetchClassroomMatches,
-        gradeSubmission,
-        returnSubmissionForRevision
+        fetchSchedulerWorkspace,
+        updateClassroomScheduleConfig,
+        seedClassroomSessions,
+        addClassroomSession,
+        previewClassroomSessionAdd,
+        addClassroomSessionBatch,
+        replaceClassroomSession,
+        previewClassroomSessionReplace,
+        rescheduleScheduledSession,
+        cancelScheduledSession,
+        previewClassroomScheduleRegeneration,
+        regenerateClassroomSchedule,
+        openScheduledAttendanceSession,
+        gradeSubmission
     };
 })();

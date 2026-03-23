@@ -26,6 +26,13 @@ This file guides the agent's understanding of the project structure and context.
 - **Explicit updates (#update)**: If the user types `#update`, you must update the Current Status with a brief summary of the active step.
 - **Automation**: DO NOT wait for the user to remind you. This is an automatic required step before and after executing work.
 
+### Task Tracking Integrity Rules (MANDATORY)
+
+1. **Never mark Done without proof**: A task can ONLY be marked as 'Done' AFTER empirical verification that the work is complete. If a session ends before verification, the task MUST remain 'In Progress'. Ending a conversation is NOT sufficient grounds to mark a task Done.
+2. **Stale task audit on session start**: When reading TASK_TRACKER.csv at the beginning of a session, check for any 'In Progress' tasks. If found, verify whether they were completed in a previous session by checking conversation artifacts (task.md/walkthrough.md). Update accordingly.
+3. **Edit in place — never rewrite the full file**: When updating a single row (e.g., marking Done), use targeted line edits (replace_file_content on the specific row). Do NOT read the entire CSV and write it back — this causes duplicate rows.
+4. **One task per deliverable**: If a task spans multiple conversations, the LAST conversation to complete the work is responsible for marking it Done. Do not create duplicate task entries for the same deliverable.
+
 ## GSD Auto-Integration (MANDATORY)
 
 Every task MUST follow the GSD (Get Stuff Done) methodology automatically. This is not optional.

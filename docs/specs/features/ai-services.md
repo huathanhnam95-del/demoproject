@@ -68,3 +68,9 @@
   - Exceed daily `assessWriting` quota -> verify LanguageTool fallback is used.
   - Force AI endpoint failure (invalid key/upstream timeout) -> verify client receives fallback signal and flow continues with non-AI path.
   - Simulate offline/disconnected mode during AI check -> verify UI stays usable and user gets actionable retry/fallback messaging.
+
+## 7. Image Generation Pathway
+
+- Thumbnail images are generated entirely server-side (using `src/services/reading-journey/thumbnail-generator.js`).
+- Browser clients **must never** call Google image generation APIs (Vertex or AI Studio) directly.
+- All image generations use configured backend credentials and validate requests through the defined thumbnail generation endpoints.

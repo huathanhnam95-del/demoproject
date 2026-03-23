@@ -29,7 +29,7 @@ const cache = require('../src/services/reading-journey/cache');
 
 const COLLECTION_OUTLINES = 'reading_journey_outlines_v1';
 const COLLECTION_BEATS = 'reading_journey_beats_v1';
-const MAX_INTERACTIVE_BEATS = 5;
+const MAX_INTERACTIVE_BEATS = 3;
 const ENDING_BEAT_NUMBER = MAX_INTERACTIVE_BEATS + 1;
 const PROGRESS_FILE = path.join(__dirname, '..', 'docs', 'audits', 'reading-journey-quality', 'progress.json');
 

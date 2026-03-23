@@ -66,6 +66,19 @@ expectRoute(routes, 'GET /students/:studentId/classroom-matches');
 expectRoute(routes, 'GET /courses');
 expectRoute(routes, 'POST /courses');
 expectRoute(routes, 'PATCH /courses/:courseId');
+expectRoute(routes, 'GET /scheduler/workspace');
+expectRoute(routes, 'PATCH /classrooms/:classId/schedule-config');
+expectRoute(routes, 'POST /classrooms/:classId/sessions/seed');
+expectRoute(routes, 'POST /classrooms/:classId/sessions/add-preview');
+expectRoute(routes, 'POST /classrooms/:classId/sessions/add-batch');
+expectRoute(routes, 'POST /classrooms/:classId/sessions/add');
+expectRoute(routes, 'POST /classrooms/:classId/sessions/replace-preview');
+expectRoute(routes, 'POST /classrooms/:classId/sessions/replace');
+expectRoute(routes, 'POST /classrooms/:classId/schedule/regenerate-preview');
+expectRoute(routes, 'POST /classrooms/:classId/schedule/regenerate');
+expectRoute(routes, 'PATCH /sessions/:sessionId/reschedule');
+expectRoute(routes, 'POST /sessions/:sessionId/cancel');
+expectRoute(routes, 'POST /attendance/sessions/open-from-scheduled');
 expectRoute(routes, 'POST /students/:studentId/class-code');
 expectRoute(routes, 'GET /users/lookup');
 expectRoute(routes, 'POST /students/:studentId/force-link');
@@ -81,7 +94,8 @@ expectRoute(routes, 'POST /submissions/:submissionId/grade');
 for (const relativePath of [
     'functions/src/routes/admin/students.js',
     'functions/src/routes/admin/courses.js',
-    'functions/src/routes/admin/identity.js'
+    'functions/src/routes/admin/identity.js',
+    'functions/src/routes/admin/scheduling.js'
 ]) {
     const source = readFile(relativePath);
     assert(

@@ -17,6 +17,7 @@
     "test:preloader:browser": "node tests/browser/preloader-browser-check.js",
     "test:preloader:browser:reduced": "node tests/browser/preloader-browser-check.js --reduced-motion",
     "test:preloader:browser:mobile": "node tests/browser/preloader-browser-check.js --mobile-low",
+    "test:crm:scheduler:browser": "node tests/browser/crm-scheduler-browser-check.js",
     "test:reading-journey:quiz:browser": "node tests/browser/reading-journey-quiz-browser-check.js",
     "test:site-header:browser": "node tests/browser/site-header-about-check.js"
   },

@@ -5,16 +5,17 @@
 
 ## 1. Overview
 
-Reading Journey is a story-driven reading practice mode. Users provide a few interest keywords, then read a short interactive story in 50–60 word segments. After each segment, users choose what happens next (multiple choice) and write a short response (1–2 sentences) to practice comprehension + production. The story runs for a maximum of 5 user turns.
+Reading Journey is a story-driven reading practice mode. Users provide a few interest keywords, then read a short interactive story in 50-60 word segments. After each segment, users choose what happens next or write a short response to practice comprehension and production. The current local prototype uses 3 interactive beats, 1 ending beat, and an optional post-story formative quiz.
 
-Access is intentionally hidden: users can only enter by visiting `/readingjourney`. There is no UI button/card/link that navigates to this mode.
+Access is intentionally hidden: users can only enter by visiting `/readingjourney`. There is no UI button, card, or link that navigates to this mode.
 
 ## 2. Goals (The "Why")
 
 - Provide an engaging way to practice reading comprehension via short narrative segments.
-- Require active language production (short open-ended response each turn).
-- Personalize the theme using user interests while controlling drift via a locked 5-beat outline.
-- Reduce LLM cost via cross-user caching keyed on canonical topic tags + choice path.
+- Require active language production through short open-ended responses.
+- Personalize the theme using user interests while controlling drift via a locked outline and cached beat path.
+- Reduce LLM cost via cross-user caching keyed on canonical topic tags and choice path.
+- Add a retention-focused post-story quiz grounded in the actual completed story path.
 
 ## 3. Requirements (The "What")
 
@@ -24,39 +25,40 @@ Access is intentionally hidden: users can only enter by visiting `/readingjourne
 - **Setup**:
   - User enters up to 8 comma-separated keywords.
   - User selects CEFR level: A2, B1, B2, or C1.
-- **Story loop** (max 5 turns):
+- **Story loop** (current prototype: 3 interactive beats + 1 ending beat):
   - Each turn shows:
-    - 50–60 word story segment
+    - 50-60 word story segment
     - recap sentence
-    - 3-option plot choice (steers plot)
-    - 1 open-ended prompt (“summarize + explain your choice”)
-  - Backend enforces max turn count and ends at beat 5 with a 20–30 word wrap-up.
+    - either a 3-option plot choice or a short open-ended prompt
+  - Backend enforces the current beat structure and ends with a short wrap-up beat.
 - **Caching**:
-  - Cache outline + beat outputs.
+  - Cache outline and beat outputs.
   - Never cache raw user free-text.
 - **Assessment**:
-  - Provide a backend-only endpoint to assess a full story text (used by simulation).
+  - Provide a backend-only endpoint to assess a full story text for simulation and audits.
+  - Provide `POST /api/reading-journey/quiz` to reconstruct the completed story from cache and return a normalized quiz deck.
 
 ### Non-Functional
 
 - **Hidden in production**:
-  - Backend endpoints return 404 unless `READING_JOURNEY_ENABLED=true`.
-  - Frontend redirects to `/` if health check fails or is disabled.
+  - Backend endpoints return `404` unless `READING_JOURNEY_ENABLED=true`.
+  - Frontend redirects to `/` if health check fails or the feature is disabled.
 - **Safety**:
-  - Classroom-safe, PG content; avoid real celebrities/politicians/brands as characters.
+  - Classroom-safe, PG content.
+  - Avoid real celebrities, politicians, and brands as characters.
 - **Privacy**:
   - No raw user free-text stored in shared caches.
-  - Avoid logging prompts/responses containing user input.
+  - Avoid logging prompts or responses containing user input.
 - **Cost control**:
-  - Gemini-only via backend, with caching (Firestore when available; fallback to in-memory).
+  - Gemini-only via backend, with caching when available.
 
 ### Environment (local)
 
-- `READING_JOURNEY_ENABLED=true` (required)
-- `READING_JOURNEY_ALLOW_REMOTE=true` (optional; default local-only)
-- `READING_JOURNEY_GEMINI_MODEL=gemini-3.1-pro-preview` (optional; defaults to `gemini-3.1-pro-preview`)
-- `READING_JOURNEY_CACHE_TTL_DAYS=30` (optional)
-- `READING_JOURNEY_DISABLE_RATE_LIMIT=true` (optional; local-only bypass for simulation tooling)
+- `READING_JOURNEY_ENABLED=true`
+- `READING_JOURNEY_ALLOW_REMOTE=true` for non-local access when needed
+- `READING_JOURNEY_GEMINI_MODEL=gemini-3.1-pro-preview`
+- `READING_JOURNEY_CACHE_TTL_DAYS=30`
+- `READING_JOURNEY_DISABLE_RATE_LIMIT=true` for local simulation tooling only
 
 ## 4. Data & Contracts (The "Contract")
 
@@ -67,28 +69,32 @@ Access is intentionally hidden: users can only enter by visiting `/readingjourne
 - Advance: `POST /api/reading-journey/advance`
 - Suggest keywords: `POST /api/reading-journey/suggest-keywords`
 - Assess story: `POST /api/reading-journey/assess-story`
+- Quiz: `POST /api/reading-journey/quiz`
 
-### Cache collections (Firestore, if available)
+### Cache collections
 
-- `reading_journey_keyword_tags_v1` (hashed keywords → topic tags)
-- `reading_journey_outlines_v1` (outline key hash → outline)
-- `reading_journey_beats_v1` (beat key hash → beat response)
+- `reading_journey_keyword_tags_v1`
+- `reading_journey_outlines_v1`
+- `reading_journey_beats_v1`
 
 ### Frontend (vanilla JS)
 
 - Route-only UI container: `#readingjourney-root` in `public/index.html`
 - Client controller: `public/js/reading-journey.js`
+- Assessment view helpers: `public/js/reading-journey-assessment.js`
 
 ## 5. Verification
 
 - Manual:
   - With feature disabled, `/readingjourney` redirects to `/`.
-  - With feature enabled locally, `/readingjourney` runs a 5-turn story successfully.
+  - With feature enabled locally, `/readingjourney` runs the full story-to-quiz flow successfully.
   - No UI element on `/` links to Reading Journey.
 - Automated:
   - `node tests/reading-journey-cache-keys.test.js`
   - `node tests/reading-journey-json-parse.test.js`
-  - `node scripts/smoke-reading-journey.js` (setup + 4 advances; asserts response shape and word counts)
+  - `node tests/browser/reading-journey-quiz-browser-check.js`
+  - `node tests/reading-journey-quiz-regenerated-corpus.test.js`
+  - `node scripts/smoke-reading-journey.js --start-server --port 8787`
 
 ## 6. Promotion Gate
 
@@ -101,3 +107,4 @@ Do not promote this work into `functions/src/` or public navigation until:
 - no critical accessibility blockers remain
 - review queue survives reload and keeps its missed-item schedule
 - generated decks stay valid across the supported CEFR bands
+- regenerated-corpus fixtures stay grounded after story regeneration

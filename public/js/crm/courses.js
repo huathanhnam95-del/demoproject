@@ -1,4 +1,7 @@
 window.CrmCourses = (function () {
+    // Source of truth is the Firestore crmCourses collection (read via admin API on this page).
+    const CRM_COURSES_COLLECTION = 'crmCourses';
+
     async function getAuthHeaders() {
         const auth = typeof firebase !== 'undefined' ? firebase.auth() : null;
         if (!auth || !auth.currentUser) return { 'Content-Type': 'application/json' };

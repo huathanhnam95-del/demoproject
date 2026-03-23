@@ -335,6 +335,13 @@ module.exports = createCrmRouter({
     db,
     admin,
     authMiddleware,
+    resolveAdminStatus: async ({ req }) => ({
+        // authMiddleware already enforces ADMIN_EMAIL whitelist for this server stack
+        isAdmin: true,
+        uid: req?.user?.uid || null,
+        email: req?.user?.email || null,
+        bootstrapped: false
+    }),
     sendSuccess,
     sendError,
     serverTimestamp: () => admin.firestore.FieldValue.serverTimestamp(),

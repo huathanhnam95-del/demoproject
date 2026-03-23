@@ -33,6 +33,7 @@ window.CrmStudents = (function () {
             email: getValue(elements.inputStudentEmail),
             zalo: getValue(elements.inputStudentZalo),
             facebook: getValue(elements.inputStudentFacebook),
+            acquisitionSource: getValue(elements.inputStudentAcquisitionSource),
             learningProfile: {
                 overall: getNumberValue(elements.inputScoreOverall),
                 listening: getNumberValue(elements.inputScoreListening),
@@ -57,6 +58,7 @@ window.CrmStudents = (function () {
         if (elements.inputStudentEmail) elements.inputStudentEmail.value = String(student?.email || '');
         if (elements.inputStudentZalo) elements.inputStudentZalo.value = String(student?.zalo || '');
         if (elements.inputStudentFacebook) elements.inputStudentFacebook.value = String(student?.facebook || '');
+        if (elements.inputStudentAcquisitionSource) elements.inputStudentAcquisitionSource.value = String(student?.acquisitionSource || '');
         if (elements.inputScoreOverall) elements.inputScoreOverall.value = learning.overall ?? '';
         if (elements.inputScoreListening) elements.inputScoreListening.value = learning.listening ?? '';
         if (elements.inputScoreReading) elements.inputScoreReading.value = learning.reading ?? '';

@@ -23,8 +23,20 @@ window.ClassroomAPI = (function () {
         };
     }
 
-    // Admin: Read local classroom docs
+    // Student: List classrooms I am enrolled in (membership-based).
     async function fetchClassrooms() {
+        const headers = await getHeaders();
+        const res = await fetch('/api/classrooms', {
+            method: 'GET',
+            headers
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        const json = await res.json();
+        return json.classrooms || [];
+    }
+
+    // Admin: List all classrooms (admin-only).
+    async function fetchAdminClassrooms() {
         const headers = await getHeaders();
         const res = await fetch('/api/admin/classrooms', {
             method: 'GET',
@@ -35,8 +47,13 @@ window.ClassroomAPI = (function () {
         return json.classrooms || [];
     }
 
-    // Admin: Read CRM course catalog (via server API to avoid Firestore permission issues)
+    // Admin: Read CRM course catalog (crmCourses-backed) via server API to avoid Firestore permission issues.
     async function fetchCourses() {
+        const crmCoursesApi = window.CrmCourses;
+        if (crmCoursesApi && typeof crmCoursesApi.fetchCourses === 'function') {
+            return crmCoursesApi.fetchCourses();
+        }
+
         const headers = await getHeaders();
         const res = await fetch('/api/admin/courses', {
             method: 'GET',
@@ -273,6 +290,7 @@ window.ClassroomAPI = (function () {
     return {
         fetchCourses,
         fetchClassrooms,
+        fetchAdminClassrooms,
         createClassroom,
         updateClassroom,
         loadModules,

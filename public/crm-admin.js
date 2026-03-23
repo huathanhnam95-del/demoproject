@@ -137,6 +137,7 @@
     // Student Info Inputs
     elements.inputStudentName = document.getElementById('student-name');
     elements.inputStudentLabel = document.getElementById('student-label');
+    elements.inputStudentAcquisitionSource = document.getElementById('student-acquisition-source');
     elements.inputStudentPhone = document.getElementById('student-phone');
     elements.inputStudentEmail = document.getElementById('student-email');
     elements.inputStudentZalo = document.getElementById('student-zalo');
@@ -615,6 +616,7 @@
     const inputs = [
       elements.inputStudentName,
       elements.inputStudentLabel,
+      elements.inputStudentAcquisitionSource,
       elements.inputStudentPhone,
       elements.inputStudentEmail,
       elements.inputStudentZalo,
@@ -786,6 +788,7 @@
       email: String(elements.inputStudentEmail?.value || '').trim(),
       zalo: String(elements.inputStudentZalo?.value || '').trim(),
       facebook: String(elements.inputStudentFacebook?.value || '').trim(),
+      acquisitionSource: String(elements.inputStudentAcquisitionSource?.value || '').trim(),
       learningProfile: {
         overall: null,
         listening: null,
@@ -3118,7 +3121,7 @@
     if (!elements.classManagementGrid) return;
     try {
       const [classrooms, courses] = await Promise.all([
-        window.ClassroomAPI.fetchClassrooms(),
+        (window.ClassroomAPI.fetchAdminClassrooms || window.ClassroomAPI.fetchClassrooms)(),
         fetchCoursesFromCatalog().catch(() => [])
       ]);
       const courseIndex = new Map(courses.map((course) => [String(course.id || ''), course]));

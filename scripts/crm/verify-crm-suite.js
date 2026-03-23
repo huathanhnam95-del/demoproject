@@ -51,6 +51,7 @@ function main() {
         ['node', ['tests/crm/admin-router-contract.test.js']],
         ['node', ['tests/crm/collection-contracts.test.js']],
         ['node', ['tests/crm/crm-shell-static.test.js']],
+        ['node', ['tests/crm/local-admin-entrance-tests.test.js']],
         ['node', ['tests/crm/homework-service.test.js']],
         ['node', ['tests/crm/live-session-service.test.js']],
         ['node', ['tests/crm/classroom-match-service.test.js']],

@@ -91,3 +91,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 101,2026-03-23,Execute CRM browser retest plan on crm-workflow-fixes branch,Done,2026-03-23
 102,2026-03-23,Execute Read Aloud browser testing plan,Done,2026-03-23
 103,2026-03-23,Redesign sidebar buttons to be modern and sleek,In Progress,
+104,2026-03-23,Merge all branches to main and clean up worktrees,Done,2026-03-23

@@ -1,0 +1,11 @@
+{
+  "date": "2026-03-20",
+  "mode": "apply",
+  "totalEntries": 20929,
+  "validEntries": 4874,
+  "staleDeleted": 16055,
+  "staleReasons": {
+    "beat_number_too_high": 14522,
+    "beat2_invalid_choice": 1533
+  }
+}

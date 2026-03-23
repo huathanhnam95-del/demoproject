@@ -1,0 +1,80 @@
+{
+  "auditType": "manual-sampling",
+  "date": "2026-03-19",
+  "assessor": "AI Agent (Claude)",
+  "method": "Read 100 stories from representative batches (1, 5, 10, 15) spanning all 377 unaudited outlines. Scored on 8 dimensions: plot, character, vocabulary, grammar, pacing, emotion, setting, coherence.",
+  "totalOutlinesInScope": 377,
+  "storiesSampled": 100,
+  "batchesSampled": [1, 5, 10, 15],
+  "overallVerdict": "SYSTEMIC_ISSUES",
+  "estimatedPassRate": 0.30,
+  "estimatedFailRate": 0.70,
+  "dimensionScores": {
+    "plot": { "avg": 5.0, "issue": "Formulaic arcs — problem→struggle→solve→success. No real stakes, tension, or surprise. 'Because of this' connectors make causality feel mechanical." },
+    "character": { "avg": 5.5, "issue": "Characters are functional but flat. They 'feel worried' then 'feel proud' with little internal complexity. Heroes rarely make mistakes or have genuine flaws." },
+    "vocabulary": { "avg": 7.0, "issue": "Generally appropriate for ESL learners. Good variety per story. This is consistently the strongest dimension across all batches." },
+    "grammar": { "avg": 6.5, "issue": "Clean and correct. Sentence structures are varied enough. Minor issue: some run-on compound sentences." },
+    "pacing": { "avg": 4.5, "issue": "Most problematic dimension. Beat 1 is always setup, Beats 2-4 are formulaic middle, Beat 5 is always climax, Beat 6 is always resolution. No variation. Stories feel templated." },
+    "emotion": { "avg": 5.5, "issue": "Emotions are told not shown. 'She felt proud', 'A wave of relief washed over her'. Limited emotional range — usually anxiety→pride." },
+    "setting": { "avg": 6.0, "issue": "Vietnamese settings (Mộc Châu, Da Nang, Phu Quoc etc.) add cultural value. But settings are decoration rather than active story elements." },
+    "coherence": { "avg": 5.5, "issue": "Stories are internally consistent but predictable. Beat-to-beat transitions are robotic: 'After that,' 'Because of this,' 'Then,' repeat." }
+  },
+  "systemicIssues": [
+    {
+      "id": "TRANSITION_REPETITION",
+      "severity": "HIGH",
+      "frequency": "95%+ of stories",
+      "description": "Nearly every beat starts with 'After that,' 'Because of this,' or 'Then,'. Some stories use the same connector 3+ times in 6 beats.",
+      "examples": ["Story #1: 'After that' x3, 'Because of this' x2", "Story #12: 'Because of this' x3, 'After that' x2"]
+    },
+    {
+      "id": "FORMULAIC_ARC",
+      "severity": "HIGH",
+      "frequency": "90%+ of stories",
+      "description": "Almost all stories follow: Beat1=Setup → Beat2=Problem → Beat3=Attempt → Beat4=Progress → Beat5=Success → Beat6=Resolution+moral. No subversion, no ambiguity.",
+      "examples": ["Story #8 (Leo's Banking App), Story #16 (Leo's New Recipe), Story #88 (Leo's Creative Breakthrough) all follow identical arcs"]
+    },
+    {
+      "id": "EMOTIONAL_FLATNESS",
+      "severity": "MEDIUM",
+      "frequency": "80%+ of stories",
+      "description": "Emotions follow anxiety→determination→pride with little variation. Characters rarely feel conflicted, angry, jealous, or ambivalent.",
+      "examples": ["'Linh felt worried' → 'Linh felt much more confident' → 'Linh felt proud'"]
+    },
+    {
+      "id": "PASSIVE_RESOLUTION",
+      "severity": "MEDIUM",
+      "frequency": "70%+ of stories",
+      "description": "Problems resolve too easily. Characters 'work hard' off-screen and then succeed. The struggle is mentioned but never felt.",
+      "examples": ["Story #98 (Mai in Da Nang): struggles with English → attends classes → immediately succeeds at client presentation"]
+    },
+    {
+      "id": "THEMATIC_REPETITION",
+      "severity": "MEDIUM",
+      "frequency": "50%+ of stories",
+      "description": "Many stories share near-identical themes: 'Linh improves English', 'character overcomes challenge through hard work', 'teamwork saves the day'. Name variations on the same plot.",
+      "examples": ["Stories #2, #7, #14, #17 are all 'Linh improves English through practice'", "Stories #11, #87, #91, #96 are all 'team learns teamwork'"]
+    },
+    {
+      "id": "ENDING_MORALIZING",
+      "severity": "LOW",
+      "frequency": "90%+ of stories",
+      "description": "Nearly every story ends with an explicit moral lesson ('This story teaches...', 'Linh's journey showed that...'). Breaks immersion and feels preachy.",
+      "examples": ["'Linh's journey shows that practice and heart can help you overcome challenges.'", "'This story shows how teamwork and good habits can help a community overcome challenges'"]
+    }
+  ],
+  "qualityTiers": {
+    "good": { "percent": 10, "description": "Engaging premise, some character depth, varied pacing. Examples: The Onyx Tempest (#193), The Zucchini Bread Experiment (#18), A Summer by the Lake (#84)" },
+    "adequate": { "percent": 20, "description": "Readable, educational, but formulaic. Grammar and vocab are fine. Stories 'work' for ESL but aren't engaging." },
+    "mediocre": { "percent": 50, "description": "All systemic issues present. Predictable, repetitive transitions, flat characters. Functional but not enjoyable." },
+    "poor": { "percent": 20, "description": "Multiple critical failures: incoherent beats, extreme formulaicness, or barely any narrative arc. Just a sequence of events." }
+  },
+  "recommendations": [
+    "CRITICAL: Fix transition prompts — the old prompt forced 'After that', 'Because of this', 'Then' openers. The improved prompt already addresses this but existing stories need regeneration.",
+    "CRITICAL: Regenerate ALL existing cached stories with the improved prompt. The old prompt produced systematically inferior quality.",
+    "HIGH: Add plot variety — the prompt should occasionally produce stories where the character fails, where the resolution is bittersweet, or where the 'problem' isn't solved by individual effort.",
+    "MEDIUM: Reduce ending moralism — add prompt instruction to end with the story itself, not an explicit lesson.",
+    "MEDIUM: Diversify themes — too many 'Linh learns English' stories. Stories should cover wider range of genuine conflicts.",
+    "LOW: Add emotional complexity — prompt should encourage showing emotions through actions/dialogue, not just stating them."
+  ]
+}

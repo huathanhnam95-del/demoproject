@@ -1,0 +1,182 @@
+{
+  "731": {
+    "male": {
+      "voiceId": "s3TPKV1kjDlVtZbl4Ksh",
+      "voiceName": "Adam",
+      "files": {
+        "100": "RA_731_male_100.mp3",
+        "80": "RA_731_male_80.mp3"
+      }
+    },
+    "female": {
+      "voiceId": "pjcYQlDFKMbcOUp6F5GD",
+      "voiceName": "Brittney",
+      "files": {
+        "100": "RA_731_female_100.mp3",
+        "80": "RA_731_female_80.mp3"
+      }
+    }
+  },
+  "8": {
+    "male": {
+      "voiceId": "dXtC3XhB9GtPusIpNtQx",
+      "voiceName": "Hale",
+      "files": {
+        "100": "RA_8_male_100.mp3",
+        "80": "RA_8_male_80.mp3"
+      }
+    },
+    "female": {
+      "voiceId": "56AoDkrOh6qfVPDXZ7Pt",
+      "voiceName": "Cassidy",
+      "files": {
+        "100": "RA_8_female_100.mp3",
+        "80": "RA_8_female_80.mp3"
+      }
+    }
+  },
+  "15": {
+    "male": {
+      "voiceId": "dXtC3XhB9GtPusIpNtQx",
+      "voiceName": "Hale",
+      "files": {
+        "100": "RA_15_male_100.mp3",
+        "80": "RA_15_male_80.mp3"
+      }
+    },
+    "female": {
+      "voiceId": "56AoDkrOh6qfVPDXZ7Pt",
+      "voiceName": "Cassidy",
+      "files": {
+        "100": "RA_15_female_100.mp3",
+        "80": "RA_15_female_80.mp3"
+      }
+    }
+  },
+  "18": {
+    "male": {
+      "voiceId": "dXtC3XhB9GtPusIpNtQx",
+      "voiceName": "Hale",
+      "files": {
+        "100": "RA_18_male_100.mp3",
+        "80": "RA_18_male_80.mp3"
+      }
+    },
+    "female": {
+      "voiceId": "kdmDKE6EkgrWrrykO9Qt",
+      "voiceName": "Alexandra",
+      "files": {
+        "100": "RA_18_female_100.mp3",
+        "80": "RA_18_female_80.mp3"
+      }
+    }
+  },
+  "147": {
+    "male": {
+      "voiceId": "x8xv0H8Ako6Iw3cKXLoC",
+      "voiceName": "Haven Sands",
+      "files": {
+        "100": "RA_147_male_100.mp3",
+        "80": "RA_147_male_80.mp3"
+      }
+    },
+    "female": {
+      "voiceId": "eBvoGh8YGJn1xokno71w",
+      "voiceName": "Halley",
+      "files": {
+        "100": "RA_147_female_100.mp3",
+        "80": "RA_147_female_80.mp3"
+      }
+    }
+  },
+  "203": {
+    "male": {
+      "voiceId": "n1PvBOwxb8X6m7tahp2h",
+      "voiceName": "Michael C. Vincent",
+      "files": {
+        "100": "RA_203_male_100.mp3",
+        "80": "RA_203_male_80.mp3"
+      }
+    },
+    "female": {
+      "voiceId": "pjcYQlDFKMbcOUp6F5GD",
+      "voiceName": "Brittney",
+      "files": {
+        "100": "RA_203_female_100.mp3",
+        "80": "RA_203_female_80.mp3"
+      }
+    }
+  },
+  "402": {
+    "male": {
+      "voiceId": "UgBBYS2sOqTuMpoF3BR0",
+      "voiceName": "Mark",
+      "files": {
+        "100": "RA_402_male_100.mp3",
+        "80": "RA_402_male_80.mp3"
+      }
+    },
+    "female": {
+      "voiceId": "56AoDkrOh6qfVPDXZ7Pt",
+      "voiceName": "Cassidy",
+      "files": {
+        "100": "RA_402_female_100.mp3",
+        "80": "RA_402_female_80.mp3"
+      }
+    }
+  },
+  "419": {
+    "male": {
+      "voiceId": "x8xv0H8Ako6Iw3cKXLoC",
+      "voiceName": "Haven Sands",
+      "files": {
+        "100": "RA_419_male_100.mp3",
+        "80": "RA_419_male_80.mp3"
+      }
+    },
+    "female": {
+      "voiceId": "aMSt68OGf4xUZAnLpTU8",
+      "voiceName": "Juniper",
+      "files": {
+        "100": "RA_419_female_100.mp3",
+        "80": "RA_419_female_80.mp3"
+      }
+    }
+  },
+  "490": {
+    "male": {
+      "voiceId": "s3TPKV1kjDlVtZbl4Ksh",
+      "voiceName": "Adam",
+      "files": {
+        "100": "RA_490_male_100.mp3",
+        "80": "RA_490_male_80.mp3"
+      }
+    },
+    "female": {
+      "voiceId": "aMSt68OGf4xUZAnLpTU8",
+      "voiceName": "Juniper",
+      "files": {
+        "100": "RA_490_female_100.mp3",
+        "80": "RA_490_female_80.mp3"
+      }
+    }
+  },
+  "531": {
+    "male": {
+      "voiceId": "s3TPKV1kjDlVtZbl4Ksh",
+      "voiceName": "Adam",
+      "files": {
+        "100": "RA_531_male_100.mp3",
+        "80": "RA_531_male_80.mp3"
+      }
+    },
+    "female": {
+      "voiceId": "yM93hbw8Qtvdma2wCnJG",
+      "voiceName": "Ivanna",
+      "files": {
+        "100": "RA_531_female_100.mp3",
+        "80": "RA_531_female_80.mp3"
+      }
+    }
+  }
+}

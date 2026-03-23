@@ -1,0 +1,229 @@
+"""
+Generate ElevenLabs audio for Read Aloud questions.
+
+Each question gets:
+  - 1 male voice × 2 speeds (100%, 80%)
+  - 1 female voice × 2 speeds (100%, 80%)
+  = 4 MP3 files per question
+
+Usage:
+  # Test on 10 questions first
+  python scripts/generate_ra_audio.py --test
+
+  # Generate all
+  python scripts/generate_ra_audio.py
+
+  # Resume after interruption (skips already-generated files)
+  python scripts/generate_ra_audio.py
+"""
+
+import os
+import sys
+import json
+import time
+import random
+import argparse
+import requests
+import openpyxl
+from dotenv import load_dotenv
+
+# ── Config ───────────────────────────────────────────────────────────
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.join(SCRIPT_DIR, '..')
+load_dotenv(os.path.join(PROJECT_ROOT, '.env'))
+
+RA_XLSX = os.path.join(PROJECT_ROOT, 'public', 'database', 'RA', 'RA.xlsx')
+VOICES_XLSX = os.path.join(PROJECT_ROOT, 'public', 'database', 'RA', 'Voice', 'Voices.xlsx')
+OUTPUT_DIR = os.path.join(PROJECT_ROOT, 'public', 'audio', 'ra')
+PROGRESS_FILE = os.path.join(PROJECT_ROOT, '_tmp', 'ra_audio_progress.json')
+MANIFEST_FILE = os.path.join(OUTPUT_DIR, 'manifest.json')
+
+API_BASE = 'https://api.elevenlabs.io/v1/text-to-speech'
+SPEEDS = [1.0, 0.80]
+SPEED_LABELS = {1.0: '100', 0.80: '80'}
+MODEL_ID = 'eleven_v3'
+OUTPUT_FORMAT = 'mp3_44100_128'
+DELAY_BETWEEN_CALLS = 0.5  # seconds, to respect rate limits
+
+
+# ── Load voices ──────────────────────────────────────────────────────
+def load_voices():
+    wb = openpyxl.load_workbook(VOICES_XLSX)
+    ws = wb.active
+    male_voices = []
+    female_voices = []
+    for row in ws.iter_rows(min_row=2, values_only=True):
+        name, voice_id, gender, style = row[0], row[1], row[2], row[3]
+        entry = {'name': name, 'id': voice_id, 'style': style}
+        if gender and gender.strip().lower() == 'male':
+            male_voices.append(entry)
+        elif gender and gender.strip().lower() == 'female':
+            female_voices.append(entry)
+    return male_voices, female_voices
+
+
+# ── Load RA questions ────────────────────────────────────────────────
+def load_questions():
+    wb = openpyxl.load_workbook(RA_XLSX)
+    ws = wb.active
+    questions = []
+    for row in ws.iter_rows(min_row=2, values_only=True):
+        q_id = row[0]
+        # Column D (index 3) = clean text without "/" marks
+        clean_text = row[3]
+        if q_id is not None and clean_text:
+            questions.append({
+                'id': int(q_id),
+                'text': str(clean_text).strip()
+            })
+    return questions
+
+
+# ── Deterministic voice assignment ───────────────────────────────────
+def assign_voice(q_id, voice_pool):
+    """Pick a voice deterministically based on question ID."""
+    rng = random.Random(q_id)
+    return rng.choice(voice_pool)
+
+
+# ── Progress tracking ────────────────────────────────────────────────
+def load_progress():
+    if os.path.exists(PROGRESS_FILE):
+        with open(PROGRESS_FILE, 'r') as f:
+            return set(json.load(f))
+    return set()
+
+
+def save_progress(completed):
+    os.makedirs(os.path.dirname(PROGRESS_FILE), exist_ok=True)
+    with open(PROGRESS_FILE, 'w') as f:
+        json.dump(list(completed), f)
+
+
+# ── TTS generation via REST API ──────────────────────────────────────
+def generate_single(api_key, text, voice_id, speed, output_path):
+    """Call ElevenLabs TTS REST API with speed control and save to file."""
+    url = f'{API_BASE}/{voice_id}?output_format={OUTPUT_FORMAT}'
+    headers = {
+        'Content-Type': 'application/json',
+        'xi-api-key': api_key,
+        'Accept': 'audio/mpeg',
+    }
+    payload = {
+        'text': text,
+        'model_id': MODEL_ID,
+        'speed': speed,
+    }
+
+    response = requests.post(url, json=payload, headers=headers, stream=True)
+
+    if response.status_code != 200:
+        raise Exception(f'API error {response.status_code}: {response.text[:300]}')
+
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    with open(output_path, 'wb') as f:
+        for chunk in response.iter_content(chunk_size=4096):
+            if chunk:
+                f.write(chunk)
+
+
+# ── Main ─────────────────────────────────────────────────────────────
+def main():
+    parser = argparse.ArgumentParser(description='Generate ElevenLabs audio for RA questions')
+    parser.add_argument('--test', action='store_true', help='Only generate for 10 questions')
+    args = parser.parse_args()
+
+    api_key = os.getenv('ELEVENLABS_API_KEY')
+    if not api_key:
+        print('ERROR: ELEVENLABS_API_KEY not found in .env')
+        sys.exit(1)
+
+    print('Loading voices...')
+    male_voices, female_voices = load_voices()
+    print(f'  Male voices: {len(male_voices)}, Female voices: {len(female_voices)}')
+
+    print('Loading questions...')
+    questions = load_questions()
+    print(f'  Total questions: {len(questions)}')
+
+    if args.test:
+        questions = questions[:10]
+        print(f'  TEST MODE: Processing only {len(questions)} questions')
+
+    # Ensure output directory exists
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+    completed = load_progress()
+    manifest = {}
+
+    # Load existing manifest if present
+    if os.path.exists(MANIFEST_FILE):
+        with open(MANIFEST_FILE, 'r') as f:
+            manifest = json.load(f)
+
+    total_tasks = len(questions) * 2 * len(SPEEDS)  # 2 genders × speeds
+    done_count = 0
+    skipped_count = 0
+
+    for q in questions:
+        q_id = q['id']
+        text = q['text']
+
+        male_voice = assign_voice(q_id, male_voices)
+        female_voice = assign_voice(q_id + 10000, female_voices)  # offset seed for female
+
+        q_manifest = manifest.get(str(q_id), {
+            'male': {'voiceId': male_voice['id'], 'voiceName': male_voice['name'], 'files': {}},
+            'female': {'voiceId': female_voice['id'], 'voiceName': female_voice['name'], 'files': {}}
+        })
+
+        for gender, voice in [('male', male_voice), ('female', female_voice)]:
+            for speed in SPEEDS:
+                speed_label = SPEED_LABELS[speed]
+                filename = f'RA_{q_id}_{gender}_{speed_label}.mp3'
+                file_key = f'{q_id}_{gender}_{speed_label}'
+
+                if file_key in completed:
+                    skipped_count += 1
+                    done_count += 1
+                    q_manifest[gender]['files'][speed_label] = filename
+                    continue
+
+                output_path = os.path.join(OUTPUT_DIR, filename)
+
+                try:
+                    print(f'  [{done_count + 1}/{total_tasks}] Generating {filename}...')
+                    generate_single(api_key, text, voice['id'], speed, output_path)
+                    completed.add(file_key)
+                    q_manifest[gender]['files'][speed_label] = filename
+                    done_count += 1
+
+                    # Save progress periodically
+                    if done_count % 10 == 0:
+                        save_progress(completed)
+
+                    time.sleep(DELAY_BETWEEN_CALLS)
+
+                except Exception as e:
+                    print(f'  ERROR generating {filename}: {e}')
+                    save_progress(completed)
+                    # Update manifest with what we have so far
+                    manifest[str(q_id)] = q_manifest
+                    with open(MANIFEST_FILE, 'w') as f:
+                        json.dump(manifest, f, indent=2)
+                    print(f'  Progress saved. Re-run to resume.')
+                    sys.exit(1)
+
+        manifest[str(q_id)] = q_manifest
+
+    # Final save
+    save_progress(completed)
+    with open(MANIFEST_FILE, 'w') as f:
+        json.dump(manifest, f, indent=2)
+
+    print(f'\nDone! Generated: {done_count - skipped_count}, Skipped: {skipped_count}, Total: {done_count}')
+    print(f'Manifest saved to: {MANIFEST_FILE}')
+
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "universalResults": [
+    {
+      "id": "u1",
+      "passed": true,
+      "explanation": "Looks good"
+    }
+  ],
+  "storyResults": [
+    {
+      "id": "s1",
+      "passed": true,
+      "explanation": "Matches"
+    }
+  ],
+  "blockingFailuresFound": []
+}

@@ -1,0 +1,3718 @@
+{
+  "discoveredAt": "2026-03-18T08:21:31.225Z",
+  "summary": {
+    "totalOutlines": 410,
+    "withPaths": 394,
+    "empty": 16,
+    "totalPaths": 8874,
+    "completePaths": 8861,
+    "partialPaths": 13,
+    "alreadyAudited": 15,
+    "byLevel": {
+      "A2": {
+        "outlines": 2,
+        "paths": 54
+      },
+      "?": {
+        "outlines": 406,
+        "paths": 8820
+      },
+      "B1": {
+        "outlines": 2,
+        "paths": 0
+      }
+    }
+  },
+  "outlines": [
+    {
+      "outlineId": "00787689d8813c356d244328b49231150046003f4a20b1abe09583d665196f33",
+      "title": "A Trip to Remember",
+      "level": "A2",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": true
+    },
+    {
+      "outlineId": "017b07e19acc52a37870d2ac70445bbabbe7455a069da39b5d956b643fd588ab",
+      "title": "Lina's Gratitude Feast",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": true
+    },
+    {
+      "outlineId": "01869c38f749a9e44e31d7bd5c85db9ccd8a8d75f58039cad821096a271046ba",
+      "title": "The Mystery of the Pixelated Strands",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": true
+    },
+    {
+      "outlineId": "039627797ec13f8a0620c6869c28acdd028668090d1ed62eb9bf01ddcd94e60a",
+      "title": "The Melody of Resilience in Hanoi",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": true
+    },
+    {
+      "outlineId": "03ac97ed47d8b7f8c46e832497cfdde5f364b5166286e8abd9003b51e2c24dc6",
+      "title": "Linh's Quang Ninh Presentation",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": true
+    },
+    {
+      "outlineId": "04c4a9b1aaa6c304abc8a49d3e15c6cc397f0a79bffc0f7d211b6b8e02c83f05",
+      "title": "Leo's Language Helper",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": true
+    },
+    {
+      "outlineId": "0530718619d11cc5da782541701b7498230809cb7dd6ae698f0332f4cd109e19",
+      "title": "The Traveling Cookbook",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": true
+    },
+    {
+      "outlineId": "0637990fa1a6cccd27c4dd935e320ec237e687e7af5cc593f69abd4cb701f414",
+      "title": "A Rainy Day Adventure",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": true
+    },
+    {
+      "outlineId": "06ba58dd86469c6b0cc4356d48cddeeffd3a35d9704e680c73ae092b22927390",
+      "title": "The Crystal Quest",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": true
+    },
+    {
+      "outlineId": "0729a326f833670b78c0255e30532a9a7fa42d35b9b720454c81db4dc9c5d7ac",
+      "title": "Linh's English Wave",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": true
+    },
+    {
+      "outlineId": "073aa933c5d6ac579c799c619fe6ac98086a3f611ab64b32344a164d894e495b",
+      "title": "The Special Card",
+      "level": "?",
+      "total": 0,
+      "complete": 0,
+      "partial": 0,
+      "hasExistingAudit": true
+    },
+    {
+      "outlineId": "075881629db5d5e78d9256a6a657efec6528694a2820c4bf3b77112a83d49427",
+      "title": "Sapa's Hidden Joy",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": true
+    },
+    {
+      "outlineId": "08b5f4f98d4d00ea7d09a5e5c18c9773ea3d486d1fbdd1db58a251b16f2d6054",
+      "title": "The Community Yogurt Dream",
+      "level": "?",
+      "total": 0,
+      "complete": 0,
+      "partial": 0,
+      "hasExistingAudit": true
+    },
+    {
+      "outlineId": "08eeb4a0b6d943362aab48bd4ae89f8a1f7c0313d5a558f9e8c27fde04303a44",
+      "title": "Sweet Soup in the Storm",
+      "level": "?",
+      "total": 0,
+      "complete": 0,
+      "partial": 0,
+      "hasExistingAudit": true
+    },
+    {
+      "outlineId": "08f1ebc6d4bfe6fdf79a5d2b3ddd9595761284bf23ef74963cc499d84f203f15",
+      "title": "Linh's Ha Long Bay Creation",
+      "level": "?",
+      "total": 0,
+      "complete": 0,
+      "partial": 0,
+      "hasExistingAudit": true
+    },
+    {
+      "outlineId": "09249a6b9d8da536601701852a9bca771c8b8cae4095438aae58cea1f9835506",
+      "title": "The Sunstone Secret",
+      "level": "?",
+      "total": 2,
+      "complete": 2,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "099df6e5e0f8305b99f222ee21461ac56007164e0fadcdcc9542179c070dffbd",
+      "title": "The Disciplined Remote Worker",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "0a61e3af4bdf8517d8fe9074f7204c3516a6e076cf64f65382f0ea139cf2861d",
+      "title": "The Future Pitch",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "0b1f805708ac461d516934e0753157dc8a95f4356e41e31a859cbb45fa14beed",
+      "title": "Linh's Lantern Festival Story",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "0ba3d0feca9a3cf49ffff87fce0c8282054be60f936bb3bf97e12b4e6a467303",
+      "title": "The Rhythm of Wave 25",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "0d0f3debc158b76eec3567e5d0e53eddc21e0ee32d5c24da1b3f1985f35aa8d9",
+      "title": "Linh's Online Confidence",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "0d9312263c82f00d460c8862c0b5e91264b9ffc45840c13c25ea9b5789dff94c",
+      "title": "The Summer of Many Colors",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "0eb10a32ffc6e232dbbcfe1e1d81ef811a20a027672684f5f1c4d96612e087f8",
+      "title": "The Digital Rose",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "0edbf268d4421ce1a1a6c3866af9a0e68b9bddd3b164488661f7f23e7ed6e3a0",
+      "title": "Lena's Healthy English Journey",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "0ef894c145ebe0c793dcc65528efcb889429434627a57285311268b3b41f9e6d",
+      "title": "Leo's Banking App Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "0f2f533c6b0cc398999168c253272fe593670af4967d88cadaac9f908de62a76",
+      "title": "The Vũng Tàu Tower Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "115186ccf35471b596ebbad6d0b7e5bb9e8bfb86184d6a3d4bb8e6884bacefdf",
+      "title": "The Bánh Flan Breakthrough",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "1225f1ede6a4b106cbc9e5d01aee3536e87c0595901bdddbbcc20cbe5e2e03e5",
+      "title": "The Unity Cup: Four Nations Challenge",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "12e2f536cf9feb000f23f16b97c112561982187c0ddacc83a9090eb828ac3c94",
+      "title": "The Sweet Taste of Savings",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "1303fcbdf10c16bd6bca777aea830c7725bd87328d49b8b91809eda38f9d70ee",
+      "title": "A Day at Emerald Gardens",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "130a30e537731d3714cbfd015dc207d505b001f32d4edfe3153705062418f46e",
+      "title": "Linh's Delicious Words",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "145d5c78e4066d2ec86fccd359ce2627b00bca428df42fac0d467e3122f8eba0",
+      "title": "Linh's Stormy English Lesson in Mũi Né",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "1460773a64a8e983e2332f6a17ab2171d92412635d17485717c9c562b9624722",
+      "title": "Mama Elena's Sweet Connection",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "153996b8843e9a442e8d6fc1f52d5ccae44b991e174863ed6536b8933bf389d1",
+      "title": "Leo's New Recipe for Success",
+      "level": "?",
+      "total": 24,
+      "complete": 23,
+      "partial": 1,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "16150c7034511b03867fd7483e5331fd4a518f90fb9a3eae22ad8fbcb6734d56",
+      "title": "Linh's Festival Writing Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "16f40ef49230fe5c7179b89c3eb16ce8ae8e296815c5f33df66b72f0d4e83ccb",
+      "title": "The Zucchini Bread Experiment",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "18a82e9e009775133067c2d4196afc26c64902a9e267f83fa37b087ea5037797",
+      "title": "From City Buzz to Mountain Calm",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "1936d44c4e1f060f9b8a6d23fb9d1c0b208c204f375604ec5e0485ea6259b345",
+      "title": "Linh's Coral Reef Challenge in Phu Quoc",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "1937377f7e4f16e42dcda6503a491e7ad40ffe6f38334ee469a842e3ac56e708",
+      "title": "Leo's Laptop Dream",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "197416777521adc6b22e2e745f89d589d8defcc4608cf3492aabce4ca02bc3d0",
+      "title": "Mai's Huế Chatbot Journey",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "1a17b1df05f2eabd7150db9938cb9e8fb02521973a5985df37d3822cb4957734",
+      "title": "Lena's Digital Shield",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "1a437d4191ca55003686340db33806293451a2fd110a79f774cd8f34af23ebf8",
+      "title": "The Summer of Unseen Work",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "1aa1d3562f0898832dfc1c4eec73a98e1e838ba08a391713bb2957f40147ed1a",
+      "title": "Linh's Healthy Bún Bò Huế",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "1b2ae997c60a6f148a2159d287e07d7abca3208726e733d33cb18b633a8deeda",
+      "title": "Mai's Typhoon Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "1c761ea980e7cb64397e309841a25181674f9e7b322a43e8728b67e107e2eb3a",
+      "title": "The Festival Flan",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "1ce185b4b33ee72dc9f9dbdbb80c9feaaf9d32af82eac6ac88a1573c3043549d",
+      "title": "The Tây Ninh Connection",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "1d7b5be2f9c99eb75a397ed544642f455a560c43dc713e04101abf9d6838acf9",
+      "title": "The Utility Tracker",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "1da951d06fb3aca3bceda81257f8bf777675764423f51dd3414a746f4c232fdc",
+      "title": "Lena's Digital Discipline",
+      "level": "?",
+      "total": 20,
+      "complete": 20,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "1e74d96dda63729d5e056d74d4e22ef18a6788449e6b160093a05b6bd8cd5d9b",
+      "title": "The Typhoon and the Harmony Concert",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "1eea152ed30f322fec5fef99320f6c9aab7f3ef0594fd3b2ea9cda48f2751f71",
+      "title": "The Secret of the Sunshine Honey",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "1f5c7be64e37d97666e9dc9c16d4dec3b404334adabf0854d949b27ecd50f1de",
+      "title": "The Friendship Photo Album",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "1fc3b1bcac101ce8cfa7023f56953c4808437a6cb1bfb35646e6ba2282efb6d1",
+      "title": "The Hawks' United Flight",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "1fe0ea84819c458879d2e3d76517d6fd176c3c06fa471b3ff8827df52b43823b",
+      "title": "The Smart App Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "2054606f6dcbe82b9b11eadf9a51497a1fd41fb7250dd2fabca9c3fcc369370d",
+      "title": "The Mũi Né Storm Cafe",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "20815f4a3fbfe0b3ff0ba679d4a772fbae951c692d00a4c5d95789b44773b9bc",
+      "title": "Linh's Special Dish",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "218c88cbdb4c5192c2d89eafafe7ca8c6bd20a257e9167bc919c13efcb8ddf93",
+      "title": "Linh's Countryside Connection",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "21cedd00b25f844b89460ed9857bc7a1274b90dbc993f5a7b620448ec45b4222",
+      "title": "Leo's Digital Canvas",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "21d5d1585b86aee45366f3efd9781aae40fbc7506fb84e1918834d2b35dbe76d",
+      "title": "The Vegetarian Curry of Can Tho",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "21db82f2af82313888a22b3a0e1cdbb63edad258d3caa85aedd449cb14d32ed1",
+      "title": "The Gemini Coastal Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "22ae33b439bbae48a7c32149207a42d48edcf8859f1ef85ed9f622c911ac3cb8",
+      "title": "The Pho Order Problem",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "22eabd5bea58f82e9fd9bfa630dd81cd497b6bcf3a60ba0f72f71d6508e6f48f",
+      "title": "Sarah's Secure Dream Home",
+      "level": "?",
+      "total": 25,
+      "complete": 25,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "23886ea6cdff7d1c67fda21eab2bd300c352590dae9c190aeb52aab82f68de13",
+      "title": "The Community Cup Challenge",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "239585253c1131fd93a0f530d41a1aa013a264dfb978a812a023d26a33d2310e",
+      "title": "Mia's Concert Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "23ea47ff349fb3208a2a20bab92a483775d8262659e7937cfe0734121bb757f5",
+      "title": "AURA's Golden Secret",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "2442fe7eff18c0a134128e1e325c7b2bd842256e899917cbc388cfb20dc13d83",
+      "title": "The Bio-Dome Glitch",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "2482f4f647291b2bb478229089c23ef7de07c9888e800d6e0713577ab3f7f682",
+      "title": "The Moonpetal Orchid's Secret",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "24a7c24918bde706a6c096e66ebc7baf0627d0ede1a0a13a35ecc8c89d8db518",
+      "title": "Linh's Noodle Pronunciation Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "24b64dc3a00db5c42cba2dd3ab86eccfdc1c6149d2d5ae6d62819867d4ef4c99",
+      "title": "The Stormy Bún Riêu English Lesson",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "25e9d1804c6be2d9dddb5838653472f70a88c33410cf97e554dc3752941ce899",
+      "title": "Linh's Sunny Spring Rolls",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "266ba295fdacb754e159ad305856b5bd9669a497e0ecb2a79bf800f8de11a64e",
+      "title": "Emily's Creative Climb",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "26e22ba72adc80341d5decda37d5ad6fa41a3dced4a900b1de53736ed7968672",
+      "title": "A Message Through the Rain",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "270fef064e1c9d13abf042faf6ddf3b2f4062df9cdabe55cc7da6f95abc7cbc9",
+      "title": "The Clock Tower Secret",
+      "level": "?",
+      "total": 19,
+      "complete": 18,
+      "partial": 1,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "27ebc1a635a7ebcddf2db8381e8d85cc744f1a48f62f3b5a3a636e0064b7d51d",
+      "title": "The Glowing Moss Mystery",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "28b0dfcae23316fe102b0af7a9b2e1627353f20ed9c2cbb894d31d63fe83b0e8",
+      "title": "The Mung Bean Mission",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "2925b35aad2a2a0594a884690c636b8787d6735462c45fd509f66eb51c8c2dc1",
+      "title": "Leo's Big Trip to Mumbai",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "29d5acad2d9151a07b758d37ed18fb926c904ec6254174bc16acecb625be25c6",
+      "title": "Hội An's Rainy Budget",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "2aeb3200679fcfff07ccdbc81db8588ef7258c07f5a3f23fd02949edeb902006",
+      "title": "The Artisan's Digital Hope",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "2b0889f781245419111d6b1e3a68f330ffc82f1a32affc481549ce02586a63ae",
+      "title": "The Moon Blossom Lanterns",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "2b4f6f56b85322bda103d8907838ef2c18c74354b8b6d9e3c0870b2f2eecd093",
+      "title": "Clara's Clever Cuts",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "2b6928330cbf8eb183fd13fcadb32263c9a403f186fe174ff20d2c9abcb82ee9",
+      "title": "The Big Match",
+      "level": "?",
+      "total": 1,
+      "complete": 0,
+      "partial": 1,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "2c5a023eb16aa6223957d90fa9bd436ba2578af3636825252f08b54fa187d95d",
+      "title": "DeepSeek's Cricket Gambit: A Cultural Clash",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "2c61d876332420e4653c385960db78deae803e0817f67b69e1616a108a2f9bd2",
+      "title": "Linh's Smart Flan Adventure",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "2cfefff74abcec47803b31057803a6e3678aa5a02d2c81c5d357bd789de86204",
+      "title": "The Dak Lak Wedding Dream",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "2d57e6c96e3eac75ff7d7260821ff97a97d7db6d47cc0f8a340d7e6af3220007",
+      "title": "The Model Campaign",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "2df554977ab50249f2794999c9c9ce140276502742a72589bbd4f1567707faac",
+      "title": "Linh's Ha Long Interview",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "2f0f19dbd2bc6501fc94664bd013891cc7e806140c9f96631e571f97b1f2fb58",
+      "title": "The Phu Quoc Grammar Storm",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "2fe32940cb824ed3c5d4f35117e1aabb4966e9448bd17b66926a14edfe8808b0",
+      "title": "The Golden Yogurt",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "302646a4bc0f4553420480a30af2c3d039225784ec4df7f92f1d179136c7d123",
+      "title": "The Harmony of Home",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "303aa356fed0d96bf3bd664cf0e61fb4a6e1065df8676236636253cd1f1abc3c",
+      "title": "The Delivery Dilemma",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "30c21dcfe9341ad4bd18c0c3a36473fb0298a095624e42425c8c43f458aedcb9",
+      "title": "The Cloud Cookbook",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "3255c5d60c15f78ce74a457782b30169783b81f4addeb32c2e5d81058c3acdba",
+      "title": "The Glowing Mystery of Sector Four",
+      "level": "?",
+      "total": 0,
+      "complete": 0,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "32874fc9e597948029f2eb1a5590bb12ca5404a85295179ff1044e5093a0fb34",
+      "title": "Anna's Quiet Victory",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "32a80113e3a350a8397587eedd7c49cdd2e41b8565dac0683d3929dc8849c70a",
+      "title": "Linh's Language Link",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "3328fc4587aa739225ddbc4c572daee7719fa5eb8a318a7daedd89309ca007fb",
+      "title": "Mai's Digital Pronunciation Journey",
+      "level": "?",
+      "total": 25,
+      "complete": 25,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "3352067935818bc2a788b6f1ee2760c5a2609c2ca19a202cf6663fdebee8ab33",
+      "title": "Linh's Digital Delights",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "346d25db8666f45ddd673c13ad05888a022150342b67957a216a76d77ba0928a",
+      "title": "Linh's Dream Home for Mama",
+      "level": "?",
+      "total": 23,
+      "complete": 23,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "34b5464dd918ee80f871f8b07c7a8e1bde912497d82d296f1db1710dd78ff3a7",
+      "title": "The Silent Study and Sleepy Smiles",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "34c2e0f1cf7a02c695d2a2dfcdf0881c9dfb1e388759a7aa24dd7ec7557f9524",
+      "title": "The Sovereign's Soil",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "35501becded6209a9db9053a6bb33ce46e359a56ef43453725d1a169d0634c0c",
+      "title": "Linh's Healthy Nem Rán",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "360b612302687aef4b87a031cd577d92f5b6188f7329d245d924de550492e119",
+      "title": "The Red Rain Recipe",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "3687f6793ebf20ba71df4846404fa5748af6dd6949e542e0b32168df98f076ae",
+      "title": "The Quy Nhơn Connection",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "373a46521f149d9f508e3b4b037572ba2f19ea7494e5736df7d9a634c25d5abf",
+      "title": "Linh's Quiet English Corner",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "3824d0a80c05e046660a81ee78901b8e114e558b6556440e2502cd89e5358f93",
+      "title": "Linh's Lý Sơn Dream",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "3855882b253ba9451126800f1d807909824fe15768f4baf4cecf0f10db7b60c4",
+      "title": "Grandma Lan's Sweet Solution",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "39033d173c7b8e4616dd09b518f36df7d220e0849454efb972ccf63aa8fae83c",
+      "title": "A Summer by the Lake",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "3a081498825fc220f30f792d832f77c3dd6dce1e00171a306babb7da5e6f90ae",
+      "title": "Linh's Digital Dream",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "3a37fcf5e4a18ee1a8b3fc5b322b1d3604f593af035315221c6b487a250b02fa",
+      "title": "Lena's Festival Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "3a914f6b58dc8f26e4e9e205eb64d23c306c0793bf6559bd29a315418566064d",
+      "title": "Sunnybrook United: The Team Spirit",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "3bc4c36b44c9c0b77b974d265af88aff2fc4c2c2e33f3cdd625e81e5b7f66b8f",
+      "title": "Leo's Creative Breakthrough",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "3caa60be788fe4e9a65b170fbf108168684b9c4d7e553a400b03721a85aa4255",
+      "title": "The Cà Mau Compass",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "3e66828bbbc7cedac23701b9a65088d8dd0e6e6247dc32bf68816cf826d163fe",
+      "title": "The Typhoon and the E-Wallet Plan",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "407658dfb17ffaef9a866c4c8460eee4be6d89393fe414a16f1b680907b46096",
+      "title": "The Pine Ridge Challenge",
+      "level": "?",
+      "total": 24,
+      "complete": 23,
+      "partial": 1,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "417f5df919b222ee54144487690193fafba6d983fd4f9307bbfc5532ab025d99",
+      "title": "Trang An Adventure: A Weather Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "42454d003ee7747ef6312c45c9085eeb0f165f15c074e183230a9256849efa6d",
+      "title": "Lena's Stormy Carrot Soup",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "42cdbffbff955018f98c2cd26a88d7ee814f61942d7e2407f2d01ff44a954eef",
+      "title": "The Stormy Deadline",
+      "level": "?",
+      "total": 21,
+      "complete": 21,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "447211f82557c9bb6c82fa334af7153433f8afc0c117fd2c02d31e75fdeb273a",
+      "title": "Words and Friends",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "44d581b6fd6c8512199a7a146a5a127afa20a9bb42eb8037b7491f4ff6cdd06b",
+      "title": "The Green Valley Cricket Challenge",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "4507b469793c3f8dd8485eb447811e6f16393bdca5dc261acb624afab7bcb439",
+      "title": "A Taste of Vietnamese: The Bún Bò Huế Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "450d004ecc66214db93b261e487e1e7eb1b5f8b9ba3f657ee7e427d9277028e9",
+      "title": "Mai's New Language Journey in Da Nang",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "45b1141c61e5c93128f8d011c31ece7567e408d564f735c970e44c1eb93b95f4",
+      "title": "The First Storm's Aftermath",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "463a4c30d9bbfd0240875697124fba64bb622d70a4d040884c4bc1d8386925e8",
+      "title": "Minh's Mountain Home",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "4691725468f2c95cfa223626bde8ad9ed7c4385c8d82c05b3116d7edf877a35f",
+      "title": "The Gemini Connection",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "47475737cc0f7af3935cb96970d2eb6d9985a526a03d9585523d7cc62c889eb0",
+      "title": "The Rose of Hope",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "489bb57d94513b9ec4918dd037b27957a41329949f8e070bcec6b5df80467665",
+      "title": "The Stormy Dinner",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "48af4549229f51c0707c1043ddc57957d7acdef4919c209e8afa943ca52431bb",
+      "title": "Snow in the Sun",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "491df0793693395effddac52af09135515a4fde312d79f9c255d5d75665f6a2d",
+      "title": "Leo's AI Art Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "493120ce4ec88f0cb755c513fee074f0a443bc405beffef49fae8b737aae97fa",
+      "title": "Linh's Sweet Green Bean Secret",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "49d636d43322d1b354adf2dfe37ff1e871ca4c2a153f7743b81461da394188fd",
+      "title": "The Peach Tea Photo Adventure",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "4a3d80e9749f953f4b3a37f1cc40d76b6a214e7e35ff37674c734da6d385f12d",
+      "title": "Barnaby's Big Farm School Adventure",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "4a3e79ce9c6bea273d3a261dd4eb71a0d769b00c2269ef7147dcd118a1aa4628",
+      "title": "Da Nang Dreams and Dollars",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "4b5aad92d61c1fe5bf365094e48d1fc433a940edbd5780b6cb8dfad780677e84",
+      "title": "Linh's Mui Ne Reset",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "4c16878460241114eaa2d0621e6d772e14310886cae4c65517b8a162dba08144",
+      "title": "The Red Rain of Tây Ninh",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "4e112657672354232dce71d19d67cb81aaac3516dca6b8fe45a29f24f605d2d0",
+      "title": "The Secret Spaghetti Sauce",
+      "level": "?",
+      "total": 0,
+      "complete": 0,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "4e31afe9f219a8520d8fa2db73238b61b7a6e2f78368149f8d58d33a65264dbb",
+      "title": "The Shimmering Peach Grove",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "4e6110c1b31c565ab4d069f2ea6c1182b9cf852979335f1c90bfa979106b9fbe",
+      "title": "Linh's Ha Long Bay Challenge",
+      "level": "?",
+      "total": 25,
+      "complete": 25,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "4e6c8f17971541adc8cc1dc7e39335676bb9917303458980af30e85bab5fb9af",
+      "title": "The Mystery of Willow Creek's Hot Honey",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "4f232a473b1acc995910f6a295240f907fd715fd3f00ba7b9b36c10e05de3128",
+      "title": "Linh's Stormy Kitchen",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "4ffc3960b71513642015164f74ac8f9041f55217fda52e26fd7ebc64927f8847",
+      "title": "The Secret of Whispering Caves",
+      "level": "?",
+      "total": 0,
+      "complete": 0,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "512a0a20f1846c506b9997b8f71cf425ab0fd4416ac0d52377bdfcc6f93bd1bd",
+      "title": "The Secret of Freedom Peak",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "51647da8c3945a78bee74f2d704d44c9bdc349b6ddc6a7a4dc0e5800fa0d58f7",
+      "title": "The Garden Bot's Helping Hand",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "5197871bdbe15cc5ab15bfc49b4bae071f60dec03562fb1aa4ef80302803f163",
+      "title": "Restoring Memories: The Wave 25 Project",
+      "level": "?",
+      "total": 26,
+      "complete": 26,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "52a25c1d4e23fa41e78bd167c7427d9ac3413cd4fea0edd7012176c5fe4e5814",
+      "title": "Linh's Sweet Comfort",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "531fca33a1063b051aca7085fd83990767e43687169176ca105a88a94a3da3d3",
+      "title": "Linh's Da Nang Dream",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "541d6af651d1acaa884d49d12e95cbe79c985120589817b4d0f2e454d5971fc0",
+      "title": "The Digital Canvas",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "54c746e015a80dc7ca6c71d33cc6c7399ecaca7f615f2e72cd0535a8bcca4e91",
+      "title": "Linh's Healthy Storm",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "569dc4f1a0442425a04a990db9a40c4b8b2a56a8a0749bd676a4446c8f8cb1ab",
+      "title": "The Healthy Chef Challenge",
+      "level": "?",
+      "total": 0,
+      "complete": 0,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "584fb0bef0bfd51e031089b6cc3d58d0d93874c40eb21af9f8296164a2fc834b",
+      "title": "The Healthy Art Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "58b4312896728223cd044ffe66d131186321514020b6154d0fb67ff75223b57f",
+      "title": "The Little Bird and the Big Rain",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "59f9d6e70c859ea3011b4a5c962c0b75e3ffbaca457ff00aeb333bede373c5e7",
+      "title": "Linh's Quiet Corner",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "5a18ac26fdf68251af2efbf13bc3da0efe3cbdff1fc8be851b85b3c9fcc9b6d4",
+      "title": "The Noodle Scientist",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "5afc78af831d51a0ba81c68ff8cea8f8df016d6e3449a10c11357b18c02b1669",
+      "title": "Kiên and the Strange Matcha Latte",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "5b580b4ad363b902fd67b23498263fd508865b9f12bae671ab58727c64efed34",
+      "title": "Linh's Haiphong Plum Syrup Challenge",
+      "level": "?",
+      "total": 23,
+      "complete": 21,
+      "partial": 2,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "5b5e5bfde9e44ce69abe8eefa9d2f39ec6df85b7bde6da34fe7f5931a4ef77a9",
+      "title": "Lena's Digital Festival Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "5be2fe61e37eafd6d62cd5541a4e2c5a5b68e512baeb6415f6d7a954baf59786",
+      "title": "The Quiet Bloom",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "5c03ef80eaef07009c816be83eede415e8f280e2dc78f649f38f85853a26a7b1",
+      "title": "Snowy Dreams in Hội An",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "5c51fdd44ba4a9dff222a5ac6fd0828da0c671d7cd3c18d31487e3151a568de9",
+      "title": "The Melody of Strength",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "5caab70a745eb21a5dcc28a114ef89b83ad3d41cf939cbf5b233bb5262c9c67c",
+      "title": "The Legend of the Golden Embrace",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "5ddceade9b6edc9bfc1c4d6b8207623cd8ac02144148334700bb5ff496318e5d",
+      "title": "Linh's Crispy Legacy",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "5e28eb26f1183382ecf407c81470f5c1a28021a0d34abf42be94f33016d8447c",
+      "title": "The Gemini Garden",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "5e6b59bfb2bbb714f7ea02b3979f2b665111329957e541918bdbc326a4b8c538",
+      "title": "Linh's Ly Son 3D Dream",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "5e729d544c8cf16716e9f996068c880f9238650920f0c825ab9dd2b77c27ff62",
+      "title": "Mia's Laptop Dream",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "6038a7e3f9bad7f3a91c05e4c84cf68355723cf8517626e7e2d1866254cd8c9f",
+      "title": "Leo's Green Journey",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "607681b1d0f0f9eed684bcc8bb6a725c25c3864696d5dd10c344a433c860baa6",
+      "title": "The Trauma Code Connection",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "60fa600712d6b88833dfbc5f59aa6cfba180d2907ea2712a2f9367f834e62b37",
+      "title": "The Priceless Family Picture",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "6105f275b612c02f9d111bf3266cd7246432d31c3e050a4a9c1665cb897aa274",
+      "title": "The Tam Đảo Trail",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "6142aa6bc7b0685cea2e6d3edb0414cfd067d126e53b5081f627958c3b13ffea",
+      "title": "The Village Well's New Start",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "617d632a333568614140ca6c29f089fe65df628d640959634466bd702b189493",
+      "title": "Linh's Vegetarian Welcome",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "6550fd6b3ab2e23f5f2e324a04d4a1070a7568415dc7b51c89554697ccb29845",
+      "title": "Linh's Ha Giang Adventure",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "671828cb3f27d4922796fc91b34f64c3e749b0a050a48c3ea5280d6134fecc6a",
+      "title": "Linh's Promotion Pho",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "676db19bb7ad5fbc33568a29341aabb3352f5a1b3ca768c4b7fa0ee8fc663479",
+      "title": "The Locked Concert Ticket",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "67be73a757fb06d78ce36cfee6b628a8b9e039fabb2a29e84e2ebc3fb54504c5",
+      "title": "Lena's Refund Email",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "67df9385f8718fa45986ab0c708d3610be1830e2696a7a258b7f8bc931ad3bb4",
+      "title": "Linh's Salted Coffee Dream",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "68600141ee390bf32141af9b6e851a46bcad69a7ec7c20a7e1b69161d756519e",
+      "title": "Lena and the Salty Coffee Secret",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "6875c24708bfbf0f6433a0162935eed9fd7a677670f060869151c0a968f808d9",
+      "title": "The Mystery of the Missing Spring Roll Herbs",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "68fddcd1e6a2c4a2be84dd14cede8c4b9db4be843d24561eb41f17e086f0221a",
+      "title": "The Vũng Tàu Salad Secret",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "690ac2167fed0af278ea4fae36680a77fb3d094be221004acd302ebf0ee566f2",
+      "title": "The Billion-Dollar Flavor of Đắk Lắk",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "69ad6934451b79bbea856de11df689b44646a4c80aa4a82c64dffd26585f87d7",
+      "title": "Linh's Lantern Dream",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "6a0d9062a22c3372ce01820b841591f28c6fc2b4bb9746a590b4de1651af0a04",
+      "title": "The Quảng Ninh Rose Sketch",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "6a18660457ed10a9cdd7cf77d9c95caca3a9a6b38423837a58a9d0bde2784fba",
+      "title": "Linh's Healthy Recipe Blog",
+      "level": "A2",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "6b452af750e62bebf05b0048e1d44eede520b5b01e47c18e14d4bdca26b39993",
+      "title": "Lena's Good Habits",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "6b7e23b32525c45d9d3951282e8680d54e4d58ec99ee25c12f6ff06a09aced44",
+      "title": "A Family Trip to the Sea",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "6c2b63b34cffce6eec17357d0b8d81e0d1856229e5b36a2525f7f58a7605456c",
+      "title": "A Sweet Welcome Home",
+      "level": "?",
+      "total": 27,
+      "complete": 25,
+      "partial": 2,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "6c561ffdebc8aceb7f84c414a579147ca5127283365c105d50e21c3393b9dcf5",
+      "title": "Leo's Latte and Laptop Dream",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "6cc125ac3035007ad883a75ef916d5f9bc9d7af3406ee3129ce646d0a5e950af",
+      "title": "Leo and the Creature Quest Mystery",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "6d226577ffa41070655b190063260fcfe43216ed9f7687573fb32316b8f73d7e",
+      "title": "Writing Through the Storm in Hoi An",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "6e2a5f52983a20800310bac44010aa168543531f56dfb1c5ce78f6e84679dc3f",
+      "title": "The Apartment Challenge: Leo's CV Quest",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "6e417ae03715835b38a5bd2399d5c4d83108486f2a829b9a79949f7627fbb27f",
+      "title": "The Bánh Xèo Breakthrough",
+      "level": "?",
+      "total": 9,
+      "complete": 9,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "6e74d72a0995bdadbfa14a7aab227013dcdbfcdd462518ad5ee61cea949622d3",
+      "title": "Linh's Tết Concert Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "6e87f77171b6607f80a4f1b17d149714c336dc8516b3d7591c61c8eb716adef9",
+      "title": "Lily's Healthy Kitchen Adventures",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "7085f948e5669e17571f27ab97eac843aea66f203ee3e4c47c4074231f267bff",
+      "title": "Linh's New Balance",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "714281f04384df31d8a9cee9744412dfbe26d8d5a77a79b31e1a4172aa82e483",
+      "title": "The Family Lasagna Day",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "71ee53a7053a2f7486e509707eb4813ecbd1f1429e6eb47d0efa00f6a2463ed2",
+      "title": "The Lychee Tea Refreshment",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "72d5c9888a49f4e3115d8573194d6cafd550c2fbed6c8c403d6489ea8f66b99c",
+      "title": "The Lumina Expedition: A Glitch in Aethelgard",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "73f56d444dc429ebf5634e9ab801e2fbfa8289df339240a1b40065835d562dd0",
+      "title": "The Crimson Sky's Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "7428cfe41c6767c9fc0d396b899f14213e411e3a78bf4024bca14270e41bc21d",
+      "title": "The Gemini Garden Box",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "7551553c7cb756fd0dc8e9ea7c567a1f7852e95d44ce9b85746b18f95f47f107",
+      "title": "Lily's Lasagna Soup Experiment",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "7638138760fac2931428959e0e8192aa4ffd61c55f630688a40af214a6dec290",
+      "title": "Linh's Locked Recipe",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "76f1d108d4b7b3608937fade0781d31aa5ff73b020677356d386fc79d8a01953",
+      "title": "Linh's Ly Son Adventure",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "7774daf20907a3582b0b54c9892abc3bbcc424ae77acbda178e34a6454277bb6",
+      "title": "Linh's Matcha Storm",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "779dd1f2fee4ab9a6c9737e0cf2149ee502d3f91b015460182d49701fe9635ba",
+      "title": "The Taste of Heritage: A Vietnamese Journey",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "784e5c2cb7000de6265aa43234e6649c9d4612824086909c5a3f60166c1e619e",
+      "title": "Lena's Healthy Plum Syrup",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "789c7d7e74f3dfa5cc20581311c2a15d55c25e184312a229b9c962b25577715b",
+      "title": "The AI Art Assistant",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "78a6f6d041ba386ac032ca0b687978042b0a7c15a640f95cd245dffb61f8ce5c",
+      "title": "Linh's Market Secret",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "78c8984e31446eded15cdfa3c5339c257e2a4d1f0c54dc0eb00c535aa1b0fbd0",
+      "title": "The Cafe's New Language",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "794e6cd73551a06483cad01f297ee0b556f3f0efe3794e85a6226367a2ed773e",
+      "title": "A Lantern's Glow in An Giang",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "7998204def11d873d52573aa5baa394893267b828659db28a9ea5410e691bf6c",
+      "title": "The Lantern Engineer",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "79cad4fd1fd9978ada5fcb24a8ca2077f3a2eab74c3bccdb1e7a8ea5122afece",
+      "title": "Friendship's Password",
+      "level": "?",
+      "total": 26,
+      "complete": 25,
+      "partial": 1,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "7a528c1aacf3178614a3af61a83b1220740f2a5cf987e10f69a0f0f428b25be5",
+      "title": "The Typhoon's Gift",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "7ab4f564441efb076b9eb02403c12804eaacad14f2d9fd8d69a804d70e892393",
+      "title": "Lena's Back to Basics",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "7bb4d02204c475d12de07d359e043f9c36aee8036bc00c5ef384f4c103e96430",
+      "title": "Hanoi Harmony: A Red Canvas",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "7c322889f7d8bf95d7981ea124d78c0df89a094e15976f42c021960eb875b034",
+      "title": "Linh's Digital Thank You",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "7cd4a4907820385327ed0b7e28bdfdcccd45f6391a7977dee405ac6813452b89",
+      "title": "Matcha Magic in the Storm",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "7d43b5930f8ff0d4b5ebce2e2c3fbbf0976fc7441496af754bdb52db8b6c7bd5",
+      "title": "Linh's Mountain Letter",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "7d6cc7252b4ecf2b6e125a2fd0fa3e1763ba1949a66f290b22fa59db7b9b28db",
+      "title": "The Tam Dao Password Mystery",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "7f3a103709a7d4444b00f25d476266fd6766f3e1d87d9c2f10c297ab552d46e5",
+      "title": "The Whispering Shell",
+      "level": "B1",
+      "total": 0,
+      "complete": 0,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "7f5b838693eb921c91ce85d0dd4c1f0bbf792a59db40d33843c7ec477c8f1a4d",
+      "title": "The Secure Interview",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "7fa7365cf54bef23d6440ec6d799b4475abef38ffadd13f8118537eea304ce8f",
+      "title": "The Halong Bay Project",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "7fb87ebebda1bb9d4e0f8893ddf16a6d3e2d54e5666ea496a3e9321dd3cb86a8",
+      "title": "The Onyx Tempest",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "8024471238242704d4f5b0c3d86b75b01e64e44cc7428fbcb78f5b2841e09be0",
+      "title": "The Perfect Bún Riêu Wave",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "80af5814cfec3ce2715247096cef1536de6bc858547d3905084b99516c196892",
+      "title": "Lina's Da Nang Souvenir",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "80fe510e7bff6a07851c32c28cf3227dab051ef81f1b51ceddaa70041f724c39",
+      "title": "Linh's Da Nang Dream Home",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "817759603fdeb34619262a082ce80adb856f0e8ba671da69e35ecc794bb6d8b7",
+      "title": "Leo's Budget Balance",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "8193393958c3c60b2e100f397c085e00579cbfb0d95a243ada04d75e15f9e909",
+      "title": "The Festival Twins",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "82380b9d283eb0c9efc53bba5337762cb3ad7e8097624ab1fcf7e3138c6c5628",
+      "title": "Linh's Special Card for Ms. Hoa",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "82fa2e97cbb7c39973ae81cd28ad3339b83aeb804ad04884f2fb4a9b24d7d100",
+      "title": "The Storm and Our Strong Team",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "83411f40bf99e4cb602ac6f16f267169985066bacb03d97e0e82155107bd31a9",
+      "title": "A New Chapter in Ho Chi Minh City",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "834f5de4e65fd407ad03ad2d24bf3bdfc5050c7ca6c4b307adcd1b1e41223741",
+      "title": "Lina's Salt Coffee Dream in Nha Trang",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "834f6cfa8d510f46fc0000422ab8d572e80bb599f61fcb59dd00f7fc76abe5c5",
+      "title": "The Emerald Eagles' Flight",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "83b1e195642b9fd16700a363e00ff63573009e1dc300a64aaad1db14b14fe5db",
+      "title": "The Hà Giang Craft Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "83c5e6789b138a30bb145801e665d87553eebf2330c078596ccf4fb52c91b3a1",
+      "title": "The Nha Trang Culture Code",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "84c18fa9b124dba4e5fc00306d61000c95ed545c1a90ba5c5da621eb72806011",
+      "title": "The Peach Tea Prank",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "858c3539233bc051d46dc49301101f370892fe33010b3bb60af2230674dba43e",
+      "title": "Leo's Digital Balance",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "85a6d7682eae22dd36cb5454cc5809a3376d19a297e75907f5c15ba530be514d",
+      "title": "Mia's Digital Lanterns",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "86a25493b7c9cf715fcd4ddc0026935dabb6148525c0cd6a2cd67d0d26fb1f53",
+      "title": "Maya's Sweet Proposal",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "8743139183ea9e68ec8b0f4e336f797bfb1a23bc94623832dbe6f2493b5b7fab",
+      "title": "Lina's Special Dish",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "89bc6c5df19a30bbd32abf4f52d46e0e4e538d84390f77519f6a735549061fb8",
+      "title": "Maya's Matcha Mission",
+      "level": "?",
+      "total": 0,
+      "complete": 0,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "89ee261202e1840af26481c04d5fcce48f923a2262c252c78961697bd959f6fb",
+      "title": "The Art of Clear Words",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "8bc3a9c46a7d4a67273be6701307057ceba5985f266315e21a4c010de962d56d",
+      "title": "Leo's Refund Quest",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "8cf85130d5ce5c1dca058c8a962b52fbbe6cc563e736714e395b44f2fc6f9ed1",
+      "title": "Linh's Sweet English Order",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "8d34263146282e7830c0b108c82b600a86af3c1f7381a087b53abb86c03ea9c7",
+      "title": "Leo's New Start",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "8d4ec86a5652886564f49913c115928c61c996c66408060964a25749e8d42031",
+      "title": "Lena's Smart Schedule",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "8d75d4ef9b6fdda93461018740a11a615d36234343dbab526acd54d9065c1054",
+      "title": "A New Home, A New Language, A Big Storm",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "8d85a0ed7eb27fd2b40239301c0b3b9cde5fe2abd95426a944ceb72d3bbdb266",
+      "title": "The Phishing Fighter",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "8f98e6f38749a426823f337fad4235b358f9bba030f6458b66efa28774c6d227",
+      "title": "The Storm and the Smart Art",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "909a5a9c5d748eaae1387ecae924ecf3e107dabd85438b0e232a0765eb0fd1f3",
+      "title": "The Old Photo Project",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "91825e13669caf073d1af5a46cab8ebfabac00626afb0bff4a51ff0e087ba90a",
+      "title": "Leo's Job Letter",
+      "level": "?",
+      "total": 25,
+      "complete": 24,
+      "partial": 1,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "91bf315f368e96661d4165dc0b1c061cbd3b5af8ac9e4d4981269f944beabc2e",
+      "title": "The WaveNet Dinner Dilemma",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "92f25d934913e9bd723bb727e33795cb141f6c666a52f9e6db393c7ed9d035e4",
+      "title": "Chloe's Cà Mau Connection",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "930ffeac073cb941e063c21f8e16885258ebaf7759d68f7a3012e236e245ac21",
+      "title": "The Secret in the Sauce",
+      "level": "?",
+      "total": 0,
+      "complete": 0,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "936a2be5bd53b080b36f2df40505b8dafef65068b8ac2a44b2c6bbbab340416e",
+      "title": "The Bun Bo Hue Teamwork Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "94ac09a976307614e713ed1e8021f0c6799acb8b7570466cfbfe21197c7f5982",
+      "title": "A Lantern of Friendship",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "94dc7c135e1a2cfc01e5419803c86399fcf740d99a7bb89bc547be349b1c7066",
+      "title": "Lily's Red Background Art",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "9513d8cc5bddeb2cc91c9ed344fc95e16e09e451d6b09813d0b6871a06497aa5",
+      "title": "The Installment Avengers",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "955a40fe4a70abf20eac260f1273c697383480bd1a7c5fe493e446d3efc55260",
+      "title": "Elena's Legacy Lasagna",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "9587425be86792c23219626d19ec6dd6182e4acbb4e6b55f383a163013ccfac3",
+      "title": "The Pluribus Park Project",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "963a661dd2f3da0602fd9c1e4894f36fd5daae3d980d4ad45104c6447c9a6688",
+      "title": "Lena's Library Language Quest",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "969d2e54edf4936a4d3d270b233bf4e7f8d700dddc56ab41ee8078691328b394",
+      "title": "The Storm and the Smart Assistant",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "973287f511148ad80e45776f2361e701bd4afabf135f1b53eec994863b2cf004",
+      "title": "The Quy Nhon Project App",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "97fb42589d4de97ae8bee51db979a4707e0c2adc07bae2f353f1db9ebc2230ab",
+      "title": "Clara's Healthy Steps",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "9807c13b7192bddb37649f01f23fb4e93daec8f8ad018f2d52090af6cddcb90c",
+      "title": "Maya's Toy Box Art Show",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "98aa992027621e938cfab872de07e94832b58294ede772faa299029fef32592e",
+      "title": "The Prairie Thunderbolts' Unison",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "98c2f53ec2b8b00cc126bf7b19fd669b5fe85fd1d081bd1799c73615865ff0b7",
+      "title": "The Storm's Silver Lining in Hà Giang",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "9af1bbfab67ca97a3bcbc37d68d067edd77b6abb6aad4493bc2ccf0b797ac045",
+      "title": "The Green Journey",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "9af48e535a11c4291e7f02bb9cc14955745cf6c55657efe80452de4e32d007e2",
+      "title": "Linh's Sapa Song",
+      "level": "?",
+      "total": 0,
+      "complete": 0,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "9b0d52511d3280bdad59fba148638496c150aed47f6e04f647be4333fbf5fd16",
+      "title": "The Đắk Lắk Discovery",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "9c2bd15c3dcf3487c1e24448c14b7e0a260f83a2669d27fa78ef693cb0950bdc",
+      "title": "Typhoon Celeste: Anya's Forecast",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "9c7f34b4b9e6ca7b61b1d185ed09662c845257dc64ebd95e8560ff7c09b7bff7",
+      "title": "Linh's Island Budget: A Phu Quoc Adventure",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "9d70efd37cbe154896a71ccf88cff6b9e6cc5506b4fdb449353232c3ee1cbee0",
+      "title": "The Brotherly Balance",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "9ddcbc54594245602fa2c87917be46ce111470ee927b2685bdb6dd40b33e05ee",
+      "title": "The Stormy Presentation",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "9df302a21225853da4988f895ce317a33e213ebed9cba5c8ba8c6db760cfca06",
+      "title": "The Krathon Storm and the Matcha Latte",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "9f4532fb86c6c089e1bff7d3d1254d851d60044c239e581b944622c8ef998c4b",
+      "title": "The Ascent: Lena's English Interview",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "9f7626bb81ad99002b202b04e68b3f9b86598812e6218e54cde33a9073fb9569",
+      "title": "Mai's Brilliant Journey",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "a0c6f537b59b14e7129a8add4c0c1caa32b2cfdbb4db501b609df90a8ddcfd9a",
+      "title": "The Phú Quốc Presentation",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "a33809ab9162d746a940a9941dfc2f4194e7fd3b55b7bdd37bebb92410a18d59",
+      "title": "Linh's Tây Ninh Tech Dream",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "a3ee597969e618024781faecee8825fe4b3435bd949836bc52609165ab572191",
+      "title": "Linh's Haiphong Connection",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "a43f2afb4cb66cc0c7b4f844b9d708a1e2a5e86ae80c1531b1a751b68581bdef",
+      "title": "Mia's Moving Deadline",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "a4b954e1cd3bf10b44f64fb71ba7b7b1b3cf02d58d33d60c9b74dea242d099a9",
+      "title": "Maya and the Storm Story",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "a53549cd1a74b617a866688e950c8cb3ebc9aabdd34d469732f54fa39b300a76",
+      "title": "Linh's Zesty CV",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "a54f761a7fd7b6457666bc12746582ac0cfafce8d152d9b365d90dfb1689128b",
+      "title": "Mai's Smart Pho",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "a5b7de9ce7e2f83d7cce0e3e3db84bc671dae45f9d290903aa88ce2b6cc070ce",
+      "title": "Linh's Hanoi Presentation",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "a64f15a323954bd29949b8511cfbb7857a66b2a05d46686703c597d6f3344a6a",
+      "title": "Linh's English Job Hunt",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "a6f8998dd8972def2f61fc0c7bf8d258ae76f3abf37deeb887d8e87d310f37d6",
+      "title": "Liam's Sunny Escape",
+      "level": "?",
+      "total": 1,
+      "complete": 0,
+      "partial": 1,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "a7254325486796d27e579996c861491dd4c0cceed5ceccc97966436a7a65b35f",
+      "title": "A Twist on Tradition",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "a97d0617277abc27e5bceebf305a42669d2845b6ba0e090d207d449ef196663b",
+      "title": "Mai's English CV Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "a98e09c32a0cf9dcc8a73455f34d97adce76aae98dcae3062d73c9ab4c7ee873",
+      "title": "Detective Kien and the Remote Ruffle",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "a9dd31e0051fc5db73170429f3b3fc9b699af78532e3e1a25d7973c8f5c85352",
+      "title": "The Red Rain of Huế",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "aae8cbf2a7d13d84c7caf02d6311ee5b9323cd5282eebfdb207a53d5339791c3",
+      "title": "Mai's Cao Bằng Adventure: A Writing Journey",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "ab80320876a92649414208301836f853aadc343d3d143e7c19ed807de99884a5",
+      "title": "Leo's New Path",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "ab8f48c86fdac4d65b5e008b4c617e946f7b23b444348b7294b8c7248715c426",
+      "title": "The Pixelated Muse",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "ad78998af7f649603dd003f6ceef32e866340aacc2f024cf60d5c17542bd57ae",
+      "title": "Our Mũi Né Polaroid Adventure",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "ae5d8c54547acff30ece896ed902eb65bb55bd32350fb70cedb888737101a465",
+      "title": "Linh's Healthy Smile English Class",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "ae72cad6371916e4b6c97a2b7b157cabab768297bae3ac0a1b1e24d3fe4cd092",
+      "title": "The Housemaid and the Forest Whisper",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "afccd56269f4097369dbe23470621bf3cc15047defb98d9fafc3bbcf7265f817",
+      "title": "The Stormy Smile",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "b0717498460dd4afb57ae74236af9b27ad6f3a487753c1f88f59ba8d31a94768",
+      "title": "Minh's Nha Trang Dream",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "b0d2756402207abbbbffbef9087b37446eee6d522b45eed9604e8600d0e9fee6",
+      "title": "The Vung Tau Teamwork Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "b0f2dad47ac2720cab8f4df02230a1ff6218cfb973a0283ee1c7838212717c5a",
+      "title": "Linh's Digital Dream in Da Nang",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "b268b3bd944e8e8cd8bd066d04ea18e3592533d6c89cd3eecb08ff2a2935015d",
+      "title": "Detective Kien's App Mystery",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "b2daa20d9659628ae03950a71d59170aea5c820ae809b163355698c4dff69661",
+      "title": "The Polaroid Path to Confidence",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "b31a5fc76060ff3c45f2668fc957e2b7e0e0a29dd2143a6549b94b67ff6997ee",
+      "title": "The Boundary Beyond Borders",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "b3499e6881d9fdf91b47aa2460f458e51529084fe4720d62a26175c1f370e313",
+      "title": "Linh's Rice Ball Remedy",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "b3815ae362e20dcdd6272e57c3618e9cd3d8327873860cd71115c2fce45c01da",
+      "title": "The Secret of the Sunstone Flower",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "b3acc043a44e55fc90cea53c2bda9e75128c4f1581444323e5747dd02fef9110",
+      "title": "Linh's Phu Quoc Password Puzzle",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "b4321c2a06f56ffc1bd0499ad18056e1a64760b1433508b32f9fae82c082ba77",
+      "title": "Leo's Creative Journal",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "b51c99d54bceff347d6efb9eaf352bc4596959ae39d5781a1897b18a93486a8d",
+      "title": "The Botanist's Odyssey: A Global Green Quest",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "b61c064dfe496f8e0195cc84937380a0063c07ae121b4ddb650b4ef4db4f6fc6",
+      "title": "Linh's Sparkling Elephants",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "b751133817357b635d4335e8f91e0dd46113f1282b3fb55c2cb6f6a8380ba0e3",
+      "title": "The Botanist's Grand Tour",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "b7f435e14d785fa83e4facf12cbdbbe38d0c187119a12341955c578a2d4f3d6f",
+      "title": "Lily's Peach Tea Deal",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "b835a2225657c29da5a661f70caf1beaae6461606e3b00acea7f004339a78808",
+      "title": "Lily's Lychee Tea Lesson",
+      "level": "?",
+      "total": 17,
+      "complete": 16,
+      "partial": 1,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "b890d5e68254bfc7af9e79aa965ef20edf689a6c7546249a61a6324e31a4f1c4",
+      "title": "Lily's Bình Dương Cooking Adventure",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "b96fd2b0b9f2418c4d37898e8ba137bb0edc716a314cff93e87e64c19f1d8901",
+      "title": "The Sweet Teamwork of Chè Đậu Xanh",
+      "level": "?",
+      "total": 27,
+      "complete": 26,
+      "partial": 1,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "b9ec1632fec15f4227c2126e5d3107df4fc25667b38ba7dba2d933e57043270e",
+      "title": "The Con Dao Connection",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "ba2dbf8bb57ce7239ad946cc250bc0660feea85eeae2445157f54060407aaaaf",
+      "title": "Elara's Flu Email",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "bb29f6fb74eb2589a0cd8a2ea2b0b88407ef3d80531bd7b405bcd1c1e289db35",
+      "title": "The Storm Baker's Secret",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "bc8aaa38be51ce8d7b73b5fbbbed06c653a526f362b23f91f71d732ec1ebd5fd",
+      "title": "The Green Heart of the City",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "bca96b095ff63bfe62180b7da946ee61b1c19a7102492944ca923119092df333",
+      "title": "The Park Portrait",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "bcb207482fae91b8d151cf8994a51e7c37befc4ce5a016a4fdd7d42457d8a1c9",
+      "title": "Tet Memories: A Family Restoration",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "bddb09233f668cee12c2bc07edb5eae8c5c62c646b7bfcee17fb776eafe132e0",
+      "title": "A Stormy Supper",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "be108db61bf5eaff25f7b52b582abb4e271140a14015464e0716055a75805423",
+      "title": "The Mộc Châu Storm",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "bee1c038867cbde3a95379c19a0ce013c184b7b36256dd9e452828cec5ad8dd1",
+      "title": "Linh's English Email",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "bf020f4ddb9a56dd653d799e649fae21102730b08b3da38f425f1611fee1b4dc",
+      "title": "The Riverbend Raptors' New Game",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "c15920b120cdb3751bc0654b7019f343208b2d83d616aa60483731e147eb8875",
+      "title": "Lien's Hà Giang Art Journey",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "c1ae78bd84cd1b33158f3abf2e83fd8f892d4fe4fa7b7e65d7ab08544a4eef22",
+      "title": "Mai's English Recipe Adventure",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "c2c187ceb7761d53de55354fcf8471b66c3e8b45ddd8219dc8fd6f1fcf0d9cdd",
+      "title": "An's 30-Day Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "c3a2123cf5925cbcbd1df08b6f6aab6742f715f9bd01429c26f0ad6b5224cca1",
+      "title": "The Whispering Reef",
+      "level": "?",
+      "total": 0,
+      "complete": 0,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "c3c79ea8dbfe029f48fac22d476dad389ab2c51e82b7288264598c7e334fc163",
+      "title": "The Lost Signal on Mars",
+      "level": "?",
+      "total": 0,
+      "complete": 0,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "c40902c7b19e597bc2d20d67ad632fd777c7da21ae9dc933376c6833d3bb8e06",
+      "title": "Ace Newton and the Friendship Games",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "c49cd855bdcaa78dce7849469eb59ee042dbf6643b7f289b0981e64f342447ea",
+      "title": "The Navigators' Comeback: A Community Court Story",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "c60cb6ce6c4f71a93cb5f70a82675d0b3824888d547d133200a72506dfb84daa",
+      "title": "The Tropical Snow Dream",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "c674c640459e7b3cc5b16cbde305ef141803ffd54139cceee162dddcb23c4188",
+      "title": "A Difficult Decision in Hai Phong",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "c6cbb420d16874e465dea8acd975be1c2f5f3690f627be2a3a0e7175ad0e0035",
+      "title": "The Friendship Games",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "c75df5f1c7cdfda121a4842eea3df834c1ec57090105884a3d1416d5ca438238",
+      "title": "Leo's Special Dinner",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "c7639c6e2068fbb1e03f8ff463f79b53b0f29fa62da5e6440913be1a856cba49",
+      "title": "Linh and the Well of Hope",
+      "level": "?",
+      "total": 26,
+      "complete": 26,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "c76ffc1201e70c58b5a64b64ce16af6c8ead0e704ea2c3e9f0a4fdeadbb17021",
+      "title": "The Mystery of the Missing Hot Honey",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "c7de1a49302d99598713e77cf520f93d3c697b800a5139b3c9f7f5fadb681ed6",
+      "title": "Lena's New Start: Budgeting and Belonging",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "c7fa5d6fc3b9e559ce684ff32917f08253c84d53739effc321a4db5123810723",
+      "title": "Linh's Ha Long Dream",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "c8846e9b9042e74870fa1e67eb0872531fb66ccf210013ec1de2ccd3d9e53e04",
+      "title": "Mia and the Rocking Horse",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "c8c49cd295cb88c5a10d02c3f307dd408f00a75ea9f345a554c5e2244ffbeb05",
+      "title": "A Raise for Linh",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "c9ddb6d5b6df8230a4b17a305d7493630d6c96c8e8edc5a7b4a7c01306063257",
+      "title": "Linh's Tết Journey to Cà Mau",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "cab0a8a99897d9d35f6c84d0d93687f790861974ff6dd5768e6bbd36900d63f0",
+      "title": "Leo's AI Breakthrough",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "cb9729e7082cb8161aadce7688f8d382914a23a77ecf41652dc936267fdfdfab",
+      "title": "Linh's Da Nang Story",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "cbb23b7a898cebde08d8cffc5d32fb5dc19fdd5ec940467eccc566a74022db65",
+      "title": "Linh's Bún Bò Huế Triumph",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "ccb3cfbb9d121065c04bf45b9036fddddb7762bbf8b3287ecd28577f40e9b9a4",
+      "title": "Elara and the Forest's Echo",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "cd13c8452d19fa47cb18e3a02510bbbabac53487628833baf6876fa85d18272d",
+      "title": "The Blocky Builders' Choice",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "cdd53f579b85fb950bad1462c064abf332a5d9a58af1bbca9c2d73f5e833a160",
+      "title": "The Willow Creek Revival Cup",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "cde92b27e38e15a32a2203dc8ff094b7c83f8efce666a2876a6a5e5707368161",
+      "title": "Echoes of Regret",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "cdfdb44c1aa9378eb08ec7daebf44dfa67e20695fd3694dc3c58d2b6df4e6279",
+      "title": "The Community Garden Spreadsheet",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "cff697c721e2c92cc624ca35212e08bda9c8d21b32b46519b82cadfa916d1e39",
+      "title": "Lien's Calm Promotion",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "d006e95214712e7a97e399b58ced7455441a1f3a18ac5c168f06e28b3b06df29",
+      "title": "The Da Lat Dream: A Stormy House Hunt",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "d048d43d785d08e47f9580e2ae4f8a3412ed10abb8612c6eaad06c10782d5cef",
+      "title": "The Shard Crafters' Quest",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "d1188fe3eb0b5d037db214c88ed0b7d4b2244df2ddf9ef3c493b6d39aa77fbbe",
+      "title": "Leo's Clear Path",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "d1320367a1f308d5896622c2331d0403cf25b95c90fd3cffc0222bec9cc53c7c",
+      "title": "The Community Health Connect",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "d1ec76447e206220a98746a56dc97a9acbe1182f6e5089abd0b2f24ff7e5eabf",
+      "title": "Sweet Victory Pudding",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "d37301e28d2a8b1e139e21fdf58f2d69699f142d03e3b63c3a2ca52bc2694532",
+      "title": "Lena's Walking Rewards",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "d38438f2d0ad76cbb39093ea970dd1e7a99130f70cf085786feacd802d024687",
+      "title": "The Mystery of the Missing Hot Honey",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "d3bcc12b42767e4e00afdf2f9625cb6192cbe21cc6edbda02ddff2dedc8bdb53",
+      "title": "Linh's Typhoon Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "d3f84559d005a2b2b8ea79017e95ab3dd02017070a0686c945ef2a4ae958b8df",
+      "title": "The Wedding Photo Secret",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "d5f792a85ec363b0130402aa5c683a56abd1e0fcb21d5350f3bbb44d32854359",
+      "title": "Mia's Bubble Tea English Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "da8f894920f0bca5bc58a9c55f0ec12dffa6ba2e82a0ed14b7dbd797efbc60d2",
+      "title": "The Hanoi Silk Fan Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "db3b9eb5e986c2d25c201d061e59a0e454372dc9d42801014678f30025433d62",
+      "title": "Linh's Bright Idea",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "dc3c4f51f538035ca9de65042494bc55aa29b9dfd88de0f3a462429ecc824c08",
+      "title": "The Leg Day Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "ddaf169305cd804641fa70c3c799fc5ce13f4f61713fde68328cd8d026e187c2",
+      "title": "The Digital Balance",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "ddaf4f5c4ff978b9ca5a8a7c354b711fab054c7c1c064f83e7d04e5a18fd5b1f",
+      "title": "Pixel's Healthy Art Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "de110af312b25873590590fa899e32fdd140231ae95cce0118a6e4f6f7d04190",
+      "title": "The Bean Sprout Lasagna Soup",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "dec2619ea9495501ff8d51a01d37c22eadc694745617fc3b8d8f5c499e37799f",
+      "title": "Linh's Sapa Memory",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "df1db9fd3179c5330eb7d3db72a15eff14b14b573e83fea0ae52783089ef9c16",
+      "title": "Linh's Digital Dish: A Cơm Tấm Story",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "e042b8345e6bdf8c744508b8c59da340b9afebf03fbb2afb3bdfc23a89705a2c",
+      "title": "Linh's Misty Mountain Art",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "e1b4435771a0be4c907d3f9e27ef3e28869a29992eb3a8ed7681d6e7e43c70b4",
+      "title": "A Culinary Exchange: From Chia to Chimichurri",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "e25bf33bf713747edf3d16f59f336d0f11bd808a3b4d4c5d2ddb4e76dfa0b94f",
+      "title": "Leo and the Tricky Message",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "e47efdc2b9bb7c54451bf1f21f15033ac20cc9728c7d75a2c09d8318aa93602e",
+      "title": "Linh's Concert Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "e495c972acaecc5d5fb2c38931c7fb12f1e700e437687e975fbe563cca970ef7",
+      "title": "Lily's Red English Poster",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "e5526333cec00f5001fa5545029a246895255a7a450db8f5c5c76b0115350e14",
+      "title": "The Lychee Tea Interview",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "e5ccbee9cfec3677ad145fc941bc682e38b52ae264952a55510f0b87c8403c94",
+      "title": "The Story Weaver's New Beginning",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "e85b2ffeaece44ce55a679f04a683e842c30aa5417e8bf33d9b27b043d95a05e",
+      "title": "Linh's Saving Plan",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "e9b2a4d0db4c220a23d353c3d0faacf5b1fa6d5f0d081bb4671125ca6e7e21a3",
+      "title": "The Mystery of the Missing Bicycle",
+      "level": "B1",
+      "total": 0,
+      "complete": 0,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "ea652cf5d0757c68e9a81657463533ac6449fa5a1372be87c676362e448b3159",
+      "title": "Linh's Tropical Snow Tết",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "eaf77870a1b4a08943e0ece803676597f1df52b3bb72e0115172c03b084afe01",
+      "title": "Mai's Hà Giang Sweet Surprise",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "eafd431ca173e581f98479917ad711e8fe6274098da7b7c98a2c95551d56b3f3",
+      "title": "The Cà Mau Connection",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "ed3545488a2274865496cc39bfc47d2f839449b9b3eb4bdab6a9b63067ba502c",
+      "title": "Linh's Fresh Rolls and Healthy Glow",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "ed7b442de180b8af871405015615c18cb67d68822a8abd9fe9674e6812753e50",
+      "title": "Lena's New Home Search",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "eeb0f2a2a80fce4734a969292dd6efbaab203a7caee48ee10c8ed695d4a2a354",
+      "title": "Lena's Red Background Challenge",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "eeda55174dc59b2f26154c932caddfbf6fb6ffb103e35018095e44f9f9acf06f",
+      "title": "The Whispering Woods Mystery",
+      "level": "?",
+      "total": 0,
+      "complete": 0,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "eff30bbf5d2f7dce7b8dcbeb60acefe2687bd0d7f07aa7656745ef0d77db158c",
+      "title": "Linh's An Giang Summer Rolls",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "f0752c526457c703c9d6429b510ce7769b5a3a1fc46684c9e074c33ef3649f14",
+      "title": "The English Wave of Quang Ninh",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "f0e83847d0424e433819fe40503f6c6a27bc0f32ec11edb5995871590d133f6f",
+      "title": "Leo's Digital Dream",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "f161340c9b180750600520040acf55748e96fe603806f31c8d1dcd254bc34d77",
+      "title": "Leo's Locked Journal",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "f1b7db328b8caf289011ccd3089432cf62f062b449192ed6a4ad758992ec254e",
+      "title": "Lena's Countryside Pages",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "f1be84495f49a791ccd77d21182421d72316a8c2a3174d2474403b8376d3b713",
+      "title": "The Secret of Sunfire Honey",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "f1c8d6b97bbd58c5d4c1bf6d755a29f574fbb5ae1444ab71c0a40c0a49568a19",
+      "title": "The Stormy English Practice",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "f2034be72ae414f680c5bce912b22a660492a8196c8a77c70609be606c80c80f",
+      "title": "The Grand Green Gambit",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "f20aef64bdd369d2c72a2151fb0d754401d9b2813ecda4fa99bce099fc76bb50",
+      "title": "The Team's Big Idea",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "f213d6a2884caa5896f6b2fd37cde041b7977c54481d7acf4f63b6da76c1f58c",
+      "title": "The Tràng An Melody",
+      "level": "?",
+      "total": 26,
+      "complete": 26,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "f2c2c30b2e2a3d72766ccb9a6106c6b2416f1fae280be643e08c1e734e4da63f",
+      "title": "Linh's Digital Journey",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "f3a90c034961a572fd61a4fa1ee77157c07965f04fa8cc5e61dcdbc99331cb55",
+      "title": "Lily and the White Lotus",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "f4561d132b097d3586215ccdf42a31ca442bbe6692241b20fd7ff032faa939fb",
+      "title": "The Digital Artist's Balance",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "f45faa0d6d2170972163a6e88ac4061b3fe7ddf3c4e96252d005957947f4df11",
+      "title": "Lily's Spring Roll Balance",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "f4fcea5d69b1f146f1f049545898c15aa8af668515178322b1bf2e329d1a242f",
+      "title": "Linh's Con Dao English Adventure",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "f52a77af1ea239c54a5c8529efe203bce02d31cade9dab821e5f7a6f6b9dd941",
+      "title": "Linh's Da Lat Dream Art",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "f58ec6823d400d2c629150e3d6ab26e68651fa4c3c30e725fe40c069bc285698",
+      "title": "An's Coffee Presentation",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "f5df312061bf909b3ab350f2286f0d7c8b58fd58a08c8f13bfa5ea3087576df7",
+      "title": "The Cà Mau Connection",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "f758ebe347c0fb61543f0182174937c95bbc363be7ebce86151032b74a93fb89",
+      "title": "The Stormy Deadline",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "f7a195f052fd78bbdeb677c84269fed839e75f0bfd286f720bc6516bfcef71f9",
+      "title": "Lý Sơn's Healthy Journey",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "f7d1c5a78c73504c67a1d8dee5ecfbe204e77e80b6b80e108fb3383291c60835",
+      "title": "The Salted Coffee Interview",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "f920b81f505207f9f68503030640ef3525d7d337704a1b33be4de346cc667d88",
+      "title": "Linh's Lowkey Tết Surprise",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "f96810503517b03a7392261dc8bdb915fa5bb0276c39223d36a31fb9db272ae1",
+      "title": "The Project Manager's Pain",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "f9c03b3ebe925cdfc4cacd08a23001bfaa3810db560d222d5c2d9a735ecd081a",
+      "title": "Linh's Digital Journey in Ho Chi Minh City",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "facc2a3e168c6e70bf8d15106218d8e2c2b5e9680c9dd2e48d75844ba9d18721",
+      "title": "Pixel Paladins: The Astro-Raiders Quest",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "fc5a7d96cc738093ea6f0d37d29332215a777e312a224438eef022db10708a5a",
+      "title": "Linh's Festival English",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "ff7cfb69c911ed2ebfd742536a7c9fd50ef7b530d102f006e54b695de77de6e1",
+      "title": "Linh's Trang An AI Art Adventure",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "ffa0d55bedb3b0661ad1f23c62ea6db5ee1086170f1a9c1c7a91debfc72f833b",
+      "title": "Aetherial Beasts: The Nexus Split",
+      "level": "?",
+      "total": 1,
+      "complete": 1,
+      "partial": 0,
+      "hasExistingAudit": false
+    },
+    {
+      "outlineId": "fff2bc37afad815fe2eb433b90add9ff5686115abcf9bb5191b20c01e4579236",
+      "title": "Lena's Digital Dream",
+      "level": "?",
+      "total": 27,
+      "complete": 27,
+      "partial": 0,
+      "hasExistingAudit": false
+    }
+  ]
+}

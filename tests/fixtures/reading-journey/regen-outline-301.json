@@ -1,0 +1,46 @@
+{
+  "outlineId": "b3815ae362e20dcdd6272e57c3618e9cd3d8327873860cd71115c2fce45c01da",
+  "title": "The Secret of the Sunstone Flower",
+  "paths": [
+    {
+      "path": [
+        "investigate",
+        "investigate",
+        "open_text_response"
+      ],
+      "beats": [
+        {
+          "beatNumber": 1,
+          "segment": "Maya visited the city's big park. She needed to find the rare Sunstone Flower for her school project. She had a map, but the park was very large. She saw many tall trees and colorful birds, but no Sunstone Flower.",
+          "highlights": [
+            "find the rare",
+            "school project",
+            "very large"
+          ]
+        },
+        {
+          "beatNumber": 2,
+          "segment": "Maya looked closely at the map. She saw a small trail hidden behind some big rocks. She followed it carefully.",
+          "highlights": [
+            "second step"
+          ]
+        },
+        {
+          "beatNumber": 3,
+          "segment": "Walking down the hidden path, Maya found a beautiful glass house. Inside, the temperature was very warm. In the center, a bright yellow flower glowed like the sun.",
+          "highlights": [
+            "climax"
+          ]
+        },
+        {
+          "beatNumber": 4,
+          "segment": "Maya took out her camera and took a perfect photo for her project. She smiled. She learned that being patient helps you find beautiful things.",
+          "highlights": [
+            "resolution"
+          ],
+          "endWrap": "Maya finished her school project and discovered a magical new place."
+        }
+      ]
+    }
+  ]
+}

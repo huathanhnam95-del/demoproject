@@ -1,0 +1,540 @@
+{
+  "date": "2026-03-20",
+  "mode": "dry-run",
+  "totalEntries": 20929,
+  "validEntries": 4874,
+  "staleEntries": 16055,
+  "staleReasons": {
+    "beat_number_too_high": 14522,
+    "beat2_invalid_choice": 1533
+  },
+  "preview": [
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "wait",
+        "ask",
+        "wait",
+        "ask",
+        "wait"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "wait",
+        "wait",
+        "ask",
+        "investigate",
+        "investigate"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 5,
+      "path": [
+        "ask",
+        "investigate",
+        "wait",
+        "wait"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 5,
+      "path": [
+        "wait",
+        "investigate",
+        "investigate",
+        "ask"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "ask",
+        "wait",
+        "wait",
+        "ask",
+        "investigate"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "wait",
+        "ask",
+        "wait",
+        "ask",
+        "investigate"
+      ]
+    },
+    {
+      "reason": "beat2_invalid_choice",
+      "beat": 4,
+      "path": [
+        "investigate",
+        "wait",
+        "wait"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "wait",
+        "ask",
+        "ask",
+        "wait",
+        "ask"
+      ]
+    },
+    {
+      "reason": "beat2_invalid_choice",
+      "beat": 4,
+      "path": [
+        "ask",
+        "wait",
+        "investigate"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 5,
+      "path": [
+        "ask",
+        "wait",
+        "investigate",
+        "ask"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "investigate",
+        "investigate",
+        "ask",
+        "investigate",
+        "investigate"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "wait",
+        "ask",
+        "wait",
+        "ask",
+        "investigate"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "wait",
+        "wait",
+        "investigate",
+        "ask",
+        "investigate"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "ask",
+        "investigate",
+        "wait",
+        "investigate",
+        "ask"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "ask",
+        "wait",
+        "investigate",
+        "investigate",
+        "wait"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "investigate",
+        "wait",
+        "wait",
+        "wait",
+        "ask"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "ask",
+        "wait",
+        "investigate",
+        "ask",
+        "investigate"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "wait",
+        "ask",
+        "ask",
+        "investigate",
+        "wait"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 5,
+      "path": [
+        "wait",
+        "ask",
+        "investigate",
+        "investigate"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "investigate",
+        "ask",
+        "ask",
+        "ask",
+        "ask"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 5,
+      "path": [
+        "investigate",
+        "investigate",
+        "investigate",
+        "investigate"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "wait",
+        "wait",
+        "investigate",
+        "wait",
+        "investigate"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "wait",
+        "ask",
+        "ask",
+        "ask",
+        "wait"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "wait",
+        "wait",
+        "investigate",
+        "wait",
+        "investigate"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 5,
+      "path": [
+        "investigate",
+        "wait",
+        "investigate",
+        "ask"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "wait",
+        "investigate",
+        "wait",
+        "ask",
+        "investigate"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "ask",
+        "ask",
+        "ask",
+        "ask",
+        "investigate"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "investigate",
+        "investigate",
+        "ask",
+        "wait",
+        "investigate"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "investigate",
+        "wait",
+        "ask",
+        "ask",
+        "investigate"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 5,
+      "path": [
+        "ask",
+        "ask",
+        "ask",
+        "ask"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 5,
+      "path": [
+        "investigate",
+        "wait",
+        "wait",
+        "ask"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "investigate",
+        "ask",
+        "wait",
+        "wait",
+        "ask"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 5,
+      "path": [
+        "ask",
+        "ask",
+        "investigate",
+        "ask"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "wait",
+        "ask",
+        "investigate",
+        "wait",
+        "investigate"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "investigate",
+        "ask",
+        "investigate",
+        "wait",
+        "ask"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "wait",
+        "wait",
+        "investigate",
+        "ask",
+        "wait"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "investigate",
+        "investigate",
+        "wait",
+        "investigate",
+        "wait"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 5,
+      "path": [
+        "wait",
+        "wait",
+        "ask",
+        "ask"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 5,
+      "path": [
+        "wait",
+        "ask",
+        "wait",
+        "investigate"
+      ]
+    },
+    {
+      "reason": "beat2_invalid_choice",
+      "beat": 3,
+      "path": [
+        "ask",
+        "wait"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "investigate",
+        "wait",
+        "ask",
+        "wait",
+        "ask"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "wait",
+        "ask",
+        "investigate",
+        "investigate",
+        "ask"
+      ]
+    },
+    {
+      "reason": "beat2_invalid_choice",
+      "beat": 3,
+      "path": [
+        "investigate",
+        "wait"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "wait",
+        "wait",
+        "ask",
+        "wait",
+        "ask"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 5,
+      "path": [
+        "wait",
+        "investigate",
+        "ask",
+        "investigate"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "ask",
+        "wait",
+        "investigate",
+        "investigate",
+        "investigate"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "investigate",
+        "investigate",
+        "investigate",
+        "investigate",
+        "wait"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 5,
+      "path": [
+        "ask",
+        "investigate",
+        "wait",
+        "wait"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "wait",
+        "investigate",
+        "ask",
+        "wait",
+        "ask"
+      ]
+    },
+    {
+      "reason": "beat_number_too_high",
+      "beat": 6,
+      "path": [
+        "wait",
+        "ask",
+        "investigate",
+        "investigate",
+        "investigate"
+      ]
+    }
+  ]
+}

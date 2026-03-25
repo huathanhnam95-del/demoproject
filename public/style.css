@@ -246,62 +246,25 @@ body {
 
 
 /* ============================================
-   Feedback Toast (New)
+   Version Indicator
    ============================================ */
-.feedback-toast {
+.version-indicator {
   position: fixed;
-  bottom: 32px;
-  right: 32px;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
-  padding: 16px 24px;
-  border-radius: var(--radius-lg);
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  z-index: 9900;
-  animation: slideInToast 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-  max-width: 360px;
+  bottom: 10px;
+  right: 14px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.7rem;
+  color: rgba(0, 0, 0, 0.22);
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  user-select: none;
+  z-index: 50;
+  transition: color 0.3s ease;
 }
 
-@keyframes slideInToast {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-.feedback-toast-content {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.toast-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 0.9rem;
-  color: var(--text-main);
-}
-
-.feedback-link-toast {
-  color: #b45309;
-  font-weight: 600;
-  text-decoration: none;
-  font-size: 0.85rem;
-}
-
-.feedback-link-toast:hover {
-  text-decoration: underline;
+.version-indicator:hover {
+  color: rgba(0, 0, 0, 0.45);
+  pointer-events: auto;
 }
 
 /* Legacy banner styles removed */

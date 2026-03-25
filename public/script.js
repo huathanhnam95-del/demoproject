@@ -1672,7 +1672,7 @@
 
     try {
       log.log("Loading sentence length database...");
-      const response = await fetch('database/type/WFD.xlsx');
+      const response = await fetch('/database/type/WFD.xlsx');
 
       if (!response.ok) {
         throw new Error(`Failed to fetch database file: ${response.statusText} `);
@@ -1739,7 +1739,7 @@
 
     try {
       log.debug("Loading speak length database...");
-      const response = await fetch('database/speak/RS.xlsx');
+      const response = await fetch('/database/speak/RS.xlsx');
 
       if (!response.ok) {
         throw new Error(`Failed to fetch speak database file: ${response.statusText} `);
@@ -6857,7 +6857,7 @@
   // Database loading functions
   const loadDatabase = async (mode) => {
     try {
-      const response = await fetch(`database/${mode}/index.json?v=${Date.now()}`);
+      const response = await fetch(`/database/${mode}/index.json?v=${Date.now()}`);
       if (!response.ok) {
         throw new Error(`Failed to load ${mode} database: ${response.statusText}`);
       }

@@ -11,6 +11,7 @@ database/speak/audio/
 # Excel files
 *.xlsx
 !database/**/*.xlsx
+!public/database/**/*.xlsx
 
 # OS files
 .DS_Store

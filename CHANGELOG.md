@@ -1,3 +1,24 @@
+## [V1.5.9] - 2026-03-25
+
+### Added
+
+- **Read Aloud Mode**: Implemented new practice mode with Azure Pronunciation Assessment integration and sample audio filtering.
+- **Audio Generation**: Gemini API integration for generating test audio for RFIB Excel entries via pipeline.
+- **Content**: Added `BaiTapTongHopSo5` Excel.
+
+### Improved
+
+- **Reading Journey UX**: UI refinements, modern sidebar buttons, and profile alignment.
+- **Landing Pages**: Rewrote About Us and Home pages with concise text and HD generated images, aligning heroes.
+- **Testing**: Executed CRM full workflow browser tests and Read Aloud chunking QA.
+- **Assessment UX**: Fixed pronunciation assessment text overflow and linking sound symbols positioning.
+
+### Fixed
+
+- **Analytics Display**: Fixed Bar Chart to include Doanh Thu and Doanh So.
+- **Scripting**: Extended auto-accept script for testing tools (always run, retry, expand).
+- **Skill Tree**: Temporarily hid the Skill Tree button.
+
 ## [V1.5.8] - 2026-03-14
 
 ### Added

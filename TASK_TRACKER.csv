@@ -92,3 +92,17 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 102,2026-03-23,Execute Read Aloud browser testing plan,Done,2026-03-23
 103,2026-03-23,Redesign sidebar buttons to be modern and sleek,In Progress,
 104,2026-03-23,Merge all branches to main and clean up worktrees,Done,2026-03-23
+105,2026-03-23,Read Aloud UI Fixes,Done,2026-03-23
+106,2026-03-23,Pronunciation test design and technology research,Done,2026-03-23
+107,2026-03-24,Implement Azure Pronunciation Assessment for Read Aloud,Done,2026-03-24
+108,2026-03-24,Research Azure AI Immersive Reader integration,Done,2026-03-24
+109,2026-03-24,Fix linking sound symbols UI positioning,Done,2026-03-24
+110,2026-03-24,Fix pronunciation assessment text overflow,Done,2026-03-24
+111,2026-03-24,Add sample audio filter to Read Aloud mode,Done,2026-03-24
+112,2026-03-24,Investigate impact of Gemini Image Generation endpoint deprecation,Done,2026-03-24
+113,2026-03-24,Execute Read Aloud Chunking QA Plan,Done,2026-03-24
+114,2026-03-24,Temporarily hide the Skill Tree button,Done,2026-03-24
+115,2026-03-25,Research feasibility of Google AI Studio API for Read Aloud TTS,Done,2026-03-25
+116,2026-03-25,Generate test audio for RFIB Excel entries via Gemini API,Done,2026-03-25
+116,2026-03-25,Fix auto accept script - add always run/retry/expand/accept all support,Done,2026-03-25
+117,2026-03-25,Production push V1.5.9,In Progress,

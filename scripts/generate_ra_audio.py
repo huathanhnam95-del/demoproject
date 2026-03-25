@@ -66,11 +66,23 @@ def load_voices():
 def load_questions():
     wb = openpyxl.load_workbook(RA_XLSX)
     ws = wb.active
+    headers = [cell.value for cell in ws[1]]
+    required_headers = ['ID', 'ANSWER FOR COMPARE OR TRANSCRIPT']
+    header_positions = {}
+
+    for index, header in enumerate(headers):
+        if header in header_positions:
+            raise ValueError(f'Duplicate workbook header found: {header}')
+        header_positions[header] = index
+
+    missing_headers = [header for header in required_headers if header not in header_positions]
+    if missing_headers:
+        raise ValueError(f'Missing required workbook headers: {", ".join(missing_headers)}')
+
     questions = []
     for row in ws.iter_rows(min_row=2, values_only=True):
-        q_id = row[0]
-        # Column D (index 3) = clean text without "/" marks
-        clean_text = row[3]
+        q_id = row[header_positions['ID']]
+        clean_text = row[header_positions['ANSWER FOR COMPARE OR TRANSCRIPT']]
         if q_id is not None and clean_text:
             questions.append({
                 'id': int(q_id),

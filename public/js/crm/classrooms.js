@@ -12,12 +12,22 @@ window.CrmClassrooms = (function () {
             .split(',')
             .map((day) => day.trim())
             .filter(Boolean);
+        const meetingDays = String(elements.inputClassroomMeetingDays?.value || '')
+            .split(',')
+            .map((day) => day.trim())
+            .filter(Boolean);
+        const meetingHours = String(elements.inputClassroomMeetingHours?.value || '')
+            .split(',')
+            .map((hour) => hour.trim())
+            .filter(Boolean);
 
         return {
             name: String(elements.inputClassroomName?.value || '').trim(),
             courseId: String(elements.inputClassroomCourseId?.value || '').trim(),
             status: String(elements.inputClassroomStatus?.value || '').trim() || 'draft',
             primaryTeacherUid: String(elements.inputClassroomPrimaryTeacher?.value || '').trim(),
+            meetingDays,
+            meetingHours,
             scheduleConfig: {
                 totalInstructionMinutes: Number.isFinite(totalHours) && totalHours > 0
                     ? Math.round(totalHours * 60)
@@ -71,6 +81,16 @@ window.CrmClassrooms = (function () {
                 ? classroom.scheduleConfig.seedWeekdays.join(',')
                 : '';
             elements.inputClassroomSeedWeekdays.value = weekdays;
+        }
+        if (elements.inputClassroomMeetingDays) {
+            elements.inputClassroomMeetingDays.value = Array.isArray(classroom?.meetingDays)
+                ? classroom.meetingDays.join(', ')
+                : '';
+        }
+        if (elements.inputClassroomMeetingHours) {
+            elements.inputClassroomMeetingHours.value = Array.isArray(classroom?.meetingHours)
+                ? classroom.meetingHours.join(', ')
+                : '';
         }
     }
 

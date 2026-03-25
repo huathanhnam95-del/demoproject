@@ -107,3 +107,12 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 116,2026-03-25,Fix auto accept script - add always run/retry/expand/accept all support,Done,2026-03-25
 117,2026-03-25,Production push V1.5.9,Done,2026-03-25
 118,2026-03-25,Fix Dictation Practice read aloud database loading issue on subroutes,Done,2026-03-25
+119,2026-03-25,Generate RFIB audio for next 20 questions (IDs 0014-0033),Done,2026-03-25
+120,2026-03-25,Fix read-aloud JS subroute loading errors by using absolute paths in index.html,Done,2026-03-25
+121,2026-03-25,Revise Level 3 Pronunciation Guide UX UI,Done,2026-03-25
+122,2026-03-25,Upgrade Read Aloud connected-speech scoring to MFA-based backend,Phase 2 MFA,
+123,2026-03-25,Generate RFIB audio for next 30 questions (IDs 0034-0063),Done,2026-03-25
+124,2026-03-25,Implement Elevenlabs chunk pauses in RA audio,Done,2026-03-25
+125,2026-03-25,Generate RFIB audio for next 200 questions (IDs 0064-0263),In Progress,
+126,2026-03-25,Generate thumbnails for RFIB questions with council assessment,Done,2026-03-25
+127,2026-03-26,Production push V1.6.0 - all pending changes since V1.5.15,In Progress,

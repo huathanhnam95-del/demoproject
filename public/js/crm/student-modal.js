@@ -18,6 +18,7 @@ window.CrmStudentModal = (function () {
             resetStudentFinanceComposer,
             renderStudentSchedulePrompt
         } = deps;
+        const entranceTestUi = window.CrmEntranceTests || null;
 
         function switchStudentTab(tabId) {
             elements.studentSidebarItems.forEach((btn) => {
@@ -66,6 +67,8 @@ window.CrmStudentModal = (function () {
                 elements.inputTargetExam,
                 elements.inputTargetScore,
                 elements.inputPreferredSchedule,
+                elements.inputPreferredLearningDays,
+                elements.inputPreferredLearningHours,
                 elements.inputScoreHistory,
                 elements.inputGuardianContacts,
                 elements.inputCompanyContacts,
@@ -84,11 +87,15 @@ window.CrmStudentModal = (function () {
             }
 
             if (elements.btnAddEntranceTest) elements.btnAddEntranceTest.disabled = false;
-            if (elements.entranceTestLinkInput) elements.entranceTestLinkInput.value = '';
-            if (elements.btnCopyEntranceTestLink) elements.btnCopyEntranceTestLink.disabled = true;
-            if (elements.btnOpenEntranceTestLink) elements.btnOpenEntranceTestLink.disabled = true;
-            if (elements.entranceTestLinkNote) {
-                elements.entranceTestLinkNote.textContent = 'Create a test to generate a single-use learner link you can send.';
+            if (entranceTestUi && typeof entranceTestUi.applyControls === 'function') {
+                entranceTestUi.applyControls(elements, null, { hasAnyTests: false });
+            } else {
+                if (elements.entranceTestLinkInput) elements.entranceTestLinkInput.value = '';
+                if (elements.btnCopyEntranceTestLink) elements.btnCopyEntranceTestLink.disabled = true;
+                if (elements.btnOpenEntranceTestLink) elements.btnOpenEntranceTestLink.disabled = true;
+                if (elements.entranceTestLinkNote) {
+                    elements.entranceTestLinkNote.textContent = 'Create a test to generate a single-use learner link you can send.';
+                }
             }
             if (elements.entranceTestsList) elements.entranceTestsList.innerHTML = '<div class="crm-muted">No tests yet.</div>';
 
@@ -101,6 +108,7 @@ window.CrmStudentModal = (function () {
             resetStudentTaskComposer();
             resetStudentActivityComposer();
             resetStudentFinanceComposer();
+            renderStudentSchedulePrompt();
             if (elements.studentClassroomMatchSummary) elements.studentClassroomMatchSummary.innerHTML = '<div class="crm-muted">Loading classroom recommendations...</div>';
             if (elements.inputStudentClassroomMatchSelect) {
                 elements.inputStudentClassroomMatchSelect.innerHTML = '<option value="">No classroom selected</option>';

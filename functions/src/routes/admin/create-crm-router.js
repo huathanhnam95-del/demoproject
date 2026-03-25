@@ -25,6 +25,7 @@ const registerFinanceRoutes = require('./finance');
 const registerAutomationRoutes = require('./automations');
 const registerReportingRoutes = require('./reporting');
 const registerGovernanceRoutes = require('./governance');
+const registerLiveSessionRoutes = require('./live-sessions');
 const { buildAuditLogEntry } = require('../../crm/governance-service');
 const {
     buildClassroomCreateData,
@@ -38,6 +39,12 @@ const {
     buildScheduleSummary,
     normalizeScheduledSession
 } = require('../../crm/scheduling-service');
+const {
+    buildHomeworkSubmissionCreateData,
+    buildHomeworkSubmissionDocId,
+    buildHomeworkSubmissionReturnPatch,
+    buildHomeworkSubmissionGradePatch
+} = require('../../crm/homework-service');
 
 function resolveServerTimestampFactory(deps) {
     if (typeof deps.serverTimestamp === 'function') {
@@ -215,6 +222,7 @@ module.exports = function createCrmRouter(rawDeps) {
     registerAutomationRoutes(router, routeDeps);
     registerReportingRoutes(router, routeDeps);
     registerGovernanceRoutes(router, routeDeps);
+    registerLiveSessionRoutes(router, routeDeps);
 
     router.post('/classrooms', ...requireAdminHandlers, async (req, res) => {
         try {
@@ -372,6 +380,57 @@ module.exports = function createCrmRouter(rawDeps) {
         }
     });
 
+    router.post('/classrooms/:classId/submissions', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const classId = String(req.params.classId || '').trim();
+            const submissionInput = req.body && typeof req.body === 'object' ? req.body : {};
+            const workId = String(submissionInput.workId || '').trim();
+            const studentUid = String(submissionInput.studentUid || '').trim();
+
+            if (!classId) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'Missing classId.');
+            }
+            if (!workId) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'workId is required.');
+            }
+            if (!studentUid) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'studentUid is required.');
+            }
+
+            const submissionId = buildHomeworkSubmissionDocId({ classId, workId, studentUid });
+            const submission = {
+                ...buildHomeworkSubmissionCreateData({
+                    ...submissionInput,
+                    classId,
+                    workId,
+                    studentUid
+                }, {
+                    user: req.user,
+                    serverTimestamp
+                }),
+                studentName: String(submissionInput.studentName || '').trim() || null,
+                studentId: String(submissionInput.studentId || '').trim() || null
+            };
+
+            const ref = deps.db.collection(CRM_SUBMISSIONS).doc(submissionId);
+            await ref.set(submission);
+            await writeAuditLog({
+                action: 'submission.create',
+                entityType: 'submission',
+                entityId: submissionId,
+                metadata: { classId, workId, studentUid }
+            }, { user: req.user });
+
+            const snap = await ref.get();
+            return sendSuccess(res, {
+                submissionId,
+                submission: { id: submissionId, ...snap.data() }
+            }, 'Submission created.');
+        } catch (error) {
+            return sendError(res, 500, 'CREATE_SUBMISSION_ERROR', 'Failed to create submission.', error?.message || error);
+        }
+    });
+
     router.get('/classrooms/:classId/submissions', ...requireAdminHandlers, async (req, res) => {
         try {
             const classId = String(req.params.classId || '').trim();
@@ -384,6 +443,40 @@ module.exports = function createCrmRouter(rawDeps) {
             return sendSuccess(res, { submissions });
         } catch (error) {
             return sendError(res, 500, 'FETCH_SUBMISSIONS_ERROR', 'Failed to fetch submissions.', error?.message || error);
+        }
+    });
+
+    router.post('/submissions/:submissionId/return-for-revision', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const submissionId = String(req.params.submissionId || '').trim();
+            if (!submissionId) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'Missing submissionId.');
+            }
+
+            const ref = deps.db.collection(CRM_SUBMISSIONS).doc(submissionId);
+            const snap = await ref.get();
+            if (!snap.exists) {
+                return sendError(res, 404, 'SUBMISSION_NOT_FOUND', 'Submission not found.');
+            }
+
+            const patch = buildHomeworkSubmissionReturnPatch(snap.data() || {}, req.body || {}, {
+                user: req.user,
+                serverTimestamp
+            });
+            await ref.set(patch, { merge: true });
+            await writeAuditLog({
+                action: 'submission.return_for_revision',
+                entityType: 'submission',
+                entityId: submissionId
+            }, { user: req.user });
+
+            const updatedSnap = await ref.get();
+            return sendSuccess(res, {
+                submissionId,
+                submission: { id: submissionId, ...updatedSnap.data() }
+            }, 'Submission returned for revision.');
+        } catch (error) {
+            return sendError(res, 500, 'RETURN_SUBMISSION_ERROR', 'Failed to return submission for revision.', error?.message || error);
         }
     });
 
@@ -426,13 +519,17 @@ module.exports = function createCrmRouter(rawDeps) {
                 return sendError(res, 400, 'VALIDATION_ERROR', 'Missing submissionId.');
             }
 
-            await deps.db.collection(CRM_SUBMISSIONS).doc(submissionId).update({
-                grade: req.body?.grade ?? null,
-                feedback: req.body?.feedback ?? null,
-                gradedAt: serverTimestamp(),
-                gradedBy: req.user.uid,
-                status: 'graded'
+            const ref = deps.db.collection(CRM_SUBMISSIONS).doc(submissionId);
+            const snap = await ref.get();
+            if (!snap.exists) {
+                return sendError(res, 404, 'SUBMISSION_NOT_FOUND', 'Submission not found.');
+            }
+
+            const patch = buildHomeworkSubmissionGradePatch(snap.data() || {}, req.body || {}, {
+                user: req.user,
+                serverTimestamp
             });
+            await ref.set(patch, { merge: true });
             await writeAuditLog({
                 action: 'submission.grade',
                 entityType: 'submission',
@@ -440,7 +537,11 @@ module.exports = function createCrmRouter(rawDeps) {
                 metadata: { grade: req.body?.grade ?? null }
             }, { user: req.user });
 
-            return sendSuccess(res, {}, 'Submission graded.');
+            const updatedSnap = await ref.get();
+            return sendSuccess(res, {
+                submissionId,
+                submission: { id: submissionId, ...updatedSnap.data() }
+            }, 'Submission graded.');
         } catch (error) {
             return sendError(res, 500, 'GRADE_ERROR', 'Failed to grade submission.', error?.message || error);
         }

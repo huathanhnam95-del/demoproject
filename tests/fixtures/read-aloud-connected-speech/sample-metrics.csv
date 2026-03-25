@@ -1,0 +1,5 @@
+attemptId,questionId,eventId,family,phrase,referenceText,recognizedText,systemStatus,humanLabel,raterNotes,audioStatus,workerStatus,audioQualityReason,audioQualityPassed,leftWord,rightWord,startMs,endMs,gapMs,leftAccuracy,rightAccuracy,relativeDuration,variant
+a1,1,e1,catenation,pick it,Pick it up now,Pick it up now,detected,detected,clear link,complete,complete,,true,pick,it,0,600,18,94,91,,linked
+a2,2,e2,n_bilabial_assimilation,green park,green park,green park,not_detected,not_detected,canonical release,complete,complete,,true,green,park,0,680,310,95,92,,canonical
+a3,3,e3,yod_coalescence,would you,would you see it,would you see it,uncertain,uncertain,ambiguous rate,complete,complete,,true,would,you,0,520,170,86,90,,canonical
+a4,4,e4,weak_form_reduction,to,want to go,want to go,not_rateable,not_rateable,too noisy,failed,complete,no_speech,false,to,go,1200,1600,,0,0,0.6,weak_form

@@ -669,7 +669,10 @@
                 <input id="entrance-test-link" class="crm-input" type="text" readonly
                   placeholder="Generated link will appear here">
                 <button id="btn-copy-entrance-test-link" class="crm-btn-secondary" type="button" disabled>Copy</button>
+                <button id="btn-open-entrance-test-link" class="crm-btn-secondary" type="button" disabled>Open</button>
               </div>
+
+              <small id="entrance-test-link-note" class="text-muted">Create a test to generate a single-use learner link you can send.</small>
 
               <div id="entrance-tests-list" class="crm-entrance-tests-list">
                 <div class="crm-muted">No tests yet.</div>
@@ -692,6 +695,17 @@
                 <input type="text" id="student-preferred-schedule" class="crm-input" placeholder="Weeknights, weekends">
               </div>
             </div>
+            <div class="crm-form-grid">
+              <div class="crm-form-group">
+                <label for="student-preferred-learning-days">Preferred Learning Days</label>
+                <input type="text" id="student-preferred-learning-days" class="crm-input" placeholder="Mon, Wed, Fri">
+              </div>
+              <div class="crm-form-group">
+                <label for="student-preferred-learning-hours">Preferred Learning Hours</label>
+                <input type="text" id="student-preferred-learning-hours" class="crm-input" placeholder="18:00-20:00">
+              </div>
+            </div>
+            <div id="student-schedule-prompt" class="crm-muted" style="margin-bottom: 16px;">Add the student's preferred days and hours to improve classroom recommendations.</div>
             <div class="crm-form-group">
               <label for="student-score-history">Score History</label>
               <textarea id="student-score-history" class="crm-input" rows="3" placeholder="YYYY-MM-DD|58"></textarea>
@@ -729,7 +743,9 @@
                     <h3>Finance Summary</h3>
                     <p class="crm-muted">Track invoiced, paid, outstanding, and next due date.</p>
                   </div>
+                  <span id="student-finance-workflow-badge" class="crm-task-priority low">collect payment</span>
                 </div>
+                <div id="student-finance-workflow-note" class="crm-muted" style="margin-bottom: 12px;">Follow the finance workflow guidance.</div>
                 <div class="crm-form-grid crm-compact-grid">
                   <div class="crm-form-group">
                     <label>Invoiced</label>
@@ -747,6 +763,28 @@
                     <label>Next Due</label>
                     <div id="student-finance-next-due" class="crm-placeholder-card">-</div>
                   </div>
+                </div>
+              </section>
+              <section class="crm-workspace-card">
+                <div class="crm-section-header">
+                  <div>
+                    <h3>Recommended Classroom</h3>
+                    <p class="crm-muted">Rank active classrooms and create the recommended enrollment after payment.</p>
+                  </div>
+                </div>
+                <div class="crm-form-group">
+                  <label for="student-classroom-match-select">Suggested Classrooms</label>
+                  <div id="student-classroom-match-summary" class="crm-stack-list">
+                    <div class="crm-muted">Loading classroom recommendations...</div>
+                  </div>
+                  <select id="student-classroom-match-select" class="crm-input" style="margin-top: 12px;">
+                    <option value="">No classroom selected</option>
+                  </select>
+                  <small id="student-classroom-match-meta" class="text-muted">Select the suggested classroom or choose another match.</small>
+                </div>
+                <div id="student-classroom-match-warning" class="crm-muted" style="margin-top: 12px;"></div>
+                <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
+                  <button id="btn-create-recommended-enrollment" class="crm-btn-primary" type="button" disabled>Create Enrollment</button>
                 </div>
               </section>
               <section class="crm-workspace-card">
@@ -1079,10 +1117,19 @@
                     <label for="classroom-duration-step">Duration Step Minutes</label>
                     <input type="number" id="classroom-duration-step" class="crm-input" min="15" step="15" placeholder="30">
                   </div>
+                  <div class="crm-form-group">
+                    <label for="classroom-meeting-days">Meeting Days</label>
+                    <input type="text" id="classroom-meeting-days" class="crm-input" placeholder="Mon, Wed, Fri">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="classroom-meeting-hours">Meeting Hours</label>
+                    <input type="text" id="classroom-meeting-hours" class="crm-input" placeholder="18:00-20:00">
+                  </div>
                 </div>
                 <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
                   <button id="btn-save-classroom-scheduling" class="crm-btn-primary" type="button">Generate Schedule</button>
                 </div>
+                <div id="attendance-schedule-prompt" class="crm-muted" style="margin-top: 12px;">Define meeting days and hours so attendance and live delivery guidance can stay aligned.</div>
                 <div class="classroom-regeneration-panel">
                   <div class="crm-section-header">
                     <div>
@@ -1134,6 +1181,77 @@
             </div>
           </div>
 
+          <div id="classroom-live" data-panel="courses/zoom-links" class="crm-tab-content" style="display: none;">
+            <div class="crm-workspace-grid" style="margin-top: 0;">
+              <section class="crm-workspace-card">
+                <div class="crm-section-header">
+                  <div>
+                    <h3>Live Delivery</h3>
+                    <p class="crm-muted">Schedule, start, and end live sessions for the classroom.</p>
+                  </div>
+                </div>
+                <div id="live-delivery-summary" class="crm-stack-list">
+                  <div class="crm-muted">Create a live session before class starts.</div>
+                </div>
+                <div class="crm-form-grid crm-compact-grid" style="margin-top: 16px;">
+                  <div class="crm-form-group">
+                    <label for="input-live-session-title">Session Title</label>
+                    <input type="text" id="input-live-session-title" class="crm-input" placeholder="Live class 1">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="input-live-session-status">Status</label>
+                    <select id="input-live-session-status" class="crm-input">
+                      <option value="draft">Draft</option>
+                      <option value="scheduled">Scheduled</option>
+                      <option value="live">Live</option>
+                      <option value="ended">Ended</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="input-live-session-start-at">Start At</label>
+                    <input type="datetime-local" id="input-live-session-start-at" class="crm-input">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="input-live-session-end-at">End At</label>
+                    <input type="datetime-local" id="input-live-session-end-at" class="crm-input">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="input-live-session-meeting-url">Meeting URL</label>
+                    <input type="url" id="input-live-session-meeting-url" class="crm-input" placeholder="https://...">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="input-live-session-host-url">Host URL</label>
+                    <input type="url" id="input-live-session-host-url" class="crm-input" placeholder="https://...">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="input-live-session-meeting-id">Meeting ID</label>
+                    <input type="text" id="input-live-session-meeting-id" class="crm-input" placeholder="123 456 789">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="input-live-session-passcode">Passcode</label>
+                    <input type="text" id="input-live-session-passcode" class="crm-input" placeholder="Passcode">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="input-live-session-notes">Notes</label>
+                    <textarea id="input-live-session-notes" class="crm-input" rows="3" placeholder="Session notes"></textarea>
+                  </div>
+                </div>
+                <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
+                  <button id="btn-create-live-session" class="crm-btn-secondary" type="button">New Session</button>
+                  <button id="btn-save-live-session" class="crm-btn-primary" type="button">Save Session</button>
+                  <button id="btn-copy-live-join-link" class="crm-btn-secondary" type="button">Copy Join Link</button>
+                  <button id="btn-copy-live-host-link" class="crm-btn-secondary" type="button">Copy Host Link</button>
+                  <button id="btn-start-live-session" class="crm-btn-primary" type="button">Start Session</button>
+                  <button id="btn-end-live-session" class="crm-btn-secondary" type="button">End Session</button>
+                </div>
+                <div id="live-session-list" class="crm-stack-list" style="margin-top: 16px;">
+                  <div class="crm-muted">No live sessions yet.</div>
+                </div>
+              </section>
+            </div>
+          </div>
+
           <div id="classroom-attendance" class="crm-tab-content" style="display: none;">
             <div class="crm-workspace-grid" style="margin-top: 0;">
               <section class="crm-workspace-card">
@@ -1155,6 +1273,7 @@
                   <button id="btn-enroll-student" class="crm-btn-primary" type="button">Enroll</button>
                 </div>
                 <div id="attendance-enrollment-meta" class="crm-muted" style="margin-top: 12px;">No enrollments yet.</div>
+                <div id="attendance-classroom-fit-note" class="crm-muted" style="margin-top: 8px;">Select a student to see schedule fit guidance.</div>
               </section>
               <section class="crm-workspace-card">
                 <div class="crm-section-header">
@@ -1183,6 +1302,7 @@
                   <button id="btn-create-attendance-session" class="crm-btn-secondary" type="button">Create Session</button>
                   <button id="btn-save-attendance-records" class="crm-btn-primary" type="button">Save Attendance</button>
                 </div>
+                <div id="attendance-live-session-note" class="crm-muted" style="margin-top: 12px;">Create a live session before class starts.</div>
               </section>
             </div>
             <div id="attendance-roster-container" class="crm-table-host" style="margin-top: 20px;">
@@ -1221,6 +1341,7 @@
               <h3>Assignments & Materials</h3>
               <button id="btn-add-classwork" class="crm-btn-secondary">+ Create Work</button>
             </div>
+            <div id="classwork-live-session-note" class="crm-muted" style="margin-bottom: 12px;">Create or complete a live session before assigning follow-up work.</div>
             <div id="classwork-composer" class="crm-form-grid"
               style="display: none; background: #f8fbfa; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
               <div class="crm-form-group">
@@ -1425,12 +1546,27 @@
   <script src="js/crm/activities.js"></script>
   <script src="js/crm/enrollments.js"></script>
   <script src="js/crm/attendance.js"></script>
+  <script src="js/crm/finance-workflow.js"></script>
   <script src="js/crm/finance.js"></script>
   <script src="js/crm/communications.js"></script>
   <script src="js/crm/scheduler-workspace.js"></script>
+  <script src="js/crm/student-finance.js"></script>
+  <script src="js/crm/live-delivery.js"></script>
+  <script src="js/crm/classroom-modal.js"></script>
+  <script src="js/crm/student-modal.js"></script>
+  <script src="js/crm/course-modal.js"></script>
+  <script src="js/crm/lead-workspace.js"></script>
+  <script src="js/crm/classroom-workspace.js"></script>
+  <script src="js/crm/task-activity-workspace.js"></script>
+  <script src="js/crm/communications-workspace.js"></script>
+  <script src="js/crm/dashboard-workspace.js"></script>
+  <script src="js/crm/student-directory-workspace.js"></script>
+  <script src="js/crm/activity-surfaces.js"></script>
+  <script src="js/crm/student-workspace.js"></script>
   <script src="js/crm/dashboard.js"></script>
   <script src="js/crm/governance.js"></script>
   <script src="js/crm/index.js"></script>
+  <script src="js/crm/entrance-test-link-state.js"></script>
   <script src="crm-admin.js"></script>
 </body>
 

@@ -66,8 +66,7 @@
         if (el.disabled) return false;
         if (now - lastClickedAt < CFG.perElementCooldownMs) return false;
         if (now - state.lastActionAt < 350) return false;
-        // Scroll into view FIRST — handles off-screen buttons
-        try { el.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' }); } catch (_) { /* intentional ignore */ }
+        if (!isOnScreen(el)) return false;  // only click what's visible — never scroll away
         try { el.focus(); } catch (_) { /* intentional ignore */ }
         try {
             el.click();
@@ -96,6 +95,7 @@
         if (labLower === 'accept') return 100;
         if (labLower === 'accept all') return 100;
         if (labLower === 'always allow') return 100;
+        if (labLower === 'allow this conversation') return 100;
         if (labLower === 'allow') return 100;
         if (labLower === 'retry') return 100;
 
@@ -125,18 +125,47 @@
         }
         return false;
     }
+    // Cursor approval prompts always have Run + Reject as siblings.
+    // Walk up to find a container that also contains a 'Reject' button.
+    function isInsideApprovalPrompt(el) {
+        let container = el.parentElement;
+        // Walk up a few levels to find the prompt container
+        for (let depth = 0; container && depth < 6; depth++) {
+            const buttons = container.querySelectorAll('button, [role="button"]');
+            for (const btn of buttons) {
+                const lab = (shallowText(btn) || t(btn.textContent || '')).toLowerCase();
+                if (lab === 'reject' || lab.startsWith('reject') || 
+                    lab === 'deny' || lab.startsWith('deny') ||
+                    lab === 'cancel') {
+                    return true;
+                }
+            }
+            container = container.parentElement;
+        }
+        return false;
+    }
     function findBestRunButton() {
         const candidates = Array.from(document.querySelectorAll('button, [role="button"], a[role="button"]'))
-            .filter(el => isVisible(el) && !isInsideHUD(el));
+            .filter(el => isVisible(el) && isOnScreen(el) && !isInsideHUD(el));
         let bestRun = null;
         let bestScore = -1;
+        let bestY = -1;  // prefer buttons closer to bottom (newer prompts)
         for (const el of candidates) {
             const ll = labelOf(el).toLowerCase();
             const s = scoreRunLabel(ll);
-            if (CFG.log && s > -1) console.log('[auto-run] candidate:', ll, '→ score:', s);
-            if (s > bestScore) {
+            if (s <= -1) continue;
+            // "Expand" buttons don't need approval context (they reveal it)
+            const isExpand = ll.includes('expand');
+            if (!isExpand && !isInsideApprovalPrompt(el)) {
+                if (CFG.log) console.log('[auto-run] SKIP (no Reject sibling):', ll);
+                continue;
+            }
+            if (CFG.log) console.log('[auto-run] candidate:', ll, '→ score:', s, '| y:', Math.round(rect(el).y));
+            const elY = rect(el).y;
+            if (s > bestScore || (s === bestScore && elY > bestY)) {
                 bestScore = s;
                 bestRun = el;
+                bestY = elY;
             }
         }
         return bestRun;

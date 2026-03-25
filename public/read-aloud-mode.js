@@ -31,6 +31,9 @@ class ReadAloudMode {
     this.connectedSpeechPanelMode = 'hidden';
     this.currentGuideExplanationItems = [];
     this.selectedGuideItemId = null;
+    this.currentGuideHasVisibleAssimilation = false;
+    this.guideExplanationsExpanded = null;
+    this.guideExplanationsToggled = false;
 
     // ElevenLabs audio state
     this.audioManifest = null;
@@ -39,6 +42,10 @@ class ReadAloudMode {
     this.selectedSpeed = '100';
     this.hasLoadedManifest = false;
     this.sampleAudioFilter = 'all';
+    this.promptFeatureFilter = 'all';
+    this.promptFeatureIndex = new Map();
+    this.promptFeatureIndexReady = false;
+    this.promptFeatureIndexPromise = null;
 
     // Recording state
     this.mediaRecorder = null;
@@ -91,6 +98,8 @@ class ReadAloudMode {
     document.getElementById('ra-filter-all')?.addEventListener('click', () => this.setSampleAudioFilter('all'));
     document.getElementById('ra-filter-available')?.addEventListener('click', () => this.setSampleAudioFilter('available'));
     document.getElementById('ra-filter-unavailable')?.addEventListener('click', () => this.setSampleAudioFilter('unavailable'));
+    document.getElementById('ra-filter-feature-all')?.addEventListener('click', () => this.setPromptFeatureFilter('all'));
+    document.getElementById('ra-filter-assimilation')?.addEventListener('click', () => this.setPromptFeatureFilter('assimilation'));
 
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
@@ -121,8 +130,10 @@ class ReadAloudMode {
     this.connectedSpeechLevel = 'off';
     this.connectedSpeechLayerOverrides = new Set();
     this.sessionConnectedSpeechLayerOverrides = new Set();
+    this.promptFeatureFilter = 'all';
     this.activePromptRenderToken += 1;
     this.updatePromptGuideButtons();
+    this.refreshFilterControls();
     this.announceLinkingStatus('Prompt guides reset.');
     this.observePromptStage();
 
@@ -144,6 +155,7 @@ class ReadAloudMode {
     this.sessionConnectedSpeechLevel = 'off';
     this.connectedSpeechLayerOverrides = new Set();
     this.sessionConnectedSpeechLayerOverrides = new Set();
+    this.promptFeatureFilter = 'all';
     this.activePromptKey = null;
     this.currentQuestionId = null;
     this.currentPromptPlainText = '';
@@ -154,6 +166,7 @@ class ReadAloudMode {
     this.clearPromptVisualState();
     this.restorePlainTextVisibility();
     this.updatePromptGuideButtons();
+    this.refreshFilterControls();
     this.cleanup();
   }
 
@@ -187,31 +200,20 @@ class ReadAloudMode {
       this.database = rawData.filter((row) => row.ANSWER || row['ANSWER FOR COMPARE OR TRANSCRIPT']);
       this.hasLoadedDatabase = true;
       this.populateQuestionSelect();
+      this.startPromptFeatureIndexing();
     } catch (_) {
       this.setPromptText('Error loading prompts.');
       this.hasLoadedDatabase = false;
+      this.promptFeatureIndexReady = false;
+      this.promptFeatureIndexPromise = null;
+      this.refreshFilterControls();
     }
   }
 
   setSampleAudioFilter(filterType) {
     if (this.sampleAudioFilter === filterType) return;
     this.sampleAudioFilter = filterType;
-    
-    ['all', 'available', 'unavailable'].forEach(type => {
-      const btn = document.getElementById(`ra-filter-${type}`);
-      if (!btn) return;
-      if (type === filterType) {
-        btn.classList.add('active');
-        btn.style.background = 'rgba(37, 99, 235, 0.1)';
-        btn.style.border = '1px solid var(--brand-primary, #2563eb)';
-        btn.style.color = 'var(--brand-primary, #2563eb)';
-      } else {
-        btn.classList.remove('active');
-        btn.style.background = 'transparent';
-        btn.style.border = '1px solid var(--border-light, #e5e7eb)';
-        btn.style.color = 'var(--text-muted, #6b7280)';
-      }
-    });
+    this.refreshFilterControls();
 
     if (this.hasLoadedDatabase) {
       this.populateQuestionSelect();
@@ -219,21 +221,179 @@ class ReadAloudMode {
     }
   }
 
+  setPromptFeatureFilter(filterType) {
+    if (filterType !== 'all' && filterType !== 'assimilation') return;
+    if (filterType === 'assimilation' && !this.promptFeatureIndexReady) return;
+    if (this.promptFeatureFilter === filterType) return;
+    this.promptFeatureFilter = filterType;
+    this.refreshFilterControls();
+
+    if (this.hasLoadedDatabase) {
+      this.populateQuestionSelect();
+      this.loadNextPrompt();
+    }
+  }
+
+  refreshFilterControls() {
+    const filterStates = [
+      { id: 'ra-filter-all', active: this.sampleAudioFilter === 'all' },
+      { id: 'ra-filter-available', active: this.sampleAudioFilter === 'available' },
+      { id: 'ra-filter-unavailable', active: this.sampleAudioFilter === 'unavailable' },
+      { id: 'ra-filter-feature-all', active: this.promptFeatureFilter === 'all' },
+      {
+        id: 'ra-filter-assimilation',
+        active: this.promptFeatureFilter === 'assimilation',
+        disabled: !this.promptFeatureIndexReady,
+        busyLabel: 'Level 3 Assimilation: Checking...',
+        label: 'Level 3 Assimilation'
+      }
+    ];
+
+    filterStates.forEach((state) => {
+      const btn = document.getElementById(state.id);
+      if (!btn) return;
+      const active = !!state.active;
+      const disabled = !!state.disabled;
+      if (state.label) {
+        btn.textContent = disabled && state.busyLabel ? state.busyLabel : state.label;
+      }
+      btn.disabled = disabled;
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+      btn.classList.toggle('active', active);
+      btn.style.background = active ? 'rgba(37, 99, 235, 0.1)' : 'transparent';
+      btn.style.border = active ? '1px solid var(--brand-primary, #2563eb)' : '1px solid var(--border-light, #e5e7eb)';
+      btn.style.color = active ? 'var(--brand-primary, #2563eb)' : 'var(--text-muted, #6b7280)';
+      btn.style.opacity = disabled ? '0.55' : '1';
+      btn.style.cursor = disabled ? 'not-allowed' : 'pointer';
+      btn.title = disabled && state.busyLabel ? state.busyLabel : '';
+    });
+  }
+
+  startPromptFeatureIndexing() {
+    if (!this.hasLoadedDatabase || this.promptFeatureIndexPromise) {
+      return this.promptFeatureIndexPromise || Promise.resolve();
+    }
+
+    this.promptFeatureIndex = new Map();
+    this.promptFeatureIndexReady = false;
+    this.refreshFilterControls();
+    this.promptFeatureIndexPromise = new Promise((resolve) => {
+      setTimeout(() => {
+        this.buildPromptFeatureIndex()
+          .then(() => resolve())
+          .catch(() => resolve())
+          .finally(() => {
+            this.promptFeatureIndexPromise = null;
+          });
+      }, 0);
+    });
+    return this.promptFeatureIndexPromise;
+  }
+
+  async buildPromptFeatureIndex() {
+    if (!this.database || !Array.isArray(this.database)) {
+      this.promptFeatureIndex = new Map();
+      this.promptFeatureIndexReady = false;
+      this.refreshFilterControls();
+      return this.promptFeatureIndex;
+    }
+
+    const index = new Map();
+    const delayMs = Number(window.__raPromptFeatureIndexDelayMs || 0);
+    try {
+      for (let i = 0; i < this.database.length; i += 1) {
+        const row = this.database[i];
+        const rowKey = this.getPromptFeatureRowKey(row);
+        if (!rowKey) continue;
+        if (delayMs > 0) {
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+        }
+        const promptText = row['ANSWER FOR COMPARE OR TRANSCRIPT'] || row.ANSWER || '';
+        if (!promptText) {
+          index.set(rowKey, { hasAssimilation: false });
+          continue;
+        }
+
+        index.set(rowKey, {
+          hasAssimilation: this.hasAssimilationPromptText(promptText)
+        });
+
+        if (i > 0 && i % 10 === 0) {
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        }
+      }
+      this.promptFeatureIndex = index;
+      this.promptFeatureIndexReady = true;
+    } catch (error) {
+      console.warn('RA prompt feature index build failed:', error);
+      this.promptFeatureIndex = new Map();
+      this.promptFeatureIndexReady = false;
+    } finally {
+      this.refreshFilterControls();
+    }
+    return this.promptFeatureIndex;
+  }
+
+  hasAssimilationPromptText(promptText) {
+    const normalized = String(promptText || '')
+      .toLowerCase()
+      .replace(/[\u2018\u2019']/g, "'");
+    const matches = normalized.match(/\b([a-z]+(?:'[a-z]+)?)\s+(you|year)\b/g);
+    if (!matches || matches.length === 0) {
+      return false;
+    }
+
+    return matches.some((phrase) => /(?:d|t|s|z)\s+(you|year)\b/.test(phrase));
+  }
+
+  getPromptFeatureRowKey(row) {
+    if (!row) return '';
+    const id = row.ID != null ? String(row.ID).trim() : '';
+    if (id) return `id:${id}`;
+    const promptText = String(row['ANSWER FOR COMPARE OR TRANSCRIPT'] || row.ANSWER || '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+    return promptText ? `prompt:${promptText}` : '';
+  }
+
   getFilteredDatabase() {
     if (!this.database) return [];
-    if (this.sampleAudioFilter === 'all' || !this.hasLoadedManifest || !this.audioManifest) return this.database;
-    
-    return this.database.filter(row => {
-      const hasAudio = !!this.audioManifest[String(row.ID)];
-      return this.sampleAudioFilter === 'available' ? hasAudio : !hasAudio;
-    });
+    let filtered = this.database;
+
+    if (this.sampleAudioFilter !== 'all' && this.hasLoadedManifest && this.audioManifest) {
+      filtered = filtered.filter((row) => {
+        const hasAudio = !!this.audioManifest[String(row.ID)];
+        return this.sampleAudioFilter === 'available' ? hasAudio : !hasAudio;
+      });
+    }
+
+    if (this.promptFeatureFilter === 'assimilation') {
+      if (!this.promptFeatureIndexReady) {
+        return [];
+      }
+      filtered = filtered.filter((row) => {
+        const rowKey = this.getPromptFeatureRowKey(row);
+        return !!this.promptFeatureIndex.get(rowKey)?.hasAssimilation;
+      });
+    }
+
+    return filtered;
   }
 
   populateQuestionSelect() {
     const select = document.getElementById('ra-question-select');
     const filteredDb = this.getFilteredDatabase();
-    if (!select || !filteredDb || filteredDb.length === 0) return;
+    if (!select) return;
 
+    if (!filteredDb || filteredDb.length === 0) {
+      select.innerHTML = '<option value="random">No questions match the current filters.</option>';
+      select.disabled = true;
+      select.style.display = 'block';
+      return;
+    }
+
+    select.disabled = false;
     select.innerHTML = '<option value="random">🔀 Random Question</option>';
     filteredDb.forEach((row) => {
       const originalIndex = this.database.indexOf(row);
@@ -282,7 +442,7 @@ class ReadAloudMode {
 
     const filteredDb = this.getFilteredDatabase();
     if (filteredDb.length === 0) {
-      this.setPromptText('No questions match the current filter.');
+      this.setPromptText('No questions match the current filters.');
       return;
     }
 
@@ -409,6 +569,9 @@ class ReadAloudMode {
     const badgeLayer = document.getElementById('ra-connected-speech-badges');
     const fallbackList = document.getElementById('ra-linking-fallback-list');
     const summary = document.getElementById('ra-linking-a11y-summary');
+    this.selectedGuideItemId = null;
+    this.guideExplanationsExpanded = null;
+    this.guideExplanationsToggled = false;
 
     const textNode = document.getElementById('ra-text-prompt');
     if (textNode) {
@@ -964,6 +1127,7 @@ class ReadAloudMode {
       disposition: 'submit',
       promptToken: this.promptLifecycleToken,
       referenceText: this.currentPromptPlainText,
+      questionId: this.currentQuestionId || null,
       phase: 'requesting-mic'
     };
     this.recordingRequestId = recordingSession.id;
@@ -1122,11 +1286,11 @@ class ReadAloudMode {
       const formData = new FormData();
       formData.append('audio', wavBlob, 'recording.wav');
       formData.append('referenceText', recordingSession.referenceText);
-      if (this.currentQuestionId) {
-        formData.append('questionId', this.currentQuestionId);
+      if (recordingSession.questionId) {
+        formData.append('questionId', recordingSession.questionId);
       }
       this.lastAssessmentRequest = {
-        questionId: this.currentQuestionId || null,
+        questionId: recordingSession.questionId || null,
         referenceText: recordingSession.referenceText,
         fieldNames: Array.from(formData.keys())
       };
@@ -1264,6 +1428,9 @@ class ReadAloudMode {
     this.connectedSpeechPanelMode = 'hidden';
     this.currentGuideExplanationItems = [];
     this.selectedGuideItemId = null;
+    this.currentGuideHasVisibleAssimilation = false;
+    this.guideExplanationsExpanded = null;
+    this.guideExplanationsToggled = false;
     if (box) box.style.display = 'none';
     if (label) label.textContent = 'Connected Speech';
     if (list) list.innerHTML = '';
@@ -1276,18 +1443,38 @@ class ReadAloudMode {
       return;
     }
 
-    const items = window.ReadAloudLinking.buildGuideExplanationItems(analysis);
-    if (!items.length) {
+    const rawItems = window.ReadAloudLinking.buildGuideExplanationItems(analysis);
+    if (!rawItems.length) {
       this.hideConnectedSpeechPanel();
       return;
     }
 
+    const seen = new Set();
+    const items = [];
+    for (const item of rawItems) {
+      const key = `${item.label}|${item.spokenAs}|${item.badge}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        items.push(item);
+      }
+    }
+
     this.currentGuideExplanationItems = items;
+    this.currentGuideHasVisibleAssimilation = typeof window.ReadAloudLinking.hasVisibleAssimilation === 'function'
+      ? window.ReadAloudLinking.hasVisibleAssimilation(analysis)
+      : items.some((item) => item.layer === 'assimilation');
     this.connectedSpeechPanelMode = 'guide';
-    if (!items.some((item) => item.id === this.selectedGuideItemId)) {
+    if (!this.selectedGuideItemId || !items.some((item) => item.id === this.selectedGuideItemId)) {
       this.selectedGuideItemId = items[0].id;
     }
+    if (!this.guideExplanationsToggled) {
+      this.guideExplanationsExpanded = !this.isCompactConnectedSpeechGuideLayout();
+    }
     this.renderConnectedSpeechGuidePanel();
+  }
+
+  isCompactConnectedSpeechGuideLayout() {
+    return (window.innerWidth || 0) < 940;
   }
 
   renderConnectedSpeechGuidePanel() {
@@ -1305,6 +1492,15 @@ class ReadAloudMode {
       this.hideConnectedSpeechPanel();
       return;
     }
+    const compactView = this.isCompactConnectedSpeechGuideLayout();
+    if (!this.guideExplanationsToggled) {
+      this.guideExplanationsExpanded = !compactView;
+    }
+    const showFullList = !compactView || this.guideExplanationsExpanded;
+    const selectedItem = items.find((item) => item.id === this.selectedGuideItemId) || items[0];
+    const noSoundChangeMessage = this.connectedSpeechLevel === 'v3_sound_changes'
+      && items.length > 0
+      && !this.currentGuideHasVisibleAssimilation;
 
     const escapeHtml = (value) => String(value ?? '')
       .replace(/&/g, '&amp;')
@@ -1339,24 +1535,63 @@ class ReadAloudMode {
     box.style.display = 'block';
     label.textContent = 'How To Say It';
     meta.textContent = levelLabel;
-    summary.textContent = `${items.length} pronunciation hint${items.length === 1 ? '' : 's'} in this prompt`;
-    list.innerHTML = items.map((item) => {
+    summary.textContent = noSoundChangeMessage
+      ? 'No sound changes in this sentence.'
+      : (compactView && !showFullList
+        ? 'Start here.'
+        : `${items.length} pronunciation hint${items.length === 1 ? '' : 's'} in this prompt`);
+    const renderGuideCard = (item, selected) => {
       const palette = paletteForLayer(item.layer);
-      const selected = item.id === this.selectedGuideItemId;
       const spokenAs = item.spokenAs
-        ? `<div style="font-size:0.86rem; color:#92400e;"><strong>Try:</strong> ${escapeHtml(item.spokenAs)}</div>`
+        ? `<span style="font-size:0.86rem; color:#92400e; margin-left:6px;"><strong>Try:</strong> ${escapeHtml(item.spokenAs)}</span>`
         : '';
       return `
-        <button type="button" data-guide-item="${escapeHtml(item.id)}" data-guide-target="${escapeHtml(item.id)}" data-selected="${selected ? 'true' : 'false'}" aria-pressed="${selected ? 'true' : 'false'}" style="display:flex; flex-direction:column; gap:8px; width:100%; text-align:left; padding:12px 14px; border-radius:12px; background:${selected ? '#fffaf0' : '#ffffff'}; border:1px solid ${selected ? '#f59e0b' : '#e5e7eb'}; ${palette.borderStyle} box-shadow:${selected ? '0 0 0 2px rgba(245, 158, 11, 0.18)' : 'none'}; cursor:pointer;">
-          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">
-            <strong style="font-size:0.96rem; color:#111827;">${escapeHtml(item.label || 'Hint')}</strong>
-            <span style="padding:4px 10px; border-radius:999px; font-size:0.75rem; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; ${palette.badgeStyle}">${escapeHtml(item.badge || 'Hint')}</span>
+        <button type="button" data-guide-item="${escapeHtml(item.id)}" data-guide-target="${escapeHtml(item.id)}" data-selected="${selected ? 'true' : 'false'}" aria-pressed="${selected ? 'true' : 'false'}" style="display:flex; flex-direction:column; gap:6px; width:100%; text-align:left; padding:8px 12px; border-radius:8px; background:${selected ? '#fffaf0' : '#ffffff'}; border:1px solid ${selected ? '#f59e0b' : '#e5e7eb'}; ${palette.borderStyle} box-shadow:${selected ? '0 0 0 2px rgba(245, 158, 11, 0.18)' : 'none'}; cursor:pointer;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+            <div style="display:flex; align-items:baseline;">
+              <strong style="font-size:0.95rem; color:#111827;">${escapeHtml(item.label || 'Hint')}</strong>
+              ${spokenAs}
+            </div>
+            <span style="padding:2px 8px; border-radius:999px; font-size:0.7rem; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; ${palette.badgeStyle}">${escapeHtml(item.badge || 'Hint')}</span>
           </div>
-          ${spokenAs}
-          <div style="font-size:0.92rem; color:#374151; line-height:1.45;">${escapeHtml(item.explanation || '')}</div>
+          <div style="font-size:0.86rem; color:#4b5563; line-height:1.35;">${escapeHtml(item.explanation || '')}</div>
         </button>
       `;
-    }).join('');
+    };
+    const renderItemList = (itemList) => itemList.map((item) => renderGuideCard(item, item.id === this.selectedGuideItemId)).join('');
+    const noSoundChangeHtml = noSoundChangeMessage
+      ? `
+        <div data-role="guide-no-sound-change" style="padding:10px 12px; border-radius:8px; border:1px solid rgba(180, 83, 9, 0.18); background:rgba(180, 83, 9, 0.08); color:#92400e; font-size:0.9rem; line-height:1.45;">
+          This sentence still has linking or reduced words, but no Level 3 sound-change example.
+        </div>
+      `
+      : '';
+    if (compactView) {
+      const selectedIndex = Math.max(0, items.findIndex((item) => item.id === selectedItem.id));
+      const compactCard = renderGuideCard(selectedItem, true);
+      const toggleLabel = showFullList ? 'Hide' : 'See more';
+      list.style.display = 'flex';
+      list.style.flexDirection = 'column';
+      list.style.gap = '10px';
+      list.innerHTML = `
+        <div data-role="guide-selected-summary" style="display:flex; flex-direction:column; gap:10px;">
+          ${noSoundChangeHtml}
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:0.84rem; color:#6b7280; text-transform:uppercase; letter-spacing:0.05em;">
+            <span>Start here</span>
+            <span>${selectedIndex + 1} of ${items.length}</span>
+          </div>
+          <div data-role="guide-selected-card">${compactCard}</div>
+          <button type="button" data-role="guide-toggle-details" aria-expanded="${showFullList ? 'true' : 'false'}" style="align-self:flex-start; padding:8px 12px; border-radius:999px; border:1px solid #d1d5db; background:#fff; color:#1f2937; font-weight:600; cursor:pointer;">${escapeHtml(toggleLabel)}</button>
+        </div>
+        <div data-role="guide-expanded-list" style="display:${showFullList ? 'flex' : 'none'}; flex-direction:column; gap:10px;">
+          ${renderItemList(items)}
+        </div>
+      `;
+    } else {
+      list.style.display = 'grid';
+      list.style.gap = '10px';
+      list.innerHTML = `${noSoundChangeHtml}${renderItemList(items)}`;
+    }
     this.syncGuideSelectionState();
   }
 
@@ -1376,6 +1611,7 @@ class ReadAloudMode {
     this.connectedSpeechPanelMode = 'results';
     this.currentGuideExplanationItems = [];
     this.selectedGuideItemId = null;
+    this.currentGuideHasVisibleAssimilation = false;
     box.style.display = 'block';
     label.textContent = 'Connected Speech';
     meta.textContent = 'GA only';
@@ -1403,6 +1639,20 @@ class ReadAloudMode {
         : event.status === 'not_detected'
           ? 'background: rgba(245, 158, 11, 0.14); color: #92400e;'
           : 'background: rgba(107, 114, 128, 0.12); color: #4b5563;';
+      const evidenceBits = [];
+      if (event?.evidence && typeof event.evidence.gapMs === 'number') {
+        evidenceBits.push(`${Math.round(event.evidence.gapMs)} ms gap`);
+      }
+      if (event?.evidence && typeof event.evidence.relativeDuration === 'number') {
+        evidenceBits.push(`duration ratio ${Number(event.evidence.relativeDuration).toFixed(2)}`);
+      }
+      if (event?.evidence && event.evidence.audioQualityReason) {
+        evidenceBits.push(`audio ${String(event.evidence.audioQualityReason).replace(/_/g, ' ')}`);
+      }
+      if (event?.evidence && Array.isArray(event.evidence.rightPhonemeHints) && event.evidence.rightPhonemeHints.length) {
+        evidenceBits.push(`phonemes ${event.evidence.rightPhonemeHints.slice(0, 2).join(', ')}`);
+      }
+      const evidenceText = evidenceBits.length ? evidenceBits.join(' · ') : '';
       return `
         <div style="display:flex; flex-direction:column; gap:6px; padding:12px 14px; border:1px solid #e5e7eb; border-radius:10px; background:#fff;">
           <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
@@ -1411,6 +1661,7 @@ class ReadAloudMode {
           </div>
           <div style="font-size:0.88rem; color:#6b7280;">${escapeHtml(event.family || 'connected speech')}${typeof event.confidence === 'number' ? ` · ${(event.confidence * 100).toFixed(0)}% confidence` : ''}</div>
           <div style="font-size:0.95rem; color:#374151;">${escapeHtml(event.feedbackText || '')}</div>
+          ${evidenceText ? `<div style="font-size:0.82rem; color:#6b7280;">Evidence: ${escapeHtml(evidenceText)}</div>` : ''}
         </div>
       `;
     }).join('');
@@ -1425,6 +1676,16 @@ class ReadAloudMode {
     const target = event?.target instanceof Element
       ? event.target.closest('[data-guide-target]')
       : null;
+    const detailsToggle = event?.target instanceof Element
+      ? event.target.closest('[data-role="guide-toggle-details"]')
+      : null;
+    if (detailsToggle) {
+      if (event.type === 'keydown') {
+        event.preventDefault();
+      }
+      this.toggleConnectedSpeechGuideDetails();
+      return;
+    }
     if (!target) return;
     if (event.type === 'keydown') {
       event.preventDefault();
@@ -1438,10 +1699,21 @@ class ReadAloudMode {
     if (!guideId || this.connectedSpeechPanelMode !== 'guide') {
       return;
     }
-    if (!this.currentGuideExplanationItems.some((item) => item.id === guideId)) {
+    this.selectedGuideItemId = guideId;
+    this.renderConnectedSpeechGuidePanel();
+  }
+
+  toggleConnectedSpeechGuideDetails(forceExpanded = null) {
+    if (this.connectedSpeechPanelMode !== 'guide') return;
+    if (!this.isCompactConnectedSpeechGuideLayout()) {
+      this.guideExplanationsExpanded = true;
+      this.renderConnectedSpeechGuidePanel();
       return;
     }
-    this.selectedGuideItemId = guideId;
+    this.guideExplanationsToggled = true;
+    this.guideExplanationsExpanded = typeof forceExpanded === 'boolean'
+      ? forceExpanded
+      : !this.guideExplanationsExpanded;
     this.renderConnectedSpeechGuidePanel();
   }
 

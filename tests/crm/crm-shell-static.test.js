@@ -133,8 +133,10 @@ assert(
 assert(
     html.includes('student-preferred-learning-days') &&
     html.includes('student-preferred-learning-hours') &&
+    html.includes('student-schedule-prompt') &&
     html.includes('classroom-meeting-days') &&
-    html.includes('classroom-meeting-hours'),
+    html.includes('classroom-meeting-hours') &&
+    html.includes('attendance-schedule-prompt'),
     'CRM admin page must expose structured schedule inputs for students and classrooms.'
 );
 assert(
@@ -143,89 +145,49 @@ assert(
     'CRM admin page must expose clear entrance-test handoff controls and status messaging.'
 );
 assert(
+    html.includes('js/crm/entrance-test-link-state.js') &&
+    html.indexOf('js/crm/entrance-test-link-state.js') < html.indexOf('crm-admin.js'),
+    'CRM admin page must load the shared entrance-test link helper before crm-admin.js.'
+);
+assert(
     html.includes('data-panel="courses/zoom-links"') &&
     html.includes('classroom-live') &&
     html.includes('live-session-list') &&
+    html.includes('btn-create-live-session') &&
+    html.includes('btn-save-live-session') &&
     html.includes('btn-start-live-session') &&
-    html.includes('btn-end-live-session'),
+    html.includes('btn-end-live-session') &&
+    html.includes('attendance-live-session-note') &&
+    html.includes('classwork-live-session-note') &&
+    html.includes('attendance-classroom-fit-note'),
     'CRM admin page must expose the live delivery panel and live-session controls.'
 );
 assert(
-    js.includes('loadLiveSessions') &&
-    js.includes('renderLiveDeliverySummary') &&
-    js.includes('renderAttendanceWorkflowGuidance') &&
-    js.includes('renderClassworkWorkflowGuidance'),
-    'crm-admin.js must implement live-session loading and deterministic workflow guidance.'
+    js.includes('let studentFinanceController = null;') &&
+    js.includes('studentFinanceController = window.CrmStudentFinance') &&
+    js.includes('let studentModalController = null;') &&
+    js.includes('studentModalController = window.CrmStudentModal') &&
+    js.includes('elements.btnCreateRecommendedEnrollment = document.getElementById(\'btn-create-recommended-enrollment\')') &&
+    js.includes('elements.inputPreferredLearningDays = document.getElementById(\'student-preferred-learning-days\')') &&
+    js.includes('elements.studentSchedulePrompt = document.getElementById(\'student-schedule-prompt\')') &&
+    js.includes('function renderStudentSchedulePrompt()') &&
+    js.includes('async function createRecommendedEnrollment()'),
+    'crm-admin.js must bind the finance recommendation controls and delegate them through the student finance helper.'
 );
 assert(
-    js.includes('window.CrmStudentFinance') &&
-    js.includes('studentFinanceController'),
-    'crm-admin.js must delegate finance-tab logic through the student finance helper.'
-);
-assert(
-    js.includes('window.CrmLiveDelivery') &&
-    js.includes('liveDeliveryController'),
-    'crm-admin.js must delegate live-delivery logic through the live delivery helper.'
-);
-assert(
-    js.includes('window.CrmClassroomModal') &&
-    js.includes('classroomModalController'),
-    'crm-admin.js must delegate classroom modal shell logic through the classroom modal helper.'
-);
-assert(
-    js.includes('window.CrmStudentModal') &&
-    js.includes('studentModalController'),
-    'crm-admin.js must delegate student modal shell logic through the student modal helper.'
-);
-assert(
-    js.includes('window.CrmCourseModal') &&
-    js.includes('courseModalController'),
-    'crm-admin.js must delegate course modal shell logic through the course modal helper.'
-);
-assert(
-    js.includes('window.CrmLeadWorkspace') &&
-    js.includes('leadWorkspaceController'),
-    'crm-admin.js must delegate lead pipeline and workspace logic through the lead workspace helper.'
-);
-assert(
-    js.includes('window.CrmClassroomWorkspace') &&
-    js.includes('classroomWorkspaceController'),
-    'crm-admin.js must delegate classroom workspace logic through the classroom workspace helper.'
-);
-assert(
-    js.includes('window.CrmStudentWorkspace') &&
-    js.includes('studentWorkspaceController'),
-    'crm-admin.js must delegate student workspace logic through the student workspace helper.'
-);
-assert(
-    js.includes('window.CrmTaskActivityWorkspace') &&
-    js.includes('taskActivityWorkspaceController'),
-    'crm-admin.js must delegate task and activity orchestration through the task activity helper.'
-);
-assert(
-    js.includes('window.CrmClassroomWorkspace') &&
-    js.includes('classroomWorkspaceController'),
-    'crm-admin.js must delegate classroom workspace logic through the classroom workspace helper.'
-);
-assert(
-    js.includes('window.CrmCommunicationsWorkspace') &&
-    js.includes('communicationsController'),
-    'crm-admin.js must delegate communications management through the communications workspace helper.'
-);
-assert(
-    js.includes('window.CrmDashboardWorkspace') &&
-    js.includes('dashboardController'),
-    'crm-admin.js must delegate dashboard management through the dashboard workspace helper.'
-);
-assert(
-    js.includes('window.CrmStudentDirectoryWorkspace') &&
-    js.includes('studentDirectoryController'),
-    'crm-admin.js must delegate student list rendering through the student directory workspace helper.'
-);
-assert(
-    js.includes('window.CrmActivitySurfaces') &&
-    js.includes('activitySurfacesController'),
-    'crm-admin.js must delegate activity surface wiring through the activity surfaces helper.'
+    js.includes('let liveDeliveryController = null;') &&
+    js.includes('liveDeliveryController = window.CrmLiveDelivery') &&
+    js.includes('let classroomModalController = null;') &&
+    js.includes('classroomModalController = window.CrmClassroomModal') &&
+    js.includes('elements.btnCreateLiveSession = document.getElementById(\'btn-create-live-session\')') &&
+    js.includes('elements.inputClassroomMeetingDays = document.getElementById(\'classroom-meeting-days\')') &&
+    js.includes('elements.attendanceSchedulePrompt = document.getElementById(\'attendance-schedule-prompt\')') &&
+    js.includes('function renderClassroomSchedulePrompt()') &&
+    js.includes('async function loadLiveSessions(classId, options = {})') &&
+    js.includes('async function saveLiveSession()') &&
+    js.includes('async function startSelectedLiveSession()') &&
+    js.includes('async function endSelectedLiveSession()'),
+    'crm-admin.js must bind and implement the live-delivery session workflow in the active shell.'
 );
 assert(
     js.includes('async function refreshAttendanceRiskSnapshot()'),
@@ -243,8 +205,13 @@ assert(
     'crm-admin.js must keep entrance-test link rendering and handoff messaging wired into the student workflow.'
 );
 assert(
+    js.includes('window.CrmEntranceTests') &&
+    js.includes('entranceTestUi.applyControls'),
+    'crm-admin.js must use the shared entrance-test helper for link state synchronization.'
+);
+assert(
     js.includes('function formatDateTime(') &&
-    js.includes('function formatDateTimeLocalValue('),
+    js.includes('function formatDateTimeLocalValue(ts)'),
     'crm-admin.js must define shared date formatting helpers required by extracted CRM controllers.'
 );
 

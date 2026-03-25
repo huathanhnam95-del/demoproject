@@ -1,0 +1,2010 @@
+{
+  "summary": {
+    "totalRows": 1449,
+    "zeroMarkerRows": 0,
+    "oneMarkerRows": 0,
+    "highDensityRows": 2,
+    "rowsWithLongPause": 1125,
+    "averageChunkCount": 8.53,
+    "changedRowsVsLegacy": 1007
+  },
+  "reviewBuckets": {
+    "highDriftRows": [
+      {
+        "id": "1307",
+        "plainWordCount": 60,
+        "chunkCount": 18,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 20,
+        "containsComplexToken": false
+      },
+      {
+        "id": "1215",
+        "plainWordCount": 59,
+        "chunkCount": 19,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 19,
+        "containsComplexToken": false
+      },
+      {
+        "id": "682",
+        "plainWordCount": 64,
+        "chunkCount": 15,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 18,
+        "containsComplexToken": false
+      },
+      {
+        "id": "365",
+        "plainWordCount": 58,
+        "chunkCount": 14,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 17,
+        "containsComplexToken": false
+      },
+      {
+        "id": "671",
+        "plainWordCount": 59,
+        "chunkCount": 11,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 17,
+        "containsComplexToken": false
+      },
+      {
+        "id": "850",
+        "plainWordCount": 53,
+        "chunkCount": 15,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 16,
+        "containsComplexToken": false
+      },
+      {
+        "id": "810",
+        "plainWordCount": 55,
+        "chunkCount": 10,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 16,
+        "containsComplexToken": false
+      },
+      {
+        "id": "121",
+        "plainWordCount": 60,
+        "chunkCount": 14,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 16,
+        "containsComplexToken": false
+      },
+      {
+        "id": "1365",
+        "plainWordCount": 61,
+        "chunkCount": 16,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 16,
+        "containsComplexToken": false
+      },
+      {
+        "id": "1406",
+        "plainWordCount": 60,
+        "chunkCount": 11,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 16,
+        "containsComplexToken": false
+      },
+      {
+        "id": "674",
+        "plainWordCount": 62,
+        "chunkCount": 18,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 16,
+        "containsComplexToken": false
+      },
+      {
+        "id": "730",
+        "plainWordCount": 65,
+        "chunkCount": 13,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 16,
+        "containsComplexToken": false
+      },
+      {
+        "id": "59",
+        "plainWordCount": 50,
+        "chunkCount": 18,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": true,
+        "driftFromLegacy": 15,
+        "containsComplexToken": false
+      },
+      {
+        "id": "1340",
+        "plainWordCount": 51,
+        "chunkCount": 11,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 15,
+        "containsComplexToken": false
+      },
+      {
+        "id": "861",
+        "plainWordCount": 56,
+        "chunkCount": 16,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 15,
+        "containsComplexToken": false
+      },
+      {
+        "id": "1123",
+        "plainWordCount": 61,
+        "chunkCount": 18,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 15,
+        "containsComplexToken": false
+      },
+      {
+        "id": "666",
+        "plainWordCount": 63,
+        "chunkCount": 14,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 15,
+        "containsComplexToken": false
+      },
+      {
+        "id": "86",
+        "plainWordCount": 70,
+        "chunkCount": 15,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 15,
+        "containsComplexToken": false
+      },
+      {
+        "id": "1122",
+        "plainWordCount": 44,
+        "chunkCount": 12,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 14,
+        "containsComplexToken": false
+      },
+      {
+        "id": "917",
+        "plainWordCount": 49,
+        "chunkCount": 11,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 14,
+        "containsComplexToken": false
+      },
+      {
+        "id": "566",
+        "plainWordCount": 51,
+        "chunkCount": 15,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 14,
+        "containsComplexToken": true
+      },
+      {
+        "id": "732",
+        "plainWordCount": 52,
+        "chunkCount": 10,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 14,
+        "containsComplexToken": false
+      },
+      {
+        "id": "1166",
+        "plainWordCount": 51,
+        "chunkCount": 13,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 14,
+        "containsComplexToken": false
+      },
+      {
+        "id": "960",
+        "plainWordCount": 57,
+        "chunkCount": 15,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 14,
+        "containsComplexToken": false
+      },
+      {
+        "id": "455",
+        "plainWordCount": 58,
+        "chunkCount": 10,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 14,
+        "containsComplexToken": false
+      },
+      {
+        "id": "1016",
+        "plainWordCount": 58,
+        "chunkCount": 20,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 14,
+        "containsComplexToken": false
+      },
+      {
+        "id": "108",
+        "plainWordCount": 59,
+        "chunkCount": 12,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 14,
+        "containsComplexToken": false
+      },
+      {
+        "id": "539",
+        "plainWordCount": 59,
+        "chunkCount": 15,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 14,
+        "containsComplexToken": false
+      },
+      {
+        "id": "240",
+        "plainWordCount": 60,
+        "chunkCount": 15,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 14,
+        "containsComplexToken": false
+      },
+      {
+        "id": "564",
+        "plainWordCount": 60,
+        "chunkCount": 12,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 14,
+        "containsComplexToken": false
+      },
+      {
+        "id": "72",
+        "plainWordCount": 60,
+        "chunkCount": 18,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 14,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1179",
+        "plainWordCount": 61,
+        "chunkCount": 19,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 14,
+        "containsComplexToken": true
+      },
+      {
+        "id": "689",
+        "plainWordCount": 64,
+        "chunkCount": 14,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 14,
+        "containsComplexToken": false
+      },
+      {
+        "id": "709",
+        "plainWordCount": 64,
+        "chunkCount": 10,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 14,
+        "containsComplexToken": false
+      },
+      {
+        "id": "414",
+        "plainWordCount": 71,
+        "chunkCount": 16,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 14,
+        "containsComplexToken": false
+      },
+      {
+        "id": "296",
+        "plainWordCount": 44,
+        "chunkCount": 16,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": true,
+        "driftFromLegacy": 13,
+        "containsComplexToken": false
+      },
+      {
+        "id": "1020",
+        "plainWordCount": 50,
+        "chunkCount": 9,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 13,
+        "containsComplexToken": false
+      },
+      {
+        "id": "468",
+        "plainWordCount": 53,
+        "chunkCount": 15,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 13,
+        "containsComplexToken": false
+      },
+      {
+        "id": "1159",
+        "plainWordCount": 54,
+        "chunkCount": 11,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 13,
+        "containsComplexToken": false
+      },
+      {
+        "id": "758",
+        "plainWordCount": 55,
+        "chunkCount": 14,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 13,
+        "containsComplexToken": false
+      },
+      {
+        "id": "1447",
+        "plainWordCount": 55,
+        "chunkCount": 13,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 13,
+        "containsComplexToken": false
+      },
+      {
+        "id": "839",
+        "plainWordCount": 59,
+        "chunkCount": 15,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 13,
+        "containsComplexToken": false
+      },
+      {
+        "id": "1127",
+        "plainWordCount": 59,
+        "chunkCount": 16,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 13,
+        "containsComplexToken": false
+      },
+      {
+        "id": "605",
+        "plainWordCount": 60,
+        "chunkCount": 16,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 13,
+        "containsComplexToken": false
+      },
+      {
+        "id": "169",
+        "plainWordCount": 61,
+        "chunkCount": 13,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 13,
+        "containsComplexToken": false
+      },
+      {
+        "id": "662",
+        "plainWordCount": 61,
+        "chunkCount": 14,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 13,
+        "containsComplexToken": false
+      },
+      {
+        "id": "840",
+        "plainWordCount": 61,
+        "chunkCount": 14,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 13,
+        "containsComplexToken": false
+      },
+      {
+        "id": "1132",
+        "plainWordCount": 61,
+        "chunkCount": 12,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 13,
+        "containsComplexToken": false
+      },
+      {
+        "id": "49",
+        "plainWordCount": 62,
+        "chunkCount": 15,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 13,
+        "containsComplexToken": false
+      },
+      {
+        "id": "1063",
+        "plainWordCount": 62,
+        "chunkCount": 13,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 13,
+        "containsComplexToken": false
+      }
+    ],
+    "zeroMarkerLongRows": [],
+    "highDensityRows": [
+      {
+        "id": "296",
+        "plainWordCount": 44,
+        "chunkCount": 16,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": true,
+        "driftFromLegacy": 13,
+        "containsComplexToken": false
+      },
+      {
+        "id": "59",
+        "plainWordCount": 50,
+        "chunkCount": 18,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": true,
+        "driftFromLegacy": 15,
+        "containsComplexToken": false
+      }
+    ],
+    "complexTokenRows": [
+      {
+        "id": "531",
+        "plainWordCount": 40,
+        "chunkCount": 11,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 9,
+        "containsComplexToken": true
+      },
+      {
+        "id": "856",
+        "plainWordCount": 41,
+        "chunkCount": 8,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 5,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1004",
+        "plainWordCount": 41,
+        "chunkCount": 5,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1069",
+        "plainWordCount": 42,
+        "chunkCount": 7,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 3,
+        "containsComplexToken": true
+      },
+      {
+        "id": "46",
+        "plainWordCount": 43,
+        "chunkCount": 3,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "412",
+        "plainWordCount": 44,
+        "chunkCount": 8,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 4,
+        "containsComplexToken": true
+      },
+      {
+        "id": "549",
+        "plainWordCount": 43,
+        "chunkCount": 3,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1001",
+        "plainWordCount": 43,
+        "chunkCount": 5,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1405",
+        "plainWordCount": 43,
+        "chunkCount": 5,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "32",
+        "plainWordCount": 44,
+        "chunkCount": 3,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "616",
+        "plainWordCount": 44,
+        "chunkCount": 10,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 9,
+        "containsComplexToken": true
+      },
+      {
+        "id": "864",
+        "plainWordCount": 44,
+        "chunkCount": 4,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1076",
+        "plainWordCount": 44,
+        "chunkCount": 7,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 2,
+        "containsComplexToken": true
+      },
+      {
+        "id": "394",
+        "plainWordCount": 45,
+        "chunkCount": 7,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 4,
+        "containsComplexToken": true
+      },
+      {
+        "id": "514",
+        "plainWordCount": 45,
+        "chunkCount": 10,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 11,
+        "containsComplexToken": true
+      },
+      {
+        "id": "530",
+        "plainWordCount": 44,
+        "chunkCount": 7,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 3,
+        "containsComplexToken": true
+      },
+      {
+        "id": "534",
+        "plainWordCount": 45,
+        "chunkCount": 11,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 8,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1287",
+        "plainWordCount": 45,
+        "chunkCount": 8,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 2,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1344",
+        "plainWordCount": 45,
+        "chunkCount": 9,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 5,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1389",
+        "plainWordCount": 45,
+        "chunkCount": 10,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 6,
+        "containsComplexToken": true
+      },
+      {
+        "id": "136",
+        "plainWordCount": 46,
+        "chunkCount": 7,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 5,
+        "containsComplexToken": true
+      },
+      {
+        "id": "456",
+        "plainWordCount": 45,
+        "chunkCount": 7,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 3,
+        "containsComplexToken": true
+      },
+      {
+        "id": "512",
+        "plainWordCount": 46,
+        "chunkCount": 12,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 9,
+        "containsComplexToken": true
+      },
+      {
+        "id": "772",
+        "plainWordCount": 46,
+        "chunkCount": 11,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 7,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1009",
+        "plainWordCount": 46,
+        "chunkCount": 6,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 4,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1292",
+        "plainWordCount": 46,
+        "chunkCount": 9,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 1,
+        "containsComplexToken": true
+      },
+      {
+        "id": "191",
+        "plainWordCount": 47,
+        "chunkCount": 9,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 7,
+        "containsComplexToken": true
+      },
+      {
+        "id": "623",
+        "plainWordCount": 47,
+        "chunkCount": 9,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 6,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1026",
+        "plainWordCount": 46,
+        "chunkCount": 6,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1129",
+        "plainWordCount": 47,
+        "chunkCount": 11,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 9,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1144",
+        "plainWordCount": 47,
+        "chunkCount": 4,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1260",
+        "plainWordCount": 47,
+        "chunkCount": 9,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 3,
+        "containsComplexToken": true
+      },
+      {
+        "id": "190",
+        "plainWordCount": 48,
+        "chunkCount": 4,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "559",
+        "plainWordCount": 48,
+        "chunkCount": 10,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 7,
+        "containsComplexToken": true
+      },
+      {
+        "id": "809",
+        "plainWordCount": 48,
+        "chunkCount": 4,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 3,
+        "containsComplexToken": true
+      },
+      {
+        "id": "358",
+        "plainWordCount": 49,
+        "chunkCount": 10,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 7,
+        "containsComplexToken": true
+      },
+      {
+        "id": "469",
+        "plainWordCount": 49,
+        "chunkCount": 3,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1003",
+        "plainWordCount": 47,
+        "chunkCount": 7,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 2,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1298",
+        "plainWordCount": 49,
+        "chunkCount": 11,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 7,
+        "containsComplexToken": true
+      },
+      {
+        "id": "261",
+        "plainWordCount": 50,
+        "chunkCount": 4,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "733",
+        "plainWordCount": 50,
+        "chunkCount": 6,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "984",
+        "plainWordCount": 50,
+        "chunkCount": 6,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1235",
+        "plainWordCount": 50,
+        "chunkCount": 7,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 7,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1246",
+        "plainWordCount": 50,
+        "chunkCount": 13,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 9,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1291",
+        "plainWordCount": 50,
+        "chunkCount": 7,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1394",
+        "plainWordCount": 52,
+        "chunkCount": 3,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 4,
+        "containsComplexToken": true
+      },
+      {
+        "id": "176",
+        "plainWordCount": 51,
+        "chunkCount": 10,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 6,
+        "containsComplexToken": true
+      },
+      {
+        "id": "293",
+        "plainWordCount": 51,
+        "chunkCount": 4,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "566",
+        "plainWordCount": 51,
+        "chunkCount": 15,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 14,
+        "containsComplexToken": true
+      },
+      {
+        "id": "568",
+        "plainWordCount": 51,
+        "chunkCount": 5,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "700",
+        "plainWordCount": 51,
+        "chunkCount": 6,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1286",
+        "plainWordCount": 51,
+        "chunkCount": 12,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 4,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1440",
+        "plainWordCount": 51,
+        "chunkCount": 9,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 5,
+        "containsComplexToken": true
+      },
+      {
+        "id": "40",
+        "plainWordCount": 52,
+        "chunkCount": 5,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "312",
+        "plainWordCount": 52,
+        "chunkCount": 5,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "367",
+        "plainWordCount": 53,
+        "chunkCount": 10,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 6,
+        "containsComplexToken": true
+      },
+      {
+        "id": "438",
+        "plainWordCount": 52,
+        "chunkCount": 16,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 7,
+        "containsComplexToken": true
+      },
+      {
+        "id": "500",
+        "plainWordCount": 52,
+        "chunkCount": 8,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 4,
+        "containsComplexToken": true
+      },
+      {
+        "id": "815",
+        "plainWordCount": 52,
+        "chunkCount": 4,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1075",
+        "plainWordCount": 52,
+        "chunkCount": 6,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "99",
+        "plainWordCount": 53,
+        "chunkCount": 12,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 9,
+        "containsComplexToken": true
+      },
+      {
+        "id": "273",
+        "plainWordCount": 53,
+        "chunkCount": 10,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 6,
+        "containsComplexToken": true
+      },
+      {
+        "id": "453",
+        "plainWordCount": 53,
+        "chunkCount": 5,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1380",
+        "plainWordCount": 53,
+        "chunkCount": 5,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "395",
+        "plainWordCount": 54,
+        "chunkCount": 10,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 7,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1214",
+        "plainWordCount": 54,
+        "chunkCount": 8,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 5,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1346",
+        "plainWordCount": 54,
+        "chunkCount": 10,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 7,
+        "containsComplexToken": true
+      },
+      {
+        "id": "199",
+        "plainWordCount": 55,
+        "chunkCount": 6,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1321",
+        "plainWordCount": 55,
+        "chunkCount": 12,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 7,
+        "containsComplexToken": true
+      },
+      {
+        "id": "31",
+        "plainWordCount": 56,
+        "chunkCount": 5,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "58",
+        "plainWordCount": 56,
+        "chunkCount": 5,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "229",
+        "plainWordCount": 56,
+        "chunkCount": 8,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 3,
+        "containsComplexToken": true
+      },
+      {
+        "id": "245",
+        "plainWordCount": 56,
+        "chunkCount": 5,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "280",
+        "plainWordCount": 56,
+        "chunkCount": 16,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 12,
+        "containsComplexToken": true
+      },
+      {
+        "id": "305",
+        "plainWordCount": 56,
+        "chunkCount": 12,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 3,
+        "containsComplexToken": true
+      },
+      {
+        "id": "498",
+        "plainWordCount": 56,
+        "chunkCount": 5,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "511",
+        "plainWordCount": 56,
+        "chunkCount": 10,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 5,
+        "containsComplexToken": true
+      },
+      {
+        "id": "906",
+        "plainWordCount": 56,
+        "chunkCount": 10,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 12,
+        "containsComplexToken": true
+      },
+      {
+        "id": "930",
+        "plainWordCount": 56,
+        "chunkCount": 9,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 8,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1416",
+        "plainWordCount": 54,
+        "chunkCount": 10,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 7,
+        "containsComplexToken": true
+      },
+      {
+        "id": "93",
+        "plainWordCount": 57,
+        "chunkCount": 10,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 6,
+        "containsComplexToken": true
+      },
+      {
+        "id": "206",
+        "plainWordCount": 57,
+        "chunkCount": 8,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 1,
+        "containsComplexToken": true
+      },
+      {
+        "id": "225",
+        "plainWordCount": 58,
+        "chunkCount": 6,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "228",
+        "plainWordCount": 57,
+        "chunkCount": 5,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "232",
+        "plainWordCount": 57,
+        "chunkCount": 7,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "446",
+        "plainWordCount": 57,
+        "chunkCount": 6,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "471",
+        "plainWordCount": 57,
+        "chunkCount": 16,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 12,
+        "containsComplexToken": true
+      },
+      {
+        "id": "510",
+        "plainWordCount": 57,
+        "chunkCount": 9,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 6,
+        "containsComplexToken": true
+      },
+      {
+        "id": "570",
+        "plainWordCount": 57,
+        "chunkCount": 10,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 6,
+        "containsComplexToken": true
+      },
+      {
+        "id": "728",
+        "plainWordCount": 55,
+        "chunkCount": 6,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1184",
+        "plainWordCount": 59,
+        "chunkCount": 8,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 11,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1189",
+        "plainWordCount": 56,
+        "chunkCount": 5,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 1,
+        "containsComplexToken": true
+      },
+      {
+        "id": "12",
+        "plainWordCount": 58,
+        "chunkCount": 15,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 10,
+        "containsComplexToken": true
+      },
+      {
+        "id": "144",
+        "plainWordCount": 58,
+        "chunkCount": 5,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "470",
+        "plainWordCount": 58,
+        "chunkCount": 16,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 11,
+        "containsComplexToken": true
+      },
+      {
+        "id": "657",
+        "plainWordCount": 58,
+        "chunkCount": 12,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 11,
+        "containsComplexToken": true
+      },
+      {
+        "id": "824",
+        "plainWordCount": 58,
+        "chunkCount": 9,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 5,
+        "containsComplexToken": true
+      },
+      {
+        "id": "895",
+        "plainWordCount": 58,
+        "chunkCount": 12,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 9,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1199",
+        "plainWordCount": 58,
+        "chunkCount": 4,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1201",
+        "plainWordCount": 57,
+        "chunkCount": 11,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 8,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1337",
+        "plainWordCount": 58,
+        "chunkCount": 10,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 6,
+        "containsComplexToken": true
+      },
+      {
+        "id": "237",
+        "plainWordCount": 59,
+        "chunkCount": 11,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 4,
+        "containsComplexToken": true
+      },
+      {
+        "id": "542",
+        "plainWordCount": 59,
+        "chunkCount": 6,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 1,
+        "containsComplexToken": true
+      },
+      {
+        "id": "594",
+        "plainWordCount": 59,
+        "chunkCount": 6,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1113",
+        "plainWordCount": 59,
+        "chunkCount": 5,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1163",
+        "plainWordCount": 59,
+        "chunkCount": 5,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1336",
+        "plainWordCount": 59,
+        "chunkCount": 11,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 11,
+        "containsComplexToken": true
+      },
+      {
+        "id": "29",
+        "plainWordCount": 60,
+        "chunkCount": 16,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 10,
+        "containsComplexToken": true
+      },
+      {
+        "id": "103",
+        "plainWordCount": 60,
+        "chunkCount": 4,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "251",
+        "plainWordCount": 60,
+        "chunkCount": 7,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "272",
+        "plainWordCount": 60,
+        "chunkCount": 14,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 7,
+        "containsComplexToken": true
+      },
+      {
+        "id": "515",
+        "plainWordCount": 60,
+        "chunkCount": 5,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1392",
+        "plainWordCount": 60,
+        "chunkCount": 12,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 8,
+        "containsComplexToken": true
+      },
+      {
+        "id": "55",
+        "plainWordCount": 60,
+        "chunkCount": 15,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 11,
+        "containsComplexToken": true
+      },
+      {
+        "id": "72",
+        "plainWordCount": 60,
+        "chunkCount": 18,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 14,
+        "containsComplexToken": true
+      },
+      {
+        "id": "141",
+        "plainWordCount": 61,
+        "chunkCount": 13,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 6,
+        "containsComplexToken": true
+      },
+      {
+        "id": "344",
+        "plainWordCount": 59,
+        "chunkCount": 17,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 9,
+        "containsComplexToken": true
+      },
+      {
+        "id": "912",
+        "plainWordCount": 61,
+        "chunkCount": 4,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1179",
+        "plainWordCount": 61,
+        "chunkCount": 19,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 14,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1317",
+        "plainWordCount": 61,
+        "chunkCount": 10,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 6,
+        "containsComplexToken": true
+      },
+      {
+        "id": "71",
+        "plainWordCount": 62,
+        "chunkCount": 3,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "90",
+        "plainWordCount": 62,
+        "chunkCount": 12,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 9,
+        "containsComplexToken": true
+      },
+      {
+        "id": "233",
+        "plainWordCount": 62,
+        "chunkCount": 6,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "265",
+        "plainWordCount": 62,
+        "chunkCount": 8,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "326",
+        "plainWordCount": 62,
+        "chunkCount": 9,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 2,
+        "containsComplexToken": true
+      },
+      {
+        "id": "445",
+        "plainWordCount": 62,
+        "chunkCount": 9,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "499",
+        "plainWordCount": 62,
+        "chunkCount": 4,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "748",
+        "plainWordCount": 62,
+        "chunkCount": 11,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 6,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1410",
+        "plainWordCount": 62,
+        "chunkCount": 9,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 7,
+        "containsComplexToken": true
+      },
+      {
+        "id": "224",
+        "plainWordCount": 63,
+        "chunkCount": 6,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 2,
+        "containsComplexToken": true
+      },
+      {
+        "id": "299",
+        "plainWordCount": 63,
+        "chunkCount": 11,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 4,
+        "containsComplexToken": true
+      },
+      {
+        "id": "435",
+        "plainWordCount": 63,
+        "chunkCount": 8,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "551",
+        "plainWordCount": 62,
+        "chunkCount": 13,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 8,
+        "containsComplexToken": true
+      },
+      {
+        "id": "583",
+        "plainWordCount": 63,
+        "chunkCount": 9,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 2,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1087",
+        "plainWordCount": 63,
+        "chunkCount": 10,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 4,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1277",
+        "plainWordCount": 63,
+        "chunkCount": 14,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 9,
+        "containsComplexToken": true
+      },
+      {
+        "id": "123",
+        "plainWordCount": 64,
+        "chunkCount": 14,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 8,
+        "containsComplexToken": true
+      },
+      {
+        "id": "388",
+        "plainWordCount": 64,
+        "chunkCount": 15,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 6,
+        "containsComplexToken": true
+      },
+      {
+        "id": "532",
+        "plainWordCount": 64,
+        "chunkCount": 12,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 6,
+        "containsComplexToken": true
+      },
+      {
+        "id": "555",
+        "plainWordCount": 64,
+        "chunkCount": 6,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "931",
+        "plainWordCount": 65,
+        "chunkCount": 10,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 3,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1170",
+        "plainWordCount": 65,
+        "chunkCount": 4,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 5,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1196",
+        "plainWordCount": 63,
+        "chunkCount": 6,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 10,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1324",
+        "plainWordCount": 66,
+        "chunkCount": 4,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 0,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1342",
+        "plainWordCount": 63,
+        "chunkCount": 17,
+        "hasLongPause": true,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 13,
+        "containsComplexToken": true
+      },
+      {
+        "id": "1232",
+        "plainWordCount": 65,
+        "chunkCount": 11,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 8,
+        "containsComplexToken": true
+      },
+      {
+        "id": "513",
+        "plainWordCount": 73,
+        "chunkCount": 7,
+        "hasLongPause": false,
+        "zeroMarkers": false,
+        "highDensity": false,
+        "driftFromLegacy": 8,
+        "containsComplexToken": true
+      }
+    ]
+  }
+}

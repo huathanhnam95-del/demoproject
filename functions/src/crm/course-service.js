@@ -15,6 +15,24 @@ function sanitizeTeachers(rawTeachers) {
         .filter(Boolean);
 }
 
+function normalizeStringList(value) {
+    if (Array.isArray(value)) {
+        return value
+            .map((item) => cleanOptionalString(item, ''))
+            .filter(Boolean);
+    }
+
+    const normalized = cleanOptionalString(value, '');
+    if (!normalized) {
+        return [];
+    }
+
+    return normalized
+        .split(',')
+        .map((item) => cleanOptionalString(item, ''))
+        .filter(Boolean);
+}
+
 function normalizePositiveInteger(value, label) {
     const numeric = Number(value);
     if (!Number.isInteger(numeric) || numeric <= 0) {
@@ -201,6 +219,8 @@ function buildClassroomCreateData(input, context = {}) {
         courseId: cleanOptionalString(input.courseId),
         primaryTeacherUid: cleanOptionalString(input.primaryTeacherUid),
         status: cleanOptionalString(input.status, 'draft') || 'draft',
+        meetingDays: normalizeStringList(input.meetingDays),
+        meetingHours: normalizeStringList(input.meetingHours),
         scheduleConfig,
         scheduleSummary: buildEmptyScheduleSummary(scheduleConfig),
         createdAt: context.serverTimestamp ? context.serverTimestamp() : new Date(),
@@ -220,6 +240,12 @@ function buildClassroomPatchData(existing, input, context = {}) {
                 ? cleanOptionalString(input[key], '')
                 : cleanOptionalString(input[key]);
         }
+    }
+    if (Object.prototype.hasOwnProperty.call(input || {}, 'meetingDays')) {
+        patch.meetingDays = normalizeStringList(input.meetingDays);
+    }
+    if (Object.prototype.hasOwnProperty.call(input || {}, 'meetingHours')) {
+        patch.meetingHours = normalizeStringList(input.meetingHours);
     }
     if (Object.prototype.hasOwnProperty.call(input || {}, 'scheduleConfig')) {
         patch.scheduleConfig = normalizeScheduleConfig(input.scheduleConfig, {
@@ -250,6 +276,8 @@ function mapClassroomRecord(doc, classId) {
         courseId: data.courseId || null,
         primaryTeacherUid: data.primaryTeacherUid || null,
         status: data.status || 'draft',
+        meetingDays: normalizeStringList(data.meetingDays),
+        meetingHours: normalizeStringList(data.meetingHours),
         scheduleConfig: data.scheduleConfig || null,
         scheduleSummary: data.scheduleSummary || buildEmptyScheduleSummary(data.scheduleConfig || null),
         createdAt: data.createdAt || null,
@@ -312,5 +340,6 @@ module.exports = {
     mapClassroomRecord,
     mapCourseRecord,
     normalizeScheduleConfig,
+    normalizeStringList,
     sanitizeTeachers
 };

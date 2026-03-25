@@ -1,0 +1,5 @@
+speaker_id,item_id,contrast_id,target_phoneme,azure_score,azure_top_candidate,human_rater_1,human_rater_2,heard_label_r1,heard_label_r2,needs_adjudication,notes
+vn_001,core-thin-001,theta_t,θ,52,t,2,2,paired_contrast,paired_contrast,false,Intentional t-for-theta substitution
+vn_001,core-cat-001,final_retention,t,0,,1,1,deleted_final,deleted_final,false,Final consonant omitted
+vn_002,core-sheep-001,vowel_i_ih,i,62,i,4,3,target,target,false,Borderline long high front vowel
+vn_002,core-pen-001,vowel_e_ae,ɛ,74,ɛ,4,4,target,target,false,Stable vowel production

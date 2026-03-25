@@ -1045,6 +1045,13 @@
                 position: 'bottom'
             },
             {
+                target: '#ra-prompt-guides-group',
+                icon: 'ðŸ”—',
+                title: 'Use Prompt Guides',
+                text: 'Use <strong>Chunking</strong> to preview pause groups and the <strong>connected speech</strong> levels to preview how fluent speech links or reduces words. Level 1 is linking only, and level 2 adds reduced words. Both guides are optional and can be enabled together.',
+                position: 'bottom'
+            },
+            {
                 target: '.ra-status-bar',
                 icon: '⏱️',
                 title: 'Prep And Record',
@@ -1052,7 +1059,7 @@
                 position: 'bottom'
             },
             {
-                target: '.ra-controls',
+                target: '#ra-read-aloud-controls',
                 icon: '🎙️',
                 title: 'Control The Attempt',
                 text: 'Use Skip for a new prompt and the action button to begin, finish, or move to the next prompt.',

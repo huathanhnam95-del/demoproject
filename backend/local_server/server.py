@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
+import sys
 try:
     import parselmouth  # type: ignore
 except ImportError:
@@ -17,6 +18,15 @@ except ImportError:
     except ImportError:
         def uniform_filter1d(input: np.ndarray, size: int, *args, **kwargs) -> np.ndarray:
             return input
+
+try:
+    # Keep Unicode log output from crashing on Windows' default console encoding.
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    if hasattr(sys.stderr, 'reconfigure'):
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+except Exception:
+    pass
 
 try:
     import nltk
@@ -503,12 +513,20 @@ def clamp_boundary_to_vowel_end(candidate_boundary, peak_time, start_time,
 
 
 app: Flask = Flask(__name__)
+app.config['MAX_CONTENT_LENGTH'] = int(os.environ.get('MAX_UPLOAD_BYTES', 10 * 1024 * 1024))
 
-# CORS configuration - allow all origins for development
+# CORS configuration - default to local origins unless explicitly overridden
 # Using late initialization pattern to avoid type mismatch in some IDEs
 cors = CORS()
+cors_origins_env = str(os.environ.get('CORS_ORIGINS', '')).strip()
+cors_origins = [origin.strip() for origin in cors_origins_env.split(',') if origin.strip()] if cors_origins_env else [
+    'http://localhost:8443',
+    'https://localhost:8443',
+    'http://127.0.0.1:8443',
+    'https://127.0.0.1:8443'
+]
 # type: ignore
-cors.init_app(app, origins='*', methods=['GET', 'POST', 'OPTIONS'], allow_headers=['Content-Type'])
+cors.init_app(app, origins=cors_origins, methods=['GET', 'POST', 'OPTIONS'], allow_headers=['Content-Type'])
 
 @app.route('/', methods=['GET'])
 def home():
@@ -1328,6 +1346,38 @@ def analyze():
         if os.path.exists(tmp_path):
             os.unlink(tmp_path)
 
+@app.route('/analyze-vowel', methods=['POST'])
+def analyze_vowel():
+    if 'audio' not in request.files:
+        return jsonify({'error': 'No audio file provided'}), 400
+
+    category = str(request.form.get('category', '')).strip()
+    if category != 'vowel':
+        return jsonify({
+            'exploratory': True,
+            'usable': False,
+            'reason': 'non_vowel_item'
+        })
+
+    audio_file = request.files['audio']
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp:
+        audio_file.save(tmp.name)
+        tmp_path = tmp.name
+
+    try:
+        result = analyze_vowel_hint(tmp_path)
+        return jsonify(result)
+    except Exception as e:
+        print(f"Vowel hint analysis error: {e}")
+        return jsonify({
+            'exploratory': True,
+            'usable': False,
+            'reason': 'praat_unavailable'
+        })
+    finally:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
 def analyze_audio(audio_path, expected_syllables=None):
     """Main analysis using Parselmouth/Praat"""
     
@@ -1374,6 +1424,123 @@ def analyze_audio(audio_path, expected_syllables=None):
             'values': [v for v in intensity_values]
         },
         'syllables': syllables
+    }
+
+def _longest_true_run(times, mask):
+    best_start = None
+    best_end = None
+    run_start = None
+
+    for index, flag in enumerate(mask):
+        if flag and run_start is None:
+            run_start = index
+        if not flag and run_start is not None:
+            if best_start is None or (index - run_start) > (best_end - best_start):
+                best_start = run_start
+                best_end = index
+            run_start = None
+
+    if run_start is not None:
+        end_index = len(mask)
+        if best_start is None or (end_index - run_start) > (best_end - best_start):
+            best_start = run_start
+            best_end = end_index
+
+    if best_start is None or best_end is None:
+        return None, None
+
+    start_time = float(times[best_start])
+    end_lookup = min(len(times) - 1, best_end - 1)
+    end_time = float(times[end_lookup])
+    return start_time, end_time
+
+def analyze_vowel_hint(audio_path):
+    sound = parselmouth.Sound(audio_path)
+    duration = float(sound.duration)
+    if duration < 0.08:
+        return {
+            'exploratory': True,
+            'usable': False,
+            'reason': 'no_stable_vowel'
+        }
+
+    time_step = 0.005
+    times = np.arange(0, duration, time_step)
+    pitch = sound.to_pitch(time_step=time_step, pitch_floor=75, pitch_ceiling=500)
+    intensity = sound.to_intensity(minimum_pitch=75, time_step=time_step)
+    formant = sound.to_formant_burg(time_step=time_step, max_number_of_formants=5, maximum_formant=5500)
+
+    pitch_values = np.array([pitch.get_value_at_time(t) for t in times], dtype=float)
+    intensity_values = np.array([intensity.get_value(t) for t in times], dtype=float)
+    intensity_values = np.nan_to_num(intensity_values, nan=0.0)
+    voiced_mask = (~np.isnan(pitch_values)) & (pitch_values > 0)
+
+    positive_intensities = intensity_values[intensity_values > 0]
+    if len(positive_intensities) == 0:
+        return {
+            'exploratory': True,
+            'usable': False,
+            'reason': 'no_stable_vowel'
+        }
+
+    intensity_threshold = max(np.percentile(positive_intensities, 35), 35.0)
+    stable_mask = voiced_mask & (intensity_values >= intensity_threshold)
+    if not np.any(stable_mask):
+        return {
+            'exploratory': True,
+            'usable': False,
+            'reason': 'no_stable_vowel'
+        }
+
+    region_start, region_end = _longest_true_run(times, stable_mask)
+    if region_start is None or region_end is None or (region_end - region_start) < 0.05:
+        return {
+            'exploratory': True,
+            'usable': False,
+            'reason': 'no_stable_vowel'
+        }
+
+    region_duration = region_end - region_start
+    nucleus_start = region_start + (region_duration * 0.2)
+    nucleus_end = region_end - (region_duration * 0.2)
+    if nucleus_end <= nucleus_start:
+        return {
+            'exploratory': True,
+            'usable': False,
+            'reason': 'no_stable_vowel'
+        }
+
+    sample_pcts = [35, 50, 65]
+    samples = []
+    for pct in sample_pcts:
+        sample_time = nucleus_start + ((pct / 100.0) * (nucleus_end - nucleus_start))
+        f1 = float(formant.get_value_at_time(1, sample_time))
+        f2 = float(formant.get_value_at_time(2, sample_time))
+        if np.isnan(f1) or np.isnan(f2) or f1 < 150 or f1 > 1200 or f2 < 500 or f2 > 3500:
+            return {
+                'exploratory': True,
+                'usable': False,
+                'reason': 'implausible_formants'
+            }
+        samples.append({
+            'pct': pct,
+            'f1': round(f1, 1),
+            'f2': round(f2, 1)
+        })
+
+    mid_time = nucleus_start + ((nucleus_end - nucleus_start) / 2.0)
+    mid_pitch = float(pitch.get_value_at_time(mid_time))
+    if np.isnan(mid_pitch) or mid_pitch <= 0:
+        mid_pitch = 0.0
+
+    return {
+        'exploratory': True,
+        'usable': True,
+        'reason': None,
+        'nucleusStart': round(float(nucleus_start), 3),
+        'nucleusEnd': round(float(nucleus_end), 3),
+        'samples': samples,
+        'midPitch': round(mid_pitch, 1)
     }
 
 def detect_syllables(sound, pitch, intensity, expected_syllables=None):
@@ -2138,6 +2305,7 @@ def find_stressed_with_corrections(syllables):
 if __name__ == '__main__':
     # Use 8081 to match config.js default
     port = int(os.environ.get('PORT', 8081))
+    host = str(os.environ.get('HOST', '127.0.0.1')).strip() or '127.0.0.1'
     use_https = os.environ.get('USE_HTTPS', 'true').lower() == 'true'
     
     # For local development with HTTPS (Chrome requires it)
@@ -2184,16 +2352,16 @@ if __name__ == '__main__':
             try:
                 context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
                 context.load_cert_chain(certfile=cert_file, keyfile=key_file)
-                app.run(host='0.0.0.0', port=port, debug=False, ssl_context=context)
+                app.run(host=host, port=port, debug=False, ssl_context=context)
             except Exception as e:
                 print(f"❌ SSL Error: Could not load certificate chain: {e}")
                 print(f"   Falling back to HTTP on http://localhost:{port}")
-                app.run(host='0.0.0.0', port=port, debug=False)
+                app.run(host=host, port=port, debug=False)
         else:
             print(f"⚠️  SSL certificates not found in {PROJECT_ROOT}")
             print("   Please run setup-trusted-certs.bat in the project root.")
             print(f"   Falling back to HTTP on http://localhost:{port}")
-            app.run(host='0.0.0.0', port=port, debug=False)
+            app.run(host=host, port=port, debug=False)
     else:
         print(f"🌐 Starting HTTP server on http://localhost:{port} (USE_HTTPS is false)")
-        app.run(host='0.0.0.0', port=port, debug=False)
+        app.run(host=host, port=port, debug=False)

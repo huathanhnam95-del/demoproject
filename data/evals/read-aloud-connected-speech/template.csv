@@ -1,0 +1,1 @@
+attemptId,questionId,eventId,family,phrase,referenceText,recognizedText,systemStatus,humanLabel,raterNotes,audioStatus,workerStatus,audioQualityReason,audioQualityPassed,leftWord,rightWord,startMs,endMs,gapMs,leftAccuracy,rightAccuracy,relativeDuration,variant

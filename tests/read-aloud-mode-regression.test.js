@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const assert = require('assert');
 const { spawn } = require('child_process');
 const net = require('net');
@@ -40,11 +41,47 @@ async function preparePage(page, baseUrl) {
   await page.waitForFunction(() => typeof window.switchToMode === 'function', { timeout: 30000 });
 }
 
+async function mockWorkbookRows(page, rows) {
+  await page.evaluate((mockRows) => {
+    const originalSheetToJson = window.XLSX.utils.sheet_to_json.bind(window.XLSX.utils);
+    window.__raMockRows = mockRows;
+
+    window.XLSX.read = () => ({
+      SheetNames: ['Sheet1'],
+      Sheets: {
+        Sheet1: {
+          __mockRows: window.__raMockRows
+        }
+      }
+    });
+
+    window.XLSX.utils.sheet_to_json = (worksheet) => {
+      if (Array.isArray(worksheet?.__mockRows)) {
+        return worksheet.__mockRows.slice();
+      }
+      return originalSheetToJson(worksheet);
+    };
+  }, rows);
+}
+
+async function stubPrepareWavBlob(page) {
+  await page.evaluate(() => {
+    window.ReadAloudMode.prepareWavBlob = async (blob) => blob;
+  });
+}
+
 async function assertUnsupportedFlow(browser, baseUrl) {
   const context = await browser.newContext();
   await context.addInitScript(() => {
-    window.SpeechRecognition = undefined;
-    window.webkitSpeechRecognition = undefined;
+    Object.defineProperty(window, 'MediaRecorder', {
+      configurable: true,
+      writable: true,
+      value: undefined
+    });
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: undefined
+    });
 
     const originalFetch = window.fetch.bind(window);
     window.__raFetchCount = 0;
@@ -71,12 +108,18 @@ async function assertUnsupportedFlow(browser, baseUrl) {
   await page.waitForFunction(() => {
     const status = document.getElementById('ra-status-message');
     const recordBtn = document.getElementById('ra-record-btn');
+    const chunkingBtn = document.getElementById('ra-toggle-chunking-btn');
+    const linkingBtn = document.getElementById('ra-toggle-linking-btn');
+    const reducedWordsBtn = document.getElementById('ra-toggle-reduced-words-btn');
     return (
       Number(window.__raFetchCount || 0) >= 1 &&
       !!status &&
       /not supported|unsupported/i.test(String(status.textContent || '')) &&
       !!recordBtn &&
-      !!recordBtn.disabled
+      !!recordBtn.disabled &&
+      !!chunkingBtn &&
+      !!linkingBtn &&
+      !!reducedWordsBtn
     );
   }, { timeout: 30000 });
 
@@ -85,12 +128,25 @@ async function assertUnsupportedFlow(browser, baseUrl) {
     const tab = document.getElementById('tab-read-aloud');
     const status = document.getElementById('ra-status-message');
     const recordBtn = document.getElementById('ra-record-btn');
+    const chunkingBtn = document.getElementById('ra-toggle-chunking-btn');
+    const offBtn = document.getElementById('ra-toggle-connected-off-btn');
+    const linkingBtn = document.getElementById('ra-toggle-linking-btn');
+    const reducedWordsBtn = document.getElementById('ra-toggle-reduced-words-btn');
+    const soundChangesBtn = document.getElementById('ra-toggle-sound-changes-btn');
+    const overlay = document.getElementById('ra-linking-overlay');
     return {
       panelActive: !!panel && panel.classList.contains('active') && getComputedStyle(panel).display !== 'none',
       tabActive: !!tab && tab.classList.contains('active'),
       fetchCount: Number(window.__raFetchCount || 0),
       statusText: status ? String(status.textContent || '').trim() : '',
-      recordDisabled: recordBtn ? !!recordBtn.disabled : null
+      recordDisabled: recordBtn ? !!recordBtn.disabled : null,
+      chunkingPressed: chunkingBtn ? String(chunkingBtn.getAttribute('aria-pressed') || '') : '',
+      chunkingDisabled: chunkingBtn ? !!chunkingBtn.disabled : null,
+      offPressed: offBtn ? String(offBtn.getAttribute('aria-pressed') || '') : '',
+      linkingPressed: linkingBtn ? String(linkingBtn.getAttribute('aria-pressed') || '') : '',
+      reducedWordsPressed: reducedWordsBtn ? String(reducedWordsBtn.getAttribute('aria-pressed') || '') : '',
+      soundChangesPressed: soundChangesBtn ? String(soundChangesBtn.getAttribute('aria-pressed') || '') : '',
+      overlayPointerEvents: overlay ? getComputedStyle(overlay).pointerEvents : ''
     };
   });
 
@@ -98,7 +154,14 @@ async function assertUnsupportedFlow(browser, baseUrl) {
   assert.equal(state.tabActive, true, 'Read Aloud tab should activate via switchToMode');
   assert.equal(state.fetchCount, 1, 'Read Aloud database should fetch on first mode entry');
   assert.match(state.statusText, /not supported|unsupported/i, 'unsupported browsers should get an explicit message');
-  assert.equal(state.recordDisabled, true, 'record button should stay disabled when speech recognition is unavailable');
+  assert.equal(state.recordDisabled, true, 'record button should stay disabled when microphone recording is unavailable');
+  assert.equal(state.chunkingPressed, 'false', 'Chunking should be off by default');
+  assert.equal(state.chunkingDisabled, false, 'Chunking should be enabled when the workbook row has a chunked prompt');
+  assert.equal(state.offPressed, 'true', 'Connected speech should default to off');
+  assert.equal(state.linkingPressed, 'false', 'V1 linking should be off by default');
+  assert.equal(state.reducedWordsPressed, 'false', 'V2 reduced words should be off by default');
+  assert.equal(state.soundChangesPressed, 'false', 'V3 sound changes should be off by default');
+  assert.equal(state.overlayPointerEvents, 'none', 'linking overlay should not block pointer events');
 
   await page.evaluate(() => {
     window.startTutorial('read-aloud', true);
@@ -114,50 +177,1235 @@ async function assertUnsupportedFlow(browser, baseUrl) {
     );
   }, { timeout: 30000 });
 
-  const tutorialTitle = await page.evaluate(() => {
-    const title = document.getElementById('tutorial-title');
-    return title ? String(title.textContent || '').trim() : '';
+  const tutorialTargets = await page.evaluate(() => ([
+    '.ra-prompt-box',
+    '#ra-prompt-guides-group',
+    '.ra-status-bar',
+    '#ra-read-aloud-controls'
+  ].map((selector) => ({
+    selector,
+    exists: !!document.querySelector(selector)
+  }))));
+  tutorialTargets.forEach(({ selector, exists }) => {
+    assert.equal(exists, true, `Read Aloud tutorial target should exist: ${selector}`);
   });
-  assert.match(tutorialTitle, /read aloud/i, 'Read Aloud tutorial should not fall back to Type mode');
+
+  await page.evaluate(() => {
+    document.getElementById('tutorial-next')?.click();
+  });
+  await page.waitForFunction(() => {
+    const title = document.getElementById('tutorial-title');
+    return !!title && /read the prompt/i.test(String(title.textContent || ''));
+  }, { timeout: 30000 });
+
+  await page.evaluate(() => {
+    document.getElementById('tutorial-next')?.click();
+  });
+  await page.waitForFunction(() => {
+    const title = document.getElementById('tutorial-title');
+    const text = document.getElementById('tutorial-text');
+    return (
+      !!title &&
+      /use prompt guides/i.test(String(title.textContent || '')) &&
+      !!text &&
+      /can be enabled together/i.test(String(text.textContent || '')) &&
+      /reduced words/i.test(String(text.textContent || ''))
+    );
+  }, { timeout: 30000 });
 
   await context.close();
 }
 
 async function assertSupportedFlow(browser, baseUrl) {
-  const context = await browser.newContext();
+  const context = await browser.newContext({ viewport: { width: 1024, height: 900 } });
   await context.addInitScript(() => {
-    class FakeSpeechRecognition {
-      constructor() {
-        this.continuous = false;
-        this.interimResults = false;
-        this.lang = 'en-US';
-        window.__raLastRecognition = this;
+    window.__raPromptFeatureIndexDelayMs = 50;
+    class FakeMediaRecorder {
+      constructor(stream) {
+        this.stream = stream;
+        this.state = 'inactive';
+        this.mimeType = 'audio/webm';
+        this.listeners = {};
+      }
+
+      addEventListener(type, handler) {
+        if (!this.listeners[type]) this.listeners[type] = [];
+        this.listeners[type].push(handler);
       }
 
       start() {
-        window.__raRecognitionStarts = Number(window.__raRecognitionStarts || 0) + 1;
+        this.state = 'recording';
+        window.__raRecorderStarts = Number(window.__raRecorderStarts || 0) + 1;
       }
 
       stop() {
-        window.__raRecognitionStops = Number(window.__raRecognitionStops || 0) + 1;
-      }
-
-      emit(finalTranscript, interimTranscript = '') {
-        const results = [];
-        if (interimTranscript) {
-          results.push({ isFinal: false, 0: { transcript: interimTranscript } });
-        }
-        if (finalTranscript) {
-          results.push({ isFinal: true, 0: { transcript: finalTranscript } });
-        }
-        if (typeof this.onresult === 'function') {
-          this.onresult({ resultIndex: 0, results });
-        }
+        if (this.state !== 'recording') return;
+        this.state = 'inactive';
+        window.__raRecorderStops = Number(window.__raRecorderStops || 0) + 1;
+        const blob = new Blob(['fake-audio'], { type: this.mimeType });
+        (this.listeners.dataavailable || []).forEach((handler) => handler({ data: blob }));
+        (this.listeners.stop || []).forEach((handler) => handler());
       }
     }
 
-    window.SpeechRecognition = FakeSpeechRecognition;
-    window.webkitSpeechRecognition = FakeSpeechRecognition;
+    Object.defineProperty(window, 'MediaRecorder', {
+      configurable: true,
+      writable: true,
+      value: FakeMediaRecorder
+    });
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: {
+        getUserMedia: async () => {
+          window.__raGetUserMediaCalls = Number(window.__raGetUserMediaCalls || 0) + 1;
+          return {
+            getTracks() {
+              return [{
+                stop() {
+                  window.__raTrackStops = Number(window.__raTrackStops || 0) + 1;
+                }
+              }];
+            }
+          };
+        }
+      }
+    });
+
+    const originalFetch = window.fetch.bind(window);
+    window.__raFetchCount = 0;
+    window.__raAssessCount = 0;
+    window.fetch = async (...args) => {
+      const [resource] = args;
+      const url = String(resource && resource.url ? resource.url : resource || '');
+      if (url.includes('database/RA/RA.xlsx')) {
+        window.__raFetchCount += 1;
+        return new Response(new Uint8Array([1, 2, 3, 4]).buffer, { status: 200 });
+      }
+      if (url.includes('audio/ra/manifest.json')) {
+        return new Response(JSON.stringify({
+          '1': { audio: 'https://example.com/ra-1.mp3' },
+          '3': { audio: 'https://example.com/ra-3.mp3' }
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+      if (url.includes('/api/read-aloud/assess')) {
+        window.__raAssessCount += 1;
+        const requestBody = args[1]?.body;
+        const capturedFormData = {};
+        if (requestBody && typeof requestBody.entries === 'function') {
+          for (const [key, value] of requestBody.entries()) {
+            capturedFormData[key] = typeof value === 'string' ? value : String(value?.name || value?.type || 'blob');
+          }
+        }
+        window.__raLastAssessmentFormData = capturedFormData;
+        return new Response(JSON.stringify({
+          success: true,
+          accuracyScore: 92,
+          fluencyScore: 89,
+          completenessScore: 100,
+          recognizedText: 'Pick it up now',
+          words: [
+            { word: 'Pick', accuracyScore: 93, errorType: 'None' },
+            { word: 'it', accuracyScore: 95, errorType: 'None' },
+            { word: 'up', accuracyScore: 90, errorType: 'None' },
+            { word: 'now', accuracyScore: 91, errorType: 'None' }
+          ],
+          connectedSpeech: {
+            status: 'complete',
+            version: 'cs-v1',
+            summary: {
+              detectedCount: 1,
+              notDetectedCount: 0,
+              uncertainCount: 0
+            },
+            events: [
+              {
+                eventId: 'q-1-catenation-0-1',
+                family: 'catenation',
+                phrase: 'Pick it',
+                status: 'detected',
+                confidence: 0.84,
+                feedbackText: 'Good connected speech in "Pick it".',
+                startMs: 0,
+                endMs: 520,
+                evidence: {
+                  variant: 'linked',
+                  gapMs: 12
+                }
+              }
+            ]
+          }
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+      return originalFetch(...args);
+    };
+  });
+
+  const page = await context.newPage();
+  await preparePage(page, baseUrl);
+  await mockWorkbookRows(page, [
+    {
+      ID: 1,
+      ANSWER: 'Pick / it up now',
+      'ANSWER FOR COMPARE OR TRANSCRIPT': 'Pick it up now',
+      'ANSWER CHUNKED': 'Pick / it up now',
+      'Word count': 4
+    },
+    {
+      ID: 2,
+      ANSWER: 'I can / take it to / the store',
+      'ANSWER FOR COMPARE OR TRANSCRIPT': 'I can take it to the store',
+      'ANSWER CHUNKED': 'I can / take it to / the store',
+      'Word count': 7
+    },
+    {
+      ID: 3,
+      ANSWER: 'Did you see it?',
+      'ANSWER FOR COMPARE OR TRANSCRIPT': 'Did you see it?',
+      'ANSWER CHUNKED': 'Did you see it?',
+      'Word count': 4
+    }
+  ]);
+  await stubPrepareWavBlob(page);
+
+  await page.evaluate(async () => {
+    await window.switchToMode('read-aloud');
+  });
+  await page.waitForFunction(() => window.ReadAloudMode && window.ReadAloudMode.hasLoadedDatabase && window.ReadAloudMode.database.length >= 2, { timeout: 30000 });
+  await page.waitForFunction(() => {
+    const text = document.getElementById('ra-text-prompt');
+    const status = document.getElementById('ra-status-message');
+    return (
+      !!window.ReadAloudMode &&
+      String(window.ReadAloudMode.currentPromptPlainText || '').length > 0 &&
+      !!text &&
+      String(text.textContent || '').trim().length > 0 &&
+      !!status &&
+      /read the text silently/i.test(String(status.textContent || ''))
+    );
+  }, { timeout: 30000 });
+  await page.evaluate(async () => {
+    await window.ReadAloudMode.loadSpecificPrompt(0);
+  });
+
+  await page.waitForFunction(() => {
+    const text = document.getElementById('ra-text-prompt');
+      const status = document.getElementById('ra-status-message');
+      const recordBtn = document.getElementById('ra-record-btn');
+      const chunkingBtn = document.getElementById('ra-toggle-chunking-btn');
+      const linkingBtn = document.getElementById('ra-toggle-linking-btn');
+      const reducedWordsBtn = document.getElementById('ra-toggle-reduced-words-btn');
+      const soundChangesBtn = document.getElementById('ra-toggle-sound-changes-btn');
+      return (
+      Number(window.__raFetchCount || 0) === 1 &&
+      !!text &&
+      /pick it up now/i.test(String(text.textContent || '')) &&
+      !!status &&
+      /read the text silently/i.test(String(status.textContent || '')) &&
+      !!recordBtn &&
+      /skip prep/i.test(String(recordBtn.textContent || '')) &&
+      !recordBtn.disabled &&
+      !!chunkingBtn &&
+      !!linkingBtn &&
+      !!reducedWordsBtn &&
+      !!soundChangesBtn
+    );
+  }, { timeout: 30000 });
+
+  const initialViewState = await page.evaluate(() => {
+    const chunkingBtn = document.getElementById('ra-toggle-chunking-btn');
+    const offBtn = document.getElementById('ra-toggle-connected-off-btn');
+    const linkingBtn = document.getElementById('ra-toggle-linking-btn');
+    const reducedWordsBtn = document.getElementById('ra-toggle-reduced-words-btn');
+    const soundChangesBtn = document.getElementById('ra-toggle-sound-changes-btn');
+    const featureAllBtn = document.getElementById('ra-filter-feature-all');
+    const assimilationBtn = document.getElementById('ra-filter-assimilation');
+    const summary = document.getElementById('ra-linking-a11y-summary');
+    const connectedSpeechGroup = document.getElementById('ra-connected-speech-group');
+    return {
+      chunkingSelected: chunkingBtn ? String(chunkingBtn.getAttribute('aria-pressed') || '') : '',
+      chunkingDisabled: chunkingBtn ? !!chunkingBtn.disabled : null,
+      offSelected: offBtn ? String(offBtn.getAttribute('aria-pressed') || '') : '',
+      linkingSelected: linkingBtn ? String(linkingBtn.getAttribute('aria-pressed') || '') : '',
+      reducedWordsSelected: reducedWordsBtn ? String(reducedWordsBtn.getAttribute('aria-pressed') || '') : '',
+      soundChangesSelected: soundChangesBtn ? String(soundChangesBtn.getAttribute('aria-pressed') || '') : '',
+      featureAllSelected: featureAllBtn ? String(featureAllBtn.getAttribute('aria-pressed') || '') : '',
+      assimilationDisabled: assimilationBtn ? !!assimilationBtn.disabled : null,
+      assimilationText: assimilationBtn ? String(assimilationBtn.textContent || '').trim() : '',
+      summaryText: summary ? String(summary.textContent || '').trim() : '',
+      summaryLive: summary ? String(summary.getAttribute('aria-live') || '') : '',
+      summaryDescribedBy: summary ? String(summary.getAttribute('aria-describedby') || '') : '',
+      connectedSpeechRole: connectedSpeechGroup ? String(connectedSpeechGroup.getAttribute('role') || '') : ''
+    };
+  });
+
+  assert.equal(initialViewState.chunkingSelected, 'false', 'Chunking should be off on first prompt load');
+  assert.equal(initialViewState.chunkingDisabled, false, 'Chunking should be available when ANSWER CHUNKED is present');
+  assert.equal(initialViewState.offSelected, 'true', 'Connected speech should default to off');
+  assert.equal(initialViewState.linkingSelected, 'false', 'V1 linking should be off by default');
+  assert.equal(initialViewState.reducedWordsSelected, 'false', 'Reduced words should be off by default');
+  assert.equal(initialViewState.soundChangesSelected, 'false', 'Sound changes should be off by default');
+  assert.equal(initialViewState.featureAllSelected, 'true', 'prompt feature filter should default to all prompts');
+  assert.equal(initialViewState.assimilationDisabled, true, 'assimilation filter should start disabled while indexing runs');
+  assert.match(initialViewState.assimilationText, /checking/i, 'assimilation filter should indicate indexing while disabled');
+  assert.equal(initialViewState.summaryText, '', 'connected speech accessibility summary should start empty when connected speech is off');
+  assert.equal(initialViewState.summaryLive, 'polite', 'connected speech summary should be announced politely');
+  assert.equal(initialViewState.connectedSpeechRole, 'radiogroup', 'connected speech controls should use radiogroup semantics');
+
+  await page.waitForFunction(() => {
+    const btn = document.getElementById('ra-filter-assimilation');
+    return !!btn && btn.disabled;
+  }, { timeout: 30000 });
+
+  await page.waitForFunction(() => {
+    const btn = document.getElementById('ra-filter-assimilation');
+    return !!btn && !btn.disabled;
+  }, { timeout: 30000 });
+
+  const readyFilterState = await page.evaluate(() => {
+    const featureAllBtn = document.getElementById('ra-filter-feature-all');
+    const assimilationBtn = document.getElementById('ra-filter-assimilation');
+    return {
+      featureAllSelected: featureAllBtn ? String(featureAllBtn.getAttribute('aria-pressed') || '') : '',
+      assimilationDisabled: assimilationBtn ? !!assimilationBtn.disabled : null,
+      assimilationText: assimilationBtn ? String(assimilationBtn.textContent || '').trim() : ''
+    };
+  });
+  assert.equal(readyFilterState.assimilationDisabled, false, 'assimilation filter should enable after indexing completes');
+  assert.match(readyFilterState.assimilationText, /Level 3 Assimilation/i, 'assimilation filter should restore its final label after indexing');
+
+  await page.waitForFunction(() => {
+    const mode = window.ReadAloudMode;
+    return !!mode && mode.hasLoadedManifest && !!mode.audioManifest && Object.keys(mode.audioManifest).length > 0;
+  }, { timeout: 30000 });
+
+  const availableFilterState = await page.evaluate(() => {
+    window.ReadAloudMode?.setSampleAudioFilter('available');
+    const select = document.getElementById('ra-question-select');
+    const filteredDb = window.ReadAloudMode?.getFilteredDatabase?.() || [];
+    const options = select ? Array.from(select.options).map((option) => String(option.textContent || '').trim()) : [];
+    return {
+      disabled: select ? !!select.disabled : null,
+      optionCount: options.length,
+      filteredCount: filteredDb.length,
+      options
+    };
+  });
+  assert.equal(availableFilterState.disabled, false, 'audio filter should keep the selector enabled when matches exist');
+  assert.equal(availableFilterState.filteredCount, 2, 'available audio should narrow the filtered database to matching prompts');
+  assert.equal(availableFilterState.optionCount, 3, 'available audio should narrow the dropdown to matching prompts');
+  assert.ok(availableFilterState.options.some((text) => /Q1:/i.test(text)), 'available audio should keep prompt 1');
+  assert.ok(availableFilterState.options.some((text) => /Q3:/i.test(text)), 'available audio should keep prompt 3');
+
+  await page.evaluate(() => {
+    window.ReadAloudMode?.setPromptFeatureFilter('assimilation');
+  });
+  await page.waitForFunction(() => String(window.ReadAloudMode?.currentQuestionId || '') === '3', { timeout: 30000 });
+
+  const assimilationFilterState = await page.evaluate(() => {
+    const select = document.getElementById('ra-question-select');
+    const filteredDb = window.ReadAloudMode?.getFilteredDatabase?.() || [];
+    const options = select ? Array.from(select.options).map((option) => String(option.textContent || '').trim()) : [];
+    return {
+      disabled: select ? !!select.disabled : null,
+      optionCount: options.length,
+      filteredCount: filteredDb.length,
+      options,
+      currentQuestionId: String(window.ReadAloudMode?.currentQuestionId || '')
+    };
+  });
+  assert.equal(assimilationFilterState.disabled, false, 'assimilation filter should keep the selector enabled when matches exist');
+  assert.equal(assimilationFilterState.filteredCount, 1, 'assimilation-only should narrow the filtered database to one prompt');
+  assert.equal(assimilationFilterState.optionCount, 2, 'assimilation-only should narrow the dropdown to one prompt plus random');
+  assert.ok(assimilationFilterState.options.some((text) => /Q3:/i.test(text)), 'assimilation-only should keep the prompt with Level 3 sound changes');
+  assert.equal(assimilationFilterState.currentQuestionId, '3', 'assimilation-only should load the matching Level 3 prompt');
+
+  const noMatchFilterState = await page.evaluate(() => {
+    window.ReadAloudMode?.setSampleAudioFilter('unavailable');
+    const select = document.getElementById('ra-question-select');
+    const filteredDb = window.ReadAloudMode?.getFilteredDatabase?.() || [];
+    return {
+      disabled: select ? !!select.disabled : null,
+      value: select ? String(select.value || '') : '',
+      text: select ? String(select.textContent || '').trim() : '',
+      filteredCount: filteredDb.length
+    };
+  });
+  assert.equal(noMatchFilterState.disabled, true, 'combined filters with no matches should disable the selector');
+  assert.equal(noMatchFilterState.filteredCount, 0, 'combined filters with no matches should yield no rows');
+  assert.match(noMatchFilterState.text, /No questions match the current filters/i, 'empty filter combinations should explain that no questions match');
+
+  await page.evaluate(() => {
+    window.ReadAloudMode?.setPromptFeatureFilter('all');
+    window.ReadAloudMode?.setSampleAudioFilter('all');
+  });
+  const restoredFilterState = await page.evaluate(() => {
+    const select = document.getElementById('ra-question-select');
+    const allBtn = document.getElementById('ra-filter-all');
+    const featureAllBtn = document.getElementById('ra-filter-feature-all');
+    const filteredDb = window.ReadAloudMode?.getFilteredDatabase?.() || [];
+    return {
+      disabled: select ? !!select.disabled : null,
+      allPressed: allBtn ? String(allBtn.getAttribute('aria-pressed') || '') : '',
+      featureAllPressed: featureAllBtn ? String(featureAllBtn.getAttribute('aria-pressed') || '') : '',
+      filteredCount: filteredDb.length
+    };
+  });
+  assert.equal(restoredFilterState.disabled, false, 'resetting filters should restore the selector');
+  assert.equal(restoredFilterState.allPressed, 'true', 'audio filter should reset to all');
+  assert.equal(restoredFilterState.featureAllPressed, 'true', 'feature filter should reset to all prompts');
+  assert.equal(restoredFilterState.filteredCount, 3, 'resetting filters should restore the full prompt pool');
+
+  await page.evaluate(() => {
+    document.getElementById('ra-toggle-chunking-btn')?.click();
+    document.getElementById('ra-toggle-linking-btn')?.click();
+  });
+
+  await page.waitForTimeout(1000);
+
+  const wideLinkingState = await page.evaluate(() => {
+    const overlay = document.getElementById('ra-linking-overlay');
+    const fallbackList = document.getElementById('ra-linking-fallback-list');
+    return {
+      overlayPaths: overlay ? overlay.querySelectorAll('path').length : 0,
+      fallbackVisible: !!fallbackList && getComputedStyle(fallbackList).display !== 'none'
+    };
+  });
+  assert.ok(wideLinkingState.overlayPaths > 0, 'wide layouts should render at least one linking arrow');
+
+  await page.evaluate(async () => {
+    document.getElementById('ra-toggle-reduced-words-btn')?.click();
+    await window.ReadAloudMode.loadSpecificPrompt(1);
+  });
+
+  await page.waitForFunction(() => {
+    const reducedWordsBtn = document.getElementById('ra-toggle-reduced-words-btn');
+    const highlighted = document.querySelectorAll('[data-connected-speech-layer="weak_forms"]');
+    const summary = document.getElementById('ra-linking-a11y-summary');
+    return (
+      !!reducedWordsBtn &&
+      reducedWordsBtn.getAttribute('aria-pressed') === 'true' &&
+      highlighted.length > 0 &&
+      !!summary &&
+      /reduced words/i.test(String(summary.textContent || ''))
+    );
+  }, { timeout: 30000 });
+
+  const reducedWordState = await page.evaluate(() => {
+    const reducedWordsBtn = document.getElementById('ra-toggle-reduced-words-btn');
+    const highlighted = document.querySelectorAll('[data-connected-speech-layer="weak_forms"]');
+    const summary = document.getElementById('ra-linking-a11y-summary');
+    return {
+      reducedWordsPressed: reducedWordsBtn ? String(reducedWordsBtn.getAttribute('aria-pressed') || '') : '',
+      highlightedCount: highlighted.length,
+      highlightedWords: Array.from(highlighted).map((node) => String(node.textContent || '').trim().toLowerCase()).filter(Boolean),
+      summaryText: summary ? String(summary.textContent || '').trim() : ''
+    };
+  });
+
+  assert.equal(reducedWordState.reducedWordsPressed, 'true', 'V2 reduced words should be enabled');
+  assert.ok(reducedWordState.highlightedCount >= 1, 'reduced-word prompts should visibly annotate weak words');
+  assert.ok(reducedWordState.highlightedWords.includes('the'), 'non-blocked reduced words should stay visible');
+  assert.ok(!reducedWordState.highlightedWords.includes('can'), 'chunk-separated reduced words should stay suppressed');
+  assert.ok(!reducedWordState.highlightedWords.includes('to'), 'chunk-blocked reduced words should not leak across pause groups');
+  assert.match(reducedWordState.summaryText, /reduced words/i, 'reduced-word summary should mention the layer');
+
+  await page.evaluate(() => {
+    const reducedWord = document.querySelector('[data-connected-speech-layer="weak_forms"]');
+    if (reducedWord instanceof HTMLElement) {
+      reducedWord.click();
+    }
+  });
+  await page.waitForFunction(() => {
+    const selectedGuideCard = document.querySelector('[data-guide-item][data-selected="true"]');
+    return !!selectedGuideCard && /reduced word/i.test(String(selectedGuideCard.textContent || ''));
+  }, { timeout: 30000 });
+
+  const reducedSelectionState = await page.evaluate(() => {
+    const selectedGuideCard = document.querySelector('[data-guide-item][data-selected="true"]');
+    return {
+      selectedText: selectedGuideCard ? String(selectedGuideCard.textContent || '').trim() : '',
+      selectedId: selectedGuideCard ? String(selectedGuideCard.getAttribute('data-guide-item') || '') : ''
+    };
+  });
+  assert.match(reducedSelectionState.selectedText, /reduced word/i, 'clicking a reduced word should focus its guide card');
+
+  await page.evaluate(() => {
+    document.getElementById('ra-toggle-sound-changes-btn')?.click();
+  });
+  await page.evaluate(async () => {
+    await window.ReadAloudMode.loadSpecificPrompt(2);
+  });
+
+  await page.waitForFunction(() => {
+    const soundChangesBtn = document.getElementById('ra-toggle-sound-changes-btn');
+    const summary = document.getElementById('ra-linking-a11y-summary');
+    return (
+      !!soundChangesBtn &&
+      soundChangesBtn.getAttribute('aria-pressed') === 'true' &&
+      !!summary &&
+      /sound changes/i.test(String(summary.textContent || ''))
+    );
+  }, { timeout: 30000 });
+
+  const soundChangeState = await page.evaluate(() => {
+    const soundChangesBtn = document.getElementById('ra-toggle-sound-changes-btn');
+    const summary = document.getElementById('ra-linking-a11y-summary');
+    return {
+      soundChangesPressed: soundChangesBtn ? String(soundChangesBtn.getAttribute('aria-pressed') || '') : '',
+      summaryText: summary ? String(summary.textContent || '').trim() : ''
+    };
+  });
+  assert.equal(soundChangeState.soundChangesPressed, 'true', 'V3 sound changes should be enabled');
+  assert.match(soundChangeState.summaryText, /sound changes/i, 'sound-change summary should mention the layer');
+
+  await page.evaluate(() => {
+    const badge = document.querySelector('#ra-connected-speech-badges [data-guide-target]');
+    if (badge instanceof HTMLElement) {
+      badge.click();
+    }
+  });
+  await page.waitForFunction(() => {
+    const selectedGuideCard = document.querySelector('[data-guide-item][data-selected="true"]');
+    return !!selectedGuideCard && /sound change/i.test(String(selectedGuideCard.textContent || ''));
+  }, { timeout: 30000 });
+
+  const soundChangeSelectionState = await page.evaluate(() => {
+    const selectedGuideCard = document.querySelector('[data-guide-item][data-selected="true"]');
+    return {
+      selectedText: selectedGuideCard ? String(selectedGuideCard.textContent || '').trim() : '',
+      selectedId: selectedGuideCard ? String(selectedGuideCard.getAttribute('data-guide-item') || '') : ''
+    };
+  });
+  assert.match(soundChangeSelectionState.selectedText, /sound change/i, 'clicking a sound-change badge should focus its guide card');
+
+  const guideHintState = await page.evaluate(() => {
+    const connectedBox = document.getElementById('ra-connected-speech-box');
+    const connectedSummary = document.getElementById('ra-connected-speech-summary');
+    const connectedList = document.getElementById('ra-connected-speech-list');
+    return {
+      visible: !!connectedBox && getComputedStyle(connectedBox).display !== 'none',
+      summaryText: connectedSummary ? String(connectedSummary.textContent || '').trim() : '',
+      listText: connectedList ? String(connectedList.textContent || '').trim() : '',
+      listCount: connectedList ? connectedList.children.length : 0
+    };
+  });
+  assert.equal(guideHintState.visible, true, 'connected-speech guide should show a help panel when a guide level is active');
+  assert.ok(guideHintState.listCount >= 1, 'connected-speech guide should list at least one pronunciation hint');
+  assert.match(guideHintState.listText, /did you|sound change|reduce|lighter|slide/i, 'connected-speech guide should explain how to say the highlighted items');
+
+  await page.setViewportSize({ width: 390, height: 900 });
+  const narrowGuideControlState = await page.evaluate(() => {
+    const btn = document.getElementById('ra-toggle-sound-changes-btn');
+    if (!btn) return null;
+    const rect = btn.getBoundingClientRect();
+    return {
+      viewportWidth: window.innerWidth,
+      left: rect.left,
+      right: rect.right
+    };
+  });
+  assert.ok(narrowGuideControlState, 'sound-change control should exist on narrow layouts');
+  assert.ok(narrowGuideControlState.left >= 0, 'sound-change control should stay inside the viewport on narrow layouts');
+  assert.ok(narrowGuideControlState.right <= narrowGuideControlState.viewportWidth, 'sound-change control should remain clickable on narrow layouts');
+
+  await page.waitForFunction(() => {
+    const guideBox = document.getElementById('ra-connected-speech-box');
+    const toggle = document.querySelector('#ra-connected-speech-list [data-role="guide-toggle-details"]');
+    const selectedCard = document.querySelector('#ra-connected-speech-list [data-role="guide-selected-card"] [data-guide-target]');
+    return !!guideBox
+      && getComputedStyle(guideBox).display !== 'none'
+      && !!toggle
+      && !!selectedCard;
+  }, { timeout: 30000 });
+
+  const compactGuideState = await page.evaluate(() => {
+    const guideBox = document.getElementById('ra-connected-speech-box');
+    const toggle = document.querySelector('#ra-connected-speech-list [data-role="guide-toggle-details"]');
+    const selectedCard = document.querySelector('#ra-connected-speech-list [data-role="guide-selected-card"] [data-guide-target]');
+    const expandedList = document.querySelector('#ra-connected-speech-list [data-role="guide-expanded-list"]');
+    return {
+      visible: !!guideBox && getComputedStyle(guideBox).display !== 'none',
+      toggleText: toggle ? String(toggle.textContent || '').trim() : '',
+      toggleExpanded: toggle ? String(toggle.getAttribute('aria-expanded') || '') : '',
+      selectedText: selectedCard ? String(selectedCard.textContent || '').trim() : '',
+      expandedVisible: !!expandedList && getComputedStyle(expandedList).display !== 'none',
+      itemCount: document.querySelectorAll('#ra-connected-speech-list [data-guide-item]').length
+    };
+  });
+  assert.equal(compactGuideState.visible, true, 'guide panel should stay visible on narrow layouts');
+  assert.match(compactGuideState.toggleText, /see more/i, 'compact guide view should offer a concise expand control');
+  assert.match(compactGuideState.selectedText, /did you|sound change|reduce|lighter|slide/i, 'compact guide view should keep the selected explanation visible');
+  assert.equal(compactGuideState.expandedVisible, false, 'compact guide view should collapse the full list by default');
+
+  await page.evaluate(() => {
+    document.querySelector('#ra-connected-speech-list [data-role="guide-toggle-details"]')?.click();
+  });
+  await page.waitForFunction(() => {
+    const toggle = document.querySelector('#ra-connected-speech-list [data-role="guide-toggle-details"]');
+    const expandedList = document.querySelector('#ra-connected-speech-list [data-role="guide-expanded-list"]');
+    return !!toggle && String(toggle.getAttribute('aria-expanded') || '') === 'true' && !!expandedList && getComputedStyle(expandedList).display !== 'none';
+  }, { timeout: 30000 });
+
+  const expandedGuideState = await page.evaluate(() => {
+    const toggle = document.querySelector('#ra-connected-speech-list [data-role="guide-toggle-details"]');
+    const expandedList = document.querySelector('#ra-connected-speech-list [data-role="guide-expanded-list"]');
+    return {
+      toggleText: toggle ? String(toggle.textContent || '').trim() : '',
+      expandedVisible: !!expandedList && getComputedStyle(expandedList).display !== 'none',
+      itemCount: document.querySelectorAll('#ra-connected-speech-list [data-guide-item]').length
+    };
+  });
+  assert.match(expandedGuideState.toggleText, /hide/i, 'expanding the compact guide should update the toggle label');
+  assert.equal(expandedGuideState.expandedVisible, true, 'expanding the compact guide should reveal the full list');
+  assert.ok(expandedGuideState.itemCount > 1, 'expanding the compact guide should expose more than the selected hint');
+
+  await page.setViewportSize({ width: 420, height: 900 });
+  const fallbackState = await page.evaluate(async () => {
+    const fallbackList = document.getElementById('ra-linking-fallback-list');
+    if (!fallbackList || !window.ReadAloudLinking) return;
+    const promptText = String(window.ReadAloudMode?.currentPromptPlainText || document.getElementById('ra-text-prompt')?.textContent || '');
+    const analysis = await window.ReadAloudLinking.analyzePrompt(promptText, {
+      connectedSpeechLevel: 'v3_sound_changes'
+    });
+    fallbackList.style.display = 'flex';
+    window.ReadAloudLinking.renderFallbackList(fallbackList, analysis);
+    const headings = Array.from(fallbackList.querySelectorAll('h4, [data-role="fallback-heading"]'))
+      .map((node) => String(node.textContent || '').trim().toLowerCase());
+    return {
+      display: getComputedStyle(fallbackList).display,
+      text: String(fallbackList.textContent || '').trim(),
+      headings
+    };
+  });
+  assert.notEqual(fallbackState.display, 'none', 'narrow layouts should show a fallback list');
+  assert.ok(fallbackState.headings.includes('sound changes'), 'narrow layouts should group sound changes separately');
+
+  await page.evaluate(() => {
+    const fallbackChip = document.querySelector('#ra-linking-fallback-list [data-guide-target]');
+    if (fallbackChip instanceof HTMLElement) {
+      fallbackChip.click();
+    }
+  });
+  await page.waitForFunction(() => {
+    const selectedFallbackChip = document.querySelector('#ra-linking-fallback-list [data-guide-target][data-selected="true"]');
+    return !!selectedFallbackChip;
+  }, { timeout: 30000 });
+
+  const narrowSelectionState = await page.evaluate(() => {
+    const selectedFallbackChip = document.querySelector('#ra-linking-fallback-list [data-guide-target][data-selected="true"]');
+    return {
+      selectedText: selectedFallbackChip ? String(selectedFallbackChip.textContent || '').trim() : '',
+      fallbackTargets: document.querySelectorAll('#ra-linking-fallback-list [data-guide-target]').length
+    };
+  });
+  assert.ok(narrowSelectionState.fallbackTargets >= 1, 'fallback chips should expose selectable targets on narrow layouts');
+  assert.notStrictEqual(narrowSelectionState.selectedText, '', 'clicking a fallback chip should mark that chip selected');
+
+  await page.setViewportSize({ width: 1024, height: 900 });
+  await page.waitForFunction(() => {
+    const overlay = document.getElementById('ra-linking-overlay');
+    return !!overlay && overlay.querySelectorAll('path').length > 0;
+  }, { timeout: 30000 });
+
+  await page.evaluate(() => {
+    document.getElementById('ra-record-btn')?.click();
+  });
+
+  await page.waitForFunction(() => {
+    const status = document.getElementById('ra-status-message');
+    const stopBtn = document.getElementById('ra-stop-btn');
+    return (
+      Number(window.__raRecorderStarts || 0) === 1 &&
+      Number(window.__raGetUserMediaCalls || 0) === 1 &&
+      !!status &&
+      /recording/i.test(String(status.textContent || '')) &&
+      !!stopBtn &&
+      getComputedStyle(stopBtn).display !== 'none'
+    );
+  }, { timeout: 30000 });
+
+  await page.evaluate(() => {
+    document.getElementById('ra-stop-btn')?.click();
+  });
+
+  await page.waitForFunction(() => {
+    const resultBox = document.getElementById('ra-result-box');
+    const connectedBox = document.getElementById('ra-connected-speech-box');
+    const accuracy = document.getElementById('ra-accuracy-value');
+    const feedback = document.getElementById('ra-transcript-feedback');
+    const connectedSummary = document.getElementById('ra-connected-speech-summary');
+    const status = document.getElementById('ra-status-message');
+    const recordBtn = document.getElementById('ra-record-btn');
+    return (
+      Number(window.__raAssessCount || 0) === 1 &&
+      !!resultBox &&
+      getComputedStyle(resultBox).display !== 'none' &&
+      !!connectedBox &&
+      getComputedStyle(connectedBox).display !== 'none' &&
+      !!accuracy &&
+      String(accuracy.textContent || '').trim() === '92' &&
+      !!feedback &&
+      /pick/i.test(String(feedback.textContent || '')) &&
+      !!connectedSummary &&
+      /1 detected/i.test(String(connectedSummary.textContent || '')) &&
+      !!connectedBox.querySelector('#ra-connected-speech-list') &&
+      /gap/i.test(String(connectedBox.querySelector('#ra-connected-speech-list')?.textContent || '')) &&
+      !!status &&
+      /analysis complete/i.test(String(status.textContent || '')) &&
+      !!recordBtn &&
+      /next prompt/i.test(String(recordBtn.textContent || ''))
+    );
+  }, { timeout: 30000 });
+
+  const supportedAssessmentState = await page.evaluate(() => {
+    const resultBox = document.getElementById('ra-result-box');
+    const connectedBox = document.getElementById('ra-connected-speech-box');
+    const accuracy = document.getElementById('ra-accuracy-value');
+    const feedback = document.getElementById('ra-transcript-feedback');
+    const connectedSummary = document.getElementById('ra-connected-speech-summary');
+    const connectedList = document.getElementById('ra-connected-speech-list');
+    const status = document.getElementById('ra-status-message');
+    const recordBtn = document.getElementById('ra-record-btn');
+    return {
+      assessCount: Number(window.__raAssessCount || 0),
+      postedQuestionId: String(window.__raLastAssessmentFormData?.questionId || ''),
+      currentQuestionId: String(window.ReadAloudMode?.currentQuestionId || ''),
+      resultVisible: !!resultBox && getComputedStyle(resultBox).display !== 'none',
+      connectedVisible: !!connectedBox && getComputedStyle(connectedBox).display !== 'none',
+      accuracyText: accuracy ? String(accuracy.textContent || '').trim() : '',
+      feedbackText: feedback ? String(feedback.textContent || '').trim() : '',
+      connectedSummaryText: connectedSummary ? String(connectedSummary.textContent || '').trim() : '',
+      connectedListText: connectedList ? String(connectedList.textContent || '').trim() : '',
+      connectedChildren: connectedList ? connectedList.children.length : 0,
+      statusText: status ? String(status.textContent || '').trim() : '',
+      recordText: recordBtn ? String(recordBtn.textContent || '').trim() : ''
+    };
+  });
+
+  assert.equal(supportedAssessmentState.assessCount, 1, 'supported flow should submit exactly one assessment');
+  assert.equal(
+    supportedAssessmentState.postedQuestionId,
+    supportedAssessmentState.currentQuestionId,
+    'read-aloud assessment should post the active prompt questionId'
+  );
+  assert.equal(supportedAssessmentState.resultVisible, true, 'result box should be visible after assessment');
+  assert.equal(supportedAssessmentState.connectedVisible, true, 'connected speech box should be visible after assessment');
+  assert.equal(supportedAssessmentState.accuracyText, '92', 'accuracy score should render from the mocked response');
+  assert.match(supportedAssessmentState.feedbackText, /pick/i, 'transcript feedback should render from the mocked response');
+  assert.match(supportedAssessmentState.connectedSummaryText, /1 detected/i, 'connected speech summary should render from the mocked response');
+  assert.equal(supportedAssessmentState.connectedChildren, 1, 'connected speech row should render');
+  assert.match(supportedAssessmentState.connectedListText, /gap/i, 'connected speech result should render evidence text');
+  assert.match(supportedAssessmentState.statusText, /analysis complete/i, 'status message should update after assessment');
+  assert.match(supportedAssessmentState.recordText, /next prompt/i, 'record button should switch to next prompt after assessment');
+
+  await page.evaluate(() => {
+    document.getElementById('ra-record-btn')?.click();
+  });
+
+  await page.waitForFunction(() => {
+    const status = document.getElementById('ra-status-message');
+    const recordBtn = document.getElementById('ra-record-btn');
+    return (
+      !!status &&
+      /read the text silently/i.test(String(status.textContent || '')) &&
+      !!recordBtn &&
+      /skip prep/i.test(String(recordBtn.textContent || ''))
+    );
+  }, { timeout: 30000 });
+
+  const supportedState = await page.evaluate(() => ({
+    fetchCount: Number(window.__raFetchCount || 0),
+    recorderStarts: Number(window.__raRecorderStarts || 0),
+    recorderStops: Number(window.__raRecorderStops || 0),
+    assessCount: Number(window.__raAssessCount || 0),
+    trackStops: Number(window.__raTrackStops || 0)
+  }));
+
+  assert.equal(supportedState.fetchCount, 1, 'database should stay cached between prompts');
+  assert.equal(supportedState.recorderStarts, 1, 'recording should start exactly once for one attempt');
+  assert.ok(supportedState.recorderStops >= 1, 'recording should stop when finishing the attempt');
+  assert.equal(supportedState.assessCount, 1, 'one completed attempt should submit exactly one assessment');
+  assert.ok(supportedState.trackStops >= 1, 'microphone tracks should be stopped after recording');
+
+  await context.close();
+}
+
+async function assertChunkingDisabledStateReset(browser, baseUrl) {
+  const context = await browser.newContext({ viewport: { width: 1024, height: 900 } });
+  await context.addInitScript(() => {
+    Object.defineProperty(window, 'MediaRecorder', {
+      configurable: true,
+      writable: true,
+      value: undefined
+    });
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: undefined
+    });
+
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = (...args) => {
+      const [resource] = args;
+      const url = String(resource && resource.url ? resource.url : resource || '');
+      if (url.includes('database/RA/RA.xlsx')) {
+        return Promise.resolve(new Response(new Uint8Array([1, 2, 3, 4]).buffer, { status: 200 }));
+      }
+      return originalFetch(...args);
+    };
+  });
+
+  const page = await context.newPage();
+  await preparePage(page, baseUrl);
+  await mockWorkbookRows(page, [
+    {
+      ID: 1,
+      ANSWER: 'Pick / it up now',
+      'ANSWER FOR COMPARE OR TRANSCRIPT': 'Pick it up now',
+      'ANSWER CHUNKED': 'Pick / it up now',
+      'Word count': 4
+    },
+    {
+      ID: 2,
+      ANSWER: 'Turn it on',
+      'ANSWER FOR COMPARE OR TRANSCRIPT': 'Turn it on',
+      'Word count': 3
+    }
+  ]);
+
+  await page.evaluate(async () => {
+    await window.switchToMode('read-aloud');
+  });
+  await page.waitForFunction(() => window.ReadAloudMode && window.ReadAloudMode.hasLoadedDatabase, { timeout: 30000 });
+  await page.evaluate(async () => {
+    await window.ReadAloudMode.loadSpecificPrompt(0);
+  });
+
+  await page.waitForFunction(() => {
+    const chunkingBtn = document.getElementById('ra-toggle-chunking-btn');
+    return !!chunkingBtn && !chunkingBtn.disabled;
+  }, { timeout: 30000 });
+
+  await page.evaluate(() => {
+    document.getElementById('ra-toggle-chunking-btn')?.click();
+  });
+
+  await page.evaluate(async () => {
+    await window.ReadAloudMode.loadSpecificPrompt(1);
+  });
+
+  const unavailableState = await page.evaluate(() => {
+    const chunkingBtn = document.getElementById('ra-toggle-chunking-btn');
+    return {
+      disabled: !!chunkingBtn?.disabled,
+      pressed: chunkingBtn?.getAttribute('aria-pressed') || ''
+    };
+  });
+
+  assert.equal(unavailableState.disabled, true, 'chunking should disable itself on rows without ANSWER CHUNKED');
+  assert.equal(unavailableState.pressed, 'false', 'disabled chunking rows should not keep a pressed state from the prior prompt');
+
+  await context.close();
+}
+
+async function assertAssessmentGuards(browser, baseUrl) {
+  const context = await browser.newContext({ viewport: { width: 1024, height: 900 } });
+  await context.addInitScript(() => {
+    class FakeMediaRecorder {
+      constructor(stream) {
+        this.stream = stream;
+        this.state = 'inactive';
+        this.mimeType = 'audio/webm';
+        this.listeners = {};
+      }
+
+      addEventListener(type, handler) {
+        if (!this.listeners[type]) this.listeners[type] = [];
+        this.listeners[type].push(handler);
+      }
+
+      start() {
+        this.state = 'recording';
+        window.__raRecorderStarts = Number(window.__raRecorderStarts || 0) + 1;
+      }
+
+      stop() {
+        if (this.state !== 'recording') return;
+        this.state = 'inactive';
+        window.__raRecorderStops = Number(window.__raRecorderStops || 0) + 1;
+        const blob = new Blob(['fake-audio'], { type: this.mimeType });
+        (this.listeners.dataavailable || []).forEach((handler) => handler({ data: blob }));
+        (this.listeners.stop || []).forEach((handler) => handler());
+      }
+    }
+
+    Object.defineProperty(window, 'MediaRecorder', {
+      configurable: true,
+      writable: true,
+      value: FakeMediaRecorder
+    });
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: {
+        getUserMedia: async () => ({
+          getTracks() {
+            return [{
+              stop() {
+                window.__raTrackStops = Number(window.__raTrackStops || 0) + 1;
+              }
+            }];
+          }
+        })
+      }
+    });
+
+    const originalFetch = window.fetch.bind(window);
+    window.__raFetchCount = 0;
+    window.__raAssessCount = 0;
+    window.__raAssessQueue = [];
+    window.__resolveNextAssessment = (payload) => {
+      const pending = window.__raAssessQueue.shift();
+      if (!pending) return false;
+      pending.resolve(new Response(JSON.stringify(payload), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      }));
+      return true;
+    };
+
+    window.fetch = (...args) => {
+      const [resource] = args;
+      const url = String(resource && resource.url ? resource.url : resource || '');
+      if (url.includes('database/RA/RA.xlsx')) {
+        window.__raFetchCount += 1;
+        return Promise.resolve(new Response(new Uint8Array([1, 2, 3, 4]).buffer, { status: 200 }));
+      }
+      if (url.includes('/api/read-aloud/assess')) {
+        window.__raAssessCount += 1;
+        return new Promise((resolve, reject) => {
+          window.__raAssessQueue.push({ resolve, reject });
+        });
+      }
+      return originalFetch(...args);
+    };
+  });
+
+  const page = await context.newPage();
+  await preparePage(page, baseUrl);
+  await mockWorkbookRows(page, [
+    { ID: 1, ANSWER: 'Pick it up now', 'Word count': 4 },
+    { ID: 2, ANSWER: 'Turn it on', 'Word count': 3 },
+    { ID: 3, ANSWER: 'Take it away', 'Word count': 3 }
+  ]);
+  await stubPrepareWavBlob(page);
+
+  await page.evaluate(async () => {
+    await window.switchToMode('read-aloud');
+  });
+  await page.waitForFunction(() => window.ReadAloudMode && window.ReadAloudMode.hasLoadedDatabase && window.ReadAloudMode.database.length === 3, { timeout: 30000 });
+  await page.evaluate(async () => {
+    await window.ReadAloudMode.loadSpecificPrompt(0);
+  });
+
+  await page.waitForFunction(() => {
+    const mode = window.ReadAloudMode;
+    return !!mode && mode.currentQuestionId === '1' && /pick it up now/i.test(String(mode.currentPromptPlainText || ''));
+  }, { timeout: 30000 });
+
+  await page.evaluate(() => {
+    document.getElementById('ra-record-btn')?.click();
+  });
+  await page.waitForFunction(() => Number(window.__raRecorderStarts || 0) === 1, { timeout: 30000 });
+
+  await page.evaluate(async () => {
+    await window.ReadAloudMode.loadSpecificPrompt(1);
+  });
+  await page.waitForFunction(() => {
+    const mode = window.ReadAloudMode;
+    return !!mode && mode.currentQuestionId === '2' && /turn it on/i.test(String(mode.currentPromptPlainText || ''));
+  }, { timeout: 30000 });
+  await page.waitForTimeout(200);
+
+  const abandonedRecordingState = await page.evaluate(() => ({
+    assessCount: Number(window.__raAssessCount || 0),
+    recorderStops: Number(window.__raRecorderStops || 0)
+  }));
+  assert.equal(abandonedRecordingState.assessCount, 0, 'abandoning a recording should not submit an assessment');
+  assert.ok(abandonedRecordingState.recorderStops >= 1, 'abandoning a recording should still stop the recorder');
+
+  await page.evaluate(() => {
+    document.getElementById('ra-record-btn')?.click();
+  });
+  await page.waitForFunction(() => Number(window.__raRecorderStarts || 0) === 2, { timeout: 30000 });
+
+  await page.evaluate(() => {
+    document.getElementById('ra-stop-btn')?.click();
+  });
+  await page.waitForFunction(() => Number(window.__raAssessCount || 0) === 1 && window.__raAssessQueue.length === 1, { timeout: 30000 });
+
+  await page.evaluate(async () => {
+    await window.ReadAloudMode.loadSpecificPrompt(2);
+  });
+  await page.waitForFunction(() => {
+    const mode = window.ReadAloudMode;
+    const status = document.getElementById('ra-status-message');
+    return (
+      !!mode &&
+      mode.currentQuestionId === '3' &&
+      /take it away/i.test(String(mode.currentPromptPlainText || '')) &&
+      !!status &&
+      /read the text silently/i.test(String(status.textContent || ''))
+    );
+  }, { timeout: 30000 });
+
+  await page.evaluate(() => {
+    window.__resolveNextAssessment({
+      success: true,
+      accuracyScore: 77,
+      fluencyScore: 75,
+      completenessScore: 80,
+      recognizedText: 'Turn it on',
+      words: [
+        { word: 'Turn', accuracyScore: 78, errorType: 'None' },
+        { word: 'it', accuracyScore: 80, errorType: 'None' },
+        { word: 'on', accuracyScore: 74, errorType: 'None' }
+      ]
+    });
+  });
+  await page.waitForTimeout(200);
+
+  const staleAssessmentState = await page.evaluate(() => {
+    const status = document.getElementById('ra-status-message');
+    const accuracy = document.getElementById('ra-accuracy-value');
+    const feedback = document.getElementById('ra-transcript-feedback');
+    return {
+      statusText: status ? String(status.textContent || '').trim() : '',
+      accuracyText: accuracy ? String(accuracy.textContent || '').trim() : '',
+      feedbackText: feedback ? String(feedback.textContent || '').trim() : ''
+    };
+  });
+
+  assert.match(staleAssessmentState.statusText, /read the text silently/i, 'stale assessments should not overwrite the current prompt status');
+  assert.notStrictEqual(staleAssessmentState.accuracyText, '77', 'stale assessments should not overwrite the current prompt score');
+  assert.doesNotMatch(staleAssessmentState.feedbackText, /turn it on/i, 'stale assessments should not overwrite the current prompt feedback');
+
+  await context.close();
+}
+
+async function assertPendingMicrophoneRequestGuards(browser, baseUrl) {
+  const context = await browser.newContext({ viewport: { width: 1024, height: 900 } });
+  await context.addInitScript(() => {
+    class FakeMediaRecorder {
+      constructor(stream) {
+        this.stream = stream;
+        this.state = 'inactive';
+        this.mimeType = 'audio/webm';
+        this.listeners = {};
+      }
+
+      addEventListener(type, handler) {
+        if (!this.listeners[type]) this.listeners[type] = [];
+        this.listeners[type].push(handler);
+      }
+
+      start() {
+        this.state = 'recording';
+        window.__raRecorderStarts = Number(window.__raRecorderStarts || 0) + 1;
+      }
+
+      stop() {
+        if (this.state !== 'recording') return;
+        this.state = 'inactive';
+        window.__raRecorderStops = Number(window.__raRecorderStops || 0) + 1;
+        const blob = new Blob(['fake-audio'], { type: this.mimeType });
+        (this.listeners.dataavailable || []).forEach((handler) => handler({ data: blob }));
+        (this.listeners.stop || []).forEach((handler) => handler());
+      }
+    }
+
+    Object.defineProperty(window, 'MediaRecorder', {
+      configurable: true,
+      writable: true,
+      value: FakeMediaRecorder
+    });
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: {
+        getUserMedia: () => {
+          window.__raGetUserMediaCalls = Number(window.__raGetUserMediaCalls || 0) + 1;
+          return new Promise((resolve) => {
+            window.__raPendingMicResolvers = window.__raPendingMicResolvers || [];
+            window.__raPendingMicResolvers.push(resolve);
+          });
+        }
+      }
+    });
+
+    window.__raResolveNextMicRequest = () => {
+      const pending = Array.isArray(window.__raPendingMicResolvers) ? window.__raPendingMicResolvers.shift() : null;
+      if (!pending) return false;
+      pending({
+        getTracks() {
+          return [{
+            stop() {
+              window.__raTrackStops = Number(window.__raTrackStops || 0) + 1;
+            }
+          }];
+        }
+      });
+      return true;
+    };
+
+    const originalFetch = window.fetch.bind(window);
+    window.__raFetchCount = 0;
+    window.__raAssessCount = 0;
+    window.fetch = (...args) => {
+      const [resource] = args;
+      const url = String(resource && resource.url ? resource.url : resource || '');
+      if (url.includes('database/RA/RA.xlsx')) {
+        window.__raFetchCount += 1;
+        return Promise.resolve(new Response(new Uint8Array([1, 2, 3, 4]).buffer, { status: 200 }));
+      }
+      if (url.includes('/api/read-aloud/assess')) {
+        window.__raAssessCount += 1;
+        return Promise.resolve(new Response(JSON.stringify({ success: true }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        }));
+      }
+      return originalFetch(...args);
+    };
+  });
+
+  const page = await context.newPage();
+  await preparePage(page, baseUrl);
+  await mockWorkbookRows(page, [
+    { ID: 1, ANSWER: 'Pick it up now', 'Word count': 4 },
+    { ID: 2, ANSWER: 'Turn it on', 'Word count': 3 }
+  ]);
+  await stubPrepareWavBlob(page);
+
+  await page.evaluate(async () => {
+    await window.switchToMode('read-aloud');
+  });
+  await page.waitForFunction(() => window.ReadAloudMode && window.ReadAloudMode.hasLoadedDatabase && window.ReadAloudMode.database.length === 2, { timeout: 30000 });
+  await page.evaluate(async () => {
+    await window.ReadAloudMode.loadSpecificPrompt(0);
+  });
+
+  await page.waitForFunction(() => {
+    const text = document.getElementById('ra-text-prompt');
+    return !!text && /pick it up now/i.test(String(text.textContent || ''));
+  }, { timeout: 30000 });
+
+  await page.evaluate(() => {
+    document.getElementById('ra-record-btn')?.click();
+  });
+  await page.waitForFunction(() => Number(window.__raGetUserMediaCalls || 0) === 1, { timeout: 30000 });
+
+  await page.evaluate(async () => {
+    await window.ReadAloudMode.loadSpecificPrompt(1);
+  });
+  await page.waitForFunction(() => {
+    const text = document.getElementById('ra-text-prompt');
+    return !!text && /turn it on/i.test(String(text.textContent || ''));
+  }, { timeout: 30000 });
+
+  await page.evaluate(() => {
+    window.__raResolveNextMicRequest();
+  });
+  await page.waitForTimeout(200);
+
+  const afterPromptSwitch = await page.evaluate(() => {
+    const status = document.getElementById('ra-status-message');
+    const recordBtn = document.getElementById('ra-record-btn');
+    return {
+      recorderStarts: Number(window.__raRecorderStarts || 0),
+      assessCount: Number(window.__raAssessCount || 0),
+      trackStops: Number(window.__raTrackStops || 0),
+      statusText: status ? String(status.textContent || '').trim() : '',
+      recordText: recordBtn ? String(recordBtn.textContent || '').trim() : ''
+    };
+  });
+  assert.equal(afterPromptSwitch.recorderStarts, 0, 'a stale microphone request should not start recording after prompt change');
+  assert.equal(afterPromptSwitch.assessCount, 0, 'a stale microphone request should not submit an assessment after prompt change');
+  assert.ok(afterPromptSwitch.trackStops >= 1, 'stale microphone streams should be stopped after prompt change');
+  assert.match(afterPromptSwitch.statusText, /read the text silently/i, 'prompt switch should keep prep status after stale microphone resolution');
+  assert.match(afterPromptSwitch.recordText, /skip prep/i, 'prompt switch should leave the prompt ready to record again');
+
+  await page.evaluate(async () => {
+    await window.ReadAloudMode.loadSpecificPrompt(0);
+  });
+  await page.waitForFunction(() => {
+    const text = document.getElementById('ra-text-prompt');
+    return !!text && /pick it up now/i.test(String(text.textContent || ''));
+  }, { timeout: 30000 });
+
+  await page.evaluate(() => {
+    document.getElementById('ra-record-btn')?.click();
+  });
+  await page.waitForFunction(() => Number(window.__raGetUserMediaCalls || 0) === 2, { timeout: 30000 });
+
+  await page.evaluate(async () => {
+    await window.switchToMode('type');
+  });
+  await page.evaluate(() => {
+    window.__raResolveNextMicRequest();
+  });
+  await page.waitForTimeout(200);
+
+  const afterExit = await page.evaluate(() => ({
+    recorderStarts: Number(window.__raRecorderStarts || 0),
+    assessCount: Number(window.__raAssessCount || 0),
+    trackStops: Number(window.__raTrackStops || 0),
+    readAloudActive: !!document.getElementById('mode-read-aloud')?.classList.contains('active'),
+    typeActive: !!document.getElementById('mode-type')?.classList.contains('active')
+  }));
+  assert.equal(afterExit.recorderStarts, 0, 'leaving Read Aloud should cancel pending microphone requests before recording starts');
+  assert.equal(afterExit.assessCount, 0, 'leaving Read Aloud should not submit assessments from stale microphone requests');
+  assert.ok(afterExit.trackStops >= 2, 'stale microphone streams should be stopped after leaving Read Aloud');
+  assert.equal(afterExit.readAloudActive, false, 'Read Aloud should stay inactive after leaving the mode');
+  assert.equal(afterExit.typeActive, true, 'the fallback mode should remain active after cancelling a stale microphone request');
+
+  await context.close();
+}
+
+async function assertMicrophoneErrorRecovery(browser, baseUrl) {
+  const context = await browser.newContext({ viewport: { width: 1024, height: 900 } });
+  await context.addInitScript(() => {
+    class FakeMediaRecorder {
+      constructor(stream) {
+        this.stream = stream;
+        this.state = 'inactive';
+      }
+
+      addEventListener() {}
+      start() {
+        this.state = 'recording';
+      }
+      stop() {
+        this.state = 'inactive';
+      }
+    }
+
+    Object.defineProperty(window, 'MediaRecorder', {
+      configurable: true,
+      writable: true,
+      value: FakeMediaRecorder
+    });
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: {
+        getUserMedia: async () => {
+          throw new DOMException('Permission blocked', 'NotAllowedError');
+        }
+      }
+    });
 
     const originalFetch = window.fetch.bind(window);
     window.__raFetchCount = 0;
@@ -174,125 +1422,139 @@ async function assertSupportedFlow(browser, baseUrl) {
 
   const page = await context.newPage();
   await preparePage(page, baseUrl);
-
-  await page.evaluate(() => {
-    const originalSheetToJson = window.XLSX.utils.sheet_to_json.bind(window.XLSX.utils);
-    window.__raMockRows = [
-      {
-        ANSWER: 'This is a simple prompt',
-        'Word count': 5
-      }
-    ];
-
-    window.XLSX.read = () => ({
-      SheetNames: ['Sheet1'],
-      Sheets: {
-        Sheet1: {
-          __mockRows: window.__raMockRows
-        }
-      }
-    });
-
-    window.XLSX.utils.sheet_to_json = (worksheet) => {
-      if (Array.isArray(worksheet?.__mockRows)) {
-        return worksheet.__mockRows.slice();
-      }
-      return originalSheetToJson(worksheet);
-    };
-  });
+  await mockWorkbookRows(page, [
+    { ID: 1, ANSWER: 'Pick it up now', 'Word count': 4 }
+  ]);
 
   await page.evaluate(async () => {
     await window.switchToMode('read-aloud');
   });
+  await page.waitForFunction(() => window.ReadAloudMode && window.ReadAloudMode.hasLoadedDatabase && window.ReadAloudMode.database.length === 1, { timeout: 30000 });
+  await page.evaluate(async () => {
+    await window.ReadAloudMode.loadSpecificPrompt(0);
+  });
 
   await page.waitForFunction(() => {
     const text = document.getElementById('ra-text-prompt');
+    return !!text && /pick it up now/i.test(String(text.textContent || ''));
+  }, { timeout: 30000 });
+
+  await page.evaluate(() => {
+    document.getElementById('ra-record-btn')?.click();
+  });
+
+  await page.waitForFunction(() => {
     const status = document.getElementById('ra-status-message');
     const recordBtn = document.getElementById('ra-record-btn');
+    const stopBtn = document.getElementById('ra-stop-btn');
     return (
-      Number(window.__raFetchCount || 0) === 1 &&
-      !!text &&
-      /this is a simple prompt/i.test(String(text.textContent || '')) &&
       !!status &&
-      /read the text silently/i.test(String(status.textContent || '')) &&
+      /blocked|allow microphone access/i.test(String(status.textContent || '')) &&
       !!recordBtn &&
       /skip prep/i.test(String(recordBtn.textContent || '')) &&
-      !recordBtn.disabled
+      !recordBtn.disabled &&
+      !!stopBtn &&
+      getComputedStyle(stopBtn).display === 'none'
     );
   }, { timeout: 30000 });
 
-  await page.evaluate(() => {
-    document.getElementById('ra-record-btn')?.click();
-  });
-
-  await page.waitForFunction(() => {
+  const state = await page.evaluate(() => {
     const status = document.getElementById('ra-status-message');
     const recordBtn = document.getElementById('ra-record-btn');
-    return (
-      Number(window.__raRecognitionStarts || 0) === 1 &&
-      !!status &&
-      /recording/i.test(String(status.textContent || '')) &&
-      !!recordBtn &&
-      /finish recording/i.test(String(recordBtn.textContent || ''))
-    );
-  }, { timeout: 30000 });
+    return {
+      fetchCount: Number(window.__raFetchCount || 0),
+      statusText: status ? String(status.textContent || '').trim() : '',
+      recordText: recordBtn ? String(recordBtn.textContent || '').trim() : '',
+      recordDisabled: recordBtn ? !!recordBtn.disabled : null
+    };
+  });
+  assert.equal(state.fetchCount, 1, 'permission denial should not reload the database');
+  assert.match(state.statusText, /blocked|allow microphone access/i, 'permission denial should show a retryable microphone access message');
+  assert.doesNotMatch(state.statusText, /unsupported/i, 'permission denial should not be reported as unsupported browser');
+  assert.match(state.recordText, /skip prep/i, 'permission denial should leave the prompt in prep state');
+  assert.equal(state.recordDisabled, false, 'permission denial should keep the record button enabled');
 
-  await page.evaluate(() => {
-    window.__raLastRecognition.emit('This is a simple prompt');
+  await context.close();
+}
+
+async function assertUnsupportedWithoutWebAudio(browser, baseUrl) {
+  const context = await browser.newContext({ viewport: { width: 1024, height: 900 } });
+  await context.addInitScript(() => {
+    class FakeMediaRecorder {
+      addEventListener() {}
+      start() {}
+      stop() {}
+    }
+
+    Object.defineProperty(window, 'MediaRecorder', {
+      configurable: true,
+      writable: true,
+      value: FakeMediaRecorder
+    });
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: {
+        getUserMedia: async () => ({
+          getTracks() {
+            return [];
+          }
+        })
+      }
+    });
+    Object.defineProperty(window, 'AudioContext', {
+      configurable: true,
+      writable: true,
+      value: undefined
+    });
+    Object.defineProperty(window, 'webkitAudioContext', {
+      configurable: true,
+      writable: true,
+      value: undefined
+    });
+    Object.defineProperty(window, 'OfflineAudioContext', {
+      configurable: true,
+      writable: true,
+      value: undefined
+    });
+
+    const originalFetch = window.fetch.bind(window);
+    window.__raFetchCount = 0;
+    window.fetch = (...args) => {
+      const [resource] = args;
+      const url = String(resource && resource.url ? resource.url : resource || '');
+      if (url.includes('database/RA/RA.xlsx')) {
+        window.__raFetchCount += 1;
+        return Promise.resolve(new Response(new Uint8Array([1, 2, 3, 4]).buffer, { status: 200 }));
+      }
+      return originalFetch(...args);
+    };
   });
 
-  await page.evaluate(() => {
-    document.getElementById('ra-record-btn')?.click();
+  const page = await context.newPage();
+  await preparePage(page, baseUrl);
+  await mockWorkbookRows(page, [
+    { ID: 1, ANSWER: 'Pick it up now', 'Word count': 4 }
+  ]);
+
+  await page.evaluate(async () => {
+    await window.switchToMode('read-aloud');
+  });
+  await page.waitForFunction(() => window.ReadAloudMode && window.ReadAloudMode.hasLoadedDatabase && window.ReadAloudMode.database.length === 1, { timeout: 30000 });
+  await page.evaluate(async () => {
+    await window.ReadAloudMode.loadSpecificPrompt(0);
   });
 
   await page.waitForFunction(() => {
-    const resultBox = document.getElementById('ra-result-box');
-    const accuracy = document.getElementById('ra-accuracy-value');
-    const feedback = document.getElementById('ra-transcript-feedback');
-    const status = document.getElementById('ra-status-message');
-    const recordBtn = document.getElementById('ra-record-btn');
-    return (
-      !!resultBox &&
-      getComputedStyle(resultBox).display !== 'none' &&
-      !!accuracy &&
-      String(accuracy.textContent || '').trim() === '100' &&
-      !!feedback &&
-      /this is a simple prompt/i.test(String(feedback.textContent || '')) &&
-      !!status &&
-      /analysis complete/i.test(String(status.textContent || '')) &&
-      !!recordBtn &&
-      /next prompt/i.test(String(recordBtn.textContent || ''))
-    );
-  }, { timeout: 30000 });
-
-  await page.evaluate(() => {
-    document.getElementById('ra-record-btn')?.click();
-  });
-
-  await page.waitForFunction(() => {
-    const resultBox = document.getElementById('ra-result-box');
     const status = document.getElementById('ra-status-message');
     const recordBtn = document.getElementById('ra-record-btn');
     return (
       Number(window.__raFetchCount || 0) === 1 &&
-      !!resultBox &&
-      getComputedStyle(resultBox).display === 'none' &&
       !!status &&
-      /read the text silently/i.test(String(status.textContent || '')) &&
+      /not supported|unsupported/i.test(String(status.textContent || '')) &&
       !!recordBtn &&
-      /skip prep/i.test(String(recordBtn.textContent || ''))
+      recordBtn.disabled
     );
   }, { timeout: 30000 });
-
-  const supportedState = await page.evaluate(() => ({
-    fetchCount: Number(window.__raFetchCount || 0),
-    recognitionStarts: Number(window.__raRecognitionStarts || 0),
-    recognitionStops: Number(window.__raRecognitionStops || 0)
-  }));
-
-  assert.equal(supportedState.fetchCount, 1, 'database should stay cached between prompts');
-  assert.equal(supportedState.recognitionStarts, 1, 'recording should start exactly once for one attempt');
-  assert.ok(supportedState.recognitionStops >= 1, 'recording should stop when finishing the attempt');
 
   await context.close();
 }
@@ -314,9 +1576,13 @@ async function run() {
   try {
     await waitForServer(`${baseUrl}/api/health`);
     browser = await chromium.launch({ headless: true });
-    await assertUnsupportedFlow(browser, baseUrl);
-    await assertSupportedFlow(browser, baseUrl);
-
+  await assertUnsupportedFlow(browser, baseUrl);
+  await assertSupportedFlow(browser, baseUrl);
+  await assertChunkingDisabledStateReset(browser, baseUrl);
+  await assertAssessmentGuards(browser, baseUrl);
+    await assertPendingMicrophoneRequestGuards(browser, baseUrl);
+    await assertMicrophoneErrorRecovery(browser, baseUrl);
+    await assertUnsupportedWithoutWebAudio(browser, baseUrl);
     console.log('read-aloud mode regression test passed');
   } catch (error) {
     const tail = serverLogs.slice(-10000);

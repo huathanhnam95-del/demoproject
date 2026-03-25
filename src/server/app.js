@@ -6,6 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const https = require('https');
 const http = require('http');
+const { sendError } = require('../utils/response-helper');
 /* eslint-disable no-console */
 
 function hasFingerprint(filePath) {
@@ -61,7 +62,9 @@ function createApp(options = {}) {
     adminRoutes: require('../routes/admin'),
     classroomsRoutes: require('../routes/classrooms'),
     entranceTestRoutes: require('../routes/entrance-tests'),
-    readingJourneyRoutes: require('../routes/reading-journey')
+    readingJourneyRoutes: require('../routes/reading-journey'),
+    pronunciationTestRoutes: require('../routes/pronunciation-test'),
+    readAloudRoutes: require('../routes/read-aloud')
   };
   const firebase = options.firebase || require('../utils/firebase');
   const circuitBreaker = options.circuitBreaker || require('../middleware/circuit-breaker');
@@ -108,6 +111,8 @@ function createApp(options = {}) {
   app.use('/api', routes.classroomsRoutes);
   app.use('/api/entrance-tests', routes.entranceTestRoutes);
   app.use('/api', routes.readingJourneyRoutes);
+  app.use('/api', routes.pronunciationTestRoutes);
+  app.use('/api', routes.readAloudRoutes);
 
   app.get('/api/health', async (_req, res) => {
     const memory = process.memoryUsage();
@@ -163,6 +168,21 @@ function createApp(options = {}) {
         measurementId: process.env.FIREBASE_MEASUREMENT_ID
       }
     });
+  });
+
+  app.use((err, _req, res, _next) => {
+    const status = Number(err?.status || err?.statusCode || 500);
+    if (err?.code === 'LIMIT_FILE_SIZE') {
+      return sendError(res, 413, 'PAYLOAD_TOO_LARGE', 'Uploaded file exceeds the allowed size.');
+    }
+    if (err?.name === 'MulterError' || String(err?.code || '').startsWith('LIMIT_')) {
+      return sendError(res, 400, 'INVALID_REQUEST', err?.message || 'Multipart request could not be processed.');
+    }
+    if (status >= 400 && status < 500) {
+      return sendError(res, status, 'INVALID_REQUEST', err?.message || 'Request could not be processed.');
+    }
+    console.error('[Server] Unhandled request error:', err);
+    return sendError(res, 500, 'INTERNAL_ERROR', 'An unexpected server error occurred.');
   });
 
   app.use('/api', (req, res) => {

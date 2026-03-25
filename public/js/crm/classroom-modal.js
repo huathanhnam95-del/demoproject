@@ -6,6 +6,8 @@ window.CrmClassroomModal = (function () {
             showToast,
             openClassroomModal,
             saveClassroomSettings,
+            previewClassroomRegeneration,
+            applyClassroomRegeneration,
             loadClassroomModules,
             loadClassroomClasswork,
             loadClassroomStream,
@@ -64,6 +66,9 @@ window.CrmClassroomModal = (function () {
 
         function resetClassroomModal() {
             modalState.classroomId = null;
+            modalState.classroomScheduleVersion = null;
+            modalState.classroomRecord = null;
+            modalState.regenerationPreview = null;
             modalState.liveSessions = [];
             modalState.liveSessionId = null;
             switchClassroomTab('settings');
@@ -75,6 +80,23 @@ window.CrmClassroomModal = (function () {
                 });
             }
             if (elements.inputClassroomStatus) elements.inputClassroomStatus.value = 'draft';
+            if (elements.inputClassroomTotalHours) elements.inputClassroomTotalHours.value = '';
+            if (elements.inputClassroomPrimaryTeacher) elements.inputClassroomPrimaryTeacher.value = '';
+            if (elements.inputClassroomSessionMinutes) elements.inputClassroomSessionMinutes.value = '';
+            if (elements.inputClassroomScheduleTimezone) elements.inputClassroomScheduleTimezone.value = '';
+            if (elements.inputClassroomSeedStartDate) elements.inputClassroomSeedStartDate.value = '';
+            if (elements.inputClassroomSeedStartTime) elements.inputClassroomSeedStartTime.value = '';
+            if (elements.inputClassroomSeedWeekdays) elements.inputClassroomSeedWeekdays.value = '';
+            if (elements.inputClassroomAllowedStartTime) elements.inputClassroomAllowedStartTime.value = '';
+            if (elements.inputClassroomAllowedEndTime) elements.inputClassroomAllowedEndTime.value = '';
+            if (elements.inputClassroomDurationStep) elements.inputClassroomDurationStep.value = '';
+            if (elements.inputClassroomMeetingDays) elements.inputClassroomMeetingDays.value = '';
+            if (elements.inputClassroomMeetingHours) elements.inputClassroomMeetingHours.value = '';
+            if (elements.inputClassroomRegenerateFromDate) elements.inputClassroomRegenerateFromDate.value = '';
+            if (elements.inputClassroomRegenerateSessionMinutes) elements.inputClassroomRegenerateSessionMinutes.value = '';
+            if (elements.inputClassroomRegenerateWeekdays) elements.inputClassroomRegenerateWeekdays.value = '';
+            if (elements.inputClassroomRegenerateStartTime) elements.inputClassroomRegenerateStartTime.value = '';
+            if (elements.btnApplyClassroomRegeneration) elements.btnApplyClassroomRegeneration.disabled = true;
             if (elements.classroomStatusBadge) {
                 elements.classroomStatusBadge.textContent = 'Draft';
                 elements.classroomStatusBadge.style.display = 'inline-flex';
@@ -98,6 +120,20 @@ window.CrmClassroomModal = (function () {
             if (elements.inputAttendanceSessionSelect) elements.inputAttendanceSessionSelect.innerHTML = '<option value="">Select a session...</option>';
             if (elements.attendanceRosterContainer) elements.attendanceRosterContainer.innerHTML = '<div class="crm-muted">No attendance roster yet.</div>';
             if (elements.classworkLiveSessionNote) elements.classworkLiveSessionNote.textContent = 'Create or complete a live session before assigning follow-up work.';
+            if (elements.classroomScheduleSummary) {
+                elements.classroomScheduleSummary.innerHTML = `
+          <div class="crm-summary-card">
+            <div class="crm-summary-card-label">Assigned</div>
+            <div class="crm-summary-card-value">0/0</div>
+          </div>
+        `;
+            }
+            if (elements.classroomRegenerationPreview) {
+                elements.classroomRegenerationPreview.innerHTML = 'Preview regeneration to review preserved sessions, blocked reasons, and the next contracted target count.';
+            }
+            renderClassroomSchedulePrompt();
+            renderAttendanceWorkflowGuidance();
+            renderClassworkWorkflowGuidance();
         }
 
         function setupClassroomModal() {
@@ -124,6 +160,39 @@ window.CrmClassroomModal = (function () {
                     }).catch((e) => {
                         console.error('[CRM Admin] Save classroom failed:', e);
                         showToast(e?.message || 'Failed to save classroom.', 'error');
+                    });
+                });
+            }
+
+            if (elements.btnSaveClassroomScheduling) {
+                elements.btnSaveClassroomScheduling.addEventListener('click', () => {
+                    saveClassroomSettings().then(() => {
+                        showToast('Scheduling setup saved.', 'success');
+                    }).catch((e) => {
+                        console.error('[CRM Admin] Save classroom scheduling failed:', e);
+                        showToast(e?.message || 'Failed to save classroom scheduling.', 'error');
+                    });
+                });
+            }
+
+            if (elements.btnPreviewClassroomRegeneration) {
+                elements.btnPreviewClassroomRegeneration.addEventListener('click', () => {
+                    previewClassroomRegeneration().then(() => {
+                        showToast('Regeneration preview ready.', 'success');
+                    }).catch((e) => {
+                        console.error('[CRM Admin] Preview classroom regeneration failed:', e);
+                        showToast(e?.message || 'Failed to preview regeneration.', 'error');
+                    });
+                });
+            }
+
+            if (elements.btnApplyClassroomRegeneration) {
+                elements.btnApplyClassroomRegeneration.addEventListener('click', () => {
+                    applyClassroomRegeneration().then(() => {
+                        showToast('Future schedule regenerated.', 'success');
+                    }).catch((e) => {
+                        console.error('[CRM Admin] Apply classroom regeneration failed:', e);
+                        showToast(e?.message || 'Failed to regenerate future schedule.', 'error');
                     });
                 });
             }

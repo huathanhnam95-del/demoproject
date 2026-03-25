@@ -27,12 +27,12 @@ window.CrmStudentDirectoryWorkspace = (function () {
         function studentContact(student) {
             const email = String(student?.email || '').trim();
             const phone = String(student?.phone || '').trim();
-            if (email && phone) return `${email} â€¢ ${phone}`;
+            if (email && phone) return `${email} | ${phone}`;
             if (email) return email;
             if (phone) return phone;
             const zalo = String(student?.zalo || '').trim();
             if (zalo) return `Zalo: ${zalo}`;
-            return 'â€”';
+            return '-';
         }
 
         function renderStudentsTable(container, students, emptyMessage) {
@@ -52,7 +52,7 @@ window.CrmStudentDirectoryWorkspace = (function () {
             const rows = list.map((student) => {
                 const studentId = String(student.studentId || '').trim();
                 const displayName = studentDisplayName(student);
-                const label = String(student.label || '').trim() || 'â€”';
+                const label = String(student.label || '').trim() || '-';
                 const contact = studentContact(student);
                 return `
         <tr>

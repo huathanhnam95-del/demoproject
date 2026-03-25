@@ -116,6 +116,17 @@ window.ClassroomAPI = (function () {
         return res.json();
     }
 
+    async function createSubmission(classId, data) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/classrooms/${classId}/submissions`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
     // Student: Submit work
     async function submitAssignment(classId, workId, audioBlob) {
         const auth = getAuth();
@@ -198,6 +209,34 @@ window.ClassroomAPI = (function () {
         return json.submissions || [];
     }
 
+    async function fetchClassroomMatches(studentId, params = {}) {
+        const headers = await getHeaders();
+        const search = new URLSearchParams();
+        Object.entries(params).forEach(([key, value]) => {
+            if (value !== null && value !== undefined && String(value).trim() !== '') {
+                search.set(key, String(value).trim());
+            }
+        });
+        const suffix = search.toString() ? `?${search.toString()}` : '';
+        const res = await fetch(`/api/admin/students/${studentId}/classroom-matches${suffix}`, {
+            method: 'GET',
+            headers
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function fetchLiveSessions(classId) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/classrooms/${classId}/live-sessions`, {
+            method: 'GET',
+            headers
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        const json = await res.json();
+        return json.sessions || [];
+    }
+
     async function fetchReviewBoard(classId) {
         const headers = await getHeaders();
         const res = await fetch(`/api/admin/classrooms/${classId}/review-board`, {
@@ -225,6 +264,48 @@ window.ClassroomAPI = (function () {
             method: 'POST',
             headers,
             body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function createLiveSession(classId, data) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/classrooms/${classId}/live-sessions`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function updateLiveSession(classId, sessionId, data) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/classrooms/${classId}/live-sessions/${sessionId}`, {
+            method: 'PATCH',
+            headers,
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function startLiveSession(classId, sessionId) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/classrooms/${classId}/live-sessions/${sessionId}/start`, {
+            method: 'POST',
+            headers
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
+    async function endLiveSession(classId, sessionId) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/classrooms/${classId}/live-sessions/${sessionId}/end`, {
+            method: 'POST',
+            headers
         });
         if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
         return res.json();
@@ -424,6 +505,17 @@ window.ClassroomAPI = (function () {
         return res.json();
     }
 
+    async function returnSubmissionForRevision(submissionId, data) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/admin/submissions/${submissionId}/return-for-revision`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+    }
+
     return {
         fetchCourses,
         fetchClassrooms,
@@ -433,12 +525,19 @@ window.ClassroomAPI = (function () {
         createModule,
         loadClasswork,
         createClasswork,
+        createSubmission,
         submitAssignment,
         fetchMySubmissions,
         fetchSubmissions,
+        fetchClassroomMatches,
+        fetchLiveSessions,
         fetchReviewBoard,
         createEnrollment,
         createAttendanceSession,
+        createLiveSession,
+        updateLiveSession,
+        startLiveSession,
+        endLiveSession,
         saveAttendanceRecords,
         fetchAttendanceSummary,
         fetchSchedulerWorkspace,
@@ -454,6 +553,7 @@ window.ClassroomAPI = (function () {
         previewClassroomScheduleRegeneration,
         regenerateClassroomSchedule,
         openScheduledAttendanceSession,
-        gradeSubmission
+        gradeSubmission,
+        returnSubmissionForRevision
     };
 })();

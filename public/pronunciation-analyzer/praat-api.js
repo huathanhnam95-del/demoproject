@@ -37,6 +37,39 @@ export class PraatAPI {
     }
 
     /**
+     * Exploratory vowel-only analysis used for screen-level hinting.
+     * This never contributes to score output.
+     */
+    async analyzeVowel(audioBlob, {
+        itemId = '',
+        targetPhoneme = '',
+        category = 'vowel',
+        endpoint = '/analyze-vowel'
+    } = {}) {
+        const wavBlob = await this.ensureWav(audioBlob);
+        const normalizedEndpoint = String(endpoint || '/analyze-vowel').replace(/^\/+/, '');
+        const baseUrl = String(this.backendUrl || '').replace(/\/+$/, '');
+
+        const formData = new FormData();
+        formData.append('audio', wavBlob, 'recording.wav');
+        formData.append('itemId', String(itemId));
+        formData.append('targetPhoneme', String(targetPhoneme));
+        formData.append('category', String(category));
+
+        const response = await fetch(`${baseUrl}/${normalizedEndpoint}`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({ error: 'Analysis failed' }));
+            throw new Error(error.error || 'Analysis failed');
+        }
+
+        return response.json();
+    }
+
+    /**
      * Analyze audio from URL (for native reference)
      * Used by WordReferenceService for MW audio analysis
      */

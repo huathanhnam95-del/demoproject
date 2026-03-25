@@ -77,6 +77,19 @@ async function postAssessment(baseUrl, { audioBuffer, referenceText, questionId 
 
 (async () => {
   const { createApp } = require(path.join(process.cwd(), 'src/server/app.js'));
+  const connectedSpeechStorage = require(path.join(process.cwd(), 'src/read-aloud/connected-speech-storage.js'));
+  const originalUpload = connectedSpeechStorage.uploadConnectedSpeechAudio;
+  const originalPersist = connectedSpeechStorage.persistConnectedSpeechAttempt;
+  const persistedAttempts = [];
+  connectedSpeechStorage.uploadConnectedSpeechAudio = async ({ attemptId }) => ({
+    status: 'complete',
+    attemptId,
+    audioPath: `read-aloud-connected-speech/raw/test/${attemptId}.wav`
+  });
+  connectedSpeechStorage.persistConnectedSpeechAttempt = async (record) => {
+    persistedAttempts.push(JSON.parse(JSON.stringify(record)));
+    return { status: 'complete', attemptId: record.attemptId };
+  };
   const readAloudRoutes = require(path.join(process.cwd(), 'src/routes/read-aloud.js'));
   const originalMock = process.env.READ_ALOUD_AZURE_MOCK_RESPONSE;
   const originalFetch = global.fetch;
@@ -192,6 +205,10 @@ async function postAssessment(baseUrl, { audioBuffer, referenceText, questionId 
     ]);
     assert.strictEqual(azureFetchCalls, 0, 'mocked Azure success should not hit the network');
     assert.strictEqual(result.payload.connectedSpeech.status, 'not_applicable', 'connected speech should be skipped without questionId');
+    assert.ok(persistedAttempts.length >= 1, 'attempt persistence should run without questionId');
+    assert.strictEqual(persistedAttempts[0].audioStatus, 'complete', 'persistence should store audio status');
+    assert.strictEqual(persistedAttempts[0].workerStatus, 'not_applicable', 'persistence should store worker status');
+    assert.deepStrictEqual(persistedAttempts[0].eventFamilyCounts, {}, 'persistence should store empty family counts when no connected speech is applicable');
 
     process.env.READ_ALOUD_AZURE_MOCK_RESPONSE = JSON.stringify({
       RecognitionStatus: 'Success',
@@ -221,6 +238,25 @@ async function postAssessment(baseUrl, { audioBuffer, referenceText, questionId 
     assert.strictEqual(result.payload.connectedSpeech.status, 'complete', 'connected speech should run when questionId is present');
     assert.ok(Array.isArray(result.payload.connectedSpeech.events), 'connected speech should include events');
     assert.ok(result.payload.connectedSpeech.events.length >= 1, 'connected speech should return at least one event for a linked prompt');
+    const linkedRecord = persistedAttempts[persistedAttempts.length - 1];
+    assert.strictEqual(linkedRecord.audioStatus, 'complete', 'linked attempt should persist the audio status');
+    assert.ok(String(linkedRecord.workerStatus || '').length > 0, 'linked attempt should persist worker status');
+    assert.ok(linkedRecord.connectedSpeechVersion, 'linked attempt should persist the connected speech version');
+    assert.ok(linkedRecord.eventFamilyCounts.catenation >= 1, 'linked attempt should persist family counts');
+    assert.ok(linkedRecord.connectedSpeechEvents[0].evidence, 'linked attempt should persist event evidence');
+    assert.strictEqual(typeof linkedRecord.referenceWordCount, 'number', 'linked attempt should persist prompt context');
+
+    result = await postAssessment(baseUrl, {
+      audioBuffer: createMonoPcmWavBuffer({ durationMs: 260, amplitude: 32767 }),
+      referenceText: 'Pick it up now',
+      questionId: '1'
+    });
+    assert.strictEqual(result.response.status, 200, 'clipped audio should still return Azure results');
+    assert.strictEqual(result.payload.connectedSpeech.status, 'unavailable', 'clipped audio should not return connected speech scores');
+    const clippedRecord = persistedAttempts[persistedAttempts.length - 1];
+    assert.strictEqual(clippedRecord.workerStatus, 'not_rateable', 'clipped audio should persist not_rateable worker status');
+    assert.strictEqual(String(clippedRecord.audioQualityReason || clippedRecord.audioQuality?.reason || ''), 'clipped', 'clipped audio should persist its downgrade reason');
+    assert.strictEqual(clippedRecord.audioQualityPassed, false, 'clipped audio should persist its quality pass flag');
 
     result = await postAssessment(baseUrl, {
       audioBuffer: createMonoPcmWavBuffer({ durationMs: 260 }),
@@ -233,8 +269,37 @@ async function postAssessment(baseUrl, { audioBuffer, referenceText, questionId 
       result.payload.connectedSpeech.events.some((event) => event.family === 'yod_coalescence'),
       'connected speech should surface yod coalescence for did you-style prompts'
     );
+
+    process.env.READ_ALOUD_AZURE_MOCK_RESPONSE = JSON.stringify({
+      RecognitionStatus: 'Success',
+      NBest: [{
+        Display: 'Hello',
+        PronunciationAssessment: {
+          AccuracyScore: 90.1,
+          FluencyScore: 88.4,
+          CompletenessScore: 100,
+          PronScore: 89.9
+        },
+        Words: [
+          { Word: 'Hello', Offset: 0, Duration: 3000000, PronunciationAssessment: { AccuracyScore: 91, ErrorType: 'None' } }
+        ]
+      }]
+    });
+
+    result = await postAssessment(baseUrl, {
+      audioBuffer: createMonoPcmWavBuffer({ durationMs: 260 }),
+      referenceText: 'Hello',
+      questionId: '3'
+    });
+    assert.strictEqual(result.response.status, 200, 'single-word prompt should still return 200');
+    assert.strictEqual(result.payload.connectedSpeech.status, 'not_applicable', 'single-word prompt should not create connected speech events');
+    const notApplicableRecord = persistedAttempts[persistedAttempts.length - 1];
+    assert.strictEqual(notApplicableRecord.workerStatus, 'not_applicable', 'not applicable prompt should persist not_applicable worker status');
+    assert.deepStrictEqual(notApplicableRecord.eventFamilyCounts, {}, 'not applicable prompt should persist empty family counts');
   } finally {
     process.env.READ_ALOUD_AZURE_MOCK_RESPONSE = originalMock;
+    connectedSpeechStorage.uploadConnectedSpeechAudio = originalUpload;
+    connectedSpeechStorage.persistConnectedSpeechAttempt = originalPersist;
     global.fetch = originalFetch;
     await stopServer(server);
   }

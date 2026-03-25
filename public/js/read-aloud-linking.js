@@ -10,6 +10,33 @@
   const ORTHOGRAPHIC_FALLBACK_BLOCKLIST = new Set(['hour']);
   const AMBIGUOUS_FINAL_SPELLING_PATTERNS = [/mb$/i, /bt$/i, /mn$/i, /gue$/i, /que$/i];
   const REDUCED_WORD_HINTS = new Set(['a', 'an', 'the', 'to', 'of', 'and', 'for', 'can', 'have', 'has', 'was', 'were']);
+  const REDUCED_WORD_GUIDE_COPY = {
+    a: { spokenAs: 'uh', explanation: 'Make it short and light unless you want to stress it.' },
+    an: { spokenAs: 'uhn', explanation: 'Keep the vowel weak and move quickly into the next word.' },
+    the: { spokenAs: 'thuh', explanation: 'Use a light vowel in fast speech unless you are emphasizing it.' },
+    to: { spokenAs: 'tuh', explanation: 'Shorten it and keep it unstressed in the middle of the phrase.' },
+    of: { spokenAs: 'uhv', explanation: 'Reduce the vowel and keep it quick; some speakers make it almost just v.' },
+    and: { spokenAs: 'uhn', explanation: 'Lighten the vowel so it sounds quicker and less stressed.' },
+    for: { spokenAs: 'fer', explanation: 'Use a lighter vowel and do not hold the word too long.' },
+    can: { spokenAs: "k'n", explanation: 'Keep it light when it is not being emphasized.' },
+    have: { spokenAs: 'uhv', explanation: 'Shorten the vowel and let it stay unstressed.' },
+    has: { spokenAs: 'huz', explanation: 'Reduce the vowel and keep the word light.' },
+    was: { spokenAs: 'wuz', explanation: 'Use the weak form when the sentence stress is elsewhere.' },
+    were: { spokenAs: 'wer', explanation: 'Keep it short and unstressed in connected speech.' }
+  };
+  const SOUND_CHANGE_GUIDE_COPY = {
+    coalescent_dj: { spokenAs: 'j', explanation: 'Let the final d slide into the y sound so it blends more like j.' },
+    coalescent_tj: { spokenAs: 'ch', explanation: 'Let the final t blend into the y sound so it comes out more like ch.' },
+    coalescent_sj: { spokenAs: 'sh', explanation: 'Let the s slide into the y sound so the pair softens toward sh.' },
+    coalescent_zj: { spokenAs: 'zh', explanation: 'Let the z slide into the y sound so it blends into a softer zh sound.' }
+  };
+  const LINKING_GUIDE_COPY = {
+    consonant_to_vowel: 'Carry the last consonant straight into the next vowel without adding a pause.',
+    same_consonant_merge: 'Hold the shared sound once instead of saying it twice.',
+    y_glide: 'Move straight between the vowels and let a light y sound smooth the connection.',
+    w_glide: 'Move straight between the vowels and let a light w sound smooth the connection.',
+    generic_vowel_link: 'Keep the two words connected so the mouth keeps moving forward.'
+  };
   const grammarApi = root.ReadAloudPromptGrammar || loadGrammarApi();
   const spokenFormsApi = root.ReadAloudSpokenForms || loadSpokenFormsApi() || root.ReadAloudSpokenForms;
   const connectedSpeechRulesApi = root.ReadAloudConnectedSpeechRules || loadConnectedSpeechRulesApi() || root.ReadAloudConnectedSpeechRules;
@@ -226,6 +253,88 @@
     return summaryParts.join(' ');
   }
 
+  function buildGuideExplanationItems(analysis) {
+    if (!analysis) return [];
+    const items = [];
+    const pushItem = (item) => {
+      if (!item || !item.id) return;
+      if (items.some((existing) => existing.id === item.id)) return;
+      items.push(item);
+    };
+
+    const eligibleBoundaries = Array.isArray(analysis.boundaries)
+      ? analysis.boundaries.filter((boundary) => (
+          boundary
+          && !boundary.blocked
+          && (boundary.confidence === 'high' || boundary.confidence === 'medium')
+        ))
+      : [];
+    const eligibleTokens = Array.isArray(analysis.tokenAnnotations)
+      ? analysis.tokenAnnotations.filter((annotation) => annotation && annotation.layer === 'weak_forms')
+      : [];
+
+    eligibleBoundaries
+      .filter((boundary) => String(boundary.layer || '') === 'assimilation')
+      .forEach((boundary) => {
+        const phrase = `${boundary.leftDisplay || boundary.leftWord || ''} ${boundary.rightDisplay || boundary.rightWord || ''}`.trim();
+        const copy = SOUND_CHANGE_GUIDE_COPY[boundary.subtype] || SOUND_CHANGE_GUIDE_COPY.coalescent_dj;
+        pushItem({
+          id: `boundary-${boundary.id}`,
+          layer: 'assimilation',
+          label: phrase,
+          badge: 'Sound change',
+          spokenAs: copy.spokenAs,
+          explanation: copy.explanation
+        });
+      });
+
+    eligibleTokens.forEach((annotation) => {
+      const normalized = String(annotation.subtype || annotation.word || '').toLowerCase();
+      const copy = REDUCED_WORD_GUIDE_COPY[normalized] || {
+        spokenAs: 'lighter',
+        explanation: 'Make this word shorter and lighter than its careful citation form.'
+      };
+      pushItem({
+        id: `token-${annotation.id || annotation.wordIndex}`,
+        layer: 'weak_forms',
+        label: annotation.display || annotation.word || normalized,
+        badge: 'Reduced word',
+        spokenAs: copy.spokenAs,
+        explanation: copy.explanation
+      });
+    });
+
+    eligibleBoundaries
+      .filter((boundary) => String(boundary.layer || 'linking') !== 'assimilation')
+      .slice(0, 3)
+      .forEach((boundary) => {
+        const phrase = `${boundary.leftDisplay || boundary.leftWord || ''} ${boundary.rightDisplay || boundary.rightWord || ''}`.trim();
+        pushItem({
+          id: `link-${boundary.id}`,
+          layer: 'linking',
+          label: phrase,
+          badge: 'Linking',
+          spokenAs: null,
+          explanation: LINKING_GUIDE_COPY[boundary.subtype || boundary.category] || LINKING_GUIDE_COPY.generic_vowel_link
+        });
+      });
+
+    return items.slice(0, 6);
+  }
+
+  function hasVisibleAssimilation(analysis) {
+    if (!analysis || !Array.isArray(analysis.boundaries)) {
+      return false;
+    }
+
+    return analysis.boundaries.some((boundary) => (
+      boundary
+      && !boundary.blocked
+      && (boundary.confidence === 'high' || boundary.confidence === 'medium')
+      && String(boundary.layer || '') === 'assimilation'
+    ));
+  }
+
   function filterAnalysisByBlockedBoundaries(analysis, blockedBoundarySet) {
     if (!analysis || !Array.isArray(analysis.boundaries) || !blockedBoundarySet?.size) {
       return analysis;
@@ -393,6 +502,9 @@
       const badge = document.createElement('div');
       badge.textContent = boundary.markerText || 'sound change';
       badge.title = boundary.legendLabel || 'Sound change';
+      badge.tabIndex = 0;
+      badge.setAttribute('role', 'button');
+      badge.dataset.guideTarget = `boundary-${boundary.id}`;
       badge.style.cssText = [
         'position:absolute',
         `left:${(startX + endX) / 2}px`,
@@ -406,7 +518,9 @@
         'font-weight:700',
         'letter-spacing:0.02em',
         'box-shadow:0 1px 2px rgba(180, 83, 9, 0.12)',
-        'white-space:nowrap'
+        'white-space:nowrap',
+        'pointer-events:auto',
+        'cursor:pointer'
       ].join(';');
       container.appendChild(badge);
       renderedCount += 1;
@@ -449,14 +563,25 @@
       const row = document.createElement('div');
       row.style.cssText = 'display:flex; flex-wrap:wrap; gap:8px; align-items:center;';
       boundaries.forEach((boundary) => {
-        const item = document.createElement('div');
+        const item = document.createElement('button');
+        const guideTarget = String(boundary.layer || '') === 'assimilation'
+          ? `boundary-${boundary.id}`
+          : `link-${boundary.id}`;
+        item.type = 'button';
+        item.dataset.guideTarget = guideTarget;
+        item.dataset.guideItem = guideTarget;
+        item.dataset.guideLayer = String(boundary.layer || 'linking');
+        item.setAttribute('aria-label', `${headingText}: ${boundary.leftDisplay} ${boundary.rightDisplay}`);
+        item.setAttribute('aria-pressed', 'false');
         item.textContent = `${boundary.leftDisplay} ${boundary.rightDisplay}`;
         item.style.padding = '6px 10px';
         item.style.borderRadius = '999px';
         item.style.background = palette.background;
         item.style.color = palette.color;
         item.style.fontWeight = '600';
-        row.appendChild(item);
+        item.style.border = '1px solid rgba(0,0,0,0.08)';
+        item.style.cursor = 'pointer';
+      row.appendChild(item);
       });
       section.appendChild(row);
       container.appendChild(section);
@@ -488,6 +613,10 @@
       if (!span) return;
       span.classList.add('ra-connected-speech-token', 'ra-connected-speech-token--weak');
       span.dataset.connectedSpeechLayer = annotation.layer;
+      span.dataset.guideTarget = `token-${annotation.id || annotation.wordIndex}`;
+      span.tabIndex = 0;
+      span.setAttribute('role', 'button');
+      span.setAttribute('aria-pressed', 'false');
       if (annotation.subtype) {
         span.dataset.connectedSpeechSubtype = annotation.subtype;
       }
@@ -496,6 +625,7 @@
       span.style.background = 'rgba(217, 119, 6, 0.12)';
       span.style.borderRadius = '4px';
       span.style.padding = '0 1px';
+      span.style.cursor = 'pointer';
       appliedCount += 1;
     });
 
@@ -781,6 +911,8 @@
     tokenizePrompt,
     analyzePrompt,
     buildAccessibleSummary,
+    buildGuideExplanationItems,
+    hasVisibleAssimilation,
     filterAnalysisByBlockedBoundaries,
     renderLinkingLayer,
     applyTokenAnnotations,

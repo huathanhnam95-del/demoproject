@@ -53,6 +53,11 @@ def extract_azure_words(azure_payload):
     words = nbest.get("Words", []) if isinstance(nbest, dict) else []
     parsed = []
     for index, node in enumerate(words):
+        phoneme_candidates = []
+        for candidate in node.get("PronunciationAssessment", {}).get("NBestPhonemes", []) or []:
+            phoneme = str(candidate.get("Phoneme") or candidate.get("phoneme") or "").strip()
+            if phoneme:
+                phoneme_candidates.append(phoneme)
         parsed.append({
             "index": index,
             "word": normalize_word(node.get("Word") or node.get("Display") or node.get("Lexical")),
@@ -61,6 +66,7 @@ def extract_azure_words(azure_payload):
             "duration_ms": to_ms(node.get("Duration")),
             "accuracy_score": round(float(node.get("PronunciationAssessment", {}).get("AccuracyScore", 0) or 0)),
             "error_type": str(node.get("PronunciationAssessment", {}).get("ErrorType", "None")),
+            "phonemes": phoneme_candidates,
         })
     return parsed
 
@@ -77,12 +83,31 @@ def summarize_events(events):
     return summary
 
 
+def normalize_phoneme_candidates(phonemes):
+    return [normalize_word(phoneme) for phoneme in (phonemes or []) if normalize_word(phoneme)]
+
+
+def has_any_phoneme_candidate(word_node, candidates):
+    normalized = set(normalize_phoneme_candidates(word_node.get("phonemes", []) if isinstance(word_node, dict) else []))
+    return any(normalize_word(candidate) in normalized for candidate in candidates)
+
+
+def build_not_rateable_result(reason=None):
+    return {
+        "status": "not_rateable",
+        "version": VERSION,
+        "summary": {"detectedCount": 0, "notDetectedCount": 0, "uncertainCount": 0},
+        "events": [],
+        "reason": reason,
+    }
+
+
 def classify_gap_status(gap_ms, detector_config=None):
     detector_config = detector_config or {}
     detected_threshold = int(detector_config.get("detectedThresholdMs", 140))
     uncertain_threshold = int(detector_config.get("uncertainThresholdMs", 220))
 
-    if gap_ms is None:
+    if gap_ms is None or gap_ms < 0:
         return "uncertain"
     if gap_ms <= detected_threshold:
         return "detected"
@@ -96,10 +121,11 @@ def get_gap_ms(left_word, right_word):
         return None
     if left_word["offset_ms"] is None or left_word["duration_ms"] is None or right_word["offset_ms"] is None:
         return None
-    return max(0, right_word["offset_ms"] - (left_word["offset_ms"] + left_word["duration_ms"]))
+    gap_ms = right_word["offset_ms"] - (left_word["offset_ms"] + left_word["duration_ms"])
+    return None if gap_ms < 0 else gap_ms
 
 
-def classify_event(event, reference_words, azure_words, reference_text):
+def classify_event(event, reference_words, azure_words, reference_text, audio_quality=None):
     family = str(event.get("family", "")).strip()
     feedback_templates = event.get("feedbackTemplates", {})
     phrase = str(event.get("phrase", "")).strip()
@@ -145,6 +171,27 @@ def classify_event(event, reference_words, azure_words, reference_text):
             "evidence": {"reason": "missing_timing_fields", "gapMs": gap_ms},
         }
 
+    left_phoneme_hints = left.get("phonemes", [])
+    right_phoneme_hints = right.get("phonemes", [])
+    coalesced_hint = has_any_phoneme_candidate(right, ["dʒ", "ʤ", "tʃ", "ʧ", "ʒ"])
+    reduced_hint = has_any_phoneme_candidate(left, ["ə", "ɐ", "ʊ", "ɪ"])
+    bilabial_hint = has_any_phoneme_candidate(left, ["m"])
+
+    if audio_quality and not audio_quality.get("passed", True):
+        return {
+            "eventId": event.get("eventId"),
+            "family": family,
+            "status": "uncertain",
+            "confidence": 0.1,
+            "startMs": None,
+            "endMs": None,
+            "feedbackText": feedback_templates.get("uncertain", f'We could not judge "{phrase}" reliably.'),
+            "evidence": {
+                "reason": "audio_not_rateable",
+                "audioQualityReason": audio_quality.get("reason"),
+            },
+        }
+
     status = classify_gap_status(gap_ms, event.get("detectorConfig", {}))
     phrase = str(event.get("phrase", "")).strip()
     family = str(event.get("family", "")).strip()
@@ -161,9 +208,9 @@ def classify_event(event, reference_words, azure_words, reference_text):
         relative_duration = None
         if next_word and next_word.get("duration_ms") and left.get("duration_ms"):
             relative_duration = left["duration_ms"] / max(1, next_word["duration_ms"])
-        if left["accuracy_score"] <= 82 or (relative_duration is not None and relative_duration <= 0.8):
+        if left["accuracy_score"] <= 78 or (relative_duration is not None and relative_duration <= 0.75) or reduced_hint:
             status = "detected"
-        elif left["accuracy_score"] >= 92 and (relative_duration is None or relative_duration >= 1.1):
+        elif left["accuracy_score"] >= 94 and (relative_duration is None or relative_duration >= 1.15) and not reduced_hint:
             status = "not_detected"
         else:
             status = "uncertain"
@@ -179,13 +226,15 @@ def classify_event(event, reference_words, azure_words, reference_text):
                 "variant": "weak_form" if status == "detected" else "canonical",
                 "gapMs": gap_ms,
                 "relativeDuration": relative_duration,
+                "leftPhonemeHints": left_phoneme_hints,
+                "rightPhonemeHints": right_phoneme_hints,
                 "targetWord": reduced_word,
                 "promptText": prompt_text,
             },
         }
 
     if family == "n_bilabial_assimilation":
-        status = "detected" if gap_ms is not None and gap_ms <= 150 and left["accuracy_score"] <= 88 else ("not_detected" if gap_ms is not None and gap_ms >= 260 else "uncertain")
+        status = "detected" if gap_ms is not None and gap_ms <= 125 and (left["accuracy_score"] <= 84 or bilabial_hint) else ("not_detected" if gap_ms is not None and gap_ms >= 280 and not bilabial_hint else "uncertain")
         return {
             "eventId": event.get("eventId"),
             "family": family,
@@ -197,6 +246,8 @@ def classify_event(event, reference_words, azure_words, reference_text):
             "evidence": {
                 "variant": "assimilated_n_to_m" if status == "detected" else "canonical",
                 "gapMs": gap_ms,
+                "leftPhonemeHints": left_phoneme_hints,
+                "rightPhonemeHints": right_phoneme_hints,
                 "leftAccuracy": left["accuracy_score"],
                 "rightAccuracy": right["accuracy_score"],
                 "promptText": prompt_text,
@@ -204,7 +255,7 @@ def classify_event(event, reference_words, azure_words, reference_text):
         }
 
     if family == "yod_coalescence":
-        status = "detected" if gap_ms is not None and gap_ms <= 150 else ("not_detected" if gap_ms is not None and gap_ms >= 260 else "uncertain")
+        status = "detected" if gap_ms is not None and (gap_ms <= 125 or coalesced_hint) else ("not_detected" if gap_ms is not None and gap_ms >= 280 and not coalesced_hint else "uncertain")
         return {
             "eventId": event.get("eventId"),
             "family": family,
@@ -216,6 +267,8 @@ def classify_event(event, reference_words, azure_words, reference_text):
             "evidence": {
                 "variant": "coalesced" if status == "detected" else "canonical",
                 "gapMs": gap_ms,
+                "leftPhonemeHints": left_phoneme_hints,
+                "rightPhonemeHints": right_phoneme_hints,
                 "promptText": prompt_text,
             },
         }
@@ -232,6 +285,8 @@ def classify_event(event, reference_words, azure_words, reference_text):
         "evidence": {
             "variant": "linked" if status == "detected" else "canonical",
             "gapMs": gap_ms,
+            "leftPhonemeHints": left_phoneme_hints,
+            "rightPhonemeHints": right_phoneme_hints,
             "promptText": prompt_text,
         },
     }
@@ -241,6 +296,7 @@ def analyze_connected_speech(spec, audio_bytes):
     reference_text = str(spec.get("referenceText", "")).strip()
     question_id = str(spec.get("questionId", "")).strip()
     events = list(spec.get("events", []) or [])
+    audio_quality = spec.get("audioQuality", {}) if isinstance(spec.get("audioQuality", {}), dict) else {}
     if not question_id or not events:
         return {
             "status": "not_applicable",
@@ -249,9 +305,12 @@ def analyze_connected_speech(spec, audio_bytes):
             "events": [],
         }
 
+    if audio_quality and not audio_quality.get("passed", True):
+        return build_not_rateable_result(audio_quality.get("reason"))
+
     reference_words = parse_reference_words(reference_text)
     azure_words = extract_azure_words(spec.get("azurePayload", {}))
-    scored_events = [classify_event(event, reference_words, azure_words, reference_text) for event in events]
+    scored_events = [classify_event(event, reference_words, azure_words, reference_text, audio_quality) for event in events]
     return {
         "status": "complete",
         "version": VERSION,
@@ -306,6 +365,9 @@ def analyze_route():
         }), 400
 
     result = analyze_connected_speech(spec, audio_bytes)
+    if result.get("status") == "not_rateable":
+        result["summary"] = {"detectedCount": 0, "notDetectedCount": 0, "uncertainCount": 0}
+        result["events"] = []
     result["elapsedMs"] = round((time.time() - started) * 1000)
     return jsonify(result)
 

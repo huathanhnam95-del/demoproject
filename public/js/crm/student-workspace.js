@@ -24,6 +24,7 @@ window.CrmStudentWorkspace = (function () {
             renderActivityList,
             escapeHtml
         } = deps;
+        const entranceTestUi = window.CrmEntranceTests || null;
 
         function toDate(value) {
             if (!value) return null;
@@ -181,11 +182,15 @@ window.CrmStudentWorkspace = (function () {
 
                 modalState.createdTestLinks.set(testId, testLink);
 
-                if (elements.entranceTestLinkInput) elements.entranceTestLinkInput.value = testLink;
-                if (elements.btnCopyEntranceTestLink) elements.btnCopyEntranceTestLink.disabled = false;
-                if (elements.btnOpenEntranceTestLink) elements.btnOpenEntranceTestLink.disabled = false;
-                if (elements.entranceTestLinkNote) {
-                    elements.entranceTestLinkNote.textContent = 'Latest single-use learner link is ready to send. It will stop working after submission.';
+                if (entranceTestUi && typeof entranceTestUi.applyControls === 'function') {
+                    entranceTestUi.applyControls(elements, { testLink }, { hasAnyTests: true });
+                } else {
+                    if (elements.entranceTestLinkInput) elements.entranceTestLinkInput.value = testLink;
+                    if (elements.btnCopyEntranceTestLink) elements.btnCopyEntranceTestLink.disabled = false;
+                    if (elements.btnOpenEntranceTestLink) elements.btnOpenEntranceTestLink.disabled = false;
+                    if (elements.entranceTestLinkNote) {
+                        elements.entranceTestLinkNote.textContent = 'Latest single-use learner link is ready to send. It will stop working after submission.';
+                    }
                 }
 
                 await refreshEntranceTestsList();

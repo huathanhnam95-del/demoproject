@@ -143,6 +143,8 @@ async function assertNoReducedWordCase(analyzePrompt, caseItem) {
     tokenizePrompt,
     analyzePrompt,
     buildAccessibleSummary,
+    buildGuideExplanationItems,
+    hasVisibleAssimilation,
     filterAnalysisByBlockedBoundaries
   } = await loadHelper();
 
@@ -261,6 +263,32 @@ async function assertNoReducedWordCase(analyzePrompt, caseItem) {
   });
   assert.match(mixedSummary, /sound changes/i, 'accessible summary should mention sound changes when present');
 
+  const guideItems = buildGuideExplanationItems({
+    boundaries: [
+      { id: 'b-1', leftWord: 'pick', rightWord: 'it', leftDisplay: 'pick', rightDisplay: 'it', blocked: false, confidence: 'high', layer: 'linking', category: 'consonant_to_vowel', subtype: 'consonant_to_vowel' },
+      { id: 'b-2', leftWord: 'did', rightWord: 'you', leftDisplay: 'did', rightDisplay: 'you', blocked: false, confidence: 'medium', layer: 'assimilation', subtype: 'coalescent_dj' }
+    ],
+    tokenAnnotations: [
+      { id: 'token-1', layer: 'weak_forms', word: 'to', display: 'to', subtype: 'to' }
+    ]
+  });
+  assert.ok(guideItems.some((item) => item.layer === 'assimilation' && /slide|blend/i.test(item.explanation)), 'guide items should explain sound changes in plain English');
+  assert.ok(guideItems.some((item) => item.layer === 'weak_forms' && /short|light/i.test(item.explanation)), 'guide items should explain reduced words in plain English');
+  assert.ok(guideItems.some((item) => item.layer === 'linking' && /pause|carry|connect/i.test(item.explanation)), 'guide items should explain linking in plain English');
+  assert.ok(guideItems.some((item) => item.id === 'boundary-b-2'), 'sound-change guide items should expose stable ids for badge selection');
+  assert.ok(guideItems.some((item) => item.id === 'token-token-1'), 'reduced-word guide items should expose stable ids for token selection');
+
+  const screenshotSentence = 'The situation is similar to a pregnant woman who has twin babies in her belly, says Avi of the Smithsonian Center for Astrophysics. He\'s proposing the idea in a paper that\'s been accepted for publication in the Astrophysical Journal Letters.';
+  const screenshotAnalysis = await analyzePrompt(screenshotSentence, {
+    connectedSpeechLevel: 'v3_sound_changes'
+  });
+  assert.strictEqual(hasVisibleAssimilation(screenshotAnalysis), false, 'sentences without a coalescent assimilation case should not count as visible sound changes');
+
+  const didYouAnalysis = await analyzePrompt('Did you see it?', {
+    connectedSpeechLevel: 'v3_sound_changes'
+  });
+  assert.strictEqual(hasVisibleAssimilation(didYouAnalysis), true, '"did you" should count as a visible Level 3 sound-change case');
+
   const blockedByChunk = filterAnalysisByBlockedBoundaries(await analyzePrompt('pick it up'), new Set(['0:1']));
   const blockedPickIt = findBoundary(blockedByChunk, 'pick', 'it');
   assert.ok(blockedPickIt, 'filtered analyses should retain boundary records');
@@ -311,6 +339,11 @@ async function assertNoReducedWordCase(analyzePrompt, caseItem) {
     buildAccessibleSummary(chunkBlockedSoundChanges),
     /sound changes/i,
     'chunk-blocked sound changes should not leak into the accessible summary'
+  );
+  assert.strictEqual(
+    hasVisibleAssimilation(chunkBlockedSoundChanges),
+    false,
+    'blocked assimilation boundaries should not count as visible sound changes'
   );
 
   console.log('read-aloud linking helper tests passed');

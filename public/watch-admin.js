@@ -285,7 +285,7 @@
      */
     async function loadVideos() {
         try {
-            const response = await fetch('/database/watch/Videos.xlsx');
+            const response = await fetch(`/database/watch/Videos.xlsx?v=${Date.now()}`);
 
             console.log('Video fetch status:', response.status);
             console.log('Video fetch type:', response.headers.get('content-type'));

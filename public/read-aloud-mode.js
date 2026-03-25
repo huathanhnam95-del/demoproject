@@ -166,7 +166,7 @@ class ReadAloudMode {
 
   async loadDatabase() {
     try {
-      const response = await fetch('/database/RA/RA.xlsx');
+      const response = await fetch(`/database/RA/RA.xlsx?v=${Date.now()}`);
       if (!response.ok) throw new Error('Failed to fetch RA.xlsx');
       const arrayBuffer = await response.arrayBuffer();
       const workbook = XLSX.read(arrayBuffer, { type: 'array' });
@@ -558,6 +558,9 @@ class ReadAloudMode {
     this.restorePlainTextVisibility();
     this.setPromptText(this.currentPromptPlainText, this.currentPromptChunkedText);
     this.updatePromptGuideButtons();
+    if (this.state !== 'RESULTS') {
+      this.clearConnectedSpeechResults();
+    }
 
     if (!window.ReadAloudLinking || this.connectedSpeechLevel === 'off') {
       return;
@@ -618,6 +621,9 @@ class ReadAloudMode {
       }
       const summaryText = window.ReadAloudLinking.buildAccessibleSummary(filteredAnalysis);
       summary.textContent = summaryText;
+      if (this.state !== 'RESULTS') {
+        this.renderPromptGuideExplanations(filteredAnalysis);
+      }
 
       const promptWidth = Math.min(window.innerWidth || 0, promptStage.getBoundingClientRect().width || 0);
       const useFallback = promptWidth < (window.ReadAloudLinking.DESKTOP_MIN_WIDTH || 560);
@@ -1235,18 +1241,92 @@ class ReadAloudMode {
 
   clearConnectedSpeechResults() {
     const box = document.getElementById('ra-connected-speech-box');
+    const label = document.getElementById('ra-connected-speech-label');
     const list = document.getElementById('ra-connected-speech-list');
+    const meta = document.getElementById('ra-connected-speech-meta');
     const summary = document.getElementById('ra-connected-speech-summary');
     if (box) box.style.display = 'none';
+    if (label) label.textContent = 'Connected Speech';
     if (list) list.innerHTML = '';
+    if (meta) meta.textContent = 'Guide';
     if (summary) summary.textContent = '';
+  }
+
+  renderPromptGuideExplanations(analysis) {
+    const box = document.getElementById('ra-connected-speech-box');
+    const label = document.getElementById('ra-connected-speech-label');
+    const list = document.getElementById('ra-connected-speech-list');
+    const meta = document.getElementById('ra-connected-speech-meta');
+    const summary = document.getElementById('ra-connected-speech-summary');
+    if (!box || !label || !list || !meta || !summary || !window.ReadAloudLinking || typeof window.ReadAloudLinking.buildGuideExplanationItems !== 'function') {
+      return;
+    }
+
+    const items = window.ReadAloudLinking.buildGuideExplanationItems(analysis);
+    if (!items.length) {
+      this.clearConnectedSpeechResults();
+      return;
+    }
+
+    const escapeHtml = (value) => String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+    const levelLabel = this.connectedSpeechLevel === 'v3_sound_changes'
+      ? 'Level 3 guide'
+      : this.connectedSpeechLevel === 'v2_reduced_words'
+        ? 'Level 2 guide'
+        : 'Level 1 guide';
+    const paletteForLayer = (layer) => {
+      if (layer === 'assimilation') {
+        return {
+          badgeStyle: 'background: rgba(180, 83, 9, 0.14); color: #92400e;',
+          borderStyle: 'border-left: 4px solid #b45309;'
+        };
+      }
+      if (layer === 'weak_forms') {
+        return {
+          badgeStyle: 'background: rgba(217, 119, 6, 0.14); color: #92400e;',
+          borderStyle: 'border-left: 4px solid #d97706;'
+        };
+      }
+      return {
+        badgeStyle: 'background: rgba(37, 99, 235, 0.12); color: #1d4ed8;',
+        borderStyle: 'border-left: 4px solid #2563eb;'
+      };
+    };
+
+    box.style.display = 'block';
+    label.textContent = 'How To Say It';
+    meta.textContent = levelLabel;
+    summary.textContent = `${items.length} pronunciation hint${items.length === 1 ? '' : 's'} in this prompt`;
+    list.innerHTML = items.map((item) => {
+      const palette = paletteForLayer(item.layer);
+      const spokenAs = item.spokenAs
+        ? `<div style="font-size:0.86rem; color:#92400e;"><strong>Try:</strong> ${escapeHtml(item.spokenAs)}</div>`
+        : '';
+      return `
+        <div style="display:flex; flex-direction:column; gap:8px; padding:12px 14px; border-radius:12px; background:#ffffff; border:1px solid #e5e7eb; ${palette.borderStyle}">
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">
+            <strong style="font-size:0.96rem; color:#111827;">${escapeHtml(item.label || 'Hint')}</strong>
+            <span style="padding:4px 10px; border-radius:999px; font-size:0.75rem; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; ${palette.badgeStyle}">${escapeHtml(item.badge || 'Hint')}</span>
+          </div>
+          ${spokenAs}
+          <div style="font-size:0.92rem; color:#374151; line-height:1.45;">${escapeHtml(item.explanation || '')}</div>
+        </div>
+      `;
+    }).join('');
   }
 
   renderConnectedSpeechResults(connectedSpeech) {
     const box = document.getElementById('ra-connected-speech-box');
+    const label = document.getElementById('ra-connected-speech-label');
     const list = document.getElementById('ra-connected-speech-list');
+    const meta = document.getElementById('ra-connected-speech-meta');
     const summary = document.getElementById('ra-connected-speech-summary');
-    if (!box || !list || !summary) return;
+    if (!box || !label || !list || !meta || !summary) return;
 
     if (!connectedSpeech || connectedSpeech.status === 'not_applicable') {
       this.clearConnectedSpeechResults();
@@ -1254,6 +1334,8 @@ class ReadAloudMode {
     }
 
     box.style.display = 'block';
+    label.textContent = 'Connected Speech';
+    meta.textContent = 'GA only';
     const detectedCount = Number(connectedSpeech?.summary?.detectedCount || 0);
     const notDetectedCount = Number(connectedSpeech?.summary?.notDetectedCount || 0);
     const uncertainCount = Number(connectedSpeech?.summary?.uncertainCount || 0);

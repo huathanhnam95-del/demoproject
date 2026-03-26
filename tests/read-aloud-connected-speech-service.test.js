@@ -72,7 +72,7 @@ function eventIds(events) {
             PronunciationAssessment: {
               AccuracyScore: 89,
               ErrorType: 'None',
-              NBestPhonemes: [{ Phoneme: 'dʒ', Score: 91 }]
+              NBestPhonemes: [{ Phoneme: 'd\u0292', Score: 91 }]
             }
           },
           { Word: 'see', Offset: 4700000, Duration: 1800000, PronunciationAssessment: { AccuracyScore: 93, ErrorType: 'None' } },
@@ -86,6 +86,74 @@ function eventIds(events) {
     phonemeHintAnalysis.events.find((event) => event.eventId === 'q-2-yod_coalescence-0-1')?.status,
     'detected',
     'phoneme candidates should help borderline yod cases score as detected'
+  );
+
+  const weakFormPhonemeHintAnalysis = buildConnectedSpeechAnalysis({
+    questionId: '6',
+    referenceText: 'Want to go',
+    azurePayload: {
+      NBest: [{
+        Display: 'Want to go',
+        PronunciationAssessment: {
+          AccuracyScore: 90,
+          FluencyScore: 87,
+          CompletenessScore: 100,
+          PronScore: 89
+        },
+        Words: [
+          { Word: 'Want', Offset: 0, Duration: 2000000, PronunciationAssessment: { AccuracyScore: 94, ErrorType: 'None' } },
+          {
+            Word: 'to',
+            Offset: 2100000,
+            Duration: 2200000,
+            PronunciationAssessment: {
+              AccuracyScore: 90,
+              ErrorType: 'None',
+              NBestPhonemes: [{ Phoneme: '\u0259', Score: 93 }]
+            }
+          },
+          { Word: 'go', Offset: 4400000, Duration: 2200000, PronunciationAssessment: { AccuracyScore: 92, ErrorType: 'None' } }
+        ]
+      }]
+    }
+  });
+
+  const weakFormEvent = weakFormPhonemeHintAnalysis.events.find((event) => event.family === 'weak_form_reduction');
+  assert.strictEqual(
+    weakFormEvent?.status,
+    'detected',
+    'schwa phoneme hints should mark weak-form reductions as detected in borderline timing cases'
+  );
+  assert.ok(weakFormEvent?.phrase, 'weak-form events should keep the phrase field');
+  assert.ok(weakFormEvent?.leftWord, 'weak-form events should keep the leftWord field');
+  assert.ok(weakFormEvent?.rightWord, 'weak-form events should keep the rightWord field');
+  assert.strictEqual(typeof weakFormEvent?.startWordIndex, 'number', 'weak-form events should keep the startWordIndex field');
+  assert.strictEqual(typeof weakFormEvent?.endWordIndex, 'number', 'weak-form events should keep the endWordIndex field');
+
+  const assimilationAnalysis = buildConnectedSpeechAnalysis({
+    questionId: '7',
+    referenceText: 'green park',
+    azurePayload: {
+      NBest: [{
+        Display: 'green park',
+        PronunciationAssessment: {
+          AccuracyScore: 90,
+          FluencyScore: 86,
+          CompletenessScore: 100,
+          PronScore: 89
+        },
+        Words: [
+          { Word: 'green', Offset: 0, Duration: 2600000, PronunciationAssessment: { AccuracyScore: 78, ErrorType: 'None' } },
+          { Word: 'park', Offset: 2720000, Duration: 2200000, PronunciationAssessment: { AccuracyScore: 91, ErrorType: 'None' } }
+        ]
+      }]
+    }
+  });
+
+  assert.strictEqual(
+    assimilationAnalysis.events.find((event) => event.family === 'n_bilabial_assimilation')?.status,
+    'detected',
+    'assimilation detection should follow the left boundary word evidence rather than averaging both words'
   );
 
   const notRateableAnalysis = buildConnectedSpeechAnalysis({

@@ -80,6 +80,9 @@ window.CrmStudentModal = (function () {
             inputs.forEach((el) => {
                 if (el) el.value = '';
             });
+            if (window.CrmStudents && typeof window.CrmStudents.syncScoreDecorations === 'function') {
+                window.CrmStudents.syncScoreDecorations(elements);
+            }
 
             if (elements.studentIdBadge) {
                 elements.studentIdBadge.style.display = 'none';

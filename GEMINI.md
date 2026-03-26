@@ -11,7 +11,7 @@
 ## Active State
 
 - **Status**: Active Development
-- **Phase**: Release V1.5.8
+- **Phase**: Release V1.6.0
 
 ## Instructions
 
@@ -30,8 +30,11 @@ This file guides the agent's understanding of the project structure and context.
 
 1. **Never mark Done without proof**: A task can ONLY be marked as 'Done' AFTER empirical verification that the work is complete. If a session ends before verification, the task MUST remain 'In Progress'. Ending a conversation is NOT sufficient grounds to mark a task Done.
 2. **Stale task audit on session start**: When reading TASK_TRACKER.csv at the beginning of a session, check for any 'In Progress' tasks. If found, verify whether they were completed in a previous session by checking conversation artifacts (task.md/walkthrough.md). Update accordingly.
-3. **Edit in place — never rewrite the full file**: When updating a single row (e.g., marking Done), use targeted line edits (replace_file_content on the specific row). Do NOT read the entire CSV and write it back — this causes duplicate rows.
+3. **Edit in place — never rewrite the full file**: When updating a single row (e.g., marking Done), use targeted line edits (replace_file_content on the specific row). Do NOT read the entire CSV and write it back — this causes duplicate rows. This also applies when appending: target the last line or trailing newline and replace it with the new row + trailing newline. NEVER use write_to_file with Overwrite for this file.
 4. **One task per deliverable**: If a task spans multiple conversations, the LAST conversation to complete the work is responsible for marking it Done. Do not create duplicate task entries for the same deliverable.
+5. **Calculate TaskNo by scanning ALL rows**: When appending a new task, find the maximum TaskNo across the entire file — do NOT just read the last line. Out-of-order or deleted rows can cause duplicates if you only check the bottom.
+6. **Preserve line endings**: Match the existing file's line ending style (`\r\n` on Windows). Mixed line endings cause git to flag every line as changed and make targeted edits unreliable.
+7. **Verify after editing**: After any edit to TASK_TRACKER.csv, re-read the affected lines to confirm: (a) no duplicate TaskNos exist, (b) no duplicate rows were introduced, (c) the row count has not unexpectedly increased.
 
 ## GSD Auto-Integration (MANDATORY)
 
@@ -112,7 +115,7 @@ These workflows add product thinking, automated QA, and release automation:
 
 - **Versioning Rule**: ALWAYS name commits and pushes with explicit version tags.
 - **Changelog Rule**: ALWAYS add a changelog summarizing all updates before pushing.
-- **Next Version**: `V1.6.0`
+- **Next Version**: `V1.6.1`
 - **SemVer Protocol**:
   - **Minor Push (Bug fixes, small edits)**: Increment the LAST digit (e.g., `1.0.0` -> `1.0.1`).
   - **Major Push (New functions, big updates)**: Increment the MIDDLE digit (e.g., `1.0.0` -> `1.1.0`).

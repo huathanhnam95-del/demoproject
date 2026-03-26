@@ -27,6 +27,14 @@ window.CrmClassroomWorkspace = (function () {
             return String(classroom?.classroomId || classroom?.id || '').trim();
         }
 
+        function getClassroomById(classroomId) {
+            const targetId = String(classroomId || '').trim();
+            if (!targetId) return null;
+            return Array.isArray(dataCache.classrooms)
+                ? dataCache.classrooms.find((row) => getClassroomId(row) === targetId) || null
+                : null;
+        }
+
         function renderAttendanceRoster(summaryRows) {
             if (!elements.attendanceRosterContainer) return;
             const rows = Array.isArray(summaryRows) ? summaryRows : [];
@@ -364,6 +372,75 @@ window.CrmClassroomWorkspace = (function () {
                 return;
             }
 
+            if (!container.__crmKanbanHandlerBound) {
+                container.addEventListener('click', async (event) => {
+                    const button = event.target && typeof event.target.closest === 'function'
+                        ? event.target.closest('.btn-grade-submit, .btn-return-revision, .btn-play-audio')
+                        : null;
+                    if (!button || !container.contains(button)) return;
+
+                    if (button.classList.contains('btn-grade-submit')) {
+                        const card = button.closest('.crm-kanban-card');
+                        const sid = String(card?.dataset?.subId || '').trim();
+                        const grade = String(card?.querySelector('.grade-val')?.value || '').trim();
+                        if (!grade) return showToast('Enter a grade first.', 'error');
+
+                        try {
+                            button.disabled = true;
+                            await window.ClassroomAPI.gradeSubmission(sid, { grade });
+                            showToast('Graded.', 'success');
+                            loadReviewBoard(modalState.classroomId);
+                        } catch (error) {
+                            showToast(error?.message || 'Failed to grade submission.', 'error');
+                            button.disabled = false;
+                        }
+                        return;
+                    }
+
+                    if (button.classList.contains('btn-return-revision')) {
+                        const card = button.closest('.crm-kanban-card');
+                        const sid = String(card?.dataset?.subId || '').trim();
+                        const feedback = String(card?.querySelector('.revision-feedback')?.value || '').trim();
+                        if (!feedback) return showToast('Add feedback before returning for revision.', 'error');
+
+                        try {
+                            button.disabled = true;
+                            await window.ClassroomAPI.returnSubmissionForRevision(sid, { feedback });
+                            showToast('Returned for revision.', 'success');
+                            loadReviewBoard(modalState.classroomId);
+                        } catch (error) {
+                            showToast(error?.message || 'Failed to return for revision.', 'error');
+                            button.disabled = false;
+                        }
+                        return;
+                    }
+
+                    if (button.classList.contains('btn-play-audio')) {
+                        const path = String(button.dataset.path || '').trim();
+                        if (!path || typeof firebase === 'undefined') return;
+                        try {
+                            button.disabled = true;
+                            const originalText = button.textContent;
+                            button.textContent = 'Loading...';
+                            const url = await firebase.storage().ref(path).getDownloadURL();
+                            const audio = new Audio(url);
+                            audio.play();
+                            button.textContent = 'Playing...';
+                            audio.onended = () => {
+                                button.disabled = false;
+                                button.textContent = originalText;
+                            };
+                        } catch (error) {
+                            console.error('[CRM Admin] Audio playback failed:', error);
+                            showToast('Failed to load audio.', 'error');
+                            button.disabled = false;
+                            button.textContent = 'Play Audio';
+                        }
+                    }
+                });
+                container.__crmKanbanHandlerBound = true;
+            }
+
             container.innerHTML = list.map((submission) => `
               <div class="crm-kanban-card" data-sub-id="${escapeHtml(submission.id || '')}">
                 <div class="card-user">
@@ -394,69 +471,6 @@ window.CrmClassroomWorkspace = (function () {
                 `}
               </div>
             `).join('');
-
-            container.querySelectorAll('.btn-grade-submit').forEach((button) => {
-                button.addEventListener('click', async () => {
-                    const card = button.closest('.crm-kanban-card');
-                    const sid = String(card?.dataset?.subId || '').trim();
-                    const grade = String(card?.querySelector('.grade-val')?.value || '').trim();
-                    if (!grade) return showToast('Enter a grade first.', 'error');
-
-                    try {
-                        button.disabled = true;
-                        await window.ClassroomAPI.gradeSubmission(sid, { grade });
-                        showToast('Graded.', 'success');
-                        loadReviewBoard(modalState.classroomId);
-                    } catch (error) {
-                        showToast(error?.message || 'Failed to grade submission.', 'error');
-                        button.disabled = false;
-                    }
-                });
-            });
-
-            container.querySelectorAll('.btn-return-revision').forEach((button) => {
-                button.addEventListener('click', async () => {
-                    const card = button.closest('.crm-kanban-card');
-                    const sid = String(card?.dataset?.subId || '').trim();
-                    const feedback = String(card?.querySelector('.revision-feedback')?.value || '').trim();
-                    if (!feedback) return showToast('Add feedback before returning for revision.', 'error');
-
-                    try {
-                        button.disabled = true;
-                        await window.ClassroomAPI.returnSubmissionForRevision(sid, { feedback });
-                        showToast('Returned for revision.', 'success');
-                        loadReviewBoard(modalState.classroomId);
-                    } catch (error) {
-                        showToast(error?.message || 'Failed to return for revision.', 'error');
-                        button.disabled = false;
-                    }
-                });
-            });
-
-            container.querySelectorAll('.btn-play-audio').forEach((button) => {
-                button.addEventListener('click', async () => {
-                    const path = String(button.dataset.path || '').trim();
-                    if (!path || typeof firebase === 'undefined') return;
-                    try {
-                        button.disabled = true;
-                        const originalText = button.textContent;
-                        button.textContent = 'Loading...';
-                        const url = await firebase.storage().ref(path).getDownloadURL();
-                        const audio = new Audio(url);
-                        audio.play();
-                        button.textContent = 'Playing...';
-                        audio.onended = () => {
-                            button.disabled = false;
-                            button.textContent = originalText;
-                        };
-                    } catch (error) {
-                        console.error('[CRM Admin] Audio playback failed:', error);
-                        showToast('Failed to load audio.', 'error');
-                        button.disabled = false;
-                        button.textContent = 'Play Audio';
-                    }
-                });
-            });
         }
 
         async function loadReviewBoard(classId) {
@@ -629,10 +643,24 @@ window.CrmClassroomWorkspace = (function () {
         async function refreshClassroomList() {
             if (!elements.classManagementGrid) return;
             try {
+                if (!elements.classManagementGrid.__crmClassroomLinkHandlerBound) {
+                    elements.classManagementGrid.addEventListener('click', async (event) => {
+                        const button = event.target && typeof event.target.closest === 'function'
+                            ? event.target.closest('button.crm-classroom-link[data-classroom-id]')
+                            : null;
+                        if (!button || !elements.classManagementGrid.contains(button)) return;
+                        const classroom = getClassroomById(button.dataset.classroomId);
+                        if (!classroom) return;
+                        await openExistingClassroom(classroom);
+                    });
+                    elements.classManagementGrid.__crmClassroomLinkHandlerBound = true;
+                }
+
                 const [classrooms, courses] = await Promise.all([
                     window.ClassroomAPI.fetchClassrooms(),
                     fetchCoursesFromCatalog().catch(() => [])
                 ]);
+                dataCache.classrooms = classrooms;
                 const courseIndex = new Map(courses.map((course) => [String(course.id || ''), course]));
                 if (!classrooms.length) {
                     elements.classManagementGrid.innerHTML = '<div class="crm-muted">No classrooms found.</div>';
@@ -661,16 +689,6 @@ window.CrmClassroomWorkspace = (function () {
                     </table>
                   </div>
                 `;
-
-                const classroomIndex = new Map(classrooms.map((classroom) => [getClassroomId(classroom), classroom]));
-                Array.from(elements.classManagementGrid.querySelectorAll('button.crm-classroom-link[data-classroom-id]')).forEach((button) => {
-                    button.addEventListener('click', async () => {
-                        const classroomId = String(button.dataset.classroomId || '').trim();
-                        const classroom = classroomIndex.get(classroomId);
-                        if (!classroom) return;
-                        await openExistingClassroom(classroom);
-                    });
-                });
             } catch (error) {
                 elements.classManagementGrid.innerHTML = '<div class="crm-muted">Failed to load classrooms.</div>';
             }
@@ -681,7 +699,23 @@ window.CrmClassroomWorkspace = (function () {
                 return;
             }
 
+            if (!elements.zoomLinksGrid.__crmLiveClassroomOpenHandlerBound) {
+                elements.zoomLinksGrid.addEventListener('click', (event) => {
+                    const button = event.target && typeof event.target.closest === 'function'
+                        ? event.target.closest('.btn-open-live-classroom[data-classroom-id]')
+                        : null;
+                    if (!button || !elements.zoomLinksGrid.contains(button)) return;
+                    const classroom = getClassroomById(button.dataset.classroomId);
+                    openExistingClassroom(classroom).catch((error) => {
+                        console.error('[CRM Admin] Failed to open classroom from live delivery overview:', error);
+                        showToast(error?.message || 'Failed to open classroom.', 'error');
+                    });
+                });
+                elements.zoomLinksGrid.__crmLiveClassroomOpenHandlerBound = true;
+            }
+
             const classrooms = await window.ClassroomAPI.fetchClassrooms();
+            dataCache.classrooms = classrooms;
             const activeClassrooms = classrooms.filter((row) => String(row?.status || '').trim().toLowerCase() !== 'archived');
 
             if (!activeClassrooms.length) {
@@ -722,18 +756,6 @@ window.CrmClassroomWorkspace = (function () {
                   </section>
                 `;
             }).join('');
-
-            const classroomIndex = new Map(activeClassrooms.map((row) => [getClassroomId(row), row]));
-            Array.from(elements.zoomLinksGrid.querySelectorAll('.btn-open-live-classroom[data-classroom-id]')).forEach((button) => {
-                button.addEventListener('click', () => {
-                    const classroomId = String(button.dataset.classroomId || '').trim();
-                    const classroom = classroomIndex.get(classroomId);
-                    openExistingClassroom(classroom).catch((error) => {
-                        console.error('[CRM Admin] Failed to open classroom from live delivery overview:', error);
-                        showToast(error?.message || 'Failed to open classroom.', 'error');
-                    });
-                });
-            });
         }
 
         return {

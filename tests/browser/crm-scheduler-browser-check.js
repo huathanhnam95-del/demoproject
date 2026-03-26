@@ -93,6 +93,9 @@ async function dragBetween(page, sourceSelector, targetSelector) {
 
 function buildHarnessState() {
   const weekStart = startOfWeek(new Date());
+  const previewNowIso = new Date(weekStart);
+  previewNowIso.setDate(previewNowIso.getDate() - 1);
+  previewNowIso.setHours(0, 0, 0, 0);
   const timezone = 'Asia/Bangkok';
   const classOneFirstDate = toLocalDateInput(addDays(weekStart, 1));
   const classOneSecondDate = toLocalDateInput(addDays(weekStart, 3));
@@ -423,6 +426,7 @@ function buildHarnessState() {
     courses,
     classrooms,
     sessions,
+    previewNowIso,
     getClassroom,
     activeSessions,
     listClassSessions,
@@ -636,7 +640,8 @@ function startHarnessServer() {
       durationMinutes: req.body?.durationMinutes,
       addMode: req.body?.addMode,
       recurringCount: req.body?.recurringCount,
-      existingSessions: state.listClassSessions(req.params.classId)
+      existingSessions: state.listClassSessions(req.params.classId),
+      nowIso: state.previewNowIso.toISOString()
     });
     responseJson(res, { success: true, ...preview });
   });
@@ -657,7 +662,8 @@ function startHarnessServer() {
       durationMinutes: req.body?.durationMinutes,
       addMode: req.body?.addMode,
       recurringCount: req.body?.recurringCount,
-      existingSessions: state.listClassSessions(req.params.classId)
+      existingSessions: state.listClassSessions(req.params.classId),
+      nowIso: state.previewNowIso.toISOString()
     });
     const createdSessions = [];
     const skippedOccurrences = [...preview.blockedOccurrences];
@@ -695,7 +701,8 @@ function startHarnessServer() {
       durationMinutes: req.body?.durationMinutes || classroom?.scheduleConfig?.sessionMinutes || 60,
       existingSessions: state.listClassSessions(req.params.classId),
       totalInstructionMinutes: Number(classroom?.scheduleConfig?.totalInstructionMinutes || 0) || 60,
-      sessionMinutes: Number(classroom?.scheduleConfig?.sessionMinutes || 0) || 60
+      sessionMinutes: Number(classroom?.scheduleConfig?.sessionMinutes || 0) || 60,
+      nowIso: state.previewNowIso.toISOString()
     });
     responseJson(res, { success: true, ...preview });
   });
@@ -711,7 +718,8 @@ function startHarnessServer() {
       durationMinutes: req.body?.durationMinutes || classroom?.scheduleConfig?.sessionMinutes || 60,
       existingSessions: state.listClassSessions(req.params.classId),
       totalInstructionMinutes: Number(classroom?.scheduleConfig?.totalInstructionMinutes || 0) || 60,
-      sessionMinutes: Number(classroom?.scheduleConfig?.sessionMinutes || 0) || 60
+      sessionMinutes: Number(classroom?.scheduleConfig?.sessionMinutes || 0) || 60,
+      nowIso: state.previewNowIso.toISOString()
     });
     const eligible = preview.eligibleSessions.find((session) => String(session.sessionId || '') === String(req.body?.replacedSessionId || ''));
     if (!eligible) {

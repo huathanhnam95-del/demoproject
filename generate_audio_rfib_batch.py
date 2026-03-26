@@ -2,31 +2,19 @@ import os
 import subprocess
 import pandas as pd
 from dotenv import load_dotenv
-from google import genai
-from google.genai import types
+import requests
 import random
 import time
+import base64
 
 load_dotenv()
 
-# --- API Key Rotation ---
-API_KEYS = [
-    "AIzaSyB-7-Z_akwDLmHj40KD-5W1t6qKJbTfqZs",
-    "AIzaSyAaEBXf1LdkixTExCagUVCFY-dVUFf9X9U",
-]
-current_key_idx = 0
-client = genai.Client(api_key=API_KEYS[current_key_idx])
-
-
-def rotate_key():
-    """Switch to the next API key. Returns False if all keys exhausted."""
-    global current_key_idx, client
-    current_key_idx += 1
-    if current_key_idx >= len(API_KEYS):
-        return False
-    print(f"  >> Rotating to API key {current_key_idx + 1}/{len(API_KEYS)}")
-    client = genai.Client(api_key=API_KEYS[current_key_idx])
-    return True
+# --- API Configuration ---
+# Using the Vertex AI Express key to bypass AI Studio limits
+API_KEY = "AQ.Ab8RN6IevtwiomI4-zHShe_gVo__PYPcY0HlDukIul9qHdxZig"
+PROJECT_ID = "gen-lang-client-0677756745"
+LOCATION = "us-central1"
+MODEL = "gemini-2.5-flash-preview-tts"
 
 EXCEL_PATH = r"C:\Cursor AI\public\database\RFIB\RFIB Final ver.xlsx"
 AUDIO_DIR = r"C:\Cursor AI\public\database\RFIB\audio"
@@ -41,45 +29,72 @@ FEMALE_VOICES = ["Aoede", "Kore"]
 START_ROW = 0
 END_ROW = 263  # exclusive — set to len(df) for full run
 MP3_BITRATE = "64k"  # speech-optimized bitrate
+FFMPEG_PATH = r"C:\ffmpeg\ffmpeg-master-latest-win64-gpl\bin\ffmpeg.exe"
 
-
-def generate_voice(text, voice_name, pcm_output_path, max_retries=3):
+def generate_voice(text, voice_name, pcm_output_path, max_retries=5):
     if pd.isna(text) or str(text).strip() == "":
         return False
+        
+    url = f"https://{LOCATION}-aiplatform.googleapis.com/v1/projects/{PROJECT_ID}/locations/{LOCATION}/publishers/google/models/{MODEL}:generateContent?key={API_KEY}"
+    
+    payload = {
+        "contents": [{"role": "user", "parts": [{"text": str(text)}]}],
+        "generationConfig": {
+            "responseModalities": ["AUDIO"],
+            "speechConfig": {
+                "voiceConfig": {
+                    "prebuiltVoiceConfig": {
+                        "voiceName": voice_name
+                    }
+                }
+            }
+        }
+    }
+    
     for attempt in range(max_retries):
         try:
-            print(f"Generating audio for '{str(text)[:25]}...' using {voice_name}")
-            response = client.models.generate_content(
-                model="gemini-2.5-flash-preview-tts",
-                contents=str(text),
-                config=types.GenerateContentConfig(
-                    response_modalities=["AUDIO"],
-                    speech_config=types.SpeechConfig(
-                        voice_config=types.VoiceConfig(
-                            prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                                voice_name=voice_name
-                            )
-                        )
-                    )
-                )
-            )
-            for part in response.candidates[0].content.parts:
-                if hasattr(part, 'inline_data') and part.inline_data:
-                    with open(pcm_output_path, "wb") as f:
-                        f.write(part.inline_data.data)
-                    return True
-            return False
-        except Exception as e:
-            if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
-                if rotate_key():
-                    print(f"  Switched to next API key. Retrying...")
-                    continue  # retry immediately with new key
-                else:
-                    print("  All API keys exhausted! Stopping.")
-                    raise SystemExit("All API keys exhausted")
+            print(f"Generating audio for '{str(text)[:25]}...' using {voice_name} via Vertex")
+            response = requests.post(url, json=payload)
+            
+            if response.status_code == 200:
+                data = response.json()
+                b64_audio = data['candidates'][0]['content']['parts'][0]['inlineData']['data']
+                with open(pcm_output_path, "wb") as f:
+                    f.write(base64.b64decode(b64_audio))
+                return True
+                
+            err_str = response.text
+            if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
+                wait = 5 * (2 ** attempt)
+                print(f"  Rate limited (attempt {attempt+1}/{max_retries}). Retrying in {wait}s...")
+                time.sleep(wait)
+                continue
+            elif "SSL" in err_str or "ssl" in err_str or "DECRYPTION" in err_str or "bad record mac" in err_str:
+                wait = 5 * (2 ** attempt)
+                print(f"  SSL error (attempt {attempt+1}/{max_retries}). Retrying in {wait}s...")
+                time.sleep(wait)
+                continue
             else:
-                print(f"  Error: {e}")
+                print(f"  API Error ({response.status_code}): {err_str}")
+                if attempt < max_retries - 1:
+                    time.sleep(3)
+                    continue
                 return False
+                
+        except Exception as e:
+            err_str = str(e)
+            if "SSL" in err_str or "ssl" in err_str or "DECRYPTION" in err_str or "bad record mac" in err_str:
+                wait = 5 * (2 ** attempt)
+                print(f"  Network/SSL error (attempt {attempt+1}/{max_retries}). Retrying in {wait}s...")
+                time.sleep(wait)
+                continue
+            else:
+                print(f"  Request Error: {e}")
+                if attempt < max_retries - 1:
+                    time.sleep(3)
+                    continue
+                return False
+                
     print("  Max retries reached. Skipping.")
     return False
 
@@ -94,13 +109,13 @@ def convert_and_stretch(pcm_input, speeds_dict):
     for speed, out_path in speeds_dict.items():
         if speed == 100:
             cmd = [
-                "ffmpeg", "-y", "-f", "s16le", "-ar", "24000", "-ac", "1",
+                FFMPEG_PATH, "-y", "-f", "s16le", "-ar", "24000", "-ac", "1",
                 "-i", pcm_input, "-b:a", MP3_BITRATE, out_path
             ]
         else:
             rate = speed / 100.0
             cmd = [
-                "ffmpeg", "-y", "-f", "s16le", "-ar", "24000", "-ac", "1",
+                FFMPEG_PATH, "-y", "-f", "s16le", "-ar", "24000", "-ac", "1",
                 "-i", pcm_input, "-filter:a", f"atempo={rate}",
                 "-b:a", MP3_BITRATE, out_path
             ]
@@ -164,6 +179,10 @@ def run_batch():
                     convert_and_stretch(female_pcm, female_speeds)
 
         completed += 1
+        
+        if completed >= 20:
+            print(f"\nReached target of 20 newly generated questions. Stopping batch.")
+            break
     
     print(f"\n=== Batch complete: {completed} rows processed, {skipped} skipped (already done) ===")
 

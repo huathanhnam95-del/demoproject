@@ -11,6 +11,29 @@ window.CrmCommunicationsWorkspace = (function () {
         async function refreshCommunicationsManager() {
             if (!window.CrmCommunications || !elements.automationList) return;
 
+            if (!elements.automationList.__crmAutomationRunHandlerBound) {
+                elements.automationList.addEventListener('click', async (event) => {
+                    const button = event.target && typeof event.target.closest === 'function'
+                        ? event.target.closest('.btn-run-automation')
+                        : null;
+                    if (!button || !elements.automationList.contains(button)) return;
+                    const ruleId = String(button.dataset.ruleId || '').trim();
+                    try {
+                        button.disabled = true;
+                        await apiFetchJson(`/api/admin/automations/${encodeURIComponent(ruleId)}/run-now`, {
+                            method: 'POST'
+                        });
+                        await refreshCommunicationsManager();
+                        showToast('Automation queued.', 'success');
+                    } catch (error) {
+                        console.error('[CRM Admin] Run automation failed:', error);
+                        showToast(error?.message || 'Failed to run automation.', 'error');
+                        button.disabled = false;
+                    }
+                });
+                elements.automationList.__crmAutomationRunHandlerBound = true;
+            }
+
             const [templatesJson, automationsJson] = await Promise.all([
                 apiFetchJson('/api/admin/templates', { method: 'GET' }),
                 apiFetchJson('/api/admin/automations', { method: 'GET' })
@@ -51,24 +74,6 @@ window.CrmCommunicationsWorkspace = (function () {
         </div>
       `;
             }).join('');
-
-            Array.from(elements.automationList.querySelectorAll('.btn-run-automation')).forEach((button) => {
-                button.addEventListener('click', async () => {
-                    const ruleId = String(button.dataset.ruleId || '').trim();
-                    try {
-                        button.disabled = true;
-                        await apiFetchJson(`/api/admin/automations/${encodeURIComponent(ruleId)}/run-now`, {
-                            method: 'POST'
-                        });
-                        await refreshCommunicationsManager();
-                        showToast('Automation queued.', 'success');
-                    } catch (error) {
-                        console.error('[CRM Admin] Run automation failed:', error);
-                        showToast(error?.message || 'Failed to run automation.', 'error');
-                        button.disabled = false;
-                    }
-                });
-            });
         }
 
         async function createCommunicationTemplate() {

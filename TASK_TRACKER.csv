@@ -113,6 +113,11 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 122,2026-03-25,Upgrade Read Aloud connected-speech scoring to MFA-based backend,Phase 2 MFA,
 123,2026-03-25,Generate RFIB audio for next 30 questions (IDs 0034-0063),Done,2026-03-25
 124,2026-03-25,Implement Elevenlabs chunk pauses in RA audio,Done,2026-03-25
-125,2026-03-25,Generate RFIB audio for next 200 questions (IDs 0064-0263),In Progress,
+125,2026-03-25,Generate RFIB audio for next 200 questions (IDs 0064-0263),In Progress - Generating next 20 questions (0085-0104) via Vertex API,
 126,2026-03-25,Generate thumbnails for RFIB questions with council assessment,Done,2026-03-25
-127,2026-03-26,Production push V1.6.0 - all pending changes since V1.5.15,In Progress,
+127,2026-03-26,Production push V1.6.0 - all pending changes since V1.5.15,Done,2026-03-26
+128,2026-03-26,Regenerate Read Aloud audio with ElevenLabs pause tags,In Progress,
+129,2026-03-26,Reassess Read Aloud chunking and create rubric,Paused - Processing stopped per user request due to API limits and unnatural rules,
+
+130,2026-03-26,Refactor enrich_rfib_data_test.py to Vertex REST API to bypass quotas,Done,2026-03-26
+131,2026-03-26,Assess abnormal chunking in RA.xlsx,Done,2026-03-26

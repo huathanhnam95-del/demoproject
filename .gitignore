@@ -82,3 +82,58 @@ mode_*_old.html
 
 # Council output files
 council_*.txt
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Temp/scratch scripts and outputs
+*.backup.*.xlsx
+*.cohesion_audit.*.xlsx
+*.overwritten.*.xlsx
+*.with_cohesion.*.xlsx
+*.before_restore.*.bak.xlsx
+*_enriched_test.xlsx
+*_updated.xlsx
+RA_extracted.json
+RA_rechunked.json
+abnormal_chunks.md
+apply_prosody_chunker.py
+detect_abnormal_chunks.py
+dump_sample_enrichment.py
+enrich_pedagogical_data_test.py
+enrich_rfib_data_batch.py
+enrich_rfib_data_test.py
+extract_chunks.py
+extract_ra_chunks.py
+extract_ra_questions.py
+extracted_chunks.txt
+extracted_chunks_to_review.md
+test_prosody_chunker.py
+test_vertex_api_key.py
+test_vertex_rest_key.py
+tmp_tts_test.py
+read-aloud-chunking-checkpoint.json
+sample_output.json
+db_cols.json
+
+# Output/log dumps
+output.txt
+output2.txt
+test1_out.txt
+qa2_out.txt
+qa4_out.txt
+val.txt
+
+# QA test scripts
+qa_test_*.js
+qa_test_*.py
+
+# FFmpeg binary
+ffmpeg.zip
+
+# Telemetry
+*.telemetry.json
+
+# Speak audio xlsxs (duplicates)
+public/database/speak/audio/*.xlsx

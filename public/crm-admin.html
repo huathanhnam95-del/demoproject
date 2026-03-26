@@ -162,6 +162,32 @@
                 <div class="crm-muted">Loading audit logs...</div>
               </div>
             </section>
+            <section class="crm-workspace-card">
+              <div class="crm-section-header">
+                <div>
+                  <h3>Read Aloud Connected Speech</h3>
+                  <p class="crm-muted">Prompt inventory, sample coverage, and recent usage telemetry.</p>
+                </div>
+              </div>
+              <div class="crm-form-group">
+                <label>Prompt Inventory</label>
+                <div id="read-aloud-prompt-summary-cards" class="crm-summary-grid">
+                  <div class="crm-muted">Loading prompt summary...</div>
+                </div>
+              </div>
+              <div class="crm-form-group">
+                <label>Representative Prompts</label>
+                <div id="read-aloud-prompt-samples" class="crm-stack-list">
+                  <div class="crm-muted">Loading prompt examples...</div>
+                </div>
+              </div>
+              <div class="crm-form-group">
+                <label>Usage Last 7 Days</label>
+                <div id="read-aloud-usage-summary-cards" class="crm-summary-grid">
+                  <div class="crm-muted">Loading usage summary...</div>
+                </div>
+              </div>
+            </section>
           </div>
         </div>
       </section>
@@ -582,8 +608,8 @@
             <div class="scores-visual-container">
               <div class="overall-score-pill">
                 <div class="pill-top">Overall Score</div>
-                <div class="pill-bottom"><input type="text" id="score-overall" name="score_overall" value="90"
-                    class="score-input-large" aria-label="Overall Score"></div>
+                <div class="pill-bottom"><input type="text" id="score-overall" name="score_overall" placeholder="N/A"
+                    inputmode="numeric" class="score-input-large" aria-label="Overall Score"></div>
               </div>
 
               <div class="score-divider"></div>
@@ -591,7 +617,7 @@
               <div class="skills-row">
                 <div class="skill-score-block listening">
                   <div class="skill-circle">
-                    <input type="text" id="score-listening" name="score_listening" value="90"
+                    <input type="text" id="score-listening" name="score_listening" inputmode="numeric"
                       aria-label="Listening Score">
                   </div>
                   <div class="skill-label">Listening</div>
@@ -605,7 +631,7 @@
 
                 <div class="skill-score-block reading">
                   <div class="skill-circle">
-                    <input type="text" id="score-reading" name="score_reading" value="90" aria-label="Reading Score">
+                    <input type="text" id="score-reading" name="score_reading" inputmode="numeric" aria-label="Reading Score">
                   </div>
                   <div class="skill-label">Reading</div>
                   <div class="skill-icon">
@@ -618,7 +644,7 @@
 
                 <div class="skill-score-block speaking">
                   <div class="skill-circle">
-                    <input type="text" id="score-speaking" name="score_speaking" value="90" aria-label="Speaking Score">
+                    <input type="text" id="score-speaking" name="score_speaking" inputmode="numeric" aria-label="Speaking Score">
                   </div>
                   <div class="skill-label">Speaking</div>
                   <div class="skill-icon">
@@ -631,7 +657,7 @@
 
                 <div class="skill-score-block writing">
                   <div class="skill-circle">
-                    <input type="text" id="score-writing" name="score_writing" value="90" aria-label="Writing Score">
+                    <input type="text" id="score-writing" name="score_writing" inputmode="numeric" aria-label="Writing Score">
                   </div>
                   <div class="skill-label">Writing</div>
                   <div class="skill-icon">

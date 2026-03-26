@@ -46,6 +46,13 @@ class ReadAloudMode {
     this.promptFeatureIndex = new Map();
     this.promptFeatureIndexReady = false;
     this.promptFeatureIndexPromise = null;
+    this.promptFeatureIndexVersion = '';
+    this.promptFeatureIndexError = null;
+    this.featuredPromptIndex = null;
+    this.featuredPromptIndexReady = false;
+    this.featuredPromptIndexPromise = null;
+    this.featuredPromptIndexError = null;
+    this.featuredPromptIndexVersion = '';
 
     // Recording state
     this.mediaRecorder = null;
@@ -99,7 +106,10 @@ class ReadAloudMode {
     document.getElementById('ra-filter-available')?.addEventListener('click', () => this.setSampleAudioFilter('available'));
     document.getElementById('ra-filter-unavailable')?.addEventListener('click', () => this.setSampleAudioFilter('unavailable'));
     document.getElementById('ra-filter-feature-all')?.addEventListener('click', () => this.setPromptFeatureFilter('all'));
-    document.getElementById('ra-filter-assimilation')?.addEventListener('click', () => this.setPromptFeatureFilter('assimilation'));
+    document.getElementById('ra-filter-any-connected')?.addEventListener('click', () => this.setPromptFeatureFilter('any_connected'));
+    document.getElementById('ra-filter-linking')?.addEventListener('click', () => this.setPromptFeatureFilter('linking'));
+    document.getElementById('ra-filter-reduced-words')?.addEventListener('click', () => this.setPromptFeatureFilter('reduced_words'));
+    document.getElementById('ra-filter-sound-changes')?.addEventListener('click', () => this.setPromptFeatureFilter('sound_changes'));
 
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
@@ -198,14 +208,23 @@ class ReadAloudMode {
       const rawData = XLSX.utils.sheet_to_json(worksheet);
 
       this.database = rawData.filter((row) => row.ANSWER || row['ANSWER FOR COMPARE OR TRANSCRIPT']);
+      await this.loadPromptFeatureIndex();
+      await this.loadFeaturedPromptIndex();
       this.hasLoadedDatabase = true;
       this.populateQuestionSelect();
-      this.startPromptFeatureIndexing();
     } catch (_) {
+      this.resetPromptContext();
       this.setPromptText('Error loading prompts.');
       this.hasLoadedDatabase = false;
       this.promptFeatureIndexReady = false;
       this.promptFeatureIndexPromise = null;
+      this.promptFeatureIndexVersion = '';
+      this.promptFeatureIndexError = null;
+      this.featuredPromptIndex = null;
+      this.featuredPromptIndexReady = false;
+      this.featuredPromptIndexPromise = null;
+      this.featuredPromptIndexVersion = '';
+      this.featuredPromptIndexError = null;
       this.refreshFilterControls();
     }
   }
@@ -222,8 +241,9 @@ class ReadAloudMode {
   }
 
   setPromptFeatureFilter(filterType) {
-    if (filterType !== 'all' && filterType !== 'assimilation') return;
-    if (filterType === 'assimilation' && !this.promptFeatureIndexReady) return;
+    const allowedFilters = new Set(['all', 'any_connected', 'linking', 'reduced_words', 'sound_changes']);
+    if (!allowedFilters.has(filterType)) return;
+    if (filterType !== 'all' && !this.promptFeatureIndexReady) return;
     if (this.promptFeatureFilter === filterType) return;
     this.promptFeatureFilter = filterType;
     this.refreshFilterControls();
@@ -240,13 +260,10 @@ class ReadAloudMode {
       { id: 'ra-filter-available', active: this.sampleAudioFilter === 'available' },
       { id: 'ra-filter-unavailable', active: this.sampleAudioFilter === 'unavailable' },
       { id: 'ra-filter-feature-all', active: this.promptFeatureFilter === 'all' },
-      {
-        id: 'ra-filter-assimilation',
-        active: this.promptFeatureFilter === 'assimilation',
-        disabled: !this.promptFeatureIndexReady,
-        busyLabel: 'Level 3 Assimilation: Checking...',
-        label: 'Level 3 Assimilation'
-      }
+      { id: 'ra-filter-any-connected', active: this.promptFeatureFilter === 'any_connected', disabled: !this.promptFeatureIndexReady, label: 'Any connected speech' },
+      { id: 'ra-filter-linking', active: this.promptFeatureFilter === 'linking', disabled: !this.promptFeatureIndexReady, label: 'Level 1 Linking' },
+      { id: 'ra-filter-reduced-words', active: this.promptFeatureFilter === 'reduced_words', disabled: !this.promptFeatureIndexReady, label: 'Level 2 Reduced words' },
+      { id: 'ra-filter-sound-changes', active: this.promptFeatureFilter === 'sound_changes', disabled: !this.promptFeatureIndexReady, label: 'Level 3 Sound changes' }
     ];
 
     filterStates.forEach((state) => {
@@ -265,85 +282,99 @@ class ReadAloudMode {
       btn.style.color = active ? 'var(--brand-primary, #2563eb)' : 'var(--text-muted, #6b7280)';
       btn.style.opacity = disabled ? '0.55' : '1';
       btn.style.cursor = disabled ? 'not-allowed' : 'pointer';
-      btn.title = disabled && state.busyLabel ? state.busyLabel : '';
+      btn.title = disabled ? 'Prompt index unavailable.' : '';
     });
+
+    const status = document.getElementById('ra-filter-feature-status');
+    if (status) {
+      if (this.promptFeatureIndexReady) {
+        status.textContent = '';
+      } else if (this.promptFeatureIndexPromise) {
+        status.textContent = 'Loading prompt index...';
+      } else {
+        status.textContent = this.promptFeatureIndexError || 'Prompt index unavailable.';
+      }
+    }
   }
 
-  startPromptFeatureIndexing() {
-    if (!this.hasLoadedDatabase || this.promptFeatureIndexPromise) {
-      return this.promptFeatureIndexPromise || Promise.resolve();
+  async loadPromptFeatureIndex() {
+    if (this.promptFeatureIndexPromise) {
+      return this.promptFeatureIndexPromise;
     }
 
-    this.promptFeatureIndex = new Map();
     this.promptFeatureIndexReady = false;
+    this.promptFeatureIndexError = null;
     this.refreshFilterControls();
-    this.promptFeatureIndexPromise = new Promise((resolve) => {
-      setTimeout(() => {
-        this.buildPromptFeatureIndex()
-          .then(() => resolve())
-          .catch(() => resolve())
-          .finally(() => {
-            this.promptFeatureIndexPromise = null;
-          });
-      }, 0);
-    });
+
+    this.promptFeatureIndexPromise = (async () => {
+      try {
+        const response = await fetch(`/database/RA/connected-speech-index.json?v=${Date.now()}`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch connected speech index (${response.status})`);
+        }
+        const index = await response.json();
+        const map = new Map();
+        (Array.isArray(index?.prompts) ? index.prompts : []).forEach((prompt) => {
+          if (!prompt) return;
+          if (prompt.rowKey) {
+            map.set(String(prompt.rowKey), prompt);
+          }
+          if (prompt.questionId != null && String(prompt.questionId).trim()) {
+            map.set(`id:${String(prompt.questionId).trim()}`, prompt);
+          }
+        });
+        this.promptFeatureIndex = map;
+        this.promptFeatureIndexVersion = String(index?.indexVersion || '');
+        this.promptFeatureIndexReady = true;
+        return map;
+      } catch (error) {
+        console.warn('RA prompt feature index unavailable:', error?.message || error);
+        this.promptFeatureIndex = new Map();
+        this.promptFeatureIndexVersion = '';
+        this.promptFeatureIndexError = 'Prompt index unavailable.';
+        this.promptFeatureIndexReady = false;
+        return this.promptFeatureIndex;
+      } finally {
+        this.promptFeatureIndexPromise = null;
+        this.refreshFilterControls();
+      }
+    })();
+
     return this.promptFeatureIndexPromise;
   }
 
-  async buildPromptFeatureIndex() {
-    if (!this.database || !Array.isArray(this.database)) {
-      this.promptFeatureIndex = new Map();
-      this.promptFeatureIndexReady = false;
-      this.refreshFilterControls();
-      return this.promptFeatureIndex;
+  async loadFeaturedPromptIndex() {
+    if (this.featuredPromptIndexPromise) {
+      return this.featuredPromptIndexPromise;
     }
 
-    const index = new Map();
-    const delayMs = Number(window.__raPromptFeatureIndexDelayMs || 0);
-    try {
-      for (let i = 0; i < this.database.length; i += 1) {
-        const row = this.database[i];
-        const rowKey = this.getPromptFeatureRowKey(row);
-        if (!rowKey) continue;
-        if (delayMs > 0) {
-          await new Promise((resolve) => setTimeout(resolve, delayMs));
-        }
-        const promptText = row['ANSWER FOR COMPARE OR TRANSCRIPT'] || row.ANSWER || '';
-        if (!promptText) {
-          index.set(rowKey, { hasAssimilation: false });
-          continue;
-        }
+    this.featuredPromptIndexReady = false;
+    this.featuredPromptIndexError = null;
 
-        index.set(rowKey, {
-          hasAssimilation: this.hasAssimilationPromptText(promptText)
-        });
-
-        if (i > 0 && i % 10 === 0) {
-          await new Promise((resolve) => setTimeout(resolve, 0));
+    this.featuredPromptIndexPromise = (async () => {
+      try {
+        const response = await fetch(`/database/RA/connected-speech-featured-prompts.json?v=${Date.now()}`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch featured prompt index (${response.status})`);
         }
+        const index = await response.json();
+        this.featuredPromptIndex = index;
+        this.featuredPromptIndexVersion = String(index?.version || '');
+        this.featuredPromptIndexReady = true;
+        return index;
+      } catch (error) {
+        console.warn('RA featured prompt index unavailable:', error?.message || error);
+        this.featuredPromptIndex = null;
+        this.featuredPromptIndexVersion = '';
+        this.featuredPromptIndexError = 'Featured prompt index unavailable.';
+        this.featuredPromptIndexReady = false;
+        return null;
+      } finally {
+        this.featuredPromptIndexPromise = null;
       }
-      this.promptFeatureIndex = index;
-      this.promptFeatureIndexReady = true;
-    } catch (error) {
-      console.warn('RA prompt feature index build failed:', error);
-      this.promptFeatureIndex = new Map();
-      this.promptFeatureIndexReady = false;
-    } finally {
-      this.refreshFilterControls();
-    }
-    return this.promptFeatureIndex;
-  }
+    })();
 
-  hasAssimilationPromptText(promptText) {
-    const normalized = String(promptText || '')
-      .toLowerCase()
-      .replace(/[\u2018\u2019']/g, "'");
-    const matches = normalized.match(/\b([a-z]+(?:'[a-z]+)?)\s+(you|year)\b/g);
-    if (!matches || matches.length === 0) {
-      return false;
-    }
-
-    return matches.some((phrase) => /(?:d|t|s|z)\s+(you|year)\b/.test(phrase));
+    return this.featuredPromptIndexPromise;
   }
 
   getPromptFeatureRowKey(row) {
@@ -357,6 +388,44 @@ class ReadAloudMode {
     return promptText ? `prompt:${promptText}` : '';
   }
 
+  getPromptFeatureRecord(row) {
+    const rowKey = this.getPromptFeatureRowKey(row);
+    if (!rowKey || !this.promptFeatureIndex) return null;
+    return this.promptFeatureIndex.get(rowKey) || null;
+  }
+
+  getPromptFeatureIdsForFilter(filterType) {
+    const families = this.featuredPromptIndex?.families || {};
+    const ids = Array.isArray(families[filterType]) ? families[filterType] : [];
+    return ids
+      .map((value) => String(value || '').trim())
+      .filter(Boolean);
+  }
+
+  getFeaturedPromptPool(filteredDb) {
+    if (!this.featuredPromptIndexReady || this.promptFeatureFilter === 'all') {
+      return filteredDb;
+    }
+
+    const featuredIds = new Set(this.getPromptFeatureIdsForFilter(this.promptFeatureFilter));
+    if (featuredIds.size === 0) {
+      return filteredDb;
+    }
+
+    const curatedPool = filteredDb.filter((row) => featuredIds.has(String(row.ID != null ? row.ID : '').trim()));
+    return curatedPool.length > 0 ? curatedPool : filteredDb;
+  }
+
+  matchesPromptFeatureFilter(row, filterType) {
+    const record = this.getPromptFeatureRecord(row);
+    if (!record) return false;
+    if (filterType === 'any_connected') return !!record.hasAnyConnectedSpeech;
+    if (filterType === 'linking') return !!record.hasLinking;
+    if (filterType === 'reduced_words') return !!record.hasReducedWords;
+    if (filterType === 'sound_changes') return !!record.hasSoundChanges;
+    return true;
+  }
+
   getFilteredDatabase() {
     if (!this.database) return [];
     let filtered = this.database;
@@ -368,14 +437,11 @@ class ReadAloudMode {
       });
     }
 
-    if (this.promptFeatureFilter === 'assimilation') {
+    if (this.promptFeatureFilter !== 'all') {
       if (!this.promptFeatureIndexReady) {
         return [];
       }
-      filtered = filtered.filter((row) => {
-        const rowKey = this.getPromptFeatureRowKey(row);
-        return !!this.promptFeatureIndex.get(rowKey)?.hasAssimilation;
-      });
+      filtered = filtered.filter((row) => this.matchesPromptFeatureFilter(row, this.promptFeatureFilter));
     }
 
     return filtered;
@@ -415,9 +481,9 @@ class ReadAloudMode {
     this.promptLifecycleToken += 1;
     const promptLoadToken = this.promptLifecycleToken;
     this.cleanup();
+    this.resetPromptContext();
     this.state = 'PREP';
     this.currentTranscript = '';
-    this.cancelPendingHydration();
     this.clearPromptVisualState();
     this.clearConnectedSpeechResults();
     this.restorePlainTextVisibility();
@@ -436,24 +502,27 @@ class ReadAloudMode {
     }
 
     if (!this.database || this.database.length === 0) {
+      this.resetPromptContext();
       this.setPromptText('Database empty or failed to load.');
       return;
     }
 
     const filteredDb = this.getFilteredDatabase();
     if (filteredDb.length === 0) {
+      this.resetPromptContext();
       this.setPromptText('No questions match the current filters.');
       return;
     }
 
+    const candidatePool = this.getFeaturedPromptPool(filteredDb);
     let randomRow;
     if (this.sampleAudioFilter === 'all' && this.audioManifest && Object.keys(this.audioManifest).length > 0 && (!this.firstLoadDone || Math.random() < 0.2)) {
       const audioIds = Object.keys(this.audioManifest);
       const randomId = audioIds[Math.floor(Math.random() * audioIds.length)];
-      randomRow = filteredDb.find((row) => String(row.ID) === randomId) || filteredDb[Math.floor(Math.random() * filteredDb.length)];
+      randomRow = candidatePool.find((row) => String(row.ID) === randomId) || candidatePool[Math.floor(Math.random() * candidatePool.length)];
       this.firstLoadDone = true;
     } else {
-      randomRow = filteredDb[Math.floor(Math.random() * filteredDb.length)];
+      randomRow = candidatePool[Math.floor(Math.random() * candidatePool.length)];
       this.firstLoadDone = true;
     }
 
@@ -464,9 +533,9 @@ class ReadAloudMode {
     this.promptLifecycleToken += 1;
     const promptLoadToken = this.promptLifecycleToken;
     this.cleanup();
+    this.resetPromptContext();
     this.state = 'PREP';
     this.currentTranscript = '';
-    this.cancelPendingHydration();
     this.clearPromptVisualState();
     this.clearConnectedSpeechResults();
     this.restorePlainTextVisibility();
@@ -483,12 +552,16 @@ class ReadAloudMode {
     }
 
     if (!this.database || this.database.length === 0) {
+      this.resetPromptContext();
       this.setPromptText('Database empty or failed to load.');
       return;
     }
 
     const row = this.database[index];
-    if (!row) return;
+    if (!row) {
+      this.resetPromptContext();
+      return;
+    }
     this.applyPromptRow(row, promptLoadToken);
   }
 
@@ -607,6 +680,24 @@ class ReadAloudMode {
       cancelAnimationFrame(this.pendingLinkingFrame);
       this.pendingLinkingFrame = null;
     }
+  }
+
+  invalidatePromptRenderState() {
+    this.activePromptRenderToken += 1;
+    this.cancelPendingHydration();
+  }
+
+  clearPromptIdentityState() {
+    this.currentQuestionId = null;
+    this.currentPromptPlainText = '';
+    this.currentPromptChunkedText = '';
+    this.currentPromptRenderState = null;
+    this.activePromptKey = null;
+  }
+
+  resetPromptContext() {
+    this.invalidatePromptRenderState();
+    this.clearPromptIdentityState();
   }
 
   handlePromptGuideKeydown(event, guide) {
@@ -793,7 +884,12 @@ class ReadAloudMode {
       if (typeof window.ReadAloudLinking.applyTokenAnnotations === 'function') {
         window.ReadAloudLinking.applyTokenAnnotations(wordMap, filteredAnalysis);
       }
-      const summaryText = window.ReadAloudLinking.buildAccessibleSummary(filteredAnalysis);
+      const focusFamily = this.connectedSpeechLevel === 'v3_sound_changes'
+        ? 'sound_changes'
+        : this.connectedSpeechLevel === 'v2_reduced_words'
+          ? 'reduced_words'
+          : 'linking';
+      const summaryText = window.ReadAloudLinking.buildAccessibleSummary(filteredAnalysis, { focusFamily });
       summary.textContent = summaryText;
       if (this.state !== 'RESULTS') {
         this.renderPromptGuideExplanations(filteredAnalysis);
@@ -812,7 +908,7 @@ class ReadAloudMode {
         badgeLayer.innerHTML = '';
         if (hasBoundaryVisuals) {
           fallbackList.style.display = 'flex';
-          renderedCount = window.ReadAloudLinking.renderFallbackList(fallbackList, filteredAnalysis);
+          renderedCount = window.ReadAloudLinking.renderFallbackList(fallbackList, filteredAnalysis, { focusFamily });
         } else {
           fallbackList.style.display = 'none';
         }
@@ -826,12 +922,13 @@ class ReadAloudMode {
         if (overlayResult.hiddenBoundaries?.length) {
           fallbackList.style.display = 'flex';
           window.ReadAloudLinking.renderFallbackList(fallbackList, filteredAnalysis, {
-            boundaries: overlayResult.hiddenBoundaries
+            boundaries: overlayResult.hiddenBoundaries,
+            focusFamily
           });
         } else if (renderedCount === 0) {
           if (hasBoundaryVisuals) {
             fallbackList.style.display = 'flex';
-            window.ReadAloudLinking.renderFallbackList(fallbackList, filteredAnalysis);
+            window.ReadAloudLinking.renderFallbackList(fallbackList, filteredAnalysis, { focusFamily });
             overlay.style.display = 'none';
             badgeLayer.style.display = 'none';
           } else {
@@ -907,6 +1004,7 @@ class ReadAloudMode {
       return;
     }
 
+    this.invalidatePromptRenderState();
     this.connectedSpeechLevel = normalizedLevel;
 
     if (persist) {
@@ -1046,6 +1144,11 @@ class ReadAloudMode {
   }
 
   updateUIForState() {
+    if (!this.getRecordingSupportState().supported) {
+      this.applyUnsupportedState();
+      return;
+    }
+
     const prepTimerBox = document.getElementById('ra-prep-timer-box');
     const recordTimerBox = document.getElementById('ra-record-timer-box');
     const recordBtn = document.getElementById('ra-record-btn');

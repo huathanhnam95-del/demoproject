@@ -1,0 +1,11 @@
+{
+  "version": "aq-v1",
+  "minimumContainerDurationMs": 100,
+  "minimumSpeechDurationMs": 250,
+  "maximumSpeechDurationMs": 1800,
+  "minimumPeakAmplitude": 320,
+  "minimumFrameRms": 0.01,
+  "frameRmsFraction": 0.18,
+  "minimumFrameThreshold": 0.008,
+  "clippedSampleRatioThreshold": 0.005
+}

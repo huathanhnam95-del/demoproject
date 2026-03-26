@@ -1,0 +1,163 @@
+{
+  "promptCount": 1449,
+  "promptsWithSampleAudio": 10,
+  "anyConnectedCount": 1449,
+  "linkingCount": 1449,
+  "reducedWordCount": 1449,
+  "soundChangeCount": 63,
+  "soundChangeSubtypeCounts": {
+    "coalescent_tj": 21,
+    "coalescent_sj": 23,
+    "coalescent_zj": 6,
+    "coalescent_dj": 17
+  },
+  "samplePrompts": [
+    {
+      "rowKey": "id:1022",
+      "questionId": "1022",
+      "title": "#1022 Enough Fluid",
+      "hasSampleAudio": false,
+      "hasLinking": true,
+      "hasReducedWords": true,
+      "hasSoundChanges": true,
+      "soundChangeSubtypes": [
+        "coalescent_tj"
+      ]
+    },
+    {
+      "rowKey": "id:1024",
+      "questionId": "1024",
+      "title": "#1024 Tutor",
+      "hasSampleAudio": false,
+      "hasLinking": true,
+      "hasReducedWords": true,
+      "hasSoundChanges": true,
+      "soundChangeSubtypes": [
+        "coalescent_sj",
+        "coalescent_tj"
+      ]
+    },
+    {
+      "rowKey": "id:104",
+      "questionId": "104",
+      "title": "#104 Thesis",
+      "hasSampleAudio": false,
+      "hasLinking": true,
+      "hasReducedWords": true,
+      "hasSoundChanges": true,
+      "soundChangeSubtypes": [
+        "coalescent_sj"
+      ]
+    },
+    {
+      "rowKey": "id:1139",
+      "questionId": "1139",
+      "title": "#1139 Soccer",
+      "hasSampleAudio": false,
+      "hasLinking": true,
+      "hasReducedWords": true,
+      "hasSoundChanges": true,
+      "soundChangeSubtypes": [
+        "coalescent_sj"
+      ]
+    },
+    {
+      "rowKey": "id:1141",
+      "questionId": "1141",
+      "title": "#1141 Beach Vacation",
+      "hasSampleAudio": false,
+      "hasLinking": true,
+      "hasReducedWords": true,
+      "hasSoundChanges": true,
+      "soundChangeSubtypes": [
+        "coalescent_zj"
+      ]
+    },
+    {
+      "rowKey": "id:1146",
+      "questionId": "1146",
+      "title": "#1146 Great Barrier Reef",
+      "hasSampleAudio": false,
+      "hasLinking": true,
+      "hasReducedWords": true,
+      "hasSoundChanges": true,
+      "soundChangeSubtypes": [
+        "coalescent_dj"
+      ]
+    },
+    {
+      "rowKey": "id:1178",
+      "questionId": "1178",
+      "title": "#1178 AI",
+      "hasSampleAudio": false,
+      "hasLinking": true,
+      "hasReducedWords": true,
+      "hasSoundChanges": true,
+      "soundChangeSubtypes": [
+        "coalescent_tj"
+      ]
+    },
+    {
+      "rowKey": "id:1189",
+      "questionId": "1189",
+      "title": "#1189 Depression",
+      "hasSampleAudio": false,
+      "hasLinking": true,
+      "hasReducedWords": true,
+      "hasSoundChanges": true,
+      "soundChangeSubtypes": [
+        "coalescent_sj"
+      ]
+    },
+    {
+      "rowKey": "id:1198",
+      "questionId": "1198",
+      "title": "#1198 Time Zone",
+      "hasSampleAudio": false,
+      "hasLinking": true,
+      "hasReducedWords": true,
+      "hasSoundChanges": true,
+      "soundChangeSubtypes": [
+        "coalescent_zj"
+      ]
+    },
+    {
+      "rowKey": "id:1211",
+      "questionId": "1211",
+      "title": "#1211 Statistics",
+      "hasSampleAudio": false,
+      "hasLinking": true,
+      "hasReducedWords": true,
+      "hasSoundChanges": true,
+      "soundChangeSubtypes": [
+        "coalescent_sj"
+      ]
+    },
+    {
+      "rowKey": "id:1247",
+      "questionId": "1247",
+      "title": "#1247 GDP",
+      "hasSampleAudio": false,
+      "hasLinking": true,
+      "hasReducedWords": true,
+      "hasSoundChanges": true,
+      "soundChangeSubtypes": [
+        "coalescent_sj"
+      ]
+    },
+    {
+      "rowKey": "id:1258",
+      "questionId": "1258",
+      "title": "#1258 Science of Smiling",
+      "hasSampleAudio": false,
+      "hasLinking": true,
+      "hasReducedWords": true,
+      "hasSoundChanges": true,
+      "soundChangeSubtypes": [
+        "coalescent_dj"
+      ]
+    }
+  ],
+  "indexVersion": "1",
+  "generatedAt": "2026-03-26T04:30:43.842Z"
+}

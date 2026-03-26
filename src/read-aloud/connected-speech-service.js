@@ -28,6 +28,19 @@ const REDUCED_WORDS = new Map([
   ['for', ['canonical', 'reduced_for']],
   ['have', ['canonical', 'reduced_have']]
 ]);
+const PHONEME_ALIAS_MAP = new Map([
+  ['m', 'm'],
+  ['ə', 'schwa'],
+  ['ɐ', 'near_open_central'],
+  ['ʊ', 'near_close_back'],
+  ['ɪ', 'near_close_front'],
+  ['ʒ', 'ezh'],
+  ['ʃ', 'esh'],
+  ['dʒ', 'dzh'],
+  ['ʤ', 'dzh'],
+  ['tʃ', 'tsh'],
+  ['ʧ', 'tsh']
+]);
 
 let overridesCache = null;
 
@@ -556,8 +569,26 @@ function buildGenericEvents(referenceText, questionId) {
   return Array.from(unique.values());
 }
 
+function buildConnectedSpeechEventSpecs(referenceText, questionId) {
+  return buildGenericEvents(referenceText, questionId);
+}
+
+function buildEventResult(event, overrides = {}) {
+  return {
+    eventId: event.eventId,
+    family: event.family,
+    phrase: event.phrase,
+    leftWord: event.leftWord,
+    rightWord: event.rightWord,
+    startWordIndex: event.startWordIndex,
+    endWordIndex: event.endWordIndex,
+    ...overrides
+  };
+}
+
 function toMilliseconds(azureValue) {
-  const numeric = Number(azureValue || 0);
+  if (azureValue == null || azureValue === '') return null;
+  const numeric = Number(azureValue);
   return Number.isFinite(numeric) ? Math.round(numeric / 10000) : null;
 }
 
@@ -588,14 +619,24 @@ function extractAzureWords(azurePayload, referenceWords = []) {
 
 function normalizePhonemeCandidates(phonemes) {
   return Array.isArray(phonemes)
-    ? phonemes.map((phoneme) => normalizeWord(phoneme)).filter(Boolean)
+    ? phonemes
+      .map((phoneme) => {
+        const raw = String(phoneme || '')
+          .trim()
+          .normalize('NFKC')
+          .replace(/[\u02C8\u02CC\s]/g, '')
+          .toLowerCase();
+        if (!raw) return '';
+        return PHONEME_ALIAS_MAP.get(raw) || raw;
+      })
+      .filter(Boolean)
     : [];
 }
 
 function hasAnyPhonemeCandidate(wordNode, candidates) {
   if (!wordNode || !Array.isArray(wordNode.phonemes) || !wordNode.phonemes.length) return false;
   const normalized = new Set(normalizePhonemeCandidates(wordNode.phonemes));
-  return candidates.some((candidate) => normalized.has(normalizeWord(candidate)));
+  return normalizePhonemeCandidates(candidates).some((candidate) => normalized.has(candidate));
 }
 
 function classifyGapStatus(gapMs, thresholds = {}) {
@@ -699,6 +740,27 @@ function classifyEvent(event, referenceWords, azureWords, referenceText, audioQu
     };
   }
 
+  if (leftAzure.offsetMs == null || leftAzure.durationMs == null || rightAzure.offsetMs == null || rightAzure.durationMs == null) {
+    return {
+      eventId: event.eventId,
+      family: event.family,
+      phrase: event.phrase,
+      leftWord: event.leftWord,
+      rightWord: event.rightWord,
+      startWordIndex: event.startWordIndex,
+      endWordIndex: event.endWordIndex,
+      status: 'uncertain',
+      confidence: 0.5,
+      startMs: leftAzure.offsetMs ?? null,
+      endMs: rightAzure.offsetMs != null && rightAzure.durationMs != null ? rightAzure.offsetMs + rightAzure.durationMs : null,
+      feedbackText: event.feedbackTemplates?.uncertain || `We could not judge "${event.phrase}" reliably.`,
+      evidence: {
+        reason: 'missing_timing_fields',
+        gapMs
+      }
+    };
+  }
+
   const leftText = normalizeWord(leftAzure.word || leftAzure.display);
   const rightText = normalizeWord(rightAzure.word || rightAzure.display);
   const phraseText = `${leftText} ${rightText}`.trim();
@@ -761,7 +823,7 @@ function classifyEvent(event, referenceWords, azureWords, referenceText, audioQu
   }
 
   if (event.family === 'n_bilabial_assimilation') {
-    const status = gapMs != null && gapMs <= 125 && (wordAccuracyAverage <= 84 || bilabialHint)
+    const status = gapMs != null && gapMs <= 125 && (leftAzure.accuracyScore <= 84 || bilabialHint)
       ? 'detected'
       : gapMs != null && gapMs >= 280 && !bilabialHint
         ? 'not_detected'
@@ -831,9 +893,7 @@ function classifyEvent(event, referenceWords, azureWords, referenceText, audioQu
       : (leftAzure.accuracyScore >= 94 && (relativeDuration == null || relativeDuration >= 1.15) && !reducedHint)
         ? 'not_detected'
         : 'uncertain';
-    return {
-      eventId: event.eventId,
-      family: event.family,
+    return buildEventResult(event, {
       status,
       confidence: status === 'detected' ? 0.7 : status === 'not_detected' ? 0.34 : 0.5,
       startMs: leftAzure.offsetMs,
@@ -848,17 +908,10 @@ function classifyEvent(event, referenceWords, azureWords, referenceText, audioQu
         targetWord,
         promptText
       }
-    };
+    });
   }
 
-  return {
-    eventId: event.eventId,
-    family: event.family,
-    phrase: event.phrase,
-    leftWord: event.leftWord,
-    rightWord: event.rightWord,
-    startWordIndex: event.startWordIndex,
-    endWordIndex: event.endWordIndex,
+  return buildEventResult(event, {
     status: 'uncertain',
     confidence: 0.45,
     startMs: leftAzure.offsetMs,
@@ -870,7 +923,7 @@ function classifyEvent(event, referenceWords, azureWords, referenceText, audioQu
       rightPhonemeHints,
       promptText
     }
-  };
+  });
 }
 
 function summarizeEvents(events) {
@@ -891,7 +944,7 @@ function buildEventFamilyCounts(events) {
 }
 
 function buildConnectedSpeechAnalysis({ questionId, referenceText, azurePayload, audioQuality }) {
-  const events = buildGenericEvents(referenceText, questionId);
+  const events = buildConnectedSpeechEventSpecs(referenceText, questionId);
   if (!events.length) {
     return {
       status: 'not_applicable',
@@ -912,7 +965,9 @@ function buildConnectedSpeechAnalysis({ questionId, referenceText, azurePayload,
     };
   }
 
-  const referenceWords = getPromptTokens(referenceText).map((token) => token.normalized);
+  const referenceWords = getPromptTokens(referenceText)
+    .filter((token) => token.type === 'word')
+    .map((token) => token.normalized);
   const azureWords = extractAzureWords(azurePayload, referenceWords);
   const scoredEvents = events.map((event) => classifyEvent(event, referenceWords, azureWords, referenceText, audioQuality));
 
@@ -932,6 +987,7 @@ function hasConnectedSpeechEvents(referenceText, questionId) {
 module.exports = {
   VERSION,
   buildConnectedSpeechAnalysis,
+  buildConnectedSpeechEventSpecs,
   buildGenericEvents,
   hasConnectedSpeechEvents,
   normalizeWord,

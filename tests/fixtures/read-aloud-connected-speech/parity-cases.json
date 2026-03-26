@@ -1,0 +1,202 @@
+[
+  {
+    "name": "catenation_detected",
+    "expectedFamilies": ["catenation"],
+    "questionId": "1",
+    "referenceText": "Pick it up now",
+    "audioQuality": { "passed": true },
+    "azurePayload": {
+      "NBest": [
+        {
+          "Display": "Pick it up now",
+          "PronunciationAssessment": {
+            "AccuracyScore": 94,
+            "FluencyScore": 88,
+            "CompletenessScore": 100,
+            "PronScore": 92
+          },
+          "Words": [
+            { "Word": "Pick", "Offset": 0, "Duration": 3000000, "PronunciationAssessment": { "AccuracyScore": 93, "ErrorType": "None" } },
+            { "Word": "it", "Offset": 3120000, "Duration": 1900000, "PronunciationAssessment": { "AccuracyScore": 91, "ErrorType": "None" } },
+            { "Word": "up", "Offset": 5100000, "Duration": 2100000, "PronunciationAssessment": { "AccuracyScore": 90, "ErrorType": "None" } },
+            { "Word": "now", "Offset": 7300000, "Duration": 2500000, "PronunciationAssessment": { "AccuracyScore": 94, "ErrorType": "None" } }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "yod_hint_detected",
+    "expectedFamilies": ["yod_coalescence"],
+    "questionId": "2",
+    "referenceText": "Did you see it?",
+    "audioQuality": { "passed": true },
+    "azurePayload": {
+      "NBest": [
+        {
+          "Display": "Did you see it",
+          "PronunciationAssessment": {
+            "AccuracyScore": 91,
+            "FluencyScore": 88,
+            "CompletenessScore": 100,
+            "PronScore": 90
+          },
+          "Words": [
+            { "Word": "Did", "Offset": 0, "Duration": 2600000, "PronunciationAssessment": { "AccuracyScore": 84, "ErrorType": "None" } },
+            {
+              "Word": "you",
+              "Offset": 3000000,
+              "Duration": 1500000,
+              "PronunciationAssessment": {
+                "AccuracyScore": 89,
+                "ErrorType": "None",
+                "NBestPhonemes": [{ "Phoneme": "d\u0292", "Score": 91 }]
+              }
+            },
+            { "Word": "see", "Offset": 4700000, "Duration": 1800000, "PronunciationAssessment": { "AccuracyScore": 93, "ErrorType": "None" } },
+            { "Word": "it", "Offset": 6600000, "Duration": 1500000, "PronunciationAssessment": { "AccuracyScore": 91, "ErrorType": "None" } }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "weak_form_schwa_detected",
+    "expectedFamilies": ["same_consonant_merge", "weak_form_reduction"],
+    "questionId": "6",
+    "referenceText": "Want to go",
+    "audioQuality": { "passed": true },
+    "azurePayload": {
+      "NBest": [
+        {
+          "Display": "Want to go",
+          "PronunciationAssessment": {
+            "AccuracyScore": 90,
+            "FluencyScore": 87,
+            "CompletenessScore": 100,
+            "PronScore": 89
+          },
+          "Words": [
+            { "Word": "Want", "Offset": 0, "Duration": 2000000, "PronunciationAssessment": { "AccuracyScore": 94, "ErrorType": "None" } },
+            {
+              "Word": "to",
+              "Offset": 2100000,
+              "Duration": 2200000,
+              "PronunciationAssessment": {
+                "AccuracyScore": 90,
+                "ErrorType": "None",
+                "NBestPhonemes": [{ "Phoneme": "\u0259", "Score": 93 }]
+              }
+            },
+            { "Word": "go", "Offset": 4400000, "Duration": 2200000, "PronunciationAssessment": { "AccuracyScore": 92, "ErrorType": "None" } }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "no_events_not_applicable",
+    "expectedFamilies": [],
+    "questionId": "3",
+    "referenceText": "Hello",
+    "audioQuality": { "passed": false, "reason": "clipped" },
+    "azurePayload": {
+      "NBest": [
+        {
+          "Display": "Hello",
+          "Words": [
+            { "Word": "Hello", "Offset": 0, "Duration": 3000000, "PronunciationAssessment": { "AccuracyScore": 91, "ErrorType": "None" } }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "bad_audio_with_events",
+    "expectedFamilies": [],
+    "questionId": "1",
+    "referenceText": "Pick it up now",
+    "audioQuality": { "passed": false, "reason": "clipped" },
+    "azurePayload": {
+      "NBest": [
+        {
+          "Display": "Pick it up now",
+          "Words": [
+            { "Word": "Pick", "Offset": 0, "Duration": 3000000, "PronunciationAssessment": { "AccuracyScore": 95, "ErrorType": "None" } },
+            { "Word": "it", "Offset": 3120000, "Duration": 1900000, "PronunciationAssessment": { "AccuracyScore": 91, "ErrorType": "None" } }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "assimilation_detected",
+    "expectedFamilies": ["n_bilabial_assimilation"],
+    "questionId": "7",
+    "referenceText": "green park",
+    "audioQuality": { "passed": true },
+    "azurePayload": {
+      "NBest": [
+        {
+          "Display": "green park",
+          "PronunciationAssessment": {
+            "AccuracyScore": 90,
+            "FluencyScore": 86,
+            "CompletenessScore": 100,
+            "PronScore": 89
+          },
+          "Words": [
+            { "Word": "green", "Offset": 0, "Duration": 2600000, "PronunciationAssessment": { "AccuracyScore": 78, "ErrorType": "None" } },
+            { "Word": "park", "Offset": 2720000, "Duration": 2200000, "PronunciationAssessment": { "AccuracyScore": 91, "ErrorType": "None" } }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "catenation_not_detected",
+    "expectedFamilies": ["catenation"],
+    "questionId": "1",
+    "referenceText": "Pick it up now",
+    "audioQuality": { "passed": true },
+    "azurePayload": {
+      "NBest": [
+        {
+          "Display": "Pick it up now",
+          "PronunciationAssessment": {
+            "AccuracyScore": 89,
+            "FluencyScore": 80,
+            "CompletenessScore": 100,
+            "PronScore": 86
+          },
+          "Words": [
+            { "Word": "Pick", "Offset": 0, "Duration": 3000000, "PronunciationAssessment": { "AccuracyScore": 93, "ErrorType": "None" } },
+            { "Word": "it", "Offset": 7000000, "Duration": 1800000, "PronunciationAssessment": { "AccuracyScore": 91, "ErrorType": "None" } },
+            { "Word": "up", "Offset": 13000000, "Duration": 2000000, "PronunciationAssessment": { "AccuracyScore": 90, "ErrorType": "None" } },
+            { "Word": "now", "Offset": 17000000, "Duration": 2200000, "PronunciationAssessment": { "AccuracyScore": 93, "ErrorType": "None" } }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "missing_timing_uncertain",
+    "expectedFamilies": ["catenation"],
+    "questionId": "1",
+    "referenceText": "Pick it up now",
+    "audioQuality": { "passed": true },
+    "azurePayload": {
+      "NBest": [
+        {
+          "Display": "Pick it up now",
+          "Words": [
+            { "Word": "Pick", "PronunciationAssessment": { "AccuracyScore": 93, "ErrorType": "None" } },
+            { "Word": "it", "PronunciationAssessment": { "AccuracyScore": 91, "ErrorType": "None" } },
+            { "Word": "up", "PronunciationAssessment": { "AccuracyScore": 90, "ErrorType": "None" } },
+            { "Word": "now", "PronunciationAssessment": { "AccuracyScore": 94, "ErrorType": "None" } }
+          ]
+        }
+      ]
+    }
+  }
+]

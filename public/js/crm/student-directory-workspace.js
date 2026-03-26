@@ -38,6 +38,25 @@ window.CrmStudentDirectoryWorkspace = (function () {
         function renderStudentsTable(container, students, emptyMessage) {
             if (!container) return;
 
+            if (!container.__crmStudentLinkHandlerBound) {
+                container.addEventListener('click', (event) => {
+                    const button = event.target && typeof event.target.closest === 'function'
+                        ? event.target.closest('button.crm-student-link[data-student-id]')
+                        : null;
+                    if (!button || !container.contains(button)) return;
+
+                    const id = String(button.dataset.studentId || '').trim();
+                    const cached = Array.isArray(dataCache.students)
+                        ? dataCache.students.find((student) => String(student.studentId || '').trim() === id) || null
+                        : null;
+                    openStudentProfile(id, cached).catch((error) => {
+                        console.error('[CRM Admin] Open student profile failed:', error);
+                        showToast(error?.message || 'Failed to open student profile.', 'error');
+                    });
+                });
+                container.__crmStudentLinkHandlerBound = true;
+            }
+
             const list = Array.isArray(students) ? students : [];
             if (list.length === 0) {
                 container.classList.add('crm-placeholder-card');
@@ -89,19 +108,6 @@ window.CrmStudentDirectoryWorkspace = (function () {
         </table>
       </div>
     `;
-
-            const studentIndex = new Map(list.map((s) => [String(s.studentId || '').trim(), s]));
-
-            Array.from(container.querySelectorAll('button.crm-student-link[data-student-id]')).forEach((btn) => {
-                btn.addEventListener('click', () => {
-                    const id = String(btn.dataset.studentId || '').trim();
-                    const cached = studentIndex.get(id) || null;
-                    openStudentProfile(id, cached).catch((error) => {
-                        console.error('[CRM Admin] Open student profile failed:', error);
-                        showToast(error?.message || 'Failed to open student profile.', 'error');
-                    });
-                });
-            });
         }
 
         async function fetchStudentsFromFirestore(limit) {

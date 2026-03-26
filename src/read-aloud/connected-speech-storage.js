@@ -1,6 +1,6 @@
 const { randomUUID } = require('crypto');
 const path = require('path');
-const { admin, getStorageBucket } = require('../utils/firebase');
+const { admin, db, getStorageBucket } = require('../utils/firebase');
 
 function formatDateParts(date = new Date()) {
   const year = String(date.getUTCFullYear());
@@ -21,11 +21,19 @@ function buildConnectedSpeechAttemptRecord(record = {}) {
     questionId: record.questionId == null ? null : String(record.questionId),
     referenceText: String(record.referenceText || ''),
     recognizedText: String(record.recognizedText || ''),
+    clientContext: record.clientContext || null,
     azureSummary: record.azureSummary || null,
     connectedSpeechSummary: record.connectedSpeechSummary || null,
     connectedSpeechEvents,
+    requestedAlignmentMode: record.requestedAlignmentMode == null ? null : String(record.requestedAlignmentMode),
     connectedSpeechVersion: String(record.connectedSpeechVersion || ''),
     eventFamilyCounts: record.eventFamilyCounts || {},
+    promptIndexVersion: String(record.promptIndexVersion || ''),
+    promptFeatureSnapshot: record.promptFeatureSnapshot || null,
+    scoringMode: String(record.scoringMode || 'heuristic'),
+    connectedSpeechPrimarySource: String(record.connectedSpeechPrimarySource || 'heuristic'),
+    alignmentFallbackReason: record.alignmentFallbackReason == null ? null : String(record.alignmentFallbackReason),
+    connectedSpeechShadow: record.connectedSpeechShadow || null,
     workerStatus: String(record.workerStatus || 'unknown'),
     audioStatus: String(record.audioStatus || 'unknown'),
     audioQuality: record.audioQuality || null,

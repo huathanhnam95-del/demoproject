@@ -1,3 +1,5 @@
+const { loadAudioQualityThresholds } = require('./audio-quality-thresholds');
+
 function readAscii(view, offset, length) {
   let text = '';
   for (let index = 0; index < length; index += 1) {
@@ -77,6 +79,7 @@ function parseWavBuffer(buffer) {
 }
 
 function analyzeAudioQuality(buffer) {
+  const thresholds = loadAudioQualityThresholds();
   const parsed = parseWavBuffer(buffer);
   if (!parsed.ok) {
     return {
@@ -118,7 +121,7 @@ function analyzeAudioQuality(buffer) {
     normalized[index] = sample / 32768;
   }
 
-  if (maxAbs < 320) {
+  if (maxAbs < thresholds.minimumPeakAmplitude) {
     return {
       passed: false,
       reason: 'no_speech',
@@ -146,7 +149,7 @@ function analyzeAudioQuality(buffer) {
   }
 
   const maxRms = frameRms.reduce((highest, value) => Math.max(highest, value), 0);
-  if (maxRms < 0.01) {
+  if (maxRms < thresholds.minimumFrameRms) {
     return {
       passed: false,
       reason: 'no_speech',
@@ -159,7 +162,7 @@ function analyzeAudioQuality(buffer) {
     };
   }
 
-  const threshold = Math.max(0.008, maxRms * 0.18);
+  const threshold = Math.max(thresholds.minimumFrameThreshold, maxRms * thresholds.frameRmsFraction);
   let firstSpeechFrame = -1;
   let lastSpeechFrame = -1;
   let speechFrameCount = 0;
@@ -189,12 +192,12 @@ function analyzeAudioQuality(buffer) {
   const clippedRatio = clippedSamples / totalSamples;
   const silenceRatio = 1 - (speechFrameCount / Math.max(1, frameRms.length));
 
-  if (speechDurationMs < 250) {
+  if (speechDurationMs < thresholds.minimumSpeechDurationMs) {
     return {
       passed: false,
       reason: 'too_short',
       speechDurationMs,
-      clipped: clippedRatio >= 0.005,
+      clipped: clippedRatio >= thresholds.clippedSampleRatioThreshold,
       sampleRate,
       maxRms,
       clippedRatio,
@@ -202,12 +205,12 @@ function analyzeAudioQuality(buffer) {
     };
   }
 
-  if (speechDurationMs > 1800) {
+  if (speechDurationMs > thresholds.maximumSpeechDurationMs) {
     return {
       passed: false,
       reason: 'too_long',
       speechDurationMs,
-      clipped: clippedRatio >= 0.005,
+      clipped: clippedRatio >= thresholds.clippedSampleRatioThreshold,
       sampleRate,
       maxRms,
       clippedRatio,
@@ -215,7 +218,7 @@ function analyzeAudioQuality(buffer) {
     };
   }
 
-  if (clippedRatio >= 0.005) {
+  if (clippedRatio >= thresholds.clippedSampleRatioThreshold) {
     return {
       passed: false,
       reason: 'clipped',

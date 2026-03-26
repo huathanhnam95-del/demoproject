@@ -20,11 +20,11 @@ window.CrmLeadWorkspace = (function () {
 
         function formatList(values) {
             const list = Array.isArray(values) ? values : [];
-            if (!list.length) return '—';
+            if (!list.length) return '-';
             return list
                 .map((value) => String(value || '').trim())
                 .filter(Boolean)
-                .join(', ') || '—';
+                .join(', ') || '-';
         }
 
         function leadPrimaryContact(lead) {
@@ -35,14 +35,14 @@ window.CrmLeadWorkspace = (function () {
             if (email) return email;
             if (phone) return phone;
             if (zalo) return `Zalo: ${zalo}`;
-            return '—';
+            return '-';
         }
 
         function leadSourceSummary(lead) {
             const source = String(lead?.source || '').trim();
             const facebook = String(lead?.facebookDisplayName || lead?.facebook || '').trim();
             const profile = String(lead?.facebookProfileUrl || '').trim();
-            if (!source && !facebook && !profile) return '—';
+            if (!source && !facebook && !profile) return '-';
             const pieces = [source, facebook, profile].filter(Boolean);
             return pieces.join(' / ');
         }
@@ -216,6 +216,74 @@ window.CrmLeadWorkspace = (function () {
                 return;
             }
 
+            if (!elements.leadListContainer.__crmLeadTableHandlerBound) {
+                elements.leadListContainer.addEventListener('click', async (event) => {
+                    const target = event.target && typeof event.target.closest === 'function'
+                        ? event.target.closest('[data-lead-id]')
+                        : null;
+                    if (!target || !elements.leadListContainer.contains(target)) return;
+
+                    if (target.classList.contains('crm-lead-link')) {
+                        const leadId = String(target.dataset.leadId || '').trim();
+                        modalState.leadId = leadId;
+                        const lead = Array.isArray(dataCache.leads)
+                            ? dataCache.leads.find((row) => String(row.leadId || '').trim() === leadId) || null
+                            : null;
+                        if (elements.leadWorkspaceTitle) {
+                            elements.leadWorkspaceTitle.textContent = lead?.name || lead?.email || 'Lead Workspace';
+                        }
+                        refreshLeadWorkspace().catch((error) => {
+                            console.error('[CRM Admin] Open lead workspace failed:', error);
+                            showToast(error?.message || 'Failed to load lead workspace.', 'error');
+                        });
+                        return;
+                    }
+
+                    if (target.classList.contains('btn-update-lead-stage')) {
+                        const button = target;
+                        const leadId = String(button.dataset.leadId || '').trim();
+                        const select = elements.leadListContainer.querySelector(`.lead-stage-select[data-lead-id="${leadId}"]`);
+                        const stage = String(select?.value || '').trim();
+                        try {
+                            button.disabled = true;
+                            await apiFetchJson(`/api/admin/leads/${encodeURIComponent(leadId)}`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ stage })
+                            });
+                            await refreshLeadPipeline();
+                            showToast('Lead updated.', 'success');
+                        } catch (error) {
+                            console.error('[CRM Admin] Update lead stage failed:', error);
+                            showToast(error?.message || 'Failed to update lead.', 'error');
+                            button.disabled = false;
+                        }
+                        return;
+                    }
+
+                    if (target.classList.contains('btn-convert-lead')) {
+                        const button = target;
+                        const leadId = String(button.dataset.leadId || '').trim();
+                        try {
+                            button.disabled = true;
+                            await apiFetchJson(`/api/admin/leads/${encodeURIComponent(leadId)}/convert`, {
+                                method: 'POST'
+                            });
+                            await Promise.all([
+                                refreshLeadPipeline(),
+                                refreshStudentLists()
+                            ]);
+                            showToast('Lead converted to student.', 'success');
+                        } catch (error) {
+                            console.error('[CRM Admin] Convert lead failed:', error);
+                            showToast(error?.message || 'Failed to convert lead.', 'error');
+                            button.disabled = false;
+                        }
+                    }
+                });
+                elements.leadListContainer.__crmLeadTableHandlerBound = true;
+            }
+
             elements.leadListContainer.innerHTML = `
       <div class="crm-table-container">
         <table class="crm-table">
@@ -244,7 +312,7 @@ window.CrmLeadWorkspace = (function () {
                     `).join('')}
                   </select>
                 </td>
-                <td>${escapeHtml(lead.probability == null ? '—' : `${lead.probability}%`)}</td>
+                <td>${escapeHtml(lead.probability == null ? '-' : `${lead.probability}%`)}</td>
                 <td>
                   <div class="crm-inline-fields">
                     <button type="button" class="crm-btn-secondary btn-update-lead-stage" data-lead-id="${escapeHtml(lead.leadId)}" ${isConverted ? 'disabled' : ''}>Update</button>
@@ -259,65 +327,6 @@ window.CrmLeadWorkspace = (function () {
         </table>
       </div>
     `;
-
-            const leadIndex = new Map(leads.map((lead) => [String(lead.leadId || '').trim(), lead]));
-
-            Array.from(elements.leadListContainer.querySelectorAll('.crm-lead-link[data-lead-id]')).forEach((button) => {
-                button.addEventListener('click', () => {
-                    modalState.leadId = String(button.dataset.leadId || '').trim();
-                    const lead = leadIndex.get(modalState.leadId) || null;
-                    if (elements.leadWorkspaceTitle) {
-                        elements.leadWorkspaceTitle.textContent = lead?.name || lead?.email || 'Lead Workspace';
-                    }
-                    refreshLeadWorkspace().catch((error) => {
-                        console.error('[CRM Admin] Open lead workspace failed:', error);
-                        showToast(error?.message || 'Failed to load lead workspace.', 'error');
-                    });
-                });
-            });
-
-            Array.from(elements.leadListContainer.querySelectorAll('.btn-update-lead-stage')).forEach((button) => {
-                button.addEventListener('click', async () => {
-                    const leadId = String(button.dataset.leadId || '').trim();
-                    const select = elements.leadListContainer.querySelector(`.lead-stage-select[data-lead-id="${leadId}"]`);
-                    const stage = String(select?.value || '').trim();
-                    try {
-                        button.disabled = true;
-                        await apiFetchJson(`/api/admin/leads/${encodeURIComponent(leadId)}`, {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ stage })
-                        });
-                        await refreshLeadPipeline();
-                        showToast('Lead updated.', 'success');
-                    } catch (error) {
-                        console.error('[CRM Admin] Update lead stage failed:', error);
-                        showToast(error?.message || 'Failed to update lead.', 'error');
-                        button.disabled = false;
-                    }
-                });
-            });
-
-            Array.from(elements.leadListContainer.querySelectorAll('.btn-convert-lead')).forEach((button) => {
-                button.addEventListener('click', async () => {
-                    const leadId = String(button.dataset.leadId || '').trim();
-                    try {
-                        button.disabled = true;
-                        await apiFetchJson(`/api/admin/leads/${encodeURIComponent(leadId)}/convert`, {
-                            method: 'POST'
-                        });
-                        await Promise.all([
-                            refreshLeadPipeline(),
-                            refreshStudentLists()
-                        ]);
-                        showToast('Lead converted to student.', 'success');
-                    } catch (error) {
-                        console.error('[CRM Admin] Convert lead failed:', error);
-                        showToast(error?.message || 'Failed to convert lead.', 'error');
-                        button.disabled = false;
-                    }
-                });
-            });
         }
 
         async function refreshLeadPipeline() {

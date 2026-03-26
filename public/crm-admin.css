@@ -1747,10 +1747,26 @@ body {
   outline: none;
   padding: 0;
   line-height: 1;
+  letter-spacing: -0.04em;
+  transition: font-size 0.2s ease, color 0.2s ease;
 }
 
 .pill-bottom .score-input-large::placeholder {
   color: rgba(255, 255, 255, 0.6);
+}
+
+.pill-bottom .score-input-large[data-score-state="empty"] {
+  font-size: 2rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.pill-bottom .score-input-large[data-score-digits="2"] {
+  font-size: 3rem;
+}
+
+.pill-bottom .score-input-large[data-score-digits="3"] {
+  font-size: 2.35rem;
 }
 
 .score-divider {
@@ -1797,6 +1813,20 @@ body {
   border: none;
   background: transparent;
   outline: none;
+  letter-spacing: -0.03em;
+  transition: font-size 0.2s ease, color 0.2s ease;
+}
+
+.skill-circle input[data-score-state="empty"] {
+  color: #94a3b8;
+}
+
+.skill-circle input[data-score-digits="2"] {
+  font-size: 1.3rem;
+}
+
+.skill-circle input[data-score-digits="3"] {
+  font-size: 1.05rem;
 }
 
 .skill-info {

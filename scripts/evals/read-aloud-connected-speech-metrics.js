@@ -75,6 +75,11 @@ function normalizeStatus(value) {
   return String(value || '').trim().toLowerCase() || 'unknown';
 }
 
+function normalizeBucket(value, fallback = 'unknown') {
+  const normalized = String(value == null ? '' : value).trim().toLowerCase();
+  return normalized || fallback;
+}
+
 function ensureColumns(headers) {
   const missing = REQUIRED_COLUMNS.filter((column) => !headers.includes(column));
   if (missing.length) {
@@ -99,7 +104,15 @@ function summarizeRows(rows) {
         agreements: 0,
         audioFailures: 0,
         workerFailures: 0,
-        audioQualityFailures: 0
+        audioQualityFailures: 0,
+        audioQualityOutcomeCounts: {
+          passed: 0,
+          failed: 0,
+          missing: 0,
+          unknown: 0
+        },
+        audioQualityFailureReasonCounts: {},
+        audioQualityAttempts: new Map()
       });
     }
 
@@ -119,13 +132,39 @@ function summarizeRows(rows) {
     if (normalizeStatus(row.workerStatus) && normalizeStatus(row.workerStatus) !== 'complete') {
       summary.workerFailures += 1;
     }
+    const attemptKey = String(row.attemptId || '').trim() || `row-${summary.total}`;
+    if (!summary.audioQualityAttempts.has(attemptKey)) {
+      summary.audioQualityAttempts.set(attemptKey, {
+        hasPass: false,
+        hasFail: false,
+        hasEvidence: false,
+        failureReason: null
+      });
+    }
+    const audioQualityState = summary.audioQualityAttempts.get(attemptKey);
     const audioQualityReason = normalizeStatus(row.audioQualityReason);
     const audioQualityPassed = normalizeStatus(row.audioQualityPassed);
-    if (audioQualityReason && audioQualityReason !== 'none') {
-      summary.audioQualityFailures += 1;
+    if (audioQualityPassed === 'true' || audioQualityPassed === 'passed') {
+      audioQualityState.hasPass = true;
+      audioQualityState.hasEvidence = true;
+    } else if (audioQualityPassed === 'false' || audioQualityPassed === 'failed') {
+      audioQualityState.hasFail = true;
+      audioQualityState.hasEvidence = true;
+      if (!audioQualityState.failureReason && audioQualityReason && audioQualityReason !== 'none' && audioQualityReason !== 'unknown') {
+        audioQualityState.failureReason = audioQualityReason;
+      }
     }
-    if (audioQualityPassed && audioQualityPassed !== 'true' && audioQualityPassed !== 'passed') {
-      summary.audioQualityFailures += 1;
+    if (audioQualityReason && audioQualityReason !== 'none' && audioQualityReason !== 'unknown') {
+      audioQualityState.hasEvidence = true;
+      if (!audioQualityState.failureReason) {
+        audioQualityState.failureReason = audioQualityReason;
+      }
+      if (audioQualityPassed !== 'true' && audioQualityPassed !== 'passed') {
+        audioQualityState.hasFail = true;
+      }
+    }
+    if (audioQualityReason || audioQualityPassed) {
+      audioQualityState.hasEvidence = true;
     }
 
     if (humanLabel && humanLabel !== 'unknown') {
@@ -143,6 +182,27 @@ function summarizeRows(rows) {
         });
       }
     }
+  }
+
+  for (const summary of byFamily.values()) {
+    for (const audioQualityState of summary.audioQualityAttempts.values()) {
+      let outcome = 'missing';
+      if (audioQualityState.hasFail) {
+        outcome = 'failed';
+      } else if (audioQualityState.hasPass) {
+        outcome = 'passed';
+      } else if (audioQualityState.hasEvidence) {
+        outcome = 'unknown';
+      }
+
+      summary.audioQualityOutcomeCounts[outcome] = (summary.audioQualityOutcomeCounts[outcome] || 0) + 1;
+      if (outcome === 'failed') {
+        summary.audioQualityFailures += 1;
+        const reason = normalizeBucket(audioQualityState.failureReason, 'unspecified_failure');
+        summary.audioQualityFailureReasonCounts[reason] = (summary.audioQualityFailureReasonCounts[reason] || 0) + 1;
+      }
+    }
+    delete summary.audioQualityAttempts;
   }
 
   return { byFamily, disagreements };
@@ -193,9 +253,20 @@ function main() {
   }
 }
 
-try {
-  main();
-} catch (error) {
-  console.error(error.message || error);
-  process.exitCode = 1;
+if (require.main === module) {
+  try {
+    main();
+  } catch (error) {
+    console.error(error.message || error);
+    process.exitCode = 1;
+  }
 }
+
+module.exports = {
+  REQUIRED_COLUMNS,
+  splitCsvLine,
+  parseCsv,
+  normalizeStatus,
+  ensureColumns,
+  summarizeRows
+};

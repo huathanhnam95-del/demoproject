@@ -24,6 +24,7 @@ const registerSchedulingRoutes = require('./scheduling');
 const registerFinanceRoutes = require('./finance');
 const registerAutomationRoutes = require('./automations');
 const registerReportingRoutes = require('./reporting');
+const registerReadAloudReportingRoutes = require('./read-aloud-reporting');
 const registerGovernanceRoutes = require('./governance');
 const registerLiveSessionRoutes = require('./live-sessions');
 const { buildAuditLogEntry } = require('../../crm/governance-service');
@@ -117,6 +118,17 @@ function nextScheduleVersion(scheduleConfig) {
     return Math.max(Number(scheduleConfig?.scheduleVersion || 0) + 1, 1);
 }
 
+function buildAdminCapabilities(status) {
+    const overrides = status?.capabilities && typeof status.capabilities === 'object'
+        ? status.capabilities
+        : {};
+
+    return {
+        classroomMatches: overrides.classroomMatches !== false,
+        readAloudReporting: overrides.readAloudReporting !== false
+    };
+}
+
 async function syncClassroomScheduleState(db, classId, options = {}) {
     const classroomRef = db.collection(CRM_CLASSROOMS).doc(classId);
     const classroomSnap = options.classroomSnap || await classroomRef.get();
@@ -201,7 +213,8 @@ module.exports = function createCrmRouter(rawDeps) {
                     isAdmin: true,
                     uid: status.uid || req.user.uid,
                     email: status.email || req.user.email || null,
-                    bootstrapped: !!status.bootstrapped
+                    bootstrapped: !!status.bootstrapped,
+                    capabilities: buildAdminCapabilities(status)
                 },
                 status.bootstrapped ? 'Admin verified.' : 'Admin verified.'
             );
@@ -221,6 +234,7 @@ module.exports = function createCrmRouter(rawDeps) {
     registerFinanceRoutes(router, routeDeps);
     registerAutomationRoutes(router, routeDeps);
     registerReportingRoutes(router, routeDeps);
+    registerReadAloudReportingRoutes(router, routeDeps);
     registerGovernanceRoutes(router, routeDeps);
     registerLiveSessionRoutes(router, routeDeps);
 

@@ -1,5 +1,9 @@
 """
-Generate ElevenLabs audio for Read Aloud questions.
+Generate ElevenLabs audio for Read Aloud questions with pause tags.
+
+Reads ANSWER CHUNKED column from RA.xlsx and translates chunk markers:
+  - ` / `  → [slightly short pause]
+  - ` // ` → [very brief pause]
 
 Each question gets:
   - 1 male voice × 2 speeds (100%, 80%)
@@ -34,7 +38,7 @@ load_dotenv(os.path.join(PROJECT_ROOT, '.env'))
 
 RA_XLSX = os.path.join(PROJECT_ROOT, 'public', 'database', 'RA', 'RA.xlsx')
 VOICES_XLSX = os.path.join(PROJECT_ROOT, 'public', 'database', 'RA', 'Voice', 'Voices.xlsx')
-OUTPUT_DIR = os.path.join(PROJECT_ROOT, 'public', 'audio', 'ra')
+OUTPUT_DIR = os.path.join(PROJECT_ROOT, 'public', 'database', 'RA', 'Voice', 'audio')
 PROGRESS_FILE = os.path.join(PROJECT_ROOT, '_tmp', 'ra_audio_progress.json')
 MANIFEST_FILE = os.path.join(OUTPUT_DIR, 'manifest.json')
 
@@ -62,6 +66,19 @@ def load_voices():
     return male_voices, female_voices
 
 
+# ── Chunk marker → pause tag translation ────────────────────────────
+def translate_chunks_to_pauses(chunked_text, plain_text):
+    """Convert chunk markers to ElevenLabs pause tags.
+    Order matters: // must be replaced before / to avoid partial matches.
+    """
+    if not chunked_text or not str(chunked_text).strip():
+        return str(plain_text).strip()  # fallback to clean text
+    text = str(chunked_text).strip()
+    text = text.replace(' // ', ' [very brief pause] ')
+    text = text.replace(' / ', ' [slightly short pause] ')
+    return text
+
+
 # ── Load RA questions ────────────────────────────────────────────────
 def load_questions():
     wb = openpyxl.load_workbook(RA_XLSX)
@@ -79,14 +96,20 @@ def load_questions():
     if missing_headers:
         raise ValueError(f'Missing required workbook headers: {", ".join(missing_headers)}')
 
+    # ANSWER CHUNKED is the 6th column (index 5)
+    chunked_col = header_positions.get('ANSWER CHUNKED', None)
+
     questions = []
     for row in ws.iter_rows(min_row=2, values_only=True):
         q_id = row[header_positions['ID']]
         clean_text = row[header_positions['ANSWER FOR COMPARE OR TRANSCRIPT']]
+        chunked_text = row[chunked_col] if chunked_col is not None else None
         if q_id is not None and clean_text:
+            tts_text = translate_chunks_to_pauses(chunked_text, clean_text)
             questions.append({
                 'id': int(q_id),
-                'text': str(clean_text).strip()
+                'text': tts_text,
+                'has_pauses': chunked_text is not None and str(chunked_text).strip() != ''
             })
     return questions
 
@@ -113,10 +136,13 @@ def save_progress(completed):
 
 
 # ── TTS generation via REST API ──────────────────────────────────────
+MAX_RETRIES = 3
+REQUEST_TIMEOUT = 60  # seconds
+
 def generate_single(api_key, text, voice_id, speed, output_path):
     """Call ElevenLabs TTS REST API with speed control and save to file."""
     url = f'{API_BASE}/{voice_id}?output_format={OUTPUT_FORMAT}'
-    headers = {
+    req_headers = {
         'Content-Type': 'application/json',
         'xi-api-key': api_key,
         'Accept': 'audio/mpeg',
@@ -127,16 +153,29 @@ def generate_single(api_key, text, voice_id, speed, output_path):
         'speed': speed,
     }
 
-    response = requests.post(url, json=payload, headers=headers, stream=True)
+    last_error = None
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            response = requests.post(url, json=payload, headers=req_headers, stream=True, timeout=REQUEST_TIMEOUT)
 
-    if response.status_code != 200:
-        raise Exception(f'API error {response.status_code}: {response.text[:300]}')
+            if response.status_code != 200:
+                raise Exception(f'API error {response.status_code}: {response.text[:300]}')
 
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    with open(output_path, 'wb') as f:
-        for chunk in response.iter_content(chunk_size=4096):
-            if chunk:
-                f.write(chunk)
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            with open(output_path, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=4096):
+                    if chunk:
+                        f.write(chunk)
+            return  # success
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+            last_error = e
+            wait = 2 ** attempt
+            print(f'    Retry {attempt}/{MAX_RETRIES} after {type(e).__name__}, waiting {wait}s...')
+            time.sleep(wait)
+        except Exception as e:
+            raise  # non-retryable errors
+
+    raise Exception(f'Failed after {MAX_RETRIES} retries: {last_error}')
 
 
 # ── Main ─────────────────────────────────────────────────────────────
@@ -156,7 +195,8 @@ def main():
 
     print('Loading questions...')
     questions = load_questions()
-    print(f'  Total questions: {len(questions)}')
+    with_pauses = sum(1 for q in questions if q.get('has_pauses'))
+    print(f'  Total questions: {len(questions)} ({with_pauses} with pause tags, {len(questions) - with_pauses} plain text fallback)')
 
     if args.test:
         questions = questions[:10]

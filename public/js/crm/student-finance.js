@@ -8,8 +8,16 @@ window.CrmStudentFinance = (function () {
             renderStudentSchedulePrompt,
             refreshDashboard,
             showToast,
-            escapeHtml
+            escapeHtml,
+            getAdminCapabilities
         } = deps;
+
+        function hasCapability(name) {
+            const capabilities = typeof getAdminCapabilities === 'function'
+                ? (getAdminCapabilities() || {})
+                : {};
+            return capabilities[name] === true;
+        }
 
         function getSelectedClassroomMatch() {
             const matches = Array.isArray(modalState.classroomMatches) ? modalState.classroomMatches : [];
@@ -33,9 +41,12 @@ window.CrmStudentFinance = (function () {
         function renderMatches(matchPayload = {}) {
             const matches = Array.isArray(matchPayload.matches) ? matchPayload.matches : [];
             modalState.classroomMatches = matches;
+            const unsupported = !!matchPayload.unsupported;
 
             if (elements.studentClassroomMatchSummary) {
-                if (!matches.length) {
+                if (unsupported) {
+                    elements.studentClassroomMatchSummary.innerHTML = '<div class="crm-muted">Classroom recommendations are unavailable on this server.</div>';
+                } else if (!matches.length) {
                     elements.studentClassroomMatchSummary.innerHTML = '<div class="crm-muted">No active classrooms found.</div>';
                 } else {
                     elements.studentClassroomMatchSummary.innerHTML = matches.slice(0, 4).map((match) => {
@@ -51,8 +62,8 @@ window.CrmStudentFinance = (function () {
                 <span class="crm-task-priority ${match.recommended ? 'medium' : 'low'}">${escapeHtml(`${Number(match.fitScore || 0)}% fit`)}</span>
               </div>
               <div class="crm-task-meta">${escapeHtml(metadata)}</div>
-              ${reasons.length ? `<div class="crm-timeline-meta" style="margin-top: 6px;">${escapeHtml(reasons.join(' • '))}</div>` : ''}
-              ${warnings.length ? `<div class="crm-muted" style="margin-top: 6px;">${escapeHtml(warnings.join(' • '))}</div>` : ''}
+              ${reasons.length ? `<div class="crm-timeline-meta" style="margin-top: 6px;">${escapeHtml(reasons.join(' | '))}</div>` : ''}
+              ${warnings.length ? `<div class="crm-muted" style="margin-top: 6px;">${escapeHtml(warnings.join(' | '))}</div>` : ''}
             </div>
           `;
                     }).join('');
@@ -63,7 +74,7 @@ window.CrmStudentFinance = (function () {
                 const currentValue = String(elements.inputStudentClassroomMatchSelect.value || '').trim();
                 const recommendedId = String(matchPayload.recommendedClassroom?.classroomId || matches[0]?.classroomId || '').trim();
                 elements.inputStudentClassroomMatchSelect.innerHTML = '<option value="">No classroom selected</option>' + matches.map((match) => `
-        <option value="${escapeHtml(match.classroomId || '')}">${escapeHtml([match.name || 'Classroom', match.courseId || 'course?', `${Number(match.fitScore || 0)}% fit`].join(' • '))}${match.recommended ? ' (recommended)' : ''}</option>
+        <option value="${escapeHtml(match.classroomId || '')}">${escapeHtml([match.name || 'Classroom', match.courseId || 'course?', `${Number(match.fitScore || 0)}% fit`].join(' | '))}${match.recommended ? ' (recommended)' : ''}</option>
       `).join('');
                 if (currentValue && matches.some((match) => String(match.classroomId || '') === currentValue)) {
                     elements.inputStudentClassroomMatchSelect.value = currentValue;
@@ -75,7 +86,9 @@ window.CrmStudentFinance = (function () {
             if (elements.studentClassroomMatchMeta) {
                 const classroomCount = Number(matchPayload.classroomCount || matches.length || 0);
                 const recommended = matchPayload.recommendedClassroom || matches[0] || null;
-                elements.studentClassroomMatchMeta.textContent = classroomCount
+                elements.studentClassroomMatchMeta.textContent = unsupported
+                    ? 'Upgrade the admin backend to enable classroom-fit recommendations.'
+                    : classroomCount
                     ? `Ranked ${classroomCount} active classroom${classroomCount === 1 ? '' : 's'}. Recommended: ${recommended?.name || 'Classroom'} (${Number(recommended?.fitScore || 0)}%).`
                     : 'No active classrooms found for this student.';
             }
@@ -83,7 +96,9 @@ window.CrmStudentFinance = (function () {
             const selected = getSelectedClassroomMatch();
             if (elements.studentClassroomMatchWarning) {
                 if (!selected) {
-                    elements.studentClassroomMatchWarning.textContent = '';
+                    elements.studentClassroomMatchWarning.textContent = unsupported
+                        ? 'The current server does not expose classroom recommendation data.'
+                        : '';
                     elements.studentClassroomMatchWarning.style.color = '';
                 } else if (modalState.financeWorkflow?.nextAction === 'start_attendance') {
                     elements.studentClassroomMatchWarning.textContent = 'Student already has an active enrollment. Continue with attendance and class delivery.';
@@ -104,7 +119,8 @@ window.CrmStudentFinance = (function () {
             }
 
             if (elements.btnCreateRecommendedEnrollment) {
-                elements.btnCreateRecommendedEnrollment.disabled = !selected
+                elements.btnCreateRecommendedEnrollment.disabled = unsupported
+                    || !selected
                     || !!modalState.financeWorkflow?.requiresPayment
                     || modalState.financeWorkflow?.nextAction === 'start_attendance';
             }
@@ -112,6 +128,18 @@ window.CrmStudentFinance = (function () {
 
         async function refreshStudentFinance() {
             if (!modalState.studentId) return;
+
+            if (elements.studentInvoiceList && !elements.studentInvoiceList.__crmInvoiceSelectHandlerBound) {
+                elements.studentInvoiceList.addEventListener('click', (event) => {
+                    const button = event.target && typeof event.target.closest === 'function'
+                        ? event.target.closest('.btn-select-invoice')
+                        : null;
+                    if (!button || !elements.studentInvoiceList.contains(button)) return;
+                    modalState.selectedInvoiceId = String(button.dataset.invoiceId || '').trim();
+                    showToast(`Selected ${modalState.selectedInvoiceId} for payment.`, 'success');
+                });
+                elements.studentInvoiceList.__crmInvoiceSelectHandlerBound = true;
+            }
 
             const financeSummaryPromise = window.CrmFinance
                 ? apiFetchJson(`/api/admin/finance/summary?studentId=${encodeURIComponent(modalState.studentId)}`, {
@@ -146,12 +174,23 @@ window.CrmStudentFinance = (function () {
                 : null;
             const classroomMatchCourseId = String(currentEnrollment?.courseId || availableEnrollments[0]?.courseId || '').trim();
 
-            const classroomMatchesPromise = window.ClassroomAPI && typeof window.ClassroomAPI.fetchClassroomMatches === 'function'
-                ? window.ClassroomAPI.fetchClassroomMatches(modalState.studentId, classroomMatchCourseId ? { courseId: classroomMatchCourseId } : {}).catch((error) => {
-                    console.error('[CRM Admin] Failed to load classroom matches:', error);
-                    return { matches: [], recommendedClassroom: null, classroomCount: 0, courseId: null };
-                })
-                : Promise.resolve({ matches: [], recommendedClassroom: null, classroomCount: 0, courseId: null });
+            const classroomMatchesPromise = hasCapability('classroomMatches')
+                && window.ClassroomAPI
+                && typeof window.ClassroomAPI.fetchClassroomMatches === 'function'
+                ? window.ClassroomAPI.fetchClassroomMatches(modalState.studentId, classroomMatchCourseId ? { courseId: classroomMatchCourseId } : {}).catch(() => ({
+                    matches: [],
+                    recommendedClassroom: null,
+                    classroomCount: 0,
+                    courseId: null,
+                    unsupported: true
+                }))
+                : Promise.resolve({
+                    matches: [],
+                    recommendedClassroom: null,
+                    classroomCount: 0,
+                    courseId: null,
+                    unsupported: true
+                });
 
             const classroomMatchesJson = await classroomMatchesPromise;
             const financeWorkflow = window.CrmFinance && typeof window.CrmFinance.deriveWorkflowState === 'function'
@@ -174,7 +213,7 @@ window.CrmStudentFinance = (function () {
             if (elements.inputStudentFinanceEnrollment) {
                 const currentValue = String(elements.inputStudentFinanceEnrollment.value || '').trim();
                 elements.inputStudentFinanceEnrollment.innerHTML = '<option value="">No enrollment selected</option>' + availableEnrollments.map((row) => `
-        <option value="${escapeHtml(row.enrollmentId || '')}">${escapeHtml([row.classId || 'class?', row.courseId || 'course?', row.status || 'status?'].join(' • '))}</option>
+        <option value="${escapeHtml(row.enrollmentId || '')}">${escapeHtml([row.classId || 'class?', row.courseId || 'course?', row.status || 'status?'].join(' | '))}</option>
       `).join('');
 
                 if (currentValue && availableEnrollments.some((row) => String(row.enrollmentId || '') === currentValue)) {
@@ -216,13 +255,6 @@ window.CrmStudentFinance = (function () {
             </div>
           </div>
         `).join('');
-
-                    Array.from(elements.studentInvoiceList.querySelectorAll('.btn-select-invoice')).forEach((button) => {
-                        button.addEventListener('click', () => {
-                            modalState.selectedInvoiceId = String(button.dataset.invoiceId || '').trim();
-                            showToast(`Selected ${modalState.selectedInvoiceId} for payment.`, 'success');
-                        });
-                    });
                 }
             }
         }

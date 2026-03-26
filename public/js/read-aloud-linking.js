@@ -197,10 +197,11 @@
     };
   }
 
-  function buildAccessibleSummary(analysis) {
+  function buildAccessibleSummary(analysis, options = {}) {
     if (!analysis || !Array.isArray(analysis.boundaries)) {
       return '';
     }
+    const focusFamily = String(options.focusFamily || '').toLowerCase();
 
     const eligible = analysis.boundaries.filter((boundary) => (
       !boundary.blocked && (boundary.confidence === 'high' || boundary.confidence === 'medium')
@@ -232,6 +233,22 @@
       .map((annotation) => annotation.display || annotation.word || annotation.label || '')
       .filter(Boolean)
       .slice(0, 4);
+
+    if (focusFamily === 'sound_changes' && soundChangeBoundaries.length === 0) {
+      return linkingBoundaries.length || reducedWords.length
+        ? 'No sound changes in this sentence. This sentence still has linking or reduced words, but no Level 3 sound-change example.'
+        : 'No sound changes in this sentence.';
+    }
+    if (focusFamily === 'reduced_words' && reducedWords.length === 0) {
+      return linkingBoundaries.length || soundChangeBoundaries.length
+        ? 'No reduced words in this sentence. This sentence still has linking or sound changes, but no Level 2 reduced-word example.'
+        : 'No reduced words in this sentence.';
+    }
+    if (focusFamily === 'linking' && linkingBoundaries.length === 0) {
+      return reducedWords.length || soundChangeBoundaries.length
+        ? 'No linking examples in this sentence. This sentence still has reduced words or sound changes, but no Level 1 linking example.'
+        : 'No linking examples in this sentence.';
+    }
 
     const summaryParts = [];
     if (linkingPhrases.length === 1) {
@@ -536,6 +553,7 @@
   function renderFallbackList(container, analysis, options = {}) {
     if (!container) return 0;
     container.innerHTML = '';
+    const focusFamily = String(options.focusFamily || '').toLowerCase();
     const sourceBoundaries = Array.isArray(options.boundaries) ? options.boundaries : analysis.boundaries;
     const eligible = sourceBoundaries.filter((boundary) => (
       !boundary.blocked && (boundary.confidence === 'high' || boundary.confidence === 'medium')
@@ -543,7 +561,15 @@
 
     if (eligible.length === 0) {
       const empty = document.createElement('div');
-      empty.textContent = 'No strong connected speech positions in this sentence.';
+      if (focusFamily === 'sound_changes') {
+        empty.textContent = 'No sound changes in this sentence.';
+      } else if (focusFamily === 'reduced_words') {
+        empty.textContent = 'No reduced words in this sentence.';
+      } else if (focusFamily === 'linking') {
+        empty.textContent = 'No linking examples in this sentence.';
+      } else {
+        empty.textContent = 'No strong connected speech positions in this sentence.';
+      }
       container.appendChild(empty);
       return 0;
     }

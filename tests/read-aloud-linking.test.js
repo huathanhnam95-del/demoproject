@@ -283,6 +283,11 @@ async function assertNoReducedWordCase(analyzePrompt, caseItem) {
     connectedSpeechLevel: 'v3_sound_changes'
   });
   assert.strictEqual(hasVisibleAssimilation(screenshotAnalysis), false, 'sentences without a coalescent assimilation case should not count as visible sound changes');
+  assert.match(
+    buildAccessibleSummary(screenshotAnalysis, { focusFamily: 'sound_changes' }),
+    /No sound changes in this sentence/i,
+    'Level 3 empty states should explain that no sound changes are present'
+  );
 
   const didYouAnalysis = await analyzePrompt('Did you see it?', {
     connectedSpeechLevel: 'v3_sound_changes'

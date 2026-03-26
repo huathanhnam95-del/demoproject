@@ -432,11 +432,12 @@
   }
 
   function applySoundHint(profile, hint = {}) {
-    if (hint.initialClass) {
-      profile.initialSoundClass = hint.initialClass;
+    const safeHint = hint || {};
+    if (safeHint.initialClass) {
+      profile.initialSoundClass = safeHint.initialClass;
     }
-    if (hint.initialKey) {
-      profile.initialSoundKey = hint.initialKey;
+    if (safeHint.initialKey) {
+      profile.initialSoundKey = safeHint.initialKey;
     }
     profile.startsWithVowelSound = profile.initialSoundClass === 'vowel';
     profile.startsWithGlideY = profile.initialSoundClass === 'glide-y';
@@ -444,15 +445,16 @@
   }
 
   function applyFinalSoundHint(profile, hint = {}) {
-    if (hint.finalClass) {
-      profile.finalSoundClass = hint.finalClass;
+    const safeHint = hint || {};
+    if (safeHint.finalClass) {
+      profile.finalSoundClass = safeHint.finalClass;
     }
-    if (hint.finalKey) {
-      profile.finalSoundKey = hint.finalKey;
+    if (safeHint.finalKey) {
+      profile.finalSoundKey = safeHint.finalKey;
     }
     profile.endsWithConsonantSound = profile.finalSoundClass === 'consonant';
     profile.endsWithVowelSound = profile.finalSoundClass === 'vowel';
-    if (hint.finalKey === 'r') {
+    if (safeHint.finalKey === 'r') {
       profile.endsWithPotentialLinkingR = true;
     }
   }

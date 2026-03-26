@@ -1,14 +1,18 @@
 const express = require('express');
 const multer = require('multer');
 const { randomUUID } = require('crypto');
+const fs = require('fs');
+const path = require('path');
 const { sendError, sendSuccess } = require('../utils/response-helper');
 const {
   VERSION: CONNECTED_SPEECH_VERSION,
   buildConnectedSpeechAnalysis,
+  buildConnectedSpeechEventSpecs,
   hasConnectedSpeechEvents,
   buildEventFamilyCounts
 } = require('../read-aloud/connected-speech-service');
 const { analyzeAudioQuality } = require('../read-aloud/audio-quality');
+const { loadAudioQualityThresholds } = require('../read-aloud/audio-quality-thresholds');
 const {
   buildConnectedSpeechAttemptRecord,
   uploadConnectedSpeechAudio,
@@ -16,10 +20,14 @@ const {
 } = require('../read-aloud/connected-speech-storage');
 
 const router = express.Router();
+const CONNECTED_SPEECH_INDEX_PATH = path.join(process.cwd(), 'public', 'database', 'RA', 'connected-speech-index.json');
+let connectedSpeechIndexCache = null;
+let connectedSpeechIndexPromise = null;
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 20 * 1024 * 1024 } // 20MB limit for longer audio
 });
+const ALIGNMENT_MODES = new Set(['heuristic', 'shadow_mfa', 'mfa_primary']);
 
 function safeJsonParse(value) {
   try { return JSON.parse(value); } catch (_) { return null; }
@@ -39,7 +47,123 @@ function readAscii(view, offset, length) {
   return text;
 }
 
+function normalizePromptIndexRecord(prompt) {
+  if (!prompt || typeof prompt !== 'object') return null;
+  return {
+    rowKey: prompt.rowKey || null,
+    questionId: prompt.questionId == null ? null : String(prompt.questionId),
+    title: String(prompt.title || ''),
+    hasSampleAudio: Boolean(prompt.hasSampleAudio),
+    hasAnyConnectedSpeech: Boolean(prompt.hasAnyConnectedSpeech),
+    hasLinking: Boolean(prompt.hasLinking),
+    linkingCount: Number(prompt.linkingCount || 0),
+    hasReducedWords: Boolean(prompt.hasReducedWords),
+    reducedWordCount: Number(prompt.reducedWordCount || 0),
+    hasSoundChanges: Boolean(prompt.hasSoundChanges),
+    soundChangeCount: Number(prompt.soundChangeCount || 0),
+    soundChangeSubtypes: Array.isArray(prompt.soundChangeSubtypes) ? prompt.soundChangeSubtypes.slice() : [],
+    representativeExamples: Array.isArray(prompt.representativeExamples) ? prompt.representativeExamples.slice() : []
+  };
+}
+
+async function loadConnectedSpeechIndex() {
+  if (connectedSpeechIndexCache) {
+    return connectedSpeechIndexCache;
+  }
+  if (connectedSpeechIndexPromise) {
+    return connectedSpeechIndexPromise;
+  }
+
+  connectedSpeechIndexPromise = (async () => {
+    const raw = await fs.promises.readFile(CONNECTED_SPEECH_INDEX_PATH, 'utf8');
+    const parsed = JSON.parse(raw);
+    const prompts = Array.isArray(parsed.prompts) ? parsed.prompts : [];
+    const byQuestionId = new Map();
+    const byRowKey = new Map();
+    prompts.forEach((prompt) => {
+      const normalized = normalizePromptIndexRecord(prompt);
+      if (!normalized) return;
+      if (normalized.questionId) {
+        byQuestionId.set(normalized.questionId, normalized);
+        byRowKey.set(`id:${normalized.questionId}`, normalized);
+      }
+      if (normalized.rowKey) {
+        byRowKey.set(String(normalized.rowKey), normalized);
+      }
+    });
+    connectedSpeechIndexCache = {
+      ...parsed,
+      prompts,
+      byQuestionId,
+      byRowKey
+    };
+    return connectedSpeechIndexCache;
+  })().finally(() => {
+    connectedSpeechIndexPromise = null;
+  });
+
+  return connectedSpeechIndexPromise;
+}
+
+function buildClientContext(body = {}) {
+  return {
+    guideLevel: String(body.clientGuideLevel || '').trim() || null,
+    sampleAudioFilter: String(body.clientSampleAudioFilter || '').trim() || null,
+    promptFamilyFilter: String(body.clientPromptFamilyFilter || '').trim() || null,
+    promptIndexVersion: String(body.clientPromptIndexVersion || '').trim() || null
+  };
+}
+
+function getConnectedSpeechAlignmentMode() {
+  const mode = String(process.env.CONNECTED_SPEECH_ALIGNMENT_MODE || 'heuristic').trim().toLowerCase();
+  return ALIGNMENT_MODES.has(mode) ? mode : 'heuristic';
+}
+
+function buildAlignmentMetadata(requestedMode, connectedSpeech) {
+  if (requestedMode === 'shadow_mfa') {
+    const shadow = normalizeConnectedSpeechStatus({
+      status: 'shadow_placeholder',
+      version: `${CONNECTED_SPEECH_VERSION}-mfa-shadow`,
+      summary: connectedSpeech.summary,
+      events: connectedSpeech.events
+    });
+    return {
+      requestedAlignmentMode: 'shadow_mfa',
+      scoringMode: 'heuristic',
+      connectedSpeechPrimarySource: 'heuristic',
+      alignmentFallbackReason: 'mfa_unavailable',
+      connectedSpeechShadow: {
+        ...shadow,
+        shadowKind: 'placeholder',
+        engine: 'none',
+        mode: 'shadow_mfa',
+        primarySource: 'heuristic',
+        note: 'MFA rollout scaffold; heuristic result mirrored until the MFA worker is wired in.'
+      }
+    };
+  }
+
+  if (requestedMode === 'mfa_primary') {
+    return {
+      requestedAlignmentMode: 'mfa_primary',
+      scoringMode: 'heuristic',
+      connectedSpeechPrimarySource: 'heuristic',
+      alignmentFallbackReason: 'mfa_unavailable',
+      connectedSpeechShadow: null
+    };
+  }
+
+  return {
+    requestedAlignmentMode: 'heuristic',
+    scoringMode: 'heuristic',
+    connectedSpeechPrimarySource: 'heuristic',
+    alignmentFallbackReason: null,
+    connectedSpeechShadow: null
+  };
+}
+
 function validateWavUpload(buffer) {
+  const thresholds = loadAudioQualityThresholds();
   try {
     if (!Buffer.isBuffer(buffer) || buffer.length < 44) {
       return { ok: false, reason: 'decode_failed' };
@@ -92,7 +216,7 @@ function validateWavUpload(buffer) {
       return { ok: false, reason: 'decode_failed' };
     }
 
-    const minimumBytes = Math.ceil(formatChunk.sampleRate * 0.1) * 2;
+    const minimumBytes = Math.ceil(formatChunk.sampleRate * (thresholds.minimumContainerDurationMs / 1000)) * 2;
     if (dataChunkLength < minimumBytes) {
       return { ok: false, reason: 'too_short' };
     }
@@ -164,12 +288,13 @@ async function callConnectedSpeechAnalysis({ attemptId, questionId, referenceTex
     };
   }
 
-  if (audioQuality && audioQuality.passed === false) {
+  const hasEvents = hasConnectedSpeechEvents(referenceText, questionId);
+  if (!hasEvents) {
     return {
-      workerStatus: 'not_rateable',
+      workerStatus: 'not_applicable',
       familyCounts: {},
       connectedSpeech: normalizeConnectedSpeechStatus({
-        status: 'not_rateable',
+        status: 'not_applicable',
         version: CONNECTED_SPEECH_VERSION,
         summary: { detectedCount: 0, notDetectedCount: 0, uncertainCount: 0 },
         events: []
@@ -177,12 +302,12 @@ async function callConnectedSpeechAnalysis({ attemptId, questionId, referenceTex
     };
   }
 
-  if (!hasConnectedSpeechEvents(referenceText, questionId)) {
+  if (audioQuality && audioQuality.passed === false) {
     return {
-      workerStatus: 'not_applicable',
+      workerStatus: 'not_rateable',
       familyCounts: {},
       connectedSpeech: normalizeConnectedSpeechStatus({
-        status: 'not_applicable',
+        status: 'not_rateable',
         version: CONNECTED_SPEECH_VERSION,
         summary: { detectedCount: 0, notDetectedCount: 0, uncertainCount: 0 },
         events: []
@@ -217,13 +342,7 @@ async function callConnectedSpeechAnalysis({ attemptId, questionId, referenceTex
     audioQuality,
     events: undefined
   };
-  const localSpec = buildConnectedSpeechAnalysis({
-    questionId,
-    referenceText,
-    azurePayload,
-    audioQuality
-  });
-  analysisSpec.events = localSpec.events;
+  analysisSpec.events = buildConnectedSpeechEventSpecs(referenceText, questionId);
 
   let timeout;
   try {
@@ -341,7 +460,17 @@ router.post('/read-aloud/assess', upload.single('audio'), async (req, res) => {
       return sendError(res, 400, 'INVALID_INPUT', 'Missing referenceText.');
     }
     const questionId = String(req.body?.questionId || '').trim() || null;
+    const clientContext = buildClientContext(req.body || {});
     const attemptId = randomUUID();
+    const alignmentMode = getConnectedSpeechAlignmentMode();
+    const promptIndex = await loadConnectedSpeechIndex().catch((error) => {
+      console.warn('[ReadAloud] connected speech index unavailable:', error?.message || error);
+      return null;
+    });
+    const promptFeatureSnapshot = questionId && promptIndex
+      ? (promptIndex.byQuestionId.get(questionId) || promptIndex.byRowKey.get(`id:${questionId}`) || null)
+      : null;
+    const promptIndexVersion = String(promptIndex?.indexVersion || '');
 
     const audioValidation = validateWavUpload(req.file.buffer);
     if (!audioValidation.ok) {
@@ -413,6 +542,7 @@ router.post('/read-aloud/assess', upload.single('audio'), async (req, res) => {
         events: []
       })
       : connectedSpeech;
+    const alignmentMetadata = buildAlignmentMetadata(alignmentMode, publicConnectedSpeech);
     const workerStatus = connectedSpeechSettled.status === 'fulfilled'
       ? String(connectedSpeechSettled.value.workerStatus || 'unknown')
       : 'unavailable';
@@ -428,11 +558,19 @@ router.post('/read-aloud/assess', upload.single('audio'), async (req, res) => {
       questionId,
       referenceText,
       recognizedText: String(nbest.Display || ''),
+      clientContext,
       azureSummary: buildAzureSummary(nbest),
+      requestedAlignmentMode: alignmentMetadata.requestedAlignmentMode,
       connectedSpeechVersion: connectedSpeech.version,
       connectedSpeechSummary: publicConnectedSpeech.summary,
       connectedSpeechEvents: publicConnectedSpeech.events,
       eventFamilyCounts,
+      promptIndexVersion,
+      promptFeatureSnapshot,
+      scoringMode: alignmentMetadata.scoringMode,
+      connectedSpeechPrimarySource: alignmentMetadata.connectedSpeechPrimarySource,
+      alignmentFallbackReason: alignmentMetadata.alignmentFallbackReason,
+      connectedSpeechShadow: alignmentMetadata.connectedSpeechShadow,
       workerStatus,
       audioStatus: storageResult.status,
       storageStatus: storageResult.status,

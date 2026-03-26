@@ -50,6 +50,26 @@ window.CrmStudents = (function () {
         return [payload.name, payload.label, payload.phone, payload.email, payload.zalo, payload.facebook].some(Boolean);
     }
 
+    function syncScoreInput(element, options = {}) {
+        if (!element) return;
+
+        const raw = getValue(element);
+        const digitsOnly = raw.replace(/\D+/g, '');
+        const digitCount = digitsOnly.length || (raw ? raw.length : 0);
+
+        element.dataset.scoreState = raw ? 'value' : 'empty';
+        element.dataset.scoreDigits = String(digitCount);
+        element.placeholder = options.emptyLabel || '';
+    }
+
+    function syncScoreDecorations(elements) {
+        syncScoreInput(elements.inputScoreOverall, { emptyLabel: 'N/A' });
+        syncScoreInput(elements.inputScoreListening);
+        syncScoreInput(elements.inputScoreReading);
+        syncScoreInput(elements.inputScoreSpeaking);
+        syncScoreInput(elements.inputScoreWriting);
+    }
+
     function applyToForm(elements, student) {
         const learning = student?.learningProfile || {};
         if (elements.inputStudentName) elements.inputStudentName.value = String(student?.name || '');
@@ -66,6 +86,7 @@ window.CrmStudents = (function () {
         if (elements.inputScoreWriting) elements.inputScoreWriting.value = learning.writing ?? '';
         if (elements.inputStudentDueDate) elements.inputStudentDueDate.value = String(learning.testResultDueDate || '');
         if (elements.inputStudentLevel) elements.inputStudentLevel.value = String(learning.entryLevel || '');
+        syncScoreDecorations(elements);
     }
 
     function classify(student) {
@@ -94,6 +115,7 @@ window.CrmStudents = (function () {
         buildPayload,
         classify,
         hasAnyInfoField,
+        syncScoreDecorations,
         splitStudents
     };
 })();

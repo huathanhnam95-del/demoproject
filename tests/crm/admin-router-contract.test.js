@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
@@ -88,6 +89,8 @@ expectRoute(routes, 'POST /classrooms/:classId/live-sessions');
 expectRoute(routes, 'PATCH /classrooms/:classId/live-sessions/:sessionId');
 expectRoute(routes, 'POST /classrooms/:classId/live-sessions/:sessionId/start');
 expectRoute(routes, 'POST /classrooms/:classId/live-sessions/:sessionId/end');
+expectRoute(routes, 'GET /read-aloud/prompt-summary');
+expectRoute(routes, 'GET /read-aloud/usage-summary');
 expectRoute(routes, 'POST /submissions/:submissionId/return-for-revision');
 expectRoute(routes, 'POST /submissions/:submissionId/grade');
 

@@ -28,7 +28,9 @@
     coalescent_dj: { spokenAs: 'j', explanation: 'Let the final d slide into the y sound so it blends more like j.' },
     coalescent_tj: { spokenAs: 'ch', explanation: 'Let the final t blend into the y sound so it comes out more like ch.' },
     coalescent_sj: { spokenAs: 'sh', explanation: 'Let the s slide into the y sound so the pair softens toward sh.' },
-    coalescent_zj: { spokenAs: 'zh', explanation: 'Let the z slide into the y sound so it blends into a softer zh sound.' }
+    coalescent_zj: { spokenAs: 'zh', explanation: 'Let the z slide into the y sound so it blends into a softer zh sound.' },
+    n_bilabial_assimilation: { spokenAs: 'm', explanation: 'Let the n blend into the next bilabial sound so it comes out closer to m.' },
+    yod_coalescence: { spokenAs: 'j', explanation: 'Let the sound blend smoothly into the following y sound.' }
   };
   const LINKING_GUIDE_COPY = {
     consonant_to_vowel: 'Carry the last consonant straight into the next vowel without adding a pause.',
@@ -36,6 +38,31 @@
     y_glide: 'Move straight between the vowels and let a light y sound smooth the connection.',
     w_glide: 'Move straight between the vowels and let a light w sound smooth the connection.',
     generic_vowel_link: 'Keep the two words connected so the mouth keeps moving forward.'
+  };
+  const LEARNER_CONNECTED_SPEECH_CATEGORY_LABELS = {
+    off: 'Off',
+    linking: 'Linking',
+    reduced_words: 'Reduced words',
+    sound_changes: 'Sound changes'
+  };
+  const LEARNER_CONNECTED_SPEECH_CATEGORY_ALIASES = {
+    off: 'off',
+    v1_linking: 'linking',
+    v2_reduced_words: 'reduced_words',
+    v3_sound_changes: 'sound_changes',
+    linking: 'linking',
+    reduced_words: 'reduced_words',
+    sound_changes: 'sound_changes',
+    catenation: 'linking',
+    same_consonant_merge: 'linking',
+    y_glide: 'linking',
+    w_glide: 'linking',
+    generic_vowel_link: 'linking',
+    weak_form_reduction: 'reduced_words',
+    reduced_word: 'reduced_words',
+    weak_forms: 'reduced_words',
+    yod_coalescence: 'sound_changes',
+    n_bilabial_assimilation: 'sound_changes'
   };
   const grammarApi = root.ReadAloudPromptGrammar || loadGrammarApi();
   const spokenFormsApi = root.ReadAloudSpokenForms || loadSpokenFormsApi() || root.ReadAloudSpokenForms;
@@ -201,7 +228,7 @@
     if (!analysis || !Array.isArray(analysis.boundaries)) {
       return '';
     }
-    const focusFamily = String(options.focusFamily || '').toLowerCase();
+    const focusFamily = normalizeConnectedSpeechCategory(options.focusFamily || '');
 
     const eligible = analysis.boundaries.filter((boundary) => (
       !boundary.blocked && (boundary.confidence === 'high' || boundary.confidence === 'medium')
@@ -236,17 +263,17 @@
 
     if (focusFamily === 'sound_changes' && soundChangeBoundaries.length === 0) {
       return linkingBoundaries.length || reducedWords.length
-        ? 'No sound changes in this sentence. This sentence still has linking or reduced words, but no Level 3 sound-change example.'
+        ? 'No sound changes in this sentence. This sentence still has linking or reduced words, but no sound-change example.'
         : 'No sound changes in this sentence.';
     }
     if (focusFamily === 'reduced_words' && reducedWords.length === 0) {
       return linkingBoundaries.length || soundChangeBoundaries.length
-        ? 'No reduced words in this sentence. This sentence still has linking or sound changes, but no Level 2 reduced-word example.'
+        ? 'No reduced words in this sentence. This sentence still has linking or sound changes, but no reduced-word example.'
         : 'No reduced words in this sentence.';
     }
     if (focusFamily === 'linking' && linkingBoundaries.length === 0) {
       return reducedWords.length || soundChangeBoundaries.length
-        ? 'No linking examples in this sentence. This sentence still has reduced words or sound changes, but no Level 1 linking example.'
+        ? 'No linking examples in this sentence. This sentence still has reduced words or sound changes, but no linking example.'
         : 'No linking examples in this sentence.';
     }
 
@@ -297,6 +324,7 @@
         const copy = SOUND_CHANGE_GUIDE_COPY[boundary.subtype] || SOUND_CHANGE_GUIDE_COPY.coalescent_dj;
         pushItem({
           id: `boundary-${boundary.id}`,
+          category: 'sound_changes',
           layer: 'assimilation',
           label: phrase,
           badge: 'Sound change',
@@ -313,6 +341,7 @@
       };
       pushItem({
         id: `token-${annotation.id || annotation.wordIndex}`,
+        category: 'reduced_words',
         layer: 'weak_forms',
         label: annotation.display || annotation.word || normalized,
         badge: 'Reduced word',
@@ -328,6 +357,7 @@
         const phrase = `${boundary.leftDisplay || boundary.leftWord || ''} ${boundary.rightDisplay || boundary.rightWord || ''}`.trim();
         pushItem({
           id: `link-${boundary.id}`,
+          category: 'linking',
           layer: 'linking',
           label: phrase,
           badge: 'Linking',
@@ -553,7 +583,7 @@
   function renderFallbackList(container, analysis, options = {}) {
     if (!container) return 0;
     container.innerHTML = '';
-    const focusFamily = String(options.focusFamily || '').toLowerCase();
+    const focusFamily = normalizeConnectedSpeechCategory(options.focusFamily || '');
     const sourceBoundaries = Array.isArray(options.boundaries) ? options.boundaries : analysis.boundaries;
     const eligible = sourceBoundaries.filter((boundary) => (
       !boundary.blocked && (boundary.confidence === 'high' || boundary.confidence === 'medium')
@@ -684,27 +714,38 @@
     return (word) => root.Phonetics.getIPAWithSource(word);
   }
 
+  function normalizeConnectedSpeechCategory(value) {
+    const candidate = String(value || '').trim().toLowerCase();
+    if (!candidate) return 'linking';
+    return LEARNER_CONNECTED_SPEECH_CATEGORY_ALIASES[candidate] || 'linking';
+  }
+
+  function getLearnerConnectedSpeechCategoryLabel(value) {
+    const category = normalizeConnectedSpeechCategory(value);
+    return LEARNER_CONNECTED_SPEECH_CATEGORY_LABELS[category] || 'Linking';
+  }
+
   function normalizeConnectedSpeechLevel(level, enabledRuleSet) {
-    const candidate = String(level || '').trim();
-    if (candidate) {
+    const candidate = normalizeConnectedSpeechCategory(level);
+    if (String(level || '').trim()) {
       return candidate;
     }
-    if (String(enabledRuleSet || '') === 'linking-v1') {
-      return 'v1_linking';
+    if (String(enabledRuleSet || '') === 'connected-speech-v3') {
+      return 'sound_changes';
     }
-    return 'v1_linking';
+    return 'linking';
   }
 
   function getRuleSetForConnectedSpeechLevel(level) {
-    const normalized = String(level || '').trim();
+    const normalized = normalizeConnectedSpeechLevel(level);
     if (normalized === 'off') return 'none';
-    if (normalized === 'v3_sound_changes') return 'connected-speech-v3';
+    if (normalized === 'sound_changes') return 'connected-speech-v3';
     return 'linking-v1';
   }
 
   function buildReducedWordAnnotations(tokens, wordTokens, wordProfiles, options = {}) {
-    const connectedSpeechLevel = String(options.connectedSpeechLevel || 'v1_linking');
-    if (connectedSpeechLevel !== 'v2_reduced_words' && connectedSpeechLevel !== 'v3_sound_changes') {
+    const connectedSpeechLevel = normalizeConnectedSpeechLevel(options.connectedSpeechLevel);
+    if (connectedSpeechLevel !== 'reduced_words' && connectedSpeechLevel !== 'sound_changes') {
       return [];
     }
 
@@ -936,6 +977,9 @@
     DESKTOP_MIN_WIDTH,
     tokenizePrompt,
     analyzePrompt,
+    normalizeConnectedSpeechLevel,
+    getLearnerConnectedSpeechCategory: normalizeConnectedSpeechCategory,
+    getLearnerConnectedSpeechCategoryLabel,
     buildAccessibleSummary,
     buildGuideExplanationItems,
     hasVisibleAssimilation,

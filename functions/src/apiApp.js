@@ -8,6 +8,7 @@ const {
 } = require('./crm/http-contracts');
 const { CRM_LEADS } = require('./crm/collections');
 const { buildLeadStageSyncPatch } = require('./crm/lead-service');
+const { buildEntranceTestLinks } = require('./crm/public-origin');
 const createCrmRouter = require('./routes/admin/create-crm-router');
 const entranceTestRoutes = require('./routes/entrance-tests');
 const { TEST_VERSION } = require('./entrance-test/test36plus');
@@ -134,13 +135,6 @@ const crmRouter = createCrmRouter({
             return crypto.createHash('sha256').update(String(token || '')).digest('hex');
         }
 
-        function getBaseUrl(req) {
-            const fromEnv = String(process.env.PUBLIC_BASE_URL || '').trim();
-            if (fromEnv) return fromEnv.replace(/\/+$/, '');
-            const proto = (req.headers['x-forwarded-proto'] || req.protocol || 'http').toString().split(',')[0].trim();
-            return `${proto}://${req.get('host')}`;
-        }
-
         // POST /students/:studentId/entrance-tests — create a new entrance test
         router.post('/students/:studentId/entrance-tests', ...deps.requireAdminHandlers, async (req, res) => {
             try {
@@ -197,11 +191,11 @@ const crmRouter = createCrmRouter({
                     }
                 });
 
-                const baseUrl = getBaseUrl(req);
+                const links = buildEntranceTestLinks(req, { deliveryToken: token, testId });
                 return deps.sendSuccess(res, {
                     testId,
-                    testLink: `${baseUrl}/entrance-test.html?token=${encodeURIComponent(token)}`,
-                    resultLink: `${baseUrl}/crm-entrance-test-result.html?testId=${encodeURIComponent(testId)}`
+                    testLink: links.testLink,
+                    resultLink: links.resultLink
                 }, 'Entrance test link created.');
             } catch (error) {
                 if (error?.message === 'STUDENT_NOT_FOUND') {
@@ -241,9 +235,11 @@ const crmRouter = createCrmRouter({
                     return bMs - aMs;
                 });
 
-                const baseUrl = getBaseUrl(req);
                 const testsWithLinks = tests.map((t) => {
-                    const deliveryToken = String(t.deliveryToken || '').trim();
+                    const links = buildEntranceTestLinks(req, {
+                        deliveryToken: String(t.deliveryToken || '').trim(),
+                        testId: t.testId
+                    });
                     return {
                         testId: t.testId,
                         version: t.version,
@@ -251,10 +247,8 @@ const crmRouter = createCrmRouter({
                         createdAt: t.createdAt,
                         startedAt: t.startedAt,
                         submittedAt: t.submittedAt,
-                        testLink: deliveryToken
-                            ? `${baseUrl}/entrance-test.html?token=${encodeURIComponent(deliveryToken)}`
-                            : null,
-                        resultLink: `${baseUrl}/crm-entrance-test-result.html?testId=${encodeURIComponent(t.testId)}`
+                        testLink: links.testLink,
+                        resultLink: links.resultLink
                     };
                 });
 

@@ -70,6 +70,29 @@ async function stubPrepareWavBlob(page) {
   });
 }
 
+async function waitForPromptReady(page, expected = {}) {
+  await page.waitForFunction(({ questionId, textPattern }) => {
+    const mode = window.ReadAloudMode;
+    if (!mode || !mode.currentPromptReady) return false;
+    if (questionId !== undefined && questionId !== null) {
+      if (String(mode.currentQuestionId || '') !== String(questionId)) return false;
+    }
+    if (textPattern) {
+      const text = String(document.getElementById('ra-text-prompt')?.textContent || '').toLowerCase();
+      if (!text.includes(String(textPattern).toLowerCase())) return false;
+    }
+    return true;
+  }, expected, { timeout: 30000 });
+}
+
+async function waitForAnimationFrames(page, count = 2) {
+  await page.evaluate(async (frameCount) => {
+    for (let index = 0; index < frameCount; index += 1) {
+      await new Promise((resolve) => requestAnimationFrame(() => resolve()));
+    }
+  }, count);
+}
+
 async function assertUnsupportedFlow(browser, baseUrl) {
   const context = await browser.newContext({ serviceWorkers: 'block' });
   await context.addInitScript(() => {
@@ -107,14 +130,11 @@ async function assertUnsupportedFlow(browser, baseUrl) {
   await page.evaluate(async () => {
     await window.switchToMode('read-aloud');
   });
-  await page.waitForTimeout(6000);
+  await waitForPromptReady(page);
   await page.evaluate(async () => {
     await window.ReadAloudMode.loadSpecificPrompt(0);
   });
-  await page.evaluate(() => {
-    window.ReadAloudMode.applyUnsupportedState();
-  });
-  await page.waitForTimeout(5000);
+  await waitForPromptReady(page, { questionId: '1', textPattern: 'pick it up now' });
 
   const state = await page.evaluate(() => {
     const panel = document.getElementById('mode-read-aloud');
@@ -149,9 +169,9 @@ async function assertUnsupportedFlow(browser, baseUrl) {
   assert.equal(state.recordDisabled, true, 'record button should stay disabled when microphone recording is unavailable');
   assert.equal(state.chunkingPressed, 'false', 'Chunking should be off by default');
   assert.equal(state.offPressed, 'true', 'Connected speech should default to off');
-  assert.equal(state.linkingPressed, 'false', 'V1 linking should be off by default');
-  assert.equal(state.reducedWordsPressed, 'false', 'V2 reduced words should be off by default');
-  assert.equal(state.soundChangesPressed, 'false', 'V3 sound changes should be off by default');
+  assert.equal(state.linkingPressed, 'false', 'Linking should be off by default');
+  assert.equal(state.reducedWordsPressed, 'false', 'Reduced words should be off by default');
+  assert.equal(state.soundChangesPressed, 'false', 'Sound changes should be off by default');
   assert.equal(state.overlayPointerEvents, 'none', 'linking overlay should not block pointer events');
 
   await page.evaluate(() => {
@@ -243,6 +263,54 @@ async function assertSupportedFlow(browser, baseUrl) {
       writable: true,
       value: FakeMediaRecorder
     });
+    Object.defineProperty(window.URL, 'createObjectURL', {
+      configurable: true,
+      writable: true,
+      value: (blob) => {
+        window.__raObjectUrls = Array.isArray(window.__raObjectUrls) ? window.__raObjectUrls : [];
+        const nextUrl = `blob:ra-recording-${window.__raObjectUrls.length + 1}`;
+        window.__raObjectUrls.push({ url: nextUrl, type: String(blob?.type || '') });
+        return nextUrl;
+      }
+    });
+    Object.defineProperty(window.URL, 'revokeObjectURL', {
+      configurable: true,
+      writable: true,
+      value: (url) => {
+        window.__raRevokedObjectUrls = Array.isArray(window.__raRevokedObjectUrls) ? window.__raRevokedObjectUrls : [];
+        window.__raRevokedObjectUrls.push(String(url || ''));
+      }
+    });
+    const originalPlay = window.HTMLMediaElement.prototype.play;
+    const originalPause = window.HTMLMediaElement.prototype.pause;
+    Object.defineProperty(window.HTMLMediaElement.prototype, 'play', {
+      configurable: true,
+      writable: true,
+      value: function play() {
+        this.__raPausedState = false;
+        if (this.id === 'ra-user-recording-audio') {
+          window.__raUserRecordingPlayCalls = Number(window.__raUserRecordingPlayCalls || 0) + 1;
+        }
+        return Promise.resolve(originalPlay ? originalPlay.call(this).catch(() => {}) : undefined);
+      }
+    });
+    Object.defineProperty(window.HTMLMediaElement.prototype, 'pause', {
+      configurable: true,
+      writable: true,
+      value: function pause() {
+        this.__raPausedState = true;
+        if (this.id === 'ra-user-recording-audio') {
+          window.__raUserRecordingPauseCalls = Number(window.__raUserRecordingPauseCalls || 0) + 1;
+        }
+        return originalPause ? originalPause.call(this) : undefined;
+      }
+    });
+    Object.defineProperty(window.HTMLMediaElement.prototype, 'paused', {
+      configurable: true,
+      get() {
+        return this.__raPausedState !== false;
+      }
+    });
     Object.defineProperty(navigator, 'mediaDevices', {
       configurable: true,
       value: {
@@ -290,7 +358,26 @@ async function assertSupportedFlow(browser, baseUrl) {
               hasSoundChanges: false,
               soundChangeCount: 0,
               soundChangeSubtypes: [],
-              representativeExamples: []
+              representativeExamples: [],
+              previewExamplesByCategory: {
+                linking: [
+                  {
+                    family: 'linking',
+                    type: 'boundary',
+                    id: 'boundary-1',
+                    guideTarget: 'boundary-1',
+                    text: 'Pick it',
+                    leftWord: 'Pick',
+                    rightWord: 'it',
+                    subtype: 'catenation',
+                    category: 'consonant_to_vowel',
+                    confidence: 'high',
+                    markerText: 'link'
+                  }
+                ],
+                reduced_words: [],
+                sound_changes: []
+              }
             },
             {
               rowKey: 'id:2',
@@ -306,7 +393,39 @@ async function assertSupportedFlow(browser, baseUrl) {
               hasSoundChanges: false,
               soundChangeCount: 0,
               soundChangeSubtypes: [],
-              representativeExamples: []
+              representativeExamples: [],
+              previewExamplesByCategory: {
+                linking: [
+                  {
+                    family: 'linking',
+                    type: 'boundary',
+                    id: 'boundary-2',
+                    guideTarget: 'boundary-2',
+                    text: 'take it',
+                    leftWord: 'take',
+                    rightWord: 'it',
+                    subtype: 'catenation',
+                    category: 'consonant_to_vowel',
+                    confidence: 'high',
+                    markerText: 'link'
+                  }
+                ],
+                reduced_words: [
+                  {
+                    family: 'reduced_words',
+                    type: 'token',
+                    id: 'token-2',
+                    guideTarget: 'token-2',
+                    text: 'to',
+                    word: 'to',
+                    spokenAs: 'tuh',
+                    subtype: 'to',
+                    confidence: 'medium',
+                    markerText: 'Reduced word'
+                  }
+                ],
+                sound_changes: []
+              }
             },
             {
               rowKey: 'id:3',
@@ -322,7 +441,26 @@ async function assertSupportedFlow(browser, baseUrl) {
               hasSoundChanges: true,
               soundChangeCount: 1,
               soundChangeSubtypes: ['coalescent_dj'],
-              representativeExamples: []
+              representativeExamples: [],
+              previewExamplesByCategory: {
+                linking: [],
+                reduced_words: [],
+                sound_changes: [
+                  {
+                    family: 'sound_changes',
+                    type: 'boundary',
+                    id: 'boundary-3',
+                    guideTarget: 'boundary-3',
+                    text: 'did you',
+                    leftWord: 'did',
+                    rightWord: 'you',
+                    subtype: 'coalescent_dj',
+                    category: 'connected_speech',
+                    confidence: 'high',
+                    markerText: 'sound change'
+                  }
+                ]
+              }
             }
           ]
         }), {
@@ -461,13 +599,12 @@ async function assertSupportedFlow(browser, baseUrl) {
   await page.evaluate(async () => {
     await window.ReadAloudMode.loadSpecificPrompt(0);
   });
-  await page.evaluate(() => {
-    window.ReadAloudMode.applyUnsupportedState();
-  });
-  await page.waitForTimeout(6000);
+  await waitForPromptReady(page, { questionId: '1', textPattern: 'pick it up now' });
 
   const initialViewState = await page.evaluate(() => {
     const chunkingBtn = document.getElementById('ra-toggle-chunking-btn');
+    const practiceTargetToggle = document.getElementById('ra-practice-target-toggle');
+    const practiceTargetDrawer = document.getElementById('ra-practice-target-drawer');
     const offBtn = document.getElementById('ra-toggle-connected-off-btn');
     const linkingBtn = document.getElementById('ra-toggle-linking-btn');
     const reducedWordsBtn = document.getElementById('ra-toggle-reduced-words-btn');
@@ -480,13 +617,22 @@ async function assertSupportedFlow(browser, baseUrl) {
     const filterStatus = document.getElementById('ra-filter-feature-status');
     const summary = document.getElementById('ra-linking-a11y-summary');
     const connectedSpeechGroup = document.getElementById('ra-connected-speech-group');
+    const recordBtn = document.getElementById('ra-record-btn');
+    const nextBtn = document.getElementById('ra-next-btn');
     return {
       chunkingSelected: chunkingBtn ? String(chunkingBtn.getAttribute('aria-pressed') || '') : '',
       chunkingDisabled: chunkingBtn ? !!chunkingBtn.disabled : null,
+      practiceTargetText: practiceTargetToggle ? String(practiceTargetToggle.textContent || '').trim() : '',
+      practiceTargetExpanded: practiceTargetToggle ? String(practiceTargetToggle.getAttribute('aria-expanded') || '') : '',
+      practiceTargetHidden: practiceTargetDrawer ? practiceTargetDrawer.hasAttribute('hidden') : null,
       offSelected: offBtn ? String(offBtn.getAttribute('aria-pressed') || '') : '',
+      offText: offBtn ? String(offBtn.textContent || '').trim() : '',
       linkingSelected: linkingBtn ? String(linkingBtn.getAttribute('aria-pressed') || '') : '',
+      linkingText: linkingBtn ? String(linkingBtn.textContent || '').trim() : '',
       reducedWordsSelected: reducedWordsBtn ? String(reducedWordsBtn.getAttribute('aria-pressed') || '') : '',
+      reducedWordsText: reducedWordsBtn ? String(reducedWordsBtn.textContent || '').trim() : '',
       soundChangesSelected: soundChangesBtn ? String(soundChangesBtn.getAttribute('aria-pressed') || '') : '',
+      soundChangesText: soundChangesBtn ? String(soundChangesBtn.textContent || '').trim() : '',
       featureAllSelected: featureAllBtn ? String(featureAllBtn.getAttribute('aria-pressed') || '') : '',
       anyConnectedDisabled: anyConnectedBtn ? !!anyConnectedBtn.disabled : null,
       linkingFilterDisabled: linkingFilterBtn ? !!linkingFilterBtn.disabled : null,
@@ -496,21 +642,32 @@ async function assertSupportedFlow(browser, baseUrl) {
       summaryText: summary ? String(summary.textContent || '').trim() : '',
       summaryLive: summary ? String(summary.getAttribute('aria-live') || '') : '',
       summaryDescribedBy: summary ? String(summary.getAttribute('aria-describedby') || '') : '',
-      connectedSpeechRole: connectedSpeechGroup ? String(connectedSpeechGroup.getAttribute('role') || '') : ''
+      connectedSpeechRole: connectedSpeechGroup ? String(connectedSpeechGroup.getAttribute('role') || '') : '',
+      recordText: recordBtn ? String(recordBtn.textContent || '').trim() : '',
+      nextText: nextBtn ? String(nextBtn.textContent || '').trim() : ''
     };
   });
 
   assert.equal(initialViewState.chunkingSelected, 'false', 'Chunking should be off on first prompt load');
   assert.equal(initialViewState.chunkingDisabled, false, 'Chunking should be available when ANSWER CHUNKED is present');
+  assert.match(initialViewState.practiceTargetText, /practice target/i, 'practice target drawer toggle should be visible');
+  assert.equal(initialViewState.practiceTargetExpanded, 'false', 'practice target drawer should start collapsed');
+  assert.equal(initialViewState.practiceTargetHidden, true, 'practice target drawer should be closed by default');
   assert.equal(initialViewState.offSelected, 'true', 'Connected speech should default to off');
-  assert.equal(initialViewState.linkingSelected, 'false', 'V1 linking should be off by default');
+  assert.equal(initialViewState.offText, 'Off', 'connected speech off button should use learner copy');
+  assert.equal(initialViewState.linkingSelected, 'false', 'Linking should be off by default');
+  assert.equal(initialViewState.linkingText, 'Linking', 'linking button should use learner copy');
   assert.equal(initialViewState.reducedWordsSelected, 'false', 'Reduced words should be off by default');
+  assert.equal(initialViewState.reducedWordsText, 'Reduced words', 'reduced words button should use learner copy');
   assert.equal(initialViewState.soundChangesSelected, 'false', 'Sound changes should be off by default');
+  assert.equal(initialViewState.soundChangesText, 'Sound changes', 'sound changes button should use learner copy');
   assert.equal(initialViewState.featureAllSelected, 'true', 'prompt feature filter should default to all prompts');
   assert.equal(initialViewState.anyConnectedDisabled, false, 'any-connected filter should be available once the static index loads');
   assert.equal(initialViewState.linkingFilterDisabled, false, 'linking filter should be available once the static index loads');
   assert.equal(initialViewState.reducedWordsFilterDisabled, false, 'reduced-words filter should be available once the static index loads');
   assert.equal(initialViewState.soundChangesFilterDisabled, false, 'sound-changes filter should be available once the static index loads');
+  assert.equal(initialViewState.recordText, 'Start recording now', 'prep-state primary CTA should use learner copy');
+  assert.equal(initialViewState.nextText, 'Next prompt', 'prep-state secondary CTA should use learner copy');
   assert.equal(initialViewState.filterStatusText, '', 'prompt-index status should stay empty when the index loads successfully');
   assert.equal(initialViewState.summaryText, '', 'connected speech accessibility summary should start empty when connected speech is off');
   assert.equal(initialViewState.summaryLive, 'polite', 'connected speech summary should be announced politely');
@@ -606,8 +763,8 @@ async function assertSupportedFlow(browser, baseUrl) {
   assert.equal(soundChangesFilterState.disabled, false, 'sound changes filter should keep the selector enabled when matches exist');
   assert.equal(soundChangesFilterState.filteredCount, 1, 'sound-changes only should narrow the filtered database to one prompt');
   assert.equal(soundChangesFilterState.optionCount, 2, 'sound-changes only should narrow the dropdown to one prompt plus random');
-  assert.ok(soundChangesFilterState.options.some((text) => /Q3:/i.test(text)), 'sound-changes only should keep the prompt with Level 3 sound changes');
-  assert.equal(soundChangesFilterState.currentQuestionId, '3', 'sound-changes only should load the matching Level 3 prompt');
+  assert.ok(soundChangesFilterState.options.some((text) => /Q3:/i.test(text)), 'sound-changes only should keep the prompt with sound changes');
+  assert.equal(soundChangesFilterState.currentQuestionId, '3', 'sound-changes only should load the matching sound-change prompt');
 
   const noMatchFilterState = await page.evaluate(() => {
     window.ReadAloudMode?.setSampleAudioFilter('unavailable');
@@ -635,22 +792,28 @@ async function assertSupportedFlow(browser, baseUrl) {
     const filteredDb = window.ReadAloudMode?.getFilteredDatabase?.() || [];
     return {
       disabled: select ? !!select.disabled : null,
+      value: select ? String(select.value || '') : '',
       allPressed: allBtn ? String(allBtn.getAttribute('aria-pressed') || '') : '',
       featureAllPressed: featureAllBtn ? String(featureAllBtn.getAttribute('aria-pressed') || '') : '',
-      filteredCount: filteredDb.length
+      filteredCount: filteredDb.length,
+      currentQuestionId: String(window.ReadAloudMode?.currentQuestionId || '')
     };
   });
   assert.equal(restoredFilterState.disabled, false, 'resetting filters should restore the selector');
+  assert.equal(restoredFilterState.value, '2', 'resetting filters should restore the last valid prompt selection');
   assert.equal(restoredFilterState.allPressed, 'true', 'audio filter should reset to all');
   assert.equal(restoredFilterState.featureAllPressed, 'true', 'feature filter should reset to all prompts');
   assert.equal(restoredFilterState.filteredCount, 3, 'resetting filters should restore the full prompt pool');
+  assert.equal(restoredFilterState.currentQuestionId, '3', 'resetting filters should restore the last valid prompt when it matches again');
 
   await page.evaluate(() => {
     document.getElementById('ra-toggle-chunking-btn')?.click();
     document.getElementById('ra-toggle-linking-btn')?.click();
   });
-
-  await page.waitForTimeout(1000);
+  await page.waitForFunction(() => {
+    const overlay = document.getElementById('ra-linking-overlay');
+    return !!overlay && overlay.querySelectorAll('path').length > 0;
+  }, { timeout: 30000 });
 
   const wideLinkingState = await page.evaluate(() => {
     const overlay = document.getElementById('ra-linking-overlay');
@@ -749,7 +912,7 @@ async function assertSupportedFlow(browser, baseUrl) {
     };
   });
 
-  assert.equal(reducedWordState.reducedWordsPressed, 'true', 'V2 reduced words should be enabled');
+  assert.equal(reducedWordState.reducedWordsPressed, 'true', 'Reduced words should be enabled');
   assert.ok(reducedWordState.highlightedCount >= 1, 'reduced-word prompts should visibly annotate weak words');
   assert.ok(reducedWordState.highlightedWords.includes('the'), 'non-blocked reduced words should stay visible');
   assert.ok(!reducedWordState.highlightedWords.includes('can'), 'chunk-separated reduced words should stay suppressed');
@@ -802,7 +965,7 @@ async function assertSupportedFlow(browser, baseUrl) {
       summaryText: summary ? String(summary.textContent || '').trim() : ''
     };
   });
-  assert.equal(soundChangeState.soundChangesPressed, 'true', 'V3 sound changes should be enabled');
+  assert.equal(soundChangeState.soundChangesPressed, 'true', 'Sound changes should be enabled');
   assert.match(soundChangeState.summaryText, /sound changes/i, 'sound-change summary should mention the layer');
 
   await page.evaluate(() => {
@@ -827,31 +990,40 @@ async function assertSupportedFlow(browser, baseUrl) {
 
   const guideHintState = await page.evaluate(() => {
     const connectedBox = document.getElementById('ra-connected-speech-box');
+    const connectedLabel = document.getElementById('ra-connected-speech-label');
     const connectedSummary = document.getElementById('ra-connected-speech-summary');
+    const connectedMeta = document.getElementById('ra-connected-speech-meta');
     const connectedList = document.getElementById('ra-connected-speech-list');
     return {
       visible: !!connectedBox && getComputedStyle(connectedBox).display !== 'none',
+      labelText: connectedLabel ? String(connectedLabel.textContent || '').trim() : '',
       summaryText: connectedSummary ? String(connectedSummary.textContent || '').trim() : '',
+      metaText: connectedMeta ? String(connectedMeta.textContent || '').trim() : '',
       listText: connectedList ? String(connectedList.textContent || '').trim() : '',
       listCount: connectedList ? connectedList.children.length : 0
     };
   });
   assert.equal(guideHintState.visible, true, 'connected-speech guide should show a help panel when a guide level is active');
+  assert.equal(guideHintState.labelText, 'Speech Coach', 'guide shell should keep a stable product name');
+  assert.equal(guideHintState.metaText, 'Preview', 'prep-state guide shell should describe itself as preview content');
   assert.ok(guideHintState.listCount >= 1, 'connected-speech guide should list at least one pronunciation hint');
   assert.match(guideHintState.listText, /did you|sound change|reduce|lighter|slide/i, 'connected-speech guide should explain how to say the highlighted items');
 
   await page.setViewportSize({ width: 390, height: 900 });
   const narrowGuideControlState = await page.evaluate(() => {
     const btn = document.getElementById('ra-toggle-sound-changes-btn');
+    const pageWidth = document.documentElement.scrollWidth;
     if (!btn) return null;
     const rect = btn.getBoundingClientRect();
     return {
       viewportWidth: window.innerWidth,
+      pageWidth,
       left: rect.left,
       right: rect.right
     };
   });
   assert.ok(narrowGuideControlState, 'sound-change control should exist on narrow layouts');
+  assert.ok(narrowGuideControlState.pageWidth <= narrowGuideControlState.viewportWidth, 'read-aloud layout should not overflow horizontally on mobile');
   assert.ok(narrowGuideControlState.left >= 0, 'sound-change control should stay inside the viewport on narrow layouts');
   assert.ok(narrowGuideControlState.right <= narrowGuideControlState.viewportWidth, 'sound-change control should remain clickable on narrow layouts');
 
@@ -867,11 +1039,13 @@ async function assertSupportedFlow(browser, baseUrl) {
 
   const compactGuideState = await page.evaluate(() => {
     const guideBox = document.getElementById('ra-connected-speech-box');
+    const connectedLabel = document.getElementById('ra-connected-speech-label');
     const toggle = document.querySelector('#ra-connected-speech-list [data-role="guide-toggle-details"]');
     const selectedCard = document.querySelector('#ra-connected-speech-list [data-role="guide-selected-card"] [data-guide-target]');
     const expandedList = document.querySelector('#ra-connected-speech-list [data-role="guide-expanded-list"]');
     return {
       visible: !!guideBox && getComputedStyle(guideBox).display !== 'none',
+      labelText: connectedLabel ? String(connectedLabel.textContent || '').trim() : '',
       toggleText: toggle ? String(toggle.textContent || '').trim() : '',
       toggleExpanded: toggle ? String(toggle.getAttribute('aria-expanded') || '') : '',
       selectedText: selectedCard ? String(selectedCard.textContent || '').trim() : '',
@@ -880,6 +1054,7 @@ async function assertSupportedFlow(browser, baseUrl) {
     };
   });
   assert.equal(compactGuideState.visible, true, 'guide panel should stay visible on narrow layouts');
+  assert.equal(compactGuideState.labelText, 'Speech Coach', 'compact guide shell should keep the same title');
   assert.match(compactGuideState.toggleText, /see more/i, 'compact guide view should offer a concise expand control');
   assert.match(compactGuideState.selectedText, /did you|sound change|reduce|lighter|slide/i, 'compact guide view should keep the selected explanation visible');
   assert.equal(compactGuideState.expandedVisible, false, 'compact guide view should collapse the full list by default');
@@ -978,6 +1153,8 @@ async function assertSupportedFlow(browser, baseUrl) {
   await page.waitForFunction(() => {
     const resultBox = document.getElementById('ra-result-box');
     const connectedBox = document.getElementById('ra-connected-speech-box');
+    const connectedLabel = document.getElementById('ra-connected-speech-label');
+    const connectedMeta = document.getElementById('ra-connected-speech-meta');
     const accuracy = document.getElementById('ra-accuracy-value');
     const feedback = document.getElementById('ra-transcript-feedback');
     const connectedSummary = document.getElementById('ra-connected-speech-summary');
@@ -989,6 +1166,10 @@ async function assertSupportedFlow(browser, baseUrl) {
       getComputedStyle(resultBox).display !== 'none' &&
       !!connectedBox &&
       getComputedStyle(connectedBox).display !== 'none' &&
+      !!connectedLabel &&
+      /speech coach/i.test(String(connectedLabel.textContent || '')) &&
+      !!connectedMeta &&
+      /feedback/i.test(String(connectedMeta.textContent || '')) &&
       !!accuracy &&
       String(accuracy.textContent || '').trim() === '92' &&
       !!feedback &&
@@ -996,7 +1177,7 @@ async function assertSupportedFlow(browser, baseUrl) {
       !!connectedSummary &&
       /1 detected/i.test(String(connectedSummary.textContent || '')) &&
       !!connectedBox.querySelector('#ra-connected-speech-list') &&
-      /gap/i.test(String(connectedBox.querySelector('#ra-connected-speech-list')?.textContent || '')) &&
+      !/gap|confidence|phoneme|duration ratio/i.test(String(connectedBox.querySelector('#ra-connected-speech-list')?.textContent || '')) &&
       !!status &&
       /analysis complete/i.test(String(status.textContent || '')) &&
       !!recordBtn &&
@@ -1007,6 +1188,8 @@ async function assertSupportedFlow(browser, baseUrl) {
   const supportedAssessmentState = await page.evaluate(() => {
     const resultBox = document.getElementById('ra-result-box');
     const connectedBox = document.getElementById('ra-connected-speech-box');
+    const connectedLabel = document.getElementById('ra-connected-speech-label');
+    const connectedMeta = document.getElementById('ra-connected-speech-meta');
     const accuracy = document.getElementById('ra-accuracy-value');
     const feedback = document.getElementById('ra-transcript-feedback');
     const connectedSummary = document.getElementById('ra-connected-speech-summary');
@@ -1019,6 +1202,8 @@ async function assertSupportedFlow(browser, baseUrl) {
       currentQuestionId: String(window.ReadAloudMode?.currentQuestionId || ''),
       resultVisible: !!resultBox && getComputedStyle(resultBox).display !== 'none',
       connectedVisible: !!connectedBox && getComputedStyle(connectedBox).display !== 'none',
+      connectedLabelText: connectedLabel ? String(connectedLabel.textContent || '').trim() : '',
+      connectedMetaText: connectedMeta ? String(connectedMeta.textContent || '').trim() : '',
       accuracyText: accuracy ? String(accuracy.textContent || '').trim() : '',
       feedbackText: feedback ? String(feedback.textContent || '').trim() : '',
       connectedSummaryText: connectedSummary ? String(connectedSummary.textContent || '').trim() : '',
@@ -1037,13 +1222,55 @@ async function assertSupportedFlow(browser, baseUrl) {
   );
   assert.equal(supportedAssessmentState.resultVisible, true, 'result box should be visible after assessment');
   assert.equal(supportedAssessmentState.connectedVisible, true, 'connected speech box should be visible after assessment');
+  assert.equal(supportedAssessmentState.connectedLabelText, 'Speech Coach', 'results shell should keep the same title');
+  assert.equal(supportedAssessmentState.connectedMetaText, 'Feedback', 'results shell should describe itself as feedback');
   assert.equal(supportedAssessmentState.accuracyText, '92', 'accuracy score should render from the mocked response');
   assert.match(supportedAssessmentState.feedbackText, /pick/i, 'transcript feedback should render from the mocked response');
   assert.match(supportedAssessmentState.connectedSummaryText, /1 detected/i, 'connected speech summary should render from the mocked response');
   assert.equal(supportedAssessmentState.connectedChildren, 1, 'connected speech row should render');
-  assert.match(supportedAssessmentState.connectedListText, /gap/i, 'connected speech result should render evidence text');
+  assert.doesNotMatch(supportedAssessmentState.connectedListText, /gap|confidence|phoneme|duration ratio/i, 'connected speech result should hide raw evidence details');
   assert.match(supportedAssessmentState.statusText, /analysis complete/i, 'status message should update after assessment');
   assert.match(supportedAssessmentState.recordText, /next prompt/i, 'record button should switch to next prompt after assessment');
+
+  await page.waitForFunction(() => {
+    const playOwnBtn = document.getElementById('ra-play-recording-btn');
+    const ownAudio = document.getElementById('ra-user-recording-audio');
+    return !!playOwnBtn
+      && getComputedStyle(playOwnBtn).display !== 'none'
+      && !playOwnBtn.disabled
+      && /play your recording/i.test(String(playOwnBtn.textContent || ''))
+      && !!ownAudio
+      && /^blob:ra-recording-/i.test(String(ownAudio.getAttribute('src') || ''));
+  }, { timeout: 30000 });
+
+  const recordedPlaybackState = await page.evaluate(() => ({
+    buttonText: String(document.getElementById('ra-play-recording-btn')?.textContent || '').trim(),
+    audioSrc: String(document.getElementById('ra-user-recording-audio')?.getAttribute('src') || '').trim(),
+    objectUrlCount: Array.isArray(window.__raObjectUrls) ? window.__raObjectUrls.length : 0
+  }));
+  assert.match(recordedPlaybackState.buttonText, /play your recording/i, 'completed attempts should expose playback for the learner recording');
+  assert.match(recordedPlaybackState.audioSrc, /^blob:ra-recording-/i, 'completed attempts should attach the captured recording to a local audio player');
+  assert.equal(recordedPlaybackState.objectUrlCount, 1, 'captured learner audio should create one object URL');
+
+  await page.evaluate(() => {
+    document.getElementById('ra-play-recording-btn')?.click();
+  });
+  await page.waitForFunction(() => {
+    const playOwnBtn = document.getElementById('ra-play-recording-btn');
+    return Number(window.__raUserRecordingPlayCalls || 0) === 1
+      && !!playOwnBtn
+      && /pause your recording/i.test(String(playOwnBtn.textContent || ''));
+  }, { timeout: 30000 });
+
+  await page.evaluate(() => {
+    document.getElementById('ra-play-recording-btn')?.click();
+  });
+  await page.waitForFunction(() => {
+    const playOwnBtn = document.getElementById('ra-play-recording-btn');
+    return Number(window.__raUserRecordingPauseCalls || 0) >= 1
+      && !!playOwnBtn
+      && /play your recording/i.test(String(playOwnBtn.textContent || ''));
+  }, { timeout: 30000 });
 
   await page.evaluate(() => {
     document.getElementById('ra-record-btn')?.click();
@@ -1052,12 +1279,154 @@ async function assertSupportedFlow(browser, baseUrl) {
   await page.waitForFunction(() => {
     const status = document.getElementById('ra-status-message');
     const recordBtn = document.getElementById('ra-record-btn');
+    const nextBtn = document.getElementById('ra-next-btn');
     return (
       !!status &&
       /read the text silently/i.test(String(status.textContent || '')) &&
       !!recordBtn &&
-      /skip prep/i.test(String(recordBtn.textContent || ''))
+      /start recording now/i.test(String(recordBtn.textContent || '')) &&
+      !!nextBtn &&
+      /next prompt/i.test(String(nextBtn.textContent || ''))
     );
+  }, { timeout: 30000 });
+
+  await page.evaluate(async () => {
+    await window.ReadAloudMode.loadSpecificPrompt(1);
+  });
+  await waitForPromptReady(page, { questionId: '2' });
+
+  const playbackResetState = await page.evaluate(() => ({
+    buttonVisible: (() => {
+      const btn = document.getElementById('ra-play-recording-btn');
+      return !!btn && getComputedStyle(btn).display !== 'none';
+    })(),
+    audioSrc: String(document.getElementById('ra-user-recording-audio')?.getAttribute('src') || '').trim(),
+    revokedCount: Array.isArray(window.__raRevokedObjectUrls) ? window.__raRevokedObjectUrls.length : 0
+  }));
+  assert.equal(playbackResetState.buttonVisible, false, 'moving to the next prompt should hide the previous learner recording playback button');
+  assert.equal(playbackResetState.audioSrc, '', 'moving to the next prompt should clear the previous learner recording source');
+  assert.ok(playbackResetState.revokedCount >= 1, 'moving to the next prompt should revoke the previous learner recording URL');
+
+  await page.evaluate(() => {
+    const originalFetch = window.fetch.bind(window);
+    window.__raDelayedAssessmentStarted = false;
+    window.__raReleaseDelayedAssessment = null;
+    window.fetch = (...args) => {
+      const [resource] = args;
+      const url = String(resource && resource.url ? resource.url : resource || '');
+      if (url.includes('/api/read-aloud/assess')) {
+        const nextCount = Number(window.__raAssessCount || 0) + 1;
+        if (nextCount === 2) {
+          window.__raAssessCount = nextCount;
+          window.__raDelayedAssessmentStarted = true;
+          const requestBody = args[1]?.body;
+          const capturedFormData = {};
+          if (requestBody && typeof requestBody.entries === 'function') {
+            for (const [key, value] of requestBody.entries()) {
+              capturedFormData[key] = typeof value === 'string' ? value : String(value?.name || value?.type || 'blob');
+            }
+          }
+          window.__raLastAssessmentFormData = capturedFormData;
+          return new Promise((resolve) => {
+            window.__raReleaseDelayedAssessment = () => resolve(new Response(JSON.stringify({
+              success: true,
+              accuracyScore: 88,
+              fluencyScore: 84,
+              completenessScore: 100,
+              recognizedText: 'I can take it to the store',
+              words: [
+                { word: 'I', accuracyScore: 90, errorType: 'None' },
+                { word: 'can', accuracyScore: 82, errorType: 'None' },
+                { word: 'take', accuracyScore: 87, errorType: 'None' },
+                { word: 'it', accuracyScore: 89, errorType: 'None' },
+                { word: 'to', accuracyScore: 78, errorType: 'None' },
+                { word: 'the', accuracyScore: 85, errorType: 'None' },
+                { word: 'store', accuracyScore: 92, errorType: 'None' }
+              ],
+              connectedSpeech: {
+                status: 'complete',
+                version: 'cs-v1',
+                summary: {
+                  detectedCount: 1,
+                  notDetectedCount: 0,
+                  uncertainCount: 0
+                },
+                events: [
+                  {
+                    eventId: 'q-2-catenation-2-3',
+                    family: 'catenation',
+                    phrase: 'take it',
+                    status: 'detected',
+                    confidence: 0.82,
+                    feedbackText: 'Good connected speech in "take it".',
+                    startMs: 0,
+                    endMs: 610,
+                    evidence: {
+                      variant: 'linked',
+                      gapMs: 10
+                    }
+                  }
+                ]
+              }
+            }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' }
+            }));
+          });
+        }
+      }
+      return originalFetch(...args);
+    };
+  });
+
+  await page.evaluate(() => {
+    document.getElementById('ra-record-btn')?.click();
+  });
+  await page.waitForFunction(() => {
+    const status = document.getElementById('ra-status-message');
+    return Number(window.__raRecorderStarts || 0) === 2
+      && !!status
+      && /recording/i.test(String(status.textContent || ''));
+  }, { timeout: 30000 });
+  await page.evaluate(() => {
+    document.getElementById('ra-stop-btn')?.click();
+  });
+
+  await page.waitForFunction(() => {
+    const status = document.getElementById('ra-status-message');
+    return window.__raDelayedAssessmentStarted === true
+      && !!status
+      && /formatting audio|analyzing pronunciation/i.test(String(status.textContent || ''));
+  }, { timeout: 30000 });
+
+  const pendingSecondAssessmentState = await page.evaluate(() => {
+    const resultBox = document.getElementById('ra-result-box');
+    const accuracy = document.getElementById('ra-accuracy-value');
+    const feedback = document.getElementById('ra-transcript-feedback');
+    return {
+      resultVisible: !!resultBox && getComputedStyle(resultBox).display !== 'none',
+      accuracyText: String(accuracy?.textContent || '').trim(),
+      feedbackText: String(feedback?.textContent || '').trim()
+    };
+  });
+  assert.equal(pendingSecondAssessmentState.resultVisible, false, 'previous result box should stay hidden while the next prompt is being assessed');
+  assert.equal(pendingSecondAssessmentState.accuracyText, '--', 'previous accuracy score should be cleared before the next result arrives');
+  assert.doesNotMatch(pendingSecondAssessmentState.feedbackText, /pick it up now/i, 'previous transcript feedback should not bleed into the next prompt');
+
+  await page.evaluate(() => {
+    window.__raReleaseDelayedAssessment?.();
+  });
+  await page.waitForFunction(() => {
+    const accuracy = document.getElementById('ra-accuracy-value');
+    const feedback = document.getElementById('ra-transcript-feedback');
+    const resultBox = document.getElementById('ra-result-box');
+    return Number(window.__raAssessCount || 0) === 2
+      && !!resultBox
+      && getComputedStyle(resultBox).display !== 'none'
+      && !!accuracy
+      && String(accuracy.textContent || '').trim() === '88'
+      && !!feedback
+      && /store/i.test(String(feedback.textContent || ''));
   }, { timeout: 30000 });
 
   const supportedState = await page.evaluate(() => ({
@@ -1069,10 +1438,10 @@ async function assertSupportedFlow(browser, baseUrl) {
   }));
 
   assert.equal(supportedState.fetchCount, 1, 'database should stay cached between prompts');
-  assert.equal(supportedState.recorderStarts, 1, 'recording should start exactly once for one attempt');
-  assert.ok(supportedState.recorderStops >= 1, 'recording should stop when finishing the attempt');
-  assert.equal(supportedState.assessCount, 1, 'one completed attempt should submit exactly one assessment');
-  assert.ok(supportedState.trackStops >= 1, 'microphone tracks should be stopped after recording');
+  assert.equal(supportedState.recorderStarts, 2, 'recording should start once per completed attempt');
+  assert.ok(supportedState.recorderStops >= 2, 'recording should stop when finishing each attempt');
+  assert.equal(supportedState.assessCount, 2, 'two completed attempts should submit two assessments');
+  assert.ok(supportedState.trackStops >= 2, 'microphone tracks should be stopped after each recording');
 
   await context.close();
 }
@@ -1126,7 +1495,7 @@ async function assertChunkingDisabledStateReset(browser, baseUrl) {
   await page.evaluate(async () => {
     await window.ReadAloudMode.loadSpecificPrompt(0);
   });
-  await page.waitForTimeout(6000);
+  await waitForPromptReady(page, { questionId: '1', textPattern: 'pick it up now' });
 
   await page.evaluate(() => {
     document.getElementById('ra-toggle-chunking-btn')?.click();
@@ -1135,7 +1504,7 @@ async function assertChunkingDisabledStateReset(browser, baseUrl) {
   await page.evaluate(async () => {
     await window.ReadAloudMode.loadSpecificPrompt(1);
   });
-  await page.waitForTimeout(6000);
+  await waitForPromptReady(page, { questionId: '2', textPattern: 'turn it on' });
 
   const unavailableState = await page.evaluate(() => {
     const chunkingBtn = document.getElementById('ra-toggle-chunking-btn');
@@ -1249,7 +1618,7 @@ async function assertAssessmentGuards(browser, baseUrl) {
   await page.evaluate(async () => {
     await window.ReadAloudMode.loadSpecificPrompt(0);
   });
-  await page.waitForTimeout(6000);
+  await waitForPromptReady(page, { questionId: '1', textPattern: 'pick it up now' });
   const firstPromptState = await page.evaluate(() => ({
     questionId: window.ReadAloudMode?.currentQuestionId || null,
     promptText: String(window.ReadAloudMode?.currentPromptPlainText || ''),
@@ -1266,7 +1635,7 @@ async function assertAssessmentGuards(browser, baseUrl) {
   await page.evaluate(async () => {
     await window.ReadAloudMode.loadSpecificPrompt(1);
   });
-  await page.waitForTimeout(6000);
+  await waitForPromptReady(page, { questionId: '2', textPattern: 'turn it on' });
   const secondPromptState = await page.evaluate(() => ({
     questionId: window.ReadAloudMode?.currentQuestionId || null,
     promptText: String(window.ReadAloudMode?.currentPromptPlainText || ''),
@@ -1295,7 +1664,7 @@ async function assertAssessmentGuards(browser, baseUrl) {
   await page.evaluate(async () => {
     await window.ReadAloudMode.loadSpecificPrompt(2);
   });
-  await page.waitForTimeout(6000);
+  await waitForPromptReady(page, { questionId: '3', textPattern: 'take it away' });
   const thirdPromptState = await page.evaluate(() => ({
     questionId: window.ReadAloudMode?.currentQuestionId || null,
     promptText: String(window.ReadAloudMode?.currentPromptPlainText || ''),
@@ -1319,7 +1688,7 @@ async function assertAssessmentGuards(browser, baseUrl) {
       ]
     });
   });
-  await page.waitForTimeout(200);
+  await waitForAnimationFrames(page);
 
   const staleAssessmentState = await page.evaluate(() => {
     const status = document.getElementById('ra-status-message');
@@ -1436,11 +1805,15 @@ async function assertPendingMicrophoneRequestGuards(browser, baseUrl) {
     await window.switchToMode('read-aloud');
   });
   await page.waitForFunction(() => window.ReadAloudMode && window.ReadAloudMode.hasLoadedDatabase && window.ReadAloudMode.database.length === 2, { timeout: 30000 });
-  await page.waitForTimeout(6000);
+  await waitForPromptReady(page);
   await page.evaluate(async () => {
     await window.ReadAloudMode.loadSpecificPrompt(0);
   });
-  await page.waitForTimeout(6000);
+  await waitForPromptReady(page, { questionId: '1', textPattern: 'pick it up now' });
+  await page.waitForFunction(() => {
+    const recordBtn = document.getElementById('ra-record-btn');
+    return !!recordBtn && !recordBtn.disabled && /start recording now/i.test(String(recordBtn.textContent || ''));
+  }, { timeout: 30000 });
 
   await page.evaluate(() => {
     document.getElementById('ra-record-btn')?.click();
@@ -1450,12 +1823,22 @@ async function assertPendingMicrophoneRequestGuards(browser, baseUrl) {
   await page.evaluate(async () => {
     await window.ReadAloudMode.loadSpecificPrompt(1);
   });
-  await page.waitForTimeout(6000);
+  await waitForPromptReady(page, { questionId: '2', textPattern: 'turn it on' });
 
   await page.evaluate(() => {
     window.__raResolveNextMicRequest();
   });
-  await page.waitForTimeout(200);
+  await page.waitForFunction(() => {
+    const status = document.getElementById('ra-status-message');
+    const recordBtn = document.getElementById('ra-record-btn');
+    return (
+      Number(window.__raTrackStops || 0) >= 1 &&
+      !!status &&
+      /read the text silently/i.test(String(status.textContent || '')) &&
+      !!recordBtn &&
+      /start recording now/i.test(String(recordBtn.textContent || ''))
+    );
+  }, { timeout: 30000 });
 
   const afterPromptSwitch = await page.evaluate(() => {
     const status = document.getElementById('ra-status-message');
@@ -1472,12 +1855,12 @@ async function assertPendingMicrophoneRequestGuards(browser, baseUrl) {
   assert.equal(afterPromptSwitch.assessCount, 0, 'a stale microphone request should not submit an assessment after prompt change');
   assert.ok(afterPromptSwitch.trackStops >= 1, 'stale microphone streams should be stopped after prompt change');
   assert.match(afterPromptSwitch.statusText, /read the text silently/i, 'prompt switch should keep prep status after stale microphone resolution');
-  assert.match(afterPromptSwitch.recordText, /skip prep/i, 'prompt switch should leave the prompt ready to record again');
+  assert.match(afterPromptSwitch.recordText, /start recording now/i, 'prompt switch should leave the prompt ready to record again');
 
   await page.evaluate(async () => {
     await window.ReadAloudMode.loadSpecificPrompt(0);
   });
-  await page.waitForTimeout(6000);
+  await waitForPromptReady(page, { questionId: '1', textPattern: 'pick it up now' });
 
   await page.evaluate(() => {
     document.getElementById('ra-record-btn')?.click();
@@ -1490,18 +1873,25 @@ async function assertPendingMicrophoneRequestGuards(browser, baseUrl) {
   await page.evaluate(() => {
     window.__raResolveNextMicRequest();
   });
-  await page.waitForTimeout(200);
+  await page.waitForFunction(() => (
+    Number(window.__raTrackStops || 0) >= 2 &&
+    !document.getElementById('mode-read-aloud')?.classList.contains('active') &&
+    !!document.getElementById('mode-type')?.classList.contains('active') &&
+    !window.ReadAloudMode?.currentPromptReady
+  ), { timeout: 30000 });
 
   const afterExit = await page.evaluate(() => ({
     recorderStarts: Number(window.__raRecorderStarts || 0),
     assessCount: Number(window.__raAssessCount || 0),
     trackStops: Number(window.__raTrackStops || 0),
+    promptReady: !!window.ReadAloudMode?.currentPromptReady,
     readAloudActive: !!document.getElementById('mode-read-aloud')?.classList.contains('active'),
     typeActive: !!document.getElementById('mode-type')?.classList.contains('active')
   }));
   assert.equal(afterExit.recorderStarts, 0, 'leaving Read Aloud should cancel pending microphone requests before recording starts');
   assert.equal(afterExit.assessCount, 0, 'leaving Read Aloud should not submit assessments from stale microphone requests');
   assert.ok(afterExit.trackStops >= 2, 'stale microphone streams should be stopped after leaving Read Aloud');
+  assert.equal(afterExit.promptReady, false, 'leaving Read Aloud should clear prompt readiness state');
   assert.equal(afterExit.readAloudActive, false, 'Read Aloud should stay inactive after leaving the mode');
   assert.equal(afterExit.typeActive, true, 'the fallback mode should remain active after cancelling a stale microphone request');
 
@@ -1520,6 +1910,7 @@ async function assertMicrophoneErrorRecovery(browser, baseUrl) {
       addEventListener() {}
       start() {
         this.state = 'recording';
+        window.__raRecorderStarts = Number(window.__raRecorderStarts || 0) + 1;
       }
       stop() {
         this.state = 'inactive';
@@ -1563,10 +1954,11 @@ async function assertMicrophoneErrorRecovery(browser, baseUrl) {
     await window.switchToMode('read-aloud');
   });
   await page.waitForFunction(() => window.ReadAloudMode && window.ReadAloudMode.hasLoadedDatabase && window.ReadAloudMode.database.length === 1, { timeout: 30000 });
-  await page.waitForTimeout(6000);
+  await waitForPromptReady(page, { questionId: '1', textPattern: 'pick it up now' });
   await page.evaluate(async () => {
     await window.ReadAloudMode.loadSpecificPrompt(0);
   });
+  await waitForPromptReady(page, { questionId: '1', textPattern: 'pick it up now' });
 
   await page.waitForFunction(() => {
     const text = document.getElementById('ra-text-prompt');
@@ -1585,7 +1977,7 @@ async function assertMicrophoneErrorRecovery(browser, baseUrl) {
       !!status &&
       /blocked|allow microphone access/i.test(String(status.textContent || '')) &&
       !!recordBtn &&
-      /skip prep/i.test(String(recordBtn.textContent || '')) &&
+      /start recording now/i.test(String(recordBtn.textContent || '')) &&
       !recordBtn.disabled &&
       !!stopBtn &&
       getComputedStyle(stopBtn).display === 'none'
@@ -1605,7 +1997,7 @@ async function assertMicrophoneErrorRecovery(browser, baseUrl) {
   assert.equal(state.fetchCount, 1, 'permission denial should not reload the database');
   assert.match(state.statusText, /blocked|allow microphone access/i, 'permission denial should show a retryable microphone access message');
   assert.doesNotMatch(state.statusText, /unsupported/i, 'permission denial should not be reported as unsupported browser');
-  assert.match(state.recordText, /skip prep/i, 'permission denial should leave the prompt in prep state');
+  assert.match(state.recordText, /start recording now/i, 'permission denial should leave the prompt in prep state');
   assert.equal(state.recordDisabled, false, 'permission denial should keep the record button enabled');
 
   await context.close();
@@ -1677,41 +2069,462 @@ async function assertUnsupportedWithoutWebAudio(browser, baseUrl) {
   await page.evaluate(async () => {
     await window.ReadAloudMode.loadSpecificPrompt(0);
   });
-  await page.waitForTimeout(6000);
+  await waitForPromptReady(page, { questionId: '1', textPattern: 'pick it up now' });
+  await page.waitForFunction(() => {
+    const status = document.getElementById('ra-status-message');
+    const recordBtn = document.getElementById('ra-record-btn');
+    const prepTimerBox = document.getElementById('ra-prep-timer-box');
+    const recordTimerBox = document.getElementById('ra-record-timer-box');
+    return (
+      !!window.ReadAloudMode &&
+      !!window.ReadAloudMode.currentPromptReady &&
+      Number(window.__raFetchCount || 0) >= 1 &&
+      !!status &&
+      /microphone recording is not supported/i.test(String(status.textContent || '')) &&
+      !!recordBtn &&
+      String(recordBtn.textContent || '').trim() === 'Unsupported Browser' &&
+      recordBtn.disabled &&
+      !!prepTimerBox &&
+      !!recordTimerBox &&
+      Number.parseFloat(getComputedStyle(prepTimerBox).opacity || '1') < 1 &&
+      Number.parseFloat(getComputedStyle(recordTimerBox).opacity || '1') < 1
+    );
+  }, { timeout: 30000 });
 
-  try {
-    await page.waitForFunction(() => {
-      const status = document.getElementById('ra-status-message');
-      const recordBtn = document.getElementById('ra-record-btn');
-      const prepTimerBox = document.getElementById('ra-prep-timer-box');
-      const recordTimerBox = document.getElementById('ra-record-timer-box');
-      return (
-        Number(window.__raFetchCount || 0) >= 1 &&
-        !!status &&
-        !!recordBtn &&
-        recordBtn.disabled &&
-        !!recordTimerBox &&
-        Number.parseFloat(getComputedStyle(recordTimerBox).opacity || '1') < 1
-      );
-    }, { timeout: 30000 });
-  } catch (error) {
-    const debug = await page.evaluate(() => {
-      const status = document.getElementById('ra-status-message');
-      const recordBtn = document.getElementById('ra-record-btn');
-      const prepTimerBox = document.getElementById('ra-prep-timer-box');
-      const recordTimerBox = document.getElementById('ra-record-timer-box');
-      return {
-        fetchCount: Number(window.__raFetchCount || 0),
-        support: window.ReadAloudMode ? window.ReadAloudMode.getRecordingSupportState() : null,
-        statusText: status ? String(status.textContent || '').trim() : '',
-        recordText: recordBtn ? String(recordBtn.textContent || '').trim() : '',
-        recordDisabled: recordBtn ? Boolean(recordBtn.disabled) : null,
-        prepOpacity: prepTimerBox ? getComputedStyle(prepTimerBox).opacity : null,
-        recordOpacity: recordTimerBox ? getComputedStyle(recordTimerBox).opacity : null
-      };
+  const debug = await page.evaluate(() => {
+    const status = document.getElementById('ra-status-message');
+    const recordBtn = document.getElementById('ra-record-btn');
+    const prepTimerBox = document.getElementById('ra-prep-timer-box');
+    const recordTimerBox = document.getElementById('ra-record-timer-box');
+    return {
+      fetchCount: Number(window.__raFetchCount || 0),
+      support: window.ReadAloudMode ? window.ReadAloudMode.getRecordingSupportState() : null,
+      statusText: status ? String(status.textContent || '').trim() : '',
+      recordText: recordBtn ? String(recordBtn.textContent || '').trim() : '',
+      recordDisabled: recordBtn ? Boolean(recordBtn.disabled) : null,
+      prepOpacity: prepTimerBox ? getComputedStyle(prepTimerBox).opacity : null,
+      recordOpacity: recordTimerBox ? getComputedStyle(recordTimerBox).opacity : null
+    };
+  });
+
+  assert.equal(debug.fetchCount, 1, 'unsupported browser should load the database once');
+  assert.match(debug.statusText, /microphone recording is not supported/i, 'unsupported browser should show the unsupported message');
+  assert.equal(debug.recordText, 'Unsupported Browser', 'unsupported browser should disable recording');
+  assert.equal(debug.recordDisabled, true, 'unsupported browser should keep the record button disabled');
+  assert.ok(Number.parseFloat(debug.prepOpacity || '1') < 1, 'unsupported browser should dim the prep timer');
+  assert.ok(Number.parseFloat(debug.recordOpacity || '1') < 1, 'unsupported browser should dim the record timer');
+
+  await context.close();
+}
+
+async function assertAssessmentFailureFeedback(browser, baseUrl) {
+  const context = await browser.newContext({ serviceWorkers: 'block' });
+  await context.addInitScript(() => {
+    class FakeMediaRecorder {
+      constructor() {
+        this.state = 'inactive';
+        this.listeners = {};
+        this.mimeType = 'audio/webm';
+      }
+
+      addEventListener(type, handler) {
+        if (!this.listeners[type]) this.listeners[type] = [];
+        this.listeners[type].push(handler);
+      }
+
+      removeEventListener(type, handler) {
+        this.listeners[type] = (this.listeners[type] || []).filter((item) => item !== handler);
+      }
+
+      start() {
+        this.state = 'recording';
+        window.__raRecorderStarts = Number(window.__raRecorderStarts || 0) + 1;
+      }
+
+      stop() {
+        if (this.state !== 'recording') return;
+        this.state = 'inactive';
+        const blob = new Blob(['fake-audio'], { type: this.mimeType });
+        (this.listeners.dataavailable || []).forEach((handler) => handler({ data: blob }));
+        (this.listeners.stop || []).forEach((handler) => handler());
+      }
+    }
+
+    Object.defineProperty(window, 'MediaRecorder', {
+      configurable: true,
+      writable: true,
+      value: FakeMediaRecorder
     });
-    throw new Error(`${error.message}\nUnsupported WebAudio debug: ${JSON.stringify(debug)}`);
-  }
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: {
+        getUserMedia: async () => ({
+          getTracks() {
+            return [{ stop() {} }];
+          }
+        })
+      }
+    });
+
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = (...args) => {
+      const [resource] = args;
+      const url = String(resource && resource.url ? resource.url : resource || '');
+      if (url.includes('database/RA/RA.xlsx')) {
+        return Promise.resolve(new Response(new Uint8Array([1, 2, 3, 4]).buffer, { status: 200 }));
+      }
+      if (url.includes('/api/read-aloud/assess')) {
+        return Promise.resolve(new Response(JSON.stringify({
+          success: false,
+          error: 'INVALID_AUDIO',
+          message: 'Audio file could not be processed.',
+          details: {
+            reason: 'too_long',
+            maxDurationMs: 40000
+          }
+        }), {
+          status: 422,
+          headers: { 'Content-Type': 'application/json' }
+        }));
+      }
+      return originalFetch(...args);
+    };
+  });
+
+  const page = await context.newPage();
+  await preparePage(page, baseUrl);
+  await mockWorkbookRows(page, [
+    { ID: 1, ANSWER: 'Pick it up now', 'Word count': 4 }
+  ]);
+  await stubPrepareWavBlob(page);
+
+  await page.evaluate(async () => {
+    await window.switchToMode('read-aloud');
+  });
+  await page.waitForFunction(() => window.ReadAloudMode && window.ReadAloudMode.hasLoadedDatabase && window.ReadAloudMode.database.length === 1, { timeout: 30000 });
+  await page.evaluate(async () => {
+    await window.ReadAloudMode.loadSpecificPrompt(0);
+  });
+  await waitForPromptReady(page, { questionId: '1', textPattern: 'pick it up now' });
+  await page.waitForFunction(() => {
+    const recordBtn = document.getElementById('ra-record-btn');
+    return !!recordBtn && !recordBtn.disabled && /start recording now/i.test(String(recordBtn.textContent || ''));
+  }, { timeout: 30000 });
+
+  await page.evaluate(() => {
+    document.getElementById('ra-record-btn')?.click();
+  });
+  await page.waitForFunction(() => Number(window.__raRecorderStarts || 0) === 1, { timeout: 30000 });
+  await page.evaluate(() => {
+    document.getElementById('ra-stop-btn')?.click();
+  });
+
+  await page.waitForFunction(() => {
+    const status = document.getElementById('ra-status-message');
+    const accuracy = document.getElementById('ra-accuracy-value');
+    const feedback = document.getElementById('ra-transcript-feedback');
+    return (
+      !!status &&
+      /too long to score|under 40 seconds/i.test(String(status.textContent || '')) &&
+      !!accuracy &&
+      String(accuracy.textContent || '').trim() === '--' &&
+      !!feedback &&
+      /too long/i.test(String(feedback.textContent || ''))
+    );
+  }, { timeout: 30000 });
+
+  const failureState = await page.evaluate(() => ({
+    statusText: String(document.getElementById('ra-status-message')?.textContent || '').trim(),
+    accuracyText: String(document.getElementById('ra-accuracy-value')?.textContent || '').trim(),
+    feedbackText: String(document.getElementById('ra-transcript-feedback')?.textContent || '').trim()
+  }));
+  assert.match(failureState.statusText, /too long to score|under 40 seconds/i, 'too-long assessment should show a specific retry message');
+  assert.equal(failureState.accuracyText, '--', 'failed assessment should not present a fake 0% score');
+  assert.match(failureState.feedbackText, /too long/i, 'failed assessment should explain why scoring was unavailable');
+
+  await context.close();
+}
+
+async function assertZeroScoreAssessmentPayloadShowsFailure(browser, baseUrl) {
+  const context = await browser.newContext({ serviceWorkers: 'block' });
+  await context.addInitScript(() => {
+    class FakeMediaRecorder {
+      constructor() {
+        this.state = 'inactive';
+        this.listeners = {};
+        this.mimeType = 'audio/webm';
+      }
+
+      addEventListener(type, handler) {
+        if (!this.listeners[type]) this.listeners[type] = [];
+        this.listeners[type].push(handler);
+      }
+
+      removeEventListener(type, handler) {
+        this.listeners[type] = (this.listeners[type] || []).filter((item) => item !== handler);
+      }
+
+      start() {
+        this.state = 'recording';
+        window.__raRecorderStarts = Number(window.__raRecorderStarts || 0) + 1;
+      }
+
+      stop() {
+        if (this.state !== 'recording') return;
+        this.state = 'inactive';
+        const blob = new Blob(['fake-audio'], { type: this.mimeType });
+        (this.listeners.dataavailable || []).forEach((handler) => handler({ data: blob }));
+        (this.listeners.stop || []).forEach((handler) => handler());
+      }
+    }
+
+    Object.defineProperty(window, 'MediaRecorder', {
+      configurable: true,
+      writable: true,
+      value: FakeMediaRecorder
+    });
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: {
+        getUserMedia: async () => ({
+          getTracks() {
+            return [{ stop() {} }];
+          }
+        })
+      }
+    });
+
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = (...args) => {
+      const [resource] = args;
+      const url = String(resource && resource.url ? resource.url : resource || '');
+      if (url.includes('database/RA/RA.xlsx')) {
+        return Promise.resolve(new Response(new Uint8Array([1, 2, 3, 4]).buffer, { status: 200 }));
+      }
+      if (url.includes('/api/read-aloud/assess')) {
+        return Promise.resolve(new Response(JSON.stringify({
+          success: true,
+          accuracyScore: 0,
+          fluencyScore: 0,
+          completenessScore: 0,
+          pronScore: 0,
+          recognizedText: 'Hopefully this will treat and prevent acne',
+          words: [
+            { word: 'Hopefully', accuracyScore: 0, errorType: 'None' },
+            { word: 'this', accuracyScore: 0, errorType: 'None' },
+            { word: 'will', accuracyScore: 0, errorType: 'None' }
+          ],
+          connectedSpeech: {
+            status: 'unavailable',
+            summary: { detectedCount: 0, notDetectedCount: 0, uncertainCount: 0 },
+            events: []
+          }
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        }));
+      }
+      return originalFetch(...args);
+    };
+  });
+
+  const page = await context.newPage();
+  await preparePage(page, baseUrl);
+  await mockWorkbookRows(page, [
+    { ID: 1, ANSWER: 'Hopefully this will treat and prevent acne', 'Word count': 7 }
+  ]);
+  await stubPrepareWavBlob(page);
+
+  await page.evaluate(async () => {
+    await window.switchToMode('read-aloud');
+  });
+  await page.waitForFunction(() => window.ReadAloudMode && window.ReadAloudMode.hasLoadedDatabase && window.ReadAloudMode.database.length === 1, { timeout: 30000 });
+  await page.evaluate(async () => {
+    await window.ReadAloudMode.loadSpecificPrompt(0);
+  });
+  await waitForPromptReady(page, { questionId: '1', textPattern: 'hopefully this will treat' });
+  await page.waitForFunction(() => {
+    const recordBtn = document.getElementById('ra-record-btn');
+    return !!recordBtn && !recordBtn.disabled && /start recording now/i.test(String(recordBtn.textContent || ''));
+  }, { timeout: 30000 });
+
+  await page.evaluate(() => {
+    document.getElementById('ra-record-btn')?.click();
+  });
+  await page.waitForFunction(() => Number(window.__raRecorderStarts || 0) === 1, { timeout: 30000 });
+  await page.evaluate(() => {
+    document.getElementById('ra-stop-btn')?.click();
+  });
+
+  await page.waitForFunction(() => {
+    const status = document.getElementById('ra-status-message');
+    const accuracy = document.getElementById('ra-accuracy-value');
+    const feedback = document.getElementById('ra-transcript-feedback');
+    return (
+      !!status &&
+      /scoring was unavailable|under 40 seconds/i.test(String(status.textContent || '')) &&
+      !!accuracy &&
+      String(accuracy.textContent || '').trim() === '--' &&
+      !!feedback &&
+      /not returned|could not score/i.test(String(feedback.textContent || ''))
+    );
+  }, { timeout: 30000 });
+
+  const failureState = await page.evaluate(() => ({
+    statusText: String(document.getElementById('ra-status-message')?.textContent || '').trim(),
+    accuracyText: String(document.getElementById('ra-accuracy-value')?.textContent || '').trim(),
+    feedbackText: String(document.getElementById('ra-transcript-feedback')?.textContent || '').trim()
+  }));
+  assert.match(failureState.statusText, /scoring was unavailable|under 40 seconds/i, 'all-zero payload should be treated as a scoring failure');
+  assert.equal(failureState.accuracyText, '--', 'all-zero payload should not present a fake 0% score');
+  assert.match(failureState.feedbackText, /not returned|could not score/i, 'all-zero payload should explain that scoring was unavailable');
+
+  await context.close();
+}
+
+async function assertDirectAccuracyPayloadShowsScoredResult(browser, baseUrl) {
+  const context = await browser.newContext({ serviceWorkers: 'block' });
+  await context.addInitScript(() => {
+    class FakeMediaRecorder {
+      constructor() {
+        this.state = 'inactive';
+        this.listeners = {};
+        this.mimeType = 'audio/webm';
+      }
+
+      addEventListener(type, handler) {
+        if (!this.listeners[type]) this.listeners[type] = [];
+        this.listeners[type].push(handler);
+      }
+
+      removeEventListener(type, handler) {
+        this.listeners[type] = (this.listeners[type] || []).filter((item) => item !== handler);
+      }
+
+      start() {
+        this.state = 'recording';
+        window.__raRecorderStarts = Number(window.__raRecorderStarts || 0) + 1;
+      }
+
+      stop() {
+        if (this.state !== 'recording') return;
+        this.state = 'inactive';
+        const blob = new Blob(['fake-audio'], { type: this.mimeType });
+        (this.listeners.dataavailable || []).forEach((handler) => handler({ data: blob }));
+        (this.listeners.stop || []).forEach((handler) => handler());
+      }
+    }
+
+    Object.defineProperty(window, 'MediaRecorder', {
+      configurable: true,
+      writable: true,
+      value: FakeMediaRecorder
+    });
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: {
+        getUserMedia: async () => ({
+          getTracks() {
+            return [{ stop() {} }];
+          }
+        })
+      }
+    });
+
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = (...args) => {
+      const [resource] = args;
+      const url = String(resource && resource.url ? resource.url : resource || '');
+      if (url.includes('database/RA/RA.xlsx')) {
+        return Promise.resolve(new Response(new Uint8Array([1, 2, 3, 4]).buffer, { status: 200 }));
+      }
+      if (url.includes('/api/read-aloud/assess')) {
+        return Promise.resolve(new Response(JSON.stringify({
+          success: true,
+          accuracyScore: 91,
+          fluencyScore: null,
+          completenessScore: null,
+          pronScore: null,
+          recognizedText: 'Pick it up now',
+          words: [
+            { word: 'Pick', accuracyScore: 94, errorType: 'None' },
+            { word: 'it', accuracyScore: 90, errorType: 'None' },
+            { word: 'up', accuracyScore: 88, errorType: 'None' },
+            { word: 'now', accuracyScore: 92, errorType: 'None' }
+          ],
+          connectedSpeech: {
+            status: 'complete',
+            summary: { detectedCount: 1, notDetectedCount: 0, uncertainCount: 0 },
+            events: [{
+              id: 'evt-1',
+              phrase: 'pick it',
+              family: 'catenation',
+              category: 'linking',
+              status: 'detected',
+              coachText: 'Linked smoothly.'
+            }]
+          }
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        }));
+      }
+      return originalFetch(...args);
+    };
+  });
+
+  const page = await context.newPage();
+  await preparePage(page, baseUrl);
+  await mockWorkbookRows(page, [
+    { ID: 1, ANSWER: 'Pick it up now', 'Word count': 4 }
+  ]);
+  await stubPrepareWavBlob(page);
+
+  await page.evaluate(async () => {
+    await window.switchToMode('read-aloud');
+  });
+  await page.waitForFunction(() => window.ReadAloudMode && window.ReadAloudMode.hasLoadedDatabase && window.ReadAloudMode.database.length === 1, { timeout: 30000 });
+  await page.evaluate(async () => {
+    await window.ReadAloudMode.loadSpecificPrompt(0);
+  });
+  await waitForPromptReady(page, { questionId: '1', textPattern: 'pick it up now' });
+  await page.waitForFunction(() => {
+    const recordBtn = document.getElementById('ra-record-btn');
+    return !!recordBtn && !recordBtn.disabled && /start recording now/i.test(String(recordBtn.textContent || ''));
+  }, { timeout: 30000 });
+
+  await page.evaluate(() => {
+    document.getElementById('ra-record-btn')?.click();
+  });
+  await page.waitForFunction(() => Number(window.__raRecorderStarts || 0) === 1, { timeout: 30000 });
+  await page.evaluate(() => {
+    document.getElementById('ra-stop-btn')?.click();
+  });
+
+  await page.waitForFunction(() => {
+    const status = document.getElementById('ra-status-message');
+    const accuracy = document.getElementById('ra-accuracy-value');
+    const feedback = document.getElementById('ra-transcript-feedback');
+    return (
+      !!status &&
+      /analysis complete/i.test(String(status.textContent || '')) &&
+      !!accuracy &&
+      String(accuracy.textContent || '').trim() === '91' &&
+      !!feedback &&
+      !/Fluency:/i.test(String(feedback.textContent || '')) &&
+      !/Completeness:/i.test(String(feedback.textContent || ''))
+    );
+  }, { timeout: 30000 });
+
+  const resultState = await page.evaluate(() => ({
+    statusText: String(document.getElementById('ra-status-message')?.textContent || '').trim(),
+    accuracyText: String(document.getElementById('ra-accuracy-value')?.textContent || '').trim(),
+    feedbackText: String(document.getElementById('ra-transcript-feedback')?.textContent || '').trim()
+  }));
+  assert.match(resultState.statusText, /analysis complete/i, 'direct Azure score fields should render as a successful assessment');
+  assert.equal(resultState.accuracyText, '91', 'direct Azure score fields should populate the main accuracy score');
+  assert.doesNotMatch(resultState.feedbackText, /Fluency:/i, 'missing fluency should stay hidden instead of showing a fake zero');
+  assert.doesNotMatch(resultState.feedbackText, /Completeness:/i, 'missing completeness should stay hidden instead of showing a fake zero');
 
   await context.close();
 }
@@ -1739,6 +2552,9 @@ async function run() {
   await assertAssessmentGuards(browser, baseUrl);
     await assertPendingMicrophoneRequestGuards(browser, baseUrl);
     await assertMicrophoneErrorRecovery(browser, baseUrl);
+    await assertAssessmentFailureFeedback(browser, baseUrl);
+    await assertZeroScoreAssessmentPayloadShowsFailure(browser, baseUrl);
+    await assertDirectAccuracyPayloadShowsScoredResult(browser, baseUrl);
     await assertUnsupportedWithoutWebAudio(browser, baseUrl);
     console.log('read-aloud mode regression test passed');
   } catch (error) {

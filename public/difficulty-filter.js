@@ -7,6 +7,9 @@ const DifficultyFilter = (() => {
     'use strict';
 
     const SUPPORTED_MODES = ['type', 'speak', 'extended', 'notes'];
+    const STORAGE_PREFIX = 'questionDifficulty';
+    const LEGACY_STORAGE_PREFIX = 'difficultyFilter';
+    const VALID_VALUES = new Set(['all', '1', '2', '3']);
 
     // State
     const currentDifficultyByMode = {
@@ -25,20 +28,7 @@ const DifficultyFilter = (() => {
 
         SUPPORTED_MODES.forEach((mode) => initFilterDropdown(mode));
 
-        // Check if filter should be visible based on Skill Tree unlock
         updateFilterVisibility();
-
-        // Listen for unlock events
-        window.addEventListener('shop-unlock', (e) => {
-            if (e.detail && e.detail.mode === 'difficultyFilter') {
-                updateFilterVisibility();
-            }
-        });
-        window.addEventListener('skill-unlock', (e) => {
-            if (e.detail && e.detail.skillId === 'difficulty_filter') {
-                updateFilterVisibility();
-            }
-        });
 
         isInitialized = true;
     }
@@ -86,7 +76,7 @@ const DifficultyFilter = (() => {
         });
 
         // Load saved difficulty setting
-        loadSavedDifficulty(mode);
+        reloadSavedDifficulty(mode);
     }
 
     /**
@@ -105,32 +95,33 @@ const DifficultyFilter = (() => {
      * Select a difficulty level
      */
     function selectDifficulty(mode, value) {
+        const normalizedValue = normalizeDifficultyValue(value);
         const menu = document.getElementById(`difficulty-filter-menu-${mode}`);
         const label = document.getElementById(`difficulty-filter-label-${mode}`);
 
         // Update visual selection
         if (menu) {
             menu.querySelectorAll('.filter-option').forEach(opt => {
-                opt.classList.toggle('selected', opt.getAttribute('data-value') === value);
+                opt.classList.toggle('selected', opt.getAttribute('data-value') === normalizedValue);
             });
         }
 
         // Update label text
         if (label) {
-            if (value === 'all') {
-                label.textContent = 'Filter by Difficulty';
+            if (normalizedValue === 'all') {
+                label.textContent = 'Recommended';
             } else {
                 const levelNames = { '1': 'Level 1 (Easy)', '2': 'Level 2 (Medium)', '3': 'Level 3 (Hard)' };
-                label.textContent = levelNames[value] || `Level ${value}`;
+                label.textContent = levelNames[normalizedValue] || `Level ${normalizedValue}`;
             }
         }
 
         if (Object.prototype.hasOwnProperty.call(currentDifficultyByMode, mode)) {
-            currentDifficultyByMode[mode] = value;
+            currentDifficultyByMode[mode] = normalizedValue;
         }
 
-        // Save to localStorage
-        saveDifficultySetting(mode, value);
+        // Save to localStorage under the new key name.
+        saveDifficultySetting(mode, normalizedValue);
 
         // Apply filter
         applyFilter(mode);
@@ -156,34 +147,97 @@ const DifficultyFilter = (() => {
      */
     function saveDifficultySetting(mode, value) {
         const userId = window.authUI?.getCurrentUserId?.() || 'guest';
-        localStorage.setItem(`difficultyFilter_${mode}_${userId}`, value);
+        const key = getDifficultyStorageKey(mode, userId);
+        const normalizedValue = normalizeDifficultyValue(value);
+        localStorage.setItem(key, normalizedValue);
+        localStorage.removeItem(getLegacyDifficultyStorageKey(mode, userId));
+    }
+
+    function getDifficultyStorageKey(mode, userId) {
+        return `${STORAGE_PREFIX}_${mode}_${userId}`;
+    }
+
+    function getLegacyDifficultyStorageKey(mode, userId) {
+        return `${LEGACY_STORAGE_PREFIX}_${mode}_${userId}`;
+    }
+
+    function readDifficultySetting(mode) {
+        const userId = window.authUI?.getCurrentUserId?.() || 'guest';
+        const key = getDifficultyStorageKey(mode, userId);
+        const legacyKey = getLegacyDifficultyStorageKey(mode, userId);
+        const rawSaved = localStorage.getItem(key);
+        const rawLegacy = localStorage.getItem(legacyKey);
+
+        if (rawSaved !== null) {
+            const saved = normalizeDifficultyValue(rawSaved);
+            if (saved !== rawSaved) {
+                localStorage.setItem(key, saved);
+            }
+            if (rawLegacy !== null) {
+                localStorage.removeItem(legacyKey);
+            }
+            return saved;
+        }
+
+        if (rawLegacy !== null) {
+            const legacySaved = normalizeDifficultyValue(rawLegacy);
+            localStorage.setItem(key, legacySaved);
+            localStorage.removeItem(legacyKey);
+            return legacySaved;
+        }
+
+        return 'all';
+    }
+
+    function normalizeDifficultyValue(value) {
+        const normalized = String(value || '').trim();
+        return VALID_VALUES.has(normalized) ? normalized : 'all';
     }
 
     /**
      * Load saved difficulty from localStorage
      */
     function loadSavedDifficulty(mode) {
-        const userId = window.authUI?.getCurrentUserId?.() || 'guest';
-        const saved = localStorage.getItem(`difficultyFilter_${mode}_${userId}`);
-        if (saved) {
-            selectDifficulty(mode, saved);
+        reloadSavedDifficulty(mode);
+    }
+
+    function reloadSavedDifficulty(mode) {
+        if (!Object.prototype.hasOwnProperty.call(currentDifficultyByMode, mode)) {
+            return;
         }
+
+        const value = readDifficultySetting(mode);
+        currentDifficultyByMode[mode] = value;
+
+        const menu = document.getElementById(`difficulty-filter-menu-${mode}`);
+        const label = document.getElementById(`difficulty-filter-label-${mode}`);
+        if (menu) {
+            menu.querySelectorAll('.filter-option').forEach(opt => {
+                opt.classList.toggle('selected', opt.getAttribute('data-value') === value);
+            });
+        }
+
+        if (label) {
+            if (value === 'all') {
+                label.textContent = 'Recommended';
+            } else {
+                const levelNames = { '1': 'Level 1 (Easy)', '2': 'Level 2 (Medium)', '3': 'Level 3 (Hard)' };
+                label.textContent = levelNames[value] || `Level ${value}`;
+            }
+        }
+
+        applyFilter(mode);
     }
 
     /**
-     * Update filter visibility based on Skill Tree unlock status
+     * Update filter visibility based on progression unlock status
      */
     function updateFilterVisibility() {
-        const profile = window.currentUserProfile && typeof window.currentUserProfile === 'object'
-            ? window.currentUserProfile
-            : null;
-        const unlockedBySkillTree = !!(profile?.unlockedSkills?.difficulty_filter || profile?.skillPassives?.difficulty_filter);
-        const isUnlocked = unlockedBySkillTree || window.shopModule?.isModeUnlocked?.('difficultyFilter');
-
         SUPPORTED_MODES.forEach(mode => {
             const container = document.getElementById(`difficulty-filter-container-${mode}`);
             if (container) {
-                container.style.display = isUnlocked ? 'block' : 'none';
+                const unlocked = !!window.shopModule?.isSkillUnlocked?.('difficulty_filter');
+                container.style.display = unlocked ? 'block' : 'none';
             }
         });
     }
@@ -217,7 +271,8 @@ const DifficultyFilter = (() => {
         applyFilter,
         resetFilter,
         getCurrentDifficulty,
-        updateFilterVisibility
+        updateFilterVisibility,
+        reloadSavedDifficulty
     };
 })();
 

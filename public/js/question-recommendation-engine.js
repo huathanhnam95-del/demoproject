@@ -55,6 +55,9 @@ function getTextForMode(mode, item) {
   if (mode === 'extended') {
     return item.transcript || item.correctSentence || '';
   }
+  if (mode === 'rfib') {
+    return item.fullText || item.text || item.correctSentence || item.transcript || '';
+  }
   if (mode === 'notes') {
     return item.transcript || '';
   }

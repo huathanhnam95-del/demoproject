@@ -1,0 +1,43 @@
+{
+  "runId": "2026-03-27T13-15-53-442Z",
+  "baseUrl": "https://localhost:8443",
+  "startedAt": "2026-03-27T13:15:53.443Z",
+  "finishedAt": "2026-03-27T13:16:15.276Z",
+  "userUid": "EcWR7NlaMMYujbvP2FE7hEcLByu1",
+  "scenarioResults": [
+    {
+      "name": "onboarding_local_persistence",
+      "status": "failed",
+      "assertions": [],
+      "artifacts": [
+        "screenshots\\2026-03-27T13-15-53-442Z__onboarding_local_persistence.png"
+      ],
+      "error": "Error: Unknown SRS audit scenario: onboarding_local_persistence\n    at seedScenario (C:\\Cursor AI\\scripts\\srs\\browser-audit-fixture-lib.js:413:15)\n    at startFreshScenarioState (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:358:11)\n    at async executeScenario (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:396:17)\n    at async main (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:784:28)"
+    }
+  ],
+  "consoleErrors": [
+    {
+      "type": "error",
+      "text": "[Dictation App][sess:394ebec1][guest][Database] Error creating/updating user profile: {code: permission-denied, message: Missing or insufficient permissions., userId: EcWR7NlaMMYujbvP2FE7hEcLByu1}",
+      "url": "https://localhost:8443/js/logger.js"
+    },
+    {
+      "type": "error",
+      "text": "[Dictation App][sess:394ebec1][guest][Auth] Profile update failed: Firestore permission denied. Please ensure security rules are deployed correctly.",
+      "url": "https://localhost:8443/js/logger.js"
+    },
+    {
+      "type": "error",
+      "text": "[AuthUI] Firestore Permission Denied. Check rules.",
+      "url": "https://localhost:8443/auth-ui.js"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    }
+  ],
+  "pageErrors": [],
+  "cleanupCompleted": true,
+  "staleCleanups": []
+}

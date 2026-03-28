@@ -10,8 +10,8 @@ const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const pointsLogic = require('./pointsLogic');
 const {
     computeAttemptCalibMult,
-    updateNoAssistStreakTokens,
-    shouldApplyNoRevealRebate
+    deriveCoreProgressionUnlocks,
+    applyProgressionUnlockWrites
 } = require('./skillEconomy');
 
 /**
@@ -71,7 +71,9 @@ const submitAttempt = onCall({ maxInstances: 10 }, async (request) => {
                 return {
                     success: true,
                     alreadyRecorded: true,
-                    message: 'Attempt already recorded'
+                    message: 'Attempt already recorded',
+                    progressionVersion: 1,
+                    newUnlocks: []
                 };
             }
 
@@ -84,6 +86,12 @@ const submitAttempt = onCall({ maxInstances: 10 }, async (request) => {
             const userData = userDoc.data();
             const currentRatings = userData.skillRatings || {
                 listening: 0, writing: 0, reading: 0, speaking: 0
+            };
+            const currentSkillPoints = userData.skillPoints || {
+                listening: 0,
+                writing: 0,
+                reading: 0,
+                speaking: 0
             };
             const srsBonus = userData.srsBonus || 0;
             const assistDoc = await transaction.get(assistRef);
@@ -144,16 +152,20 @@ const submitAttempt = onCall({ maxInstances: 10 }, async (request) => {
                 { applyMultUpwardOnly: true }
             );
 
-            // 7.5 Assist-based economy hooks (refunds + streak token progress)
-            const issueNoRevealRebate = shouldApplyNoRevealRebate(userData, assistData, accuracy);
-            const rebateCoins = issueNoRevealRebate
-                ? Math.ceil((Number(assistData?.totalCost) || 0) * 0.25)
-                : 0;
-            const nextEconomyState = updateNoAssistStreakTokens(userData, assistData, accuracy);
-
             // 8. Derive CEFR levels
             const cefrLevels = pointsLogic.deriveCefrLevels(newRatings, srsBonus);
             const overallRating = pointsLogic.calculateOverallRating(newRatings, srsBonus);
+
+            const nextSkillPoints = {
+                listening: (Number(currentSkillPoints.listening) || 0) + (breakdown.listening || 0),
+                writing: (Number(currentSkillPoints.writing) || 0) + (breakdown.writing || 0),
+                reading: (Number(currentSkillPoints.reading) || 0) + (breakdown.reading || 0),
+                speaking: (Number(currentSkillPoints.speaking) || 0) + (breakdown.speaking || 0)
+            };
+            const newUnlocks = deriveCoreProgressionUnlocks({
+                ...userData,
+                skillPoints: nextSkillPoints
+            });
 
             // 9. Prepare user update (use FieldValue.increment where possible)
             const userUpdate = {
@@ -163,8 +175,6 @@ const submitAttempt = onCall({ maxInstances: 10 }, async (request) => {
                 'skillPoints.reading': FieldValue.increment(breakdown.reading || 0),
                 'skillPoints.speaking': FieldValue.increment(breakdown.speaking || 0),
                 totalPoints: FieldValue.increment(xpEarned),
-                coins: FieldValue.increment(xpEarned + rebateCoins),
-                economyState: nextEconomyState,
 
                 // Track B: Proficiency (overwrite with new EMA)
                 'skillRatings.listening': newRatings.listening || 0,
@@ -182,6 +192,16 @@ const submitAttempt = onCall({ maxInstances: 10 }, async (request) => {
 
                 skillsUpdatedAt: FieldValue.serverTimestamp()
             };
+
+            if (newUnlocks.length > 0) {
+                applyProgressionUnlockWrites(transaction, userRef, newUnlocks);
+            } else {
+                transaction.update(userRef, {
+                    progressionVersion: 1,
+                    progressionSyncedAt: FieldValue.serverTimestamp(),
+                    skillsUpdatedAt: FieldValue.serverTimestamp()
+                });
+            }
 
             // 10. Prepare history entry
             const historyEntry = {
@@ -205,6 +225,16 @@ const submitAttempt = onCall({ maxInstances: 10 }, async (request) => {
                         effectiveRatingMult,
                         dailyCountBefore: dailyCount
                     },
+                    progression: {
+                        progressionVersion: 1,
+                        newUnlocks: newUnlocks.map((unlock) => ({
+                            id: unlock.id,
+                            branch: unlock.branch,
+                            title: unlock.title,
+                            level: unlock.level,
+                            xpThreshold: unlock.xpThreshold
+                        }))
+                    },
                     assist: {
                         used: !!assistData,
                         attemptCalibMult: assistCalibMult,
@@ -217,7 +247,7 @@ const submitAttempt = onCall({ maxInstances: 10 }, async (request) => {
                                 charged: entry.charged
                             }))
                             : [],
-                        rebateCoins
+                        rebateCoins: 0
                     }
                 },
                 createdAt: FieldValue.serverTimestamp()
@@ -238,14 +268,6 @@ const submitAttempt = onCall({ maxInstances: 10 }, async (request) => {
                 transaction.set(assistRef, {
                     attemptCalibMult: assistCalibMult,
                     submittedAt: FieldValue.serverTimestamp()
-                }, { merge: true });
-            }
-
-            if (rebateCoins > 0 && assistData) {
-                transaction.set(assistRef, {
-                    refundIssued: true,
-                    refundCoins: rebateCoins,
-                    refundIssuedAt: FieldValue.serverTimestamp()
                 }, { merge: true });
             }
 
@@ -284,14 +306,23 @@ const submitAttempt = onCall({ maxInstances: 10 }, async (request) => {
                 difficulty: difficulty,
                 newRatings: newRatings,
                 cefrLevels: cefrLevels,
-                rebateCoins,
+                rebateCoins: 0,
+                newUnlocks: newUnlocks.map((unlock) => ({
+                    id: unlock.id,
+                    branch: unlock.branch,
+                    title: unlock.title,
+                    level: unlock.level,
+                    xpThreshold: unlock.xpThreshold,
+                    roadmapOrder: unlock.roadmapOrder
+                })),
                 antiFarm: {
                     xpMult,
                     ratingMult,
                     assistCalibMult,
                     effectiveRatingMult,
                     dailyCount: dailyCount + 1
-                }
+                },
+                progressionVersion: 1
             };
         });
 
@@ -304,7 +335,7 @@ const submitAttempt = onCall({ maxInstances: 10 }, async (request) => {
 });
 
 /**
- * Score Type/Speak/Extended modes using contentItems collection
+ * Score Type/Speak/Extended/RFIB modes using contentItems collection
  */
 async function scoreContentMode(db, mode, contentId, payload, transaction) {
     if (mode === 'srs') {
@@ -341,11 +372,11 @@ async function scoreContentMode(db, mode, contentId, payload, transaction) {
     const canonical = content.text || '';
     const difficulty = content.difficultyMultiplier || 1.5;
 
-    if (mode === 'extended') {
+    if (mode === 'extended' || mode === 'rfib') {
         const gaps = content.gaps || [];
         const hasCanonicalGaps = Array.isArray(gaps) && gaps.length > 0;
         const hasAnswerArray = Array.isArray(payload.answers);
-        const fallbackCounts = scoreExtendedFromCounts(payload);
+        const fallbackCounts = mode === 'extended' ? scoreExtendedFromCounts(payload) : null;
 
         // Prefer server-verifiable canonical scoring when we have canonical gaps + answer array.
         // Otherwise, fall back to client-verified counts (for dynamic/randomized gaps).

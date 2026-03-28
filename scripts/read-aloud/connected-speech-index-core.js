@@ -230,6 +230,11 @@ function buildPromptRecord(row, manifest, analysisMap) {
     ...reducedWords.examples,
     ...soundChanges.examples
   ];
+  const previewExamplesByCategory = {
+    linking: linking.examples,
+    reduced_words: reducedWords.examples,
+    sound_changes: soundChanges.examples
+  };
 
   return {
     rowKey,
@@ -246,6 +251,7 @@ function buildPromptRecord(row, manifest, analysisMap) {
     hasSoundChanges: soundChanges.hasSoundChanges,
     soundChangeCount: soundChanges.soundChangeCount,
     soundChangeSubtypes: soundChanges.soundChangeSubtypes,
+    previewExamplesByCategory,
     representativeExamples
   };
 }

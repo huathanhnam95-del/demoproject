@@ -102,7 +102,7 @@ async function run() {
 
     const visibilityResult = await page.evaluate(async () => {
       if (window.DifficultyManager?.globalSettings) {
-        window.DifficultyManager.globalSettings.autoAdjustEnabled = true;
+        window.DifficultyManager.setAutoAdjustEnabled(true);
       }
 
       const notesFilter = document.getElementById('difficulty-filter-container-notes');
@@ -135,8 +135,7 @@ async function run() {
 
     const recommendationState = await page.evaluate(() => {
       if (window.DifficultyManager?.globalSettings) {
-        window.DifficultyManager.globalSettings.autoAdjustEnabled = false;
-        window.DifficultyManager.globalSettings.manualLevel = 6;
+        window.DifficultyManager.setManualLevel(6);
       }
       if (window.DifficultyFilter?.selectDifficulty) {
         window.DifficultyFilter.selectDifficulty('notes', 'all');

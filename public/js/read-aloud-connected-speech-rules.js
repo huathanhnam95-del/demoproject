@@ -45,6 +45,10 @@
       if (coalescentBoundary) {
         return coalescentBoundary;
       }
+      const bilabialBoundary = classifyBilabialAssimilation(boundary, leftProfile, rightProfile, enabledRuleSet, accentProfile);
+      if (bilabialBoundary) {
+        return bilabialBoundary;
+      }
     }
 
     if (rightProfile.startsWithGlideY || rightProfile.startsWithGlideW) {
@@ -134,6 +138,31 @@
       teachingLevel: 'v3',
       legendLabel: 'Sound change',
       explanationKey: subtype,
+      markerText: 'sound change',
+      confidence: highConfidence ? 'high' : 'medium',
+      source: highConfidence ? 'cmu' : (leftProfile.source || rightProfile.source || 'curated'),
+      ruleSet: enabledRuleSet,
+      accentProfile
+    };
+  }
+
+  function classifyBilabialAssimilation(boundary, leftProfile, rightProfile, enabledRuleSet, accentProfile) {
+    const leftKey = String(leftProfile.finalSoundKey || '').toLowerCase();
+    const rightKey = String(rightProfile.initialSoundKey || '').toLowerCase();
+    const bilabialSet = new Set(['b', 'p', 'm']);
+    if (leftKey !== 'n' || !bilabialSet.has(rightKey)) return null;
+
+    const highConfidence = leftProfile.source === 'cmu' && rightProfile.source === 'cmu';
+    return {
+      ...boundary,
+      blocked: false,
+      blockedReason: null,
+      category: 'connected_speech',
+      subtype: 'n_bilabial_assimilation',
+      layer: 'assimilation',
+      teachingLevel: 'v3',
+      legendLabel: 'Sound change',
+      explanationKey: 'n_bilabial_assimilation',
       markerText: 'sound change',
       confidence: highConfidence ? 'high' : 'medium',
       source: highConfidence ? 'cmu' : (leftProfile.source || rightProfile.source || 'curated'),

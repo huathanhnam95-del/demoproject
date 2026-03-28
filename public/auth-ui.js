@@ -1,3 +1,12 @@
+import {
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  collection,
+  writeBatch
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
 /**
  * Authentication UI Controller
  * 
@@ -15,10 +24,22 @@ let authFunctions, firestoreFunctions;
 let currentSessionId = null;
 let currentUserId = null;
 const log = Logger.create('Auth');
+const authSessionGuard = window.AuthSessionGuard || null;
+const GUEST_VOCAB_STORAGE_KEY = 'bel_guest_vocab_v1';
+const GUEST_SRS_STORAGE_KEY = 'bel_guest_srs_v1';
+let authUiInitialized = false;
+let authEventListenersBound = false;
+let authStateListenerBound = false;
+let sessionTrackingBound = false;
+let resolveFirebaseModulesReady = null;
+const firebaseModulesReady = new Promise((resolve) => {
+  resolveFirebaseModulesReady = resolve;
+});
 
 // Guest mode state: true if user chose to view as guest
 // This is stored in sessionStorage to persist during the session
 let isGuestMode = false;
+let guestImportModalResolver = null;
 
 // Used to trigger UI updates in other modules (e.g., progress reload)
 let authStateCallbacks = [];
@@ -26,6 +47,19 @@ let authStateCallbacks = [];
 // Cache admin checks to avoid repeated network calls
 const adminAccessCache = new Map(); // uid -> { value: boolean, atMs: number }
 const ADMIN_ACCESS_CACHE_TTL_MS = 60 * 1000;
+
+async function waitForFirebaseModules(timeoutMs = 12000) {
+  if (authFunctions && firestoreFunctions) {
+    return true;
+  }
+
+  await Promise.race([
+    firebaseModulesReady,
+    new Promise((resolve) => setTimeout(resolve, timeoutMs))
+  ]);
+
+  return !!(authFunctions && firestoreFunctions);
+}
 
 /**
  * Trigger all auth state callbacks
@@ -59,8 +93,215 @@ function onAuthStateChange(callback) {
   }
 }
 
+function readGuestSnapshot() {
+  const parse = (key, fallback) => {
+    try {
+      const stored = localStorage.getItem(key);
+      return stored ? JSON.parse(stored) : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  };
+
+  return {
+    vocab: parse(GUEST_VOCAB_STORAGE_KEY, null),
+    srs: parse(GUEST_SRS_STORAGE_KEY, null)
+  };
+}
+
+function hasGuestProgress(snapshot = readGuestSnapshot()) {
+  const vocab = snapshot?.vocab || {};
+  const srs = snapshot?.srs || {};
+  return Boolean(
+    (Array.isArray(vocab.bookmarkedWords) && vocab.bookmarkedWords.length > 0) ||
+    (Array.isArray(vocab.frequentlyMissed) && vocab.frequentlyMissed.length > 0) ||
+    (Array.isArray(vocab.usedToMiss) && vocab.usedToMiss.length > 0) ||
+    (Array.isArray(vocab.masteredWords) && vocab.masteredWords.length > 0) ||
+    (srs.srsData && Object.keys(srs.srsData).length > 0)
+  );
+}
+
+function normalizeLemmaKey(word) {
+  return String(word || '').trim().toLowerCase();
+}
+
+function mergeByLemma(primary = [], secondary = []) {
+  const map = new Map();
+  const push = (item, preferLatest = false) => {
+    const lemma = normalizeLemmaKey(item?.lemma);
+    if (!lemma) return;
+    const existing = map.get(lemma);
+    if (!existing) {
+      map.set(lemma, { ...item, lemma });
+      return;
+    }
+    map.set(lemma, preferLatest ? { ...existing, ...item, lemma } : { ...item, ...existing, lemma });
+  };
+
+  primary.forEach(item => push(item, false));
+  secondary.forEach(item => push(item, true));
+  return Array.from(map.values());
+}
+
+function mergeWordStats(primary = {}, secondary = {}) {
+  const merged = { ...primary };
+  for (const [lemma, stat] of Object.entries(secondary || {})) {
+    const existing = merged[lemma] || {};
+    merged[lemma] = {
+      ...existing,
+      ...stat,
+      missCount: Math.max(Number(existing.missCount || 0), Number(stat?.missCount || 0)),
+      correctStreak: Math.max(Number(existing.correctStreak || 0), Number(stat?.correctStreak || 0)),
+      masteryPercentage: Math.max(Number(existing.masteryPercentage || 0), Number(stat?.masteryPercentage || 0))
+    };
+  }
+  return merged;
+}
+
+function compareSrsCardStrength(cardA, cardB) {
+  const aReps = Number(cardA?.repetitions || 0);
+  const bReps = Number(cardB?.repetitions || 0);
+  if (aReps !== bReps) return aReps - bReps;
+
+  const aInterval = Number(cardA?.interval || 0);
+  const bInterval = Number(cardB?.interval || 0);
+  if (aInterval !== bInterval) return aInterval - bInterval;
+
+  const aDate = new Date(cardA?.nextReviewDate || 0).getTime();
+  const bDate = new Date(cardB?.nextReviewDate || 0).getTime();
+  return aDate - bDate;
+}
+
+function mergeSrsCards(primary = {}, secondary = {}) {
+  const merged = { ...primary };
+  for (const [lemma, card] of Object.entries(secondary || {})) {
+    const existing = merged[lemma];
+    if (!existing) {
+      merged[lemma] = { ...card, lemma };
+      continue;
+    }
+    merged[lemma] = compareSrsCardStrength(existing, card) >= 0
+      ? { ...existing, lemma }
+      : { ...card, lemma };
+  }
+  return merged;
+}
+
+function ensureGuestImportModal() {
+  let modal = document.getElementById('guest-import-modal');
+  if (modal) return modal;
+
+  modal = document.createElement('div');
+  modal.id = 'guest-import-modal';
+  modal.className = 'guest-import-modal';
+  modal.style.display = 'none';
+  modal.innerHTML = `
+    <div class="guest-import-card" role="dialog" aria-modal="true" aria-labelledby="guest-import-title">
+      <h3 id="guest-import-title">Import guest progress?</h3>
+      <p>You have saved words and review progress in Guest mode. Import them into this account or keep this account separate.</p>
+      <div class="guest-import-actions">
+        <button id="guest-import-keep" class="guest-import-secondary" type="button">Use account only</button>
+        <button id="guest-import-merge" class="guest-import-primary" type="button">Import guest progress</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  return modal;
+}
+
+function showGuestImportPrompt() {
+  return new Promise(resolve => {
+    const modal = ensureGuestImportModal();
+    const keepBtn = modal.querySelector('#guest-import-keep');
+    const mergeBtn = modal.querySelector('#guest-import-merge');
+
+    const finish = (choice) => {
+      modal.style.display = 'none';
+      guestImportModalResolver = null;
+      resolve(choice);
+    };
+
+    guestImportModalResolver = finish;
+    modal.style.display = 'flex';
+
+    if (keepBtn) {
+      keepBtn.onclick = () => finish('account');
+    }
+    if (mergeBtn) {
+      mergeBtn.onclick = () => finish('import');
+    }
+    modal.onclick = (e) => {
+      if (e.target === modal) finish('account');
+    };
+  });
+}
+
+async function importGuestProgressToAccount(user) {
+  const db = window.__FIREBASE_INTERNAL__?.db;
+  if (!db || !user?.uid) return false;
+
+  const snapshot = readGuestSnapshot();
+  if (!hasGuestProgress(snapshot)) return false;
+
+  const guestVocab = snapshot.vocab || {};
+  const guestSrs = snapshot.srs || {};
+
+  const vocabRef = doc(db, 'users', user.uid, 'vocabularyBook', 'data');
+  const vocabDoc = await getDoc(vocabRef);
+  const accountVocab = vocabDoc.exists() ? vocabDoc.data() : {};
+
+  const mergedBookmarks = mergeByLemma(accountVocab.bookmarkedWords || [], guestVocab.bookmarkedWords || []);
+  const mergedMissed = mergeByLemma(accountVocab.frequentlyMissed || [], guestVocab.frequentlyMissed || []);
+  const mergedUsedToMiss = mergeByLemma(accountVocab.usedToMiss || [], guestVocab.usedToMiss || []);
+  const mergedMastered = mergeByLemma(accountVocab.masteredWords || [], guestVocab.masteredWords || []);
+  const mergedWordStats = mergeWordStats(accountVocab.wordStats || {}, guestVocab.wordStats || {});
+  const mergedReviewStats = {
+    ...(accountVocab.reviewStats || {}),
+    ...(guestSrs.reviewStats || {})
+  };
+
+  await setDoc(vocabRef, {
+    bookmarkedWords: mergedBookmarks,
+    wordStats: mergedWordStats,
+    frequentlyMissed: mergedMissed,
+    usedToMiss: mergedUsedToMiss,
+    masteredWords: mergedMastered,
+    reviewStats: mergedReviewStats,
+    updatedAt: new Date().toISOString(),
+    importedFromGuestAt: new Date().toISOString()
+  }, { merge: true });
+
+  const cardsRef = collection(db, 'users', user.uid, 'srs_cards');
+  const cardsSnapshot = await getDocs(cardsRef);
+  const accountCards = {};
+  cardsSnapshot.forEach(cardDoc => {
+    const data = cardDoc.data();
+    const lemma = normalizeLemmaKey(data?.lemma || cardDoc.id);
+    if (lemma) accountCards[lemma] = data;
+  });
+
+  const guestCards = guestSrs.srsData || {};
+  const mergedCards = mergeSrsCards(accountCards, guestCards);
+  const batch = writeBatch(db);
+  Object.entries(mergedCards).forEach(([lemma, card]) => {
+    batch.set(doc(db, 'users', user.uid, 'srs_cards', lemma.replace(/\//g, '_')), {
+      ...card,
+      lemma,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+  });
+  await batch.commit();
+
+  return true;
+}
+
 // Initialize when Firebase is ready
 function initializeAuthUI() {
+  if (authUiInitialized) {
+    return;
+  }
+  authUiInitialized = true;
+
   // Try to set up listeners immediately so buttons are responsive
   setupEventListeners();
 
@@ -71,6 +312,10 @@ function initializeAuthUI() {
       log.debug('[AuthUI] window.firebaseFirestoreFunctions.updateUserProfile exists:', typeof window.firebaseFirestoreFunctions.updateUserProfile);
       authFunctions = window.firebaseAuthFunctions;
       firestoreFunctions = window.firebaseFirestoreFunctions;
+      if (resolveFirebaseModulesReady) {
+        resolveFirebaseModulesReady();
+        resolveFirebaseModulesReady = null;
+      }
       setupAuthStateListener();
       setupSessionTracking();
     } else {
@@ -118,6 +363,11 @@ function checkDemoMode() {
  * Setup all event listeners for auth UI
  */
 function setupEventListeners() {
+  if (authEventListenersBound) {
+    return;
+  }
+  authEventListenersBound = true;
+
   // ============================================
   // Entry Modal (First Visit)
   // ============================================
@@ -427,7 +677,7 @@ async function handleLevelSelection(level) {
         // Fallback if DM not initialized (safety)
         log.warn('DifficultyManager not fully available, falling back to storage write');
         const stored = localStorage.getItem('difficulty_profile');
-        let profileData = stored ? JSON.parse(stored) : { version: 2, globalSettings: {}, profiles: {} };
+        let profileData = stored ? JSON.parse(stored) : { version: 3, globalSettings: {}, profiles: {} };
         const legacySettings = profileData.settings && !profileData.globalSettings;
         const baseSettings = profileData.globalSettings || profileData.settings || {};
 
@@ -442,7 +692,7 @@ async function handleLevelSelection(level) {
         profileData.profiles = profileData.profiles && typeof profileData.profiles === 'object'
           ? profileData.profiles
           : {};
-        ['type', 'speak', 'srs'].forEach((mode) => {
+        ['type', 'speak', 'srs', 'extended', 'notes'].forEach((mode) => {
           const existing = profileData.profiles[mode] && typeof profileData.profiles[mode] === 'object'
             ? profileData.profiles[mode]
             : {};
@@ -633,7 +883,6 @@ function updateAccountPanelState() {
             log.debug('⚡ Seeding admin cache for', user.email);
             localStorage.setItem(cacheKey, JSON.stringify({
               email: user.email,
-              coins: 9999,
               totalPoints: 9999,
               unlockedModes: allModes,
               isAdmin: true,
@@ -758,17 +1007,15 @@ async function isAdminViaServer(user) {
  */
 async function loadPracticePoints(userId) {
   const pointsCountEl = document.getElementById('panel-points-count');
-  const coinsCountEl = document.getElementById('panel-coins-count');
 
-  if (!pointsCountEl && !coinsCountEl) return;
+  if (!pointsCountEl) return;
 
   try {
-    // Use getUserProfile to get both totalPoints and coins
+    // Use getUserProfile to get the latest practice totals
     const result = await firestoreFunctions.getUserProfile(userId);
 
     if (result.success) {
       if (pointsCountEl) pointsCountEl.textContent = (result.data.totalPoints || 0).toLocaleString();
-      if (coinsCountEl) coinsCountEl.textContent = (result.data.coins || 0).toLocaleString();
 
       // Keep header XP bar in sync when points change (Type/Watch/Notes/etc).
       if (window.LevelSystem && window.LevelSystem.updateHeaderLevel) {
@@ -779,7 +1026,6 @@ async function loadPracticePoints(userId) {
       renderSkillDashboard(result.data);
     } else {
       if (pointsCountEl) pointsCountEl.textContent = '0';
-      if (coinsCountEl) coinsCountEl.textContent = '0';
     }
 
     // Load history as well
@@ -787,7 +1033,6 @@ async function loadPracticePoints(userId) {
   } catch (error) {
     log.error('Error loading practice points:', error);
     if (pointsCountEl) pointsCountEl.textContent = '0';
-    if (coinsCountEl) coinsCountEl.textContent = '0';
   }
 }
 
@@ -875,7 +1120,7 @@ function renderSkillDashboard(data) {
 /**
  * Update the Practice Points display with a new value
  * Called when points change (e.g., after completing a task)
- * This now refreshes from server to ensure coins/points are synced
+ * This now refreshes from server to ensure progress totals are synced
  */
 async function updatePracticePointsDisplay() {
   const user = authFunctions ? authFunctions.getCurrentUser() : null;
@@ -1166,6 +1411,11 @@ async function loadUserProfile() {
  * 3. Auth state callbacks (for progress UI reload)
  */
 function setupAuthStateListener() {
+  if (authStateListenerBound) {
+    return;
+  }
+  authStateListenerBound = true;
+
   authFunctions.onAuthStateChanged(async (user) => {
     const authOverlay = document.getElementById('auth-overlay');
     const wasGuestMode = isGuestMode;
@@ -1182,6 +1432,7 @@ function setupAuthStateListener() {
         if (authOverlay) {
           authOverlay.style.display = 'none';
         }
+        hideEntryModal();
 
         currentUserId = user.uid;
 
@@ -1235,6 +1486,25 @@ function setupAuthStateListener() {
 
         // Check for Level Selection (First Login Feature)
         await checkLevelSelection(user.uid);
+
+        const guestSnapshot = wasGuestMode ? readGuestSnapshot() : null;
+        const shouldPromptGuestImport = wasGuestMode && hasGuestProgress(guestSnapshot);
+        const guestImportDecisionKey = `guestImportChoice_${user.uid}`;
+        let guestImportChoice = sessionStorage.getItem(guestImportDecisionKey) || 'account';
+        if (shouldPromptGuestImport && !sessionStorage.getItem(guestImportDecisionKey)) {
+          guestImportChoice = await showGuestImportPrompt();
+          sessionStorage.setItem(guestImportDecisionKey, guestImportChoice);
+          if (guestImportChoice === 'import') {
+            try {
+              await importGuestProgressToAccount(user);
+              localStorage.removeItem(GUEST_VOCAB_STORAGE_KEY);
+              localStorage.removeItem(GUEST_SRS_STORAGE_KEY);
+            } catch (importErr) {
+              log.warn('Guest progress import failed, continuing with account only:', importErr);
+              guestImportChoice = 'account';
+            }
+          }
+        }
 
         // Initialize Vocabulary Book with user
         if (window.VocabularyBook) {
@@ -1357,6 +1627,11 @@ async function startSession() {
  * Authenticated mode: Tracks visibility changes and page unload
  */
 function setupSessionTracking() {
+  if (sessionTrackingBound) {
+    return;
+  }
+  sessionTrackingBound = true;
+
   // Track visibility changes (tab switch, minimize, etc.)
   document.addEventListener('visibilitychange', async () => {
     // Guest mode: Do NOT track sessions
@@ -1401,7 +1676,7 @@ function setupSessionTracking() {
  * Check if this is first visit (no auth session and no guest mode chosen)
  * Shows entry modal if needed
  */
-function checkFirstVisit() {
+async function checkFirstVisit() {
   // Check if guest mode was already chosen in this session
   const guestModeStored = sessionStorage.getItem('guestMode');
   if (guestModeStored === 'true') {
@@ -1410,30 +1685,45 @@ function checkFirstVisit() {
     return; // Don't show entry modal if guest mode already chosen
   }
 
-  // Check if user is already logged in (Firebase will handle this via auth state listener)
-  // If not logged in and not guest mode, show entry modal
-  const user = authFunctions ? authFunctions.getCurrentUser() : null;
+  await waitForFirebaseModules();
+
+  const user = authSessionGuard
+    && typeof authSessionGuard.waitForInitialAuthResolution === 'function'
+    && authFunctions
+    && typeof authFunctions.onAuthStateChanged === 'function'
+    ? await authSessionGuard.waitForInitialAuthResolution({
+        getCurrentUser: () => (authFunctions ? authFunctions.getCurrentUser() : null),
+        subscribe: (onStateChanged) => authFunctions.onAuthStateChanged(onStateChanged),
+        timeoutMs: 12000,
+        nullGraceMs: 250
+      })
+    : (authFunctions ? authFunctions.getCurrentUser() : null);
+
   if (!user && !isGuestMode) {
-    // Small delay to ensure Firebase is initialized
-    setTimeout(() => {
-      const userAfterDelay = authFunctions ? authFunctions.getCurrentUser() : null;
-      if (!userAfterDelay && !isGuestMode) {
-        showEntryModal();
-      }
-    }, 500);
+    showEntryModal();
+    return;
   }
+
+  hideEntryModal();
 }
 
 // Initialize when DOM is ready
+function bootAuthUi() {
+  initializeAuthUI();
+}
+
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
-    initializeAuthUI();
-    // Check for first visit after a short delay to allow Firebase to initialize
-    setTimeout(checkFirstVisit, 1000);
+    bootAuthUi();
+    checkFirstVisit().catch((error) => {
+      log.error('Failed to resolve first-visit auth state:', error);
+    });
   });
 } else {
-  initializeAuthUI();
-  setTimeout(checkFirstVisit, 1000);
+  bootAuthUi();
+  checkFirstVisit().catch((error) => {
+    log.error('Failed to resolve first-visit auth state:', error);
+  });
 }
 
 // Export for use in practice tracking and progress UI reload
@@ -1613,7 +1903,7 @@ async function showExplanationPopup(ruleTitle, points) {
 }
 
 /**
- * Show the Level / Skill Tree Modal
+ * Show the Progress Roadmap Modal
  */
 async function showShoppingModal() {
   // Close account panel first
@@ -1644,7 +1934,7 @@ async function showShoppingModal() {
       container.innerHTML = '<div style="color:red; padding:20px;">Error: LevelSystem module not loaded.</div>';
     }
   } catch (err) {
-    log.error('Error rendering skill tree:', err);
+    log.error('Error rendering progress roadmap:', err);
     container.innerHTML = '<div style="color:red; padding:20px;">Failed to load data. Please try again.</div>';
   }
 }
@@ -1656,6 +1946,5 @@ window.authUI.onAuthStateChange = onAuthStateChange;
 window.authUI.onAuthStateChanged = onAuthStateChange; // Compatibility alias
 
 // Initialize automatically
-initializeAuthUI();
-log.log('✓ auth-ui.js: Module loaded and initialized');
+log.log('✓ auth-ui.js: Module loaded');
 

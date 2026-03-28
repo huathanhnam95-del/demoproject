@@ -9,6 +9,11 @@ const admin = require('firebase-admin');
 const XLSX = require('xlsx');
 const path = require('path');
 const fs = require('fs');
+const {
+    parseAnswerText,
+    mapDifficultyToLevel,
+    mapDifficultyToMultiplier
+} = require('./rfib-content-core');
 
 // Initialize Firebase Admin
 const serviceAccount = require('../serviceAccountKey.json');
@@ -29,6 +34,11 @@ const CONTENT_SOURCES = {
         file: 'public/database/extended/LFIB.xlsx',
         prefix: 'extended_',
         parser: parseExtendedContent
+    },
+    rfib: {
+        file: 'public/database/RFIB/RFIB Final ver.xlsx',
+        prefix: 'rfib_',
+        parser: parseRfibContent
     },
     speak: {
         file: 'public/database/speak/RS.xlsx',
@@ -112,6 +122,65 @@ function parseSpeakContent(data) {
 }
 
 /**
+ * Parse RFIB mode content (RFIB Final ver.xlsx)
+ * Expected columns: ID, TITLE, ANSWER, Full Text, Beginner Ver, Inter Ver, Topic, Enrichment_Difficulty
+ */
+function parseRfibContent(data) {
+    return data.map((row, index) => {
+        const id = row['ID'] || row['id'] || row['Question ID'] || index + 1;
+        const answerText = String(row['ANSWER'] || row['Answer'] || row['answer'] || '').trim();
+        const fullText = String(row['Full Text'] || row['fullText'] || row['full_text'] || '').trim();
+        if (!answerText || !fullText) return null;
+
+        const parsed = parseAnswerText(answerText);
+        const gaps = [];
+        let gapIndex = 0;
+        parsed.forEach((paragraph) => {
+            paragraph.parts.forEach((part) => {
+                if (part.type !== 'blank') return;
+                gaps.push({
+                    index: gapIndex,
+                    answers: part.correctAnswer ? [part.correctAnswer] : []
+                });
+                gapIndex += 1;
+            });
+        });
+
+        const difficultySource = row['Enrichment_Difficulty'] || row['Level'] || row['level'] || row['Difficulty'] || 'medium';
+        const topic = String(row['Topic'] || row['topic'] || '').trim();
+
+        return {
+            id: String(id),
+            mode: 'rfib',
+            text: fullText,
+            answerText,
+            gaps,
+            blankCount: gaps.length,
+            difficultyTag: normalizeDifficulty(difficultySource),
+            difficultyMultiplier: mapDifficultyToMultiplier(difficultySource),
+            difficultyLevel: mapDifficultyToLevel(difficultySource),
+            topic: topic || null,
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+        };
+    }).filter(item => item && item.text.length > 0);
+}
+
+function validateRfibDocuments(documents) {
+    const invalid = documents.filter((doc) => {
+        if (!doc) return true;
+        if (Number(doc.blankCount || 0) <= 0) return true;
+        if (!Array.isArray(doc.gaps) || doc.gaps.length === 0) return true;
+        return doc.gaps.some((gap) => !Array.isArray(gap.answers) || gap.answers.length === 0);
+    });
+
+    if (invalid.length > 0) {
+        const ids = invalid.map((doc) => doc && doc.id ? String(doc.id) : '(unknown)').join(', ');
+        console.error(`❌ RFIB migration blocked by invalid documents: ${ids}`); // eslint-disable-line no-console
+        throw new Error(`RFIB migration rejected ${invalid.length} invalid document(s).`);
+    }
+}
+
+/**
  * Normalize difficulty string to tag
  */
 function normalizeDifficulty(level) {
@@ -191,6 +260,7 @@ async function migrate() {
     const stats = {
         type: 0,
         extended: 0,
+        rfib: 0,
         speak: 0
     };
 
@@ -210,6 +280,10 @@ async function migrate() {
             const documents = config.parser(rawData);
             console.log(`  Parsed ${documents.length} valid documents`); // eslint-disable-line no-console
 
+            if (mode === 'rfib') {
+                validateRfibDocuments(documents);
+            }
+
             if (documents.length > 0) {
                 const count = await batchWrite('contentItems', documents, config.prefix);
                 stats[mode] = count;
@@ -218,6 +292,9 @@ async function migrate() {
             console.log(''); // eslint-disable-line no-console
         } catch (error) {
             console.error(`  ❌ Error processing ${mode}:`, error.message);
+            if (mode === 'rfib') {
+                throw error;
+            }
         }
     }
 
@@ -225,8 +302,9 @@ async function migrate() {
     console.log('📊 Migration Summary:'); // eslint-disable-line no-console
     console.log(`  Type (WFD):      ${stats.type} documents`); // eslint-disable-line no-console
     console.log(`  Extended (LFIB): ${stats.extended} documents`); // eslint-disable-line no-console
+    console.log(`  RFIB:            ${stats.rfib} documents`); // eslint-disable-line no-console
     console.log(`  Speak (RS):      ${stats.speak} documents`); // eslint-disable-line no-console
-    console.log(`  Total:           ${stats.type + stats.extended + stats.speak} documents`); // eslint-disable-line no-console
+    console.log(`  Total:           ${stats.type + stats.extended + stats.rfib + stats.speak} documents`); // eslint-disable-line no-console
     console.log('='.repeat(50)); // eslint-disable-line no-console
     console.log('✅ Migration complete!'); // eslint-disable-line no-console
 }

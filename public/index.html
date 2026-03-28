@@ -15,11 +15,12 @@
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
     rel="stylesheet" />
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-  <link rel="stylesheet" href="style.css?v=20260211_dragon_nest_v2">
+  <link rel="stylesheet" href="style.css?v=20260327_practice_reading_live">
   <link rel="stylesheet" href="srs-review.css">
   <link rel="stylesheet" href="srs-onboarding.css">
   <link rel="stylesheet" href="pronunciation-analyzer/style.css">
   <link rel="stylesheet" href="pronunciation-analyzer/syllable-verifier.css">
+  <link rel="stylesheet" href="rfib-mode.css">
   <link rel="stylesheet" href="style-scaffolding.css?v=20260123_mode_fix">
   <link rel="stylesheet" href="/site-header.css">
   <script src="/js/site-header.js" defer></script>
@@ -108,7 +109,7 @@
   <script type="importmap">
     {
       "imports": {
-        "ts-fsrs": "https://esm.sh/ts-fsrs@4.5.1",
+        "ts-fsrs": "https://esm.sh/ts-fsrs@5.2.3",
         "firebase-init": "./js/firebase-init.js"
       }
     }
@@ -378,7 +379,7 @@
   <!-- Entry Choice Modal (shown on first visit when no auth session) -->
   <div id="entry-modal" class="entry-modal" style="display: none;">
     <div class="entry-modal-content">
-      <h2>Welcome to Listening Practice</h2>
+      <h2>Welcome to Practice</h2>
       <p>Choose how you'd like to use the app:</p>
       <div class="entry-options">
         <button id="guest-mode-btn" class="entry-btn guest-btn">
@@ -611,11 +612,12 @@
         <h4>📖 Add to Vocabulary Book</h4>
         <button id="vocab-add-close" class="vocab-add-close">×</button>
       </div>
-      <p class="vocab-add-desc">Select words to save:</p>
+      <p id="vocab-add-summary" class="vocab-add-desc">Select words to save:</p>
+      <div id="vocab-add-notice" class="vocab-add-notice" aria-live="polite" style="display:none;"></div>
       <div id="vocab-add-words" class="vocab-add-words"></div>
       <div class="vocab-add-actions">
         <button id="vocab-add-btn" class="vocab-add-btn">Add Selected</button>
-        <button id="vocab-skip-btn" class="vocab-skip-btn">Skip</button>
+        <button id="vocab-skip-btn" class="vocab-skip-btn">Not now</button>
       </div>
     </div>
   </div>
@@ -894,13 +896,6 @@
           <div class="panel-points-header" style="display: flex; gap: 16px; justify-content: space-around;">
             <div class="points-item" style="text-align: center;">
               <div class="points-value-large">
-                <span class="points-icon">🪙</span>
-                <span id="panel-coins-count">0</span>
-              </div>
-              <div class="points-label">Coins</div>
-            </div>
-            <div class="points-item" style="text-align: center;">
-              <div class="points-value-large">
                 <span class="points-icon">⭐</span>
                 <span id="panel-points-count">0</span>
               </div>
@@ -908,10 +903,10 @@
             </div>
           </div>
 
-          <!-- Shopping Card -->
+          <!-- Progress Roadmap Card -->
           <div id="panel-shopping-card" class="panel-shopping-card" style="display: none;">
-            <span class="shopping-icon">🛒</span>
-            <span class="shopping-label">SKILL TREE</span>
+            <span class="shopping-icon">🛤️</span>
+            <span class="shopping-label">PROGRESS ROADMAP</span>
             <div class="shop-notification" style="display: none;"></div>
             <span class="shopping-arrow">›</span>
           </div>
@@ -957,6 +952,8 @@
           <button class="ae-mode-btn active" data-mode="type">Type</button>
           <button class="ae-mode-btn" data-mode="speak">Speak</button>
           <button class="ae-mode-btn" data-mode="extended">Fill</button>
+          <button class="ae-mode-btn" data-mode="notes">Notes</button>
+          <button class="ae-mode-btn" data-mode="srs">SRS</button>
         </div>
         <div class="ae-stats-grid">
           <div class="ae-stat-item">
@@ -998,8 +995,8 @@
     <main class="container">
       <div class="main-header">
         <div class="header-left">
-          <h1>Listening Practice</h1>
-          <div id="current-mode-indicator" class="mode-pill-indicator" style="display: none;">
+          <h1>Practice</h1>
+          <div id="current-mode-indicator" class="mode-pill-indicator" style="display: none;" aria-live="polite">
             <span id="current-mode-name" class="mode-pill-name">Type</span>
             <button id="mode-tutorial-btn" class="mode-pill-tutorial" title="Learn about this mode">?</button>
           </div>
@@ -1048,12 +1045,23 @@
           <!-- Panel 1: For Skill Center -->
           <div id="panel-tutorials" class="dashboard-panel active">
             <div class="dashboard-section-header">
-              <h2>For Skills</h2>
-              <p>Master dictation and pronunciation through interactive modes.</p>
+              <h2>Choose a Skill</h2>
+              <p>Select a skill first, then pick a practice mode.</p>
+            </div>
+            <div class="practice-skill-filter" id="practice-skill-filter" role="group" aria-label="Practice skills">
+              <button type="button" class="practice-skill-btn" data-practice-skill="speaking"
+                aria-pressed="false">Speaking</button>
+              <button type="button" class="practice-skill-btn is-active" data-practice-skill="listening"
+                aria-pressed="true">Listening</button>
+              <button type="button" class="practice-skill-btn" data-practice-skill="reading"
+                aria-pressed="false">Reading</button>
+              <button type="button" class="practice-skill-btn" data-practice-skill="writing"
+                aria-pressed="false">Writing</button>
             </div>
             <div class="tutorial-grid">
               <!-- 1. Type Mode Card -->
               <div id="mode-btn-type" class="modern-card transition-card mode-switch-btn"
+                data-practice-skill="listening"
                 onclick="window.switchToMode('type')" tabindex="0" role="button" aria-label="Type Practice mode">
                 <span class="badge new">Popular</span>
                 <div class="card-visual visual-type">
@@ -1091,6 +1099,7 @@
 
               <!-- 2. Collo-dictate Mode Card -->
               <div id="mode-btn-collo-dictate" class="modern-card transition-card mode-switch-btn"
+                data-practice-skill="listening"
                 onclick="window.switchToMode('collo-dictate')" tabindex="0" role="button"
                 aria-label="Collo-dictate mode (Collocation dictation)">
                 <span class="badge new">New</span>
@@ -1126,6 +1135,7 @@
 
               <!-- 3. Speak Mode Card -->
               <div id="mode-btn-speak" class="modern-card transition-card mode-switch-btn"
+                data-practice-skill="speaking"
                 onclick="window.switchToMode('speak')" tabindex="0" role="button" aria-label="Speak Practice mode">
                 <div class="card-visual visual-speak">
                   <div class="anim-container">
@@ -1159,6 +1169,7 @@
 
               <!-- 3. Fill Mode Card -->
               <div id="mode-btn-extended" class="modern-card transition-card mode-switch-btn"
+                data-practice-skill="listening"
                 onclick="window.switchToMode('extended')" tabindex="0" role="button"
                 aria-label="Fill in the blanks mode">
                 <div class="card-visual visual-fill">
@@ -1188,8 +1199,35 @@
                 </div>
               </div>
 
-              <!-- 4. Watch Mode Card -->
+              <!-- 4. Reading Fill Mode Card -->
+              <div id="mode-btn-rfib" class="modern-card transition-card mode-switch-btn"
+                data-practice-skill="reading"
+                onclick="window.switchToMode('rfib')" tabindex="0" role="button"
+                aria-label="Fill in the blanks mode">
+                <span class="badge">New</span>
+                <div class="card-visual visual-fill">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
+                      <rect x="8" y="24" width="12" height="4" rx="2" fill="currentColor" opacity="0.55" />
+                      <rect x="24" y="24" width="22" height="4" rx="2" fill="currentColor" />
+                      <rect class="blank-slot" x="24" y="20" width="22" height="12" rx="4" stroke="currentColor"
+                        stroke-width="2" stroke-dasharray="4 2" fill="none" />
+                      <rect x="50" y="24" width="14" height="4" rx="2" fill="currentColor" opacity="0.55" />
+                      <circle cx="56" cy="48" r="10" fill="var(--visual-accent)" opacity="0.18" />
+                      <path d="M50 48h12" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Fill in the blanks</h3>
+                  <p>Read passages, fill the blanks, and compare support versions.</p>
+                  <button class="card-cta">Practice Now</button>
+                </div>
+              </div>
+
+              <!-- 5. Watch Mode Card -->
               <div id="mode-btn-watch" class="modern-card transition-card mode-switch-btn"
+                data-practice-skill="listening"
                 onclick="window.switchToMode('watch')" tabindex="0" role="button" aria-label="Watch Video mode">
                 <div class="card-visual visual-watch">
                   <div class="anim-container">
@@ -1219,8 +1257,9 @@
               </div>
 
 
-              <!-- 5. Note Mode Card -->
+              <!-- 6. Note Mode Card -->
               <div id="mode-btn-notes" class="modern-card transition-card mode-switch-btn"
+                data-practice-skill="listening"
                 onclick="window.switchToMode('notes')" tabindex="0" role="button" aria-label="Note taking mode">
                 <span class="badge">New</span>
                 <div class="card-visual visual-notes">
@@ -1256,6 +1295,7 @@
 
               <!-- 6. Pronounce Mode Card -->
               <div id="mode-btn-pronounce" class="modern-card transition-card mode-switch-btn"
+                data-practice-skill="speaking"
                 onclick="window.switchToMode('pronounce')" tabindex="0" role="button" aria-label="Pronunciation mode">
                 <span class="badge experimental">Experimental</span>
                 <div class="card-visual visual-pronounce">
@@ -1290,6 +1330,7 @@
 
               <!-- 8. Read Aloud Mode Card -->
               <div id="mode-btn-read-aloud" class="modern-card transition-card mode-switch-btn"
+                data-practice-skill="speaking"
                 onclick="window.switchToMode('read-aloud')" tabindex="0" role="button" aria-label="Read Aloud mode">
                 <span class="badge new">New</span>
                 <div class="card-visual visual-read-aloud">
@@ -1308,25 +1349,22 @@
                   <h3>Read Aloud</h3>
                   <p>Read text aloud to check your accuracy.</p>
                   <button class="card-cta">Practice Now</button>
-                  <a class="whats-this-link"
+                <a class="whats-this-link"
                     onclick="event.stopPropagation(); window.startTutorial('read-aloud', true);">What's this?</a>
                 </div>
+              </div>
+
+              <!-- Writing Skill Empty State -->
+              <div id="practice-writing-empty" class="practice-skill-empty-state" data-practice-skill="writing"
+                hidden>
+                <h3>Writing is coming later</h3>
+                <p>We will add Writing modes in a future update.</p>
               </div>
             </div>
             <div class="whats-this-container-compact">
               <button id="what-is-this-btn" class="btn-secondary btn-compact">
                 <span class="icon">💡</span> Help me choose a mode
               </button>
-            </div>
-            <!-- Current Mode Indicator -->
-            <div id="current-mode-indicator" class="current-mode-indicator" style="display: none;">
-              <div class="mode-indicator-content">
-                <span class="mode-indicator-label">Current Mode:</span>
-                <span id="current-mode-name" class="mode-indicator-name">Type</span>
-                <button id="mode-tutorial-btn" class="mode-tutorial-btn" title="Learn about this mode">
-                  <span class="icon">❓</span> What's this?
-                </button>
-              </div>
             </div>
           </div>
 
@@ -1496,6 +1534,7 @@
           <button id="tab-collo-dictate" class="tab-btn" type="button">Collo-dictate</button>
           <button id="tab-speak" class="tab-btn" type="button">Speak</button>
           <button id="tab-extended" class="tab-btn" type="button">Fill</button>
+          <button id="tab-rfib" class="tab-btn" type="button">Fill in the blanks</button>
           <button id="tab-watch" class="tab-btn" type="button">Watch</button>
           <button id="tab-notes" class="tab-btn" type="button">Note</button>
           <button id="tab-pronounce" class="tab-btn" type="button">Pronounce</button>
@@ -1716,13 +1755,13 @@
             <!-- Unlockable Difficulty Filter (Type mode) -->
             <div id="difficulty-filter-container-type" class="difficulty-filter-dropdown" style="display: none;">
               <button id="difficulty-filter-btn-type" class="difficulty-filter-btn" type="button">
-                <span id="difficulty-filter-label-type">Filter by Difficulty</span>
+                <span id="difficulty-filter-label-type">Recommended</span>
                 <span class="filter-arrow">▼</span>
               </button>
               <div id="difficulty-filter-menu-type" class="difficulty-filter-menu" style="display: none;">
                 <div class="filter-option selected" data-value="all">
                   <span class="filter-option-icon">🎚️</span>
-                  <span class="filter-option-text">All Levels</span>
+                  <span class="filter-option-text">Recommended</span>
                 </div>
                 <div class="filter-option" data-value="1">
                   <span class="filter-option-icon">🥉</span>
@@ -1772,17 +1811,22 @@
                   <button id="skill-word-ghost" class="popover-item" title="Impact: -0.15x Calibration">
                     <span class="popover-icon">👻</span>
                     <span class="popover-label">Word Ghost</span>
-                    <span class="popover-cost">15c</span>
+                    <span class="popover-cost"></span>
                   </button>
                   <button id="skill-first-letter" class="popover-item" title="Impact: -0.35x Calibration">
                     <span class="popover-icon">👁️</span>
                     <span class="popover-label">First-Letter Peek</span>
-                    <span class="popover-cost">25c</span>
+                    <span class="popover-cost"></span>
+                  </button>
+                  <button id="skill-hint-reveal" class="popover-item" title="Impact: -0.25x Calibration">
+                    <span class="popover-icon">✨</span>
+                    <span class="popover-label">Hint Reveal</span>
+                    <span class="popover-cost"></span>
                   </button>
                   <button id="skill-transcript-glimpse" class="popover-item" title="Impact: -0.60x Calibration">
                     <span class="popover-icon">📜</span>
                     <span class="popover-label">Flash Transcript</span>
-                    <span class="popover-cost">8c</span>
+                    <span class="popover-cost"></span>
                   </button>
                 </div>
               </div>
@@ -1990,13 +2034,13 @@
             <!-- Unlockable Difficulty Filter (Speak mode) -->
             <div id="difficulty-filter-container-speak" class="difficulty-filter-dropdown" style="display: none;">
               <button id="difficulty-filter-btn-speak" class="difficulty-filter-btn" type="button">
-                <span id="difficulty-filter-label-speak">Filter by Difficulty</span>
+                <span id="difficulty-filter-label-speak">Recommended</span>
                 <span class="filter-arrow">▼</span>
               </button>
               <div id="difficulty-filter-menu-speak" class="difficulty-filter-menu" style="display: none;">
                 <div class="filter-option selected" data-value="all">
                   <span class="filter-option-icon">🎚️</span>
-                  <span class="filter-option-text">All Levels</span>
+                  <span class="filter-option-text">Recommended</span>
                 </div>
                 <div class="filter-option" data-value="1">
                   <span class="filter-option-icon">🥉</span>
@@ -2089,13 +2133,13 @@
           <div class="question-filters-row">
             <div id="difficulty-filter-container-extended" class="difficulty-filter-dropdown" style="display: none;">
               <button id="difficulty-filter-btn-extended" class="difficulty-filter-btn" type="button">
-                <span id="difficulty-filter-label-extended">Filter by Difficulty</span>
+                <span id="difficulty-filter-label-extended">Recommended</span>
                 <span class="filter-arrow">▼</span>
               </button>
               <div id="difficulty-filter-menu-extended" class="difficulty-filter-menu" style="display: none;">
                 <div class="filter-option selected" data-value="all">
                   <span class="filter-option-icon">ALL</span>
-                  <span class="filter-option-text">All Levels</span>
+                  <span class="filter-option-text">Recommended</span>
                 </div>
                 <div class="filter-option" data-value="1">
                   <span class="filter-option-icon">L1</span>
@@ -2217,7 +2261,79 @@
             </div>
             <div id="check-result-phrases" class="check-result-box" style="display: none;"></div>
           </div>
+      </div>
+      </div>
+
+      <div id="mode-rfib" class="mode-panel" style="display: none;">
+        <div class="question-selector rfib-question-selector">
+          <div class="question-id-display">
+            <label for="rfib-question-select">Question ID:</label>
+            <span id="rfib-current-question-id" class="current-question-id">1</span>
+          </div>
+          <div class="question-nav-row">
+            <button id="rfib-back-btn" class="nav-btn nav-btn-back" type="button" title="Previous Question">
+              ← Back
+            </button>
+            <select id="rfib-question-select" class="question-select question-select-narrow">
+              <option value="1">Loading...</option>
+            </select>
+            <button id="rfib-next-btn" class="nav-btn nav-btn-next" type="button" title="Next Question">
+              Next →
+            </button>
+          </div>
+          <div class="question-total">
+            <span>Total number of questions: <span id="rfib-total-questions">0</span></span>
+          </div>
         </div>
+
+        <div class="rfib-header-card">
+          <div class="rfib-header-copy">
+            <div class="rfib-kicker">Reading comprehension</div>
+            <h2>Reading Fill in the blanks</h2>
+            <p>Fill each blank with the best option, then review Beginner or Intermediate support if you need it.</p>
+          </div>
+          <div class="rfib-audio-card">
+            <div class="rfib-audio-head">
+              <span class="rfib-audio-title">Original audio</span>
+              <span id="rfib-full-audio-note" class="rfib-audio-note">Full passage audio</span>
+            </div>
+            <div class="rfib-audio-actions">
+              <button id="rfib-full-audio-play" class="modern-btn modern-btn--play" type="button">Play</button>
+              <div class="rfib-voice-toggle" id="rfib-full-audio-voice-male">
+                <button type="button" class="rfib-voice-btn is-active" data-voice="male">Male</button>
+                <button type="button" class="rfib-voice-btn" data-voice="female">Female</button>
+              </div>
+            </div>
+            <audio id="rfib-full-audio-player" preload="none"></audio>
+          </div>
+        </div>
+
+        <div class="rfib-passage-card">
+          <div id="rfib-cloze-view" class="rfib-cloze-view" aria-live="polite"></div>
+        </div>
+
+        <div class="rfib-support-toggle-row" role="tablist" aria-label="Support versions">
+          <button id="rfib-support-full-btn" class="rfib-support-toggle is-active" type="button">Full</button>
+          <button id="rfib-support-beginner-btn" class="rfib-support-toggle" type="button">Beginner</button>
+          <button id="rfib-support-intermediate-btn" class="rfib-support-toggle" type="button">Intermediate</button>
+        </div>
+
+        <div id="rfib-support-panel" class="rfib-support-panel">
+          <div class="rfib-support-panel-head">
+            <span id="rfib-support-variant" class="rfib-support-variant">Full version</span>
+            <span id="rfib-support-audio-note" class="rfib-support-audio-note"></span>
+          </div>
+          <div id="rfib-support-text" class="rfib-support-text"></div>
+          <div id="rfib-support-audio" class="rfib-support-audio"></div>
+          <audio id="rfib-support-audio-player" preload="none"></audio>
+        </div>
+
+        <div class="rfib-actions">
+          <button id="rfib-check-btn" class="modern-btn modern-btn--check" type="button">Check</button>
+          <button id="rfib-retry-btn" class="modern-btn modern-btn--retry" type="button">Retry</button>
+        </div>
+
+        <div id="rfib-result-box" class="rfib-result-box" aria-live="polite"></div>
       </div>
 
       <!-- Watch Mode Panel -->
@@ -2314,13 +2430,13 @@
             <!-- Difficulty Filter -->
             <div id="difficulty-filter-container-notes" class="difficulty-filter-dropdown" style="display: none;">
               <button id="difficulty-filter-btn-notes" class="difficulty-filter-btn" type="button">
-                <span id="difficulty-filter-label-notes">Filter by Difficulty</span>
+                <span id="difficulty-filter-label-notes">Recommended</span>
                 <span class="filter-arrow">▼</span>
               </button>
               <div id="difficulty-filter-menu-notes" class="difficulty-filter-menu" style="display: none;">
                 <div class="filter-option selected" data-value="all">
                   <span class="filter-option-icon">📋</span>
-                  <span class="filter-option-text">All Levels</span>
+                  <span class="filter-option-text">Recommended</span>
                 </div>
                 <div class="filter-option" data-value="1">
                   <span class="filter-option-icon">🟢</span>
@@ -2509,24 +2625,28 @@
       <!-- Read Aloud Mode Panel -->
       <div id="mode-read-aloud" class="mode-panel" style="display: none;">
         <!-- Filter/Config Bar -->
-        <div class="question-selector" style="border-bottom: none; justify-content: center; padding: 10px 20px; align-items: center; flex-direction: column; gap: 12px;">
-          <!-- Audio Filter Pills -->
-          <div class="read-aloud-filters" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-            <button class="ra-filter-pill active" id="ra-filter-all" type="button" style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--brand-primary, #2563eb); background: rgba(37, 99, 235, 0.1); color: var(--brand-primary, #2563eb); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">All</button>
-            <button class="ra-filter-pill" id="ra-filter-available" type="button" style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">🎵 Sample Audio: Available</button>
-            <button class="ra-filter-pill" id="ra-filter-unavailable" type="button" style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">No Audio</button>
+        <div class="question-selector" style="border-bottom: none; padding: 10px 20px 0; align-items: center; flex-direction: column; gap: 12px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap: 12px; width:100%; max-width:900px; flex-wrap:wrap;">
+            <select id="ra-question-select" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-light); font-family: inherit; font-size: 0.95rem; background: white; flex: 1 1 320px; min-width: 240px;">
+              <option value="random">🔀 Random Question</option>
+            </select>
+            <button id="ra-practice-target-toggle" type="button" aria-expanded="false" aria-controls="ra-practice-target-drawer" style="min-height: 40px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: #fff; color: #1f2937; cursor: pointer; font-size: 0.92rem; font-weight: 600;">Practice target</button>
           </div>
-          <div class="read-aloud-filters" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-            <button class="ra-filter-pill active" id="ra-filter-feature-all" type="button" aria-pressed="true" style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--brand-primary, #2563eb); background: rgba(37, 99, 235, 0.1); color: var(--brand-primary, #2563eb); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">All prompts</button>
-            <button class="ra-filter-pill" id="ra-filter-any-connected" type="button" aria-pressed="false" style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">Any connected speech</button>
-            <button class="ra-filter-pill" id="ra-filter-linking" type="button" aria-pressed="false" style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">Level 1 Linking</button>
-            <button class="ra-filter-pill" id="ra-filter-reduced-words" type="button" aria-pressed="false" style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">Level 2 Reduced words</button>
-            <button class="ra-filter-pill" id="ra-filter-sound-changes" type="button" aria-pressed="false" style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">Level 3 Sound changes</button>
-            <div id="ra-filter-feature-status" style="font-size: 0.82rem; color: var(--text-muted, #6b7280); padding: 4px 2px;"></div>
+          <div id="ra-practice-target-drawer" hidden style="width:100%; max-width:900px; display:flex; flex-direction:column; gap: 10px; padding: 12px 14px; border: 1px solid var(--border-light, #e5e7eb); border-radius: 14px; background: rgba(255,255,255,0.9); box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);">
+            <div class="read-aloud-filters" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+              <button class="ra-filter-pill active" id="ra-filter-all" type="button" style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--brand-primary, #2563eb); background: rgba(37, 99, 235, 0.1); color: var(--brand-primary, #2563eb); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">All</button>
+              <button class="ra-filter-pill" id="ra-filter-available" type="button" style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">🎵 Sample Audio: Available</button>
+              <button class="ra-filter-pill" id="ra-filter-unavailable" type="button" style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">No Audio</button>
+            </div>
+            <div class="read-aloud-filters" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+              <button class="ra-filter-pill active" id="ra-filter-feature-all" type="button" aria-pressed="true" style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--brand-primary, #2563eb); background: rgba(37, 99, 235, 0.1); color: var(--brand-primary, #2563eb); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">All prompts</button>
+              <button class="ra-filter-pill" id="ra-filter-any-connected" type="button" aria-pressed="false" style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">Any connected speech</button>
+              <button class="ra-filter-pill" id="ra-filter-linking" type="button" aria-pressed="false" style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">Linking</button>
+              <button class="ra-filter-pill" id="ra-filter-reduced-words" type="button" aria-pressed="false" style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">Reduced words</button>
+              <button class="ra-filter-pill" id="ra-filter-sound-changes" type="button" aria-pressed="false" style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">Sound changes</button>
+              <div id="ra-filter-feature-status" style="font-size: 0.82rem; color: var(--text-muted, #6b7280); padding: 4px 2px;"></div>
+            </div>
           </div>
-          <select id="ra-question-select" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-light); font-family: inherit; font-size: 0.95rem; display: none; background: white; max-width: 300px;">
-            <option value="random">🔀 Random Question</option>
-          </select>
         </div>
 
         <!-- Read Aloud UI Area -->
@@ -2547,14 +2667,14 @@
           <div id="ra-prompt-layout" style="display: flex; flex-wrap: wrap; align-items: stretch; gap: 18px; margin-bottom: 20px;">
           <div class="ra-prompt-box" style="flex: 1 1 620px; min-width: 280px; background: var(--bg-secondary); padding: 24px; border-radius: 12px; margin-bottom: 0; font-size: 1.15rem; line-height: 1.6; text-align: left; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); min-height: 120px; display: flex; flex-direction: column; gap: 14px; position: relative;">
             <div id="ra-prompt-card-header" style="display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
-              <div style="font-size: 0.92rem; color: var(--text-muted); max-width: 460px;">Use chunking to preview pause groups and connected speech levels to preview how fluent speech links, reduces words, or changes sounds. Both guides are optional and can be used together.</div>
+              <div style="font-size: 0.92rem; color: var(--text-muted); max-width: 460px;">Use chunking for pause groups and connected speech for linking, reduced words, and sound changes. Both guides are optional and can be used together.</div>
               <div id="ra-prompt-guides-group" role="group" aria-label="Prompt guides" style="display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 6px; padding: 4px; border-radius: 20px; background: rgba(37, 99, 235, 0.08); max-width: 100%;">
                 <button id="ra-toggle-chunking-btn" type="button" aria-pressed="false" style="min-height: 40px; padding: 8px 16px; border: none; border-radius: 999px; background: transparent; color: #1f2937; font-weight: 600; cursor: pointer;">Chunking</button>
                 <div id="ra-connected-speech-group" role="radiogroup" aria-label="Connected speech" style="display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 6px; max-width: 100%;">
                   <button id="ra-toggle-connected-off-btn" type="button" role="radio" aria-pressed="false" aria-checked="true" style="min-height: 40px; padding: 8px 16px; border: none; border-radius: 999px; background: transparent; color: #1f2937; font-weight: 600; cursor: pointer;">Off</button>
-                  <button id="ra-toggle-linking-btn" type="button" role="radio" aria-pressed="false" aria-checked="false" style="min-height: 40px; padding: 8px 16px; border: none; border-radius: 999px; background: transparent; color: #1f2937; font-weight: 600; cursor: pointer;">Level 1 Linking</button>
-                  <button id="ra-toggle-reduced-words-btn" type="button" role="radio" aria-pressed="false" aria-checked="false" style="min-height: 40px; padding: 8px 16px; border: none; border-radius: 999px; background: transparent; color: #1f2937; font-weight: 600; cursor: pointer;">Level 2 Reduced words</button>
-                  <button id="ra-toggle-sound-changes-btn" type="button" role="radio" aria-pressed="false" aria-checked="false" style="min-height: 40px; padding: 8px 16px; border: none; border-radius: 999px; background: transparent; color: #1f2937; font-weight: 600; cursor: pointer;">Level 3 Sound changes</button>
+                  <button id="ra-toggle-linking-btn" type="button" role="radio" aria-pressed="false" aria-checked="false" style="min-height: 40px; padding: 8px 16px; border: none; border-radius: 999px; background: transparent; color: #1f2937; font-weight: 600; cursor: pointer;">Linking</button>
+                  <button id="ra-toggle-reduced-words-btn" type="button" role="radio" aria-pressed="false" aria-checked="false" style="min-height: 40px; padding: 8px 16px; border: none; border-radius: 999px; background: transparent; color: #1f2937; font-weight: 600; cursor: pointer;">Reduced words</button>
+                  <button id="ra-toggle-sound-changes-btn" type="button" role="radio" aria-pressed="false" aria-checked="false" style="min-height: 40px; padding: 8px 16px; border: none; border-radius: 999px; background: transparent; color: #1f2937; font-weight: 600; cursor: pointer;">Sound changes</button>
                 </div>
               </div>
             </div>
@@ -2571,10 +2691,10 @@
           <div id="ra-connected-speech-box" class="ra-result" style="display: none; flex: 0 1 320px; min-width: 280px; margin-bottom: 0; text-align: left; padding: 18px 20px; border: 1px solid #d1d5db; border-radius: 12px; background: linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(37, 99, 235, 0.05) 100%); box-shadow: 0 4px 10px rgba(15, 23, 42, 0.05);">
             <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom: 12px;">
               <div>
-                <div id="ra-connected-speech-label" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);">Connected Speech</div>
-                <div id="ra-connected-speech-summary" style="font-size: 0.98rem; color: #374151; margin-top: 4px;">Summary</div>
+                <div id="ra-connected-speech-label" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);">Speech Coach</div>
+                <div id="ra-connected-speech-summary" style="font-size: 0.98rem; color: #374151; margin-top: 4px;">Preview</div>
               </div>
-              <div id="ra-connected-speech-meta" style="font-size: 0.8rem; color: var(--text-muted);">Guide</div>
+              <div id="ra-connected-speech-meta" style="font-size: 0.8rem; color: var(--text-muted);">Preview</div>
             </div>
             <div id="ra-connected-speech-list" style="display: grid; gap: 10px;"></div>
           </div>
@@ -2612,12 +2732,14 @@
             <div id="ra-read-aloud-controls" class="unified-controls" style="margin-top: 5px; width: 100%; display: flex; justify-content: center; background: transparent; padding: 0; box-shadow: none;">
               <div class="control-toolbar" style="justify-content: center;">
                 <div class="function-group">
-                  <button id="ra-next-btn" class="modern-btn modern-btn--skip" type="button" title="Skip to next">Skip</button>
+                  <button id="ra-next-btn" class="modern-btn modern-btn--skip" type="button" title="Next prompt">Next prompt</button>
                   <button id="ra-stop-btn" class="modern-btn" type="button" style="display: none; background: #ef4444; color: #fff; font-weight: 600; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; animation: ra-pulse 1.5s infinite;">⏹ Stop Recording</button>
-                  <button id="ra-record-btn" class="modern-btn modern-btn--check" type="button" disabled>...</button>
+                  <button id="ra-play-recording-btn" class="modern-btn modern-btn--play" type="button" style="display: none;">Play your recording</button>
+                  <button id="ra-record-btn" class="modern-btn modern-btn--check" type="button" disabled>Start recording now</button>
                 </div>
               </div>
             </div>
+            <audio id="ra-user-recording-audio" preload="metadata"></audio>
           </div>
         </div>
       </div>
@@ -2724,6 +2846,7 @@
   <script src="js/adaptive-engine-ui.js"></script>
   <script src="js/performance-tracker.js"></script>
   <script src="hint-system.js"></script>
+  <script src="js/auth-session-guard.js"></script>
   <script type="module" src="firebase-auth-module.js"></script>
   <script type="module" src="firebase-firestore-module.js"></script>
   <script type="module" src="auth-ui.js"></script>
@@ -2734,7 +2857,7 @@
   <script src="js/lazy-loader.js"></script>
   <script type="module" src="js/collo-dictate-mode.js"></script>
   <script type="module" src="js/reading-journey.js"></script>
-  <script type="module" src="script.js"></script>
+  <script type="module" src="script.js?v=20260327_practice_reading_live"></script>
   <!-- Points Toast Notification Container -->
   <div id="points-toast-container" class="points-toast-container"></div>
 
@@ -2761,7 +2884,7 @@
       <div class="shop-body">
         <div id="skill-tree-container" class="shop-tab-content active">
           <div id="level-system-container" class="level-system-container">
-            <!-- JS will render Level Header & Skill Tree here -->
+            <!-- JS will render Level Header & Progress Roadmap here -->
           </div>
         </div>
       </div>
@@ -3052,7 +3175,7 @@
   <script src="vocab-tutorial.js?v=20260113"></script>
 
   <!-- SRS Scheduler & Onboarding -->
-  <script src="srs-onboarding.js?v=20260127_srs_upgrade"></script>
+  <script type="module" src="srs-onboarding.js?v=20260127_srs_upgrade"></script>
 
   <!-- SRS Review Module -->
   <script type="module" src="srs-review.js?v=20260127_srs_upgrade"></script>
@@ -3091,9 +3214,11 @@
 
     // Quick Action Handler
     document.getElementById('quick-action-start-review')?.addEventListener('click', () => {
-      if (typeof openVocabModal === 'function') openVocabModal();
-      setTimeout(() => document.querySelector('.vocab-tab-btn[data-tab="practice"]')?.click(), 100);
-      setTimeout(() => document.getElementById('srs-start-review-btn')?.click(), 300);
+      if (window.SRSReview && typeof window.SRSReview.launchReviewFromDashboard === 'function') {
+        window.SRSReview.launchReviewFromDashboard();
+      } else {
+        document.getElementById('srs-start-review-btn')?.click();
+      }
     });
   </script>
 

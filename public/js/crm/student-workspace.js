@@ -176,7 +176,9 @@ window.CrmStudentWorkspace = (function () {
                     method: 'POST'
                 });
 
-                const testLink = String(json.testLink || '').trim();
+                const testLink = entranceTestUi && typeof entranceTestUi.normalizeLearnerLink === 'function'
+                    ? entranceTestUi.normalizeLearnerLink(json.testLink)
+                    : String(json.testLink || '').trim();
                 const testId = String(json.testId || '').trim();
                 if (!testLink || !testId) throw new Error('Test link missing from server response.');
 

@@ -25,6 +25,8 @@
     let notesRecommendationEngine = null;
     let notesRecommendationIndex = null;
     let recentRecommendedIds = [];
+    let notesAttemptStartTime = null;
+    let notesPerformanceTracker = null;
 
     const REASON_LABELS = {
         level_and_continuity: 'Smart Match',
@@ -148,6 +150,12 @@
         if (elements.playBtn) {
             elements.playBtn.addEventListener('click', startPractice);
         }
+        if (elements.audio) {
+            elements.audio.addEventListener('play', markAttemptStart);
+        }
+        if (elements.userInput) {
+            elements.userInput.addEventListener('input', markAttemptStart);
+        }
 
         // Status filter
         if (elements.statusFilterBtn) {
@@ -192,6 +200,24 @@
         return notesRecommendationEngine;
     }
 
+    function ensurePerformanceTracker() {
+        if (notesPerformanceTracker) return notesPerformanceTracker;
+        if (window.notesPerformanceTracker) {
+            notesPerformanceTracker = window.notesPerformanceTracker;
+            return notesPerformanceTracker;
+        }
+        if (!window.PerformanceTracker) return null;
+        notesPerformanceTracker = new window.PerformanceTracker('notes');
+        window.notesPerformanceTracker = notesPerformanceTracker;
+        return notesPerformanceTracker;
+    }
+
+    function markAttemptStart() {
+        if (!notesAttemptStartTime) {
+            notesAttemptStartTime = Date.now();
+        }
+    }
+
     function buildRecommendationIndex() {
         const engine = ensureRecommendationEngine();
         if (!engine) {
@@ -202,9 +228,18 @@
     }
 
     function getNotesCefrLevel() {
-        const filteredLevel = Number.parseInt(window.DifficultyFilter?.getCurrentDifficulty?.('notes'), 10);
+        const filterValue = window.DifficultyFilter?.getCurrentDifficulty?.('notes');
+        const filteredLevel = Number.parseInt(filterValue, 10);
         if (Number.isFinite(filteredLevel) && filteredLevel >= 1 && filteredLevel <= 3) {
             return filteredLevel * 2;
+        }
+
+        const isAdaptive = !!window.DifficultyManager?.getGlobalSettings?.()?.autoAdjustEnabled;
+        if (isAdaptive && typeof window.DifficultyManager?.getContentTier === 'function') {
+            const contentTier = window.DifficultyManager.getContentTier('notes');
+            if (Number.isFinite(contentTier) && contentTier >= 1 && contentTier <= 3) {
+                return contentTier * 2;
+            }
         }
 
         const currentLevel = Number.parseInt(String(currentEntry?.level), 10);
@@ -614,6 +649,7 @@
         elements.stepAudio.style.display = 'none';
         elements.stepResults.style.display = 'none';
         elements.userInput.value = '';
+        notesAttemptStartTime = null;
 
         // Check if has guiding video
         const hasVideo = currentEntry.videoUrl && currentEntry.videoUrl.trim().length > 0;
@@ -733,6 +769,21 @@
         elements.userDisplay.textContent = userNotes;
         elements.matchCount.textContent = matchedWords.length;
 
+        const tracker = ensurePerformanceTracker();
+        if (tracker) {
+            const safeWordCount = Math.max(1, transcriptWordCount || 0);
+            const accuracy = Math.max(0, Math.min(1, matchedWords.length / safeWordCount));
+            const timeTaken = Math.max(2, (Date.now() - (notesAttemptStartTime || Date.now())) / 1000);
+            tracker.recordAttempt({
+                correct: matchedWords.length > 0 && matchedWords.length === transcriptWordCount,
+                accuracy,
+                attempts: 1,
+                hintUsed: false,
+                timeTaken,
+                wordCount: safeWordCount
+            });
+        }
+
         // Save progress if user is logged in
         saveProgress(userNotes, matchedWords, transcriptWordCount);
     }
@@ -743,6 +794,7 @@
     function retryPractice() {
         elements.stepResults.style.display = 'none';
         elements.userInput.value = '';
+        notesAttemptStartTime = null;
         startPractice();
     }
 

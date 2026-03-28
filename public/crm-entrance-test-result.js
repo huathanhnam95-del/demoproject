@@ -14,6 +14,7 @@
   // ==================== CONSTANTS ====================
   const urlParams = new URLSearchParams(window.location.search || '');
   const testId = String(urlParams.get('testId') || '').trim();
+  const authSessionGuard = window.AuthSessionGuard || null;
   const UI_DASH = '—';
   const UI_BULLET = '•';
 
@@ -31,17 +32,17 @@
     showGate('Checking admin access…', 'Please wait');
     await initFirebaseFromServer();
 
-    const user = await waitForAuthUser({ timeoutMs: 6500 });
+    const user = await waitForAuthUser({ timeoutMs: 12000, nullGraceMs: 1500 });
     if (!user) {
       showGate('Please log in as admin first.', 'Redirecting to the app…');
-      setTimeout(() => (window.location.href = 'index.html'), 1800);
+      setTimeout(() => window.location.replace('index.html'), 1800);
       return;
     }
 
     const adminOk = await isAdminUser(user);
     if (!adminOk) {
       showGate('Access denied.', 'Admin privileges required.');
-      setTimeout(() => (window.location.href = 'index.html'), 2200);
+      setTimeout(() => window.location.replace('index.html'), 2200);
       return;
     }
 
@@ -77,6 +78,11 @@
   }
 
   async function initFirebaseFromServer() {
+    if (authSessionGuard && typeof authSessionGuard.ensureCompatFirebaseFromConfig === 'function') {
+      await authSessionGuard.ensureCompatFirebaseFromConfig(firebase);
+      return;
+    }
+
     const res = await fetch('/api/config', { cache: 'no-store' });
     const result = await res.json().catch(() => null);
 
@@ -88,31 +94,19 @@
     if (!firebase.apps.length) {
       firebase.initializeApp(result.config);
     }
+    if (authSessionGuard && typeof authSessionGuard.ensureCompatLocalPersistence === 'function') {
+      await authSessionGuard.ensureCompatLocalPersistence(firebase);
+    }
   }
 
-  function waitForAuthUser({ timeoutMs }) {
-    return new Promise((resolve) => {
-      let done = false;
-      let unsubscribe = () => { };
-
-      const complete = (user) => {
-        if (done) return;
-        done = true;
-        clearTimeout(timer);
-        unsubscribe();
-        resolve(user || null);
-      };
-
-      const timer = setTimeout(() => {
-        complete(null);
-      }, timeoutMs);
-
-      unsubscribe = firebase.auth().onAuthStateChanged((user) => {
-        complete(user || null);
-      }, () => {
-        complete(null);
+  function waitForAuthUser({ timeoutMs, nullGraceMs }) {
+    if (authSessionGuard && typeof authSessionGuard.waitForCompatAuthUser === 'function') {
+      return authSessionGuard.waitForCompatAuthUser(firebase, {
+        timeoutMs,
+        nullGraceMs
       });
-    });
+    }
+    return Promise.resolve(firebase.auth().currentUser || null);
   }
 
   async function isAdminUser(user) {

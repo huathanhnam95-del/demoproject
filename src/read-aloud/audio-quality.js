@@ -78,8 +78,11 @@ function parseWavBuffer(buffer) {
   }
 }
 
-function analyzeAudioQuality(buffer) {
-  const thresholds = loadAudioQualityThresholds();
+function analyzeAudioQuality(buffer, thresholdOverrides = null) {
+  const thresholds = {
+    ...loadAudioQualityThresholds(),
+    ...(thresholdOverrides && typeof thresholdOverrides === 'object' ? thresholdOverrides : {})
+  };
   const parsed = parseWavBuffer(buffer);
   if (!parsed.ok) {
     return {

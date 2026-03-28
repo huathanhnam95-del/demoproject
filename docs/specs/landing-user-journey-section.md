@@ -19,7 +19,7 @@ Add a "Your Journey" section to the landing page (`public/landing/index.html`) t
 **3-column phase layout** with a connecting progress line, each phase containing a numbered badge, phase title, timeframe label, and 3-4 bullet milestones.
 
 - Phase 1 — Day 0: "Build Your Pipeline" (choose level → first practice → vocab auto-unlocks → first SRS)
-- Phase 2 — Days 1–3: "Lock In the Loop" (daily practice → save words → SRS review → Skill Tree upgrades)
+- Phase 2 — Days 1–3: "Lock In the Loop" (daily practice → save words → SRS review → roadmap unlocks)
 - Phase 3 — Week 1+: "Expand Your Stack" (add Speak, Fill, Watch, Survival modes)
 
 ## 4. Placement

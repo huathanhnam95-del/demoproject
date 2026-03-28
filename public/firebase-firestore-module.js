@@ -76,7 +76,6 @@ async function createOrUpdateUserProfile(userId, email, isNewUser = false) {
         lastLoginAt: serverTimestamp(),
         totalActiveSeconds: 0,
         totalPoints: 0,
-        coins: 100,
         unlockedModes: CORE_ALWAYS_UNLOCKED_MODES,
         isAdmin: false // Explicitly set to false during client-side creation
       };
@@ -157,22 +156,19 @@ async function getUserProfile(userId) {
 
       try {
         await updateDoc(doc(db, 'users', userId), {
-          unlockedModes: allModes,
-          coins: userData.totalPoints || 0 // Sync coins with existing points
+          unlockedModes: allModes
         });
       } catch (updateError) {
         log.warn('Could not update legacy user profile:', updateError);
       }
 
       userData.unlockedModes = allModes;
-      userData.coins = userData.totalPoints || 0;
     }
 
     // Cache to localStorage for future resilience
     try {
         localStorage.setItem(cacheKey, JSON.stringify({
         email: userData.email,
-        coins: userData.coins || 0,
         totalPoints: userData.totalPoints || 0,
           unlockedModes: userData.unlockedModes || CORE_ALWAYS_UNLOCKED_MODES,
         isAdmin: userData.isAdmin === true,
@@ -1114,10 +1110,9 @@ async function addPoints(userId, points, title, description = '') {
       newTotal = 0;
     }
 
-    // Update user's totalPoints and coins
+    // Update user's totalPoints
     await updateDoc(userRef, {
-      totalPoints: increment(points),
-      coins: increment(points) // Add to spendable balance
+      totalPoints: increment(points)
     });
 
     // Add entry to pointsHistory subcollection
@@ -1327,7 +1322,6 @@ async function recordDualTrackScore(userId, scoreData) {
         'skillPoints.speaking': (currentPoints.speaking || 0) + (scoreData.points.breakdown.speaking || 0),
 
         totalPoints: (userData.totalPoints || 0) + (scoreData.points.total || 0),
-        coins: (userData.coins || 0) + (scoreData.points.total || 0),
 
         // Track B: Proficiency (Derived)
         'skillRatings.listening': validatedRatings.listening || 0,
@@ -1670,72 +1664,20 @@ async function updateUnlockedModes(userId, modes) {
 }
 
 /**
- * Atomic transaction to deduct coins from a user
- * @param {string} userId
- * @param {number} amount
+ * Coins are retired from the live progression path.
+ * Keep compatibility entry points, but do not mutate persisted currency.
  */
 async function deductCoins(userId, amount) {
-  try {
-    const userRef = doc(db, 'users', userId);
-    await updateDoc(userRef, {
-      coins: increment(-amount)
-    });
-    log.log(`✓ Deducted ${amount} coins from user ${userId}`);
-    return { success: true };
-  } catch (error) {
-    log.error('Error deducting coins:', error);
-    return { success: false, error: error.message };
-  }
+  log.log(`Coins retired; ignoring deductCoins(${userId}, ${amount})`);
+  return { success: false, retired: true };
 }
 
 /**
- * Atomic transaction to purchase a feature
- * Ensures coins are deducted and mode is unlocked together, or not at all.
- * @param {string} userId
- * @param {Object} item - Shop item object
+ * Feature purchases are retired from the live progression path.
  */
 async function purchaseFeature(userId, item) {
-  try {
-    const userRef = doc(db, 'users', userId);
-
-    await runTransaction(db, async (transaction) => {
-      const userDoc = await transaction.get(userRef);
-      if (!userDoc.exists()) throw new Error('User not found');
-
-      const userData = userDoc.data();
-      const currentCoins = userData.coins || 0;
-      const unlockedModes = userData.unlockedModes || CORE_ALWAYS_UNLOCKED_MODES;
-
-      if (currentCoins < item.cost) {
-        throw new Error('Insufficient coins');
-      }
-
-      if (unlockedModes.includes(item.unlocksMode)) {
-        throw new Error('Feature already unlocked');
-      }
-
-      // Update coins and unlockedModes
-      transaction.update(userRef, {
-        coins: currentCoins - item.cost,
-        unlockedModes: [...unlockedModes, item.unlocksMode]
-      });
-
-      // Also record purchase in history
-      const purchaseRef = doc(collection(db, 'users', userId, 'purchases'));
-      transaction.set(purchaseRef, {
-        itemId: item.id,
-        title: item.title,
-        cost: item.cost,
-        purchasedAt: serverTimestamp()
-      });
-    });
-
-    log.log('✓ Feature purchased atomically:', item.title);
-    return { success: true };
-  } catch (error) {
-    log.error('Atomic purchase failed:', error);
-    return { success: false, error: error.message };
-  }
+  log.log('Feature purchases retired; ignoring purchaseFeature call', { userId, itemId: item?.id });
+  return { success: false, retired: true };
 }
 
 /**

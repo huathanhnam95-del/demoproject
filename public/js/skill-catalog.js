@@ -3,6 +3,61 @@
  * Server remains authoritative for balance checks and coin deductions.
  */
 (function initSkillCatalog(global) {
+    const PROGRESSION_BRANCH_ORDER = ['listening', 'reading', 'writing', 'speaking'];
+    const CORE_PROGRESS_UNLOCKS = {
+        listening: [
+            { id: 'length_filter', title: 'Length Filter', branch: 'listening', kind: 'passive', level: 1, xpThreshold: 25, roadmapOrder: 10 },
+            { id: 'difficulty_filter', title: 'Difficulty Filter', branch: 'listening', kind: 'passive', level: 1, xpThreshold: 25, roadmapOrder: 20 },
+            { id: 'slow_audio', title: 'Slow Audio', branch: 'listening', kind: 'active', level: 1, xpThreshold: 25, roadmapOrder: 30 },
+            { id: 'echo_loop', title: 'Echo Loop', branch: 'listening', kind: 'active', level: 2, xpThreshold: 100, roadmapOrder: 40 },
+            { id: 'chunking', title: 'Chunking', branch: 'listening', kind: 'active', level: 4, xpThreshold: 400, roadmapOrder: 50 },
+            { id: 'transcript_glimpse', title: 'Transcript Glimpse', branch: 'listening', kind: 'active', level: 6, xpThreshold: 900, roadmapOrder: 60 }
+        ],
+        reading: [
+            { id: 'dict_peek', title: 'Dictionary Peek', branch: 'reading', kind: 'active', level: 1, xpThreshold: 25, roadmapOrder: 10 }
+        ],
+        writing: [
+            { id: 'word_ghost', title: 'Word Ghost', branch: 'writing', kind: 'active', level: 1, xpThreshold: 25, roadmapOrder: 10 },
+            { id: 'first_letter_peek', title: 'First-Letter Peek', branch: 'writing', kind: 'active', level: 2, xpThreshold: 100, roadmapOrder: 20 },
+            { id: 'hint_reveal', title: 'Hint: Reveal Word', branch: 'writing', kind: 'active', level: 4, xpThreshold: 400, roadmapOrder: 30 },
+            { id: 'typo_shield', title: 'Typo Shield', branch: 'writing', kind: 'active', level: 5, xpThreshold: 625, roadmapOrder: 40 }
+        ],
+        speaking: [
+            { id: 'pron_rune', title: 'Pronunciation Rune', branch: 'speaking', kind: 'active', level: 1, xpThreshold: 25, roadmapOrder: 10 },
+            { id: 'shadow_mode', title: 'Shadow Mode', branch: 'speaking', kind: 'active', level: 3, xpThreshold: 225, roadmapOrder: 20 },
+            { id: 'second_take', title: 'Second Take', branch: 'speaking', kind: 'active', level: 6, xpThreshold: 900, roadmapOrder: 30 }
+        ]
+    };
+    const RETIRED_SKILL_IDS = new Set([
+        'frugal_listener_1',
+        'frugal_listener_2',
+        'frugal_listener_3',
+        'frugal_writer_1',
+        'frugal_writer_2',
+        'frugal_writer_3',
+        'frugal_reader_1',
+        'frugal_reader_2',
+        'frugal_reader_3',
+        'frugal_speaker_1',
+        'frugal_speaker_2',
+        'frugal_speaker_3',
+        'audio_engineer',
+        'transcript_permit',
+        'clean_streak_saver',
+        'hint_kit',
+        'coupon_book',
+        'combo_coupon',
+        'mode_license_watch',
+        'mode_license_extended',
+        'mode_license_speak',
+        'no_reveal_rebate',
+        'breath_control',
+        'second_take_insurance',
+        'streak_shield',
+        'evidence_highlight',
+        'summary_scroll'
+    ]);
+
     const SKILL_CATALOG = {
         active: {
             slow_audio: {
@@ -176,7 +231,7 @@
             difficulty_filter: {
                 id: 'difficulty_filter',
                 title: 'Difficulty Filter',
-                desc: 'Unlock difficulty filtering in Type, Speak, and Fill modes (Easy, Medium, Hard).',
+                desc: 'Unlock the ability to select specific difficulty tiers.',
                 tree: 'listening',
                 level: 1,
                 cost: 120
@@ -314,7 +369,7 @@
             mode_license_extended: {
                 id: 'mode_license_extended',
                 title: 'Extended License',
-                desc: 'Reduces all active skill costs by 15% specifically when using Extended Mode.',
+                desc: 'Reduces all active skill costs by 15% specifically when using Extended and RFIB modes.',
                 tree: 'reading',
                 level: 10,
                 cost: 3300
@@ -442,10 +497,23 @@
             }
             return null;
         },
+        CORE_PROGRESS_UNLOCKS,
+        PROGRESSION_BRANCH_ORDER,
+        RETIRED_SKILL_IDS,
         getPurchaseCost(skillId) {
             if (SKILL_CATALOG.passive[skillId]) return SKILL_CATALOG.passive[skillId].cost || null;
             if (ACTIVE_UNLOCKS[skillId]) return ACTIVE_UNLOCKS[skillId].cost || null;
             return null;
+        },
+        getProgressionUnlockById(skillId) {
+            for (const branch of PROGRESSION_BRANCH_ORDER) {
+                const unlock = (CORE_PROGRESS_UNLOCKS[branch] || []).find((entry) => entry.id === skillId);
+                if (unlock) return unlock;
+            }
+            return null;
+        },
+        isRetiredSkill(skillId) {
+            return RETIRED_SKILL_IDS.has(skillId);
         }
     };
 })(window);

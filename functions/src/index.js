@@ -14,6 +14,7 @@ const { submitAttempt } = require('./submitAttempt');
 const { purchaseItem } = require('./purchaseItem');
 const { purchaseSkill } = require('./purchaseSkill');
 const { useActiveSkill } = require('./useActiveSkill');
+const { syncProgressionUnlocks } = require('./syncProgressionUnlocks');
 const { migrateUserCoins } = require('./migrateCoins');
 const { assessWriting } = require('./assessWriting');
 
@@ -94,6 +95,7 @@ module.exports = {
     purchaseItem,
     purchaseSkill,
     useActiveSkill,
+    syncProgressionUnlocks,
     migrateUserCoins,
     assessWriting,
     api: onRequest({ region: 'us-central1' }, apiApp),

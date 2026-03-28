@@ -25,7 +25,7 @@ At this point the app reloads and seeds Smart Difficulty (CEFR baseline) from yo
 - Vocabulary Book panel (right toggle): bookmarking + frequently missed words.
   - Unlocks automatically on missed keywords in Type/Speak for authenticated users.
   - Guests can still use manual add + local Vocabulary/SRS (browser-only persistence) and see a gentle login nudge for cloud sync.
-- Account panel: profile, coins/XP, and the entry point to the Skill Tree (Journey).
+- Account panel: profile, XP, and the entry point to the Progress Roadmap (Journey).
 - Smart Difficulty badge: opens the Adaptive Engine modal (CEFR level, recent accuracy, adjustments).
 
 ## 2. Roadmap Summary (What to do first, next, later)
@@ -51,7 +51,7 @@ Use these as training wheels. Smart Difficulty will adapt after you have real at
 1. Type (or Speak) a few items
 2. Save missed words
 3. Do SRS Review until "0 words due"
-4. Spend coins on 1-2 Skill Tree upgrades that reduce friction (hints, slow audio, etc.)
+4. Review the Progress Roadmap and keep practicing until the next unlock appears
 
 ### Later (Week 1+): Expand into the full stack
 
@@ -98,7 +98,7 @@ flowchart TD
         dailyStart --> dailyPrac["Practice: Type/Speak\n(10-20m)"]
         dailyPrac --> dailySave["Save New Words\n(1-3m)"]
         dailySave --> dailySRS["SRS Review\n(to 0 items)"]
-        dailySRS --> dailySkillTree["Unlock Skill Tree upgrades\n(passives + active assists)"]
+        dailySRS --> dailySkillTree["Practice to unlock\nnew roadmap features"]
     end
 
     %% 3. Week 1+: Expand
@@ -143,15 +143,15 @@ flowchart TD
 - Open Smart Difficulty (Adaptive Engine) and sanity-check:
   - your current level is reasonable
   - your recent accuracy is not constantly red (too hard) or always perfect (too easy)
-- Spend coins on 1-2 Skill Tree upgrades that match your friction points:
-  - If you struggle to hear: slow audio / replay assists
-  - If you struggle to spell: hint ladder improvements
-  - If you overuse reveal: earn passives that reward clean attempts (via Skill Tree)
+- Check the Progress Roadmap and keep practicing toward the next unlock:
+  - If you struggle to hear: slow audio / replay assists will open through Listening progression
+  - If you struggle to spell: hint ladder improvements will open through Writing progression
+  - If you overuse reveal: clean-attempt support features are earned through practice
 
 ## 7. Notes (How the app behaves)
 
 - Your level selection seeds Smart Difficulty (CEFR baseline).
-- Sentence Length Filter and Difficulty Filter unlock via the Skill Tree (Listening passives).
+- Sentence Length Filter and Difficulty Filter unlock via Listening progression.
 - Vocabulary Book + SRS work in guest-local mode for Day 0; logging in upgrades persistence to Firestore sync.
 - Survival Mode is available by default.
 - Writing Challenge is triggered during SRS when you get a word correct and it is eligible (POS-based).

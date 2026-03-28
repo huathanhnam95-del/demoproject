@@ -1,0 +1,45 @@
+{
+  "runId": "2026-03-27T14-13-42-180Z",
+  "baseUrl": "https://localhost:8443",
+  "startedAt": "2026-03-27T14:13:42.181Z",
+  "finishedAt": "2026-03-27T14:14:41.581Z",
+  "userUid": "fCbAWgVfulgrfD3Lc4G2SiWKBv53",
+  "scenarioResults": [
+    {
+      "name": "sm2_good_due_parity",
+      "status": "passed",
+      "assertions": [
+        "Good label 2d",
+        "SM2 Good schedule matched persisted card"
+      ],
+      "artifacts": [
+        "screenshots\\2026-03-27T14-13-42-180Z__sm2_good_due_parity.png"
+      ]
+    }
+  ],
+  "consoleErrors": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "[Dictation App][sess:97fd34fc][user:fCbAW][SRS] Error awarding points: FirebaseError: Missing or insufficient permissions.",
+      "url": "https://localhost:8443/js/logger.js"
+    }
+  ],
+  "pageErrors": [],
+  "cleanupCompleted": true,
+  "staleCleanups": []
+}

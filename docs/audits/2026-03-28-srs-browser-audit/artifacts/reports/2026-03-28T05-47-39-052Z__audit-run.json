@@ -1,0 +1,378 @@
+{
+  "runId": "2026-03-28T05-47-39-052Z",
+  "baseUrl": "https://localhost:8443",
+  "startedAt": "2026-03-28T05:47:39.054Z",
+  "finishedAt": "2026-03-28T06:00:37.421Z",
+  "userUid": "NaqfGhi4iIadMpYygTK3ZtNXEC62",
+  "scenarioResults": [
+    {
+      "name": "onboarding_local_persistence",
+      "status": "failed",
+      "assertions": [],
+      "artifacts": [
+        "screenshots\\2026-03-28T05-47-39-052Z__onboarding_local_persistence.png"
+      ],
+      "error": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.srs-card-modern')\u001b[22m\n\u001b[2m    - locator resolved to <div tabindex=\"0\" role=\"button\" aria-label=\"Start Daily Review\" class=\"modern-card srs-card-modern\" onclick=\"if(window.SRSReview) { SRSReview.startReviewSession(); }\">…</div>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\n    at executeScenario (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:480:56)\n    at async main (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:1029:28)"
+    },
+    {
+      "name": "settings_firestore_persistence",
+      "status": "failed",
+      "assertions": [],
+      "artifacts": [
+        "screenshots\\2026-03-28T05-47-39-052Z__settings_firestore_persistence.png"
+      ],
+      "error": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.srs-card-modern')\u001b[22m\n\u001b[2m    - locator resolved to <div tabindex=\"0\" role=\"button\" aria-label=\"Start Daily Review\" class=\"modern-card srs-card-modern\" onclick=\"if(window.SRSReview) { SRSReview.startReviewSession(); }\">…</div>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\n    at executeScenario (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:510:56)\n    at async main (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:1029:28)"
+    },
+    {
+      "name": "legacy_summary_compatibility",
+      "status": "failed",
+      "assertions": [],
+      "artifacts": [
+        "screenshots\\2026-03-28T05-47-39-052Z__legacy_summary_compatibility.png"
+      ],
+      "error": "page.waitForFunction: Timeout 20000ms exceeded.\n    at waitForVisible (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:178:16)\n    at executeScenario (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:551:23)\n    at async main (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:1029:28)"
+    },
+    {
+      "name": "sm2_good_due_parity",
+      "status": "failed",
+      "assertions": [],
+      "artifacts": [
+        "screenshots\\2026-03-28T05-47-39-052Z__sm2_good_due_parity.png"
+      ],
+      "error": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.srs-card-modern')\u001b[22m\n\u001b[2m    - locator resolved to <div tabindex=\"0\" role=\"button\" aria-label=\"Start Daily Review\" class=\"modern-card srs-card-modern\" onclick=\"if(window.SRSReview) { SRSReview.startReviewSession(); }\">…</div>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\n    at executeScenario (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:578:56)\n    at async main (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:1029:28)"
+    },
+    {
+      "name": "fsrs_good_due_parity",
+      "status": "failed",
+      "assertions": [],
+      "artifacts": [
+        "screenshots\\2026-03-28T05-47-39-052Z__fsrs_good_due_parity.png"
+      ],
+      "error": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.srs-card-modern')\u001b[22m\n\u001b[2m    - locator resolved to <div tabindex=\"0\" role=\"button\" aria-label=\"Start Daily Review\" class=\"modern-card srs-card-modern\" onclick=\"if(window.SRSReview) { SRSReview.startReviewSession(); }\">…</div>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\n    at executeScenario (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:578:56)\n    at async main (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:1029:28)"
+    },
+    {
+      "name": "mastered_hidden",
+      "status": "failed",
+      "assertions": [],
+      "artifacts": [
+        "screenshots\\2026-03-28T05-47-39-052Z__mastered_hidden.png"
+      ],
+      "error": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.srs-card-modern')\u001b[22m\n\u001b[2m    - locator resolved to <div tabindex=\"0\" role=\"button\" aria-label=\"Start Daily Review\" class=\"modern-card srs-card-modern\" onclick=\"if(window.SRSReview) { SRSReview.startReviewSession(); }\">…</div>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\n    at executeScenario (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:625:56)\n    at async main (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:1029:28)"
+    },
+    {
+      "name": "switch_sm2_to_fsrs",
+      "status": "failed",
+      "assertions": [],
+      "artifacts": [
+        "screenshots\\2026-03-28T05-47-39-052Z__switch_sm2_to_fsrs.png"
+      ],
+      "error": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.srs-card-modern')\u001b[22m\n\u001b[2m    - locator resolved to <div tabindex=\"0\" role=\"button\" aria-label=\"Start Daily Review\" class=\"modern-card srs-card-modern\" onclick=\"if(window.SRSReview) { SRSReview.startReviewSession(); }\">…</div>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\n    at executeScenario (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:657:56)\n    at async main (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:1029:28)"
+    },
+    {
+      "name": "switch_fsrs_to_sm2",
+      "status": "failed",
+      "assertions": [],
+      "artifacts": [
+        "screenshots\\2026-03-28T05-47-39-052Z__switch_fsrs_to_sm2.png"
+      ],
+      "error": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.srs-card-modern')\u001b[22m\n\u001b[2m    - locator resolved to <div tabindex=\"0\" role=\"button\" aria-label=\"Start Daily Review\" class=\"modern-card srs-card-modern\" onclick=\"if(window.SRSReview) { SRSReview.startReviewSession(); }\">…</div>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\n    at executeScenario (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:657:56)\n    at async main (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:1029:28)"
+    },
+    {
+      "name": "subday_relearning_labels",
+      "status": "failed",
+      "assertions": [],
+      "artifacts": [
+        "screenshots\\2026-03-28T05-47-39-052Z__subday_relearning_labels.png"
+      ],
+      "error": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.srs-card-modern')\u001b[22m\n\u001b[2m    - locator resolved to <div tabindex=\"0\" role=\"button\" aria-label=\"Start Daily Review\" class=\"modern-card srs-card-modern\" onclick=\"if(window.SRSReview) { SRSReview.startReviewSession(); }\">…</div>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\n    at executeScenario (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:690:56)\n    at async main (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:1029:28)"
+    },
+    {
+      "name": "early_review_only",
+      "status": "failed",
+      "assertions": [],
+      "artifacts": [
+        "screenshots\\2026-03-28T05-47-39-052Z__early_review_only.png"
+      ],
+      "error": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.srs-card-modern')\u001b[22m\n\u001b[2m    - locator resolved to <div tabindex=\"0\" role=\"button\" aria-label=\"Start Daily Review\" class=\"modern-card srs-card-modern\" onclick=\"if(window.SRSReview) { SRSReview.startReviewSession(); }\">…</div>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\n    at executeScenario (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:713:56)\n    at async main (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:1029:28)"
+    },
+    {
+      "name": "legacy_pending_payload_compatibility",
+      "status": "passed",
+      "assertions": [
+        "legacy pending summary.algorithm replayed to canonical summary path",
+        "legacy pending card replayed and cleared"
+      ],
+      "artifacts": [
+        "screenshots\\2026-03-28T05-47-39-052Z__legacy_pending_payload_compatibility.png"
+      ]
+    },
+    {
+      "name": "pending_recovery",
+      "status": "failed",
+      "assertions": [],
+      "artifacts": [
+        "screenshots\\2026-03-28T05-47-39-052Z__pending_recovery.png"
+      ],
+      "error": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.srs-card-modern')\u001b[22m\n\u001b[2m    - locator resolved to <div tabindex=\"0\" role=\"button\" aria-label=\"Start Daily Review\" class=\"modern-card srs-card-modern\" onclick=\"if(window.SRSReview) { SRSReview.startReviewSession(); }\">…</div>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\n    at executeScenario (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:796:56)\n    at async main (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:1029:28)"
+    },
+    {
+      "name": "rapid_save_reload_race",
+      "status": "failed",
+      "assertions": [],
+      "artifacts": [
+        "screenshots\\2026-03-28T05-47-39-052Z__rapid_save_reload_race.png"
+      ],
+      "error": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.srs-card-modern')\u001b[22m\n\u001b[2m    - locator resolved to <div tabindex=\"0\" role=\"button\" aria-label=\"Start Daily Review\" class=\"modern-card srs-card-modern\" onclick=\"if(window.SRSReview) { SRSReview.startReviewSession(); }\">…</div>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\n    at executeScenario (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:836:56)\n    at async main (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:1029:28)"
+    }
+  ],
+  "consoleErrors": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "[2026-03-28T05:58:22.589Z]  @firebase/firestore: Firestore (10.7.1): Could not reach Cloud Firestore backend. Connection failed 1 times. Most recent error: FirebaseError: [code=unavailable]: The operation could not be completed\nThis typically indicates that your device does not have a healthy Internet connection at the moment. The client will operate in offline mode until it is able to successfully connect to the backend.",
+      "url": "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    }
+  ],
+  "pageErrors": [],
+  "cleanupCompleted": true,
+  "staleCleanups": []
+}

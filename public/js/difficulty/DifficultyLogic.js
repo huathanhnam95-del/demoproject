@@ -18,13 +18,55 @@ export class DifficultyLogic {
         };
     }
 
+    sanitizeProfile(profile) {
+        if (!profile || typeof profile !== 'object') {
+            return this.makeDefaultProfile();
+        }
+
+        const clampLevel = (value) => {
+            const parsed = Number.parseInt(value, 10);
+            if (!Number.isFinite(parsed)) return 1;
+            return Math.max(this.config.LEVELS.MIN, Math.min(this.config.LEVELS.MAX, parsed));
+        };
+
+        const clampScore = (value) => {
+            const parsed = Number(value);
+            if (!Number.isFinite(parsed)) return 0;
+            return Math.max(0, Math.min(1, parsed));
+        };
+
+        const normalizedHistory = Array.isArray(profile.history)
+            ? profile.history.map((entry) => {
+                if (!entry || typeof entry !== 'object') return null;
+                return {
+                    date: Number.isFinite(Number(entry.date)) ? Number(entry.date) : Date.now(),
+                    score: clampScore(entry.score),
+                    level: clampLevel(entry.level),
+                    assisted: !!entry.assisted,
+                    calibMult: Number.isFinite(Number(entry.calibMult))
+                        ? Math.max(0.25, Math.min(1.0, Number(entry.calibMult)))
+                        : 1.0
+                };
+            }).filter(Boolean).slice(-this.config.HISTORY_SIZE)
+            : [];
+
+        return {
+            level: clampLevel(profile.level),
+            exp: Number.isFinite(Number(profile.exp)) ? Number(profile.exp) : 0,
+            history: normalizedHistory,
+            attemptsAtLevel: Number.isFinite(Number(profile.attemptsAtLevel))
+                ? Math.max(0, Number(profile.attemptsAtLevel))
+                : normalizedHistory.length
+        };
+    }
+
     /**
      * Check if the user has accumulated enough history to be considered calibrated.
      */
     isCalibrated(profile) {
-        if (!profile) return false;
-        const attempts = profile.attemptsAtLevel || 0;
-        const historyLen = profile.history ? profile.history.length : 0;
+        const safeProfile = this.sanitizeProfile(profile);
+        const attempts = safeProfile.attemptsAtLevel || 0;
+        const historyLen = safeProfile.history ? safeProfile.history.length : 0;
         return (attempts >= this.config.GRACE_PERIOD_ATTEMPTS) || (historyLen >= this.config.GRACE_PERIOD_ATTEMPTS);
     }
 
@@ -39,12 +81,12 @@ export class DifficultyLogic {
         if (!settings.autoAdjustEnabled) return null;
 
         // Validation
-        const safeScore = Math.max(0, Math.min(1, Number(score) || 0));
-        const currentLevel = Math.max(this.config.LEVELS.MIN, Math.min(this.config.LEVELS.MAX, profile.level || 1));
+        const safeProfile = this.sanitizeProfile(profile);
+        const currentLevel = Math.max(this.config.LEVELS.MIN, Math.min(this.config.LEVELS.MAX, safeProfile.level || 1));
 
         // Smurf Detection (Fast Track)
         // Check last 5 attempts at current level
-        const recent = (profile.history || []).filter(h => h.level === currentLevel).slice(-5);
+        const recent = (safeProfile.history || []).filter(h => h.level === currentLevel).slice(-5);
         const isSmurfing = recent.length === 5 && recent.every(h =>
             h.score >= this.config.THRESHOLDS.SMURF && !h.assisted
         );
@@ -55,19 +97,22 @@ export class DifficultyLogic {
 
         // Rolling Average Logic
         const windowSize = this.config.ADJUSTMENT.WINDOW_SIZES[settings.adjustmentSensitivity] || 10;
-        const attemptsAtLevel = profile.history.filter(h => h.level === currentLevel);
+        const attemptsAtLevel = (safeProfile.history || []).filter(h => h.level === currentLevel);
+        const EPSILON = 1e-9;
 
-        if (attemptsAtLevel.length >= windowSize && profile.attemptsAtLevel >= this.config.GRACE_PERIOD_ATTEMPTS) {
+        if (attemptsAtLevel.length >= windowSize && safeProfile.attemptsAtLevel >= this.config.GRACE_PERIOD_ATTEMPTS) {
             const window = attemptsAtLevel.slice(-windowSize);
             const avg = window.reduce((sum, h) => sum + h.score, 0) / windowSize;
+            const meetsPromotionThreshold = avg >= this.config.THRESHOLDS.UP || Math.abs(avg - this.config.THRESHOLDS.UP) <= EPSILON;
+            const meetsDemotionThreshold = avg <= this.config.THRESHOLDS.DOWN || Math.abs(avg - this.config.THRESHOLDS.DOWN) <= EPSILON;
 
-            if (avg > this.config.THRESHOLDS.UP && currentLevel < this.config.LEVELS.MAX) {
+            if (meetsPromotionThreshold && currentLevel < this.config.LEVELS.MAX) {
                 // Consistency check (last 3 must be decent)
                 const lastThree = window.slice(-3);
                 if (lastThree.every(h => h.score >= 0.70)) {
                     return { newLevel: currentLevel + 1, direction: 'increase', reason: 'performance' };
                 }
-            } else if (avg < this.config.THRESHOLDS.DOWN && currentLevel > this.config.LEVELS.MIN) {
+            } else if (meetsDemotionThreshold && currentLevel > this.config.LEVELS.MIN) {
                 return { newLevel: currentLevel - 1, direction: 'decrease', reason: 'struggle' };
             }
         }
@@ -85,6 +130,7 @@ export class DifficultyLogic {
         return {
             level: safeLevel,
             name: this.config.LEVELS.NAMES[safeLevel],
+            contentTier: this.config.getContentTierForLevel(safeLevel),
             ...settings
         };
     }

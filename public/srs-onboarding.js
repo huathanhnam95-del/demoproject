@@ -7,16 +7,17 @@
  *   - Integrates with VocabTutorial if available
  */
 
+import { SRS_STORAGE_KEYS } from './js/srs-constants.js';
+import {
+    getStoredAlgorithmPreference,
+    migrateLegacyAlgorithmPreference,
+    setStoredAlgorithmPreference
+} from './js/srs-storage.js';
+
 const SRSOnboarding = (function () {
     'use strict';
 
     // Storage Keys
-    const STORAGE_KEYS = {
-        ALGORITHM: 'srs_algorithm_preference',
-        ONBOARDING_COMPLETE: 'srs_onboarding_complete',
-        TUTORIAL_SEEN: 'srs_tutorial_seen'
-    };
-
     // Default Algorithm
     const DEFAULT_ALGORITHM = 'SM2';
 
@@ -27,7 +28,9 @@ const SRSOnboarding = (function () {
      * @returns {string} 'SM2' or 'FSRS'
      */
     function getPreferredAlgorithm() {
-        return localStorage.getItem(STORAGE_KEYS.ALGORITHM) || DEFAULT_ALGORITHM;
+        return migrateLegacyAlgorithmPreference(localStorage)
+            || getStoredAlgorithmPreference(localStorage)
+            || DEFAULT_ALGORITHM;
     }
 
     /**
@@ -35,7 +38,7 @@ const SRSOnboarding = (function () {
      * @param {string} algorithm - 'SM2' or 'FSRS'
      */
     function setPreferredAlgorithm(algorithm) {
-        localStorage.setItem(STORAGE_KEYS.ALGORITHM, algorithm);
+        setStoredAlgorithmPreference(algorithm, localStorage);
         console.log('[SRS Onboarding] Algorithm set to:', algorithm);
     }
 
@@ -44,14 +47,14 @@ const SRSOnboarding = (function () {
      * @returns {boolean}
      */
     function isOnboardingComplete() {
-        return localStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETE) === 'true';
+        return localStorage.getItem(SRS_STORAGE_KEYS.ONBOARDING_COMPLETE) === 'true';
     }
 
     /**
      * Mark onboarding as complete
      */
     function markOnboardingComplete() {
-        localStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETE, 'true');
+        localStorage.setItem(SRS_STORAGE_KEYS.ONBOARDING_COMPLETE, 'true');
     }
 
     /**
@@ -59,23 +62,24 @@ const SRSOnboarding = (function () {
      * @returns {boolean}
      */
     function hasSeenTutorial() {
-        return localStorage.getItem(STORAGE_KEYS.TUTORIAL_SEEN) === 'true';
+        return localStorage.getItem(SRS_STORAGE_KEYS.TUTORIAL_SEEN) === 'true';
     }
 
     /**
      * Mark tutorial as seen
      */
     function markTutorialSeen() {
-        localStorage.setItem(STORAGE_KEYS.TUTORIAL_SEEN, 'true');
+        localStorage.setItem(SRS_STORAGE_KEYS.TUTORIAL_SEEN, 'true');
     }
 
     /**
      * Reset onboarding state (for testing)
      */
     function resetOnboarding() {
-        localStorage.removeItem(STORAGE_KEYS.ALGORITHM);
-        localStorage.removeItem(STORAGE_KEYS.ONBOARDING_COMPLETE);
-        localStorage.removeItem(STORAGE_KEYS.TUTORIAL_SEEN);
+        localStorage.removeItem(SRS_STORAGE_KEYS.ALGORITHM);
+        localStorage.removeItem(SRS_STORAGE_KEYS.LEGACY_ALGORITHM);
+        localStorage.removeItem(SRS_STORAGE_KEYS.ONBOARDING_COMPLETE);
+        localStorage.removeItem(SRS_STORAGE_KEYS.TUTORIAL_SEEN);
         console.log('[SRS Onboarding] State reset');
     }
 
@@ -355,7 +359,13 @@ const SRSOnboarding = (function () {
     };
 })();
 
+if (typeof window !== 'undefined') {
+    window.SRSOnboarding = SRSOnboarding;
+}
+
 // Export for ES modules
+export { SRSOnboarding };
+
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = SRSOnboarding;
 }

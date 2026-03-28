@@ -1,108 +1,121 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { SRSScheduler, ALGORITHM, CARD_STATE, RATING } from '../public/srs-scheduler.js';
+import {
+    isCardDue,
+    isMasteredCard,
+    migrateCardForTargetAlgorithm,
+    normalizeSrsCard
+} from '../public/js/srs-card-model.js';
 
-test('SM-2 Algorithm - New Card Graduation', () => {
+test('initializeCard uses review-by-tomorrow defaults', () => {
+    const sm2 = SRSScheduler.initializeCard(ALGORITHM.SM2);
+    assert.strictEqual(sm2.algorithm, ALGORITHM.SM2);
+    assert.strictEqual(sm2.state, CARD_STATE.REVIEWING);
+    assert.strictEqual(sm2.interval, 1);
+    assert.strictEqual(sm2.repetitions, 0);
+    assert.ok(new Date(sm2.nextReviewDate) > new Date(sm2.lastReviewDate));
+
+    const fsrs = SRSScheduler.initializeCard(ALGORITHM.FSRS);
+    assert.strictEqual(fsrs.algorithm, ALGORITHM.FSRS);
+    assert.strictEqual(fsrs.state, CARD_STATE.REVIEWING);
+    assert.strictEqual(fsrs.interval, 1);
+    assert.strictEqual(fsrs.repetitions, 0);
+    assert.strictEqual(fsrs.fsrs.reps, 0);
+});
+
+test('SM-2 review cards progress logically and keep sub-day lapses at interval 0', () => {
     const card = SRSScheduler.initializeCard(ALGORITHM.SM2);
+    const reviewResult = SRSScheduler.calculate(card, RATING.GOOD, ALGORITHM.SM2);
 
-    // Good rating on first step (1m)
-    let result = SRSScheduler.calculate(card, RATING.GOOD, ALGORITHM.SM2);
-    assert.strictEqual(result.state, CARD_STATE.LEARNING);
-    assert.strictEqual(result.stepIndex, 1);
+    assert.strictEqual(reviewResult.state, CARD_STATE.REVIEWING);
+    assert.strictEqual(reviewResult.interval, 3);
+    assert.strictEqual(reviewResult.status, 'review');
 
-    // Good rating on second step (10m) -> Graduates to Reviewing (1d)
-    result = SRSScheduler.calculate(result, RATING.GOOD, ALGORITHM.SM2);
-    assert.strictEqual(result.state, CARD_STATE.REVIEWING);
-    assert.strictEqual(result.interval, 1);
-    assert.strictEqual(result.repetitions, 1);
+    const lapseResult = SRSScheduler.calculate(reviewResult, RATING.AGAIN, ALGORITHM.SM2);
+    assert.strictEqual(lapseResult.state, CARD_STATE.RELEARNING);
+    assert.strictEqual(lapseResult.interval, 0);
+    assert.strictEqual(lapseResult.stepIndex, 0);
+    assert.ok(new Date(lapseResult.nextReviewDate) > new Date(lapseResult.lastReviewDate));
+    assert.ok(new Date(lapseResult.nextReviewDate) <= new Date(Date.now() + 2 * 60 * 1000));
 });
 
-test('SM-2 Algorithm - Easy Graduation', () => {
-    const card = SRSScheduler.initializeCard(ALGORITHM.SM2);
-
-    // Easy rating on new card -> Graduates to Reviewing (4d)
-    const result = SRSScheduler.calculate(card, RATING.EASY, ALGORITHM.SM2);
-    assert.strictEqual(result.state, CARD_STATE.REVIEWING);
-    assert.strictEqual(result.interval, 4);
-    assert.strictEqual(result.repetitions, 1);
-    assert.ok(result.easeFactor > 2.5);
-});
-
-test('SM-2 Algorithm - Review Interval Growth', () => {
-    let card = {
-        interval: 1,
-        easeFactor: 2.5,
-        repetitions: 1,
-        state: CARD_STATE.REVIEWING,
-        lastReviewDate: new Date().toISOString()
-    };
-
-    // Good rating on a card with interval 1 and ease 2.5
-    // Typical SM-2 logic: next interval = current * ease
-    const result = SRSScheduler.calculate(card, RATING.GOOD, ALGORITHM.SM2);
-    assert.strictEqual(result.state, CARD_STATE.REVIEWING);
-    // 1 * 2.5 = 2.5, rounded to 3 (or 2 depending on implementation math, 
-    // but in srs-scheduler.js: Math.max(effectiveInterval + 1, Math.round(effectiveInterval * newEaseFactor)))
-    // effectiveInterval is 1. newEaseFactor is 2.5. Math.round(1 * 2.5) is 3.
-    assert.strictEqual(result.interval, 3);
-});
-
-test('SM-2 Algorithm - Lapse (Again)', () => {
-    let card = {
-        interval: 10,
-        easeFactor: 2.5,
-        repetitions: 5,
-        state: CARD_STATE.REVIEWING,
-        lastReviewDate: new Date().toISOString()
-    };
-
-    const result = SRSScheduler.calculate(card, RATING.AGAIN, ALGORITHM.SM2);
-    assert.strictEqual(result.state, CARD_STATE.RELEARNING);
-    assert.strictEqual(result.stepIndex, 0);
-    assert.strictEqual(result.repetitions, 0);
-    assert.strictEqual(result.easeFactor, 2.3); // 2.5 - 0.2
-});
-
-test('FSRS Algorithm - Integration', () => {
+test('FSRS maintains repetition ownership on every write', () => {
     const card = SRSScheduler.initializeCard(ALGORITHM.FSRS);
-    assert.strictEqual(card.algorithm, ALGORITHM.FSRS);
-    assert.ok(card.fsrs);
-
-    // Test a basic review
     const result = SRSScheduler.calculate(card, RATING.GOOD, ALGORITHM.FSRS);
+
     assert.strictEqual(result.algorithm, ALGORITHM.FSRS);
-    assert.ok(result.fsrs.stability > 0);
-    assert.ok(result.fsrs.difficulty > 0);
+    assert.strictEqual(result.repetitions, result.fsrs.reps);
     assert.strictEqual(typeof result.interval, 'number');
+    assert.ok(result.fsrs.stability >= 0);
+    assert.ok(result.fsrs.difficulty > 0);
 });
 
-test('SRSScheduler - Mastery Threshold', () => {
-    // SM-2 Mastery
-    let card = {
-        interval: 20,
-        easeFactor: 2.5,
-        repetitions: 9,
-        state: CARD_STATE.REVIEWING,
-        lastReviewDate: new Date().toISOString()
-    };
+test('normalizeSrsCard repairs legacy records and invalid dates', () => {
+    const normalized = normalizeSrsCard({
+        status: 'learning',
+        interval: 0,
+        nextReviewDate: 'not-a-date',
+        lastReviewDate: 'also-not-a-date'
+    }, new Date('2026-03-27T00:00:00.000Z'));
 
-    let result = SRSScheduler.calculate(card, RATING.GOOD, ALGORITHM.SM2);
-    assert.strictEqual(result.state, CARD_STATE.MASTERED);
+    assert.strictEqual(normalized.state, CARD_STATE.LEARNING);
+    assert.strictEqual(normalized.status, 'learning');
+    assert.strictEqual(normalized.lastReviewDate, null);
+    assert.ok(new Date(normalized.nextReviewDate).toString() !== 'Invalid Date');
+});
 
-    // FSRS Mastery (based on stability >= 30)
-    let fsrsCard = {
-        interval: 10,
+test('isCardDue and isMasteredCard use normalized state', () => {
+    const mastered = normalizeSrsCard({
+        status: 'mastered',
+        interval: 21,
+        nextReviewDate: '2026-03-01T00:00:00.000Z'
+    }, new Date('2026-03-27T00:00:00.000Z'));
+
+    const dueCard = normalizeSrsCard({
+        status: 'reviewing',
+        interval: 1,
+        nextReviewDate: '2026-03-26T00:00:00.000Z'
+    }, new Date('2026-03-27T00:00:00.000Z'));
+
+    assert.ok(isMasteredCard(mastered));
+    assert.strictEqual(isCardDue(mastered, new Date('2026-03-27T00:00:00.000Z')), false);
+    assert.strictEqual(isCardDue(dueCard, new Date('2026-03-27T00:00:00.000Z')), true);
+});
+
+test('migrateCardForTargetAlgorithm preserves due date while switching algorithms', () => {
+    const source = normalizeSrsCard({
+        algorithm: ALGORITHM.SM2,
         state: CARD_STATE.REVIEWING,
+        interval: 7,
+        repetitions: 4,
+        easeFactor: 2.1,
+        nextReviewDate: '2026-04-03T00:00:00.000Z'
+    }, new Date('2026-03-27T00:00:00.000Z'));
+
+    const migrated = migrateCardForTargetAlgorithm(source, ALGORITHM.FSRS, new Date('2026-03-27T00:00:00.000Z'));
+    assert.strictEqual(migrated.algorithm, ALGORITHM.FSRS);
+    assert.strictEqual(migrated.nextReviewDate, source.nextReviewDate);
+    assert.ok(migrated.fsrs.stability > 0);
+    assert.ok(migrated.fsrs.reps >= source.repetitions);
+});
+
+test('preview labels never render 0m', () => {
+    const card = normalizeSrsCard({
+        algorithm: ALGORITHM.FSRS,
+        state: CARD_STATE.LEARNING,
+        interval: 0,
+        nextReviewDate: new Date(Date.now() + 30 * 1000).toISOString(),
         fsrs: {
-            stability: 29,
             difficulty: 5,
-            retrievability: 0.9,
-            lastReview: new Date().toISOString()
+            stability: 0.1,
+            retrievability: 1,
+            lastReview: new Date().toISOString(),
+            lapses: 0,
+            reps: 0
         }
-    };
+    }, new Date());
 
-    let fsrsResult = SRSScheduler.calculate(fsrsCard, RATING.GOOD, ALGORITHM.FSRS);
-    if (fsrsResult.fsrs.stability >= 30) {
-        assert.strictEqual(fsrsResult.state, CARD_STATE.MASTERED);
-    }
+    const previews = SRSScheduler.getIntervalPreviews(card, ALGORITHM.FSRS);
+    assert.ok(Object.values(previews).every(label => label !== '0m'));
 });

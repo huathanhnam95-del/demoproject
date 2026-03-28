@@ -113,11 +113,21 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 122,2026-03-25,Upgrade Read Aloud connected-speech scoring to MFA-based backend,Phase 2 MFA,
 123,2026-03-25,Generate RFIB audio for next 30 questions (IDs 0034-0063),Done,2026-03-25
 124,2026-03-25,Implement Elevenlabs chunk pauses in RA audio,Done,2026-03-25
-125,2026-03-25,Generate RFIB audio for next 200 questions (IDs 0064-0263),In Progress - Generating next 20 questions (0085-0104) via Vertex API,
+125,2026-03-25,Generate RFIB audio (Full_M_100) for all 1128 questions,Done - Phase 1 complete (1128/1128). Phase 2 pending for other variations,2026-03-27
+140,2026-03-28,Generate Beg_M_80 audio for first 100 questions,Done,2026-03-28
+141,2026-03-28,Generate Beg_M_80 audio for remaining RFIB database (approx 900 questions),In Progress - AI Studio key,
 126,2026-03-25,Generate thumbnails for RFIB questions with council assessment,Done,2026-03-25
 127,2026-03-26,Production push V1.6.0 - all pending changes since V1.5.15,Done,2026-03-26
 128,2026-03-26,Regenerate Read Aloud audio with ElevenLabs pause tags,In Progress,
 129,2026-03-26,Reassess Read Aloud chunking and create rubric,Paused - Processing stopped per user request due to API limits and unnatural rules,
-
 130,2026-03-26,Refactor enrich_rfib_data_test.py to Vertex REST API to bypass quotas,Done,2026-03-26
 131,2026-03-26,Assess abnormal chunking in RA.xlsx,Done,2026-03-26
+132,2026-03-26,Production push V1.6.1 - commit and push all changes,Done,2026-03-26
+133,2026-03-27,Fix missing Writing Challenge selection container and execute browser test plan,Done,2026-03-27
+134,2026-03-27,Execute comprehensive Writing Challenge context browser test plan (24 cases),Done,2026-03-27
+135,2026-03-27,Execute Writing Challenge retest checklist (19 cases - blocker revalidation),Done,2026-03-27
+136,2026-03-27,Execute Writing Challenge summary queue browser test plan (12 cases),Done,2026-03-27
+137,2026-03-27,Execute adaptive difficulty browser test plan,Done,2026-03-28
+138,2026-03-28,Execute SRS browser edge-case test plan (13 scenarios),Done,2026-03-28
+139,2026-03-28,Execute ADM browser retest plan (16 scenarios),Done,2026-03-28
+142,2026-03-29,Commit all pending workspace changes,In Progress,

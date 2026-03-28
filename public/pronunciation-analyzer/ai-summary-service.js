@@ -45,13 +45,13 @@ export class AISummaryService {
 
         // Opening based on overall score
         if (score >= 85) {
-            pieces.push(`Great job with "${word}"! Your pronunciation is really close to native.`);
+            pieces.push(`Great job with "${word}"! Your prosody is really close to the native pattern.`);
         } else if (score >= 70) {
-            pieces.push(`Nice effort on "${word}"! You're getting there — just a few things to polish.`);
+            pieces.push(`Nice effort on "${word}"! You're getting there — just a few prosody details to polish.`);
         } else if (score >= 50) {
-            pieces.push(`Good try on "${word}"! Let's work on a couple of things to make it sound more natural.`);
+            pieces.push(`Good try on "${word}"! Let's work on a couple of melody and rhythm details to make it sound more natural.`);
         } else {
-            pieces.push(`Keep practicing "${word}" — every attempt gets you closer! Here's what to focus on.`);
+            pieces.push(`Keep practicing "${word}" — every attempt gets you closer! Here's what to focus on for prosody.`);
         }
 
         // Identify the biggest weakness
@@ -81,7 +81,7 @@ export class AISummaryService {
 
         // Stress pattern note
         if (!comparison.stressMatches) {
-            pieces.push(`Also, double-check which syllable gets the main stress — that makes a big difference in how natural it sounds.`);
+            pieces.push(`Also, double-check which syllable gets the main stress cue — that makes a big difference in how natural it sounds.`);
         }
 
         // Closing encouragement
@@ -141,11 +141,11 @@ export class AISummaryService {
         return `You are a friendly English pronunciation coach giving brief feedback to a student who just practiced saying "${word}" (IPA: ${ipa || 'unknown'}).
 
 Here are their scores compared to a native speaker:
-- Overall: ${comparison.overallScore}%
-- Pitch accuracy: ${comparison.pitchScore}%
-- Duration/rhythm: ${comparison.durationScore}%
-- Volume/stress: ${comparison.intensityScore}%
-- Stress pattern match: ${comparison.stressMatches ? 'correct' : 'incorrect — ' + (comparison.stressFeedback || 'wrong syllable stressed')}
+- Prosody match: ${comparison.overallScore}%
+- Pitch / melody: ${comparison.pitchScore}%
+- Duration / rhythm: ${comparison.durationScore}%
+- Volume / emphasis: ${comparison.intensityScore}%
+- Stress pattern match: ${comparison.stressMatches ? 'correct' : 'incorrect — ' + (comparison.stressFeedback || 'wrong stress cue')}
 ${comparison.syllableCountMatches === false ? `- They pronounced ${userSyllables.length} syllables instead of the expected count` : ''}
 - Their syllables: ${syllableInfo}
 

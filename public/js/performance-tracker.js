@@ -37,7 +37,7 @@ class PerformanceTracker {
             ? Math.max(0.25, Math.min(1.0, assistCalibMultRaw))
             : 1.0;
         const adjustedAttemptScore = Math.max(0, Math.min(1.0, attemptScore * assistCalibMult));
-        const assisted = (Number(attempt.assistCount) || 0) > 0 || assistCalibMult < 0.9;
+        const assisted = !!attempt.assisted || !!attempt.hintUsed || (Number(attempt.assistCount) || 0) > 0 || assistCalibMult < 0.9;
 
         // Send to DifficultyManager
         if (window.DifficultyManager) {
@@ -96,10 +96,17 @@ class PerformanceTracker {
             speedScore = Math.min(0.8, speedScore);
         }
 
-        // Weighted Total: Accuracy (80%), Speed (20%)
+        const weights =
+            this.mode === 'srs'
+                ? { accuracy: 1.0, speed: 0.0 }
+                : this.mode === 'notes'
+                    ? { accuracy: 0.9, speed: 0.1 }
+                    : { accuracy: 0.8, speed: 0.2 };
+
+        // Weighted Total: Mode-aware accuracy/speed balance
         const total = (
-            (accuracyScore * 0.80) +
-            (speedScore * 0.20)
+            (accuracyScore * weights.accuracy) +
+            (speedScore * weights.speed)
         );
 
         console.log(`[Performance] Score: ${total.toFixed(2)} | WPM: ${userWPM.toFixed(1)} vs Target: ${targetWPM} `);

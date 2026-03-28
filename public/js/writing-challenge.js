@@ -2,6 +2,13 @@
  * Writing Challenge Module
  * Handles the logic for the "Write a sentence" challenge in SRS Review.
  */
+import {
+    buildAssessWritingContext,
+    createActiveWritingChallengeContext,
+    getWritingChallengeValidationTarget,
+    normalizeWritingChallengeOptions
+} from './writing-challenge-utils.js';
+
 export class WritingChallenge {
     constructor(dependencies) {
         this.deps = dependencies;
@@ -9,9 +16,13 @@ export class WritingChallenge {
         this.log = dependencies.log || console;
 
         this.currentWord = null;
+        this.currentChallengeItem = null;
         this.currentPrompt = null;
         this.onCompleteCallback = null;
         this.userLevel = 1;
+        this.activeRequestId = null;
+        this.activeAiRequestId = null;
+        this.pendingTimers = new Set();
 
         this.initEventListeners();
     }
@@ -79,73 +90,213 @@ export class WritingChallenge {
         }
     }
 
-    async show(wordObj, userLevel, uniqueId, onComplete) {
-        this.currentWord = wordObj;
+    trackTimer(timerId) {
+        this.pendingTimers.add(timerId);
+        return timerId;
+    }
+
+    clearPendingTimers() {
+        this.pendingTimers.forEach((timerId) => clearTimeout(timerId));
+        this.pendingTimers.clear();
+    }
+
+    isActiveRequest(requestId) {
+        return Boolean(requestId) && this.activeRequestId === requestId;
+    }
+
+    cancelPendingWork() {
+        this.clearPendingTimers();
+        this.activeAiRequestId = null;
+    }
+
+    getDraftKey() {
+        return this.currentWord?.lemma || this.currentWord?.originalWord || '';
+    }
+
+    getActiveContext() {
+        return this.deps.getActiveWritingChallengeContext?.() || null;
+    }
+
+    seedActiveContext(challengeItem, contextId) {
+        const context = createActiveWritingChallengeContext(challengeItem, contextId);
+        this.deps.setActiveWritingChallengeContext?.(context);
+        return context;
+    }
+
+    patchActiveContext(partial) {
+        if (!this.activeRequestId) return null;
+        return this.deps.patchActiveWritingChallengeContext?.(this.activeRequestId, partial) || null;
+    }
+
+    getValidationTarget() {
+        const context = this.getActiveContext();
+        return getWritingChallengeValidationTarget(context || {
+            wordObj: this.currentWord,
+            usedCollocation: this.currentPrompt?.usedCollocation || null,
+            validationTarget: this.currentPrompt?.usedCollocation || this.currentWord?.lemma || this.currentWord?.originalWord || ''
+        });
+    }
+
+    buildAiContext() {
+        const context = this.getActiveContext() || createActiveWritingChallengeContext({
+            challengeId: this.currentChallengeItem?.challengeId,
+            wordKey: this.currentChallengeItem?.wordKey,
+            wordObj: this.currentWord
+        }, this.activeRequestId);
+
+        return buildAssessWritingContext({
+            ...context,
+            promptText: this.currentPrompt?.prompt || context.promptText || '',
+            usedCollocation: this.currentPrompt?.usedCollocation || context.usedCollocation || null,
+            validationTarget: this.getValidationTarget()
+        });
+    }
+
+    resetFeedbackUI() {
+        if (!this.elements.srsWritingFeedback) return;
+        this.elements.srsWritingFeedback.textContent = '';
+        this.elements.srsWritingFeedback.className = 'srs-writing-feedback';
+        this.elements.srsWritingFeedback.style.display = 'none';
+    }
+
+    resetModalUI({ preserveDraftField = false } = {}) {
+        if (this.elements.srsWritingPrompt) {
+            this.elements.srsWritingPrompt.textContent = '';
+        }
+        this.resetFeedbackUI();
+        this.updateStarterUI('', false);
+        this.toggleHintsVisibility(false);
+        this.updateHintsUI({}, null);
+
+        const posTag = document.getElementById('writing-pos-tag');
+        if (posTag) {
+            posTag.textContent = '';
+            posTag.style.display = 'none';
+            posTag.style.color = '';
+            posTag.style.backgroundColor = '';
+        }
+
+        const optionContainer = document.getElementById('writing-option-container');
+        if (optionContainer) {
+            optionContainer.innerHTML = '';
+            optionContainer.style.display = 'none';
+        }
+
+        if (!preserveDraftField && this.elements.srsWritingInput) {
+            this.elements.srsWritingInput.value = '';
+        }
+    }
+
+    setInputModeVisible(visible) {
+        if (this.elements.srsWritingInput?.parentElement) {
+            this.elements.srsWritingInput.parentElement.style.display = visible ? 'block' : 'none';
+        }
+        if (this.elements.srsWritingSubmit) {
+            this.elements.srsWritingSubmit.style.display = visible ? 'block' : 'none';
+        }
+        if (this.aiCheckBtn) {
+            this.aiCheckBtn.style.display = visible ? 'inline-flex' : 'none';
+        }
+    }
+
+    async show(challengeItem, userLevel, uniqueId, onComplete) {
+        const requestId = uniqueId || `writing_${Date.now()}`;
+        this.cancelPendingWork();
+        this.activeRequestId = requestId;
+        this.currentChallengeItem = challengeItem?.wordObj ? challengeItem : { wordObj: challengeItem };
+        this.currentWord = this.currentChallengeItem.wordObj
+            ? JSON.parse(JSON.stringify(this.currentChallengeItem.wordObj))
+            : null;
+        this.currentPrompt = null;
         this.onCompleteCallback = onComplete;
         this.userLevel = userLevel;
 
-        if (!this.elements.srsWritingModal) {
+        if (!this.elements.srsWritingModal || !this.currentWord) {
             this.handleSkip();
             return;
         }
 
         try {
-            // Logic adapted from srs-review.js
-            const lemma = wordObj.lemma || wordObj.originalWord;
+            const draftKey = this.getDraftKey();
+            const existingContext = this.getActiveContext();
+            if (!existingContext || existingContext.contextId !== requestId) {
+                this.seedActiveContext(this.currentChallengeItem, requestId);
+            } else {
+                this.patchActiveContext({
+                    status: 'loading',
+                    wordObj: { ...this.currentWord },
+                    validationTarget: this.currentWord.lemma || this.currentWord.originalWord || ''
+                });
+            }
 
-            // Check POS (filtering logic handled by caller or here? Plan says here is fine)
-            // ... (POS Check Logic) ... 
-            // Reuse logic from srs-review.js but simplified
+            this.resetModalUI({ preserveDraftField: false });
 
-            // Ensure modal lives at document body root for stacking context.
             document.body.appendChild(this.elements.srsWritingModal);
 
-            // Generate Prompt
-            this.currentPrompt = await this.deps.generateWritingPrompt(wordObj, userLevel);
+            requestAnimationFrame(() => {
+                if (!this.isActiveRequest(requestId)) return;
+                this.elements.srsWritingModal.classList.add('visible');
+                this.elements.srsWritingModal.style.pointerEvents = 'auto';
+            });
 
-            // Update UI
+            this.currentPrompt = await this.deps.generateWritingPrompt(this.currentWord, userLevel);
+            if (!this.isActiveRequest(requestId)) return;
+
             if (this.currentPrompt.type === 'multi-option') {
-                this.renderSelectionUI(this.currentPrompt.options);
-                // Hide input initially
-                if (this.elements.srsWritingInput) this.elements.srsWritingInput.parentElement.style.display = 'none';
-                if (this.elements.srsWritingSubmit) this.elements.srsWritingSubmit.style.display = 'none';
-                if (this.elements.srsWritingPrompt) this.elements.srsWritingPrompt.textContent = this.currentPrompt.prompt;
-                // Hide hints initially
-                this.toggleHintsVisibility(false);
+                const options = normalizeWritingChallengeOptions(this.currentPrompt.options);
+                if (options.length <= 1) {
+                    const selected = options[0] || null;
+                    const promptText = selected
+                        ? `Write a sentence using "${selected.text}".`
+                        : this.currentPrompt.prompt;
+                    this.currentPrompt = {
+                        ...this.currentPrompt,
+                        usedCollocation: selected?.text || this.currentPrompt.usedCollocation || null,
+                        prompt: promptText,
+                        type: 'single-option'
+                    };
+                    this.renderWritingUI();
+                    if (this.elements.srsWritingPrompt) this.elements.srsWritingPrompt.textContent = promptText;
+                    this.updateStarterUI(this.currentPrompt.starter, this.currentPrompt.showStarter);
+                    this.updateHintsUI(this.currentWord, this.currentPrompt.usedCollocation);
+                    this.toggleHintsVisibility(true);
+                } else {
+                    this.renderSelectionUI(options);
+                    this.setInputModeVisible(false);
+                    if (this.elements.srsWritingPrompt) this.elements.srsWritingPrompt.textContent = this.currentPrompt.prompt;
+                    this.toggleHintsVisibility(false);
+                }
             } else {
-                // Ensure selection UI is hidden if a prior prompt used multi-option.
                 const optionContainer = document.getElementById('writing-option-container');
                 if (optionContainer) optionContainer.style.display = 'none';
 
                 this.renderWritingUI();
                 if (this.elements.srsWritingPrompt) this.elements.srsWritingPrompt.textContent = this.currentPrompt.prompt;
-                // Update Starter
                 this.updateStarterUI(this.currentPrompt.starter, this.currentPrompt.showStarter);
-                // Populate Hints
-                this.updateHintsUI(wordObj, this.currentPrompt.usedCollocation);
+                this.updateHintsUI(this.currentWord, this.currentPrompt.usedCollocation);
+                this.toggleHintsVisibility(true);
             }
 
-            // Load Draft
-            const draft = this.deps.loadDraft(lemma);
-            if (this.elements.srsWritingInput) this.elements.srsWritingInput.value = draft || '';
-
-            // Reset Feedback
-            if (this.elements.srsWritingFeedback) {
-                this.elements.srsWritingFeedback.textContent = '';
-                this.elements.srsWritingFeedback.className = 'srs-writing-feedback';
-                this.elements.srsWritingFeedback.style.display = 'none';
-            }
-
-            // Show Modal
-            requestAnimationFrame(() => {
-                this.elements.srsWritingModal.classList.add('visible');
-                this.elements.srsWritingModal.style.pointerEvents = 'auto';
+            this.patchActiveContext({
+                status: 'ready',
+                promptText: this.currentPrompt?.prompt || '',
+                promptType: this.currentPrompt?.type || null,
+                usedCollocation: this.currentPrompt?.usedCollocation || null,
+                starter: this.currentPrompt?.starter || null,
+                showStarter: this.currentPrompt?.showStarter === true,
+                validationTarget: this.currentPrompt?.usedCollocation || this.currentWord.lemma || this.currentWord.originalWord || ''
             });
 
-            // Focus Input
-            setTimeout(() => {
-                if (this.elements.srsWritingInput) this.elements.srsWritingInput.focus();
-            }, 300);
+            const draft = this.deps.loadDraft(draftKey);
+            if (this.elements.srsWritingInput) this.elements.srsWritingInput.value = draft || '';
+            this.resetFeedbackUI();
+
+            this.trackTimer(setTimeout(() => {
+                if (!this.isActiveRequest(requestId)) return;
+                if (this.elements.srsWritingInput && this.elements.srsWritingInput.parentElement?.style.display !== 'none') {
+                    this.elements.srsWritingInput.focus();
+                }
+            }, 300));
 
         } catch (e) {
             this.log.error('Error showing writing challenge', e);
@@ -212,17 +363,26 @@ export class WritingChallenge {
         this.updateHintsUI(this.currentWord, option.text); // Highlight the chosen one
 
         // Update current prompt context so feedback knows what to check
-        this.currentPrompt.usedCollocation = option.text;
+        this.currentPrompt = {
+            ...this.currentPrompt,
+            usedCollocation: option.text,
+            prompt: newPrompt
+        };
+        this.patchActiveContext({
+            status: 'ready',
+            promptText: newPrompt,
+            usedCollocation: option.text,
+            validationTarget: option.text
+        });
 
         // Focus Input
-        setTimeout(() => {
+        this.trackTimer(setTimeout(() => {
             if (this.elements.srsWritingInput) this.elements.srsWritingInput.focus();
-        }, 100);
+        }, 100));
     }
 
     renderWritingUI() {
-        if (this.elements.srsWritingInput) this.elements.srsWritingInput.parentElement.style.display = 'block';
-        if (this.elements.srsWritingSubmit) this.elements.srsWritingSubmit.style.display = 'block';
+        this.setInputModeVisible(true);
     }
 
     toggleHintsVisibility(show) {
@@ -327,13 +487,19 @@ export class WritingChallenge {
         }
 
         this.updateStarterUI(newStarter, !!newStarter);
+        this.patchActiveContext({
+            starter: newStarter || null,
+            showStarter: !!newStarter
+        });
         this.log.debug('Regenerated starter:', newStarter);
     }
 
     async handleSubmit() {
         if (!this.currentWord) return;
         const sentence = this.elements.srsWritingInput.value.trim();
-        const lemma = this.currentWord.lemma || this.currentWord.originalWord;
+        const draftKey = this.getDraftKey();
+        const lemma = draftKey;
+        const requestId = this.activeRequestId;
 
         // Basic Validation
         if (!sentence) return;
@@ -345,11 +511,11 @@ export class WritingChallenge {
         }
 
         // Must include target word (or the chosen phrase) to count as a valid attempt.
-        const usedPhrase = this.currentPrompt?.usedCollocation || '';
+        const validationTarget = this.getValidationTarget();
         const normalize = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9'\s-]/g, ' ').replace(/\s+/g, ' ').trim();
         const normalizedSentence = normalize(sentence);
         const normalizedLemma = normalize(lemma);
-        const normalizedPhrase = normalize(usedPhrase);
+        const normalizedPhrase = normalize(validationTarget);
 
         const containsTarget = (() => {
             if (normalizedPhrase && normalizedSentence.includes(normalizedPhrase)) return true;
@@ -361,7 +527,7 @@ export class WritingChallenge {
         })();
 
         if (!containsTarget) {
-            const safeLemma = String(lemma)
+            const safeLemma = String(validationTarget || lemma)
                 .replaceAll('&', '&amp;')
                 .replaceAll('<', '&lt;')
                 .replaceAll('>', '&gt;')
@@ -384,6 +550,7 @@ export class WritingChallenge {
             // Assess
             try {
                 const result = await this.deps.assessSentence(sentence, lemma);
+                if (!this.isActiveRequest(requestId)) return;
                 if (result) {
                     feedback = result;
                     const match = String(result).match(/Score:\s*([1-5])\s*\/\s*5/i) || String(result).match(/\b([1-5])\s*\/\s*5\b/);
@@ -426,10 +593,10 @@ export class WritingChallenge {
             }
         }
 
-        this.deps.clearDraft?.(lemma);
+        this.deps.clearDraft?.(draftKey);
 
         // Increased timeout to 4s to allow reading feedback
-        setTimeout(() => this.close(), 4000);
+        this.trackTimer(setTimeout(() => this.close({ reason: 'auto-complete' }), 4000));
     }
 
     showFeedback(msg, type) {
@@ -440,7 +607,7 @@ export class WritingChallenge {
     }
 
     handleSkip() {
-        this.close();
+        this.close({ reason: 'skip' });
     }
 
     createAiCheckButton() {
@@ -473,38 +640,37 @@ export class WritingChallenge {
     async handleAiCheck() {
         const sentence = this.elements.srsWritingInput.value.trim();
         if (!sentence) return;
+        const requestId = this.activeRequestId;
+        const aiRequestId = `${requestId}:ai:${Date.now()}`;
+        this.activeAiRequestId = aiRequestId;
 
         this.showFeedback('Thinking...', 'info');
 
         try {
-            // Call Backend Function
-            // Note: writing-challenge.js doesn't import firebase functions directly usually.
-            // We rely on deps.assessWriting which we need to wire up in srs-review.js
             if (this.deps.assessWriting) {
-                const result = await this.deps.assessWriting(sentence, this.currentWord);
+                const result = await this.deps.assessWriting(sentence, this.buildAiContext());
+                if (!this.isActiveRequest(requestId) || this.activeAiRequestId !== aiRequestId) return;
 
                 if (result.limited) {
                     this.showFeedback(result.message, 'warning');
-                    // Fallback to LanguageTool automatically?
                     if (result.fallback) {
-                        setTimeout(() => this.checkWithLanguageTool(sentence), 1500);
+                        this.trackTimer(setTimeout(() => this.checkWithLanguageTool(sentence, aiRequestId, requestId), 1500));
                     }
                 } else if (result.success) {
                     this.displayGeminiFeedback(result);
                 }
             } else {
-                // Fallback if function not passed
-                this.checkWithLanguageTool(sentence);
+                this.checkWithLanguageTool(sentence, aiRequestId, requestId);
             }
         } catch (e) {
+            if (!this.isActiveRequest(requestId) || this.activeAiRequestId !== aiRequestId) return;
             this.log.error('AI Check failed completely:', e);
             this.showFeedback('AI Check failed. Trying LanguageTool...', 'warning');
-            // Ensure fallback triggers even on catch
-            setTimeout(() => this.checkWithLanguageTool(sentence), 1000);
+            this.trackTimer(setTimeout(() => this.checkWithLanguageTool(sentence, aiRequestId, requestId), 1000));
         }
     }
 
-    async checkWithLanguageTool(text) {
+    async checkWithLanguageTool(text, aiRequestId = this.activeAiRequestId, requestId = this.activeRequestId) {
         this.showFeedback('Checking grammar...', 'info');
         try {
             const response = await fetch('https://api.languagetool.org/v2/check', {
@@ -516,6 +682,7 @@ export class WritingChallenge {
                 })
             });
             const data = await response.json();
+            if (!this.isActiveRequest(requestId) || this.activeAiRequestId !== aiRequestId) return;
 
             // Format LanguageTool response to look like Gemini response
             const corrections = data.matches.map(m => ({
@@ -535,6 +702,7 @@ export class WritingChallenge {
             this.displayGeminiFeedback(result);
 
         } catch (e) {
+            if (!this.isActiveRequest(requestId) || this.activeAiRequestId !== aiRequestId) return;
             this.showFeedback('Grammar check unavailable.', 'error');
         }
     }
@@ -574,20 +742,28 @@ export class WritingChallenge {
         // Add specific class styling for ai-result in CSS or inline here
     }
 
-    close() {
+    close({ reason = 'dismiss' } = {}) {
+        this.cancelPendingWork();
+        const callback = this.onCompleteCallback;
+        const requestId = this.activeRequestId;
+        this.onCompleteCallback = null;
+        this.deps.clearActiveWritingChallengeContext?.(requestId);
+        this.activeRequestId = null;
+        this.activeAiRequestId = null;
+        this.currentPrompt = null;
+        this.currentWord = null;
+        this.currentChallengeItem = null;
+
         if (this.elements.srsWritingModal) {
             this.elements.srsWritingModal.classList.remove('visible');
             this.elements.srsWritingModal.style.pointerEvents = 'none';
         }
 
-        // Hide option container if it exists (multi-option state cleanup)
-        const container = document.getElementById('writing-option-container');
-        if (container) container.style.display = 'none';
+        this.resetModalUI({ preserveDraftField: false });
+        this.setInputModeVisible(true);
 
-        // Restore callback
-        if (this.onCompleteCallback) {
-            this.onCompleteCallback();
-            this.onCompleteCallback = null;
+        if (callback) {
+            callback(reason);
         }
     }
 }

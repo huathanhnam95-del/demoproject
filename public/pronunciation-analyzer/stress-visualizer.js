@@ -52,8 +52,6 @@ function alignAnalysisData(nativeAnalysis, userAnalysis) {
     const nStartTime = nativeAnalysis.pitch.times[nStartIdx] || 0;
     const uStartTime = userAnalysis.pitch.times[uStartIdx] || 0;
 
-    console.log(`Speech Onset Detected - Native: ${nStartTime.toFixed(3)}s, User: ${uStartTime.toFixed(3)}s`);
-
     // 2. Create shift function
     // We want to shift everything so speech starts at t=0 for BOTH
     // But for the chart, we keep the Native timescale as "Reference" and shift User to match
@@ -368,8 +366,6 @@ class StressVisualizer {
             return analysis; // Already normalized
         }
 
-        console.log(`Normalizing: shifting time by -${speechStartTime.toFixed(3)}s`);
-
         // Create a new normalized copy
         const normalized = {
             ...analysis,
@@ -451,7 +447,6 @@ class StressVisualizer {
      */
     drawNativePitchContour(nativeAnalysis, syllables = []) {
         if (!nativeAnalysis || !nativeAnalysis.pitch) {
-            console.log('No native analysis data for pitch contour');
             return;
         }
 
@@ -651,7 +646,6 @@ class StressVisualizer {
                 const nativeMean = getMeanPitch(normalizedNative.pitch.values);
                 const userMean = getMeanPitch(originalUserPitches);
                 pitchShift = nativeMean - userMean;
-                console.log(`[Pitch Alignment] Native Mean: ${Math.round(nativeMean)}Hz, User Mean: ${Math.round(userMean)}Hz, Shift: ${Math.round(pitchShift)}Hz`);
             }
 
             // Apply shift to user pitches for visualization
@@ -784,8 +778,8 @@ class StressVisualizer {
 
         // Generate detailed feedback
         const feedbackNativePattern = (native && native.pitch_pattern) ? native.pitch_pattern : (native && native.syllables ? native.syllables : []);
-        const feedbackNativeSyllables = normalizedNative ? normalizedNative.syllables : [];
-        this.generateFeedback(feedbackNativePattern, userSyllables, feedbackNativeSyllables);
+        const feedbackPlaybackSyllables = native?.syllables || [];
+        this.generateFeedback(feedbackNativePattern, userSyllables, feedbackPlaybackSyllables);
 
         // Draw duration comparison chart
         this.drawDurationChart(normalizedNative?.syllables || [], userSyllables);
@@ -809,7 +803,7 @@ class StressVisualizer {
     /**
      * Generate detailed feedback per syllable
      */
-    generateFeedback(nativePattern, userSyllables, nativeSyllablesAligned = null) {
+    generateFeedback(nativePattern, userSyllables, nativePlaybackSyllables = null) {
         this.toggleFeedbackSection(true);
 
         const container = document.getElementById('pa-feedback-content');
@@ -841,6 +835,7 @@ class StressVisualizer {
         // Generate Feedback Cards (hidden by default except first)
         nativePattern.forEach((nativeSyl, i) => {
             const userSyl = userSyllables[i];
+            const playbackSyl = nativePlaybackSyllables?.[i] || nativeSyl;
             if (!userSyl) return;
 
             const card = document.createElement('div');
@@ -908,8 +903,8 @@ class StressVisualizer {
             card.innerHTML = `
                 <div class="pa-feedback-header">
                     <span class="pa-feedback-title">Syllable ${i + 1} Analysis</span>
-                    ${this.onPlaySyllable && nativeSyl ?
-                    `<button class="pa-play-syl-btn" data-start="${nativeSyl.startTime}" data-end="${nativeSyl.endTime}">
+                    ${this.onPlaySyllable && Number.isFinite(playbackSyl?.startTime) && Number.isFinite(playbackSyl?.endTime) ?
+                    `<button class="pa-play-syl-btn" data-start="${playbackSyl.startTime}" data-end="${playbackSyl.endTime}">
                             🔊 Play Syllable
                         </button>` : ''}
                 </div>
@@ -947,7 +942,7 @@ class StressVisualizer {
                 playBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     if (this.onPlaySyllable) {
-                        this.onPlaySyllable(nativeSyl.startTime, nativeSyl.endTime);
+                        this.onPlaySyllable(playbackSyl.startTime, playbackSyl.endTime);
                     }
                 });
             }

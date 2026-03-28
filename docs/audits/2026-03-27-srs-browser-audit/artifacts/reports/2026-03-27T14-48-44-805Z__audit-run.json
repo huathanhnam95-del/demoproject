@@ -1,0 +1,347 @@
+{
+  "runId": "2026-03-27T14-48-44-805Z",
+  "baseUrl": "https://localhost:8443",
+  "startedAt": "2026-03-27T14:48:44.806Z",
+  "finishedAt": "2026-03-27T14:53:31.404Z",
+  "userUid": "OlpSeA76L4NExkdCTyy0oE9JjrA3",
+  "scenarioResults": [
+    {
+      "name": "onboarding_local_persistence",
+      "status": "passed",
+      "assertions": [
+        "onboarding modal visible",
+        "FSRS persisted across reload"
+      ],
+      "artifacts": [
+        "screenshots\\2026-03-27T14-48-44-805Z__onboarding_local_persistence.png"
+      ]
+    },
+    {
+      "name": "settings_firestore_persistence",
+      "status": "passed",
+      "assertions": [
+        "SM2 persisted to vocabularyBook/data and reload"
+      ],
+      "artifacts": [
+        "screenshots\\2026-03-27T14-48-44-805Z__settings_firestore_persistence.png"
+      ]
+    },
+    {
+      "name": "sm2_good_due_parity",
+      "status": "passed",
+      "assertions": [
+        "Good label 2d",
+        "SM2 Good schedule matched persisted card"
+      ],
+      "artifacts": [
+        "screenshots\\2026-03-27T14-48-44-805Z__sm2_good_due_parity.png"
+      ]
+    },
+    {
+      "name": "fsrs_good_due_parity",
+      "status": "passed",
+      "assertions": [
+        "Good label 4d",
+        "FSRS Good schedule matched persisted card"
+      ],
+      "artifacts": [
+        "screenshots\\2026-03-27T14-48-44-805Z__fsrs_good_due_parity.png"
+      ]
+    },
+    {
+      "name": "mastered_hidden",
+      "status": "failed",
+      "assertions": [],
+      "artifacts": [
+        "screenshots\\2026-03-27T14-48-44-805Z__mastered_hidden.png"
+      ],
+      "error": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#btn-panel-srs')\u001b[22m\n\u001b[2m    - locator resolved to <button id=\"btn-panel-srs\" class=\"segmented-btn\" onclick=\"toggleDashboardPanel('panel-srs')\">↵            Daily Review↵          </button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div id=\"app-preloader\" class=\"app-preloader preloader-2d\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div id=\"app-preloader\" class=\"app-preloader preloader-2d\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m    - element is not stable\u001b[22m\n\u001b[2m  12 × retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\u001b[2m       - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <div id=\"app-preloader\" class=\"app-preloader preloader-2d\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m  - retrying click action\u001b[22m\n\u001b[2m    - waiting 500ms\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m    - element is visible, enabled and stable\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n\n    at openSrsPanel (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:381:42)\n    at async executeScenario (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:583:17)\n    at async main (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:889:28)"
+    },
+    {
+      "name": "switch_sm2_to_fsrs",
+      "status": "passed",
+      "assertions": [
+        "algorithm switched to FSRS on review"
+      ],
+      "artifacts": [
+        "screenshots\\2026-03-27T14-48-44-805Z__switch_sm2_to_fsrs.png"
+      ]
+    },
+    {
+      "name": "switch_fsrs_to_sm2",
+      "status": "passed",
+      "assertions": [
+        "algorithm switched to SM2 on review"
+      ],
+      "artifacts": [
+        "screenshots\\2026-03-27T14-48-44-805Z__switch_fsrs_to_sm2.png"
+      ]
+    },
+    {
+      "name": "subday_relearning_labels",
+      "status": "passed",
+      "assertions": [
+        "labels: 1m, 2m, 10m, 4d"
+      ],
+      "artifacts": [
+        "screenshots\\2026-03-27T14-48-44-805Z__subday_relearning_labels.png"
+      ]
+    },
+    {
+      "name": "early_review_only",
+      "status": "passed",
+      "assertions": [
+        "early review confirmation accepted",
+        "header showed Early review"
+      ],
+      "artifacts": [
+        "screenshots\\2026-03-27T14-48-44-805Z__early_review_only.png"
+      ]
+    },
+    {
+      "name": "pending_recovery",
+      "status": "passed",
+      "assertions": [
+        "pending sync replayed and cleared"
+      ],
+      "artifacts": [
+        "screenshots\\2026-03-27T14-48-44-805Z__pending_recovery.png"
+      ]
+    }
+  ],
+  "consoleErrors": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "url": "https://firestore.googleapis.com/google.firestore.v1.Firestore/Write/channel?gsessionid=9wv-Yf2ULbiJJEUmGscTv9Des0rY1GOkRJx3ViksDVgGEr7iJWW8xw&VER=8&database=projects%2Flistening-tasks-3ae34%2Fdatabases%2F(default)&RID=rpc&SID=Nq1Y1PatkhmAoWYAjk7xkA&AID=0&CI=0&TYPE=xmlhttp&zx=attqopaneur2&t=1"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 400 ()",
+      "url": "https://firestore.googleapis.com/google.firestore.v1.Firestore/Write/channel?gsessionid=9wv-Yf2ULbiJJEUmGscTv9Des0rY1GOkRJx3ViksDVgGEr7iJWW8xw&VER=8&database=projects%2Flistening-tasks-3ae34%2Fdatabases%2F(default)&RID=rpc&SID=Nq1Y1PatkhmAoWYAjk7xkA&AID=3&CI=1&TYPE=xmlhttp&zx=fatlfnihnyi&t=1"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "[Dictation App][sess:51c8aae2][user:OlpSe][SRS] Error saving card SRS for qa_srs_2026-03-27T14-48-44-805Z_due: Error: SRS test hook: failNextCardSaveOnce\n    at saveCardSRS (https://localhost:8443/srs-review.js?v=20260127_srs_upgrade:1418:23)\n    at recordReviewResult (https://localhost:8443/srs-review.js?v=20260127_srs_upgrade:3017:15)",
+      "url": "https://localhost:8443/js/logger.js"
+    },
+    {
+      "type": "error",
+      "text": "[Dictation App][sess:51c8aae2][user:OlpSe][SRS] Error saving SRS summary: Error: SRS test hook: failNextSummarySaveOnce\n    at saveSRSSummary (https://localhost:8443/srs-review.js?v=20260127_srs_upgrade:1389:23)\n    at flushSRSSave (https://localhost:8443/srs-review.js?v=20260127_srs_upgrade:1467:13)",
+      "url": "https://localhost:8443/js/logger.js"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    }
+  ],
+  "pageErrors": [],
+  "cleanupCompleted": true,
+  "staleCleanups": []
+}

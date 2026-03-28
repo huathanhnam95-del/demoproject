@@ -36,6 +36,12 @@ class SyllableVerifier {
         this.init();
     }
 
+    hasPlayableTiming(syllable) {
+        return Number.isFinite(syllable?.startTime) &&
+            Number.isFinite(syllable?.endTime) &&
+            syllable.endTime > syllable.startTime;
+    }
+
     init() {
         // Create UI structure
         this.container.innerHTML = `
@@ -97,7 +103,6 @@ class SyllableVerifier {
 
         // Add regions plugin
         try {
-            console.log('SyllableVerifier: Registering Regions plugin');
             this.regions = this.wavesurfer.registerPlugin(
                 WaveSurfer.Regions.create()
             );
@@ -134,7 +139,6 @@ class SyllableVerifier {
 
         if (playAllBtn) {
             playAllBtn.addEventListener('click', () => {
-                console.log('SyllableVerifier: Play All clicked');
                 const speed = parseFloat(speedSelect?.value || '1.0');
                 this.playAll(speed);
             });
@@ -154,11 +158,14 @@ class SyllableVerifier {
         if (!this.wavesurfer) return;
 
         this.syllables = syllables;
-        // Generate ordinal labels: "Play 1st Syl", "Play 2nd Syl", etc.
-        this.syllableLabels = labels || syllables.map((_, i) => {
+        const fallbackLabels = syllables.map((_, i) => {
             const ordinal = this.getOrdinal(i + 1);
             return `Play ${ordinal} Syl`;
         });
+        // Generate ordinal labels: "Play 1st Syl", "Play 2nd Syl", etc.
+        this.syllableLabels = Array.isArray(labels)
+            ? syllables.map((_, i) => labels[i] || fallbackLabels[i])
+            : fallbackLabels;
 
         try {
             // Setup ready promise BEFORE loading to avoid race condition
@@ -231,7 +238,6 @@ class SyllableVerifier {
         ];
 
         this.syllables.forEach((syl, index) => {
-            console.log(`SyllableVerifier: Adding region ${index}`, syl);
             try {
                 this.regions.addRegion({
                     id: `syllable-${index}`,
@@ -450,14 +456,16 @@ class SyllableVerifier {
      * Load both native and user audio for comparison
      */
     async loadComparison(userAudio, userSyllables, nativeAudioUrl, nativeSyllables, labels) {
-        this.comparisonMode = true;
-        this.nativeSyllables = nativeSyllables;
+        this.nativeSyllables = Array.isArray(nativeSyllables)
+            ? nativeSyllables.filter((syllable) => this.hasPlayableTiming(syllable))
+            : [];
+        this.comparisonMode = Boolean(nativeAudioUrl && this.nativeSyllables.length > 0);
 
         // Load user audio first
         await this.loadAudio(userAudio, userSyllables, labels);
 
         // Load native audio into separate element
-        if (nativeAudioUrl) {
+        if (this.comparisonMode) {
             this.nativeAudio = new Audio(nativeAudioUrl);
             await new Promise((resolve, reject) => {
                 this.nativeAudio.addEventListener('canplaythrough', resolve, { once: true });
@@ -533,9 +541,18 @@ class SyllableVerifier {
         if (!this.nativeAudio || !this.nativeSyllables[index]) return;
 
         const syl = this.nativeSyllables[index];
+        if (!this.hasPlayableTiming(syl)) {
+            return;
+        }
+
         return new Promise(resolve => {
-            this.nativeAudio.currentTime = syl.startTime;
-            this.nativeAudio.play();
+            try {
+                this.nativeAudio.currentTime = syl.startTime;
+                this.nativeAudio.play();
+            } catch (_error) {
+                resolve();
+                return;
+            }
 
             const duration = (syl.endTime - syl.startTime) * 1000;
             setTimeout(() => {

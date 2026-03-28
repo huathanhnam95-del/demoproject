@@ -65,8 +65,8 @@ const VocabListModalTemplate = `
 
             <button id="srs-start-review-btn" class="btn-primary"
               style="padding: 12px 32px; font-size: 1.1rem; width: 100%; max-width: 300px;"
-              onclick="if(window.SRSReview) window.SRSReview.startReviewSession()">
-              Start Review Session <span id="srs-due-badge" class="badge-count"
+              onclick="if(window.SRSReview) window.SRSReview.launchReviewFromDashboard()">
+              Open Daily Review <span id="srs-due-badge" class="badge-count"
                 style="display:none; background: var(--danger); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; margin-left: 8px;">0</span>
             </button>
 

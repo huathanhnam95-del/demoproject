@@ -1,0 +1,362 @@
+{
+  "runId": "2026-03-27T13-58-55-365Z",
+  "baseUrl": "https://localhost:8443",
+  "startedAt": "2026-03-27T13:58:55.366Z",
+  "finishedAt": "2026-03-27T14:04:18.812Z",
+  "userUid": "ktNn8TcndfZv6usFcGD3tJsYZwF3",
+  "scenarioResults": [
+    {
+      "name": "onboarding_local_persistence",
+      "status": "passed",
+      "assertions": [
+        "onboarding modal visible",
+        "FSRS persisted across reload"
+      ],
+      "artifacts": [
+        "screenshots\\2026-03-27T13-58-55-365Z__onboarding_local_persistence.png"
+      ]
+    },
+    {
+      "name": "settings_firestore_persistence",
+      "status": "failed",
+      "assertions": [],
+      "artifacts": [
+        "screenshots\\2026-03-27T13-58-55-365Z__settings_firestore_persistence.png"
+      ],
+      "error": "Error: Timed out waiting for Firestore condition\n    at waitForPredicate (C:\\Cursor AI\\scripts\\srs\\browser-audit-fixture-lib.js:483:19)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async executeScenario (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:495:17)\n    at async main (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:851:28)"
+    },
+    {
+      "name": "sm2_good_due_parity",
+      "status": "failed",
+      "assertions": [],
+      "artifacts": [
+        "screenshots\\2026-03-27T13-58-55-365Z__sm2_good_due_parity.png"
+      ],
+      "error": "Error: Persisted card did not match cached Good outcome for qa_srs_2026-03-27T13-58-55-365Z_due\n    at executeScenario (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:540:27)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async main (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:851:28)"
+    },
+    {
+      "name": "fsrs_good_due_parity",
+      "status": "failed",
+      "assertions": [],
+      "artifacts": [
+        "screenshots\\2026-03-27T13-58-55-365Z__fsrs_good_due_parity.png"
+      ],
+      "error": "Error: Persisted card did not match cached Good outcome for qa_srs_2026-03-27T13-58-55-365Z_due\n    at executeScenario (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:540:27)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async main (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:851:28)"
+    },
+    {
+      "name": "mastered_hidden",
+      "status": "passed",
+      "assertions": [
+        "mastered lemma absent from queue and schedule table"
+      ],
+      "artifacts": [
+        "screenshots\\2026-03-27T13-58-55-365Z__mastered_hidden.png"
+      ]
+    },
+    {
+      "name": "switch_sm2_to_fsrs",
+      "status": "failed",
+      "assertions": [],
+      "artifacts": [
+        "screenshots\\2026-03-27T13-58-55-365Z__switch_sm2_to_fsrs.png"
+      ],
+      "error": "Error: Timed out waiting for Firestore condition\n    at waitForPredicate (C:\\Cursor AI\\scripts\\srs\\browser-audit-fixture-lib.js:483:19)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async executeScenario (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:601:32)\n    at async main (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:851:28)"
+    },
+    {
+      "name": "switch_fsrs_to_sm2",
+      "status": "failed",
+      "assertions": [],
+      "artifacts": [
+        "screenshots\\2026-03-27T13-58-55-365Z__switch_fsrs_to_sm2.png"
+      ],
+      "error": "Error: Timed out waiting for Firestore condition\n    at waitForPredicate (C:\\Cursor AI\\scripts\\srs\\browser-audit-fixture-lib.js:483:19)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async executeScenario (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:601:32)\n    at async main (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:851:28)"
+    },
+    {
+      "name": "subday_relearning_labels",
+      "status": "passed",
+      "assertions": [
+        "labels: 2m, 2m, 11m, 4d"
+      ],
+      "artifacts": [
+        "screenshots\\2026-03-27T13-58-55-365Z__subday_relearning_labels.png"
+      ]
+    },
+    {
+      "name": "early_review_only",
+      "status": "failed",
+      "assertions": [],
+      "artifacts": [
+        "screenshots\\2026-03-27T13-58-55-365Z__early_review_only.png"
+      ],
+      "error": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#btn-panel-srs')\u001b[22m\n\u001b[2m    - locator resolved to <button id=\"btn-panel-srs\" class=\"segmented-btn\" onclick=\"toggleDashboardPanel('panel-srs')\">↵            Daily Review↵          </button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div id=\"app-preloader\" class=\"app-preloader preloader-2d\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div id=\"app-preloader\" class=\"app-preloader preloader-2d\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m    - element is not stable\u001b[22m\n\u001b[2m  16 × retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\u001b[2m       - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <div id=\"app-preloader\" class=\"app-preloader preloader-2d\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m  - retrying click action\u001b[22m\n\u001b[2m    - waiting 500ms\u001b[22m\n\n    at openSrsPanel (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:376:42)\n    at async executeScenario (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:640:17)\n    at async main (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:851:28)"
+    },
+    {
+      "name": "pending_recovery",
+      "status": "passed",
+      "assertions": [
+        "pending sync replayed and cleared"
+      ],
+      "artifacts": [
+        "screenshots\\2026-03-27T13-58-55-365Z__pending_recovery.png"
+      ]
+    }
+  ],
+  "consoleErrors": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "[Dictation App][sess:618da944][user:ktNn8][SRS] Error saving setting: FirebaseError: Missing or insufficient permissions.",
+      "url": "https://localhost:8443/js/logger.js"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "[Dictation App][sess:618da944][user:ktNn8][Database] Error calling submitAttempt: FirebaseError: internal",
+      "url": "https://localhost:8443/js/logger.js"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "[Dictation App][sess:618da944][user:ktNn8][Database] Error calling submitAttempt: FirebaseError: internal",
+      "url": "https://localhost:8443/js/logger.js"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "[Dictation App][sess:618da944][user:ktNn8][SRS] Error awarding points: FirebaseError: Missing or insufficient permissions.",
+      "url": "https://localhost:8443/js/logger.js"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "[Dictation App][sess:618da944][user:ktNn8][SRS] Error awarding points: FirebaseError: Missing or insufficient permissions.",
+      "url": "https://localhost:8443/js/logger.js"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "url": "https://firestore.googleapis.com/google.firestore.v1.Firestore/Listen/channel?gsessionid=NRwh4xhBn4cadvJCpVKPb10DYyYs1bcz06elgEv4FiC8AeN2-5wLKQ&VER=8&database=projects%2Flistening-tasks-3ae34%2Fdatabases%2F(default)&RID=rpc&SID=p8wK72aKXU7CWyJuYYtcJA&AID=0&CI=0&TYPE=xmlhttp&zx=eqmev4f5kdqb&t=1"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 400 ()",
+      "url": "https://firestore.googleapis.com/google.firestore.v1.Firestore/Listen/channel?VER=8&database=projects%2Flistening-tasks-3ae34%2Fdatabases%2F(default)&gsessionid=NRwh4xhBn4cadvJCpVKPb10DYyYs1bcz06elgEv4FiC8AeN2-5wLKQ&SID=p8wK72aKXU7CWyJuYYtcJA&RID=75066&AID=9&zx=svo7i6xpvrg7&t=1"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "[Dictation App][sess:618da944][user:ktNn8][SRS] Error saving card SRS for qa_srs_2026-03-27T13-58-55-365Z_due: Error: SRS test hook: failNextCardSaveOnce\n    at saveCardSRS (https://localhost:8443/srs-review.js?v=20260127_srs_upgrade:1404:23)\n    at recordReviewResult (https://localhost:8443/srs-review.js?v=20260127_srs_upgrade:3002:15)",
+      "url": "https://localhost:8443/js/logger.js"
+    },
+    {
+      "type": "error",
+      "text": "[Dictation App][sess:618da944][user:ktNn8][SRS] Error saving SRS summary: Error: SRS test hook: failNextSummarySaveOnce\n    at saveSRSSummary (https://localhost:8443/srs-review.js?v=20260127_srs_upgrade:1375:23)\n    at flushSRSSave (https://localhost:8443/srs-review.js?v=20260127_srs_upgrade:1453:13)",
+      "url": "https://localhost:8443/js/logger.js"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    }
+  ],
+  "pageErrors": [
+    "ReferenceError: firestoreFunctions is not defined",
+    "ReferenceError: firestoreFunctions is not defined"
+  ],
+  "cleanupCompleted": true,
+  "staleCleanups": []
+}

@@ -149,6 +149,15 @@
     loadedModes.add('notes');
   }
 
+  async function ensureRfibModeLoaded() {
+    if (loadedModes.has('rfib') || window.RFIBMode) {
+      loadedModes.add('rfib');
+      return;
+    }
+    await loadScript('rfib-mode.js');
+    loadedModes.add('rfib');
+  }
+
   async function ensureModeScripts(mode) {
     if (mode === 'watch') {
       await ensureWatchModeLoaded();
@@ -158,6 +167,10 @@
       await ensureNotesModeLoaded();
       return true;
     }
+    if (mode === 'rfib') {
+      await ensureRfibModeLoaded();
+      return true;
+    }
     return false;
   }
 
@@ -165,6 +178,7 @@
     ensureModeScripts,
     ensureWatchModeLoaded,
     ensureNotesModeLoaded,
+    ensureRfibModeLoaded,
     ensureCompromiseLoaded
   };
 })();

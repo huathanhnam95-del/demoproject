@@ -22,14 +22,81 @@ const DifficultyManager = (function () {
         speak: null,
         srs: null,
         extended: null,
+        rfib: null,
         notes: null
     };
+    const STORAGE_VERSION = 3;
+    const SUPPORTED_MODES = ['type', 'speak', 'srs', 'extended', 'rfib', 'notes'];
 
     // --- Modules ---
     const logic = new DifficultyLogic();
     const ui = new DifficultyUI();
 
     // --- Core Methods ---
+
+    function clampLevel(level, fallback = 1) {
+        const parsed = Number.parseInt(level, 10);
+        if (!Number.isFinite(parsed)) return fallback;
+        return Math.max(DifficultyConfig.LEVELS.MIN, Math.min(DifficultyConfig.LEVELS.MAX, parsed));
+    }
+
+    function normalizeGlobalSettings(settings = {}) {
+        const merged = {
+            autoAdjustEnabled: true,
+            adjustmentSensitivity: DifficultyConfig.ADJUSTMENT.DEFAULT_SENSITIVITY,
+            manualLevel: 1,
+            ...settings
+        };
+
+        return {
+            autoAdjustEnabled: !!merged.autoAdjustEnabled,
+            adjustmentSensitivity: ['low', 'medium', 'high'].includes(merged.adjustmentSensitivity)
+                ? merged.adjustmentSensitivity
+                : DifficultyConfig.ADJUSTMENT.DEFAULT_SENSITIVITY,
+            manualLevel: clampLevel(merged.manualLevel, 1)
+        };
+    }
+
+    function normalizeHistoryEntry(entry, fallbackLevel) {
+        if (!entry || typeof entry !== 'object') return null;
+        const score = Number(entry.score);
+        const calibMult = Number(entry.calibMult);
+        return {
+            date: Number.isFinite(Number(entry.date)) ? Number(entry.date) : Date.now(),
+            score: Number.isFinite(score) ? Math.max(0, Math.min(1, score)) : 0,
+            level: clampLevel(entry.level, fallbackLevel),
+            assisted: !!entry.assisted,
+            calibMult: Number.isFinite(calibMult) ? Math.max(0.25, Math.min(1.0, calibMult)) : 1.0
+        };
+    }
+
+    function normalizeProfile(profile, fallbackLevel = 1) {
+        const base = logic.makeDefaultProfile();
+        if (!profile || typeof profile !== 'object') {
+            return { ...base, level: clampLevel(fallbackLevel, 1) };
+        }
+
+        const history = Array.isArray(profile.history)
+            ? profile.history.map((entry) => normalizeHistoryEntry(entry, clampLevel(profile.level, fallbackLevel))).filter(Boolean)
+            : [];
+
+        return {
+            level: clampLevel(profile.level, fallbackLevel),
+            exp: Number.isFinite(Number(profile.exp)) ? Number(profile.exp) : base.exp,
+            history: history.slice(-DifficultyConfig.HISTORY_SIZE),
+            attemptsAtLevel: Number.isFinite(Number(profile.attemptsAtLevel))
+                ? Math.max(0, Number(profile.attemptsAtLevel))
+                : history.length
+        };
+    }
+
+    function hydrateProfiles(rawProfiles = {}) {
+        const hydrated = {};
+        SUPPORTED_MODES.forEach((mode) => {
+            hydrated[mode] = normalizeProfile(rawProfiles[mode], globalSettings.manualLevel);
+        });
+        return hydrated;
+    }
 
     function init() {
         if (isInitialized) return;
@@ -66,26 +133,24 @@ const DifficultyManager = (function () {
             if (stored) {
                 const parsed = JSON.parse(stored);
                 const legacySettings = parsed.settings && !parsed.globalSettings;
+                const versionMismatch = Number(parsed.version) !== STORAGE_VERSION;
 
-                // Migration: legacy schema used `settings` instead of `globalSettings`.
-                const loadedGlobalSettings = parsed.globalSettings || parsed.settings;
-                // Merge loaded data
-                if (loadedGlobalSettings) globalSettings = { ...globalSettings, ...loadedGlobalSettings };
-                if (parsed.profiles) userDifficultyProfile = { ...userDifficultyProfile, ...parsed.profiles };
+                globalSettings = normalizeGlobalSettings(parsed.globalSettings || parsed.settings || globalSettings);
+                userDifficultyProfile = hydrateProfiles(parsed.profiles || {});
 
-                if (legacySettings) {
-                    // Rewrite as canonical schema after defaults are ensured.
+                if (legacySettings || versionMismatch) {
                     needsResave = true;
                 }
             }
         } catch (e) {
             console.error('[DifficultyManager] Load failed', e);
+            globalSettings = normalizeGlobalSettings(globalSettings);
         }
 
         // Ensure defaults
-        ['type', 'speak', 'srs', 'extended', 'notes'].forEach(mode => {
+        SUPPORTED_MODES.forEach(mode => {
             if (!userDifficultyProfile[mode]) {
-                userDifficultyProfile[mode] = logic.makeDefaultProfile();
+                userDifficultyProfile[mode] = normalizeProfile(null, globalSettings.manualLevel);
             }
         });
 
@@ -97,8 +162,8 @@ const DifficultyManager = (function () {
     function saveProfile() {
         try {
             const data = {
-                version: 2,
-                globalSettings,
+                version: STORAGE_VERSION,
+                globalSettings: normalizeGlobalSettings(globalSettings),
                 profiles: userDifficultyProfile,
                 lastSaved: Date.now()
             };
@@ -108,14 +173,32 @@ const DifficultyManager = (function () {
         }
     }
 
+    function getEffectiveLevel(mode) {
+        if (!isInitialized) init();
+
+        if (!globalSettings.autoAdjustEnabled) {
+            return clampLevel(globalSettings.manualLevel, 1);
+        }
+
+        return clampLevel(userDifficultyProfile[mode]?.level, 1);
+    }
+
+    function getContentTier(mode) {
+        return DifficultyConfig.getContentTierForLevel(getEffectiveLevel(mode));
+    }
+
     function adjustDifficulty(mode, score, meta = {}) {
+        if (!isInitialized) init();
+
         const profile = userDifficultyProfile[mode];
         if (!profile) return; // Should not happen after init
+
+        const safeScore = Number.isFinite(Number(score)) ? Math.max(0, Math.min(1, Number(score))) : 0;
 
         // Record History
         profile.history.push({
             date: Date.now(),
-            score: Number(score),
+            score: safeScore,
             level: profile.level,
             assisted: !!meta.assisted,
             calibMult: meta.calibMult || 1
@@ -124,17 +207,14 @@ const DifficultyManager = (function () {
         profile.attemptsAtLevel++;
 
         // Calculate Adjustment
-        const result = logic.calculateAdjustment(profile, score, globalSettings);
+        const result = logic.calculateAdjustment(profile, safeScore, globalSettings);
 
         if (result) {
-            const oldLevel = profile.level;
             profile.level = result.newLevel;
             profile.attemptsAtLevel = 0;
             // Trim history to avoid immediate flip-flop? Logic handles filtering by level, so maybe not needed, 
             // but cleaning up is good.
             // profile.history = []; // Keep history for "Smurf" stats? Logic filters by level.
-
-            saveProfile();
 
             // Notify UI
             const icon = result.direction === 'increase' ? 'trending-up' : 'trending-down';
@@ -146,49 +226,80 @@ const DifficultyManager = (function () {
             }
 
             updateIndicator();
-        } else if (profile.attemptsAtLevel % 5 === 0) {
-            saveProfile();
         }
+
+        saveProfile();
     }
 
     function getCurrentSettings(mode) {
         if (!isInitialized) init();
 
-        // 1. Determine Level
-        let effectiveLevel = 1;
-
-        if (!globalSettings.autoAdjustEnabled) {
-            // Manual
-            effectiveLevel = globalSettings.manualLevel;
-        } else if (globalSettings.autoAdjustEnabled) {
-            // Auto
-            effectiveLevel = userDifficultyProfile[mode]?.level || 1;
-        }
-
-        // 2. Get Settings from Logic
-        return logic.getLevelSettings(mode, effectiveLevel);
+        const effectiveLevel = getEffectiveLevel(mode);
+        const settings = logic.getLevelSettings(mode, effectiveLevel);
+        return {
+            ...settings,
+            source: globalSettings.autoAdjustEnabled ? 'auto' : 'manual',
+            autoAdjustEnabled: globalSettings.autoAdjustEnabled,
+            calibrated: logic.isCalibrated(userDifficultyProfile[mode]),
+            contentTier: DifficultyConfig.getContentTierForLevel(effectiveLevel)
+        };
     }
 
-    function setManualLevel(level) {
+    function getUiSnapshot(mode) {
         if (!isInitialized) init();
+        const profile = userDifficultyProfile[mode] || logic.makeDefaultProfile();
+        const currentSettings = getCurrentSettings(mode);
+        const windowSize = DifficultyConfig.ADJUSTMENT.WINDOW_SIZES[globalSettings.adjustmentSensitivity] || 10;
+        return {
+            mode,
+            level: currentSettings.level,
+            levelName: currentSettings.name,
+            contentTier: currentSettings.contentTier,
+            source: currentSettings.source,
+            calibrated: currentSettings.calibrated,
+            autoAdjustEnabled: globalSettings.autoAdjustEnabled,
+            manualLevel: clampLevel(globalSettings.manualLevel, 1),
+            adjustmentSensitivity: globalSettings.adjustmentSensitivity,
+            attemptsAtLevel: profile.attemptsAtLevel || 0,
+            historySize: profile.history?.length || 0,
+            graceRemaining: Math.max(0, DifficultyConfig.GRACE_PERIOD_ATTEMPTS - (profile.attemptsAtLevel || 0)),
+            windowSize,
+            recentScore: profile.history?.length ? profile.history[profile.history.length - 1].score : null,
+            settings: currentSettings,
+            profile
+        };
+    }
 
-        level = parseInt(level, 10);
-        if (isNaN(level) || level < 1 || level > 6) return;
+    function setAutoAdjustEnabled(enabled) {
+        if (!isInitialized) init();
+        globalSettings.autoAdjustEnabled = !!enabled;
+        saveProfile();
+        updateIndicator();
+    }
 
-        globalSettings.autoAdjustEnabled = false;
-        globalSettings.manualLevel = level;
+    function setGlobalManualLevel(level) {
+        if (!isInitialized) init();
+        const nextLevel = clampLevel(level, globalSettings.manualLevel);
+        globalSettings.manualLevel = nextLevel;
 
-        // Reset all profiles to this level
-        Object.keys(userDifficultyProfile).forEach(m => {
-            if (userDifficultyProfile[m]) {
-                userDifficultyProfile[m].level = level;
-                userDifficultyProfile[m].history = []; // Clear history to reset "momentum"
-                userDifficultyProfile[m].attemptsAtLevel = 0;
+        // If a profile is still pristine, seed it to the requested baseline.
+        SUPPORTED_MODES.forEach((mode) => {
+            const profile = userDifficultyProfile[mode];
+            if (profile && (profile.history?.length || 0) === 0 && (profile.attemptsAtLevel || 0) === 0) {
+                profile.level = nextLevel;
             }
         });
 
         saveProfile();
         updateIndicator();
+    }
+
+    function setManualLevel(level) {
+        if (!isInitialized) init();
+
+        const nextLevel = clampLevel(level, globalSettings.manualLevel);
+        setGlobalManualLevel(nextLevel);
+        setAutoAdjustEnabled(false);
     }
 
     /**
@@ -199,16 +310,13 @@ const DifficultyManager = (function () {
     function seedLevel(level) {
         if (!isInitialized) init();
 
-        level = parseInt(level, 10);
-        if (isNaN(level) || level < 1 || level > 6) return;
+        const nextLevel = clampLevel(level, globalSettings.manualLevel);
+        globalSettings.manualLevel = nextLevel;
 
-        globalSettings.manualLevel = level;
-
-        Object.keys(userDifficultyProfile).forEach(m => {
-            if (userDifficultyProfile[m]) {
-                userDifficultyProfile[m].level = level;
-                userDifficultyProfile[m].history = [];
-                userDifficultyProfile[m].attemptsAtLevel = 0;
+        SUPPORTED_MODES.forEach((mode) => {
+            const profile = userDifficultyProfile[mode];
+            if (profile && (profile.history?.length || 0) === 0 && (profile.attemptsAtLevel || 0) === 0) {
+                profile.level = nextLevel;
             }
         });
 
@@ -219,16 +327,9 @@ const DifficultyManager = (function () {
     function openSettings() {
         if (!isInitialized) init();
         ui.openSettingsModal(globalSettings, (newSettings) => {
-            globalSettings = { ...globalSettings, ...newSettings };
-
-            // If manual level changed, apply it
-            if (!globalSettings.autoAdjustEnabled) {
-                setManualLevel(globalSettings.manualLevel);
-                // setManualLevel handles saving
-            } else {
-                saveProfile();
-                updateIndicator();
-            }
+            globalSettings = normalizeGlobalSettings({ ...globalSettings, ...newSettings });
+            saveProfile();
+            updateIndicator();
         });
     }
 
@@ -237,6 +338,7 @@ const DifficultyManager = (function () {
         let activeMode = 'type';
         if (document.querySelector('#tab-speak.active')) activeMode = 'speak';
         else if (document.querySelector('#tab-extended.active')) activeMode = 'extended';
+        else if (document.querySelector('#tab-rfib.active')) activeMode = 'rfib';
         else if (document.querySelector('#tab-notes.active')) activeMode = 'notes';
         else if (document.querySelector('#tab-srs.active')) activeMode = 'srs';
 
@@ -263,7 +365,12 @@ const DifficultyManager = (function () {
         isFeatureEnabled: () => hasUnlockedFeature,
         adjustDifficulty,
         getCurrentSettings,
+        getEffectiveLevel,
+        getContentTier,
+        getUiSnapshot,
         openSettings,
+        setAutoAdjustEnabled,
+        setGlobalManualLevel,
         setManualLevel,
         seedLevel,
         isCalibrated,
@@ -289,7 +396,8 @@ const DifficultyManager = (function () {
                 graceRemaining: Math.max(0, DifficultyConfig.GRACE_PERIOD_ATTEMPTS - (profile?.attemptsAtLevel || 0)),
                 historySize: profile?.history?.length || 0,
                 autoAdjustEnabled: globalSettings.autoAdjustEnabled,
-                sensitivity: globalSettings.adjustmentSensitivity
+                sensitivity: globalSettings.adjustmentSensitivity,
+                contentTier: DifficultyConfig.getContentTierForLevel(settings.level)
             };
         }
     };
@@ -297,7 +405,7 @@ const DifficultyManager = (function () {
     // Add back-compat property for script.js and auth-ui.js
     Object.defineProperty(api, 'globalSettings', {
         get: () => globalSettings,
-        set: (val) => { globalSettings = val; }
+        set: (val) => { globalSettings = normalizeGlobalSettings(val); }
     });
 
     return api;

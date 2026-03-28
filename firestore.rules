@@ -34,7 +34,8 @@ service cloud.firestore {
                       'totalActiveSeconds',
                       'englishLevel', 
                       'levelSelectedAt',
-                      'practiceStats'
+                      'practiceStats',
+                      'srsBonus'
                       // REMOVED: totalPoints, coins, skillPoints, skillRatings, 
                       // cefrLevels, srsBonus, skillsUpdatedAt, unlockedModes, 
                       // vocabularyBookUnlocked, sentenceLengthFilterUnlocked

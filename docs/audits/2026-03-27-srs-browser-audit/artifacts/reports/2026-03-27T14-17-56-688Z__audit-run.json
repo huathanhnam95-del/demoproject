@@ -1,0 +1,43 @@
+{
+  "runId": "2026-03-27T14-17-56-688Z",
+  "baseUrl": "https://localhost:8443",
+  "startedAt": "2026-03-27T14:17:56.689Z",
+  "finishedAt": "2026-03-27T14:18:47.116Z",
+  "userUid": "ZmkzYVe0bbUhHFEA6ilNlNPWM643",
+  "scenarioResults": [
+    {
+      "name": "fsrs_good_due_parity",
+      "status": "failed",
+      "assertions": [],
+      "artifacts": [
+        "screenshots\\2026-03-27T14-17-56-688Z__fsrs_good_due_parity.png"
+      ],
+      "error": "Error: Persisted card did not match cached Good outcome for qa_srs_2026-03-27T14-17-56-688Z_due\nstored={\"algorithm\":\"FSRS\",\"state\":\"reviewing\",\"interval\":5,\"nextReviewDate\":\"2026-04-01T14:18:42.160Z\",\"lastReviewDate\":\"2026-03-27T14:18:42.160Z\",\"repetitions\":4,\"stepIndex\":0,\"easeFactor\":2.5,\"fsrs\":{\"difficulty\":5.1879,\"stability\":5.7089,\"retrievability\":1,\"lastReview\":\"2026-03-27T14:18:42.160Z\",\"lapses\":0,\"reps\":4}}\nexpected={\"algorithm\":\"FSRS\",\"state\":\"reviewing\",\"interval\":5,\"nextReviewDate\":\"2026-04-01T14:18:42.160Z\",\"lastReviewDate\":\"2026-03-27T14:18:42.160Z\",\"repetitions\":4,\"fsrs\":{\"difficulty\":5.1879,\"stability\":5.7089,\"retrievability\":1,\"lastReview\":\"2026-03-27T14:18:42.160Z\",\"lapses\":0,\"reps\":4}}\n    at executeScenario (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:556:27)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async main (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:870:28)"
+    }
+  ],
+  "consoleErrors": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "[Dictation App][sess:18fa763c][user:ZmkzY][SRS] Error awarding points: FirebaseError: Missing or insufficient permissions.",
+      "url": "https://localhost:8443/js/logger.js"
+    }
+  ],
+  "pageErrors": [],
+  "cleanupCompleted": true,
+  "staleCleanups": []
+}

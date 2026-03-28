@@ -1,0 +1,39 @@
+{
+  "runId": "2026-03-27T14-32-12-003Z",
+  "baseUrl": "https://localhost:8443",
+  "startedAt": "2026-03-27T14:32:12.004Z",
+  "finishedAt": "2026-03-27T14:33:03.618Z",
+  "userUid": "H0clocUJ44TFnT4dU805HWGRo4z2",
+  "scenarioResults": [
+    {
+      "name": "switch_sm2_to_fsrs",
+      "status": "passed",
+      "assertions": [
+        "algorithm switched to FSRS on review"
+      ],
+      "artifacts": [
+        "screenshots\\2026-03-27T14-32-12-003Z__switch_sm2_to_fsrs.png"
+      ]
+    }
+  ],
+  "consoleErrors": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    }
+  ],
+  "pageErrors": [],
+  "cleanupCompleted": true,
+  "staleCleanups": []
+}

@@ -115,8 +115,7 @@ async function run() {
 
     await page.evaluate(async () => {
       if (window.DifficultyManager?.globalSettings) {
-        window.DifficultyManager.globalSettings.autoAdjustEnabled = false;
-        window.DifficultyManager.globalSettings.manualLevel = 6;
+        window.DifficultyManager.setManualLevel(6);
       }
       await window.switchToMode('notes');
     });
@@ -128,20 +127,26 @@ async function run() {
       return first !== 'loading...' && !first.startsWith('error');
     }, { timeout: 120000 });
 
-    const result = await page.evaluate(async () => {
+    await page.evaluate(async () => {
       document.getElementById('play-notes-btn')?.click();
       await new Promise((resolve) => setTimeout(resolve, 300));
 
       document.getElementById('recommended-btn-notes')?.click();
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      return {
-        currentQuestionId: document.getElementById('current-question-id-notes')?.textContent?.trim() || '',
-        audioSrc: document.getElementById('notes-audio')?.getAttribute('src') || '',
-        practiceVisible: getComputedStyle(document.getElementById('notes-practice-area')).display,
-        audioStepVisible: getComputedStyle(document.getElementById('notes-step-audio')).display
-      };
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      document.getElementById('play-notes-btn')?.click();
     });
+
+    await page.waitForFunction(() => {
+      const src = document.getElementById('notes-audio')?.getAttribute('src') || '';
+      return /\/2\.(m4a|wav|mp3|aac|ogg)(\?|$)/.test(src);
+    }, { timeout: 30000 });
+
+    const result = await page.evaluate(() => ({
+      currentQuestionId: document.getElementById('current-question-id-notes')?.textContent?.trim() || '',
+      audioSrc: document.getElementById('notes-audio')?.getAttribute('src') || '',
+      practiceVisible: getComputedStyle(document.getElementById('notes-practice-area')).display,
+      audioStepVisible: getComputedStyle(document.getElementById('notes-step-audio')).display
+    }));
 
     assert.equal(result.currentQuestionId, '2');
     assert.match(result.audioSrc, /\/2\.(m4a|wav|mp3|aac|ogg)$/);

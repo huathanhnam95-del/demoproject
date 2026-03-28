@@ -5,7 +5,7 @@
 
 ## 1. Overview
 >
-> Support **guest-first** usage with an upgrade path to **Firebase-authenticated** accounts so users can persist progression (XP/Coins/Skills), vocabulary, and SRS data across devices.
+> Support **guest-first** usage with an upgrade path to **Firebase-authenticated** accounts so users can persist progression (XP, roadmap unlocks), vocabulary, and SRS data across devices.
 
 ## 2. Goals (The "Why")
 
@@ -38,7 +38,7 @@
 
 - Primary identity: Firebase Auth `uid`.
 - Persistent profile (Firestore):
-  - `users/{uid}` stores progression and feature state (Coins, totalPoints, skills, etc.).
+  - `users/{uid}` stores progression and feature state (XP, roadmap unlocks, skills, etc.).
 - Local UX caches (browser):
   - Difficulty profile (`localStorage`) to keep mode loops responsive.
   - Dictionary caches (`localStorage`) for definitions/translations.
@@ -69,11 +69,11 @@
     - `L1_landing_load` is successful and keeps PTE task mapping visible.
     - `A1_click_demo_cta` reaches app entry without hard auth block.
     - `P2_type_assisted_attempt` does not force login for hints.
-    - `V1_vocab_manual_add` works in guest flow without shop/login blocking.
+    - `V1_vocab_manual_add` works in guest flow without login blocking.
     - `S1_start_srs_review` opens SRS from guest flow.
 - Manual:
   - Use the app as a guest -> complete a few attempts -> verify the UI still works offline.
   - First load online, then switch browser offline mode -> verify `/landing/` and `/index.html` still open from cache (or `/offline.html` fallback).
   - Enter via `?demo=1` -> verify no entry modal blocks the first interaction.
   - In guest mode, add vocabulary + open SRS -> refresh -> verify local data persists.
-  - Log in -> verify profile-driven features (shop/skills/SRS sync) become persistent.
+  - Log in -> verify profile-driven features (roadmap unlocks / skills / SRS sync) become persistent.

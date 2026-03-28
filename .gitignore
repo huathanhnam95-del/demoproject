@@ -30,6 +30,7 @@ npm-debug.log*
 # Environment variables
 .env
 .env.local
+.local/
 
 # Secret/Credential files (NEVER COMMIT)
 serviceAccountKey.json

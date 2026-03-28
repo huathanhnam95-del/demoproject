@@ -38,11 +38,12 @@
   let speakLengthData = null; // Map<lengthRange, Set<questionId>> for Speak mode
 
   // RPG assist attempt state (used for active-skill spending + calibration penalties).
-  const CORE_PRACTICE_MODES = new Set(['type', 'speak', 'extended', 'watch', 'notes', 'pronounce']);
+  const CORE_PRACTICE_MODES = new Set(['type', 'speak', 'extended', 'rfib', 'watch', 'notes', 'pronounce']);
   const HINT_SKILL_BY_LEVEL = {
-    1: 'hint_wc',
-    2: 'hint_fl',
-    3: 'transcript_glimpse'
+    1: 'word_ghost',
+    2: 'first_letter_peek',
+    3: 'hint_reveal',
+    4: 'transcript_glimpse'
   };
   const GUEST_HINT_SESSION_KEY = 'bel_guest_hint_uses';
   const GUEST_HINT_SESSION_LIMIT = 12;
@@ -178,20 +179,15 @@
     });
 
     if (!result?.success) {
-      if (result?.error === 'insufficient_funds') {
-        window.shopModule?.showAlertModal?.(`Not enough coins (${result.required ?? '??'} needed).`, true);
-      } else if (result?.error === 'skill_locked') {
-        window.shopModule?.showAlertModal?.('Skill is locked. Purchase it in the Skill Tree.', true);
+      if (result?.error === 'skill_locked') {
+        window.shopModule?.showAlertModal?.('Keep practicing to unlock this feature.', true);
+      } else if (result?.error === 'skill_retired') {
+        window.shopModule?.showAlertModal?.('This skill has been retired.', true);
       }
       return result || { success: false, error: 'use_active_skill_failed' };
     }
 
     registerAssistUsage(skillId, mode, normalizedContentId, result);
-
-    if (Number.isFinite(Number(result.newBalance))) {
-      window.shopModule?.setCoins?.(Number(result.newBalance));
-      window.updatePointsDisplay?.();
-    }
 
     return result;
   }
@@ -200,15 +196,6 @@
     const currentLevel = Number(window.HintSystem?.getCurrentHintLevel?.() || 0);
     const nextLevel = currentLevel + 1;
     return HINT_SKILL_BY_LEVEL[nextLevel] || null;
-  }
-
-  function getSkillUseCostLabel(skillId) {
-    if (!skillId) return null;
-    const skill = window.SkillCatalog?.getSkill?.(skillId);
-    const baseCost = Number(skill?.baseCost);
-    if (!Number.isFinite(baseCost)) return null;
-    const plus = skill?.stacking?.enabled ? '+' : '';
-    return `${baseCost}${plus}`;
   }
 
   function getGuestHintUses() {
@@ -235,7 +222,7 @@
     if (hintBtn) {
       // Reset to an enabled baseline; branches below may disable.
       hintBtn.disabled = false;
-      hintBtn.title = 'Use a hint';
+      hintBtn.title = 'Open hint actions';
     }
 
     const hasUser = !!(window.auth && window.auth.currentUser);
@@ -275,60 +262,23 @@
       return;
     }
 
-    if (!window.shopModule?.isSkillUnlocked?.('hint_wc')) {
+    if (!window.shopModule?.isSkillUnlocked?.('word_ghost')) {
       costBadge.textContent = 'Locked';
       costBadge.className = 'hint-cost-badge locked';
       if (hintBtn) {
         hintBtn.disabled = false; // Keep clickable for guidance
         hintBtn.classList.add('locked');
-        hintBtn.title = 'Unlock Hint Skills in Skill Tree';
+        hintBtn.title = 'Keep practicing to unlock hint actions';
       }
       return;
     }
 
-    const costStr = getSkillCostString('hint_wc');
-    costBadge.textContent = costStr ? `🪙 ${costStr}` : '';
+    costBadge.textContent = 'Ready';
     costBadge.className = 'hint-cost-badge';
     if (hintBtn) {
       hintBtn.disabled = false;
       hintBtn.classList.remove('locked');
-      hintBtn.title = 'Get a hint';
-    }
-
-    const nextSkillId = getNextHintSkillId();
-    if (!nextSkillId) {
-      costBadge.textContent = '(All used)';
-      costBadge.className = 'hint-cost-badge max-reached';
-      if (hintBtn) {
-        hintBtn.disabled = true;
-        hintBtn.title = 'No more hints available for this question';
-      }
-      return;
-    }
-
-    const isUnlocked = window.shopModule?.isSkillUnlocked?.(nextSkillId);
-    if (!isUnlocked) {
-      const skillTitle = window.SkillCatalog?.getSkill?.(nextSkillId)?.title || 'this skill';
-      costBadge.textContent = '(Locked)';
-      costBadge.className = 'hint-cost-badge paid';
-      if (hintBtn) {
-        hintBtn.disabled = true;
-        hintBtn.title = `Unlock ${skillTitle} in the Skill Tree`;
-      }
-      return;
-    }
-
-    const costLabel = getSkillUseCostLabel(nextSkillId);
-    if (!costLabel) {
-      costBadge.textContent = '(?)';
-      costBadge.className = 'hint-cost-badge paid';
-      return;
-    }
-
-    costBadge.textContent = `(${costLabel} coins)`;
-    costBadge.className = 'hint-cost-badge paid';
-    if (hintBtn) {
-      hintBtn.title = `Use ${window.SkillCatalog?.getSkill?.(nextSkillId)?.title || 'hint'} (${costLabel} coins)`;
+      hintBtn.title = 'Open hint actions';
     }
   }
 
@@ -422,12 +372,12 @@
     if (speedBtn) {
       speedBtn.classList.toggle('locked', !canUseSlow);
       speedBtn.disabled = false; // Keep clickable for tooltips and guidance
-      speedBtn.title = canUseSlow ? 'Playback Speed' : 'Unlock Slow Audio in Skill Tree';
+      speedBtn.title = canUseSlow ? 'Playback Speed' : 'Keep practicing to unlock Slow Audio';
     }
     if (loopBtn) {
       loopBtn.classList.toggle('locked', !canUseLoop);
       loopBtn.disabled = false;
-      loopBtn.title = canUseLoop ? 'Loop Audio' : 'Unlock Echo Loop in Skill Tree';
+      loopBtn.title = canUseLoop ? 'Loop Audio' : 'Keep practicing to unlock Echo Loop';
     }
     if (chunkBtn) {
       if (canUseChunking) {
@@ -463,7 +413,7 @@
     updateHintCostBadge();
   }
   /**
-   * Handle clicks on locked skills to guide the user to the Skill Tree.
+   * Handle clicks on locked skills to guide the user to the roadmap.
    */
   async function handleLockedSkillClick(skillId) {
     if (!window.auth || !window.auth.currentUser) {
@@ -471,8 +421,8 @@
       return false;
     }
 
-    // Switch to Skill Tree tab in shop
-    window.shopModule?.openShop?.('skill-tree-container');
+    // Open the progression roadmap.
+    window.shopModule?.openShop?.('level-system-container');
     return true;
   }
   window.ensureAttemptContext = ensureAttemptContext;
@@ -533,6 +483,14 @@
             p.style.setProperty('display', 'none', 'important');
           }
         });
+
+        if (typeof renderPracticeLauncher === 'function') {
+          renderPracticeLauncher();
+        }
+
+        if (typeof updateCurrentModeIndicator === 'function') {
+          updateCurrentModeIndicator(currentActiveMode);
+        }
       }
 
       // 4. Extra: Trigger schedule table render if switching to SRS panel
@@ -559,6 +517,17 @@
     // Initialize mode panels visibility based on default active dashboard panel
     const activePanel = document.querySelector('.dashboard-panel.active');
     const modePanels = document.querySelectorAll('.mode-panel');
+    const practiceSkillFilter = document.getElementById('practice-skill-filter');
+
+    if (practiceSkillFilter) {
+      practiceSkillFilter.querySelectorAll('.practice-skill-btn').forEach((button) => {
+        button.addEventListener('click', () => {
+          const skill = button.dataset.practiceSkill;
+          if (skill) setSelectedPracticeSkill(skill);
+        });
+      });
+      renderPracticeLauncher();
+    }
 
     // CHECK FOR READING JOURNEY ROUTE FIRST
     const normalizedPath = (window.location.pathname || '/').replace(/\/+$/, '');
@@ -711,6 +680,163 @@
 
   // Track current active mode for tutorial button
   let currentActiveMode = 'type';
+  const PRACTICE_LAUNCHER = {
+    defaultSkill: 'listening',
+    defaultMode: 'type',
+    skills: {
+      speaking: {
+        label: 'Speaking',
+        kind: 'live-skill',
+        modeIds: ['speak', 'pronounce', 'read-aloud']
+      },
+      listening: {
+        label: 'Listening',
+        kind: 'live-skill',
+        modeIds: ['type', 'collo-dictate', 'extended', 'watch', 'notes']
+      },
+      reading: {
+        label: 'Reading',
+        kind: 'live-skill',
+        modeIds: ['rfib']
+      },
+      writing: {
+        label: 'Writing',
+        kind: 'empty-skill',
+        modeIds: [],
+        emptyStateId: 'practice-writing-empty'
+      }
+    },
+    modes: {
+      type: {
+        label: 'Type',
+        skill: 'listening',
+        hasTutorial: true,
+        isLive: true,
+        launcherVisible: true
+      },
+      'collo-dictate': {
+        label: 'Collo-dictate',
+        skill: 'listening',
+        hasTutorial: false,
+        isLive: true,
+        launcherVisible: true
+      },
+      speak: {
+        label: 'Speak',
+        skill: 'speaking',
+        hasTutorial: true,
+        isLive: true,
+        launcherVisible: true
+      },
+      pronounce: {
+        label: 'Pronounce',
+        skill: 'speaking',
+        hasTutorial: true,
+        isLive: true,
+        launcherVisible: true
+      },
+      extended: {
+        label: 'Fill',
+        skill: 'listening',
+        hasTutorial: true,
+        isLive: true,
+        launcherVisible: true
+      },
+      watch: {
+        label: 'Watch',
+        skill: 'listening',
+        hasTutorial: true,
+        isLive: true,
+        launcherVisible: true
+      },
+      notes: {
+        label: 'Note',
+        skill: 'listening',
+        hasTutorial: true,
+        isLive: true,
+        launcherVisible: true
+      },
+      'read-aloud': {
+        label: 'Read Aloud',
+        skill: 'speaking',
+        hasTutorial: true,
+        isLive: true,
+        launcherVisible: true
+      },
+      rfib: {
+        label: 'Fill in the blanks',
+        skill: 'reading',
+        hasTutorial: false,
+        isLive: true,
+        launcherVisible: true
+      }
+    }
+  };
+  const PRACTICE_SKILL_ORDER = Object.keys(PRACTICE_LAUNCHER.skills);
+  let selectedPracticeSkill = PRACTICE_LAUNCHER.defaultSkill;
+
+  function getModeMeta(mode) {
+    return PRACTICE_LAUNCHER.modes[mode] || null;
+  }
+
+  function getSkillForMode(mode) {
+    return getModeMeta(mode)?.skill || null;
+  }
+
+  function getModeDisplayName(mode) {
+    return getModeMeta(mode)?.label || mode;
+  }
+
+  function setSelectedPracticeSkill(skill, { render = true } = {}) {
+    if (!PRACTICE_SKILL_ORDER.includes(skill)) return false;
+    const changed = selectedPracticeSkill !== skill;
+    selectedPracticeSkill = skill;
+    if (render) renderPracticeLauncher();
+    return changed;
+  }
+
+  function renderPracticeLauncher() {
+    const filterRoot = document.getElementById('practice-skill-filter');
+    if (filterRoot) {
+      filterRoot.querySelectorAll('.practice-skill-btn').forEach((button) => {
+        const skill = button.dataset.practiceSkill;
+        const skillMeta = PRACTICE_LAUNCHER.skills[skill];
+        const isActive = skill === selectedPracticeSkill;
+        button.classList.toggle('is-active', isActive);
+        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        button.setAttribute('aria-label', skillMeta?.label || button.textContent.trim() || skill);
+      });
+    }
+
+    document.querySelectorAll('.tutorial-grid .mode-switch-btn[data-practice-skill]').forEach((card) => {
+      const cardMode = card.id ? card.id.replace(/^mode-btn-/, '') : '';
+      const modeMeta = getModeMeta(cardMode);
+      const cardSkill = card.dataset.practiceSkill;
+      const shouldShow = modeMeta?.launcherVisible !== false && cardSkill === selectedPracticeSkill;
+      card.hidden = !shouldShow;
+      card.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
+    });
+
+    const writingEmptyState = document.getElementById('practice-writing-empty');
+    if (writingEmptyState) {
+      const shouldShow = selectedPracticeSkill === 'writing';
+      writingEmptyState.hidden = !shouldShow;
+      writingEmptyState.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
+    }
+  }
+
+  function renderPracticeSkillFilter() {
+    renderPracticeLauncher();
+  }
+
+  function syncSelectedSkillToMode(mode) {
+    const skill = getSkillForMode(mode);
+    if (skill) {
+      setSelectedPracticeSkill(skill);
+    } else {
+      renderPracticeLauncher();
+    }
+  }
 
   /**
    * Update the current mode indicator shown between mode cards and progress bar
@@ -718,24 +844,27 @@
    */
   function updateCurrentModeIndicator(mode) {
     currentActiveMode = mode;
+    window.appState = window.appState || {};
+    window.appState.currentMode = mode;
     const indicator = document.getElementById('current-mode-indicator');
     const modeName = document.getElementById('current-mode-name');
+    const tutorialBtn = document.getElementById('mode-tutorial-btn');
+    const modeMeta = getModeMeta(mode);
+    const hasTutorial = !!modeMeta?.hasTutorial;
 
     if (indicator && modeName) {
       // Show the indicator
       indicator.style.display = 'inline-flex';
 
       // Update mode name with display-friendly text
-      const displayNames = {
-        'type': 'Type',
-        'collo-dictate': 'Collo-dictate',
-        'speak': 'Speak',
-        'pronounce': 'Pronounce',
-        'extended': 'Fill',
-        'notes': 'Note',
-        'watch': 'Watch'
-      };
-      modeName.textContent = displayNames[mode] || mode;
+      modeName.textContent = modeMeta?.label || mode;
+    }
+
+    if (tutorialBtn) {
+      tutorialBtn.hidden = !hasTutorial;
+      tutorialBtn.style.display = hasTutorial ? '' : 'none';
+      tutorialBtn.disabled = !hasTutorial;
+      tutorialBtn.title = hasTutorial ? 'Learn about this mode' : 'Tutorial coming soon';
     }
   }
 
@@ -747,7 +876,7 @@
     const tutorialBtn = document.getElementById('mode-tutorial-btn');
     if (tutorialBtn) {
       tutorialBtn.addEventListener('click', () => {
-        if (typeof window.startTutorial === 'function') {
+        if (getModeMeta(currentActiveMode)?.hasTutorial && typeof window.startTutorial === 'function') {
           window.startTutorial(currentActiveMode, true);
         }
       });
@@ -797,17 +926,6 @@
     }
   };
 
-  // Mode display names
-  const modeDisplayNames = {
-    'type': 'Type Mode',
-    'collo-dictate': 'Collo-dictate Mode',
-    'speak': 'Speak Mode',
-    'pronounce': 'Pronounce Mode',
-    'extended': 'Fill Mode',
-    'notes': 'Notes Mode',
-    'watch': 'Watch Mode'
-  };
-
   // Selected mode to start (set when suggestions are shown)
   let selectedModeToStart = null;
 
@@ -836,7 +954,7 @@
     }
 
     // Generate suggestions based on selected goals
-    const suggestions = [];
+            const suggestions = [];
     const seenModes = new Set();
 
     selectedGoals.forEach(goal => {
@@ -847,7 +965,7 @@
             seenModes.add(mode);
             suggestions.push({
               mode: mode,
-              name: modeDisplayNames[mode] || mode,
+              name: getModeDisplayName(mode),
               description: mapping.description,
               icon: mapping.icon
             });
@@ -944,7 +1062,7 @@
   };
 
   async function ensureModeAssets(mode) {
-    if (!['watch', 'notes'].includes(mode)) return true;
+    if (!['watch', 'notes', 'rfib'].includes(mode)) return true;
     if (!window.BELLazyLoader || typeof window.BELLazyLoader.ensureModeScripts !== 'function') {
       return true;
     }
@@ -975,6 +1093,8 @@
       window.updateAdaptiveUI(mode);
     }
 
+    syncSelectedSkillToMode(mode);
+
     // Try to cleanup previous mode (safe if it doesn't exist)
     if (mode === 'survival') {
       if (typeof window.ensureSurvivalGameLoaded === 'function') {
@@ -998,7 +1118,7 @@
       return;
     }
 
-    if (mode === 'watch' || mode === 'notes') {
+    if (mode === 'watch' || mode === 'notes' || mode === 'rfib') {
       const assetsReady = await ensureModeAssets(mode);
       if (!assetsReady) return;
     }
@@ -1100,6 +1220,8 @@
       // 4. Trigger any mode-specific initialization
       if (mode === 'extended' && typeof window.loadExtendedIfNeeded === 'function') {
         window.loadExtendedIfNeeded();
+      } else if (mode === 'rfib' && window.RFIBMode && typeof window.RFIBMode.activate === 'function') {
+        await window.RFIBMode.activate();
       } else if (mode === 'type' && typeDatabase.length > 0) {
         log.log(`[switchToMode] Switching to Type mode, reloading question ${currentTypeQuestionId}`);
         await loadQuestion('type', currentTypeQuestionId);
@@ -1129,11 +1251,13 @@
         localStorage.setItem(firstTimeKey, 'true');
 
         // Trigger tutorial after a short delay for UI to settle
-        setTimeout(() => {
-          if (typeof window.startTutorial === 'function') {
-            window.startTutorial(mode, false); // Not forced, but first-time
-          }
-        }, 500);
+        if (getModeMeta(mode)?.hasTutorial) {
+          setTimeout(() => {
+            if (typeof window.startTutorial === 'function') {
+              window.startTutorial(mode, false); // Not forced, but first-time
+            }
+          }, 500);
+        }
       }
 
       // 6. Force Layout Re-check (Self-correction)
@@ -1199,6 +1323,8 @@
     if (window.PerformanceTracker) {
       window.typePerformanceTracker = new PerformanceTracker('type');
       window.speakPerformanceTracker = new PerformanceTracker('speak');
+      window.extendedPerformanceTracker = new PerformanceTracker('extended');
+      window.notesPerformanceTracker = new PerformanceTracker('notes');
     }
 
     // Initialize shop module
@@ -2480,7 +2606,7 @@
     }
 
     try {
-      // Record attempt analytics (XP/coins handled server-side via Cloud Functions).
+      // Record attempt analytics handled server-side via Cloud Functions.
       const attemptLog = await window.firebaseFirestoreFunctions.recordPracticeAttempt(userId, questionId, isCorrect, mode);
       if (attemptLog && attemptLog.success === false) {
         log.warn('[Progress] recordPracticeAttempt failed:', attemptLog.error);
@@ -2537,6 +2663,8 @@
       // Don't show error to user, just log it
     }
   }
+
+  window.recordPracticeAttempt = recordPracticeAttempt;
 
   const audio = document.getElementById("audio");
   const questionSelectType = document.getElementById("question-select-type");
@@ -2630,7 +2758,6 @@
         if (!skillResult?.success) {
           return;
         }
-        window.currentAttemptCalibMult = (window.currentAttemptCalibMult || 1.0) * (skillResult.calibMult || 0.65);
       }
 
       window.isChunkingActive = nextChunkingState;
@@ -2666,7 +2793,6 @@
         if (!skillResult?.success) {
           return;
         }
-        window.currentAttemptCalibMult = (window.currentAttemptCalibMult || 1.0) * (skillResult.calibMult || 1.0);
       }
 
       audio.playbackRate = newSpeed;
@@ -2691,7 +2817,6 @@
         if (!skillResult?.success) {
           return;
         }
-        window.currentAttemptCalibMult = (window.currentAttemptCalibMult || 1.0) * (skillResult.calibMult || 1.0);
       }
 
       audio.loop = nextLoopState;
@@ -2706,69 +2831,35 @@
   }
 
   // Hint Button Logic
-  function updatePopoverCosts() {
-    if (!window.shopModule || !window.shopModule.hasSkill || !window.SkillCatalog) return;
+  function updatePopoverAvailability() {
+    if (!window.SkillCatalog) return;
 
-    function getDiscount(skillId, mode) {
-      let pct = 0;
-      const skill = window.SkillCatalog.getSkill(skillId);
-      if (!skill) return 0;
+    const skillButtons = [
+      { id: 'skill-word-ghost', skillId: 'word_ghost', title: 'Word Ghost' },
+      { id: 'skill-first-letter', skillId: 'first_letter_peek', title: 'First-Letter Peek' },
+      { id: 'skill-hint-reveal', skillId: 'hint_reveal', title: 'Hint Reveal' },
+      { id: 'skill-transcript-glimpse', skillId: 'transcript_glimpse', title: 'Transcript Glimpse' }
+    ];
 
-      // Mode licenses
-      if (mode === 'watch' && window.shopModule.hasSkill('mode_license_watch')) pct += 0.15;
-      if (mode === 'extended' && window.shopModule.hasSkill('mode_license_extended')) pct += 0.15;
-      if (mode === 'speak' && window.shopModule.hasSkill('mode_license_speak')) pct += 0.15;
+    skillButtons.forEach(({ id, skillId, title }) => {
+      const button = document.getElementById(id);
+      if (!button) return;
 
-      // Frugal family
-      if (skill.tags && skill.tags.length > 0) {
-        const tree = skill.tags[0];
-        const alias = { listening: 'listener', writing: 'writer', reading: 'reader', speaking: 'speaker' }[tree];
-        if (alias) {
-          if (window.shopModule.hasSkill(`frugal_${alias}_3`)) pct += 0.30;
-          else if (window.shopModule.hasSkill(`frugal_${alias}_2`)) pct += 0.20;
-          else if (window.shopModule.hasSkill(`frugal_${alias}_1`)) pct += 0.10;
-        }
+      const costEl = button.querySelector('.popover-cost');
+      const unlock = window.SkillCatalog.getProgressionUnlockById?.(skillId);
+      const isUnlocked = !!window.shopModule?.isSkillUnlocked?.(skillId);
+
+      button.style.display = isUnlocked ? 'flex' : 'none';
+      button.title = isUnlocked
+        ? title
+        : unlock
+          ? `${title} unlocks at ${String(unlock.branch || '').replace(/^\w/, (c) => c.toUpperCase())} Level ${unlock.unlockLevel}`
+          : `${title} is locked`;
+
+      if (costEl) {
+        costEl.textContent = isUnlocked ? 'Ready' : '';
       }
-
-      // Specific passives
-      if (window.shopModule.hasSkill('hint_kit') && (skillId === 'word_ghost' || skillId === 'first_letter_peek')) {
-        pct += 0.20;
-      }
-      if (window.shopModule.hasSkill('audio_engineer') && (skillId === 'slow_audio' || skillId === 'echo_loop')) {
-        pct += 0.15;
-      }
-      if (window.shopModule.hasSkill('transcript_permit') && skillId === 'transcript_glimpse') {
-        pct += 0.20;
-      }
-      if (window.shopModule.hasSkill('breath_control') && (skillId === 'pron_rune' || skillId === 'shadow_mode')) {
-        pct += 0.15;
-      }
-      if (window.shopModule.hasSkill('second_take_insurance') && skillId === 'second_take') {
-        pct += 0.20;
-      }
-
-      return Math.min(0.50, Math.max(0, pct)); // Max 50% discount per rules
-    }
-
-    const currentMode = 'type'; // we are in the typing/extended modes usually for this popover
-
-    // Word Ghost
-    const ghostBase = window.SkillCatalog.getSkill('word_ghost')?.baseCost || 15;
-    const ghostCost = Math.ceil(ghostBase * (1 - getDiscount('word_ghost', currentMode)));
-    const ghostCostEl = document.querySelector('#skill-word-ghost .popover-cost');
-    if (ghostCostEl) ghostCostEl.textContent = `${Math.max(0, ghostCost)}c`;
-
-    // First Letter Peek
-    const peekBase = window.SkillCatalog.getSkill('first_letter_peek')?.baseCost || 25;
-    const peekCost = Math.ceil(peekBase * (1 - getDiscount('first_letter_peek', currentMode)));
-    const peekCostEl = document.querySelector('#skill-first-letter .popover-cost');
-    if (peekCostEl) peekCostEl.textContent = `${Math.max(0, peekCost)}c`;
-
-    // Transcript Glimpse
-    const glimpseBase = window.SkillCatalog.getSkill('transcript_glimpse')?.baseCost || 8;
-    const glimpseCost = Math.ceil(glimpseBase * (1 - getDiscount('transcript_glimpse', currentMode)));
-    const glimpseCostEl = document.querySelector('#skill-transcript-glimpse .popover-cost');
-    if (glimpseCostEl) glimpseCostEl.textContent = `${Math.max(0, glimpseCost)}c`;
+    });
   }
 
   const hintBtn = document.getElementById("hint-btn");
@@ -2819,7 +2910,7 @@
       const actionPopover = document.getElementById('action-popover-menu');
       if (actionPopover) {
         if (actionPopover.style.display !== 'flex') {
-          updatePopoverCosts();
+          updatePopoverAvailability();
           actionPopover.style.display = 'flex';
         } else {
           actionPopover.style.display = 'none';
@@ -2852,9 +2943,6 @@
           const skillResult = await useActiveSkillForAttempt('word_ghost', 'type', currentTypeQuestionId);
 
           if (skillResult?.success) {
-            // Apply calibration penalty
-            window.currentAttemptCalibMult = (window.currentAttemptCalibMult || 1.0) * (skillResult.calibMult || 1.0);
-
             // Execute Hint logic: Word Ghost essentially reveals the next chunk via HintSystem
             if (window.HintSystem) {
               const hintResult = window.HintSystem.useHint(question.correctSentence);
@@ -2872,10 +2960,7 @@
               }
             }
 
-            if (hintCostBadge) {
-              hintCostBadge.textContent = `-${Number(skillResult.cost) || 0} 🪙`;
-              setTimeout(updateHintCostBadge, 800);
-            }
+            setTimeout(updateHintCostBadge, 800);
           }
         } finally {
           btnWordGhost.disabled = false;
@@ -2899,7 +2984,6 @@
           const skillResult = await useActiveSkillForAttempt('first_letter_peek', 'type', currentTypeQuestionId);
 
           if (skillResult?.success) {
-            window.currentAttemptCalibMult = (window.currentAttemptCalibMult || 1.0) * (skillResult.calibMult || 1.0);
             window.hintUsedForCurrentQuestion = true;
 
             // Use window.generateFirstLettersPreview if available, else simple fallback
@@ -2922,13 +3006,63 @@
               }, 800);
             }
 
-            if (hintCostBadge) {
-              hintCostBadge.textContent = `-${Number(skillResult.cost) || 0} 🪙`;
-              setTimeout(updateHintCostBadge, 800);
-            }
+            setTimeout(updateHintCostBadge, 800);
           }
         } finally {
           btnFirstLetter.disabled = false;
+        }
+      });
+    }
+
+    // Hint Reveal Skill
+    const btnHintReveal = document.getElementById("skill-hint-reveal");
+    if (btnHintReveal) {
+      btnHintReveal.addEventListener("click", async () => {
+        const actionPopover = document.getElementById('action-popover-menu');
+        if (actionPopover) actionPopover.style.display = "none";
+
+        const question = typeDatabase.find(q => q.id === currentTypeQuestionId);
+        const input = document.getElementById("answer-input");
+        if (!question || !input) return;
+
+        try {
+          btnHintReveal.disabled = true;
+          const skillResult = await useActiveSkillForAttempt('hint_reveal', 'type', currentTypeQuestionId);
+          if (!skillResult?.success) return;
+
+          const correctWords = String(question.correctSentence || '').trim().split(/\s+/).filter(Boolean);
+          const currentWords = String(input.value || '').trim().split(/\s+/).filter(Boolean);
+          if (correctWords.length === 0) return;
+
+          const diff = diffWords(input.value || '', question.correctSentence || '');
+          const missingPiece = diff.find((part) => part.type === 'missing' || part.type === 'move-target');
+          let revealIndex = -1;
+
+          if (missingPiece) {
+            revealIndex = correctWords.findIndex((word) => word.toLowerCase() === String(missingPiece.text || '').toLowerCase());
+          }
+
+          if (revealIndex < 0) {
+            const scanLimit = Math.max(correctWords.length, currentWords.length);
+            for (let i = 0; i < scanLimit; i += 1) {
+              if ((currentWords[i] || '').toLowerCase() !== (correctWords[i] || '').toLowerCase()) {
+                revealIndex = i;
+                break;
+              }
+            }
+          }
+
+          if (revealIndex < 0) revealIndex = Math.min(currentWords.length, correctWords.length - 1);
+
+          const nextWords = [...currentWords];
+          nextWords[revealIndex] = correctWords[revealIndex];
+          input.value = nextWords.join(' ');
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.focus();
+
+          setTimeout(updateHintCostBadge, 800);
+        } finally {
+          btnHintReveal.disabled = false;
         }
       });
     }
@@ -2948,15 +3082,11 @@
           const skillResult = await useActiveSkillForAttempt('transcript_glimpse', 'type', currentTypeQuestionId);
 
           if (skillResult?.success) {
-            window.currentAttemptCalibMult = (window.currentAttemptCalibMult || 1.0) * (skillResult.calibMult || 1.0);
             window.hintUsedForCurrentQuestion = true;
 
             showTranscriptGlimpseOverlay(question.correctSentence, 2000);
 
-            if (hintCostBadge) {
-              hintCostBadge.textContent = `-${Number(skillResult.cost) || 0} 🪙`;
-              setTimeout(updateHintCostBadge, 800);
-            }
+            setTimeout(updateHintCostBadge, 800);
           }
         } finally {
           btnTranscriptGlimpse.disabled = false;
@@ -3070,6 +3200,10 @@
     // 8. Reset Take Notes mode if it exists
     if (window.TakeNotesMode && typeof window.TakeNotesMode.reset === 'function') {
       window.TakeNotesMode.reset();
+    }
+
+    if (window.RFIBMode && typeof window.RFIBMode.reset === 'function') {
+      window.RFIBMode.reset();
     }
 
     // 9. Stop Speech Recognition
@@ -3952,6 +4086,25 @@
   let extendedGapAnswers = {}; // Store user answers for gaps
   let readingTimer = null;
   let readingTimeLeft = 30;
+  const modeLoadRequestIds = {
+    type: 0,
+    speak: 0,
+    extended: 0
+  };
+
+  const beginModeLoadRequest = (mode) => {
+    if (!Object.prototype.hasOwnProperty.call(modeLoadRequestIds, mode)) {
+      return 0;
+    }
+
+    modeLoadRequestIds[mode] += 1;
+    return modeLoadRequestIds[mode];
+  };
+
+  const isStaleModeLoadRequest = (mode, requestId) => {
+    return !Object.prototype.hasOwnProperty.call(modeLoadRequestIds, mode) ||
+      modeLoadRequestIds[mode] !== requestId;
+  };
 
   const clearExtendedReadingTimer = () => {
     if (readingTimer) {
@@ -4621,6 +4774,7 @@
 
   // Load Extended Listening question
   const loadExtendedQuestion = async (questionId) => {
+    const requestId = beginModeLoadRequest('extended');
     const question = extendedDatabase.find(q => q.id === questionId);
     if (!question) {
       log.error(`Question ${questionId} not found`);
@@ -4628,8 +4782,12 @@
     }
 
     currentExtendedQuestionId = questionId;
+    if (currentQuestionIdExtended) {
+      currentQuestionIdExtended.textContent = questionId;
+    }
     startAttemptContext('extended', questionId);
     window.questionStartTime = null;
+    window.extendedQuestionStartTime = Date.now();
     window.currentQuestionAttempts = 0;
     window.hintUsedForCurrentQuestion = false;
 
@@ -4679,12 +4837,16 @@
 
     clearExtendedReadingTimer();
 
+    if (isStaleModeLoadRequest('extended', requestId)) {
+      return;
+    }
+
     startReadingTimer();
-    await loadExtendedAudio(question.audioFile);
+    await loadExtendedAudio(question.audioFile, requestId);
   };
 
   // Load Extended Listening audio
-  const loadExtendedAudio = async (audioFile) => {
+  const loadExtendedAudio = async (audioFile, requestId = modeLoadRequestIds.extended) => {
     // Determine MIME type based on file extension
     const getAudioMimeType = (filename) => {
       const ext = filename.toLowerCase().split('.').pop();
@@ -4711,6 +4873,9 @@
       const testPath = `database/extended/audio/${testFile}`;
 
       const exists = await checkFileExists(testPath);
+      if (isStaleModeLoadRequest('extended', requestId)) {
+        return;
+      }
       log.debug(`[loadExtendedAudio] Checking ${testPath}: ${exists ? 'EXISTS' : 'NOT FOUND'}`);
 
       if (exists) {
@@ -5218,6 +5383,19 @@
 
     recordPracticeAttempt(currentExtendedQuestionId || 'extended', isFullyCorrect, 'extended');
 
+    if (window.extendedPerformanceTracker) {
+      const timeTaken = Math.max(2, (Date.now() - (window.extendedQuestionStartTime || Date.now())) / 1000);
+      const accuracy = totalGaps > 0 ? Math.max(0, Math.min(1, correctCount / totalGaps)) : 0;
+      window.extendedPerformanceTracker.recordAttempt({
+        correct: isFullyCorrect,
+        accuracy,
+        attempts: 1,
+        hintUsed: !!supportModeActive,
+        timeTaken,
+        wordCount: totalGaps
+      });
+    }
+
     // Dual-Track Scoring Integration (v6)
     if (window.handleDualTrackScoring) {
       window.handleDualTrackScoring('extended', currentExtendedQuestionId || 'extended', correctCount, totalGaps);
@@ -5251,7 +5429,13 @@
 
       // Show add to vocabulary modal if there are missed words
       if (missedWords.length > 0) {
-        window.VocabularyBook.showAddModal(missedWords, currentExtendedQuestionId || 'extended', 'fill');
+        window.VocabularyBook.handlePracticeCapture?.({
+          mode: 'fill',
+          questionId: currentExtendedQuestionId || 'extended',
+          sentenceText: extendedCorrectTranscript,
+          missedWords: filterContentWords(missedWords),
+          correctWords
+        });
       }
     }
   });
@@ -5458,6 +5642,19 @@
     checkResultPhrases.style.display = 'block';
 
     recordPracticeAttempt(currentExtendedQuestionId || 'extended', isFullyCorrect, 'phrases');
+
+    if (window.extendedPerformanceTracker) {
+      const timeTaken = Math.max(2, (Date.now() - (window.extendedQuestionStartTime || Date.now())) / 1000);
+      const accuracy = totalPhrases > 0 ? Math.max(0, Math.min(1, correctCount / totalPhrases)) : 0;
+      window.extendedPerformanceTracker.recordAttempt({
+        correct: isFullyCorrect,
+        accuracy,
+        attempts: 1,
+        hintUsed: !!supportPhrasesActive,
+        timeTaken,
+        wordCount: totalPhrases
+      });
+    }
 
     // Dual-Track Scoring Integration (v6)
     if (window.handleDualTrackScoring) {
@@ -6623,8 +6820,7 @@
       const timeTaken = (Date.now() - (window.questionStartTime || Date.now())) / 1000;
       const assistMeta = getAttemptAssistMeta('type', currentTypeQuestionId);
 
-      // Merge baseline assist meta calib mult with newly acquired dynamic RPG skills for this attempt
-      const mergedCalibMult = (assistMeta.assistCalibMult || 1.0) * (window.currentAttemptCalibMult || 1.0);
+      const mergedCalibMult = assistMeta.assistCalibMult || 1.0;
 
       window.typePerformanceTracker.recordAttempt({
         correct: !hasErrors,
@@ -6636,11 +6832,6 @@
         timeTaken: timeTaken,
         wordCount: totalWords
       });
-
-      // Clear dynamic multiplier for next question if this is a correct attempt
-      if (!hasErrors) {
-        window.currentAttemptCalibMult = 1.0;
-      }
     }
 
     scoreElement.textContent = `Points: ${scoreValue} / ${totalWords}`;
@@ -6707,7 +6898,13 @@
         if (missedWords.length > 0) {
           const contentWords = filterContentWords(missedWords);
           if (contentWords.length > 0) {
-            window.VocabularyBook.showAddModal(contentWords, currentTypeQuestionId, 'type', correctSentenceType);
+            window.VocabularyBook.handlePracticeCapture?.({
+              mode: 'type',
+              questionId: currentTypeQuestionId,
+              sentenceText: correctSentenceType,
+              missedWords: contentWords,
+              correctWords: matchedWords
+            });
           }
         }
       }
@@ -6808,7 +7005,13 @@
         if (missedWords.length > 0) {
           const contentWords = filterContentWords(missedWords);
           if (contentWords.length > 0) {
-            window.VocabularyBook.showAddModal(contentWords, currentSpeakQuestionId, 'speak', correctSentenceSpeak);
+            window.VocabularyBook.handlePracticeCapture?.({
+              mode: 'speak',
+              questionId: currentSpeakQuestionId,
+              sentenceText: correctSentenceSpeak,
+              missedWords: contentWords,
+              correctWords: matchedWords
+            });
           }
         }
       }
@@ -6837,7 +7040,6 @@
             secondTakeOverlay.remove();
             const skillResult = await useActiveSkillForAttempt('second_take', 'speak', currentSpeakQuestionId);
             if (skillResult?.success) {
-              window.currentAttemptCalibMult = (window.currentAttemptCalibMult || 1.0) * (skillResult.calibMult || 0.4);
               // Reset speak mode to allow re-recording
               if (recordBtn) { recordBtn.style.display = 'inline-block'; recordBtn.textContent = 'Start Recording'; }
               if (retryBtnSpeak) retryBtnSpeak.style.display = 'none';
@@ -6876,19 +7078,13 @@
   };
 
   const loadQuestion = async (mode, questionId) => {
+    const requestId = beginModeLoadRequest(mode);
     const database = mode === "type" ? typeDatabase : speakDatabase;
     const question = database.find(item => item.id === questionId);
 
     if (!question) {
       log.error(`Question ${questionId} not found in ${mode} database`);
       return false;
-    }
-
-    // Update correct sentence based on mode
-    if (mode === "type") {
-      correctSentenceType = question.correctSentence;
-    } else {
-      correctSentenceSpeak = question.correctSentence;
     }
 
     // Apply Smart Difficulty Settings
@@ -6953,6 +7149,9 @@
 
       log.debug(`[loadQuestion] Checking if file exists (attempt ${i + 1}/${tryExtensions.length}): ${testPath}`);
       const exists = await checkFileExists(testPath);
+      if (isStaleModeLoadRequest(mode, requestId)) {
+        return false;
+      }
 
       if (exists) {
         foundFile = testFile;
@@ -6965,6 +7164,16 @@
       log.warn(`[loadQuestion] No audio file found for question ${questionId}. Tried all extensions.`);
       // Still try to load with database filename as fallback
       foundFile = question.audioFile || `${baseFilename}.mp3`;
+    }
+
+    if (isStaleModeLoadRequest(mode, requestId)) {
+      return false;
+    }
+
+    if (mode === "type") {
+      correctSentenceType = question.correctSentence;
+    } else {
+      correctSentenceSpeak = question.correctSentence;
     }
 
     const audioPath = `database/${mode}/audio/${foundFile}?t=${Date.now()}`;
@@ -7250,22 +7459,23 @@
       // Difficulty Filter (Fill mode)
       const difficultyContainer = document.getElementById('difficulty-filter-container-extended');
       const difficultyMenu = document.getElementById('difficulty-filter-menu-extended');
+      const selectedDifficultyOption = difficultyMenu?.querySelector('.filter-option.selected');
+      const difficultyValue = selectedDifficultyOption?.dataset.value || 'all';
 
       let difficultyLevel = null;
-      const isAdaptiveMode = window.DifficultyManager && window.DifficultyManager.globalSettings.autoAdjustEnabled;
+      const isAdaptiveMode = !!window.DifficultyManager?.getGlobalSettings?.()?.autoAdjustEnabled;
 
       if (isAdaptiveMode) {
-        if (!window.DifficultyManager.isCalibrated("extended")) {
+        if (difficultyValue !== 'all') {
+          difficultyLevel = parseInt(difficultyValue, 10);
+        } else if (!window.DifficultyManager.isCalibrated("extended")) {
           // Uncalibrated: Do not filter by difficulty so the user can choose or see a mix to calibrate naturally.
           difficultyLevel = null;
         } else {
-          // Calibrated: Use exact level
-          const currentSettings = window.DifficultyManager.getCurrentSettings("extended");
-          difficultyLevel = currentSettings ? currentSettings.level : null;
+          // Calibrated: Use the mapped content tier
+          difficultyLevel = window.DifficultyManager.getContentTier?.("extended") ?? null;
         }
       } else {
-        const selectedDifficultyOption = difficultyMenu?.querySelector('.filter-option.selected');
-        const difficultyValue = selectedDifficultyOption?.dataset.value || 'all';
         difficultyLevel = difficultyValue !== 'all' ? parseInt(difficultyValue, 10) : null;
       }
 
@@ -7334,22 +7544,23 @@
       // Get Difficulty Filter (Type and Speak modes)
       const difficultyContainer = document.getElementById(`difficulty-filter-container-${mode}`);
       const difficultyMenu = document.getElementById(`difficulty-filter-menu-${mode}`);
+      const selectedDifficultyOption = difficultyMenu?.querySelector('.filter-option.selected');
+      const difficultyValue = selectedDifficultyOption?.dataset.value || 'all';
 
       let difficultyLevel = null;
-      const isAdaptiveMode = window.DifficultyManager && window.DifficultyManager.globalSettings.autoAdjustEnabled;
+      const isAdaptiveMode = !!window.DifficultyManager?.getGlobalSettings?.()?.autoAdjustEnabled;
 
       if (isAdaptiveMode) {
-        if (!window.DifficultyManager.isCalibrated(mode)) {
+        if (difficultyValue !== 'all') {
+          difficultyLevel = parseInt(difficultyValue, 10);
+        } else if (!window.DifficultyManager.isCalibrated(mode)) {
           // Uncalibrated: Do not filter by difficulty so the user can see all options and calibrate smoothly.
           difficultyLevel = null;
         } else {
-          // Calibrated: Use exact level
-          const currentSettings = window.DifficultyManager.getCurrentSettings(mode);
-          difficultyLevel = currentSettings ? currentSettings.level : null;
+          // Calibrated: Use the mapped content tier
+          difficultyLevel = window.DifficultyManager.getContentTier?.(mode) ?? null;
         }
       } else {
-        const selectedDifficultyOption = difficultyMenu?.querySelector('.filter-option.selected');
-        const difficultyValue = selectedDifficultyOption?.dataset.value || 'all';
         difficultyLevel = difficultyValue !== 'all' ? parseInt(difficultyValue, 10) : null;
       }
 
@@ -7830,6 +8041,11 @@
         window.checkFilterUnlockStatus(userId);
       }
 
+      ['type', 'speak', 'extended', 'notes'].forEach((mode) => {
+        window.DifficultyFilter?.reloadSavedDifficulty?.(mode);
+      });
+      window.DifficultyFilter?.updateFilterVisibility?.();
+
       log.debug('✓ Progress UI: Reload complete after login');
     } else if (eventType === 'logout') {
       // ============================================
@@ -7860,6 +8076,9 @@
       ['type', 'speak'].forEach((mode) => {
         const container = document.getElementById(`length-filter-container-${mode}`);
         if (container) container.style.display = 'none';
+      });
+      ['type', 'speak', 'extended', 'notes'].forEach((mode) => {
+        window.DifficultyFilter?.reloadSavedDifficulty?.(mode);
       });
       window.DifficultyFilter?.updateFilterVisibility?.();
 
@@ -7925,7 +8144,7 @@
     if (retryBtn) retryBtn.style.display = "none";
 
     // ============================================
-    // Hint System (Skill Tree-aware) + Baseline Scaffolding
+    // Hint System progression-aware + Baseline Scaffolding
     // ============================================
     const hintControlsEl = document.getElementById('hint-controls');
 
@@ -8161,7 +8380,6 @@
       if (nextState) {
         const skillResult = window.useActiveSkillForAttempt ? await window.useActiveSkillForAttempt('shadow_mode', 'speak', currentSpeakQuestionId) : { success: true };
         if (!skillResult?.success) return;
-        window.currentAttemptCalibMult = (window.currentAttemptCalibMult || 1.0) * (skillResult.calibMult || 0.65);
       }
 
       window.isShadowModeActive = nextState;
@@ -8925,16 +9143,11 @@
     lengthFilterMenu.querySelectorAll('.filter-option').forEach(option => {
       option.addEventListener('click', (e) => {
         // Restricted Filter Check
-        // Priority check: Is it unlocked via Skill Tree passive?
+        // Priority check: Is it unlocked via progression?
         const isUnlocked = isLengthFilterUnlocked();
 
         if (option.dataset.locked === "true" && !isUnlocked) {
-          const points = (window.currentUserProfile && window.currentUserProfile.totalPoints) || 0;
-          if (points >= 50) {
-            window.shopModule.showAlertModal("This feature is locked. Unlock it in the Skill Tree now!", true);
-          } else {
-            window.shopModule.showAlertModal("This feature is locked. Practice more to get coins and unlock it!", true);
-          }
+          window.shopModule.showAlertModal("This feature is locked. Keep practicing to unlock it.", true);
           return; // Do not apply filter
         }
 
@@ -9033,16 +9246,11 @@
     lengthFilterMenuSpeak.querySelectorAll('.filter-option').forEach(option => {
       option.addEventListener('click', (e) => {
         // Restricted Filter Check
-        // Priority check: Is it unlocked via Skill Tree passive?
+        // Priority check: Is it unlocked via progression?
         const isUnlocked = isLengthFilterUnlocked();
 
         if (option.dataset.locked === "true" && !isUnlocked) {
-          const points = (window.currentUserProfile && window.currentUserProfile.totalPoints) || 0;
-          if (points >= 50) {
-            window.shopModule.showAlertModal("This feature is locked. Unlock it in the Skill Tree now!", true);
-          } else {
-            window.shopModule.showAlertModal("This feature is locked. Practice more to get coins and unlock it!", true);
-          }
+          window.shopModule.showAlertModal("This feature is locked. Keep practicing to unlock it.", true);
           return; // Do not apply filter
         }
 
@@ -9127,13 +9335,14 @@
       if (!window.shopModule || !window.shopModule.isSkillUnlocked('dict_peek')) return;
 
       const currentMode = window.appState?.currentMode || 'extended'; // Fallback to extended
-      if (currentMode !== 'extended' && currentMode !== 'watch') return;
+      if (currentMode !== 'extended' && currentMode !== 'watch' && currentMode !== 'rfib') return;
 
       currentSelectedText = text;
 
       let pct = 0;
       if (currentMode === 'watch' && window.shopModule.hasSkill('mode_license_watch')) pct += 0.15;
       if (currentMode === 'extended' && window.shopModule.hasSkill('mode_license_extended')) pct += 0.15;
+      if (currentMode === 'rfib' && window.shopModule.hasSkill('mode_license_extended')) pct += 0.15;
       if (window.shopModule.hasSkill('frugal_reader_3')) pct += 0.30;
       else if (window.shopModule.hasSkill('frugal_reader_2')) pct += 0.20;
       else if (window.shopModule.hasSkill('frugal_reader_1')) pct += 0.10;
@@ -9168,8 +9377,6 @@
       try {
         const skillResult = window.useActiveSkillForAttempt ? await window.useActiveSkillForAttempt('dict_peek', currentMode, questionId) : { success: true };
         if (skillResult?.success) {
-          window.currentAttemptCalibMult = (window.currentAttemptCalibMult || 1.0) * (skillResult.calibMult || 0.85);
-
           modal.style.display = 'block';
           if (modalWord) modalWord.textContent = currentSelectedText;
           if (modalBody) modalBody.innerHTML = '<div style="padding: 20px; text-align: center;">Fetching definition...</div>';
@@ -9318,18 +9525,14 @@
 
     window.updateAdaptiveUI = function (mode) {
       if (!window.DifficultyManager) return;
+      if (!modes.includes(mode)) return;
 
-      const isAdaptive = window.DifficultyManager.globalSettings.autoAdjustEnabled;
+      const isAdaptive = !!window.DifficultyManager?.getGlobalSettings?.()?.autoAdjustEnabled;
 
       const aRadio = document.getElementById(`adaptive-${mode}`);
       const mRadio = document.getElementById(`manual-${mode}`);
       if (aRadio) aRadio.checked = isAdaptive;
       if (mRadio) mRadio.checked = !isAdaptive;
-
-      const diffContainer = document.getElementById(`difficulty-filter-container-${mode}`);
-      if (diffContainer) {
-        diffContainer.style.display = isAdaptive ? 'none' : 'block';
-      }
 
       const calibIndicator = document.getElementById(`calibration-indicator-${mode}`);
       if (calibIndicator) {
@@ -9350,9 +9553,12 @@
       const handleToggle = (isAdaptive) => {
         if (!window.DifficultyManager) return;
 
-        window.DifficultyManager.globalSettings.autoAdjustEnabled = isAdaptive;
-        if (typeof window.DifficultyManager.saveProfile === 'function') {
-          window.DifficultyManager.saveProfile();
+        if (typeof window.DifficultyManager.setAutoAdjustEnabled === 'function') {
+          window.DifficultyManager.setAutoAdjustEnabled(isAdaptive);
+        } else {
+          const settings = window.DifficultyManager?.getGlobalSettings?.();
+          if (settings) settings.autoAdjustEnabled = isAdaptive;
+          window.DifficultyManager.saveProfile?.();
         }
 
         modes.forEach(m => window.updateAdaptiveUI(m));

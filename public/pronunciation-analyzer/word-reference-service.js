@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * Word Reference Service
  * Main orchestrator: Check DB → Call backend for MW data → Save to DB → Return
@@ -5,7 +6,7 @@
 
 import { config } from './config.js';
 import { DatabaseService } from './database-service.js';
-import { STRESS_WEIGHTS, calculateStressScore } from './stress-utils.js';
+import { STRESS_WEIGHTS, calculateStressScore, findStressedSyllable } from './stress-utils.js';
 
 // Cache version - increment when backend algorithm changes
 // v8: Force re-fetch for syllable inheritance fix (2026-01-29)
@@ -141,8 +142,7 @@ export class WordReferenceService {
             throw new Error('Word not found in dictionary');
         }
 
-        // All forms should now have data due to backend inheritance
-        const alternatives = dictResult.alternatives || [];
+        const alternatives = this.extractAlternatives(dictResult);
 
         if (alternatives.length === 0) {
             throw new Error('No pronunciation data found for this word');
@@ -211,8 +211,24 @@ export class WordReferenceService {
             ...mwData,
             alternatives: uniqueAlternatives,
             nativeAnalysis: mwData.nativeAnalysis,
-            source: 'merriam-webster'
+            source: mwData.source || 'merriam-webster'
         };
+    }
+
+    extractAlternatives(dictResult) {
+        if (Array.isArray(dictResult?.alternatives) && dictResult.alternatives.length > 0) {
+            return dictResult.alternatives.filter(Boolean);
+        }
+
+        if (Array.isArray(dictResult?.data) && dictResult.data.length > 0) {
+            return dictResult.data.filter(Boolean);
+        }
+
+        if (dictResult?.data && typeof dictResult.data === 'object') {
+            return [dictResult.data];
+        }
+
+        return [];
     }
 
     /**
@@ -299,6 +315,9 @@ export class WordReferenceService {
         const userMaxPitch = Math.max(...userSyllables.map(s => s.maxPitch || 1));
         const userMaxDuration = Math.max(...userSyllables.map(s => s.vowelDuration || s.duration || 1));
         const userMaxIntensity = Math.max(...userSyllables.map(s => s.intensity || s.maxEnergy || 1));
+        const userStressedIndex = findStressedSyllable(userSyllables, {
+            finalSyllableDurationPenalty: 0.85
+        });
 
         const comparison = [];
         const count = Math.min(userSyllables.length, nativePattern.length);
@@ -313,7 +332,8 @@ export class WordReferenceService {
 
             comparison.push({
                 syllable: i + 1,
-                isStressed: native.isStressed,
+                isTargetStressed: !!native.isStressed,
+                isUserStressed: i === userStressedIndex,
                 userPitch: userRelPitch,
                 userDuration: userRelDur,
                 userIntensity: userRelInt,
@@ -352,7 +372,8 @@ export class WordReferenceService {
             patternCorrelation: stressComparison.confidence,
             stressFeedback: stressComparison.message,
             // Keep native stressed for reference
-            nativeStressedSyllable: nativeStressedIndex + 1,
+            nativeStressedSyllable: nativeStressedIndex >= 0 ? nativeStressedIndex + 1 : 1,
+            userStressedSyllable: userStressedIndex >= 0 ? userStressedIndex + 1 : 1,
             syllableCountMatches: userSyllables.length === nativePattern.length
         };
     }
@@ -364,34 +385,9 @@ export class WordReferenceService {
      */
     findUserStressedSyllable(syllables) {
         if (!syllables || syllables.length === 0) return 0;
-
-        const maxPitch = Math.max(...syllables.map(s => s.maxPitch || 0));
-        const maxDuration = Math.max(...syllables.map(s => s.duration || 0));
-        const maxEnergy = Math.max(...syllables.map(s => s.intensity || s.maxEnergy || 0));
-
-        let maxScore = -1;
-        let stressedIndex = 0;
-
-        syllables.forEach((s, i) => {
-            // Use Unified Logic from Utils
-            const pRel = ((s.maxPitch || 0) / (maxPitch || 1)) * 100;
-            let dRel = ((s.duration || 0) / (maxDuration || 1)) * 100;
-            const iRel = ((s.intensity || s.maxEnergy || 0) / (maxEnergy || 1)) * 100;
-
-            // Apply final syllable penalty (compensate for natural lengthening)
-            if (i === syllables.length - 1 && syllables.length > 1) {
-                dRel *= 0.85; // 15% penalty on duration
-            }
-
-            const score = calculateStressScore(pRel, dRel, iRel);
-
-            if (score > maxScore) {
-                maxScore = score;
-                stressedIndex = i;
-            }
+        return findStressedSyllable(syllables, {
+            finalSyllableDurationPenalty: 0.85
         });
-
-        return stressedIndex;
     }
 
     /**
@@ -437,8 +433,10 @@ export class WordReferenceService {
         const pitchCorr = this.pearsonCorrelation(userPitch.slice(0, minLen), nativePitch.slice(0, minLen));
         const intCorr = this.pearsonCorrelation(userInt.slice(0, minLen), nativeInt.slice(0, minLen));
 
-        // Weighted average (pitch matters most for stress perception)
-        const avgCorr = (pitchCorr * 0.45) + (durCorr * 0.35) + (intCorr * 0.20);
+        // Weighted average uses the canonical stress weights.
+        const avgCorr = (pitchCorr * STRESS_WEIGHTS.pitch) +
+            (durCorr * STRESS_WEIGHTS.duration) +
+            (intCorr * STRESS_WEIGHTS.intensity);
 
         // Pattern matches if correlation > 0.7
         const matches = avgCorr > 0.7;

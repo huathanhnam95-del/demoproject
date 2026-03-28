@@ -1,6 +1,7 @@
 /**
  * Unified stress analysis utilities
- * Based on Fry (1955, 1958) hierarchy: Duration > Pitch > Intensity
+ * Canonical weighting model for Pronounce mode:
+ * Pitch 0.50, Duration 0.30, Intensity 0.20
  */
 
 export const STRESS_WEIGHTS = {
@@ -27,9 +28,13 @@ export function calculateStressScore(pitchRel, durationRel, intensityRel) {
 /**
  * Find the stressed syllable in a list of syllables
  * @param {Array} syllables - Array of syllable objects
+ * @param {Object} options
+ * @param {number} options.finalSyllableDurationPenalty
  * @returns {number} Index of stressed syllable (0-based)
  */
-export function findStressedSyllable(syllables) {
+export function findStressedSyllable(syllables, {
+    finalSyllableDurationPenalty = 0.85
+} = {}) {
     if (!syllables || syllables.length === 0) return 0;
 
     // Get max values for normalization
@@ -47,8 +52,12 @@ export function findStressedSyllable(syllables) {
 
     syllables.forEach((s, i) => {
         const pRel = ((s.maxPitch || s.avgPitch || 0) / maxPitch) * 100;
-        const dRel = ((s.duration || 0) / maxDuration) * 100;
+        let dRel = ((s.duration || 0) / maxDuration) * 100;
         const iRel = ((s.intensity || s.maxEnergy || 0) / maxIntensity) * 100;
+
+        if (i === syllables.length - 1 && syllables.length > 1) {
+            dRel *= finalSyllableDurationPenalty;
+        }
 
         const score = calculateStressScore(pRel, dRel, iRel);
 

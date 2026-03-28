@@ -9,8 +9,7 @@ const ShopModule = (() => {
 
     // Legacy "modes" mapped to passive skill IDs.
     const FILTER_SKILL_MAP = {
-        lengthFilter: 'length_filter',
-        difficultyFilter: 'difficulty_filter'
+        lengthFilter: 'length_filter'
     };
 
     let userCoins = 0;
@@ -310,56 +309,17 @@ const ShopModule = (() => {
         }
 
         const skillTitle = skillNode.title || skillNode.id;
-        const cost = Number(skillNode.cost) || 0;
-        const confirmed = await showConfirmModal(
-            'Confirm Skill Purchase',
-            `Unlock <strong>${skillTitle}</strong> for <strong>${cost} coins</strong>?`
-        );
-
-        if (!confirmed) {
-            return { success: false, cancelled: true };
+        const progressionUnlock = window.SkillCatalog?.getProgressionUnlockById?.(skillNode.id);
+        if (progressionUnlock) {
+            showAlertModal(
+                `${skillTitle} now unlocks automatically through practice progression.`,
+                true
+            );
+            return { success: false, deprecated: true };
         }
 
-        try {
-            if (typeof window.callPurchaseSkill !== 'function') {
-                throw new Error('purchaseSkill API not available');
-            }
-
-            const purchaseResult = await window.callPurchaseSkill(skillNode.id);
-            if (!purchaseResult?.success) {
-                const msg = purchaseResult?.message || purchaseResult?.error || 'Skill purchase failed.';
-                showAlertModal(msg, true);
-                return { success: false };
-            }
-
-            await refreshUserData();
-            await renderSkillTree();
-
-            if (window.refreshLockedTabs) {
-                window.refreshLockedTabs();
-            }
-
-            window.dispatchEvent(new CustomEvent('skill-unlock', {
-                detail: { skillId: skillNode.id }
-            }));
-
-            // Back-compat for legacy listeners.
-            if (skillNode.id === 'length_filter') {
-                window.dispatchEvent(new CustomEvent('shop-unlock', { detail: { mode: 'lengthFilter' } }));
-            } else if (skillNode.id === 'difficulty_filter') {
-                window.dispatchEvent(new CustomEvent('shop-unlock', { detail: { mode: 'difficultyFilter' } }));
-            }
-
-            showAlertModal(`Successfully unlocked ${skillTitle}!`);
-            return {
-                success: true,
-                userProfile: userProfileSnapshot
-            };
-        } catch (error) {
-            console.error('[ShopModule] Skill purchase failed:', error);
-            showAlertModal('Skill purchase failed. Please try again.', true);
-            return { success: false };
-        }
+        showAlertModal('Manual skill purchases have been retired.', true);
+        return { success: false, deprecated: true };
     }
 
     /**

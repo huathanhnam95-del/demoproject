@@ -977,10 +977,25 @@ async function main() {
       if (!created || !created.ok) {
         throw new Error(`Failed to create entrance test link: ${JSON.stringify(created)}`);
       }
+      const expectedOrigin = new URL(args.baseUrl).origin;
+      const createdTestOrigin = new URL(created.testLink).origin;
+      const createdResultOrigin = new URL(created.resultLink).origin;
+      r.linkOrigins = {
+        expectedOrigin,
+        testLinkOrigin: createdTestOrigin,
+        resultLinkOrigin: createdResultOrigin
+      };
+      if (createdTestOrigin !== expectedOrigin || createdResultOrigin !== expectedOrigin) {
+        throw new Error(`Entrance test links use the wrong origin: ${JSON.stringify(r.linkOrigins)}`);
+      }
 
       const publicPage = await context.newPage();
       await publicPage.goto(created.testLink, { waitUntil: 'load', timeout: 60_000 });
-      await publicPage.waitForTimeout(1_800);
+      await publicPage.waitForFunction(() => {
+        const loading = document.querySelector('.et-loading');
+        return !loading || loading.parentElement?.style?.display === 'none';
+      }, { timeout: 30_000 }).catch(() => {});
+      r.publicLinkFinalUrl = publicPage.url();
       const publicShot = path.join(outputDirs.screenshots, `${runId}__${scenarioId}__ADMIN4_entrance_public.png`);
       await safeScreenshot(publicPage, publicShot, { fullPage: true });
       r.publicScreenshot = path.relative(outputDirs.outputRoot, publicShot);
@@ -1005,7 +1020,15 @@ async function main() {
       await publicPage.close();
 
       await page.goto(created.resultLink, { waitUntil: 'load', timeout: 60_000 });
-      await page.waitForTimeout(1_800);
+      await page.waitForFunction(() => {
+        return !!document.querySelector('#crm-result-root .crm-result-section, #crm-result-root .crm-result-error');
+      }, { timeout: 30_000 });
+      r.resultLinkFinalUrl = page.url();
+      r.resultRenderMarkers = await page.evaluate(() => ({
+        sectionCount: document.querySelectorAll('#crm-result-root .crm-result-section').length,
+        audioCount: document.querySelectorAll('#crm-result-root audio.crm-result-audio[src]').length,
+        hasError: !!document.querySelector('#crm-result-root .crm-result-error')
+      }));
       const resultShot = path.join(outputDirs.screenshots, `${runId}__${scenarioId}__ADMIN4_entrance_result.png`);
       await safeScreenshot(page, resultShot, { fullPage: true });
       r.resultScreenshot = path.relative(outputDirs.outputRoot, resultShot);

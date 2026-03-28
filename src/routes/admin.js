@@ -11,13 +11,7 @@ const {
     TEST_VERSION,
     buildPublicSession
 } = require('../entrance-test/test36plus');
-
-function getBaseUrl(req) {
-    const fromEnv = String(process.env.PUBLIC_BASE_URL || '').trim();
-    if (fromEnv) return fromEnv.replace(/\/+$/, '');
-    const proto = (req.headers['x-forwarded-proto'] || req.protocol || 'http').toString().split(',')[0].trim();
-    return `${proto}://${req.get('host')}`;
-}
+const { buildEntranceTestLinks } = require('../../functions/src/crm/public-origin');
 
 async function generateClassCode() {
     if (!db) {
@@ -242,11 +236,11 @@ function registerLocalOnlyRoutes(router, deps) {
                     }
                 });
 
-                const baseUrl = getBaseUrl(req);
+                const links = buildEntranceTestLinks(req, { deliveryToken: token, testId });
                 return localSendSuccess(res, {
                     testId,
-                    testLink: `${baseUrl}/entrance-test.html?token=${encodeURIComponent(token)}`,
-                    resultLink: `${baseUrl}/crm-entrance-test-result.html?testId=${encodeURIComponent(testId)}`
+                    testLink: links.testLink,
+                    resultLink: links.resultLink
                 }, 'Entrance test link created.');
             } catch (error) {
                 if (error?.message === 'STUDENT_NOT_FOUND') {
@@ -288,9 +282,11 @@ function registerLocalOnlyRoutes(router, deps) {
                 return bMs - aMs;
             });
 
-            const baseUrl = getBaseUrl(req);
             const testsWithLinks = tests.map((test) => {
-                const deliveryToken = String(test.deliveryToken || '').trim();
+                const links = buildEntranceTestLinks(req, {
+                    deliveryToken: String(test.deliveryToken || '').trim(),
+                    testId: test.testId
+                });
                 return {
                     testId: test.testId,
                     version: test.version,
@@ -298,10 +294,8 @@ function registerLocalOnlyRoutes(router, deps) {
                     createdAt: test.createdAt,
                     startedAt: test.startedAt,
                     submittedAt: test.submittedAt,
-                    testLink: deliveryToken
-                        ? `${baseUrl}/entrance-test.html?token=${encodeURIComponent(deliveryToken)}`
-                        : null,
-                    resultLink: `${baseUrl}/crm-entrance-test-result.html?testId=${encodeURIComponent(test.testId)}`
+                    testLink: links.testLink,
+                    resultLink: links.resultLink
                 };
             });
 

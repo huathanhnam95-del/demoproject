@@ -1,4 +1,4 @@
-import { countNormalizedWords, getColloAudioKey, normalizeForCompare } from './collo-dictate-utils.js';
+import { countNormalizedWords, derivePhraseFirstCapture, getColloAudioKey, normalizeForCompare } from './collo-dictate-utils.js';
 
 const SPEED_PRESETS = [1.0, 0.9, 0.8];
 
@@ -436,6 +436,14 @@ const ColloDictateMode = (() => {
 
     const expected = normalizeForCompare(currentPhrase);
     const typed = normalizeForCompare(els.input.value);
+    const baseCapture = derivePhraseFirstCapture(currentPhrase, els.input.value);
+    const missCounts = Object.fromEntries(
+      (baseCapture.tracking.missedWords || []).map((word) => [
+        word,
+        Number(window.VocabularyBook?.getMissCount?.(word) || 0) + 1
+      ])
+    );
+    const capture = derivePhraseFirstCapture(currentPhrase, els.input.value, missCounts);
 
     stats.attempts += 1;
 
@@ -446,6 +454,27 @@ const ColloDictateMode = (() => {
     } else {
       stats.streak = 0;
       setFeedback('wrong', `Not quite.<br>Answer: <strong>${currentPhrase}</strong>`);
+
+      if (window.VocabularyBook) {
+        capture.tracking.missedWords.forEach((word) => {
+          window.VocabularyBook.trackMissedWord?.(word, 'collo-dictate', getColloAudioKey(currentPhrase), currentPhrase);
+        });
+        capture.tracking.correctWords.forEach((word) => {
+          window.VocabularyBook.trackCorrectWord?.(word);
+        });
+
+        if (capture.candidates.length > 0) {
+          window.VocabularyBook.handlePracticeCapture?.({
+            mode: 'collo-dictate',
+            questionId: getColloAudioKey(currentPhrase),
+            sentenceText: currentPhrase,
+            candidates: capture.candidates.map((candidate) => ({
+              ...candidate,
+              sentence: currentPhrase
+            }))
+          });
+        }
+      }
     }
 
     els.checkBtn.disabled = true;

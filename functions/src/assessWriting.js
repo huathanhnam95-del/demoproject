@@ -13,6 +13,12 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { VertexAI } = require('@google-cloud/vertexai');
 const admin = require('firebase-admin');
+const {
+    buildModelPrompt,
+    extractJsonObject,
+    extractVertexText,
+    truncateForLog
+} = require('./assessWriting.helpers');
 
 // Initialize Vertex AI
 // GCLOUD_PROJECT is automatically populated in Firebase Functions environments.
@@ -28,7 +34,7 @@ const assessWriting = onCall({ maxInstances: 10 }, async (request) => {
         throw new HttpsError('unauthenticated', 'User must be authenticated');
     }
 
-    const { text, context, type } = request.data;
+    const { text, context } = request.data;
     const uid = request.auth.uid;
 
     if (!text || typeof text !== 'string' || text.length > 2000) {
@@ -72,25 +78,26 @@ const assessWriting = onCall({ maxInstances: 10 }, async (request) => {
         - Types: grammar, spelling, punctuation, clarity, tone.
         `;
 
-        const prompt = `
-        Context: ${context?.word ? 'Target word: ' + context.word : 'General writing'}
-        Text: "${text}"
-        `;
+        const prompt = buildModelPrompt(text, context);
 
         const result = await model.generateContent(systemPrompt + prompt);
         const response = await result.response;
-        const textResponse = response.text();
-
-        // Clean JSON
-        const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
-        const jsonString = jsonMatch ? jsonMatch[0] : "{}";
-        const analysis = JSON.parse(jsonString);
+        const textResponse = extractVertexText(response);
+        let analysis;
+        try {
+            analysis = extractJsonObject(textResponse);
+        } catch (parseError) {
+            parseError.rawResponse = textResponse;
+            throw parseError;
+        }
 
         // 4. Update Usage Record
-        await userRef.update({
-            'aiWritingStats.lastDate': today,
-            'aiWritingStats.count': (aiStats.count || 0) + 1
-        });
+        await userRef.set({
+            aiWritingStats: {
+                lastDate: today,
+                count: (aiStats.count || 0) + 1
+            }
+        }, { merge: true });
 
         return {
             success: true,
@@ -98,11 +105,25 @@ const assessWriting = onCall({ maxInstances: 10 }, async (request) => {
         };
 
     } catch (error) {
-        console.error('Gemini Analysis Failed:', error);
-        // Fallback to LanguageTool if Gemini fails? 
-        // For now, return error so client can handle fallback
+        console.error('Gemini Analysis Failed:', {
+            uid,
+            challengeId: context?.challengeId || '',
+            contextId: context?.contextId || '',
+            entryType: context?.entryType || '',
+            hasUserDoc: userDoc.exists,
+            hasPromptText: Boolean(context?.promptText),
+            hasUsedCollocation: Boolean(context?.usedCollocation),
+            parseFailure: /JSON|No JSON|Empty model response/i.test(String(error?.message || '')),
+            errorMessage: error?.message || String(error),
+            rawResponse: typeof error?.rawResponse === 'string' ? truncateForLog(error.rawResponse) : undefined
+        });
         throw new HttpsError('internal', 'AI analysis failed');
     }
 });
 
-module.exports = { assessWriting };
+module.exports = {
+    assessWriting,
+    buildModelPrompt,
+    extractJsonObject,
+    extractVertexText
+};

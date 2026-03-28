@@ -59,7 +59,7 @@ async function run() {
 
     await page.evaluate(async () => {
       if (window.DifficultyManager?.globalSettings) {
-        window.DifficultyManager.globalSettings.autoAdjustEnabled = false;
+        window.DifficultyManager.setAutoAdjustEnabled(false);
       }
       await window.switchToMode('extended');
       const manualRadio = document.getElementById('manual-extended');

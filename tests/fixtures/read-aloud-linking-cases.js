@@ -675,6 +675,13 @@ const PHASE3_SOUND_CHANGE_CASES = [
     leftWord: 'miss',
     rightWord: 'you',
     expected: { blocked: false, category: 'connected_speech', subtype: 'coalescent_sj', confidence: 'medium' }
+  },
+  {
+    id: 'ten-bikes',
+    text: 'ten bikes',
+    leftWord: 'ten',
+    rightWord: 'bikes',
+    expected: { blocked: false, category: 'connected_speech', subtype: 'n_bilabial_assimilation', confidence: 'medium' }
   }
 ];
 
@@ -706,13 +713,6 @@ const PHASE3_BLOCKED_CASES = [
     leftWord: 'far',
     rightWord: 'away',
     expected: { blocked: false, category: 'consonant_to_vowel', subtype: 'catenation', confidence: 'medium' }
-  },
-  {
-    id: 'ten-boys',
-    text: 'ten boys',
-    leftWord: 'ten',
-    rightWord: 'boys',
-    expected: { blocked: true, blockedReason: 'low_confidence' }
   }
 ];
 

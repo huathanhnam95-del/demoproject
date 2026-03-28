@@ -12,7 +12,7 @@ require('../public/js/performance-tracker.js');
 const PerformanceTracker = global.window.PerformanceTracker;
 assert.ok(PerformanceTracker, 'PerformanceTracker should attach to window');
 
-console.log('🧪 Starting PerformanceTracker Tests...');
+console.log('Starting PerformanceTracker Tests...');
 
 function approxEqual(actual, expected, eps = 1e-9) {
   assert.ok(Math.abs(actual - expected) <= eps, `Expected ~${expected}, got ${actual}`);
@@ -29,7 +29,6 @@ function approxEqual(actual, expected, eps = 1e-9) {
     wordCount: 10
   });
 
-  // speedScore = 1, accuracyScore = 0.5 -> 0.8*0.5 + 0.2*1 = 0.6
   approxEqual(score, 0.6);
 }
 
@@ -43,7 +42,6 @@ function approxEqual(actual, expected, eps = 1e-9) {
     wordCount: 10
   });
 
-  // triesMult = 0.8, speedScore = 1 -> 0.8*0.8 + 0.2*1 = 0.84
   approxEqual(score, 0.84);
 }
 
@@ -58,9 +56,61 @@ function approxEqual(actual, expected, eps = 1e-9) {
     wordCount: 10
   });
 
-  // triesMult = 0.2, speedScore = 1 -> 0.8*(1*0.2) + 0.2*1 = 0.36
   approxEqual(score, 0.36);
 }
 
-console.log('✅ PerformanceTracker tests passed');
+// 4) Notes mode uses a 90/10 accuracy-speed split
+{
+  const tracker = new PerformanceTracker('notes');
+  const score = tracker.calculateAttemptScore({
+    correct: true,
+    accuracy: 0.5,
+    attempts: 1,
+    timeTaken: 12,
+    wordCount: 10
+  });
 
+  approxEqual(score, 0.55);
+}
+
+// 5) SRS ignores speed when scoring
+{
+  const tracker = new PerformanceTracker('srs');
+  const score = tracker.calculateAttemptScore({
+    correct: true,
+    attempts: 1,
+    timeTaken: 1,
+    wordCount: 200
+  });
+
+  approxEqual(score, 1.0);
+}
+
+// 6) hintUsed marks the attempt as assisted exactly once
+{
+  let capturedMeta = null;
+  global.window.DifficultyManager = {
+    getCurrentSettings() {
+      return { level: 1 };
+    },
+    adjustDifficulty(mode, score, meta) {
+      capturedMeta = { mode, score, meta };
+    }
+  };
+
+  const tracker = new PerformanceTracker('type');
+  tracker.recordAttempt({
+    correct: true,
+    attempts: 1,
+    hintUsed: true,
+    assistCalibMult: 1,
+    timeTaken: 10,
+    wordCount: 10
+  });
+
+  assert.ok(capturedMeta, 'Expected DifficultyManager.adjustDifficulty to be called');
+  assert.equal(capturedMeta.meta.assisted, true, 'hintUsed should classify the attempt as assisted');
+  assert.equal(capturedMeta.mode, 'type');
+}
+
+console.log('PerformanceTracker tests passed');

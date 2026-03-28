@@ -52,13 +52,31 @@ function sanitizeProgressResponses(rawResponses) {
     };
 }
 
+function progressTimestampMs(value) {
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    if (typeof value === 'string' && value.trim()) {
+        const parsed = Date.parse(value);
+        if (Number.isFinite(parsed)) return parsed;
+    }
+    if (value && typeof value.toMillis === 'function') {
+        const millis = value.toMillis();
+        if (Number.isFinite(millis)) return millis;
+    }
+    if (value && Number.isFinite(value.seconds)) {
+        const nanos = Number.isFinite(value.nanoseconds) ? value.nanoseconds : 0;
+        return (value.seconds * 1000) + Math.floor(nanos / 1e6);
+    }
+    return null;
+}
+
 function sanitizeProgressDraft(rawProgress) {
     if (!isPlainObject(rawProgress)) return null;
     const stepIndexValue = Number(rawProgress.stepIndex);
     const stepIndex = Number.isFinite(stepIndexValue) ? Math.max(0, Math.floor(stepIndexValue)) : 0;
     return {
         stepIndex,
-        responses: sanitizeProgressResponses(rawProgress.responses)
+        responses: sanitizeProgressResponses(rawProgress.responses),
+        updatedAtMs: progressTimestampMs(rawProgress.updatedAt || rawProgress.updatedAtMs)
     };
 }
 

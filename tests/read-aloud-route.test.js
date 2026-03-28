@@ -280,6 +280,97 @@ async function postAssessment(baseUrl, { audioBuffer, referenceText, questionId,
       RecognitionStatus: 'Success',
       NBest: [{
         Display: 'Pick it up now',
+        AccuracyScore: 91,
+        Words: [
+          { Word: 'Pick', AccuracyScore: 94 },
+          { Word: 'it', AccuracyScore: 90 },
+          { Word: 'up', AccuracyScore: 88 },
+          { Word: 'now', AccuracyScore: 92 }
+        ]
+      }]
+    });
+
+    result = await postAssessment(baseUrl, {
+      audioBuffer: createMonoPcmWavBuffer({ durationMs: 240 }),
+      referenceText: 'Pick it up now'
+    });
+    assert.strictEqual(result.response.status, 200, 'direct Azure score fields should still return 200');
+    assert.strictEqual(result.payload.success, true);
+    assert.strictEqual(result.payload.accuracyScore, 91);
+    assert.strictEqual(result.payload.fluencyScore, null);
+    assert.strictEqual(result.payload.completenessScore, null);
+    assert.strictEqual(result.payload.pronScore, null);
+    assert.deepStrictEqual(result.payload.words, [
+      { word: 'Pick', accuracyScore: 94, errorType: 'None' },
+      { word: 'it', accuracyScore: 90, errorType: 'None' },
+      { word: 'up', accuracyScore: 88, errorType: 'None' },
+      { word: 'now', accuracyScore: 92, errorType: 'None' }
+    ]);
+
+    azureFetchCalls = 0;
+    result = await postAssessment(baseUrl, {
+      audioBuffer: createMonoPcmWavBuffer({ durationMs: 41000 }),
+      referenceText: 'Pick it up now'
+    });
+    assert.strictEqual(result.response.status, 422, 'too-long read-aloud wav should return 422');
+    assert.strictEqual(result.payload.error, 'INVALID_AUDIO');
+    assert.strictEqual(result.payload.details.reason, 'too_long');
+    assert.strictEqual(result.payload.details.maxDurationMs, 40000);
+    assert.strictEqual(azureFetchCalls, 0, 'too-long read-aloud audio should not call Azure');
+
+    process.env.READ_ALOUD_AZURE_MOCK_RESPONSE = JSON.stringify({
+      RecognitionStatus: 'Success',
+      NBest: [{
+        Display: 'Pick it up now',
+        Words: [
+          { Word: 'Pick' },
+          { Word: 'it' },
+          { Word: 'up' },
+          { Word: 'now' }
+        ]
+      }]
+    });
+    result = await postAssessment(baseUrl, {
+      audioBuffer: createMonoPcmWavBuffer({ durationMs: 240 }),
+      referenceText: 'Pick it up now'
+    });
+    assert.strictEqual(result.response.status, 502, 'missing pronunciation scores should surface as an assessment failure');
+    assert.strictEqual(result.payload.error, 'AZURE_ASSESSMENT_FAILED');
+    assert.strictEqual(result.payload.details.reason, 'scores_unavailable');
+    assert.strictEqual(result.payload.details.recognizedText, 'Pick it up now');
+
+    process.env.READ_ALOUD_AZURE_MOCK_RESPONSE = JSON.stringify({
+      RecognitionStatus: 'Success',
+      NBest: [{
+        Display: 'Pick it up now',
+        PronunciationAssessment: {
+          AccuracyScore: 0,
+          FluencyScore: 0,
+          CompletenessScore: 0,
+          PronScore: 0
+        },
+        Words: [
+          { Word: 'Pick', PronunciationAssessment: { AccuracyScore: 0, ErrorType: 'None' } },
+          { Word: 'it', PronunciationAssessment: { AccuracyScore: 0, ErrorType: 'None' } },
+          { Word: 'up', PronunciationAssessment: { AccuracyScore: 0, ErrorType: 'None' } },
+          { Word: 'now', PronunciationAssessment: { AccuracyScore: 0, ErrorType: 'None' } }
+        ]
+      }]
+    });
+    result = await postAssessment(baseUrl, {
+      audioBuffer: createMonoPcmWavBuffer({ durationMs: 240 }),
+      referenceText: 'Pick it up now'
+    });
+    assert.strictEqual(result.response.status, 502, 'all-zero pronunciation scores should surface as an assessment failure');
+    assert.strictEqual(result.payload.error, 'AZURE_ASSESSMENT_FAILED');
+    assert.strictEqual(result.payload.details.reason, 'scores_unavailable');
+    assert.strictEqual(result.payload.details.scorePattern, 'all_zero');
+    assert.strictEqual(result.payload.details.recognizedText, 'Pick it up now');
+
+    process.env.READ_ALOUD_AZURE_MOCK_RESPONSE = JSON.stringify({
+      RecognitionStatus: 'Success',
+      NBest: [{
+        Display: 'Pick it up now',
         PronunciationAssessment: {
           AccuracyScore: 94.1,
           FluencyScore: 88.8,

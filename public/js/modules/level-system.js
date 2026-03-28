@@ -10,7 +10,7 @@
         speaking: { label: 'Speaking', icon: 'mic' }
     };
 
-    const STARTER_ACTIVE_FALLBACK = new Set(['slow_audio', 'echo_loop', 'hint_wc', 'hint_fl', 'hint_reveal']);
+    const STARTER_ACTIVE_FALLBACK = new Set(['slow_audio', 'echo_loop', 'word_ghost', 'first_letter_peek', 'hint_reveal']);
     const LEGACY_UNLOCKS = {
         slow_audio: ['slowAudioUnlocked'],
         echo_loop: ['slowAudioUnlocked', 'replayTrainerUnlocked'],
@@ -110,7 +110,7 @@
 
     function calculateCoreLevel(skillXp) {
         const points = Math.max(0, num(skillXp, 0));
-        return Math.max(1, Math.floor(Math.sqrt(points / BASE_XP_DIVISOR)));
+        return Math.max(0, Math.floor(Math.sqrt(points / BASE_XP_DIVISOR)));
     }
 
     function getXPForLevel(level) {
@@ -137,7 +137,7 @@
     function getCoreProgress(skillXp) {
         const xp = Math.max(0, num(skillXp, 0));
         const level = calculateCoreLevel(xp);
-        const floor = getXPForLevel(level);
+        const floor = level === 0 ? 0 : getXPForLevel(level);
         const next = getXPForLevel(level + 1);
         return {
             xp,
@@ -508,9 +508,85 @@
         return `<img src="${customPng}" class="${sizeClass}" alt="${esc(node.title)}" onerror="window.__skillIconFallback(this, '${node.id}', '${matIcon}', '${sizeClass}')" />`;
     }
 
-    function renderSkillTree(container, userProfile, buyCallback) {
+    function getRoadmapBranches() {
+        const catalog = getCatalog();
+        const branchOrder = catalog?.PROGRESSION_BRANCH_ORDER || BRANCH_ORDER;
+        const unlocksByBranch = catalog?.CORE_PROGRESS_UNLOCKS || {};
+        return branchOrder.map((branch) => ({
+            branch,
+            label: BRANCH_META[branch]?.label || titleCase(branch),
+            icon: BRANCH_META[branch]?.icon || 'star',
+            unlocks: Array.isArray(unlocksByBranch[branch])
+                ? [...unlocksByBranch[branch]].sort((a, b) => a.roadmapOrder - b.roadmapOrder)
+                : []
+        }));
+    }
+
+    function getRoadmapBranchState(userProfile, branch) {
+        const xp = getTreeXp(userProfile, branch);
+        const level = calculateCoreLevel(xp);
+        const floor = level === 0 ? 0 : getXPForLevel(level);
+        const next = getXPForLevel(level + 1);
+        const percent = Math.min(100, Math.max(0, ((xp - floor) / Math.max(1, next - floor)) * 100));
+        const roadmap = getRoadmapBranches().find((item) => item.branch === branch) || { unlocks: [] };
+        const unlocked = roadmap.unlocks.filter((unlock) => hasUnlockedSkill(unlock.id, userProfile));
+        const nextUnlock = roadmap.unlocks.find((unlock) => !hasUnlockedSkill(unlock.id, userProfile)) || null;
+        return { xp, level, floor, next, percent, unlocked, nextUnlock };
+    }
+
+    function renderRoadmap(container, userProfile) {
         updateHeaderLevel(userProfile);
         if (!container) return;
+
+        const safeProfile = userProfile && typeof userProfile === 'object' ? userProfile : {};
+        const roadmapBranches = getRoadmapBranches();
+
+        container.innerHTML = `
+            <div class="rpg-roadmap-shell">
+                <div class="rpg-roadmap-header">
+                    <div class="rpg-roadmap-title">Progress Roadmap</div>
+                    <div class="rpg-roadmap-sub">Practice unlocks features automatically. Purchase buttons have been retired.</div>
+                </div>
+                <div class="rpg-roadmap-grid">
+                    ${roadmapBranches.map((branch) => {
+                        const state = getRoadmapBranchState(safeProfile, branch.branch);
+                        const nextLabel = state.nextUnlock
+                            ? `${state.nextUnlock.title} at Level ${state.nextUnlock.level} (${state.nextUnlock.xpThreshold} XP)`
+                            : 'All current unlocks reached';
+                        return `
+                            <section class="rpg-roadmap-card">
+                                <header class="rpg-roadmap-card-header">
+                                    <div class="rpg-roadmap-icon"><span class="material-icons">${branch.icon}</span></div>
+                                    <div>
+                                        <div class="rpg-roadmap-branch">${branch.label}</div>
+                                        <div class="rpg-roadmap-level">Level ${state.level}</div>
+                                    </div>
+                                </header>
+                                <div class="rpg-roadmap-progress">
+                                    <div class="rpg-roadmap-progress-bar" style="width:${state.percent.toFixed(1)}%"></div>
+                                </div>
+                                <div class="rpg-roadmap-xp">${state.xp} / ${state.next} XP</div>
+                                <div class="rpg-roadmap-section">
+                                    <div class="rpg-roadmap-section-label">Unlocked</div>
+                                    <div class="rpg-roadmap-chips">
+                                        ${state.unlocked.length > 0
+                                            ? state.unlocked.map((unlock) => `<span class="rpg-roadmap-chip unlocked">${esc(unlock.title)}</span>`).join('')
+                                            : '<span class="rpg-roadmap-empty">None yet</span>'}
+                                    </div>
+                                </div>
+                                <div class="rpg-roadmap-section">
+                                    <div class="rpg-roadmap-section-label">Next unlock</div>
+                                    <div class="rpg-roadmap-next">${esc(nextLabel)}</div>
+                                </div>
+                            </section>
+                        `;
+                    }).join('')}
+                </div>
+            </div>`;
+    }
+
+    function renderSkillTree(container, userProfile, buyCallback) {
+        return renderRoadmap(container, userProfile, buyCallback);
 
         const safeProfile = userProfile && typeof userProfile === 'object' ? userProfile : {};
         const treeData = buildSkillTreeData();
@@ -1251,6 +1327,7 @@
         updateHeaderLevel,
         getUnlockables: () => buildSkillTreeData().allNodes,
         isUnlocked: (itemId, userProfile) => hasUnlockedSkill(itemId, userProfile),
+        renderRoadmap,
         renderSkillTree
     };
 

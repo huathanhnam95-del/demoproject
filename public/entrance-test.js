@@ -55,10 +55,7 @@
     appState.session = data.session;
     appState.steps = buildSteps(data.session);
     hydrateQuestionProgress(appState.steps);
-    const hasRemoteProgress = hydrateSavedProgress(data.progress);
-    if (!hasRemoteProgress) {
-      hydrateSavedProgress(readLocalProgressDraft());
-    }
+    hydrateSavedProgress(choosePreferredProgressDraft(data.progress, readLocalProgressDraft()));
     render();
   }
 
@@ -207,6 +204,41 @@
     const maxRestorableIndex = Math.max(0, appState.steps.length - 2);
     appState.stepIndex = clamp(Math.floor(rawStepIndex), 0, maxRestorableIndex);
     return true;
+  }
+
+  function progressTimestampMs(value) {
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    if (typeof value === 'string' && value.trim()) {
+      const parsed = Date.parse(value);
+      if (Number.isFinite(parsed)) return parsed;
+    }
+    if (value && typeof value.toMillis === 'function') {
+      const millis = value.toMillis();
+      if (Number.isFinite(millis)) return millis;
+    }
+    if (value && Number.isFinite(value.seconds)) {
+      const nanos = Number.isFinite(value.nanoseconds) ? value.nanoseconds : 0;
+      return (value.seconds * 1000) + Math.floor(nanos / 1e6);
+    }
+    return null;
+  }
+
+  function choosePreferredProgressDraft(remoteProgress, localProgress) {
+    if (!remoteProgress && !localProgress) return null;
+    if (!remoteProgress) return localProgress;
+    if (!localProgress) return remoteProgress;
+
+    const remoteMs = progressTimestampMs(remoteProgress.updatedAtMs || remoteProgress.updatedAt);
+    const localMs = progressTimestampMs(localProgress.updatedAtMs || localProgress.updatedAt);
+
+    if (Number.isFinite(remoteMs) && Number.isFinite(localMs)) {
+      return remoteMs >= localMs ? remoteProgress : localProgress;
+    }
+
+    if (Number.isFinite(localMs)) return localProgress;
+    if (Number.isFinite(remoteMs)) return remoteProgress;
+
+    return localProgress;
   }
 
   function progressStorageKey() {
@@ -1160,30 +1192,39 @@
 
   async function finalizeSubmit() {
     const btn = elements.card.querySelector('#btn-submit');
+    const originalText = btn ? btn.textContent : 'Submit';
     if (btn) {
       btn.disabled = true;
       btn.textContent = 'Submitting...';
     }
+    try {
+      const res = await fetch('/api/entrance-tests/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token,
+          responses: appState.responses
+        }),
+        cache: 'no-store'
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.success) {
+        const msg = json?.message || 'Submit failed.';
+        throw new Error(msg);
+      }
 
-    const res = await fetch('/api/entrance-tests/submit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        token,
-        responses: appState.responses
-      }),
-      cache: 'no-store'
-    });
-    const json = await res.json().catch(() => null);
-    if (!res.ok || !json?.success) {
-      const msg = json?.message || 'Submit failed.';
-      throw new Error(msg);
+      clearLocalProgressDraft();
+
+      // Move to Thank You
+      appState.stepIndex = appState.steps.length - 1;
+      render();
+    } catch (error) {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+      render();
+      throw error;
     }
-
-    clearLocalProgressDraft();
-
-    // Move to Thank You
-    appState.stepIndex = appState.steps.length - 1;
-    render();
   }
 })();

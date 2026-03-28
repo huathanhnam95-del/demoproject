@@ -62,6 +62,7 @@
   let leadWorkspaceController = null;
   let communicationsController = null;
   const entranceTestUi = window.CrmEntranceTests || null;
+  const authSessionGuard = window.AuthSessionGuard || null;
   const modalState = {
     studentId: null,
     studentProfile: null,
@@ -436,17 +437,17 @@
 
     await initFirebaseFromServer();
 
-    const user = await waitForAuthUser({ timeoutMs: 6500 });
+    const user = await waitForAuthUser({ timeoutMs: 12000, nullGraceMs: 1500 });
     if (!user) {
       showGateMessage('Please log in as admin first.', 'Redirecting to the app…');
-      setTimeout(() => (window.location.href = 'index.html'), 1800);
+      setTimeout(() => window.location.replace('index.html'), 1800);
       return;
     }
 
     const adminOk = await isAdminUser(user);
     if (!adminOk) {
       showGateMessage('Access denied.', 'Admin privileges required.');
-      setTimeout(() => (window.location.href = 'index.html'), 2200);
+      setTimeout(() => window.location.replace('index.html'), 2200);
       return;
     }
 
@@ -656,6 +657,11 @@
   }
 
   async function initFirebaseFromServer() {
+    if (authSessionGuard && typeof authSessionGuard.ensureCompatFirebaseFromConfig === 'function') {
+      await authSessionGuard.ensureCompatFirebaseFromConfig(firebase);
+      return;
+    }
+
     const res = await fetch('/api/config', { cache: 'no-store' });
     const result = await res.json().catch(() => null);
 
@@ -667,31 +673,20 @@
     if (!firebase.apps.length) {
       firebase.initializeApp(result.config);
     }
+    if (authSessionGuard && typeof authSessionGuard.ensureCompatLocalPersistence === 'function') {
+      await authSessionGuard.ensureCompatLocalPersistence(firebase);
+    }
   }
 
-  function waitForAuthUser({ timeoutMs }) {
-    return new Promise((resolve) => {
-      let done = false;
-      const timer = setTimeout(() => {
-        if (done) return;
-        done = true;
-        resolve(null);
-      }, timeoutMs);
-
-      const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
-        if (done) return;
-        done = true;
-        clearTimeout(timer);
-        unsubscribe();
-        resolve(user || null);
-      }, () => {
-        if (done) return;
-        done = true;
-        clearTimeout(timer);
-        unsubscribe();
-        resolve(null);
+  function waitForAuthUser({ timeoutMs, nullGraceMs }) {
+    if (authSessionGuard && typeof authSessionGuard.waitForCompatAuthUser === 'function') {
+      return authSessionGuard.waitForCompatAuthUser(firebase, {
+        timeoutMs,
+        nullGraceMs
       });
-    });
+    }
+
+    return Promise.resolve(firebase.auth().currentUser || null);
   }
 
   async function isAdminUser(user) {
@@ -1707,7 +1702,9 @@
         method: 'POST'
       });
 
-      const testLink = String(json.testLink || '').trim();
+      const testLink = entranceTestUi && typeof entranceTestUi.normalizeLearnerLink === 'function'
+        ? entranceTestUi.normalizeLearnerLink(json.testLink)
+        : String(json.testLink || '').trim();
       const testId = String(json.testId || '').trim();
       if (!testLink || !testId) throw new Error('Test link missing from server response.');
 
@@ -2385,6 +2382,7 @@
       return dashboardController.refreshDashboard();
     }
     if (!window.CrmDashboard) return;
+    const readAloudReportingEnabled = getAdminCapabilities().readAloudReporting === true;
 
     const [summaryJson, funnelJson, revenueJson, duplicatesJson, auditJson] = await Promise.all([
       apiFetchJson('/api/admin/dashboard/summary', { method: 'GET' }),
@@ -2399,16 +2397,20 @@
     const revenue = Array.isArray(revenueJson.revenue) ? revenueJson.revenue : [];
     const duplicates = Array.isArray(duplicatesJson.duplicates) ? duplicatesJson.duplicates : [];
     const auditLogs = Array.isArray(auditJson.auditLogs) ? auditJson.auditLogs : [];
-    const [readAloudPromptResult, readAloudUsageResult] = await Promise.allSettled([
-      apiFetchJson('/api/admin/read-aloud/prompt-summary', { method: 'GET' }),
-      apiFetchJson('/api/admin/read-aloud/usage-summary?days=7', { method: 'GET' })
-    ]);
-    const readAloudPromptSummary = readAloudPromptResult.status === 'fulfilled'
-      ? (readAloudPromptResult.value.promptSummary || null)
-      : null;
-    const readAloudUsageSummary = readAloudUsageResult.status === 'fulfilled'
-      ? (readAloudUsageResult.value.usageSummary || null)
-      : null;
+    let readAloudPromptSummary = null;
+    let readAloudUsageSummary = null;
+    if (readAloudReportingEnabled) {
+      const [readAloudPromptResult, readAloudUsageResult] = await Promise.allSettled([
+        apiFetchJson('/api/admin/read-aloud/prompt-summary', { method: 'GET' }),
+        apiFetchJson('/api/admin/read-aloud/usage-summary?days=7', { method: 'GET' })
+      ]);
+      readAloudPromptSummary = readAloudPromptResult.status === 'fulfilled'
+        ? (readAloudPromptResult.value.promptSummary || null)
+        : null;
+      readAloudUsageSummary = readAloudUsageResult.status === 'fulfilled'
+        ? (readAloudUsageResult.value.usageSummary || null)
+        : null;
+    }
 
     if (elements.dashboardSummaryCards) {
       const cards = window.CrmDashboard.buildSummaryCards(summary);
@@ -2958,7 +2960,10 @@
     const json = await apiFetchJson(`/api/admin/students/${encodeURIComponent(modalState.studentId)}/entrance-tests`, {
       method: 'GET'
     });
-    renderEntranceTests(json.tests || []);
+    const tests = entranceTestUi && typeof entranceTestUi.buildViewModel === 'function'
+      ? entranceTestUi.buildViewModel(json.tests || [], modalState.createdTestLinks).tests
+      : (json.tests || []);
+    renderEntranceTests(tests);
   }
 
   async function copyToClipboard(text) {

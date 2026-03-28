@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'bel-offline-v7';
+const CACHE_VERSION = 'bel-offline-v9';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -8,7 +8,8 @@ const SHELL_URLS = [
   '/landing/',
   '/landing/index.html',
   '/offline.html',
-  '/style.css',
+  '/style.css?v=20260327_practice_reading_live',
+  '/script.js?v=20260327_practice_reading_live',
   '/landing/landing.css',
   '/dictionary-service.js',
   '/collocations.json',

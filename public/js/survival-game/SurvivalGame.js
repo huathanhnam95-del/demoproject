@@ -143,7 +143,7 @@ const ENEMY_TUTORIALS = {
 };
 
 export default class SurvivalGame {
-    constructor() {
+    constructor(options = {}) {
         this.canvas = document.getElementById('survival-canvas');
         if (!this.canvas) {
             console.error('SurvivalGame: Canvas element "survival-canvas" not found.');
@@ -158,6 +158,10 @@ export default class SurvivalGame {
         this.width = 0;
         this.height = 0;
         this.rafId = null;
+        this.now = typeof options.now === 'function' ? options.now : () => performance.now();
+        this.requestFrame = typeof options.requestFrame === 'function' ? options.requestFrame : requestAnimationFrame;
+        this.cancelFrame = typeof options.cancelFrame === 'function' ? options.cancelFrame : cancelAnimationFrame;
+        this.random = typeof options.random === 'function' ? options.random : Math.random;
         this.cameraShake = 0;
         this.screenFlash = 0;
         this.screenFlashKind = null;
@@ -722,7 +726,7 @@ export default class SurvivalGame {
             .map(word => String(word || '').toLowerCase().replace(/[^a-z]/g, ''))
             .filter(word => word.length >= 3 && !this.isReservedCommandWord(word));
         if (candidates.length > 0) {
-            const picked = candidates[Math.floor(Math.random() * candidates.length)];
+            const picked = candidates[Math.floor(this.random() * candidates.length)];
             return this.decorateWordForStrict(picked);
         }
 
@@ -987,7 +991,7 @@ export default class SurvivalGame {
         if (this.ui?.gameOverModal) this.ui.gameOverModal.style.display = 'none';
         if (this.ui?.gameOverTitle) this.ui.gameOverTitle.textContent = 'TERMINATED';
         if (this.trialState?.enabled) this.setPickupToast('Trial Mode: Survive 30:00', '#6a6460');
-        this.lastTime = performance.now();
+        this.lastTime = this.now();
         this.ensureLoop();
 
         try {
@@ -1012,7 +1016,7 @@ export default class SurvivalGame {
         this.update(deltaTime);
         this.draw();
 
-        this.rafId = requestAnimationFrame(this.loop);
+        this.rafId = this.requestFrame(this.loop);
     }
 
     update(deltaTime) {
@@ -1713,7 +1717,7 @@ export default class SurvivalGame {
 
     ensureLoop() {
         if (this.rafId === null) {
-            this.rafId = requestAnimationFrame(this.loop);
+            this.rafId = this.requestFrame(this.loop);
         }
     }
 
@@ -1725,7 +1729,7 @@ export default class SurvivalGame {
     resume() {
         this.state = GameStates.PLAYING;
         this.resetCommandInput();
-        this.lastTime = performance.now();
+        this.lastTime = this.now();
         this.ensureLoop();
     }
 
@@ -1741,7 +1745,7 @@ export default class SurvivalGame {
         if (this.ui?.enemyTutorialModal) this.ui.enemyTutorialModal.style.display = 'none';
         this.syncEnemyTutorialPrompt('CONTINUE');
         if (this.rafId !== null) {
-            cancelAnimationFrame(this.rafId);
+            this.cancelFrame(this.rafId);
             this.rafId = null;
         }
         this.audioManager.stopBGM();
@@ -1796,7 +1800,7 @@ export default class SurvivalGame {
         let picked = null;
 
         const wickedChance = Math.min(0.5, GameConfig.WORDS.WICKED_CHANCE_START + (this.wave * GameConfig.WORDS.WICKED_CHANCE_PER_WAVE));
-        if (this.wickedWords.length > 0 && Math.random() < wickedChance) {
+        if (this.wickedWords.length > 0 && this.random() < wickedChance) {
             picked = this.pickDifferentWord(this.wickedWords, excludeWord);
         }
 
@@ -1807,7 +1811,7 @@ export default class SurvivalGame {
                 if (bucket && bucket.length > 0) candidates.push(bucket);
             }
             if (candidates.length > 0) {
-                const bucket = candidates[Math.floor(Math.random() * candidates.length)];
+                const bucket = candidates[Math.floor(this.random() * candidates.length)];
                 picked = this.pickDifferentWord(bucket, excludeWord);
             }
         }
@@ -1830,7 +1834,7 @@ export default class SurvivalGame {
             if (bucket && bucket.length > 0) buckets.push(bucket);
         }
         if (buckets.length > 0) {
-            const bucket = buckets[Math.floor(Math.random() * buckets.length)];
+            const bucket = buckets[Math.floor(this.random() * buckets.length)];
             return this.pickDifferentWord(bucket, excludeWord);
         }
         return this.pickDifferentWord(source, excludeWord);
@@ -1848,7 +1852,7 @@ export default class SurvivalGame {
 
         let decorated = raw;
 
-        if (allowSpaces && decorated.length >= 3 && decorated.length <= 6 && Math.random() < 0.18) {
+        if (allowSpaces && decorated.length >= 3 && decorated.length <= 6 && this.random() < 0.18) {
             const extra = this.pickStrictSpaceWord(decorated);
             if (extra && extra !== decorated) {
                 const phrase = `${decorated} ${extra}`;
@@ -1857,14 +1861,14 @@ export default class SurvivalGame {
         }
 
         // Randomly capitalize first letter
-        if (allowCaps && Math.random() < 0.5) {
+        if (allowCaps && this.random() < 0.5) {
             decorated = decorated.charAt(0).toUpperCase() + decorated.slice(1);
         }
 
         // Randomly add punctuation at the end
-        if (allowPunct && Math.random() < 0.3) {
+        if (allowPunct && this.random() < 0.3) {
             const punct = ['.', '!', '?'];
-            decorated += punct[Math.floor(Math.random() * punct.length)];
+            decorated += punct[Math.floor(this.random() * punct.length)];
         }
 
         return decorated;
@@ -1875,12 +1879,12 @@ export default class SurvivalGame {
         const filtered = list.filter(word => !this.isReservedCommandWord(word));
         const source = filtered.length > 0 ? filtered : list;
         if (!excludeWord || source.length < 2) {
-            return source[Math.floor(Math.random() * source.length)];
+            return source[Math.floor(this.random() * source.length)];
         }
         let candidate = excludeWord;
         let safety = 0;
         while ((candidate === excludeWord || this.isReservedCommandWord(candidate)) && safety < 20) {
-            candidate = source[Math.floor(Math.random() * source.length)];
+            candidate = source[Math.floor(this.random() * source.length)];
             safety++;
         }
         if (this.isReservedCommandWord(candidate)) return 'target';
@@ -1924,7 +1928,7 @@ export default class SurvivalGame {
             }
         }
         if (candidates.length > 0) {
-            const bucket = candidates[Math.floor(Math.random() * candidates.length)];
+            const bucket = candidates[Math.floor(this.random() * candidates.length)];
             return this.decorateWordForStrict(this.pickDifferentWord(bucket, excludeWord), { allowSpaces: false });
         }
         return this.decorateWordForStrict(this.pickDifferentWord(source, excludeWord), { allowSpaces: false });
@@ -1945,20 +1949,20 @@ export default class SurvivalGame {
         const shieldMaxActive = Number.isFinite(SHIELD.MAX_ACTIVE) ? SHIELD.MAX_ACTIVE : 2;
 
         const traitPool = [];
-        if (this.wave >= ARMOR.UNLOCK_WAVE && Math.random() < ARMOR.BASE_CHANCE * multiplier) traitPool.push('armor');
-        if (this.wave >= STEALTH.UNLOCK_WAVE && Math.random() < STEALTH.BASE_CHANCE * multiplier) traitPool.push('stealth');
+        if (this.wave >= ARMOR.UNLOCK_WAVE && this.random() < ARMOR.BASE_CHANCE * multiplier) traitPool.push('armor');
+        if (this.wave >= STEALTH.UNLOCK_WAVE && this.random() < STEALTH.BASE_CHANCE * multiplier) traitPool.push('stealth');
         if (
             this.wave >= SHIELD.UNLOCK_WAVE
             && canSpawnShieldedEnemy(this.getActiveShieldedEnemyCount(), shieldMaxActive)
-            && Math.random() < SHIELD.BASE_CHANCE * multiplier
+            && this.random() < SHIELD.BASE_CHANCE * multiplier
         ) {
             traitPool.push('shield');
         }
-        if (this.wave >= BUFFER.UNLOCK_WAVE && Math.random() < BUFFER.BASE_CHANCE * multiplier) traitPool.push('buffer');
+        if (this.wave >= BUFFER.UNLOCK_WAVE && this.random() < BUFFER.BASE_CHANCE * multiplier) traitPool.push('buffer');
 
         if (traitPool.length === 0) return traits;
 
-        const picked = traitPool[Math.floor(Math.random() * traitPool.length)];
+        const picked = traitPool[Math.floor(this.random() * traitPool.length)];
         traits[picked] = true;
         return traits;
     }

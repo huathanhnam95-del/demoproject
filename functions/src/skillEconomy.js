@@ -3,12 +3,16 @@
  * This module is used by purchaseSkill/useActiveSkill/submitAttempt.
  */
 
+const { FieldValue } = require('firebase-admin/firestore');
 const {
     CORE_SKILLS,
     ACTIVE_SKILLS,
     PASSIVE_SKILLS,
+    CORE_PROGRESS_UNLOCKS,
+    PROGRESSION_BRANCH_ORDER,
     isActiveSkill,
     isPassiveSkill,
+    isRetiredSkill,
     MAX_DIFFICULTY_MULT,
     MIN_DIFFICULTY_MULT,
     MAX_TOTAL_DISCOUNT
@@ -40,14 +44,15 @@ const FRUGAL_RANKS = {
 const MODE_LICENSES = {
     watch: 'mode_license_watch',
     extended: 'mode_license_extended',
+    rfib: 'mode_license_extended',
     speak: 'mode_license_speak'
 };
 
 const STARTER_FALLBACK_ACTIVE_SKILLS = new Set([
     'slow_audio',
     'echo_loop',
-    'hint_wc',
-    'hint_fl',
+    'word_ghost',
+    'first_letter_peek',
     'hint_reveal'
 ]);
 
@@ -87,10 +92,79 @@ function getTodayStringUTC() {
     return new Date().toISOString().slice(0, 10);
 }
 
-function calculateCoreLevel(skillXp) {
+function calculateProgressionLevel(skillXp) {
     const points = Math.max(0, Number(skillXp) || 0);
-    const rawLevel = Math.floor(Math.sqrt(points / 25));
-    return Math.max(1, rawLevel);
+    return Math.max(0, Math.floor(Math.sqrt(points / 25)));
+}
+
+function calculateCoreLevel(skillXp) {
+    return calculateProgressionLevel(skillXp);
+}
+
+function getProgressionUnlockDefinitions() {
+    return PROGRESSION_BRANCH_ORDER.flatMap((branch) => CORE_PROGRESS_UNLOCKS[branch] || []);
+}
+
+function deriveCoreProgressionUnlocks(userData = {}) {
+    const skillPoints = userData.skillPoints || {};
+    const unlocks = [];
+    const grantedIds = new Set();
+
+    getProgressionUnlockDefinitions()
+        .slice()
+        .sort((a, b) => {
+            if (a.branch !== b.branch) return PROGRESSION_BRANCH_ORDER.indexOf(a.branch) - PROGRESSION_BRANCH_ORDER.indexOf(b.branch);
+            if (a.xpThreshold !== b.xpThreshold) return a.xpThreshold - b.xpThreshold;
+            return a.roadmapOrder - b.roadmapOrder;
+        })
+        .forEach((unlock) => {
+            if (!unlock || !unlock.id || isRetiredSkill(unlock.id)) return;
+            if (grantedIds.has(unlock.id)) return;
+
+            const branchXp = Number(skillPoints[unlock.branch]) || 0;
+            if (branchXp < (Number(unlock.xpThreshold) || 0)) return;
+
+            if (hasUnlockedSkill(userData, unlock.id, { useStarterFallbackForActive: false })) {
+                grantedIds.add(unlock.id);
+                return;
+            }
+
+            unlocks.push({
+                id: unlock.id,
+                branch: unlock.branch,
+                title: unlock.title,
+                level: unlock.level,
+                xpThreshold: unlock.xpThreshold,
+                roadmapOrder: unlock.roadmapOrder,
+                kind: unlock.kind
+            });
+            grantedIds.add(unlock.id);
+        });
+
+    return unlocks;
+}
+
+function applyProgressionUnlockWrites(transaction, userRef, newUnlocks = []) {
+    const now = FieldValue.serverTimestamp();
+    const userUpdate = {
+        progressionVersion: 1,
+        progressionSyncedAt: now,
+        skillsUpdatedAt: now
+    };
+
+    newUnlocks.forEach((unlock) => {
+        if (!unlock || !unlock.id) return;
+        userUpdate[`unlockedSkills.${unlock.id}`] = true;
+        if (unlock.kind === 'passive') {
+            userUpdate[`skillPassives.${unlock.id}`] = {
+                acquiredAt: now,
+                source: 'progression'
+            };
+        }
+    });
+
+    transaction.update(userRef, userUpdate);
+    return userUpdate;
 }
 
 function getOwnedPassiveSet(userData = {}) {
@@ -221,7 +295,7 @@ function buildDiscountPlan({
         discountPct += 0.15;
         breakdown.push({ id: 'audio_engineer', pct: 0.15, type: 'skill_specific' });
     }
-    if ((skillId === 'word_ghost' || skillId === 'first_letter_peek' || skillId === 'hint_wc' || skillId === 'hint_fl') && passives.has('hint_kit')) {
+    if ((skillId === 'word_ghost' || skillId === 'first_letter_peek' || skillId === 'hint_reveal') && passives.has('hint_kit')) {
         discountPct += 0.20;
         breakdown.push({ id: 'hint_kit', pct: 0.20, type: 'skill_specific' });
     }
@@ -368,10 +442,14 @@ module.exports = {
     CORE_SKILLS,
     ACTIVE_SKILLS,
     PASSIVE_SKILLS,
+    calculateProgressionLevel,
     isActiveSkill,
     isPassiveSkill,
     clampDifficultyMultiplier,
     calculateCoreLevel,
+    getProgressionUnlockDefinitions,
+    deriveCoreProgressionUnlocks,
+    applyProgressionUnlockWrites,
     getOwnedPassiveSet,
     hasUnlockedSkill,
     normalizeEconomyState,

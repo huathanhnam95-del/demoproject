@@ -23,6 +23,7 @@ const router = express.Router();
 const CONNECTED_SPEECH_INDEX_PATH = path.join(process.cwd(), 'public', 'database', 'RA', 'connected-speech-index.json');
 let connectedSpeechIndexCache = null;
 let connectedSpeechIndexPromise = null;
+const READ_ALOUD_MAX_ASSESSMENT_DURATION_MS = 40000;
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 20 * 1024 * 1024 } // 20MB limit for longer audio
@@ -216,14 +217,24 @@ function validateWavUpload(buffer) {
       return { ok: false, reason: 'decode_failed' };
     }
 
+    const containerDurationMs = Math.round((dataChunkLength / 2 / formatChunk.sampleRate) * 1000);
     const minimumBytes = Math.ceil(formatChunk.sampleRate * (thresholds.minimumContainerDurationMs / 1000)) * 2;
     if (dataChunkLength < minimumBytes) {
       return { ok: false, reason: 'too_short' };
     }
+    if (containerDurationMs > READ_ALOUD_MAX_ASSESSMENT_DURATION_MS) {
+      return {
+        ok: false,
+        reason: 'too_long',
+        durationMs: containerDurationMs,
+        maxDurationMs: READ_ALOUD_MAX_ASSESSMENT_DURATION_MS
+      };
+    }
 
     return {
       ok: true,
-      sampleRate: formatChunk.sampleRate
+      sampleRate: formatChunk.sampleRate,
+      durationMs: containerDurationMs
     };
   } catch (_) {
     return { ok: false, reason: 'decode_failed' };
@@ -267,10 +278,10 @@ function buildAzureSummary(nbest) {
   return {
     recognizedText: String(nbest?.Display || ''),
     wordCount: words.length,
-    accuracyScore: Math.round(Number(nbest?.PronunciationAssessment?.AccuracyScore || 0)),
-    fluencyScore: Math.round(Number(nbest?.PronunciationAssessment?.FluencyScore || 0)),
-    completenessScore: Math.round(Number(nbest?.PronunciationAssessment?.CompletenessScore || 0)),
-    pronScore: Math.round(Number(nbest?.PronunciationAssessment?.PronScore || 0))
+    accuracyScore: normalizeRoundedAzureScore(nbest, 'AccuracyScore'),
+    fluencyScore: normalizeRoundedAzureScore(nbest, 'FluencyScore'),
+    completenessScore: normalizeRoundedAzureScore(nbest, 'CompletenessScore'),
+    pronScore: normalizeRoundedAzureScore(nbest, 'PronScore')
   };
 }
 
@@ -450,6 +461,56 @@ async function callAzurePronunciationAssessment(buffer, referenceText, sampleRat
   }
 }
 
+function hasPronunciationScoreValue(value) {
+  if (value == null || value === '') return false;
+  return Number.isFinite(Number(value));
+}
+
+function getAzureScoreValue(node, fieldName) {
+  if (!node || typeof node !== 'object' || !fieldName) return null;
+  const rawValue = node?.PronunciationAssessment?.[fieldName] ?? node?.[fieldName];
+  return hasPronunciationScoreValue(rawValue) ? Number(rawValue) : null;
+}
+
+function normalizeRoundedAzureScore(node, fieldName) {
+  const score = getAzureScoreValue(node, fieldName);
+  return Number.isFinite(score) ? Math.round(score) : null;
+}
+
+function getAzureWordErrorType(wordNode) {
+  if (!wordNode || typeof wordNode !== 'object') return 'None';
+  const rawErrorType = wordNode?.PronunciationAssessment?.ErrorType ?? wordNode?.ErrorType;
+  return String(rawErrorType || 'None');
+}
+
+function collectAzurePronunciationScores(nbest) {
+  const scores = [];
+  ['AccuracyScore', 'FluencyScore', 'CompletenessScore', 'PronScore'].forEach((fieldName) => {
+    const numericScore = getAzureScoreValue(nbest, fieldName);
+    if (Number.isFinite(numericScore)) {
+      scores.push(numericScore);
+    }
+  });
+  if (Array.isArray(nbest?.Words)) {
+    nbest.Words.forEach((word) => {
+      const numericScore = getAzureScoreValue(word, 'AccuracyScore');
+      if (Number.isFinite(numericScore)) {
+        scores.push(numericScore);
+      }
+    });
+  }
+  return scores;
+}
+
+function hasAzurePronunciationScores(nbest) {
+  return collectAzurePronunciationScores(nbest).length > 0;
+}
+
+function hasOnlyZeroAzurePronunciationScores(nbest) {
+  const scores = collectAzurePronunciationScores(nbest);
+  return scores.length > 0 && scores.every((score) => score === 0);
+}
+
 router.post('/read-aloud/assess', upload.single('audio'), async (req, res) => {
   try {
     if (!req.file || !Buffer.isBuffer(req.file.buffer)) {
@@ -475,10 +536,14 @@ router.post('/read-aloud/assess', upload.single('audio'), async (req, res) => {
     const audioValidation = validateWavUpload(req.file.buffer);
     if (!audioValidation.ok) {
       return sendError(res, 422, 'INVALID_AUDIO', 'Audio file could not be processed.', {
-        reason: audioValidation.reason
+        reason: audioValidation.reason,
+        durationMs: Number.isFinite(Number(audioValidation.durationMs)) ? Number(audioValidation.durationMs) : null,
+        maxDurationMs: Number.isFinite(Number(audioValidation.maxDurationMs)) ? Number(audioValidation.maxDurationMs) : READ_ALOUD_MAX_ASSESSMENT_DURATION_MS
       });
     }
-    const audioQuality = analyzeAudioQuality(req.file.buffer);
+    const audioQuality = analyzeAudioQuality(req.file.buffer, {
+      maximumSpeechDurationMs: READ_ALOUD_MAX_ASSESSMENT_DURATION_MS
+    });
 
     const azurePayload = await callAzurePronunciationAssessment(req.file.buffer, referenceText, audioValidation.sampleRate);
 
@@ -486,14 +551,44 @@ router.post('/read-aloud/assess', upload.single('audio'), async (req, res) => {
     if (!nbest) {
       return sendError(res, 502, 'AZURE_ASSESSMENT_FAILED', 'No results returned from Azure.');
     }
+    if (!hasAzurePronunciationScores(nbest)) {
+      return sendError(
+        res,
+        502,
+        'AZURE_ASSESSMENT_FAILED',
+        'Pronunciation scores were unavailable for this recording.',
+        {
+          reason: 'scores_unavailable',
+          recognizedText: String(nbest.Display || ''),
+          maxDurationMs: READ_ALOUD_MAX_ASSESSMENT_DURATION_MS
+        }
+      );
+    }
+    if (hasOnlyZeroAzurePronunciationScores(nbest)) {
+      return sendError(
+        res,
+        502,
+        'AZURE_ASSESSMENT_FAILED',
+        'Pronunciation scores were unavailable for this recording.',
+        {
+          reason: 'scores_unavailable',
+          scorePattern: 'all_zero',
+          recognizedText: String(nbest.Display || ''),
+          maxDurationMs: READ_ALOUD_MAX_ASSESSMENT_DURATION_MS
+        }
+      );
+    }
 
-    const { AccuracyScore, FluencyScore, CompletenessScore, PronScore } = nbest.PronunciationAssessment || {};
+    const accuracyScore = normalizeRoundedAzureScore(nbest, 'AccuracyScore');
+    const fluencyScore = normalizeRoundedAzureScore(nbest, 'FluencyScore');
+    const completenessScore = normalizeRoundedAzureScore(nbest, 'CompletenessScore');
+    const pronScore = normalizeRoundedAzureScore(nbest, 'PronScore');
 
     // Process words to return to frontend
     const words = (nbest.Words || []).map(word => ({
       word: word.Word,
-      accuracyScore: word.PronunciationAssessment?.AccuracyScore || 0,
-      errorType: word.PronunciationAssessment?.ErrorType || 'None'
+      accuracyScore: normalizeRoundedAzureScore(word, 'AccuracyScore') || 0,
+      errorType: getAzureWordErrorType(word)
     }));
 
     const connectedSpeechPromise = questionId
@@ -586,10 +681,10 @@ router.post('/read-aloud/assess', upload.single('audio'), async (req, res) => {
     });
 
     return sendSuccess(res, {
-      accuracyScore: Math.round(AccuracyScore || 0),
-      fluencyScore: Math.round(FluencyScore || 0),
-      completenessScore: Math.round(CompletenessScore || 0),
-      pronScore: Math.round(PronScore || 0),
+      accuracyScore,
+      fluencyScore,
+      completenessScore,
+      pronScore,
       words,
       recognizedText: nbest.Display || '',
       connectedSpeech: publicConnectedSpeech

@@ -6,6 +6,7 @@
 import assert from 'node:assert/strict';
 import {
   countNormalizedWords,
+  derivePhraseFirstCapture,
   fnv1a32Hex,
   getColloAudioKey,
   normalizeForCompare
@@ -44,5 +45,25 @@ assert.equal(fnv1a32Hex('public debate'), fnv1a32HexRef('public debate'));
 assert.equal(getColloAudioKey('a'), `cd_${fnv1a32HexRef('a')}`);
 assert.equal(getColloAudioKey('Public debate!'), `cd_${fnv1a32HexRef('public debate')}`);
 
-console.log('✅ Collo-dictate utils tests passed');
+// Phrase-first capture keeps the collocation primary and missed words secondary.
+const phraseCapture = derivePhraseFirstCapture('raise awareness', 'raise', { awareness: 1 });
+assert.equal(phraseCapture.phraseMissed, true);
+assert.deepEqual(phraseCapture.tracking.missedWords, ['awareness']);
+assert.deepEqual(phraseCapture.tracking.correctWords, ['raise']);
+assert.equal(phraseCapture.candidates[0].entryType, 'phrase');
+assert.equal(phraseCapture.candidates[0].selectedByDefault, true);
+assert.equal(phraseCapture.candidates[1].entryType, 'word');
+assert.equal(phraseCapture.candidates[1].displayText, 'awareness');
+assert.equal(phraseCapture.candidates[1].selectedByDefault, false);
 
+// Repeated word misses can be promoted without changing the phrase-first default.
+const promotedWordCapture = derivePhraseFirstCapture('raise awareness', 'raise', { awareness: 2 });
+assert.equal(promotedWordCapture.candidates[1].selectedByDefault, true);
+
+// Function-word-only differences should not create standalone word debt.
+const articleOnlyCapture = derivePhraseFirstCapture('take a break', 'take break');
+assert.equal(articleOnlyCapture.phraseMissed, true);
+assert.equal(articleOnlyCapture.candidates.length, 1);
+assert.deepEqual(articleOnlyCapture.tracking.missedWords, []);
+
+console.log('✅ Collo-dictate utils tests passed');

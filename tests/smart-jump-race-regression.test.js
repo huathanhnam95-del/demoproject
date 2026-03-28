@@ -48,8 +48,7 @@ async function runScenario(page, mode, config) {
 
   const result = await page.evaluate(async ({ mode, switchExpr, questionSelectId, recommendationButtonId, currentQuestionIdId, audioSelector, summaryId }) => {
     if (window.DifficultyManager?.globalSettings) {
-      window.DifficultyManager.globalSettings.autoAdjustEnabled = false;
-      window.DifficultyManager.globalSettings.manualLevel = 2;
+      window.DifficultyManager.setManualLevel(2);
     }
 
     if (switchExpr === 'switchToMode') {

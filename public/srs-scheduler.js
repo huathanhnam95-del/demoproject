@@ -1,4 +1,6 @@
 import { fsrs, generatorParameters, createEmptyCard, Rating as FSRS_Rating, State as FSRS_State } from 'ts-fsrs';
+import { ALGORITHM, CARD_STATE, RATING } from './js/srs-constants.js';
+import { deriveUiStatus, normalizeSrsCard } from './js/srs-card-model.js';
 
 /**
  * SRS Scheduler Module (Dual-Engine)
@@ -8,27 +10,6 @@ import { fsrs, generatorParameters, createEmptyCard, Rating as FSRS_Rating, Stat
  *   import { SRSScheduler, ALGORITHM } from './srs-scheduler.js';
  *   const result = SRSScheduler.calculate(card, rating, ALGORITHM.SM2);
  */
-
-// --- Constants ---
-const ALGORITHM = Object.freeze({
-    SM2: 'SM2',       // SuperMemo 2 - Classic Anki
-    FSRS: 'FSRS'      // ts-fsrs Library (Approx. Anki FSRS v4.5+)
-});
-
-const CARD_STATE = Object.freeze({
-    NEW: 'new',
-    LEARNING: 'learning',
-    REVIEWING: 'reviewing',
-    RELEARNING: 'relearning',
-    MASTERED: 'mastered'
-});
-
-const RATING = Object.freeze({
-    AGAIN: 1,
-    HARD: 2,
-    GOOD: 3,
-    EASY: 4
-});
 
 // --- SM-2 Configuration ---
 const SM2_CONFIG = {
@@ -62,6 +43,32 @@ const FSRS_CONFIG = {
     FACTOR: 0.9, // Kept for backward compatibility if needed, though lib handles this
     DECAY: -0.5
 };
+
+function buildFsrsLibCard(card, now) {
+    const safeCard = normalizeSrsCard(card, now);
+
+    return {
+        due: safeCard.nextReviewDate ? new Date(safeCard.nextReviewDate) : now,
+        stability: safeCard.fsrs ? safeCard.fsrs.stability : 0,
+        difficulty: safeCard.fsrs ? safeCard.fsrs.difficulty : 0,
+        elapsed_days: safeCard.fsrs && safeCard.fsrs.lastReview
+            ? Math.max(0, (now - new Date(safeCard.fsrs.lastReview)) / (1000 * 60 * 60 * 24))
+            : 0,
+        scheduled_days: safeCard.interval,
+        reps: safeCard.repetitions,
+        lapses: safeCard.fsrs ? (safeCard.fsrs.lapses || 0) : 0,
+        state: mapToFSRSState(safeCard.state),
+        last_review: safeCard.lastReviewDate ? new Date(safeCard.lastReviewDate) : undefined
+    };
+}
+
+function formatPreviewLabel(nextCard, now) {
+    const due = new Date(nextCard.nextReviewDate);
+    const diffMinutes = Math.max(0, Math.ceil((due - now) / (1000 * 60)));
+    if (diffMinutes < 60) return `${Math.max(1, diffMinutes)}m`;
+    if (diffMinutes < 24 * 60) return `${Math.max(1, Math.round(diffMinutes / 60))}h`;
+    return `${Math.max(1, Math.round(diffMinutes / (24 * 60)))}d`;
+}
 
 // Helper: Validate and Sanitize Card Data
 function validateCard(card) {
@@ -123,7 +130,7 @@ function mapFromFSRSState(fsrsState) {
 // --- SM-2 Algorithm ---
 function calculateSM2(card, rating) {
     // Sanitize input internally
-    const safeCard = validateCard({ ...card });
+    const safeCard = validateCard(normalizeSrsCard({ ...card }, new Date()));
 
     let {
         interval = 0,
@@ -228,7 +235,7 @@ function calculateSM2(card, rating) {
                 newRepetitions = 0; // Reset streak
 
                 // Lapse handling: New Interval = Old * LAPSE_NEW_INTERVAL -> max(1, ...)
-                newInterval = Math.max(1, Math.round(interval * SM2_CONFIG.LAPSE_NEW_INTERVAL));
+                newInterval = 0;
 
                 nextReviewDate = addMinutes(now, SM2_CONFIG.LEARNING_STEPS[0]);
                 break;
@@ -289,6 +296,7 @@ function calculateSM2(card, rating) {
         easeFactor: Math.round(newEaseFactor * 100) / 100,
         repetitions: newRepetitions,
         state: newState,
+        status: deriveUiStatus({ state: newState }),
         stepIndex: newStepIndex,
         nextReviewDate: nextReviewDate.toISOString(),
         lastReviewDate: now.toISOString(),
@@ -298,7 +306,7 @@ function calculateSM2(card, rating) {
 
 // --- FSRS Algorithm (Integrated with ts-fsrs) ---
 function calculateFSRS(card, rating) {
-    const safeCard = validateCard({ ...card });
+    const safeCard = validateCard(normalizeSrsCard({ ...card }, new Date()));
 
     let {
         state = CARD_STATE.NEW,
@@ -309,24 +317,7 @@ function calculateFSRS(card, rating) {
     } = safeCard;
 
     const now = new Date();
-
-    // Map local State to ts-fsrs State
-    const fsrsState = mapToFSRSState(state);
-
-    // Create Lib Card
-    const libCard = {
-        due: card.nextReviewDate ? new Date(card.nextReviewDate) : now,
-        stability: fsrs ? fsrs.stability : 0,
-        difficulty: fsrs ? fsrs.difficulty : 0,
-        elapsed_days: fsrs && fsrs.lastReview
-            ? Math.max(0, (now - new Date(fsrs.lastReview)) / (1000 * 60 * 60 * 24))
-            : 0,
-        scheduled_days: interval,
-        reps: repetitions,
-        lapses: fsrs ? (fsrs.lapses || 0) : 0,
-        state: fsrsState,
-        last_review: lastReviewDate ? new Date(lastReviewDate) : undefined
-    };
+    const libCard = buildFsrsLibCard(safeCard, now);
 
     // Calculate Next Schedule using ts-fsrs
     // Rating mapping: Again=1, Hard=2, Good=3, Easy=4 (matches our enum)
@@ -351,18 +342,28 @@ function calculateFSRS(card, rating) {
     // Fix: Access retrievability from newCard directly or log.review per updated ts-fsrs docs
     const retrievability = recordLog.log?.review?.retrievability ?? newCard.retrievability ?? 1;
 
+    const totalReps = Number.isFinite(newCard.reps) ? newCard.reps : repetitions + 1;
+    const dueDate = newCard?.due instanceof Date && !Number.isNaN(newCard.due.getTime())
+        ? newCard.due
+        : addDays(now, Math.max(1, newCard?.scheduled_days || newInterval || 1));
+    const difficultyValue = Number.isFinite(newCard.difficulty) ? Math.max(0.1, newCard.difficulty) : 5;
+    const stabilityValue = Number.isFinite(newCard.stability) ? Math.max(0.1, newCard.stability) : 0.1;
+    const retrievabilityValue = Number.isFinite(retrievability) ? Math.max(0, Math.min(1, retrievability)) : 1;
+
     return {
         interval: newInterval,
         state: newLocalState,
-        nextReviewDate: newCard.due.toISOString(),
+        status: deriveUiStatus({ state: newLocalState }),
+        nextReviewDate: dueDate.toISOString(),
         lastReviewDate: now.toISOString(),
+        repetitions: totalReps,
         fsrs: {
-            difficulty: parseFloat(newCard.difficulty.toFixed(4)),
-            stability: parseFloat(newCard.stability.toFixed(4)),
-            retrievability: parseFloat(retrievability.toFixed(4)),
+            difficulty: parseFloat(difficultyValue.toFixed(4)),
+            stability: parseFloat(stabilityValue.toFixed(4)),
+            retrievability: parseFloat(retrievabilityValue.toFixed(4)),
             lastReview: now.toISOString(),
             lapses: newCard.lapses,
-            reps: newCard.reps || repetitions + 1
+            reps: totalReps
         },
         algorithm: ALGORITHM.FSRS
     };
@@ -400,17 +401,40 @@ const SRSScheduler = {
     },
 
     /**
+     * Calculate concrete outcomes for every rating and return cached labels + next cards
+     * @param {object} card
+     * @param {string} algorithm
+     * @returns {object}
+     */
+    getRatingOutcomes(card, algorithm = ALGORITHM.SM2) {
+        const now = new Date();
+        const safeCard = normalizeSrsCard({ ...card }, now);
+        const outcomes = {};
+
+        for (const [ratingName, ratingValue] of Object.entries(RATING)) {
+            const nextCard = this.calculate({ ...safeCard }, ratingValue, algorithm);
+            outcomes[ratingName.toLowerCase()] = {
+                label: formatPreviewLabel(nextCard, now),
+                nextCard
+            };
+        }
+
+        return outcomes;
+    },
+
+    /**
      * Initialize a new card with default values
      * @param {string} algorithm - ALGORITHM.SM2 or ALGORITHM.FSRS
      * @returns {object} Initial card state
      */
     initializeCard(algorithm = ALGORITHM.SM2) {
+        const now = new Date();
         const baseCard = {
-            interval: 0,
-            state: CARD_STATE.NEW,
+            interval: 1,
+            state: CARD_STATE.REVIEWING,
             stepIndex: 0,
-            nextReviewDate: new Date().toISOString(),
-            lastReviewDate: null,
+            nextReviewDate: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+            lastReviewDate: now.toISOString(),
             algorithm: algorithm
         };
 
@@ -418,7 +442,8 @@ const SRSScheduler = {
             return {
                 ...baseCard,
                 easeFactor: SM2_CONFIG.DEFAULT_EASE_FACTOR,
-                repetitions: 0
+                repetitions: 0,
+                status: deriveUiStatus({ state: CARD_STATE.REVIEWING })
             };
         } else {
             // Use ts-fsrs factory if available, otherwise manual fallback
@@ -434,12 +459,15 @@ const SRSScheduler = {
 
             return {
                 ...baseCard,
+                repetitions: 0,
+                status: deriveUiStatus({ state: CARD_STATE.REVIEWING }),
                 fsrs: {
                     difficulty: emptyFsrsCard.difficulty,
                     stability: emptyFsrsCard.stability,
                     retrievability: 1, // Start fresh
-                    lastReview: null,
-                    lapses: emptyFsrsCard.lapses
+                    lastReview: now.toISOString(),
+                    lapses: emptyFsrsCard.lapses,
+                    reps: 0
                 }
             };
         }
@@ -453,75 +481,12 @@ const SRSScheduler = {
      */
     getIntervalPreviews(card, algorithm = ALGORITHM.SM2) {
         const previews = {};
+        const outcomes = this.getRatingOutcomes(card, algorithm);
 
-        // OPTIMIZATION: Use FSRS batch calculation if active
-        if (algorithm === ALGORITHM.FSRS) {
-            try {
-                const now = new Date();
-                const safeCard = validateCard({ ...card });
-
-                // Construct Lib Card (Duplicated logic from calculateFSRS - could extract builder)
-                const fsrsState = mapToFSRSState(safeCard.state);
-                const libCard = {
-                    due: safeCard.nextReviewDate ? new Date(safeCard.nextReviewDate) : now,
-                    stability: safeCard.fsrs ? safeCard.fsrs.stability : 0,
-                    difficulty: safeCard.fsrs ? safeCard.fsrs.difficulty : 0,
-                    elapsed_days: safeCard.fsrs && safeCard.fsrs.lastReview
-                        ? Math.max(0, (now - new Date(safeCard.fsrs.lastReview)) / (1000 * 60 * 60 * 24))
-                        : 0,
-                    scheduled_days: safeCard.interval,
-                    reps: safeCard.repetitions,
-                    lapses: safeCard.fsrs ? (safeCard.fsrs.lapses || 0) : 0,
-                    state: fsrsState,
-                    last_review: safeCard.lastReviewDate ? new Date(safeCard.lastReviewDate) : undefined
-                };
-
-                // Batch calculate all next states
-                const repeatResult = fsrsInstance.repeat(libCard, now);
-
-                // key: 1 (Again), 2 (Hard), 3 (Good), 4 (Easy)
-                const ratingMap = { 1: 'again', 2: 'hard', 3: 'good', 4: 'easy' };
-
-                for (const item of Object.values(repeatResult)) {
-                    // repeatResult is object { '1': ..., '2': ... } in some versions or array in others
-                    // standardized check:
-                    if (!item || !item.card) continue;
-
-                    const ratingKey = ratingMap[item.log.rating];
-                    if (!ratingKey) continue;
-
-                    const intervalDays = item.card.scheduled_days;
-
-                    // Format
-                    if (intervalDays < 1) {
-                        const minutes = Math.round(intervalDays * 24 * 60);
-                        previews[ratingKey] = minutes < 60 ? `${minutes}m` : `${Math.round(minutes / 60)}h`;
-                    } else {
-                        previews[ratingKey] = `${intervalDays}d`;
-                    }
-                }
-                return previews;
-            } catch (e) {
-                console.warn("[SRS] FSRS Preview Error, falling back to iterative:", e);
-                // Fallback to loop calculation below
-            }
+        for (const [ratingName, outcome] of Object.entries(outcomes)) {
+            previews[ratingName] = outcome.label;
         }
 
-        for (const [ratingName, ratingValue] of Object.entries(RATING)) {
-            const result = this.calculate({ ...card }, ratingValue, algorithm);
-
-            // Format the interval for display
-            if (result.state === CARD_STATE.LEARNING || result.state === CARD_STATE.RELEARNING) {
-                // Intra-day: show minutes
-                const now = new Date();
-                const next = new Date(result.nextReviewDate);
-                const diffMinutes = Math.round((next - now) / (1000 * 60));
-                previews[ratingName.toLowerCase()] = diffMinutes < 60 ? `${diffMinutes}m` : `${Math.round(diffMinutes / 60)}h`;
-            } else {
-                // Days
-                previews[ratingName.toLowerCase()] = `${result.interval}d`;
-            }
-        }
         return previews;
     },
 
@@ -560,8 +525,9 @@ const SRSScheduler = {
         const now = new Date();
 
         for (const lemma in srsData) {
-            const card = srsData[lemma];
+            const card = normalizeSrsCard({ ...srsData[lemma] }, now);
             if (!card.lastReviewDate) continue;
+            if (card.state !== CARD_STATE.REVIEWING && card.state !== CARD_STATE.MASTERED) continue;
 
             const lastReview = new Date(card.lastReviewDate);
             const elapsedDays = Math.max(0, (now - lastReview) / (1000 * 60 * 60 * 24));

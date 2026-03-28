@@ -1,0 +1,40 @@
+{
+  "runId": "2026-03-27T14-15-52-974Z",
+  "baseUrl": "https://localhost:8443",
+  "startedAt": "2026-03-27T14:15:52.975Z",
+  "finishedAt": "2026-03-27T14:16:43.708Z",
+  "userUid": "NJLoZTF2ATQkonzijiQZAaDyQ0O2",
+  "scenarioResults": [
+    {
+      "name": "early_review_only",
+      "status": "passed",
+      "assertions": [
+        "early review confirmation accepted",
+        "header showed Early review"
+      ],
+      "artifacts": [
+        "screenshots\\2026-03-27T14-15-52-974Z__early_review_only.png"
+      ]
+    }
+  ],
+  "consoleErrors": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    }
+  ],
+  "pageErrors": [],
+  "cleanupCompleted": true,
+  "staleCleanups": []
+}

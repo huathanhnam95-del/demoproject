@@ -1,0 +1,45 @@
+{
+  "runId": "2026-03-27T13-57-20-751Z",
+  "baseUrl": "https://localhost:8443",
+  "startedAt": "2026-03-27T13:57:20.751Z",
+  "finishedAt": "2026-03-27T13:58:25.970Z",
+  "userUid": "ckGrBOfLCKXWxkQIrNAV5Sptwzp2",
+  "scenarioResults": [
+    {
+      "name": "onboarding_local_persistence",
+      "status": "passed",
+      "assertions": [
+        "onboarding modal visible",
+        "FSRS persisted across reload"
+      ],
+      "artifacts": [
+        "screenshots\\2026-03-27T13-57-20-751Z__onboarding_local_persistence.png"
+      ]
+    }
+  ],
+  "consoleErrors": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    }
+  ],
+  "pageErrors": [],
+  "cleanupCompleted": true,
+  "staleCleanups": []
+}

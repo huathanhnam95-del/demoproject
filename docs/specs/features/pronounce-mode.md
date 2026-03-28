@@ -5,7 +5,7 @@
 
 ## 1. Overview
 >
-> Pronounce Mode provides high-fidelity pronunciation feedback using audio analysis (pitch, intensity, syllables) with visualizations and targeted coaching.
+> Pronounce Mode provides high-fidelity pronunciation feedback using audio analysis (pitch, intensity, syllables, and prosody match scoring) with visualizations and targeted coaching.
 
 ## 2. Goals (The "Why")
 
@@ -22,6 +22,7 @@
   - intensity contour
   - syllable timing/boundaries
 - Render visual feedback (contours + comparisons).
+- Distinguish target stress from the learner's strongest stress cue in the feedback summary.
 - Provide "A/B" playback for user vs reference audio (when available).
 
 ### Non-Functional
@@ -31,11 +32,14 @@
 - Praat backend is optional: if backend health check fails, mode must automatically use local JS analysis.
 - Dictionary/native-reference lookup failures must degrade to fallback pronunciation info or a non-blocking error state.
 - Analysis failures must restore controls (`Record` re-enabled) so users can retry without page reload.
+- Silent, too-short, or otherwise unusable recordings must be rejected instead of being forced into a syllable score.
 
 ## 4. Data & Contracts (The "Contract")
 
 - Pronounce app controller: `public/pronunciation-analyzer/main.js`
   - Chooses backend or local analyzer path (`usePraatBackend`) via startup health check.
+- Pronounce controller logic: `public/pronunciation-analyzer/app.js`
+  - Owns the runtime analysis pipeline, unrateable handling, and prosody summary rendering.
 - Backend adapter: `public/pronunciation-analyzer/praat-api.js`
   - `GET /health` availability check
   - `POST /analyze` for uploaded user audio

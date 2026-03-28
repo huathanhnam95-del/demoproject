@@ -5,6 +5,7 @@ export class AudioCapture {
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 44100 });
         this.stream = null;
         this.isRecording = false;
+        this._stopPromise = null;
     }
 
     async start() {
@@ -40,54 +41,71 @@ export class AudioCapture {
         }
     }
 
-    stop() {
-        return new Promise((resolve) => {
-            if (!this.mediaRecorder) {
-                resolve(null);
-                return;
-            }
-
-            this.mediaRecorder.onstop = async () => {
-                const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
-                const arrayBuffer = await audioBlob.arrayBuffer();
-                const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
-
-                this.stream.getTracks().forEach(track => track.stop());
-                this.isRecording = false;
-
-                resolve(audioBuffer);
-            };
-
-            this.mediaRecorder.stop();
-        });
+    async blobToAudioBuffer(blob) {
+        if (!blob) return null;
+        const arrayBuffer = await blob.arrayBuffer();
+        return this.audioContext.decodeAudioData(arrayBuffer);
     }
 
     /**
      * Stops recording and returns the raw audio blob (for backend analysis)
      */
-    stopAsBlob() {
-        return new Promise((resolve) => {
-            if (!this.mediaRecorder) {
-                resolve(null);
+    stopCapture() {
+        if (this._stopPromise) {
+            return this._stopPromise;
+        }
+
+        this._stopPromise = new Promise((resolve) => {
+            const cleanup = () => {
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => track.stop());
+                }
+                this.stream = null;
+                this.mediaRecorder = null;
+                this.isRecording = false;
+                this._stopPromise = null;
+            };
+
+            if (!this.mediaRecorder || this.mediaRecorder.state === 'inactive') {
+                const existingBlob = this.audioChunks.length > 0
+                    ? new Blob(this.audioChunks, { type: 'audio/webm' })
+                    : null;
+                cleanup();
+                resolve(existingBlob ? { blob: existingBlob } : null);
                 return;
             }
 
-            this.mediaRecorder.onstop = () => {
+            const recorder = this.mediaRecorder;
+            recorder.onstop = () => {
                 const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
-                this.stream.getTracks().forEach(track => track.stop());
-                this.isRecording = false;
-                resolve(audioBlob);
+                cleanup();
+                resolve({ blob: audioBlob });
             };
 
-            this.mediaRecorder.stop();
+            try {
+                recorder.stop();
+            } catch (error) {
+                cleanup();
+                resolve(null);
+            }
         });
+
+        return this._stopPromise;
+    }
+
+    async stop() {
+        const capture = await this.stopCapture();
+        return capture ? this.blobToAudioBuffer(capture.blob) : null;
+    }
+
+    async stopAsBlob() {
+        const capture = await this.stopCapture();
+        return capture ? capture.blob : null;
     }
 
     cancel() {
         if (this.mediaRecorder && this.isRecording) {
-            this.mediaRecorder.stop();
-            this.stream.getTracks().forEach(track => track.stop());
-            this.isRecording = false;
+            this.stopCapture().catch(() => {});
         }
     }
 }

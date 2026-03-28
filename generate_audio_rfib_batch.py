@@ -10,8 +10,8 @@ import base64
 load_dotenv()
 
 # --- API Configuration ---
-# Using the Vertex AI Express key to bypass AI Studio limits
-API_KEY = "AQ.Ab8RN6IevtwiomI4-zHShe_gVo__PYPcY0HlDukIul9qHdxZig"
+# Using the Vertex AI Express key to guarantee usage of the Developer Program monthly credits on Vertex
+API_KEY = "AQ.Ab8RN6LiBU7Uh09wMsJ0wdLshpXFSkf6tD8R9SLwDj1WsfroTg"
 PROJECT_ID = "gen-lang-client-0677756745"
 LOCATION = "us-central1"
 MODEL = "gemini-2.5-flash-preview-tts"
@@ -27,7 +27,7 @@ FEMALE_VOICES = ["Aoede", "Kore"]
 
 # --- Configuration ---
 START_ROW = 0
-END_ROW = 263  # exclusive — set to len(df) for full run
+END_ROW = len(df)  # all 1128 rows
 MP3_BITRATE = "64k"  # speech-optimized bitrate
 FFMPEG_PATH = r"C:\ffmpeg\ffmpeg-master-latest-win64-gpl\bin\ffmpeg.exe"
 
@@ -123,69 +123,48 @@ def convert_and_stretch(pcm_input, speeds_dict):
     os.remove(pcm_input)
 
 
-def row_is_complete(question_id):
-    """Check if all expected MP3 files for this row already exist."""
-    expected = [
-        f"{question_id}_Full_M_100.mp3", f"{question_id}_Full_M_80.mp3",
-        f"{question_id}_Full_F_100.mp3", f"{question_id}_Full_F_80.mp3",
-        f"{question_id}_Inter_M_80.mp3", f"{question_id}_Inter_F_80.mp3",
-        f"{question_id}_Beg_M_80.mp3", f"{question_id}_Beg_F_80.mp3",
-    ]
-    return all(os.path.exists(os.path.join(AUDIO_DIR, f)) for f in expected)
+def row_has_target_audio(question_id):
+    """Check if the target Beg_M_80 MP3 already exists."""
+    return os.path.exists(os.path.join(AUDIO_DIR, f"{question_id}_Beg_M_80.mp3"))
 
 
 def run_batch():
     completed = 0
     skipped = 0
-    for idx in range(START_ROW, min(END_ROW, len(df))):
+    
+    for idx in range(START_ROW, len(df)):
         row = df.iloc[idx]
         raw_id = str(row['ID']).split('.')[0]
         question_id = raw_id.zfill(4)
 
-        if row_is_complete(question_id):
+        if row_has_target_audio(question_id):
             skipped += 1
+            continue
+
+        beg_text = row.get('Beginner Ver', '')
+        if pd.isna(beg_text) or str(beg_text).strip() == "":
+            skipped += 1
+            print(f"Skipping Row {idx} (ID: {question_id}) - No Beginner Ver text")
             continue
 
         print(f"\n--- Processing Row {idx} (ID: {question_id}) ---")
 
         male_voice = random.choice(MALE_VOICES)
-        female_voice = random.choice(FEMALE_VOICES)
 
-        # Full: 100% + 80% | Inter: 80% only | Beg: 80% only
-        versions = [
-            ("Full", row.get('Full Text', ''), [100, 80]),
-            ("Inter", row.get('Inter Ver', ''), [80]),
-            ("Beg", row.get('Beginner Ver', ''), [80]),
-        ]
+        # Beginner version, Male voice, 80% speed only
+        pcm_path = os.path.join(AUDIO_DIR, f"{question_id}_Beg_M.pcm")
+        mp3_path = os.path.join(AUDIO_DIR, f"{question_id}_Beg_M_80.mp3")
 
-        for ver_name, text, speeds in versions:
-            if pd.isna(text) or str(text).strip() == "":
-                continue
-
-            # MALE
-            male_pcm = os.path.join(AUDIO_DIR, f"{question_id}_{ver_name}_M.pcm")
-            first_mp3 = os.path.join(AUDIO_DIR, f"{question_id}_{ver_name}_M_{speeds[0]}.mp3")
-            if not os.path.exists(first_mp3):
-                if generate_voice(text, male_voice, male_pcm):
-                    male_speeds = {s: os.path.join(AUDIO_DIR, f"{question_id}_{ver_name}_M_{s}.mp3") for s in speeds}
-                    convert_and_stretch(male_pcm, male_speeds)
-
-            # FEMALE
-            female_pcm = os.path.join(AUDIO_DIR, f"{question_id}_{ver_name}_F.pcm")
-            first_mp3_f = os.path.join(AUDIO_DIR, f"{question_id}_{ver_name}_F_{speeds[0]}.mp3")
-            if not os.path.exists(first_mp3_f):
-                if generate_voice(text, female_voice, female_pcm):
-                    female_speeds = {s: os.path.join(AUDIO_DIR, f"{question_id}_{ver_name}_F_{s}.mp3") for s in speeds}
-                    convert_and_stretch(female_pcm, female_speeds)
-
-        completed += 1
-        
-        if completed >= 20:
-            print(f"\nReached target of 20 newly generated questions. Stopping batch.")
-            break
+        if generate_voice(beg_text, male_voice, pcm_path):
+            convert_and_stretch(pcm_path, {80: mp3_path})
+            completed += 1
+            print(f"  [+] OK — {question_id}_Beg_M_80.mp3 ({completed} done this run)")
+        else:
+            print(f"  [-] Failed for {question_id}")
     
-    print(f"\n=== Batch complete: {completed} rows processed, {skipped} skipped (already done) ===")
+    print(f"\n=== Batch complete: {completed} rows processed, {skipped} skipped ===")
 
 
 if __name__ == "__main__":
     run_batch()
+

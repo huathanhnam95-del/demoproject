@@ -113,5 +113,9 @@ async function runSRSIntegrationTest() {
     }
 }
 
-// Execute
-runSRSIntegrationTest();
+// Execute only in a browser console. This file is a manual harness, not a Node test.
+if (typeof window !== 'undefined') {
+    runSRSIntegrationTest();
+} else {
+    console.log('[SRS Integration Test] Manual browser-only script skipped in Node.');
+}

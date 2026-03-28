@@ -59,6 +59,9 @@ const VocabularyBook = (function () {
     let currentSentence = null;
     let vocabUnlockCache = null;
     let guestUnlockNudgeShown = false;
+    let activeCaptureRequestId = 0;
+    let activeCaptureCandidates = [];
+    let activeCaptureHydrationToken = 0;
     const GUEST_USER_ID = 'guest';
     const GUEST_VOCAB_STORAGE_KEY = 'bel_guest_vocab_v1';
 
@@ -105,21 +108,204 @@ const VocabularyBook = (function () {
         renderUsedToMiss();
 
         if (window.SRSReview && typeof window.SRSReview.initializeWord === 'function') {
-            const allWordsToSync = [...vocabCache.bookmarkedWords, ...vocabCache.frequentlyMissed];
+            const allWordsToSync = [...vocabCache.bookmarkedWords];
             const syncedLemmas = new Set();
             allWordsToSync.forEach(entry => {
                 const lemma = entry?.lemma;
                 const word = entry?.word || entry?.originalWord;
                 if (!lemma || !word || syncedLemmas.has(lemma)) return;
                 window.SRSReview.initializeWord(lemma, word, {
+                    entryType: entry?.entryType || 'word',
                     partOfSpeech: entry?.partOfSpeech || 'unknown',
                     definition: entry?.definition || null,
                     example: entry?.example || null,
-                    sentence: entry?.sentence || null
+                    sentence: entry?.sentence || null,
+                    allowedModes: entry?.allowedModes || null,
+                    phraseAudioKey: entry?.phraseAudioKey || null
                 });
                 syncedLemmas.add(lemma);
             });
         }
+    }
+
+    function getCaptureKey(word) {
+        const normalized = lemmatize(word);
+        return normalized || String(word || '').trim().toLowerCase();
+    }
+
+    function normalizeEntryType(value) {
+        return value === 'phrase' ? 'phrase' : 'word';
+    }
+
+    function getBookEntryKey(entry) {
+        return String(entry?.lemma || '').trim();
+    }
+
+    function normalizeCaptureCandidate(candidate, index = 0) {
+        if (!candidate) return null;
+
+        if (typeof candidate === 'string') {
+            const displayWord = String(candidate || '').trim();
+            const key = getCaptureKey(displayWord);
+            if (!displayWord || !key) return null;
+            return {
+                id: `${key}-${index}`,
+                key,
+                word: displayWord,
+                lemma: key,
+                entryType: 'word',
+                selectedByDefault: true,
+                sentence: null,
+                phraseAudioKey: null,
+                allowedModes: null,
+                isDuplicate: false,
+                translation: '',
+                exampleLines: [],
+                ready: false
+            };
+        }
+
+        const entryType = normalizeEntryType(candidate.entryType);
+        const displayWord = String(candidate.displayText || candidate.word || candidate.originalWord || '').trim();
+        const key = String(candidate.key || candidate.lemma || (entryType === 'phrase'
+            ? `phrase:${String(candidate.normalizedText || displayWord).trim().toLowerCase()}`
+            : getCaptureKey(displayWord))).trim();
+
+        if (!displayWord || !key) return null;
+
+        return {
+            id: `${key}-${index}`,
+            key,
+            word: displayWord,
+            lemma: key,
+            entryType,
+            selectedByDefault: candidate.selectedByDefault !== false,
+            sentence: candidate.sentence || null,
+            phraseAudioKey: candidate.phraseAudioKey || null,
+            allowedModes: Array.isArray(candidate.allowedModes) ? [...candidate.allowedModes] : (entryType === 'phrase' ? ['listen', 'speak'] : null),
+            sourcePhraseKey: candidate.sourcePhraseKey || null,
+            isDuplicate: false,
+            translation: candidate.translation || '',
+            exampleLines: Array.isArray(candidate.exampleLines) ? candidate.exampleLines : [],
+            ready: entryType === 'phrase' || candidate.ready === true
+        };
+    }
+
+    function escapeForSelector(value) {
+        if (window.CSS && typeof window.CSS.escape === 'function') {
+            return window.CSS.escape(value);
+        }
+        return String(value).replace(/["\\]/g, '\\$&');
+    }
+
+    function buildCaptureCandidates(words) {
+        if (!Array.isArray(words)) return [];
+
+        const seen = new Set();
+        const bookmarked = new Set(vocabCache.bookmarkedWords.map(getBookEntryKey));
+        const candidates = [];
+
+        words.forEach((rawCandidate, index) => {
+            const candidate = normalizeCaptureCandidate(rawCandidate, index);
+            if (!candidate || !candidate.lemma || seen.has(candidate.lemma)) return;
+            seen.add(candidate.lemma);
+            candidate.isDuplicate = bookmarked.has(candidate.lemma);
+            candidates.push(candidate);
+        });
+
+        return candidates;
+    }
+
+    function setCaptureNotice(message = '', tone = 'info') {
+        const notice = document.getElementById('vocab-add-notice');
+        if (!notice) return;
+        notice.className = `vocab-add-notice ${tone ? `tone-${tone}` : ''}`.trim();
+        notice.textContent = message;
+        notice.style.display = message ? 'block' : 'none';
+    }
+
+    function updateCaptureCta() {
+        if (!vocabAddBtn || !vocabAddWords) return;
+
+        const enabled = Array.from(vocabAddWords.querySelectorAll('input[type="checkbox"]:checked'))
+            .filter(cb => !cb.disabled);
+
+        vocabAddBtn.disabled = enabled.length === 0;
+        vocabAddBtn.textContent = enabled.length > 0 ? `Add ${enabled.length} Item${enabled.length === 1 ? '' : 's'}` : 'Add Selected';
+    }
+
+    function renderCaptureCandidates(candidates, requestId) {
+        if (!vocabAddWords) return;
+
+        const totalSelectable = candidates.filter(c => !c.isDuplicate).length;
+        const initialSelected = candidates.filter(c => !c.isDuplicate && c.selectedByDefault !== false).length;
+
+        vocabAddWords.innerHTML = candidates.length === 0
+            ? '<div class="vocab-empty">No content words available to save.</div>'
+            : candidates.map((candidate, index) => {
+                const checkboxId = `vocab-word-${requestId}-${index}`;
+                const duplicateBadge = candidate.isDuplicate ? '<span class="vocab-capture-duplicate">Already saved</span>' : '';
+                const typeBadge = candidate.entryType === 'phrase'
+                    ? '<span class="vocab-capture-type">Phrase</span>'
+                    : '<span class="vocab-capture-type">Word</span>';
+                const subtitle = candidate.entryType === 'phrase'
+                    ? (candidate.translation || 'Phrase from Collo-dictate')
+                    : (candidate.isDuplicate ? 'Already saved' : 'Loading...');
+                return `
+                    <div class="vocab-add-word-item ${candidate.isDuplicate ? 'is-duplicate' : ''}" data-capture-key="${candidate.lemma}">
+                        <div class="vocab-word-row">
+                            <input type="checkbox" id="${checkboxId}" value="${escapeHtml(candidate.lemma)}"${candidate.isDuplicate ? ' disabled' : ''}${!candidate.isDuplicate && candidate.selectedByDefault !== false ? ' checked' : ''}>
+                            <label for="${checkboxId}" class="vocab-word-label">
+                                <span class="word">${escapeHtml(candidate.word)}</span>
+                                <span class="translation" data-capture-translation="${candidate.lemma}">${escapeHtml(subtitle)}</span>
+                            </label>
+                            ${typeBadge}
+                            ${duplicateBadge}
+                        </div>
+                        <div class="vocab-word-details" data-capture-details="${candidate.lemma}" style="display: none;"></div>
+                    </div>
+                `;
+            }).join('');
+
+        const summary = document.getElementById('vocab-add-summary');
+        if (summary) {
+            summary.textContent = candidates.length === 0
+                ? 'Only content words are eligible for capture.'
+                : `${totalSelectable} item${totalSelectable === 1 ? '' : 's'} eligible for saving.`;
+        }
+
+        if (initialSelected === 0) {
+            setCaptureNotice('Select at least one word or choose Not now.', 'warn');
+        } else if (candidates.every(c => c.isDuplicate)) {
+            setCaptureNotice('These words are already in your Vocabulary Book.', 'warn');
+        } else {
+            setCaptureNotice('');
+        }
+
+        vocabAddWords.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                const row = checkbox.closest('.vocab-add-word-item');
+                if (row) row.classList.toggle('selected', checkbox.checked);
+                updateCaptureCta();
+                const selectedCount = Array.from(vocabAddWords.querySelectorAll('input[type="checkbox"]:checked'))
+                    .filter(cb => !cb.disabled).length;
+                if (selectedCount === 0) {
+                    setCaptureNotice('Select at least one word or choose Not now.', 'warn');
+                } else {
+                    setCaptureNotice('');
+                }
+            });
+        });
+
+        vocabAddWords.querySelectorAll('.vocab-add-word-item').forEach((row, index) => {
+            const candidate = candidates[index];
+            if (candidate && !candidate.isDuplicate && candidate.selectedByDefault !== false) {
+                row.classList.add('selected');
+            }
+        });
+
+        updateCaptureCta();
+        return candidates.length > 0;
     }
 
     /**
@@ -310,10 +496,12 @@ const VocabularyBook = (function () {
         if (input) input.value = '';
 
         // Show brief confirmation
-        alert(`Word "${word}" added to your list!`);
+        if (window.shopModule?.showAlertModal) {
+            window.shopModule.showAlertModal(`Word "${word}" added to your list.`, true);
+        }
 
         // Refresh list if open
-        if (document.getElementById('vocab-panel-side').classList.contains('open')) {
+        if (document.getElementById('vocab-panel-side')?.classList.contains('expanded')) {
             renderBookmarkedWords();
         }
     }
@@ -516,7 +704,7 @@ const VocabularyBook = (function () {
                     </td>
                     <td>
                         <span class="vocab-badge vocab-badge-mode">${escapeHtml(mode)}</span>
-                        <span class="vocab-badge vocab-badge-q">Q${escapeHtml(questionId)}</span>
+                        ${mode === 'collo-dictate' ? '' : `<span class="vocab-badge vocab-badge-q">Q${escapeHtml(questionId)}</span>`}
                     </td>
                     <td><span class="${posClass}">${escapeHtml(posLabel)}</span></td>
                     <td>
@@ -693,7 +881,7 @@ const VocabularyBook = (function () {
         if (isGuestSession()) return true;
         if (!currentUserId) return false;
         if (!Array.isArray(missedWords) || missedWords.length === 0) return false;
-        if (!['type', 'speak'].includes(mode)) return false;
+        if (!['type', 'speak', 'collo-dictate'].includes(mode)) return false;
 
         if (await isUnlocked()) return true;
 
@@ -788,10 +976,7 @@ const VocabularyBook = (function () {
 
                 // Sync to SRS (Auto-track all current words)
                 if (window.SRSReview && typeof window.SRSReview.initializeWord === 'function') {
-                    const allWordsToSync = [
-                        ...vocabCache.bookmarkedWords,
-                        ...vocabCache.frequentlyMissed
-                    ];
+                    const allWordsToSync = [...vocabCache.bookmarkedWords];
 
                     // Use a Set to avoid duplicates if word is in both lists
                     const syncedLemmas = new Set();
@@ -800,7 +985,15 @@ const VocabularyBook = (function () {
                         const lemma = entry.lemma;
                         const word = entry.word || entry.originalWord;
                         if (lemma && word && !syncedLemmas.has(lemma)) {
-                            window.SRSReview.initializeWord(lemma, word);
+                            window.SRSReview.initializeWord(lemma, word, {
+                                entryType: entry?.entryType || 'word',
+                                partOfSpeech: entry?.partOfSpeech || 'unknown',
+                                definition: entry?.definition || null,
+                                example: entry?.example || null,
+                                sentence: entry?.sentence || null,
+                                allowedModes: entry?.allowedModes || null,
+                                phraseAudioKey: entry?.phraseAudioKey || null
+                            });
                             syncedLemmas.add(lemma);
                         }
                     });
@@ -823,6 +1016,7 @@ const VocabularyBook = (function () {
 
             renderBookmarkedWords();
             renderFrequentlyMissed();
+            renderUsedToMiss();
         } catch (e) {
             // log.error('Error loading vocab data:', e);
         }
@@ -1270,7 +1464,7 @@ const VocabularyBook = (function () {
             return `
             <div class="vocab-word-item vocab-improved">
               <div class="vocab-word-main">
-                <span class="vocab-word-text">${w.originalWord}</span>
+                <span class="vocab-word-text">${escapeHtml(w.originalWord)}</span>
                 <span class="vocab-badge vocab-badge-improved">✓ Improving</span>
               </div>
               <div class="vocab-word-meta">
@@ -1295,42 +1489,68 @@ const VocabularyBook = (function () {
      * @param {string} sentence - The original sentence containing the word (NEW)
      */
     async function addBookmarkedWord(word, questionId, mode, sentence = null) {
-        const lemma = lemmatize(word);
+        const entryType = normalizeEntryType(word?.entryType);
+        const displayWord = typeof word === 'string'
+            ? word
+            : (word?.displayText || word?.word || word?.originalWord || '');
+        const lemma = typeof word === 'string'
+            ? lemmatize(word)
+            : String(word?.key || word?.lemma || (entryType === 'phrase'
+                ? `phrase:${String(word?.normalizedText || displayWord).trim().toLowerCase()}`
+                : lemmatize(displayWord))).trim();
 
         // Check for duplicates
         const exists = vocabCache.bookmarkedWords.some(w => w.lemma === lemma);
         if (exists) return false;
 
         // NEW: Detect POS and fetch definition if sentence provided
-        let partOfSpeech = 'unknown';
-        let definition = null;
-        let example = null;
+        let partOfSpeech = entryType === 'phrase' ? 'phrase' : 'unknown';
+        let definition = word?.definition || null;
+        let example = word?.example || null;
+        const resolvedSentence = word?.sentence || sentence;
+        const allowedModes = Array.isArray(word?.allowedModes) ? [...word.allowedModes] : (entryType === 'phrase' ? ['listen', 'speak'] : null);
+        const phraseAudioKey = word?.phraseAudioKey || null;
 
-        if (sentence && window.DictionaryService) {
-            partOfSpeech = window.DictionaryService.detectPartOfSpeech(word, sentence);
-            const wordData = await window.DictionaryService.getWordData(word, partOfSpeech);
+        if (entryType === 'word' && resolvedSentence && window.DictionaryService) {
+            partOfSpeech = window.DictionaryService.detectPartOfSpeech(displayWord, resolvedSentence);
+            const wordData = await window.DictionaryService.getWordData(displayWord, partOfSpeech);
             definition = wordData.definition;
-            example = wordData.example || sentence;
-            log.debug(`Bookmark: "${word}" as ${partOfSpeech}`);
+            example = wordData.example || resolvedSentence;
+            log.debug(`Bookmark: "${displayWord}" as ${partOfSpeech}`);
         }
 
         vocabCache.bookmarkedWords.push({
-            word: word,
+            word: displayWord,
             lemma: lemma,
+            entryType: entryType,
             questionId: questionId,
             mode: mode,
             addedAt: new Date().toISOString(),
             // NEW: Context data
-            sentence: sentence,
+            sentence: resolvedSentence,
             partOfSpeech: partOfSpeech,
             definition: definition,
-            example: example
+            example: example,
+            allowedModes: allowedModes,
+            phraseAudioKey: phraseAudioKey
         });
 
         // Initialize SRS tracking for this word (pass context data)
         if (window.SRSReview && typeof window.SRSReview.initializeWord === 'function') {
-            window.SRSReview.initializeWord(lemma, word, { partOfSpeech, definition, example, sentence });
-            updateSRSDueBadge();
+            window.SRSReview.initializeWord(lemma, displayWord, {
+                entryType,
+                partOfSpeech,
+                definition,
+                example,
+                sentence: resolvedSentence,
+                allowedModes,
+                phraseAudioKey
+            });
+            if (typeof window.SRSReview.refreshEntrySurfaces === 'function') {
+                window.SRSReview.refreshEntrySurfaces('bookmark-add');
+            } else {
+                updateSRSDueBadge();
+            }
         }
 
         debouncedSaveVocab();
@@ -1345,6 +1565,11 @@ const VocabularyBook = (function () {
         const index = vocabCache.bookmarkedWords.findIndex(w => w.lemma === lemma);
         if (index !== -1) {
             vocabCache.bookmarkedWords.splice(index, 1);
+            if (window.SRSReview && typeof window.SRSReview.unenrollWord === 'function') {
+                window.SRSReview.unenrollWord(lemma);
+            } else if (window.SRSReview && typeof window.SRSReview.refreshEntrySurfaces === 'function') {
+                window.SRSReview.refreshEntrySurfaces('bookmark-remove');
+            }
             debouncedSaveVocab();
             renderBookmarkedWords();
         }
@@ -1360,9 +1585,9 @@ const VocabularyBook = (function () {
         if (!currentUserId) {
             if (!guestUnlockNudgeShown) {
                 guestUnlockNudgeShown = true;
-                window.shopModule?.showAlertModal?.('Please log in to save missed words to your Vocabulary Book.', true);
+                window.shopModule?.showAlertModal?.('Please log in or choose Guest mode to save missed words to your Vocabulary Book.', true);
             }
-            return; // Guests do not have vocabulary behaviors
+            return;
         }
 
         const wasUnlocked = await isUnlocked();
@@ -1377,84 +1602,86 @@ const VocabularyBook = (function () {
         currentMode = mode;
         currentSentence = sentence;
 
-        vocabAddWords.innerHTML = '<div class="vocab-loading">Loading word details...</div>';
+        const requestId = ++activeCaptureRequestId;
+        activeCaptureHydrationToken += 1;
+        const hydrationToken = activeCaptureHydrationToken;
+        activeCaptureCandidates = buildCaptureCandidates(missedWords);
+
+        if (vocabAddClose) {
+            vocabAddClose.textContent = '×';
+        }
+        if (vocabSkipBtn) {
+            vocabSkipBtn.textContent = 'Not now';
+        }
+
         vocabAddModal.style.display = 'flex';
+        requestAnimationFrame(() => vocabAddModal.classList.add('active'));
+        renderCaptureCandidates(activeCaptureCandidates, requestId);
 
-        // Fetch details for each word with concurrency limit of 5
-        const wordDetails = await mapLimit(missedWords, 5, async (word) => {
+        const hasRenderableCandidates = activeCaptureCandidates.some(c => !c.isDuplicate);
+        if (!hasRenderableCandidates) {
+            setCaptureNotice('These words are already saved. Open Daily Review to start practicing them.', 'warn');
+            updateCaptureCta();
+        }
+
+        const details = await mapLimit(activeCaptureCandidates, 4, async (candidate) => {
+            if (!candidate) return candidate;
+            if (hydrationToken !== activeCaptureHydrationToken) return candidate;
+            if (candidate.entryType === 'phrase') {
+                return {
+                    ...candidate,
+                    translation: candidate.translation || 'Phrase from Collo-dictate',
+                    exampleLines: candidate.sentence ? [{ vi: '', en: candidate.sentence }] : [],
+                    ready: true
+                };
+            }
             try {
-                const entry = window.DictionaryService ? await window.DictionaryService.getVietnameseEntry(word) : { translation: 'Not found', sentences: [] };
-                return { word, ...entry };
+                const entry = window.DictionaryService && typeof window.DictionaryService.getVietnameseEntry === 'function'
+                    ? await window.DictionaryService.getVietnameseEntry(candidate.word)
+                    : { translation: '', sentences: [] };
+                return {
+                    ...candidate,
+                    translation: entry?.translation || '',
+                    exampleLines: Array.isArray(entry?.sentences) ? entry.sentences : [],
+                    ready: true
+                };
             } catch (e) {
-                return { word, translation: 'Not found', sentences: [] };
+                return { ...candidate, ready: true };
             }
         });
 
-        vocabAddWords.innerHTML = '';
+        if (requestId !== activeCaptureRequestId) return;
 
-        wordDetails.forEach((detail, index) => {
-            const item = document.createElement('div');
-            item.className = 'vocab-add-word-item';
-
-            const hasSentences = detail.sentences && detail.sentences.length > 0;
-            const sentenceHtml = hasSentences
-                ? `<div class="vocab-details-sentences">
-                    ${detail.sentences.slice(0, 3).map(s => `
-                        <div class="vocab-detail-sentence">
-                            <div class="vi">${escapeHtml(s.vi)}</div>
-                            <div class="en">${escapeHtml(s.en)}</div>
-                        </div>
-                    `).join('')}
-                   </div>`
-                : '<div class="vocab-no-sentences">No example sentences available</div>';
-
-            item.innerHTML = `
-                <div class="vocab-word-row">
-                    <input type="checkbox" id="vocab-word-${index}" value="${escapeHtml(detail.word)}">
-                    <label for="vocab-word-${index}" class="vocab-word-label">
-                        <span class="word">${escapeHtml(detail.word)}</span>
-                        <span class="translation">${escapeHtml(detail.translation)}</span>
-                    </label>
-                    ${hasSentences ? `<button class="vocab-expand-btn" title="Show Examples" type="button"></button>` : ''}
-                </div>
-                <div class="vocab-word-details" style="display: none;">
-                    ${sentenceHtml}
-                </div>
-            `;
-
-            const checkbox = item.querySelector('input');
-            const expandBtn = item.querySelector('.vocab-expand-btn');
-            const details = item.querySelector('.vocab-word-details');
-
-            checkbox.addEventListener('change', () => {
-                item.classList.toggle('selected', checkbox.checked);
-            });
-
-            if (expandBtn && details) {
-                expandBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const isVisible = details.style.display === 'block';
-                    details.style.display = isVisible ? 'none' : 'block';
-                    // Text content handled by CSS ::after
-                    expandBtn.classList.toggle('active', !isVisible);
-                });
+        details.forEach(detail => {
+            const escapedLemma = escapeForSelector(detail.lemma);
+            const row = vocabAddWords.querySelector(`[data-capture-key="${escapedLemma}"]`);
+            if (!row) return;
+            const translationEl = row.querySelector(`[data-capture-translation="${escapedLemma}"]`);
+            if (translationEl && !detail.isDuplicate) {
+                translationEl.textContent = detail.translation || (detail.entryType === 'phrase' ? 'Phrase from Collo-dictate' : 'No translation found');
             }
 
-            item.addEventListener('click', (e) => {
-                if (e.target !== checkbox && e.target.tagName !== 'LABEL' && !e.target.classList.contains('vocab-expand-btn')) {
-                    e.preventDefault();
-                    checkbox.checked = !checkbox.checked;
-                    checkbox.dispatchEvent(new Event('change'));
-                }
-            });
-
-            vocabAddWords.appendChild(item);
+            const detailsEl = row.querySelector(`[data-capture-details="${escapedLemma}"]`);
+            if (detailsEl) {
+                const sentences = detail.exampleLines || [];
+                detailsEl.innerHTML = sentences.length > 0
+                    ? `<div class="vocab-details-sentences">
+                        ${sentences.slice(0, 3).map(s => `
+                            <div class="vocab-detail-sentence">
+                                <div class="vi">${escapeHtml(s.vi)}</div>
+                                <div class="en">${escapeHtml(s.en)}</div>
+                            </div>
+                        `).join('')}
+                       </div>`
+                    : '<div class="vocab-no-sentences">No example sentences available</div>';
+            }
         });
 
-        if (!wasUnlocked && ['type', 'speak'].includes(mode) && window.VocabTutorial?.start) {
+        if (!wasUnlocked && ['type', 'speak', 'collo-dictate'].includes(mode) && window.VocabTutorial?.start) {
             setTimeout(() => {
-                window.VocabTutorial.start('vocabAddModalIntro');
+                if (requestId === activeCaptureRequestId) {
+                    window.VocabTutorial.start('vocabAddModalIntro');
+                }
             }, 120);
         }
     }
@@ -1464,33 +1691,61 @@ const VocabularyBook = (function () {
      */
     function hideAddModal() {
         if (vocabAddModal) {
+            vocabAddModal.classList.remove('active');
             vocabAddModal.style.display = 'none';
         }
         currentMissedWords = [];
         currentQuestionId = null;
         currentMode = null;
         currentSentence = null; // NEW: Reset sentence
+        activeCaptureCandidates = [];
+        activeCaptureRequestId += 1;
+        activeCaptureHydrationToken += 1;
+        setCaptureNotice('');
     }
 
     /**
      * Handle adding selected words
      */
     async function handleAddSelected() {
-        const checkboxes = vocabAddWords.querySelectorAll('input:checked');
-        let addedCount = 0;
+        const checkboxes = vocabAddWords ? vocabAddWords.querySelectorAll('input:checked') : [];
+        const selected = Array.from(checkboxes).filter(cb => !cb.disabled);
+        if (selected.length === 0) {
+            setCaptureNotice('Select at least one word or choose Not now.', 'warn');
+            updateCaptureCta();
+            return;
+        }
 
-        for (const cb of checkboxes) {
-            // NEW: Pass sentence context to addBookmarkedWord (async)
-            if (await addBookmarkedWord(cb.value, currentQuestionId, currentMode, currentSentence)) {
+        let addedCount = 0;
+        let duplicateCount = 0;
+
+        for (const cb of selected) {
+            const candidate = activeCaptureCandidates.find(item => item.lemma === cb.value);
+            if (await addBookmarkedWord(candidate || cb.value, currentQuestionId, currentMode, currentSentence)) {
                 addedCount++;
+            } else {
+                duplicateCount++;
             }
         }
 
         if (addedCount > 0) {
             log.debug(`Added ${addedCount} words to vocabulary book`);
+            hideAddModal();
+            return;
         }
 
-        hideAddModal();
+        if (duplicateCount > 0) {
+            setCaptureNotice('These words are already in your Vocabulary Book.', 'warn');
+            updateCaptureCta();
+            return;
+        }
+
+        setCaptureNotice('Nothing was added.', 'warn');
+    }
+
+    async function handlePracticeCapture({ mode, questionId, sentenceText = null, missedWords = [], candidates = [] }) {
+        const captureItems = Array.isArray(candidates) && candidates.length > 0 ? candidates : missedWords;
+        return showAddModal(captureItems, questionId, mode, sentenceText);
     }
 
     function renderBookmarkedWords() {
@@ -1513,13 +1768,14 @@ const VocabularyBook = (function () {
         const listHtml = displayItems.map(w => `
       <div class="vocab-word-item">
         <div class="vocab-word-main">
-          <span class="vocab-word-text">${w.word}</span>
+          <span class="vocab-word-text">${escapeHtml(w.word)}</span>
           <div class="vocab-word-badges">
-             <span class="vocab-badge vocab-badge-mode">${w.mode}</span>
-             <span class="vocab-badge vocab-badge-q">Q${w.questionId}</span>
+             <span class="vocab-badge vocab-badge-mode">${escapeHtml(w.entryType === 'phrase' ? 'phrase' : 'word')}</span>
+             <span class="vocab-badge vocab-badge-mode">${escapeHtml(w.mode)}</span>
+             ${w.mode === 'collo-dictate' ? '' : `<span class="vocab-badge vocab-badge-q">Q${escapeHtml(w.questionId)}</span>`}
           </div>
         </div>
-        <button class="vocab-word-remove" data-lemma="${w.lemma}" title="Remove">
+        <button class="vocab-word-remove" data-lemma="${escapeHtml(w.lemma)}" title="Remove">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -1602,8 +1858,8 @@ const VocabularyBook = (function () {
             return `
         <div class="vocab-word-item">
           <div class="vocab-word-main">
-            <span class="vocab-word-text">${w.originalWord}</span>
-            <span class="vocab-badge vocab-badge-miss">Missed ${w.missCount}x</span>
+            <span class="vocab-word-text">${escapeHtml(w.originalWord)}</span>
+            <span class="vocab-badge vocab-badge-miss">Missed ${escapeHtml(w.missCount)}x</span>
           </div>
           <div class="vocab-word-streak ${streakClass}">
             <div class="streak-dots">
@@ -1647,7 +1903,7 @@ const VocabularyBook = (function () {
 
         const unlocked = await isUnlocked();
         if (!unlocked) {
-            window.shopModule?.showAlertModal?.('Vocabulary Book unlocks automatically after missed keywords in Type or Speak mode.', true);
+            window.shopModule?.showAlertModal?.('Vocabulary Book unlocks automatically after missed keywords in Type, Speak, or Collo-dictate mode.', true);
             return;
         }
 
@@ -1684,11 +1940,12 @@ const VocabularyBook = (function () {
 
         if (!badge) return;
 
-        let dueCount = 0;
-        if (window.SRSReview && typeof window.SRSReview.getDueCount === 'function') {
-            dueCount = window.SRSReview.getDueCount();
+        let entryState = null;
+        if (window.SRSReview && typeof window.SRSReview.getEntryState === 'function') {
+            entryState = window.SRSReview.getEntryState();
         }
 
+        const dueCount = Number(entryState?.dueCount || 0);
         badge.textContent = dueCount;
 
         // Always keep button enabled - early review confirmation handles the rest
@@ -1732,6 +1989,11 @@ const VocabularyBook = (function () {
         vocabPanelToggle.style.display = unlocked ? 'flex' : 'none';
     }
 
+    function getMissCount(word) {
+        const lemma = lemmatize(word);
+        return Number(vocabCache.wordStats?.[lemma]?.missCount || 0);
+    }
+
     // Initialize on DOM ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
@@ -1745,6 +2007,7 @@ const VocabularyBook = (function () {
         trackMissedWord: trackMissedWord,
         trackCorrectWord: trackCorrectWord,
         showAddModal: showAddModal,
+        handlePracticeCapture: handlePracticeCapture,
         hideAddModal: hideAddModal,
         showToggle: showToggle,
         loadData: loadVocabData,
@@ -1753,7 +2016,8 @@ const VocabularyBook = (function () {
         togglePanel: togglePanel,
         updateSRSDueBadge: updateSRSDueBadge,
         promoteToMastered: promoteToMastered,
-        lemmatize: lemmatize
+        lemmatize: lemmatize,
+        getMissCount: getMissCount
     };
 
 })();

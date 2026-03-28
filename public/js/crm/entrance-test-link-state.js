@@ -21,15 +21,43 @@ window.CrmEntranceTests = (function () {
     return ACTIVE_STATUSES.has(toText(status).toLowerCase());
   }
 
+  function getCurrentOrigin() {
+    return toText(window?.location?.origin);
+  }
+
+  function normalizeManagedLink(link, allowedPathnames = []) {
+    const raw = toText(link);
+    if (!raw) return '';
+
+    const currentOrigin = getCurrentOrigin();
+    try {
+      const parsed = new URL(raw, currentOrigin || undefined);
+      if (currentOrigin && allowedPathnames.includes(parsed.pathname)) {
+        return `${currentOrigin}${parsed.pathname}${parsed.search}${parsed.hash}`;
+      }
+      return parsed.href;
+    } catch {
+      return raw;
+    }
+  }
+
+  function normalizeLearnerLink(link) {
+    return normalizeManagedLink(link, ['/entrance-test.html']);
+  }
+
+  function normalizeResultLink(link) {
+    return normalizeManagedLink(link, ['/crm-entrance-test-result.html']);
+  }
+
   function resolveTestLink(test, createdTestLinks = new Map()) {
     if (!isActiveStatus(test?.status)) return '';
 
-    const apiLink = toText(test?.testLink);
+    const apiLink = normalizeLearnerLink(test?.testLink);
     if (apiLink) return apiLink;
 
     const testId = toText(test?.testId);
     if (!testId || typeof createdTestLinks?.get !== 'function') return '';
-    return toText(createdTestLinks.get(testId));
+    return normalizeLearnerLink(createdTestLinks.get(testId));
   }
 
   function buildViewModel(tests, createdTestLinks = new Map()) {
@@ -40,7 +68,7 @@ window.CrmEntranceTests = (function () {
           const createdAt = test?.createdAt || null;
           const startedAt = test?.startedAt || null;
           const submittedAt = test?.submittedAt || null;
-          const resultLink = toText(test?.resultLink);
+          const resultLink = normalizeResultLink(test?.resultLink);
 
           return {
             ...test,
@@ -119,6 +147,8 @@ window.CrmEntranceTests = (function () {
     DEFAULT_NOTE,
     READY_NOTE,
     USED_NOTE,
+    normalizeLearnerLink,
+    normalizeResultLink,
     buildViewModel,
     buildRowsHtml,
     applyControls,

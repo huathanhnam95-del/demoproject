@@ -1,0 +1,48 @@
+name: RFIB Verify
+
+on:
+  pull_request:
+    branches: ["main"]
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Check RFIB dataset script syntax
+        run: node --check scripts/build-rfib-dataset.js
+
+      - name: Check RFIB frontend syntax
+        run: node --check public/rfib-mode.js
+
+      - name: Run RFIB content tests
+        run: node tests/rfib-content-core.test.js
+
+      - name: Rebuild RFIB dataset
+        run: node scripts/build-rfib-dataset.js
+
+      - name: Confirm RFIB dataset is committed cleanly
+        run: git diff --exit-code -- public/database/rfib/index.json public/database/rfib/review-metadata.json
+
+      - name: Run RFIB browser smoke
+        run: node tests/browser/rfib-mode-browser-check.js
+
+      - name: Run practice mode browser matrix
+        run: node tests/browser/practice-modes-browser-check.js

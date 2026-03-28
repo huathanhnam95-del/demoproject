@@ -1,0 +1,43 @@
+{
+  "runId": "2026-03-27T14-44-43-946Z",
+  "baseUrl": "https://localhost:8443",
+  "startedAt": "2026-03-27T14:44:43.948Z",
+  "finishedAt": "2026-03-27T14:45:46.956Z",
+  "userUid": "0x5xt4r2gWaGV1tqSvMRS4Hmpfa2",
+  "scenarioResults": [
+    {
+      "name": "settings_firestore_persistence",
+      "status": "failed",
+      "assertions": [],
+      "artifacts": [
+        "screenshots\\2026-03-27T14-44-43-946Z__settings_firestore_persistence.png"
+      ],
+      "error": "Error: SM2 was not selected after reload\n    at executeScenario (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:518:38)\n    at async main (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:887:28)"
+    }
+  ],
+  "consoleErrors": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    }
+  ],
+  "pageErrors": [],
+  "cleanupCompleted": true,
+  "staleCleanups": []
+}

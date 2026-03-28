@@ -17,8 +17,8 @@ A gamified language learning platform that merges **rigorous study tools** (SRS,
 ## Core Loop (North Star)
 
 1. Practice in a mode (Type / Speak / Fill / Watch / Notes / Pronounce / Writing).
-2. Earn **XP + Coins** (Track A) and update **proficiency / CEFR** (Track B).
-3. Spend Coins on the **Skill Tree** (active assists + passive perks).
+2. Earn **XP** and update **proficiency / CEFR** (Track B).
+3. Automatically unlock roadmap features as practice XP crosses thresholds.
 4. Save vocabulary, review via **SRS**, and convert weak words into mastered words.
 5. Optional: play **Survival Mode** for a high-intensity "run" that still trains language skills.
 
@@ -57,7 +57,7 @@ A gamified language learning platform that merges **rigorous study tools** (SRS,
 | Core function | What it does | Spec |
 | --- | --- | --- |
 | Authentication & Onboarding | Guest vs login, seed starting level, persistent profile | [auth-and-onboarding](features/auth-and-onboarding.md) |
-| RPG Progression & Economy | XP/Coins, levels, skill tree, shop, assist calibration | [rpg-progression-and-economy](features/rpg-progression-and-economy.md) |
+| RPG Progression & Economy | XP, levels, roadmap unlocks, assist calibration | [rpg-progression-and-economy](features/rpg-progression-and-economy.md) |
 | Smart Difficulty Engine | Always-on adaptive difficulty + hint ladder + replay limits | [smart-difficulty-engine](features/smart-difficulty-engine.md) |
 | Dictionary & Phonetics | Definitions, translations, examples, collocations, IPA | [dictionary-and-phonetics](features/dictionary-and-phonetics.md) |
 | Vocabulary Book | Bookmark words, track missed words, mastery lifecycle | [vocabulary-book](features/vocabulary-book.md) |
@@ -81,7 +81,7 @@ A gamified language learning platform that merges **rigorous study tools** (SRS,
 
 - Frontend: Vanilla JS/HTML/CSS in `public/` (multi-mode single-page app).
 - Backend API: Node/Express server (see `server.js`, `src/routes/*`) for AI proxying and server-side helpers.
-- Server-authoritative scoring + economy: Firebase Cloud Functions in `functions/src/*` (e.g., attempt scoring, purchases).
+- Server-authoritative scoring + progression: Firebase Cloud Functions in `functions/src/*` (e.g., attempt scoring, unlock sync).
 - Optional local Python services: Flask-based analyzers/proxies in `backend/` (audio analysis and auxiliary endpoints).
 - Heavy non-core mode assets (Watch/Notes/Survival) are lazy-loaded with timeout-safe script loading to reduce initial load friction without indefinite hangs.
 - Storage:

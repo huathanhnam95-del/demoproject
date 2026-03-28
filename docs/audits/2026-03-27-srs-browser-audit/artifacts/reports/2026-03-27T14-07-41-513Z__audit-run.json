@@ -1,0 +1,63 @@
+{
+  "runId": "2026-03-27T14-07-41-513Z",
+  "baseUrl": "https://localhost:8443",
+  "startedAt": "2026-03-27T14:07:41.513Z",
+  "finishedAt": "2026-03-27T14:08:40.236Z",
+  "userUid": "8I1bTRze4gcag1uMJULjKtjATHF3",
+  "scenarioResults": [
+    {
+      "name": "settings_firestore_persistence",
+      "status": "failed",
+      "assertions": [],
+      "artifacts": [
+        "screenshots\\2026-03-27T14-07-41-513Z__settings_firestore_persistence.png"
+      ],
+      "error": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#srs-settings-btn')\u001b[22m\n\u001b[2m    - locator resolved to <button id=\"srs-settings-btn\" class=\"srs-settings-btn\" title=\"Scheduler Settings\">⚙️</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    15 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not visible\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\n    at executeScenario (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:489:57)\n    at async main (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:853:28)"
+    }
+  ],
+  "consoleErrors": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "[2026-03-27T14:08:32.474Z]  @firebase/firestore: Firestore (10.7.1): Could not reach Cloud Firestore backend. Backend didn't respond within 10 seconds.\nThis typically indicates that your device does not have a healthy Internet connection at the moment. The client will operate in offline mode until it is able to successfully connect to the backend.",
+      "url": "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
+    },
+    {
+      "type": "error",
+      "text": "Database error (getWord): FirebaseError: Failed to get document because the client is offline.",
+      "url": "https://localhost:8443/pronunciation-analyzer/database-service.js"
+    },
+    {
+      "type": "error",
+      "text": "[Dictation App][sess:b3b292ac][guest][Database] Error creating/updating user profile: {code: permission-denied, message: Missing or insufficient permissions., userId: 8I1bTRze4gcag1uMJULjKtjATHF3}",
+      "url": "https://localhost:8443/js/logger.js"
+    },
+    {
+      "type": "error",
+      "text": "[Dictation App][sess:b3b292ac][guest][Auth] Profile update failed: Firestore permission denied. Please ensure security rules are deployed correctly.",
+      "url": "https://localhost:8443/js/logger.js"
+    },
+    {
+      "type": "error",
+      "text": "[AuthUI] Firestore Permission Denied. Check rules.",
+      "url": "https://localhost:8443/auth-ui.js"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    }
+  ],
+  "pageErrors": [],
+  "cleanupCompleted": true,
+  "staleCleanups": []
+}

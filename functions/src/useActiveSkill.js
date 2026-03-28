@@ -7,15 +7,11 @@ const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const {
     ACTIVE_SKILLS,
     isActiveSkill,
-    isModeAllowedForSkill
+    isModeAllowedForSkill,
+    isRetiredSkill
 } = require('./skillCatalog');
 const {
-    clampDifficultyMultiplier,
-    normalizeEconomyState,
     hasUnlockedSkill,
-    shouldChargeForPolicy,
-    buildDiscountPlan,
-    applyDiscountConsumptions,
     computeAttemptCalibMult
 } = require('./skillEconomy');
 
@@ -49,7 +45,7 @@ async function resolveDifficultyMultiplier(transaction, db, mode, contentId) {
         return 1.0;
     }
 
-    if (mode === 'type' || mode === 'speak' || mode === 'extended' || mode === 'writingChallenge') {
+    if (mode === 'type' || mode === 'speak' || mode === 'extended' || mode === 'rfib' || mode === 'writingChallenge') {
         const docId = String(contentId || '').startsWith(`${mode}_`)
             ? String(contentId)
             : `${mode}_${contentId}`;
@@ -93,6 +89,14 @@ const useActiveSkill = onCall({ maxInstances: 20 }, async (request) => {
     if (!isActiveSkill(skillId)) {
         throw new HttpsError('invalid-argument', `Skill is not an active skill: ${skillId}`);
     }
+    if (isRetiredSkill(skillId)) {
+        return {
+            success: false,
+            error: 'skill_retired',
+            message: 'Skill has been retired and is no longer available',
+            skillId
+        };
+    }
     if (!isModeAllowedForSkill(skillId, mode)) {
         throw new HttpsError('failed-precondition', `Skill ${skillId} is not allowed in mode ${mode}`);
     }
@@ -114,12 +118,12 @@ const useActiveSkill = onCall({ maxInstances: 20 }, async (request) => {
 
             const userData = userDoc.data();
             const skill = ACTIVE_SKILLS[skillId];
-            const unlocked = hasUnlockedSkill(userData, skillId, { useStarterFallbackForActive: true });
+            const unlocked = hasUnlockedSkill(userData, skillId, { useStarterFallbackForActive: false });
             if (!unlocked) {
                 return {
                     success: false,
                     error: 'skill_locked',
-                    message: 'Skill is locked. Purchase it first.',
+                    message: 'Skill is locked. Keep practicing to unlock it.',
                     skillId
                 };
             }
@@ -136,77 +140,25 @@ const useActiveSkill = onCall({ maxInstances: 20 }, async (request) => {
                 }
             }
 
-            const currentCoins = Number(userData.coins) || 0;
-            const economyState = normalizeEconomyState(userData.economyState || {});
             const skillsUsed = Array.isArray(existingLedger.skillsUsed)
                 ? [...existingLedger.skillsUsed]
                 : [];
-
             const priorChargedUses = skillsUsed.filter(
                 (entry) => entry.skillId === skillId && entry.charged === true
             ).length;
-            const shouldCharge = shouldChargeForPolicy(skill.costPolicy, priorChargedUses);
-
-            let effectiveDiff = 1.0;
-            let rawCost = 0;
-            let finalCost = 0;
-            let discountPct = 0;
-            let discountBreakdown = [];
-            let nextEconomyState = economyState;
-
-            if (shouldCharge) {
-                effectiveDiff = skill.flatCost
-                    ? 1.0
-                    : clampDifficultyMultiplier(
-                        await resolveDifficultyMultiplier(transaction, db, mode, contentId)
-                    );
-
-                const discountPlan = buildDiscountPlan({
-                    userData,
-                    skillId,
-                    mode,
-                    skillTier: skill.tier,
-                    skillTags: skill.tags || [],
-                    economyState
-                });
-                discountPct = discountPlan.discountPct;
-                discountBreakdown = discountPlan.breakdown;
-
-                const hasStacking = !!skill.stacking?.enabled;
-                const exponent = discountPlan.stackingExponentOverride ||
-                    Number(skill.stacking?.exponent) || 1.5;
-                const stackFactor = hasStacking
-                    ? Math.pow(exponent, priorChargedUses)
-                    : 1.0;
-
-                rawCost = skill.flatCost
-                    ? Math.ceil(Number(skill.baseCost) || 0)
-                    : Math.ceil((Number(skill.baseCost) || 0) * effectiveDiff * stackFactor);
-                finalCost = Math.max(0, Math.ceil(rawCost * (1 - discountPct)));
-
-                if (currentCoins < finalCost) {
-                    return {
-                        success: false,
-                        error: 'insufficient_funds',
-                        message: `Not enough coins. Need ${finalCost}, have ${currentCoins}`,
-                        required: finalCost,
-                        current: currentCoins
-                    };
-                }
-
-                nextEconomyState = applyDiscountConsumptions(
-                    economyState,
-                    discountPlan.tokenConsumptions
-                );
-            }
-
-            const updatedCoins = currentCoins - finalCost;
+            const effectiveDiff = skill.flatCost
+                ? 1.0
+                : Number(await resolveDifficultyMultiplier(transaction, db, mode, contentId)) || 1.0;
+            const rawCost = 0;
+            const finalCost = 0;
+            const discountPct = 0;
+            const discountBreakdown = [];
 
             const event = {
                 skillId,
                 tier: skill.tier,
                 calibMult: Number(skill.calibMult) || 1.0,
-                charged: shouldCharge,
+                charged: false,
                 cost: finalCost,
                 rawCost,
                 discountPct: Number(discountPct.toFixed(4)),
@@ -216,12 +168,10 @@ const useActiveSkill = onCall({ maxInstances: 20 }, async (request) => {
             };
             skillsUsed.push(event);
 
-            const totalCost = (Number(existingLedger.totalCost) || 0) + finalCost;
+            const totalCost = Number(existingLedger.totalCost) || 0;
             const attemptCalibMult = computeAttemptCalibMult(skillsUsed);
 
             transaction.update(userRef, {
-                coins: updatedCoins,
-                economyState: nextEconomyState,
                 skillsUpdatedAt: FieldValue.serverTimestamp()
             });
 
@@ -240,13 +190,13 @@ const useActiveSkill = onCall({ maxInstances: 20 }, async (request) => {
             return {
                 success: true,
                 skillId,
-                charged: shouldCharge,
+                charged: false,
                 cost: finalCost,
                 rawCost,
                 difficultyMult: effectiveDiff,
                 discountPct,
                 discountBreakdown,
-                newBalance: updatedCoins,
+                newBalance: 0,
                 attemptCalibMult,
                 totalCost
             };

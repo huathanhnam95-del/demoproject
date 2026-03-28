@@ -10,6 +10,7 @@ import {
     getDoc,
     setDoc,
     updateDoc,
+    deleteDoc,
     increment,
     collection,
     addDoc,
@@ -22,9 +23,31 @@ import {
 import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
 
 // Import new SRS Scheduler
-import { SRSScheduler, ALGORITHM, CARD_STATE, RATING } from './srs-scheduler.js';
+import { SRSScheduler } from './srs-scheduler.js';
+import { ALGORITHM, CARD_STATE, RATING, SRS_STORAGE_KEYS } from './js/srs-constants.js';
+import {
+    isCardDue,
+    isMasteredCard,
+    migrateCardForTargetAlgorithm,
+    normalizeSrsCard
+} from './js/srs-card-model.js';
+import {
+    getStoredAlgorithmPreference,
+    setStoredAlgorithmPreference
+} from './js/srs-storage.js';
 import { WritingChallenge } from './js/writing-challenge.js';
 import { CollocationRater } from './js/collocation-rater.js';
+import {
+    buildAssessWritingContext,
+    consumePendingWritingChallenges,
+    createActiveWritingChallengeContext,
+    createQueuedWritingChallengeItem,
+    getNextPendingWritingChallenge as getNextPendingWritingChallengeFromQueue,
+    getPendingWritingChallengeCount as getPendingWritingChallengeCountFromQueue,
+    getWritingChallengeDecision,
+    getWritingChallengeSummaryState,
+    getWritingChallengeValidationTarget
+} from './js/writing-challenge-utils.js';
 
 const SRSReview = (function () {
     'use strict';
@@ -62,8 +85,10 @@ const SRSReview = (function () {
         active: false,
         wordsToReview: [],
         currentIndex: 0,
-        sessionResults: []
+        sessionResults: [],
+        currentRatingOutcomes: null
     };
+    let activeWritingChallengeContext = null;
 
     // Definition Cache
     const definitionCache = new Map();
@@ -111,9 +136,25 @@ const SRSReview = (function () {
         return matrix[b.length][a.length];
     }
     let pendingSave = null;
-    const LOCAL_STORAGE_KEY = 'srs_pending_data';
     const GUEST_USER_ID = 'guest';
-    const GUEST_SRS_STORAGE_KEY = 'bel_guest_srs_v1';
+    const IS_LOCAL_HOST = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+
+    if (IS_LOCAL_HOST) {
+        const rootHooks = window.__SRS_TEST_HOOKS__ || {};
+        if (!rootHooks.srs || typeof rootHooks.srs !== 'object') {
+            rootHooks.srs = {};
+        }
+        if (typeof rootHooks.srs.failNextCardSaveOnce !== 'boolean') {
+            rootHooks.srs.failNextCardSaveOnce = false;
+        }
+        if (typeof rootHooks.srs.failNextSummarySaveOnce !== 'boolean') {
+            rootHooks.srs.failNextSummarySaveOnce = false;
+        }
+        if (typeof rootHooks.srs.disableAwardPoints !== 'boolean') {
+            rootHooks.srs.disableAwardPoints = false;
+        }
+        window.__SRS_TEST_HOOKS__ = rootHooks;
+    }
 
     // Save debouncing
     let saveTimeout = null;
@@ -135,6 +176,166 @@ const SRSReview = (function () {
             sessionsCompleted: 0
         };
         srsCache.masteredWords = [];
+    }
+
+    function getMasteredLemmaSet() {
+        const mastered = new Set();
+        if (!Array.isArray(srsCache.masteredWords)) return mastered;
+        for (const item of srsCache.masteredWords) {
+            if (typeof item === 'string') {
+                mastered.add(item);
+            } else if (item && typeof item === 'object' && item.lemma) {
+                mastered.add(item.lemma);
+            }
+        }
+        return mastered;
+    }
+
+    function isLemmaMastered(lemma) {
+        return getMasteredLemmaSet().has(lemma);
+    }
+
+    function normalizeStoredCard(lemma, card, now = new Date()) {
+        return normalizeSrsCard({ ...(card || {}), lemma }, now);
+    }
+
+    function getReviewCardForAlgorithm(currentData, targetAlgorithm = currentAlgorithm) {
+        const now = new Date();
+        const card = normalizeStoredCard(currentData?.lemma || currentData?.originalWord || '', currentData, now);
+        if (card.algorithm === targetAlgorithm) {
+            return card;
+        }
+        return migrateCardForTargetAlgorithm(card, targetAlgorithm, now);
+    }
+
+    function getRatingKeyFromQuality(quality) {
+        switch (quality) {
+            case 1: return 'again';
+            case 2: return 'hard';
+            case 3: return 'good';
+            case 4: return 'easy';
+            default: return 'good';
+        }
+    }
+
+    function getCurrentRatingOutcomes(currentData) {
+        const card = getReviewCardForAlgorithm(currentData, currentAlgorithm);
+        const outcomes = SRSScheduler.getRatingOutcomes(card, currentAlgorithm);
+        reviewSession.currentRatingOutcomes = outcomes;
+        return outcomes;
+    }
+
+    function getCachedReviewOutcome(quality) {
+        const key = getRatingKeyFromQuality(quality);
+        return reviewSession.currentRatingOutcomes?.[key] || null;
+    }
+
+    function consumeSrsTestHookOnce(flagName) {
+        if (!IS_LOCAL_HOST) return false;
+        const hook = window.__SRS_TEST_HOOKS__?.srs;
+        if (!hook || hook[flagName] !== true) return false;
+        hook[flagName] = false;
+        return true;
+    }
+
+    function getCurrentReviewSnapshot() {
+        const currentWord = reviewSession.wordsToReview?.[reviewSession.currentIndex] || null;
+        const ratingOutcomes = reviewSession.currentRatingOutcomes
+            || (currentWord ? getCurrentRatingOutcomes(currentWord) : null);
+
+        return {
+            currentLemma: currentWord?.lemma || null,
+            currentAlgorithm,
+            isEarlyReview: reviewSession.isEarlyReview === true,
+            currentIndex: reviewSession.currentIndex,
+            currentWord: currentWord
+                ? normalizeStoredCard(currentWord.lemma || currentWord.originalWord || '', currentWord)
+                : null,
+            ratingOutcomes
+        };
+    }
+
+    function buildSummarySnapshot() {
+        return {
+            reviewStats: srsCache.reviewStats || {},
+            masteredWords: Array.isArray(srsCache.masteredWords) ? srsCache.masteredWords : [],
+            totalPoints: Number(srsCache.totalPoints) || 0,
+            srsSettings: {
+                algorithm: currentAlgorithm
+            }
+        };
+    }
+
+    function buildSummaryFirestorePayload(summary = null) {
+        const source = summary && typeof summary === 'object' ? summary : buildSummarySnapshot();
+        return sanitize({
+            reviewStats: source.reviewStats || {},
+            masteredWords: Array.isArray(source.masteredWords) ? source.masteredWords : [],
+            srsSettings: {
+                algorithm: source?.srsSettings?.algorithm || source?.algorithm || currentAlgorithm
+            },
+            updatedAt: new Date().toISOString()
+        });
+    }
+
+    function persistPendingSync() {
+        try {
+            const payload = {
+                userId: currentUserId,
+                updatedAt: new Date().toISOString(),
+                summary: buildSummarySnapshot(),
+                cardsByLemma: Object.fromEntries(
+                    Object.entries(srsCache.srsData || {}).map(([lemma, card]) => [
+                        lemma,
+                        normalizeStoredCard(lemma, card)
+                    ])
+                )
+            };
+            localStorage.setItem(SRS_STORAGE_KEYS.PENDING, JSON.stringify(payload));
+        } catch (e) {
+            log.warn('Failed to persist pending SRS sync:', e);
+        }
+    }
+
+    function clearPendingSync() {
+        try {
+            localStorage.removeItem(SRS_STORAGE_KEYS.PENDING);
+        } catch (e) {
+            log.warn('Failed to clear pending SRS sync:', e);
+        }
+    }
+
+    async function flushPendingSync(payload = null) {
+        if (isGuestSession() || !currentUserId || !db) return false;
+
+        const pendingPayload = payload || (() => {
+            const raw = localStorage.getItem(SRS_STORAGE_KEYS.PENDING);
+            if (!raw) return null;
+            try {
+                return JSON.parse(raw);
+            } catch (e) {
+                return null;
+            }
+        })();
+
+        if (!pendingPayload || pendingPayload.userId !== currentUserId) return false;
+
+        const summaryRef = doc(db, 'users', currentUserId, 'vocabularyBook', 'data');
+        await setDoc(summaryRef, buildSummaryFirestorePayload(pendingPayload.summary), { merge: true });
+
+        const cardsByLemma = pendingPayload.cardsByLemma || {};
+        for (const [lemma, card] of Object.entries(cardsByLemma)) {
+            const safeId = lemma.replace(/\//g, '_');
+            const cardRef = doc(db, 'users', currentUserId, 'srs_cards', safeId);
+            await setDoc(cardRef, sanitize({
+                ...normalizeStoredCard(lemma, card),
+                lemma,
+                updatedAt: new Date().toISOString()
+            }), { merge: true });
+        }
+
+        clearPendingSync();
+        return true;
     }
 
     // Collocations data cache
@@ -203,9 +404,8 @@ const SRSReview = (function () {
                 const functions = getFunctions();
                 const assessFn = httpsCallable(functions, 'assessWriting');
                 try {
-                    const targetWord = context?.lemma || context?.originalWord || context?.word || '';
-                    const safeContext = {
-                        word: targetWord,
+                    const safeContext = buildAssessWritingContext(context) || {
+                        word: context?.lemma || context?.originalWord || context?.word || '',
                         lemma: context?.lemma || context?.originalWord || '',
                         partOfSpeech: context?.partOfSpeech || context?.pos || ''
                     };
@@ -224,7 +424,11 @@ const SRSReview = (function () {
             loadDraft: loadDraft,
             clearDraft: clearDraft,
             getCollocations: getCollocations,
-            triggerConfetti: triggerConfetti
+            triggerConfetti: triggerConfetti,
+            setActiveWritingChallengeContext,
+            patchActiveWritingChallengeContext,
+            getActiveWritingChallengeContext,
+            clearActiveWritingChallengeContext
         });
 
         // Load algorithm preference from SRSOnboarding
@@ -239,7 +443,7 @@ const SRSReview = (function () {
         // Listen for online status to retry saves
         window.addEventListener('online', () => {
             log.debug('Back online, syncing pending changes...');
-            debouncedSave();
+            scheduleRetry();
         });
 
         // Periodic Cleanup
@@ -449,20 +653,30 @@ const SRSReview = (function () {
     function updateDashboardSummary() {
         const summaryEl = document.getElementById('dashboard-srs-summary');
         const textEl = document.getElementById('dashboard-srs-text');
+        const state = getEntryState();
 
         // Check for immediate due words
         const dueWords = getWordsDueForReview();
-        const hasWords = Object.keys(srsCache.srsData).length > 0;
+        const hasWords = state.hasCards;
 
         if (!hasWords) {
             summaryEl.style.display = 'none';
             return;
         }
 
+        if (state.sessionActive && state.isEarlyReview) {
+            summaryEl.style.display = 'flex';
+            summaryEl.classList.remove('has-due');
+            summaryEl.innerHTML = `<span class="icon">⏳</span><span>Early review in progress</span>`;
+            if (textEl) textEl.textContent = 'Early review in progress';
+            return;
+        }
+
         if (dueWords.length > 0) {
             summaryEl.style.display = 'flex';
             summaryEl.classList.add('has-due');
-            summaryEl.innerHTML = `<span class="icon">🔥</span><span>${dueWords.length} words due now</span>`;
+            summaryEl.innerHTML = `<span class="icon">🔥</span><span>${dueWords.length} items due now</span>`;
+            if (textEl) textEl.textContent = `${dueWords.length} items due now`;
             // Add pulse effect/class if desired
             return;
         } else {
@@ -475,10 +689,11 @@ const SRSReview = (function () {
 
         // Iterate all words to find next closest date
         for (const [lemma, data] of Object.entries(srsCache.srsData)) {
-            if (data.status === 'mastered') continue;
+            const card = normalizeStoredCard(lemma, data, new Date());
+            if (isMasteredCard(card)) continue;
 
             pendingCount++;
-            const reviewDate = new Date(data.nextReviewDate);
+            const reviewDate = new Date(card.nextReviewDate);
 
             if (!nextDate || reviewDate < nextDate) {
                 nextDate = reviewDate;
@@ -492,6 +707,7 @@ const SRSReview = (function () {
                 // but effectively means all reviews are in future
                 summaryEl.style.display = 'flex';
                 summaryEl.innerHTML = `<span class="icon">✅</span><span>All caught up!</span>`;
+                if (textEl) textEl.textContent = 'All caught up!';
             } else {
                 // No words in SRS
                 summaryEl.style.display = 'none';
@@ -542,14 +758,8 @@ const SRSReview = (function () {
             });
         }
 
-        // Auto-Continue Button (for Auto-Assign Mode)
         const autoContinueBtn = document.getElementById('srs-auto-continue-btn');
-        if (autoContinueBtn) {
-            autoContinueBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                recordAutoReview();
-            });
-        }
+        if (autoContinueBtn) autoContinueBtn.style.display = 'none';
 
         // Click on card to flip
         if (elements.flashcard) {
@@ -769,7 +979,11 @@ const SRSReview = (function () {
 
             case 'Escape': // Close panel
                 e.preventDefault();
-                closeReviewPanel();
+                if (elements.srsWritingModal && elements.srsWritingModal.classList.contains('visible')) {
+                    closeWritingChallenge();
+                } else {
+                    closeReviewPanel();
+                }
                 break;
 
             case 'p': // Play audio
@@ -824,7 +1038,7 @@ const SRSReview = (function () {
     /**
      * Save Scheduler Settings
      */
-    function saveSettings() {
+    async function saveSettings() {
         const checkedInput = document.querySelector('input[name="srs-algo"]:checked');
         if (!checkedInput) return;
 
@@ -832,13 +1046,11 @@ const SRSReview = (function () {
         const oldAlgo = currentAlgorithm;
         currentAlgorithm = selectedAlgo;
 
+        setStoredAlgorithmPreference(selectedAlgo, localStorage);
+        persistPendingSync();
+
         // Persist setting
-        if (currentUserId && db) {
-            updateDoc(doc(db, 'users', currentUserId), {
-                'srsSettings.algorithm': selectedAlgo
-            }).catch(err => log.error('Error saving setting:', err));
-        }
-        localStorage.setItem('srs_preferred_algorithm', selectedAlgo);
+        await saveSRSSummary();
 
         // Notify user if changed
         if (oldAlgo !== selectedAlgo) {
@@ -847,8 +1059,13 @@ const SRSReview = (function () {
             if (reviewSession.active) {
                 const currentData = reviewSession.wordsToReview[reviewSession.currentIndex];
                 if (currentData) {
-                    const previews = getIntervalPreviews(currentData);
-                    updateIntervalLabels(previews);
+                    const outcomes = getCurrentRatingOutcomes(currentData);
+                    updateIntervalLabels({
+                        again: outcomes.again?.label,
+                        hard: outcomes.hard?.label,
+                        good: outcomes.good?.label,
+                        easy: outcomes.easy?.label
+                    });
                 }
             }
         }
@@ -951,10 +1168,15 @@ const SRSReview = (function () {
     function loadGuestSRSData() {
         resetSRSCache();
         try {
-            const stored = localStorage.getItem(GUEST_SRS_STORAGE_KEY);
+            const stored = localStorage.getItem(SRS_STORAGE_KEYS.GUEST_SRS);
             if (stored) {
                 const parsed = JSON.parse(stored);
-                srsCache.srsData = parsed?.srsData && typeof parsed.srsData === 'object' ? parsed.srsData : {};
+                srsCache.srsData = parsed?.srsData && typeof parsed.srsData === 'object'
+                    ? Object.fromEntries(Object.entries(parsed.srsData).map(([lemma, card]) => [
+                        lemma,
+                        normalizeStoredCard(lemma, card)
+                    ]))
+                    : {};
                 srsCache.reviewStats = parsed?.reviewStats && typeof parsed.reviewStats === 'object'
                     ? parsed.reviewStats
                     : srsCache.reviewStats;
@@ -964,6 +1186,7 @@ const SRSReview = (function () {
                 }
                 if (parsed?.algorithm) {
                     currentAlgorithm = parsed.algorithm;
+                    setStoredAlgorithmPreference(currentAlgorithm, localStorage);
                 }
             } else {
                 resetSRSCache();
@@ -974,9 +1197,7 @@ const SRSReview = (function () {
         }
 
         updateGamificationUI();
-        if (typeof updateDashboardUI === 'function') updateDashboardUI();
-        updateDashboardSummary();
-        renderScheduleTable();
+        refreshEntrySurfaces('guest-load');
     }
 
     function saveGuestSRSData() {
@@ -989,7 +1210,8 @@ const SRSReview = (function () {
                 algorithm: currentAlgorithm,
                 updatedAt: new Date().toISOString()
             };
-            localStorage.setItem(GUEST_SRS_STORAGE_KEY, JSON.stringify(payload));
+            localStorage.setItem(SRS_STORAGE_KEYS.GUEST_SRS, JSON.stringify(payload));
+            setStoredAlgorithmPreference(currentAlgorithm, localStorage);
             lastSavedSRState = JSON.stringify(payload);
         } catch (e) {
             log.warn('Failed to save guest SRS data:', e);
@@ -1024,6 +1246,7 @@ const SRSReview = (function () {
             // Reset cache on logout
             resetSRSCache();
             currentUserId = null;
+            refreshEntrySurfaces('auth-reset');
         }
     }
 
@@ -1043,24 +1266,23 @@ const SRSReview = (function () {
             // 1. Load Summary Data (XP, Streak, etc)
             const summaryRef = doc(db, 'users', currentUserId, 'vocabularyBook', 'data');
             const summaryDoc = await getDoc(summaryRef);
+            const summaryData = summaryDoc.exists() ? summaryDoc.data() : null;
 
-            if (summaryDoc.exists()) {
-                const data = summaryDoc.data();
-
+            if (summaryData) {
                 // Legacy check: If srsData exists in the summary doc, we need to migrate it
-                if (data.srsData && Object.keys(data.srsData).length > 0) {
+                if (summaryData.srsData && Object.keys(summaryData.srsData).length > 0) {
                     log.warn('Legacy SRS data detected in monolithic doc. Migrating to srs_cards subcollection...');
-                    await migrateToSubcollection(data.srsData);
+                    await migrateToSubcollection(summaryData.srsData);
                 }
 
-                srsCache.reviewStats = data.reviewStats || {
+                srsCache.reviewStats = summaryData.reviewStats || {
                     totalReviews: 0,
                     reviewsToday: 0,
                     lastReviewSession: null,
                     streak: 0,
                     longestStreak: 0
                 };
-                srsCache.masteredWords = data.masteredWords || [];
+                srsCache.masteredWords = summaryData.masteredWords || [];
             }
 
             // 2. Load Individual Cards from Subcollection
@@ -1071,7 +1293,7 @@ const SRSReview = (function () {
             cardsSnapshot.forEach(doc => {
                 const card = doc.data();
                 const lemma = card.lemma || doc.id;
-                srsCache.srsData[lemma] = card;
+                srsCache.srsData[lemma] = normalizeStoredCard(lemma, card);
             });
 
             log.debug(`Loaded ${Object.keys(srsCache.srsData).length} cards from srs_cards subcollection`);
@@ -1085,22 +1307,21 @@ const SRSReview = (function () {
                 srsCache.totalPoints = userData.totalPoints ?? userData.practicePoints ?? 0;
 
                 // Load Algorithm Preference
-                if (userData.srsSettings && userData.srsSettings.algorithm) {
-                    currentAlgorithm = userData.srsSettings.algorithm;
-                    log.debug('Algorithm preference loaded from Firestore:', currentAlgorithm);
-                } else {
-                    const localAlgo = localStorage.getItem('srs_preferred_algorithm');
-                    if (localAlgo) {
-                        currentAlgorithm = localAlgo;
-                        log.debug('Algorithm preference loaded from LocalStorage:', currentAlgorithm);
-                    }
+                const summaryAlgorithm = summaryData?.srsSettings?.algorithm || summaryData?.algorithm;
+                const localAlgorithm = getStoredAlgorithmPreference(localStorage);
+                const preferredAlgorithm = summaryAlgorithm || localAlgorithm;
+
+                if (preferredAlgorithm) {
+                    currentAlgorithm = preferredAlgorithm;
+                    log.debug('Algorithm preference loaded:', currentAlgorithm);
+                    setStoredAlgorithmPreference(currentAlgorithm, localStorage);
                 }
 
                 updateGamificationUI();
-                if (typeof updateDashboardUI === 'function') updateDashboardUI();
             }
 
-            updateDashboardSummary();
+            loadPendingData();
+            refreshEntrySurfaces('srs-load');
         } catch (e) {
             log.error('Error loading SRS data:', e);
         }
@@ -1156,18 +1377,19 @@ const SRSReview = (function () {
         }
         if (!currentUserId || !db) return;
 
-        const dataToSave = sanitize({
-            reviewStats: srsCache.reviewStats,
-            masteredWords: srsCache.masteredWords,
-            updatedAt: new Date().toISOString()
-        });
+        const dataToSave = buildSummaryFirestorePayload();
 
         try {
+            if (consumeSrsTestHookOnce('failNextSummarySaveOnce')) {
+                throw new Error('SRS test hook: failNextSummarySaveOnce');
+            }
             const vocabDocRef = doc(db, 'users', currentUserId, 'vocabularyBook', 'data');
             await setDoc(vocabDocRef, dataToSave, { merge: true });
             log.debug('Saved SRS summary to Firestore');
         } catch (e) {
             log.error('Error saving SRS summary:', e);
+            persistPendingSync();
+            scheduleRetry();
         }
     }
 
@@ -1187,14 +1409,19 @@ const SRSReview = (function () {
         const cardRef = doc(db, 'users', currentUserId, 'srs_cards', safeId);
 
         try {
+            if (consumeSrsTestHookOnce('failNextCardSaveOnce')) {
+                throw new Error('SRS test hook: failNextCardSaveOnce');
+            }
             await setDoc(cardRef, sanitize({
-                ...card,
+                ...normalizeStoredCard(lemma, card),
                 lemma: lemma,
                 updatedAt: new Date().toISOString()
             }), { merge: true });
             log.debug(`Saved card SRS for: ${lemma}`);
         } catch (e) {
             log.error(`Error saving card SRS for ${lemma}:`, e);
+            persistPendingSync();
+            scheduleRetry();
         }
     }
 
@@ -1243,7 +1470,12 @@ const SRSReview = (function () {
         if (pendingSave) clearTimeout(pendingSave);
         pendingSave = setTimeout(async () => {
             log.debug('Attempting to sync local data...');
-            await saveSRSSummary();
+            try {
+                await flushPendingSync();
+            } catch (e) {
+                log.warn('Pending sync retry failed:', e);
+                persistPendingSync();
+            }
         }, 10000); // Retry after 10 seconds
     }
 
@@ -1251,18 +1483,33 @@ const SRSReview = (function () {
      * Load pending data from localStorage on init
      */
     function loadPendingData() {
-        const pending = localStorage.getItem(LOCAL_STORAGE_KEY);
+        const pending = localStorage.getItem(SRS_STORAGE_KEYS.PENDING);
         if (!pending) return;
 
         try {
-            const { userId, data, timestamp } = JSON.parse(pending);
+            const { userId, summary, cardsByLemma, updatedAt } = JSON.parse(pending);
             // Only restore if same user and data is relatively recent (< 7 days)
-            if (userId === currentUserId && Date.now() - timestamp < 7 * 24 * 60 * 60 * 1000) {
+            if (userId === currentUserId && Date.now() - new Date(updatedAt).getTime() < 7 * 24 * 60 * 60 * 1000) {
                 log.debug('Restoring pending changes from local storage');
-                srsCache.srsData = data.srsData || srsCache.srsData;
-                srsCache.reviewStats = data.reviewStats || srsCache.reviewStats;
-                srsCache.masteredWords = data.masteredWords || srsCache.masteredWords;
-                saveSRSSummary(); // Try to sync immediately
+                if (cardsByLemma && typeof cardsByLemma === 'object') {
+                    for (const [lemma, card] of Object.entries(cardsByLemma)) {
+                        srsCache.srsData[lemma] = normalizeStoredCard(lemma, card);
+                    }
+                }
+                if (summary && typeof summary === 'object') {
+                    srsCache.reviewStats = summary.reviewStats || srsCache.reviewStats;
+                    srsCache.masteredWords = summary.masteredWords || srsCache.masteredWords;
+                    srsCache.totalPoints = Number(summary.totalPoints) || srsCache.totalPoints || 0;
+                    const pendingAlgorithm = summary?.srsSettings?.algorithm || summary?.algorithm;
+                    if (pendingAlgorithm) {
+                        currentAlgorithm = pendingAlgorithm;
+                        setStoredAlgorithmPreference(currentAlgorithm, localStorage);
+                    }
+                }
+                flushPendingSync().catch((e) => {
+                    log.warn('Could not flush pending SRS sync:', e);
+                    persistPendingSync();
+                });
             }
         } catch (e) {
             log.warn('Could not parse pending data:', e);
@@ -1283,31 +1530,54 @@ const SRSReview = (function () {
     function initializeWord(lemma, originalWord, contextData = {}) {
         if (srsCache.srsData[lemma]) {
             log.log('Word already initialized:', lemma);
-            // Update context data if provided (in case it's richer than what we have)
-            if (contextData.definition && !srsCache.srsData[lemma].definition) {
-                srsCache.srsData[lemma].definition = contextData.definition;
-                srsCache.srsData[lemma].example = contextData.example || null;
-                srsCache.srsData[lemma].partOfSpeech = contextData.partOfSpeech || 'unknown';
-                srsCache.srsData[lemma].sentence = contextData.sentence || null;
+            const existing = normalizeStoredCard(lemma, srsCache.srsData[lemma]);
+            let updated = false;
+            if (contextData.definition && !existing.definition) {
+                existing.definition = contextData.definition;
+                updated = true;
+            }
+            if (contextData.example && !existing.example) {
+                existing.example = contextData.example;
+                updated = true;
+            }
+            if (contextData.sentence && !existing.sentence) {
+                existing.sentence = contextData.sentence;
+                updated = true;
+            }
+            if (contextData.partOfSpeech && existing.partOfSpeech === 'unknown') {
+                existing.partOfSpeech = contextData.partOfSpeech;
+                updated = true;
+            }
+            if (contextData.entryType && !existing.entryType) {
+                existing.entryType = contextData.entryType;
+                updated = true;
+            }
+            if (contextData.allowedModes && !existing.allowedModes) {
+                existing.allowedModes = contextData.allowedModes;
+                updated = true;
+            }
+            if (contextData.phraseAudioKey && !existing.phraseAudioKey) {
+                existing.phraseAudioKey = contextData.phraseAudioKey;
+                updated = true;
+            }
+            if (updated) {
+                srsCache.srsData[lemma] = existing;
                 debouncedSave();
             }
             return;
         }
 
-        const now = new Date();
+        const initialized = SRSScheduler.initializeCard(currentAlgorithm);
         srsCache.srsData[lemma] = {
+            ...normalizeStoredCard(lemma, initialized),
             originalWord: originalWord,
-            interval: 1,                    // First review in 1 day
-            easeFactor: SM2_DEFAULT_EASE,
-            repetitions: 0,
-            nextReviewDate: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
-            lastReviewDate: null,
-            status: 'learning',             // learning | reviewing | mastered
-            // NEW: Store context data
+            entryType: contextData.entryType || 'word',
             partOfSpeech: contextData.partOfSpeech || 'unknown',
             definition: contextData.definition || null,
             example: contextData.example || null,
-            sentence: contextData.sentence || null
+            sentence: contextData.sentence || null,
+            allowedModes: contextData.allowedModes || null,
+            phraseAudioKey: contextData.phraseAudioKey || null
         };
 
         log.log('Initialized word:', lemma, 'POS:', contextData.partOfSpeech || 'unknown');
@@ -1325,13 +1595,13 @@ const SRSReview = (function () {
         const dueWords = [];
 
         for (const [lemma, data] of Object.entries(srsCache.srsData)) {
-            if (data.status === 'mastered') continue;
+            const card = normalizeStoredCard(lemma, data, now);
+            if (isMasteredCard(card)) continue;
 
-            const nextReview = new Date(data.nextReviewDate);
-            if (nextReview <= now) {
+            if (isCardDue(card, now)) {
                 dueWords.push({
                     lemma: lemma,
-                    ...data
+                    ...card
                 });
             }
         }
@@ -1350,22 +1620,23 @@ const SRSReview = (function () {
         const dueCountEl = document.getElementById('schedule-due-count');
         if (!tableBody) return;
 
+        const now = new Date();
         const allWords = Object.entries(srsCache.srsData)
-            .filter(([_, data]) => data.status !== 'mastered')
-            .map(([lemma, data]) => ({ lemma, ...data }));
+            .map(([lemma, data]) => normalizeStoredCard(lemma, data, now))
+            .filter(card => !isMasteredCard(card))
+            .map(card => ({ lemma: card.lemma, ...card }));
 
         // Sort: Urgent (due) first, then by next review date
-        const now = new Date();
         allWords.sort((a, b) => new Date(a.nextReviewDate) - new Date(b.nextReviewDate));
 
         if (allWords.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="3" class="empty-schedule">No words in your review list yet. Add some words from the practice modes!</td></tr>';
-            if (dueCountEl) dueCountEl.textContent = '0 words due';
+            tableBody.innerHTML = '<tr><td colspan="3" class="empty-schedule">No review items yet. Add vocabulary from the practice modes first.</td></tr>';
+            if (dueCountEl) dueCountEl.textContent = '0 items due';
             return;
         }
 
         const dueWords = allWords.filter(w => new Date(w.nextReviewDate) <= now);
-        if (dueCountEl) dueCountEl.textContent = `${dueWords.length} words due`;
+        if (dueCountEl) dueCountEl.textContent = `${dueWords.length} items due`;
 
         tableBody.innerHTML = allWords.slice(0, 15).map(word => {
             const nextReview = new Date(word.nextReviewDate);
@@ -1388,8 +1659,9 @@ const SRSReview = (function () {
                 }
             }
 
-            const statusClass = word.status === 'learning' ? 'status-learning' : 'status-review';
-            const statusLabel = word.status === 'learning' ? 'Learning' : 'Review';
+            const isLearning = word.state === CARD_STATE.LEARNING || word.state === CARD_STATE.RELEARNING;
+            const statusClass = isLearning ? 'status-learning' : 'status-review';
+            const statusLabel = isLearning ? 'Learning' : word.state === CARD_STATE.MASTERED ? 'Mastered' : 'Review';
 
             return `
                 <tr>
@@ -1411,11 +1683,12 @@ const SRSReview = (function () {
         const allWords = [];
 
         for (const [lemma, data] of Object.entries(srsCache.srsData)) {
-            if (data.status === 'mastered') continue;
+            const card = normalizeStoredCard(lemma, data, new Date());
+            if (isMasteredCard(card)) continue;
 
             allWords.push({
                 lemma: lemma,
-                ...data
+                ...card
             });
         }
 
@@ -1423,89 +1696,6 @@ const SRSReview = (function () {
         allWords.sort((a, b) => new Date(a.nextReviewDate) - new Date(b.nextReviewDate));
 
         return allWords;
-    }
-
-    // Milestones for Auto-Assign algorithm
-    const AUTO_MILESTONES = [1, 3, 6, 14];
-
-    /**
-     * Calculate next interval using Auto-Assign algorithm
-     * Automatically determines interval based on pass/fail status
-     * @param {boolean} wasCorrect - Whether user answered correctly
-     * @param {object} currentData - Current SRS data for the word
-     * @returns {object} - New interval, ease factor, and other SRS data
-     */
-    function calculateAutoInterval(wasCorrect, currentData) {
-        let { interval, easeFactor, repetitions, consecutiveFails } = currentData;
-        interval = interval || 1;
-        easeFactor = easeFactor || SM2_DEFAULT_EASE;
-        repetitions = repetitions || 0;
-        consecutiveFails = consecutiveFails || 0;
-
-        if (!wasCorrect) {
-            // FAIL: Reduce interval
-            consecutiveFails++;
-
-            if (consecutiveFails >= 2) {
-                // Multiple fails: Reset to 1 day
-                interval = 1;
-                log.debug('[SRS Auto] Multiple fails, resetting to 1 day');
-            } else {
-                // First fail: Go to 50% of current interval (min 1 day)
-                interval = Math.max(1, Math.round(interval * 0.5));
-                log.debug(`[SRS Auto] First fail, reducing to ${interval} days (50%)`);
-            }
-
-            // Decrease ease factor (word is harder)
-            easeFactor = Math.max(SM2_MIN_EASE, easeFactor - 0.15);
-            repetitions = 0; // Reset streak
-
-        } else {
-            // SUCCESS: Advance to next milestone
-            consecutiveFails = 0;
-            repetitions++;
-
-            // Find current milestone index
-            let currentMilestoneIdx = AUTO_MILESTONES.findIndex(m => m >= interval);
-            if (currentMilestoneIdx === -1) currentMilestoneIdx = AUTO_MILESTONES.length - 1;
-
-            // Move to next milestone
-            const nextMilestoneIdx = Math.min(currentMilestoneIdx + 1, AUTO_MILESTONES.length - 1);
-            interval = AUTO_MILESTONES[nextMilestoneIdx];
-
-            // For intervals beyond milestones, apply ease factor
-            if (currentMilestoneIdx >= AUTO_MILESTONES.length - 1 && repetitions > 4) {
-                interval = Math.round(interval * easeFactor);
-                log.debug(`[SRS Auto] Beyond 14 days, applying EF: ${interval} days`);
-            } else {
-                log.debug(`[SRS Auto] Success! Advancing to ${interval} days`);
-            }
-
-            // Increase ease factor slightly (word is getting easier)
-            easeFactor = Math.min(2.5, easeFactor + 0.05);
-        }
-
-        // Calculate next review date
-        const now = new Date();
-        const nextDate = new Date(now.getTime() + interval * 24 * 60 * 60 * 1000);
-
-        // Determine status
-        let status = 'learning';
-        if (repetitions >= 3) status = 'reviewing';
-        // Mastery: repetition count OR long interval (unified)
-        if (repetitions >= MASTERY_THRESHOLD || interval >= 21) status = 'mastered';
-
-        log.debug(`[SRS Auto] Result: interval=${interval}, EF=${easeFactor.toFixed(2)}, reps=${repetitions}, status=${status}`);
-
-        return {
-            interval,
-            easeFactor: Math.round(easeFactor * 100) / 100,
-            repetitions,
-            consecutiveFails,
-            nextReviewDate: nextDate.toISOString(),
-            lastReviewDate: now.toISOString(),
-            status
-        };
     }
 
     /**
@@ -1524,20 +1714,17 @@ const SRSReview = (function () {
             4: RATING.EASY
         };
         const rating = ratingMap[quality] || RATING.GOOD;
+        const cachedOutcome = getCachedReviewOutcome(quality);
+        let result = null;
+        if (cachedOutcome?.nextCard) {
+            result = normalizeStoredCard(currentData?.lemma || currentData?.originalWord || '', cachedOutcome.nextCard);
+        } else {
+            // Prepare card data for scheduler
+            const card = getReviewCardForAlgorithm(currentData, currentAlgorithm);
 
-        // Prepare card data for scheduler
-        const card = {
-            state: currentData.state || CARD_STATE.NEW,
-            interval: currentData.interval || 0,
-            easeFactor: currentData.easeFactor || 2.5,
-            repetitions: currentData.repetitions || 0,
-            stepIndex: currentData.stepIndex || 0,
-            lastReviewDate: currentData.lastReviewDate,
-            fsrs: currentData.fsrs || null
-        };
-
-        // Use SRSScheduler with current algorithm preference
-        const result = SRSScheduler.calculate(card, rating, currentAlgorithm);
+            // Use SRSScheduler with current algorithm preference
+            result = SRSScheduler.calculate(card, rating, currentAlgorithm);
+        }
 
         // NEW: If interval was >= 14 days and user succeeded, promote to Mastered in VocabBook
         if (quality >= 3 && currentData.interval >= 14) {
@@ -1557,16 +1744,7 @@ const SRSReview = (function () {
      * @returns {object} - Previews for each rating
      */
     function getIntervalPreviews(currentData) {
-        const card = {
-            state: currentData.state || CARD_STATE.NEW,
-            interval: currentData.interval || 0,
-            easeFactor: currentData.easeFactor || 2.5,
-            repetitions: currentData.repetitions || 0,
-            stepIndex: currentData.stepIndex || 0,
-            lastReviewDate: currentData.lastReviewDate,
-            fsrs: currentData.fsrs || null
-        };
-
+        const card = getReviewCardForAlgorithm(currentData, currentAlgorithm);
         return SRSScheduler.getIntervalPreviews(card, currentAlgorithm);
     }
 
@@ -1605,17 +1783,30 @@ const SRSReview = (function () {
 
         // FIX: Close vocab panel and list modal to prevent layering issues
         const vocabPanelSide = document.getElementById('vocab-panel-side');
-        if (vocabPanelSide) vocabPanelSide.classList.remove('open');
+        if (vocabPanelSide) vocabPanelSide.classList.remove('expanded');
 
-        const listModal = document.querySelector('.vocab-list-modal-overlay');
-        if (listModal) listModal.style.display = 'none';
+        const listModal = document.getElementById('vocab-list-modal');
+        if (listModal) {
+            listModal.classList.remove('active');
+            listModal.style.display = 'none';
+        }
+
+        if (window.VocabularyBook && typeof window.VocabularyBook.hideAddModal === 'function') {
+            window.VocabularyBook.hideAddModal();
+        } else {
+            const addModal = document.getElementById('vocab-add-modal');
+            if (addModal) {
+                addModal.classList.remove('active');
+                addModal.style.display = 'none';
+            }
+        }
 
         const dueWords = getWordsDueForReview();
         const allWords = getAllWordsForReview();
 
         // No words in SRS at all
         if (allWords.length === 0) {
-            showCustomAlert('No words in your vocabulary! Bookmark some words first to start reviewing.');
+            showCustomAlert('No review items yet. Add something to your Vocabulary Book first.');
             return;
         }
 
@@ -1653,7 +1844,8 @@ const SRSReview = (function () {
             currentIndex: 0,
             sessionResults: [],
             startTime: new Date(),
-            isEarlyReview: dueWords.length === 0
+            isEarlyReview: dueWords.length === 0,
+            pendingWritingChallenges: []
         };
 
         // Reset daily count if new day
@@ -1662,6 +1854,7 @@ const SRSReview = (function () {
         // Show review panel
         showReviewPanel();
         showCurrentWord();
+        refreshEntrySurfaces('review-start');
 
         // Trigger Tutorial if not seen
         if (window.SRSOnboarding && !window.SRSOnboarding.hasSeenTutorial()) {
@@ -1708,7 +1901,7 @@ const SRSReview = (function () {
             <h3 style="color: #f1f5f9; margin: 0 0 16px 0; font-size: 1.25rem;">⏰ Not Scheduled Yet</h3>
             <p style="color: #94a3b8; margin: 0 0 24px 0; line-height: 1.5;">
                 This is not your scheduled review time.<br>
-                You have <strong style="color: #f1f5f9;">${allWords.length}</strong> word${allWords.length !== 1 ? 's' : ''} to review early.
+                You have <strong style="color: #f1f5f9;">${allWords.length}</strong> item${allWords.length !== 1 ? 's' : ''} to review early.
             </p>
             <p style="color: #64748b; font-size: 0.9rem; margin: 0 0 24px 0;">
                 Continue anyway?
@@ -1823,6 +2016,8 @@ const SRSReview = (function () {
      * Close the review panel
      */
     function closeReviewPanel() {
+        closeWritingChallenge();
+
         // Restore background scroll
         document.body.style.overflow = '';
 
@@ -1847,6 +2042,7 @@ const SRSReview = (function () {
         if (elements.qualityBtns) elements.qualityBtns.style.display = 'none';
         if (elements.srsResultContainer) elements.srsResultContainer.style.display = 'none';
         if (elements.flashcard) elements.flashcard.classList.remove('flipped');
+        reviewSession.currentRatingOutcomes = null;
 
         // If session was active, show incomplete warning
         if (reviewSession.active && reviewSession.currentIndex < reviewSession.wordsToReview.length) {
@@ -1854,6 +2050,7 @@ const SRSReview = (function () {
         }
 
         reviewSession.active = false;
+        refreshEntrySurfaces('review-close');
     }
 
     /**
@@ -2012,6 +2209,7 @@ const SRSReview = (function () {
                 const isCodeOrSymbol =
                     rawPos.includes('code') ||
                     rawPos.includes('symbol') ||
+                    rawPos === 'phrase' ||
                     rawPos.length > 15 ||
                     rawDef.includes('iso 639');
 
@@ -2066,8 +2264,16 @@ const SRSReview = (function () {
         }
 
         // Identify valid modes
-        const validModes = ['listen', 'speak'];
-        if (canDoCloze) validModes.push('cloze');
+        const configuredModes = Array.isArray(currentWord.allowedModes) && currentWord.allowedModes.length > 0
+            ? currentWord.allowedModes
+            : ['listen', 'speak', ...(canDoCloze ? ['cloze'] : [])];
+        const validModes = configuredModes.filter((mode) => {
+            if (mode === 'cloze') return canDoCloze;
+            return mode === 'listen' || mode === 'speak';
+        });
+        if (validModes.length === 0) {
+            validModes.push('listen', 'speak');
+        }
 
         // Calculate total weight for VALID modes only
         let totalWeight = 0;
@@ -2268,8 +2474,13 @@ const SRSReview = (function () {
             } finally {
                 // Update interval preview labels on rating buttons (always do this)
                 try {
-                    const previews = getIntervalPreviews(currentWord);
-                    updateIntervalLabels(previews);
+                    const outcomes = getCurrentRatingOutcomes(currentWord);
+                    updateIntervalLabels({
+                        again: outcomes.again?.label,
+                        hard: outcomes.hard?.label,
+                        good: outcomes.good?.label,
+                        easy: outcomes.easy?.label
+                    });
                 } catch (e) {
                     log.warn('Could not update interval labels:', e);
                 }
@@ -2288,22 +2499,13 @@ const SRSReview = (function () {
 
         if (elements.showAnswerBtn) elements.showAnswerBtn.style.display = 'none';
 
-        // Toggle between Auto-Assign mode and Manual mode
         const autoContinueBtn = document.getElementById('srs-auto-continue-btn');
         const qualityOptions = document.querySelector('.srs-quality-options');
         const qualityPrompt = document.querySelector('.srs-quality-prompt');
 
-        if (reviewSession.autoAssignMode) {
-            // Auto-Assign Mode: Show continue button, hide quality options
-            if (autoContinueBtn) autoContinueBtn.style.display = 'flex';
-            if (qualityOptions) qualityOptions.style.display = 'none';
-            if (qualityPrompt) qualityPrompt.textContent = 'Answer recorded!';
-        } else {
-            // Manual Mode: Show quality options, hide continue button
-            if (autoContinueBtn) autoContinueBtn.style.display = 'none';
-            if (qualityOptions) qualityOptions.style.display = 'grid';
-            if (qualityPrompt) qualityPrompt.textContent = 'How well did you remember?';
-        }
+        if (autoContinueBtn) autoContinueBtn.style.display = 'none';
+        if (qualityOptions) qualityOptions.style.display = 'grid';
+        if (qualityPrompt) qualityPrompt.textContent = 'How well did you remember?';
 
         // Fix: Use CSS class for visibility animation
         if (elements.qualityBtns) {
@@ -2381,13 +2583,15 @@ const SRSReview = (function () {
         // Difficulty Integration: Record Attempt
         if (srsPerformanceTracker) {
             // Estimate time (simple diff from last check or card show?)
-            // For now, pass 0 or track it properly. 
-            // We can use a simplified tracking here since SRS is item-based.
+            const startMs = reviewSession.startTime ? new Date(reviewSession.startTime).getTime() : Date.now();
+            const timeTaken = Math.max(2, (Date.now() - startMs) / 1000);
             srsPerformanceTracker.recordAttempt({
                 correct: isCorrect,
+                accuracy: isCorrect ? 1 : 0,
                 attempts: 1,
                 hintUsed: false,
-                timeTaken: 5 // Placeholder or implement timer
+                timeTaken,
+                wordCount: 1
             });
         }
 
@@ -2586,146 +2790,170 @@ const SRSReview = (function () {
         }, 1200);
     }
 
+    function closeWritingChallenge(reason = 'dismiss') {
+        if (!elements.srsWritingModal || !elements.srsWritingModal.classList.contains('visible')) {
+            return;
+        }
+        if (writingChallenge && typeof writingChallenge.close === 'function') {
+            writingChallenge.close({ reason });
+        }
+    }
+
+    function setActiveWritingChallengeContext(context) {
+        activeWritingChallengeContext = context ? { ...context } : null;
+        return activeWritingChallengeContext;
+    }
+
+    function patchActiveWritingChallengeContext(contextId, partial) {
+        if (!activeWritingChallengeContext || activeWritingChallengeContext.contextId !== contextId) {
+            return null;
+        }
+        activeWritingChallengeContext = {
+            ...activeWritingChallengeContext,
+            ...partial,
+            wordObj: partial?.wordObj
+                ? { ...partial.wordObj }
+                : { ...(activeWritingChallengeContext.wordObj || {}) }
+        };
+        return activeWritingChallengeContext;
+    }
+
+    function getActiveWritingChallengeContext() {
+        return activeWritingChallengeContext ? {
+            ...activeWritingChallengeContext,
+            wordObj: { ...(activeWritingChallengeContext.wordObj || {}) }
+        } : null;
+    }
+
+    function clearActiveWritingChallengeContext(contextId) {
+        if (!activeWritingChallengeContext) return;
+        if (!contextId || activeWritingChallengeContext.contextId === contextId) {
+            activeWritingChallengeContext = null;
+        }
+    }
+
+    function queueWritingChallenge(wordObj, triggerReason = '') {
+        const queuedItem = createQueuedWritingChallengeItem(wordObj, triggerReason);
+        if (!queuedItem) return;
+        if (!Array.isArray(reviewSession.pendingWritingChallenges)) {
+            reviewSession.pendingWritingChallenges = [];
+        }
+        const exists = reviewSession.pendingWritingChallenges.some((entry) => entry.wordKey === queuedItem.wordKey);
+        if (exists) return;
+        reviewSession.pendingWritingChallenges.push(queuedItem);
+    }
+
+    function getPendingWritingChallengeCount() {
+        return getPendingWritingChallengeCountFromQueue(reviewSession.pendingWritingChallenges);
+    }
+
+    function getNextPendingWritingChallenge() {
+        return getNextPendingWritingChallengeFromQueue(reviewSession.pendingWritingChallenges);
+    }
+
+    function consumePendingWritingChallenge(reason) {
+        reviewSession.pendingWritingChallenges = consumePendingWritingChallenges(
+            reviewSession.pendingWritingChallenges,
+            reason
+        );
+        return getNextPendingWritingChallenge();
+    }
+
+    function renderWritingChallengeSummaryControls() {
+        if (!elements.srsSummary) return;
+
+        const controls = document.getElementById('srs-writing-summary-controls');
+        if (!controls) return;
+
+        const summaryState = getWritingChallengeSummaryState(reviewSession.pendingWritingChallenges);
+        elements.srsSummary.dataset.pendingWritingCount = String(summaryState.count);
+
+        if (!summaryState.showButton) {
+            controls.innerHTML = '';
+            controls.style.display = 'none';
+            return;
+        }
+
+        controls.style.display = 'flex';
+        controls.innerHTML = `
+            ${summaryState.showStatus
+                ? `<div id="srs-writing-summary-status" class="srs-writing-summary-status">${summaryState.text}</div>`
+                : ''}
+            <button id="srs-writing-summary-btn" class="srs-done-btn srs-writing-summary-btn">Try Writing Challenge</button>
+        `;
+
+        const writingBtn = document.getElementById('srs-writing-summary-btn');
+        if (writingBtn) {
+            writingBtn.addEventListener('click', launchQueuedWritingChallengeFromSummary);
+        }
+    }
+
+    function handleWritingChallengeSummaryExit(reason) {
+        if (reason === 'skip' || reason === 'auto-complete' || reason === 'complete') {
+            consumePendingWritingChallenge(reason);
+        }
+        renderWritingChallengeSummaryControls();
+    }
+
+    function launchQueuedWritingChallengeFromSummary() {
+        const nextChallenge = getNextPendingWritingChallenge();
+        if (!nextChallenge) {
+            renderWritingChallengeSummaryControls();
+            return;
+        }
+
+        const writingBtn = document.getElementById('srs-writing-summary-btn');
+        if (writingBtn) {
+            writingBtn.disabled = true;
+        }
+
+        showWritingChallenge(nextChallenge, (reason) => {
+            handleWritingChallengeSummaryExit(reason);
+        }, 'summary_' + Date.now());
+    }
+
+    function advanceReviewAfterFeedback(delay = 0) {
+        setTimeout(() => {
+            reviewSession.lastAnswerCorrect = false;
+            reviewSession.currentIndex++;
+            showCurrentWord();
+        }, delay);
+    }
+
     /**
      * Decide whether to trigger the Writing Challenge for a word.
      * Used by both Auto-Assign and manual quality rating flows.
      */
-    function getWritingChallengeTriggerDecision(currentWord, wasCorrect) {
-        const decision = {
-            shouldTrigger: false,
-            wasCorrect: wasCorrect === true,
-            currentPOS: '',
-            isAllowedPOS: false,
-            shouldSkipWord: false
-        };
+    function getWritingChallengeTriggerDecision(currentWord, wasCorrect, options = {}) {
+        let normalizedWord = currentWord;
 
-        if (!wasCorrect || !currentWord) return decision;
-
-        // Only show Writing Challenge for nouns, verbs, adjectives, adverbs
-        const ALLOWED_POS = ['noun', 'verb', 'adjective', 'adverb', 'n', 'v', 'adj', 'adv'];
-
-        // Try multiple sources for POS: partOfSpeech, pos, or detect via dictionary service
-        let currentPOS = String(currentWord.partOfSpeech || currentWord.pos || '').toLowerCase();
-
-        // If POS is still unknown, use DictionaryService
-        if ((!currentPOS || currentPOS === 'unknown') && window.DictionaryService && typeof window.DictionaryService.detectPartOfSpeech === 'function') {
+        if (normalizedWord && (!normalizedWord.partOfSpeech || normalizedWord.partOfSpeech === 'unknown') && window.DictionaryService && typeof window.DictionaryService.detectPartOfSpeech === 'function') {
             try {
-                const detected = window.DictionaryService.detectPartOfSpeech(
-                    currentWord.originalWord || currentWord.lemma,
-                    currentWord.sentence || currentWord.example || ''
-                );
-                currentPOS = String(detected || '').toLowerCase();
+                normalizedWord = {
+                    ...normalizedWord,
+                    partOfSpeech: window.DictionaryService.detectPartOfSpeech(
+                        normalizedWord.originalWord || normalizedWord.lemma,
+                        normalizedWord.sentence || normalizedWord.example || ''
+                    ) || normalizedWord.partOfSpeech
+                };
             } catch (e) {
-                // Ignore POS detection errors and continue with existing value.
+                normalizedWord = currentWord;
             }
         }
 
-        const isAllowedPOS = ALLOWED_POS.some(pos => currentPOS.includes(pos));
-
-        // Words to skip for Writing Challenge (too common/simple for meaningful practice)
-        const SKIP_WRITING_CHALLENGE_WORDS = ['be', 'a', 'an', 'the', 'is', 'are', 'was', 'were'];
-        const wordLemma = String(currentWord.lemma || currentWord.originalWord || '').toLowerCase().trim();
-        const shouldSkip = SKIP_WRITING_CHALLENGE_WORDS.includes(wordLemma);
-
-        decision.currentPOS = currentPOS;
-        decision.isAllowedPOS = isAllowedPOS;
-        decision.shouldSkipWord = shouldSkip;
-        decision.shouldTrigger = wasCorrect && isAllowedPOS && !shouldSkip;
-
-        return decision;
+        return getWritingChallengeDecision({
+            currentWord: normalizedWord,
+            wasCorrect,
+            becameMastered: options.becameMastered === true
+        });
     }
 
     /**
-     * Record review result using Auto-Assign mode
-     * Uses answer correctness to automatically determine next interval
+     * Auto-assign scheduling is disabled in this phase.
+     * Keep the symbol around to avoid breaking any stale handlers, but do nothing.
      */
     async function recordAutoReview() {
-        const currentWord = reviewSession.wordsToReview[reviewSession.currentIndex];
-        const lemma = currentWord.lemma;
-        const wasCorrect = reviewSession.lastAnswerCorrect === true;
-
-        log.debug('[SRS Auto] Recording auto-review for:', lemma, 'wasCorrect:', wasCorrect);
-
-        // Calculate new SRS values using Auto-Assign algorithm
-        const currentData = srsCache.srsData[lemma] || currentWord;
-        const newData = calculateAutoInterval(wasCorrect, currentData);
-
-        // Show Feedback Toast
-        showFeedbackToast(newData.interval);
-
-        // Update cached data
-        srsCache.srsData[lemma] = {
-            ...srsCache.srsData[lemma],
-            ...newData,
-            originalWord: currentWord.originalWord || currentWord.lemma
-        };
-
-        // Track session result
-        reviewSession.sessionResults.push({
-            lemma,
-            quality: wasCorrect ? 4 : 1, // Map to quality for stats
-            wasCorrect: wasCorrect
-        });
-
-        // Check if word is now mastered
-        if (newData.status === 'mastered') {
-            log.debug('[SRS Auto] Word mastered:', lemma);
-            srsCache.masteredWords.push({
-                lemma,
-                masteredAt: new Date().toISOString(),
-                totalReviews: newData.repetitions
-            });
-
-            // Promote in VocabBook if applicable
-            if (window.VocabularyBook && typeof window.VocabularyBook.promoteToMastered === 'function') {
-                window.VocabularyBook.promoteToMastered(lemma);
-            }
-
-            await awardPoints(POINTS_WORD_MASTERED, 'word_mastered');
-        }
-
-        // Update stats
-        srsCache.reviewStats.totalReviews++;
-        srsCache.reviewStats.reviewsToday++;
-        if (wasCorrect) {
-            srsCache.reviewStats.totalCorrect = (srsCache.reviewStats.totalCorrect || 0) + 1;
-        }
-        srsCache.reviewStats.lastReviewSession = new Date().toISOString();
-
-        // Track last quality for awardPoints (Map wasCorrect to quality 4 or 1)
-        reviewSession.lastQuality = wasCorrect ? 4 : 1;
-
-        await awardPoints(POINTS_PER_REVIEW, 'srs_review');
-        // FIX: Removed duplicate awardPoints call
-
-        // Save to Firestore (Per-card for Zero Trust + Debounced summary)
-        await saveCardSRS(lemma, srsCache.srsData[lemma]);
-        debouncedSave();
-        updateDashboardSummary(); // Update dashboard "Next review" info
-
-        // Reset flip animation
-        if (elements.flashcard) {
-            elements.flashcard.classList.remove('flipped');
-        }
-
-        // Trigger Writing Challenge in auto mode using the same gating logic as manual mode.
-        const wcDecision = getWritingChallengeTriggerDecision(currentWord, wasCorrect);
-        log.debug('[SRS Auto] Writing Challenge decision:', wcDecision);
-
-        if (wcDecision.shouldTrigger) {
-            setTimeout(() => {
-                showWritingChallenge(currentWord, () => {
-                    reviewSession.lastAnswerCorrect = false;
-                    reviewSession.currentIndex++;
-                    showCurrentWord();
-                }, 'review_' + Date.now());
-            }, 300);
-        } else {
-            // Move to next word immediately if wrong or not eligible
-            reviewSession.lastAnswerCorrect = false;
-            reviewSession.currentIndex++;
-            showCurrentWord();
-        }
+        log.warn('[SRS] Auto-assign review is disabled.');
     }
 
     /**
@@ -2759,7 +2987,8 @@ const SRSReview = (function () {
         reviewSession.lastQuality = quality;
 
         // Check if word is now mastered
-        if (newData.status === 'mastered') {
+        const becameMastered = isMasteredCard(newData);
+        if (becameMastered) {
             log.debug('Word mastered:', lemma);
             srsCache.masteredWords.push({
                 lemma,
@@ -2782,6 +3011,7 @@ const SRSReview = (function () {
         // Save to Firestore (Per-card for Zero Trust + Debounced summary)
         await saveCardSRS(lemma, srsCache.srsData[lemma]);
         debouncedSave();
+        refreshEntrySurfaces('review-progress');
 
         // Reset flip animation
         if (elements.flashcard) {
@@ -2792,34 +3022,19 @@ const SRSReview = (function () {
         // Trigger if:
         // 1. User typed correctly (lastAnswerCorrect === true)
         // 2. OR User self-rated as Good (3), Easy (4), or Perfect (5)
-        const isSelfRatedCorrect = typeof quality === 'number' && quality >= 3;
-        const wasCorrect = reviewSession.lastAnswerCorrect === true || isSelfRatedCorrect;
+        const wasCorrect = reviewSession.lastAnswerCorrect === true;
 
-        const wcDecision = getWritingChallengeTriggerDecision(currentWord, wasCorrect);
+        const wcDecision = getWritingChallengeTriggerDecision(currentWord, wasCorrect, { becameMastered });
 
         log.debug('[SRS DEBUG] recordReviewResult - wasCorrect:', wasCorrect, 'reviewSession.lastAnswerCorrect:', reviewSession.lastAnswerCorrect);
-        log.debug('[SRS DEBUG] recordReviewResult - currentPOS:', wcDecision.currentPOS, 'isAllowedPOS:', wcDecision.isAllowedPOS);
         log.debug('[SRS DEBUG] recordReviewResult - Will trigger Writing Challenge?', wcDecision.shouldTrigger);
 
         if (wcDecision.shouldTrigger) {
-            setTimeout(() => {
-                showWritingChallenge(currentWord, () => {
-                    // Callback after challenge
-                    reviewSession.lastAnswerCorrect = false;
-                    reviewSession.currentIndex++;
-                    showCurrentWord();
-                }, 'review_' + Date.now());
-            }, 300);
-        } else {
-            // Incorrect answer, no answer check, or non-content word: Move to next word directly
-            // ERROR FIX: Wait for card to flip halfway (300ms) before updating content
-            // to prevent "flashing" the new answer on the back of the card.
-            setTimeout(() => {
-                reviewSession.lastAnswerCorrect = false;
-                reviewSession.currentIndex++;
-                showCurrentWord();
-            }, 350);
+            queueWritingChallenge(currentWord, wcDecision.reason);
         }
+
+        // Wait for card to flip halfway before updating content.
+        advanceReviewAfterFeedback(350);
     }
 
     /**
@@ -2856,6 +3071,7 @@ const SRSReview = (function () {
 
         if (elements.srsSummary) {
             elements.srsSummary.style.display = 'block';
+            elements.srsSummary.dataset.pendingWritingCount = String(getPendingWritingChallengeCount());
             elements.srsSummary.innerHTML = `
                 <div class="srs-summary-content">
                     <h3>🎉 Session Complete!</h3>
@@ -2879,8 +3095,9 @@ const SRSReview = (function () {
                     </div>
                     ${dueRemaining === 0
                     ? '<div class="srs-all-done">✅ All reviews complete for today!</div>'
-                    : `<div class="srs-remaining">${dueRemaining} more words due</div>`
+                    : `<div class="srs-remaining">${dueRemaining} more items due</div>`
                 }
+                    <div id="srs-writing-summary-controls" class="srs-writing-summary-controls"></div>
                     <button id="srs-done-btn" class="srs-done-btn">Done</button>
                 </div>
             `;
@@ -2893,6 +3110,8 @@ const SRSReview = (function () {
             if (doneBtn) {
                 doneBtn.addEventListener('click', closeReviewPanel);
             }
+
+            renderWritingChallengeSummaryControls();
         }
 
         reviewSession.active = false;
@@ -2918,10 +3137,13 @@ const SRSReview = (function () {
      * Update stats display in header
      */
     function updateStatsDisplay() {
-        const dueCount = getWordsDueForReview().length;
+        const state = getEntryState();
+        const dueCount = state.dueCount;
 
         if (elements.srsDueCount) {
-            elements.srsDueCount.textContent = `${dueCount} word${dueCount !== 1 ? 's' : ''} due`;
+            elements.srsDueCount.textContent = state.sessionActive && state.isEarlyReview
+                ? 'Early review'
+                : `${dueCount} item${dueCount !== 1 ? 's' : ''} due`;
         }
         if (elements.srsStreak && srsCache.reviewStats.streak > 0) {
             elements.srsStreak.textContent = `🔥 ${srsCache.reviewStats.streak} day streak`;
@@ -2939,6 +3161,18 @@ const SRSReview = (function () {
         if (!currentWord) return;
 
         const word = currentWord.originalWord || currentWord.lemma;
+        if (currentWord.entryType === 'phrase' && currentWord.phraseAudioKey) {
+            const audio = new Audio(`database/collo-dictate/audio/${currentWord.phraseAudioKey}.wav`);
+            audio.play().catch(() => {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(word);
+                    utterance.lang = 'en-US';
+                    window.speechSynthesis.speak(utterance);
+                }
+            });
+            return;
+        }
 
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
@@ -3064,6 +3298,12 @@ const SRSReview = (function () {
         if (!currentUserId || !db) return;
 
         try {
+            if (window.__SRS_TEST_HOOKS__?.srs?.disableAwardPoints === true) {
+                if (typeof srsCache.totalPoints === 'undefined') srsCache.totalPoints = 0;
+                srsCache.totalPoints += points;
+                updateGamificationUI();
+                return;
+            }
             // Use Dual-Track Scoring for SRS Reviews if available
             if (reason === 'srs_review' && window.handleDualTrackScoring) {
                 const currentWord = reviewSession.wordsToReview?.[reviewSession.currentIndex] || null;
@@ -3107,7 +3347,8 @@ const SRSReview = (function () {
      * Bonus = Consistency^0.7 * Retention^1.3 (Max 5.0)
      */
     async function updateSRSBonus() {
-        if (!currentUserId || !firestoreFunctions) return;
+        if (!currentUserId || typeof firestoreFunctions === 'undefined' || !firestoreFunctions) return;
+        if (window.__SRS_TEST_HOOKS__?.srs?.disableAwardPoints === true) return;
 
         const streak = srsCache.reviewStats.streak || 0;
         const total = srsCache.reviewStats.totalReviews || 1;
@@ -3150,6 +3391,79 @@ const SRSReview = (function () {
         return getWordsDueForReview().length;
     }
 
+    function launchReviewFromDashboard() {
+        const vocabPanelSide = document.getElementById('vocab-panel-side');
+        if (vocabPanelSide) vocabPanelSide.classList.remove('expanded');
+
+        const listModal = document.getElementById('vocab-list-modal');
+        if (listModal) {
+            listModal.classList.remove('active');
+            listModal.style.display = 'none';
+        }
+
+        if (window.VocabularyBook && typeof window.VocabularyBook.hideAddModal === 'function') {
+            window.VocabularyBook.hideAddModal();
+        } else {
+            const addModal = document.getElementById('vocab-add-modal');
+            if (addModal) {
+                addModal.classList.remove('active');
+                addModal.style.display = 'none';
+            }
+        }
+
+        if (typeof window.toggleDashboardPanel === 'function') {
+            window.toggleDashboardPanel('panel-srs');
+        }
+
+        const panel = document.getElementById('panel-srs');
+        const card = document.querySelector('.srs-card-modern');
+
+        if (panel && typeof panel.scrollIntoView === 'function') {
+            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (card && typeof card.scrollIntoView === 'function') {
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        if (card && typeof card.focus === 'function') {
+            card.focus({ preventScroll: true });
+        }
+    }
+
+    async function unenrollWord(lemma) {
+        if (!lemma) return false;
+
+        if (!srsCache.srsData[lemma]) return false;
+
+        delete srsCache.srsData[lemma];
+        if (Array.isArray(srsCache.masteredWords)) {
+            srsCache.masteredWords = srsCache.masteredWords.filter(word => word?.lemma !== lemma);
+        }
+        if (Array.isArray(reviewSession.wordsToReview) && reviewSession.wordsToReview.length > 0) {
+            const removedIndex = reviewSession.wordsToReview.findIndex(word => word?.lemma === lemma);
+            if (removedIndex !== -1) {
+                reviewSession.wordsToReview.splice(removedIndex, 1);
+                if (removedIndex <= reviewSession.currentIndex && reviewSession.currentIndex > 0) {
+                    reviewSession.currentIndex -= 1;
+                }
+            }
+        }
+
+        try {
+            if (isGuestSession()) {
+                saveGuestSRSData();
+            } else if (currentUserId && db) {
+                const safeId = lemma.replace(/\//g, '_');
+                await deleteDoc(doc(db, 'users', currentUserId, 'srs_cards', safeId));
+                await saveSRSSummary();
+            }
+        } catch (e) {
+            log.warn('Failed to unenroll SRS card:', e);
+        }
+
+        refreshEntrySurfaces('unenroll-word');
+        return true;
+    }
+
     /**
      * Get human-readable next review info for a word
      * @param {string} lemma - The lemmatized word
@@ -3160,7 +3474,7 @@ const SRSReview = (function () {
             return { dueNow: false, daysUntil: null, dateString: 'Not scheduled', timeString: '', fullText: 'Not in SRS' };
         }
 
-        const wordData = srsCache.srsData[lemma];
+        const wordData = normalizeStoredCard(lemma, srsCache.srsData[lemma]);
         const nextReviewDate = new Date(wordData.nextReviewDate);
         const now = new Date();
 
@@ -3219,11 +3533,50 @@ const SRSReview = (function () {
     }
 
     /**
+     * Shared state for review-entry surfaces
+     */
+    function getEntryState() {
+        const dueCount = getWordsDueForReview().length;
+        const totalWords = getAllWordsForReview().length;
+        const sessionActive = reviewSession.active === true;
+        const isEarlyReview = sessionActive && reviewSession.isEarlyReview === true;
+        const hasCards = totalWords > 0;
+        const entryLabel = !hasCards
+            ? 'No review items yet'
+            : sessionActive && isEarlyReview
+                ? 'Early review in progress'
+                : dueCount > 0
+                    ? `${dueCount} items due now`
+                    : 'All caught up';
+
+        return {
+            dueCount,
+            totalWords,
+            hasCards,
+            hasDue: dueCount > 0,
+            sessionActive,
+            isEarlyReview,
+            entryLabel
+        };
+    }
+
+    function refreshEntrySurfaces(reason = 'manual') {
+        log.debug(`Refreshing entry surfaces (${reason})`);
+        updateDashboardUI();
+        updateDashboardSummary();
+        renderScheduleTable();
+        if (window.VocabularyBook && typeof window.VocabularyBook.updateSRSDueBadge === 'function') {
+            window.VocabularyBook.updateSRSDueBadge();
+        }
+    }
+
+    /**
      * Update Dashboard UI (Next Review Date & Due Badge)
      */
     function updateDashboardUI() {
         // 1. Update Due Badge
-        const dueCount = getDueCount();
+        const entryState = getEntryState();
+        const dueCount = entryState.dueCount;
         const badge = document.getElementById('srs-due-badge');
         if (badge) {
             badge.textContent = dueCount;
@@ -3235,6 +3588,12 @@ const SRSReview = (function () {
         const nextReviewContainer = document.getElementById('srs-next-review-info');
 
         if (nextReviewEl) {
+            if (entryState.sessionActive && entryState.isEarlyReview) {
+                nextReviewEl.textContent = 'Early review';
+                if (nextReviewContainer) nextReviewContainer.style.display = 'block';
+                return;
+            }
+
             if (dueCount > 0) {
                 nextReviewEl.textContent = 'Now!';
                 if (nextReviewContainer) nextReviewContainer.style.display = 'block';
@@ -3284,12 +3643,13 @@ const SRSReview = (function () {
         if (!lemma) return null;
 
         // Check if mastered
-        if (srsCache.masteredWords.includes(lemma)) {
-            return { status: 'mastered' };
+        if (isLemmaMastered(lemma)) {
+            return { lemma, state: CARD_STATE.MASTERED, status: 'mastered' };
         }
 
         // Return SRS data if exists
-        return srsCache.srsData[lemma] || null;
+        const card = srsCache.srsData[lemma];
+        return card ? normalizeStoredCard(lemma, card) : null;
     }
 
     /**
@@ -3418,10 +3778,19 @@ const SRSReview = (function () {
     const tatoebaCache = new Map();
     let scaffoldingLoadedForWord = null;
 
-    function getCurrentScaffoldingWord() {
-        const current = reviewSession.wordsToReview?.[reviewSession.currentIndex] || null;
-        const word = current?.lemma || current?.originalWord || '';
-        return String(word || '').trim();
+    function getCurrentWritingChallengeContext() {
+        return getActiveWritingChallengeContext();
+    }
+
+    function getScaffoldingCacheKey(context) {
+        return String(
+            context?.usedCollocation
+            || context?.validationTarget
+            || context?.wordKey
+            || context?.wordObj?.lemma
+            || context?.wordObj?.originalWord
+            || ''
+        ).trim().toLowerCase();
     }
 
     function ensureMoreHelpLabelSpan() {
@@ -3512,10 +3881,10 @@ const SRSReview = (function () {
                 setMoreHelpButtonLabel(true);
             }
 
-            const word = getCurrentScaffoldingWord();
-            const key = word ? word.toLowerCase() : '';
-            if (word && scaffoldingLoadedForWord !== key) {
-                const loaded = await loadScaffoldingContent(word);
+            const context = getCurrentWritingChallengeContext();
+            const key = getScaffoldingCacheKey(context);
+            if (context && key && scaffoldingLoadedForWord !== key) {
+                const loaded = await loadScaffoldingContent(context);
                 if (loaded) scaffoldingLoadedForWord = key;
             }
         }
@@ -3524,30 +3893,43 @@ const SRSReview = (function () {
     /**
      * Load scaffolding content (example sentences + Enhanced Scaffolding)
      */
-    async function loadScaffoldingContent(word) {
-        if (!word) return false;
+    async function loadScaffoldingContent(context) {
+        if (!context) return false;
 
-        const sentences = await fetchTatoebaSentences(word);
-        displayExampleSentences(sentences, word);
+        const displayWord = getWritingChallengeValidationTarget(context)
+            || context.wordObj?.originalWord
+            || context.wordObj?.lemma
+            || '';
+        if (!displayWord) return false;
 
-        await displayEnhancedScaffolding(word);
+        const sentences = await fetchWritingChallengeExamples(context);
+        displayExampleSentences(sentences, displayWord);
+
+        await displayEnhancedScaffolding(context);
         return true;
     }
 
     /**
      * Fetch example sentences with fallback
      */
-    async function fetchTatoebaSentences(word) {
-        const currentWord = reviewSession.wordsToReview.find(w =>
-            (w.originalWord || w.lemma).toLowerCase() === word.toLowerCase()
-        ) || reviewSession.wordsToReview[reviewSession.currentIndex];
+    async function fetchWritingChallengeExamples(context) {
+        const wordObj = context?.wordObj || {};
+        const lookupTerms = [
+            getWritingChallengeValidationTarget(context),
+            wordObj.originalWord,
+            wordObj.lemma
+        ]
+            .map((value) => String(value || '').replace(/^phrase:/i, '').trim())
+            .filter(Boolean);
 
-        // 1. Check if word object already has an example
-        if (currentWord && (currentWord.example || currentWord.sentence)) {
-            return [currentWord.example || currentWord.sentence];
+        if (wordObj.example || wordObj.sentence) {
+            return [wordObj.example || wordObj.sentence];
         }
 
-        const cacheKey = word.toLowerCase();
+        const primaryLookup = lookupTerms[0];
+        if (!primaryLookup) return [];
+
+        const cacheKey = primaryLookup.toLowerCase();
         if (tatoebaCache.has(cacheKey)) {
             return tatoebaCache.get(cacheKey);
         }
@@ -3555,31 +3937,26 @@ const SRSReview = (function () {
         try {
             let sentences = [];
 
-            // 2. Try DictionaryService (Tracau.vn) FIRST as requested
-            // This provides high-quality bilingual sentences
             if (window.DictionaryService && window.DictionaryService.getWordData) {
-                try {
-                    const data = await window.DictionaryService.getWordData(word);
-                    // Use Tracau sentences if available
-                    if (data && data.sentences && data.sentences.length > 0) {
-                        // Map to extract just the English sentence if it's an object {en, vi}, or use string
-                        sentences = data.sentences
-                            .filter(s => s && (typeof s === 'string' || s.en)) // Filter invalid entries
-                            .map(s => typeof s === 'string' ? s : s.en);
+                for (const term of lookupTerms) {
+                    try {
+                        const data = await window.DictionaryService.getWordData(term);
+                        if (data && data.sentences && data.sentences.length > 0) {
+                            sentences = data.sentences
+                                .filter(s => s && (typeof s === 'string' || s.en))
+                                .map(s => typeof s === 'string' ? s : s.en);
 
-                        log.debug('Loaded sentences from DictionaryService (Tracau):', sentences.length);
+                            log.debug('Loaded sentences from DictionaryService (Tracau):', sentences.length);
+                            if (sentences.length > 0) break;
+                        }
+                    } catch (e) {
+                        log.warn('DictionaryService sentence fetch failed:', e);
                     }
-                } catch (e) {
-                    log.warn('DictionaryService sentence fetch failed:', e);
-                    // Continue to fallbacks
                 }
             }
 
-            // 3. Fallback to Backend Tatoeba Proxy if needed
             if (sentences.length === 0) {
-                // Use local proxy to avoid CORS
                 try {
-                    // Create a timeout promise (2000ms = 2s)
                     const fetchWithTimeout = (url, ms = 2000) => {
                         return new Promise((resolve, reject) => {
                             const timer = setTimeout(() => reject(new Error('Timeout')), ms);
@@ -3593,7 +3970,7 @@ const SRSReview = (function () {
                         });
                     };
 
-                    const response = await fetchWithTimeout(`/api/tatoeba?word=${encodeURIComponent(word)}`);
+                    const response = await fetchWithTimeout(`/api/tatoeba?word=${encodeURIComponent(primaryLookup)}`);
                     if (response.ok) {
                         const data = await response.json();
                         if (data.sentences && data.sentences.length > 0) {
@@ -3602,21 +3979,22 @@ const SRSReview = (function () {
                     }
                 } catch (backendErr) {
                     log.warn('Backend sentences fetch failed or timed out:', backendErr);
-                    // Continue to fallbacks immediately
                 }
             }
 
-            // 4. Fallback to DictionaryService definitions
             if (sentences.length === 0 && window.DictionaryService) {
-                const data = await window.DictionaryService.getDefinition(word);
-                if (data && data.meanings) {
-                    for (const m of data.meanings) {
-                        if (m.definitions) {
-                            for (const d of m.definitions) {
-                                if (d.example) sentences.push(d.example);
+                for (const term of lookupTerms) {
+                    const data = await window.DictionaryService.getDefinition(term);
+                    if (data && data.meanings) {
+                        for (const m of data.meanings) {
+                            if (m.definitions) {
+                                for (const d of m.definitions) {
+                                    if (d.example) sentences.push(d.example);
+                                }
                             }
                         }
                     }
+                    if (sentences.length > 0) break;
                 }
             }
 
@@ -3642,8 +4020,13 @@ const SRSReview = (function () {
     /**
     * Display enhanced scaffolding: POS, Synonyms, Example phrases
     */
-    async function displayEnhancedScaffolding(word) {
-        const currentWord = reviewSession.wordsToReview[reviewSession.currentIndex];
+    async function displayEnhancedScaffolding(context) {
+        const currentWord = context?.wordObj || {};
+        const word = getWritingChallengeValidationTarget(context)
+            || currentWord.originalWord
+            || currentWord.lemma
+            || '';
+        if (!word) return;
 
         // 1. Update Compact Header POS (Moved from body to header)
         const posTag = document.getElementById('writing-pos-tag');
@@ -3680,13 +4063,14 @@ const SRSReview = (function () {
         // 2. Synonyms (Only real data, no fake examples)
         if (window.DictionaryService) {
             try {
-                const data = await window.DictionaryService.getDefinition(word);
+                const lookupWord = String(currentWord.originalWord || currentWord.lemma || word).replace(/^phrase:/i, '');
+                const data = await window.DictionaryService.getDefinition(lookupWord);
                 if (data && data.synonyms && data.synonyms.length > 0) {
                     const synonymsHtml = `<div class="scaffold-section"><h4>📚 Synonyms</h4><div class="context-content">${data.synonyms.slice(0, 5).join(', ')}</div></div>`;
                     container.innerHTML = synonymsHtml;
                 }
             } catch (e) {
-                log.warn('Failed to fetch definitions for synonyms:', synonymsHtml, e);
+                log.warn('Failed to fetch definitions for synonyms:', e);
             }
         }
 
@@ -3712,7 +4096,8 @@ const SRSReview = (function () {
     }
 
     function highlightWord(sentence, word) {
-        const regex = new RegExp(`\\b(${word})\\b`, 'gi');
+        const escapedWord = String(word || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`\\b(${escapedWord})\\b`, 'gi');
         return sentence.replace(regex, '<strong class="highlight-word">$1</strong>');
     }
 
@@ -4261,75 +4646,34 @@ const SRSReview = (function () {
     function applyAIScoreToSRS(lemma, score) {
         const item = srsCache.srsData[lemma];
         if (!item) return;
-
-        // Skip adjustment for brand new items (learning step < 1 day) to avoid messing up learning phase
-        if (item.interval < 1 && item.state !== 'mastered') return;
-
-        let modifier = 1.0;
-        let msg = "";
-        let type = "info";
-
-        if (score === 5) {
-            modifier = 1.25; // +25% Boost
-            msg = "Perfect! Interval boosted +25%";
-            type = "success";
-        } else if (score === 4) {
-            modifier = 1.1; // +10% Boost
-            msg = "Good job! Interval boosted +10%";
-            type = "success";
-        } else if (score === 3) {
-            // Neutral / Slight refinement needed
-            return;
-        } else if (score <= 2) {
-            modifier = 0.75; // -25% Penalty
-            msg = "Review context. Interval tightened.";
-            type = "warning";
-        }
-
-        const oldInterval = item.interval;
-        // Apply modifier, ensuring at least 1 day if it was >= 1
-        let newInterval = Math.round(oldInterval * modifier);
-        if (oldInterval >= 1) newInterval = Math.max(1, newInterval);
-
-        if (newInterval !== oldInterval) {
-            log.debug(`[SRS AI] Adjusting ${lemma} interval: ${oldInterval}d -> ${newInterval}d (Score: ${score})`);
-
-            item.interval = newInterval;
-
-            // Recalculate next date based on LAST review date
-            const lastReview = item.lastReviewDate ? new Date(item.lastReviewDate) : new Date();
-            const nextDate = new Date(lastReview);
-            nextDate.setDate(nextDate.getDate() + newInterval);
-
-            item.nextReviewDate = nextDate.toISOString();
-
-            // Persist (Per-card for Zero Trust + Debounced summary)
-            saveCardSRS(lemma, item);
-            debouncedSave();
-
-            // Show Toast
-            if (typeof showToast === 'function') {
-                showToast(msg, type);
-            }
-        }
+        const normalized = normalizeStoredCard(lemma, item);
+        normalized.aiAdvisory = {
+            lastWritingScore: score,
+            lastWritingScoreAt: new Date().toISOString()
+        };
+        srsCache.srsData[lemma] = normalized;
+        saveCardSRS(lemma, normalized);
+        debouncedSave();
     }
 
     /**
      * Legacy Bridge for Writing Challenge
      */
     function showWritingChallenge(wordObj, onComplete, uniqueId) {
-        // Reset scaffolding UI/state per challenge so "More help" loads the correct word.
         resetWritingChallengeScaffolding();
-        reviewSession.currentWritingWord = wordObj?.lemma || wordObj?.originalWord || '';
 
         const resolvedId = (typeof uniqueId === 'string' && uniqueId.length > 0)
             ? uniqueId
             : 'manual_' + Date.now();
+        const queuedItem = wordObj?.challengeId ? wordObj : createQueuedWritingChallengeItem(wordObj);
+        if (!queuedItem) return;
+        setActiveWritingChallengeContext(createActiveWritingChallengeContext(queuedItem, resolvedId));
 
         if (writingChallenge) {
-            writingChallenge.show(wordObj, calculateUserLevel(), resolvedId, onComplete);
+            writingChallenge.show(queuedItem, calculateUserLevel(), resolvedId, onComplete);
         } else {
             console.warn('WritingChallenge module not initialized');
+            clearActiveWritingChallengeContext(resolvedId);
             if (onComplete) onComplete();
         }
     }
@@ -4435,10 +4779,10 @@ const SRSReview = (function () {
      */
     function checkOfflineSync() {
         if (navigator.onLine) {
-            const pending = localStorage.getItem(LOCAL_STORAGE_KEY);
+            const pending = localStorage.getItem(SRS_STORAGE_KEYS.PENDING);
             if (pending) {
                 log.debug('Pending data found, attempt sync...');
-                debouncedSave();
+                scheduleRetry();
             }
         }
     }
@@ -4464,6 +4808,12 @@ const SRSReview = (function () {
         setUser,
         initializeWord,
         getWordsDueForReview,
+        getDueCount,
+        getEntryState,
+        getCurrentReviewSnapshot,
+        refreshEntrySurfaces,
+        unenrollWord,
+        launchReviewFromDashboard,
         startReviewSession,
         getWordData,
         init: initModule,

@@ -1,0 +1,13 @@
+{
+  "runId": "2026-03-27T13-20-33-723Z",
+  "baseUrl": "https://localhost:8443",
+  "startedAt": "2026-03-27T13:20:33.725Z",
+  "finishedAt": "2026-03-27T13:21:27.746Z",
+  "userUid": "8JbhnBHVnkOPJexcJ8lczKSvtu93",
+  "scenarioResults": [],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "cleanupCompleted": false,
+  "staleCleanups": [],
+  "error": "page.waitForFunction: Timeout 30000ms exceeded.\n    at waitForAppReady (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:277:16)\n    at ensureLoggedIn (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:324:11)\n    at async main (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:784:9)"
+}

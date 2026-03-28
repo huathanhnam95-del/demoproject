@@ -10,11 +10,18 @@ export class SyllableDetector {
      * @param {number} expectedCount Hint from IPA parser
      */
     detect(data, expectedCount = null) {
-        if (data.energies.length === 0) return { syllables: [], noiseCount: 0 };
+        const quality = this.assessRateability(data);
+        if (!quality.rateable) {
+            return {
+                syllables: [],
+                noiseCount: 0,
+                quality
+            };
+        }
 
         // IF we have an expected count, use Guided Segmentation (Dictionary-Driven)
         if (expectedCount && expectedCount > 0) {
-            return this.detectWithExpectedCount(data, expectedCount);
+            return this.detectWithExpectedCount(data, expectedCount, quality);
         }
 
         // OTHERWISE, use the previous Peak-Based Detection (Blind)
@@ -39,7 +46,8 @@ export class SyllableDetector {
 
         return {
             syllables: filtered,
-            noiseCount: initialCount - filtered.length
+            noiseCount: initialCount - filtered.length,
+            quality
         };
     }
 
@@ -47,7 +55,16 @@ export class SyllableDetector {
     // STRATEGY A: GUIDED SEGMENTATION (Dictionary Driven)
     // =========================================================================
 
-    detectWithExpectedCount(data, expectedSyllables) {
+    detectWithExpectedCount(data, expectedSyllables, quality = null) {
+        const gate = quality || this.assessRateability(data);
+        if (!gate.rateable) {
+            return {
+                syllables: [],
+                noiseCount: 0,
+                quality: gate
+            };
+        }
+
         const { energies, pitches, times } = data;
 
         // Step 1: Find speech region
@@ -113,8 +130,115 @@ export class SyllableDetector {
         // Let's just return the forced segments.
         return {
             syllables: syllables,
-            noiseCount: 0
+            noiseCount: 0,
+            quality: gate
         };
+    }
+
+    assessRateability(data) {
+        const energies = data?.energies || [];
+        const pitches = data?.pitches || [];
+        const times = data?.times || [];
+
+        const baseMetrics = {
+            peakEnergy: 0,
+            activeSpeechDurationMs: 0,
+            voicedFrameRatio: 0,
+            activeFrameCount: 0
+        };
+
+        if (energies.length === 0 || energies.every(e => !e || e <= 0)) {
+            return this._buildQuality(false, 'no_speech', baseMetrics);
+        }
+
+        const windowSize = energies.length > 500 ? 7 : 5;
+        const smoothedEnergy = this._smoothArray(energies, windowSize);
+        const peakEnergy = Math.max(...smoothedEnergy) || 0;
+
+        if (peakEnergy < 0.012) {
+            return this._buildQuality(false, 'low_energy', {
+                ...baseMetrics,
+                peakEnergy
+            });
+        }
+
+        const activeThreshold = Math.max(peakEnergy * 0.18, 0.006);
+        const activeIndices = smoothedEnergy
+            .map((energy, index) => ({ energy, index }))
+            .filter(item => item.energy > activeThreshold)
+            .map(item => item.index);
+
+        if (activeIndices.length === 0) {
+            return this._buildQuality(false, 'no_speech', {
+                ...baseMetrics,
+                peakEnergy
+            });
+        }
+
+        const firstActive = activeIndices[0];
+        const lastActive = activeIndices[activeIndices.length - 1];
+        const frameDurationMs = this._estimateFrameDurationMs(times);
+        const activeSpeechDurationMs = Math.max(frameDurationMs, (times[lastActive] - times[firstActive] + (frameDurationMs / 1000)) * 1000);
+
+        if (activeSpeechDurationMs < 180) {
+            return this._buildQuality(false, 'too_short', {
+                ...baseMetrics,
+                peakEnergy,
+                activeSpeechDurationMs,
+                activeFrameCount: activeIndices.length
+            });
+        }
+
+        const voicedFrames = activeIndices.filter(index => {
+            const pitch = pitches[index];
+            return typeof pitch === 'number' && pitch >= 70 && pitch <= 400;
+        });
+        const voicedFrameRatio = voicedFrames.length / activeIndices.length;
+
+        if (voicedFrameRatio < 0.22) {
+            return this._buildQuality(false, 'low_voicing', {
+                ...baseMetrics,
+                peakEnergy,
+                activeSpeechDurationMs,
+                voicedFrameRatio,
+                activeFrameCount: activeIndices.length
+            });
+        }
+
+        return this._buildQuality(true, null, {
+            ...baseMetrics,
+            peakEnergy,
+            activeSpeechDurationMs,
+            voicedFrameRatio,
+            activeFrameCount: activeIndices.length
+        });
+    }
+
+    _buildQuality(rateable, reason, metrics) {
+        return {
+            rateable,
+            reason,
+            metrics: {
+                peakEnergy: metrics.peakEnergy || 0,
+                activeSpeechDurationMs: metrics.activeSpeechDurationMs || 0,
+                voicedFrameRatio: metrics.voicedFrameRatio || 0,
+                activeFrameCount: metrics.activeFrameCount || 0
+            }
+        };
+    }
+
+    _estimateFrameDurationMs(times) {
+        if (!Array.isArray(times) || times.length < 2) return 11;
+        const deltas = [];
+        for (let i = 1; i < times.length; i++) {
+            const delta = times[i] - times[i - 1];
+            if (Number.isFinite(delta) && delta > 0) {
+                deltas.push(delta);
+            }
+        }
+        if (deltas.length === 0) return 11;
+        const avgSeconds = deltas.reduce((sum, value) => sum + value, 0) / deltas.length;
+        return Math.max(1, avgSeconds * 1000);
     }
 
     findSpeechRegion(energies, times) {

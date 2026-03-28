@@ -86,6 +86,10 @@ export default class Renderer {
         this._levelupPromptIcon = this._loadIcon(LEVELUP_PROMPT_ICON_PATH);
     }
 
+    random() {
+        return typeof this.game?.random === 'function' ? this.game.random() : Math.random();
+    }
+
     resize(width, height, dpr = 1) {
         this.width = width;
         this.height = height;
@@ -115,11 +119,11 @@ export default class Renderer {
             const nctx = noise.getContext('2d');
             const img = nctx.createImageData(noise.width, noise.height);
             for (let i = 0; i < img.data.length; i += 4) {
-                const v = (Math.random() * 255) | 0;
+                const v = (this.random() * 255) | 0;
                 img.data[i] = v;
                 img.data[i + 1] = v;
                 img.data[i + 2] = v;
-                img.data[i + 3] = (Math.random() * 40) | 0;
+                img.data[i + 3] = (this.random() * 40) | 0;
             }
             nctx.putImageData(img, 0, 0);
             this._noisePattern = this.ctx.createPattern(noise, 'repeat');
@@ -147,11 +151,11 @@ export default class Renderer {
         this._stars = [];
         for (let i = 0; i < count; i++) {
             this._stars.push({
-                x: Math.random() * w,
-                y: Math.random() * h * 0.62,
-                r: Math.random() * 1.2 + 0.3,
-                layer: Math.random() * 0.9 + 0.1,
-                tw: Math.random() * Math.PI * 2
+                x: this.random() * w,
+                y: this.random() * h * 0.62,
+                r: this.random() * 1.2 + 0.3,
+                layer: this.random() * 0.9 + 0.1,
+                tw: this.random() * Math.PI * 2
             });
         }
     }
@@ -183,7 +187,7 @@ export default class Renderer {
         const ctx = this.ctx;
         const width = this.game.width;
         const height = this.game.height;
-        const t = this.game.runTime || (performance.now() / 1000);
+        const t = this.game.runTime || (this.game.now() / 1000);
 
         const shake = this.game.cameraShake || 0;
         ctx.save();

@@ -468,13 +468,13 @@
             }
         ],
 
-        // Difficulty Filter Tutorial (unlocked via Shop) for Type Mode
+        // Question Difficulty Tutorial for Type Mode
         typeDifficultyFilter: [
             {
                 target: null,
                 icon: '🎉',
-                title: 'Feature Unlocked!',
-                text: 'Congratulations! You\'ve unlocked <strong>Filter by Difficulty</strong>! This helps you practice at your preferred CEFR level.',
+                title: 'Question Difficulty',
+                text: 'Use this menu to browse easier or harder questions without changing the engine level.',
                 position: 'center',
                 nextLabel: 'Show Me How →',
                 interactive: false
@@ -483,7 +483,7 @@
                 target: '#difficulty-filter-btn-type',
                 icon: '👆',
                 title: 'Step 1: Click the Button',
-                text: 'Click this teal button to open the difficulty filter menu.',
+                text: 'Click this button to open the question difficulty menu.',
                 position: 'bottom',
                 nextLabel: null,
                 interactive: true,
@@ -513,20 +513,20 @@
                 target: '#question-select-type',
                 icon: '🎯',
                 title: 'Filtered!',
-                text: 'Your question list now shows only easier sentences. You can change this anytime!',
+                text: 'Your question list now reflects the chosen difficulty filter. You can change this anytime!',
                 position: 'bottom',
                 nextLabel: 'Got It! ✓',
                 interactive: false
             }
         ],
 
-        // Difficulty Filter Tutorial (unlocked via Shop) for Speak Mode
+        // Question Difficulty Tutorial for Speak Mode
         speakDifficultyFilter: [
             {
                 target: null,
                 icon: '🎉',
-                title: 'Feature Unlocked!',
-                text: 'Congratulations! You\'ve unlocked <strong>Filter by Difficulty</strong> for Speak mode!',
+                title: 'Question Difficulty',
+                text: 'Use this menu to browse questions by difficulty in Speak mode.',
                 position: 'center',
                 nextLabel: 'Show Me How →',
                 interactive: false
@@ -535,7 +535,7 @@
                 target: '#difficulty-filter-btn-speak',
                 icon: '👆',
                 title: 'Step 1: Click the Button',
-                text: 'Click this teal button to filter questions by difficulty.',
+                text: 'Click this button to open the question difficulty menu.',
                 position: 'bottom',
                 nextLabel: null,
                 interactive: true,
@@ -1141,10 +1141,10 @@
             {
                 target: '#panel-shopping-card',
                 icon: '🛒',
-                title: 'You Earned Coins!',
-                text: 'You have enough coins to unlock a new practice mode! Visit the Shop to unlock it.',
+                title: 'Practice Unlocks Features',
+                text: 'Keep practicing and features will unlock automatically as you progress.',
                 position: 'left',
-                nextLabel: 'Go to Shop',
+                nextLabel: 'Open Roadmap',
                 interactive: true,
                 waitForEvent: 'click'
             }
@@ -1933,47 +1933,10 @@
     window.startTutorial = startTutorial;
 
     /**
-     * Check if user should be nudged to the Shop
-     * Called after earning coins
+     * Compatibility stub for retired shop nudges.
      */
     window.checkShopUnlockCondition = function () {
-        if (!window.shopModule || !window.firebaseFirestoreFunctions) return;
-
-        // Don't show if shop is already open
-        if (document.getElementById('shop-modal')?.classList.contains('active')) return;
-
-        const userId = window.authUI?.getCurrentUserId?.();
-        if (!userId) return;
-
-        // Check coins
-        window.firebaseFirestoreFunctions.getUserProfile(userId).then(result => {
-            if (result.success) {
-                const coins = result.data.coins || 0;
-                const unlocked = result.data.unlockedModes || [];
-
-                // Check if can afford any LOCKED mode
-                // Simple hardcoded check for now based on ShopModule data
-                // Speak: 50, Fill: 100, Watch: 150
-                let canAffordNewMode = false;
-
-                if (!unlocked.includes('speak') && coins >= 50) canAffordNewMode = true;
-                else if (!unlocked.includes('extended') && coins >= 50) canAffordNewMode = true;
-                else if (!unlocked.includes('watch') && coins >= 50) canAffordNewMode = true;
-                else if (!unlocked.includes('notes') && coins >= 50) canAffordNewMode = true;
-                else if (!unlocked.includes('pronounce') && coins >= 50) canAffordNewMode = true;
-
-                if (canAffordNewMode) {
-                    // Check if already seen using localStorage to avoid nagging
-                    const lastSeen = localStorage.getItem('shopNudgeLastSeen');
-                    const now = Date.now();
-                    // Show at most once per hour
-                    if (!lastSeen || (now - parseInt(lastSeen) > 3600000)) {
-                        localStorage.setItem('shopNudgeLastSeen', now);
-                        window.LengthFilterTutorial.start('shopUnlock');
-                    }
-                }
-            }
-        });
+        return;
     };
 
     // Initialize settings on load

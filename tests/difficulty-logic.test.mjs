@@ -45,6 +45,17 @@ function makeProfile(level, scores, assisted = false) {
   assert.deepEqual(result, { newLevel: 2, direction: 'decrease', reason: 'struggle' });
 }
 
+// 2b) Inclusive promotion and demotion thresholds
+{
+  const promoteProfile = makeProfile(2, Array.from({ length: 10 }, () => 0.85));
+  const promoteResult = logic.calculateAdjustment(promoteProfile, 0.85, settingsAuto);
+  assert.deepEqual(promoteResult, { newLevel: 3, direction: 'increase', reason: 'performance' });
+
+  const demoteProfile = makeProfile(3, Array.from({ length: 10 }, () => 0.60));
+  const demoteResult = logic.calculateAdjustment(demoteProfile, 0.60, settingsAuto);
+  assert.deepEqual(demoteResult, { newLevel: 2, direction: 'decrease', reason: 'struggle' });
+}
+
 // 3) No adjustment before grace period
 {
   const profile = makeProfile(2, Array.from({ length: 10 }, () => 0.95));
@@ -68,6 +79,23 @@ function makeProfile(level, scores, assisted = false) {
 
   const calibratedProfile = makeProfile(1, Array.from({ length: 10 }, () => 0.8));
   assert.equal(logic.isCalibrated(calibratedProfile), true, 'Should be true after grace period');
+}
+
+// 6) sanitizeProfile tolerates malformed data
+{
+  const sanitized = logic.sanitizeProfile({
+    level: '99',
+    exp: 'not-a-number',
+    history: [{ score: '0.4', level: '7', assisted: 1, calibMult: '0.5' }],
+    attemptsAtLevel: '12'
+  });
+
+  assert.equal(sanitized.level, 6);
+  assert.equal(sanitized.exp, 0);
+  assert.equal(sanitized.history.length, 1);
+  assert.equal(sanitized.history[0].level, 6);
+  assert.equal(sanitized.history[0].calibMult, 0.5);
+  assert.equal(sanitized.attemptsAtLevel, 12);
 }
 
 console.log('✅ DifficultyLogic tests passed');

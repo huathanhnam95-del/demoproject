@@ -1,8 +1,8 @@
 # Read Aloud Connected Speech Coverage
 
-- Generated at: 2026-03-26T04:30:43.842Z
+- Generated at: 2026-03-27T23:14:15.593Z
 - Index version: 1
-- Source workbook SHA-256: 96ef897123fc162f19689866c81e032e227257cb1c00761761e6502532b2954d
+- Source workbook SHA-256: 7701b5cef9e04bfbec64809cfbb58c96f5c1a3074f6bd2da16b07d27623c0651
 - Audio manifest SHA-256: 4eb89da5c12006edb4b07570e9456a7f1d827f8a2970929291050404e2dde901
 
 ## Totals
@@ -11,24 +11,25 @@
 - Prompts with any connected speech: 1449
 - Prompts with linking: 1449
 - Prompts with reduced words: 1449
-- Prompts with sound changes: 63
+- Prompts with sound changes: 606
 
 ## Sound Change Subtypes
+- n_bilabial_assimilation: 556
 - coalescent_sj: 23
 - coalescent_tj: 21
 - coalescent_dj: 17
 - coalescent_zj: 6
 
 ## Sample Prompts
+- [1005] #1005 Stroke Risk (linking; reduced words; sound changes: n_bilabial_assimilation)
+- [1010] #1010 New Textbook (linking; reduced words; sound changes: n_bilabial_assimilation)
+- [1013] #1013 Humanities (linking; reduced words; sound changes: n_bilabial_assimilation)
+- [1015] #1015 Natural Environment (linking; reduced words; sound changes: n_bilabial_assimilation)
+- [1017] #1017 Expression (linking; reduced words; sound changes: n_bilabial_assimilation)
+- [1019] #1019 Attendance to Theater (linking; reduced words; sound changes: n_bilabial_assimilation)
+- [102] #102 Programming Art (linking; reduced words; sound changes: n_bilabial_assimilation)
 - [1022] #1022 Enough Fluid (linking; reduced words; sound changes: coalescent_tj)
+- [1023] #1023 Attendance (linking; reduced words; sound changes: n_bilabial_assimilation)
 - [1024] #1024 Tutor (linking; reduced words; sound changes: coalescent_sj, coalescent_tj)
-- [104] #104 Thesis (linking; reduced words; sound changes: coalescent_sj)
-- [1139] #1139 Soccer (linking; reduced words; sound changes: coalescent_sj)
-- [1141] #1141 Beach Vacation (linking; reduced words; sound changes: coalescent_zj)
-- [1146] #1146 Great Barrier Reef (linking; reduced words; sound changes: coalescent_dj)
-- [1178] #1178 AI (linking; reduced words; sound changes: coalescent_tj)
-- [1189] #1189 Depression (linking; reduced words; sound changes: coalescent_sj)
-- [1198] #1198 Time Zone (linking; reduced words; sound changes: coalescent_zj)
-- [1211] #1211 Statistics (linking; reduced words; sound changes: coalescent_sj)
-- [1247] #1247 GDP (linking; reduced words; sound changes: coalescent_sj)
-- [1258] #1258 Science of Smiling (linking; reduced words; sound changes: coalescent_dj)
+- [1025] #1025 Rates of Depression (linking; reduced words; sound changes: n_bilabial_assimilation)
+- [103] #103 Disaster (linking; reduced words; sound changes: n_bilabial_assimilation)

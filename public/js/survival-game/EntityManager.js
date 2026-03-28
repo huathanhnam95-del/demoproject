@@ -46,6 +46,10 @@ export default class EntityManager {
         this.spawnSeq = 0;
     }
 
+    random() {
+        return typeof this.game?.random === 'function' ? this.game.random() : Math.random();
+    }
+
     reset() {
         this.player.maxHealth = GameConfig.PLAYER.START_HEALTH;
         this.player.health = this.player.maxHealth;
@@ -473,7 +477,7 @@ export default class EntityManager {
                 const maxWord = Number.isFinite(cfg.MINI_WORD_MAX) ? cfg.MINI_WORD_MAX : 4;
                 const scatter = Number.isFinite(cfg.MINI_SCATTER) ? cfg.MINI_SCATTER : 34;
 
-                let miniCount = Math.max(0, minCount + Math.floor(Math.random() * (Math.max(minCount, maxCount) - minCount + 1)));
+                let miniCount = Math.max(0, minCount + Math.floor(this.random() * (Math.max(minCount, maxCount) - minCount + 1)));
 
                 // Keep splits from blowing past the player's WPM difficulty cap too aggressively.
                 let activeLimit = Math.max(1, GameConfig.ENEMIES.MAX_ACTIVE || 80);
@@ -491,8 +495,8 @@ export default class EntityManager {
 
                 const usedWords = new Set();
                 for (let k = 0; k < miniCount; k++) {
-                    const angle = Math.random() * Math.PI * 2;
-                    const dist = scatter * (0.4 + Math.random() * 0.9);
+                    const angle = this.random() * Math.PI * 2;
+                    const dist = scatter * (0.4 + this.random() * 0.9);
                     const mx = enemy.x + Math.cos(angle) * dist;
                     const my = enemy.y + Math.sin(angle) * dist;
 
@@ -761,7 +765,7 @@ export default class EntityManager {
             * this.game.omenConfig.speedMult;
 
         const enemy = {
-            id: 's_' + Math.random().toString(36).substr(2, 9),
+            id: 's_' + this.random().toString(36).substr(2, 9),
             x: originEnemy.x,
             y: originEnemy.y,
             word,
@@ -820,7 +824,7 @@ export default class EntityManager {
         let item = this.itemPool.pop();
         if (!item) item = {};
         Object.assign(item, {
-            id: 'i_' + Math.random().toString(36).substr(2, 9),
+            id: 'i_' + this.random().toString(36).substr(2, 9),
             x,
             y,
             word: this.game.getItemWord(),
@@ -849,7 +853,7 @@ export default class EntityManager {
 
     maybeSpawnItem(enemy) {
         if (!enemy || enemy.isProjectileEnemy || enemy.noItemDrop) return;
-        if (Math.random() > GameConfig.ITEMS.DROP_CHANCE) return;
+        if (this.random() > GameConfig.ITEMS.DROP_CHANCE) return;
 
         const weights = { ...GameConfig.ITEMS.WEIGHTS };
         const bonus = this.game.itemWeightBonus || {};
@@ -865,7 +869,7 @@ export default class EntityManager {
         const pool = Object.entries(weights);
         const total = pool.reduce((sum, [, w]) => sum + w, 0);
         if (total <= 0) return;
-        let roll = Math.random() * total;
+        let roll = this.random() * total;
         let picked = pool[0][0];
         for (const [key, weight] of pool) {
             roll -= weight;
@@ -979,7 +983,7 @@ export default class EntityManager {
         }
 
         const enemy = {
-            id: 'e_' + Math.random().toString(36).substr(2, 9),
+            id: 'e_' + this.random().toString(36).substr(2, 9),
             x, y, word: safeWord, typedIndex: 0,
             spawnTime: this.game.runTime,
             lastHitTime: -999,
@@ -1001,7 +1005,7 @@ export default class EntityManager {
             isShielded: false,
             shieldCycle: GameConfig.ENEMIES.TRAITS.SHIELD.CYCLE_TIME,
             shieldOpenFraction: GameConfig.ENEMIES.TRAITS.SHIELD.OPEN_FRACTION,
-            shieldOffset: Math.random() * GameConfig.ENEMIES.TRAITS.SHIELD.CYCLE_TIME,
+            shieldOffset: this.random() * GameConfig.ENEMIES.TRAITS.SHIELD.CYCLE_TIME,
             shieldOpen: true,
             shieldPhase: 0,
             isBuffer: false,
@@ -1036,7 +1040,7 @@ export default class EntityManager {
             enemy.isShielded = true;
             enemy.shieldCycle = GameConfig.ENEMIES.TRAITS.SHIELD.CYCLE_TIME;
             enemy.shieldOpenFraction = GameConfig.ENEMIES.TRAITS.SHIELD.OPEN_FRACTION;
-            enemy.shieldOffset = Math.random() * enemy.shieldCycle;
+            enemy.shieldOffset = this.random() * enemy.shieldCycle;
             enemy.shieldOpen = false;
             enemy.shieldPhase = 0;
         }
@@ -1048,7 +1052,7 @@ export default class EntityManager {
         }
 
         if (enemy.type === 'turret') {
-            enemy.turretTimer = Math.random() * enemy.turretCooldown;
+            enemy.turretTimer = this.random() * enemy.turretCooldown;
         }
 
         this.enemies.push(enemy);
@@ -1067,18 +1071,18 @@ export default class EntityManager {
 
         const rangeX = Math.max(0, w - spawnInset * 2);
         const rangeY = Math.max(0, h - spawnInset * 2);
-        const side = Math.random();
+        const side = this.random();
         if (side < 0.25) {
             x = spawnInset;
-            y = spawnInset + Math.random() * rangeY;
+            y = spawnInset + this.random() * rangeY;
         } else if (side < 0.5) {
             x = w - spawnInset;
-            y = spawnInset + Math.random() * rangeY;
+            y = spawnInset + this.random() * rangeY;
         } else if (side < 0.75) {
-            x = spawnInset + Math.random() * rangeX;
+            x = spawnInset + this.random() * rangeX;
             y = spawnInset;
         } else {
-            x = spawnInset + Math.random() * rangeX;
+            x = spawnInset + this.random() * rangeX;
             y = h - spawnInset;
         }
         return { x, y };
@@ -1114,7 +1118,7 @@ export default class EntityManager {
             if (p) {
                 p.reset(x, y, color);
             } else {
-                p = new Particle(x, y, color);
+                p = new Particle(x, y, color, this.random.bind(this));
             }
             this.particles.push(p);
         }
@@ -1174,7 +1178,8 @@ export default class EntityManager {
 }
 
 class Particle {
-    constructor(x, y, color) {
+    constructor(x, y, color, random = Math.random) {
+        this.random = random;
         this.reset(x, y, color);
     }
 
@@ -1182,16 +1187,17 @@ class Particle {
         this.x = x;
         this.y = y;
         this.color = color;
-        const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 120 + 60;
+        const random = this.random || Math.random;
+        const angle = random() * Math.PI * 2;
+        const speed = random() * 120 + 60;
         this.vx = Math.cos(angle) * speed;
         this.vy = Math.sin(angle) * speed;
         this.life = 1.0;
-        this.size = Math.random() * 2 + 1;
-        this.rot = Math.random() * Math.PI * 2;
-        this.vr = (Math.random() - 0.5) * 14;
-        this.shape = Math.random() < 0.55 ? 'line' : 'tri';
-        this.len = Math.random() * 10 + 6;
+        this.size = random() * 2 + 1;
+        this.rot = random() * Math.PI * 2;
+        this.vr = (random() - 0.5) * 14;
+        this.shape = random() < 0.55 ? 'line' : 'tri';
+        this.len = random() * 10 + 6;
     }
 
     update(deltaTime) {

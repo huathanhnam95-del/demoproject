@@ -5,7 +5,7 @@
 
 ## 1. Overview
 >
-> The RPG layer turns practice into progression: users earn **XP + Coins**, level up, and spend Coins on a **Skill Tree** (active assists + passive perks) that modifies how practice feels and how rewards are calibrated.
+> The RPG layer turns practice into progression: users earn **XP**, level up, and automatically unlock roadmap features as they practice. The old coin/shop economy is retired from the live flow and remains only as compatibility history where needed.
 
 ## 2. Goals (The "Why")
 
@@ -18,18 +18,15 @@
 ### Functional
 
 - **Dual-track scoring**
-  - Track A: XP + Coins ("grind")
+  - Track A: XP and branch progression ("grind")
   - Track B: Skill ratings / CEFR-like proficiency ("truth")
 - **Level math (quadratic)**
   - XP required for a level is quadratic: `XP = 25 * level^2`.
-  - Level is derived from total XP: `level = floor(sqrt(totalPoints / 25))`.
-- **Coins**
-  - Coins are earned from practice and spent on skills and items.
-- **Skill Tree**
+  - Branch level is derived from branch XP: `level = floor(sqrt(branchXP / 25))`.
+- **Progress roadmap**
   - Four branches: Listening / Reading / Writing / Speaking.
-  - See [Skill Catalog](skill-catalog.md) for the full roster of audited skills and status.
-  - Active skills can have a per-use cost (coin cost per attempt).
-  - Passive perks modify costs/rebates and unlock licenses for modes.
+  - See [Skill Catalog](skill-catalog.md) for the full roster of audited roadmap unlocks.
+  - Core assists and filters unlock automatically from progression thresholds.
 - **Anti-farm**
   - Repeating the same content has diminishing returns (server-side ledger).
 - **Server authority**
@@ -39,14 +36,15 @@
 
 - Economy computations must be deterministic and debuggable (loggable breakdowns).
 - All write operations must be idempotent (avoid double-awarding on retries).
-- Fail-closed requirement: failed purchases/attempt writes must not partially mutate coins/xp.
+- Fail-closed requirement: failed progression writes must not partially mutate XP or unlock state.
 - Client-side practice flow must continue even when economy RPC calls fail/unavailable (no hard-stop on learning loop).
 
 ## 4. Data & Contracts (The "Contract")
 
-- Level / Skill tree rendering (client): `public/js/modules/level-system.js`
+- Level / roadmap rendering (client): `public/js/modules/level-system.js`
   - Uses `users/{uid}.totalPoints` for overall level.
   - Uses `users/{uid}.skillPoints[branch]` for branch/core levels.
+  - Uses automatic unlock metadata from `users/{uid}.unlockedSkills` / `users/{uid}.skillPassives`.
 - Client submission wrapper: `public/script.js` (`handleDualTrackScoring`)
   - Skips cloud writes for guest/no-auth sessions.
   - Uses `attemptId` context and tolerates RPC failure without crashing mode UI.
@@ -54,14 +52,14 @@
   - Idempotency key: `users/{uid}/pointsHistory/{attemptId}`.
   - Updates:
     - `users/{uid}.totalPoints` (Track A)
-    - `users/{uid}.coins` (Track A)
+    - `users/{uid}.skillPoints[branch]` (Track A)
     - `users/{uid}.skillRatings` (Track B)
+    - progression unlock state when thresholds are crossed
   - Maintains an award ledger (`users/{uid}/awardLedger/{mode__contentId}`) for diminishing returns.
   - Extended-mode fallback scoring path accepts client counts when canonical gaps/answers are unavailable.
-- Purchases:
-  - Skills: `functions/src/purchaseSkill.js` (+ `functions/src/skillCatalog.js`)
-  - Items: `functions/src/purchaseItem.js`
-  - Both purchase functions execute in Firestore transactions and return explicit errors (`already_unlocked`, `insufficient_funds`, etc.).
+- Progression unlocks:
+  - `functions/src/syncProgressionUnlocks.js`
+  - `functions/src/purchaseSkill.js` and `functions/src/purchaseItem.js` now return deprecation responses only.
 
 ## 5. Rewards & Calibration (Core Rules)
 
@@ -74,9 +72,9 @@
 ## 6. Verification
 
 - Manual:
-  - Complete a Type attempt -> verify XP/Coins increase.
+  - Complete a Type attempt -> verify XP increases and progression unlocks backfill as thresholds are crossed.
   - Repeat the same content multiple times in a day -> verify diminishing rewards.
   - Use a paid assist (hint/reveal) -> verify calibrated rewards (lower multipliers).
   - Submit same `attemptId` twice -> verify second call returns idempotent `alreadyRecorded` behavior with no extra award.
   - Simulate submitAttempt RPC failure -> verify attempt UI still completes locally without app crash.
-  - Attempt purchase with insufficient funds -> verify coins remain unchanged and error is explicit.
+  - Call the deprecated purchase endpoints -> verify they return retirement errors and do not mutate data.

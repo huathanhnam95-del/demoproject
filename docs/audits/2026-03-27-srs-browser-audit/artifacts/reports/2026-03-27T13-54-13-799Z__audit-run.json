@@ -1,0 +1,30 @@
+{
+  "runId": "2026-03-27T13-54-13-799Z",
+  "baseUrl": "https://localhost:8443",
+  "startedAt": "2026-03-27T13:54:13.800Z",
+  "finishedAt": "2026-03-27T13:55:42.244Z",
+  "userUid": "hjTy4wMEFVMYC2ra5l98LCjZTTi1",
+  "scenarioResults": [
+    {
+      "name": "onboarding_local_persistence",
+      "status": "failed",
+      "assertions": [
+        "onboarding modal visible"
+      ],
+      "artifacts": [
+        "screenshots\\2026-03-27T13-54-13-799Z__onboarding_local_persistence.png"
+      ],
+      "error": "page.waitForFunction: Timeout 20000ms exceeded.\n    at waitForVisible (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:177:16)\n    at executeScenario (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:467:23)\n    at async main (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:854:28)"
+    }
+  ],
+  "consoleErrors": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    }
+  ],
+  "pageErrors": [],
+  "cleanupCompleted": true,
+  "staleCleanups": []
+}

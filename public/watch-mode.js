@@ -214,6 +214,11 @@ const WatchMode = (function () {
         return null;
     }
 
+    function safeClassToken(value, fallback = 'default') {
+        const token = String(value || '').toLowerCase().replace(/[^a-z0-9_-]/g, '');
+        return token || fallback;
+    }
+
     /**
      * Render video grid
      */
@@ -230,18 +235,63 @@ const WatchMode = (function () {
             return;
         }
 
-        elements.videoGrid.innerHTML = videosToRender.map(video => `
-            <div class="watch-video-card" data-video-id="${video.id}" onclick="WatchMode.selectVideo('${video.id}')">
-                <div class="watch-video-thumbnail">
-                    ${video.thumbnail ? `<img src="${video.thumbnail}" alt="${video.title}" onerror="this.style.display='none'">` : '▶'}
-                </div>
-                <div class="watch-video-card-info">
-                    <span class="watch-video-card-level ${video.level.toLowerCase()}">${video.level}</span>
-                    <h4 class="watch-video-card-title">${video.title}</h4>
-                    <p class="watch-video-card-desc">${video.description}</p>
-                </div>
-            </div>
-        `).join('');
+        elements.videoGrid.replaceChildren();
+
+        videosToRender.forEach(video => {
+            const card = document.createElement('div');
+            card.className = 'watch-video-card';
+            card.dataset.videoId = String(video.id || '');
+            card.tabIndex = 0;
+            card.setAttribute('role', 'button');
+
+            const thumbnail = document.createElement('div');
+            thumbnail.className = 'watch-video-thumbnail';
+            if (video.thumbnail) {
+                const img = document.createElement('img');
+                img.src = String(video.thumbnail || '');
+                img.alt = String(video.title || 'Video');
+                img.addEventListener('error', () => {
+                    img.style.display = 'none';
+                });
+                thumbnail.appendChild(img);
+            } else {
+                thumbnail.textContent = '▶';
+            }
+
+            const info = document.createElement('div');
+            info.className = 'watch-video-card-info';
+
+            const level = document.createElement('span');
+            level.className = `watch-video-card-level ${safeClassToken(video.level, 'unknown')}`;
+            level.textContent = String(video.level || '');
+
+            const title = document.createElement('h4');
+            title.className = 'watch-video-card-title';
+            title.textContent = String(video.title || '');
+
+            const description = document.createElement('p');
+            description.className = 'watch-video-card-desc';
+            description.textContent = String(video.description || '');
+
+            info.appendChild(level);
+            info.appendChild(title);
+            info.appendChild(description);
+
+            card.appendChild(thumbnail);
+            card.appendChild(info);
+
+            card.addEventListener('click', () => selectVideo(video.id));
+            card.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    selectVideo(video.id);
+                }
+            });
+
+            elements.videoGrid.appendChild(card);
+        });
+        return;
+
     }
 
     /**
@@ -518,11 +568,19 @@ const WatchMode = (function () {
             return;
         }
 
-        elements.mcOptions.innerHTML = options.map((option, index) => `
-            <button class="watch-mc-option" data-index="${index}" onclick="WatchMode.selectMCOption(${index})">
-                ${String.fromCharCode(65 + index)}. ${option}
-            </button>
-        `).join('');
+        elements.mcOptions.replaceChildren();
+
+        options.forEach((option, index) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'watch-mc-option';
+            button.dataset.index = String(index);
+            button.textContent = `${String.fromCharCode(65 + index)}. ${String(option || '')}`;
+            button.addEventListener('click', () => selectMCOption(index));
+            elements.mcOptions.appendChild(button);
+        });
+        return;
+
     }
 
     /**
@@ -855,14 +913,31 @@ const WatchMode = (function () {
     function updateQuestionMarkers() {
         if (!elements.questionMarkers || videoDuration === 0) return;
 
-        elements.questionMarkers.innerHTML = questions.map(q => {
+        elements.questionMarkers.replaceChildren();
+
+        questions.forEach(q => {
             const position = (q.timestamp / videoDuration) * 100;
             const answered = answeredQuestions.has(q.id);
-            return `<div class="watch-question-marker ${answered ? 'answered' : ''}" 
-                        style="left: ${position}%"
-                        title="Question at ${formatTime(q.timestamp)}"
-                        onclick="WatchMode.seekToQuestion('${q.id}')"></div>`;
-        }).join('');
+            const marker = document.createElement('div');
+            marker.className = `watch-question-marker${answered ? ' answered' : ''}`;
+            marker.style.left = `${position}%`;
+            const label = `Question at ${formatTime(q.timestamp)}`;
+            marker.title = label;
+            marker.setAttribute('role', 'button');
+            marker.setAttribute('tabindex', '0');
+            marker.setAttribute('aria-label', label);
+            marker.dataset.questionId = String(q.id || '');
+            marker.addEventListener('click', () => seekToQuestion(q.id));
+            marker.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    seekToQuestion(q.id);
+                }
+            });
+            elements.questionMarkers.appendChild(marker);
+        });
+        return;
+
     }
 
     /**

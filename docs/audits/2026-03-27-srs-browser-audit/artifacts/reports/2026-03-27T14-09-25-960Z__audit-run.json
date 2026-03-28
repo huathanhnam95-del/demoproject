@@ -1,0 +1,43 @@
+{
+  "runId": "2026-03-27T14-09-25-960Z",
+  "baseUrl": "https://localhost:8443",
+  "startedAt": "2026-03-27T14:09:25.960Z",
+  "finishedAt": "2026-03-27T14:10:40.078Z",
+  "userUid": "abcsaUHYcre3W2X0jz1RdbYy0Tj2",
+  "scenarioResults": [
+    {
+      "name": "settings_firestore_persistence",
+      "status": "failed",
+      "assertions": [],
+      "artifacts": [
+        "screenshots\\2026-03-27T14-09-25-960Z__settings_firestore_persistence.png"
+      ],
+      "error": "Error: Timed out waiting for Firestore condition\n    at waitForPredicate (C:\\Cursor AI\\scripts\\srs\\browser-audit-fixture-lib.js:483:19)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async executeScenario (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:497:17)\n    at async main (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:855:28)"
+    }
+  ],
+  "consoleErrors": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "[Dictation App][sess:b7cee94a][user:abcsa][SRS] Error saving setting: FirebaseError: Missing or insufficient permissions.",
+      "url": "https://localhost:8443/js/logger.js"
+    }
+  ],
+  "pageErrors": [],
+  "cleanupCompleted": true,
+  "staleCleanups": []
+}

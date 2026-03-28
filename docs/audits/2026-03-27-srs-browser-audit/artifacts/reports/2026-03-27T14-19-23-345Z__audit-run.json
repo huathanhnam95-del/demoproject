@@ -1,0 +1,43 @@
+{
+  "runId": "2026-03-27T14-19-23-345Z",
+  "baseUrl": "https://localhost:8443",
+  "startedAt": "2026-03-27T14:19:23.345Z",
+  "finishedAt": "2026-03-27T14:20:15.548Z",
+  "userUid": "6hwfV9RBlTYh9Rpdz0ARdHCYNp43",
+  "scenarioResults": [
+    {
+      "name": "fsrs_good_due_parity",
+      "status": "failed",
+      "assertions": [],
+      "artifacts": [
+        "screenshots\\2026-03-27T14-19-23-345Z__fsrs_good_due_parity.png"
+      ],
+      "error": "Error: Persisted card did not match cached Good outcome for qa_srs_2026-03-27T14-19-23-345Z_due\nstored={\"algorithm\":\"FSRS\",\"state\":\"reviewing\",\"interval\":6,\"nextReviewDate\":\"2026-04-02T14:20:10.339Z\",\"lastReviewDate\":\"2026-03-27T14:20:10.339Z\",\"repetitions\":4,\"stepIndex\":0,\"easeFactor\":2.5}\nexpected={\"algorithm\":\"FSRS\",\"state\":\"reviewing\",\"interval\":6,\"nextReviewDate\":\"2026-04-02T14:20:10.339Z\",\"lastReviewDate\":\"2026-03-27T14:20:10.339Z\",\"repetitions\":4}\nfsrs={\"difficulty\":5.1879,\"stability\":5.7089,\"retrievability\":1,\"lastReview\":\"2026-03-27T14:20:10.339Z\",\"lapses\":0,\"reps\":4}\n    at executeScenario (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:560:27)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async main (C:\\Cursor AI\\scripts\\audit\\run-srs-browser-audit.js:874:28)"
+    }
+  ],
+  "consoleErrors": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "https://localhost:8443/api/session-end"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "https://localhost:8443/api/admin/status"
+    },
+    {
+      "type": "error",
+      "text": "[Dictation App][sess:6f3dd67a][user:6hwfV][SRS] Error awarding points: FirebaseError: Missing or insufficient permissions.",
+      "url": "https://localhost:8443/js/logger.js"
+    }
+  ],
+  "pageErrors": [],
+  "cleanupCompleted": true,
+  "staleCleanups": []
+}

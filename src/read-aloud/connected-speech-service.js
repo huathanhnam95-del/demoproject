@@ -592,20 +592,40 @@ function toMilliseconds(azureValue) {
   return Number.isFinite(numeric) ? Math.round(numeric / 10000) : null;
 }
 
+function getAzureWordScore(wordNode, fieldName) {
+  if (!wordNode || typeof wordNode !== 'object' || !fieldName) return null;
+  const rawValue = wordNode?.PronunciationAssessment?.[fieldName] ?? wordNode?.[fieldName];
+  const numeric = Number(rawValue);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function getAzureWordErrorType(wordNode) {
+  if (!wordNode || typeof wordNode !== 'object') return 'None';
+  return String(wordNode?.PronunciationAssessment?.ErrorType || wordNode?.ErrorType || 'None');
+}
+
 function simplifyWordNode(wordNode, index, referenceWords) {
   if (!wordNode) return null;
   const word = normalizeWord(wordNode.Word || wordNode.Display || wordNode.Lexical || '');
-  const phonemeCandidates = Array.isArray(wordNode?.PronunciationAssessment?.NBestPhonemes)
-    ? wordNode.PronunciationAssessment.NBestPhonemes.map((candidate) => String(candidate?.Phoneme || '').trim()).filter(Boolean)
-    : [];
+  const rawPhonemeCandidates = Array.isArray(wordNode?.PronunciationAssessment?.NBestPhonemes)
+    ? wordNode.PronunciationAssessment.NBestPhonemes
+    : Array.isArray(wordNode?.NBestPhonemes)
+      ? wordNode.NBestPhonemes
+      : Array.isArray(wordNode?.Phonemes)
+        ? wordNode.Phonemes
+        : [];
+  const phonemeCandidates = rawPhonemeCandidates
+    .map((candidate) => String(candidate?.Phoneme || candidate?.phoneme || '').trim())
+    .filter(Boolean);
+  const accuracyScore = getAzureWordScore(wordNode, 'AccuracyScore');
   return {
     index,
     word,
     display: String(wordNode.Word || wordNode.Display || wordNode.Lexical || '').trim(),
     offsetMs: toMilliseconds(wordNode.Offset),
     durationMs: toMilliseconds(wordNode.Duration),
-    accuracyScore: Math.round(Number(wordNode?.PronunciationAssessment?.AccuracyScore || 0)),
-    errorType: String(wordNode?.PronunciationAssessment?.ErrorType || 'None'),
+    accuracyScore: Number.isFinite(accuracyScore) ? Math.round(accuracyScore) : 0,
+    errorType: getAzureWordErrorType(wordNode),
     phonemes: phonemeCandidates,
     referenceWord: referenceWords[index] || null
   };

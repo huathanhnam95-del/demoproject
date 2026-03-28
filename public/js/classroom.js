@@ -49,6 +49,7 @@
     let startTime = 0;
     let activeWorkId = null;
     let currentSubmission = null;
+    const authSessionGuard = window.AuthSessionGuard || null;
 
     function formatTime(seconds) {
         const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -57,27 +58,23 @@
     }
 
     // Wait for firebase init
-    function waitForAuthUser({ timeoutMs = 5000 } = {}) {
-        return new Promise((resolve) => {
-            if (typeof firebase === 'undefined') return resolve(null);
-            let done = false;
-            const timer = setTimeout(() => {
-                if (done) return;
-                done = true;
-                resolve(null);
-            }, timeoutMs);
-
-            const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
-                if (done) return;
-                done = true;
-                clearTimeout(timer);
-                unsubscribe();
-                resolve(user || null);
+    function waitForAuthUser({ timeoutMs = 12000, nullGraceMs = 1500 } = {}) {
+        if (typeof firebase === 'undefined') return Promise.resolve(null);
+        if (authSessionGuard && typeof authSessionGuard.waitForCompatAuthUser === 'function') {
+            return authSessionGuard.waitForCompatAuthUser(firebase, {
+                timeoutMs,
+                nullGraceMs
             });
-        });
+        }
+        return Promise.resolve(firebase.auth().currentUser || null);
     }
 
     async function initFirebaseFromServer() {
+        if (authSessionGuard && typeof authSessionGuard.ensureCompatFirebaseFromConfig === 'function') {
+            await authSessionGuard.ensureCompatFirebaseFromConfig(firebase);
+            return;
+        }
+
         if (typeof firebase === 'undefined') return;
         const res = await fetch('/api/config', { cache: 'no-store' });
         const result = await res.json().catch(() => null);
@@ -90,13 +87,16 @@
         if (!firebase.apps.length) {
             firebase.initializeApp(result.config);
         }
+        if (authSessionGuard && typeof authSessionGuard.ensureCompatLocalPersistence === 'function') {
+            await authSessionGuard.ensureCompatLocalPersistence(firebase);
+        }
     }
 
     async function init() {
         await initFirebaseFromServer();
         currentUser = await waitForAuthUser();
         if (!currentUser) {
-            window.location.href = 'index.html';
+            window.location.replace('index.html');
             return;
         }
 

@@ -16,6 +16,10 @@ export const DifficultyConfig = {
             6: 'C2 (Expert II)'
         }
     },
+    CONTENT_TIERS: {
+        MIN: 1,
+        MAX: 3
+    },
     HISTORY_SIZE: 20,
     GRACE_PERIOD_ATTEMPTS: 10,
     THRESHOLDS: {
@@ -64,6 +68,14 @@ export const DifficultyConfig = {
             5: { maxReplays: 5, showHints: false },
             6: { maxReplays: 5, showHints: false }
         },
+        rfib: {
+            1: { maxReplays: 5, showHints: true },
+            2: { maxReplays: 5, showHints: true },
+            3: { maxReplays: 5, showHints: false },
+            4: { maxReplays: 5, showHints: false },
+            5: { maxReplays: 5, showHints: false },
+            6: { maxReplays: 5, showHints: false }
+        },
         notes: {
             1: { maxReplays: 5, showTranscript: true },
             2: { maxReplays: 4, showTranscript: true },
@@ -72,6 +84,12 @@ export const DifficultyConfig = {
             5: { maxReplays: 2, showTranscript: false },
             6: { maxReplays: 2, showTranscript: false }
         }
+    },
+    getContentTierForLevel(level) {
+        const safeLevel = Math.max(this.LEVELS.MIN, Math.min(this.LEVELS.MAX, Number(level) || 1));
+        if (safeLevel <= 2) return 1;
+        if (safeLevel <= 4) return 2;
+        return 3;
     },
     STORAGE_KEY: 'difficulty_profile'
 };

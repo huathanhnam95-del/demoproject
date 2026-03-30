@@ -2039,13 +2039,12 @@ class ReadAloudMode {
     this.syncGuideSelectionState();
   }
 
-  renderConnectedSpeechResults(connectedSpeech) {
+  async renderConnectedSpeechResults(connectedSpeech) {
     const box = document.getElementById('ra-connected-speech-box');
     const label = document.getElementById('ra-connected-speech-label');
     const list = document.getElementById('ra-connected-speech-list');
-    const meta = document.getElementById('ra-connected-speech-meta');
     const summary = document.getElementById('ra-connected-speech-summary');
-    if (!box || !label || !list || !meta || !summary) return;
+    if (!box || !label || !list || !summary) return;
 
     if (!connectedSpeech || connectedSpeech.status === 'not_applicable') {
       this.hideConnectedSpeechPanel();
@@ -2058,18 +2057,47 @@ class ReadAloudMode {
     this.currentGuideHasVisibleAssimilation = false;
     box.style.display = 'block';
     label.textContent = 'Speech Coach';
-    meta.textContent = 'Feedback';
+    list.innerHTML = '';
+    
+    // Set up layer toggles
+    const layer1Btn = document.getElementById('ra-layer-level1');
+    const layer2Btn = document.getElementById('ra-layer-level2');
+    const wrapper = document.getElementById('ra-transcript-feedback');
+    if (layer1Btn && layer2Btn && wrapper) {
+      if (!wrapper.classList.contains('sc-layer-reduced-words-active')) {
+         wrapper.classList.add('sc-layer-reduced-words-active');
+      }
+      layer1Btn.onclick = () => {
+         wrapper.classList.remove('sc-layer-reduced-words-active');
+         layer1Btn.style.background = 'transparent';
+         layer1Btn.style.color = '#1f2937';
+         layer1Btn.style.boxShadow = 'none';
+         layer2Btn.style.background = '#ffffff';
+         layer2Btn.style.color = '#1d4ed8';
+         layer2Btn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+      };
+      layer2Btn.onclick = () => {
+         wrapper.classList.add('sc-layer-reduced-words-active');
+         layer2Btn.style.background = '#ffffff';
+         layer2Btn.style.color = '#1d4ed8';
+         layer2Btn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+         layer1Btn.style.background = 'transparent';
+         layer1Btn.style.color = '#1f2937';
+         layer1Btn.style.boxShadow = 'none';
+      };
+      // initialize layer 2 visually
+      layer2Btn.onclick();
+    }
+
     const detectedCount = Number(connectedSpeech?.summary?.detectedCount || 0);
     const notDetectedCount = Number(connectedSpeech?.summary?.notDetectedCount || 0);
     const uncertainCount = Number(connectedSpeech?.summary?.uncertainCount || 0);
 
     if (connectedSpeech.status === 'unavailable') {
       summary.textContent = 'Connected-speech feedback is temporarily unavailable for this attempt.';
-      list.innerHTML = '';
       return;
     }
 
-    // P1 Fix: Learner-friendly summary
     const totalEvents = detectedCount + notDetectedCount + uncertainCount;
     if (totalEvents === 0) {
       summary.textContent = 'No connected speech patterns analysed in this attempt.';
@@ -2082,14 +2110,8 @@ class ReadAloudMode {
     }
 
     const events = Array.isArray(connectedSpeech.events) ? connectedSpeech.events : [];
-    const escapeHtml = (value) => String(value ?? '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
+    const escapeHtml = (value) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
-    // Aggregation Logic
     const groupedReduced = new Map();
     const linkingIssues = [];
     const linkingSuccesses = [];
@@ -2101,12 +2123,8 @@ class ReadAloudMode {
         || event.subtype
         || 'linking'
       );
-      const categoryLabel = window.ReadAloudLinking?.getLearnerConnectedSpeechCategoryLabel
-        ? window.ReadAloudLinking.getLearnerConnectedSpeechCategoryLabel(eventCategory)
-        : this.getConnectedSpeechDisplayLabel(eventCategory);
-
+      const categoryLabel = window.ReadAloudLinking?.getLearnerConnectedSpeechCategoryLabel ? window.ReadAloudLinking.getLearnerConnectedSpeechCategoryLabel(eventCategory) : this.getConnectedSpeechDisplayLabel(eventCategory);
       const phrase = event.phrase || event.eventId || 'Word';
-
       const isReduced = eventCategory === 'weak_forms' || eventCategory === 'reduced_words' || String(categoryLabel).toLowerCase().includes('reduced');
 
       if (isReduced) {
@@ -2124,17 +2142,19 @@ class ReadAloudMode {
       }
     });
 
-    // P0 Fix: Token-aware annotated paragraph via renderLinkingLayer + applyTokenAnnotations
     const annotatedContainer = document.createElement('div');
     annotatedContainer.className = 'sc-annotated-paragraph';
+    annotatedContainer.style.position = 'relative';
 
     let usedTokenAnnotation = false;
     if (window.ReadAloudLinking && this.currentPromptPlainText) {
       try {
-        const tokens = window.ReadAloudLinking.tokenizePrompt(this.currentPromptPlainText);
+        const analysisOptions = { connectedSpeechLevel: 'sound_changes', enabledRuleSet: 'connected-speech-v3' };
+        const targetPromptKey = this.currentPromptId || 'result_eval';
+        const analysis = await this.getPromptAnalysis(targetPromptKey, this.currentPromptPlainText, analysisOptions);
+        const tokens = analysis.tokens;
         if (tokens && tokens.length > 0) {
           const wordMap = window.ReadAloudLinking.renderLinkingLayer(annotatedContainer, { tokens, boundaries: [], tokenAnnotations: [] });
-          // Apply status-based highlighting to word spans using event data
           events.forEach((ev) => {
             if (!ev.phrase) return;
             const phraseLower = ev.phrase.toLowerCase().trim();
@@ -2143,19 +2163,75 @@ class ReadAloudMode {
               if (spanText === phraseLower && !span.dataset.scHighlighted) {
                 span.dataset.scHighlighted = 'true';
                 span.classList.add('sc-token-highlight');
+                const isEvReduced = ev.category === 'weak_forms' || String(ev.family).includes('reduced') || ev.category === 'reduced_words';
                 if (ev.status === 'detected') {
                   span.classList.add('sc-token--success');
+                  if (isEvReduced) span.classList.add('sc-token-bg--success');
                 } else if (ev.status === 'not_detected') {
                   span.classList.add('sc-token--error');
+                  if (isEvReduced) span.classList.add('sc-token-bg--error');
                 } else {
                   span.classList.add('sc-token--uncertain');
+                  if (isEvReduced) span.classList.add('sc-token-bg--uncertain');
                 }
                 span.title = ev.feedbackText || '';
                 span.style.cursor = 'pointer';
               }
             });
           });
-          usedTokenAnnotation = true;
+
+          // Embed styling for background highlighting specifically targeted by Layer 2
+          const localStyle = document.createElement('style');
+          localStyle.textContent = `
+            #ra-transcript-feedback .sc-token-bg--success, #ra-transcript-feedback .sc-token-bg--error, #ra-transcript-feedback .sc-token-bg--uncertain {
+               background: transparent; border-bottom: none; border-radius: 4px; padding: 0 1px; transition: background 0.2s;
+            }
+            #ra-transcript-feedback.sc-layer-reduced-words-active .sc-token-bg--success {
+               background: rgba(16, 185, 129, 0.15); border-bottom: 2px solid #10b981;
+            }
+            #ra-transcript-feedback.sc-layer-reduced-words-active .sc-token-bg--error {
+               background: rgba(239, 68, 68, 0.15); border-bottom: 2px solid #ef4444;
+            }
+            #ra-transcript-feedback.sc-layer-reduced-words-active .sc-token-bg--uncertain {
+               background: rgba(245, 158, 11, 0.15); border-bottom: 2px solid #f59e0b;
+            }
+          `;
+          annotatedContainer.insertBefore(localStyle, annotatedContainer.firstChild);
+
+          const overlaySvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+          overlaySvg.className = 'sc-linking-overlay';
+          overlaySvg.style.position = 'absolute';
+          overlaySvg.style.inset = '0';
+          overlaySvg.style.width = '100%';
+          overlaySvg.style.height = '100%';
+          overlaySvg.style.pointerEvents = 'none';
+          overlaySvg.style.overflow = 'visible';
+          overlaySvg.style.zIndex = '0';
+          annotatedContainer.insertBefore(overlaySvg, annotatedContainer.firstChild);
+
+          const overlayBoundaries = analysis.boundaries.map((b) => {
+            const leftWord = b.leftDisplay || b.leftWord || '';
+            const rightWord = b.rightDisplay || b.rightWord || '';
+            const bPhrase = `${leftWord} ${rightWord}`.toLowerCase().trim();
+            const matchEvent = events.find((ev) => {
+              const evPhraseLower = (ev.phrase || ev.eventId || '').toLowerCase().trim();
+              const isEventLinking = ev.category === 'linking' || ev.category === 'sound_changes' || ev.layer === 'assimilation' || ev.layer === 'linking' || this.normalizeConnectedSpeechMode(ev.family) === 'linking' || ev.category === 'consonant_to_vowel';
+              return evPhraseLower === bPhrase && isEventLinking;
+            });
+            if (matchEvent) {
+               const color = matchEvent.status === 'detected' ? '#10b981' : matchEvent.status === 'not_detected' ? '#ef4444' : '#f59e0b';
+               return { ...b, strokeColor: color };
+            }
+            return { ...b, confidence: 'low' }; // Skip non-targeted
+          });
+
+          // Mount temp to DOM to compute rects
+          if (wrapper) {
+            wrapper.innerHTML = '';
+            wrapper.appendChild(annotatedContainer);
+            window.ReadAloudLinking.renderOverlay(overlaySvg, annotatedContainer, { boundaries: overlayBoundaries }, wordMap);
+            usedTokenAnnotation = true;
+          }
         }
       } catch (tokenErr) {
         console.warn('Token annotation failed, falling back to plain text:', tokenErr);
@@ -2163,54 +2239,55 @@ class ReadAloudMode {
     }
 
     if (!usedTokenAnnotation) {
+      if (wrapper) wrapper.innerHTML = '';
       annotatedContainer.textContent = this.currentPromptPlainText || '';
+      if (wrapper) wrapper.appendChild(annotatedContainer);
     }
 
-    // Build DOM fragments instead of innerHTML strings
-    const fragment = document.createDocumentFragment();
-
-    // Section 1: Annotated paragraph
-    fragment.appendChild(annotatedContainer);
-
-    // P1 Fix: Color legend — only show when token highlights were applied
-    if (usedTokenAnnotation) {
+    if (usedTokenAnnotation && wrapper) {
       const legendEl = document.createElement('div');
       legendEl.className = 'sc-legend';
+      legendEl.style.marginTop = '12px';
       legendEl.innerHTML = [
         '<span class="sc-legend-item"><span class="sc-legend-dot sc-legend-dot--success"></span> Good</span>',
         '<span class="sc-legend-item"><span class="sc-legend-dot sc-legend-dot--error"></span> Needs practice</span>',
         '<span class="sc-legend-item"><span class="sc-legend-dot sc-legend-dot--uncertain"></span> Unclear</span>'
       ].join('');
-      fragment.appendChild(legendEl);
+      wrapper.appendChild(legendEl);
     }
 
-    // Section 2: Reduced Words & Weak Forms
+    const fragment = document.createDocumentFragment();
+
+    // Grid Column Setup
+    const leftCol = document.createElement('div');
+    leftCol.className = 'sc-grid-left';
+    leftCol.style.display = 'flex';
+    leftCol.style.flexDirection = 'column';
+    leftCol.style.gap = '20px';
+
+    const rightCol = document.createElement('div');
+    rightCol.className = 'sc-grid-right';
+    rightCol.style.display = 'flex';
+    rightCol.style.flexDirection = 'column';
+    rightCol.style.gap = '20px';
+
     if (groupedReduced.size > 0) {
       const section = document.createElement('div');
       section.className = 'sc-section';
-
-      // P2 Fix: Section header with explainer tooltip
       const header = document.createElement('h4');
       header.className = 'sc-section-header';
       header.innerHTML = 'Reduced Words <span class="sc-info-tip" title="In natural speech, common words like &ldquo;to&rdquo;, &ldquo;and&rdquo;, &ldquo;of&rdquo; are pronounced shorter and lighter. This section checks whether you did that.">ⓘ</span>';
       section.appendChild(header);
 
-      // P2 Fix: Separate singles from multiples for grid vs stack layout
       const singles = [];
       const multiples = [];
       groupedReduced.forEach((group) => {
-        if (group.items.length === 1) {
-          singles.push(group);
-        } else {
-          multiples.push(group);
-        }
+        if (group.items.length === 1) { singles.push(group); } else { multiples.push(group); }
       });
 
-      // Render multi-occurrence groups as expandable accordions
       if (multiples.length > 0) {
         const stackContainer = document.createElement('div');
         stackContainer.className = 'sc-accordion-stack';
-
         multiples.forEach((group, groupIdx) => {
           const totalCount = group.items.length;
           const successCount = group.items.filter((i) => i.status === 'detected').length;
@@ -2220,8 +2297,6 @@ class ReadAloudMode {
 
           const card = document.createElement('div');
           card.className = `sc-accordion-card ${statusClass}`;
-
-          // P0 Fix: Accordion header uses data-attribute delegation, no inline onclick
           const cardHeader = document.createElement('button');
           cardHeader.type = 'button';
           cardHeader.className = 'sc-accordion-toggle';
@@ -2235,14 +2310,12 @@ class ReadAloudMode {
 
           const dotSide = document.createElement('div');
           dotSide.className = 'sc-accordion-dots';
-          // P1 Fix: Status dots with aria labels
           group.items.forEach((i, dotIdx) => {
             const dot = document.createElement('span');
             dot.className = `sc-status-dot ${i.status === 'detected' ? 'sc-status-dot--success' : i.status === 'not_detected' ? 'sc-status-dot--error' : 'sc-status-dot--uncertain'}`;
             dot.setAttribute('aria-label', `Instance ${dotIdx + 1}: ${i.status || 'uncertain'}`);
             dotSide.appendChild(dot);
           });
-
           const chevron = document.createElement('span');
           chevron.className = 'sc-chevron';
           chevron.innerHTML = '<svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>';
@@ -2252,7 +2325,6 @@ class ReadAloudMode {
           cardHeader.appendChild(dotSide);
           card.appendChild(cardHeader);
 
-          // Accordion content
           const cardContent = document.createElement('div');
           cardContent.className = 'sc-accordion-content';
           cardContent.id = accordionId;
@@ -2265,18 +2337,15 @@ class ReadAloudMode {
             instance.innerHTML = `<div class="sc-instance-header"><span class="sc-status-badge ${statusCls}">${escapeHtml(i.status || 'uncertain')}</span><span class="sc-instance-label">Instance ${idx + 1}</span></div><div class="sc-instance-feedback">${escapeHtml(i.feedbackText || 'No detailed coaching tips provided for this instance.')}</div>`;
             cardContent.appendChild(instance);
           });
-
           card.appendChild(cardContent);
           stackContainer.appendChild(card);
         });
         section.appendChild(stackContainer);
       }
 
-      // P2 Fix: Grid layout for single-occurrence reduced words
       if (singles.length > 0) {
         const gridContainer = document.createElement('div');
         gridContainer.className = singles.length >= 2 ? 'sc-singles-grid' : 'sc-accordion-stack';
-
         singles.forEach((group) => {
           const item = group.items[0];
           const statusClass = item.status === 'detected' ? 'sc-border--success' : item.status === 'not_detected' ? 'sc-border--error' : 'sc-border--mixed';
@@ -2290,15 +2359,12 @@ class ReadAloudMode {
         });
         section.appendChild(gridContainer);
       }
-
-      fragment.appendChild(section);
+      leftCol.appendChild(section);
     }
 
-    // Section 3: Problematic Linking (Needs Attention)
     if (linkingIssues.length > 0) {
       const section = document.createElement('div');
       section.className = 'sc-section';
-
       const header = document.createElement('h4');
       header.className = 'sc-section-header';
       header.innerHTML = 'Needs Attention <span class="sc-info-tip" title="These are places where words should flow together smoothly, but the link wasn\'t detected in your speech. Try saying them closer together.">ⓘ</span>';
@@ -2309,31 +2375,26 @@ class ReadAloudMode {
 
       const resolveCategory = (ev) => {
         const cat = this.normalizeConnectedSpeechMode(window.ReadAloudLinking?.getLearnerConnectedSpeechCategory?.(ev.family || ev.subtype || ev.category || '') || ev.category || ev.subtype || 'linking');
-        const label = window.ReadAloudLinking?.getLearnerConnectedSpeechCategoryLabel ? window.ReadAloudLinking.getLearnerConnectedSpeechCategoryLabel(cat) : this.getConnectedSpeechDisplayLabel(cat);
-        return { eventCategory: cat, categoryLabel: label };
+        const l = window.ReadAloudLinking?.getLearnerConnectedSpeechCategoryLabel ? window.ReadAloudLinking.getLearnerConnectedSpeechCategoryLabel(cat) : this.getConnectedSpeechDisplayLabel(cat);
+        return { eventCategory: cat, categoryLabel: l };
       };
 
       linkingIssues.forEach((event) => {
         const { categoryLabel } = resolveCategory(event);
         const borderCls = event.status === 'not_detected' ? 'sc-border--error' : 'sc-border--mixed';
-
         const card = document.createElement('div');
         card.className = `sc-issue-card ${borderCls}`;
-
         const badgeCls = event.status === 'not_detected' ? 'sc-badge--error' : 'sc-badge--uncertain';
         card.innerHTML = `<div class="sc-issue-header"><strong class="sc-issue-phrase">${escapeHtml(event.phrase || event.eventId || 'Event')}</strong><span class="sc-status-badge ${badgeCls}">${escapeHtml(event.status || 'uncertain')}</span></div><div class="sc-issue-category">${escapeHtml(categoryLabel)}</div><div class="sc-issue-feedback">${escapeHtml(event.feedbackText || '')}</div>`;
         issueStack.appendChild(card);
       });
-
       section.appendChild(issueStack);
-      fragment.appendChild(section);
+      rightCol.appendChild(section);
     }
 
-    // Section 4: Successful Links (Pills)
     if (linkingSuccesses.length > 0) {
       const section = document.createElement('div');
       section.className = 'sc-section';
-
       const header = document.createElement('h4');
       header.className = 'sc-section-header';
       header.innerHTML = 'Successful Links <span class="sc-info-tip" title="These word pairs flowed together naturally in your speech. Nice work!">ⓘ</span>';
@@ -2341,7 +2402,6 @@ class ReadAloudMode {
 
       const pillWrap = document.createElement('div');
       pillWrap.className = 'sc-pill-wrap';
-
       linkingSuccesses.forEach((event) => {
         const pill = document.createElement('span');
         pill.className = 'sc-success-pill';
@@ -2349,17 +2409,18 @@ class ReadAloudMode {
         pill.innerHTML = `<svg class="sc-check-icon" width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>${escapeHtml(event.phrase || 'Word')}`;
         pillWrap.appendChild(pill);
       });
-
       section.appendChild(pillWrap);
-      fragment.appendChild(section);
+      rightCol.appendChild(section);
     }
-
-    list.innerHTML = '';
+    
+    fragment.appendChild(leftCol);
+    fragment.appendChild(rightCol);
     list.appendChild(fragment);
-
-    // P0 Fix: Wire up accordion delegation via data attributes
+    
+    // Delegate accordion clicks
     this.bindSpeechCoachAccordions(list);
   }
+
 
   /** P0 Fix: Delegated accordion handler for Speech Coach results */
   bindSpeechCoachAccordions(container) {

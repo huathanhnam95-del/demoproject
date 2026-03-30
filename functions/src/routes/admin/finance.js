@@ -88,6 +88,16 @@ module.exports = function registerFinanceRoutes(router, deps) {
             if (!snap.exists) {
                 return sendError(res, 404, 'INVOICE_NOT_FOUND', 'Invoice not found.');
             }
+            const requestedCurrency = Object.prototype.hasOwnProperty.call(req.body || {}, 'currency')
+                ? String(req.body.currency || '').trim().toUpperCase()
+                : '';
+            const existingCurrency = String(snap.data()?.currency || 'VND').trim().toUpperCase() || 'VND';
+            if (requestedCurrency && requestedCurrency !== existingCurrency) {
+                const paymentSnap = await db.collection(CRM_PAYMENTS).where('invoiceId', '==', invoiceId).limit(1).get();
+                if (!paymentSnap.empty) {
+                    return sendError(res, 400, 'VALIDATION_ERROR', 'Cannot change invoice currency after payments have been recorded.');
+                }
+            }
             const next = buildInvoicePatchData(snap.data() || {}, req.body || {}, {
                 user: req.user,
                 serverTimestamp
@@ -122,6 +132,7 @@ module.exports = function registerFinanceRoutes(router, deps) {
             }
 
             const invoice = mapInvoiceRecord(invoiceSnap, payment.invoiceId);
+            payment.currency = invoice.currency || payment.currency || 'VND';
             if (String(invoice.studentId || '') !== String(payment.studentId || '')) {
                 return sendError(res, 400, 'PAYMENT_MISMATCH', 'Payment student must match the invoice student.');
             }
@@ -204,7 +215,8 @@ module.exports = function registerFinanceRoutes(router, deps) {
                 commissionSplits: invoice.commissionSplits
             }, {
                 user: req.user,
-                serverTimestamp
+                serverTimestamp,
+                currency: invoice.currency || payment.currency || 'VND'
             });
 
             await Promise.all(commissions.map((commission) => db.collection(CRM_COMMISSIONS).doc().set(commission)));

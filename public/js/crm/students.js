@@ -25,6 +25,11 @@ window.CrmStudents = (function () {
         return Number.isFinite(value) ? value : null;
     }
 
+    function isLikelyFacebookUrl(value) {
+        const text = getValue({ value });
+        return /^https?:\/\//i.test(text) && /facebook\.com/i.test(text);
+    }
+
     function buildPayload(elements) {
         return {
             name: getValue(elements.inputStudentName),
@@ -33,6 +38,7 @@ window.CrmStudents = (function () {
             email: getValue(elements.inputStudentEmail),
             zalo: getValue(elements.inputStudentZalo),
             facebook: getValue(elements.inputStudentFacebook),
+            facebookProfileUrl: getValue(elements.inputStudentFacebookProfileUrl),
             acquisitionSource: getValue(elements.inputStudentAcquisitionSource),
             learningProfile: {
                 overall: getNumberValue(elements.inputScoreOverall),
@@ -47,7 +53,7 @@ window.CrmStudents = (function () {
     }
 
     function hasAnyInfoField(payload) {
-        return [payload.name, payload.label, payload.phone, payload.email, payload.zalo, payload.facebook].some(Boolean);
+        return [payload.name, payload.label, payload.phone, payload.email, payload.zalo, payload.facebook, payload.facebookProfileUrl].some(Boolean);
     }
 
     function syncScoreInput(element, options = {}) {
@@ -77,7 +83,14 @@ window.CrmStudents = (function () {
         if (elements.inputStudentPhone) elements.inputStudentPhone.value = String(student?.phone || '');
         if (elements.inputStudentEmail) elements.inputStudentEmail.value = String(student?.email || '');
         if (elements.inputStudentZalo) elements.inputStudentZalo.value = String(student?.zalo || '');
-        if (elements.inputStudentFacebook) elements.inputStudentFacebook.value = String(student?.facebook || '');
+        if (elements.inputStudentFacebook) {
+            const facebookName = isLikelyFacebookUrl(student?.facebook) ? '' : String(student?.facebook || '');
+            elements.inputStudentFacebook.value = facebookName;
+        }
+        if (elements.inputStudentFacebookProfileUrl) {
+            const facebookLink = String(student?.facebookProfileUrl || (isLikelyFacebookUrl(student?.facebook) ? student.facebook : '') || '');
+            elements.inputStudentFacebookProfileUrl.value = facebookLink;
+        }
         if (elements.inputStudentAcquisitionSource) elements.inputStudentAcquisitionSource.value = String(student?.acquisitionSource || '');
         if (elements.inputScoreOverall) elements.inputScoreOverall.value = learning.overall ?? '';
         if (elements.inputScoreListening) elements.inputScoreListening.value = learning.listening ?? '';

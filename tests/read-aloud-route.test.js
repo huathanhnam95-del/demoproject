@@ -309,13 +309,13 @@ async function postAssessment(baseUrl, { audioBuffer, referenceText, questionId,
 
     azureFetchCalls = 0;
     result = await postAssessment(baseUrl, {
-      audioBuffer: createMonoPcmWavBuffer({ durationMs: 41000 }),
+      audioBuffer: createMonoPcmWavBuffer({ durationMs: 46000 }),
       referenceText: 'Pick it up now'
     });
     assert.strictEqual(result.response.status, 422, 'too-long read-aloud wav should return 422');
     assert.strictEqual(result.payload.error, 'INVALID_AUDIO');
     assert.strictEqual(result.payload.details.reason, 'too_long');
-    assert.strictEqual(result.payload.details.maxDurationMs, 40000);
+    assert.strictEqual(result.payload.details.maxDurationMs, 45000);
     assert.strictEqual(azureFetchCalls, 0, 'too-long read-aloud audio should not call Azure');
 
     process.env.READ_ALOUD_AZURE_MOCK_RESPONSE = JSON.stringify({

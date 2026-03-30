@@ -38,14 +38,32 @@ window.CrmStudentFinance = (function () {
             elements.studentFinanceWorkflowNote.textContent = String(state.message || 'Follow the finance workflow guidance.');
         }
 
+        function formatGroupedMoney(totalValue, currencyTotals, key) {
+            const buckets = Array.isArray(currencyTotals) ? currencyTotals : [];
+            if (!buckets.length) {
+                return window.CrmFinance ? window.CrmFinance.formatMoney(totalValue || 0, 'VND') : String(totalValue || 0);
+            }
+            return buckets.map((bucket) => {
+                const currency = String(bucket.currency || 'VND').toUpperCase();
+                const amount = Number(bucket?.[key] || 0);
+                const formatted = window.CrmFinance
+                    ? window.CrmFinance.formatMoney(amount, currency)
+                    : String(amount);
+                return `${currency} ${formatted}`;
+            }).join(' | ');
+        }
+
         function renderMatches(matchPayload = {}) {
             const matches = Array.isArray(matchPayload.matches) ? matchPayload.matches : [];
             modalState.classroomMatches = matches;
             const unsupported = !!matchPayload.unsupported;
+            const temporaryIssue = !!matchPayload.error && !unsupported;
 
             if (elements.studentClassroomMatchSummary) {
                 if (unsupported) {
                     elements.studentClassroomMatchSummary.innerHTML = '<div class="crm-muted">Classroom recommendations are unavailable on this server.</div>';
+                } else if (temporaryIssue) {
+                    elements.studentClassroomMatchSummary.innerHTML = '<div class="crm-muted">Classroom recommendations are temporarily unavailable.</div>';
                 } else if (!matches.length) {
                     elements.studentClassroomMatchSummary.innerHTML = '<div class="crm-muted">No active classrooms found.</div>';
                 } else {
@@ -88,6 +106,8 @@ window.CrmStudentFinance = (function () {
                 const recommended = matchPayload.recommendedClassroom || matches[0] || null;
                 elements.studentClassroomMatchMeta.textContent = unsupported
                     ? 'Upgrade the admin backend to enable classroom-fit recommendations.'
+                    : temporaryIssue
+                    ? 'Classroom recommendations are temporarily unavailable.'
                     : classroomCount
                     ? `Ranked ${classroomCount} active classroom${classroomCount === 1 ? '' : 's'}. Recommended: ${recommended?.name || 'Classroom'} (${Number(recommended?.fitScore || 0)}%).`
                     : 'No active classrooms found for this student.';
@@ -98,6 +118,8 @@ window.CrmStudentFinance = (function () {
                 if (!selected) {
                     elements.studentClassroomMatchWarning.textContent = unsupported
                         ? 'The current server does not expose classroom recommendation data.'
+                        : temporaryIssue
+                        ? 'Classroom recommendations are temporarily unavailable.'
                         : '';
                     elements.studentClassroomMatchWarning.style.color = '';
                 } else if (modalState.financeWorkflow?.nextAction === 'start_attendance') {
@@ -120,6 +142,7 @@ window.CrmStudentFinance = (function () {
 
             if (elements.btnCreateRecommendedEnrollment) {
                 elements.btnCreateRecommendedEnrollment.disabled = unsupported
+                    || temporaryIssue
                     || !selected
                     || !!modalState.financeWorkflow?.requiresPayment
                     || modalState.financeWorkflow?.nextAction === 'start_attendance';
@@ -165,6 +188,7 @@ window.CrmStudentFinance = (function () {
             const totalOutstanding = Number(json.totalOutstanding || 0);
             const nextDueDate = String(json.nextDueDate || '').trim() || '-';
             const invoices = Array.isArray(json.invoices) ? json.invoices : [];
+            const currencyTotals = Array.isArray(json.currencyTotals) ? json.currencyTotals : [];
             const enrollmentRows = Array.isArray(attendanceJson?.students) ? attendanceJson.students : [];
             const activeEnrollments = enrollmentRows.filter((row) => String(row.status || '') === 'active');
             const availableEnrollments = activeEnrollments.length ? activeEnrollments : enrollmentRows;
@@ -182,7 +206,7 @@ window.CrmStudentFinance = (function () {
                     recommendedClassroom: null,
                     classroomCount: 0,
                     courseId: null,
-                    unsupported: true
+                    error: true
                 }))
                 : Promise.resolve({
                     matches: [],
@@ -229,9 +253,9 @@ window.CrmStudentFinance = (function () {
                     : 'No enrollment linked yet. You can bill first, then assign the student after payment confirmation.';
             }
 
-            if (elements.studentFinanceInvoiced) elements.studentFinanceInvoiced.textContent = window.CrmFinance ? window.CrmFinance.formatMoney(totalInvoiced) : String(totalInvoiced);
-            if (elements.studentFinancePaid) elements.studentFinancePaid.textContent = window.CrmFinance ? window.CrmFinance.formatMoney(totalPaid) : String(totalPaid);
-            if (elements.studentFinanceOutstanding) elements.studentFinanceOutstanding.textContent = window.CrmFinance ? window.CrmFinance.formatMoney(totalOutstanding) : String(totalOutstanding);
+            if (elements.studentFinanceInvoiced) elements.studentFinanceInvoiced.textContent = formatGroupedMoney(totalInvoiced, currencyTotals, 'totalInvoiced');
+            if (elements.studentFinancePaid) elements.studentFinancePaid.textContent = formatGroupedMoney(totalPaid, currencyTotals, 'totalPaid');
+            if (elements.studentFinanceOutstanding) elements.studentFinanceOutstanding.textContent = formatGroupedMoney(totalOutstanding, currencyTotals, 'totalOutstanding');
             if (elements.studentFinanceNextDue) elements.studentFinanceNextDue.textContent = nextDueDate;
 
             renderMatches(classroomMatchesJson);

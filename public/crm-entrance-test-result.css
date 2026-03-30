@@ -503,12 +503,12 @@
   overflow-x: auto;
 }
 
-.crm-pdf-exporting .crm-result-table-container {
+.crm-result-pdf-shell .crm-result-table-container {
   overflow-x: visible !important;
 }
 
-.crm-pdf-exporting .crm-table th,
-.crm-pdf-exporting .crm-table td {
+.crm-result-pdf-shell .crm-table th,
+.crm-result-pdf-shell .crm-table td {
   white-space: normal !important;
   word-break: break-word !important;
 }
@@ -571,89 +571,156 @@
   cursor: not-allowed;
 }
 
-/* PDF export overrides */
-.crm-pdf-exporting .crm-header {
-  background: #165d31 !important;
-  -webkit-print-color-adjust: exact;
-  print-color-adjust: exact;
-  padding: 0 12px !important;
-  height: 50px !important;
+/* PDF export shell
+   Keep the capture shell in normal flow so html2pdf renders it reliably. */
+.crm-result-pdf-shell {
+  position: relative;
+  display: block;
+  margin: 0 auto;
+  width: 1120px;
+  min-width: 1120px;
+  max-width: 1120px;
+  background: #ffffff;
+  color: var(--crm-text-main);
+  box-sizing: border-box;
+  pointer-events: none;
+  overflow: visible;
 }
 
-.crm-pdf-exporting .crm-logo-box {
-  width: 40px !important;
+.crm-result-pdf-pages {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
-.crm-pdf-exporting .crm-result-title {
-  font-size: 1.1rem !important;
+.crm-result-pdf-page {
+  width: 1120px;
+  min-height: 1584px;
+  height: 1584px;
+  box-sizing: border-box;
+  padding: 28px 32px 24px;
+  font-family: "Times New Roman", Times, serif !important;
+  background: #ffffff;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  overflow: hidden;
+  break-after: page;
+  page-break-after: always;
 }
 
-.crm-pdf-exporting .crm-score-card {
-  background: #ffffff !important;
-  box-shadow: none !important;
-  border: 1px solid #e2e8f0 !important;
+.crm-result-pdf-page:last-child {
+  break-after: auto;
+  page-break-after: auto;
 }
 
-.crm-pdf-exporting .crm-score-card::before,
-.crm-pdf-exporting .crm-score-card::after {
-  display: none !important;
+.crm-result-pdf-header {
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.crm-pdf-exporting .crm-score-bar-fill {
-  -webkit-print-color-adjust: exact;
-  print-color-adjust: exact;
+.crm-result-pdf-kicker {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--crm-primary);
 }
 
-/* html2pdf page-break marker */
-.html2pdf__page-break {
-  page-break-before: always;
+.crm-result-pdf-title {
+  margin-top: 6px;
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: var(--crm-primary);
 }
 
-/* Hide audio players in PDF (they render as blank rectangles) */
-.crm-pdf-exporting audio {
-  display: none !important;
+.crm-result-pdf-subtitle {
+  margin-top: 6px;
+  font-size: 0.95rem;
+  color: var(--crm-text-muted);
+  line-height: 1.45;
 }
 
-/* Tighten spacing in PDF mode */
-.crm-admin.crm-pdf-exporting {
-  padding: 0 !important;
-  margin-left: 0 !important;
-  margin-right: auto !important;
-  width: 190mm !important;
-  max-width: 190mm !important;
-  overflow: visible !important;
-  background-color: #ffffff !important;
+.crm-result-pdf-page-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  overflow: hidden;
 }
 
-.crm-pdf-exporting .crm-result-grid {
-  margin-top: 10px !important;
-  gap: 10px !important;
-  grid-template-columns: 1fr !important;
-}
-
-/* Strictly hide the Test card (2nd child of grid) */
-.crm-pdf-exporting .crm-result-grid>.crm-result-card:nth-child(2) {
-  display: none !important;
-}
-
-.crm-pdf-exporting .crm-result-card {
-  margin-top: 5px !important;
-}
-
-.crm-pdf-exporting .crm-result-details {
-  margin-top: 10px !important;
-}
-
-.crm-pdf-exporting .crm-result-question {
-  margin-bottom: 10px !important;
-  padding: 12px !important;
-}
-
-.crm-pdf-footer {
-  text-align: center;
-  padding: 16px 0 8px;
-  font-size: 0.8rem;
-  color: #94a3b8;
+.crm-result-pdf-footer {
+  margin-top: 16px;
+  padding-top: 12px;
   border-top: 1px solid #e2e8f0;
-  margin-top: 24px;
+  font-size: 0.82rem;
+  color: var(--crm-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.crm-result-pdf-summary-block .crm-result-summary {
+  margin-top: 0;
+}
+
+.crm-result-pdf-shell .crm-result-table-container {
+  overflow-x: visible !important;
+}
+
+.crm-result-pdf-shell .crm-score-card {
+  box-shadow: none !important;
+}
+
+.crm-result-pdf-shell .crm-score-card::before,
+.crm-result-pdf-shell .crm-score-card::after {
+  display: none !important;
+}
+
+.crm-result-pdf-shell .crm-score-bar-fill {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.crm-result-pdf-shell audio {
+  display: none !important;
+}
+
+.crm-result-pdf-section-intro {
+  border: 1px solid rgba(22, 93, 49, 0.08);
+  border-radius: 12px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.crm-result-pdf-section-intro summary {
+  list-style: none;
+  cursor: default;
+}
+
+.crm-result-pdf-section-intro summary::-webkit-details-marker {
+  display: none;
+}
+
+.crm-result-pdf-section-intro .crm-result-section-note {
+  margin: 0;
+  padding: 14px 18px 16px;
+}
+
+.crm-result-pdf-question-fragment {
+  margin-bottom: 0;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.crm-result-pdf-question-continuation {
+  padding-top: 14px;
+}
+
+.crm-result-pdf-question-fragment .crm-result-paragraph:last-child,
+.crm-result-pdf-question-fragment .crm-result-transcript:last-child,
+.crm-result-pdf-question-fragment .crm-result-table-container:last-child {
+  margin-bottom: 0;
 }

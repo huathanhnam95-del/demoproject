@@ -5,9 +5,12 @@ const path = require('path');
 
 const {
     buildRolePrompt,
+    evaluateRoleOutput,
     evaluateCouncilOutputs,
+    extractReferencedFiles,
     renderCouncilTelemetry,
     resolveContextFiles,
+    resolveOutputPath,
     runCouncilAnalysis
 } = require('../scripts/council-brain-lib');
 
@@ -45,6 +48,38 @@ async function testResolveContextFilesLoadsAbsoluteWindowsStylePathWithSpaces() 
     assert.match(result.contextData, /Space path context/);
 }
 
+async function testResolveContextFilesDeduplicatesEquivalentRelativePaths() {
+    const fixtureRelativePath = path.join('tmp', 'council-dedupe-fixture.md');
+    const fixturePath = path.join(process.cwd(), fixtureRelativePath);
+    fs.mkdirSync(path.dirname(fixturePath), { recursive: true });
+    fs.writeFileSync(fixturePath, '# Brief\nDeduplicated context\n', 'utf8');
+
+    const result = resolveContextFiles({
+        userMessage: `Review tmp/council-dedupe-fixture.md for logic issues`,
+        contextFiles: ['tmp\\council-dedupe-fixture.md'],
+        cwd: process.cwd()
+    });
+
+    assert.deepStrictEqual(result.missingFiles, []);
+    assert.deepStrictEqual(result.resolvedFiles, [fixturePath]);
+    assert.match(result.contextData, /Deduplicated context/);
+    assert.strictEqual(
+        (result.contextData.match(/--- FILE:/g) || []).length,
+        1
+    );
+}
+
+async function testExtractReferencedFilesSupportsMultiDotFilenamesAndLineSuffixes() {
+    const files = extractReferencedFiles(
+        'Review tests/summon-council-brain.test.js:L10-L20 and path-with-dash/file-name.test.js.'
+    );
+
+    assert.deepStrictEqual(files, [
+        'tests/summon-council-brain.test.js',
+        'path-with-dash/file-name.test.js'
+    ]);
+}
+
 async function testResolveContextFilesFailsClosedForMissingPromptReferencedFile() {
     const missingPath = path.join(os.tmpdir(), 'council-brain-missing.md');
 
@@ -58,6 +93,34 @@ async function testResolveContextFilesFailsClosedForMissingPromptReferencedFile(
     );
 }
 
+async function testResolveContextFilesCompactsLargeFilesAroundRelevantMatches() {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'council-brain-compact-'));
+    const fixturePath = path.join(tmpDir, 'large-file.js');
+    const lines = [];
+
+    for (let index = 1; index <= 120; index += 1) {
+        lines.push(`const filler${index} = ${index};`);
+    }
+    lines[95] = 'function criticalMatcher() { return "focus"; }';
+    lines[96] = 'const criticalContext = criticalMatcher();';
+    fs.writeFileSync(fixturePath, `${lines.join('\n')}\n`, 'utf8');
+
+    const result = resolveContextFiles({
+        userMessage: 'Review criticalMatcher behavior',
+        contextFiles: [fixturePath],
+        cwd: process.cwd(),
+        maxFileLinesForFullContext: 20,
+        excerptRadiusLines: 1,
+        maxExcerptMatchesPerFile: 2,
+        maxContextChars: 500
+    });
+
+    assert.deepStrictEqual(result.resolvedFiles, [fixturePath]);
+    assert.ok(result.contextData.length < 700, 'context should be compacted for large files');
+    assert.match(result.contextData, /criticalMatcher/);
+    assert.match(result.contextData, /L96/);
+}
+
 async function testReviewerRunsAfterDebateAndReceivesPriorOutputs() {
     const calls = [];
 
@@ -68,15 +131,42 @@ async function testReviewerRunsAfterDebateAndReceivesPriorOutputs() {
         runRole: async ({ roleKey, prompt }) => {
             calls.push({ roleKey, prompt });
             if (roleKey === 'architect') {
-                return 'ARCHITECT: Use service boundaries.';
+                return [
+                    '1. Observed Facts',
+                    '- Service boundary exists [FILE: C:\\tmp\\fixture.js:L1-L2]',
+                    '2. Inferences',
+                    '- It is broad [FILE: C:\\tmp\\fixture.js:L3-L4]',
+                    '3. Recommendations',
+                    '- Narrow it [FILE: C:\\tmp\\fixture.js:L5-L6]',
+                    '4. Unknowns',
+                    '- Unknown one'
+                ].join('\n');
             }
             if (roleKey === 'challenger') {
-                assert.match(prompt, /ARCHITECT: Use service boundaries\./);
-                return 'CHALLENGER: The service boundary is too broad.';
+                assert.match(prompt, /Service boundary exists/);
+                return [
+                    '1. Supported Concerns',
+                    '- Boundary is too broad [FILE: C:\\tmp\\fixture.js:L3-L4]',
+                    '2. Weak Claims',
+                    '- Scope is unclear [FILE: C:\\tmp\\fixture.js:L7-L8]',
+                    '3. Corrections',
+                    '- Split the module [FILE: C:\\tmp\\fixture.js:L9-L10]',
+                    '4. Remaining Unknowns',
+                    '- Unknown one'
+                ].join('\n');
             }
-            assert.match(prompt, /ARCHITECT: Use service boundaries\./);
-            assert.match(prompt, /CHALLENGER: The service boundary is too broad\./);
-            return 'REVIEWER: Narrow the boundary and keep the evidence.';
+            assert.match(prompt, /Architect Summary:/);
+            assert.match(prompt, /Challenger Summary:/);
+            assert.doesNotMatch(prompt, /Architect Output:/);
+            assert.doesNotMatch(prompt, /Challenger Output:/);
+            return [
+                '1. Final Findings',
+                '- Narrow the boundary [FILE: C:\\tmp\\fixture.js:L5-L6]',
+                '2. Recommended Actions',
+                '- Split the module [FILE: C:\\tmp\\fixture.js:L9-L10]',
+                '3. Open Unknowns',
+                '- Unknown one'
+            ].join('\n');
         }
     });
 
@@ -84,7 +174,129 @@ async function testReviewerRunsAfterDebateAndReceivesPriorOutputs() {
         calls.map((call) => call.roleKey),
         ['architect', 'challenger', 'reviewer']
     );
-    assert.strictEqual(results.reviewer, 'REVIEWER: Narrow the boundary and keep the evidence.');
+    assert.match(results.reviewer, /Narrow the boundary/);
+}
+
+async function testRunCouncilAnalysisCanWidenContextOnRetry() {
+    const seenPrompts = [];
+
+    const results = await runCouncilAnalysis({
+        userMessage: 'Review the current implementation',
+        contextData: 'Context Evidence:\nnarrow context',
+        resolvedFiles: ['C:\\tmp\\fixture.js'],
+        fileLineCounts: {
+            'C:\\tmp\\fixture.js': 20
+        },
+        validateRoles: true,
+        maxRoleAttempts: 2,
+        getContextDataForAttempt: ({ roleKey, attempt, defaultContextData }) => {
+            if (roleKey === 'architect' && attempt === 2) {
+                return `${defaultContextData}\nexpanded context`;
+            }
+            return defaultContextData;
+        },
+        runRole: async ({ roleKey, prompt, attempt }) => {
+            seenPrompts.push({ roleKey, prompt, attempt });
+
+            if (roleKey === 'architect' && attempt === 1) {
+                return '1. Observed Facts\n- Fact one\n2. Inferences\n- Inference one\n3. Recommendations\n- Action one\n4. Unknowns\n- Unknown one';
+            }
+            if (roleKey === 'architect') {
+                assert.match(prompt, /expanded context/);
+                assert.match(prompt, /Additional context has been provided/);
+            }
+
+            if (roleKey === 'challenger') {
+                return [
+                    '1. Supported Concerns',
+                    '- Concern one [FILE: C:\\tmp\\fixture.js:L1-L2]',
+                    '2. Weak Claims',
+                    '- Weak claim one [FILE: C:\\tmp\\fixture.js:L3-L4]',
+                    '3. Corrections',
+                    '- Correction one [FILE: C:\\tmp\\fixture.js:L5-L6]',
+                    '4. Remaining Unknowns',
+                    '- Unknown one'
+                ].join('\n');
+            }
+
+            return [
+                roleKey === 'architect' ? '1. Observed Facts' : '1. Final Findings',
+                roleKey === 'architect' ? '- Fact one [FILE: C:\\tmp\\fixture.js:L1-L2]' : '- Finding one [FILE: C:\\tmp\\fixture.js:L1-L2]',
+                roleKey === 'architect' ? '2. Inferences' : '2. Recommended Actions',
+                roleKey === 'architect' ? '- Inference one [FILE: C:\\tmp\\fixture.js:L3-L4]' : '- Action one [FILE: C:\\tmp\\fixture.js:L3-L4]',
+                roleKey === 'architect' ? '3. Recommendations' : '3. Open Unknowns',
+                roleKey === 'architect' ? '- Action one [FILE: C:\\tmp\\fixture.js:L5-L6]' : '- Unknown one',
+                roleKey === 'architect' ? '4. Unknowns' : undefined,
+                roleKey === 'architect' ? '- Unknown one' : undefined
+            ].filter(Boolean).join('\n');
+        }
+    });
+
+    assert.strictEqual(results.status, 'repaired_success');
+    assert.strictEqual(seenPrompts.filter((entry) => entry.roleKey === 'architect').length, 2);
+}
+
+async function testRunCouncilAnalysisRetriesArchitectWhenEvidenceIsMissing() {
+    const calls = [];
+
+    const results = await runCouncilAnalysis({
+        userMessage: 'Review the current implementation',
+        contextData: 'Observed facts:\n- Fact A',
+        resolvedFiles: ['C:\\tmp\\fixture.js'],
+        fileLineCounts: {
+            'C:\\tmp\\fixture.js': 20
+        },
+        validateRoles: true,
+        maxRoleAttempts: 2,
+        runRole: async ({ roleKey, prompt }) => {
+            calls.push({ roleKey, prompt });
+
+            if (roleKey === 'architect') {
+                const architectAttempt = calls.filter((call) => call.roleKey === 'architect').length;
+                if (architectAttempt === 1) {
+                    return '1. Observed Facts\n- Fact one\n2. Inferences\n- Inference one\n3. Recommendations\n- Action one\n4. Unknowns\n- Unknown one';
+                }
+
+                assert.match(prompt, /missing evidence/i);
+                return [
+                    '1. Observed Facts',
+                    '- Fact one [FILE: C:\\tmp\\fixture.js:L1-L2]',
+                    '2. Inferences',
+                    '- Inference one [FILE: C:\\tmp\\fixture.js:L3-L4]',
+                    '3. Recommendations',
+                    '- Action one [FILE: C:\\tmp\\fixture.js:L5-L6]',
+                    '4. Unknowns',
+                    '- Unknown one'
+                ].join('\n');
+            }
+
+            if (roleKey === 'challenger') {
+                return [
+                    '1. Supported Concerns',
+                    '- Concern one [FILE: C:\\tmp\\fixture.js:L1-L2]',
+                    '2. Weak Claims',
+                    '- Weak claim one [FILE: C:\\tmp\\fixture.js:L3-L4]',
+                    '3. Corrections',
+                    '- Correction one [FILE: C:\\tmp\\fixture.js:L5-L6]',
+                    '4. Remaining Unknowns',
+                    '- Unknown one'
+                ].join('\n');
+            }
+
+            return [
+                '1. Final Findings',
+                '- Finding one [FILE: C:\\tmp\\fixture.js:L1-L2]',
+                '2. Recommended Actions',
+                '- Action one [FILE: C:\\tmp\\fixture.js:L3-L4]',
+                '3. Open Unknowns',
+                '- Unknown one'
+            ].join('\n');
+        }
+    });
+
+    assert.strictEqual(calls.filter((call) => call.roleKey === 'architect').length, 2);
+    assert.strictEqual(results.status, 'repaired_success');
+    assert.strictEqual(results.attemptsByRole.architect, 2);
 }
 
 async function testReviewerRetriesWhenCitationPrecisionFails() {
@@ -153,6 +365,48 @@ async function testReviewerRetriesWhenCitationPrecisionFails() {
     assert.match(results.reviewer, /\[FILE: C:\\tmp\\fixture\.js:L1-L5\]/);
 }
 
+async function testRunCouncilAnalysisFailsClosedWhenRoleNeverValidates() {
+    const results = await runCouncilAnalysis({
+        userMessage: 'Review the current implementation',
+        contextData: 'Observed facts:\n- Fact A',
+        resolvedFiles: ['C:\\tmp\\fixture.js'],
+        fileLineCounts: {
+            'C:\\tmp\\fixture.js': 20
+        },
+        validateRoles: true,
+        maxRoleAttempts: 2,
+        runRole: async ({ roleKey }) => {
+            if (roleKey === 'architect') {
+                return '1. Observed Facts\n- Fact one\n2. Inferences\n- Inference one\n3. Recommendations\n- Action one\n4. Unknowns\n- Unknown one';
+            }
+            if (roleKey === 'challenger') {
+                return [
+                    '1. Supported Concerns',
+                    '- Concern one [FILE: C:\\tmp\\fixture.js:L1-L2]',
+                    '2. Weak Claims',
+                    '- Weak claim one [FILE: C:\\tmp\\fixture.js:L3-L4]',
+                    '3. Corrections',
+                    '- Correction one [FILE: C:\\tmp\\fixture.js:L5-L6]',
+                    '4. Remaining Unknowns',
+                    '- Unknown one'
+                ].join('\n');
+            }
+            return [
+                '1. Final Findings',
+                '- Finding one [FILE: C:\\tmp\\fixture.js:L1-L2]',
+                '2. Recommended Actions',
+                '- Action one [FILE: C:\\tmp\\fixture.js:L3-L4]',
+                '3. Open Unknowns',
+                '- Unknown one'
+            ].join('\n');
+        }
+    });
+
+    assert.strictEqual(results.status, 'failed_validation');
+    assert.strictEqual(results.attemptsByRole.architect, 2);
+    assert.ok(results.validationFailures.architect.length > 0);
+}
+
 async function testBuildRolePromptRequiresEvidenceTags() {
     const prompt = buildRolePrompt({
         roleKey: 'architect',
@@ -163,6 +417,28 @@ async function testBuildRolePromptRequiresEvidenceTags() {
 
     assert.match(prompt, /Use evidence tags in the form \[FILE:/);
     assert.match(prompt, /If no direct evidence exists, write No direct evidence/);
+}
+
+async function testEvaluateRoleOutputAcceptsBacktickWrappedEvidenceTags() {
+    const evaluation = evaluateRoleOutput('architect', [
+        '1. Observed Facts',
+        '- Fact one [FILE: `C:\\tmp\\fixture.js:L1-L2`]',
+        '2. Inferences',
+        '- Inference one [FILE: `C:\\tmp\\fixture.js:L3-L4`]',
+        '3. Recommendations',
+        '- Action one [FILE: `C:\\tmp\\fixture.js:L5-L6`]',
+        '4. Unknowns',
+        '- Unknown one'
+    ].join('\n'), {
+        resolvedFiles: ['C:\\tmp\\fixture.js'],
+        fileLineCounts: {
+            'C:\\tmp\\fixture.js': 10
+        }
+    });
+
+    assert.strictEqual(evaluation.hasEvidenceTags, true);
+    assert.strictEqual(evaluation.evidenceTagCount, 3);
+    assert.strictEqual(evaluation.invalidEvidenceTagCount, 0);
 }
 
 async function testEvaluateCouncilOutputsScoresRequiredSectionsAndDuplicates() {
@@ -297,17 +573,37 @@ async function testRenderCouncilTelemetryIncludesEvaluationSummary() {
     assert.strictEqual(parsed.evaluation.roles.architect.broadEvidenceTagCount, 0);
 }
 
+async function testResolveOutputPathRejectsExternalPathsByDefault() {
+    assert.throws(
+        () => resolveOutputPath({
+            requestedOutFile: path.join(os.tmpdir(), 'council-outside.txt'),
+            cwd: process.cwd(),
+            repoRoot: process.cwd(),
+            allowExternalOut: false
+        }),
+        /outside the repository/i
+    );
+}
+
 async function main() {
     await testResolveContextFilesLoadsPromptReferencedFile();
     await testResolveContextFilesLoadsAbsoluteWindowsStylePathWithSpaces();
+    await testResolveContextFilesDeduplicatesEquivalentRelativePaths();
+    await testExtractReferencedFilesSupportsMultiDotFilenamesAndLineSuffixes();
     await testResolveContextFilesFailsClosedForMissingPromptReferencedFile();
+    await testResolveContextFilesCompactsLargeFilesAroundRelevantMatches();
     await testReviewerRunsAfterDebateAndReceivesPriorOutputs();
+    await testRunCouncilAnalysisCanWidenContextOnRetry();
+    await testRunCouncilAnalysisRetriesArchitectWhenEvidenceIsMissing();
     await testReviewerRetriesWhenCitationPrecisionFails();
+    await testRunCouncilAnalysisFailsClosedWhenRoleNeverValidates();
     await testBuildRolePromptRequiresEvidenceTags();
+    await testEvaluateRoleOutputAcceptsBacktickWrappedEvidenceTags();
     await testEvaluateCouncilOutputsScoresRequiredSectionsAndDuplicates();
     await testEvaluateCouncilOutputsFlagsInvalidEvidenceTags();
     await testEvaluateCouncilOutputsFlagsBroadEvidenceTags();
     await testRenderCouncilTelemetryIncludesEvaluationSummary();
+    await testResolveOutputPathRejectsExternalPathsByDefault();
     process.stdout.write('summon council brain passed\n');
 }
 

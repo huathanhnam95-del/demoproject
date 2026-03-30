@@ -11,7 +11,7 @@ const {
     TEST_VERSION,
     buildPublicSession
 } = require('../entrance-test/test36plus');
-const { buildEntranceTestLinks } = require('../../functions/src/crm/public-origin');
+const { buildEntranceTestAdminList } = require('../../functions/src/crm/entrance-test-link-recovery');
 
 async function generateClassCode() {
     if (!db) {
@@ -172,6 +172,7 @@ function registerLocalOnlyRoutes(router, deps) {
         }
     });
 
+        if (process.env.ENABLE_LEGACY_DUPLICATE_ENTRANCE_TEST_ROUTES === '1') {
         router.post('/students/:studentId/entrance-tests', localAuthMiddleware, async (req, res) => {
             try {
                 const studentId = String(req.params.studentId || '').trim();
@@ -282,22 +283,7 @@ function registerLocalOnlyRoutes(router, deps) {
                 return bMs - aMs;
             });
 
-            const testsWithLinks = tests.map((test) => {
-                const links = buildEntranceTestLinks(req, {
-                    deliveryToken: String(test.deliveryToken || '').trim(),
-                    testId: test.testId
-                });
-                return {
-                    testId: test.testId,
-                    version: test.version,
-                    status: test.status,
-                    createdAt: test.createdAt,
-                    startedAt: test.startedAt,
-                    submittedAt: test.submittedAt,
-                    testLink: links.testLink,
-                    resultLink: links.resultLink
-                };
-            });
+            const testsWithLinks = await buildEntranceTestAdminList(req, localDb, tests);
 
             return localSendSuccess(res, { tests: testsWithLinks });
         } catch (error) {
@@ -374,11 +360,13 @@ function registerLocalOnlyRoutes(router, deps) {
             return localSendError(res, 500, 'AUDIO_URL_ERROR', 'Failed to generate audio URL.', error?.message || error);
         }
     });
+        }
 }
 
 const localAdminRouter = createCrmRouter({
     db,
     admin,
+    getStorageBucket,
     authMiddleware,
     resolveAdminStatus: async ({ req }) => ({
         // authMiddleware already enforces ADMIN_EMAIL whitelist for this server stack

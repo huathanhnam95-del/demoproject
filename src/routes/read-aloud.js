@@ -23,7 +23,7 @@ const router = express.Router();
 const CONNECTED_SPEECH_INDEX_PATH = path.join(process.cwd(), 'public', 'database', 'RA', 'connected-speech-index.json');
 let connectedSpeechIndexCache = null;
 let connectedSpeechIndexPromise = null;
-const READ_ALOUD_MAX_ASSESSMENT_DURATION_MS = 40000;
+const READ_ALOUD_MAX_ASSESSMENT_DURATION_MS = 45000;
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 20 * 1024 * 1024 } // 20MB limit for longer audio

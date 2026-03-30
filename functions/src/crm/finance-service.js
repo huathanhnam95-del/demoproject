@@ -5,6 +5,8 @@ const {
 } = globalThis.CrmFinanceWorkflow || {};
 
 const COMMISSION_STATUSES = ['pending', 'approved', 'paid'];
+const SUPPORTED_CURRENCIES = ['VND', 'AUD', 'USD'];
+const DEFAULT_CURRENCY = 'VND';
 
 function cleanOptionalString(value) {
     const normalized = String(value || '').trim();
@@ -13,13 +15,34 @@ function cleanOptionalString(value) {
 
 function cleanOptionalNumber(value) {
     if (value === null || value === undefined || value === '') return null;
-    const normalized = Number(value);
+    const normalized = Number(String(value).replace(/,/g, ''));
     return Number.isFinite(normalized) ? normalized : null;
 }
 
-function normalizeMoney(value) {
+function normalizeCurrency(value) {
+    const normalized = String(value || '').trim().toUpperCase();
+    return SUPPORTED_CURRENCIES.includes(normalized) ? normalized : DEFAULT_CURRENCY;
+}
+
+function currencyDecimals(currency) {
+    return normalizeCurrency(currency) === 'VND' ? 0 : 2;
+}
+
+function normalizeMoney(value, currency = DEFAULT_CURRENCY) {
     const amount = cleanOptionalNumber(value);
-    return amount === null ? 0 : Math.max(0, amount);
+    if (amount === null) return 0;
+    const decimals = currencyDecimals(currency);
+    const factor = 10 ** decimals;
+    return Math.max(0, Math.round(amount * factor) / factor);
+}
+
+function formatMoneyValue(value, currency = DEFAULT_CURRENCY) {
+    const amount = normalizeMoney(value, currency);
+    const decimals = currencyDecimals(currency);
+    return new Intl.NumberFormat('en-US', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+    }).format(amount);
 }
 
 function normalizeCommissionSplits(raw) {
@@ -38,18 +61,20 @@ function normalizeCommissionSplits(raw) {
 function buildInvoiceCreateData(input, context = {}) {
     const studentId = cleanOptionalString(input?.studentId);
     const enrollmentId = cleanOptionalString(input?.enrollmentId);
-    const amount = normalizeMoney(input?.amount);
+    const currency = normalizeCurrency(input?.currency);
+    const amount = normalizeMoney(input?.amount, currency);
     if (!studentId || amount <= 0) {
         throw new Error('Invoice requires studentId and a positive amount.');
     }
 
-    const discountAmount = normalizeMoney(input?.discountAmount);
+    const discountAmount = normalizeMoney(input?.discountAmount, currency);
     const netAmount = Math.max(0, amount - discountAmount);
 
     return {
         studentId,
         enrollmentId,
         courseId: cleanOptionalString(input?.courseId),
+        currency,
         amount,
         discountAmount,
         netAmount,
@@ -68,20 +93,24 @@ function buildInvoiceCreateData(input, context = {}) {
 
 function buildInvoicePatchData(existing, input, context = {}) {
     const payload = input && typeof input === 'object' ? input : {};
-    const recognizedKeys = ['dueDate', 'status', 'refundStatus', 'notes', 'discountAmount', 'commissionSplits'];
+    const recognizedKeys = ['dueDate', 'status', 'refundStatus', 'notes', 'discountAmount', 'commissionSplits', 'currency'];
     if (!recognizedKeys.some((key) => Object.prototype.hasOwnProperty.call(payload, key))) {
         throw new Error('No invoice fields provided for update.');
     }
 
+    const currency = Object.prototype.hasOwnProperty.call(payload, 'currency')
+        ? normalizeCurrency(payload.currency)
+        : normalizeCurrency(existing?.currency);
     const discountAmount = Object.prototype.hasOwnProperty.call(payload, 'discountAmount')
-        ? normalizeMoney(payload.discountAmount)
-        : normalizeMoney(existing?.discountAmount);
-    const amount = normalizeMoney(existing?.amount);
+        ? normalizeMoney(payload.discountAmount, currency)
+        : normalizeMoney(existing?.discountAmount, currency);
+    const amount = normalizeMoney(existing?.amount, currency);
     const netAmount = Math.max(0, amount - discountAmount);
-    const paidAmount = normalizeMoney(existing?.paidAmount);
+    const paidAmount = normalizeMoney(existing?.paidAmount, currency);
 
     return {
         ...existing,
+        currency,
         dueDate: Object.prototype.hasOwnProperty.call(payload, 'dueDate') ? cleanOptionalString(payload.dueDate) : (existing?.dueDate ?? null),
         status: Object.prototype.hasOwnProperty.call(payload, 'status') ? cleanOptionalString(payload.status) : (existing?.status || 'open'),
         refundStatus: Object.prototype.hasOwnProperty.call(payload, 'refundStatus') ? cleanOptionalString(payload.refundStatus) : (existing?.refundStatus || 'none'),
@@ -101,7 +130,8 @@ function buildPaymentCreateData(input, context = {}) {
     const invoiceId = cleanOptionalString(input?.invoiceId);
     const studentId = cleanOptionalString(input?.studentId);
     const enrollmentId = cleanOptionalString(input?.enrollmentId);
-    const amount = normalizeMoney(input?.amount);
+    const currency = normalizeCurrency(input?.currency);
+    const amount = normalizeMoney(input?.amount, currency);
     if (!invoiceId || !studentId || amount <= 0) {
         throw new Error('Payment requires invoiceId, studentId, and a positive amount.');
     }
@@ -110,6 +140,7 @@ function buildPaymentCreateData(input, context = {}) {
         invoiceId,
         studentId,
         enrollmentId,
+        currency,
         amount,
         method: cleanOptionalString(input?.method) || 'bank-transfer',
         paymentDate: cleanOptionalString(input?.paymentDate) || new Date().toISOString(),
@@ -160,14 +191,16 @@ function buildPaidEnrollmentSyncPatch({ invoice, enrollment, student }, context 
 
 function applyPaymentToInvoice(invoice, payments) {
     const paymentList = Array.isArray(payments) ? payments : [];
-    const paidAmount = paymentList.reduce((sum, payment) => sum + normalizeMoney(payment?.amount), 0);
-    const outstandingAmount = Math.max(0, normalizeMoney(invoice?.netAmount) - paidAmount);
+    const currency = normalizeCurrency(invoice?.currency);
+    const paidAmount = paymentList.reduce((sum, payment) => sum + normalizeMoney(payment?.amount, currency), 0);
+    const outstandingAmount = Math.max(0, normalizeMoney(invoice?.netAmount, currency) - paidAmount);
     const status = outstandingAmount === 0
         ? 'paid'
         : (paidAmount > 0 ? 'partial' : (invoice?.status || 'open'));
 
     return {
         ...invoice,
+        currency,
         paidAmount,
         outstandingAmount,
         status
@@ -176,6 +209,7 @@ function applyPaymentToInvoice(invoice, payments) {
 
 function buildCommissionRecords({ invoiceId, paymentId, studentId, enrollmentId, commissionSplits }, context = {}) {
     const splits = normalizeCommissionSplits(commissionSplits);
+    const currency = normalizeCurrency(context.currency);
     return Object.entries(splits)
         .filter(([, split]) => split.actorUid && split.amount > 0)
         .map(([role, split]) => ({
@@ -186,6 +220,7 @@ function buildCommissionRecords({ invoiceId, paymentId, studentId, enrollmentId,
             role,
             actorUid: split.actorUid,
             amount: split.amount,
+            currency,
             status: 'pending',
             createdAt: context.serverTimestamp ? context.serverTimestamp() : new Date(),
             createdBy: context.user?.uid || null
@@ -196,12 +231,37 @@ function summarizeFinance({ invoices, payments }) {
     const invoiceList = Array.isArray(invoices) ? invoices : [];
     const paymentList = Array.isArray(payments) ? payments : [];
 
-    const totalInvoiced = invoiceList.reduce((sum, invoice) => sum + normalizeMoney(invoice?.netAmount), 0);
-    const totalPaid = paymentList.reduce((sum, payment) => sum + normalizeMoney(payment?.amount), 0);
-    const totalOutstanding = invoiceList.reduce((sum, invoice) => sum + normalizeMoney(invoice?.outstandingAmount), 0);
+    const bucketMap = new Map();
+    function getBucket(currency) {
+        const normalized = normalizeCurrency(currency);
+        if (!bucketMap.has(normalized)) {
+            bucketMap.set(normalized, {
+                currency: normalized,
+                totalInvoiced: 0,
+                totalPaid: 0,
+                totalOutstanding: 0
+            });
+        }
+        return bucketMap.get(normalized);
+    }
+
+    invoiceList.forEach((invoice) => {
+        const bucket = getBucket(invoice?.currency);
+        bucket.totalInvoiced += normalizeMoney(invoice?.netAmount, bucket.currency);
+        bucket.totalOutstanding += normalizeMoney(invoice?.outstandingAmount, bucket.currency);
+    });
+    paymentList.forEach((payment) => {
+        const bucket = getBucket(payment?.currency);
+        bucket.totalPaid += normalizeMoney(payment?.amount, bucket.currency);
+    });
+
+    const currencyTotals = Array.from(bucketMap.values());
+    const totalInvoiced = currencyTotals.reduce((sum, bucket) => sum + bucket.totalInvoiced, 0);
+    const totalPaid = currencyTotals.reduce((sum, bucket) => sum + bucket.totalPaid, 0);
+    const totalOutstanding = currencyTotals.reduce((sum, bucket) => sum + bucket.totalOutstanding, 0);
 
     const dueDates = invoiceList
-        .filter((invoice) => normalizeMoney(invoice?.outstandingAmount) > 0 && cleanOptionalString(invoice?.dueDate))
+        .filter((invoice) => normalizeMoney(invoice?.outstandingAmount, invoice?.currency) > 0 && cleanOptionalString(invoice?.dueDate))
         .map((invoice) => cleanOptionalString(invoice.dueDate))
         .sort();
 
@@ -209,7 +269,8 @@ function summarizeFinance({ invoices, payments }) {
         totalInvoiced,
         totalPaid,
         totalOutstanding,
-        nextDueDate: dueDates[0] || null
+        nextDueDate: dueDates[0] || null,
+        currencyTotals
     };
 }
 
@@ -220,6 +281,7 @@ function mapInvoiceRecord(doc, invoiceId) {
         studentId: data.studentId || null,
         enrollmentId: data.enrollmentId || null,
         courseId: data.courseId || null,
+        currency: normalizeCurrency(data.currency),
         amount: data.amount || 0,
         discountAmount: data.discountAmount || 0,
         netAmount: data.netAmount || 0,
@@ -245,6 +307,7 @@ function mapPaymentRecord(doc, paymentId) {
         invoiceId: data.invoiceId || null,
         studentId: data.studentId || null,
         enrollmentId: data.enrollmentId || null,
+        currency: normalizeCurrency(data.currency),
         amount: data.amount || 0,
         method: data.method || 'bank-transfer',
         paymentDate: data.paymentDate || null,
@@ -267,5 +330,9 @@ module.exports = {
     summarizeFinance,
     deriveFinanceWorkflowState,
     mapInvoiceRecord,
-    mapPaymentRecord
+    mapPaymentRecord,
+    normalizeCurrency,
+    formatMoneyValue,
+    SUPPORTED_CURRENCIES,
+    DEFAULT_CURRENCY
 };

@@ -16,6 +16,12 @@ function cleanOptionalString(value) {
     return normalized || null;
 }
 
+function looksLikeUrl(value) {
+    const text = cleanOptionalString(value);
+    if (!text) return false;
+    return /^https?:\/\//i.test(text) && /facebook\.com/i.test(text);
+}
+
 function cleanOptionalNumber(value) {
     if (value === null || value === undefined || value === '') return null;
     const normalized = Number(value);
@@ -72,6 +78,9 @@ function normalizeLeadCore(input, fallback = {}) {
         facebookProfileUrl: Object.prototype.hasOwnProperty.call(source, 'facebookProfileUrl')
             ? cleanOptionalString(source.facebookProfileUrl)
             : (base.facebookProfileUrl ?? null),
+        crmId: Object.prototype.hasOwnProperty.call(source, 'crmId')
+            ? cleanOptionalString(source.crmId)
+            : (base.crmId ?? null),
         realName: Object.prototype.hasOwnProperty.call(source, 'realName')
             ? cleanOptionalString(source.realName)
             : (base.realName ?? null),
@@ -125,7 +134,8 @@ function hasAnyLeadContact(lead) {
 function buildLeadCreateData(input, context = {}) {
     const lead = normalizeLeadCore(input, {
         stage: 'new',
-        ownerUid: context.user?.uid || null
+        ownerUid: context.user?.uid || null,
+        crmId: context.crmId || null
     });
     if (!hasAnyLeadContact(lead)) {
         throw new Error('Please fill at least 1 lead contact field before saving.');
@@ -187,19 +197,32 @@ function buildLeadConversion({ leadId, lead, context = {} }) {
         || cleanOptionalString(lead.facebook)
         || cleanOptionalString(lead.facebookProfileUrl);
 
+    const studentFacebookName = cleanOptionalString(lead.facebookDisplayName)
+        || (looksLikeUrl(lead.facebook) ? null : cleanOptionalString(lead.facebook));
+    const studentFacebookProfileUrl = cleanOptionalString(lead.facebookProfileUrl)
+        || (looksLikeUrl(lead.facebook) ? cleanOptionalString(lead.facebook) : null);
+
+    const leadStage = cleanOptionalString(lead.stage);
+    const studentLifecycleStage = ({
+        test_scheduled: 'test_scheduled',
+        test_completed: 'test_completed',
+        counseling: 'counseling',
+        trial: 'trial'
+    })[leadStage] || 'potential';
+
     const student = buildStudentCreateData({
         name: studentName,
         label: cleanOptionalString(lead.label) || cleanOptionalString(lead.facebookDisplayName) || null,
         phone: lead.phone,
         email: lead.email,
         zalo: lead.zalo,
-        facebook: cleanOptionalString(lead.facebookDisplayName)
-            || cleanOptionalString(lead.facebook)
-            || cleanOptionalString(lead.facebookProfileUrl),
+        facebook: studentFacebookName,
+        facebookProfileUrl: studentFacebookProfileUrl,
+        crmId: cleanOptionalString(lead.crmId) || cleanOptionalString(context.crmId) || null,
         ownerUid: lead.ownerUid || context.user?.uid || null,
         acquisitionSource: lead.source || null,
         leadId,
-        lifecycleStage: 'enrolled',
+        lifecycleStage: studentLifecycleStage,
         notes: joinNonEmpty([lead.notes, notes]),
         preferredSchedule,
         preferredLearningDays: cleanOptionalArray(lead.preferredLearningDays),
@@ -254,6 +277,7 @@ function mapLeadRecord(doc, leadId) {
         facebook: data.facebook || data.facebookDisplayName || null,
         facebookDisplayName: data.facebookDisplayName || data.facebook || null,
         facebookProfileUrl: data.facebookProfileUrl || null,
+        crmId: data.crmId || null,
         realName: data.realName || null,
         dateOfBirth: data.dateOfBirth || null,
         learningNeeds: data.learningNeeds || null,

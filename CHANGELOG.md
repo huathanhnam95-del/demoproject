@@ -1,3 +1,21 @@
+## [V1.6.1] - 2026-03-30
+
+### Added
+
+- **CRM Extensions**: Added administrative recycle bin, bulk delete functionality, and entrance test link recovery endpoints.
+- **Audio Pipeline**: Integrated generation of Beginner Mode (Speed 80) MP3s for the RFIB dataset.
+
+### Improved
+
+- **Speech Coach UX**: Modernized Read Aloud mode feedback UI with a two-column compact layout, robust token-based annotations, and accessible accordions.
+- **CRM Admin UI**: Resolved header overflow issues for a robust, responsive layout on smaller viewports.
+
+### Fixed
+
+- **Entrance Tests**: Corrected backend scoring logic and executed rescoring.
+- **PDF Export**: Addressed layout clipping and blurry rendering by configuring proper width constraints and lossless PNG capture in `jsPDF`/`html2pdf`.
+- **System Stability**: Fixed High Council scripting and accessibility issues for agentic assistance.
+
 ## [V1.5.9] - 2026-03-25
 
 ### Added

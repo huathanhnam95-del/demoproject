@@ -3,6 +3,9 @@ const {
     CRM_STUDENTS
 } = require('../../crm/collections');
 const {
+    allocateNextCrmId
+} = require('../../crm/business-id-service');
+const {
     buildLeadCreateData,
     buildLeadPatchData,
     buildLeadConversion,
@@ -41,9 +44,11 @@ module.exports = function registerLeadRoutes(router, deps) {
 
     router.post('/leads', ...requireAdminHandlers, async (req, res) => {
         try {
+            const allocation = await allocateNextCrmId(db, { serverTimestamp });
             const lead = buildLeadCreateData(req.body || {}, {
                 user: req.user,
-                serverTimestamp
+                serverTimestamp,
+                crmId: allocation.crmId
             });
             const ref = db.collection(CRM_LEADS).doc();
             await ref.set(lead);
@@ -113,21 +118,38 @@ module.exports = function registerLeadRoutes(router, deps) {
                 return sendError(res, 409, 'LEAD_ALREADY_CONVERTED', 'Lead has already been converted.');
             }
 
+            const crmIdAllocation = String(lead.crmId || '').trim()
+                ? null
+                : await allocateNextCrmId(db, { serverTimestamp });
+            const crmId = String(lead.crmId || crmIdAllocation?.crmId || '').trim() || null;
+
             const conversion = buildLeadConversion({
                 leadId,
                 lead,
                 context: {
                     user: req.user,
-                    serverTimestamp
+                    serverTimestamp,
+                    crmId
                 }
             });
 
             const studentRef = db.collection(CRM_STUDENTS).doc();
-            await studentRef.set(conversion.student);
-            await leadRef.set({
+            const linkedTestSnap = await db.collection('entranceTests').where('leadId', '==', leadId).get();
+            const batch = db.batch();
+            batch.set(studentRef, conversion.student);
+            batch.set(leadRef, {
                 ...conversion.leadPatch,
+                ...(crmId ? { crmId } : {}),
                 studentId: studentRef.id
             }, { merge: true });
+            linkedTestSnap.docs.forEach((doc) => {
+                batch.set(doc.ref, {
+                studentId: studentRef.id,
+                crmId: crmId || conversion.student?.crmId || null,
+                updatedAt: serverTimestamp()
+                }, { merge: true });
+            });
+            await batch.commit();
             await Promise.all([
                 writeAuditLog?.({
                     action: 'lead.convert',

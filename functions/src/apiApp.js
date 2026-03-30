@@ -8,7 +8,7 @@ const {
 } = require('./crm/http-contracts');
 const { CRM_LEADS } = require('./crm/collections');
 const { buildLeadStageSyncPatch } = require('./crm/lead-service');
-const { buildEntranceTestLinks } = require('./crm/public-origin');
+const { buildEntranceTestAdminList } = require('./crm/entrance-test-link-recovery');
 const createCrmRouter = require('./routes/admin/create-crm-router');
 const entranceTestRoutes = require('./routes/entrance-tests');
 const { TEST_VERSION } = require('./entrance-test/test36plus');
@@ -129,6 +129,10 @@ const crmRouter = createCrmRouter({
         forceLinkProfile
     },
     registerExtraRoutes(router, deps) {
+        if (process.env.ENABLE_LEGACY_DUPLICATE_ENTRANCE_TEST_ROUTES !== '1') {
+            return;
+        }
+
         const crypto = require('crypto');
 
         function hashTokenToTestId(token) {
@@ -235,22 +239,7 @@ const crmRouter = createCrmRouter({
                     return bMs - aMs;
                 });
 
-                const testsWithLinks = tests.map((t) => {
-                    const links = buildEntranceTestLinks(req, {
-                        deliveryToken: String(t.deliveryToken || '').trim(),
-                        testId: t.testId
-                    });
-                    return {
-                        testId: t.testId,
-                        version: t.version,
-                        status: t.status,
-                        createdAt: t.createdAt,
-                        startedAt: t.startedAt,
-                        submittedAt: t.submittedAt,
-                        testLink: links.testLink,
-                        resultLink: links.resultLink
-                    };
-                });
+                const testsWithLinks = await buildEntranceTestAdminList(req, deps.db, tests);
 
                 return deps.sendSuccess(res, { tests: testsWithLinks });
             } catch (error) {

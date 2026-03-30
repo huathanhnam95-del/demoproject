@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech Coach feedback</title>
+    <!-- Tailwind CSS for rapid styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #f8fafc;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            /* backdrop-filter: blur(10px); */
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+        }
+        .anim-expand {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .status-badge {
+            transition: all 0.2s ease;
+        }
+        .status-badge:hover {
+            transform: scale(1.05);
+        }
+    </style>
+    <script>
+        function toggleDetails(id) {
+            const el = document.getElementById(id);
+            const icon = document.getElementById('icon-' + id);
+            if (el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                el.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+    </script>
+</head>
+<body class="p-8 flex justify-center items-start min-h-screen">
+
+    <div class="w-full max-w-2xl glass-panel rounded-2xl overflow-hidden">
+        
+        <!-- Header -->
+        <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white">
+            <div>
+                <h2 class="text-xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
+                    <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+                    Speech Coach
+                </h2>
+                <div class="flex items-center gap-3 mt-2 text-sm font-medium">
+                    <span class="text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">11 Detected</span>
+                    <span class="text-rose-600 bg-rose-50 px-2.5 py-0.5 rounded-full">3 Not Detected</span>
+                    <span class="text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded-full">1 Uncertain</span>
+                </div>
+            </div>
+            <button class="text-xs font-semibold text-slate-500 hover:text-indigo-600 transition-colors uppercase tracking-wider">
+                Feedback
+            </button>
+        </div>
+
+        <!-- Content Area -->
+        <div class="p-6 space-y-8 bg-slate-50/50">
+
+            <!-- Section: Analysis Context -->
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <p class="text-slate-600 text-sm leading-relaxed">
+                    <span class="font-medium text-slate-900 border-b-2 border-emerald-200">An analysis</span> 
+                    <span class="font-medium text-slate-900 border-b-2 border-rose-200 cursor-pointer" title="Try moving 'analysis of' closer together">of</span> ten different species finds that humans, followed by 
+                    <span class="font-medium text-slate-900 border-b-2 border-rose-200 cursor-pointer" title="Try moving 'ferrets and' closer together">ferrets and</span>, 
+                    <span class="font-medium text-slate-900 border-b-2 border-emerald-200">to</span> a 
+                    <span class="font-medium text-slate-900 border-b-2 border-amber-200 cursor-pointer" title="Uncertain: 'lesser extent'">lesser extent</span>, cats, 
+                    <span class="font-medium text-slate-900 border-b-2 border-rose-200 cursor-pointer">civets and</span> dogs, are the most susceptible...
+                </p>
+                <div class="mt-3 text-xs text-slate-400 flex gap-4">
+                    <span class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-emerald-400"></div> Good</span>
+                    <span class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-rose-400"></div> Needs Polish</span>
+                    <span class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-amber-400"></div> Unclear</span>
+                </div>
+            </div>
+
+            <!-- Section: Reduced Words (Grouped & Deduplicated) -->
+            <div>
+                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3 px-1">Reduced Words</h3>
+                <div class="space-y-2">
+                    
+                    <!-- Group: "to" -->
+                    <div class="bg-white border border-slate-200 rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+                        <div class="px-4 py-3 cursor-pointer flex justify-between items-center" onclick="toggleDetails('details-to')">
+                            <div class="flex items-center gap-3">
+                                <span class="font-semibold text-slate-800 text-lg">to</span>
+                                <span class="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">2 occurrences</span>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="flex gap-1">
+                                    <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"></div>
+                                    <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"></div>
+                                </div>
+                                <svg id="icon-details-to" class="w-4 h-4 text-slate-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                        </div>
+                        <!-- Expanded Details -->
+                        <div id="details-to" class="hidden border-t border-slate-100 bg-slate-50 p-4 anim-expand">
+                            <ul class="space-y-3">
+                                <li class="flex items-start gap-3">
+                                    <div class="mt-0.5 bg-emerald-100 text-emerald-600 rounded p-0.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>
+                                    <div>
+                                        <p class="text-sm font-medium text-slate-800">Good weak form.</p>
+                                        <p class="text-xs text-slate-500 mt-0.5">"...and, <span class="font-semibold text-indigo-600">to</span> a lesser extent..."</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <div class="mt-0.5 bg-emerald-100 text-emerald-600 rounded p-0.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>
+                                    <div>
+                                        <p class="text-sm font-medium text-slate-800">Good weak form.</p>
+                                        <p class="text-xs text-slate-500 mt-0.5">"...animals <span class="font-semibold text-indigo-600">to</span> SARS-CoV-2..."</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Group: "and" -->
+                    <div class="bg-white border border-slate-200 rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+                        <div class="px-4 py-3 cursor-pointer flex justify-between items-center" onclick="toggleDetails('details-and')">
+                            <div class="flex items-center gap-3">
+                                <span class="font-semibold text-slate-800 text-lg">and</span>
+                                <span class="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">2 occurrences</span>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="flex gap-1">
+                                    <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"></div>
+                                    <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"></div>
+                                </div>
+                                <svg id="icon-details-and" class="w-4 h-4 text-slate-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                        </div>
+                        <div id="details-and" class="hidden border-t border-slate-100 bg-slate-50 p-4 anim-expand">
+                            <p class="text-sm text-slate-600">Both instances showed excellent weak form reduction. Keep it up!</p>
+                        </div>
+                    </div>
+
+                    <!-- Group: "of" & "for" (Combined for compactness) -->
+                    <div class="grid grid-cols-2 gap-2 mt-2">
+                        <div class="bg-white border border-slate-200 rounded-lg px-4 py-3 flex justify-between items-center shadow-sm">
+                            <span class="font-semibold text-slate-800">of <span class="text-xs font-normal text-slate-400 ml-1">(x1)</span></span>
+                            <div class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"></div>
+                        </div>
+                        <div class="bg-white border border-slate-200 rounded-lg px-4 py-3 flex justify-between items-center shadow-sm">
+                            <span class="font-semibold text-slate-800">for <span class="text-xs font-normal text-slate-400 ml-1">(x1)</span></span>
+                            <div class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Section: Linking -->
+            <div>
+                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3 px-1">Linking Issues</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    
+                    <!-- Issue Card: analysis of -->
+                    <div class="bg-rose-50 border border-rose-100 rounded-lg p-3 flex gap-3 shadow-sm relative overflow-hidden group">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-rose-400"></div>
+                        <div class="mt-0.5 text-rose-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-rose-900 leading-none">analysis of</p>
+                            <p class="text-xs text-rose-700 mt-1">Try moving these a little closer together.</p>
+                        </div>
+                    </div>
+
+                    <!-- Issue Card: ferrets and -->
+                    <div class="bg-rose-50 border border-rose-100 rounded-lg p-3 flex gap-3 shadow-sm relative overflow-hidden">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-rose-400"></div>
+                        <div class="mt-0.5 text-rose-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-rose-900 leading-none">ferrets and</p>
+                            <p class="text-xs text-rose-700 mt-1">Try moving these a little closer together.</p>
+                        </div>
+                    </div>
+
+                    <!-- Issue Card: civets and -->
+                    <div class="bg-rose-50 border border-rose-100 rounded-lg p-3 flex gap-3 shadow-sm relative overflow-hidden">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-rose-400"></div>
+                        <div class="mt-0.5 text-rose-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-rose-900 leading-none">civets and</p>
+                            <p class="text-xs text-rose-700 mt-1">Try moving these a little closer together.</p>
+                        </div>
+                    </div>
+
+                     <!-- Issue Card: lesser extent -->
+                     <div class="bg-amber-50 border border-amber-100 rounded-lg p-3 flex gap-3 shadow-sm relative overflow-hidden">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-amber-400"></div>
+                        <div class="mt-0.5 text-amber-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-amber-900 leading-none">lesser extent</p>
+                            <p class="text-xs text-amber-700 mt-1">Could not judge linking reliably.</p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Passed Linking (Compact Pills) -->
+                <div class="mt-4 pt-4 border-t border-slate-200">
+                    <p class="text-xs text-slate-500 font-medium mb-2">Great Linking Detected:</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-100">
+                            <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> An analysis
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-100">
+                            <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> and dogs
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-100">
+                            <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> 2 infection
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-100">
+                            <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> help identify
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-100">
+                            <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> monitoring and
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>

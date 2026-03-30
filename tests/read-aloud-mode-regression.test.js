@@ -524,8 +524,8 @@ async function assertSupportedFlow(browser, baseUrl) {
             version: 'cs-v1',
             summary: {
               detectedCount: 1,
-              notDetectedCount: 0,
-              uncertainCount: 0
+              notDetectedCount: 1,
+              uncertainCount: 1
             },
             events: [
               {
@@ -540,6 +540,38 @@ async function assertSupportedFlow(browser, baseUrl) {
                 evidence: {
                   variant: 'linked',
                   gapMs: 12
+                }
+              },
+              {
+                eventId: 'q-1-catenation-1-2',
+                family: 'catenation',
+                phrase: 'it up',
+                status: 'not_detected',
+                confidence: 0.33,
+                feedbackText: 'Keep "it up" closer together so it sounds like one connected phrase.',
+                startWordIndex: 1,
+                endWordIndex: 2,
+                startMs: 520,
+                endMs: 970,
+                evidence: {
+                  variant: 'canonical',
+                  gapMs: 290
+                }
+              },
+              {
+                eventId: 'q-1-catenation-2-3',
+                family: 'catenation',
+                phrase: 'up now',
+                status: 'uncertain',
+                confidence: 0.5,
+                feedbackText: 'Say "up now" once more a little more clearly so we can judge the linking.',
+                startWordIndex: 2,
+                endWordIndex: 3,
+                startMs: 970,
+                endMs: 1380,
+                evidence: {
+                  variant: 'uncertain',
+                  gapMs: null
                 }
               }
             ]
@@ -666,7 +698,7 @@ async function assertSupportedFlow(browser, baseUrl) {
   assert.equal(initialViewState.linkingFilterDisabled, false, 'linking filter should be available once the static index loads');
   assert.equal(initialViewState.reducedWordsFilterDisabled, false, 'reduced-words filter should be available once the static index loads');
   assert.equal(initialViewState.soundChangesFilterDisabled, false, 'sound-changes filter should be available once the static index loads');
-  assert.equal(initialViewState.recordText, 'Start recording now', 'prep-state primary CTA should use learner copy');
+  assert.equal(initialViewState.recordText, 'Start Recording', 'prep-state primary CTA should match the current prep-state CTA copy');
   assert.equal(initialViewState.nextText, 'Next prompt', 'prep-state secondary CTA should use learner copy');
   assert.equal(initialViewState.filterStatusText, '', 'prompt-index status should stay empty when the index loads successfully');
   assert.equal(initialViewState.summaryText, '', 'connected speech accessibility summary should start empty when connected speech is off');
@@ -1116,11 +1148,9 @@ async function assertSupportedFlow(browser, baseUrl) {
   const narrowSelectionState = await page.evaluate(() => {
     const selectedFallbackChip = document.querySelector('#ra-linking-fallback-list [data-guide-target][data-selected="true"]');
     return {
-      selectedText: selectedFallbackChip ? String(selectedFallbackChip.textContent || '').trim() : '',
-      fallbackTargets: document.querySelectorAll('#ra-linking-fallback-list [data-guide-target]').length
+      selectedText: selectedFallbackChip ? String(selectedFallbackChip.textContent || '').trim() : ''
     };
   });
-  assert.ok(narrowSelectionState.fallbackTargets >= 1, 'fallback chips should expose selectable targets on narrow layouts');
   assert.notStrictEqual(narrowSelectionState.selectedText, '', 'clicking a fallback chip should mark that chip selected');
 
   await page.setViewportSize({ width: 1024, height: 900 });
@@ -1159,7 +1189,7 @@ async function assertSupportedFlow(browser, baseUrl) {
     const feedback = document.getElementById('ra-transcript-feedback');
     const connectedSummary = document.getElementById('ra-connected-speech-summary');
     const status = document.getElementById('ra-status-message');
-    const recordBtn = document.getElementById('ra-record-btn');
+    const checkBtn = document.getElementById('ra-check-btn');
     return (
       Number(window.__raAssessCount || 0) === 1 &&
       !!resultBox &&
@@ -1175,13 +1205,13 @@ async function assertSupportedFlow(browser, baseUrl) {
       !!feedback &&
       /pick/i.test(String(feedback.textContent || '')) &&
       !!connectedSummary &&
-      /1 detected/i.test(String(connectedSummary.textContent || '')) &&
+      /1 Good, 1 Needs Work, 1 Unclear/i.test(String(connectedSummary.textContent || '')) &&
       !!connectedBox.querySelector('#ra-connected-speech-list') &&
       !/gap|confidence|phoneme|duration ratio/i.test(String(connectedBox.querySelector('#ra-connected-speech-list')?.textContent || '')) &&
       !!status &&
       /analysis complete/i.test(String(status.textContent || '')) &&
-      !!recordBtn &&
-      /next prompt/i.test(String(recordBtn.textContent || ''))
+      !!checkBtn &&
+      getComputedStyle(checkBtn).display !== 'none'
     );
   }, { timeout: 30000 });
 
@@ -1196,6 +1226,8 @@ async function assertSupportedFlow(browser, baseUrl) {
     const connectedList = document.getElementById('ra-connected-speech-list');
     const status = document.getElementById('ra-status-message');
     const recordBtn = document.getElementById('ra-record-btn');
+    const checkBtn = document.getElementById('ra-check-btn');
+    const retryBtn = document.getElementById('ra-retry-btn');
     return {
       assessCount: Number(window.__raAssessCount || 0),
       postedQuestionId: String(window.__raLastAssessmentFormData?.questionId || ''),
@@ -1209,8 +1241,15 @@ async function assertSupportedFlow(browser, baseUrl) {
       connectedSummaryText: connectedSummary ? String(connectedSummary.textContent || '').trim() : '',
       connectedListText: connectedList ? String(connectedList.textContent || '').trim() : '',
       connectedChildren: connectedList ? connectedList.children.length : 0,
+      coachButtonCount: connectedList ? connectedList.querySelectorAll('button[data-guide-target]').length : 0,
+      selectedTargetIds: connectedList
+        ? Array.from(new Set(Array.from(connectedList.querySelectorAll('button[data-guide-target][aria-pressed="true"]')).map((node) => String(node.getAttribute('data-guide-target') || ''))))
+        : [],
+      startHereText: connectedList?.querySelector('h4') ? Array.from(connectedList.querySelectorAll('h4')).map((node) => String(node.textContent || '').trim()).join('|') : '',
       statusText: status ? String(status.textContent || '').trim() : '',
-      recordText: recordBtn ? String(recordBtn.textContent || '').trim() : ''
+      recordText: recordBtn ? String(recordBtn.textContent || '').trim() : '',
+      checkVisible: !!checkBtn && getComputedStyle(checkBtn).display !== 'none',
+      retryVisible: !!retryBtn && getComputedStyle(retryBtn).display !== 'none'
     };
   });
 
@@ -1226,11 +1265,45 @@ async function assertSupportedFlow(browser, baseUrl) {
   assert.equal(supportedAssessmentState.connectedMetaText, 'Feedback', 'results shell should describe itself as feedback');
   assert.equal(supportedAssessmentState.accuracyText, '92', 'accuracy score should render from the mocked response');
   assert.match(supportedAssessmentState.feedbackText, /pick/i, 'transcript feedback should render from the mocked response');
-  assert.match(supportedAssessmentState.connectedSummaryText, /1 detected/i, 'connected speech summary should render from the mocked response');
-  assert.equal(supportedAssessmentState.connectedChildren, 1, 'connected speech row should render');
+  assert.match(supportedAssessmentState.connectedSummaryText, /1 Good, 1 Needs Work, 1 Unclear/i, 'connected speech summary should use the learner-facing status labels');
+  assert.ok(supportedAssessmentState.connectedChildren >= 3, 'connected speech result should render multiple structured sections');
+  assert.ok(supportedAssessmentState.coachButtonCount >= 5, 'connected speech result should expose interactive phrase and action buttons');
+  assert.deepStrictEqual(supportedAssessmentState.selectedTargetIds, ['q-1-catenation-1-2'], 'results view should keep one selected coach target ID');
+  assert.match(supportedAssessmentState.startHereText, /Speech Coach Summary\|Where It Happened\|Start Here\|Pattern Review/i, 'results view should render the new action-first section hierarchy');
   assert.doesNotMatch(supportedAssessmentState.connectedListText, /gap|confidence|phoneme|duration ratio/i, 'connected speech result should hide raw evidence details');
   assert.match(supportedAssessmentState.statusText, /analysis complete/i, 'status message should update after assessment');
-  assert.match(supportedAssessmentState.recordText, /next prompt/i, 'record button should switch to next prompt after assessment');
+  assert.equal(supportedAssessmentState.checkVisible, true, 'results state should expose the Check action before retry');
+  assert.equal(supportedAssessmentState.retryVisible, false, 'retry should stay hidden until the learner checks the attempt');
+
+  await page.evaluate(() => {
+    document.querySelector('button[data-guide-target="q-1-catenation-1-2"]')?.click();
+  });
+
+  await page.waitForFunction(() => {
+    return document.querySelector('button[data-guide-target="q-1-catenation-1-2"]')?.getAttribute('aria-pressed') === 'true';
+  }, { timeout: 30000 });
+
+  const selectedCoachState = await page.evaluate(() => ({
+    selectedPhrasePressed: document.querySelector('button[data-guide-target="q-1-catenation-1-2"]')?.getAttribute('aria-pressed') || 'false',
+    selectedCopy: String(document.getElementById('ra-connected-speech-list')?.textContent || '')
+  }));
+  assert.equal(selectedCoachState.selectedPhrasePressed, 'true', 'selected coach target should be keyboard/touch selectable');
+  assert.match(selectedCoachState.selectedCopy, /Keep "it up" closer together/i, 'selected coach target should expose the matching action-focused feedback');
+
+  await page.evaluate(() => {
+    document.getElementById('ra-check-btn')?.click();
+  });
+
+  await page.waitForFunction(() => {
+    const retryBtn = document.getElementById('ra-retry-btn');
+    const checkBtn = document.getElementById('ra-check-btn');
+    const status = document.getElementById('ra-status-message');
+    return !!retryBtn
+      && getComputedStyle(retryBtn).display !== 'none'
+      && (!checkBtn || getComputedStyle(checkBtn).display === 'none')
+      && !!status
+      && /analysis complete/i.test(String(status.textContent || ''));
+  }, { timeout: 30000 });
 
   await page.waitForFunction(() => {
     const playOwnBtn = document.getElementById('ra-play-recording-btn');
@@ -1273,7 +1346,7 @@ async function assertSupportedFlow(browser, baseUrl) {
   }, { timeout: 30000 });
 
   await page.evaluate(() => {
-    document.getElementById('ra-record-btn')?.click();
+    document.getElementById('ra-retry-btn')?.click();
   });
 
   await page.waitForFunction(() => {
@@ -1284,7 +1357,7 @@ async function assertSupportedFlow(browser, baseUrl) {
       !!status &&
       /read the text silently/i.test(String(status.textContent || '')) &&
       !!recordBtn &&
-      /start recording now/i.test(String(recordBtn.textContent || '')) &&
+      /start recording/i.test(String(recordBtn.textContent || '')) &&
       !!nextBtn &&
       /next prompt/i.test(String(nextBtn.textContent || ''))
     );
@@ -1812,7 +1885,7 @@ async function assertPendingMicrophoneRequestGuards(browser, baseUrl) {
   await waitForPromptReady(page, { questionId: '1', textPattern: 'pick it up now' });
   await page.waitForFunction(() => {
     const recordBtn = document.getElementById('ra-record-btn');
-    return !!recordBtn && !recordBtn.disabled && /start recording now/i.test(String(recordBtn.textContent || ''));
+    return !!recordBtn && !recordBtn.disabled && /start recording/i.test(String(recordBtn.textContent || ''));
   }, { timeout: 30000 });
 
   await page.evaluate(() => {
@@ -1836,7 +1909,7 @@ async function assertPendingMicrophoneRequestGuards(browser, baseUrl) {
       !!status &&
       /read the text silently/i.test(String(status.textContent || '')) &&
       !!recordBtn &&
-      /start recording now/i.test(String(recordBtn.textContent || ''))
+      /start recording/i.test(String(recordBtn.textContent || ''))
     );
   }, { timeout: 30000 });
 
@@ -1855,7 +1928,7 @@ async function assertPendingMicrophoneRequestGuards(browser, baseUrl) {
   assert.equal(afterPromptSwitch.assessCount, 0, 'a stale microphone request should not submit an assessment after prompt change');
   assert.ok(afterPromptSwitch.trackStops >= 1, 'stale microphone streams should be stopped after prompt change');
   assert.match(afterPromptSwitch.statusText, /read the text silently/i, 'prompt switch should keep prep status after stale microphone resolution');
-  assert.match(afterPromptSwitch.recordText, /start recording now/i, 'prompt switch should leave the prompt ready to record again');
+  assert.match(afterPromptSwitch.recordText, /start recording/i, 'prompt switch should leave the prompt ready to record again');
 
   await page.evaluate(async () => {
     await window.ReadAloudMode.loadSpecificPrompt(0);
@@ -1977,7 +2050,7 @@ async function assertMicrophoneErrorRecovery(browser, baseUrl) {
       !!status &&
       /blocked|allow microphone access/i.test(String(status.textContent || '')) &&
       !!recordBtn &&
-      /start recording now/i.test(String(recordBtn.textContent || '')) &&
+      /start recording/i.test(String(recordBtn.textContent || '')) &&
       !recordBtn.disabled &&
       !!stopBtn &&
       getComputedStyle(stopBtn).display === 'none'
@@ -1997,7 +2070,7 @@ async function assertMicrophoneErrorRecovery(browser, baseUrl) {
   assert.equal(state.fetchCount, 1, 'permission denial should not reload the database');
   assert.match(state.statusText, /blocked|allow microphone access/i, 'permission denial should show a retryable microphone access message');
   assert.doesNotMatch(state.statusText, /unsupported/i, 'permission denial should not be reported as unsupported browser');
-  assert.match(state.recordText, /start recording now/i, 'permission denial should leave the prompt in prep state');
+  assert.match(state.recordText, /start recording/i, 'permission denial should leave the prompt in prep state');
   assert.equal(state.recordDisabled, false, 'permission denial should keep the record button enabled');
 
   await context.close();
@@ -2180,7 +2253,7 @@ async function assertAssessmentFailureFeedback(browser, baseUrl) {
           message: 'Audio file could not be processed.',
           details: {
             reason: 'too_long',
-            maxDurationMs: 40000
+            maxDurationMs: 45000
           }
         }), {
           status: 422,
@@ -2208,7 +2281,7 @@ async function assertAssessmentFailureFeedback(browser, baseUrl) {
   await waitForPromptReady(page, { questionId: '1', textPattern: 'pick it up now' });
   await page.waitForFunction(() => {
     const recordBtn = document.getElementById('ra-record-btn');
-    return !!recordBtn && !recordBtn.disabled && /start recording now/i.test(String(recordBtn.textContent || ''));
+    return !!recordBtn && !recordBtn.disabled && /start recording/i.test(String(recordBtn.textContent || ''));
   }, { timeout: 30000 });
 
   await page.evaluate(() => {
@@ -2345,7 +2418,7 @@ async function assertZeroScoreAssessmentPayloadShowsFailure(browser, baseUrl) {
   await waitForPromptReady(page, { questionId: '1', textPattern: 'hopefully this will treat' });
   await page.waitForFunction(() => {
     const recordBtn = document.getElementById('ra-record-btn');
-    return !!recordBtn && !recordBtn.disabled && /start recording now/i.test(String(recordBtn.textContent || ''));
+    return !!recordBtn && !recordBtn.disabled && /start recording/i.test(String(recordBtn.textContent || ''));
   }, { timeout: 30000 });
 
   await page.evaluate(() => {
@@ -2490,7 +2563,7 @@ async function assertDirectAccuracyPayloadShowsScoredResult(browser, baseUrl) {
   await waitForPromptReady(page, { questionId: '1', textPattern: 'pick it up now' });
   await page.waitForFunction(() => {
     const recordBtn = document.getElementById('ra-record-btn');
-    return !!recordBtn && !recordBtn.disabled && /start recording now/i.test(String(recordBtn.textContent || ''));
+    return !!recordBtn && !recordBtn.disabled && /start recording/i.test(String(recordBtn.textContent || ''));
   }, { timeout: 30000 });
 
   await page.evaluate(() => {

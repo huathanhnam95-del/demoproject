@@ -130,4 +130,13 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 137,2026-03-27,Execute adaptive difficulty browser test plan,Done,2026-03-28
 138,2026-03-28,Execute SRS browser edge-case test plan (13 scenarios),Done,2026-03-28
 139,2026-03-28,Execute ADM browser retest plan (16 scenarios),Done,2026-03-28
-142,2026-03-29,Commit all pending workspace changes,In Progress,
+142,2026-03-29,Commit all pending workspace changes,Done,2026-03-29
+143,2026-03-29,Redesign Speech Coach UX and implement interactive grouping,Done,2026-03-29
+144,2026-03-29,Investigate #council accessibility in Codex extension,Done,2026-03-29
+145,2026-03-29,Provide absolute path for summon_council.js,Done,2026-03-29
+146,2026-03-29,Unify Read Aloud buttons to match Speak mode styling and flow,Done,2026-03-29
+148,2026-03-30,Review and merge Speech Coach UX redesign (feature/speech-coach-redesign),Done,2026-03-30
+147,2026-03-29,Optimize Read Aloud feedback UX - extract inline styles to CSS classes,Done,2026-03-30
+149,2026-03-30,Fix CRM admin header tab overflow on small screens and zoom,Done,2026-03-30
+150,2026-03-30,Redesign Speech Coach UI - Layout and Interactive Toggles,Done,2026-03-30
+151,2026-03-30,Fix blurry PDF export - switch from JPEG to PNG rendering,Done,2026-03-30

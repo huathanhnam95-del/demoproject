@@ -18,7 +18,10 @@ const CRM_AUTOMATION_QUEUE = 'crmAutomationQueue';
 const CRM_AUDIT_LOGS = 'crmAuditLogs';
 const CRM_MERGE_JOBS = 'crmMergeJobs';
 const CRM_SUBMISSIONS = 'crmSubmissions';
+const CRM_COUNTERS = 'crmCounters';
+const CRM_RECYCLE_BIN = 'crmRecycleBin';
 const ENTRANCE_TESTS = 'entranceTests';
+const ENTRANCE_TEST_LINK_RECOVERY = 'entranceTestLinkRecovery';
 
 const CLASSROOM_MODULES = 'modules';
 const CLASSROOM_CLASSWORK = 'classwork';
@@ -46,7 +49,10 @@ module.exports = {
     CRM_AUDIT_LOGS,
     CRM_MERGE_JOBS,
     CRM_SUBMISSIONS,
+    CRM_COUNTERS,
+    CRM_RECYCLE_BIN,
     ENTRANCE_TESTS,
+    ENTRANCE_TEST_LINK_RECOVERY,
     CLASSROOM_MODULES,
     CLASSROOM_CLASSWORK,
     CLASSROOM_MEMBERS,

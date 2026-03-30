@@ -18,6 +18,11 @@ const PERSONAS = {
 
 const DEFAULT_PERSONA_ORDER = ['architect', 'challenger', 'reviewer'];
 const MAX_EVIDENCE_SPAN_LINES = 20;
+const DEFAULT_MAX_FULL_CONTEXT_LINES = 80;
+const DEFAULT_EXCERPT_RADIUS_LINES = 2;
+const DEFAULT_MAX_EXCERPT_MATCHES_PER_FILE = 4;
+const DEFAULT_MAX_CONTEXT_CHARS = 120000;
+const DEFAULT_MAX_ROLE_ATTEMPTS = 3;
 const REQUIRED_SECTIONS = {
     architect: ['Observed Facts', 'Inferences', 'Recommendations', 'Unknowns'],
     challenger: ['Supported Concerns', 'Weak Claims', 'Corrections', 'Remaining Unknowns'],
@@ -25,14 +30,24 @@ const REQUIRED_SECTIONS = {
 };
 const ABSOLUTE_PATH_START_PATTERN = /[A-Za-z]:[\\/]/g;
 const RELATIVE_PATH_START_PATTERN = /(?:\.{1,2}[\\/]|[A-Za-z0-9_-]+[\\/])/g;
+const ROLE_ERROR_PATTERN = /^\[Error querying [^\]]+\]/;
+const COMMON_SEARCH_TERMS = new Set([
+    'review', 'logic', 'issue', 'issues', 'current', 'implementation', 'whole',
+    'again', 'this', 'that', 'with', 'from', 'into', 'file', 'files', 'please'
+]);
 
 function normalizePathCandidate(candidate) {
-    return candidate.replace(/^["'`]+|["'`.,;:!?]+$/g, '');
+    return String(candidate || '').replace(/^["'`]+|["'`.,;:!?]+$/g, '');
+}
+
+function toPathKey(filePath) {
+    const normalized = path.normalize(filePath);
+    return process.platform === 'win32' ? normalized.toLowerCase() : normalized;
 }
 
 function extractPathFrom(message, startIndex) {
     const remainder = message.slice(startIndex);
-    const match = remainder.match(/^[^"'`\n]+?\.[A-Za-z0-9]+/);
+    const match = remainder.match(/^[^"'`\n]+?\.[A-Za-z0-9]+(?:\.[A-Za-z0-9]+)*/);
     return match ? normalizePathCandidate(match[0]) : null;
 }
 
@@ -92,6 +107,105 @@ function buildMissingContextError(missingFiles) {
     return error;
 }
 
+function normalizeEvidenceMarkup(text) {
+    return String(text || '')
+        .replace(/\[FILE:\s*`([^`]+?)`\]/g, '[FILE: $1]')
+        .replace(/\[FILE:\s*"([^"]+?)"\]/g, '[FILE: $1]')
+        .replace(/\[FILE:\s*'([^']+?)'\]/g, '[FILE: $1]');
+}
+
+function normalizeEvidenceFilePath(value) {
+    return normalizePathCandidate(String(value || '').replace(/^["'`]+|["'`]+$/g, ''));
+}
+
+function extractSearchTerms(userMessage, resolvedPath) {
+    const promptTerms = (String(userMessage || '').match(/[A-Za-z_][A-Za-z0-9_.-]{2,}/g) || [])
+        .map((term) => term.toLowerCase())
+        .filter((term) => term.length >= 4 && !COMMON_SEARCH_TERMS.has(term));
+    const pathTerms = path.basename(resolvedPath)
+        .split(/[^A-Za-z0-9_]+/)
+        .map((term) => term.toLowerCase())
+        .filter((term) => term.length >= 4 && !COMMON_SEARCH_TERMS.has(term));
+
+    return Array.from(new Set([...promptTerms, ...pathTerms]));
+}
+
+function mergeRanges(ranges) {
+    if (ranges.length === 0) return [];
+
+    const sorted = [...ranges].sort((left, right) => left.start - right.start);
+    const merged = [sorted[0]];
+
+    for (let index = 1; index < sorted.length; index += 1) {
+        const current = sorted[index];
+        const previous = merged[merged.length - 1];
+        if (current.start <= previous.end + 1) {
+            previous.end = Math.max(previous.end, current.end);
+            continue;
+        }
+        merged.push(current);
+    }
+
+    return merged;
+}
+
+function formatFileLines(lines, startLineNumber) {
+    return lines.map((line, index) => `L${startLineNumber + index}: ${line}`).join('\n');
+}
+
+function buildContextSection({
+    resolvedPath,
+    content,
+    userMessage,
+    maxFileLinesForFullContext = DEFAULT_MAX_FULL_CONTEXT_LINES,
+    excerptRadiusLines = DEFAULT_EXCERPT_RADIUS_LINES,
+    maxExcerptMatchesPerFile = DEFAULT_MAX_EXCERPT_MATCHES_PER_FILE
+}) {
+    const lines = content.split(/\r?\n/);
+    const isFullContext = lines.length <= maxFileLinesForFullContext;
+    let sectionBody = '';
+    let compacted = false;
+
+    if (isFullContext) {
+        sectionBody = formatFileLines(lines, 1);
+    } else {
+        compacted = true;
+        const searchTerms = extractSearchTerms(userMessage, resolvedPath);
+        const matchingIndexes = [];
+
+        lines.forEach((line, index) => {
+            const lowerLine = line.toLowerCase();
+            if (searchTerms.some((term) => lowerLine.includes(term))) {
+                matchingIndexes.push(index);
+            }
+        });
+
+        const fallbackIndexes = matchingIndexes.length > 0
+            ? matchingIndexes
+            : lines.slice(0, Math.min(lines.length, excerptRadiusLines * 2 + 4)).map((_, index) => index);
+        const ranges = mergeRanges(
+            fallbackIndexes.slice(0, maxExcerptMatchesPerFile).map((index) => ({
+                start: Math.max(0, index - excerptRadiusLines),
+                end: Math.min(lines.length - 1, index + excerptRadiusLines)
+            }))
+        );
+
+        const rendered = [];
+        ranges.forEach((range, rangeIndex) => {
+            if (rangeIndex > 0) {
+                rendered.push('... [excerpt gap] ...');
+            }
+            rendered.push(formatFileLines(lines.slice(range.start, range.end + 1), range.start + 1));
+        });
+        sectionBody = rendered.join('\n');
+    }
+
+    return {
+        compacted,
+        text: `\n--- FILE: ${resolvedPath} ---\n${sectionBody}\n`
+    };
+}
+
 function resolveContextFiles(options) {
     const {
         userMessage,
@@ -99,7 +213,11 @@ function resolveContextFiles(options) {
         cwd = process.cwd(),
         existsSync = fs.existsSync,
         readFileSync = fs.readFileSync,
-        statSync = fs.statSync
+        statSync = fs.statSync,
+        maxFileLinesForFullContext = DEFAULT_MAX_FULL_CONTEXT_LINES,
+        excerptRadiusLines = DEFAULT_EXCERPT_RADIUS_LINES,
+        maxExcerptMatchesPerFile = DEFAULT_MAX_EXCERPT_MATCHES_PER_FILE,
+        maxContextChars = DEFAULT_MAX_CONTEXT_CHARS
     } = options || {};
 
     const promptReferences = extractReferencedFiles(userMessage);
@@ -111,12 +229,22 @@ function resolveContextFiles(options) {
     const resolvedFiles = [];
     const missingFiles = [];
     const fileLineCounts = {};
+    const seenResolvedPaths = new Set();
+    const seenMissingPaths = new Set();
+    const truncatedFiles = [];
     let contextData = '';
 
     for (const candidate of orderedCandidates) {
         const resolvedPath = resolvePathCandidate(candidate, cwd);
+        const pathKey = toPathKey(resolvedPath);
+
+        if (seenResolvedPaths.has(pathKey) || seenMissingPaths.has(pathKey)) {
+            continue;
+        }
+
         if (!existsSync(resolvedPath)) {
             missingFiles.push(resolvedPath);
+            seenMissingPaths.add(pathKey);
             continue;
         }
 
@@ -125,21 +253,43 @@ function resolveContextFiles(options) {
             stats = statSync(resolvedPath);
         } catch (_) {
             missingFiles.push(resolvedPath);
+            seenMissingPaths.add(pathKey);
             continue;
         }
 
         if (!stats.isFile()) {
             missingFiles.push(resolvedPath);
+            seenMissingPaths.add(pathKey);
             continue;
         }
 
         try {
             const content = readFileSync(resolvedPath, 'utf8');
             resolvedFiles.push(resolvedPath);
+            seenResolvedPaths.add(pathKey);
             fileLineCounts[resolvedPath] = content.split(/\r?\n/).length;
-            contextData += `\n--- FILE: ${resolvedPath} ---\n${content}\n`;
+            const contextSection = buildContextSection({
+                resolvedPath,
+                content,
+                userMessage,
+                maxFileLinesForFullContext,
+                excerptRadiusLines,
+                maxExcerptMatchesPerFile
+            });
+            let nextSection = contextSection.text;
+            if ((contextData.length + nextSection.length) > maxContextChars) {
+                const remainingChars = Math.max(0, maxContextChars - contextData.length);
+                nextSection = remainingChars > 0
+                    ? `${nextSection.slice(0, remainingChars).trimEnd()}\n... [context truncated]\n`
+                    : '';
+                truncatedFiles.push(resolvedPath);
+            } else if (contextSection.compacted) {
+                truncatedFiles.push(resolvedPath);
+            }
+            contextData += nextSection;
         } catch (_) {
             missingFiles.push(resolvedPath);
+            seenMissingPaths.add(pathKey);
         }
     }
 
@@ -151,7 +301,8 @@ function resolveContextFiles(options) {
         resolvedFiles,
         missingFiles,
         contextData,
-        fileLineCounts
+        fileLineCounts,
+        truncatedFiles
     };
 }
 
@@ -175,7 +326,51 @@ function buildEvidenceBlock(contextData) {
     ].join('\n');
 }
 
-function buildRolePrompt({ roleKey, userMessage, contextData, priorOutputs }) {
+function extractClaimBullets(text, maxBullets = 6) {
+    return String(text || '')
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter((line) => /^[-*]\s+/.test(line))
+        .slice(0, maxBullets);
+}
+
+function buildReviewerDebateSummary(priorOutputs, priorEvaluations = {}) {
+    const summarySections = [];
+
+    for (const priorRoleKey of ['architect', 'challenger']) {
+        const output = priorOutputs[priorRoleKey];
+        if (!output) {
+            continue;
+        }
+
+        const persona = PERSONAS[priorRoleKey];
+        const evaluation = priorEvaluations[priorRoleKey] || {};
+        const bullets = extractClaimBullets(output);
+        const summaryLines = [
+            `${persona.displayName} Summary:`,
+            `- Validation: ${evaluation.hasRequiredSections && (evaluation.mentionsInsufficientContext || evaluation.hasEvidenceTags) && evaluation.invalidEvidenceTagCount === 0 && evaluation.broadEvidenceTagCount === 0 ? 'grounded' : 'needs review'}`,
+            `- Evidence tags: ${evaluation.evidenceTagCount || 0}`,
+            `- Invalid evidence tags: ${evaluation.invalidEvidenceTagCount || 0}`,
+            `- Broad evidence tags: ${evaluation.broadEvidenceTagCount || 0}`
+        ];
+
+        if (bullets.length > 0) {
+            summaryLines.push(...bullets);
+        } else {
+            summaryLines.push('- No summarized claims available.');
+        }
+
+        summarySections.push(summaryLines.join('\n'));
+    }
+
+    if (summarySections.length === 0) {
+        return 'Debate History:\n- No prior role output yet.';
+    }
+
+    return `Debate History:\n${summarySections.join('\n\n')}`;
+}
+
+function buildRolePrompt({ roleKey, userMessage, contextData, priorOutputs, priorEvaluations = {} }) {
     const persona = PERSONAS[roleKey];
     const evidenceBlock = buildEvidenceBlock(contextData);
     const debateHistory = [];
@@ -220,7 +415,9 @@ function buildRolePrompt({ roleKey, userMessage, contextData, priorOutputs }) {
         persona.brief,
         '',
         evidenceBlock,
-        debateHistory.length > 0 ? `Debate History:\n${debateHistory.join('\n\n')}` : 'Debate History:\n- No prior role output yet.',
+        roleKey === 'reviewer'
+            ? buildReviewerDebateSummary(priorOutputs, priorEvaluations)
+            : (debateHistory.length > 0 ? `Debate History:\n${debateHistory.join('\n\n')}` : 'Debate History:\n- No prior role output yet.'),
         '',
         roleSpecificInstructions[roleKey],
         '',
@@ -228,23 +425,55 @@ function buildRolePrompt({ roleKey, userMessage, contextData, priorOutputs }) {
     ].join('\n');
 }
 
-function buildReviewerRetryPrompt({ userMessage, contextData, priorOutputs, evaluation }) {
+function buildRoleRepairPrompt({ roleKey, userMessage, contextData, priorOutputs, priorEvaluations, evaluation, issues, contextUpdated = false }) {
     const basePrompt = buildRolePrompt({
-        roleKey: 'reviewer',
+        roleKey,
         userMessage,
         contextData,
-        priorOutputs
+        priorOutputs,
+        priorEvaluations
     });
 
     return [
         basePrompt,
         '',
-        'Your previous reviewer output failed evidence precision checks.',
+        roleKey === 'reviewer'
+            ? 'Your previous reviewer output failed evidence precision checks.'
+            : `Your previous ${roleKey} output failed validation.`,
+        `Issues to fix: ${issues.join('; ')}.`,
         `Invalid evidence tags: ${evaluation.invalidEvidenceTagCount}.`,
         `Broad evidence tags: ${evaluation.broadEvidenceTagCount}.`,
+        contextUpdated ? 'Additional context has been provided for this retry. Re-evaluate your claims using the updated evidence.' : 'Use the same loaded context and tighten the claims.',
+        'If evidence exists, cite it precisely. If evidence does not exist, say INSUFFICIENT_CONTEXT and keep the required sections.',
         `Keep each evidence span at or under ${MAX_EVIDENCE_SPAN_LINES} lines and only cite loaded files with valid ranges.`,
-        'Rewrite the full reviewer output now.'
+        `Rewrite the full ${roleKey} output now.`
     ].join('\n');
+}
+
+function getRoleValidationIssues(roleKey, output, evaluation) {
+    const issues = [];
+    const trimmedOutput = String(output || '').trim();
+    if (ROLE_ERROR_PATTERN.test(trimmedOutput)) {
+        issues.push('role error output');
+    }
+    if (!evaluation.hasRequiredSections) {
+        issues.push(`missing sections: ${evaluation.missingSections.join(', ')}`);
+    }
+    if (evaluation.duplicateBulletCount > 0) {
+        issues.push(`duplicate bullets: ${evaluation.duplicateBulletCount}`);
+    }
+    if (!evaluation.mentionsInsufficientContext) {
+        if (!evaluation.hasEvidenceTags) {
+            issues.push('missing evidence');
+        }
+        if (evaluation.invalidEvidenceTagCount > 0) {
+            issues.push(`invalid evidence tags: ${evaluation.invalidEvidenceTagCount}`);
+        }
+        if (evaluation.broadEvidenceTagCount > 0) {
+            issues.push(`broad evidence tags: ${evaluation.broadEvidenceTagCount}`);
+        }
+    }
+    return issues;
 }
 
 async function runCouncilAnalysis(options) {
@@ -254,8 +483,11 @@ async function runCouncilAnalysis(options) {
         personaOrder = DEFAULT_PERSONA_ORDER,
         resolvedFiles = [],
         fileLineCounts = {},
+        getContextDataForAttempt,
+        validateRoles = false,
         enforceReviewerEvidence = false,
         maxReviewerAttempts = 2,
+        maxRoleAttempts = DEFAULT_MAX_ROLE_ATTEMPTS,
         runRole
     } = options || {};
 
@@ -264,45 +496,120 @@ async function runCouncilAnalysis(options) {
     }
 
     const outputs = {};
+    const attemptsByRole = {};
+    const validationFailures = {};
+    const roleErrors = {};
+    const evaluationsByRole = {};
+    const repairedRoles = [];
 
     for (const roleKey of personaOrder) {
-        const prompt = buildRolePrompt({
-            roleKey,
-            userMessage,
-            contextData,
-            priorOutputs: outputs
-        });
-        let output = await runRole({ roleKey, prompt, priorOutputs: { ...outputs } });
+        const shouldValidateRole = validateRoles || (enforceReviewerEvidence && roleKey === 'reviewer');
+        const allowedAttempts = shouldValidateRole
+            ? (validateRoles ? maxRoleAttempts : maxReviewerAttempts)
+            : 1;
+        let attempts = 0;
+        let output = '';
+        let evaluation = null;
+        let issues = [];
+        let attemptContextData = contextData;
+        let contextUpdated = false;
 
-        if (roleKey === 'reviewer' && enforceReviewerEvidence) {
-            let attempts = 1;
-            let evaluation = evaluateRoleOutput(roleKey, output, {
+        do {
+            attempts += 1;
+            if (typeof getContextDataForAttempt === 'function') {
+                const nextContextData = getContextDataForAttempt({
+                    roleKey,
+                    attempt: attempts,
+                    previousIssues: issues,
+                    previousEvaluation: evaluation,
+                    defaultContextData: contextData
+                });
+                if (typeof nextContextData === 'string' && nextContextData.length > 0) {
+                    contextUpdated = nextContextData !== attemptContextData;
+                    attemptContextData = nextContextData;
+                } else {
+                    contextUpdated = false;
+                    attemptContextData = contextData;
+                }
+            } else {
+                contextUpdated = false;
+                attemptContextData = contextData;
+            }
+            const prompt = attempts === 1
+                ? buildRolePrompt({
+                    roleKey,
+                    userMessage,
+                    contextData: attemptContextData,
+                    priorOutputs: outputs,
+                    priorEvaluations: evaluationsByRole
+                })
+                : buildRoleRepairPrompt({
+                    roleKey,
+                    userMessage,
+                    contextData: attemptContextData,
+                    priorOutputs: outputs,
+                    priorEvaluations: evaluationsByRole,
+                    evaluation,
+                    issues,
+                    contextUpdated
+                });
+
+            try {
+                output = await runRole({
+                    roleKey,
+                    prompt,
+                    priorOutputs: { ...outputs },
+                    attempt: attempts,
+                    phase: attempts === 1 ? 'initial' : 'repair'
+                });
+            } catch (error) {
+                output = `[Error querying ${PERSONAS[roleKey].displayName}: ${error.message}]`;
+            }
+
+            evaluation = evaluateRoleOutput(roleKey, output, {
                 resolvedFiles,
                 fileLineCounts
             });
-
-            while (attempts < maxReviewerAttempts && (
-                evaluation.invalidEvidenceTagCount > 0 || evaluation.broadEvidenceTagCount > 0
-            )) {
-                attempts += 1;
-                const retryPrompt = buildReviewerRetryPrompt({
-                    userMessage,
-                    contextData,
-                    priorOutputs: outputs,
-                    evaluation
-                });
-                output = await runRole({ roleKey, prompt: retryPrompt, priorOutputs: { ...outputs } });
-                evaluation = evaluateRoleOutput(roleKey, output, {
-                    resolvedFiles,
-                    fileLineCounts
-                });
-            }
-        }
+            issues = shouldValidateRole ? getRoleValidationIssues(roleKey, output, evaluation) : [];
+        } while (issues.length > 0 && attempts < allowedAttempts);
 
         outputs[roleKey] = output;
+        attemptsByRole[roleKey] = attempts;
+        evaluationsByRole[roleKey] = evaluation;
+        validationFailures[roleKey] = issues;
+        if (attempts > 1 && issues.length === 0) {
+            repairedRoles.push(roleKey);
+        }
+        if (ROLE_ERROR_PATTERN.test(String(output || '').trim())) {
+            roleErrors[roleKey] = String(output || '').trim();
+        }
     }
 
-    return outputs;
+    const allRolesAbstained = personaOrder.length > 0 && personaOrder.every(
+        (roleKey) => evaluationsByRole[roleKey]?.mentionsInsufficientContext
+    );
+    const hasValidationFailures = personaOrder.some((roleKey) => (validationFailures[roleKey] || []).length > 0);
+    const hasRoleErrors = Object.keys(roleErrors).length > 0;
+    const status = hasRoleErrors
+        ? 'role_error'
+        : hasValidationFailures
+            ? 'failed_validation'
+            : allRolesAbstained
+                ? 'insufficient_context'
+                : repairedRoles.length > 0
+                    ? 'repaired_success'
+                    : 'success';
+
+    return {
+        ...outputs,
+        outputs,
+        attemptsByRole,
+        evaluationsByRole,
+        validationFailures,
+        roleErrors,
+        repairedRoles,
+        status
+    };
 }
 
 function countDuplicateBullets(text) {
@@ -327,19 +634,20 @@ function countDuplicateBullets(text) {
 }
 
 function countEvidenceTags(text) {
-    const matches = (text || '').match(/\[FILE:\s*[^\]]+:L\d+(?:-L?\d+)?\]/g);
+    const matches = normalizeEvidenceMarkup(text).match(/\[FILE:\s*[^\]]+:L\d+(?:-L?\d+)?\]/g);
     return matches ? matches.length : 0;
 }
 
 function parseEvidenceTags(text) {
     const tags = [];
     const pattern = /\[FILE:\s*(.+?):L(\d+)(?:-L?(\d+))?\]/g;
+    const normalizedText = normalizeEvidenceMarkup(text);
     let match;
 
-    while ((match = pattern.exec(text || '')) !== null) {
+    while ((match = pattern.exec(normalizedText)) !== null) {
         tags.push({
             raw: match[0],
-            filePath: match[1].trim(),
+            filePath: normalizeEvidenceFilePath(match[1].trim()),
             startLine: Number.parseInt(match[2], 10),
             endLine: Number.parseInt(match[3] || match[2], 10)
         });
@@ -352,7 +660,7 @@ function normalizeResolvedFileMap(resolvedFiles, fileLineCounts) {
     const normalized = new Map();
 
     for (const filePath of resolvedFiles || []) {
-        const normalizedPath = path.normalize(filePath).toLowerCase();
+        const normalizedPath = toPathKey(filePath);
         normalized.set(normalizedPath, fileLineCounts?.[filePath] || 0);
     }
 
@@ -364,7 +672,7 @@ function countInvalidEvidenceTags(text, resolvedFiles, fileLineCounts) {
     let invalidCount = 0;
 
     for (const tag of parseEvidenceTags(text)) {
-        const normalizedTagPath = path.normalize(tag.filePath).toLowerCase();
+        const normalizedTagPath = toPathKey(tag.filePath);
         const lineCount = normalizedFiles.get(normalizedTagPath);
         const hasKnownFile = typeof lineCount === 'number' && lineCount > 0;
         const hasValidRange = tag.startLine >= 1 && tag.endLine >= tag.startLine && tag.endLine <= lineCount;
@@ -391,7 +699,7 @@ function countBroadEvidenceTags(text) {
 
 function evaluateRoleOutput(roleKey, text, options = {}) {
     const requiredSections = REQUIRED_SECTIONS[roleKey] || [];
-    const normalized = text || '';
+    const normalized = normalizeEvidenceMarkup(text || '');
     const missingSections = requiredSections.filter((section) => !normalized.includes(section));
     const evidenceTagCount = countEvidenceTags(normalized);
     const invalidEvidenceTagCount = countInvalidEvidenceTags(
@@ -464,7 +772,7 @@ function evaluateCouncilOutputs({
     };
 }
 
-function renderCouncilOutput({ userMessage, outputs, personaOrder = DEFAULT_PERSONA_ORDER }) {
+function renderCouncilOutput({ userMessage, outputs, personaOrder = DEFAULT_PERSONA_ORDER, status = 'success' }) {
     let fileOutput = `Council Query: "${userMessage}"\n`;
     fileOutput += `${'='.repeat(50)}\n\n`;
 
@@ -476,7 +784,9 @@ function renderCouncilOutput({ userMessage, outputs, personaOrder = DEFAULT_PERS
         fileOutput += `${'-'.repeat(50)}\n\n`;
     }
 
-    fileOutput += 'Council Adjourned.\n';
+    fileOutput += status === 'success' || status === 'repaired_success'
+        ? 'Council Adjourned.\n'
+        : `Council Ended With Status: ${status}\n`;
     return fileOutput;
 }
 
@@ -485,7 +795,13 @@ function renderCouncilTelemetry({
     resolvedFiles = [],
     fileLineCounts = {},
     outputs,
-    personaOrder = DEFAULT_PERSONA_ORDER
+    personaOrder = DEFAULT_PERSONA_ORDER,
+    status = 'success',
+    attemptsByRole = {},
+    validationFailures = {},
+    roleErrors = {},
+    repairedRoles = [],
+    truncatedFiles = []
 }) {
     const evaluation = evaluateCouncilOutputs({
         outputs,
@@ -498,8 +814,41 @@ function renderCouncilTelemetry({
         userMessage,
         resolvedFiles,
         fileLineCounts,
+        status,
+        attemptsByRole,
+        validationFailures,
+        roleErrors,
+        repairedRoles,
+        truncatedFiles,
         evaluation
     }, null, 2);
+}
+
+function isPathInsideRoot(candidatePath, rootPath) {
+    const relative = path.relative(rootPath, candidatePath);
+    return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+}
+
+function resolveOutputPath({
+    requestedOutFile,
+    cwd = process.cwd(),
+    repoRoot = path.resolve(cwd),
+    allowExternalOut = false,
+    now = new Date()
+} = {}) {
+    if (!requestedOutFile) {
+        const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        return path.join(repoRoot, `council_output_${timestamp}.txt`);
+    }
+
+    const resolvedPath = path.isAbsolute(requestedOutFile)
+        ? path.normalize(requestedOutFile)
+        : path.resolve(cwd, requestedOutFile);
+    if (!allowExternalOut && !isPathInsideRoot(resolvedPath, path.resolve(repoRoot))) {
+        throw new Error('Requested output path is outside the repository.');
+    }
+
+    return resolvedPath;
 }
 
 module.exports = {
@@ -507,11 +856,13 @@ module.exports = {
     DEFAULT_PERSONA_ORDER,
     MAX_EVIDENCE_SPAN_LINES,
     buildRolePrompt,
-    buildReviewerRetryPrompt,
+    buildRoleRepairPrompt,
+    evaluateRoleOutput,
     evaluateCouncilOutputs,
     extractReferencedFiles,
     renderCouncilOutput,
     renderCouncilTelemetry,
     resolveContextFiles,
+    resolveOutputPath,
     runCouncilAnalysis
 };

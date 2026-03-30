@@ -9,7 +9,7 @@
 
   const DEFAULT_ROUTE = { main: 'dashboard', sub: '' };
   const DEFAULT_ADMIN_CAPABILITIES = Object.freeze({
-    classroomMatches: false,
+    classroomMatches: true,
     readAloudReporting: false
   });
 
@@ -36,6 +36,7 @@
       ]
     },
     enquiry: { label: 'Enquiry', subTabs: [] },
+    recycle: { label: 'Recycle Bin', subTabs: [] },
     staff: { label: 'Staff Management', subTabs: [] },
     agents: { label: 'Agent Management', subTabs: [] },
     settings: { label: 'Settings', subTabs: [] },
@@ -47,9 +48,13 @@
   const dataCache = {
     leads: [],
     students: [],
+    courses: [],
+    classrooms: [],
     openTasks: [],
     attendanceRiskByStudentId: new Map()
   };
+  const selectedCourseIds = new Set();
+  const selectedClassroomIds = new Set();
   let adminCapabilities = { ...DEFAULT_ADMIN_CAPABILITIES };
   let dashboardController = null;
   let schedulerController = null;
@@ -60,6 +65,7 @@
   let classroomModalController = null;
   let studentDirectoryController = null;
   let leadWorkspaceController = null;
+  let recycleBinController = null;
   let communicationsController = null;
   const entranceTestUi = window.CrmEntranceTests || null;
   const authSessionGuard = window.AuthSessionGuard || null;
@@ -67,6 +73,7 @@
     studentId: null,
     studentProfile: null,
     createdTestLinks: new Map(),
+    leadCreatedTestLinks: new Map(),
     classroomMatches: [],
     financeWorkflow: null,
     courseId: null,
@@ -80,9 +87,17 @@
     liveSessions: [],
     liveSessionId: null
   };
+  const bulkDeleteWarningState = {
+    resolver: null,
+    previousFocus: null,
+    requiresText: 'archive',
+    onKeyDown: null
+  };
+  window.CrmAdminDialogs = window.CrmAdminDialogs || {};
 
   document.addEventListener('DOMContentLoaded', () => {
     cacheElements();
+    bindBulkDeleteWarningModal();
     init().catch((e) => {
       console.error('[CRM Admin] Fatal init error:', e);
       showGateMessage('Initialization failed.', e?.message || 'Unknown error');
@@ -101,6 +116,8 @@
     elements.potentialStudentsContainer = document.querySelector('[data-panel="students/potential"] .crm-placeholder-card');
     elements.studentDataContainer = document.querySelector('[data-panel="students/data"] .crm-placeholder-card');
     elements.courseCatalogContainer = document.querySelector('[data-panel="courses/courses"] .crm-placeholder-card');
+    elements.recycleBinWorkspace = document.getElementById('recycle-bin-workspace');
+    elements.btnRefreshRecycleBin = document.getElementById('btn-refresh-recycle-bin');
     elements.btnNewLead = document.getElementById('btn-new-lead');
     elements.btnSaveLead = document.getElementById('btn-save-lead');
     elements.btnCancelLead = document.getElementById('btn-cancel-lead');
@@ -127,6 +144,12 @@
     elements.inputLeadActivityBody = document.getElementById('lead-activity-body');
     elements.btnSaveLeadActivity = document.getElementById('btn-save-lead-activity');
     elements.leadActivityList = document.getElementById('lead-activity-list');
+    elements.btnAddLeadEntranceTest = document.getElementById('btn-add-lead-entrance-test');
+    elements.leadEntranceTestLinkInput = document.getElementById('lead-entrance-test-link');
+    elements.btnCopyLeadEntranceTestLink = document.getElementById('btn-copy-lead-entrance-test-link');
+    elements.btnOpenLeadEntranceTestLink = document.getElementById('btn-open-lead-entrance-test-link');
+    elements.leadEntranceTestLinkNote = document.getElementById('lead-entrance-test-link-note');
+    elements.leadEntranceTestsList = document.getElementById('lead-entrance-tests-list');
     elements.inputTemplateName = document.getElementById('template-name');
     elements.inputTemplateChannel = document.getElementById('template-channel');
     elements.inputTemplateSubject = document.getElementById('template-subject');
@@ -169,6 +192,7 @@
     elements.inputStudentEmail = document.getElementById('student-email');
     elements.inputStudentZalo = document.getElementById('student-zalo');
     elements.inputStudentFacebook = document.getElementById('student-facebook');
+    elements.inputStudentFacebookProfileUrl = document.getElementById('student-facebook-profile-url');
     elements.inputScoreOverall = document.getElementById('score-overall');
     elements.inputScoreListening = document.getElementById('score-listening');
     elements.inputScoreReading = document.getElementById('score-reading');
@@ -204,6 +228,7 @@
     elements.studentFinanceOutstanding = document.getElementById('student-finance-outstanding');
     elements.studentFinanceNextDue = document.getElementById('student-finance-next-due');
     elements.inputInvoiceAmount = document.getElementById('invoice-amount');
+    elements.selectInvoiceCurrency = document.getElementById('invoice-currency');
     elements.inputInvoiceDiscount = document.getElementById('invoice-discount');
     elements.inputInvoiceDueDate = document.getElementById('invoice-due-date');
     elements.inputStudentFinanceEnrollment = document.getElementById('student-finance-enrollment');
@@ -218,6 +243,7 @@
     elements.btnCreateStudentInvoice = document.getElementById('btn-create-student-invoice');
     elements.studentInvoiceList = document.getElementById('student-invoice-list');
     elements.inputPaymentAmount = document.getElementById('payment-amount');
+    elements.selectPaymentCurrency = document.getElementById('payment-currency');
     elements.inputPaymentMethod = document.getElementById('payment-method');
     elements.btnRecordStudentPayment = document.getElementById('btn-record-student-payment');
 
@@ -374,6 +400,19 @@
     elements.schedulerActionPreviewOverflow = document.getElementById('scheduler-action-preview-overflow');
     elements.schedulerActionReplaceSummary = document.getElementById('scheduler-action-replace-summary');
     elements.schedulerActionReplaceList = document.getElementById('scheduler-action-replace-list');
+    elements.bulkDeleteWarningModal = document.getElementById('bulk-delete-warning-modal');
+    elements.bulkDeleteWarningTitle = document.getElementById('bulk-delete-warning-title');
+    elements.bulkDeleteWarningBadge = document.getElementById('bulk-delete-warning-badge');
+    elements.bulkDeleteWarningSummary = document.getElementById('bulk-delete-warning-summary');
+    elements.bulkDeleteWarningNote = document.getElementById('bulk-delete-warning-note');
+    elements.bulkDeleteWarningPanelTitle = document.getElementById('bulk-delete-warning-panel-title');
+    elements.bulkDeleteWarningPanelNote = document.getElementById('bulk-delete-warning-panel-note');
+    elements.bulkDeleteWarningList = document.getElementById('bulk-delete-warning-list');
+    elements.bulkDeleteConfirmLabel = document.getElementById('bulk-delete-confirm-label');
+    elements.bulkDeleteConfirmInput = document.getElementById('bulk-delete-confirm-input');
+    elements.btnCloseBulkDeleteWarningModal = document.getElementById('btn-close-bulk-delete-warning-modal');
+    elements.btnCancelBulkDeleteWarning = document.getElementById('btn-cancel-bulk-delete-warning');
+    elements.btnConfirmBulkDeleteWarning = document.getElementById('btn-confirm-bulk-delete-warning');
 
     // Classroom Modules & Classwork
     elements.btnAddModule = document.getElementById('btn-add-module');
@@ -432,6 +471,25 @@
     });
   }
 
+  function setupMoneyInputs() {
+    if (!window.CrmFinance || typeof window.CrmFinance.bindMoneyInput !== 'function') return;
+
+    window.CrmFinance.bindMoneyInput(elements.inputInvoiceAmount, elements.selectInvoiceCurrency, {
+      relatedInputs: [elements.inputInvoiceDiscount]
+    });
+    window.CrmFinance.bindMoneyInput(elements.inputInvoiceDiscount, elements.selectInvoiceCurrency, {
+      relatedInputs: [elements.inputInvoiceAmount]
+    });
+    window.CrmFinance.bindMoneyInput(elements.inputPaymentAmount, elements.selectPaymentCurrency);
+
+    if (elements.selectInvoiceCurrency && !elements.selectInvoiceCurrency.value) {
+      elements.selectInvoiceCurrency.value = 'VND';
+    }
+    if (elements.selectPaymentCurrency && !elements.selectPaymentCurrency.value) {
+      elements.selectPaymentCurrency.value = 'VND';
+    }
+  }
+
   async function init() {
     showGateMessage('Checking admin access…', 'Please wait');
 
@@ -454,6 +512,7 @@
     // Ready
     hideGate();
     setupScoreDecorations();
+    setupMoneyInputs();
     dashboardController = window.CrmDashboardWorkspace && typeof window.CrmDashboardWorkspace.createController === 'function'
       ? window.CrmDashboardWorkspace.createController({
           elements,
@@ -497,7 +556,8 @@
           renderReminderBadgeMarkup,
           renderRiskBadgeMarkup,
           escapeHtml,
-          formatDateTime
+          formatDateTime,
+          refreshDashboard
         })
       : null;
     leadWorkspaceController = window.CrmLeadWorkspace && typeof window.CrmLeadWorkspace.createController === 'function'
@@ -516,7 +576,23 @@
           renderTaskList,
           renderActivityList,
           renderReminderBadgeMarkup,
-          escapeHtml
+          escapeHtml,
+          openStudentProfile
+        })
+      : null;
+    recycleBinController = window.CrmRecycleBinWorkspace && typeof window.CrmRecycleBinWorkspace.createController === 'function'
+      ? window.CrmRecycleBinWorkspace.createController({
+          elements,
+          showToast,
+          apiFetchJson,
+          escapeHtml,
+          formatDateTime,
+          refreshLeadPipeline,
+          refreshStudentLists,
+          refreshCourseCatalog,
+          refreshClassroomList,
+          refreshDashboard,
+          showBulkActionConfirm: showBulkDeleteWarningModal
         })
       : null;
     communicationsController = window.CrmCommunicationsWorkspace && typeof window.CrmCommunicationsWorkspace.createController === 'function'
@@ -964,6 +1040,7 @@
       elements.inputStudentEmail,
       elements.inputStudentZalo,
       elements.inputStudentFacebook,
+      elements.inputStudentFacebookProfileUrl,
       elements.inputScoreOverall,
       elements.inputScoreListening,
       elements.inputScoreReading,
@@ -1123,6 +1200,7 @@
     modalState.classroomMatches = [];
     modalState.financeWorkflow = null;
     if (elements.inputInvoiceAmount) elements.inputInvoiceAmount.value = '';
+    if (elements.selectInvoiceCurrency) elements.selectInvoiceCurrency.value = 'VND';
     if (elements.inputInvoiceDiscount) elements.inputInvoiceDiscount.value = '';
     if (elements.inputInvoiceDueDate) elements.inputInvoiceDueDate.value = '';
     if (elements.inputStudentFinanceEnrollment) {
@@ -1133,6 +1211,7 @@
       elements.studentFinanceEnrollmentMeta.textContent = 'Choose the enrollment this invoice belongs to.';
     }
     if (elements.inputPaymentAmount) elements.inputPaymentAmount.value = '';
+    if (elements.selectPaymentCurrency) elements.selectPaymentCurrency.value = 'VND';
     if (elements.inputPaymentMethod) elements.inputPaymentMethod.value = 'bank-transfer';
     if (elements.studentInvoiceList) elements.studentInvoiceList.innerHTML = '<div class="crm-muted">No invoices yet.</div>';
     if (elements.studentFinanceInvoiced) elements.studentFinanceInvoiced.textContent = '0';
@@ -1175,6 +1254,7 @@
       email: String(elements.inputStudentEmail?.value || '').trim(),
       zalo: String(elements.inputStudentZalo?.value || '').trim(),
       facebook: String(elements.inputStudentFacebook?.value || '').trim(),
+      facebookProfileUrl: String(elements.inputStudentFacebookProfileUrl?.value || '').trim(),
       learningProfile: {
         overall: null,
         listening: null,
@@ -1200,7 +1280,7 @@
     if (window.CrmStudents && typeof window.CrmStudents.hasAnyInfoField === 'function') {
       return window.CrmStudents.hasAnyInfoField(payload);
     }
-    return [payload?.name, payload?.label, payload?.phone, payload?.email, payload?.zalo, payload?.facebook]
+    return [payload?.name, payload?.label, payload?.phone, payload?.email, payload?.zalo, payload?.facebook, payload?.facebookProfileUrl]
       .some(v => !!String(v || '').trim());
   }
 
@@ -3193,6 +3273,12 @@
         console.error('[CRM Admin] Scheduler refresh failed:', error);
       });
     }
+
+    if (activePanel === 'recycle') {
+      refreshRecycleBin().catch((error) => {
+        console.error('[CRM Admin] Recycle bin refresh failed:', error);
+      });
+    }
   }
 
   function loadSchedulerWorkspace() {
@@ -3205,11 +3291,36 @@
     return schedulerController.refresh();
   }
 
+  function refreshRecycleBin() {
+    if (!recycleBinController || typeof recycleBinController.refreshRecycleBin !== 'function') return Promise.resolve();
+    return recycleBinController.refreshRecycleBin();
+  }
+
   function showGateMessage(title, subtitle) {
     if (!elements.gate) return;
     if (elements.gateText) elements.gateText.textContent = title || '';
     if (elements.gateSubtext) elements.gateSubtext.textContent = subtitle || '';
     elements.gate.style.display = 'flex';
+  }
+
+  function updateSelectionSet(set, itemId, selected) {
+    const id = String(itemId || '').trim();
+    if (!id) return;
+    if (selected) set.add(id);
+    else set.delete(id);
+  }
+
+  function clearSelectionSet(set) {
+    set.clear();
+  }
+
+  function pruneSelectionSet(set, validIds) {
+    const keep = new Set((Array.isArray(validIds) ? validIds : []).map((id) => String(id || '').trim()).filter(Boolean));
+    Array.from(set).forEach((id) => {
+      if (!keep.has(id)) {
+        set.delete(id);
+      }
+    });
   }
 
   function hideGate() {
@@ -4110,25 +4221,149 @@
         });
         elements.classManagementGrid.__crmClassroomLinkHandlerBound = true;
       }
+      if (!elements.classManagementGrid.__crmClassroomBulkDeleteBound) {
+        elements.classManagementGrid.addEventListener('change', (event) => {
+          const checkbox = event.target && typeof event.target.closest === 'function'
+            ? event.target.closest('input[type="checkbox"][data-classroom-select]')
+            : null;
+          if (!checkbox || !elements.classManagementGrid.contains(checkbox)) return;
+          updateSelectionSet(selectedClassroomIds, checkbox.dataset.classroomSelect, checkbox.checked);
+          refreshClassroomList().catch((error) => {
+            console.error('[CRM Admin] Refresh classroom list failed:', error);
+          });
+        });
+        elements.classManagementGrid.addEventListener('click', async (event) => {
+          const selectAll = event.target && typeof event.target.closest === 'function'
+            ? event.target.closest('input[type="checkbox"][data-classroom-select-all]')
+            : null;
+          if (selectAll && elements.classManagementGrid.contains(selectAll)) {
+            const rows = Array.isArray(dataCache.classrooms) ? dataCache.classrooms : [];
+            if (selectAll.checked) {
+              rows.forEach((classroom) => {
+                const id = String(classroom.classroomId || classroom.id || '').trim();
+                if (id) selectedClassroomIds.add(id);
+              });
+            } else {
+              clearSelectionSet(selectedClassroomIds);
+            }
+            refreshClassroomList().catch((error) => {
+              console.error('[CRM Admin] Refresh classroom list failed:', error);
+            });
+            return;
+          }
+
+          const deleteButton = event.target && typeof event.target.closest === 'function'
+            ? event.target.closest('button[data-action="bulk-delete-classrooms"]')
+            : null;
+          if (!deleteButton || !elements.classManagementGrid.contains(deleteButton)) return;
+          try {
+            const ids = Array.from(selectedClassroomIds);
+            if (!ids.length) return;
+            let preview;
+            try {
+              preview = await apiFetchJson('/api/admin/classrooms/bulk-delete/preview', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids, sourcePanel: 'courses/class-management' })
+              });
+            } catch (error) {
+              if (Number(error?.status) === 404) {
+                throw new Error('Recycle-bin archive is not available in the currently running backend. Restart or redeploy the server, then try again.');
+              }
+              throw error;
+            }
+            const archiveableIds = Array.isArray(preview.archiveableIds) ? preview.archiveableIds : [];
+            const notFoundIds = Array.isArray(preview.notFoundIds) ? preview.notFoundIds : [];
+            const impactSummary = Array.isArray(preview.impactSummary) ? preview.impactSummary : [];
+            const expiresAt = String(preview.expiresAt || '').trim();
+            const previewItems = impactSummary.map((item) => ({
+              title: String(item?.title || item?.id || 'Classroom').trim() || 'Classroom',
+              subtitle: [String(item?.rootEntityType || 'classroom').trim(), String(item?.subtitle || item?.sourcePanel || '').trim()].filter(Boolean).join(' · '),
+              detailText: expiresAt ? `Expires ${formatDateTime(expiresAt)}` : 'Retained for 30 days',
+              details: Array.isArray(item?.details) ? item.details : []
+            })).concat(notFoundIds.map((id) => ({
+              kind: 'missing',
+              title: id,
+              subtitle: 'Not found',
+              detailText: 'Skipped during archive.'
+            })));
+            const proceed = await showBulkDeleteWarningModal({
+              title: `Move ${ids.length} classroom${ids.length === 1 ? '' : 's'} to Recycle Bin?`,
+              note: `${archiveableIds.length} classroom${archiveableIds.length === 1 ? '' : 's'} will move to Recycle Bin and stay there for 30 days.`,
+              totalCount: ids.length,
+              deletableCount: archiveableIds.length,
+              summaryCards: [
+                { label: 'Selected', value: String(ids.length) },
+                { label: 'Will archive', value: String(archiveableIds.length) },
+                { label: 'Not found', value: String(notFoundIds.length) }
+              ],
+              detailTitle: 'Archive preview',
+              detailNote: expiresAt ? `Archived records are retained until ${formatDateTime(expiresAt)}.` : 'Archived records are retained for 30 days.',
+              detailItems: previewItems,
+              entityLabel: 'classroom',
+              confirmLabel: 'Move to Recycle Bin',
+              requiresText: 'archive',
+              badgeText: 'Warning'
+            });
+            if (!proceed) return;
+            const result = await apiFetchJson('/api/admin/classrooms/bulk-delete', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ids, sourcePanel: 'courses/class-management' })
+            });
+            clearSelectionSet(selectedClassroomIds);
+            await refreshClassroomList();
+            await refreshDashboard().catch(() => {});
+            const archivedCount = Array.isArray(result.archivedIds) ? result.archivedIds.length : 0;
+            const notFoundCount = Array.isArray(result.notFoundIds) ? result.notFoundIds.length : 0;
+            if (archivedCount > 0) {
+              showToast(notFoundCount > 0
+                ? `Moved ${archivedCount} classroom(s) to Recycle Bin. ${notFoundCount} were not found.`
+                : `Moved ${archivedCount} classroom(s) to Recycle Bin.`, 'success');
+            } else {
+              showToast('No classroom records were moved to Recycle Bin.', 'error');
+            }
+          } catch (error) {
+            console.error('[CRM Admin] Bulk archive classrooms failed:', error);
+            showToast(error?.message || 'Failed to archive classrooms.', 'error');
+          }
+        });
+        elements.classManagementGrid.__crmClassroomBulkDeleteBound = true;
+      }
       const [classrooms, courses] = await Promise.all([
         window.ClassroomAPI.fetchClassrooms(),
         fetchCoursesFromCatalog().catch(() => [])
       ]);
       dataCache.classrooms = classrooms;
+      pruneSelectionSet(selectedClassroomIds, classrooms.map((classroom) => classroom.classroomId || classroom.id));
       const courseIndex = new Map(courses.map((course) => [String(course.id || ''), course]));
       if (!classrooms.length) {
         elements.classManagementGrid.innerHTML = '<div class="crm-muted">No classrooms found.</div>';
         return;
       }
+      const checkedCount = selectedClassroomIds.size;
+      const allChecked = checkedCount > 0 && classrooms.every((classroom) => selectedClassroomIds.has(String(classroom.classroomId || classroom.id || '').trim()));
       elements.classManagementGrid.innerHTML = `
+        <div class="crm-inline-fields" style="justify-content: space-between; margin-bottom: 12px;">
+          <div class="crm-muted">${checkedCount ? `${checkedCount} selected` : 'Select rows to move to Recycle Bin.'}</div>
+          <button type="button" class="crm-btn-secondary" data-action="bulk-delete-classrooms" ${checkedCount ? '' : 'disabled'}>Archive Selected</button>
+        </div>
         <div class="crm-table-container">
           <table class="crm-table">
             <thead>
-              <tr><th>Name</th><th>Course</th><th>Status</th><th>Modules</th></tr>
+              <tr>
+                <th style="width:56px; text-align:center; padding-left:14px; padding-right:14px;">
+                  <input type="checkbox" data-classroom-select-all ${allChecked ? 'checked' : ''}>
+                </th>
+                <th>Name</th><th>Course</th><th>Status</th><th>Modules</th>
+              </tr>
             </thead>
             <tbody>
               ${classrooms.map(c => `
                 <tr>
+                  <td style="width:56px; text-align:center; padding-left:14px; padding-right:14px;">
+                    <input type="checkbox" data-classroom-select="${escapeHtml(c.classroomId || c.id || '')}" ${selectedClassroomIds.has(String(c.classroomId || c.id || '').trim()) ? 'checked' : ''}>
+                  </td>
                   <td class="td-bold">
                     <button type="button" class="crm-student-link crm-classroom-link" data-classroom-id="${escapeHtml(c.classroomId || c.id || '')}">
                       ${escapeHtml(c.name)}
@@ -4245,22 +4480,37 @@
       }
       const courses = await fetchCoursesFromCatalog();
       dataCache.courses = courses;
+      pruneSelectionSet(selectedCourseIds, courses.map((course) => course.id || course.courseId));
       await populateClassroomCourseOptions({ selectedValue: elements.inputClassroomCourseId?.value || '' });
 
       if (!courses.length) {
         container.innerHTML = '<div class="crm-muted">No courses found.</div>';
         return;
       }
+      const checkedCount = selectedCourseIds.size;
+      const allChecked = checkedCount > 0 && courses.every((course) => selectedCourseIds.has(String(course.id || course.courseId || '').trim()));
 
       container.innerHTML = `
+        <div class="crm-inline-fields" style="justify-content: space-between; margin-bottom: 12px;">
+          <div class="crm-muted">${checkedCount ? `${checkedCount} selected` : 'Select rows to move to Recycle Bin.'}</div>
+          <button type="button" class="crm-btn-secondary" data-action="bulk-delete-courses" ${checkedCount ? '' : 'disabled'}>Archive Selected</button>
+        </div>
         <div class="crm-table-container">
           <table class="crm-table">
             <thead>
-              <tr><th>Name</th><th>Code</th><th>Status</th><th>Teachers</th></tr>
+              <tr>
+                <th style="width:56px; text-align:center; padding-left:14px; padding-right:14px;">
+                  <input type="checkbox" data-course-select-all ${allChecked ? 'checked' : ''}>
+                </th>
+                <th>Name</th><th>Code</th><th>Status</th><th>Teachers</th>
+              </tr>
             </thead>
             <tbody>
               ${courses.map((course) => `
                 <tr>
+                  <td style="width:56px; text-align:center; padding-left:14px; padding-right:14px;">
+                    <input type="checkbox" data-course-select="${escapeHtml(course.id || course.courseId || '')}" ${selectedCourseIds.has(String(course.id || course.courseId || '').trim()) ? 'checked' : ''}>
+                  </td>
                   <td class="td-bold">
                     <button type="button" class="crm-student-link crm-course-link" data-course-id="${escapeHtml(course.id || course.courseId || '')}">
                       ${escapeHtml(course.name || 'Untitled')}
@@ -4275,11 +4525,347 @@
           </table>
         </div>
       `;
+
+      if (!container.__crmCourseBulkDeleteBound) {
+        container.addEventListener('change', (event) => {
+          const checkbox = event.target && typeof event.target.closest === 'function'
+            ? event.target.closest('input[type="checkbox"][data-course-select]')
+            : null;
+          if (!checkbox || !container.contains(checkbox)) return;
+          updateSelectionSet(selectedCourseIds, checkbox.dataset.courseSelect, checkbox.checked);
+          refreshCourseCatalog().catch((error) => {
+            console.error('[CRM Admin] Refresh course catalog failed:', error);
+          });
+        });
+        container.addEventListener('click', async (event) => {
+          const selectAll = event.target && typeof event.target.closest === 'function'
+            ? event.target.closest('input[type="checkbox"][data-course-select-all]')
+            : null;
+          if (selectAll && container.contains(selectAll)) {
+            const rows = Array.isArray(dataCache.courses) ? dataCache.courses : [];
+            if (selectAll.checked) {
+              rows.forEach((course) => {
+                const id = String(course.id || course.courseId || '').trim();
+                if (id) selectedCourseIds.add(id);
+              });
+            } else {
+              clearSelectionSet(selectedCourseIds);
+            }
+            refreshCourseCatalog().catch((error) => {
+              console.error('[CRM Admin] Refresh course catalog failed:', error);
+            });
+            return;
+          }
+
+          const deleteButton = event.target && typeof event.target.closest === 'function'
+            ? event.target.closest('button[data-action="bulk-delete-courses"]')
+            : null;
+          if (!deleteButton || !container.contains(deleteButton)) return;
+          try {
+            const ids = Array.from(selectedCourseIds);
+            if (!ids.length) return;
+            let preview;
+            try {
+              preview = await apiFetchJson('/api/admin/courses/bulk-delete/preview', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids, sourcePanel: 'courses/courses' })
+              });
+            } catch (error) {
+              if (Number(error?.status) === 404) {
+                throw new Error('Recycle-bin archive is not available in the currently running backend. Restart or redeploy the server, then try again.');
+              }
+              throw error;
+            }
+            const archiveableIds = Array.isArray(preview.archiveableIds) ? preview.archiveableIds : [];
+            const notFoundIds = Array.isArray(preview.notFoundIds) ? preview.notFoundIds : [];
+            const impactSummary = Array.isArray(preview.impactSummary) ? preview.impactSummary : [];
+            const expiresAt = String(preview.expiresAt || '').trim();
+            const previewItems = impactSummary.map((item) => ({
+              title: String(item?.title || item?.id || 'Course').trim() || 'Course',
+              subtitle: [String(item?.rootEntityType || 'course').trim(), String(item?.subtitle || item?.sourcePanel || '').trim()].filter(Boolean).join(' · '),
+              detailText: expiresAt ? `Expires ${formatDateTime(expiresAt)}` : 'Retained for 30 days',
+              details: Array.isArray(item?.details) ? item.details : []
+            })).concat(notFoundIds.map((id) => ({
+              kind: 'missing',
+              title: id,
+              subtitle: 'Not found',
+              detailText: 'Skipped during archive.'
+            })));
+            const proceed = await showBulkDeleteWarningModal({
+              title: `Move ${ids.length} course${ids.length === 1 ? '' : 's'} to Recycle Bin?`,
+              note: `${archiveableIds.length} course${archiveableIds.length === 1 ? '' : 's'} will move to Recycle Bin and stay there for 30 days.`,
+              totalCount: ids.length,
+              deletableCount: archiveableIds.length,
+              summaryCards: [
+                { label: 'Selected', value: String(ids.length) },
+                { label: 'Will archive', value: String(archiveableIds.length) },
+                { label: 'Not found', value: String(notFoundIds.length) }
+              ],
+              detailTitle: 'Archive preview',
+              detailNote: expiresAt ? `Archived records are retained until ${formatDateTime(expiresAt)}.` : 'Archived records are retained for 30 days.',
+              detailItems: previewItems,
+              entityLabel: 'course',
+              confirmLabel: 'Move to Recycle Bin',
+              requiresText: 'archive',
+              badgeText: 'Warning'
+            });
+            if (!proceed) return;
+            const result = await apiFetchJson('/api/admin/courses/bulk-delete', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ids, sourcePanel: 'courses/courses' })
+            });
+            clearSelectionSet(selectedCourseIds);
+            await refreshCourseCatalog();
+            await refreshDashboard().catch(() => {});
+            const archivedCount = Array.isArray(result.archivedIds) ? result.archivedIds.length : 0;
+            const notFoundCount = Array.isArray(result.notFoundIds) ? result.notFoundIds.length : 0;
+            if (archivedCount > 0) {
+              showToast(notFoundCount > 0
+                ? `Moved ${archivedCount} course(s) to Recycle Bin. ${notFoundCount} were not found.`
+                : `Moved ${archivedCount} course(s) to Recycle Bin.`, 'success');
+            } else {
+              showToast('No course records were moved to Recycle Bin.', 'error');
+            }
+          } catch (error) {
+            console.error('[CRM Admin] Bulk archive courses failed:', error);
+            showToast(error?.message || 'Failed to archive courses.', 'error');
+          }
+        });
+        container.__crmCourseBulkDeleteBound = true;
+      }
     } catch (error) {
       console.error('[CRM Admin] Failed to refresh course catalog:', error);
       container.innerHTML = '<div class="crm-muted">Failed to load courses.</div>';
     }
   }
+
+  function bindBulkDeleteWarningModal() {
+    if (!elements.bulkDeleteWarningModal || elements.bulkDeleteWarningModal.__crmBulkDeleteWarningBound) return;
+
+    const closeWithCancel = () => closeBulkDeleteWarningModal(false);
+    const closeWithConfirm = () => {
+      if (!isBulkDeleteConfirmReady()) return;
+      closeBulkDeleteWarningModal(true);
+    };
+
+    if (elements.btnCloseBulkDeleteWarningModal) {
+      elements.btnCloseBulkDeleteWarningModal.addEventListener('click', closeWithCancel);
+    }
+    if (elements.btnCancelBulkDeleteWarning) {
+      elements.btnCancelBulkDeleteWarning.addEventListener('click', closeWithCancel);
+    }
+    if (elements.btnConfirmBulkDeleteWarning) {
+      elements.btnConfirmBulkDeleteWarning.addEventListener('click', closeWithConfirm);
+    }
+    if (elements.bulkDeleteConfirmInput) {
+      elements.bulkDeleteConfirmInput.addEventListener('input', syncBulkDeleteConfirmState);
+      elements.bulkDeleteConfirmInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' && isBulkDeleteConfirmReady()) {
+          event.preventDefault();
+          closeWithConfirm();
+        }
+      });
+    }
+    elements.bulkDeleteWarningModal.addEventListener('click', (event) => {
+      if (event.target === elements.bulkDeleteWarningModal) {
+        closeWithCancel();
+      }
+    });
+    elements.bulkDeleteWarningModal.__crmBulkDeleteWarningBound = true;
+  }
+
+  function buildSummaryCardsHtml(cards = []) {
+    const list = Array.isArray(cards) ? cards : [];
+    if (!list.length) return '';
+    return list.map((card) => {
+      const label = escapeHtml(String(card?.label || 'Summary').trim() || 'Summary');
+      const value = escapeHtml(String(card?.value ?? '').trim() || '0');
+      return `
+        <div class="crm-delete-warning-summary-card">
+          <span>${label}</span>
+          <strong>${value}</strong>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function formatDetailCounts(details = []) {
+    const list = Array.isArray(details) ? details : [];
+    if (!list.length) return '';
+    return list.map((detail) => {
+      const label = String(detail?.label || 'Item').trim() || 'Item';
+      const count = Number(detail?.count || 0);
+      return `${label}${Number.isFinite(count) && count > 0 ? ` (${count})` : ''}`;
+    }).join(', ');
+  }
+
+  function buildWarningDetailHtml(items = [], emptyMessage = 'No additional details.') {
+    const list = Array.isArray(items) ? items : [];
+    if (!list.length) {
+      return `<div class="crm-muted">${escapeHtml(emptyMessage)}</div>`;
+    }
+
+    return list.map((item) => {
+      const title = String(item?.title || item?.displayTitle || item?.id || 'Record').trim() || 'Record';
+      const subtitle = String(item?.subtitle || item?.displaySubtitle || item?.sourcePanel || '').trim();
+      const detailLines = [];
+      const detailCounts = formatDetailCounts(item?.details);
+      if (detailCounts) detailLines.push(detailCounts);
+      const reasonCounts = formatDetailCounts(item?.reasons);
+      if (reasonCounts) detailLines.push(reasonCounts);
+      const recordCount = Number(item?.recordCount || item?.count || 0);
+      if (Number.isFinite(recordCount) && recordCount > 0) {
+        detailLines.push(`${recordCount} record${recordCount === 1 ? '' : 's'}`);
+      }
+      const detailText = String(item?.detailText || item?.reason || '').trim();
+      if (detailText) detailLines.push(detailText);
+      if (String(item?.kind || '').trim().toLowerCase() === 'missing') {
+        detailLines.push('Not found');
+      }
+      return `
+        <div class="crm-delete-warning-item">
+          <div class="crm-delete-warning-item-head">
+            <span>${escapeHtml(title)}</span>
+            ${subtitle ? `<span class="crm-delete-warning-item-meta">${escapeHtml(subtitle)}</span>` : ''}
+          </div>
+          ${detailLines.length ? `<div class="crm-delete-warning-item-reasons">${detailLines.map((line) => escapeHtml(line)).join('<br>')}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  function isBulkDeleteConfirmReady() {
+    const expected = String(bulkDeleteWarningState.requiresText || 'archive').trim().toLowerCase();
+    const actual = String(elements.bulkDeleteConfirmInput?.value || '').trim().toLowerCase();
+    return !!expected && actual === expected;
+  }
+
+  function syncBulkDeleteConfirmState() {
+    if (!elements.btnConfirmBulkDeleteWarning) return;
+    elements.btnConfirmBulkDeleteWarning.disabled = !isBulkDeleteConfirmReady();
+  }
+
+  function closeBulkDeleteWarningModal(result = false) {
+    if (!elements.bulkDeleteWarningModal) {
+      const resolver = bulkDeleteWarningState.resolver;
+      bulkDeleteWarningState.resolver = null;
+      if (typeof resolver === 'function') resolver(!!result);
+      return;
+    }
+
+    elements.bulkDeleteWarningModal.style.display = 'none';
+    elements.bulkDeleteWarningModal.setAttribute('aria-hidden', 'true');
+    if (elements.bulkDeleteConfirmInput) {
+      elements.bulkDeleteConfirmInput.value = '';
+    }
+    syncBulkDeleteConfirmState();
+    if (bulkDeleteWarningState.onKeyDown) {
+      document.removeEventListener('keydown', bulkDeleteWarningState.onKeyDown, true);
+      bulkDeleteWarningState.onKeyDown = null;
+    }
+    const resolver = bulkDeleteWarningState.resolver;
+    bulkDeleteWarningState.resolver = null;
+    const previousFocus = bulkDeleteWarningState.previousFocus;
+    bulkDeleteWarningState.previousFocus = null;
+    if (typeof resolver === 'function') resolver(!!result);
+    if (previousFocus && typeof previousFocus.focus === 'function') {
+      try {
+        previousFocus.focus();
+      } catch (_) {
+        // ignore focus restoration failures
+      }
+    }
+  }
+
+  function showBulkDeleteWarningModal({
+    title,
+    note,
+    badgeText,
+    summaryCards,
+    detailTitle,
+    detailNote,
+    detailItems,
+    totalCount = 0,
+    deletableCount = 0,
+    blocked = [],
+    entityLabel = 'record',
+    proceedLabel = '',
+    confirmLabel = '',
+    requiresText = 'archive'
+  } = {}) {
+    if (!elements.bulkDeleteWarningModal || !elements.bulkDeleteWarningSummary || !elements.bulkDeleteWarningList || !elements.btnConfirmBulkDeleteWarning || !elements.bulkDeleteConfirmInput) {
+      showToast('Delete warning dialog is unavailable.', 'error');
+      return Promise.resolve(false);
+    }
+
+    if (bulkDeleteWarningState.resolver) {
+      closeBulkDeleteWarningModal(false);
+    }
+
+    const blockedList = Array.isArray(blocked) ? blocked : [];
+    const items = Array.isArray(detailItems) ? detailItems : [];
+    const total = Number(totalCount || 0);
+    const deletable = Number(deletableCount || 0);
+    const normalizedConfirmText = String(requiresText || 'archive').trim().toLowerCase() || 'archive';
+    bulkDeleteWarningState.previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    bulkDeleteWarningState.requiresText = normalizedConfirmText;
+
+    elements.bulkDeleteWarningTitle.textContent = title || 'Review action';
+    if (elements.bulkDeleteWarningBadge) {
+      elements.bulkDeleteWarningBadge.textContent = badgeText || 'Warning';
+    }
+    if (elements.bulkDeleteWarningNote) {
+      elements.bulkDeleteWarningNote.textContent = note || `${deletable} record${deletable === 1 ? '' : 's'} will be processed. ${blockedList.length} item${blockedList.length === 1 ? '' : 's'} need attention.`;
+    }
+    const cards = Array.isArray(summaryCards) && summaryCards.length
+      ? summaryCards
+      : [
+          { label: 'Selected', value: String(total) },
+          { label: `Ready to ${normalizedConfirmText}`, value: String(deletable) },
+          { label: 'Not found', value: String(blockedList.length) }
+        ];
+    elements.bulkDeleteWarningSummary.innerHTML = buildSummaryCardsHtml(cards);
+    if (elements.bulkDeleteWarningPanelTitle) {
+      elements.bulkDeleteWarningPanelTitle.textContent = detailTitle || 'Action details';
+    }
+    if (elements.bulkDeleteWarningPanelNote) {
+      elements.bulkDeleteWarningPanelNote.textContent = detailNote || 'Review the selected records before continuing.';
+    }
+    elements.bulkDeleteWarningList.innerHTML = buildWarningDetailHtml(items.length ? items : blockedList);
+
+    elements.btnConfirmBulkDeleteWarning.textContent = proceedLabel || confirmLabel || 'Confirm Action';
+    elements.bulkDeleteConfirmInput.value = '';
+    elements.bulkDeleteConfirmInput.setAttribute('placeholder', normalizedConfirmText);
+    if (elements.bulkDeleteConfirmLabel) {
+      elements.bulkDeleteConfirmLabel.innerHTML = `Type <strong>${escapeHtml(normalizedConfirmText)}</strong> to continue`;
+    }
+    syncBulkDeleteConfirmState();
+    elements.bulkDeleteWarningModal.style.display = 'flex';
+    elements.bulkDeleteWarningModal.setAttribute('aria-hidden', 'false');
+    requestAnimationFrame(() => {
+      try {
+        elements.bulkDeleteConfirmInput.focus();
+      } catch (_) {
+        // ignore focus errors
+      }
+    });
+
+    bulkDeleteWarningState.onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeBulkDeleteWarningModal(false);
+      }
+    };
+    document.addEventListener('keydown', bulkDeleteWarningState.onKeyDown, true);
+
+    return new Promise((resolve) => {
+      bulkDeleteWarningState.resolver = resolve;
+    });
+  }
+
+  window.CrmAdminDialogs.showBulkDeleteWarning = showBulkDeleteWarningModal;
 
   function showToast(message, type = 'info') {
     const toast = document.createElement('div');

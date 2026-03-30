@@ -58,11 +58,12 @@
 
     const json = await apiFetchJson(`/api/admin/entrance-tests/${encodeURIComponent(testId)}`, { method: 'GET' });
     const test = json.test || {};
+    const lead = json.lead || null;
     const student = json.student || null;
     const session = json.session || null;
 
     const audioUrls = await fetchSpeakingAudioUrls(testId, test);
-    renderResult({ testId, test, student, session, audioUrls });
+    renderResult({ testId, test, lead, student, session, audioUrls });
   }
 
   // ==================== AUTH & GATE ====================
@@ -525,6 +526,37 @@
     `;
   }
 
+  function buildLeadCard(lead) {
+    const body = lead
+      ? `
+        <div class="crm-result-kv">
+          <div class="crm-result-kv-label">Name</div>
+          <div class="crm-result-kv-value">${escapeHtml(lead.name || UI_DASH)}</div>
+          <div class="crm-result-kv-label">Phone</div>
+          <div class="crm-result-kv-value">${escapeHtml(lead.phone || UI_DASH)}</div>
+          <div class="crm-result-kv-label">Email</div>
+          <div class="crm-result-kv-value">${escapeHtml(lead.email || UI_DASH)}</div>
+          ${lead.stage ? `<div class="crm-result-kv-label">Stage</div><div class="crm-result-kv-value">${escapeHtml(lead.stage)}</div>` : ''}
+          ${lead.crmId ? `<div class="crm-result-kv-label">CRM ID</div><div class="crm-result-kv-value">${escapeHtml(lead.crmId)}</div>` : ''}
+          ${lead.facebookDisplayName ? `<div class="crm-result-kv-label">Facebook</div><div class="crm-result-kv-value">${escapeHtml(lead.facebookDisplayName)}</div>` : ''}
+          ${lead.facebookProfileUrl ? `<div class="crm-result-kv-label">Facebook Link</div><div class="crm-result-kv-value">${escapeHtml(lead.facebookProfileUrl)}</div>` : ''}
+        </div>
+      `
+      : '<div class="crm-result-muted">Enquiry profile not found.</div>';
+
+    return `
+      <div class="crm-result-card">
+        <div class="crm-result-card-header">
+          <h3>Enquiry</h3>
+          ${lead ? `<span class="crm-result-muted">${escapeHtml(lead.id || '')}</span>` : ''}
+        </div>
+        <div class="crm-result-card-body">
+          ${body}
+        </div>
+      </div>
+    `;
+  }
+
   function buildMetaCard(testId, test, status) {
     return `
       <div class="crm-result-card">
@@ -625,15 +657,16 @@
 
   // ==================== MAIN RENDER ====================
 
-  function renderResult({ testId, test, student, session, audioUrls }) {
+  function renderResult({ testId, test, lead, student, session, audioUrls }) {
     if (!elements.root) return;
 
     const status = safeLower(test?.status) || 'created';
-    const studentLabel = student?.name || student?.email || student?.phone || 'Student';
+    const studentLabel = student?.name || lead?.name || student?.email || lead?.email || student?.phone || lead?.phone || 'Student';
     setSubtitle(`${studentLabel} ${UI_BULLET} ${testId}`);
 
     const scoreData = computeScoreData(test, session);
 
+    const leadCard = buildLeadCard(lead);
     const studentCard = buildStudentCard(student);
     const metaCard = buildMetaCard(testId, test, status);
     const summary = buildScoreSummary(scoreData);
@@ -641,6 +674,7 @@
 
     elements.root.innerHTML = `
       <div class="crm-result-grid">
+        ${leadCard}
         ${studentCard}
         ${metaCard}
       </div>
@@ -651,6 +685,269 @@
     // Show export button now that content is rendered
     const exportBtn = document.getElementById('crm-export-pdf-btn');
     if (exportBtn) exportBtn.style.display = '';
+  }
+
+  function waitForNextFrame() {
+    return new Promise((resolve) => window.requestAnimationFrame(() => resolve()));
+  }
+
+  async function waitForPdfLayout() {
+    if (document.fonts && document.fonts.ready && typeof document.fonts.ready.then === 'function') {
+      try {
+        await document.fonts.ready;
+      } catch (_) {
+        // Ignore font loading failures and keep the export moving.
+      }
+    }
+
+    await waitForNextFrame();
+    await waitForNextFrame();
+  }
+
+  function getPdfExportSubtitle() {
+    const subtitleEl = document.getElementById('crm-result-subtitle');
+    return subtitleEl ? subtitleEl.textContent.trim() : '';
+  }
+
+  function getPdfExportStudentName(subtitleText) {
+    return String(subtitleText || '').split(UI_BULLET)[0].trim() || 'Student';
+  }
+
+  function buildPdfFooterText(now) {
+    return `Generated on ${now.toLocaleString()} • BEL Entrance Test`;
+  }
+
+  function cloneResultRootForPdf() {
+    if (!elements.root) return null;
+
+    const clone = elements.root.cloneNode(true);
+    clone.removeAttribute('id');
+    clone.querySelector('.crm-result-grid')?.remove();
+
+    const details = clone.querySelectorAll('details');
+    details.forEach((detail) => {
+      detail.open = true;
+      detail.setAttribute('open', '');
+    });
+
+    clone.querySelectorAll('audio').forEach((audio) => audio.remove());
+    return clone;
+  }
+
+  function buildPdfExportShell() {
+    const shell = document.createElement('div');
+    shell.className = 'crm-result-pdf-shell';
+    shell.setAttribute('aria-hidden', 'true');
+    shell.innerHTML = `
+      <div class="crm-result-pdf-pages"></div>
+    `;
+    return shell;
+  }
+
+  function buildPdfPage(studentName, footerText, pageNumber) {
+    const page = document.createElement('section');
+    page.className = 'crm-result-pdf-page';
+    page.innerHTML = `
+      <header class="crm-result-pdf-header">
+        <div class="crm-result-pdf-kicker">BEL CRM</div>
+        <div class="crm-result-pdf-title">Entrance Test Result</div>
+        <div class="crm-result-pdf-subtitle">${escapeHtml(studentName || 'Student')}</div>
+      </header>
+      <div class="crm-result-pdf-page-body"></div>
+      <footer class="crm-result-pdf-footer">
+        <span>${escapeHtml(footerText || '')}</span>
+        <span>Page ${pageNumber}</span>
+      </footer>
+    `;
+    return page;
+  }
+
+  function buildPdfSectionIntroBlock(detail) {
+    const summary = detail?.querySelector(':scope > summary');
+    if (!summary) return null;
+
+    const block = document.createElement('section');
+    block.className = 'crm-result-pdf-section-intro';
+    block.appendChild(summary.cloneNode(true));
+
+    const note = detail.querySelector(':scope > .crm-result-details-body > .crm-result-section-note');
+    if (note) {
+      block.appendChild(note.cloneNode(true));
+    }
+
+    return block;
+  }
+
+  function buildPdfQuestionBlocks(question) {
+    const blocks = [];
+    if (!question) return blocks;
+
+    const header = question.querySelector(':scope > .crm-result-question-header');
+    const children = Array.from(question.children).filter((child) => child !== header);
+
+    const firstContent = children[0] || null;
+    const primaryBlock = document.createElement('div');
+    primaryBlock.className = 'crm-result-question crm-result-pdf-question-fragment';
+    if (header) primaryBlock.appendChild(header.cloneNode(true));
+    if (firstContent) primaryBlock.appendChild(firstContent.cloneNode(true));
+    blocks.push(primaryBlock);
+
+    children.slice(1).forEach((child) => {
+      const continuation = document.createElement('div');
+      continuation.className = 'crm-result-question crm-result-pdf-question-fragment crm-result-pdf-question-continuation';
+      continuation.appendChild(child.cloneNode(true));
+      blocks.push(continuation);
+    });
+
+    return blocks;
+  }
+
+  function buildPdfBlocks(rootClone) {
+    const blocks = [];
+    if (!rootClone) return blocks;
+
+    const summary = rootClone.querySelector(':scope > .crm-result-summary');
+    if (summary) {
+      const summaryBlock = document.createElement('section');
+      summaryBlock.className = 'crm-result-pdf-summary-block';
+      summaryBlock.appendChild(summary.cloneNode(true));
+      blocks.push(summaryBlock);
+    }
+
+    rootClone.querySelectorAll(':scope > .crm-result-details').forEach((detail) => {
+      const intro = buildPdfSectionIntroBlock(detail);
+      if (intro) blocks.push(intro);
+
+      detail.querySelectorAll(':scope > .crm-result-details-body > .crm-result-question').forEach((question) => {
+        blocks.push(...buildPdfQuestionBlocks(question));
+      });
+    });
+
+    return blocks;
+  }
+
+  function paginatePdfBlocks(exportShell, blocks, studentName, footerText) {
+    const pagesRoot = exportShell.querySelector('.crm-result-pdf-pages');
+    if (!pagesRoot) return;
+
+    let pageNumber = 0;
+    let currentPage = null;
+    let currentBody = null;
+
+    const createPage = () => {
+      pageNumber += 1;
+      currentPage = buildPdfPage(studentName, footerText, pageNumber);
+      currentBody = currentPage.querySelector('.crm-result-pdf-page-body');
+      pagesRoot.appendChild(currentPage);
+    };
+
+    createPage();
+
+    blocks.forEach((block) => {
+      if (!currentPage || !currentBody) createPage();
+      currentBody.appendChild(block);
+
+      if (currentBody.scrollHeight <= currentBody.clientHeight + 1) {
+        return;
+      }
+
+      currentBody.removeChild(block);
+      createPage();
+      currentBody.appendChild(block);
+    });
+  }
+
+  function buildPdfCaptureOptions({ width, height, filename }) {
+    return {
+      margin: 0,
+      filename,
+      image: { type: 'jpeg', quality: 0.99 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        letterRendering: true,
+        scrollX: 0,
+        scrollY: 0,
+        width,
+        height,
+        windowHeight: height
+      },
+      jsPDF: {
+        unit: 'mm',
+        format: 'a4',
+        orientation: 'portrait'
+      }
+    };
+  }
+
+  function getPdfPageCount(pdf) {
+    if (!pdf) return 0;
+    if (pdf.internal && typeof pdf.internal.getNumberOfPages === 'function') {
+      return pdf.internal.getNumberOfPages();
+    }
+    if (typeof pdf.getNumberOfPages === 'function') {
+      return pdf.getNumberOfPages();
+    }
+    return 0;
+  }
+
+  function trimPdfToSinglePage(pdf) {
+    if (!pdf || typeof pdf.deletePage !== 'function') return;
+
+    while (getPdfPageCount(pdf) > 1) {
+      pdf.deletePage(getPdfPageCount(pdf));
+    }
+  }
+
+  async function renderPdfPages(exportShell, filename) {
+    const pages = Array.from(exportShell.querySelectorAll('.crm-result-pdf-page'));
+    if (!pages.length) {
+      throw new Error('PDF export failed to build pages.');
+    }
+
+    let pdf = null;
+
+    for (let i = 0; i < pages.length; i += 1) {
+      const page = pages[i];
+      const pageWidth = Math.round(page.getBoundingClientRect().width || page.scrollWidth || 0);
+      const pageHeight = Math.round(page.getBoundingClientRect().height || page.scrollHeight || 0);
+      if (!pageWidth || !pageHeight) {
+        throw new Error('PDF export failed to measure page dimensions.');
+      }
+
+      const originalBreakAfter = page.style.breakAfter;
+      const originalPageBreakAfter = page.style.pageBreakAfter;
+      page.style.breakAfter = 'auto';
+      page.style.pageBreakAfter = 'auto';
+
+      const opt = buildPdfCaptureOptions({ width: pageWidth, height: pageHeight, filename });
+
+      try {
+        if (i === 0) {
+          pdf = await html2pdf().set(opt).from(page).toPdf().get('pdf');
+          trimPdfToSinglePage(pdf);
+          continue;
+        }
+
+        const canvas = await html2pdf().set(opt).from(page).toCanvas().get('canvas');
+        const pageSize = pdf.internal && pdf.internal.pageSize;
+        const pdfWidth = pageSize && typeof pageSize.getWidth === 'function' ? pageSize.getWidth() : (pageSize?.width || 210);
+        const pdfHeight = pageSize && typeof pageSize.getHeight === 'function' ? pageSize.getHeight() : (pageSize?.height || 297);
+        const imageData = canvas.toDataURL('image/jpeg', opt.image.quality);
+        pdf.addPage();
+        pdf.addImage(imageData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+      } finally {
+        page.style.breakAfter = originalBreakAfter;
+        page.style.pageBreakAfter = originalPageBreakAfter;
+      }
+    }
+
+    if (!pdf) {
+      throw new Error('PDF export failed to render pages.');
+    }
+
+    pdf.save(filename);
   }
 
   // ==================== PDF EXPORT ====================
@@ -667,8 +964,8 @@
       btn.textContent = '⏳ Generating…';
     }
 
-    const container = document.querySelector('.crm-admin');
-    if (!container) {
+    const rootClone = cloneResultRootForPdf();
+    if (!rootClone) {
       alert('Nothing to export.');
       if (btn) { btn.disabled = false; btn.textContent = '📄 Export PDF'; }
       return;
@@ -677,86 +974,36 @@
     // Collect all mutations for cleanup in finally block
     const cleanup = [];
 
-    // 1. Expand all <details> and remember which were closed
-    const allDetails = container.querySelectorAll('details');
-    const closedDetails = [];
-    allDetails.forEach((d) => {
-      if (!d.open) {
-        closedDetails.push(d);
-        d.open = true;
+    const subtitleText = getPdfExportSubtitle();
+    const studentName = getPdfExportStudentName(subtitleText);
+    const now = new Date();
+    const footerText = buildPdfFooterText(now);
+    const filenameStudentName = studentName
+      .normalize('NFD').replace(/([\u0300-\u036f]|[^0-9a-zA-Z\s])/g, '')
+      .replace(/đ/g, 'd').replace(/Đ/g, 'D')
+      .replace(/\s+/g, '-') || 'student';
+    const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+    const filename = `entrance-test-${filenameStudentName}-${dateStr}.pdf`;
+    const exportShell = buildPdfExportShell();
+    const blocks = buildPdfBlocks(rootClone);
+
+    if (blocks.length === 0) {
+      alert('Nothing to export.');
+      if (btn) { btn.disabled = false; btn.textContent = '📄 Export PDF'; }
+      return;
+    }
+    document.body.appendChild(exportShell);
+    cleanup.push(() => {
+      if (exportShell.parentNode) {
+        exportShell.parentNode.removeChild(exportShell);
       }
     });
-    cleanup.push(() => closedDetails.forEach((d) => (d.open = false)));
-
-    // 2. Hide header actions (buttons) during capture
-    const headerActions = container.querySelector('.crm-result-header-actions');
-    if (headerActions) {
-      const origDisplay = headerActions.style.display;
-      headerActions.style.display = 'none';
-      cleanup.push(() => { headerActions.style.display = origDisplay; });
-    }
-
-    // 3. Add export class (CSS handles width/layout via .crm-admin.crm-pdf-exporting)
-    container.classList.add('crm-pdf-exporting');
-    cleanup.push(() => container.classList.remove('crm-pdf-exporting'));
-
-    // 4. Add page-break-before markers on each section <details>
-    //    Skip the FIRST section to avoid a blank page after the summary.
-    const sectionDetails = container.querySelectorAll('.crm-result-details');
-    sectionDetails.forEach((d, i) => {
-      if (i > 0) d.classList.add('html2pdf__page-break');
-    });
-    cleanup.push(() => sectionDetails.forEach((d) => d.classList.remove('html2pdf__page-break')));
-
-    // 5. Hide audio elements (they render as blank blocks in the PDF)
-    const audioEls = container.querySelectorAll('audio');
-    audioEls.forEach((a) => {
-      a.dataset.origDisplay = a.style.display;
-      a.style.display = 'none';
-    });
-    cleanup.push(() => audioEls.forEach((a) => {
-      a.style.display = a.dataset.origDisplay || '';
-      delete a.dataset.origDisplay;
-    }));
-
-    // 6. Add footer
-    const footer = document.createElement('div');
-    footer.className = 'crm-pdf-footer';
-    const now = new Date();
-    footer.textContent = `Generated on ${now.toLocaleString()} • BEL Entrance Test`;
-    const root = document.getElementById('crm-result-root');
-    if (root) root.appendChild(footer);
-    cleanup.push(() => { if (footer.parentNode) footer.parentNode.removeChild(footer); });
-
-    // 7. Build filename
-    const subtitleEl = document.getElementById('crm-result-subtitle');
-    const subtitleText = subtitleEl ? subtitleEl.textContent.trim() : '';
-    const studentName = subtitleText.split('•')[0].trim().replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '-') || 'student';
-    const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
-    const filename = `entrance-test-${studentName}-${dateStr}.pdf`;
 
     try {
-      const opt = {
-        margin: [20, 10, 10, 10],
-        filename,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          letterRendering: true,
-          scrollX: 0,
-          scrollY: 0
-        },
-        jsPDF: {
-          unit: 'mm',
-          format: 'a4',
-          orientation: 'portrait'
-        },
-        pagebreak: { mode: ['css', 'legacy'] }
-      };
-
-      await html2pdf().set(opt).from(container).save();
+      await waitForPdfLayout();
+      paginatePdfBlocks(exportShell, blocks, studentName, footerText);
+      await waitForPdfLayout();
+      await renderPdfPages(exportShell, filename);
     } catch (e) {
       console.error('[ExportPDF] Error:', e);
       alert('Failed to generate PDF. See console for details.');

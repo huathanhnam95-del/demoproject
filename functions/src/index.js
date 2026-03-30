@@ -36,6 +36,9 @@ const {
     evaluateRuleTargets,
     generateQueueEntries
 } = require('./crm/automation-service');
+const {
+    purgeExpiredRecycleEntries
+} = require('./crm/recycle-bin-service');
 const { buildAttendanceRiskRows } = require('./crm/reporting-service');
 
 async function runCrmAutomationQueue() {
@@ -90,6 +93,14 @@ async function runCrmAutomationQueue() {
     await Promise.all(writes);
 }
 
+async function runRecycleBinPurgeQueue() {
+    const db = getFirestore();
+    await purgeExpiredRecycleEntries(db, {
+        now: new Date(),
+        user: { uid: 'system', email: null }
+    });
+}
+
 module.exports = {
     submitAttempt,
     purchaseItem,
@@ -101,5 +112,8 @@ module.exports = {
     api: onRequest({ region: 'us-central1' }, apiApp),
     crmAutomationRunner: onSchedule({ region: 'us-central1', schedule: 'every 24 hours' }, async () => {
         await runCrmAutomationQueue();
+    }),
+    crmRecycleBinPurgeRunner: onSchedule({ region: 'us-central1', schedule: 'every 24 hours' }, async () => {
+        await runRecycleBinPurgeQueue();
     })
 };

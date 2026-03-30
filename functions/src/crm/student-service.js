@@ -5,6 +5,12 @@ function cleanOptionalString(value) {
     return normalized || null;
 }
 
+function looksLikeUrl(value) {
+    const text = cleanOptionalString(value);
+    if (!text) return false;
+    return /^https?:\/\//i.test(text) && /facebook\.com/i.test(text);
+}
+
 function cleanOptionalNumber(value) {
     if (value === null || value === undefined || value === '') return null;
     const normalized = Number(value);
@@ -114,6 +120,10 @@ function normalizeStudentCore(input, fallback = {}) {
         email: Object.prototype.hasOwnProperty.call(source, 'email') ? cleanOptionalString(source.email) : (base.email ?? null),
         zalo: Object.prototype.hasOwnProperty.call(source, 'zalo') ? cleanOptionalString(source.zalo) : (base.zalo ?? null),
         facebook: Object.prototype.hasOwnProperty.call(source, 'facebook') ? cleanOptionalString(source.facebook) : (base.facebook ?? null),
+        facebookProfileUrl: Object.prototype.hasOwnProperty.call(source, 'facebookProfileUrl')
+            ? cleanOptionalString(source.facebookProfileUrl)
+            : (looksLikeUrl(base.facebookProfileUrl) ? cleanOptionalString(base.facebookProfileUrl) : (looksLikeUrl(base.facebook) ? cleanOptionalString(base.facebook) : (base.facebookProfileUrl ?? null))),
+        crmId: Object.prototype.hasOwnProperty.call(source, 'crmId') ? cleanOptionalString(source.crmId) : (base.crmId ?? null),
         lifecycleStage: Object.prototype.hasOwnProperty.call(source, 'lifecycleStage')
             ? normalizeLifecycleStage(source.lifecycleStage)
             : normalizeLifecycleStage(base.lifecycleStage),
@@ -154,7 +164,7 @@ function normalizeStudentCore(input, fallback = {}) {
 }
 
 function hasAnyInfoField(student) {
-    return [student.name, student.label, student.phone, student.email, student.zalo, student.facebook].some(Boolean);
+    return [student.name, student.label, student.phone, student.email, student.zalo, student.facebook, student.facebookProfileUrl].some(Boolean);
 }
 
 function hasRecognizedPatch(input) {
@@ -166,6 +176,8 @@ function hasRecognizedPatch(input) {
         'email',
         'zalo',
         'facebook',
+        'facebookProfileUrl',
+        'crmId',
         'lifecycleStage',
         'acquisitionSource',
         'leadId',
@@ -187,7 +199,8 @@ function hasRecognizedPatch(input) {
 function buildStudentCreateData(input, context = {}) {
     const baseStudent = normalizeStudentCore(input, {
         lifecycleStage: 'potential',
-        ownerUid: context.user?.uid || null
+        ownerUid: context.user?.uid || null,
+        crmId: context.crmId || null
     });
     const student = {
         ...baseStudent,
@@ -242,6 +255,10 @@ function mapStudentRecord(data, studentId) {
         email: source.email || null,
         zalo: source.zalo || null,
         facebook: source.facebook || null,
+        facebookProfileUrl: looksLikeUrl(source.facebookProfileUrl)
+            ? source.facebookProfileUrl
+            : (looksLikeUrl(source.facebook) ? source.facebook : (source.facebookProfileUrl || null)),
+        crmId: source.crmId || null,
         lifecycleStage: normalizeLifecycleStage(source.lifecycleStage),
         acquisitionSource: source.acquisitionSource || null,
         leadId: source.leadId || null,

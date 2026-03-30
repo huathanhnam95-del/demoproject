@@ -187,42 +187,42 @@ function getDefaultFeedbackTemplates(family, phrase) {
   if (family === 'catenation') {
     return {
       detected: `Good linking in "${label}".`,
-      not_detected: `Try moving "${label}" a little closer together.`,
-      uncertain: `We could not judge linking in "${label}" reliably.`
+      not_detected: `Keep "${label}" closer together so it sounds like one connected phrase.`,
+      uncertain: `Say "${label}" once more a little more clearly so we can judge the linking.`
     };
   }
   if (family === 'same_consonant_merge') {
     return {
       detected: `Good consonant merge in "${label}".`,
-      not_detected: `Try letting the repeated consonant in "${label}" run together more.`,
-      uncertain: `We could not judge the merge in "${label}" reliably.`
+      not_detected: `Let the repeated consonant in "${label}" run together instead of restarting it.`,
+      uncertain: `Say "${label}" once more clearly so we can judge the merge.`
     };
   }
   if (family === 'n_bilabial_assimilation') {
     return {
       detected: `Good assimilation in "${label}".`,
-      not_detected: `Try letting the /n/ in "${label}" move toward /m/ before the bilabial sound.`,
-      uncertain: `We could not judge the assimilation in "${label}" reliably.`
+      not_detected: `Let the /n/ in "${label}" move toward /m/ before the next bilabial sound.`,
+      uncertain: `Say "${label}" once more clearly so we can judge the assimilation.`
     };
   }
   if (family === 'yod_coalescence') {
     return {
       detected: `Good smoothing in "${label}".`,
-      not_detected: `Try saying "${label}" as one smoother sound.`,
-      uncertain: `We could not judge "${label}" reliably.`
+      not_detected: `Blend "${label}" into one smoother boundary instead of keeping the sounds separate.`,
+      uncertain: `Say "${label}" once more clearly so we can judge that boundary.`
     };
   }
   if (family === 'weak_form_reduction') {
     return {
       detected: `Good weak form in "${label}".`,
-      not_detected: `Try using the shorter weak form of "${label}".`,
-      uncertain: `We could not judge the weak form in "${label}" reliably.`
+      not_detected: `Make "${label}" lighter and shorter with a weak form.`,
+      uncertain: `Say "${label}" once more clearly so we can judge the weak form.`
     };
   }
   return {
     detected: `Good connected speech in "${label}".`,
-    not_detected: `Try smoothing "${label}" more.`,
-    uncertain: `We could not judge "${label}" reliably.`
+    not_detected: `Smooth "${label}" into one connected phrase.`,
+    uncertain: `Say "${label}" once more clearly so we can judge it reliably.`
   };
 }
 

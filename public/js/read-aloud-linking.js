@@ -491,7 +491,7 @@
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', `M ${startX} ${baseY} Q ${controlX} ${controlY} ${endX} ${baseY}`);
       path.setAttribute('fill', 'none');
-      path.setAttribute('stroke', pathColor);
+      path.setAttribute('stroke', boundary.strokeColor || pathColor);
       path.setAttribute('stroke-width', '2');
       path.setAttribute('stroke-linecap', 'round');
       path.setAttribute('stroke-linejoin', 'round');

@@ -3,6 +3,9 @@ const {
     CRM_CLASSROOMS
 } = require('../../crm/collections');
 const {
+    allocateNextCrmId
+} = require('../../crm/business-id-service');
+const {
     buildStudentCreateData,
     buildStudentPatchData,
     mapStudentRecord
@@ -19,9 +22,13 @@ module.exports = function registerStudentRoutes(router, deps) {
 
     router.post('/students', ...requireAdminHandlers, async (req, res) => {
         try {
-            const student = buildStudentCreateData(req.body || {}, {
+            const allocation = await allocateNextCrmId(db, { serverTimestamp });
+            const student = buildStudentCreateData({
+                ...(req.body || {}),
+                crmId: allocation.crmId
+            }, {
                 user: req.user,
-                serverTimestamp
+                serverTimestamp,
             });
 
             const ref = db.collection(CRM_STUDENTS).doc();

@@ -246,14 +246,17 @@ router.post('/speaking/upload', express.raw({ type: () => true, limit: '25mb' })
             return sendError(res, 400, 'TEST_VERSION_MISMATCH', 'This entrance test link uses an unsupported version.');
         }
         const studentId = String(data.studentId || '').trim();
-        if (!studentId) {
-            return sendError(res, 500, 'DATA_ERROR', 'Student binding is missing for this test.');
+        const leadId = String(data.leadId || '').trim();
+        const storageOwnerId = studentId || leadId;
+        if (!storageOwnerId) {
+            return sendError(res, 500, 'DATA_ERROR', 'Lead or student binding is missing for this test.');
         }
 
         const contentType = String(req.headers['content-type'] || 'application/octet-stream');
         const ext = extensionFromContentType(contentType);
         const fileName = `audio_${String(question.promptNumber).padStart(2, '0')}.${ext}`;
-        const storagePath = `crmStudents/${studentId}/entranceTests/${testId}/speaking/${fileName}`;
+        const storageScope = studentId ? 'crmStudents' : 'crmLeads';
+        const storagePath = `${storageScope}/${storageOwnerId}/entranceTests/${testId}/speaking/${fileName}`;
 
         const file = bucket.file(storagePath);
         await file.save(audioBuffer, {
@@ -342,6 +345,7 @@ router.post('/submit', async (req, res) => {
 
             const scoring = scoreSubmission(responses);
             const studentId = String(data.studentId || '').trim();
+            const leadId = String(data.leadId || '').trim();
             if (studentId) {
                 const studentRef = db.collection('crmStudents').doc(studentId);
                 const studentSnap = await tx.get(studentRef);
@@ -357,6 +361,18 @@ router.post('/submit', async (req, res) => {
                         if (leadPatch) {
                             tx.set(leadRef, leadPatch, { merge: true });
                         }
+                    }
+                }
+            } else if (leadId) {
+                const leadRef = db.collection(CRM_LEADS).doc(leadId);
+                const leadSnap = await tx.get(leadRef);
+                if (leadSnap.exists) {
+                    const leadPatch = buildLeadStageSyncPatch(leadSnap.data() || {}, 'test_completed', {
+                        user: { uid: 'public-entrance-test', email: null },
+                        serverTimestamp: () => admin.firestore.FieldValue.serverTimestamp()
+                    });
+                    if (leadPatch) {
+                        tx.set(leadRef, leadPatch, { merge: true });
                     }
                 }
             }

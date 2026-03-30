@@ -2688,16 +2688,7 @@
             <div id="ra-linking-fallback-list" style="display: none; flex-wrap: wrap; gap: 8px; align-items: center;"></div>
             <div id="ra-linking-a11y-summary" aria-live="polite" aria-atomic="true" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;"></div>
           </div>
-          <div id="ra-connected-speech-box" class="ra-result" style="display: none; flex: 0 1 320px; min-width: 280px; margin-bottom: 0; text-align: left; padding: 18px 20px; border: 1px solid #d1d5db; border-radius: 12px; background: linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(37, 99, 235, 0.05) 100%); box-shadow: 0 4px 10px rgba(15, 23, 42, 0.05);">
-            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom: 12px;">
-              <div>
-                <div id="ra-connected-speech-label" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);">Speech Coach</div>
-                <div id="ra-connected-speech-summary" style="font-size: 0.98rem; color: #374151; margin-top: 4px;">Preview</div>
-              </div>
-              <div id="ra-connected-speech-meta" style="font-size: 0.8rem; color: var(--text-muted);">Preview</div>
-            </div>
-            <div id="ra-connected-speech-list" style="display: grid; gap: 10px;"></div>
-          </div>
+
           </div>
 
           <!-- Audio Player (ElevenLabs) -->
@@ -2723,7 +2714,25 @@
               <span id="ra-accuracy-value">--</span>%
             </div>
             <div class="ra-accuracy-label" style="text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 15px;">Accuracy</div>
-            <div id="ra-transcript-feedback" class="ra-feedback-text" style="font-size: 1.1rem; line-height: 1.5;"></div>
+            <div id="ra-transcript-feedback" class="ra-feedback-text" style="font-size: 1.1rem; line-height: 1.5; position: relative;">
+               <!-- Overlay SVG will be injected here during Results rendering if enabled -->
+            </div>
+          </div>
+
+          <div id="ra-connected-speech-box" class="ra-result" style="display: none; width: 100%; margin-bottom: 20px; text-align: left; padding: 18px 20px; border: 1px solid #d1d5db; border-radius: 12px; background: linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(37, 99, 235, 0.05) 100%); box-shadow: 0 4px 10px rgba(15, 23, 42, 0.05);">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom: 16px; flex-wrap: wrap;">
+              <div>
+                <div id="ra-connected-speech-label" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);">Speech Coach</div>
+                <div id="ra-connected-speech-summary" style="font-size: 0.98rem; color: #374151; margin-top: 4px; font-weight: 600;">Feedback Details</div>
+              </div>
+              <div id="ra-connected-speech-layers" style="display: flex; gap: 8px; background: rgba(37, 99, 235, 0.08); padding: 4px; border-radius: 20px;">
+                <button id="ra-layer-level1" class="ra-layer-btn" data-level="1" type="button" style="padding: 6px 14px; border: none; border-radius: 999px; background: transparent; color: #1f2937; font-size: 0.85rem; font-weight: 600; cursor: pointer;">Linking</button>
+                <button id="ra-layer-level2" class="ra-layer-btn" data-level="2" type="button" style="padding: 6px 14px; border: none; border-radius: 999px; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); color: #1d4ed8; font-size: 0.85rem; font-weight: 600; cursor: pointer;">Linking + Reduced Words</button>
+              </div>
+            </div>
+            <div id="ra-connected-speech-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
+               <!-- JS will inject 2 columns here -->
+            </div>
           </div>
 
           <!-- Status and Controls -->
@@ -2732,10 +2741,12 @@
             <div id="ra-read-aloud-controls" class="unified-controls" style="margin-top: 5px; width: 100%; display: flex; justify-content: center; background: transparent; padding: 0; box-shadow: none;">
               <div class="control-toolbar" style="justify-content: center;">
                 <div class="function-group">
-                  <button id="ra-next-btn" class="modern-btn modern-btn--skip" type="button" title="Next prompt">Next prompt</button>
-                  <button id="ra-stop-btn" class="modern-btn" type="button" style="display: none; background: #ef4444; color: #fff; font-weight: 600; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; animation: ra-pulse 1.5s infinite;">⏹ Stop Recording</button>
+                  <button id="ra-next-btn" class="modern-btn modern-btn--back" type="button" title="Next prompt">Next prompt</button>
+                  <button id="ra-record-btn" class="modern-btn modern-btn--record" type="button" disabled>Start Recording</button>
+                  <button id="ra-stop-btn" class="modern-btn modern-btn--record recording" type="button" style="display: none;">Stop Recording</button>
                   <button id="ra-play-recording-btn" class="modern-btn modern-btn--play" type="button" style="display: none;">Play your recording</button>
-                  <button id="ra-record-btn" class="modern-btn modern-btn--check" type="button" disabled>Start recording now</button>
+                  <button id="ra-check-btn" class="modern-btn modern-btn--check" type="button" style="display: none;">Check</button>
+                  <button id="ra-retry-btn" class="modern-btn modern-btn--retry" type="button" style="display: none;">Retry</button>
                 </div>
               </div>
             </div>

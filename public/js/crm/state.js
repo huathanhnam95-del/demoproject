@@ -1,3 +1,3 @@
 window.CrmShellState = {
-    comingSoonLabel: 'Coming soon'
+    comingSoonLabel: 'Soon'
 };

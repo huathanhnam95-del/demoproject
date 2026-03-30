@@ -24,6 +24,7 @@
     "test:pronounce:browser": "node tests/browser/pronounce-mode-browser-check.js && node tests/browser/pronounce-mode-syllable-playback-check.js",
     "verify:pronounce": "npm run test:pronounce:logic && npm run test:pronounce:browser",
     "test:crm:scheduler:browser": "node tests/browser/crm-scheduler-browser-check.js",
+    "test:crm:entrance-test-result-pdf:browser": "node tests/browser/crm-entrance-test-result-pdf-browser-check.js",
     "test:reading-journey:quiz:browser": "node tests/browser/reading-journey-quiz-browser-check.js",
     "test:rfib:browser": "node tests/browser/rfib-mode-browser-check.js",
     "test:site-header:browser": "node tests/browser/site-header-about-check.js",

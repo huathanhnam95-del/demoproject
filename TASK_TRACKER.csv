@@ -140,3 +140,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 149,2026-03-30,Fix CRM admin header tab overflow on small screens and zoom,Done,2026-03-30
 150,2026-03-30,Redesign Speech Coach UI - Layout and Interactive Toggles,Done,2026-03-30
 151,2026-03-30,Fix blurry PDF export - switch from JPEG to PNG rendering,Done,2026-03-30
+152,2026-03-30,Upgrade Entrance Test Results UI - transcript diff and table formatting,Done,2026-03-30

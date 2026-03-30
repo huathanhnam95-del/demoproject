@@ -1,3 +1,10 @@
+## [V1.6.2] - 2026-03-30
+
+### Improved
+
+- **Entrance Test Results**: Upgraded the result screen with a visual word-level transcript diff (green/red/strikethrough) and compact table layouts.
+- **Result Feedback**: Implemented color-coded answer pills (green for correct, red for incorrect) for better visual comparison in listening and vocabulary sections.
+
 ## [V1.6.1] - 2026-03-30
 
 ### Added

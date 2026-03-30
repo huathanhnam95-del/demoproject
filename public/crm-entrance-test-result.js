@@ -338,21 +338,25 @@
       .map((b, idx) => {
         const expected = b?.expected ?? null;
         const actual = b?.actual ?? null;
-        const scored = b?.scored !== false;
         const correct = b?.isCorrect === true;
         const wrong = b?.isCorrect === false;
 
-        let resultLabel = UI_DASH;
-        if (!scored) resultLabel = 'Not scored';
-        else if (correct) resultLabel = 'Correct';
-        else if (wrong) resultLabel = 'Wrong';
+        let answerHtml = UI_DASH;
+        if (actual) {
+          if (correct) {
+            answerHtml = `<span class="crm-result-answer-pill correct">${escapeHtml(actual)}</span>`;
+          } else if (wrong) {
+            answerHtml = `<span class="crm-result-answer-pill wrong">${escapeHtml(actual)}</span>`;
+          } else {
+            answerHtml = escapeHtml(actual);
+          }
+        }
 
         return `
           <tr>
             <td class="td-bold">${idx + 1}</td>
             <td>${expected ? escapeHtml(expected) : UI_DASH}</td>
-            <td>${actual ? escapeHtml(actual) : UI_DASH}</td>
-            <td>${escapeHtml(resultLabel)}</td>
+            <td>${answerHtml}</td>
           </tr>
         `;
       })
@@ -366,7 +370,6 @@
               <th>#</th>
               <th>Expected</th>
               <th>Answer</th>
-              <th>Result</th>
             </tr>
           </thead>
           <tbody>
@@ -375,6 +378,63 @@
         </table>
       </div>
     `;
+  }
+
+  // ==================== DIFF LOGIC ====================
+
+  function computeTranscriptDiffHtml(expectedText, transcriptText) {
+    if (!expectedText && !transcriptText) return '';
+    if (!expectedText) return `<span class="crm-transcript-added">${escapeHtml(transcriptText)}</span>`;
+    if (!transcriptText) return `<span class="crm-transcript-missing">${escapeHtml(expectedText)}</span>`;
+
+    function tokenize(text) {
+      return text.trim().split(/\s+/);
+    }
+
+    const aWords = tokenize(expectedText);
+    const bWords = tokenize(transcriptText);
+
+    const aLen = aWords.length;
+    const bLen = bWords.length;
+    
+    const dp = Array(aLen + 1).fill(null).map(() => Array(bLen + 1).fill(0));
+    
+    function isMatch(wordA, wordB) {
+      const wa = String(wordA).replace(/[.,;:!?\u2019'"]/g, '').toLowerCase();
+      const wb = String(wordB).replace(/[.,;:!?\u2019'"]/g, '').toLowerCase();
+      if (!wa && !wb) return wordA === wordB; // Fallback to exact if punctuation-only
+      return wa === wb;
+    }
+
+    for (let i = 1; i <= aLen; i++) {
+      for (let j = 1; j <= bLen; j++) {
+        if (isMatch(aWords[i - 1], bWords[j - 1])) {
+          dp[i][j] = dp[i - 1][j - 1] + 1;
+        } else {
+          dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+        }
+      }
+    }
+
+    let i = aLen;
+    let j = bLen;
+    const result = [];
+
+    while (i > 0 || j > 0) {
+      if (i > 0 && j > 0 && isMatch(aWords[i - 1], bWords[j - 1])) {
+        result.unshift(`<span class="crm-transcript-correct">${escapeHtml(bWords[j - 1])}</span>`);
+        i--;
+        j--;
+      } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+        result.unshift(`<span class="crm-transcript-added">${escapeHtml(bWords[j - 1])}</span>`);
+        j--;
+      } else if (i > 0 && (j === 0 || dp[i][j - 1] < dp[i - 1][j])) {
+        result.unshift(`<span class="crm-transcript-missing">${escapeHtml(aWords[i - 1])}</span>`);
+        i--;
+      }
+    }
+
+    return result.join(' ');
   }
 
   // ==================== SECTION RENDERERS ====================
@@ -400,8 +460,10 @@
               ? `<audio class="crm-result-audio" controls src="${escapeHtml(audioUrl)}"></audio>`
               : '<div class="crm-result-muted">Audio not available.</div>';
 
+            const diffedTranscript = transcript ? computeTranscriptDiffHtml(expectedText, transcript) : '';
+
             const transcriptHtml = transcript
-              ? `<div class="crm-result-transcript"><strong>Transcript:</strong>\n${escapeHtml(transcript)}</div>`
+              ? `<div class="crm-result-transcript"><strong>Transcript:</strong><br>\n${diffedTranscript}</div>`
               : (asrError
                 ? `<div class="crm-result-transcript"><strong>ASR error:</strong>\n${escapeHtml(asrError)}</div>`
                 : '<div class="crm-result-muted">Transcript not available.</div>');

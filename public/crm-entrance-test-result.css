@@ -517,6 +517,55 @@
   white-space: nowrap;
 }
 
+/* Answer Pills */
+.crm-result-answer-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e0;
+  font-weight: 700;
+  font-size: 0.95em;
+  line-height: 1.2;
+}
+
+.crm-result-answer-pill.correct {
+  background: #f0fff4;
+  border-color: #38a169;
+  color: #276749;
+}
+
+.crm-result-answer-pill.wrong {
+  background: #fff5f5;
+  border-color: #e53e3e;
+  color: #742a2a;
+}
+
+/* Transcript Diff Highlights */
+.crm-transcript-correct {
+  color: #10b981;
+  font-weight: 700;
+}
+
+.crm-transcript-added {
+  color: #ef4444;
+  font-weight: 700;
+}
+
+.crm-transcript-missing {
+  color: #1a1a1a;
+  text-decoration: line-through;
+  opacity: 0.5;
+  font-weight: 400;
+}
+
+/* Compact Tables */
+.crm-result-table-container .crm-table th,
+.crm-result-table-container .crm-table td {
+  padding: 6px 10px;
+}
+
 @media (max-width: 1000px) {
   .crm-result-grid {
     grid-template-columns: 1fr;

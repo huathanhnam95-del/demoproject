@@ -2172,15 +2172,17 @@ class ReadAloudMode {
     // Section 1: Annotated paragraph
     fragment.appendChild(annotatedContainer);
 
-    // P1 Fix: Color legend
-    const legendEl = document.createElement('div');
-    legendEl.className = 'sc-legend';
-    legendEl.innerHTML = [
-      '<span class="sc-legend-item"><span class="sc-legend-dot sc-legend-dot--success"></span> Good</span>',
-      '<span class="sc-legend-item"><span class="sc-legend-dot sc-legend-dot--error"></span> Needs practice</span>',
-      '<span class="sc-legend-item"><span class="sc-legend-dot sc-legend-dot--uncertain"></span> Unclear</span>'
-    ].join('');
-    fragment.appendChild(legendEl);
+    // P1 Fix: Color legend — only show when token highlights were applied
+    if (usedTokenAnnotation) {
+      const legendEl = document.createElement('div');
+      legendEl.className = 'sc-legend';
+      legendEl.innerHTML = [
+        '<span class="sc-legend-item"><span class="sc-legend-dot sc-legend-dot--success"></span> Good</span>',
+        '<span class="sc-legend-item"><span class="sc-legend-dot sc-legend-dot--error"></span> Needs practice</span>',
+        '<span class="sc-legend-item"><span class="sc-legend-dot sc-legend-dot--uncertain"></span> Unclear</span>'
+      ].join('');
+      fragment.appendChild(legendEl);
+    }
 
     // Section 2: Reduced Words & Weak Forms
     if (groupedReduced.size > 0) {
@@ -2190,7 +2192,7 @@ class ReadAloudMode {
       // P2 Fix: Section header with explainer tooltip
       const header = document.createElement('h4');
       header.className = 'sc-section-header';
-      header.innerHTML = 'Reduced Words <span class="sc-info-tip" title="In natural speech, common words like &quot;to&quot;, &quot;and&quot;, &quot;of&quot; are pronounced shorter and lighter. This section checks whether you did that.">ⓘ</span>';
+      header.innerHTML = 'Reduced Words <span class="sc-info-tip" title="In natural speech, common words like &ldquo;to&rdquo;, &ldquo;and&rdquo;, &ldquo;of&rdquo; are pronounced shorter and lighter. This section checks whether you did that.">ⓘ</span>';
       section.appendChild(header);
 
       // P2 Fix: Separate singles from multiples for grid vs stack layout
@@ -2305,9 +2307,14 @@ class ReadAloudMode {
       const issueStack = document.createElement('div');
       issueStack.className = 'sc-accordion-stack';
 
+      const resolveCategory = (ev) => {
+        const cat = this.normalizeConnectedSpeechMode(window.ReadAloudLinking?.getLearnerConnectedSpeechCategory?.(ev.family || ev.subtype || ev.category || '') || ev.category || ev.subtype || 'linking');
+        const label = window.ReadAloudLinking?.getLearnerConnectedSpeechCategoryLabel ? window.ReadAloudLinking.getLearnerConnectedSpeechCategoryLabel(cat) : this.getConnectedSpeechDisplayLabel(cat);
+        return { eventCategory: cat, categoryLabel: label };
+      };
+
       linkingIssues.forEach((event) => {
-        const eventCategory = this.normalizeConnectedSpeechMode(window.ReadAloudLinking?.getLearnerConnectedSpeechCategory?.(event.family || event.subtype || event.category || '') || event.category || event.subtype || 'linking');
-        const categoryLabel = window.ReadAloudLinking?.getLearnerConnectedSpeechCategoryLabel ? window.ReadAloudLinking.getLearnerConnectedSpeechCategoryLabel(eventCategory) : this.getConnectedSpeechDisplayLabel(eventCategory);
+        const { categoryLabel } = resolveCategory(event);
         const borderCls = event.status === 'not_detected' ? 'sc-border--error' : 'sc-border--mixed';
 
         const card = document.createElement('div');

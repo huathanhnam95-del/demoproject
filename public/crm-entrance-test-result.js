@@ -396,14 +396,50 @@
 
     const aLen = aWords.length;
     const bLen = bWords.length;
-    
+
     const dp = Array(aLen + 1).fill(null).map(() => Array(bLen + 1).fill(0));
-    
+
+    /**
+     * Normalize a word to a canonical US-English form
+     * so that UK/US spelling variants match each other.
+     */
+    function normalizeSpelling(w) {
+      // Order matters: longer suffixes first to avoid partial matches
+      const rules = [
+        // -isation/-ization → -ization
+        [/isations$/, 'izations'], [/isation$/, 'ization'],
+        // -ised/-ized, -ising/-izing, -ise/-ize
+        [/ised$/, 'ized'], [/ising$/, 'izing'], [/ises$/, 'izes'], [/ise$/, 'ize'],
+        // -yse/-yze (analyse/analyze)
+        [/ysed$/, 'yzed'], [/ysing$/, 'yzing'], [/yses$/, 'yzes'], [/yse$/, 'yze'],
+        // -our/-or (colour/color) — but not "our", "pour", "four" etc.
+        [/(?<=[a-z]{2})oured$/, 'ored'], [/(?<=[a-z]{2})ouring$/, 'oring'],
+        [/(?<=[a-z]{2})ours$/, 'ors'], [/(?<=[a-z]{2})our$/, 'or'],
+        // -re/-er (centre/center) — but not "re" alone
+        [/(?<=[a-z]{2})tres$/, 'ters'], [/(?<=[a-z]{2})tre$/, 'ter'],
+        // -ence/-ense (defence/defense) — limited to known patterns
+        [/ence$/, 'ense'],
+        // -lled/-led, -lling/-ling (travelled/traveled)
+        [/([a-z])lled$/, '$1led'], [/([a-z])lling$/, '$1ling'],
+        // -ogue/-og (catalogue/catalog)
+        [/ogue$/, 'og'],
+        // -ae-/-e-, -oe-/-e- (anaemia/anemia, foetus/fetus)
+        [/ae/, 'e'], [/oe(?=[a-z])/, 'e'],
+      ];
+      let result = w;
+      for (const [pattern, replacement] of rules) {
+        const replaced = result.replace(pattern, replacement);
+        if (replaced !== result) { result = replaced; break; } // Apply first matching rule only
+      }
+      return result;
+    }
+
     function isMatch(wordA, wordB) {
       const wa = String(wordA).replace(/[.,;:!?\u2019'"]/g, '').toLowerCase();
       const wb = String(wordB).replace(/[.,;:!?\u2019'"]/g, '').toLowerCase();
       if (!wa && !wb) return wordA === wordB; // Fallback to exact if punctuation-only
-      return wa === wb;
+      if (wa === wb) return true;
+      return normalizeSpelling(wa) === normalizeSpelling(wb);
     }
 
     for (let i = 1; i <= aLen; i++) {

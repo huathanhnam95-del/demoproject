@@ -561,6 +561,16 @@
 }
 
 /* Compact Tables */
+.crm-result-table-container .crm-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.crm-result-table-container .crm-table th:first-child,
+.crm-result-table-container .crm-table td:first-child {
+  width: 36px;
+}
+
 .crm-result-table-container .crm-table th,
 .crm-result-table-container .crm-table td {
   padding: 6px 10px;

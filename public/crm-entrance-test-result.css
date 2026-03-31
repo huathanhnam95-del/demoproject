@@ -768,18 +768,30 @@
   padding: 14px 18px 16px;
 }
 
-.crm-result-pdf-question-fragment {
-  margin-bottom: 0;
+.crm-result-pdf-question-unified {
+  margin-bottom: 24px;
   break-inside: avoid;
   page-break-inside: avoid;
+  border: none;
+  border-bottom: 2px dashed #edf2f7;
+  border-radius: 0;
+  padding: 0 0 24px 0;
+  background: transparent;
 }
 
-.crm-result-pdf-question-continuation {
-  padding-top: 14px;
-}
-
-.crm-result-pdf-question-fragment .crm-result-paragraph:last-child,
-.crm-result-pdf-question-fragment .crm-result-transcript:last-child,
-.crm-result-pdf-question-fragment .crm-result-table-container:last-child {
+.crm-result-pdf-question-unified:last-child {
+  border-bottom: none;
   margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.crm-result-pdf-shell .crm-result-details {
+  border: none;
+  box-shadow: none;
+}
+
+.crm-result-pdf-shell .crm-result-transcript {
+  background: transparent;
+  border: 1px dashed #cbd5e0;
+  padding: 14px;
 }

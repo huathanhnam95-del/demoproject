@@ -877,27 +877,17 @@
   }
 
   function buildPdfQuestionBlocks(question) {
-    const blocks = [];
-    if (!question) return blocks;
+    if (!question) return [];
 
-    const header = question.querySelector(':scope > .crm-result-question-header');
-    const children = Array.from(question.children).filter((child) => child !== header);
+    const block = document.createElement('div');
+    block.className = 'crm-result-question crm-result-pdf-question-unified';
 
-    const firstContent = children[0] || null;
-    const primaryBlock = document.createElement('div');
-    primaryBlock.className = 'crm-result-question crm-result-pdf-question-fragment';
-    if (header) primaryBlock.appendChild(header.cloneNode(true));
-    if (firstContent) primaryBlock.appendChild(firstContent.cloneNode(true));
-    blocks.push(primaryBlock);
-
-    children.slice(1).forEach((child) => {
-      const continuation = document.createElement('div');
-      continuation.className = 'crm-result-question crm-result-pdf-question-fragment crm-result-pdf-question-continuation';
-      continuation.appendChild(child.cloneNode(true));
-      blocks.push(continuation);
+    // Clone all children to maintain structure instead of fragmenting
+    Array.from(question.children).forEach(child => {
+      block.appendChild(child.cloneNode(true));
     });
 
-    return blocks;
+    return [block];
   }
 
   function buildPdfBlocks(rootClone) {

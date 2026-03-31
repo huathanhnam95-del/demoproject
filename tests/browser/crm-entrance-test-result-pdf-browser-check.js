@@ -94,8 +94,8 @@ function buildHtml2PdfStubScript() {
           const shell = document.querySelector('.crm-result-pdf-shell');
           state.pageCount = shell ? shell.querySelectorAll('.crm-result-pdf-page').length : 0;
           state.gridCount = shell ? shell.querySelectorAll('.crm-result-grid').length : 0;
-          state.questionFragmentCount = shell ? shell.querySelectorAll('.crm-result-pdf-question-fragment').length : 0;
-          const firstQuestion = shell ? shell.querySelector('.crm-result-pdf-question-fragment') : null;
+          state.questionUnifiedCount = shell ? shell.querySelectorAll('.crm-result-pdf-question-unified').length : 0;
+          const firstQuestion = shell ? shell.querySelector('.crm-result-pdf-question-unified') : null;
           state.questionBreakInside = firstQuestion ? getComputedStyle(firstQuestion).breakInside : '';
           state.audioCount = shell ? shell.querySelectorAll('audio').length : 0;
           state.crmHeaderCount = shell ? shell.querySelectorAll('.crm-header').length : 0;
@@ -475,7 +475,7 @@ async function main() {
     assert.strictEqual(probe.setCalls.every((call) => call?.pagebreak === undefined), true, 'Per-page rendering should not depend on html2pdf page-break mode.');
     assert.strictEqual(probe.pageCount, probe.fromCalls.length, 'Export shell page count should match the number of rendered page nodes.');
     assert.strictEqual(probe.gridCount, 0, 'PDF capture should omit the lead and student card grid.');
-    assert.ok(probe.questionFragmentCount >= 4, 'PDF capture should split questions into safe fragments for pagination.');
+    assert.ok(probe.questionUnifiedCount >= 4, 'PDF capture should keep questions as unified blocks for pagination.');
     assert.strictEqual(probe.questionBreakInside, 'avoid', 'Individual questions should stay intact within the PDF capture.');
     assert.strictEqual(probe.audioCount, 0, 'Audio players should be removed from the PDF capture.');
     assert.strictEqual(probe.crmHeaderCount, 0, 'Live CRM header controls should not be inside the PDF capture.');

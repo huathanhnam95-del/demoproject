@@ -10,6 +10,7 @@ const { CRM_LEADS } = require('./crm/collections');
 const { buildLeadStageSyncPatch } = require('./crm/lead-service');
 const { buildEntranceTestAdminList } = require('./crm/entrance-test-link-recovery');
 const createCrmRouter = require('./routes/admin/create-crm-router');
+const createTeacherSchedulerRouter = require('./routes/teacher/scheduler');
 const entranceTestRoutes = require('./routes/entrance-tests');
 const { TEST_VERSION } = require('./entrance-test/test36plus');
 const {
@@ -273,8 +274,17 @@ const crmRouter = createCrmRouter({
     }
 });
 
+const teacherSchedulerRouter = createTeacherSchedulerRouter({
+    db,
+    authMiddleware,
+    sendSuccess,
+    sendError,
+    serverTimestamp: () => FieldValue.serverTimestamp()
+});
+
 app.use('/admin', crmRouter);
 app.use('/api/admin', crmRouter);
+app.use('/api/teacher', teacherSchedulerRouter);
 app.use('/api/entrance-tests', entranceTestRoutes);
 
 app.get(['/config', '/api/config'], (req, res) => {

@@ -60,6 +60,7 @@ function createApp(options = {}) {
     dictionaryRoutes: require('../routes/dictionary'),
     aiProxyRoutes: require('../routes/ai-proxy'),
     adminRoutes: require('../routes/admin'),
+    teacherSchedulerRoutes: require('../routes/teacher-scheduler'),
     classroomsRoutes: require('../routes/classrooms'),
     entranceTestRoutes: require('../routes/entrance-tests'),
     readingJourneyRoutes: require('../routes/reading-journey'),
@@ -108,6 +109,7 @@ function createApp(options = {}) {
   app.use('/api', routes.dictionaryRoutes);
   app.use('/api', routes.aiProxyRoutes);
   app.use('/api/admin', routes.adminRoutes);
+  app.use('/api/teacher', routes.teacherSchedulerRoutes);
   app.use('/api', routes.classroomsRoutes);
   app.use('/api/entrance-tests', routes.entranceTestRoutes);
   app.use('/api', routes.readingJourneyRoutes);

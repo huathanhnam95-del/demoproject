@@ -472,6 +472,21 @@ window.CrmLeadWorkspace = (function () {
                         const lead = Array.isArray(dataCache.leads)
                             ? dataCache.leads.find((row) => String(row.leadId || '').trim() === leadId) || null
                             : null;
+
+                        // Once a lead is converted, clicking its name should open the student profile.
+                        if (lead && window.CrmLeads && typeof window.CrmLeads.isConvertedLead === 'function'
+                            && window.CrmLeads.isConvertedLead(lead)
+                            && lead.studentId
+                            && typeof openStudentProfile === 'function') {
+                            try {
+                                await openStudentProfile(String(lead.studentId || '').trim(), null, { crmId: lead.crmId || '' });
+                            } catch (error) {
+                                console.error('[CRM Admin] Open converted lead student profile failed:', error);
+                                showToast(error?.message || 'Failed to open student profile.', 'error');
+                            }
+                            return;
+                        }
+
                         if (elements.leadWorkspaceTitle) {
                             elements.leadWorkspaceTitle.textContent = lead?.name || lead?.email || 'Lead Workspace';
                         }

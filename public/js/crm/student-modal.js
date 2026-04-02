@@ -4,6 +4,8 @@ window.CrmStudentModal = (function () {
             elements,
             modalState,
             showToast,
+            openFreshStudentModal,
+            closeStudentProfile,
             refreshStudentFinance,
             saveStudentProfile,
             createRecommendedEnrollment,
@@ -43,6 +45,7 @@ window.CrmStudentModal = (function () {
         }
 
         function resetStudentModal() {
+            modalState.studentSessionKey = Number(modalState.studentSessionKey || 0) + 1;
             modalState.studentId = null;
             modalState.studentProfile = null;
             modalState.createdTestLinks = new Map();
@@ -140,6 +143,10 @@ window.CrmStudentModal = (function () {
 
             elements.btnNewStudentTriggers.forEach((btn) => {
                 btn.addEventListener('click', () => {
+                    if (typeof openFreshStudentModal === 'function') {
+                        openFreshStudentModal();
+                        return;
+                    }
                     elements.studentModal.style.display = 'flex';
                     elements.studentModal.setAttribute('aria-hidden', 'false');
                     resetStudentModal();
@@ -147,6 +154,10 @@ window.CrmStudentModal = (function () {
             });
 
             const closeStudentModal = () => {
+                if (typeof closeStudentProfile === 'function') {
+                    closeStudentProfile();
+                    return;
+                }
                 elements.studentModal.style.display = 'none';
                 elements.studentModal.setAttribute('aria-hidden', 'true');
                 switchStudentTab('info');

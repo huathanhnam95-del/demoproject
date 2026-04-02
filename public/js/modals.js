@@ -27,6 +27,7 @@ const VocabListModalTemplate = `
               <th>Examples</th>
               <th>Source</th>
               <th>Form</th>
+              <th>Date</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -46,6 +47,7 @@ const VocabListModalTemplate = `
               <th>Examples</th>
               <th>Source</th>
               <th>Form</th>
+              <th>Date</th>
               <th>Times Missed</th>
             </tr>
           </thead>
@@ -118,15 +120,15 @@ const VocabListModalTemplate = `
 `;
 
 function injectVocabListModal() {
-    if (!document.getElementById('vocab-list-modal')) {
-        document.body.insertAdjacentHTML('beforeend', VocabListModalTemplate);
-        console.log('✅ Vocab List Modal injected.');
-    }
+  if (!document.getElementById('vocab-list-modal')) {
+    document.body.insertAdjacentHTML('beforeend', VocabListModalTemplate);
+    console.log('✅ Vocab List Modal injected.');
+  }
 }
 
 // Auto-inject on load
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', injectVocabListModal);
+  document.addEventListener('DOMContentLoaded', injectVocabListModal);
 } else {
-    injectVocabListModal();
+  injectVocabListModal();
 }

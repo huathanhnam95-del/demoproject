@@ -148,7 +148,7 @@ body {
 }
 
 @media (max-width: 1440px) {
-  .crm-nav-list > li > .crm-nav-item[disabled] {
+  .crm-nav-list>li>.crm-nav-item[disabled] {
     display: none !important;
   }
 }
@@ -210,7 +210,8 @@ body {
 .crm-header-right {
   display: flex;
   align-items: center;
-  flex-shrink: 0; /* Guarantee the bell and user profile never get pushed off-screen */
+  flex-shrink: 0;
+  /* Guarantee the bell and user profile never get pushed off-screen */
 }
 
 .crm-header-actions {
@@ -1559,6 +1560,10 @@ body {
 
 .scheduler-center {
   padding: 18px;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 160px);
+  overflow: hidden;
 }
 
 .scheduler-toolbar {
@@ -1566,10 +1571,14 @@ body {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 18px;
+  flex-shrink: 0;
 }
 
 .scheduler-calendar {
-  min-height: 420px;
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .scheduler-calendar-grid {
@@ -1577,7 +1586,6 @@ body {
   grid-template-columns: 88px repeat(7, minmax(120px, 1fr));
   border: 1px solid #edf2f7;
   border-radius: 14px;
-  overflow: hidden;
   background: #fff;
 }
 
@@ -1593,6 +1601,9 @@ body {
   padding: 10px 12px;
   background: #f8fbfa;
   font-weight: 700;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .scheduler-calendar-time {
@@ -1958,6 +1969,7 @@ body {
   font-size: 0.8rem;
   color: var(--crm-text-muted);
 }
+
 /* Identity Merging Styles */
 .crm-preview-card {
   transition: all 0.3s ease;
@@ -2144,10 +2156,21 @@ body {
 }
 
 /* Color variations for skills */
-.skill-score-block.listening .skill-circle { border-color: #1e3a5f; }
-.skill-score-block.reading .skill-circle { border-color: #cddb29; }
-.skill-score-block.speaking .skill-circle { border-color: #63666a; }
-.skill-score-block.writing .skill-circle { border-color: #9d156b; }
+.skill-score-block.listening .skill-circle {
+  border-color: #1e3a5f;
+}
+
+.skill-score-block.reading .skill-circle {
+  border-color: #cddb29;
+}
+
+.skill-score-block.speaking .skill-circle {
+  border-color: #63666a;
+}
+
+.skill-score-block.writing .skill-circle {
+  border-color: #9d156b;
+}
 
 .classroom-regeneration-panel {
   margin-top: 1.5rem;
@@ -2209,4 +2232,139 @@ body {
   font-weight: 600;
 }
 
+.teacher-scheduler-workspace {
+  position: relative;
+}
 
+.teacher-scheduler-class-card.is-armed {
+  border-color: rgba(37, 99, 235, 0.5);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.teacher-scheduler-pattern-card {
+  margin-top: 1rem;
+  padding: 0.9rem;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(30, 58, 95, 0.12);
+  background: #f8fafc;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.teacher-scheduler-pattern-card h4 {
+  margin: 0;
+}
+
+.teacher-scheduler-day-chip-row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.teacher-scheduler-day-chip {
+  border: 1px solid rgba(30, 58, 95, 0.18);
+  border-radius: 999px;
+  background: #fff;
+  color: #334155;
+  font-size: 0.78rem;
+  line-height: 1;
+  padding: 0.45rem 0.4rem;
+  cursor: pointer;
+}
+
+.teacher-scheduler-day-chip.is-selected {
+  background: rgba(37, 99, 235, 0.12);
+  border-color: rgba(37, 99, 235, 0.45);
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.teacher-scheduler-step-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  background: rgba(239, 246, 255, 0.85);
+}
+
+.teacher-scheduler-step-divider {
+  margin: 0 0.35rem;
+  color: #1d4ed8;
+}
+
+.teacher-scheduler-activation-summary {
+  margin-bottom: 0.85rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: #f8fafc;
+}
+
+.teacher-scheduler-activation-summary ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.teacher-scheduler-slot {
+  position: relative;
+}
+
+.teacher-scheduler-slot-error {
+  margin-top: 0.35rem;
+  color: #b91c1c;
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.teacher-scheduler-session-pill.is-saving {
+  opacity: 0.68;
+}
+
+.teacher-scheduler-popover {
+  position: absolute;
+  z-index: 50;
+  width: min(340px, calc(100vw - 32px));
+  padding: 0.85rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  background: #fff;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
+  display: grid;
+  gap: 0.55rem;
+}
+
+.teacher-scheduler-popover-title {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.teacher-scheduler-popover-grid {
+  gap: 0.6rem;
+}
+
+.teacher-scheduler-error {
+  color: #b91c1c;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.teacher-scheduler-session-bubble {
+  width: min(380px, calc(100vw - 32px));
+}
+
+.teacher-scheduler-session-meta {
+  color: #334155;
+  font-size: 0.84rem;
+}
+
+.teacher-scheduler-session-lock {
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 600;
+}

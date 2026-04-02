@@ -12,8 +12,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
   <!-- Reuse main app design tokens -->
-  <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="crm-admin.css" />
+  <link rel="stylesheet" href="style.css?v=20260401-crm-admin-livefix" />
+  <link rel="stylesheet" href="crm-admin.css?v=20260401-crm-admin-livefix" />
 </head>
 
 <body>
@@ -37,21 +37,27 @@
               <ul class="crm-dropdown-menu">
                 <li><button data-sub="courses">Catalog</button></li>
                 <li><button data-sub="classes">Classes</button></li>
+                <li><button data-sub="teacher-schedule">Teacher Schedule</button></li>
                 <li><button data-sub="zoom-links" data-coming-soon="true" disabled>Zoom Links</button></li>
                 <li><button data-sub="materials" data-coming-soon="true" disabled>Materials</button></li>
                 <li><button data-sub="planning" data-coming-soon="true" disabled>Planning</button></li>
                 <li><button data-sub="new-planning" data-coming-soon="true" disabled>New Planning</button></li>
-                <li><button data-sub="admission-calendar" data-coming-soon="true" disabled>Admission Calendar</button></li>
+                <li><button data-sub="admission-calendar" data-coming-soon="true" disabled>Admission Calendar</button>
+                </li>
                 <li><button data-sub="class-management">Class Management</button></li>
               </ul>
             </li>
             <li><button class="crm-nav-item" data-main="enquiry" data-label="Enquiry">Enquiry</button></li>
-            <li><button class="crm-nav-item" data-main="staff" data-label="Staff" data-coming-soon="true" disabled>Staff</button>
+            <li><button class="crm-nav-item" data-main="staff" data-label="Staff" data-coming-soon="true"
+                disabled>Staff</button>
             </li>
-            <li><button class="crm-nav-item" data-main="agents" data-label="Agents" data-coming-soon="true" disabled>Agents</button>
+            <li><button class="crm-nav-item" data-main="agents" data-label="Agents" data-coming-soon="true"
+                disabled>Agents</button>
             </li>
-            <li><button class="crm-nav-item" data-main="settings" data-label="Settings" data-coming-soon="true" disabled>Settings</button></li>
-            <li><button class="crm-nav-item" data-main="chatbot" data-label="Chatbots" data-coming-soon="true" disabled>Chatbots</button></li>
+            <li><button class="crm-nav-item" data-main="settings" data-label="Settings" data-coming-soon="true"
+                disabled>Settings</button></li>
+            <li><button class="crm-nav-item" data-main="chatbot" data-label="Chatbots" data-coming-soon="true"
+                disabled>Chatbots</button></li>
           </ul>
         </nav>
       </div>
@@ -144,7 +150,8 @@
               </div>
               <div class="crm-form-group">
                 <label for="merge-duplicate-student-ids">Duplicate Student IDs</label>
-                <textarea id="merge-duplicate-student-ids" class="crm-input" rows="3" placeholder="student-2, student-3"></textarea>
+                <textarea id="merge-duplicate-student-ids" class="crm-input" rows="3"
+                  placeholder="student-2, student-3"></textarea>
               </div>
               <div class="crm-inline-fields" style="justify-content: flex-end;">
                 <button id="btn-create-merge-job" class="crm-btn-secondary" type="button">Create Merge Job</button>
@@ -266,6 +273,110 @@
               <div class="crm-muted">Scheduler calendar will appear here.</div>
             </div>
           </section>
+        </div>
+      </section>
+
+      <section class="crm-panel" data-panel="courses/teacher-schedule">
+        <div class="crm-panel-header">
+          <div>
+            <h2>Teacher Schedule</h2>
+            <p>Schedule your assigned classrooms quickly: Place this week, then activate recurrences.</p>
+          </div>
+          <div class="crm-inline-fields">
+            <button id="btn-teacher-scheduler-refresh" class="crm-btn-secondary" type="button">Refresh</button>
+          </div>
+        </div>
+        <div id="teacher-scheduler-workspace" class="scheduler-workspace teacher-scheduler-workspace">
+          <aside class="scheduler-rail">
+            <div class="scheduler-rail-header">
+              <h3>Your Classes</h3>
+              <p>Click a class to arm placement mode, then click slots to place sessions.</p>
+            </div>
+            <div id="teacher-scheduler-class-list" class="scheduler-class-list">
+              <div class="crm-muted">No classes loaded yet.</div>
+            </div>
+            <div class="teacher-scheduler-pattern-card">
+              <h4>Set weekly pattern</h4>
+              <div class="crm-form-group">
+                <label for="teacher-scheduler-pattern-class">Classroom</label>
+                <select id="teacher-scheduler-pattern-class" class="crm-input"></select>
+              </div>
+              <div class="crm-form-group">
+                <label>Days</label>
+                <div id="teacher-scheduler-pattern-days" class="teacher-scheduler-day-chip-row"></div>
+              </div>
+              <div class="crm-form-group">
+                <label for="teacher-scheduler-pattern-time">Start time</label>
+                <input id="teacher-scheduler-pattern-time" type="time" class="crm-input" value="18:00">
+              </div>
+              <div id="teacher-scheduler-pattern-summary" class="crm-muted"></div>
+              <button id="btn-teacher-scheduler-place-week" class="crm-btn-primary" type="button">Place this week</button>
+            </div>
+          </aside>
+          <section class="scheduler-center">
+            <div class="teacher-scheduler-step-banner">
+              <div>
+                <strong>Step 1:</strong> Place this week
+                <span class="teacher-scheduler-step-divider">→</span>
+                <strong>Step 2:</strong> Activate recurrences
+              </div>
+              <button id="btn-teacher-scheduler-activate-recurrences" class="crm-btn-secondary" type="button">Activate recurrences</button>
+            </div>
+            <div class="scheduler-toolbar">
+              <div class="crm-form-group">
+                <label for="teacher-scheduler-from-date">From</label>
+                <input type="date" id="teacher-scheduler-from-date" class="crm-input">
+              </div>
+              <div class="crm-form-group">
+                <label for="teacher-scheduler-to-date">To</label>
+                <input type="date" id="teacher-scheduler-to-date" class="crm-input">
+              </div>
+            </div>
+            <div id="teacher-scheduler-activation-summary" class="teacher-scheduler-activation-summary" style="display:none;"></div>
+            <div id="teacher-scheduler-calendar" class="scheduler-calendar">
+              <div class="crm-muted">Teacher scheduler calendar will appear here.</div>
+            </div>
+          </section>
+        </div>
+
+        <div id="teacher-scheduler-quick-add" class="teacher-scheduler-popover" aria-hidden="true" style="display:none;">
+          <div class="teacher-scheduler-popover-title">Quick add session</div>
+          <div class="crm-form-group">
+            <label for="teacher-scheduler-quick-class">Classroom</label>
+            <select id="teacher-scheduler-quick-class" class="crm-input"></select>
+          </div>
+          <div class="crm-form-grid teacher-scheduler-popover-grid">
+            <div class="crm-form-group">
+              <label for="teacher-scheduler-quick-date">Date</label>
+              <input id="teacher-scheduler-quick-date" type="date" class="crm-input">
+            </div>
+            <div class="crm-form-group">
+              <label for="teacher-scheduler-quick-time">Start</label>
+              <input id="teacher-scheduler-quick-time" type="time" class="crm-input">
+            </div>
+          </div>
+          <div class="crm-form-group">
+            <label for="teacher-scheduler-quick-duration">Duration</label>
+            <input id="teacher-scheduler-quick-duration" type="text" class="crm-input" readonly>
+          </div>
+          <div id="teacher-scheduler-quick-error" class="teacher-scheduler-error" style="display:none;"></div>
+          <div id="teacher-scheduler-quick-suggestions"></div>
+          <div class="crm-inline-fields">
+            <button id="btn-teacher-scheduler-quick-cancel" class="crm-btn-secondary" type="button">Cancel</button>
+            <button id="btn-teacher-scheduler-quick-add" class="crm-btn-primary" type="button">Add session</button>
+          </div>
+        </div>
+
+        <div id="teacher-scheduler-session-bubble" class="teacher-scheduler-popover teacher-scheduler-session-bubble" aria-hidden="true" style="display:none;">
+          <div class="teacher-scheduler-popover-title" id="teacher-scheduler-session-bubble-title">Session</div>
+          <div class="teacher-scheduler-session-meta" id="teacher-scheduler-session-bubble-meta"></div>
+          <div class="teacher-scheduler-session-lock" id="teacher-scheduler-session-bubble-lock"></div>
+          <div class="crm-inline-fields">
+            <button id="btn-teacher-scheduler-open-attendance" class="crm-btn-secondary" type="button">Open attendance</button>
+            <button id="btn-teacher-scheduler-cancel-session" class="crm-btn-secondary" type="button">Cancel</button>
+            <button id="btn-teacher-scheduler-duplicate-session" class="crm-btn-primary" type="button">Duplicate</button>
+            <button id="btn-teacher-scheduler-close-bubble" class="crm-btn-secondary" type="button">Close</button>
+          </div>
         </div>
       </section>
 
@@ -392,7 +503,8 @@
             </div>
             <div class="crm-form-group">
               <label for="lead-activity-body">Details</label>
-              <textarea id="lead-activity-body" class="crm-input" rows="3" placeholder="Summary, commitments, blockers"></textarea>
+              <textarea id="lead-activity-body" class="crm-input" rows="3"
+                placeholder="Summary, commitments, blockers"></textarea>
             </div>
             <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
               <button id="btn-save-lead-activity" class="crm-btn-secondary" type="button">Log Activity</button>
@@ -541,7 +653,8 @@
                 <div class="crm-form-grid crm-compact-grid">
                   <div class="crm-form-group">
                     <label for="student-task-title">Task</label>
-                    <input type="text" id="student-task-title" class="crm-input" placeholder="Counseling call, payment reminder">
+                    <input type="text" id="student-task-title" class="crm-input"
+                      placeholder="Counseling call, payment reminder">
                   </div>
                   <div class="crm-form-group">
                     <label for="student-task-due-at">Due At</label>
@@ -589,7 +702,8 @@
                 </div>
                 <div class="crm-form-group">
                   <label for="student-activity-body">Details</label>
-                  <textarea id="student-activity-body" class="crm-input" rows="3" placeholder="Notes, commitments, concerns"></textarea>
+                  <textarea id="student-activity-body" class="crm-input" rows="3"
+                    placeholder="Notes, commitments, concerns"></textarea>
                 </div>
                 <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
                   <button id="btn-save-student-activity" class="crm-btn-secondary" type="button">Log Activity</button>
@@ -630,7 +744,8 @@
 
                 <div class="skill-score-block reading">
                   <div class="skill-circle">
-                    <input type="text" id="score-reading" name="score_reading" inputmode="numeric" aria-label="Reading Score">
+                    <input type="text" id="score-reading" name="score_reading" inputmode="numeric"
+                      aria-label="Reading Score">
                   </div>
                   <div class="skill-label">Reading</div>
                   <div class="skill-icon">
@@ -643,7 +758,8 @@
 
                 <div class="skill-score-block speaking">
                   <div class="skill-circle">
-                    <input type="text" id="score-speaking" name="score_speaking" inputmode="numeric" aria-label="Speaking Score">
+                    <input type="text" id="score-speaking" name="score_speaking" inputmode="numeric"
+                      aria-label="Speaking Score">
                   </div>
                   <div class="skill-label">Speaking</div>
                   <div class="skill-icon">
@@ -656,7 +772,8 @@
 
                 <div class="skill-score-block writing">
                   <div class="skill-circle">
-                    <input type="text" id="score-writing" name="score_writing" inputmode="numeric" aria-label="Writing Score">
+                    <input type="text" id="score-writing" name="score_writing" inputmode="numeric"
+                      aria-label="Writing Score">
                   </div>
                   <div class="skill-label">Writing</div>
                   <div class="skill-icon">
@@ -697,7 +814,8 @@
                 <button id="btn-open-entrance-test-link" class="crm-btn-secondary" type="button" disabled>Open</button>
               </div>
 
-              <small id="entrance-test-link-note" class="text-muted">Create a test to generate a single-use learner link you can send.</small>
+              <small id="entrance-test-link-note" class="text-muted">Create a test to generate a single-use learner link
+                you can send.</small>
 
               <div id="entrance-tests-list" class="crm-entrance-tests-list">
                 <div class="crm-muted">No tests yet.</div>
@@ -730,7 +848,8 @@
                 <input type="text" id="student-preferred-learning-hours" class="crm-input" placeholder="18:00-20:00">
               </div>
             </div>
-            <div id="student-schedule-prompt" class="crm-muted" style="margin-bottom: 16px;">Add the student's preferred days and hours to improve classroom recommendations.</div>
+            <div id="student-schedule-prompt" class="crm-muted" style="margin-bottom: 16px;">Add the student's preferred
+              days and hours to improve classroom recommendations.</div>
             <div class="crm-form-group">
               <label for="student-score-history">Score History</label>
               <textarea id="student-score-history" class="crm-input" rows="3" placeholder="YYYY-MM-DD|58"></textarea>
@@ -738,20 +857,24 @@
             <div class="crm-form-grid">
               <div class="crm-form-group">
                 <label for="student-guardian-contacts">Guardian Contacts</label>
-                <textarea id="student-guardian-contacts" class="crm-input" rows="3" placeholder="Name|Phone|Email"></textarea>
+                <textarea id="student-guardian-contacts" class="crm-input" rows="3"
+                  placeholder="Name|Phone|Email"></textarea>
               </div>
               <div class="crm-form-group">
                 <label for="student-company-contacts">Company Contacts</label>
-                <textarea id="student-company-contacts" class="crm-input" rows="3" placeholder="Company|Email|Phone"></textarea>
+                <textarea id="student-company-contacts" class="crm-input" rows="3"
+                  placeholder="Company|Email|Phone"></textarea>
               </div>
             </div>
             <div class="crm-form-group">
               <label for="student-document-refs">Document Refs</label>
-              <textarea id="student-document-refs" class="crm-input" rows="3" placeholder="Passport|crmStudents/student-1/docs/passport.pdf"></textarea>
+              <textarea id="student-document-refs" class="crm-input" rows="3"
+                placeholder="Passport|crmStudents/student-1/docs/passport.pdf"></textarea>
             </div>
             <div class="crm-form-group">
               <label for="student-counseling-notes">Counseling Notes</label>
-              <textarea id="student-counseling-notes" class="crm-input" rows="4" placeholder="Key counseling history, objections, preferences"></textarea>
+              <textarea id="student-counseling-notes" class="crm-input" rows="4"
+                placeholder="Key counseling history, objections, preferences"></textarea>
             </div>
           </div>
 
@@ -770,7 +893,8 @@
                   </div>
                   <span id="student-finance-workflow-badge" class="crm-task-priority low">collect payment</span>
                 </div>
-                <div id="student-finance-workflow-note" class="crm-muted" style="margin-bottom: 12px;">Follow the finance workflow guidance.</div>
+                <div id="student-finance-workflow-note" class="crm-muted" style="margin-bottom: 12px;">Follow the
+                  finance workflow guidance.</div>
                 <div class="crm-form-grid crm-compact-grid">
                   <div class="crm-form-group">
                     <label>Invoiced</label>
@@ -805,11 +929,13 @@
                   <select id="student-classroom-match-select" class="crm-input" style="margin-top: 12px;">
                     <option value="">No classroom selected</option>
                   </select>
-                  <small id="student-classroom-match-meta" class="text-muted">Select the suggested classroom or choose another match.</small>
+                  <small id="student-classroom-match-meta" class="text-muted">Select the suggested classroom or choose
+                    another match.</small>
                 </div>
                 <div id="student-classroom-match-warning" class="crm-muted" style="margin-top: 12px;"></div>
                 <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
-                  <button id="btn-create-recommended-enrollment" class="crm-btn-primary" type="button" disabled>Create Enrollment</button>
+                  <button id="btn-create-recommended-enrollment" class="crm-btn-primary" type="button" disabled>Create
+                    Enrollment</button>
                 </div>
               </section>
               <section class="crm-workspace-card">
@@ -824,7 +950,8 @@
                   <select id="student-finance-enrollment" class="crm-input">
                     <option value="">No enrollment selected</option>
                   </select>
-                  <small id="student-finance-enrollment-meta" class="text-muted">Choose the enrollment this invoice belongs to.</small>
+                  <small id="student-finance-enrollment-meta" class="text-muted">Choose the enrollment this invoice
+                    belongs to.</small>
                 </div>
                 <div class="crm-form-grid crm-compact-grid">
                   <div class="crm-form-group">
@@ -869,7 +996,8 @@
                   </div>
                 </div>
                 <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
-                  <button id="btn-record-student-payment" class="crm-btn-secondary" type="button">Record Payment</button>
+                  <button id="btn-record-student-payment" class="crm-btn-secondary" type="button">Record
+                    Payment</button>
                 </div>
               </section>
             </div>
@@ -885,7 +1013,8 @@
             <div class="crm-form-group" style="margin-top: 20px;">
               <label>Class Code (For Student Self-Claim)</label>
               <div style="display: flex; gap: 10px; align-items: center;">
-                <input type="text" id="crm-class-code-display" class="crm-input" readonly placeholder="No code generated">
+                <input type="text" id="crm-class-code-display" class="crm-input" readonly
+                  placeholder="No code generated">
                 <button id="btn-generate-class-code" class="crm-btn-secondary">Generate New</button>
               </div>
               <small class="text-muted">Share this 6-digit code with the student.</small>
@@ -903,15 +1032,18 @@
             </div>
 
             <!-- Preview Card -->
-            <div id="crm-handshake-preview" class="crm-preview-card" style="display: none; margin-top: 16px; padding: 16px; border: 1px solid #edf2f7; border-radius: 8px; background: #f8f9fa;">
+            <div id="crm-handshake-preview" class="crm-preview-card"
+              style="display: none; margin-top: 16px; padding: 16px; border: 1px solid #edf2f7; border-radius: 8px; background: #f8f9fa;">
               <div style="display: flex; align-items: center; gap: 12px;">
-                <img id="crm-handshake-avatar" src="" alt="Avatar" style="width: 48px; height: 48px; border-radius: 50%; background: #eee;">
+                <img id="crm-handshake-avatar" src="" alt="Avatar"
+                  style="width: 48px; height: 48px; border-radius: 50%; background: #eee;">
                 <div>
                   <div id="crm-handshake-name" style="font-weight: bold;">User Name</div>
                   <div id="crm-handshake-uid" class="text-muted" style="font-size: 12px;">UID: ...</div>
                 </div>
               </div>
-              <button id="btn-confirm-handshake" class="crm-btn-primary" style="width: 100%; margin-top: 16px;">Confirm Link</button>
+              <button id="btn-confirm-handshake" class="crm-btn-primary" style="width: 100%; margin-top: 16px;">Confirm
+                Link</button>
             </div>
 
             <div id="crm-linked-accounts-list" style="margin-top: 20px;">
@@ -996,17 +1128,18 @@
               </div>
               <div class="crm-form-group">
                 <label for="course-default-session-minutes">Default Session Minutes</label>
-                <input type="number" id="course-default-session-minutes" name="course_default_session_minutes" class="crm-input"
-                  min="30" step="15" placeholder="e.g. 120">
+                <input type="number" id="course-default-session-minutes" name="course_default_session_minutes"
+                  class="crm-input" min="30" step="15" placeholder="e.g. 120">
               </div>
               <div class="crm-form-group">
                 <label for="course-duration-step">Duration Step Minutes</label>
-                <input type="number" id="course-duration-step" name="course_duration_step" class="crm-input"
-                  min="15" step="15" placeholder="e.g. 30">
+                <input type="number" id="course-duration-step" name="course_duration_step" class="crm-input" min="15"
+                  step="15" placeholder="e.g. 30">
               </div>
               <div class="crm-form-group">
                 <label for="course-timezone">Timezone</label>
-                <input type="text" id="course-timezone" name="course_timezone" class="crm-input" placeholder="e.g. Asia/Bangkok">
+                <input type="text" id="course-timezone" name="course_timezone" class="crm-input"
+                  placeholder="e.g. Asia/Bangkok">
               </div>
             </div>
           </div>
@@ -1069,7 +1202,8 @@
           <button class="crm-sidebar-item" data-tab="review-board">Review Board</button>
         </div>
         <div class="crm-modal-content">
-          <!-- Settings Section -->          <div id="classroom-settings" class="crm-tab-content active">
+          <!-- Settings Section -->
+          <div id="classroom-settings" class="crm-tab-content active">
             <div class="crm-form-grid">
               <div class="crm-form-group">
                 <label for="classroom-name">Classroom Name</label>
@@ -1100,94 +1234,121 @@
                     <h3>Scheduling Setup</h3>
                     <p class="crm-muted">Define the class template before generating or editing sessions.</p>
                   </div>
-                </div>
-                <div class="crm-form-grid crm-compact-grid">
-                  <div class="crm-form-group">
-                    <label for="classroom-total-hours">Total Instruction Hours</label>
-                    <input type="number" id="classroom-total-hours" class="crm-input" min="0.5" step="0.5" placeholder="e.g. 24">
-                  </div>
-                  <div class="crm-form-group">
-                    <label for="classroom-primary-teacher">Primary Teacher UID</label>
-                    <input type="text" id="classroom-primary-teacher" class="crm-input" placeholder="Teacher UID">
-                  </div>
-                  <div class="crm-form-group">
-                    <label for="classroom-session-minutes">Session Minutes</label>
-                    <input type="number" id="classroom-session-minutes" class="crm-input" min="30" step="15" placeholder="120">
-                  </div>
-                  <div class="crm-form-group">
-                    <label for="classroom-schedule-timezone">Timezone</label>
-                    <input type="text" id="classroom-schedule-timezone" class="crm-input" placeholder="Asia/Bangkok">
-                  </div>
-                  <div class="crm-form-group">
-                    <label for="classroom-seed-start-date">Seed Start Date</label>
-                    <input type="date" id="classroom-seed-start-date" class="crm-input">
-                  </div>
-                  <div class="crm-form-group">
-                    <label for="classroom-seed-start-time">Seed Start Time</label>
-                    <input type="time" id="classroom-seed-start-time" class="crm-input">
-                  </div>
-                  <div class="crm-form-group">
-                    <label for="classroom-seed-weekdays">Seed Weekdays</label>
-                    <input type="text" id="classroom-seed-weekdays" class="crm-input" placeholder="mon,wed,fri">
-                  </div>
-                  <div class="crm-form-group">
-                    <label for="classroom-allowed-start-time">Allowed Start Time</label>
-                    <input type="time" id="classroom-allowed-start-time" class="crm-input">
-                  </div>
-                  <div class="crm-form-group">
-                    <label for="classroom-allowed-end-time">Allowed End Time</label>
-                    <input type="time" id="classroom-allowed-end-time" class="crm-input">
-                  </div>
-                  <div class="crm-form-group">
-                    <label for="classroom-duration-step">Duration Step Minutes</label>
-                    <input type="number" id="classroom-duration-step" class="crm-input" min="15" step="15" placeholder="30">
-                  </div>
-                  <div class="crm-form-group">
-                    <label for="classroom-meeting-days">Meeting Days</label>
-                    <input type="text" id="classroom-meeting-days" class="crm-input" placeholder="Mon, Wed, Fri">
-                  </div>
-                  <div class="crm-form-group">
-                    <label for="classroom-meeting-hours">Meeting Hours</label>
-                    <input type="text" id="classroom-meeting-hours" class="crm-input" placeholder="18:00-20:00">
-                  </div>
-                </div>
-                <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
-                  <button id="btn-save-classroom-scheduling" class="crm-btn-primary" type="button">Generate Schedule</button>
-                </div>
-                <div id="attendance-schedule-prompt" class="crm-muted" style="margin-top: 12px;">Define meeting days and hours so attendance and live delivery guidance can stay aligned.</div>
-                <div class="classroom-regeneration-panel">
-                  <div class="crm-section-header">
-                    <div>
-                      <h3>Regenerate Future Schedule</h3>
-                      <p class="crm-muted">Preview a future-only duration change before replacing unlocked contracted sessions.</p>
+                  <div id="scheduling-suggestion-banner" class="crm-suggestion-banner"
+                    style="display:none; margin-bottom:12px; padding:10px 14px; background:#fffbeb; border:1px solid #fbbf24; border-radius:8px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                    <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:200px;">
+                      <span style="font-size:1.2em;">💡</span>
+                      <div>
+                        <strong style="font-size:0.85rem;">Suggested defaults available</strong><br>
+                        <span class="crm-muted" style="font-size:0.8rem;">Timezone: Asia/Bangkok · Start: 18:00 · Days:
+                          Mon, Wed, Fri · Session: 120 min</span>
+                      </div>
+                    </div>
+                    <div style="display:flex; gap:6px; flex-shrink:0;">
+                      <button type="button" id="btn-apply-scheduling-defaults" class="crm-btn-primary"
+                        style="font-size:0.8rem; padding:4px 12px;">Apply Defaults</button>
+                      <button type="button" id="btn-dismiss-scheduling-defaults" class="crm-btn-secondary"
+                        style="font-size:0.8rem; padding:4px 10px;">Dismiss</button>
                     </div>
                   </div>
                   <div class="crm-form-grid crm-compact-grid">
                     <div class="crm-form-group">
-                      <label for="classroom-regenerate-from-date">Regenerate From Date</label>
-                      <input type="date" id="classroom-regenerate-from-date" class="crm-input">
+                      <label for="classroom-total-hours">Total Instruction Hours</label>
+                      <input type="number" id="classroom-total-hours" class="crm-input" min="0.5" step="0.5"
+                        placeholder="e.g. 24">
                     </div>
                     <div class="crm-form-group">
-                      <label for="classroom-regenerate-session-minutes">New Session Minutes</label>
-                      <input type="number" id="classroom-regenerate-session-minutes" class="crm-input" min="30" step="15" placeholder="120">
+                      <label for="classroom-primary-teacher">Primary Teacher UID</label>
+                      <input type="text" id="classroom-primary-teacher" class="crm-input" placeholder="Teacher UID">
                     </div>
                     <div class="crm-form-group">
-                      <label for="classroom-regenerate-weekdays">Seed Weekdays</label>
-                      <input type="text" id="classroom-regenerate-weekdays" class="crm-input" placeholder="mon,wed,fri">
+                      <label for="classroom-session-minutes">Session Minutes</label>
+                      <input type="number" id="classroom-session-minutes" class="crm-input" min="30" step="15"
+                        placeholder="120">
                     </div>
                     <div class="crm-form-group">
-                      <label for="classroom-regenerate-start-time">Seed Start Time</label>
-                      <input type="time" id="classroom-regenerate-start-time" class="crm-input">
+                      <label for="classroom-schedule-timezone">Timezone</label>
+                      <input type="text" id="classroom-schedule-timezone" class="crm-input" placeholder="Asia/Bangkok">
+                    </div>
+                    <div class="crm-form-group">
+                      <label for="classroom-seed-start-date">Seed Start Date</label>
+                      <input type="date" id="classroom-seed-start-date" class="crm-input">
+                    </div>
+                    <div class="crm-form-group">
+                      <label for="classroom-seed-start-time">Seed Start Time</label>
+                      <input type="time" id="classroom-seed-start-time" class="crm-input">
+                    </div>
+                    <div class="crm-form-group">
+                      <label for="classroom-seed-weekdays">Seed Weekdays</label>
+                      <input type="text" id="classroom-seed-weekdays" class="crm-input" placeholder="mon,wed,fri">
+                    </div>
+                    <div class="crm-form-group">
+                      <label for="classroom-allowed-start-time">Allowed Start Time</label>
+                      <input type="time" id="classroom-allowed-start-time" class="crm-input">
+                    </div>
+                    <div class="crm-form-group">
+                      <label for="classroom-allowed-end-time">Allowed End Time</label>
+                      <input type="time" id="classroom-allowed-end-time" class="crm-input">
+                    </div>
+                    <div class="crm-form-group">
+                      <label for="classroom-duration-step">Duration Step Minutes</label>
+                      <input type="number" id="classroom-duration-step" class="crm-input" min="15" step="15"
+                        placeholder="30">
+                    </div>
+                    <div class="crm-form-group">
+                      <label for="classroom-meeting-days">Meeting Days</label>
+                      <input type="text" id="classroom-meeting-days" class="crm-input" placeholder="Mon, Wed, Fri">
+                    </div>
+                    <div class="crm-form-group">
+                      <label for="classroom-meeting-hours">Meeting Hours</label>
+                      <input type="text" id="classroom-meeting-hours" class="crm-input" placeholder="18:00-20:00">
                     </div>
                   </div>
-                  <div class="crm-inline-fields classroom-regeneration-actions">
-                    <button id="btn-preview-classroom-regeneration" class="crm-btn-secondary" type="button">Preview Regeneration</button>
-                    <button id="btn-apply-classroom-regeneration" class="crm-btn-primary" type="button" disabled>Apply Regeneration</button>
+                  <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
+                    <button id="btn-save-classroom-scheduling" class="crm-btn-primary" type="button">Generate
+                      Schedule</button>
                   </div>
-                  <div id="classroom-regeneration-preview" class="classroom-regeneration-preview crm-muted">
-                    Preview regeneration to review preserved sessions, blocked reasons, and the next contracted target count.
+                  <div id="attendance-schedule-prompt" class="crm-muted" style="margin-top: 12px;">Define meeting days
+                    and hours so attendance and live delivery guidance can stay aligned.</div>
+                  <div class="classroom-regeneration-panel">
+                    <div class="crm-section-header">
+                      <div>
+                        <h3>Regenerate Future Schedule</h3>
+                        <p class="crm-muted">Preview a future-only duration change before replacing unlocked contracted
+                          sessions.</p>
+                      </div>
+                    </div>
+                    <div class="crm-form-grid crm-compact-grid">
+                      <div class="crm-form-group">
+                        <label for="classroom-regenerate-from-date">Regenerate From Date</label>
+                        <input type="date" id="classroom-regenerate-from-date" class="crm-input">
+                      </div>
+                      <div class="crm-form-group">
+                        <label for="classroom-regenerate-session-minutes">New Session Minutes</label>
+                        <input type="number" id="classroom-regenerate-session-minutes" class="crm-input" min="30"
+                          step="15" placeholder="120">
+                      </div>
+                      <div class="crm-form-group">
+                        <label for="classroom-regenerate-weekdays">Seed Weekdays</label>
+                        <input type="text" id="classroom-regenerate-weekdays" class="crm-input"
+                          placeholder="mon,wed,fri">
+                      </div>
+                      <div class="crm-form-group">
+                        <label for="classroom-regenerate-start-time">Seed Start Time</label>
+                        <input type="time" id="classroom-regenerate-start-time" class="crm-input">
+                      </div>
+                    </div>
+                    <div class="crm-inline-fields classroom-regeneration-actions">
+                      <button id="btn-preview-classroom-regeneration" class="crm-btn-secondary" type="button">Preview
+                        Regeneration</button>
+                      <button id="btn-apply-classroom-regeneration" class="crm-btn-primary" type="button" disabled>Apply
+                        Regeneration</button>
+                    </div>
+                    <div id="classroom-regeneration-preview" class="classroom-regeneration-preview crm-muted">
+                      Preview regeneration to review preserved sessions, blocked reasons, and the next contracted target
+                      count.
+                    </div>
                   </div>
-                </div>
               </section>
               <section class="crm-workspace-card">
                 <div class="crm-section-header">
@@ -1259,7 +1420,8 @@
                   </div>
                   <div class="crm-form-group">
                     <label for="input-live-session-notes">Notes</label>
-                    <textarea id="input-live-session-notes" class="crm-input" rows="3" placeholder="Session notes"></textarea>
+                    <textarea id="input-live-session-notes" class="crm-input" rows="3"
+                      placeholder="Session notes"></textarea>
                   </div>
                 </div>
                 <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
@@ -1297,8 +1459,10 @@
                 <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
                   <button id="btn-enroll-student" class="crm-btn-primary" type="button">Enroll</button>
                 </div>
-                <div id="attendance-enrollment-meta" class="crm-muted" style="margin-top: 12px;">No enrollments yet.</div>
-                <div id="attendance-classroom-fit-note" class="crm-muted" style="margin-top: 8px;">Select a student to see schedule fit guidance.</div>
+                <div id="attendance-enrollment-meta" class="crm-muted" style="margin-top: 12px;">No enrollments yet.
+                </div>
+                <div id="attendance-classroom-fit-note" class="crm-muted" style="margin-top: 8px;">Select a student to
+                  see schedule fit guidance.</div>
               </section>
               <section class="crm-workspace-card">
                 <div class="crm-section-header">
@@ -1324,10 +1488,13 @@
                   </div>
                 </div>
                 <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
-                  <button id="btn-create-attendance-session" class="crm-btn-secondary" type="button">Create Session</button>
-                  <button id="btn-save-attendance-records" class="crm-btn-primary" type="button">Save Attendance</button>
+                  <button id="btn-create-attendance-session" class="crm-btn-secondary" type="button">Create
+                    Session</button>
+                  <button id="btn-save-attendance-records" class="crm-btn-primary" type="button">Save
+                    Attendance</button>
                 </div>
-                <div id="attendance-live-session-note" class="crm-muted" style="margin-top: 12px;">Create a live session before class starts.</div>
+                <div id="attendance-live-session-note" class="crm-muted" style="margin-top: 12px;">Create a live session
+                  before class starts.</div>
               </section>
             </div>
             <div id="attendance-roster-container" class="crm-table-host" style="margin-top: 20px;">
@@ -1341,7 +1508,8 @@
               <h3>Announcements</h3>
             </div>
             <div class="crm-form-group" style="margin-bottom: 24px; display: flex; gap: 10px;">
-              <input type="text" id="stream-post-content" class="crm-input" placeholder="Announce something to your class">
+              <input type="text" id="stream-post-content" class="crm-input"
+                placeholder="Announce something to your class">
               <button id="btn-post-announcement" class="crm-btn-primary">Post</button>
             </div>
             <div id="stream-posts-container" class="module-list-container">
@@ -1366,7 +1534,8 @@
               <h3>Assignments & Materials</h3>
               <button id="btn-add-classwork" class="crm-btn-secondary">+ Create Work</button>
             </div>
-            <div id="classwork-live-session-note" class="crm-muted" style="margin-bottom: 12px;">Create or complete a live session before assigning follow-up work.</div>
+            <div id="classwork-live-session-note" class="crm-muted" style="margin-bottom: 12px;">Create or complete a
+              live session before assigning follow-up work.</div>
             <div id="classwork-composer" class="crm-form-grid"
               style="display: none; background: #f8fbfa; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
               <div class="crm-form-group">
@@ -1429,7 +1598,8 @@
   </div>
 
   <!-- Scheduler Action Modal -->
-  <div id="scheduler-action-modal" class="crm-modal-overlay scheduler-action-modal" role="dialog" aria-modal="true" aria-labelledby="scheduler-action-title" aria-hidden="true" style="display: none;">
+  <div id="scheduler-action-modal" class="crm-modal-overlay scheduler-action-modal" role="dialog" aria-modal="true"
+    aria-labelledby="scheduler-action-title" aria-hidden="true" style="display: none;">
     <div class="crm-modal-container scheduler-action-container">
       <div class="crm-modal-header">
         <div class="crm-modal-title-row">
@@ -1469,8 +1639,10 @@
         </div>
         <div class="scheduler-action-content">
           <div class="scheduler-action-switcher" role="group" aria-label="Scheduler action type">
-            <button id="scheduler-action-add-button" type="button" class="scheduler-action-switcher-btn active" aria-pressed="true">Add session</button>
-            <button id="scheduler-action-replace-button" type="button" class="scheduler-action-switcher-btn" aria-pressed="false">Replace session</button>
+            <button id="scheduler-action-add-button" type="button" class="scheduler-action-switcher-btn active"
+              aria-pressed="true">Add session</button>
+            <button id="scheduler-action-replace-button" type="button" class="scheduler-action-switcher-btn"
+              aria-pressed="false">Replace session</button>
           </div>
 
           <section id="scheduler-action-add-panel" class="scheduler-action-panel">
@@ -1499,7 +1671,8 @@
             <div class="crm-form-grid scheduler-action-grid">
               <div class="crm-form-group">
                 <label for="scheduler-action-recurring-count">Weekly Occurrences</label>
-                <input id="scheduler-action-recurring-count" type="number" class="crm-input" min="2" max="12" step="1" value="2">
+                <input id="scheduler-action-recurring-count" type="number" class="crm-input" min="2" max="12" step="1"
+                  value="2">
               </div>
             </div>
             <div id="scheduler-action-add-preview" class="scheduler-action-preview-grid">
@@ -1544,6 +1717,54 @@
     </div>
   </div>
 
+  <!-- Bulk Archive Warning Modal -->
+  <div id="bulk-delete-warning-modal" class="crm-modal-overlay" role="dialog" aria-modal="true"
+    aria-labelledby="bulk-delete-warning-title" aria-hidden="true" style="display: none;">
+    <div class="crm-modal-container crm-delete-warning-modal-container">
+      <div class="crm-modal-header">
+        <div class="crm-modal-title-row">
+          <h2 id="bulk-delete-warning-title">Review archive action</h2>
+          <span id="bulk-delete-warning-badge" class="crm-student-id-badge">Warning</span>
+        </div>
+        <button id="btn-close-bulk-delete-warning-modal" class="crm-icon-btn text-dark" title="Close">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+        </button>
+      </div>
+      <div class="crm-modal-body crm-delete-warning-body">
+        <div id="bulk-delete-warning-summary" class="crm-delete-warning-summary"></div>
+        <p id="bulk-delete-warning-note" class="crm-delete-warning-note crm-muted">
+          Review the selected records before moving them to the Recycle Bin.
+        </p>
+        <section class="crm-delete-warning-panel">
+          <div class="crm-delete-warning-panel-head">
+            <h3 id="bulk-delete-warning-panel-title">Archive preview</h3>
+            <p id="bulk-delete-warning-panel-note" class="crm-muted">Archived records are retained for 30 days.</p>
+          </div>
+          <div id="bulk-delete-warning-list" class="crm-delete-warning-list">
+            <div class="crm-muted">No additional details.</div>
+          </div>
+        </section>
+        <section class="crm-delete-confirm-panel">
+          <label id="bulk-delete-confirm-label" for="bulk-delete-confirm-input" class="crm-delete-confirm-label">
+            Type <strong>archive</strong> to continue
+          </label>
+          <div class="crm-delete-confirm-row">
+            <input id="bulk-delete-confirm-input" class="crm-input" type="text" autocomplete="off" spellcheck="false"
+              placeholder="archive">
+            <button id="btn-confirm-bulk-delete-warning" class="crm-btn-primary" type="button" disabled>Move to Recycle
+              Bin</button>
+          </div>
+        </section>
+      </div>
+      <div class="crm-modal-footer">
+        <button id="btn-cancel-bulk-delete-warning" class="crm-btn-secondary" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Loading / Access Gate -->
   <div id="crm-loading" class="crm-loading-overlay" aria-live="polite">
     <div class="crm-loading-card">
@@ -1559,41 +1780,41 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
-  <script src="js/auth-session-guard.js"></script>
-  <script src="js/classroom-api.js"></script>
-  <script src="js/crm/utils.js"></script>
-  <script src="js/crm/state.js"></script>
-  <script src="js/crm/dom.js"></script>
-  <script src="js/crm/courses.js"></script>
-  <script src="js/crm/students.js"></script>
-  <script src="js/crm/student-360.js"></script>
-  <script src="js/crm/classrooms.js"></script>
-  <script src="js/crm/leads.js"></script>
-  <script src="js/crm/activities.js"></script>
-  <script src="js/crm/enrollments.js"></script>
-  <script src="js/crm/attendance.js"></script>
-  <script src="js/crm/finance-workflow.js"></script>
-  <script src="js/crm/finance.js"></script>
-  <script src="js/crm/communications.js"></script>
-  <script src="js/crm/scheduler-workspace.js"></script>
-  <script src="js/crm/student-finance.js"></script>
-  <script src="js/crm/live-delivery.js"></script>
-  <script src="js/crm/classroom-modal.js"></script>
-  <script src="js/crm/student-modal.js"></script>
-  <script src="js/crm/course-modal.js"></script>
-  <script src="js/crm/lead-workspace.js"></script>
-  <script src="js/crm/classroom-workspace.js"></script>
-  <script src="js/crm/task-activity-workspace.js"></script>
-  <script src="js/crm/communications-workspace.js"></script>
-  <script src="js/crm/dashboard-workspace.js"></script>
-  <script src="js/crm/student-directory-workspace.js"></script>
-  <script src="js/crm/activity-surfaces.js"></script>
-  <script src="js/crm/student-workspace.js"></script>
-  <script src="js/crm/dashboard.js"></script>
-  <script src="js/crm/governance.js"></script>
-  <script src="js/crm/index.js"></script>
-  <script src="js/crm/entrance-test-link-state.js"></script>
-  <script src="crm-admin.js"></script>
+  <script src="js/auth-session-guard.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/classroom-api.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/utils.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/state.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/dom.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/courses.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/students.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/student-360.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/classrooms.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/leads.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/activities.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/enrollments.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/attendance.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/finance-workflow.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/finance.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/communications.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/scheduler-workspace.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/teacher-scheduler-workspace.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/student-finance.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/live-delivery.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/classroom-modal.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/student-modal.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/course-modal.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/lead-workspace.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/classroom-workspace.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/task-activity-workspace.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/communications-workspace.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/dashboard-workspace.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/student-directory-workspace.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/activity-surfaces.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/dashboard.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/governance.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/index.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/crm/entrance-test-link-state.js?v=20260401-crm-admin-livefix"></script>
+  <script src="crm-admin.js?v=20260401-crm-admin-livefix"></script>
 </body>
 
 </html>

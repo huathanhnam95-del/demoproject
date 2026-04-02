@@ -131,6 +131,7 @@ window.CrmClassroomModal = (function () {
             if (elements.classroomRegenerationPreview) {
                 elements.classroomRegenerationPreview.innerHTML = 'Preview regeneration to review preserved sessions, blocked reasons, and the next contracted target count.';
             }
+            if (elements.schedulingSuggestionBanner) elements.schedulingSuggestionBanner.style.display = 'none';
             renderClassroomSchedulePrompt();
             renderAttendanceWorkflowGuidance();
             renderClassworkWorkflowGuidance();
@@ -141,6 +142,7 @@ window.CrmClassroomModal = (function () {
 
             const openFreshClassroomModal = () => {
                 resetClassroomModal();
+                if (elements.schedulingSuggestionBanner) elements.schedulingSuggestionBanner.style.display = 'flex';
                 openClassroomModal();
             };
 
@@ -172,6 +174,25 @@ window.CrmClassroomModal = (function () {
                         console.error('[CRM Admin] Save classroom scheduling failed:', e);
                         showToast(e?.message || 'Failed to save classroom scheduling.', 'error');
                     });
+                });
+            }
+
+            // --- Suggestion banner: Apply / Dismiss ---
+            if (elements.btnApplySchedulingDefaults) {
+                elements.btnApplySchedulingDefaults.addEventListener('click', () => {
+                    if (window.CrmClassrooms && typeof window.CrmClassrooms.applyDefaults === 'function') {
+                        window.CrmClassrooms.applyDefaults(elements);
+                    }
+                    if (window.CrmClassrooms && typeof window.CrmClassrooms.syncMeetingFieldsFromSeed === 'function') {
+                        window.CrmClassrooms.syncMeetingFieldsFromSeed(elements);
+                    }
+                    if (elements.schedulingSuggestionBanner) elements.schedulingSuggestionBanner.style.display = 'none';
+                    showToast('Suggested defaults applied — review and adjust as needed.', 'success');
+                });
+            }
+            if (elements.btnDismissSchedulingDefaults) {
+                elements.btnDismissSchedulingDefaults.addEventListener('click', () => {
+                    if (elements.schedulingSuggestionBanner) elements.schedulingSuggestionBanner.style.display = 'none';
                 });
             }
 
@@ -366,6 +387,30 @@ window.CrmClassroomModal = (function () {
                 });
             }
 
+            // --- Suggestive pre-input: course selection auto-fills scheduling fields ---
+            if (elements.inputClassroomCourseId) {
+                elements.inputClassroomCourseId.addEventListener('change', () => {
+                    if (window.CrmClassrooms && typeof window.CrmClassrooms.applyCourseDefaults === 'function') {
+                        window.CrmClassrooms.applyCourseDefaults(elements);
+                    }
+                });
+            }
+
+            // --- Suggestive pre-input: seed fields auto-sync to meeting fields ---
+            const seedSyncFields = [
+                elements.inputClassroomSeedWeekdays,
+                elements.inputClassroomSeedStartTime,
+                elements.inputClassroomSessionMinutes
+            ];
+            seedSyncFields.forEach((field) => {
+                if (field) {
+                    field.addEventListener('change', () => {
+                        if (window.CrmClassrooms && typeof window.CrmClassrooms.syncMeetingFieldsFromSeed === 'function') {
+                            window.CrmClassrooms.syncMeetingFieldsFromSeed(elements);
+                        }
+                    });
+                }
+            });
             if (elements.attendanceSchedulePrompt) {
                 elements.attendanceSchedulePrompt.addEventListener('click', (evt) => {
                     const btn = evt.target instanceof HTMLElement ? evt.target.closest('[data-action="edit-classroom-schedule"]') : null;

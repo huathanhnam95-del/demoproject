@@ -1052,7 +1052,7 @@
               <button type="button" class="practice-skill-btn" data-practice-skill="speaking"
                 aria-pressed="false">Speaking</button>
               <button type="button" class="practice-skill-btn is-active" data-practice-skill="listening"
-                aria-pressed="true">Listening</button>
+                aria-pressed="true">English Practice</button>
               <button type="button" class="practice-skill-btn" data-practice-skill="reading"
                 aria-pressed="false">Reading</button>
               <button type="button" class="practice-skill-btn" data-practice-skill="writing"
@@ -1061,8 +1061,8 @@
             <div class="tutorial-grid">
               <!-- 1. Type Mode Card -->
               <div id="mode-btn-type" class="modern-card transition-card mode-switch-btn"
-                data-practice-skill="listening"
-                onclick="window.switchToMode('type')" tabindex="0" role="button" aria-label="Type Practice mode">
+                data-practice-skill="listening" onclick="window.switchToMode('type')" tabindex="0" role="button"
+                aria-label="Type Practice mode">
                 <span class="badge new">Popular</span>
                 <div class="card-visual visual-type">
                   <div class="anim-container">
@@ -1099,9 +1099,8 @@
 
               <!-- 2. Collo-dictate Mode Card -->
               <div id="mode-btn-collo-dictate" class="modern-card transition-card mode-switch-btn"
-                data-practice-skill="listening"
-                onclick="window.switchToMode('collo-dictate')" tabindex="0" role="button"
-                aria-label="Collo-dictate mode (Collocation dictation)">
+                data-practice-skill="listening" onclick="window.switchToMode('collo-dictate')" tabindex="0"
+                role="button" aria-label="Collo-dictate mode (Collocation dictation)">
                 <span class="badge new">New</span>
                 <div class="card-visual visual-collo">
                   <div class="anim-container">
@@ -1135,8 +1134,8 @@
 
               <!-- 3. Speak Mode Card -->
               <div id="mode-btn-speak" class="modern-card transition-card mode-switch-btn"
-                data-practice-skill="speaking"
-                onclick="window.switchToMode('speak')" tabindex="0" role="button" aria-label="Speak Practice mode">
+                data-practice-skill="speaking" onclick="window.switchToMode('speak')" tabindex="0" role="button"
+                aria-label="Speak Practice mode">
                 <div class="card-visual visual-speak">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
@@ -1169,8 +1168,7 @@
 
               <!-- 3. Fill Mode Card -->
               <div id="mode-btn-extended" class="modern-card transition-card mode-switch-btn"
-                data-practice-skill="listening"
-                onclick="window.switchToMode('extended')" tabindex="0" role="button"
+                data-practice-skill="listening" onclick="window.switchToMode('extended')" tabindex="0" role="button"
                 aria-label="Fill in the blanks mode">
                 <div class="card-visual visual-fill">
                   <div class="anim-container">
@@ -1200,10 +1198,8 @@
               </div>
 
               <!-- 4. Reading Fill Mode Card -->
-              <div id="mode-btn-rfib" class="modern-card transition-card mode-switch-btn"
-                data-practice-skill="reading"
-                onclick="window.switchToMode('rfib')" tabindex="0" role="button"
-                aria-label="Fill in the blanks mode">
+              <div id="mode-btn-rfib" class="modern-card transition-card mode-switch-btn" data-practice-skill="reading"
+                onclick="window.switchToMode('rfib')" tabindex="0" role="button" aria-label="Fill in the blanks mode">
                 <span class="badge">New</span>
                 <div class="card-visual visual-fill">
                   <div class="anim-container">
@@ -1227,8 +1223,8 @@
 
               <!-- 5. Watch Mode Card -->
               <div id="mode-btn-watch" class="modern-card transition-card mode-switch-btn"
-                data-practice-skill="listening"
-                onclick="window.switchToMode('watch')" tabindex="0" role="button" aria-label="Watch Video mode">
+                data-practice-skill="listening" onclick="window.switchToMode('watch')" tabindex="0" role="button"
+                aria-label="Watch Video mode" style="display: none;">
                 <div class="card-visual visual-watch">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
@@ -1259,8 +1255,8 @@
 
               <!-- 6. Note Mode Card -->
               <div id="mode-btn-notes" class="modern-card transition-card mode-switch-btn"
-                data-practice-skill="listening"
-                onclick="window.switchToMode('notes')" tabindex="0" role="button" aria-label="Note taking mode">
+                data-practice-skill="listening" onclick="window.switchToMode('notes')" tabindex="0" role="button"
+                aria-label="Note taking mode">
                 <span class="badge">New</span>
                 <div class="card-visual visual-notes">
                   <div class="anim-container">
@@ -1295,8 +1291,8 @@
 
               <!-- 6. Pronounce Mode Card -->
               <div id="mode-btn-pronounce" class="modern-card transition-card mode-switch-btn"
-                data-practice-skill="speaking"
-                onclick="window.switchToMode('pronounce')" tabindex="0" role="button" aria-label="Pronunciation mode">
+                data-practice-skill="speaking" onclick="window.switchToMode('pronounce')" tabindex="0" role="button"
+                aria-label="Pronunciation mode">
                 <span class="badge experimental">Experimental</span>
                 <div class="card-visual visual-pronounce">
                   <div class="anim-container">
@@ -1330,18 +1326,24 @@
 
               <!-- 8. Read Aloud Mode Card -->
               <div id="mode-btn-read-aloud" class="modern-card transition-card mode-switch-btn"
-                data-practice-skill="speaking"
-                onclick="window.switchToMode('read-aloud')" tabindex="0" role="button" aria-label="Read Aloud mode">
+                data-practice-skill="speaking" onclick="window.switchToMode('read-aloud')" tabindex="0" role="button"
+                aria-label="Read Aloud mode">
                 <span class="badge new">New</span>
                 <div class="card-visual visual-read-aloud">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
-                      <rect x="16" y="12" width="32" height="40" rx="4" stroke="currentColor" stroke-width="2" fill="var(--visual-bg)" />
-                      <line x1="24" y1="22" x2="40" y2="22" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                      <line x1="24" y1="30" x2="40" y2="30" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                      <line x1="24" y1="38" x2="32" y2="38" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                      <path d="M52 28a8 8 0 0 1 0 16" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" />
-                      <path d="M58 24a14 14 0 0 1 0 24" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" opacity="0.5" />
+                      <rect x="16" y="12" width="32" height="40" rx="4" stroke="currentColor" stroke-width="2"
+                        fill="var(--visual-bg)" />
+                      <line x1="24" y1="22" x2="40" y2="22" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" />
+                      <line x1="24" y1="30" x2="40" y2="30" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" />
+                      <line x1="24" y1="38" x2="32" y2="38" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" />
+                      <path d="M52 28a8 8 0 0 1 0 16" stroke="var(--visual-accent)" stroke-width="2"
+                        stroke-linecap="round" />
+                      <path d="M58 24a14 14 0 0 1 0 24" stroke="var(--visual-accent)" stroke-width="2"
+                        stroke-linecap="round" opacity="0.5" />
                     </svg>
                   </div>
                 </div>
@@ -1349,14 +1351,13 @@
                   <h3>Read Aloud</h3>
                   <p>Read text aloud to check your accuracy.</p>
                   <button class="card-cta">Practice Now</button>
-                <a class="whats-this-link"
+                  <a class="whats-this-link"
                     onclick="event.stopPropagation(); window.startTutorial('read-aloud', true);">What's this?</a>
                 </div>
               </div>
 
               <!-- Writing Skill Empty State -->
-              <div id="practice-writing-empty" class="practice-skill-empty-state" data-practice-skill="writing"
-                hidden>
+              <div id="practice-writing-empty" class="practice-skill-empty-state" data-practice-skill="writing" hidden>
                 <h3>Writing is coming later</h3>
                 <p>We will add Writing modes in a future update.</p>
               </div>
@@ -1507,8 +1508,8 @@
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
                       <circle cx="18" cy="24" r="8" stroke="currentColor" stroke-width="2.5" />
                       <path d="M26 24H50" stroke="var(--visual-accent)" stroke-width="2.5" stroke-linecap="round" />
-                      <path d="M46 18L54 24L46 30" stroke="var(--visual-accent)" stroke-width="2.5" stroke-linecap="round"
-                        stroke-linejoin="round" />
+                      <path d="M46 18L54 24L46 30" stroke="var(--visual-accent)" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round" />
                       <rect x="14" y="42" width="40" height="10" rx="5" stroke="currentColor" stroke-width="2.5" />
                       <rect x="18" y="45" width="10" height="4" rx="2" fill="currentColor" opacity="0.45" />
                       <rect x="32" y="45" width="18" height="4" rx="2" fill="currentColor" opacity="0.75" />
@@ -1849,20 +1850,22 @@
       <div id="mode-collo-dictate" class="mode-panel" style="display: none;">
         <div class="collo-dictate-header">
           <h2>Collo-dictate</h2>
-          <p class="collo-dictate-sub">Listen and type common word pairs & phrases — sharpen your ear for natural English combinations.</p>
+          <p class="collo-dictate-sub">Listen and type common word pairs & phrases — sharpen your ear for natural
+            English combinations.</p>
         </div>
 
         <div class="collo-search-container" role="search" aria-label="Search collocations">
           <div class="collo-search-wrapper">
             <span class="collo-search-icon" aria-hidden="true">🔍</span>
             <input type="text" id="collo-search-input" class="collo-search-input"
-              placeholder="Search collocations (e.g. play, make, take...)"
-              aria-label="Search collocations by keyword"
+              placeholder="Search collocations (e.g. play, make, take...)" aria-label="Search collocations by keyword"
               autocomplete="off" autocorrect="off" spellcheck="false" />
             <span id="collo-search-count" class="collo-search-count" aria-live="polite"></span>
-            <button type="button" id="collo-search-clear" class="collo-search-clear" aria-label="Clear search" title="Clear search (Esc)">×</button>
+            <button type="button" id="collo-search-clear" class="collo-search-clear" aria-label="Clear search"
+              title="Clear search (Esc)">×</button>
           </div>
-          <p class="collo-search-hint">Matches words starting with your search term across 2,466 Pearson PTE collocations</p>
+          <p class="collo-search-hint">Matches words starting with your search term across 2,466 Pearson PTE
+            collocations</p>
         </div>
         <div id="collo-search-no-results" class="collo-search-no-results" style="display: none;">
           <span class="collo-search-no-results-icon" aria-hidden="true">📭</span>
@@ -2114,7 +2117,8 @@
             </button>
           </div>
           <div id="recommendation-controls-extended" class="recommendation-controls" style="display: none;">
-            <button id="recommended-btn-extended" class="recommended-jump-btn" type="button" disabled>Recommended</button>
+            <button id="recommended-btn-extended" class="recommended-jump-btn" type="button"
+              disabled>Recommended</button>
             <span id="recommendation-summary-extended" class="recommendation-summary is-hidden"></span>
           </div>
           <!-- Adaptive vs Manual Toggle -->
@@ -2261,7 +2265,7 @@
             </div>
             <div id="check-result-phrases" class="check-result-box" style="display: none;"></div>
           </div>
-      </div>
+        </div>
       </div>
 
       <div id="mode-rfib" class="mode-panel" style="display: none;">
@@ -2625,26 +2629,48 @@
       <!-- Read Aloud Mode Panel -->
       <div id="mode-read-aloud" class="mode-panel" style="display: none;">
         <!-- Filter/Config Bar -->
-        <div class="question-selector" style="border-bottom: none; padding: 10px 20px 0; align-items: center; flex-direction: column; gap: 12px;">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap: 12px; width:100%; max-width:900px; flex-wrap:wrap;">
-            <select id="ra-question-select" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-light); font-family: inherit; font-size: 0.95rem; background: white; flex: 1 1 320px; min-width: 240px;">
+        <div class="question-selector"
+          style="border-bottom: none; padding: 10px 20px 0; align-items: center; flex-direction: column; gap: 12px;">
+          <div
+            style="display:flex; align-items:center; justify-content:space-between; gap: 12px; width:100%; max-width:900px; flex-wrap:wrap;">
+            <select id="ra-question-select"
+              style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-light); font-family: inherit; font-size: 0.95rem; background: white; flex: 1 1 320px; min-width: 240px;">
               <option value="random">🔀 Random Question</option>
             </select>
-            <button id="ra-practice-target-toggle" type="button" aria-expanded="false" aria-controls="ra-practice-target-drawer" style="min-height: 40px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: #fff; color: #1f2937; cursor: pointer; font-size: 0.92rem; font-weight: 600;">Practice target</button>
+            <button id="ra-practice-target-toggle" type="button" aria-expanded="false"
+              aria-controls="ra-practice-target-drawer"
+              style="min-height: 40px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: #fff; color: #1f2937; cursor: pointer; font-size: 0.92rem; font-weight: 600;">Practice
+              target</button>
           </div>
-          <div id="ra-practice-target-drawer" hidden style="width:100%; max-width:900px; display:flex; flex-direction:column; gap: 10px; padding: 12px 14px; border: 1px solid var(--border-light, #e5e7eb); border-radius: 14px; background: rgba(255,255,255,0.9); box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);">
+          <div id="ra-practice-target-drawer" hidden
+            style="width:100%; max-width:900px; display:flex; flex-direction:column; gap: 10px; padding: 12px 14px; border: 1px solid var(--border-light, #e5e7eb); border-radius: 14px; background: rgba(255,255,255,0.9); box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);">
             <div class="read-aloud-filters" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-              <button class="ra-filter-pill active" id="ra-filter-all" type="button" style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--brand-primary, #2563eb); background: rgba(37, 99, 235, 0.1); color: var(--brand-primary, #2563eb); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">All</button>
-              <button class="ra-filter-pill" id="ra-filter-available" type="button" style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">🎵 Sample Audio: Available</button>
-              <button class="ra-filter-pill" id="ra-filter-unavailable" type="button" style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">No Audio</button>
+              <button class="ra-filter-pill active" id="ra-filter-all" type="button"
+                style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--brand-primary, #2563eb); background: rgba(37, 99, 235, 0.1); color: var(--brand-primary, #2563eb); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">All</button>
+              <button class="ra-filter-pill" id="ra-filter-available" type="button"
+                style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">🎵
+                Sample Audio: Available</button>
+              <button class="ra-filter-pill" id="ra-filter-unavailable" type="button"
+                style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">No
+                Audio</button>
             </div>
             <div class="read-aloud-filters" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-              <button class="ra-filter-pill active" id="ra-filter-feature-all" type="button" aria-pressed="true" style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--brand-primary, #2563eb); background: rgba(37, 99, 235, 0.1); color: var(--brand-primary, #2563eb); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">All prompts</button>
-              <button class="ra-filter-pill" id="ra-filter-any-connected" type="button" aria-pressed="false" style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">Any connected speech</button>
-              <button class="ra-filter-pill" id="ra-filter-linking" type="button" aria-pressed="false" style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">Linking</button>
-              <button class="ra-filter-pill" id="ra-filter-reduced-words" type="button" aria-pressed="false" style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">Reduced words</button>
-              <button class="ra-filter-pill" id="ra-filter-sound-changes" type="button" aria-pressed="false" style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">Sound changes</button>
-              <div id="ra-filter-feature-status" style="font-size: 0.82rem; color: var(--text-muted, #6b7280); padding: 4px 2px;"></div>
+              <button class="ra-filter-pill active" id="ra-filter-feature-all" type="button" aria-pressed="true"
+                style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--brand-primary, #2563eb); background: rgba(37, 99, 235, 0.1); color: var(--brand-primary, #2563eb); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">All
+                prompts</button>
+              <button class="ra-filter-pill" id="ra-filter-any-connected" type="button" aria-pressed="false"
+                style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">Any
+                connected speech</button>
+              <button class="ra-filter-pill" id="ra-filter-linking" type="button" aria-pressed="false"
+                style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">Linking</button>
+              <button class="ra-filter-pill" id="ra-filter-reduced-words" type="button" aria-pressed="false"
+                style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">Reduced
+                words</button>
+              <button class="ra-filter-pill" id="ra-filter-sound-changes" type="button" aria-pressed="false"
+                style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">Sound
+                changes</button>
+              <div id="ra-filter-feature-status"
+                style="font-size: 0.82rem; color: var(--text-muted, #6b7280); padding: 4px 2px;"></div>
             </div>
           </div>
         </div>
@@ -2654,147 +2680,220 @@
           <!-- Timers -->
           <div class="ra-status-bar" style="display: flex; gap: 20px; justify-content: center; margin-bottom: 20px;">
             <div class="ra-timer-box" id="ra-prep-timer-box" style="text-align: center;">
-              <div class="ra-timer-label" style="font-size: 0.85rem; color: var(--text-muted); font-weight: bold; text-transform: uppercase;">Prep Time</div>
-              <div class="ra-timer-value" id="ra-prep-time" style="font-size: 2rem; font-weight: bold; color: var(--brand-primary);">00:40</div>
+              <div class="ra-timer-label"
+                style="font-size: 0.85rem; color: var(--text-muted); font-weight: bold; text-transform: uppercase;">Prep
+                Time</div>
+              <div class="ra-timer-value" id="ra-prep-time"
+                style="font-size: 2rem; font-weight: bold; color: var(--brand-primary);">00:40</div>
             </div>
             <div class="ra-timer-box" id="ra-record-timer-box" style="text-align: center; opacity: 0.4;">
-              <div class="ra-timer-label" style="font-size: 0.85rem; color: var(--text-muted); font-weight: bold; text-transform: uppercase;">Record Time</div>
-              <div class="ra-timer-value" id="ra-record-time" style="font-size: 2rem; font-weight: bold; color: var(--danger, #ef4444);">00:40</div>
+              <div class="ra-timer-label"
+                style="font-size: 0.85rem; color: var(--text-muted); font-weight: bold; text-transform: uppercase;">
+                Record Time</div>
+              <div class="ra-timer-value" id="ra-record-time"
+                style="font-size: 2rem; font-weight: bold; color: var(--danger, #ef4444);">00:40</div>
             </div>
           </div>
 
           <!-- Prompt Area -->
-          <div id="ra-prompt-layout" style="display: flex; flex-wrap: wrap; align-items: stretch; gap: 18px; margin-bottom: 20px;">
-          <div class="ra-prompt-box" style="flex: 1 1 620px; min-width: 280px; background: var(--bg-secondary); padding: 24px; border-radius: 12px; margin-bottom: 0; font-size: 1.15rem; line-height: 1.6; text-align: left; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); min-height: 120px; display: flex; flex-direction: column; gap: 14px; position: relative;">
-            <div id="ra-prompt-card-header" style="display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
-              <div style="font-size: 0.92rem; color: var(--text-muted); max-width: 460px;">Use chunking for pause groups and connected speech for linking, reduced words, and sound changes. Both guides are optional and can be used together.</div>
-              <div id="ra-prompt-guides-group" role="group" aria-label="Prompt guides" style="display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 6px; padding: 4px; border-radius: 20px; background: rgba(37, 99, 235, 0.08); max-width: 100%;">
-                <button id="ra-toggle-chunking-btn" type="button" aria-pressed="false" style="min-height: 40px; padding: 8px 16px; border: none; border-radius: 999px; background: transparent; color: #1f2937; font-weight: 600; cursor: pointer;">Chunking</button>
-                <div id="ra-connected-speech-group" role="radiogroup" aria-label="Connected speech" style="display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 6px; max-width: 100%;">
-                  <button id="ra-toggle-connected-off-btn" type="button" role="radio" aria-pressed="false" aria-checked="true" style="min-height: 40px; padding: 8px 16px; border: none; border-radius: 999px; background: transparent; color: #1f2937; font-weight: 600; cursor: pointer;">Off</button>
-                  <button id="ra-toggle-linking-btn" type="button" role="radio" aria-pressed="false" aria-checked="false" style="min-height: 40px; padding: 8px 16px; border: none; border-radius: 999px; background: transparent; color: #1f2937; font-weight: 600; cursor: pointer;">Linking</button>
-                  <button id="ra-toggle-reduced-words-btn" type="button" role="radio" aria-pressed="false" aria-checked="false" style="min-height: 40px; padding: 8px 16px; border: none; border-radius: 999px; background: transparent; color: #1f2937; font-weight: 600; cursor: pointer;">Reduced words</button>
-                  <button id="ra-toggle-sound-changes-btn" type="button" role="radio" aria-pressed="false" aria-checked="false" style="min-height: 40px; padding: 8px 16px; border: none; border-radius: 999px; background: transparent; color: #1f2937; font-weight: 600; cursor: pointer;">Sound changes</button>
+          <div id="ra-prompt-layout"
+            style="display: flex; flex-wrap: wrap; align-items: stretch; gap: 18px; margin-bottom: 20px;">
+            <div class="ra-prompt-box"
+              style="flex: 1 1 620px; min-width: 280px; background: var(--bg-secondary); padding: 24px; border-radius: 12px; margin-bottom: 0; font-size: 1.15rem; line-height: 1.6; text-align: left; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); min-height: 120px; display: flex; flex-direction: column; gap: 14px; position: relative;">
+              <div id="ra-prompt-card-header"
+                style="display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
+                <div style="font-size: 0.92rem; color: var(--text-muted); max-width: 460px;">Use chunking for pause
+                  groups and connected speech for linking, reduced words, and sound changes. Both guides are optional
+                  and can be used together.</div>
+                <div id="ra-prompt-guides-group" role="group" aria-label="Prompt guides"
+                  style="display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 6px; padding: 4px; border-radius: 20px; background: rgba(37, 99, 235, 0.08); max-width: 100%;">
+                  <button id="ra-toggle-chunking-btn" type="button" aria-pressed="false"
+                    style="min-height: 40px; padding: 8px 16px; border: none; border-radius: 999px; background: transparent; color: #1f2937; font-weight: 600; cursor: pointer;">Chunking</button>
+                  <div id="ra-connected-speech-group" role="radiogroup" aria-label="Connected speech"
+                    style="display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 6px; max-width: 100%;">
+                    <button id="ra-toggle-connected-off-btn" type="button" role="radio" aria-pressed="false"
+                      aria-checked="true"
+                      style="min-height: 40px; padding: 8px 16px; border: none; border-radius: 999px; background: transparent; color: #1f2937; font-weight: 600; cursor: pointer;">Off</button>
+                    <button id="ra-toggle-linking-btn" type="button" role="radio" aria-pressed="false"
+                      aria-checked="false"
+                      style="min-height: 40px; padding: 8px 16px; border: none; border-radius: 999px; background: transparent; color: #1f2937; font-weight: 600; cursor: pointer;">Linking</button>
+                    <button id="ra-toggle-reduced-words-btn" type="button" role="radio" aria-pressed="false"
+                      aria-checked="false"
+                      style="min-height: 40px; padding: 8px 16px; border: none; border-radius: 999px; background: transparent; color: #1f2937; font-weight: 600; cursor: pointer;">Reduced
+                      words</button>
+                    <button id="ra-toggle-sound-changes-btn" type="button" role="radio" aria-pressed="false"
+                      aria-checked="false"
+                      style="min-height: 40px; padding: 8px 16px; border: none; border-radius: 999px; background: transparent; color: #1f2937; font-weight: 600; cursor: pointer;">Sound
+                      changes</button>
+                  </div>
                 </div>
               </div>
+              <div id="ra-linking-status" aria-live="polite" aria-atomic="true"
+                style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;">
+              </div>
+              <div id="ra-prompt-stage"
+                style="position: relative; min-height: 120px; padding-top: 8px; padding-bottom: 24px;">
+                <p id="ra-prompt-plain"
+                  style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;">
+                  Loading text...</p>
+                <p id="ra-text-prompt" class="ra-text" style="margin: 0; position: relative; z-index: 1;">Loading
+                  text...</p>
+                <svg id="ra-linking-overlay" aria-hidden="true"
+                  style="display: none; pointer-events: none; position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible;"></svg>
+                <div id="ra-connected-speech-badges" aria-hidden="true"
+                  style="display: none; pointer-events: none; position: absolute; inset: 0; overflow: visible;"></div>
+              </div>
+              <div id="ra-linking-fallback-list" style="display: none; flex-wrap: wrap; gap: 8px; align-items: center;">
+              </div>
+              <div id="ra-linking-a11y-summary" aria-live="polite" aria-atomic="true"
+                style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;">
+              </div>
             </div>
-            <div id="ra-linking-status" aria-live="polite" aria-atomic="true" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;"></div>
-            <div id="ra-prompt-stage" style="position: relative; min-height: 120px; padding-top: 8px; padding-bottom: 24px;">
-              <p id="ra-prompt-plain" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;">Loading text...</p>
-              <p id="ra-text-prompt" class="ra-text" style="margin: 0; position: relative; z-index: 1;">Loading text...</p>
-              <svg id="ra-linking-overlay" aria-hidden="true" style="display: none; pointer-events: none; position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible;"></svg>
-              <div id="ra-connected-speech-badges" aria-hidden="true" style="display: none; pointer-events: none; position: absolute; inset: 0; overflow: visible;"></div>
-            </div>
-            <div id="ra-linking-fallback-list" style="display: none; flex-wrap: wrap; gap: 8px; align-items: center;"></div>
-            <div id="ra-linking-a11y-summary" aria-live="polite" aria-atomic="true" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;"></div>
-          </div>
 
           </div>
 
           <!-- Audio Player (ElevenLabs) -->
-          <div id="ra-audio-player" class="ra-audio-player" style="display: none; margin-bottom: 20px; padding: 15px; background: var(--bg-secondary); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+          <div id="ra-audio-player" class="ra-audio-player"
+            style="display: none; margin-bottom: 20px; padding: 15px; background: var(--bg-secondary); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
             <div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;">
-              <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">🔊 Listen</span>
-              <div class="ra-toggle-group" style="display: flex; border-radius: 8px; overflow: hidden; border: 2px solid #e5e7eb; background: #e5e7eb;">
-                <button id="ra-voice-male" class="ra-toggle-btn ra-toggle-active" type="button" style="padding: 6px 14px; font-size: 0.85rem; border: none; cursor: pointer; background: #3b82f6; color: #ffffff; font-weight: 600; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 6px;">♂ Male</button>
-                <button id="ra-voice-female" class="ra-toggle-btn" type="button" style="padding: 6px 14px; font-size: 0.85rem; border: none; cursor: pointer; background: transparent; color: #4b5563; font-weight: 500; transition: all 0.2s; border-radius: 6px;">♀ Female</button>
+              <span
+                style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">🔊
+                Listen</span>
+              <div class="ra-toggle-group"
+                style="display: flex; border-radius: 8px; overflow: hidden; border: 2px solid #e5e7eb; background: #e5e7eb;">
+                <button id="ra-voice-male" class="ra-toggle-btn ra-toggle-active" type="button"
+                  style="padding: 6px 14px; font-size: 0.85rem; border: none; cursor: pointer; background: #3b82f6; color: #ffffff; font-weight: 600; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 6px;">♂
+                  Male</button>
+                <button id="ra-voice-female" class="ra-toggle-btn" type="button"
+                  style="padding: 6px 14px; font-size: 0.85rem; border: none; cursor: pointer; background: transparent; color: #4b5563; font-weight: 500; transition: all 0.2s; border-radius: 6px;">♀
+                  Female</button>
               </div>
-              <div class="ra-toggle-group" style="display: flex; border-radius: 8px; overflow: hidden; border: 2px solid #e5e7eb; background: #e5e7eb;">
-                <button id="ra-speed-100" class="ra-toggle-btn ra-toggle-active" type="button" style="padding: 6px 14px; font-size: 0.85rem; border: none; cursor: pointer; background: #3b82f6; color: #ffffff; font-weight: 600; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 6px;">Normal</button>
-                <button id="ra-speed-80" class="ra-toggle-btn" type="button" style="padding: 6px 14px; font-size: 0.85rem; border: none; cursor: pointer; background: transparent; color: #4b5563; font-weight: 500; transition: all 0.2s; border-radius: 6px;">Slow</button>
+              <div class="ra-toggle-group"
+                style="display: flex; border-radius: 8px; overflow: hidden; border: 2px solid #e5e7eb; background: #e5e7eb;">
+                <button id="ra-speed-100" class="ra-toggle-btn ra-toggle-active" type="button"
+                  style="padding: 6px 14px; font-size: 0.85rem; border: none; cursor: pointer; background: #3b82f6; color: #ffffff; font-weight: 600; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 6px;">Normal</button>
+                <button id="ra-speed-80" class="ra-toggle-btn" type="button"
+                  style="padding: 6px 14px; font-size: 0.85rem; border: none; cursor: pointer; background: transparent; color: #4b5563; font-weight: 500; transition: all 0.2s; border-radius: 6px;">Slow</button>
               </div>
-              <button id="ra-play-audio-btn" class="modern-btn modern-btn--play" type="button" style="min-width: 80px; padding: 6px 16px; font-size: 0.9rem;">▶ Play</button>
+              <button id="ra-play-audio-btn" class="modern-btn modern-btn--play" type="button"
+                style="min-width: 80px; padding: 6px 16px; font-size: 0.9rem;">▶ Play</button>
             </div>
             <audio id="ra-elevenlabs-audio" preload="auto"></audio>
           </div>
 
           <!-- Results -->
-          <div id="ra-result-box" class="ra-result" style="display: none; margin-bottom: 20px; text-align: center; padding: 20px; border: 2px solid var(--border-light); border-radius: 12px; background: rgba(16, 185, 129, 0.05);">
+          <div id="ra-result-box" class="ra-result"
+            style="display: none; margin-bottom: 20px; text-align: center; padding: 20px; border: 2px solid var(--border-light); border-radius: 12px; background: rgba(16, 185, 129, 0.05);">
             <div class="ra-accuracy-score" style="font-size: 2.5rem; font-weight: 800; color: var(--success, #10b981);">
               <span id="ra-accuracy-value">--</span>%
             </div>
-            <div class="ra-accuracy-label" style="text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 15px;">Accuracy</div>
-            <div id="ra-transcript-feedback" class="ra-feedback-text" style="font-size: 1.1rem; line-height: 1.5; position: relative;">
-               <!-- Overlay SVG will be injected here during Results rendering if enabled -->
+            <div class="ra-accuracy-label"
+              style="text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 15px;">
+              Accuracy</div>
+            <div id="ra-transcript-feedback" class="ra-feedback-text"
+              style="font-size: 1.1rem; line-height: 1.5; position: relative;">
+              <!-- Overlay SVG will be injected here during Results rendering if enabled -->
             </div>
           </div>
 
-          <div id="ra-connected-speech-box" class="ra-result" style="display: none; width: 100%; margin-bottom: 20px; text-align: left; padding: 18px 20px; border: 1px solid #d1d5db; border-radius: 12px; background: linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(37, 99, 235, 0.05) 100%); box-shadow: 0 4px 10px rgba(15, 23, 42, 0.05);">
-            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom: 16px; flex-wrap: wrap;">
-              <div>
-                <div id="ra-connected-speech-label" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);">Speech Coach</div>
-                <div id="ra-connected-speech-summary" style="font-size: 0.98rem; color: #374151; margin-top: 4px; font-weight: 600;">Feedback Details</div>
+          <div id="ra-connected-speech-box" class="ra-result"
+            style="display: none; width: 100%; margin-bottom: 20px; text-align: left; padding: 18px 20px; border: 1px solid #d1d5db; border-radius: 12px; background: linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(37, 99, 235, 0.05) 100%); box-shadow: 0 4px 10px rgba(15, 23, 42, 0.05);">
+            <div
+              style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom: 16px; flex-wrap: wrap;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div id="ra-connected-speech-label"
+                  style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);">
+                  Speech Coach</div>
+                <button id="ra-speech-coach-toggle" type="button" aria-expanded="true" title="Hide/show Speech Coach"
+                  style="padding: 3px 10px; border-radius: 999px; border: 1px solid #d1d5db; background: #fff; color: #4b5563; font-size: 0.72rem; font-weight: 600; cursor: pointer; white-space: nowrap;">👁
+                  Hide</button>
               </div>
-              <div id="ra-connected-speech-layers" style="display: flex; gap: 8px; background: rgba(37, 99, 235, 0.08); padding: 4px; border-radius: 20px;">
-                <button id="ra-layer-level1" class="ra-layer-btn" data-level="1" type="button" style="padding: 6px 14px; border: none; border-radius: 999px; background: transparent; color: #1f2937; font-size: 0.85rem; font-weight: 600; cursor: pointer;">Linking</button>
-                <button id="ra-layer-level2" class="ra-layer-btn" data-level="2" type="button" style="padding: 6px 14px; border: none; border-radius: 999px; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); color: #1d4ed8; font-size: 0.85rem; font-weight: 600; cursor: pointer;">Linking + Reduced Words</button>
-              </div>
+              <div id="ra-connected-speech-summary"
+                style="font-size: 0.98rem; color: #374151; margin-top: 4px; font-weight: 600;">Feedback Details</div>
             </div>
-            <div id="ra-connected-speech-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
-               <!-- JS will inject 2 columns here -->
+            <div id="ra-connected-speech-layers"
+              style="display: flex; gap: 8px; background: rgba(37, 99, 235, 0.08); padding: 4px; border-radius: 20px;">
+              <button id="ra-layer-level1" class="ra-layer-btn" data-level="1" type="button"
+                style="padding: 6px 14px; border: none; border-radius: 999px; background: transparent; color: #1f2937; font-size: 0.85rem; font-weight: 600; cursor: pointer;">Linking</button>
+              <button id="ra-layer-level2" class="ra-layer-btn" data-level="2" type="button"
+                style="padding: 6px 14px; border: none; border-radius: 999px; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); color: #1d4ed8; font-size: 0.85rem; font-weight: 600; cursor: pointer;">Linking
+                + Reduced Words</button>
             </div>
           </div>
+          <div id="ra-connected-speech-list"
+            style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
+            <!-- JS will inject 2 columns here -->
+          </div>
+        </div>
 
-          <!-- Status and Controls -->
-          <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
-            <div id="ra-status-message" class="ra-status-msg" style="font-weight: 500; color: var(--text-muted); min-height: 24px;">Status message</div>
-            <div id="ra-read-aloud-controls" class="unified-controls" style="margin-top: 5px; width: 100%; display: flex; justify-content: center; background: transparent; padding: 0; box-shadow: none;">
-              <div class="control-toolbar" style="justify-content: center;">
-                <div class="function-group">
-                  <button id="ra-next-btn" class="modern-btn modern-btn--back" type="button" title="Next prompt">Next prompt</button>
-                  <button id="ra-record-btn" class="modern-btn modern-btn--record" type="button" disabled>Start Recording</button>
-                  <button id="ra-stop-btn" class="modern-btn modern-btn--record recording" type="button" style="display: none;">Stop Recording</button>
-                  <button id="ra-play-recording-btn" class="modern-btn modern-btn--play" type="button" style="display: none;">Play your recording</button>
-                  <button id="ra-check-btn" class="modern-btn modern-btn--check" type="button" style="display: none;">Check</button>
-                  <button id="ra-retry-btn" class="modern-btn modern-btn--retry" type="button" style="display: none;">Retry</button>
-                </div>
+        <!-- Status and Controls -->
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
+          <div id="ra-status-message" class="ra-status-msg"
+            style="font-weight: 500; color: var(--text-muted); min-height: 24px;">Status message</div>
+          <div id="ra-read-aloud-controls" class="unified-controls"
+            style="margin-top: 5px; width: 100%; display: flex; justify-content: center; background: transparent; padding: 0; box-shadow: none;">
+            <div class="control-toolbar" style="justify-content: center;">
+              <div class="function-group">
+                <button id="ra-next-btn" class="modern-btn modern-btn--back" type="button" title="Next prompt">Next
+                  prompt</button>
+                <button id="ra-record-btn" class="modern-btn modern-btn--record" type="button" disabled>Start
+                  Recording</button>
+                <button id="ra-stop-btn" class="modern-btn modern-btn--record recording" type="button"
+                  style="display: none;">Stop Recording</button>
+                <button id="ra-play-recording-btn" class="modern-btn modern-btn--play" type="button"
+                  style="display: none;">Play your recording</button>
+                <button id="ra-check-btn" class="modern-btn modern-btn--check" type="button"
+                  style="display: none;">Check</button>
+                <button id="ra-retry-btn" class="modern-btn modern-btn--retry" type="button"
+                  style="display: none;">Retry</button>
               </div>
             </div>
-            <audio id="ra-user-recording-audio" preload="metadata"></audio>
           </div>
+          <audio id="ra-user-recording-audio" preload="metadata"></audio>
         </div>
       </div>
+  </div>
 
-    </main>
+  </main>
 
-    <!-- Watch Mode Question Panel (sibling of white card, NOT inside it) -->
-    <div id="watch-question-panel" class="watch-question-panel" style="display: none;">
-      <div class="watch-question-panel-content">
-        <div class="watch-question-header">
-          <span id="watch-question-number">Question 1</span>
-          <button id="watch-skip-question" class="watch-skip-btn" style="display: none;">Skip</button>
-        </div>
+  <!-- Watch Mode Question Panel (sibling of white card, NOT inside it) -->
+  <div id="watch-question-panel" class="watch-question-panel" style="display: none;">
+    <div class="watch-question-panel-content">
+      <div class="watch-question-header">
+        <span id="watch-question-number">Question 1</span>
+        <button id="watch-skip-question" class="watch-skip-btn" style="display: none;">Skip</button>
+      </div>
 
-        <div class="watch-question-content">
-          <p id="watch-question-text">Question text will appear here</p>
-          <button id="watch-play-question-audio" class="watch-audio-btn" style="display: none;">
-            🔊 Listen
-          </button>
-        </div>
+      <div class="watch-question-content">
+        <p id="watch-question-text">Question text will appear here</p>
+        <button id="watch-play-question-audio" class="watch-audio-btn" style="display: none;">
+          🔊 Listen
+        </button>
+      </div>
 
-        <!-- Multiple Choice Options -->
-        <div id="watch-mc-options" class="watch-mc-options" style="display: none;">
-          <!-- Options will be populated dynamically -->
-        </div>
+      <!-- Multiple Choice Options -->
+      <div id="watch-mc-options" class="watch-mc-options" style="display: none;">
+        <!-- Options will be populated dynamically -->
+      </div>
 
-        <!-- Open-ended Answer -->
-        <div id="watch-open-answer" class="watch-open-answer" style="display: none;">
-          <textarea id="watch-answer-input" rows="3" placeholder="Type your answer..."></textarea>
-        </div>
+      <!-- Open-ended Answer -->
+      <div id="watch-open-answer" class="watch-open-answer" style="display: none;">
+        <textarea id="watch-answer-input" rows="3" placeholder="Type your answer..."></textarea>
+      </div>
 
-        <div class="watch-question-actions">
-          <button id="watch-submit-answer" class="modern-btn modern-btn--check" type="button">Submit Answer</button>
-        </div>
+      <div class="watch-question-actions">
+        <button id="watch-submit-answer" class="modern-btn modern-btn--check" type="button">Submit Answer</button>
+      </div>
 
-        <!-- Feedback Area -->
-        <div id="watch-feedback" class="watch-feedback" style="display: none;">
-          <p id="watch-feedback-text"></p>
-          <button id="watch-continue-btn" class="modern-btn modern-btn--play" type="button">Continue</button>
-          <button id="watch-replay-segment-btn" class="modern-btn modern-btn--retry" type="button"
-            style="display: none;">Replay Segment</button>
-        </div>
+      <!-- Feedback Area -->
+      <div id="watch-feedback" class="watch-feedback" style="display: none;">
+        <p id="watch-feedback-text"></p>
+        <button id="watch-continue-btn" class="modern-btn modern-btn--play" type="button">Continue</button>
+        <button id="watch-replay-segment-btn" class="modern-btn modern-btn--retry" type="button"
+          style="display: none;">Replay Segment</button>
       </div>
     </div>
+  </div>
   </div> <!-- End of page-layout-wrapper -->
 
   <!-- Reading Journey (hidden route-only shell) -->

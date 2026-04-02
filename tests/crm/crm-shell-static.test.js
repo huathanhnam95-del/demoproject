@@ -9,8 +9,25 @@ function read(relativePath) {
 const html = read('public/crm-admin.html');
 const js = read('public/crm-admin.js');
 const packageJson = JSON.parse(read('package.json'));
+const CRM_ADMIN_ASSET_VERSION = '20260401-crm-admin-livefix';
 
 const panelIds = new Set(Array.from(html.matchAll(/data-panel="([^"]+)"/g), (match) => match[1]));
+const localAssetRefs = Array.from(
+    html.matchAll(/<(?:link|script)\b[^>]+(?:href|src)="([^"]+)"/g),
+    (match) => match[1]
+).filter((ref) => !ref.startsWith('http://') && !ref.startsWith('https://') && !ref.startsWith('//'));
+
+for (const ref of localAssetRefs) {
+    assert(
+        ref.includes(`?v=${CRM_ADMIN_ASSET_VERSION}`),
+        `CRM admin asset "${ref}" must include the shared cache-busting version token.`
+    );
+}
+
+assert(
+    !html.includes('js/crm/student-workspace.js'),
+    'CRM admin page must not load the legacy student workspace helper.'
+);
 
 for (const match of html.matchAll(/<button[^>]*data-main="([^"]+)"([^>]*)>/g)) {
     const main = match[1];
@@ -89,11 +106,6 @@ assert(
     html.includes('js/crm/classroom-workspace.js') &&
     html.indexOf('js/crm/classroom-workspace.js') < html.indexOf('crm-admin.js'),
     'CRM admin page must load the classroom workspace helper before crm-admin.js.'
-);
-assert(
-    html.includes('js/crm/student-workspace.js') &&
-    html.indexOf('js/crm/student-workspace.js') < html.indexOf('crm-admin.js'),
-    'CRM admin page must load the student workspace helper before crm-admin.js.'
 );
 assert(
     html.includes('js/crm/task-activity-workspace.js') &&
@@ -205,6 +217,15 @@ assert(
     'crm-admin.js must keep entrance-test link rendering and handoff messaging wired into the student workflow.'
 );
 assert(
+    js.includes('function openFreshStudentModal()') &&
+    js.includes('function closeStudentProfile()') &&
+    js.includes('openStudentProfileByCrmId') &&
+    js.includes('setStudentProfileHash(crmId)') &&
+    js.includes('/api/admin/students/by-crm-id/') &&
+    js.includes('state.studentLookup'),
+    'crm-admin.js must support crmId-backed student deep links and close back to the correct route.'
+);
+assert(
     js.includes('window.CrmEntranceTests') &&
     js.includes('entranceTestUi.applyControls'),
     'crm-admin.js must use the shared entrance-test helper for link state synchronization.'
@@ -213,6 +234,13 @@ assert(
     js.includes('function formatDateTime(') &&
     js.includes('function formatDateTimeLocalValue(ts)'),
     'crm-admin.js must define shared date formatting helpers required by extracted CRM controllers.'
+);
+assert(
+    js.includes('ID: ${crmId}') &&
+    js.includes('ID: ${freshCrmId}') &&
+    js.includes('CRM ID') &&
+    js.includes("crmId || '"),
+    'crm-admin.js and the student directory must surface the public CRM ID instead of the internal document ID.'
 );
 
 assert(
@@ -226,6 +254,15 @@ assert(
 assert(
     html.includes('id="scheduler-class-rail"'),
     'CRM admin page must expose the scheduler right rail for draggable class cards.'
+);
+assert(
+    html.includes('id="bulk-delete-warning-modal"') &&
+    html.includes('id="bulk-delete-warning-title"') &&
+    html.includes('id="bulk-delete-warning-summary"') &&
+    html.includes('id="bulk-delete-warning-list"') &&
+    html.includes('id="bulk-delete-confirm-input"') &&
+    html.includes('id="btn-confirm-bulk-delete-warning"'),
+    'CRM admin page must expose the archive warning modal required by bulk recycle-bin actions.'
 );
 assert(
     html.includes('id="course-total-hours"') &&

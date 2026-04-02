@@ -3,7 +3,10 @@ const {
     CRM_CLASSROOMS
 } = require('../../crm/collections');
 const {
-    allocateNextCrmId
+    allocateNextCrmId,
+    ensureCrmIdOnDoc,
+    isValidCrmId,
+    normalizeCrmId
 } = require('../../crm/business-id-service');
 const {
     buildStudentCreateData,
@@ -20,6 +23,99 @@ const {
 module.exports = function registerStudentRoutes(router, deps) {
     const { db, sendSuccess, sendError, requireAdminHandlers, serverTimestamp, writeAuditLog } = deps;
 
+    function buildStudentRecord(studentId, data, crmId) {
+        return mapStudentRecord({
+            id: studentId,
+            ...(data || {}),
+            crmId: crmId || data?.crmId || null
+        }, studentId);
+    }
+
+    async function hydrateStudentDoc(doc, context = {}) {
+        const studentId = String(doc?.id || '').trim();
+        if (!studentId) {
+            throw new Error('Missing studentId.');
+        }
+
+        const data = doc && typeof doc.data === 'function' ? (doc.data() || {}) : (doc || {});
+        const studentRef = doc?.ref || db.collection(CRM_STUDENTS).doc(studentId);
+        const ensure = await ensureCrmIdOnDoc(db, studentRef, data, context);
+        return buildStudentRecord(studentId, data, ensure.crmId);
+    }
+
+    async function hydrateDocsWithConcurrency(docs, context = {}, options = {}) {
+        const list = Array.isArray(docs) ? docs : [];
+        const concurrency = Math.max(1, Math.min(20, Math.floor(Number(options.concurrency) || 0) || 8));
+        const out = new Array(list.length);
+        let index = 0;
+
+        async function worker() {
+            while (index < list.length) {
+                const current = index;
+                index += 1;
+                out[current] = await hydrateStudentDoc(list[current], context);
+            }
+        }
+
+        const workerCount = Math.min(concurrency, list.length || 1);
+        await Promise.all(Array.from({ length: workerCount }, () => worker()));
+        return out;
+    }
+
+    async function findStudentDocsByNormalizedCrmId(crmId) {
+        const exactMatches = await db
+            .collection(CRM_STUDENTS)
+            .where('crmId', '==', crmId)
+            .limit(2)
+            .get();
+
+        if (exactMatches.docs.length > 1) {
+            return exactMatches.docs;
+        }
+
+        const upperCandidate = String(crmId || '').toUpperCase();
+
+        // If we already have one exact match, only do a cheap uppercase lookup to detect a legacy duplicate.
+        if (exactMatches.docs.length === 1) {
+            if (upperCandidate && upperCandidate !== crmId) {
+                const upperMatches = await db
+                    .collection(CRM_STUDENTS)
+                    .where('crmId', '==', upperCandidate)
+                    .limit(2)
+                    .get();
+
+                if (upperMatches.docs.length) {
+                    const combined = [...exactMatches.docs];
+                    upperMatches.docs.forEach((doc) => {
+                        if (!combined.some((existing) => existing.id === doc.id)) {
+                            combined.push(doc);
+                        }
+                    });
+                    return combined;
+                }
+            }
+            return exactMatches.docs;
+        }
+
+        // If there was no exact match, try an uppercase lookup before scanning the full collection.
+        if (upperCandidate && upperCandidate !== crmId) {
+            const upperMatches = await db
+                .collection(CRM_STUDENTS)
+                .where('crmId', '==', upperCandidate)
+                .limit(2)
+                .get();
+
+            if (upperMatches.docs.length) {
+                return upperMatches.docs;
+            }
+        }
+
+        // Legacy rows may still have uppercase or otherwise non-canonical crmId values.
+        // Scan only when cheaper lookups do not return any candidate documents.
+        const allStudents = await db.collection(CRM_STUDENTS).get();
+        return allStudents.docs.filter((doc) => normalizeCrmId(doc.data()?.crmId) === crmId);
+    }
+
     router.post('/students', ...requireAdminHandlers, async (req, res) => {
         try {
             const allocation = await allocateNextCrmId(db, { serverTimestamp });
@@ -33,13 +129,18 @@ module.exports = function registerStudentRoutes(router, deps) {
 
             const ref = db.collection(CRM_STUDENTS).doc();
             await ref.set(student);
+            const studentRecord = buildStudentRecord(ref.id, student, student.crmId);
             await writeAuditLog?.({
                 action: 'student.create',
                 entityType: 'student',
                 entityId: ref.id
             }, { user: req.user });
 
-            return sendSuccess(res, { studentId: ref.id }, 'Student profile created.');
+            return sendSuccess(res, {
+                studentId: ref.id,
+                crmId: studentRecord.crmId,
+                student: studentRecord
+            }, 'Student profile created.');
         } catch (error) {
             if ((error?.message || '').includes('Please fill at least 1 field')) {
                 return sendError(res, 400, 'VALIDATION_ERROR', error.message);
@@ -61,7 +162,10 @@ module.exports = function registerStudentRoutes(router, deps) {
                 .limit(limit)
                 .get();
 
-            const students = snaps.docs.map((doc) => mapStudentRecord(doc, doc.id));
+            const students = await hydrateDocsWithConcurrency(snaps.docs, {
+                user: req.user,
+                serverTimestamp
+            }, { concurrency: 8 });
             return sendSuccess(res, { students, count: students.length });
         } catch (error) {
             return sendError(res, 500, 'LIST_STUDENTS_ERROR', 'Failed to list student profiles.', error?.message || error);
@@ -80,7 +184,41 @@ module.exports = function registerStudentRoutes(router, deps) {
                 return sendError(res, 404, 'STUDENT_NOT_FOUND', 'Student profile not found.');
             }
 
-            return sendSuccess(res, { student: mapStudentRecord(snap, studentId) });
+            const student = await hydrateStudentDoc({
+                id: studentId,
+                data: () => (snap.data() || {}),
+                ref: db.collection(CRM_STUDENTS).doc(studentId)
+            }, {
+                user: req.user,
+                serverTimestamp
+            });
+
+            return sendSuccess(res, { student });
+        } catch (error) {
+            return sendError(res, 500, 'GET_STUDENT_ERROR', 'Failed to fetch student profile.', error?.message || error);
+        }
+    });
+
+    router.get('/students/by-crm-id/:crmId', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const crmId = normalizeCrmId(req.params.crmId);
+            if (!crmId || !isValidCrmId(crmId)) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'Missing or invalid crmId.');
+            }
+
+            const matches = await findStudentDocsByNormalizedCrmId(crmId);
+            if (!matches.length) {
+                return sendError(res, 404, 'STUDENT_NOT_FOUND', 'Student profile not found.');
+            }
+            if (matches.length > 1) {
+                return sendError(res, 409, 'STUDENT_ID_CONFLICT', 'Multiple student profiles share the same crmId.');
+            }
+
+            const student = await hydrateStudentDoc(matches[0], {
+                user: req.user,
+                serverTimestamp
+            });
+            return sendSuccess(res, { student });
         } catch (error) {
             return sendError(res, 500, 'GET_STUDENT_ERROR', 'Failed to fetch student profile.', error?.message || error);
         }
@@ -106,7 +244,10 @@ module.exports = function registerStudentRoutes(router, deps) {
                 .get();
 
             const classrooms = classroomsSnap.docs.map((doc) => mapClassroomRecord(doc, doc.id));
-            const student = mapStudentRecord(studentSnap, studentId);
+            const student = await hydrateStudentDoc(studentSnap, {
+                user: req.user,
+                serverTimestamp
+            });
             const matchPayload = buildClassroomMatches({
                 student,
                 classrooms,
@@ -150,7 +291,15 @@ module.exports = function registerStudentRoutes(router, deps) {
             }, { user: req.user });
 
             const updatedSnap = await ref.get();
-            return sendSuccess(res, { student: mapStudentRecord(updatedSnap, studentId) }, 'Student profile updated.');
+            const student = await hydrateStudentDoc({
+                id: studentId,
+                data: () => (updatedSnap.data() || {}),
+                ref
+            }, {
+                user: req.user,
+                serverTimestamp
+            });
+            return sendSuccess(res, { student }, 'Student profile updated.');
         } catch (error) {
             if ((error?.message || '').includes('No student fields provided')) {
                 return sendError(res, 400, 'VALIDATION_ERROR', error.message);

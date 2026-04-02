@@ -23,15 +23,19 @@ The CRM surface now covers the standardized operational workflow around leads, s
 - Entrance test flow:
   - generate links
   - collect results
-  - view results in admin UI
+  - view results in admin UI (with word-level color-coded visual diffs)
+  - produce visually polished highly-readable PDF exports
 - CRM dashboard:
-  - student profiles and progress signals
+  - student profiles and progress signals (accessible via persistent crmId deep-links)
   - teacher/admin actions (assignments, lifecycle)
   - funnel, revenue, duplicate, and audit reporting
 - Lead pipeline:
   - create leads
   - stage progression
   - lead conversion into student records
+- Class Scheduling:
+  - Google Calendar-style suggestive UX for scheduling class sessions
+  - fast click-to-create workflows with full administrative control
 - Activity management:
   - activity timeline
   - follow-up tasks and reminder states

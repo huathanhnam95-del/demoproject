@@ -1,11 +1,23 @@
 # Local Agent Notes
 
+## Response Timestamps
+
+- In every final response to the user, include both `Start time` and `End time`.
+- Apply this as a default workspace behavior for all tasks unless a higher-priority instruction overrides it.
+
 ## Browser Testing Credentials
 
 - For any browser testing plan or browser test execution that requires login, first read `C:\Cursor AI\.local\browser-test-credentials.md`.
 - Use the admin account documented there unless the user explicitly says to use a different account.
 - In plans, refer to that file path directly instead of inlining credentials.
 - Treat that file as local-only secret material. Do not copy its contents into tracked files, commits, or audit docs unless the user explicitly asks for that.
+
+## Browser Workflow
+
+- For browser checks in this workspace, start with the local Playwright-based `webapp-testing` workflow for app verification and UI flows.
+- Whenever writing a browser testing plan in this workspace, write the plan for Chrome only. Do not include test coverage for other browsers unless the user explicitly asks for them.
+- After the Playwright pass, use the Antigravity `browser-agent` workflow as a second step when you want live browser confirmation, richer artifact capture, or an interactive repro.
+- When a task needs browser automation and login, combine both steps with `C:\Cursor AI\.local\browser-test-credentials.md`.
 
 ## Council Workflow
 

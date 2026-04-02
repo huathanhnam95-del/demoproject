@@ -124,9 +124,16 @@
       s: 'coalescent_sj',
       z: 'coalescent_zj'
     };
+    const arrowMap = {
+      coalescent_dj: { arrow: 'd + y → /dʒ/', arrowShort: '/dʒ/' },
+      coalescent_tj: { arrow: 't + y → /tʃ/', arrowShort: '/tʃ/' },
+      coalescent_sj: { arrow: 's + y → /ʃ/', arrowShort: '/ʃ/' },
+      coalescent_zj: { arrow: 'z + y → /ʒ/', arrowShort: '/ʒ/' }
+    };
     const subtype = subtypeMap[leftKey];
     if (!subtype) return null;
 
+    const arrowInfo = arrowMap[subtype] || { arrow: 'sound change', arrowShort: '~' };
     const highConfidence = leftProfile.source === 'cmu' && rightProfile.source === 'cmu';
     return {
       ...boundary,
@@ -138,7 +145,9 @@
       teachingLevel: 'v3',
       legendLabel: 'Sound change',
       explanationKey: subtype,
-      markerText: 'sound change',
+      markerText: arrowInfo.arrow,
+      arrowText: arrowInfo.arrow,
+      arrowShort: arrowInfo.arrowShort,
       confidence: highConfidence ? 'high' : 'medium',
       source: highConfidence ? 'cmu' : (leftProfile.source || rightProfile.source || 'curated'),
       ruleSet: enabledRuleSet,
@@ -163,7 +172,9 @@
       teachingLevel: 'v3',
       legendLabel: 'Sound change',
       explanationKey: 'n_bilabial_assimilation',
-      markerText: 'sound change',
+      markerText: 'n → /m/',
+      arrowText: 'n → /m/',
+      arrowShort: '/m/',
       confidence: highConfidence ? 'high' : 'medium',
       source: highConfidence ? 'cmu' : (leftProfile.source || rightProfile.source || 'curated'),
       ruleSet: enabledRuleSet,

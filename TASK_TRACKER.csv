@@ -118,7 +118,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 141,2026-03-28,Generate Beg_M_80 audio for remaining RFIB database (approx 900 questions),In Progress - AI Studio key,
 126,2026-03-25,Generate thumbnails for RFIB questions with council assessment,Done,2026-03-25
 127,2026-03-26,Production push V1.6.0 - all pending changes since V1.5.15,Done,2026-03-26
-128,2026-03-26,Regenerate Read Aloud audio with ElevenLabs pause tags,In Progress,
+128,2026-03-26,Regenerate Read Aloud audio with ElevenLabs pause tags,In Progress - 230/1449 male_100 done. SSML breaks (0.3s/0.6s). Credits depleted,
 129,2026-03-26,Reassess Read Aloud chunking and create rubric,Paused - Processing stopped per user request due to API limits and unnatural rules,
 130,2026-03-26,Refactor enrich_rfib_data_test.py to Vertex REST API to bypass quotas,Done,2026-03-26
 131,2026-03-26,Assess abnormal chunking in RA.xlsx,Done,2026-03-26
@@ -141,4 +141,23 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 150,2026-03-30,Redesign Speech Coach UI - Layout and Interactive Toggles,Done,2026-03-30
 151,2026-03-30,Fix blurry PDF export - switch from JPEG to PNG rendering,Done,2026-03-30
 152,2026-03-30,Upgrade Entrance Test Results UI - transcript diff and table formatting,Done,2026-03-30
-153,2026-03-31,Fix US-UK spelling inconsistency in transcript diff matching,In Progress,
+153,2026-03-31,Fix US-UK spelling inconsistency in transcript diff matching,Done,2026-03-31
+154,2026-03-31,Overhaul Entrance Test PDF export design,Done,2026-03-31
+155,2026-03-31,Create curriculum xlsx from image data (9 semesters),Done,2026-03-31
+156,2026-03-31,Fix grammar words in vocab book review + add Date Added column,Done,2026-03-31
+157,2026-03-31,Scheduler calendar sticky header + internal scroll,Done,2026-03-31
+158,2026-03-31,Replace DOM-clone PDF export with direct jsPDF draw from data,Done,2026-04-02
+159,2026-03-31,Class scheduling suggestive pre-input defaults,Done,2026-03-31
+160,2026-03-31,Convert RA pause tags to ElevenLabs SSML break syntax,Done,2026-03-31
+161,2026-04-01,Fix student profile tab reset bug - remove delayed switchStudentTab,Done,2026-04-01
+162,2026-04-01,Execute CRM student deep-link browser test plan,Done,2026-04-01
+163,2026-04-01,Execute CRM Teacher Scheduler browser test plan,Done,2026-04-01
+164,2026-04-01,Execute CRM student deep-link livefix test plan,Done,2026-04-01
+165,2026-04-02,Execute CRM student deep-link browser test plan,Done,2026-04-02
+166,2026-04-02,Update product specs with latest features,Done,2026-04-02
+167,2026-04-02,Fix Read Aloud sound changes and linking display bugs,Done,2026-04-02
+168,2026-04-02,Change default tab to Speaking and default mode to Read Aloud,Done,2026-04-02
+169,2026-04-02,Debug and refactor Speech Coach renderConnectedSpeechResults,Done,2026-04-02
+170,2026-04-02,Change Listening Practice to English Practice and hide Watch mode,Done,2026-04-02
+171,2026-04-02,Review and update Help me choose a mode options,Done,2026-04-02
+172,2026-04-02,Prepare V1.6.3 production release,Done,2026-04-02

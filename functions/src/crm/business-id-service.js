@@ -4,10 +4,21 @@ const { CRM_COUNTERS } = require('./collections');
 
 const ID_GROUP_SIZE = 9999;
 const DEFAULT_COUNTER_DOC = 'crmId';
+const CRM_ID_PATTERN = /^[a-z]+[0-9]{4}$/i;
 
 function cleanOptionalString(value) {
     const normalized = String(value || '').trim();
     return normalized || null;
+}
+
+function normalizeCrmId(value) {
+    const normalized = cleanOptionalString(value);
+    return normalized ? normalized.toLowerCase() : null;
+}
+
+function isValidCrmId(value) {
+    const normalized = normalizeCrmId(value);
+    return !!normalized && CRM_ID_PATTERN.test(normalized);
 }
 
 function indexToPrefix(index) {
@@ -64,8 +75,16 @@ async function allocateNextCrmId(db, options = {}) {
 
 async function ensureCrmIdOnDoc(db, ref, existingData = {}, options = {}) {
     const data = existingData && typeof existingData === 'object' ? existingData : {};
-    const current = cleanOptionalString(data.crmId);
-    if (current) {
+    const rawCurrent = cleanOptionalString(data.crmId);
+    const current = normalizeCrmId(rawCurrent);
+    if (current && isValidCrmId(current)) {
+        if (rawCurrent !== current) {
+            await ref.set({
+                crmId: current,
+                updatedAt: typeof options.serverTimestamp === 'function' ? options.serverTimestamp() : new Date(),
+                updatedBy: options.user?.uid || null
+            }, { merge: true });
+        }
         return { crmId: current, allocated: false };
     }
 
@@ -85,7 +104,10 @@ async function ensureCrmIdOnDoc(db, ref, existingData = {}, options = {}) {
 module.exports = {
     ID_GROUP_SIZE,
     DEFAULT_COUNTER_DOC,
+    CRM_ID_PATTERN,
     formatCrmId,
     allocateNextCrmId,
-    ensureCrmIdOnDoc
+    ensureCrmIdOnDoc,
+    normalizeCrmId,
+    isValidCrmId
 };

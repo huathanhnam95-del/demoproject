@@ -261,9 +261,6 @@ window.CrmStudentWorkspace = (function () {
             await refreshStudentIdentity();
             await refreshStudentTimeline();
             await refreshStudentFinance();
-            if (typeof switchStudentTab === 'function') {
-                switchStudentTab('info');
-            }
         }
 
         return {

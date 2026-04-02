@@ -18,6 +18,9 @@
   const UI_DASH = '—';
   const UI_BULLET = '•';
 
+  // Cached data for PDF export (set after renderResult)
+  let _cachedResultData = null;
+
   // ==================== INIT ====================
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -63,7 +66,8 @@
     const session = json.session || null;
 
     const audioUrls = await fetchSpeakingAudioUrls(testId, test);
-    renderResult({ testId, test, lead, student, session, audioUrls });
+    _cachedResultData = { testId, test, lead, student, session, audioUrls };
+    renderResult(_cachedResultData);
   }
 
   // ==================== AUTH & GATE ====================
@@ -902,12 +906,32 @@
       blocks.push(summaryBlock);
     }
 
+    let isFirstSection = true;
+
     rootClone.querySelectorAll(':scope > .crm-result-details').forEach((detail) => {
       const intro = buildPdfSectionIntroBlock(detail);
-      if (intro) blocks.push(intro);
 
+      const summaryEl = detail.querySelector('summary');
+      const sectionTitle = summaryEl ? summaryEl.textContent.toLowerCase() : '';
+      let questionsPerPage = 2;
+      if (sectionTitle.includes('speaking') || sectionTitle.includes('đọc & nói')) {
+        questionsPerPage = 3;
+      }
+
+      if (intro) {
+        if (!isFirstSection) intro.dataset.pdfPageBreak = 'true';
+        blocks.push(intro);
+      }
+      isFirstSection = false;
+
+      let questionCount = 0;
       detail.querySelectorAll(':scope > .crm-result-details-body > .crm-result-question').forEach((question) => {
-        blocks.push(...buildPdfQuestionBlocks(question));
+        const qBlocks = buildPdfQuestionBlocks(question);
+        if (questionCount > 0 && questionCount % questionsPerPage === 0) {
+          if (qBlocks.length > 0) qBlocks[0].dataset.pdfPageBreak = 'true';
+        }
+        questionCount++;
+        blocks.push(...qBlocks);
       });
     });
 
@@ -933,6 +957,11 @@
 
     blocks.forEach((block) => {
       if (!currentPage || !currentBody) createPage();
+
+      if (block.dataset.pdfPageBreak === 'true' && currentBody.children.length > 0) {
+        createPage();
+      }
+
       currentBody.appendChild(block);
 
       if (currentBody.scrollHeight <= currentBody.clientHeight + 1) {
@@ -1040,9 +1069,15 @@
 
   // ==================== PDF EXPORT ====================
 
+
   window.__exportResultPdf = async function () {
-    if (typeof html2pdf === 'undefined') {
-      alert('PDF library not loaded. Please refresh the page and try again.');
+    if (typeof window.generateEntranceTestPdf !== 'function') {
+      alert('PDF generator not loaded. Please refresh the page and try again.');
+      return;
+    }
+
+    if (!_cachedResultData) {
+      alert('Nothing to export. Please wait for data to load.');
       return;
     }
 
@@ -1052,54 +1087,12 @@
       btn.textContent = '⏳ Generating…';
     }
 
-    const rootClone = cloneResultRootForPdf();
-    if (!rootClone) {
-      alert('Nothing to export.');
-      if (btn) { btn.disabled = false; btn.textContent = '📄 Export PDF'; }
-      return;
-    }
-
-    // Collect all mutations for cleanup in finally block
-    const cleanup = [];
-
-    const subtitleText = getPdfExportSubtitle();
-    const studentName = getPdfExportStudentName(subtitleText);
-    const now = new Date();
-    const footerText = buildPdfFooterText(now);
-    const filenameStudentName = studentName
-      .normalize('NFD').replace(/([\u0300-\u036f]|[^0-9a-zA-Z\s])/g, '')
-      .replace(/đ/g, 'd').replace(/Đ/g, 'D')
-      .replace(/\s+/g, '-') || 'student';
-    const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
-    const filename = `entrance-test-${filenameStudentName}-${dateStr}.pdf`;
-    const exportShell = buildPdfExportShell();
-    const blocks = buildPdfBlocks(rootClone);
-
-    if (blocks.length === 0) {
-      alert('Nothing to export.');
-      if (btn) { btn.disabled = false; btn.textContent = '📄 Export PDF'; }
-      return;
-    }
-    document.body.appendChild(exportShell);
-    cleanup.push(() => {
-      if (exportShell.parentNode) {
-        exportShell.parentNode.removeChild(exportShell);
-      }
-    });
-
     try {
-      await waitForPdfLayout();
-      paginatePdfBlocks(exportShell, blocks, studentName, footerText);
-      await waitForPdfLayout();
-      await renderPdfPages(exportShell, filename);
+      await window.generateEntranceTestPdf(_cachedResultData);
     } catch (e) {
       console.error('[ExportPDF] Error:', e);
       alert('Failed to generate PDF. See console for details.');
     } finally {
-      // Restore all mutations in reverse order
-      for (let i = cleanup.length - 1; i >= 0; i--) {
-        try { cleanup[i](); } catch (_) { /* ignore restore errors */ }
-      }
       if (btn) { btn.disabled = false; btn.textContent = '📄 Export PDF'; }
     }
   };

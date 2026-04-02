@@ -25,12 +25,12 @@
     were: { spokenAs: 'wer', explanation: 'Keep it short and unstressed in connected speech.' }
   };
   const SOUND_CHANGE_GUIDE_COPY = {
-    coalescent_dj: { spokenAs: 'j', explanation: 'Let the final d slide into the y sound so it blends more like j.' },
-    coalescent_tj: { spokenAs: 'ch', explanation: 'Let the final t blend into the y sound so it comes out more like ch.' },
-    coalescent_sj: { spokenAs: 'sh', explanation: 'Let the s slide into the y sound so the pair softens toward sh.' },
-    coalescent_zj: { spokenAs: 'zh', explanation: 'Let the z slide into the y sound so it blends into a softer zh sound.' },
-    n_bilabial_assimilation: { spokenAs: 'm', explanation: 'Let the n blend into the next bilabial sound so it comes out closer to m.' },
-    yod_coalescence: { spokenAs: 'j', explanation: 'Let the sound blend smoothly into the following y sound.' }
+    coalescent_dj: { spokenAs: '/dʒ/', arrow: 'd + y → /dʒ/', explanation: 'Let the final d slide into the y sound so it blends more like j.' },
+    coalescent_tj: { spokenAs: '/tʃ/', arrow: 't + y → /tʃ/', explanation: 'Let the final t blend into the y sound so it comes out more like ch.' },
+    coalescent_sj: { spokenAs: '/ʃ/', arrow: 's + y → /ʃ/', explanation: 'Let the s slide into the y sound so the pair softens toward sh.' },
+    coalescent_zj: { spokenAs: '/ʒ/', arrow: 'z + y → /ʒ/', explanation: 'Let the z slide into the y sound so it blends into a softer zh sound.' },
+    n_bilabial_assimilation: { spokenAs: '/m/', arrow: 'n → /m/', explanation: 'Let the n blend into the next bilabial sound so it comes out closer to m.' },
+    yod_coalescence: { spokenAs: '/dʒ/', arrow: 'sound change', explanation: 'Let the sound blend smoothly into the following y sound.' }
   };
   const LINKING_GUIDE_COPY = {
     consonant_to_vowel: 'Carry the last consonant straight into the next vowel without adding a pause.',
@@ -237,8 +237,8 @@
     const soundChangeBoundaries = eligible.filter((boundary) => String(boundary.layer || '') === 'assimilation');
     const reducedWordAnnotations = Array.isArray(analysis.tokenAnnotations)
       ? analysis.tokenAnnotations.filter((annotation) => (
-          annotation && annotation.layer === 'weak_forms'
-        ))
+        annotation && annotation.layer === 'weak_forms'
+      ))
       : [];
 
     if (eligible.length === 0 && reducedWordAnnotations.length === 0) {
@@ -308,10 +308,10 @@
 
     const eligibleBoundaries = Array.isArray(analysis.boundaries)
       ? analysis.boundaries.filter((boundary) => (
-          boundary
-          && !boundary.blocked
-          && (boundary.confidence === 'high' || boundary.confidence === 'medium')
-        ))
+        boundary
+        && !boundary.blocked
+        && (boundary.confidence === 'high' || boundary.confidence === 'medium')
+      ))
       : [];
     const eligibleTokens = Array.isArray(analysis.tokenAnnotations)
       ? analysis.tokenAnnotations.filter((annotation) => annotation && annotation.layer === 'weak_forms')
@@ -389,8 +389,8 @@
 
     const filteredTokenAnnotations = Array.isArray(analysis.tokenAnnotations)
       ? analysis.tokenAnnotations.filter((annotation) => (
-          !annotation?.boundaryKey || !blockedBoundarySet.has(annotation.boundaryKey)
-        ))
+        !annotation?.boundaryKey || !blockedBoundarySet.has(annotation.boundaryKey)
+      ))
       : [];
 
     return {
@@ -509,9 +509,8 @@
   function renderAssimilationBadges(container, stage, analysis, wordMap, options = {}) {
     if (!container || !stage) return { renderedCount: 0, skippedCount: 0 };
     container.innerHTML = '';
-    container.style.display = 'block';
+    container.style.display = 'none';
 
-    const stageRect = stage.getBoundingClientRect();
     let renderedCount = 0;
     let skippedCount = 0;
 
@@ -531,52 +530,65 @@
         return;
       }
 
-      const leftRect = leftSpan.getBoundingClientRect();
-      const rightRect = rightSpan.getBoundingClientRect();
-      if (Math.abs(leftRect.top - rightRect.top) > LINE_TOLERANCE_PX) {
-        skippedCount += 1;
-        return;
-      }
+      // Style both words with amber dashed underline
+      const wordStyle = 'border-bottom:2px dashed #b45309; background:rgba(180,83,9,0.08); border-radius:3px; padding:0 2px; cursor:pointer;';
+      leftSpan.style.cssText += wordStyle;
+      leftSpan.classList.add('ra-sound-change-word');
+      leftSpan.dataset.guideTarget = `boundary-${boundary.id}`;
+      leftSpan.tabIndex = 0;
+      leftSpan.setAttribute('role', 'button');
+      leftSpan.setAttribute('aria-pressed', 'false');
 
-      const startX = leftRect.right - stageRect.left - 4;
-      const endX = rightRect.left - stageRect.left + 4;
-      const baseY = Math.max(leftRect.bottom, rightRect.bottom) - stageRect.top + 12;
-      if (endX <= startX) {
-        skippedCount += 1;
-        return;
-      }
+      rightSpan.style.cssText += wordStyle;
+      rightSpan.classList.add('ra-sound-change-word');
+      rightSpan.dataset.guideTarget = `boundary-${boundary.id}`;
+      rightSpan.tabIndex = 0;
+      rightSpan.setAttribute('role', 'button');
+      rightSpan.setAttribute('aria-pressed', 'false');
 
-      const badge = document.createElement('div');
-      badge.textContent = boundary.markerText || 'sound change';
-      badge.title = boundary.legendLabel || 'Sound change';
-      badge.tabIndex = 0;
-      badge.setAttribute('role', 'button');
-      badge.dataset.guideTarget = `boundary-${boundary.id}`;
-      badge.style.cssText = [
-        'position:absolute',
-        `left:${(startX + endX) / 2}px`,
-        `top:${baseY}px`,
-        'transform:translate(-50%, 0)',
-        'padding:2px 8px',
-        'border-radius:999px',
-        'background:rgba(180, 83, 9, 0.14)',
-        'color:#b45309',
-        'font-size:11px',
+      // Insert phonetic hint tag between the two words
+      const arrowText = boundary.arrowText || boundary.markerText || 'sound change';
+      const copy = SOUND_CHANGE_GUIDE_COPY[boundary.subtype];
+      const hintLabel = copy?.arrow || arrowText;
+
+      const hintTag = document.createElement('span');
+      hintTag.className = 'ra-sound-change-hint';
+      hintTag.textContent = hintLabel;
+      hintTag.title = copy?.explanation || boundary.legendLabel || 'Sound change';
+      hintTag.dataset.guideTarget = `boundary-${boundary.id}`;
+      hintTag.tabIndex = 0;
+      hintTag.setAttribute('role', 'button');
+      hintTag.style.cssText = [
+        'display:inline-block',
+        'font-size:0.7rem',
         'font-weight:700',
-        'letter-spacing:0.02em',
-        'box-shadow:0 1px 2px rgba(180, 83, 9, 0.12)',
+        'color:#b45309',
+        'background:rgba(180,83,9,0.12)',
+        'border:1px solid rgba(180,83,9,0.22)',
+        'border-radius:4px',
+        'padding:1px 5px',
+        'margin:0 2px',
         'white-space:nowrap',
-        'pointer-events:auto',
-        'cursor:pointer'
+        'vertical-align:baseline',
+        'cursor:pointer',
+        'letter-spacing:0.01em',
+        'line-height:1.4'
       ].join(';');
-      container.appendChild(badge);
+
+      // Insert the hint tag after leftSpan (before the space/rightSpan)
+      const parent = leftSpan.parentNode;
+      if (parent) {
+        const nextSibling = leftSpan.nextSibling;
+        if (nextSibling) {
+          parent.insertBefore(hintTag, nextSibling);
+        } else {
+          parent.appendChild(hintTag);
+        }
+      }
+
       renderedCount += 1;
     });
 
-    if (renderedCount === 0) {
-      container.style.display = 'none';
-    }
-    container.setAttribute('viewBox', `0 0 ${Math.max(stageRect.width, 1)} ${Math.max(stageRect.height, 1)}`);
     return { renderedCount, skippedCount };
   }
 
@@ -637,7 +649,7 @@
         item.style.fontWeight = '600';
         item.style.border = '1px solid rgba(0,0,0,0.08)';
         item.style.cursor = 'pointer';
-      row.appendChild(item);
+        row.appendChild(item);
       });
       section.appendChild(row);
       container.appendChild(section);
@@ -645,14 +657,18 @@
     };
 
     let renderedCount = 0;
-    renderedCount += appendSection('Linking', linkingBoundaries, {
-      background: 'rgba(37, 99, 235, 0.08)',
-      color: '#1d4ed8'
-    });
-    renderedCount += appendSection('Sound changes', soundChangeBoundaries, {
-      background: 'rgba(180, 83, 9, 0.10)',
-      color: '#b45309'
-    });
+    if (focusFamily !== 'sound_changes') {
+      renderedCount += appendSection('Linking', linkingBoundaries, {
+        background: 'rgba(37, 99, 235, 0.08)',
+        color: '#1d4ed8'
+      });
+    }
+    if (focusFamily !== 'linking') {
+      renderedCount += appendSection('Sound changes', soundChangeBoundaries, {
+        background: 'rgba(180, 83, 9, 0.10)',
+        color: '#b45309'
+      });
+    }
 
     return renderedCount;
   }
@@ -987,6 +1003,7 @@
     renderLinkingLayer,
     applyTokenAnnotations,
     renderOverlay,
+    renderAssimilationBadges,
     renderFallbackList,
     clearLinkingRender
   };

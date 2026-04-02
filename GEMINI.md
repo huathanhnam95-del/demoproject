@@ -11,7 +11,7 @@
 ## Active State
 
 - **Status**: Active Development
-- **Phase**: Release V1.6.2
+- **Phase**: Release V1.6.3
 
 ## Instructions
 
@@ -53,11 +53,13 @@ When a new task is created, immediately classify it:
 ### Step 2: Run the GSD Flow
 
 **Quick Fix:**
+
 1. Execute the fix directly
 2. Verify empirically (run the app, check output, confirm the fix)
 3. Mark done
 
 **Feature (MUST plan before coding):**
+
 1. **CEO Review** (medium+ features only) — Auto-run `/ceo-review` to challenge the premise and find the 10-star version. Skip for small features or when user says "just build it".
 2. **Plan** — State what files will change, what the deliverable is, and what success looks like (2-3 sentences minimum)
 3. **Execute** — Implement with atomic commits per logical unit
@@ -67,6 +69,7 @@ When a new task is created, immediately classify it:
 7. **Ship** (optional) — Run `/ship` to automate version bump, changelog, and push
 
 **Investigation:**
+
 1. **Research** — Reproduce the issue, gather evidence, read logs/errors
 2. **Diagnose** — Identify root cause with evidence
 3. **Fix** — Apply targeted fix
@@ -84,6 +87,7 @@ When a new task is created, immediately classify it:
 ### Full GSD Mode (Optional)
 
 For large multi-phase projects, the user can invoke the full GSD workflow explicitly:
+
 - `/map` → Analyze codebase and create ARCHITECTURE.md
 - `/plan N` → Decompose phase N into executable plans
 - `/execute N` → Wave-based execution of phase plans
@@ -102,6 +106,7 @@ These workflows add product thinking, automated QA, and release automation:
 | `/ship` | **Manual** when ready to release | Sync main → run tests → version bump → changelog → push. One command, zero friction. |
 
 **Auto-trigger rules:**
+
 - 🎯 `/ceo-review` triggers automatically when a Feature task is medium+ (new page/mode/flow, 3+ files, new user behavior). User can skip with "just build it".
 - 🧪 `/diff-qa` is suggested after any HTML/CSS/JS UI changes. User can skip with "skip qa".
 - 🚀 `/ship` is always manual — invoke when implementation and verification are complete.
@@ -111,12 +116,17 @@ These workflows add product thinking, automated QA, and release automation:
 - **#council**: When the user types `#council [query]`, run `node scripts/summon_council.js "[query]" --out council_latest.txt` and then read the file `council_latest.txt` to present the full council output. The script auto-saves to a timestamped file if `--out` is omitted, but always use `--out` to have a predictable filename.
 - **#hproto**: When the user types `#hproto`, immediately initiate the [Harness Engineering Protocol](.agent/workflows/harness-protocol.md) and guide the user through the Spec -> Plan -> Execute -> Verify loop.
 
+## Response Formatting
+
+- **Timestamp Rule**: ALWAYS include the Start time and End time of every response, on two separate lines at the end. Format:
+  - `⏱️ Start: [ISO timestamp]`
+  - `⏱️ End: [ISO timestamp]`
+
 ## Versioning & Commits
 
 - **Versioning Rule**: ALWAYS name commits and pushes with explicit version tags.
 - **Changelog Rule**: ALWAYS add a changelog summarizing all updates before pushing.
-- **Next Version**: `V1.6.3`ngelog Rule**: ALWAYS add a changelog summarizing all updates before pushing.
-- **Next Version**: `V1.6.2`
+- **Next Version**: `V1.6.4`
 - **SemVer Protocol**:
   - **Minor Push (Bug fixes, small edits)**: Increment the LAST digit (e.g., `1.0.0` -> `1.0.1`).
   - **Major Push (New functions, big updates)**: Increment the MIDDLE digit (e.g., `1.0.0` -> `1.1.0`).

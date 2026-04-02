@@ -4,6 +4,7 @@ window.CrmStudentFinance = (function () {
             apiFetchJson,
             elements,
             modalState,
+            isActiveStudentSession,
             getCurrentStudentProfile,
             renderStudentSchedulePrompt,
             refreshDashboard,
@@ -149,8 +150,10 @@ window.CrmStudentFinance = (function () {
             }
         }
 
-        async function refreshStudentFinance() {
-            if (!modalState.studentId) return;
+        async function refreshStudentFinance(session = null) {
+            const studentId = String(session?.studentId || modalState.studentId || '').trim();
+            if (!studentId) return;
+            if (session && typeof isActiveStudentSession === 'function' && !isActiveStudentSession(session)) return;
 
             if (elements.studentInvoiceList && !elements.studentInvoiceList.__crmInvoiceSelectHandlerBound) {
                 elements.studentInvoiceList.addEventListener('click', (event) => {
@@ -165,7 +168,7 @@ window.CrmStudentFinance = (function () {
             }
 
             const financeSummaryPromise = window.CrmFinance
-                ? apiFetchJson(`/api/admin/finance/summary?studentId=${encodeURIComponent(modalState.studentId)}`, {
+                ? apiFetchJson(`/api/admin/finance/summary?studentId=${encodeURIComponent(studentId)}`, {
                     method: 'GET'
                 })
                 : Promise.resolve({
@@ -176,12 +179,13 @@ window.CrmStudentFinance = (function () {
                     invoices: []
                 });
             const attendanceSummaryPromise = window.ClassroomAPI && typeof window.ClassroomAPI.fetchAttendanceSummary === 'function'
-                ? window.ClassroomAPI.fetchAttendanceSummary({ studentId: modalState.studentId })
+                ? window.ClassroomAPI.fetchAttendanceSummary({ studentId })
                 : Promise.resolve({ students: [] });
             const [json, attendanceJson] = await Promise.all([
                 financeSummaryPromise,
                 attendanceSummaryPromise
             ]);
+            if (session && typeof isActiveStudentSession === 'function' && !isActiveStudentSession(session)) return;
 
             const totalInvoiced = Number(json.totalInvoiced || 0);
             const totalPaid = Number(json.totalPaid || 0);
@@ -201,7 +205,7 @@ window.CrmStudentFinance = (function () {
             const classroomMatchesPromise = hasCapability('classroomMatches')
                 && window.ClassroomAPI
                 && typeof window.ClassroomAPI.fetchClassroomMatches === 'function'
-                ? window.ClassroomAPI.fetchClassroomMatches(modalState.studentId, classroomMatchCourseId ? { courseId: classroomMatchCourseId } : {}).catch(() => ({
+                ? window.ClassroomAPI.fetchClassroomMatches(studentId, classroomMatchCourseId ? { courseId: classroomMatchCourseId } : {}).catch(() => ({
                     matches: [],
                     recommendedClassroom: null,
                     classroomCount: 0,
@@ -217,6 +221,7 @@ window.CrmStudentFinance = (function () {
                 });
 
             const classroomMatchesJson = await classroomMatchesPromise;
+            if (session && typeof isActiveStudentSession === 'function' && !isActiveStudentSession(session)) return;
             const financeWorkflow = window.CrmFinance && typeof window.CrmFinance.deriveWorkflowState === 'function'
                 ? window.CrmFinance.deriveWorkflowState({
                     invoices,

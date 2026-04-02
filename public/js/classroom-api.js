@@ -23,6 +23,23 @@ window.ClassroomAPI = (function () {
         };
     }
 
+    async function parseJsonResponse(res) {
+        const json = await res.json().catch(() => null);
+        if (res.ok) {
+            return json;
+        }
+
+        const error = new Error(
+            json?.message
+            || json?.error
+            || `HTTP Error: ${res.status}`
+        );
+        error.status = res.status;
+        error.code = json?.error || null;
+        error.details = json?.details || null;
+        throw error;
+    }
+
     // Admin: Read local classroom docs
     async function fetchClassrooms() {
         const headers = await getHeaders();
@@ -389,6 +406,16 @@ window.ClassroomAPI = (function () {
         return res.json();
     }
 
+    async function teacherAddClassroomSession(classId, data) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/teacher/classrooms/${classId}/sessions/add`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(data)
+        });
+        return parseJsonResponse(res);
+    }
+
     async function previewClassroomSessionAdd(classId, data) {
         const headers = await getHeaders();
         const res = await fetch(`/api/admin/classrooms/${classId}/sessions/add-preview`, {
@@ -409,6 +436,16 @@ window.ClassroomAPI = (function () {
         });
         if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
         return res.json();
+    }
+
+    async function teacherAddClassroomSessionMulti(classId, data) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/teacher/classrooms/${classId}/sessions/add-multi`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(data)
+        });
+        return parseJsonResponse(res);
     }
 
     async function replaceClassroomSession(classId, data) {
@@ -444,6 +481,16 @@ window.ClassroomAPI = (function () {
         return res.json();
     }
 
+    async function teacherRescheduleScheduledSession(sessionId, data) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/teacher/sessions/${sessionId}/reschedule`, {
+            method: 'PATCH',
+            headers,
+            body: JSON.stringify(data)
+        });
+        return parseJsonResponse(res);
+    }
+
     async function cancelScheduledSession(sessionId) {
         const headers = await getHeaders();
         const res = await fetch(`/api/admin/sessions/${sessionId}/cancel`, {
@@ -452,6 +499,25 @@ window.ClassroomAPI = (function () {
         });
         if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
         return res.json();
+    }
+
+    async function teacherCancelScheduledSession(sessionId) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/teacher/sessions/${sessionId}/cancel`, {
+            method: 'POST',
+            headers
+        });
+        return parseJsonResponse(res);
+    }
+
+    async function teacherActivateRecurrences(data = {}) {
+        const headers = await getHeaders();
+        const res = await fetch('/api/teacher/scheduler/activate-recurrences', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(data)
+        });
+        return parseJsonResponse(res);
     }
 
     async function previewClassroomScheduleRegeneration(classId, data) {
@@ -505,6 +571,22 @@ window.ClassroomAPI = (function () {
         return res.json();
     }
 
+    async function fetchTeacherSchedulerWorkspace(params = {}) {
+        const headers = await getHeaders();
+        const search = new URLSearchParams();
+        Object.entries(params).forEach(([key, value]) => {
+            if (value !== null && value !== undefined && String(value).trim() !== '') {
+                search.set(key, String(value).trim());
+            }
+        });
+        const suffix = search.toString() ? `?${search.toString()}` : '';
+        const res = await fetch(`/api/teacher/scheduler/workspace${suffix}`, {
+            method: 'GET',
+            headers
+        });
+        return parseJsonResponse(res);
+    }
+
     async function returnSubmissionForRevision(submissionId, data) {
         const headers = await getHeaders();
         const res = await fetch(`/api/admin/submissions/${submissionId}/return-for-revision`, {
@@ -541,15 +623,21 @@ window.ClassroomAPI = (function () {
         saveAttendanceRecords,
         fetchAttendanceSummary,
         fetchSchedulerWorkspace,
+        fetchTeacherSchedulerWorkspace,
         updateClassroomScheduleConfig,
         seedClassroomSessions,
         addClassroomSession,
+        teacherAddClassroomSession,
         previewClassroomSessionAdd,
         addClassroomSessionBatch,
+        teacherAddClassroomSessionMulti,
         replaceClassroomSession,
         previewClassroomSessionReplace,
         rescheduleScheduledSession,
+        teacherRescheduleScheduledSession,
         cancelScheduledSession,
+        teacherCancelScheduledSession,
+        teacherActivateRecurrences,
         previewClassroomScheduleRegeneration,
         regenerateClassroomSchedule,
         openScheduledAttendanceSession,

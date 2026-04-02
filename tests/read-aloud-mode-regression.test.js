@@ -291,7 +291,7 @@ async function assertSupportedFlow(browser, baseUrl) {
         if (this.id === 'ra-user-recording-audio') {
           window.__raUserRecordingPlayCalls = Number(window.__raUserRecordingPlayCalls || 0) + 1;
         }
-        return Promise.resolve(originalPlay ? originalPlay.call(this).catch(() => {}) : undefined);
+        return Promise.resolve(originalPlay ? originalPlay.call(this).catch(() => { }) : undefined);
       }
     });
     Object.defineProperty(window.HTMLMediaElement.prototype, 'pause', {
@@ -867,7 +867,7 @@ async function assertSupportedFlow(browser, baseUrl) {
     window.ReadAloudLinking = {
       ...originalLinking,
       filterAnalysisByBlockedBoundaries: (analysis) => analysis,
-      applyTokenAnnotations: () => {},
+      applyTokenAnnotations: () => { },
       buildAccessibleSummary: (analysis) => (analysis?.marker === 'fresh' ? 'fresh summary' : 'stale summary')
     };
     mode.getPromptAnalysis = () => {
@@ -1205,7 +1205,7 @@ async function assertSupportedFlow(browser, baseUrl) {
       !!feedback &&
       /pick/i.test(String(feedback.textContent || '')) &&
       !!connectedSummary &&
-      /1 Good, 1 Needs Work, 1 Unclear/i.test(String(connectedSummary.textContent || '')) &&
+      /nailed|pattern|practice|keep going/i.test(String(connectedSummary.textContent || '')) &&
       !!connectedBox.querySelector('#ra-connected-speech-list') &&
       !/gap|confidence|phoneme|duration ratio/i.test(String(connectedBox.querySelector('#ra-connected-speech-list')?.textContent || '')) &&
       !!status &&
@@ -1265,30 +1265,44 @@ async function assertSupportedFlow(browser, baseUrl) {
   assert.equal(supportedAssessmentState.connectedMetaText, 'Feedback', 'results shell should describe itself as feedback');
   assert.equal(supportedAssessmentState.accuracyText, '92', 'accuracy score should render from the mocked response');
   assert.match(supportedAssessmentState.feedbackText, /pick/i, 'transcript feedback should render from the mocked response');
-  assert.match(supportedAssessmentState.connectedSummaryText, /1 Good, 1 Needs Work, 1 Unclear/i, 'connected speech summary should use the learner-facing status labels');
-  assert.ok(supportedAssessmentState.connectedChildren >= 3, 'connected speech result should render multiple structured sections');
-  assert.ok(supportedAssessmentState.coachButtonCount >= 5, 'connected speech result should expose interactive phrase and action buttons');
-  assert.deepStrictEqual(supportedAssessmentState.selectedTargetIds, ['q-1-catenation-1-2'], 'results view should keep one selected coach target ID');
-  assert.match(supportedAssessmentState.startHereText, /Speech Coach Summary\|Where It Happened\|Start Here\|Pattern Review/i, 'results view should render the new action-first section hierarchy');
+  assert.match(supportedAssessmentState.connectedSummaryText, /nailed|pattern|practice|keep going/i, 'connected speech summary should use the learner-facing feedback format');
+  assert.ok(supportedAssessmentState.connectedChildren >= 2, 'connected speech result should render left and right grid columns');
+  assert.ok(supportedAssessmentState.connectedListText.length > 0, 'connected speech result list should contain rendered content');
+  assert.match(supportedAssessmentState.startHereText, /Needs Attention|Successful Links/i, 'results view should render the refactored sc-section headers');
   assert.doesNotMatch(supportedAssessmentState.connectedListText, /gap|confidence|phoneme|duration ratio/i, 'connected speech result should hide raw evidence details');
   assert.match(supportedAssessmentState.statusText, /analysis complete/i, 'status message should update after assessment');
   assert.equal(supportedAssessmentState.checkVisible, true, 'results state should expose the Check action before retry');
   assert.equal(supportedAssessmentState.retryVisible, false, 'retry should stay hidden until the learner checks the attempt');
 
-  await page.evaluate(() => {
-    document.querySelector('button[data-guide-target="q-1-catenation-1-2"]')?.click();
+  // Verify refactored sc-* DOM structure (T1-T4 from browser test plan)
+  const scDomState = await page.evaluate(() => {
+    const list = document.getElementById('ra-connected-speech-list');
+    const leftCol = list?.querySelector('.sc-grid-left');
+    const rightCol = list?.querySelector('.sc-grid-right');
+    const issueCards = rightCol?.querySelectorAll('.sc-issue-card') || [];
+    const pills = rightCol?.querySelectorAll('.sc-success-pill') || [];
+    const annotated = document.querySelector('.sc-annotated-paragraph');
+    const styleTags = annotated ? annotated.querySelectorAll('style') : [];
+    return {
+      hasLeftCol: !!leftCol,
+      hasRightCol: !!rightCol,
+      issueCardCount: issueCards.length,
+      hasErrorBorder: issueCards.length > 0 && issueCards[0].classList.contains('sc-border--error'),
+      pillCount: pills.length,
+      hasCheckIcon: pills.length > 0 && !!pills[0].querySelector('.sc-check-icon'),
+      pillText: pills.length > 0 ? String(pills[0].textContent || '').trim() : '',
+      injectedStyleCount: styleTags.length,
+      feedbackText: Array.from(issueCards).map(c => String(c.querySelector('.sc-issue-feedback')?.textContent || '').trim()).join(' | ')
+    };
   });
-
-  await page.waitForFunction(() => {
-    return document.querySelector('button[data-guide-target="q-1-catenation-1-2"]')?.getAttribute('aria-pressed') === 'true';
-  }, { timeout: 30000 });
-
-  const selectedCoachState = await page.evaluate(() => ({
-    selectedPhrasePressed: document.querySelector('button[data-guide-target="q-1-catenation-1-2"]')?.getAttribute('aria-pressed') || 'false',
-    selectedCopy: String(document.getElementById('ra-connected-speech-list')?.textContent || '')
-  }));
-  assert.equal(selectedCoachState.selectedPhrasePressed, 'true', 'selected coach target should be keyboard/touch selectable');
-  assert.match(selectedCoachState.selectedCopy, /Keep "it up" closer together/i, 'selected coach target should expose the matching action-focused feedback');
+  assert.ok(scDomState.hasLeftCol, 'results should render sc-grid-left column');
+  assert.ok(scDomState.hasRightCol, 'results should render sc-grid-right column');
+  assert.ok(scDomState.issueCardCount >= 1, 'should render at least 1 issue card for not_detected/uncertain events');
+  assert.ok(scDomState.hasErrorBorder, 'not_detected issue card should have sc-border--error class');
+  assert.ok(scDomState.pillCount >= 1, 'should render at least 1 success pill for detected events');
+  assert.ok(scDomState.hasCheckIcon, 'success pill should contain sc-check-icon');
+  assert.equal(scDomState.injectedStyleCount, 0, 'no <style> tags should be injected into annotated paragraph');
+  assert.match(scDomState.feedbackText, /Keep "it up" closer together/i, 'issue card should expose the action-focused feedback text');
 
   await page.evaluate(() => {
     document.getElementById('ra-check-btn')?.click();
@@ -1980,7 +1994,7 @@ async function assertMicrophoneErrorRecovery(browser, baseUrl) {
         this.state = 'inactive';
       }
 
-      addEventListener() {}
+      addEventListener() { }
       start() {
         this.state = 'recording';
         window.__raRecorderStarts = Number(window.__raRecorderStarts || 0) + 1;
@@ -2080,9 +2094,9 @@ async function assertUnsupportedWithoutWebAudio(browser, baseUrl) {
   const context = await browser.newContext({ viewport: { width: 1024, height: 900 }, serviceWorkers: 'block' });
   await context.addInitScript(() => {
     class FakeMediaRecorder {
-      addEventListener() {}
-      start() {}
-      stop() {}
+      addEventListener() { }
+      start() { }
+      stop() { }
     }
 
     Object.defineProperty(window, 'MediaRecorder', {
@@ -2233,7 +2247,7 @@ async function assertAssessmentFailureFeedback(browser, baseUrl) {
       value: {
         getUserMedia: async () => ({
           getTracks() {
-            return [{ stop() {} }];
+            return [{ stop() { } }];
           }
         })
       }
@@ -2361,7 +2375,7 @@ async function assertZeroScoreAssessmentPayloadShowsFailure(browser, baseUrl) {
       value: {
         getUserMedia: async () => ({
           getTracks() {
-            return [{ stop() {} }];
+            return [{ stop() { } }];
           }
         })
       }
@@ -2498,7 +2512,7 @@ async function assertDirectAccuracyPayloadShowsScoredResult(browser, baseUrl) {
       value: {
         getUserMedia: async () => ({
           getTracks() {
-            return [{ stop() {} }];
+            return [{ stop() { } }];
           }
         })
       }
@@ -2602,6 +2616,242 @@ async function assertDirectAccuracyPayloadShowsScoredResult(browser, baseUrl) {
   await context.close();
 }
 
+/**
+ * T5-T8: Speech Coach accordion interactions and edge cases.
+ * Uses Mock B with reduced words (weak_forms) to test accordion rendering,
+ * expand/collapse, single-card grid, and unavailable status.
+ */
+async function assertSpeechCoachAccordionAndEdgeCases(browser, baseUrl) {
+  const context = await browser.newContext();
+
+  await context.route('**/*', async (route) => {
+    // Block non-essential resources for speed
+    if (['image', 'font', 'media'].includes(route.request().resourceType())) {
+      return route.abort();
+    }
+    return route.continue();
+  });
+
+  const page = await context.newPage();
+  await preparePage(page, baseUrl);
+
+  // Mock B: reduced words + linking for accordion testing
+  await page.evaluate(() => {
+    window.__scAccordionAssessCount = 0;
+    const originalFetch = window.fetch;
+    window.fetch = async function (...args) {
+      const url = String(args[0] || '');
+      if (url.includes('/api/read-aloud/assess')) {
+        window.__scAccordionAssessCount += 1;
+        return new Response(JSON.stringify({
+          recognizedText: 'I want to go to the store and pick it up',
+          accuracyScore: 88,
+          words: [
+            { word: 'I', accuracyScore: 95, errorType: 'None' },
+            { word: 'want', accuracyScore: 90, errorType: 'None' },
+            { word: 'to', accuracyScore: 85, errorType: 'None' },
+            { word: 'go', accuracyScore: 92, errorType: 'None' },
+            { word: 'to', accuracyScore: 80, errorType: 'None' },
+            { word: 'the', accuracyScore: 88, errorType: 'None' },
+            { word: 'store', accuracyScore: 91, errorType: 'None' },
+            { word: 'and', accuracyScore: 86, errorType: 'None' },
+            { word: 'pick', accuracyScore: 93, errorType: 'None' },
+            { word: 'it', accuracyScore: 89, errorType: 'None' },
+            { word: 'up', accuracyScore: 87, errorType: 'None' }
+          ],
+          connectedSpeech: {
+            status: 'complete',
+            version: 'cs-v1',
+            summary: { detectedCount: 2, notDetectedCount: 2, uncertainCount: 0 },
+            events: [
+              { eventId: 'r1', family: 'weak_forms', category: 'weak_forms', phrase: 'to', status: 'detected', feedbackText: 'Good reduction of "to".' },
+              { eventId: 'r2', family: 'weak_forms', category: 'weak_forms', phrase: 'to', status: 'not_detected', feedbackText: 'Try reducing "to" more — say it like "tuh".' },
+              { eventId: 'r3', family: 'weak_forms', category: 'weak_forms', phrase: 'and', status: 'detected', feedbackText: 'Good.' },
+              { eventId: 'l1', family: 'catenation', category: 'linking', phrase: 'pick it', status: 'not_detected', feedbackText: 'Link "pick it" more smoothly.' }
+            ]
+          }
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+      return originalFetch(...args);
+    };
+  });
+
+  await mockWorkbookRows(page, [
+    {
+      ID: 1,
+      ANSWER: 'I want / to go / to the store / and pick / it up',
+      'ANSWER FOR COMPARE OR TRANSCRIPT': 'I want to go to the store and pick it up',
+      'ANSWER CHUNKED': 'I want / to go / to the store / and pick / it up',
+      'Word count': 11
+    }
+  ]);
+
+  await stubPrepareWavBlob(page);
+
+  // Navigate to Read Aloud
+  await page.evaluate(() => {
+    window.switchToMode('read-aloud');
+  });
+  await page.waitForFunction(() => window.ReadAloudMode?.currentPromptReady, { timeout: 30000 });
+
+  // Trigger a mock recording
+  await page.evaluate(() => {
+    const mode = window.ReadAloudMode;
+    mode.recording = false;
+    mode.currentRecordedBlob = new Blob(['fake-audio'], { type: 'audio/wav' });
+    mode.submitAssessment();
+  });
+
+  // Wait for assessment results to render
+  await page.waitForFunction(() => {
+    const list = document.getElementById('ra-connected-speech-list');
+    const accordion = list?.querySelector('.sc-accordion-card');
+    return Number(window.__scAccordionAssessCount || 0) === 1 && !!accordion;
+  }, { timeout: 30000 });
+
+  // T5: Multi-occurrence reduced words as accordion
+  const accordionState = await page.evaluate(() => {
+    const list = document.getElementById('ra-connected-speech-list');
+    const leftCol = list?.querySelector('.sc-grid-left');
+    const accordion = leftCol?.querySelector('.sc-accordion-card');
+    const toggle = accordion?.querySelector('.sc-accordion-toggle');
+    const dots = accordion?.querySelectorAll('.sc-status-dot') || [];
+    const countBadge = accordion?.querySelector('.sc-count-badge');
+    return {
+      hasAccordion: !!accordion,
+      ariaExpanded: toggle?.getAttribute('aria-expanded') || '',
+      dotCount: dots.length,
+      countText: countBadge ? String(countBadge.textContent || '').trim() : '',
+      wordTitle: accordion?.querySelector('.sc-word-title')?.textContent?.trim() || ''
+    };
+  });
+  assert.ok(accordionState.hasAccordion, 'T5: multi-occurrence word "to" should render as accordion');
+  assert.equal(accordionState.ariaExpanded, 'false', 'T5: accordion should start collapsed');
+  assert.equal(accordionState.dotCount, 2, 'T5: should show 2 status dots for 2 instances of "to"');
+  assert.equal(accordionState.countText, '2x', 'T5: count badge should show 2x');
+  assert.match(accordionState.wordTitle, /to/i, 'T5: accordion title should show the word "to"');
+
+  // T6: Accordion expand/collapse
+  await page.evaluate(() => {
+    const toggle = document.querySelector('.sc-accordion-toggle');
+    if (toggle) toggle.click();
+  });
+  const expandedState = await page.evaluate(() => {
+    const toggle = document.querySelector('.sc-accordion-toggle');
+    const contentId = toggle?.getAttribute('aria-controls');
+    const content = contentId ? document.getElementById(contentId) : null;
+    const chevron = toggle?.querySelector('.sc-chevron');
+    const instances = content?.querySelectorAll('.sc-instance') || [];
+    return {
+      ariaExpanded: toggle?.getAttribute('aria-expanded') || '',
+      contentHidden: content ? content.hidden : true,
+      chevronOpen: chevron ? chevron.classList.contains('sc-chevron--open') : false,
+      instanceCount: instances.length
+    };
+  });
+  assert.equal(expandedState.ariaExpanded, 'true', 'T6: accordion should expand on click');
+  assert.equal(expandedState.contentHidden, false, 'T6: content panel should be visible');
+  assert.equal(expandedState.chevronOpen, true, 'T6: chevron should rotate to open state');
+  assert.equal(expandedState.instanceCount, 2, 'T6: expanded content should show 2 instance rows');
+
+  // Click again to collapse
+  await page.evaluate(() => {
+    const toggle = document.querySelector('.sc-accordion-toggle');
+    if (toggle) toggle.click();
+  });
+  const collapsedState = await page.evaluate(() => {
+    const toggle = document.querySelector('.sc-accordion-toggle');
+    const contentId = toggle?.getAttribute('aria-controls');
+    const content = contentId ? document.getElementById(contentId) : null;
+    const chevron = toggle?.querySelector('.sc-chevron');
+    return {
+      ariaExpanded: toggle?.getAttribute('aria-expanded') || '',
+      contentHidden: content ? content.hidden : true,
+      chevronOpen: chevron ? chevron.classList.contains('sc-chevron--open') : false
+    };
+  });
+  assert.equal(collapsedState.ariaExpanded, 'false', 'T6: accordion should collapse on second click');
+  assert.equal(collapsedState.contentHidden, true, 'T6: content panel should be hidden after collapse');
+  assert.equal(collapsedState.chevronOpen, false, 'T6: chevron should rotate back to closed state');
+
+  // T7: Single-occurrence reduced words as grid cards
+  const singleCardState = await page.evaluate(() => {
+    const leftCol = document.querySelector('.sc-grid-left');
+    const singleCards = leftCol?.querySelectorAll('.sc-single-card') || [];
+    const firstCard = singleCards.length > 0 ? singleCards[0] : null;
+    return {
+      singleCardCount: singleCards.length,
+      hasStatusDot: firstCard ? !!firstCard.querySelector('.sc-status-dot') : false,
+      cardWord: firstCard?.querySelector('.sc-word-title')?.textContent?.trim() || ''
+    };
+  });
+  assert.ok(singleCardState.singleCardCount >= 1, 'T7: single-occurrence "and" should render as grid card');
+  assert.ok(singleCardState.hasStatusDot, 'T7: single card should have status dot');
+  assert.match(singleCardState.cardWord, /and/i, 'T7: single card should show "and"');
+
+  await context.close();
+
+  // T8: Unavailable status hides panel (separate context)
+  const ctx2 = await browser.newContext();
+  const page2 = await ctx2.newPage();
+  await preparePage(page2, baseUrl);
+
+  await page2.evaluate(() => {
+    const originalFetch = window.fetch;
+    window.fetch = async function (...args) {
+      const url = String(args[0] || '');
+      if (url.includes('/api/read-aloud/assess')) {
+        return new Response(JSON.stringify({
+          recognizedText: 'test',
+          accuracyScore: 50,
+          words: [{ word: 'test', accuracyScore: 50, errorType: 'None' }],
+          connectedSpeech: { status: 'unavailable' }
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+      return originalFetch(...args);
+    };
+  });
+
+  await mockWorkbookRows(page2, [
+    { ID: 1, ANSWER: 'test', 'ANSWER FOR COMPARE OR TRANSCRIPT': 'test', 'ANSWER CHUNKED': 'test', 'Word count': 1 }
+  ]);
+  await stubPrepareWavBlob(page2);
+
+  await page2.evaluate(() => { window.switchToMode('read-aloud'); });
+  await page2.waitForFunction(() => window.ReadAloudMode?.currentPromptReady, { timeout: 30000 });
+
+  await page2.evaluate(() => {
+    const mode = window.ReadAloudMode;
+    mode.recording = false;
+    mode.currentRecordedBlob = new Blob(['fake-audio'], { type: 'audio/wav' });
+    mode.submitAssessment();
+  });
+
+  await page2.waitForFunction(() => {
+    const summary = document.getElementById('ra-connected-speech-summary');
+    return summary && /unavailable/i.test(String(summary.textContent || ''));
+  }, { timeout: 30000 });
+
+  const unavailableState = await page2.evaluate(() => {
+    const summary = document.getElementById('ra-connected-speech-summary');
+    const list = document.getElementById('ra-connected-speech-list');
+    return {
+      summaryText: String(summary?.textContent || '').trim(),
+      listChildren: list ? list.children.length : -1
+    };
+  });
+  assert.match(unavailableState.summaryText, /unavailable/i, 'T8: summary should mention unavailable');
+  assert.equal(unavailableState.listChildren, 0, 'T8: list should be empty for unavailable status');
+
+  await ctx2.close();
+}
+
 async function run() {
   const port = await getFreePort();
   const baseUrl = `http://127.0.0.1:${port}`;
@@ -2619,16 +2869,17 @@ async function run() {
   try {
     await waitForServer(`${baseUrl}/api/health`);
     browser = await chromium.launch({ headless: true });
-  await assertUnsupportedFlow(browser, baseUrl);
-  await assertSupportedFlow(browser, baseUrl);
-  await assertChunkingDisabledStateReset(browser, baseUrl);
-  await assertAssessmentGuards(browser, baseUrl);
+    await assertUnsupportedFlow(browser, baseUrl);
+    await assertSupportedFlow(browser, baseUrl);
+    await assertChunkingDisabledStateReset(browser, baseUrl);
+    await assertAssessmentGuards(browser, baseUrl);
     await assertPendingMicrophoneRequestGuards(browser, baseUrl);
     await assertMicrophoneErrorRecovery(browser, baseUrl);
     await assertAssessmentFailureFeedback(browser, baseUrl);
     await assertZeroScoreAssessmentPayloadShowsFailure(browser, baseUrl);
     await assertDirectAccuracyPayloadShowsScoredResult(browser, baseUrl);
     await assertUnsupportedWithoutWebAudio(browser, baseUrl);
+    await assertSpeechCoachAccordionAndEdgeCases(browser, baseUrl);
     console.log('read-aloud mode regression test passed');
   } catch (error) {
     const tail = serverLogs.slice(-10000);

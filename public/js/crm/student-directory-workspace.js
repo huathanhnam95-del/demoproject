@@ -224,6 +224,7 @@ window.CrmStudentDirectoryWorkspace = (function () {
                 const displayName = studentDisplayName(student);
                 const label = String(student.label || '').trim() || '-';
                 const contact = studentContact(student);
+                const crmId = String(student.crmId || '').trim();
                 const checked = selectedStudentIds.has(studentId);
                 return `
         <tr>
@@ -240,7 +241,7 @@ window.CrmStudentDirectoryWorkspace = (function () {
           <td>${escapeHtml(label)}</td>
           <td>${escapeHtml(contact)}</td>
           <td>${escapeHtml(formatDateTime(student.createdAt))}</td>
-          <td><code>${escapeHtml(studentId)}</code></td>
+          <td><code>${escapeHtml(crmId || '—')}</code></td>
         </tr>
       `;
             }).join('');
@@ -257,7 +258,7 @@ window.CrmStudentDirectoryWorkspace = (function () {
               <th>Label</th>
               <th>Contact</th>
               <th>Created</th>
-              <th>Student ID</th>
+              <th>CRM ID</th>
             </tr>
           </thead>
           <tbody>

@@ -86,6 +86,47 @@ async function listClassSessions(db, classId) {
     return listCollectionSessions(db, (query) => query.where('classId', '==', classId));
 }
 
+async function listTeacherScheduledSessions(db, teacherUid) {
+    const cleanedTeacherUid = cleanOptionalString(teacherUid);
+    if (!cleanedTeacherUid) return [];
+    return listCollectionSessions(db, (query) =>
+        query.where('teacherUid', '==', cleanedTeacherUid).where('status', '==', 'scheduled')
+    );
+}
+
+function mergeSessionsById(...sessionLists) {
+    const merged = new Map();
+    sessionLists.forEach((sessions) => {
+        (Array.isArray(sessions) ? sessions : []).forEach((session) => {
+            const sessionId = cleanOptionalString(session?.sessionId);
+            if (!sessionId) return;
+            if (!merged.has(sessionId)) {
+                merged.set(sessionId, session);
+            }
+        });
+    });
+    return Array.from(merged.values());
+}
+
+function sessionsOverlapUtc(left, right) {
+    const leftStartMs = new Date(left?.scheduledStartAtUtc).getTime();
+    const leftEndMs = new Date(left?.scheduledEndAtUtc).getTime();
+    const rightStartMs = new Date(right?.scheduledStartAtUtc).getTime();
+    const rightEndMs = new Date(right?.scheduledEndAtUtc).getTime();
+    if (!Number.isFinite(leftStartMs) || !Number.isFinite(leftEndMs) || !Number.isFinite(rightStartMs) || !Number.isFinite(rightEndMs)) {
+        return false;
+    }
+    return rightStartMs < leftEndMs && rightEndMs > leftStartMs;
+}
+
+function findTeacherConflict(teacherSessions, proposedSession, ignoredSessionIds = []) {
+    const normalizedProposal = normalizeScheduledSession(proposedSession);
+    return (Array.isArray(teacherSessions) ? teacherSessions : []).find((session) => {
+        if (ignoredSessionIds.includes(cleanOptionalString(session?.sessionId))) return false;
+        return sessionsOverlapUtc(session, normalizedProposal);
+    }) || null;
+}
+
 async function listRawClassSessions(db, classId) {
     const snap = await db.collection(CRM_SCHEDULED_SESSIONS).where('classId', '==', classId).get();
     return snap.docs.map((doc) => ({ sessionId: doc.id, ...doc.data() }));
@@ -439,7 +480,11 @@ module.exports = function registerSchedulingRoutes(router, deps) {
                 return sendError(res, 409, 'NO_VALID_OCCURRENCES', 'No valid occurrences can be created.');
             }
             const occurrence = preview.validOccurrences[0];
-            await ensureNoTeacherConflict(db, occurrence);
+            try {
+                await ensureNoTeacherConflict(db, occurrence);
+            } catch (error) {
+                return sendError(res, 409, 'teacher_conflict', error?.message || 'Teacher conflict.');
+            }
             const ref = db.collection(CRM_SCHEDULED_SESSIONS).doc();
             await ref.set({
                 ...occurrence,

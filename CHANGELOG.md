@@ -1,3 +1,23 @@
+## [V1.6.3] - 2026-04-02
+
+### Added
+
+- **Teacher Scheduler Validations**: Browser test validation for CRM class scheduling workflow.
+- **RFIB Audio Pipeline**: Initial generation of male ElevenLabs RFIB prompt voices.
+- **Speech Coach Annotations**: Refined inline phonetic annotations to provide clear Read Aloud feedback metrics.
+
+### Improved
+
+- **Read Aloud Mode UX**: Upgraded sound change hints from floating popups to intuitive inline phonetics and added persistent visibility toggle.
+- **Practice Mode Defaults**: Speaking tab is now strictly the default landing tab, favoring Read Aloud.
+- **CRM Student Deep Linking**: Refined modal hash propagation enabling permanent URLs for student CRM entries.
+
+### Fixed
+
+- **Speech Coach Stability**: Decomposed the monolithic `renderConnectedSpeechResults` method and removed dead legacy tracking code.
+- **Student Profile Navigation**: Fixed the state persistence bug resetting student panels to the first tab upon routing.
+- **UI Labeling Consistency**: Renamed outdated "Listening practice" terminology to the unified "English Practice" label.
+
 ## [V1.6.2] - 2026-03-30
 
 ### Improved

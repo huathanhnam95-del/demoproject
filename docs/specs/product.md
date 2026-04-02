@@ -64,6 +64,7 @@ A gamified language learning platform that merges **rigorous study tools** (SRS,
 | SRS Review | Scheduling (SM-2 + FSRS), review UX, stats, mastery | [srs-review](features/srs-review.md) |
 | Type Mode (Dictation) | Listening precision loop (audio -> type -> score) | [type-mode](features/type-mode.md) |
 | Speak Mode | Sentence-level speaking accuracy (record -> STT -> score) | [speak-mode](features/speak-mode.md) |
+| Read Aloud Mode | Speech execution and rhythm practice with integrated Speech Coach | [speak-mode](features/speak-mode.md) |
 | Fill Mode (Extended) | Cloze/completion with context + collocation scaffolding | [fill-mode](features/fill-mode.md) |
 | Notes Mode | Structured note-taking + scoring/feedback loop | [notes-mode](features/notes-mode.md) |
 | Watch Mode | Video-synced comprehension tasks + evidence-based scoring | [watch-mode](features/watch-mode.md) |

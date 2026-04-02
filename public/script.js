@@ -549,11 +549,8 @@
       if (activePanel.id === 'panel-srs') {
         modePanels.forEach(p => p.style.display = 'none');
       } else {
-        // Initialize with Type mode by default if in Learning Center
-        const typeModeBtn = document.querySelector('.mode-switch-btn[onclick*="type"]');
-        if (typeModeBtn) {
-          window.switchToMode('type');
-        }
+        // Initialize with Read Aloud mode by default if in Learning Center
+        window.switchToMode('read-aloud');
       }
     }
 
@@ -679,10 +676,10 @@
   window.resetGoalModalState = resetGoalModalState;
 
   // Track current active mode for tutorial button
-  let currentActiveMode = 'type';
+  let currentActiveMode = 'read-aloud';
   const PRACTICE_LAUNCHER = {
-    defaultSkill: 'listening',
-    defaultMode: 'type',
+    defaultSkill: 'speaking',
+    defaultMode: 'read-aloud',
     skills: {
       speaking: {
         label: 'Speaking',
@@ -954,7 +951,7 @@
     }
 
     // Generate suggestions based on selected goals
-            const suggestions = [];
+    const suggestions = [];
     const seenModes = new Set();
 
     selectedGoals.forEach(goal => {
@@ -8604,7 +8601,11 @@
     // Other grammar words
     "as", "if", "when", "where", "while", "which", "who", "whom", "whose", "what", "why", "how",
     // Common temporal and general words
-    "next", "time", "now", "then", "here", "there", "more", "most", "some", "any", "many", "much",
+    "next", "now", "then", "here", "there", "more", "most", "some", "any", "many", "much",
+    // Adverbs / particles (non-content)
+    "well", "quite", "just", "also", "still", "even", "only", "very", "too", "enough",
+    "rather", "already", "almost", "really", "perhaps", "maybe", "never", "always", "often",
+    "sometimes", "ago", "else", "back", "away", "less", "least", "not", "no", "yes",
     // Contractions
     "we'll", "we're", "we've", "we'd", "they'll", "they're", "they've", "they'd", "it's", "that's", "there's",
     "don't", "doesn't", "didn't", "won't", "wouldn't", "couldn't", "shouldn't", "can't", "isn't", "aren't",

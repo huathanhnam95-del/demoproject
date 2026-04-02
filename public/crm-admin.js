@@ -8,6 +8,8 @@
   'use strict';
 
   const DEFAULT_ROUTE = { main: 'dashboard', sub: '' };
+  const STUDENT_LIST_SUB_ROUTES = new Set(['potential', 'data']);
+  const STUDENT_PROFILE_ROUTE_RE = /^[a-z]+[0-9]{4}$/i;
   const DEFAULT_ADMIN_CAPABILITIES = Object.freeze({
     classroomMatches: true,
     readAloudReporting: false
@@ -27,6 +29,7 @@
       subTabs: [
         { id: 'courses', label: 'Courses' },
         { id: 'classes', label: 'Classes' },
+        { id: 'teacher-schedule', label: 'Teacher Schedule' },
         { id: 'zoom-links', label: 'Zoom Links' },
         { id: 'materials', label: 'Materials' },
         { id: 'planning', label: 'Planning' },
@@ -43,7 +46,11 @@
     chatbot: { label: 'Chatbot Management', subTabs: [] }
   };
 
-  const state = { ...DEFAULT_ROUTE };
+  const state = {
+    ...DEFAULT_ROUTE,
+    studentLookup: '',
+    studentReturnRoute: null
+  };
   const elements = {};
   const dataCache = {
     leads: [],
@@ -58,6 +65,7 @@
   let adminCapabilities = { ...DEFAULT_ADMIN_CAPABILITIES };
   let dashboardController = null;
   let schedulerController = null;
+  let teacherSchedulerController = null;
   let studentFinanceController = null;
   let liveDeliveryController = null;
   let studentModalController = null;
@@ -72,6 +80,7 @@
   const modalState = {
     studentId: null,
     studentProfile: null,
+    studentSessionKey: 0,
     createdTestLinks: new Map(),
     leadCreatedTestLinks: new Map(),
     classroomMatches: [],
@@ -94,6 +103,118 @@
     onKeyDown: null
   };
   window.CrmAdminDialogs = window.CrmAdminDialogs || {};
+
+  function normalizeRouteToken(value) {
+    return String(value || '').trim();
+  }
+
+  function normalizeCrmId(value) {
+    return normalizeRouteToken(value).toLowerCase();
+  }
+
+  function isValidCrmId(value) {
+    const crmId = normalizeCrmId(value);
+    return !!crmId && STUDENT_PROFILE_ROUTE_RE.test(crmId);
+  }
+
+  function isStudentListSubRoute(value) {
+    return STUDENT_LIST_SUB_ROUTES.has(normalizeRouteToken(value));
+  }
+
+  function snapshotRoute() {
+    return {
+      main: normalizeRouteToken(state.main) || DEFAULT_ROUTE.main,
+      sub: normalizeRouteToken(state.sub)
+    };
+  }
+
+  function getRouteHash(main, sub = '') {
+    const normalizedMain = normalizeRouteToken(main) || DEFAULT_ROUTE.main;
+    const normalizedSub = normalizeRouteToken(sub);
+    return normalizedSub ? `#${normalizedMain}/${normalizedSub}` : `#${normalizedMain}`;
+  }
+
+  function getStudentListSubRoute(student) {
+    const classifier = window.CrmStudents && typeof window.CrmStudents.classify === 'function'
+      ? window.CrmStudents.classify(student)
+      : '';
+    if (classifier === 'studentData') return 'data';
+
+    const stage = String(student?.lifecycleStage || '').trim().toLowerCase();
+    const enrolledStages = new Set(['enrolled', 'paused', 'completed', 'alumni']);
+    if (enrolledStages.has(stage)) return 'data';
+    return 'potential';
+  }
+
+  function getStudentReturnRoute(student) {
+    const route = state.studentReturnRoute;
+    if (route && normalizeRouteToken(route.main)) {
+      if (normalizeRouteToken(route.main) === 'students' && !isStudentListSubRoute(route.sub)) {
+        return {
+          main: 'students',
+          sub: getStudentListSubRoute(student)
+        };
+      }
+      return {
+        main: normalizeRouteToken(route.main) || DEFAULT_ROUTE.main,
+        sub: normalizeRouteToken(route.sub)
+      };
+    }
+    return {
+      main: 'students',
+      sub: getStudentListSubRoute(student)
+    };
+  }
+
+  function showStudentModalSurface() {
+    if (!elements.studentModal) return;
+    elements.studentModal.style.display = 'flex';
+    elements.studentModal.setAttribute('aria-hidden', 'false');
+  }
+
+  function hideStudentModalSurface() {
+    if (!elements.studentModal) return;
+    elements.studentModal.style.display = 'none';
+    elements.studentModal.setAttribute('aria-hidden', 'true');
+  }
+
+  function clearStudentProfileState() {
+    state.studentLookup = '';
+    state.studentReturnRoute = null;
+    hideStudentModalSurface();
+    if (studentModalController && typeof studentModalController.resetStudentModal === 'function') {
+      studentModalController.resetStudentModal();
+      return;
+    }
+    if (typeof resetStudentModal === 'function') {
+      resetStudentModal();
+    }
+  }
+
+  function beginStudentSession(studentId) {
+    modalState.studentSessionKey = Number(modalState.studentSessionKey || 0) + 1;
+    return {
+      key: modalState.studentSessionKey,
+      studentId: String(studentId || '').trim()
+    };
+  }
+
+  function isActiveStudentSession(session) {
+    if (!session || typeof session !== 'object') return true;
+    const expectedStudentId = String(session.studentId || '').trim();
+    if (!expectedStudentId) return false;
+    return Number(session.key || 0) === Number(modalState.studentSessionKey || 0)
+      && String(modalState.studentId || '').trim() === expectedStudentId;
+  }
+
+  function setStudentProfileHash(crmId) {
+    const normalized = normalizeCrmId(crmId);
+    if (!normalized) return;
+    const next = getRouteHash('students', normalized);
+    if (window.location.hash !== next) {
+      window.location.hash = next;
+    }
+  }
 
   document.addEventListener('DOMContentLoaded', () => {
     cacheElements();
@@ -327,6 +448,9 @@
     elements.inputClassroomMeetingDays = document.getElementById('classroom-meeting-days');
     elements.inputClassroomMeetingHours = document.getElementById('classroom-meeting-hours');
     elements.btnSaveClassroomScheduling = document.getElementById('btn-save-classroom-scheduling');
+    elements.schedulingSuggestionBanner = document.getElementById('scheduling-suggestion-banner');
+    elements.btnApplySchedulingDefaults = document.getElementById('btn-apply-scheduling-defaults');
+    elements.btnDismissSchedulingDefaults = document.getElementById('btn-dismiss-scheduling-defaults');
     elements.attendanceSchedulePrompt = document.getElementById('attendance-schedule-prompt');
     elements.inputClassroomRegenerateFromDate = document.getElementById('classroom-regenerate-from-date');
     elements.inputClassroomRegenerateSessionMinutes = document.getElementById('classroom-regenerate-session-minutes');
@@ -400,6 +524,36 @@
     elements.schedulerActionPreviewOverflow = document.getElementById('scheduler-action-preview-overflow');
     elements.schedulerActionReplaceSummary = document.getElementById('scheduler-action-replace-summary');
     elements.schedulerActionReplaceList = document.getElementById('scheduler-action-replace-list');
+    elements.teacherSchedulerWorkspace = document.getElementById('teacher-scheduler-workspace');
+    elements.teacherSchedulerClassList = document.getElementById('teacher-scheduler-class-list');
+    elements.teacherSchedulerCalendar = document.getElementById('teacher-scheduler-calendar');
+    elements.btnTeacherSchedulerRefresh = document.getElementById('btn-teacher-scheduler-refresh');
+    elements.inputTeacherSchedulerFromDate = document.getElementById('teacher-scheduler-from-date');
+    elements.inputTeacherSchedulerToDate = document.getElementById('teacher-scheduler-to-date');
+    elements.teacherSchedulerPatternSummary = document.getElementById('teacher-scheduler-pattern-summary');
+    elements.inputTeacherSchedulerPatternClass = document.getElementById('teacher-scheduler-pattern-class');
+    elements.inputTeacherSchedulerPatternTime = document.getElementById('teacher-scheduler-pattern-time');
+    elements.teacherSchedulerPatternDays = document.getElementById('teacher-scheduler-pattern-days');
+    elements.btnTeacherSchedulerPlaceWeek = document.getElementById('btn-teacher-scheduler-place-week');
+    elements.btnTeacherSchedulerActivateRecurrences = document.getElementById('btn-teacher-scheduler-activate-recurrences');
+    elements.teacherSchedulerActivationSummary = document.getElementById('teacher-scheduler-activation-summary');
+    elements.teacherSchedulerQuickAdd = document.getElementById('teacher-scheduler-quick-add');
+    elements.inputTeacherSchedulerQuickClass = document.getElementById('teacher-scheduler-quick-class');
+    elements.inputTeacherSchedulerQuickDate = document.getElementById('teacher-scheduler-quick-date');
+    elements.inputTeacherSchedulerQuickTime = document.getElementById('teacher-scheduler-quick-time');
+    elements.inputTeacherSchedulerQuickDuration = document.getElementById('teacher-scheduler-quick-duration');
+    elements.teacherSchedulerQuickError = document.getElementById('teacher-scheduler-quick-error');
+    elements.teacherSchedulerQuickSuggestions = document.getElementById('teacher-scheduler-quick-suggestions');
+    elements.btnTeacherSchedulerQuickCancel = document.getElementById('btn-teacher-scheduler-quick-cancel');
+    elements.btnTeacherSchedulerQuickAdd = document.getElementById('btn-teacher-scheduler-quick-add');
+    elements.teacherSchedulerSessionBubble = document.getElementById('teacher-scheduler-session-bubble');
+    elements.teacherSchedulerSessionBubbleTitle = document.getElementById('teacher-scheduler-session-bubble-title');
+    elements.teacherSchedulerSessionBubbleMeta = document.getElementById('teacher-scheduler-session-bubble-meta');
+    elements.teacherSchedulerSessionBubbleLock = document.getElementById('teacher-scheduler-session-bubble-lock');
+    elements.btnTeacherSchedulerOpenAttendance = document.getElementById('btn-teacher-scheduler-open-attendance');
+    elements.btnTeacherSchedulerCancelSession = document.getElementById('btn-teacher-scheduler-cancel-session');
+    elements.btnTeacherSchedulerDuplicateSession = document.getElementById('btn-teacher-scheduler-duplicate-session');
+    elements.btnTeacherSchedulerCloseBubble = document.getElementById('btn-teacher-scheduler-close-bubble');
     elements.bulkDeleteWarningModal = document.getElementById('bulk-delete-warning-modal');
     elements.bulkDeleteWarningTitle = document.getElementById('bulk-delete-warning-title');
     elements.bulkDeleteWarningBadge = document.getElementById('bulk-delete-warning-badge');
@@ -515,172 +669,181 @@
     setupMoneyInputs();
     dashboardController = window.CrmDashboardWorkspace && typeof window.CrmDashboardWorkspace.createController === 'function'
       ? window.CrmDashboardWorkspace.createController({
-          elements,
-          showToast,
-          apiFetchJson,
-          formatDateTime,
-          escapeHtml,
-          getAdminCapabilities
-        })
+        elements,
+        showToast,
+        apiFetchJson,
+        formatDateTime,
+        escapeHtml,
+        getAdminCapabilities
+      })
       : null;
     schedulerController = window.CrmSchedulerWorkspace && typeof window.CrmSchedulerWorkspace.createController === 'function'
       ? window.CrmSchedulerWorkspace.createController({
-          elements,
-          modalState,
-          showToast,
-          escapeHtml
-        })
+        elements,
+        modalState,
+        showToast,
+        escapeHtml
+      })
+      : null;
+    teacherSchedulerController = window.TeacherSchedulerWorkspace && typeof window.TeacherSchedulerWorkspace.createController === 'function'
+      ? window.TeacherSchedulerWorkspace.createController({
+        elements,
+        showToast
+      })
       : null;
     studentFinanceController = window.CrmStudentFinance && typeof window.CrmStudentFinance.createController === 'function'
       ? window.CrmStudentFinance.createController({
-          apiFetchJson,
-          elements,
-          modalState,
-          getCurrentStudentProfile,
-          renderStudentSchedulePrompt,
-          refreshDashboard,
-          showToast,
-          escapeHtml,
-          getAdminCapabilities
-        })
+        apiFetchJson,
+        elements,
+        modalState,
+        isActiveStudentSession,
+        getCurrentStudentProfile,
+        renderStudentSchedulePrompt,
+        refreshDashboard,
+        showToast,
+        escapeHtml,
+        getAdminCapabilities
+      })
       : null;
     studentDirectoryController = window.CrmStudentDirectoryWorkspace && typeof window.CrmStudentDirectoryWorkspace.createController === 'function'
       ? window.CrmStudentDirectoryWorkspace.createController({
-          elements,
-          dataCache,
-          apiFetchJson,
-          populateAttendanceStudentOptions,
-          openStudentProfile,
-          showToast,
-          getReminderSummary,
-          renderReminderBadgeMarkup,
-          renderRiskBadgeMarkup,
-          escapeHtml,
-          formatDateTime,
-          refreshDashboard
-        })
+        elements,
+        dataCache,
+        apiFetchJson,
+        populateAttendanceStudentOptions,
+        openStudentProfile,
+        showToast,
+        getReminderSummary,
+        renderReminderBadgeMarkup,
+        renderRiskBadgeMarkup,
+        escapeHtml,
+        formatDateTime,
+        refreshDashboard
+      })
       : null;
     leadWorkspaceController = window.CrmLeadWorkspace && typeof window.CrmLeadWorkspace.createController === 'function'
       ? window.CrmLeadWorkspace.createController({
-          elements,
-          dataCache,
-          modalState,
-          showToast,
-          apiFetchJson,
-          refreshDashboard,
-          refreshStudentLists,
-          fetchTasks,
-          fetchActivities,
-          applyReminderBadge,
-          getReminderSummary,
-          renderTaskList,
-          renderActivityList,
-          renderReminderBadgeMarkup,
-          escapeHtml,
-          openStudentProfile
-        })
+        elements,
+        dataCache,
+        modalState,
+        showToast,
+        apiFetchJson,
+        refreshDashboard,
+        refreshStudentLists,
+        fetchTasks,
+        fetchActivities,
+        applyReminderBadge,
+        getReminderSummary,
+        renderTaskList,
+        renderActivityList,
+        renderReminderBadgeMarkup,
+        escapeHtml,
+        openStudentProfile
+      })
       : null;
     recycleBinController = window.CrmRecycleBinWorkspace && typeof window.CrmRecycleBinWorkspace.createController === 'function'
       ? window.CrmRecycleBinWorkspace.createController({
-          elements,
-          showToast,
-          apiFetchJson,
-          escapeHtml,
-          formatDateTime,
-          refreshLeadPipeline,
-          refreshStudentLists,
-          refreshCourseCatalog,
-          refreshClassroomList,
-          refreshDashboard,
-          showBulkActionConfirm: showBulkDeleteWarningModal
-        })
+        elements,
+        showToast,
+        apiFetchJson,
+        escapeHtml,
+        formatDateTime,
+        refreshLeadPipeline,
+        refreshStudentLists,
+        refreshCourseCatalog,
+        refreshClassroomList,
+        refreshDashboard,
+        showBulkActionConfirm: showBulkDeleteWarningModal
+      })
       : null;
     communicationsController = window.CrmCommunicationsWorkspace && typeof window.CrmCommunicationsWorkspace.createController === 'function'
       ? window.CrmCommunicationsWorkspace.createController({
-          elements,
-          showToast,
-          apiFetchJson,
-          refreshDashboard,
-          escapeHtml
-        })
+        elements,
+        showToast,
+        apiFetchJson,
+        refreshDashboard,
+        escapeHtml
+      })
       : null;
     liveDeliveryController = window.CrmLiveDelivery && typeof window.CrmLiveDelivery.createController === 'function'
       ? window.CrmLiveDelivery.createController({
-          elements,
-          modalState,
-          escapeHtml,
-          formatDateTime,
-          formatDateTimeLocalValue,
-          renderClassroomSchedulePrompt
-        })
+        elements,
+        modalState,
+        escapeHtml,
+        formatDateTime,
+        formatDateTimeLocalValue,
+        renderClassroomSchedulePrompt
+      })
       : null;
     studentModalController = window.CrmStudentModal && typeof window.CrmStudentModal.createController === 'function'
       ? window.CrmStudentModal.createController({
-          elements,
-          modalState,
-          showToast,
-          refreshStudentFinance,
-          saveStudentProfile,
-          createRecommendedEnrollment,
-          renderStudentClassroomMatches: (payload) => {
-            if (studentFinanceController && typeof studentFinanceController.renderStudentClassroomMatches === 'function') {
-              studentFinanceController.renderStudentClassroomMatches(payload);
-            }
-          },
-          createEntranceTest,
-          copyToClipboard,
-          apiFetchJson,
-          refreshStudentIdentity,
-          applyReminderBadge,
-          resetStudentTaskComposer,
-          resetStudentActivityComposer,
-          resetStudentFinanceComposer,
-          renderStudentSchedulePrompt
-        })
+        elements,
+        modalState,
+        showToast,
+        openFreshStudentModal,
+        closeStudentProfile,
+        refreshStudentFinance,
+        saveStudentProfile,
+        createRecommendedEnrollment,
+        renderStudentClassroomMatches: (payload) => {
+          if (studentFinanceController && typeof studentFinanceController.renderStudentClassroomMatches === 'function') {
+            studentFinanceController.renderStudentClassroomMatches(payload);
+          }
+        },
+        createEntranceTest,
+        copyToClipboard,
+        apiFetchJson,
+        refreshStudentIdentity,
+        applyReminderBadge,
+        resetStudentTaskComposer,
+        resetStudentActivityComposer,
+        resetStudentFinanceComposer,
+        renderStudentSchedulePrompt
+      })
       : null;
     courseModalController = window.CrmCourseModal && typeof window.CrmCourseModal.createController === 'function'
       ? window.CrmCourseModal.createController({
-          elements,
-          modalState,
-          showToast,
-          apiFetchJson,
-          refreshCourseCatalog,
-          getCoursePayload,
-          openCourseModal,
-          setCourseTeachers
-        })
+        elements,
+        modalState,
+        showToast,
+        apiFetchJson,
+        refreshCourseCatalog,
+        getCoursePayload,
+        openCourseModal,
+        setCourseTeachers
+      })
       : null;
     classroomModalController = window.CrmClassroomModal && typeof window.CrmClassroomModal.createController === 'function'
       ? window.CrmClassroomModal.createController({
-          elements,
-          modalState,
-          showToast,
-          openClassroomModal,
-          saveClassroomSettings,
-          previewClassroomRegeneration,
-          applyClassroomRegeneration,
-          loadClassroomModules,
-          loadClassroomClasswork,
-          loadClassroomStream,
-          loadClassroomAttendance,
-          loadReviewBoard,
-          loadLiveSessions,
-          renderClassroomSchedulePrompt,
-          renderAttendanceWorkflowGuidance,
-          renderClassworkWorkflowGuidance,
-          enrollStudentIntoClassroom,
-          createAttendanceSessionForClassroom,
-          saveAttendanceRecordsForClassroom,
-          resetLiveSessionForm,
-          renderLiveDeliverySummary,
-          saveLiveSession,
-          startSelectedLiveSession,
-          endSelectedLiveSession,
-          getSelectedLiveSession,
-          copyToClipboard,
-          refreshAttendanceClassroomFitNote,
-          populateClassroomCourseOptions
-        })
+        elements,
+        modalState,
+        showToast,
+        openClassroomModal,
+        saveClassroomSettings,
+        previewClassroomRegeneration,
+        applyClassroomRegeneration,
+        loadClassroomModules,
+        loadClassroomClasswork,
+        loadClassroomStream,
+        loadClassroomAttendance,
+        loadReviewBoard,
+        loadLiveSessions,
+        renderClassroomSchedulePrompt,
+        renderAttendanceWorkflowGuidance,
+        renderClassworkWorkflowGuidance,
+        enrollStudentIntoClassroom,
+        createAttendanceSessionForClassroom,
+        saveAttendanceRecordsForClassroom,
+        resetLiveSessionForm,
+        renderLiveDeliverySummary,
+        saveLiveSession,
+        startSelectedLiveSession,
+        endSelectedLiveSession,
+        getSelectedLiveSession,
+        copyToClipboard,
+        refreshAttendanceClassroomFitNote,
+        populateClassroomCourseOptions
+      })
       : null;
     setupTabs();
     setupLeadComposer();
@@ -688,7 +851,10 @@
     if (schedulerController && typeof schedulerController.init === 'function') {
       schedulerController.init();
     }
-    applyRouteFromHash();
+    if (teacherSchedulerController && typeof teacherSchedulerController.init === 'function') {
+      teacherSchedulerController.init();
+    }
+    applyRouteFromHash({ initial: true });
     render();
 
     refreshStudentLists().catch((e) => {
@@ -812,6 +978,9 @@
     // Main Nav Items
     elements.navItems.forEach((btn) => {
       btn.addEventListener('click', () => {
+        if (state.studentLookup) {
+          clearStudentProfileState();
+        }
         const nextMain = btn.dataset.main;
         if (nextMain === 'courses') {
           // Courses is a dropdown parent, maybe do nothing or open first sub
@@ -828,6 +997,9 @@
     elements.dropdownItems.forEach((btn) => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
+        if (state.studentLookup) {
+          clearStudentProfileState();
+        }
         const nextSub = btn.dataset.sub;
         // For simple routing, we assume parent is 'courses' if it's in a dropdown for now
         // In a real app, you'd find the closest .crm-nav-dropdown parent's data-main
@@ -858,6 +1030,10 @@
     // Open Modal
     elements.btnNewStudentTriggers.forEach(btn => {
       btn.addEventListener('click', () => {
+        if (typeof openFreshStudentModal === 'function') {
+          openFreshStudentModal();
+          return;
+        }
         elements.studentModal.style.display = 'flex';
         elements.studentModal.setAttribute('aria-hidden', 'false');
         resetStudentModal();
@@ -866,6 +1042,10 @@
 
     // Close Modal Func
     const closeStudentModal = () => {
+      if (typeof closeStudentProfile === 'function') {
+        closeStudentProfile();
+        return;
+      }
       elements.studentModal.style.display = 'none';
       elements.studentModal.setAttribute('aria-hidden', 'true');
       // Reset tabs to info
@@ -1026,6 +1206,7 @@
       studentModalController.resetStudentModal();
       return;
     }
+    modalState.studentSessionKey = Number(modalState.studentSessionKey || 0) + 1;
     modalState.studentId = null;
     modalState.studentProfile = null;
     modalState.createdTestLinks = new Map();
@@ -1248,23 +1429,23 @@
     const basePayload = window.CrmStudents && typeof window.CrmStudents.buildPayload === 'function'
       ? window.CrmStudents.buildPayload(elements)
       : {
-      name: String(elements.inputStudentName?.value || '').trim(),
-      label: String(elements.inputStudentLabel?.value || '').trim(),
-      phone: String(elements.inputStudentPhone?.value || '').trim(),
-      email: String(elements.inputStudentEmail?.value || '').trim(),
-      zalo: String(elements.inputStudentZalo?.value || '').trim(),
-      facebook: String(elements.inputStudentFacebook?.value || '').trim(),
-      facebookProfileUrl: String(elements.inputStudentFacebookProfileUrl?.value || '').trim(),
-      learningProfile: {
-        overall: null,
-        listening: null,
-        reading: null,
-        speaking: null,
-        writing: null,
-        entryLevel: String(elements.inputStudentLevel?.value || '').trim(),
-        testResultDueDate: String(elements.inputStudentDueDate?.value || '').trim()
-      }
-    };
+        name: String(elements.inputStudentName?.value || '').trim(),
+        label: String(elements.inputStudentLabel?.value || '').trim(),
+        phone: String(elements.inputStudentPhone?.value || '').trim(),
+        email: String(elements.inputStudentEmail?.value || '').trim(),
+        zalo: String(elements.inputStudentZalo?.value || '').trim(),
+        facebook: String(elements.inputStudentFacebook?.value || '').trim(),
+        facebookProfileUrl: String(elements.inputStudentFacebookProfileUrl?.value || '').trim(),
+        learningProfile: {
+          overall: null,
+          listening: null,
+          reading: null,
+          speaking: null,
+          writing: null,
+          entryLevel: String(elements.inputStudentLevel?.value || '').trim(),
+          testResultDueDate: String(elements.inputStudentDueDate?.value || '').trim()
+        }
+      };
 
     const overviewPayload = window.CrmStudent360 && typeof window.CrmStudent360.buildPayload === 'function'
       ? window.CrmStudent360.buildPayload(elements)
@@ -1718,18 +1899,36 @@
 
       const studentId = String(json.studentId || json.student?.studentId || modalState.studentId || '').trim();
       if (!studentId) throw new Error('Student ID missing from server response.');
+      const student = json.student && typeof json.student === 'object'
+        ? json.student
+        : {
+          ...modalState.studentProfile,
+          ...payload,
+          studentId
+        };
+      const crmId = normalizeCrmId(json.crmId || json.student?.crmId || student.crmId || modalState.studentProfile?.crmId || '');
+      if (!crmId) {
+        throw new Error('CRM ID missing from server response.');
+      }
 
       modalState.studentId = studentId;
-      modalState.studentProfile = json.student || {
-        ...modalState.studentProfile,
-        ...payload,
-        studentId
+      modalState.studentProfile = {
+        ...student,
+        studentId,
+        crmId
       };
+      state.main = 'students';
+      state.sub = state.studentReturnRoute && state.studentReturnRoute.main === 'students' && isStudentListSubRoute(state.studentReturnRoute.sub)
+        ? state.studentReturnRoute.sub
+        : getStudentListSubRoute(modalState.studentProfile);
+      state.studentLookup = crmId;
 
       if (elements.studentIdBadge) {
-        elements.studentIdBadge.textContent = `ID: ${studentId}`;
+        elements.studentIdBadge.textContent = `ID: ${crmId}`;
         elements.studentIdBadge.style.display = 'inline-flex';
       }
+
+      setStudentProfileHash(crmId);
 
       if (elements.btnAddEntranceTest) elements.btnAddEntranceTest.disabled = false;
 
@@ -2126,21 +2325,24 @@
     renderActivityList(elements.leadActivityList, activities, 'No lead activity yet.');
   }
 
-  async function refreshStudentTimeline() {
-    if (!modalState.studentId) {
+  async function refreshStudentTimeline(session = null) {
+    const studentId = String(session?.studentId || modalState.studentId || '').trim();
+    if (!studentId) {
       if (elements.studentTaskMeta) {
         elements.studentTaskMeta.textContent = 'Save the profile to schedule follow-ups.';
       }
       applyReminderBadge(elements.studentTaskBadge, null);
       return;
     }
+    if (session && !isActiveStudentSession(session)) return;
 
     const [tasks, activities] = await Promise.all([
-      fetchTasks({ studentId: modalState.studentId, limit: 50 }),
-      fetchActivities({ studentId: modalState.studentId, limit: 50 })
+      fetchTasks({ studentId, limit: 50 }),
+      fetchActivities({ studentId, limit: 50 })
     ]);
+    if (session && !isActiveStudentSession(session)) return;
 
-    const summary = getReminderSummary({ studentId: modalState.studentId });
+    const summary = getReminderSummary({ studentId });
     if (elements.studentTaskMeta) {
       elements.studentTaskMeta.textContent = summary?.nextActionAt
         ? formatDueAtForMeta(summary.nextActionAt)
@@ -2554,10 +2756,10 @@
           const item = window.CrmGovernance
             ? window.CrmGovernance.formatDuplicateGroup(group)
             : {
-                title: String(group.kind || 'match'),
-                subtitle: String(group.key || ''),
-                detail: Array.isArray(group.studentIds) ? group.studentIds.join(', ') : ''
-              };
+              title: String(group.kind || 'match'),
+              subtitle: String(group.key || ''),
+              detail: Array.isArray(group.studentIds) ? group.studentIds.join(', ') : ''
+            };
           return `
             <div class="crm-task-item">
               <div class="crm-task-head">
@@ -2702,6 +2904,7 @@
       const data = doc.data() || {};
       return {
         studentId: doc.id,
+        crmId: normalizeCrmId(data.crmId),
         name: data.name || null,
         label: data.label || null,
         phone: data.phone || null,
@@ -2719,10 +2922,26 @@
     throw new Error('Student profile missing from server response.');
   }
 
+  async function fetchStudentProfileByCrmId(crmId) {
+    const normalized = normalizeCrmId(crmId);
+    if (!normalized) {
+      throw new Error('Missing CRM ID.');
+    }
+    const json = await apiFetchJson(`/api/admin/students/by-crm-id/${encodeURIComponent(normalized)}`, { method: 'GET' });
+    if (json?.student && typeof json.student === 'object') return json.student;
+    throw new Error('Student profile missing from server response.');
+  }
+
+  function findCachedStudentByCrmId(crmId) {
+    const normalized = normalizeCrmId(crmId);
+    if (!normalized) return null;
+    const students = Array.isArray(dataCache.students) ? dataCache.students : [];
+    const match = students.find((row) => normalizeCrmId(row?.crmId || '') === normalized) || null;
+    return match && typeof match === 'object' ? match : null;
+  }
+
   function openStudentModal() {
-    if (!elements.studentModal) return;
-    elements.studentModal.style.display = 'flex';
-    elements.studentModal.setAttribute('aria-hidden', 'false');
+    showStudentModalSurface();
   }
 
   function openCourseModal() {
@@ -2737,19 +2956,45 @@
     elements.classroomModal.setAttribute('aria-hidden', 'false');
   }
 
-  async function openStudentProfile(studentId, cachedStudent = null) {
+  async function openStudentProfile(studentId, cachedStudent = null, options = {}) {
     const id = String(studentId || '').trim();
     if (!id) throw new Error('Missing student ID.');
+
+    const {
+      syncHash = true,
+      captureReturnRoute = true,
+      returnRoute = null,
+      crmId: explicitCrmId = '',
+      refreshProfile = true
+    } = options || {};
+
+    const student = cachedStudent && typeof cachedStudent === 'object' ? cachedStudent : null;
+    let resolvedCrmId = normalizeCrmId(explicitCrmId || student?.crmId || modalState.studentProfile?.crmId || '');
+    const nextReturnRoute = returnRoute && normalizeRouteToken(returnRoute.main)
+      ? {
+        main: normalizeRouteToken(returnRoute.main) || DEFAULT_ROUTE.main,
+        sub: normalizeRouteToken(returnRoute.sub)
+      }
+      : (captureReturnRoute ? snapshotRoute() : null);
+    const backgroundSub = nextReturnRoute && nextReturnRoute.main === 'students' && isStudentListSubRoute(nextReturnRoute.sub)
+      ? nextReturnRoute.sub
+      : getStudentListSubRoute(student);
 
     openStudentModal();
     resetStudentModal();
 
+    state.main = 'students';
+    state.sub = backgroundSub;
+    state.studentLookup = resolvedCrmId;
+    state.studentReturnRoute = nextReturnRoute;
+
     modalState.studentId = id;
-    modalState.studentProfile = cachedStudent || null;
+    modalState.studentProfile = student || null;
     modalState.createdTestLinks = new Map();
+    const studentSession = beginStudentSession(id);
 
     if (elements.studentIdBadge) {
-      elements.studentIdBadge.textContent = `ID: ${id}`;
+      elements.studentIdBadge.textContent = `ID: ${resolvedCrmId || normalizeCrmId(id) || id}`;
       elements.studentIdBadge.style.display = 'inline-flex';
     }
 
@@ -2763,11 +3008,7 @@
       elements.btnAddEntranceTest.textContent = 'Add new test';
     }
 
-    const student = cachedStudent || null;
-
-    if (!student) {
-      showToast('Student details are not available yet. Please refresh and try again.', 'error');
-    } else {
+    if (student) {
       if (window.CrmStudents && typeof window.CrmStudents.applyToForm === 'function') {
         window.CrmStudents.applyToForm(elements, student);
       }
@@ -2777,33 +3018,106 @@
       renderStudentSchedulePrompt();
     }
 
-    fetchStudentProfile(id).then((fresh) => {
-      if (!fresh) return;
-      modalState.studentProfile = fresh;
-      if (window.CrmStudents && typeof window.CrmStudents.applyToForm === 'function') {
-        window.CrmStudents.applyToForm(elements, fresh);
-      }
-      if (window.CrmStudent360 && typeof window.CrmStudent360.applyToForm === 'function') {
-        window.CrmStudent360.applyToForm(elements, fresh);
-      }
-      renderStudentSchedulePrompt();
-    }).catch((error) => {
-      console.error('[CRM Admin] Failed to refresh student profile after open:', error);
-    });
+    if (syncHash && resolvedCrmId) {
+      setStudentProfileHash(resolvedCrmId);
+    }
 
-    await refreshEntranceTestsList();
-    await refreshStudentIdentity();
-    await refreshStudentTimeline();
-    await refreshStudentFinance();
-    switchStudentTab('info');
+    if (refreshProfile) {
+      fetchStudentProfile(id).then((fresh) => {
+        if (!isActiveStudentSession(studentSession)) {
+          return;
+        }
+        if (!fresh) return;
+        modalState.studentProfile = fresh;
+        const freshCrmId = normalizeCrmId(fresh.crmId || '');
+        if (freshCrmId) {
+          resolvedCrmId = freshCrmId;
+          state.studentLookup = freshCrmId;
+          if (elements.studentIdBadge) {
+            elements.studentIdBadge.textContent = `ID: ${freshCrmId}`;
+            elements.studentIdBadge.style.display = 'inline-flex';
+          }
+          if (syncHash && window.location.hash !== getRouteHash('students', freshCrmId)) {
+            setStudentProfileHash(freshCrmId);
+          }
+        }
+        if (window.CrmStudents && typeof window.CrmStudents.applyToForm === 'function') {
+          window.CrmStudents.applyToForm(elements, fresh);
+        }
+        if (window.CrmStudent360 && typeof window.CrmStudent360.applyToForm === 'function') {
+          window.CrmStudent360.applyToForm(elements, fresh);
+        }
+        renderStudentSchedulePrompt();
+      }).catch((error) => {
+        if (isActiveStudentSession(studentSession)) {
+          console.error('[CRM Admin] Failed to refresh student profile after open:', error);
+        }
+      });
+    }
+
+    await refreshEntranceTestsList(studentSession);
+    await refreshStudentIdentity(studentSession);
+    await refreshStudentTimeline(studentSession);
+    await refreshStudentFinance(studentSession);
   }
 
-  async function refreshStudentIdentity() {
-    if (!modalState.studentId) return;
+  async function openStudentProfileByCrmId(crmId, options = {}) {
+    const normalizedCrmId = normalizeCrmId(crmId);
+    if (!normalizedCrmId) throw new Error('Missing CRM ID.');
+
+    const cachedStudent = findCachedStudentByCrmId(normalizedCrmId);
+    const cachedStudentId = String(cachedStudent?.studentId || cachedStudent?.id || '').trim();
+    const hasFullCachedProfile = !!cachedStudent && Object.prototype.hasOwnProperty.call(cachedStudent, 'learningProfile');
+    const student = cachedStudentId ? cachedStudent : await fetchStudentProfileByCrmId(normalizedCrmId);
+    const returnRoute = options.returnRoute && normalizeRouteToken(options.returnRoute.main)
+      ? {
+        main: normalizeRouteToken(options.returnRoute.main) || DEFAULT_ROUTE.main,
+        sub: normalizeRouteToken(options.returnRoute.sub)
+      }
+      : {
+        main: 'students',
+        sub: getStudentListSubRoute(student)
+      };
+
+    await openStudentProfile(student.studentId || normalizedCrmId, student, {
+      ...options,
+      syncHash: false,
+      captureReturnRoute: false,
+      returnRoute,
+      crmId: normalizedCrmId,
+      refreshProfile: cachedStudentId ? !hasFullCachedProfile : false
+    });
+  }
+
+  function openFreshStudentModal() {
+    state.studentReturnRoute = snapshotRoute();
+    state.studentLookup = '';
+    openStudentModal();
+    resetStudentModal();
+  }
+
+  function closeStudentProfile() {
+    const hadProfile = !!state.studentLookup;
+    const targetRoute = hadProfile ? getStudentReturnRoute(modalState.studentProfile) : snapshotRoute();
+
+    clearStudentProfileState();
+
+    if (!hadProfile) return;
+
+    state.main = normalizeRouteToken(targetRoute.main) || 'students';
+    state.sub = normalizeRouteToken(targetRoute.sub);
+    updateHash();
+  }
+
+  async function refreshStudentIdentity(session = null) {
+    const studentId = String(session?.studentId || modalState.studentId || '').trim();
+    if (!studentId) return;
+    if (session && !isActiveStudentSession(session)) return;
     try {
       // Re-fetch the student document to get class_code and linked_user_ids
-      const snap = await firebase.firestore().collection('crmStudents').doc(modalState.studentId).get();
+      const snap = await firebase.firestore().collection('crmStudents').doc(studentId).get();
       if (!snap.exists) return;
+      if (session && !isActiveStudentSession(session)) return;
       const data = snap.data();
 
       if (elements.inputClassCodeDisplay) {
@@ -2824,7 +3138,9 @@
         }
       }
     } catch (e) {
-      console.error('[CRM Admin] Failed to refresh identity:', e);
+      if (!session || isActiveStudentSession(session)) {
+        console.error('[CRM Admin] Failed to refresh identity:', e);
+      }
     }
   }
 
@@ -2882,6 +3198,19 @@
           const lead = Array.isArray(dataCache.leads)
             ? dataCache.leads.find((row) => String(row.leadId || '').trim() === leadId)
             : null;
+
+          // Converted leads should navigate to the student profile rather than reopening the enquiry workspace.
+          if (lead && window.CrmLeads && typeof window.CrmLeads.isConvertedLead === 'function'
+            && window.CrmLeads.isConvertedLead(lead)
+            && lead.studentId
+            && typeof openStudentProfile === 'function') {
+            openStudentProfile(String(lead.studentId || '').trim(), null, { crmId: lead.crmId || '' }).catch((error) => {
+              console.error('[CRM Admin] Open converted lead student profile failed:', error);
+              showToast(error?.message || 'Failed to open student profile.', 'error');
+            });
+            return;
+          }
+
           if (elements.leadWorkspaceTitle) {
             elements.leadWorkspaceTitle.textContent = lead?.name || lead?.email || 'Lead Workspace';
           }
@@ -2919,13 +3248,16 @@
           const leadId = String(button.dataset.leadId || '').trim();
           try {
             button.disabled = true;
-            await apiFetchJson(`/api/admin/leads/${encodeURIComponent(leadId)}/convert`, {
+            const json = await apiFetchJson(`/api/admin/leads/${encodeURIComponent(leadId)}/convert`, {
               method: 'POST'
             });
             await Promise.all([
               refreshLeadPipeline(),
               refreshStudentLists()
             ]);
+            if (json?.student && typeof openStudentProfile === 'function') {
+              await openStudentProfile(json.student.studentId || json.student.id || '', json.student);
+            }
             showToast('Lead converted to student.', 'success');
           } catch (error) {
             console.error('[CRM Admin] Convert lead failed:', error);
@@ -2946,9 +3278,9 @@
           <tbody>
             ${leads.map((lead) => `
               ${(() => {
-                const isConverted = window.CrmLeads.isConvertedLead(lead);
-                const stageOptions = window.CrmLeads.getSelectableStages(lead.stage);
-                return `
+        const isConverted = window.CrmLeads.isConvertedLead(lead);
+        const stageOptions = window.CrmLeads.getSelectableStages(lead.stage);
+        return `
               <tr>
                 <td class="td-bold">
                   <div class="crm-name-cell">
@@ -2974,7 +3306,7 @@
                 </td>
               </tr>
             `;
-              })()}
+      })()}
             `).join('')}
           </tbody>
         </table>
@@ -3025,21 +3357,24 @@
     if (entranceTestUi && typeof entranceTestUi.applyControls === 'function') {
       const latestActiveTest = Array.isArray(tests)
         ? tests.find((test) => {
-            const status = String(test?.status || '').toLowerCase();
-            const testId = String(test?.testId || '').trim();
-            const testLink = String(test?.testLink || modalState.createdTestLinks.get(testId) || '').trim();
-            return (status === 'created' || status === 'started') && testLink;
-          }) || null
+          const status = String(test?.status || '').toLowerCase();
+          const testId = String(test?.testId || '').trim();
+          const testLink = String(test?.testLink || modalState.createdTestLinks.get(testId) || '').trim();
+          return (status === 'created' || status === 'started') && testLink;
+        }) || null
         : null;
       entranceTestUi.applyControls(elements, latestActiveTest, { hasAnyTests: true });
     }
   }
 
-  async function refreshEntranceTestsList() {
-    if (!modalState.studentId) return;
-    const json = await apiFetchJson(`/api/admin/students/${encodeURIComponent(modalState.studentId)}/entrance-tests`, {
+  async function refreshEntranceTestsList(session = null) {
+    const studentId = String(session?.studentId || modalState.studentId || '').trim();
+    if (!studentId) return;
+    if (session && !isActiveStudentSession(session)) return;
+    const json = await apiFetchJson(`/api/admin/students/${encodeURIComponent(studentId)}/entrance-tests`, {
       method: 'GET'
     });
+    if (session && !isActiveStudentSession(session)) return;
     const tests = entranceTestUi && typeof entranceTestUi.buildViewModel === 'function'
       ? entranceTestUi.buildViewModel(json.tests || [], modalState.createdTestLinks).tests
       : (json.tests || []);
@@ -3220,7 +3555,7 @@
   function isValidSub(main, sub) {
     if (main === 'courses') {
       // Allow the new sub tabs for courses
-      const courseSubs = ['courses', 'classes', 'zoom-links', 'materials', 'planning', 'new-planning', 'admission-calendar', 'class-management'];
+      const courseSubs = ['courses', 'classes', 'teacher-schedule', 'zoom-links', 'materials', 'planning', 'new-planning', 'admission-calendar', 'class-management'];
       return courseSubs.includes(sub);
     }
     const group = ROUTES[main];
@@ -3228,22 +3563,114 @@
     return group.subTabs.some((t) => t.id === sub);
   }
 
-  function applyRouteFromHash() {
+  function applyRouteFromHash({ initial = false } = {}) {
     const raw = (window.location.hash || '').replace(/^#/, '').trim();
     if (!raw) {
-      state.main = 'dashboard';
-      state.sub = '';
+      if (state.studentLookup) {
+        clearStudentProfileState();
+      }
+      state.main = DEFAULT_ROUTE.main;
+      state.sub = DEFAULT_ROUTE.sub;
       updateHash();
       return;
     }
 
-    const [main, sub] = raw.split('/').map((s) => (s || '').trim());
-    state.main = main || 'dashboard';
-    state.sub = sub || '';
+    const [mainRaw, subRaw] = raw.split('/').map((s) => normalizeRouteToken(s));
+    const main = normalizeRouteToken(mainRaw) || DEFAULT_ROUTE.main;
+    const sub = normalizeRouteToken(subRaw);
+
+    if (main === 'students') {
+      if (isStudentListSubRoute(sub)) {
+        if (state.studentLookup) {
+          clearStudentProfileState();
+        }
+        state.main = 'students';
+        state.sub = sub;
+        return;
+      }
+
+      if (isValidCrmId(sub)) {
+        const crmId = normalizeCrmId(sub);
+        const currentLookup = normalizeCrmId(state.studentLookup);
+        const currentProfileCrmId = normalizeCrmId(modalState.studentProfile?.crmId || '');
+        const sameOpenProfile = currentLookup === crmId && currentProfileCrmId === crmId;
+        const sameOpenLookup = currentLookup === crmId && !!String(modalState.studentId || '').trim() && !!state.studentReturnRoute;
+
+        // Canonicalize student profile hashes so pasted uppercase IDs still resolve to a stable URL.
+        if (sub && crmId && sub !== crmId) {
+          const canonical = getRouteHash('students', crmId);
+          if (window.location.hash !== canonical) {
+            try {
+              window.history.replaceState(null, '', canonical);
+            } catch (_) {
+              // replaceState may be blocked in older browser contexts; ignore.
+            }
+          }
+        }
+
+        // If the modal has already been opened programmatically (e.g. after converting a lead),
+        // the hashchange event should not overwrite the captured return route.
+        if (sameOpenProfile || sameOpenLookup) {
+          state.main = 'students';
+          return;
+        }
+        const routeSnapshot = snapshotRoute();
+        const fallbackRoute = routeSnapshot.main === 'students'
+          ? {
+            main: 'students',
+            sub: isStudentListSubRoute(routeSnapshot.sub)
+              ? routeSnapshot.sub
+              : getStudentListSubRoute(modalState.studentProfile)
+          }
+          : routeSnapshot;
+
+        state.main = 'students';
+        state.sub = isStudentListSubRoute(routeSnapshot.sub) ? routeSnapshot.sub : getStudentListSubRoute(modalState.studentProfile);
+        state.studentLookup = crmId;
+        state.studentReturnRoute = initial ? null : fallbackRoute;
+
+        openStudentProfileByCrmId(crmId, {
+          syncHash: false,
+          captureReturnRoute: false,
+          returnRoute: initial ? null : fallbackRoute,
+          initialRoute: initial
+        }).catch((error) => {
+          console.error('[CRM Admin] Failed to open student profile from hash:', error);
+          showToast(error?.message || 'Failed to open student profile.', 'error');
+          clearStudentProfileState();
+          state.main = 'students';
+          state.sub = 'potential';
+          if (window.location.hash !== '#students/potential') {
+            updateHash();
+          }
+        });
+        return;
+      }
+
+      if (state.studentLookup) {
+        clearStudentProfileState();
+      }
+      state.main = 'students';
+      state.sub = 'potential';
+      if (window.location.hash !== '#students/potential') {
+        updateHash();
+      }
+      return;
+    }
+
+    if (state.studentLookup) {
+      clearStudentProfileState();
+    }
+
+    state.main = ROUTES[main] ? main : DEFAULT_ROUTE.main;
+    state.sub = isValidSub(state.main, sub) ? sub : (ROUTES[state.main]?.subTabs[0]?.id || '');
+    if (!ROUTES[main] || !isValidSub(state.main, sub)) {
+      updateHash();
+    }
   }
 
   function updateHash() {
-    const next = state.sub ? `#${state.main}/${state.sub}` : `#${state.main}`;
+    const next = getRouteHash(state.main, state.sub);
     if (window.location.hash !== next) {
       window.location.hash = next;
     }
@@ -3274,6 +3701,12 @@
       });
     }
 
+    if (activePanel === 'courses/teacher-schedule') {
+      refreshTeacherSchedulerWorkspace().catch((error) => {
+        console.error('[CRM Admin] Teacher scheduler refresh failed:', error);
+      });
+    }
+
     if (activePanel === 'recycle') {
       refreshRecycleBin().catch((error) => {
         console.error('[CRM Admin] Recycle bin refresh failed:', error);
@@ -3289,6 +3722,11 @@
   function refreshSchedulerWorkspace() {
     if (!schedulerController || typeof schedulerController.refresh !== 'function') return Promise.resolve();
     return schedulerController.refresh();
+  }
+
+  function refreshTeacherSchedulerWorkspace() {
+    if (!teacherSchedulerController || typeof teacherSchedulerController.refresh !== 'function') return Promise.resolve();
+    return teacherSchedulerController.refresh();
   }
 
   function refreshRecycleBin() {
@@ -3337,6 +3775,7 @@
 
     const openFreshClassroomModal = () => {
       resetClassroomModal();
+      if (elements.schedulingSuggestionBanner) elements.schedulingSuggestionBanner.style.display = 'flex';
       openClassroomModal();
     };
 
@@ -3368,6 +3807,25 @@
           console.error('[CRM Admin] Save classroom scheduling failed:', e);
           showToast(e?.message || 'Failed to save classroom scheduling.', 'error');
         });
+      });
+    }
+
+    // --- Suggestion banner: Apply / Dismiss ---
+    if (elements.btnApplySchedulingDefaults) {
+      elements.btnApplySchedulingDefaults.addEventListener('click', () => {
+        if (window.CrmClassrooms && typeof window.CrmClassrooms.applyDefaults === 'function') {
+          window.CrmClassrooms.applyDefaults(elements);
+        }
+        if (window.CrmClassrooms && typeof window.CrmClassrooms.syncMeetingFieldsFromSeed === 'function') {
+          window.CrmClassrooms.syncMeetingFieldsFromSeed(elements);
+        }
+        if (elements.schedulingSuggestionBanner) elements.schedulingSuggestionBanner.style.display = 'none';
+        showToast('Suggested defaults applied — review and adjust as needed.', 'success');
+      });
+    }
+    if (elements.btnDismissSchedulingDefaults) {
+      elements.btnDismissSchedulingDefaults.addEventListener('click', () => {
+        if (elements.schedulingSuggestionBanner) elements.schedulingSuggestionBanner.style.display = 'none';
       });
     }
 
@@ -3427,8 +3885,8 @@
           elements.inputStreamPost.value = '';
           showToast('Announcement posted.', 'success');
           loadClassroomStream(modalState.classroomId);
-        } catch (e) { 
-          showToast(e.message, 'error'); 
+        } catch (e) {
+          showToast(e.message, 'error');
         } finally {
           elements.btnPostAnnouncement.disabled = false;
         }
@@ -3557,6 +4015,31 @@
         });
       });
     }
+
+    // --- Suggestive pre-input: course selection auto-fills scheduling fields ---
+    if (elements.inputClassroomCourseId) {
+      elements.inputClassroomCourseId.addEventListener('change', () => {
+        if (window.CrmClassrooms && typeof window.CrmClassrooms.applyCourseDefaults === 'function') {
+          window.CrmClassrooms.applyCourseDefaults(elements);
+        }
+      });
+    }
+
+    // --- Suggestive pre-input: seed fields auto-sync to meeting fields ---
+    const seedSyncFields = [
+      elements.inputClassroomSeedWeekdays,
+      elements.inputClassroomSeedStartTime,
+      elements.inputClassroomSessionMinutes
+    ];
+    seedSyncFields.forEach((field) => {
+      if (field) {
+        field.addEventListener('change', () => {
+          if (window.CrmClassrooms && typeof window.CrmClassrooms.syncMeetingFieldsFromSeed === 'function') {
+            window.CrmClassrooms.syncMeetingFieldsFromSeed(elements);
+          }
+        });
+      }
+    });
   }
 
   function resetClassroomModal() {
@@ -3630,6 +4113,7 @@
     if (elements.classroomRegenerationPreview) {
       elements.classroomRegenerationPreview.innerHTML = 'Preview regeneration to review preserved sessions, blocked reasons, and the next contracted target count.';
     }
+    if (elements.schedulingSuggestionBanner) elements.schedulingSuggestionBanner.style.display = 'none';
   }
 
   function switchClassroomTab(tabId) {
@@ -3900,11 +4384,11 @@
     const payload = window.CrmEnrollments && typeof window.CrmEnrollments.buildEnrollmentPayload === 'function'
       ? window.CrmEnrollments.buildEnrollmentPayload(elements, student)
       : {
-          studentId,
-          studentUid: student.linked_user_ids?.[0] || null,
-          studentName: student.name || null,
-          studentEmail: student.email || null
-        };
+        studentId,
+        studentUid: student.linked_user_ids?.[0] || null,
+        studentName: student.name || null,
+        studentEmail: student.email || null
+      };
 
     await window.ClassroomAPI.createEnrollment({
       ...payload,
@@ -4103,10 +4587,10 @@
     const payload = window.CrmClassrooms && typeof window.CrmClassrooms.buildPayload === 'function'
       ? window.CrmClassrooms.buildPayload(elements)
       : {
-          name: elements.inputClassroomName.value.trim(),
-          courseId: elements.inputClassroomCourseId.value,
-          status: elements.inputClassroomStatus.value
-        };
+        name: elements.inputClassroomName.value.trim(),
+        courseId: elements.inputClassroomCourseId.value,
+        status: elements.inputClassroomStatus.value
+      };
     if (!payload.name) throw new Error('Classroom name is required.');
 
     const res = modalState.classroomId
@@ -4135,7 +4619,7 @@
     if (elements.classroomTitle) elements.classroomTitle.textContent = payload.name;
     renderClassroomSchedulePrompt();
     await refreshClassroomList();
-    await refreshSchedulerWorkspace().catch(() => {});
+    await refreshSchedulerWorkspace().catch(() => { });
   }
 
   function buildRegenerationRequestPayload() {
@@ -4177,7 +4661,7 @@
     renderClassroomScheduleSummary(res.scheduleSummary || null);
     renderRegenerationPreview(null);
     await refreshClassroomList();
-    await refreshSchedulerWorkspace().catch(() => {});
+    await refreshSchedulerWorkspace().catch(() => { });
   }
 
   async function refreshClassroomList() {
@@ -4313,7 +4797,7 @@
             });
             clearSelectionSet(selectedClassroomIds);
             await refreshClassroomList();
-            await refreshDashboard().catch(() => {});
+            await refreshDashboard().catch(() => { });
             const archivedCount = Array.isArray(result.archivedIds) ? result.archivedIds.length : 0;
             const notFoundCount = Array.isArray(result.notFoundIds) ? result.notFoundIds.length : 0;
             if (archivedCount > 0) {
@@ -4618,7 +5102,7 @@
             });
             clearSelectionSet(selectedCourseIds);
             await refreshCourseCatalog();
-            await refreshDashboard().catch(() => {});
+            await refreshDashboard().catch(() => { });
             const archivedCount = Array.isArray(result.archivedIds) ? result.archivedIds.length : 0;
             const notFoundCount = Array.isArray(result.notFoundIds) ? result.notFoundIds.length : 0;
             if (archivedCount > 0) {
@@ -4822,10 +5306,10 @@
     const cards = Array.isArray(summaryCards) && summaryCards.length
       ? summaryCards
       : [
-          { label: 'Selected', value: String(total) },
-          { label: `Ready to ${normalizedConfirmText}`, value: String(deletable) },
-          { label: 'Not found', value: String(blockedList.length) }
-        ];
+        { label: 'Selected', value: String(total) },
+        { label: `Ready to ${normalizedConfirmText}`, value: String(deletable) },
+        { label: 'Not found', value: String(blockedList.length) }
+      ];
     elements.bulkDeleteWarningSummary.innerHTML = buildSummaryCardsHtml(cards);
     if (elements.bulkDeleteWarningPanelTitle) {
       elements.bulkDeleteWarningPanelTitle.textContent = detailTitle || 'Action details';

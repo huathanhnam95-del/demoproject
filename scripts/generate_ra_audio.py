@@ -2,8 +2,8 @@
 Generate ElevenLabs audio for Read Aloud questions with pause tags.
 
 Reads ANSWER CHUNKED column from RA.xlsx and translates chunk markers:
-  - ` / `  → [slightly short pause]
-  - ` // ` → [very brief pause]
+  - ` / `  → <break time="0.8s" />  (0.8s pause — phrase break)
+  - ` // ` → <break time="0.4s" />  (0.4s pause — brief breath)
 
 Each question gets:
   - 1 male voice × 2 speeds (100%, 80%)
@@ -74,8 +74,8 @@ def translate_chunks_to_pauses(chunked_text, plain_text):
     if not chunked_text or not str(chunked_text).strip():
         return str(plain_text).strip()  # fallback to clean text
     text = str(chunked_text).strip()
-    text = text.replace(' // ', ' [very brief pause] ')
-    text = text.replace(' / ', ' [slightly short pause] ')
+    text = text.replace(' // ', ' <break time="0.3s" /> ')
+    text = text.replace(' / ', ' <break time="0.6s" /> ')
     return text
 
 
@@ -182,6 +182,8 @@ def generate_single(api_key, text, voice_id, speed, output_path):
 def main():
     parser = argparse.ArgumentParser(description='Generate ElevenLabs audio for RA questions')
     parser.add_argument('--test', action='store_true', help='Only generate for 10 questions')
+    parser.add_argument('--gender', choices=['male', 'female'], default=None, help='Only generate for this gender')
+    parser.add_argument('--speed', type=int, choices=[100, 80], default=None, help='Only generate for this speed (100 or 80)')
     args = parser.parse_args()
 
     api_key = os.getenv('ELEVENLABS_API_KEY')
@@ -213,9 +215,15 @@ def main():
         with open(MANIFEST_FILE, 'r') as f:
             manifest = json.load(f)
 
-    total_tasks = len(questions) * 2 * len(SPEEDS)  # 2 genders × speeds
+    # Build filtered gender/speed combos
+    gender_filter = [args.gender] if args.gender else ['male', 'female']
+    speed_filter = [int(args.speed)] if args.speed else [int(s * 100) for s in SPEEDS]
+    active_speeds = [s for s in SPEEDS if int(s * 100) in speed_filter]
+
+    total_tasks = len(questions) * len(gender_filter) * len(active_speeds)
     done_count = 0
     skipped_count = 0
+    print(f'  Generating: genders={gender_filter}, speeds={[SPEED_LABELS[s] for s in active_speeds]}, total_tasks={total_tasks}')
 
     for q in questions:
         q_id = q['id']
@@ -230,7 +238,9 @@ def main():
         })
 
         for gender, voice in [('male', male_voice), ('female', female_voice)]:
-            for speed in SPEEDS:
+            if gender not in gender_filter:
+                continue
+            for speed in active_speeds:
                 speed_label = SPEED_LABELS[speed]
                 filename = f'RA_{q_id}_{gender}_{speed_label}.mp3'
                 file_key = f'{q_id}_{gender}_{speed_label}'

@@ -17,9 +17,9 @@
 
 ### Functional
 
-- Bookmark words from practice modes and from "missed word" harvests.
+- Bookmark words from practice modes and from "missed word" harvests (excluding grammar/function words automatically).
 - Maintain two key lists:
-  - Bookmarks (user-curated)
+  - Bookmarks (user-curated, sortable by 'Date Added')
   - Frequently missed (system-curated from errors)
 - Guest users can open the Vocabulary Book, manually add words, and continue to SRS without forced login.
 - Integrate with SRS:

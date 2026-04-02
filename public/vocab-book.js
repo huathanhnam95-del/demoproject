@@ -26,6 +26,56 @@ const VocabularyBook = (function () {
 
     const log = Logger.create('VocabBook');
 
+    // Centralized grammar/function word filter — words that should NEVER be tracked or bookmarked
+    const GRAMMAR_WORDS = new Set([
+        // Articles
+        'a', 'an', 'the',
+        // Conjunctions
+        'and', 'or', 'but', 'nor', 'so', 'yet', 'for',
+        // Prepositions
+        'in', 'on', 'at', 'to', 'of', 'with', 'by', 'from', 'up', 'about', 'into', 'through',
+        'during', 'including', 'until', 'against', 'among', 'throughout', 'despite', 'towards',
+        'upon', 'concerning', 'over', 'under', 'above', 'below', 'between', 'within', 'without',
+        'across', 'around', 'behind', 'beside', 'besides', 'beyond', 'near', 'off', 'out', 'down',
+        'toward', 'till',
+        // Auxiliary / Modal verbs
+        'is', 'are', 'was', 'were', 'be', 'been', 'being',
+        'have', 'has', 'had', 'having',
+        'do', 'does', 'did', 'doing',
+        'will', 'would', 'could', 'should', 'may', 'might', 'can', 'must', 'shall',
+        // Demonstratives
+        'this', 'that', 'these', 'those',
+        // Pronouns
+        'i', 'you', 'he', 'she', 'it', 'we', 'they',
+        'me', 'him', 'her', 'us', 'them',
+        'my', 'your', 'his', 'its', 'our', 'their',
+        'mine', 'yours', 'hers', 'ours', 'theirs',
+        'myself', 'yourself', 'himself', 'herself', 'itself', 'ourselves', 'themselves',
+        // Relative / Interrogative
+        'who', 'whom', 'whose', 'which', 'what', 'where', 'when', 'why', 'how', 'whether',
+        // Adverbs / Particles (non-content)
+        'not', 'no', 'yes', 'well', 'quite', 'just', 'also', 'still', 'even', 'only',
+        'very', 'too', 'enough', 'rather', 'already', 'almost', 'really', 'perhaps', 'maybe',
+        'never', 'always', 'often', 'sometimes', 'here', 'there', 'now', 'then', 'ago',
+        'else', 'back', 'away', 'much', 'more', 'most', 'less', 'least',
+        // Quantifiers / Determiners
+        'some', 'any', 'many', 'few', 'all', 'each', 'every', 'both', 'other', 'another',
+        'such', 'either', 'neither',
+        // Linking words
+        'as', 'if', 'while', 'though', 'although', 'because', 'since', 'unless', 'whereas',
+        // Misc function words
+        'than', 'like', 'next'
+    ]);
+
+    /**
+     * Check if a word is a grammar/function word that should not be tracked
+     */
+    function isGrammarWord(word) {
+        if (!word) return true;
+        const normalized = String(word).trim().toLowerCase().replace(/[.,!?;:'"]/g, '');
+        return !normalized || normalized.length <= 1 || GRAMMAR_WORDS.has(normalized);
+    }
+
     // Firebase references
     let db = null;
     let currentUserId = null;
@@ -663,7 +713,7 @@ const VocabularyBook = (function () {
             });
         }
 
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;">Loading...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#94a3b8;">Loading...</td></tr>';
 
         let items = [];
         if (tabName === 'bookmarks') {
@@ -673,7 +723,7 @@ const VocabularyBook = (function () {
         }
 
         if (items.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;">No words found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;">No words found.</td></tr>';
             return;
         }
 
@@ -686,6 +736,8 @@ const VocabularyBook = (function () {
             const pos = item.partOfSpeech || 'unknown';
             const posLabel = pos === 'unknown' ? '-' : pos;
             const posClass = pos !== 'unknown' ? `vocab-badge-pos vocab-badge-pos-${pos}` : 'vocab-badge-pos';
+
+            const dateAdded = item.addedAt ? new Date(item.addedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) : '-';
 
             return `
                 <tr id="${rowId}" class="vocab-row-main">
@@ -707,6 +759,7 @@ const VocabularyBook = (function () {
                         ${mode === 'collo-dictate' ? '' : `<span class="vocab-badge vocab-badge-q">Q${escapeHtml(questionId)}</span>`}
                     </td>
                     <td><span class="${posClass}">${escapeHtml(posLabel)}</span></td>
+                    <td class="date-cell" style="white-space:nowrap;font-size:12px;color:#64748b;">${dateAdded}</td>
                     <td>
                         ${tabName === 'missed'
                     ? `<span class="vocab-badge vocab-badge-miss">${item.missCount}</span>`
@@ -717,7 +770,7 @@ const VocabularyBook = (function () {
                     </td>
                 </tr>
                 <tr id="${rowId}-details" class="vocab-row-details" style="display: none;">
-                    <td colspan="7">
+                    <td colspan="8">
                         <div class="vocab-table-details-content"></div>
                     </td>
                 </tr>
@@ -1135,6 +1188,12 @@ const VocabularyBook = (function () {
         const lemma = lemmatize(word);
         if (!lemma) return;
 
+        // Reject grammar/function words — they should never accumulate miss counts
+        if (isGrammarWord(lemma)) {
+            log.debug(`Rejected grammar word from tracking: "${word}" (${lemma})`);
+            return;
+        }
+
         if (!vocabCache.wordStats[lemma]) {
             vocabCache.wordStats[lemma] = { missCount: 0, correctStreak: 0 };
         }
@@ -1498,6 +1557,12 @@ const VocabularyBook = (function () {
             : String(word?.key || word?.lemma || (entryType === 'phrase'
                 ? `phrase:${String(word?.normalizedText || displayWord).trim().toLowerCase()}`
                 : lemmatize(displayWord))).trim();
+
+        // Reject grammar/function words (only for single words, not phrases)
+        if (entryType === 'word' && isGrammarWord(lemma)) {
+            log.debug(`Rejected grammar word from bookmark: "${displayWord}" (${lemma})`);
+            return false;
+        }
 
         // Check for duplicates
         const exists = vocabCache.bookmarkedWords.some(w => w.lemma === lemma);

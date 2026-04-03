@@ -8,8 +8,8 @@ const {
 const PROJECT_ROOT = path.resolve(__dirname, '..');
 const DEFAULT_WORKBOOK_PATH = path.join(PROJECT_ROOT, 'public', 'database', 'RFIB', 'RFIB Final ver.xlsx');
 const DEFAULT_AUDIO_DIR = path.join(PROJECT_ROOT, 'public', 'database', 'RFIB', 'audio');
-const DEFAULT_OUTPUT_INDEX_PATH = path.join(PROJECT_ROOT, 'public', 'database', 'rfib', 'index.json');
-const DEFAULT_OUTPUT_REVIEW_PATH = path.join(PROJECT_ROOT, 'public', 'database', 'rfib', 'review-metadata.json');
+const DEFAULT_OUTPUT_INDEX_PATH = path.join(PROJECT_ROOT, 'public', 'database', 'RFIB', 'index.json');
+const DEFAULT_OUTPUT_REVIEW_PATH = path.join(PROJECT_ROOT, 'public', 'database', 'RFIB', 'review-metadata.json');
 
 function ensureDir(filePath) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });

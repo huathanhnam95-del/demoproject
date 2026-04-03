@@ -39,7 +39,7 @@ jobs:
         run: node scripts/build-rfib-dataset.js
 
       - name: Confirm RFIB dataset is committed cleanly
-        run: git diff --exit-code -- public/database/rfib/index.json public/database/rfib/review-metadata.json
+        run: git diff --exit-code -- public/database/RFIB/index.json public/database/RFIB/review-metadata.json
 
       - name: Run RFIB browser smoke
         run: node tests/browser/rfib-mode-browser-check.js

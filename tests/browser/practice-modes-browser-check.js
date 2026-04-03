@@ -169,14 +169,14 @@ async function checkSkillFilter(page, skill, expectedVisibleIds, expectedModeId)
     );
 
     const launcherSemantics = await page.evaluate(() => {
-    const filterRoot = document.getElementById('practice-skill-filter');
+      const filterRoot = document.getElementById('practice-skill-filter');
       const readingCard = document.getElementById('mode-btn-rfib');
       const writingEmptyState = document.getElementById('practice-writing-empty');
       const readingPlaceholder = document.getElementById('mode-btn-reading');
 
       return {
         filterRole: filterRoot ? filterRoot.getAttribute('role') : null,
-        selectedSkill: document.querySelector('#practice-skill-filter .practice-skill-btn[data-practice-skill="listening"]')?.getAttribute('aria-pressed') || null,
+        selectedSkill: document.querySelector('#practice-skill-filter .practice-skill-btn[data-practice-skill="speaking"]')?.getAttribute('aria-pressed') || null,
         readingCardVisible: readingCard ? getComputedStyle(readingCard).display !== 'none' : false,
         readingPlaceholderExists: Boolean(readingPlaceholder),
         writingVisible: writingEmptyState ? getComputedStyle(writingEmptyState).display !== 'none' : false,
@@ -185,11 +185,11 @@ async function checkSkillFilter(page, skill, expectedVisibleIds, expectedModeId)
     });
 
     assert.strictEqual(launcherSemantics.filterRole, 'group', 'practice skill filter should use group semantics');
-    assert.strictEqual(launcherSemantics.selectedSkill, 'true', 'Listening should be selected on first load');
-    assert.strictEqual(launcherSemantics.readingCardVisible, false, 'Reading live card should start hidden under Listening');
+    assert.strictEqual(launcherSemantics.selectedSkill, 'true', 'Speaking should be selected on first load');
+    assert.strictEqual(launcherSemantics.readingCardVisible, false, 'Reading live card should start hidden under Speaking');
     assert.strictEqual(launcherSemantics.readingPlaceholderExists, false, 'Reading placeholder should not exist in the launcher');
     assert.strictEqual(launcherSemantics.writingVisible, false, 'Writing empty state should start hidden');
-    assert.strictEqual(launcherSemantics.tutorialButtonVisible, true, 'Tutorial button should be visible for the default Type mode');
+    assert.strictEqual(launcherSemantics.tutorialButtonVisible, true, 'Tutorial button should be visible for the default Read Aloud mode');
 
     for (const mode of ['type', 'speak', 'extended', 'rfib']) {
       // eslint-disable-next-line no-await-in-loop
@@ -205,7 +205,6 @@ async function checkSkillFilter(page, skill, expectedVisibleIds, expectedModeId)
       'mode-btn-type',
       'mode-btn-collo-dictate',
       'mode-btn-extended',
-      'mode-btn-watch',
       'mode-btn-notes'
     ], 'mode-extended');
 

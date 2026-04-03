@@ -159,5 +159,5 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 168,2026-04-02,Change default tab to Speaking and default mode to Read Aloud,Done,2026-04-02
 169,2026-04-02,Debug and refactor Speech Coach renderConnectedSpeechResults,Done,2026-04-02
 170,2026-04-02,Change Listening Practice to English Practice and hide Watch mode,Done,2026-04-02
-171,2026-04-02,Review and update Help me choose a mode options,Done,2026-04-02
+171,2026-04-02,Review and update Help me choose a mode options,Done,2026-04-03
 172,2026-04-02,Prepare V1.6.3 production release,Done,2026-04-02

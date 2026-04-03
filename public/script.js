@@ -892,12 +892,12 @@
   // Goal to modes mapping with descriptions
   const goalToModesMap = {
     'spelling': {
-      modes: ['type'],
-      description: 'Write exactly what you hear to sharpen your spelling.',
+      modes: ['type', 'collo-dictate'],
+      description: 'Write exactly what you hear to sharpen your spelling and collocations.',
       icon: '⌨️'
     },
     'speaking': {
-      modes: ['speak'],
+      modes: ['speak', 'read-aloud'],
       description: 'Practice speaking full sentences with speech recognition.',
       icon: '🎤'
     },
@@ -906,20 +906,30 @@
       description: 'Get detailed phoneme-level feedback on your pronunciation.',
       icon: '🗣️'
     },
+    'fluency': {
+      modes: ['read-aloud'],
+      description: 'Read passages aloud to build fluency and natural rhythm.',
+      icon: '📖'
+    },
+    'collocations': {
+      modes: ['collo-dictate'],
+      description: 'Listen and type common word combinations to sound more natural.',
+      icon: '🔗'
+    },
     'vocabulary': {
-      modes: ['extended'],
+      modes: ['extended', 'rfib'],
       description: 'Fill in blanks to reinforce vocabulary in context.',
       icon: '📝'
+    },
+    'reading': {
+      modes: ['rfib'],
+      description: 'Read academic passages and choose the best word for each blank.',
+      icon: '📚'
     },
     'notetaking': {
       modes: ['notes'],
       description: 'Listen to lectures and practice capturing key points.',
       icon: '📓'
-    },
-    'listening': {
-      modes: ['watch'],
-      description: 'Learn from real videos with interactive comprehension checks.',
-      icon: '📺'
     }
   };
 

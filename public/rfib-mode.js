@@ -1,8 +1,8 @@
 (function () {
   'use strict';
 
-  const DATA_URL = '/database/rfib/index.json';
-  const REVIEW_METADATA_URL = '/database/rfib/review-metadata.json';
+  const DATA_URL = '/database/RFIB/index.json';
+  const REVIEW_METADATA_URL = '/database/RFIB/review-metadata.json';
 
   const state = {
     initialized: false,

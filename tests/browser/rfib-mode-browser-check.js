@@ -80,7 +80,7 @@ function parseArgs(argv) {
 }
 
 function getSmokeQuestion() {
-  const dataPath = path.join(process.cwd(), 'public', 'database', 'rfib', 'index.json');
+  const dataPath = path.join(process.cwd(), 'public', 'database', 'RFIB', 'index.json');
   const data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
   const items = Array.isArray(data.items) ? data.items : [];
   const target = items.find((item) => item && item.beginnerText && item.intermediateText && item.audio?.beginner && item.audio?.intermediate)

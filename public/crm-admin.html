@@ -692,7 +692,10 @@
               style="margin-bottom: 24px; padding: 12px; border-radius: 8px; border: 1px solid #e0e0e0; background: #fafafa;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <label style="margin-bottom: 0; display: flex; align-items: center; gap: 4px;"><span>✨</span> AI Profile
-                  Snapshot</label>
+                  Snapshot
+                  <span id="ai-summary-date"
+                    style="display:none;font-size:11px;color:#888;font-weight:400;margin-left:8px;"></span>
+                </label>
                 <div style="display:flex;gap:6px;align-items:center;">
                   <button id="btn-stop-ai-summary" class="crm-btn-secondary" type="button"
                     style="display:none;padding:4px 12px;font-size:13px;background:#fecaca;color:#991b1b;">Stop</button>
@@ -701,10 +704,7 @@
                 </div>
               </div>
               <div id="student-ai-summary-box" style="font-size: 14px; color: #555; line-height: 1.5; margin-top: 8px;">
-                Click
-                'Generate'
-                to instantly parse this student's history, test scores, and counseling goals into a quick 3-sentence
-                snapshot.</div>
+                Click 'Generate' to create a summary, or save the profile to auto-generate.</div>
             </div>
             <div class="crm-form-grid">
               <div class="crm-form-group">

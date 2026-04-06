@@ -716,6 +716,26 @@
       elements.studentAiSummaryBox.textContent = 'Ollama is offline. Start Ollama and confirm OLLAMA_ORIGINS allows your origin, then click Refresh.';
       elements.studentAiSummaryBox.style.color = '#888';
     }
+
+    // Addendum A.2: Remote Ollama warning banner
+    let remoteBanner = document.getElementById('ollama-remote-warning');
+    const baseUrl = localStorage.getItem('crm:ollama_base_url') || 'http://localhost:11434';
+    const isRemote = !isLocalhostUrl(baseUrl) && localStorage.getItem('crm:allow_remote_ollama') === 'true';
+    if (isRemote) {
+      if (!remoteBanner) {
+        remoteBanner = document.createElement('div');
+        remoteBanner.id = 'ollama-remote-warning';
+        remoteBanner.className = 'ollama-remote-warning';
+        const content = document.querySelector('.crm-content');
+        if (content) content.prepend(remoteBanner);
+      }
+      remoteBanner.textContent = `⚠ Remote Ollama override active — data is sent to: ${escapeHtml(baseUrl)}`;
+      remoteBanner.style.display = 'block';
+      // eslint-disable-next-line no-console
+      console.warn('[Ollama] Remote override enabled. Data is sent to:', baseUrl);
+    } else if (remoteBanner) {
+      remoteBanner.style.display = 'none';
+    }
   }
 
   function isLocalhostUrl(urlStr) {
@@ -783,6 +803,8 @@
       controller.abort();
     }, Math.max(0, timeoutMs));
 
+    // Addendum E.9: Track latency
+    const _fetchStart = Date.now();
     try {
       const base = String(baseUrl || '').replace(/\/+$/, '');
       const ollamaOptions = opts.ollamaOptions && typeof opts.ollamaOptions === 'object' ? opts.ollamaOptions : {};
@@ -815,14 +837,24 @@
       }
       const message = e?.message || String(e);
       if (e instanceof TypeError || /failed to fetch/i.test(message)) {
+        // Addendum B.4: Immediately re-check health on network failure
+        _ollamaHealth.lastCheck = 0;
+        checkOllamaHealth().catch(() => { });
         throw new Error('Local Gemma 4 unreachable. Is Ollama running and allowed by OLLAMA_ORIGINS?');
       }
       throw new Error(`Gemma request failed: ${message}`);
     } finally {
       clearTimeout(timer);
+      // Addendum E.9: Latency tracking
+      const elapsed = Date.now() - _fetchStart;
+      // eslint-disable-next-line no-console
+      console.debug(`[Ollama] Request completed in ${elapsed}ms`);
     }
   }
-  window.fetchGemmaJSON = fetchGemmaJSON;
+  // Addendum A.3: Gate debug helper behind explicit switch
+  if (localStorage.getItem('crm:debug_ai') === 'true') {
+    window.fetchGemmaJSON = fetchGemmaJSON;
+  }
 
   /* ──────────────────────────────────────────────────────────── */
 
@@ -863,6 +895,27 @@
 
     if (elements.btnGenerateAiSummary) {
       let studentSummaryAbort = null;
+
+      // Addendum B.5: Stop button for student summary
+      const stopBtn = document.getElementById('btn-stop-ai-summary');
+      const showStopBtn = (show) => {
+        if (stopBtn) stopBtn.style.display = show ? 'inline-block' : 'none';
+      }
+      if (stopBtn) {
+        stopBtn.addEventListener('click', () => {
+          if (studentSummaryAbort) {
+            try { studentSummaryAbort.abort(); } catch (_) { /* */ }
+            studentSummaryAbort = null;
+          }
+          showStopBtn(false);
+          elements.btnGenerateAiSummary.disabled = !_ollamaHealth.online;
+          if (elements.studentAiSummaryBox) {
+            elements.studentAiSummaryBox.textContent = 'Generation stopped.';
+            elements.studentAiSummaryBox.style.color = '#888';
+          }
+        });
+      }
+
       elements.btnGenerateAiSummary.addEventListener('click', async () => {
         if (!elements.studentAiSummaryBox) return;
 
@@ -882,6 +935,7 @@
         studentSummaryAbort = requestAbort;
 
         elements.btnGenerateAiSummary.disabled = true;
+        showStopBtn(true);
         elements.studentAiSummaryBox.textContent = 'Generating summary with Gemma 4…';
         elements.studentAiSummaryBox.style.color = '#555';
         try {
@@ -912,7 +966,13 @@
           elements.studentAiSummaryBox.style.color = '#111';
         } catch (e) {
           if (studentSummaryAbort !== requestAbort) return;
-          if (e?.name === 'AbortError' || /aborted/i.test(String(e?.message || ''))) return;
+          if (e?.name === 'AbortError' || /aborted/i.test(String(e?.message || ''))) {
+            if (elements.studentAiSummaryBox) {
+              elements.studentAiSummaryBox.textContent = 'Generation stopped.';
+              elements.studentAiSummaryBox.style.color = '#888';
+            }
+            return;
+          }
           elements.studentAiSummaryBox.textContent = 'AI generation failed — ' + (e?.message || 'unknown error');
           elements.studentAiSummaryBox.style.color = '#c00';
           console.error('[AI Summary]', e);
@@ -921,6 +981,7 @@
             elements.btnGenerateAiSummary.disabled = !_ollamaHealth.online;
             studentSummaryAbort = null;
           }
+          showStopBtn(false);
         }
       });
     }

@@ -1065,10 +1065,18 @@ window.TeacherSchedulerWorkspace = (function () {
 
             if (elements.btnTeacherSchedulerVoiceNote) {
                 const voiceReady = elements.teacherSchedulerVoiceStatus
-                    && elements.inputTeacherSchedulerSessionNote
-                    && typeof fetchGemmaJSON === 'function';
+                    && elements.inputTeacherSchedulerSessionNote;
+                // Addendum C.6: Show disabled voice button with contextual messages instead of hiding
+                const hasSpeechAPI = ('webkitSpeechRecognition' in window) || ('SpeechRecognition' in window);
+                const hasGemma = typeof fetchGemmaJSON === 'function';
                 if (!voiceReady) {
-                    elements.btnTeacherSchedulerVoiceNote.style.display = 'none';
+                    elements.btnTeacherSchedulerVoiceNote.disabled = true;
+                    elements.btnTeacherSchedulerVoiceNote.title = 'Voice note dependencies unavailable';
+                    elements.btnTeacherSchedulerVoiceNote.style.opacity = '0.5';
+                } else if (!hasSpeechAPI) {
+                    elements.btnTeacherSchedulerVoiceNote.disabled = true;
+                    elements.btnTeacherSchedulerVoiceNote.title = 'Speech recognition requires Chrome';
+                    elements.btnTeacherSchedulerVoiceNote.style.opacity = '0.5';
                 } else {
                     let recognition = null;
                     const VALID_OUTCOMES = ['completed', 'absent_counted', 'absent_makeup', 'none'];

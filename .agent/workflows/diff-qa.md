@@ -87,9 +87,9 @@ Affected routes: {list}
 
 ```bash
 # Check for running dev server
-# Common ports: 3000, 5173, 8080, 4200
+# Common ports: 8443, 5173, 8080, 4200
 curl -s -o /dev/null -w "%{http_code}" http://localhost:8080
-curl -s -o /dev/null -w "%{http_code}" http://localhost:3000
+curl -s -o /dev/null -w "%{http_code}" http://localhost:8443
 curl -s -o /dev/null -w "%{http_code}" http://localhost:5173
 ```
 
@@ -103,25 +103,30 @@ curl -s -o /dev/null -w "%{http_code}" http://localhost:5173
 For each route in the test plan, use the browser agent to:
 
 ### 4a. Navigate and Verify Load
+
 - Navigate to the page
 - Check for console errors
 - Verify page renders (not blank/error)
 - Take screenshot as evidence
 
 ### 4b. Functional Testing (if applicable)
+
 - Fill forms and submit
 - Click buttons and verify responses
 - Test navigation links
 - Verify dynamic content loads
 
 ### 4c. Visual Inspection
+
 - Check for layout breakage
 - Verify responsive behavior (if CSS changed)
 - Check for overlapping elements
 - Verify text readability
 
 ### 4d. Record Evidence
+
 For each page tested:
+
 ```markdown
 ### {Page Name} ({URL})
 - **Status:** ✅ PASS / ⚠️ WARNING / ❌ FAIL
@@ -174,13 +179,17 @@ Issues Found:
 ## 6. Modes
 
 ### Quick Mode (--quick)
+
 30-second smoke test:
+
 1. Homepage
 2. Top 5 navigation targets
 3. Check: loads? Console errors? Broken links?
 
 ### Full Mode (--full)
+
 Systematic exploration:
+
 1. Discover all pages via navigation
 2. Test every unique route
 3. Fill all forms
@@ -188,6 +197,7 @@ Systematic exploration:
 5. Test edge cases (empty states, error states)
 
 ### Regression Mode (--regression baseline.json)
+
 1. Run full mode
 2. Compare against baseline
 3. Report: fixed issues, new issues, score delta
@@ -205,6 +215,7 @@ This workflow SHOULD auto-trigger (suggest, not force) when:
 3. **Before `/ship`** — as a pre-release quality gate
 
 When suggesting:
+
 ```
 🧪 You've made UI changes. Want me to run /diff-qa to verify
    everything looks right in the browser?
@@ -217,6 +228,7 @@ When suggesting:
 ## Related
 
 ### Workflows
+
 | Command | Relationship |
 |---------|--------------|
 | `/verify` | Spec-based verification (complements /diff-qa) |
@@ -224,9 +236,11 @@ When suggesting:
 | `/ceo-review` | Product vision (run before building) |
 
 ### Skills
+
 | Skill | Purpose |
 |-------|---------|
 | `browser-agent` | Browser interaction tooling |
 | `webapp-testing` | Web application test patterns |
 | `empirical-validation` | Evidence-based verification |
+
 </related>

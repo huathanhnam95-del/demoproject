@@ -161,6 +161,15 @@ try {
             bucketVerified = false;
         }
         console.warn('[SECURE] Firebase Admin initialized.');
+        if (process.env.FIRESTORE_EMULATOR_HOST) {
+            console.warn(`🔧 [Admin SDK] Firestore targeting emulator: ${process.env.FIRESTORE_EMULATOR_HOST}`);
+        }
+        if (process.env.FIREBASE_AUTH_EMULATOR_HOST) {
+            console.warn(`🔧 [Admin SDK] Auth targeting emulator: ${process.env.FIREBASE_AUTH_EMULATOR_HOST}`);
+        }
+        if (process.env.FIREBASE_STORAGE_EMULATOR_HOST) {
+            console.warn(`🔧 [Admin SDK] Storage targeting emulator: ${process.env.FIREBASE_STORAGE_EMULATOR_HOST}`);
+        }
     } else {
         console.warn('[WARN] serviceAccountKey.json not found.');
     }

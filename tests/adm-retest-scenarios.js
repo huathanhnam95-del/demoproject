@@ -370,10 +370,10 @@ function log(scenario, status, detail) {
         log('S11', 'PASS', `Guest override: ${guestKey}`);
 
         // Simulate user-scoped key
-        await page.evaluate(() => localStorage.setItem('questionDifficulty_extended_huathanhnam95@gmail.com', '4'));
+        await page.evaluate(() => localStorage.setItem('questionDifficulty_extended_admin@example.test', '4'));
         const isolation = await page.evaluate(() => ({
             guest: localStorage.getItem('questionDifficulty_extended_guest'),
-            user: localStorage.getItem('questionDifficulty_extended_huathanhnam95@gmail.com')
+            user: localStorage.getItem('questionDifficulty_extended_admin@example.test')
         }));
 
         log('S11', isolation.guest === '2' && isolation.user === '4' ? 'PASS' : 'FAIL',

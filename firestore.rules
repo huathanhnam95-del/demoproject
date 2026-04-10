@@ -35,9 +35,10 @@ service cloud.firestore {
                       'englishLevel', 
                       'levelSelectedAt',
                       'practiceStats',
-                      'srsBonus'
+                      'srsBonus',
+                      'unlockedModes'
                       // REMOVED: totalPoints, coins, skillPoints, skillRatings, 
-                      // cefrLevels, srsBonus, skillsUpdatedAt, unlockedModes, 
+                      // cefrLevels, skillsUpdatedAt,
                       // vocabularyBookUnlocked, sentenceLengthFilterUnlocked
                     ]);
       

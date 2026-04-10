@@ -52,6 +52,13 @@
     setSubtitle('Preparing your test…');
     const data = await fetchSession();
     appState.testId = data.testId;
+
+    // Segmental screening: redirect to pronunciation test page
+    if (data.testType === 'segmental_screening_v1') {
+      window.location.href = `/pronunciation-test/?entranceToken=${encodeURIComponent(token)}`;
+      return;
+    }
+
     appState.session = data.session;
     appState.steps = buildSteps(data.session);
     hydrateQuestionProgress(appState.steps);
@@ -771,7 +778,7 @@
     if (missing <= 0) return Promise.resolve(false);
 
     const overlay = ensureModalOverlay();
-     overlay.innerHTML = `
+    overlay.innerHTML = `
        <div class="et-modal" role="dialog" aria-modal="true" aria-labelledby="et-modal-title">
          <div class="et-modal-header">
            <div id="et-modal-title" class="et-modal-title">Chưa điền hết chỗ trống</div>

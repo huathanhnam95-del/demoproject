@@ -63,11 +63,19 @@ async function summonCouncil() {
         args.splice(outIndex, 2);
     }
 
+    const contextIndex = args.indexOf('--context');
+    let inlineContextFile = null;
+
+    if (contextIndex !== -1 && contextIndex < args.length - 1) {
+        inlineContextFile = args[contextIndex + 1];
+        args.splice(contextIndex, 2);
+    }
+
     const userMessage = args[0];
     const contextFiles = args.slice(1);
 
     if (!userMessage) {
-        console.log("Usage: node summon_council.js 'Your Question' [file_paths...] [--out filename]");
+        console.log("Usage: node summon_council.js 'Your Question' [file_paths...] [--context filepath] [--out filename]");
         return;
     }
 
@@ -104,8 +112,25 @@ async function summonCouncil() {
         throw error;
     }
 
+    // Prepend inline context if --context flag was provided
+    if (inlineContextFile) {
+        const resolvedContextPath = path.resolve(process.cwd(), inlineContextFile);
+        try {
+            const inlineContent = fs.readFileSync(resolvedContextPath, 'utf8');
+            contextData = `--- INLINE CONTEXT (from conversation) ---\n${inlineContent}\n--- END INLINE CONTEXT ---\n\n${contextData}`;
+        } catch (error) {
+            console.error(`\n[COUNCIL] Failed to read inline context file: ${resolvedContextPath}`);
+            console.error(`Error: ${error.message}`);
+            process.exitCode = 1;
+            return;
+        }
+    }
+
     console.log('\n[COUNCIL] Summoning the war room council...');
     console.log(`Sovereign's Command: "${userMessage}"`);
+    if (inlineContextFile) {
+        console.log(`Inline context: loaded from ${inlineContextFile}`);
+    }
     if (resolvedFiles.length > 0) {
         console.log(`Intelligence: ${resolvedFiles.length} files analyzed.`);
     }

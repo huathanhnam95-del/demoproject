@@ -15,7 +15,7 @@
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
     rel="stylesheet" />
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-  <link rel="stylesheet" href="style.css?v=20260327_practice_reading_live">
+  <link rel="stylesheet" href="style.css?v=20260410_watermarks">
   <link rel="stylesheet" href="srs-review.css">
   <link rel="stylesheet" href="srs-onboarding.css">
   <link rel="stylesheet" href="pronunciation-analyzer/style.css">
@@ -370,6 +370,7 @@
       </div>
 
       <div class="account-actions">
+        <button id="profile-adaptive-settings-btn" class="account-btn">⚙️ Adaptive Settings</button>
         <button id="change-password-btn" class="account-btn">Change Password</button>
         <button id="logout-btn" class="account-btn logout-btn">Logout</button>
       </div>
@@ -949,10 +950,10 @@
           <span class="ae-value ae-level-value" id="ae-level">B1 (Intermediate)</span>
         </div>
         <div class="ae-mode-tabs">
-          <button class="ae-mode-btn active" data-mode="type">Type</button>
-          <button class="ae-mode-btn" data-mode="speak">Speak</button>
-          <button class="ae-mode-btn" data-mode="extended">Fill</button>
-          <button class="ae-mode-btn" data-mode="notes">Notes</button>
+          <button class="ae-mode-btn active" data-mode="type">Dictate</button>
+          <button class="ae-mode-btn" data-mode="speak">Repeat</button>
+          <button class="ae-mode-btn" data-mode="extended">Fill In the Blanks</button>
+          <button class="ae-mode-btn" data-mode="notes">Take Notes</button>
           <button class="ae-mode-btn" data-mode="srs">SRS</button>
         </div>
         <div class="ae-stats-grid">
@@ -1013,9 +1014,11 @@
             </div>
           </div>
         </div>
-        <div id="difficulty-badge" class="difficulty-badge" style="display: none;" title="Smart Difficulty Active">
+        <div id="difficulty-badge" class="difficulty-badge" style="display: none;"
+          title="Tap to configure Smart Difficulty" role="button" tabindex="0" aria-label="Smart Difficulty settings">
           <span class="diff-icon">🎯</span>
           <span id="diff-level-text" class="diff-level-text">Guided</span>
+          <span class="diff-settings-hint">⚙</span>
         </div>
       </div>
 
@@ -1048,21 +1051,94 @@
               <h2>Choose a Skill</h2>
               <p>Select a skill first, then pick a practice mode.</p>
             </div>
-            <div class="practice-skill-filter" id="practice-skill-filter" role="group" aria-label="Practice skills">
-              <button type="button" class="practice-skill-btn" data-practice-skill="speaking"
-                aria-pressed="false">Speaking</button>
-              <button type="button" class="practice-skill-btn is-active" data-practice-skill="listening"
+            <div class="practice-scope-filter" id="practice-scope-filter" role="group" aria-label="Practice scope">
+              <button type="button" class="practice-scope-btn is-active" data-practice-scope="english"
                 aria-pressed="true">English Practice</button>
-              <button type="button" class="practice-skill-btn" data-practice-skill="reading"
-                aria-pressed="false">Reading</button>
-              <button type="button" class="practice-skill-btn" data-practice-skill="writing"
-                aria-pressed="false">Writing</button>
+              <button type="button" class="practice-scope-btn" data-practice-scope="pte" aria-pressed="false">PTE
+                Practice</button>
+            </div>
+            <div class="practice-skill-filter" id="practice-skill-filter" role="group" aria-label="Practice skills">
+              <button type="button" class="practice-skill-btn card-speaking" data-practice-skill="speaking"
+                aria-pressed="false">
+                <svg class="watermark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.5"
+                  stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="9" y="2" width="6" height="11" rx="3" fill="currentColor" opacity="0.3" />
+                  <path d="M5 10c0 3.87 3.13 7 7 7s7-3.13 7-7" />
+                  <line x1="12" y1="17" x2="12" y2="22" />
+                  <line x1="8" y1="22" x2="16" y2="22" />
+                  <path d="M19 8 a4 4 0 0 1 0 4" opacity="0.6" stroke-width="1" />
+                  <path d="M22 6 a8 8 0 0 1 0 8" opacity="0.3" stroke-width="1" />
+                </svg>
+                <div class="content-wrapper">
+                  <span class="skill-card-icon"><span class="material-symbols-outlined"
+                      style="font-variation-settings: 'FILL' 1;">mic</span></span>
+                  <span class="skill-card-text"><strong>Speaking</strong><span>Fluency &amp; Pronunciation</span></span>
+                  <span class="material-symbols-outlined skill-card-chevron">chevron_right</span>
+                </div>
+              </button>
+              <button type="button" class="practice-skill-btn card-listening is-active" data-practice-skill="listening"
+                aria-pressed="true">
+                <svg class="watermark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.5"
+                  stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3 18v-6a9 9 0 0 1 18 0v6" stroke-width="1" />
+                  <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z" fill="currentColor"
+                    opacity="0.4" />
+                  <path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" fill="currentColor" opacity="0.4" />
+                  <circle cx="12" cy="12" r="2" fill="currentColor" opacity="0.1" />
+                </svg>
+                <div class="content-wrapper">
+                  <span class="skill-card-icon"><span class="material-symbols-outlined"
+                      style="font-variation-settings: 'FILL' 1;">headphones</span></span>
+                  <span class="skill-card-text"><strong>Listening</strong><span>Comprehension &amp;
+                      Retelling</span></span>
+                  <span class="material-symbols-outlined skill-card-chevron">chevron_right</span>
+                </div>
+              </button>
+              <button type="button" class="practice-skill-btn card-reading" data-practice-skill="reading"
+                aria-pressed="false">
+                <svg class="watermark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.5"
+                  stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" fill="currentColor" opacity="0.2" />
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" fill="currentColor" opacity="0.4" />
+                  <line x1="14" y1="8" x2="20" y2="8" stroke-width="1" opacity="0.6" />
+                  <line x1="14" y1="12" x2="20" y2="12" stroke-width="1" opacity="0.6" />
+                  <line x1="14" y1="16" x2="18" y2="16" stroke-width="1" opacity="0.6" />
+                </svg>
+                <div class="content-wrapper">
+                  <span class="skill-card-icon"><span class="material-symbols-outlined"
+                      style="font-variation-settings: 'FILL' 1;">book</span></span>
+                  <span class="skill-card-text"><strong>Reading</strong><span>Vocabulary &amp; Speed</span></span>
+                  <span class="material-symbols-outlined skill-card-chevron">chevron_right</span>
+                </div>
+              </button>
+              <button type="button" class="practice-skill-btn card-writing" data-practice-skill="writing"
+                aria-pressed="false">
+                <svg class="watermark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linejoin="round"
+                  xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 12 l8 -8" stroke-width="2" opacity="0.3" stroke-linecap="round" />
+                  <path d="M14 14 l8 -8" stroke-width="2" opacity="0.3" stroke-linecap="round" />
+                  <path d="M13 11 L15 13 L11 18 L2 22 L6 13 Z" fill="currentColor" opacity="0.15" stroke-width="1" />
+                  <path d="M13 11 L15 13 L11 18 L2 22 L6 13 Z" stroke-width="1" />
+                  <circle cx="9" cy="15" r="1.5" fill="none" stroke-width="1" />
+                  <line x1="8" y1="16" x2="2" y2="22" stroke-width="1" />
+                  <line x1="11" y1="11" x2="9" y2="15" stroke-width="0.5" opacity="0.5" />
+                  <line x1="13" y1="13" x2="9" y2="15" stroke-width="0.5" opacity="0.5" />
+                  <path d="M2 22 Q4 26 10 20 T20 20 T24 16" stroke-width="1.5" stroke-linecap="round" fill="none"
+                    opacity="0.4" />
+                </svg>
+                <div class="content-wrapper">
+                  <span class="skill-card-icon"><span class="material-symbols-outlined"
+                      style="font-variation-settings: 'FILL' 1;">edit_document</span></span>
+                  <span class="skill-card-text"><strong>Writing</strong><span>Grammar &amp; Structure</span></span>
+                  <span class="material-symbols-outlined skill-card-chevron">chevron_right</span>
+                </div>
+              </button>
             </div>
             <div class="tutorial-grid">
               <!-- 1. Type Mode Card -->
               <div id="mode-btn-type" class="modern-card transition-card mode-switch-btn"
                 data-practice-skill="listening" onclick="window.switchToMode('type')" tabindex="0" role="button"
-                aria-label="Type Practice mode">
+                aria-label="Dictate Practice mode">
                 <span class="badge new">Popular</span>
                 <div class="card-visual visual-type">
                   <div class="anim-container">
@@ -1089,7 +1165,7 @@
                   </div>
                 </div>
                 <div class="card-body">
-                  <h3>Type</h3>
+                  <h3>Dictate</h3>
                   <p>Improve typing speed and spelling accuracy.</p>
                   <button class="card-cta">Practice Now</button>
                   <a class="whats-this-link"
@@ -1135,7 +1211,7 @@
               <!-- 3. Speak Mode Card -->
               <div id="mode-btn-speak" class="modern-card transition-card mode-switch-btn"
                 data-practice-skill="speaking" onclick="window.switchToMode('speak')" tabindex="0" role="button"
-                aria-label="Speak Practice mode">
+                aria-label="Repeat Practice mode">
                 <div class="card-visual visual-speak">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
@@ -1158,7 +1234,7 @@
                   </div>
                 </div>
                 <div class="card-body">
-                  <h3>Speak</h3>
+                  <h3>Repeat</h3>
                   <p>Record your voice and verify transcription.</p>
                   <button class="card-cta">Practice Now</button>
                   <a class="whats-this-link"
@@ -1169,7 +1245,7 @@
               <!-- 3. Fill Mode Card -->
               <div id="mode-btn-extended" class="modern-card transition-card mode-switch-btn"
                 data-practice-skill="listening" onclick="window.switchToMode('extended')" tabindex="0" role="button"
-                aria-label="Fill in the blanks mode">
+                aria-label="Fill In the Blanks mode">
                 <div class="card-visual visual-fill">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
@@ -1189,7 +1265,7 @@
                   </div>
                 </div>
                 <div class="card-body">
-                  <h3>Fill</h3>
+                  <h3>Fill In the Blanks</h3>
                   <p>Complete sentences with missing words.</p>
                   <button class="card-cta">Practice Now</button>
                   <a class="whats-this-link"
@@ -1199,7 +1275,7 @@
 
               <!-- 4. Reading Fill Mode Card -->
               <div id="mode-btn-rfib" class="modern-card transition-card mode-switch-btn" data-practice-skill="reading"
-                onclick="window.switchToMode('rfib')" tabindex="0" role="button" aria-label="Fill in the blanks mode">
+                onclick="window.switchToMode('rfib')" tabindex="0" role="button" aria-label="Dropdown mode">
                 <span class="badge">New</span>
                 <div class="card-visual visual-fill">
                   <div class="anim-container">
@@ -1215,9 +1291,11 @@
                   </div>
                 </div>
                 <div class="card-body">
-                  <h3>Fill in the blanks</h3>
+                  <h3>Dropdown</h3>
                   <p>Read passages, fill the blanks, and compare support versions.</p>
                   <button class="card-cta">Practice Now</button>
+                  <a class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('rfib', true);">What's this?</a>
                 </div>
               </div>
 
@@ -1281,7 +1359,7 @@
                   </div>
                 </div>
                 <div class="card-body">
-                  <h3>Note</h3>
+                  <h3>Take Notes</h3>
                   <p>Watch videos and engage in note-taking.</p>
                   <button class="card-cta">Practice Now</button>
                   <a class="whats-this-link"
@@ -1293,7 +1371,7 @@
               <div id="mode-btn-pronounce" class="modern-card transition-card mode-switch-btn"
                 data-practice-skill="speaking" onclick="window.switchToMode('pronounce')" tabindex="0" role="button"
                 aria-label="Pronunciation mode">
-                <span class="badge experimental">Experimental</span>
+
                 <div class="card-visual visual-pronounce">
                   <div class="anim-container">
                     <svg class="ctx-icon ctx-pronounce" viewBox="0 0 72 72" fill="none" aria-hidden="true">
@@ -1353,6 +1431,31 @@
                   <button class="card-cta">Practice Now</button>
                   <a class="whats-this-link"
                     onclick="event.stopPropagation(); window.startTutorial('read-aloud', true);">What's this?</a>
+                </div>
+              </div>
+
+              <!-- 9. ASQ (Quiz) Mode Card -->
+              <div id="mode-btn-asq" class="modern-card transition-card mode-switch-btn"
+                data-practice-skill="speaking" onclick="window.switchToMode('asq')" tabindex="0" role="button"
+                aria-label="Quiz mode">
+                <span class="badge new">New</span>
+                <div class="card-visual visual-read-aloud">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+                      <rect x="14" y="14" width="44" height="36" rx="8" stroke="currentColor" stroke-width="2"
+                        fill="var(--visual-bg)" />
+                      <path d="M30 56l6-6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                      <circle cx="36" cy="30" r="10" stroke="var(--visual-accent)" stroke-width="2" fill="none" />
+                      <path d="M36 24v7" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" />
+                      <circle cx="36" cy="36" r="1.8" fill="var(--visual-accent)" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Quiz</h3>
+                  <p>Listen to a short question and answer out loud.</p>
+                  <button class="card-cta">Practice Now</button>
                 </div>
               </div>
 
@@ -1501,7 +1604,7 @@
               </div>
 
               <a id="mode-btn-segmental-screening" class="modern-card transition-card mode-switch-btn"
-                href="/pronunciation-test/" aria-label="Segmental Screening">
+                href="/pronunciation-test/" aria-label="Segmental Screening" style="display: none;">
                 <span class="badge new">Pilot</span>
                 <div class="card-visual visual-type">
                   <div class="anim-container">
@@ -1531,15 +1634,16 @@
       <!-- Lower tabs now hidden - kept for JS compatibility -->
       <div class="tabs-header" style="display: none !important;">
         <div class="tabs">
-          <button id="tab-type" class="tab-btn active" type="button">Type</button>
+          <button id="tab-type" class="tab-btn active" type="button">Dictate</button>
           <button id="tab-collo-dictate" class="tab-btn" type="button">Collo-dictate</button>
-          <button id="tab-speak" class="tab-btn" type="button">Speak</button>
-          <button id="tab-extended" class="tab-btn" type="button">Fill</button>
-          <button id="tab-rfib" class="tab-btn" type="button">Fill in the blanks</button>
+          <button id="tab-speak" class="tab-btn" type="button">Repeat</button>
+          <button id="tab-extended" class="tab-btn" type="button">Fill In the Blanks</button>
+          <button id="tab-rfib" class="tab-btn" type="button">Dropdown</button>
           <button id="tab-watch" class="tab-btn" type="button">Watch</button>
-          <button id="tab-notes" class="tab-btn" type="button">Note</button>
+          <button id="tab-notes" class="tab-btn" type="button">Take Notes</button>
           <button id="tab-pronounce" class="tab-btn" type="button">Pronounce</button>
           <button id="tab-read-aloud" class="tab-btn" type="button">Read Aloud</button>
+          <button id="tab-asq" class="tab-btn" type="button">Quiz</button>
         </div>
       </div>
 
@@ -2626,6 +2730,50 @@
         <div id="same-vocab-sentences-speak" class="same-vocab-sentences"></div>
       </section>
 
+      <!-- ASQ (Quiz) Mode Panel -->
+      <div id="mode-asq" class="mode-panel" style="display: none;">
+        <div class="question-selector"
+          style="border-bottom: none; padding: 10px 20px 0; align-items: center; flex-direction: column; gap: 12px;">
+          <div
+            style="display:flex; align-items:center; justify-content:space-between; gap: 12px; width:100%; max-width:900px; flex-wrap:wrap;">
+            <select id="asq-question-select"
+              style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-light); font-family: inherit; font-size: 0.95rem; background: white; flex: 1 1 320px; min-width: 240px;">
+              <option value="random">Random Question</option>
+            </select>
+            <button id="asq-play-prompt-btn" class="modern-btn modern-btn--play" type="button"
+              style="min-height: 40px; min-width: 90px; padding: 6px 16px; font-size: 0.9rem;">Play</button>
+          </div>
+          <audio id="asq-prompt-audio" preload="auto"></audio>
+        </div>
+
+        <div
+          style="width: 100%; max-width: 900px; margin: 0 auto; padding: 10px 20px 20px; display: flex; flex-direction: column; gap: 14px;">
+          <div id="asq-status-message"
+            style="text-align: center; font-weight: 600; color: var(--text-muted);">Play the prompt audio, then record
+            your answer.</div>
+
+          <div style="display:flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+            <button id="asq-record-btn" class="modern-btn modern-btn--record" type="button"
+              style="min-width: 180px;">Record answer</button>
+            <button id="asq-stop-btn" class="modern-btn modern-btn--retry" type="button"
+              style="min-width: 120px; display: none;">Stop</button>
+          </div>
+
+          <div id="asq-user-audio-box" class="ra-result"
+            style="display: none; padding: 14px 16px; border: 1px solid var(--border-light); border-radius: 12px; background: rgba(255,255,255,0.9); text-align: left;">
+            <div style="font-weight: 700; margin-bottom: 10px;">Your recording</div>
+            <audio id="asq-user-recording-audio" controls preload="none" style="width: 100%;"></audio>
+          </div>
+
+          <div id="asq-result-box" class="ra-result"
+            style="display: none; padding: 18px 20px; border: 2px solid var(--border-light); border-radius: 12px; background: rgba(37, 99, 235, 0.04); text-align: center;">
+            <div id="asq-result-status" style="font-size: 1.2rem; font-weight: 800;"></div>
+            <div id="asq-transcript-feedback" style="margin-top: 10px; font-size: 1.05rem; line-height: 1.5;"></div>
+            <div id="asq-correct-answers" style="margin-top: 10px; color: var(--text-muted);"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- Read Aloud Mode Panel -->
       <div id="mode-read-aloud" class="mode-panel" style="display: none;">
         <!-- Filter/Config Bar -->
@@ -2967,7 +3115,7 @@
   <script src="js/lazy-loader.js"></script>
   <script type="module" src="js/collo-dictate-mode.js"></script>
   <script type="module" src="js/reading-journey.js"></script>
-  <script type="module" src="script.js?v=20260327_practice_reading_live"></script>
+  <script type="module" src="script.js?v=20260409_skill_cards"></script>
   <!-- Points Toast Notification Container -->
   <div id="points-toast-container" class="points-toast-container"></div>
 
@@ -3180,8 +3328,9 @@
         measurementId: "G-1891MSSLXT"
       });
     }
-    console.log('✓ Firebase compat SDK initialized for Watch mode');
+    console.log('✓ Firebase compat SDK initialized for Watch mo');
   </script>
+  <script src="js/compat-emulator-redirect.js"></script>
   <!-- Watch/Notes heavy scripts are lazy-loaded by js/lazy-loader.js -->
 
   <!-- Dictionary Service (Definitions & Translations) -->
@@ -3572,7 +3721,7 @@
 
       game.handleInput(e.key);
     });
-    // Note: openSurvivalGame is now defined in the head to avoid race conditions.
+    // Note: openSurvivalGame is now defined in the head to avoid race conditis.
 
   </script>
   <script src="js/sw-register.js"></script>
@@ -3582,6 +3731,7 @@
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
   <script src="/read-aloud-mode.js"></script>
+  <script src="/asq-mode.js"></script>
 </body>
 
 </html>

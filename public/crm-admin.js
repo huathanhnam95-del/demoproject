@@ -43,13 +43,30 @@
     staff: { label: 'Staff Management', subTabs: [] },
     agents: { label: 'Agent Management', subTabs: [] },
     settings: { label: 'Settings', subTabs: [] },
-    chatbot: { label: 'Chatbot Management', subTabs: [] }
+    chatbot: { label: 'Chatbot Management', subTabs: [] },
+    devtools: { label: '🔧 Dev Tools', subTabs: [], localOnly: true }
+  };
+
+  const devToolsAccess = window.CrmDevToolsAccess || {
+    resolveDevToolsRoute({ main, sub, fallbackRoute, devToolsAvailable }) {
+      if (main === 'devtools' && !devToolsAvailable) {
+        return {
+          main: fallbackRoute.main,
+          sub: fallbackRoute.sub
+        };
+      }
+      return { main, sub };
+    },
+    shouldShowDevToolsNav({ devToolsAvailable }) {
+      return !!devToolsAvailable;
+    }
   };
 
   const state = {
     ...DEFAULT_ROUTE,
     studentLookup: '',
-    studentReturnRoute: null
+    studentReturnRoute: null,
+    devToolsAvailable: false
   };
   const elements = {};
   const dataCache = {
@@ -75,6 +92,7 @@
   let leadWorkspaceController = null;
   let recycleBinController = null;
   let communicationsController = null;
+  let devToolsPollTimer = null;
   const entranceTestUi = window.CrmEntranceTests || null;
   const authSessionGuard = window.AuthSessionGuard || null;
   const modalState = {
@@ -977,6 +995,8 @@
     hideGate();
     setupScoreDecorations();
     setupMoneyInputs();
+
+    await initDevTools();
 
     // Initialize Ollama health status
     checkOllamaHealth().catch(() => { });
@@ -4046,6 +4066,19 @@
     const [mainRaw, subRaw] = raw.split('/').map((s) => normalizeRouteToken(s));
     const main = normalizeRouteToken(mainRaw) || DEFAULT_ROUTE.main;
     const sub = normalizeRouteToken(subRaw);
+    const gatedRoute = devToolsAccess.resolveDevToolsRoute({
+      main,
+      sub,
+      fallbackRoute: DEFAULT_ROUTE,
+      devToolsAvailable: state.devToolsAvailable
+    });
+
+    if (gatedRoute.main !== main || gatedRoute.sub !== sub) {
+      state.main = gatedRoute.main;
+      state.sub = gatedRoute.sub;
+      updateHash();
+      return;
+    }
 
     if (main === 'students') {
       if (isStudentListSubRoute(sub)) {
@@ -4145,6 +4178,12 @@
   }
 
   function render() {
+    if (state.main === 'devtools' && !state.devToolsAvailable) {
+      state.main = DEFAULT_ROUTE.main;
+      state.sub = DEFAULT_ROUTE.sub;
+      updateHash();
+    }
+
     // Nav active state
     elements.navItems.forEach((btn) => {
       const isActive = btn.dataset.main === state.main;
@@ -5815,6 +5854,309 @@
     return new Promise((resolve) => {
       bulkDeleteWarningState.resolver = resolve;
     });
+  }
+
+  // -------------------------------------------------------------------------------- //
+  //  Developer Tools (Local Only)
+  // -------------------------------------------------------------------------------- //
+
+  async function initDevTools() {
+    const btnSyncFull = document.getElementById('btn-sync-full');
+    const btnSyncSelected = document.getElementById('btn-sync-selected');
+    const limitInput = document.getElementById('sync-limit-input');
+    const limitLabel = document.getElementById('sync-limit-label');
+    const collListContainer = document.getElementById('sync-collection-list');
+    const progressContainer = document.getElementById('sync-progress-container');
+    const progressFill = document.getElementById('sync-progress-fill');
+    const progressText = document.getElementById('sync-progress-text');
+    const resultsBox = document.getElementById('sync-results');
+    const devToolsContainer = document.getElementById('nav-devtools-container');
+    const statusSummary = document.getElementById('devtools-status-summary');
+    const statusDetail = document.getElementById('devtools-status-detail');
+    const lastJobMeta = document.getElementById('devtools-last-job');
+    const emulatorLink = document.getElementById('devtools-emulator-link');
+
+    let availableCollections = [];
+
+    function clearDevToolsPollTimer() {
+      if (!devToolsPollTimer) return;
+      window.clearTimeout(devToolsPollTimer);
+      devToolsPollTimer = null;
+    }
+
+    function getSelectedCollections() {
+      return Array.from(document.querySelectorAll('.sync-col-checkbox:checked')).map((checkbox) => checkbox.dataset.col);
+    }
+
+    function updateDevToolsNav() {
+      if (!devToolsContainer) return;
+      devToolsContainer.style.display = devToolsAccess.shouldShowDevToolsNav({ devToolsAvailable: state.devToolsAvailable }) ? 'block' : 'none';
+    }
+
+    function updateSyncButtons(isBusy) {
+      if (btnSyncFull) {
+        btnSyncFull.disabled = !!isBusy || !state.devToolsAvailable;
+      }
+      if (btnSyncSelected) {
+        btnSyncSelected.disabled = !!isBusy || !state.devToolsAvailable || getSelectedCollections().length === 0;
+      }
+    }
+
+    function setCapabilityState(isAvailable, detailMessage) {
+      state.devToolsAvailable = !!isAvailable;
+      updateDevToolsNav();
+      if (statusSummary) {
+        statusSummary.textContent = state.devToolsAvailable
+          ? 'Prod-to-local sync routes are available.'
+          : 'Prod-to-local sync routes are unavailable.';
+      }
+      if (statusDetail) {
+        statusDetail.textContent = detailMessage || (
+          state.devToolsAvailable
+            ? 'You can start sync jobs and monitor them from this panel.'
+            : 'Start the local server with Firestore emulators enabled to expose the sync endpoints.'
+        );
+      }
+      if (emulatorLink) {
+        emulatorLink.style.display = state.devToolsAvailable ? 'inline-block' : 'none';
+      }
+      if (!state.devToolsAvailable && state.main === 'devtools') {
+        applyRouteFromHash();
+        render();
+      }
+      updateSyncButtons(false);
+    }
+
+    function renderCollectionList() {
+      if (!collListContainer) return;
+      if (!availableCollections.length) {
+        collListContainer.innerHTML = '<div class="crm-muted" style="padding: 12px;">Sync tools are unavailable until the backend capability check succeeds.</div>';
+        updateSyncButtons(false);
+        return;
+      }
+
+      collListContainer.innerHTML = availableCollections.map((collection) => `
+        <div class="crm-stack-item" style="display:flex; align-items:center; gap:12px; padding:8px 12px; border-bottom:1px solid var(--border-color);">
+          <input type="checkbox" id="sync-col-${collection.name}" data-col="${collection.name}" class="sync-col-checkbox" />
+          <label for="sync-col-${collection.name}" style="flex:1; cursor:pointer; font-weight:500;">
+            ${collection.name}
+            ${collection.hasSubcollections ? '<span class="crm-muted" style="font-size:12px; margin-left:8px;">(includes subcollections)</span>' : ''}
+          </label>
+        </div>
+      `).join('');
+
+      document.querySelectorAll('.sync-col-checkbox').forEach((checkbox) => {
+        checkbox.addEventListener('change', () => {
+          updateSyncButtons(false);
+        });
+      });
+
+      updateSyncButtons(false);
+    }
+
+    function renderSyncJob(job) {
+      if (lastJobMeta) {
+        if (!job) {
+          lastJobMeta.textContent = state.devToolsAvailable
+            ? 'No sync job has run in this session.'
+            : 'Sync job history is unavailable until capability is confirmed.';
+        } else {
+          lastJobMeta.textContent = `Latest job: ${job.status} (${job.collectionsCompleted}/${job.collectionsTotal} collections, ${job.docs + job.subDocs} documents).`;
+        }
+      }
+
+      if (!job) {
+        if (progressContainer) progressContainer.style.display = 'none';
+        if (resultsBox) {
+          resultsBox.style.display = 'none';
+          resultsBox.innerHTML = '';
+        }
+        return;
+      }
+
+      const collectionsTotal = Math.max(Number(job.collectionsTotal || 0), 1);
+      const collectionsCompleted = Math.max(Number(job.collectionsCompleted || 0), 0);
+      let percent = Math.round((collectionsCompleted / collectionsTotal) * 100);
+      if (job.status === 'running') {
+        percent = Math.max(percent, 10);
+      } else {
+        percent = 100;
+      }
+
+      if (progressContainer) progressContainer.style.display = 'block';
+      if (progressFill) {
+        progressFill.style.width = `${percent}%`;
+        progressFill.style.background = job.status === 'failed'
+          ? 'var(--status-danger)'
+          : job.status === 'completed_with_issues'
+            ? 'var(--warning-color, #d97706)'
+            : 'var(--accent-color)';
+      }
+      if (progressText) {
+        if (job.status === 'running') {
+          progressText.textContent = `Running sync job for ${job.currentCollection || 'queued collections'} (${collectionsCompleted}/${collectionsTotal}).`;
+        } else if (job.status === 'completed_with_issues') {
+          progressText.textContent = `Sync completed with issues. ${job.warnings.length} warning(s), ${job.errors.length} error(s).`;
+        } else if (job.status === 'failed') {
+          progressText.textContent = `Sync failed. ${job.errors.length} error(s) reported.`;
+        } else {
+          progressText.textContent = `Sync completed successfully. ${job.docs + job.subDocs} documents replaced locally.`;
+        }
+      }
+
+      if (resultsBox) {
+        const warningsHtml = job.warnings && job.warnings.length
+          ? `<div style="margin-top:8px;"><strong>Warnings:</strong></div><pre style="margin:4px 0 0 0; background:none; padding:0; border:none; white-space:pre-wrap;">${escapeHtml(JSON.stringify(job.warnings, null, 2))}</pre>`
+          : '';
+        const errorsHtml = job.errors && job.errors.length
+          ? `<div style="margin-top:8px;"><strong>Errors:</strong></div><pre style="margin:4px 0 0 0; background:none; padding:0; border:none; white-space:pre-wrap;">${escapeHtml(JSON.stringify(job.errors, null, 2))}</pre>`
+          : '';
+        resultsBox.style.display = 'block';
+        resultsBox.innerHTML = `<div><strong>Status:</strong> ${escapeHtml(job.status)}</div>
+          <div><strong>Root Docs:</strong> ${job.docs}</div>
+          <div><strong>Sub Docs:</strong> ${job.subDocs}</div>
+          <div><strong>Collections:</strong> ${job.collectionsCompleted}/${job.collectionsTotal}</div>
+          <div style="margin-top:8px;"><strong>Results:</strong></div>
+          <pre style="margin:4px 0 0 0; background:none; padding:0; border:none; white-space:pre-wrap;">${escapeHtml(JSON.stringify(job.results || {}, null, 2))}</pre>${warningsHtml}${errorsHtml}`;
+      }
+    }
+
+    async function loadCollections() {
+      const json = await apiFetchJson('/api/admin/sync-from-prod/collections', { method: 'GET' });
+      availableCollections = Array.isArray(json.data?.collections) ? json.data.collections : [];
+      renderCollectionList();
+      setCapabilityState(true, `Loaded ${availableCollections.length} syncable business-data collections from the local admin API.`);
+    }
+
+    async function loadLatestJob() {
+      const json = await apiFetchJson('/api/admin/sync-from-prod/jobs/latest', { method: 'GET' });
+      const latestJob = json.data || null;
+      renderSyncJob(latestJob);
+      if (latestJob && latestJob.status === 'running') {
+        await pollSyncJob(latestJob.jobId, false);
+      }
+    }
+
+    async function pollSyncJob(jobId, announceTerminal) {
+      clearDevToolsPollTimer();
+      try {
+        const json = await apiFetchJson(`/api/admin/sync-from-prod/jobs/${encodeURIComponent(jobId)}`, { method: 'GET' });
+        const job = json.data || null;
+        renderSyncJob(job);
+        if (job && job.status === 'running') {
+          updateSyncButtons(true);
+          devToolsPollTimer = window.setTimeout(() => {
+            pollSyncJob(jobId, announceTerminal).catch((error) => {
+              console.error('[DevTools] Sync job polling failed:', error);
+            });
+          }, 1000);
+          return;
+        }
+
+        updateSyncButtons(false);
+        await loadCollections();
+
+        if (!job || !announceTerminal) return;
+        if (job.status === 'completed') {
+          showToast('Sync completed successfully.', 'success');
+          return;
+        }
+        if (job.status === 'completed_with_issues') {
+          showToast('Sync completed with warnings. Review the results panel.', 'info');
+          return;
+        }
+        showToast('Sync failed. Review the results panel.', 'error');
+      } catch (error) {
+        updateSyncButtons(false);
+        if (progressFill) progressFill.style.background = 'var(--status-danger)';
+        if (progressText) progressText.textContent = `Error: ${error.message}`;
+        showToast(`Sync status failed: ${error.message}`, 'error');
+      }
+    }
+
+    async function triggerSync(type, payload = {}) {
+      if (!state.devToolsAvailable) {
+        showToast('Sync tools are unavailable until the backend capability check succeeds.', 'error');
+        return;
+      }
+      if (!confirm(`Are you sure you want to run a ${type} sync? This will replace local emulator data for the selected collections.`)) return;
+
+      updateSyncButtons(true);
+      if (progressContainer) progressContainer.style.display = 'block';
+      if (progressFill) {
+        progressFill.style.width = '10%';
+        progressFill.style.background = 'var(--accent-color)';
+      }
+      if (progressText) progressText.textContent = 'Starting sync job...';
+      if (resultsBox) {
+        resultsBox.style.display = 'none';
+        resultsBox.innerHTML = '';
+      }
+
+      try {
+        const routePath = type === 'full' ? '/api/admin/sync-from-prod' : '/api/admin/sync-from-prod/selective';
+        const json = await apiFetchJson(routePath, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+        if (progressText) {
+          progressText.textContent = `Sync job ${json.data.jobId} started. Polling for progress...`;
+        }
+        await pollSyncJob(json.data.jobId, true);
+      } catch (error) {
+        updateSyncButtons(false);
+        if (progressFill) progressFill.style.background = 'var(--status-danger)';
+        if (progressText) progressText.textContent = `Error: ${error.message}`;
+        showToast(`Sync failed: ${error.message}`, 'error');
+      }
+    }
+
+    if (limitInput && limitLabel) {
+      limitInput.addEventListener('input', () => {
+        limitLabel.textContent = limitInput.value;
+      });
+    }
+
+    if (btnSyncFull) {
+      btnSyncFull.addEventListener('click', () => {
+        const limit = limitInput ? Number(limitInput.value) : 500;
+        triggerSync('full', {
+          maxDocsPerCollection: limit,
+          maxDocsPerSubcollection: limit
+        });
+      });
+    }
+
+    if (btnSyncSelected) {
+      btnSyncSelected.addEventListener('click', () => {
+        const limit = limitInput ? Number(limitInput.value) : 500;
+        triggerSync('selective', {
+          collections: getSelectedCollections(),
+          maxDocsPerCollection: limit,
+          maxDocsPerSubcollection: limit
+        });
+      });
+    }
+
+    updateDevToolsNav();
+    updateSyncButtons(false);
+    renderSyncJob(null);
+
+    try {
+      await loadCollections();
+      await loadLatestJob();
+      return true;
+    } catch (error) {
+      availableCollections = [];
+      renderCollectionList();
+      setCapabilityState(false, error?.message || 'The sync routes are unavailable.');
+      renderSyncJob(null);
+      clearDevToolsPollTimer();
+      return false;
+    }
   }
 
   window.CrmAdminDialogs.showBulkDeleteWarning = showBulkDeleteWarningModal;

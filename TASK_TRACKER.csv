@@ -173,9 +173,28 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 182,2026-04-05,Teacher View Profile feature implementation plan,Done,2026-04-05
 183,2026-04-05,Add --context flag to council script for inline chat context,Done,2026-04-05
 184,2026-04-05,Refactor auto accept script (CPU optimization and Shadow DOM),Done,2026-04-05
+194,2026-04-06,Fix Dropdown UI persistence bug and implement interactive tutorial,Done,2026-04-07
 186,2026-04-05,Integrate Local Ollama Gemma 4,Done,2026-04-05
 187,2026-04-05,Create Visio Organization Chart CSV,Done,2026-04-05
 188,2026-04-06,Check daily usage limit for Gemma 4 CRM setup,Done,2026-04-06
 189,2026-04-06,Inspect computer specs and estimate capabilities,In Progress,
 190,2026-04-06,Execute Gemma4 Ollama CRM optimizations plan (7 areas),Done,2026-04-06
 191,2026-04-06,Auto-summary on save + fix summary persisting across students,Done,2026-04-06
+192,2026-04-06,Fix Read Aloud list audio missing issue due to outdated manifest fetch pathway,Done,2026-04-06
+193,2026-04-06,Plan PTE Practice mode and English Practice separation,Done,2026-04-06
+195,2026-04-07,Execute browser testing plan,Done,2026-04-07
+196,2026-04-07,Practice scope browser test remediation (fix persistence bug + add logged-in/recommendation scripts + manual verification),Done,2026-04-07
+197,2026-04-07,Firebase Emulator setup to isolate local CRM data from production,Done,2026-04-07
+198,2026-04-08,Fix logged-in browser test - emulator user provisioning + emailVerified + login flow rewrite,Done,2026-04-08
+199,2026-04-08,Firebase Emulator V2 remediation - compat SDK + Admin SDK + Functions + Storage + host detection,Done,2026-04-08
+200,2026-04-08,Continue Read Aloud audio generation with ElevenLabs API,In Progress,
+201,2026-04-09,Create standalone mockup preview of Premium App List design,Done,2026-04-09
+202,2026-04-08,Implement Production-to-Emulator Data Sync with CRM Dev Tools UI,Done,2026-04-09
+203,2026-04-09,Add auth-state assertion to logged-in test + fix dual-SDK issue + correct report,Done,2026-04-09
+204,2026-04-09,Implement skill selection redesign - segmented control + card grid replacing pills,Done,2026-04-09
+205,2026-04-09,Harden and optimize Prod-to-Local Sync (staged caps deterministic ordering parallel staging),Done,2026-04-09
+206,2026-04-10,Implement premium SVG watermarks and color styles for skill selection redesign,Done,2026-04-10
+207,2026-04-10,Seed emulator admin account to fix localhost login and console errors,Done,2026-04-10
+208,2026-04-10,Summon #council to review speaking attempt retention plan,Done,2026-04-10
+209,2026-04-10,Summon #council to review counter-argument,Done,2026-04-10
+210,2026-04-10,Summarize and commit changes for V1.6.4,Done,2026-04-10

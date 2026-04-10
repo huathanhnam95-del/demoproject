@@ -5,9 +5,9 @@
  */
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-import { getFunctions } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
+import { getAuth, connectAuthEmulator } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { getFirestore, connectFirestoreEmulator } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getFunctions, connectFunctionsEmulator } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
 
 const firebaseConfig = {
     apiKey: "AIzaSyB0vXX7NwOvME_XoaGiJlYaiLRcaHJtrIQ",
@@ -24,6 +24,26 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const functions = getFunctions(app);
+
+// ── Emulator Redirect (local dev only) ────────────────────────────
+// When running locally, route all Firebase calls to local emulators
+// so test data never touches production.
+let _h = String(window.location.hostname || '').trim().toLowerCase();
+if (_h.startsWith('[') && _h.endsWith(']')) _h = _h.slice(1, -1); // IPv6 literal
+const isLocal = _h === 'localhost'
+    || _h === '127.0.0.1'
+    || _h === '::1'
+    || _h.endsWith('.local')
+    || /^192\.168\.\d{1,3}\.\d{1,3}$/.test(_h)
+    || /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(_h)
+    || /^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(_h);
+
+if (isLocal) {
+    connectFirestoreEmulator(db, 'localhost', 8080);
+    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+    connectFunctionsEmulator(functions, 'localhost', 5001);
+    console.warn('🔧 [Modular SDK] Firebase Emulators active — local data only.');
+}
 
 // Export instances
 export { app, auth, db, functions };

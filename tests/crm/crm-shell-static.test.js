@@ -9,7 +9,7 @@ function read(relativePath) {
 const html = read('public/crm-admin.html');
 const js = read('public/crm-admin.js');
 const packageJson = JSON.parse(read('package.json'));
-const CRM_ADMIN_ASSET_VERSION = '20260401-crm-admin-livefix';
+const CRM_ADMIN_ASSET_VERSION = '20260406-gemma4-ollama-fix';
 
 const panelIds = new Set(Array.from(html.matchAll(/data-panel="([^"]+)"/g), (match) => match[1]));
 const localAssetRefs = Array.from(
@@ -126,6 +126,11 @@ assert(
     html.includes('js/crm/student-directory-workspace.js') &&
     html.indexOf('js/crm/student-directory-workspace.js') < html.indexOf('crm-admin.js'),
     'CRM admin page must load the student directory workspace helper before crm-admin.js.'
+);
+assert(
+    html.includes('js/crm/devtools-access.js') &&
+    html.indexOf('js/crm/devtools-access.js') < html.indexOf('crm-admin.js'),
+    'CRM admin page must load the devtools access helper before crm-admin.js.'
 );
 assert(
     html.includes('js/crm/activity-surfaces.js') &&
@@ -291,6 +296,14 @@ assert(
     js.includes('loadSchedulerWorkspace') &&
     js.includes('refreshSchedulerWorkspace'),
     'crm-admin.js must wire scheduler workspace lifecycle helpers.'
+);
+assert(
+    js.includes('window.CrmDevToolsAccess') &&
+    js.includes('resolveDevToolsRoute') &&
+    js.includes('shouldShowDevToolsNav') &&
+    js.includes('/api/admin/sync-from-prod/collections') &&
+    js.includes('devToolsAvailable'),
+    'crm-admin.js must gate Dev Tools on backend sync capability instead of hostname-only checks.'
 );
 
 assert(

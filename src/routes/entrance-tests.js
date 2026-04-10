@@ -133,7 +133,10 @@ router.get('/session', async (req, res) => {
         }
 
         const data = snap.data() || {};
-        if (data.version && data.version !== TEST_VERSION) {
+        const testType = data.testType || 'entrance_test_36plus_v1';
+
+        // Only enforce version check for standard entrance tests
+        if (testType === 'entrance_test_36plus_v1' && data.version && data.version !== TEST_VERSION) {
             return sendError(res, 400, 'TEST_VERSION_MISMATCH', 'This entrance test link uses an unsupported version.');
         }
 
@@ -149,9 +152,14 @@ router.get('/session', async (req, res) => {
             }, { merge: true });
         }
 
+        // For segmental tests, return minimal session with testType
+        if (testType === 'segmental_screening_v1') {
+            return sendSuccess(res, { testId, testType, session: null, progress: null });
+        }
+
         const session = buildPublicSession(testId);
         const progress = sanitizeProgressDraft(data.progress);
-        return sendSuccess(res, { testId, session, progress });
+        return sendSuccess(res, { testId, testType, session, progress });
     } catch (e) {
         console.error('[EntranceTest] /session error:', e);
         return sendError(res, 500, 'SESSION_ERROR', 'Failed to start session.', e?.message || String(e));
@@ -428,6 +436,82 @@ router.post('/submit', async (req, res) => {
     } catch (e) {
         console.error('[EntranceTest] /submit error:', e);
         return sendError(res, 500, 'SUBMIT_ERROR', 'Failed to submit entrance test.', e?.message || String(e));
+    }
+});
+
+ // --- Segmental screening submit route ---
+router.post('/submit-segmental', async (req, res) => {
+    try {
+        if (!db) return sendError(res, 500, 'SERVER_CONFIG_ERROR', 'Firebase Admin not initialized.');
+
+        const token = String(req.body?.token || '').trim();
+        if (!token || token.length < 10) {
+            return sendError(res, 400, 'INVALID_TOKEN', 'Missing or invalid token.');
+        }
+
+        const testId = hashTokenToTestId(token);
+        const ref = db.collection('entranceTests').doc(testId);
+
+        const result = await db.runTransaction(async (tx) => {
+            const snap = await tx.get(ref);
+            if (!snap.exists) {
+                return { ok: false, status: 404, error: 'TEST_NOT_FOUND', message: 'This link is invalid.' };
+            }
+
+            const data = snap.data() || {};
+            if (data.testType !== 'segmental_screening_v1') {
+                return { ok: false, status: 400, error: 'WRONG_TEST_TYPE', message: 'This endpoint is only for segmental screening tests.' };
+            }
+            if (data.status === 'submitted' || data.status === 'revoked') {
+                return { ok: false, status: 410, error: 'TEST_LINK_USED', message: 'This link has already been used.' };
+            }
+
+            const results = req.body?.results || null;
+            const contrastSummaries = req.body?.contrastSummaries || null;
+
+            const leadId = String(data.leadId || '').trim();
+            const studentId = String(data.studentId || '').trim();
+            const ownerId = studentId || leadId;
+
+            // Sync lead stage to test_completed
+            if (leadId) {
+                const leadRef = db.collection(CRM_LEADS).doc(leadId);
+                const leadSnap = await tx.get(leadRef);
+                if (leadSnap.exists) {
+                    const leadPatch = buildLeadStageSyncPatch(leadSnap.data() || {}, 'test_completed', {
+                        user: { uid: 'public-entrance-test', email: null },
+                        serverTimestamp: () => admin.firestore.FieldValue.serverTimestamp()
+                    });
+                    if (leadPatch) {
+                        tx.set(leadRef, leadPatch, { merge: true });
+                    }
+                }
+            }
+
+            tx.set(ref, {
+                status: 'submitted',
+                startedAt: data.startedAt || admin.firestore.FieldValue.serverTimestamp(),
+                submittedAt: admin.firestore.FieldValue.serverTimestamp(),
+                segmentalResults: results,
+                segmentalSummaries: contrastSummaries,
+                submittedMeta: {
+                    ip: req.ip || null,
+                    userAgent: req.headers['user-agent'] || null
+                },
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+
+            return { ok: true };
+        });
+
+        if (!result.ok) {
+            return sendError(res, result.status, result.error, result.message);
+        }
+
+        return sendSuccess(res, { testId }, 'Segmental screening submitted.');
+    } catch (e) {
+        console.error('[EntranceTest] /submit-segmental error:', e);
+        return sendError(res, 500, 'SUBMIT_ERROR', 'Failed to submit segmental screening.', e?.message || String(e));
     }
 });
 

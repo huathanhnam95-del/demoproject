@@ -62,6 +62,11 @@
                 disabled>Settings</button></li>
             <li><button class="crm-nav-item" data-main="chatbot" data-label="Chatbots" data-coming-soon="true"
                 disabled>Chatbots</button></li>
+            <li id="nav-devtools-container"
+              style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color);">
+              <button class="crm-nav-item" data-main="devtools" data-label="🔧 Dev Tools"
+                style="color: var(--accent-color);">🔧 Dev Tools</button>
+            </li>
           </ul>
         </nav>
       </div>
@@ -89,6 +94,86 @@
     <!-- Content -->
     <!-- Content -->
     <main class="crm-content" aria-live="polite">
+      <!-- Dev Tools (Local Only) -->
+      <section class="crm-panel" data-panel="devtools" style="display: none;">
+        <div class="crm-panel-header">
+          <div>
+            <h2>🔧 Developer Tools</h2>
+            <p>Local emulator utilities. These tools are never visible in production.</p>
+          </div>
+        </div>
+        <div class="crm-dashboard-layout" style="margin-top: 24px;">
+          <div class="crm-main-col">
+            <section class="crm-workspace-card">
+              <div class="crm-section-header">
+                <div>
+                  <h3>Production → Emulator Sync</h3>
+                  <p class="crm-muted">Copy documents from production into the local emulator. This does not modify
+                    production data.</p>
+                </div>
+              </div>
+              <div style="padding: 18px;">
+                <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+                  <button id="btn-sync-full" class="crm-btn crm-btn-primary">Sync All Data</button>
+                  <button id="btn-sync-selected" class="crm-btn crm-btn-secondary" disabled>Sync Selected</button>
+                </div>
+
+                <div style="margin-bottom: 24px; max-width: 400px;">
+                  <label for="sync-limit-input" style="display: block; font-weight: 500; margin-bottom: 8px;">Max Docs
+                    per Collection:</label>
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <input type="range" id="sync-limit-input" min="1" max="10000" step="1" value="500"
+                      style="flex: 1;" />
+                    <span id="sync-limit-label"
+                      style="font-family: monospace; font-size: 14px; width: 56px; text-align: right;">500</span>
+                  </div>
+                </div>
+
+                <div id="sync-collection-list" class="crm-stack-list" style="max-height: 400px; overflow-y: auto;">
+                  <div class="crm-muted" style="padding: 12px;">Loading collections...</div>
+                </div>
+
+                <div id="sync-progress-container" style="display: none; margin-top: 24px;">
+                  <h4 style="margin-bottom: 8px;">Sync Progress</h4>
+                  <div class="crm-progress-bar"
+                    style="height: 12px; background: var(--hover-color); border-radius: 6px; overflow: hidden; margin-bottom: 8px;">
+                    <div id="sync-progress-fill"
+                      style="height: 100%; width: 0%; background: var(--accent-color); transition: width 0.2s linear;">
+                    </div>
+                  </div>
+                  <div id="sync-progress-text" class="crm-muted" style="font-family: monospace; font-size: 13px;">
+                    Preparing...</div>
+                  <div id="sync-results"
+                    style="margin-top: 16px; font-family: monospace; font-size: 13px; max-height: 200px; overflow-y: auto; background: var(--hover-color); padding: 12px; border-radius: 4px; display: none;">
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+          <div class="crm-side-col">
+            <section class="crm-workspace-card">
+              <div class="crm-section-header">
+                <div>
+                  <h3>Emulator Status</h3>
+                </div>
+              </div>
+              <div style="padding: 16px;">
+                <p id="devtools-status-summary">Checking prod-to-local sync capability...</p>
+                <p id="devtools-status-detail" class="crm-muted" style="margin-top: 8px;">The local admin API must expose sync routes before these tools become available.</p>
+                <p id="devtools-last-job" class="crm-muted" style="margin-top: 12px;">No sync job has run in this session.</p>
+                <div style="margin-top: 16px;">
+                  <a id="devtools-emulator-link" href="http://localhost:4000/firestore" target="_blank" rel="noopener noreferrer"
+                    class="crm-btn crm-btn-secondary"
+                    style="display: inline-block; text-decoration: none; text-align: center; width: 100%;">
+                    Open Firebase Emulator UI ↗
+                  </a>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+
       <!-- Dashboard -->
       <section class="crm-panel" data-panel="dashboard">
         <div class="crm-panel-header">
@@ -1923,6 +2008,7 @@
   <script src="js/crm/governance.js?v=20260406-gemma4-ollama-fix"></script>
   <script src="js/crm/index.js?v=20260406-gemma4-ollama-fix"></script>
   <script src="js/crm/entrance-test-link-state.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/devtools-access.js?v=20260406-gemma4-ollama-fix"></script>
   <script src="crm-admin.js?v=20260406-gemma4-ollama-fix"></script>
 </body>
 

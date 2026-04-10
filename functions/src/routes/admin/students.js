@@ -19,6 +19,7 @@ const {
 const {
     mapClassroomRecord
 } = require('../../crm/course-service');
+const { enqueuePracticeAccessJob } = require('../../crm/practice-access-service');
 
 module.exports = function registerStudentRoutes(router, deps) {
     const { db, sendSuccess, sendError, requireAdminHandlers, serverTimestamp, writeAuditLog } = deps;
@@ -291,6 +292,12 @@ module.exports = function registerStudentRoutes(router, deps) {
             }, { user: req.user });
 
             const updatedSnap = await ref.get();
+
+            // Override changes can affect practice access for linked accounts.
+            const linked = updatedSnap.exists ? (updatedSnap.data()?.linked_user_ids || []) : [];
+            const uids = Array.isArray(linked) ? linked.map((x) => String(x || '').trim()).filter(Boolean) : [];
+            await Promise.all(uids.map((targetUid) => enqueuePracticeAccessJob(db, 'reconcileUid', targetUid, { runAfterAt: new Date() })));
+
             const student = await hydrateStudentDoc({
                 id: studentId,
                 data: () => (updatedSnap.data() || {}),

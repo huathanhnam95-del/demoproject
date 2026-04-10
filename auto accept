@@ -84,69 +84,52 @@
     }
     function scoreRunLabel(labLower) {
         if (!labLower) return -1;
+        if (labLower.includes('always run') || labLower === 'reject' || labLower.includes('collapse')) return -1;
 
-        // ── Blacklist: things that look like actions but aren't ──
-        if (labLower.includes('always run')) return -1;   // preference toggle
-        if (labLower === 'reject') return -1;
-        if (labLower.includes('collapse')) return -1;     // already expanded
+        const exact = ['run', 'accept', 'accept all', 'always allow', 'allow this conversation', 'allow', 'retry'];
+        if (exact.includes(labLower)) return 100;
 
-        // ── Exact matches — highest priority ──
-        if (labLower === 'run') return 100;
-        if (labLower === 'accept') return 100;
-        if (labLower === 'accept all') return 100;
-        if (labLower === 'always allow') return 100;
-        if (labLower === 'allow this conversation') return 100;
-        if (labLower === 'allow') return 100;
-        if (labLower === 'retry') return 100;
+        const starts = ['run', 'accept', 'always allow', 'allow', 'retry'];
+        if (starts.some(s => labLower.startsWith(s))) return 80;
 
-        // ── Prefix matches (e.g. "Run Alt+↵") ──
-        if (labLower.startsWith('run')) return 80;
-        if (labLower.startsWith('accept')) return 80;
-        if (labLower.startsWith('always allow')) return 80;
-        if (labLower.startsWith('allow')) return 80;
-        if (labLower.startsWith('retry')) return 80;
+        const subs = ['always allow', 'accept all', 'retry'];
+        if (subs.some(s => labLower.includes(s))) return 60;
 
-        // ── Substring matches for composite labels ──
-        if (labLower.includes('always allow')) return 60;
-        if (labLower.includes('accept all')) return 60;
-        if (labLower.includes('retry')) return 60;
-
-        // ── "Expand" — reveals hidden "1 Step Requires Input" section ──
         if (labLower === 'expand') return 50;
         if (labLower.includes('expand')) return 40;
 
         return -1;
     }
-    function isInsideHUD(el) {
-        let node = el;
-        while (node) {
-            if (node.id === '__antigravity_auto_run_hud__') return true;
-            node = node.parentElement;
-        }
-        return false;
-    }
-    // Cursor approval prompts always have Run + Reject as siblings.
-    // Walk up to find a container that also contains a 'Reject' button.
-    function isInsideApprovalPrompt(el) {
+    function isInsideApprovalPrompt(el, cache) {
         let container = el.parentElement;
         // Walk up a few levels to find the prompt container
         for (let depth = 0; container && depth < 6; depth++) {
+            if (cache.has(container)) return cache.get(container);
             const buttons = container.querySelectorAll('button, [role="button"]');
+            // Optimistic abort: typical prompts won't have more than 15 buttons
+            if (buttons.length > 15) {
+                cache.set(container, false);
+                return false;
+            }
             for (const btn of buttons) {
+                if (btn === el) continue;
                 const lab = (shallowText(btn) || t(btn.textContent || '')).toLowerCase();
                 if (lab === 'reject' || lab.startsWith('reject') || 
                     lab === 'deny' || lab.startsWith('deny') ||
                     lab === 'cancel') {
+                    cache.set(container, true);
                     return true;
                 }
             }
+            cache.set(container, false);
             container = container.parentElement;
         }
         return false;
     }
     function findBestRunButton() {
+        const cache = new Map();
         const candidates = Array.from(document.querySelectorAll('button, [role="button"], a[role="button"]'))
-            .filter(el => isVisible(el) && isOnScreen(el) && !isInsideHUD(el));
+            .filter(el => isVisible(el) && isOnScreen(el));
         let bestRun = null;
         let bestScore = -1;
         let bestY = -1;  // prefer buttons closer to bottom (newer prompts)
@@ -156,7 +139,7 @@
             if (s <= -1) continue;
             // "Expand" buttons don't need approval context (they reveal it)
             const isExpand = ll.includes('expand');
-            if (!isExpand && !isInsideApprovalPrompt(el)) {
+            if (!isExpand && !isInsideApprovalPrompt(el, cache)) {
                 if (CFG.log) console.log('[auto-run] SKIP (no Reject sibling):', ll);
                 continue;
             }
@@ -221,12 +204,25 @@
             const fn = state.cleanupFns.pop();
             try { fn(); } catch (_) { /* intentional ignore */ }
         }
-        if (state.ui) state.ui.remove();
+        if (state.ui) {
+            const host = document.getElementById('__antigravity_auto_run_host__');
+            if (host) host.remove();
+        }
         state.ui = null;
     }
     function createHUD() {
-        const old = document.getElementById('__antigravity_auto_run_hud__');
-        if (old) old.remove();
+        const hostId = '__antigravity_auto_run_host__';
+        const oldHost = document.getElementById(hostId);
+        if (oldHost) oldHost.remove();
+
+        const host = document.createElement('div');
+        host.id = hostId;
+        // Position fixed to 0,0 so our inner transforms work, but zero size so it doesn't block clicks
+        host.style.cssText = 'position:fixed; z-index:2147483647; top:0; left:0; width:0; height:0; overflow:visible; display:block;';
+        document.body.appendChild(host);
+
+        const shadow = host.attachShadow({ mode: 'open' });
+
         const hud = document.createElement('div');
         hud.id = '__antigravity_auto_run_hud__';
         hud.style.cssText = [
@@ -375,7 +371,7 @@
         body.appendChild(status);
         hud.appendChild(header);
         hud.appendChild(body);
-        document.body.appendChild(hud);
+        shadow.appendChild(hud);
         function bind(target, event, handler, options) {
             target.addEventListener(event, handler, options);
             state.cleanupFns.push(() => target.removeEventListener(event, handler, options));
@@ -419,11 +415,11 @@
         }
         bind(close, 'click', cleanupAll);
         function onMouseDown(e) {
-            if (e.target === collapse || e.target === close || e.target === toggleBtn || e.target === cbRun || e.target === intervalInput) return;
+            if (e.target.closest && e.target.closest('button, input')) return;
             state.dragging = true;
             state.drag.startX = e.clientX;
             state.drag.startY = e.clientY;
-            const m = (hud.style.transform || '').match(/translate3d\(([-0-9.]+)px,\s*([-0-9.]+)px,\s*0px\)/);
+            const m = (hud.style.transform || '').match(/translate3d\(([-0-9.]+)px,\s*([-0-9.]+)px/);
             state.drag.offX = m ? Number(m[1]) : 0;
             state.drag.offY = m ? Number(m[2]) : 0;
             e.preventDefault();
@@ -441,8 +437,9 @@
             state.dragging = false;
         }
         bind(header, 'mousedown', onMouseDown);
-        bind(document, 'mousemove', onMouseMove);
-        bind(document, 'mouseup', onMouseUp);
+        // Bind to shadow and window root for dragging across the page
+        bind(window, 'mousemove', onMouseMove);
+        bind(window, 'mouseup', onMouseUp);
         bind(document, 'keydown', keyHandler, true);
         return hud;
     }

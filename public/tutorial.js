@@ -1067,6 +1067,49 @@
                 nextLabel: 'Finish Tutorial ✓'
             }
         ],
+        rfib: [
+            {
+                target: null,
+                icon: '📖',
+                title: 'Dropdown Mode',
+                text: 'Read the passage and select the correct option from each dropdown to fill in the blanks.',
+                position: 'center',
+                nextLabel: 'Show Me →',
+                beforeShow: () => {
+                    const tab = document.getElementById('tab-rfib');
+                    if (tab) tab.click();
+                }
+            },
+            {
+                target: '.rfib-passage-card',
+                icon: '📝',
+                title: 'Fill in the Blanks',
+                text: 'Click on a blank to see the options and choose the one that fits best.',
+                position: 'bottom'
+            },
+            {
+                target: '.rfib-support-toggle-row',
+                icon: '🛟',
+                title: 'Support Versions',
+                text: 'Stuck? Switch to <strong>Beginner</strong> or <strong>Intermediate</strong> support to get contextual hints, simplified text, or dedicated audio help.',
+                position: 'top'
+            },
+            {
+                target: '.rfib-audio-card',
+                icon: '🔊',
+                title: 'Listen to the Passage',
+                text: 'You can listen to the original passage audio here, or switch between male and female voices.',
+                position: 'bottom'
+            },
+            {
+                target: '.rfib-actions',
+                icon: '✅',
+                title: 'Check Your Answers',
+                text: 'Click <strong>Check</strong> when you are done to see how you did. You can then <strong>Retry</strong> any missed blanks.',
+                position: 'top',
+                nextLabel: 'Finish Tutorial ✓'
+            }
+        ],
         survival: [
             {
                 target: null,
@@ -1116,10 +1159,10 @@
                 nextLabel: 'Enemies \u2192',
                 interactive: false
             },
-            { 
-                target: null, 
-                icon: 'E', 
-                title: 'Enemies', 
+            {
+                target: null,
+                icon: 'E',
+                title: 'Enemies',
                 text: ` 
                     Each enemy has a different behavior. You\u2019ll get a short popup the first time a new enemy type (or major trait) appears. 
                     <div class="tutorial-media-grid"> 
@@ -1131,9 +1174,9 @@
                         <img class="tutorial-media-thumb" src="assets/survival-tutorial/enemy-shielded.svg" alt="Shielded enemy"> 
                     </div> 
                     Ready? Good luck. 
-                `, 
-                position: 'center', 
-                nextLabel: 'Start \u2713', 
+                `,
+                position: 'center',
+                nextLabel: 'Start \u2713',
                 interactive: false
             }
         ],
@@ -1192,6 +1235,10 @@
         if (mode === 'read-aloud') return {
             complete: 'readAloudTutorialCompleted',
             replay: 'readAloudTutorialReplay'
+        };
+        if (mode === 'rfib') return {
+            complete: 'rfibTutorialCompleted',
+            replay: 'rfibTutorialReplay'
         };
         if (mode === 'survival') return {
             complete: 'survivalTutorialCompleted',

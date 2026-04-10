@@ -435,6 +435,12 @@ function setupEventListeners() {
     }
 
     // --- Panel Buttons (Logged In) ---
+    const panelViewProfileBtn = document.getElementById('panel-view-profile-btn');
+    if (panelViewProfileBtn) {
+      panelViewProfileBtn.removeEventListener('click', showAccountDetailsModal);
+      panelViewProfileBtn.addEventListener('click', showAccountDetailsModal);
+    }
+
     const panelLogoutBtn = document.getElementById('panel-logout-btn');
     if (panelLogoutBtn) {
       panelLogoutBtn.removeEventListener('click', handleLogout); // Safety
@@ -1692,11 +1698,11 @@ async function checkFirstVisit() {
     && authFunctions
     && typeof authFunctions.onAuthStateChanged === 'function'
     ? await authSessionGuard.waitForInitialAuthResolution({
-        getCurrentUser: () => (authFunctions ? authFunctions.getCurrentUser() : null),
-        subscribe: (onStateChanged) => authFunctions.onAuthStateChanged(onStateChanged),
-        timeoutMs: 12000,
-        nullGraceMs: 250
-      })
+      getCurrentUser: () => (authFunctions ? authFunctions.getCurrentUser() : null),
+      subscribe: (onStateChanged) => authFunctions.onAuthStateChanged(onStateChanged),
+      timeoutMs: 12000,
+      nullGraceMs: 250
+    })
     : (authFunctions ? authFunctions.getCurrentUser() : null);
 
   if (!user && !isGuestMode) {

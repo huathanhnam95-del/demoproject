@@ -252,12 +252,34 @@ function looksLikeUtcInstant(value) {
     return /(?:z|[+-]\d{2}:\d{2})$/i.test(String(value || ''));
 }
 
+function deriveContractCountState(session = {}) {
+    const base = session && typeof session === 'object' ? session : {};
+    const explicit = cleanOptionalString(base.contractCountState);
+    if (String(base.status || 'scheduled') === 'cancelled' || String(base.sessionOutcome || 'none') === 'absent_makeup') {
+        return 'does_not_count';
+    }
+    if (explicit === 'does_not_count') {
+        return 'does_not_count';
+    }
+    return 'counts';
+}
+
 function normalizeScheduledSession(session) {
     const base = session && typeof session === 'object' ? session : {};
     const timezone = cleanOptionalString(base.timezone, 'UTC');
+    const status = cleanOptionalString(base.status, 'scheduled') || 'scheduled';
+    const sessionOutcome = cleanOptionalString(base.sessionOutcome, 'none') || 'none';
+    const contractCountState = deriveContractCountState({
+        ...base,
+        status,
+        sessionOutcome
+    });
     const normalized = {
         ...base,
-        timezone
+        timezone,
+        status,
+        sessionOutcome,
+        contractCountState
     };
 
     let scheduledStartAtUtc = cleanOptionalString(base.scheduledStartAtUtc);
@@ -413,6 +435,8 @@ function buildSeedSessions({
                 seedBatchId: cleanOptionalString(seedBatchId),
                 replacementOfSessionId: null,
                 status: 'scheduled',
+                sessionOutcome: 'none',
+                contractCountState: 'counts',
                 attendanceState: 'none',
                 lockState: 'unlocked',
                 lockReason: null,
@@ -434,10 +458,15 @@ function buildScheduleSummary({ totalInstructionMinutes, sessionMinutes, targetS
         });
     const list = Array.isArray(sessions) ? sessions.map(normalizeScheduledSession) : [];
     const active = list.filter((session) => String(session?.status || 'scheduled') !== 'cancelled');
-    const contracted = active.filter((session) => session.unitType === 'contracted');
+    const contracted = active.filter((session) =>
+        session.unitType === 'contracted' && String(session.contractCountState || 'counts') !== 'does_not_count'
+    );
     const overflow = active.filter((session) => session.unitType === 'overflow');
     const contractedCompletedCount = contracted.filter((session) =>
-        session.status === 'completed' || session.attendanceState === 'finalized'
+        session.status === 'completed'
+        || session.sessionOutcome === 'completed'
+        || session.sessionOutcome === 'absent_counted'
+        || session.attendanceState === 'finalized'
     ).length;
 
     const nowMs = nowIso ? new Date(nowIso).getTime() : Date.now();
@@ -681,6 +710,8 @@ function buildRegenerationPreview({
                 seedBatchId: null,
                 replacementOfSessionId: null,
                 status: 'scheduled',
+                sessionOutcome: 'none',
+                contractCountState: 'counts',
                 attendanceState: 'none',
                 lockState: 'unlocked',
                 lockReason: null,
@@ -798,7 +829,12 @@ function buildAddSessionPreview({
     const normalizedExisting = Array.isArray(existingSessions)
         ? existingSessions.map(normalizeScheduledSession)
         : [];
-    const activeScheduled = normalizedExisting.filter((session) => String(session.status || 'scheduled') === 'scheduled');
+    const scheduledSessions = normalizedExisting.filter((session) => String(session.status || 'scheduled') === 'scheduled');
+    const countingContractedSessions = normalizedExisting.filter((session) =>
+        session.unitType === 'contracted'
+        && String(session.status || 'scheduled') !== 'cancelled'
+        && String(session.contractCountState || 'counts') !== 'does_not_count'
+    );
     const requestedOccurrences = buildRequestedOccurrences({
         targetLocalDate,
         targetLocalTime,
@@ -810,13 +846,16 @@ function buildAddSessionPreview({
 
     const validOccurrences = [];
     const blockedOccurrences = [];
-    let contractedAssignedCount = activeScheduled.filter((session) => session.unitType === 'contracted').length;
-    let overflowSequence = activeScheduled
+    let contractedAssignedCount = countingContractedSessions.length;
+    let nextContractUnitIndex = normalizedExisting
+        .filter((session) => session.unitType === 'contracted')
+        .reduce((maxValue, session) => Math.max(maxValue, Number(session.contractUnitIndex || 0)), 0) + 1;
+    let overflowSequence = normalizedExisting
         .filter((session) => session.unitType === 'overflow' && session.status !== 'cancelled')
         .reduce((maxValue, session) => Math.max(maxValue, Number(session.overflowSequence || 0)), 0);
 
     for (const occurrence of requestedOccurrences) {
-        const teacherConflict = activeScheduled.find((session) =>
+        const teacherConflict = scheduledSessions.find((session) =>
             cleanOptionalString(session.teacherUid) === cleanOptionalString(teacherUid) && overlapsUtc(session, occurrence)
         ) || validOccurrences.find((session) =>
             cleanOptionalString(session.teacherUid) === cleanOptionalString(teacherUid) && overlapsUtc(session, occurrence)
@@ -838,11 +877,13 @@ function buildAddSessionPreview({
             teacherUid: cleanOptionalString(teacherUid),
             ...occurrence,
             unitType: contractedAssignedCount < Number(targetSessionCount || 0) ? 'contracted' : 'overflow',
-            contractUnitIndex: contractedAssignedCount < Number(targetSessionCount || 0) ? contractedAssignedCount + 1 : null,
+            contractUnitIndex: contractedAssignedCount < Number(targetSessionCount || 0) ? nextContractUnitIndex : null,
             overflowSequence: contractedAssignedCount < Number(targetSessionCount || 0) ? null : overflowSequence + 1,
             seedBatchId: null,
             replacementOfSessionId: null,
             status: 'scheduled',
+            sessionOutcome: 'none',
+            contractCountState: 'counts',
             attendanceState: 'none',
             lockState: 'unlocked',
             lockReason: null,
@@ -851,6 +892,7 @@ function buildAddSessionPreview({
 
         if (nextOccurrence.unitType === 'contracted') {
             contractedAssignedCount += 1;
+            nextContractUnitIndex += 1;
         } else {
             overflowSequence += 1;
         }
@@ -990,6 +1032,8 @@ function buildReplacementPlan({ replacementSession, replacedSession }) {
             overflowSequence: replaced.overflowSequence ?? null,
             replacementOfSessionId: cleanOptionalString(replaced.sessionId),
             status: 'scheduled',
+            sessionOutcome: 'none',
+            contractCountState: 'counts',
             attendanceState: 'none',
             lockState: 'unlocked',
             lockReason: null,
@@ -1039,6 +1083,7 @@ module.exports = {
     buildScheduleSummary,
     buildSeedSessions,
     computeContractedTargetCount,
+    deriveContractCountState,
     formatLocalDateTime,
     localDateTimeToUtcIso,
     normalizeScheduledSession,

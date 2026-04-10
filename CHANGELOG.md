@@ -1,3 +1,22 @@
+## [V1.6.4] - 2026-04-10
+
+### Added
+
+- **Teacher Scheduler Duplication**: Implemented session duplication logic in the CRM Teacher Scheduler UI.
+- **Contracted Target Validations**: Added server-side and client-side logic to derive and validate contract count states for class scheduling.
+- **Live Browser Check**: New Playwright-based live verification for Teacher Scheduler workflows.
+
+### Improved
+
+- **CRM Admin Safeguards**: Implemented `maxDocsPerCollection` limits to prevent accidental bulk operations on large production datasets.
+- **Scheduling Service**: Refined session normalization and added robust string cleaning for session IDs.
+- **Conductor Protocols**: Updated `GEMINI.md` with enhanced council and engineering protocols.
+
+### Fixed
+
+- **Council Analytics**: Resolved stability issues in `summon_council.js` regarding context injection and telemetry output.
+- **UI State Persistence**: Fixed minor reactive state bugs in the Teacher Scheduler workspace during session updates.
+
 ## [V1.6.3] - 2026-04-02
 
 ### Added

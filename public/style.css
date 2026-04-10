@@ -572,47 +572,225 @@ h1 {
   font-size: 0.95rem;
 }
 
-.practice-skill-filter {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin: 18px 0 24px;
+/* ── Practice Scope: Segmented Control ── */
+.practice-scope-filter {
+  display: inline-flex;
+  background: #eef0f4;
+  border-radius: 999px;
+  padding: 5px;
+  margin: 16px 0 12px;
 }
 
-.practice-skill-btn {
+.practice-scope-btn {
   appearance: none;
-  border: 1px solid #d7deea;
-  background: rgba(255, 255, 255, 0.88);
-  color: #334155;
+  border: none;
+  background: transparent;
+  color: #64748b;
   border-radius: 999px;
-  padding: 10px 16px;
+  padding: 10px 24px;
   font-size: 0.95rem;
   font-weight: 600;
   letter-spacing: 0.01em;
   cursor: pointer;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
-  transition: transform 0.2s var(--ease-smooth), box-shadow 0.2s var(--ease-smooth),
-    border-color 0.2s var(--ease-smooth), background 0.2s var(--ease-smooth), color 0.2s var(--ease-smooth);
+  transition: background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+  white-space: nowrap;
+  font-family: inherit;
 }
 
-.practice-skill-btn:hover:not(.is-active) {
-  transform: translateY(-1px);
-  border-color: #b8c3d6;
+.practice-scope-btn:hover:not(.is-active) {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.practice-scope-btn.is-active {
   background: #ffffff;
+  color: var(--primary, #2563eb);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.practice-scope-btn:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.35);
+  outline-offset: 2px;
+}
+
+/* ── Practice Skill: Card Grid ── */
+.practice-skill-filter {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 18px 0 24px;
+}
+
+.practice-skill-btn {
+  --accent-color: var(--primary, #2563eb);
+  --accent-rgb: 37, 99, 235;
+
+  appearance: none;
+  display: flex;
+  align-items: center;
+  padding: 18px 20px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #f3f4f6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+
+  position: relative;
+  overflow: hidden;
+}
+
+.practice-skill-btn.card-speaking {
+  --accent-color: #3b82f6;
+  --accent-rgb: 59, 130, 246;
+}
+
+.practice-skill-btn.card-listening {
+  --accent-color: #8b5cf6;
+  --accent-rgb: 139, 92, 246;
+}
+
+.practice-skill-btn.card-reading {
+  --accent-color: #10b981;
+  --accent-rgb: 16, 185, 129;
+}
+
+.practice-skill-btn.card-writing {
+  --accent-color: #f59e0b;
+  --accent-rgb: 245, 158, 11;
+}
+
+.practice-skill-btn::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, var(--accent-color) 0%, transparent 70%);
+  opacity: 0.04;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.practice-skill-btn:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border-color: var(--accent-color);
+  transform: translateY(-4px);
+}
+
+.practice-skill-btn:hover::before {
+  opacity: 0.08;
+}
+
+.practice-skill-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 .practice-skill-btn.is-active {
-  border-color: transparent;
-  background: linear-gradient(135deg, var(--primary, #2563eb), #0f6ddf);
-  color: white;
-  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.22);
-  transform: translateY(-1px);
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.2), 0 4px 12px rgba(var(--accent-rgb), 0.1);
+}
+
+@supports (color: color-mix(in srgb, red, blue)) {
+  .practice-skill-btn.is-active {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-color) 20%, transparent),
+      0 4px 12px rgba(var(--accent-rgb), 0.1);
+  }
 }
 
 .practice-skill-btn:focus-visible {
-  outline: 3px solid rgba(37, 99, 235, 0.35);
+  outline: 3px solid rgba(var(--accent-rgb), 0.35);
   outline-offset: 2px;
+}
+
+/* Watermark styles */
+.watermark {
+  position: absolute;
+  right: -15px;
+  bottom: -15px;
+  width: 180px;
+  height: 180px;
+  color: var(--accent-color);
+  opacity: 0.18;
+  pointer-events: none;
+  z-index: 0;
+  transition: all 0.5s cubic-bezier(0.4, 1, 0.2, 1);
+  transform: rotate(-10deg);
+}
+
+.practice-skill-btn:hover .watermark {
+  opacity: 0.35;
+  transform: scale(1.15) rotate(0deg);
+  right: 0px;
+  bottom: 0px;
+}
+
+.content-wrapper {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+/* Skill Card Inner Elements */
+.skill-card-icon {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 50%;
+  background: rgba(var(--accent-rgb), 0.12);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 14px;
+  color: var(--accent-color);
+}
+
+.skill-card-icon .material-symbols-outlined {
+  font-size: 22px;
+}
+
+.skill-card-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.skill-card-text strong {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main, #111827);
+}
+
+.skill-card-text>span:last-child {
+  font-size: 0.8rem;
+  color: var(--text-muted, #6b7280);
+  font-weight: 400;
+}
+
+.skill-card-chevron {
+  color: #c5c9d2;
+  font-size: 20px;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+/* Responsive: single column on mobile */
+@media (max-width: 640px) {
+  .practice-skill-filter {
+    grid-template-columns: 1fr;
+  }
+
+  .practice-skill-btn {
+    padding: 16px 18px;
+  }
 }
 
 /* Card Grid Layouts */
@@ -2466,8 +2644,10 @@ h1 {
 /* Premium Mode Helper Modal */
 .mode-helper-content {
   max-width: 550px;
+  max-height: 90vh;
+  overflow-y: auto;
   text-align: center;
-  padding: 48px !important;
+  padding: 32px 36px !important;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.8);
@@ -2476,7 +2656,7 @@ h1 {
 }
 
 .mode-helper-header {
-  margin-bottom: 40px;
+  margin-bottom: 24px;
 }
 
 .mode-helper-icon {
@@ -2498,7 +2678,7 @@ h1 {
 .mode-helper-options {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
 }
 
 .helper-option {
@@ -4859,6 +5039,9 @@ textarea:focus {
   justify-content: center;
   align-items: center;
   backdrop-filter: blur(4px);
+  overflow-y: auto;
+  padding: 24px 16px;
+  box-sizing: border-box;
 }
 
 .entry-modal-content {
@@ -13537,13 +13720,13 @@ html {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   padding: 6px 16px;
   font-weight: 700;
   font-size: 0.85rem;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  border-radius: 4px;
-  clip-path: polygon(10% 0, 100% 0, 90% 100%, 0% 100%);
+  border-radius: 20px;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -13553,7 +13736,42 @@ html {
   position: relative;
   overflow: hidden;
   color: white;
-  /* Default text color for dark backgrounds */
+  cursor: pointer;
+  animation: diffBadgePulse 3s ease-in-out infinite;
+}
+
+.difficulty-badge:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.difficulty-badge:active {
+  transform: scale(0.97);
+}
+
+/* Gear icon that hints at settings */
+.diff-settings-hint {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.difficulty-badge:hover .diff-settings-hint {
+  opacity: 1;
+  transform: rotate(90deg);
+}
+
+/* Pulsing glow to attract attention */
+@keyframes diffBadgePulse {
+
+  0%,
+  100% {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  50% {
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2), 0 0 12px rgba(255, 255, 255, 0.15);
+  }
 }
 
 .difficulty-badge::before {
@@ -13791,6 +14009,30 @@ html {
   line-height: 1.5;
 }
 
+/* Smooth expand/collapse for settings toggle panels */
+.setting-toggle-panel {
+  overflow: hidden;
+  transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s ease,
+    margin-bottom 0.35s ease,
+    padding 0.35s ease;
+}
+
+.setting-toggle-panel.setting-visible {
+  max-height: 500px;
+  opacity: 1;
+  margin-bottom: 24px;
+  padding: 20px;
+}
+
+.setting-toggle-panel.setting-hidden {
+  max-height: 0;
+  opacity: 0;
+  margin-bottom: 0;
+  padding: 0 20px;
+  border-color: transparent;
+}
+
 .setting-select {
   width: 100%;
   padding: 12px 16px;
@@ -13806,6 +14048,56 @@ html {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 4px var(--primary-light);
+}
+
+/* Sensitivity Card Selection UI */
+.sensitivity-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sensitivity-card {
+  padding: 14px 16px;
+  border: 2px solid var(--border-light, #e2e8f0);
+  border-radius: var(--radius-md, 10px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.sensitivity-card:hover {
+  border-color: var(--primary, #3b82f6);
+  background: #f8fafc;
+}
+
+.sensitivity-card.selected {
+  border-color: var(--primary, #3b82f6);
+  background: #eff6ff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.sensitivity-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.sensitivity-icon {
+  font-size: 1.1rem;
+}
+
+.sensitivity-card-header strong {
+  font-size: 0.95rem;
+  color: #1e293b;
+}
+
+.sensitivity-desc {
+  font-size: 0.82rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.45;
 }
 
 

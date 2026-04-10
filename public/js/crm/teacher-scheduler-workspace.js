@@ -1048,7 +1048,8 @@ window.TeacherSchedulerWorkspace = (function () {
                 });
             }
             if (elements.btnTeacherSchedulerDuplicateSession) {
-                elements.btnTeacherSchedulerDuplicateSession.addEventListener('click', () => {
+                elements.btnTeacherSchedulerDuplicateSession.addEventListener('click', (evt) => {
+                    evt.stopPropagation();
                     const sessionId = String(elements.btnTeacherSchedulerDuplicateSession.dataset.sessionId || '').trim();
                     duplicateSession(sessionId).catch((error) => showToast?.(error?.message || 'Failed to duplicate session.', 'error'));
                 });

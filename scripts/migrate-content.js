@@ -30,6 +30,11 @@ const CONTENT_SOURCES = {
         prefix: 'type_',
         parser: parseTypeContent
     },
+    asq: {
+        file: 'public/database/quiz/ASQ/ASQ.xlsx',
+        prefix: 'asq_',
+        parser: parseAsqContent
+    },
     extended: {
         file: 'public/database/extended/LFIB.xlsx',
         prefix: 'extended_',
@@ -67,6 +72,50 @@ function parseTypeContent(data) {
             createdAt: admin.firestore.FieldValue.serverTimestamp()
         };
     }).filter(item => item.text.length > 0);
+}
+
+/**
+ * Parse ASQ mode content (ASQ.xlsx)
+ * Expected columns: ID, ANSWER
+ * ANSWER format: "<prompt>\\n---\\n<alias1 / alias2 / ...>"
+ */
+function parseAsqContent(data) {
+    return data.map((row, index) => {
+        const id = row['ID'] || row['id'] || index + 1;
+        const answerCell = String(row['ANSWER'] || row['Answer'] || row['answer'] || '').trim();
+        if (!answerCell) return null;
+
+        const normalized = answerCell.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        let parts = normalized.split(/\n\s*---\s*\n/);
+        if (parts.length < 2) {
+            parts = normalized.split(/\s*---\s*/);
+        }
+        if (parts.length < 2) return null;
+
+        const promptText = String(parts[0] || '').trim();
+        const answersRaw = String(parts.slice(1).join('\n---\n') || '').trim();
+        if (!promptText || !answersRaw) return null;
+
+        const acceptedAnswers = answersRaw
+            .split('/')
+            .map((value) => String(value || '').trim())
+            .filter(Boolean);
+
+        if (acceptedAnswers.length === 0) return null;
+
+        return {
+            id: String(id),
+            mode: 'asq',
+            promptText,
+            text: promptText,
+            answerDisplay: answersRaw,
+            acceptedAnswers: acceptedAnswers.map((value) => value.toLowerCase()),
+            wordCount: promptText.split(/\s+/).filter(w => w).length,
+            difficultyTag: 'medium',
+            difficultyMultiplier: 1.5,
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+        };
+    }).filter(Boolean);
 }
 
 /**
@@ -259,6 +308,7 @@ async function migrate() {
 
     const stats = {
         type: 0,
+        asq: 0,
         extended: 0,
         rfib: 0,
         speak: 0
@@ -301,10 +351,11 @@ async function migrate() {
     console.log('='.repeat(50)); // eslint-disable-line no-console
     console.log('📊 Migration Summary:'); // eslint-disable-line no-console
     console.log(`  Type (WFD):      ${stats.type} documents`); // eslint-disable-line no-console
+    console.log(`  ASQ:             ${stats.asq} documents`); // eslint-disable-line no-console
     console.log(`  Extended (LFIB): ${stats.extended} documents`); // eslint-disable-line no-console
     console.log(`  RFIB:            ${stats.rfib} documents`); // eslint-disable-line no-console
     console.log(`  Speak (RS):      ${stats.speak} documents`); // eslint-disable-line no-console
-    console.log(`  Total:           ${stats.type + stats.extended + stats.rfib + stats.speak} documents`); // eslint-disable-line no-console
+    console.log(`  Total:           ${stats.type + stats.asq + stats.extended + stats.rfib + stats.speak} documents`); // eslint-disable-line no-console
     console.log('='.repeat(50)); // eslint-disable-line no-console
     console.log('✅ Migration complete!'); // eslint-disable-line no-console
 }

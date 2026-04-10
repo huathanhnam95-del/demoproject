@@ -395,7 +395,7 @@ The code represents a reasonably well-structured admin panel for managing video 
 ```javascript
 // auth-manager.js
 import { firebaseConfig } from './config'; // Assuming you have a config file
-const ADMIN_EMAIL = 'huathanhnam95@gmail.com';
+const ADMIN_EMAIL = '<admin-email>';
 
 let authInitialized = false;
 
@@ -484,3 +484,4 @@ This is a substantial codebase, and this review is a starting point.  Prioritize
 --------------------------------------------------
 
 Γ£à Council Adjourned. The Sovereign's vision is secured.
+

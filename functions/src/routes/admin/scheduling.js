@@ -16,6 +16,7 @@ const {
     buildScheduleSummary,
     buildScheduledSessionWriteData,
     buildSeedSessions,
+    deriveContractCountState,
     normalizeScheduledSession
 } = require('../../crm/scheduling-service');
 const {
@@ -36,7 +37,8 @@ function toPositiveInteger(value, fallback = null) {
 }
 
 function isLockedSession(session) {
-    return String(session?.lockState || 'unlocked') === 'hard_locked';
+    return String(session?.lockState || 'unlocked') === 'hard_locked'
+        || String(session?.status || 'scheduled') === 'cancelled';
 }
 
 function readExpectedScheduleVersion(payload) {
@@ -698,6 +700,10 @@ module.exports = function registerSchedulingRoutes(router, deps) {
 
             await ref.set({
                 status: 'cancelled',
+                contractCountState: deriveContractCountState({
+                    ...existing,
+                    status: 'cancelled'
+                }),
                 version: Number(existing.version || 1) + 1,
                 updatedAt: serverTimestamp(),
                 updatedBy: req.user?.uid || null

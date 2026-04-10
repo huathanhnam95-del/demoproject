@@ -15,5 +15,18 @@ project-excludes = [
     "**/backend/ver0.0/**",
     "**/.git/**",
     "**/venv/**",
-    "**/backend/**"
+    "**/backend/**",
+    "**/_tmp/**",
+    "dump_sample_enrichment.py",
+    "enrich_pedagogical_data_test.py",
+    "enrich_rfib_data_batch.py",
+    "enrich_rfib_data_test.py",
+    "test_vertex_api_key.py",
+    "generate_thumbnails_rfib.py",
+    "qa_test_1.py",
+    "apply_prosody_chunker.py",
+    "extract_ra_questions.py",
+    "scripts/generate_ra_audio.py",
+    "scripts/merge_rechunked_to_excel.py",
+    "scripts/rechunk_local_regex.py"
 ]

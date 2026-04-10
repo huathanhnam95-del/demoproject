@@ -510,6 +510,16 @@ window.ClassroomAPI = (function () {
         return parseJsonResponse(res);
     }
 
+    async function teacherSetScheduledSessionOutcome(sessionId, data = {}) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/teacher/sessions/${sessionId}/outcome`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(data || {})
+        });
+        return parseJsonResponse(res);
+    }
+
     async function teacherActivateRecurrences(data = {}) {
         const headers = await getHeaders();
         const res = await fetch('/api/teacher/scheduler/activate-recurrences', {
@@ -637,6 +647,7 @@ window.ClassroomAPI = (function () {
         teacherRescheduleScheduledSession,
         cancelScheduledSession,
         teacherCancelScheduledSession,
+        teacherSetScheduledSessionOutcome,
         teacherActivateRecurrences,
         previewClassroomScheduleRegeneration,
         regenerateClassroomSchedule,

@@ -1,5 +1,0 @@
-[dotenv@17.2.3] injecting env (13) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
-[Dict] Loaded 34 words.
-[SECURE] Firebase Admin initialized.
-[SECURE] Server running with TRUSTED CA on https://localhost:8443
-[Dict] Periodic atomic save completed.

@@ -159,7 +159,7 @@ def generate_single(api_key, text, voice_id, speed, output_path):
             response = requests.post(url, json=payload, headers=req_headers, stream=True, timeout=REQUEST_TIMEOUT)
 
             if response.status_code != 200:
-                raise Exception(f'API error {response.status_code}: {response.text[:300]}')
+                raise Exception(f'API error {response.status_code}: {response.text}')
 
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
             with open(output_path, 'wb') as f:
@@ -253,28 +253,49 @@ def main():
 
                 output_path = os.path.join(OUTPUT_DIR, filename)
 
-                try:
-                    print(f'  [{done_count + 1}/{total_tasks}] Generating {filename}...')
-                    generate_single(api_key, text, voice['id'], speed, output_path)
-                    completed.add(file_key)
-                    q_manifest[gender]['files'][speed_label] = filename
-                    done_count += 1
+                offset = 0
+                while True:
+                    if offset > 0:
+                        voice_pool = male_voices if gender == 'male' else female_voices
+                        voice = assign_voice(q_id + offset, voice_pool)
 
-                    # Save progress periodically
-                    if done_count % 10 == 0:
+                    try:
+                        print(f'  [{done_count + 1}/{total_tasks}] Generating {filename} with voice {voice["name"]}...')
+                        generate_single(api_key, text, voice['id'], speed, output_path)
+                        completed.add(file_key)
+                        q_manifest[gender]['files'][speed_label] = filename
+                        # update manifest for final assigned voice
+                        q_manifest[gender]['voiceId'] = voice['id']
+                        q_manifest[gender]['voiceName'] = voice['name']
+                        
+                        done_count += 1
+
+                        # Save progress periodically
+                        if done_count % 10 == 0:
+                            save_progress(completed)
+
+                        time.sleep(DELAY_BETWEEN_CALLS)
+                        break # success, exit retry loop
+                        
+                    except Exception as e:
+                        err_str = str(e).lower()
+                        if "library voices" in err_str or "payment_required" in err_str or "paid_plan_required" in err_str or "402" in err_str:
+                            print(f'  Warning: Voice {voice["name"]} requires paid plan. Trying fallback...')
+                            offset += 100
+                            if offset > 1000:
+                                print('  ERROR: All voices exhausted.')
+                                save_progress(completed)
+                                sys.exit(1)
+                            continue
+
+                        print(f'  ERROR generating {filename}: {e}')
                         save_progress(completed)
-
-                    time.sleep(DELAY_BETWEEN_CALLS)
-
-                except Exception as e:
-                    print(f'  ERROR generating {filename}: {e}')
-                    save_progress(completed)
-                    # Update manifest with what we have so far
-                    manifest[str(q_id)] = q_manifest
-                    with open(MANIFEST_FILE, 'w') as f:
-                        json.dump(manifest, f, indent=2)
-                    print(f'  Progress saved. Re-run to resume.')
-                    sys.exit(1)
+                        # Update manifest with what we have so far
+                        manifest[str(q_id)] = q_manifest
+                        with open(MANIFEST_FILE, 'w') as f:
+                            json.dump(manifest, f, indent=2)
+                        print(f'  Progress saved. Re-run to resume.')
+                        sys.exit(1)
 
         manifest[str(q_id)] = q_manifest
 

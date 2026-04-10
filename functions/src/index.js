@@ -23,6 +23,11 @@ const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { getFirestore } = require('firebase-admin/firestore');
 const apiApp = require('./apiApp');
 const {
+    runSpeakingAttemptCleanup,
+    runPracticeAccessReconcileJobs,
+    runPracticeAccessPromotionJobs
+} = require('./practice-attempts/job-runners');
+const {
     CRM_AUTOMATION_RULES,
     CRM_AUTOMATION_QUEUE,
     CRM_TEMPLATES,
@@ -115,5 +120,17 @@ module.exports = {
     }),
     crmRecycleBinPurgeRunner: onSchedule({ region: 'us-central1', schedule: 'every 24 hours' }, async () => {
         await runRecycleBinPurgeQueue();
+    }),
+    speakingAttemptCleanupRunner: onSchedule({ region: 'us-central1', schedule: 'every 60 minutes' }, async () => {
+        const db = getFirestore();
+        await runSpeakingAttemptCleanup(db, { now: new Date() });
+    }),
+    practiceAccessReconcileRunner: onSchedule({ region: 'us-central1', schedule: 'every 6 hours' }, async () => {
+        const db = getFirestore();
+        await runPracticeAccessReconcileJobs(db, { now: new Date() });
+    }),
+    practiceAccessPromotionRunner: onSchedule({ region: 'us-central1', schedule: 'every 60 minutes' }, async () => {
+        const db = getFirestore();
+        await runPracticeAccessPromotionJobs(db, { now: new Date() });
     })
 };

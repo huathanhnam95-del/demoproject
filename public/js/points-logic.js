@@ -61,6 +61,7 @@ const CONFIG = {
     MODE_WEIGHTS: {
         type: { listening: 0.40, writing: 0.60, reading: 0.00, speaking: 0.00 },
         speak: { listening: 0.60, writing: 0.00, reading: 0.00, speaking: 0.40 },
+        asq: { listening: 0.50, writing: 0.00, reading: 0.00, speaking: 0.50 },
         extended: { listening: 0.60, writing: 0.40, reading: 0.00, speaking: 0.00 },
         rfib: { listening: 0.00, writing: 0.00, reading: 1.00, speaking: 0.00 },
         watch: { listening: 0.50, writing: 0.00, reading: 0.50, speaking: 0.00 },

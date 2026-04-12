@@ -2,23 +2,134 @@ class AsqMode {
   constructor() {
     this.isActive = false;
     this.isInitialized = false;
+    this.isRecording = false;
     this.database = [];
+    this.databaseById = new Map();
     this.audioManifest = null;
     this.currentId = null;
     this.audioStream = null;
     this.mediaRecorder = null;
+    this.speechRecognition = null;
+    this.pendingTranscriptPromise = null;
     this.recordedBlobUrl = null;
+    this.hasAudioSrc = false;
+    /** @type {Record<string, HTMLElement|null>} Cached DOM refs, populated in init() */
+    this.els = {};
   }
+
+  // ---------------------------------------------------------------------------
+  // Recording support detection
+  // ---------------------------------------------------------------------------
 
   getRecordingSupportState() {
     const hasGetUserMedia = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
     const hasMediaRecorder = typeof window.MediaRecorder === 'function';
     const hasAudioContext = typeof window.AudioContext === 'function' || typeof window.webkitAudioContext === 'function';
     const hasOfflineAudioContext = typeof window.OfflineAudioContext === 'function';
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const hasSpeechRecognition = typeof SpeechRecognition === 'function';
     return {
-      supported: hasGetUserMedia && hasMediaRecorder && hasAudioContext && hasOfflineAudioContext
+      supported: hasGetUserMedia && hasMediaRecorder && hasAudioContext && hasOfflineAudioContext && hasSpeechRecognition
     };
   }
+
+  // ---------------------------------------------------------------------------
+  // Speech Recognition helpers
+  // ---------------------------------------------------------------------------
+
+  createSpeechRecognitionSession() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (typeof SpeechRecognition !== 'function') return null;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+    recognition.maxAlternatives = 1;
+    return recognition;
+  }
+
+  startSpeechRecognition() {
+    if (this.speechRecognition) {
+      try { this.speechRecognition.stop(); } catch (_) { /* intentional */ }
+      this.speechRecognition = null;
+    }
+
+    const recognition = this.createSpeechRecognitionSession();
+    if (!recognition) {
+      const err = new Error('Speech recognition not available.');
+      err.code = 'STT_UNAVAILABLE';
+      throw err;
+    }
+
+    this.pendingTranscriptPromise = new Promise((resolve, reject) => {
+      let resolved = false;
+
+      recognition.onresult = (event) => {
+        if (resolved) return;
+        const text = String(event?.results?.[0]?.[0]?.transcript || '').trim();
+        resolved = true;
+        resolve(text);
+      };
+      recognition.onerror = (event) => {
+        if (resolved) return;
+        const error = new Error(`Speech recognition error: ${event?.error || 'unknown'}`);
+        error.code = 'STT_FAILED';
+        error.details = { error: event?.error || null };
+        resolved = true;
+        reject(error);
+      };
+      recognition.onend = () => {
+        if (resolved) return;
+        resolved = true;
+        resolve('');
+      };
+    });
+
+    this.speechRecognition = recognition;
+    try {
+      recognition.start();
+    } catch (error) {
+      this.speechRecognition = null;
+      this.pendingTranscriptPromise = null;
+      throw error;
+    }
+  }
+
+  stopSpeechRecognition() {
+    if (!this.speechRecognition) return;
+    try { this.speechRecognition.stop(); } catch (_) { /* intentional */ }
+  }
+
+  async waitForTranscript({ timeoutMs = 2500 } = {}) {
+    const promise = this.pendingTranscriptPromise;
+    if (!promise) return '';
+
+    const timeout = new Promise((resolve) => {
+      setTimeout(() => resolve(''), timeoutMs);
+    });
+
+    let didTimeout = false;
+    try {
+      const result = await Promise.race([
+        promise,
+        timeout.then(() => {
+          didTimeout = true;
+          return '';
+        })
+      ]);
+      return String(result || '').trim();
+    } finally {
+      if (didTimeout) {
+        try { this.stopSpeechRecognition(); } catch (_) { /* intentional */ }
+      }
+      this.pendingTranscriptPromise = null;
+      this.speechRecognition = null;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Data parsing
+  // ---------------------------------------------------------------------------
 
   normalizeAnswerCell(answerCell) {
     const normalized = String(answerCell || '').trim().replace(/\r\n/g, '\n').replace(/\r/g, '\n');
@@ -36,6 +147,10 @@ class AsqMode {
     if (acceptedAnswers.length === 0) return null;
     return { promptText, answersRaw, acceptedAnswers };
   }
+
+  // ---------------------------------------------------------------------------
+  // Data loading
+  // ---------------------------------------------------------------------------
 
   async loadWorkbookIfNeeded() {
     if (this.database.length > 0) return;
@@ -67,6 +182,9 @@ class AsqMode {
         };
       })
       .filter(Boolean);
+
+    // Build O(1) lookup map
+    this.databaseById = new Map(this.database.map((item) => [item.id, item]));
   }
 
   normalizeManifestPayload(payload) {
@@ -87,6 +205,10 @@ class AsqMode {
     this.audioManifest = this.normalizeManifestPayload(payload);
   }
 
+  // ---------------------------------------------------------------------------
+  // Audio source resolution
+  // ---------------------------------------------------------------------------
+
   getAudioSrcForId(id) {
     const normalizedId = String(id || '').trim();
     if (!normalizedId) return null;
@@ -101,8 +223,12 @@ class AsqMode {
     return `/database/quiz/ASQ/audio/${file}`;
   }
 
+  // ---------------------------------------------------------------------------
+  // Question selection UI
+  // ---------------------------------------------------------------------------
+
   populateQuestionSelect() {
-    const select = document.getElementById('asq-question-select');
+    const select = this.els.select;
     if (!select) return;
 
     const existing = new Set(Array.from(select.options).map((opt) => opt.value));
@@ -125,12 +251,21 @@ class AsqMode {
     return candidates[Math.floor(Math.random() * candidates.length)];
   }
 
+  // ---------------------------------------------------------------------------
+  // Current question helpers
+  // ---------------------------------------------------------------------------
+
   getCurrentItem() {
-    return this.database.find((item) => item.id === this.currentId) || null;
+    if (!this.currentId) return null;
+    return this.databaseById.get(this.currentId) || null;
   }
 
+  // ---------------------------------------------------------------------------
+  // Status messaging
+  // ---------------------------------------------------------------------------
+
   setStatus(message, tone = 'muted') {
-    const el = document.getElementById('asq-status-message');
+    const el = this.els.statusMessage;
     if (!el) return;
     el.textContent = String(message || '');
     if (tone === 'error') el.style.color = '#b91c1c';
@@ -138,29 +273,75 @@ class AsqMode {
     else el.style.color = 'var(--text-muted)';
   }
 
+  // ---------------------------------------------------------------------------
+  // Prompt audio + question text
+  // ---------------------------------------------------------------------------
+
   setPromptAudioForCurrent() {
-    const audioEl = document.getElementById('asq-prompt-audio');
+    const audioEl = this.els.promptAudio;
+    const textEl = this.els.questionText;
+    const recordBtn = this.els.recordBtn;
+    const redoBtn = this.els.redoBtn;
     if (!audioEl) return;
+
     const src = this.getAudioSrcForId(this.currentId);
     audioEl.src = src || '';
     audioEl.load();
+    this.hasAudioSrc = !!src;
+
+    // Show record button and hide redo button when loading a new question
+    if (recordBtn) recordBtn.style.display = '';
+    if (redoBtn) redoBtn.style.display = 'none';
+
+    // Hide question text until user submits
+    if (textEl) {
+      const item = this.getCurrentItem();
+      textEl.textContent = item ? item.promptText : '';
+      textEl.style.display = 'none';
+    }
+
+    // Reset previous result state
+    this.resetResultUI();
   }
 
+  /** Clear stale result/recording UI from the previous question */
+  resetResultUI() {
+    const { resultBox, userAudioBox } = this.els;
+    if (resultBox) resultBox.style.display = 'none';
+    this.clearRecordedAudio();
+    if (userAudioBox) userAudioBox.style.display = 'none';
+  }
+
+  /** Reset UI to re-attempt the current question */
+  redoQuestion() {
+    this.resetResultUI();
+    const { recordBtn, redoBtn, statusMessage } = this.els;
+    if (recordBtn) recordBtn.style.display = '';
+    if (redoBtn) redoBtn.style.display = 'none';
+    this.setStatus('Play the prompt audio, then record your answer.', 'muted');
+
+    // Hide question text again
+    if (this.els.questionText) {
+      this.els.questionText.style.display = 'none';
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Prompt playback
+  // ---------------------------------------------------------------------------
+
   playPrompt() {
-    const audioEl = document.getElementById('asq-prompt-audio');
-    const playBtn = document.getElementById('asq-play-prompt-btn');
+    const audioEl = this.els.promptAudio;
+    const playBtn = this.els.playBtn;
     if (!audioEl) return;
-    if (!audioEl.src) {
+    if (!this.hasAudioSrc) {
       this.setStatus('Prompt audio is not available yet for this question.', 'error');
       return;
     }
 
     if (audioEl.paused) {
-      audioEl.play().catch(() => { });
+      audioEl.play().catch(() => { /* intentional */ });
       if (playBtn) playBtn.textContent = 'Pause';
-      audioEl.onended = () => {
-        if (playBtn) playBtn.textContent = 'Play';
-      };
       return;
     }
 
@@ -168,10 +349,14 @@ class AsqMode {
     if (playBtn) playBtn.textContent = 'Play';
   }
 
+  // ---------------------------------------------------------------------------
+  // Media stream helpers
+  // ---------------------------------------------------------------------------
+
   stopTracks(stream) {
     try {
       (stream?.getTracks?.() || []).forEach((track) => track.stop());
-    } catch (_) { }
+    } catch (_) { /* intentional */ }
   }
 
   stopMediaStream() {
@@ -181,24 +366,26 @@ class AsqMode {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Recorded audio management
+  // ---------------------------------------------------------------------------
+
   clearRecordedAudio() {
-    const box = document.getElementById('asq-user-audio-box');
-    const audioEl = document.getElementById('asq-user-recording-audio');
+    const audioEl = this.els.userRecordingAudio;
     if (audioEl) {
       audioEl.pause();
       audioEl.removeAttribute('src');
       audioEl.load();
     }
-    if (box) box.style.display = 'none';
     if (this.recordedBlobUrl) {
-      try { URL.revokeObjectURL(this.recordedBlobUrl); } catch (_) { }
+      try { URL.revokeObjectURL(this.recordedBlobUrl); } catch (_) { /* intentional */ }
       this.recordedBlobUrl = null;
     }
   }
 
   showRecordedAudio(blob) {
-    const box = document.getElementById('asq-user-audio-box');
-    const audioEl = document.getElementById('asq-user-recording-audio');
+    const box = this.els.userAudioBox;
+    const audioEl = this.els.userRecordingAudio;
     if (!box || !audioEl) return;
     this.clearRecordedAudio();
     const url = URL.createObjectURL(blob);
@@ -207,25 +394,46 @@ class AsqMode {
     box.style.display = 'block';
   }
 
-  showResult({ isCorrect, transcript, answerDisplay, xpEarned }) {
-    const box = document.getElementById('asq-result-box');
-    const statusEl = document.getElementById('asq-result-status');
-    const transcriptEl = document.getElementById('asq-transcript-feedback');
-    const answersEl = document.getElementById('asq-correct-answers');
-    if (!box || !statusEl || !transcriptEl || !answersEl) return;
+  // ---------------------------------------------------------------------------
+  // Result display
+  // ---------------------------------------------------------------------------
 
-    box.style.display = 'block';
-    statusEl.textContent = isCorrect ? 'Correct' : 'Incorrect';
-    statusEl.style.color = isCorrect ? '#166534' : '#b91c1c';
+  showResult({ isCorrect, transcript, answerDisplay, xpEarned }) {
+    const { resultBox, resultStatus, transcriptFeedback, correctAnswers, questionText, recordBtn, redoBtn } = this.els;
+    if (!resultBox || !resultStatus || !transcriptFeedback || !correctAnswers) return;
+
+    resultBox.style.display = 'block';
+    resultStatus.textContent = isCorrect ? 'Correct' : 'Incorrect';
+    resultStatus.style.color = isCorrect ? '#166534' : '#b91c1c';
+
+    // Hide record button and show redo button after showing result
+    if (recordBtn) recordBtn.style.display = 'none';
+    if (redoBtn) redoBtn.style.display = '';
+
+    // Reveal question text after submission
+    if (questionText) {
+      questionText.style.display = '';
+    }
 
     const xpText = Number.isFinite(Number(xpEarned)) ? ` (+${Number(xpEarned)} XP)` : '';
     if (xpText) {
-      statusEl.textContent = `${statusEl.textContent}${xpText}`;
+      resultStatus.textContent = `${resultStatus.textContent}${xpText}`;
     }
 
-    transcriptEl.innerHTML = `You said: <i>"${String(transcript || '').trim() || 'Nothing detected'}"</i>`;
-    answersEl.textContent = answerDisplay ? `Accepted answers: ${answerDisplay}` : '';
+    // Safe DOM construction — no innerHTML with user data
+    const said = String(transcript || '').trim() || 'Nothing detected';
+    transcriptFeedback.textContent = '';
+    transcriptFeedback.append('You said: ');
+    const em = document.createElement('em');
+    em.textContent = `"${said}"`;
+    transcriptFeedback.appendChild(em);
+
+    correctAnswers.textContent = answerDisplay ? `Accepted answers: ${answerDisplay}` : '';
   }
+
+  // ---------------------------------------------------------------------------
+  // Answer matching
+  // ---------------------------------------------------------------------------
 
   tokenizeForAsqMatch(str) {
     return (str || '')
@@ -266,96 +474,46 @@ class AsqMode {
     return { ok: false, matchedAlias: null };
   }
 
-  async prepareWavBlob(blob) {
-    if (blob.type === 'audio/wav' || blob.type === 'audio/wave') return blob;
-    const arrayBuffer = await blob.arrayBuffer();
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const decoded = await audioContext.decodeAudioData(arrayBuffer.slice(0));
-    const offline = new OfflineAudioContext(1, Math.ceil(decoded.duration * 16000), 16000);
-    const source = offline.createBufferSource();
-    source.buffer = decoded;
-    source.connect(offline.destination);
-    source.start(0);
-    const rendered = await offline.startRendering();
-    if (typeof audioContext.close === 'function') await audioContext.close().catch(() => { });
-    return this.audioBufferToWav(rendered);
-  }
-
-  audioBufferToWav(buffer) {
-    const channelData = buffer.getChannelData(0);
-    const dataLength = channelData.length;
-    const wavBuffer = new ArrayBuffer(44 + dataLength * 2);
-    const view = new DataView(wavBuffer);
-    const writeString = (offset, value) => {
-      for (let i = 0; i < value.length; i++) view.setUint8(offset + i, value.charCodeAt(i));
-    };
-
-    writeString(0, 'RIFF');
-    view.setUint32(4, 36 + dataLength * 2, true);
-    writeString(8, 'WAVE');
-    writeString(12, 'fmt ');
-    view.setUint32(16, 16, true);
-    view.setUint16(20, 1, true);
-    view.setUint16(22, 1, true);
-    view.setUint32(24, buffer.sampleRate, true);
-    view.setUint32(28, buffer.sampleRate * 2, true);
-    view.setUint16(32, 2, true);
-    view.setUint16(34, 16, true);
-    writeString(36, 'data');
-    view.setUint32(40, dataLength * 2, true);
-    let offset = 44;
-    for (let i = 0; i < dataLength; i++) {
-      const sample = Math.max(-1, Math.min(1, channelData[i]));
-      view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true);
-      offset += 2;
-    }
-    return new Blob([wavBuffer], { type: 'audio/wav' });
-  }
-
-  async transcribeRecording(rawBlob) {
-    const wavBlob = await this.prepareWavBlob(rawBlob);
-    const formData = new FormData();
-    formData.append('audio', wavBlob, 'recording.wav');
-    const response = await fetch('/api/asq/transcribe', { method: 'POST', body: formData });
-    const payload = await response.json().catch(() => null);
-    if (!response.ok || !payload?.success) {
-      const error = new Error(payload?.message || 'Transcription failed.');
-      error.code = payload?.error || null;
-      throw error;
-    }
-    return String(payload?.data?.transcript || payload?.transcript || '').trim();
-  }
+  // ---------------------------------------------------------------------------
+  // Recording flow
+  // ---------------------------------------------------------------------------
 
   async startRecording() {
-    const recordBtn = document.getElementById('asq-record-btn');
-    const stopBtn = document.getElementById('asq-stop-btn');
-    const resultBox = document.getElementById('asq-result-box');
-    if (resultBox) resultBox.style.display = 'none';
-    this.clearRecordedAudio();
+    // Guard against re-entrant recording
+    if (this.isRecording) return;
+
+    const { recordBtn, stopBtn } = this.els;
 
     const support = this.getRecordingSupportState();
     if (!support.supported) {
-      this.setStatus('Recording is not supported in this browser.', 'error');
+      console.warn('[ASQ] Recording setup not supported');
+      this.setStatus('Recording or speech recognition is not supported in this browser.', 'error');
       return;
     }
 
+    this.isRecording = true;
     this.setStatus('Recording...', 'muted');
     if (recordBtn) recordBtn.disabled = true;
     if (stopBtn) {
-      stopBtn.style.display = '';
+      stopBtn.style.display = 'inline-flex';
       stopBtn.disabled = false;
     }
 
     try {
+      this.startSpeechRecognition();
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recordedChunks = [];
       const recorder = new window.MediaRecorder(stream);
-      recorder.addEventListener('dataavailable', (event) => {
+
+      recorder.ondataavailable = (event) => {
         if (event.data?.size) recordedChunks.push(event.data);
-      });
-      recorder.addEventListener('stop', async () => {
+      };
+
+      recorder.onstop = async () => {
         this.stopMediaStream();
         this.mediaRecorder = null;
+        this.isRecording = false;
 
         if (recordBtn) recordBtn.disabled = false;
         if (stopBtn) stopBtn.style.display = 'none';
@@ -370,7 +528,7 @@ class AsqMode {
 
         try {
           this.setStatus('Transcribing...', 'muted');
-          const transcript = await this.transcribeRecording(rawBlob);
+          const transcript = await this.waitForTranscript({ timeoutMs: 5000 });
           const item = this.getCurrentItem();
           const localCheck = this.isTranscriptCorrect(transcript, item?.acceptedAnswers || []);
 
@@ -380,44 +538,65 @@ class AsqMode {
             xpEarned = scoringResult.xpEarned;
           }
 
+          const canonicalIsCorrect = scoringResult && scoringResult.success
+            ? Number(scoringResult.accuracy) >= 0.999
+            : null;
+          const isCorrect = canonicalIsCorrect === null ? localCheck.ok : canonicalIsCorrect;
+
           this.showResult({
-            isCorrect: localCheck.ok,
+            isCorrect,
             transcript,
             answerDisplay: item?.answerDisplay || '',
             xpEarned
           });
 
-          this.setStatus(localCheck.ok ? 'Nice. Keep it short and clear.' : 'Try again and say one of the accepted answers.', localCheck.ok ? 'success' : 'error');
+          if (!transcript) {
+            this.setStatus('No speech detected. Try again and keep your answer short.', 'error');
+            return;
+          }
+
+          this.setStatus(isCorrect ? 'Nice. Keep it short and clear.' : 'Try again and say one of the accepted answers.', isCorrect ? 'success' : 'error');
         } catch (error) {
           console.error('[ASQ] Transcription/scoring failed:', error);
           this.setStatus('Transcription failed. Please try again.', 'error');
         }
-      });
+      };
 
       this.audioStream = stream;
       this.mediaRecorder = recorder;
       recorder.start();
     } catch (error) {
       console.error('[ASQ] Microphone error:', error);
+      this.isRecording = false;
       if (recordBtn) recordBtn.disabled = false;
       if (stopBtn) stopBtn.style.display = 'none';
       this.setStatus('Microphone access failed. Please allow mic permission and try again.', 'error');
       this.stopMediaStream();
       this.mediaRecorder = null;
+      this.stopSpeechRecognition();
     }
   }
 
   stopRecording() {
+    this.stopSpeechRecognition();
     if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
-      try { this.mediaRecorder.stop(); } catch (_) { }
+      try { this.mediaRecorder.stop(); } catch (_) { /* intentional */ }
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // Question navigation
+  // ---------------------------------------------------------------------------
 
   async setQuestionById(id) {
     this.currentId = String(id || '').trim() || null;
     if (!this.currentId) return;
     this.setPromptAudioForCurrent();
   }
+
+  // ---------------------------------------------------------------------------
+  // Lifecycle
+  // ---------------------------------------------------------------------------
 
   async onEnter() {
     this.isActive = true;
@@ -427,17 +606,48 @@ class AsqMode {
     this.setStatus('Play the prompt audio, then record your answer.', 'muted');
   }
 
+  onExit() {
+    this.isActive = false;
+    this.stopRecording();
+    this.stopMediaStream();
+    this.clearRecordedAudio();
+  }
+
   async init() {
     this.isInitialized = true;
 
-    const playBtn = document.getElementById('asq-play-prompt-btn');
-    const select = document.getElementById('asq-question-select');
-    const recordBtn = document.getElementById('asq-record-btn');
-    const stopBtn = document.getElementById('asq-stop-btn');
+    // Cache all DOM refs once
+    this.els = {
+      playBtn: document.getElementById('asq-play-prompt-btn'),
+      select: document.getElementById('asq-question-select'),
+      recordBtn: document.getElementById('asq-record-btn'),
+      stopBtn: document.getElementById('asq-stop-btn'),
+      redoBtn: document.getElementById('asq-redo-btn'),
+      promptAudio: document.getElementById('asq-prompt-audio'),
+      questionText: document.getElementById('asq-question-text'),
+      statusMessage: document.getElementById('asq-status-message'),
+      userAudioBox: document.getElementById('asq-user-audio-box'),
+      userRecordingAudio: document.getElementById('asq-user-recording-audio'),
+      resultBox: document.getElementById('asq-result-box'),
+      resultStatus: document.getElementById('asq-result-status'),
+      transcriptFeedback: document.getElementById('asq-transcript-feedback'),
+      correctAnswers: document.getElementById('asq-correct-answers')
+    };
+
+    const { playBtn, select, recordBtn, stopBtn, redoBtn, promptAudio } = this.els;
 
     if (playBtn) playBtn.addEventListener('click', () => this.playPrompt());
     if (recordBtn) recordBtn.addEventListener('click', () => this.startRecording());
     if (stopBtn) stopBtn.addEventListener('click', () => this.stopRecording());
+    if (redoBtn) redoBtn.addEventListener('click', () => this.redoQuestion());
+
+    // Fix: assign onended once to avoid listener accumulation
+    if (promptAudio) {
+      promptAudio.addEventListener('ended', () => {
+        if (playBtn) playBtn.textContent = 'Play';
+      });
+    }
+
     if (select) {
       select.addEventListener('change', async () => {
         const value = String(select.value || '').trim();
@@ -469,4 +679,3 @@ class AsqMode {
 document.addEventListener('DOMContentLoaded', () => {
   window.ASQMode = new AsqMode();
 });
-

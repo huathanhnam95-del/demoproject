@@ -198,3 +198,11 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 208,2026-04-10,Summon #council to review speaking attempt retention plan,Done,2026-04-10
 209,2026-04-10,Summon #council to review counter-argument,Done,2026-04-10
 210,2026-04-10,Summarize and commit changes for V1.6.4,Done,2026-04-10
+2 1 1 , 2 0 2 6 - 0 4 - 1 0 , E x e c u t e   A S Q   b r o w s e r   t e s t   p l a n , I n   P r o g r e s s , 
+ 
+ 212,2026-04-10,Create VBA macro for batch downloading links from Excel column E,Done,2026-04-10
+213,2026-04-11,Execute Speaking Attempts Browser Testing Plan (Attempt Sharing Flow),In Progress,
+214,2026-04-11,Implement ASQ audio playback and hide question text before submission,Done,2026-04-11
+215,2026-04-11,Review debug and refactor auto accept script,Done,2026-04-11
+216,2026-04-11,Review debug and refactor ASQ quiz mode,Done,2026-04-11
+217,2026-04-12,Fix Firebase emulator connectivity issues,In Progress 

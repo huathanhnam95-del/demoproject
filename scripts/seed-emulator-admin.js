@@ -17,11 +17,17 @@ const FS_EMULATOR = 'http://localhost:8080';
 const PROJECT_ID = 'listening-tasks-3ae34';
 
 // Admin credentials — mirrors production
-const ADMIN_EMAIL = 'huathanhnam95@gmail.com';
-const ADMIN_PASSWORD = 'Alphaein@1new';
-const ADMIN_DISPLAY = 'Admin';
+const ADMIN_EMAIL = String(process.env.EMULATOR_ADMIN_EMAIL || process.env.ADMIN_EMAIL || '').trim();
+const ADMIN_PASSWORD = String(process.env.EMULATOR_ADMIN_PASSWORD || '').trim();
+const ADMIN_DISPLAY = String(process.env.EMULATOR_ADMIN_DISPLAY || 'Admin').trim();
 
 async function main() {
+    if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
+        console.error('Missing emulator admin credentials.');
+        console.error('Set EMULATOR_ADMIN_EMAIL and EMULATOR_ADMIN_PASSWORD in your environment, then rerun.');
+        process.exit(1);
+    }
+
     console.log('');
     console.log('=== Seeding Emulator Admin Account ===');
     console.log('');
@@ -136,7 +142,7 @@ async function main() {
     console.log('══════════════════════════════════════');
     console.log('  Admin account ready on emulator!');
     console.log(`  Email:    ${ADMIN_EMAIL}`);
-    console.log(`  Password: (same as production)`);
+    console.log('  Password: (from EMULATOR_ADMIN_PASSWORD)');
     console.log(`  UID:      ${uid}`);
     console.log('  isAdmin:  true');
     console.log('══════════════════════════════════════');

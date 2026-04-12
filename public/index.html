@@ -1435,9 +1435,8 @@
               </div>
 
               <!-- 9. ASQ (Quiz) Mode Card -->
-              <div id="mode-btn-asq" class="modern-card transition-card mode-switch-btn"
-                data-practice-skill="speaking" onclick="window.switchToMode('asq')" tabindex="0" role="button"
-                aria-label="Quiz mode">
+              <div id="mode-btn-asq" class="modern-card transition-card mode-switch-btn" data-practice-skill="speaking"
+                onclick="window.switchToMode('asq')" tabindex="0" role="button" aria-label="Quiz mode">
                 <span class="badge new">New</span>
                 <div class="card-visual visual-read-aloud">
                   <div class="anim-container">
@@ -2748,15 +2747,22 @@
 
         <div
           style="width: 100%; max-width: 900px; margin: 0 auto; padding: 10px 20px 20px; display: flex; flex-direction: column; gap: 14px;">
+          <div id="asq-question-text"
+            style="text-align: center; font-size: 1.35rem; font-weight: 700; color: var(--text-main); line-height: 1.4; min-height: 1.8em;">
+          </div>
+
           <div id="asq-status-message"
-            style="text-align: center; font-weight: 600; color: var(--text-muted);">Play the prompt audio, then record
+            style="text-align: center; font-weight: 600; color: var(--text-muted); margin-bottom: 12px;">Play the
+            prompt audio, then record
             your answer.</div>
 
-          <div style="display:flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+          <div style="display:flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px;">
             <button id="asq-record-btn" class="modern-btn modern-btn--record" type="button"
               style="min-width: 180px;">Record answer</button>
             <button id="asq-stop-btn" class="modern-btn modern-btn--retry" type="button"
               style="min-width: 120px; display: none;">Stop</button>
+            <button id="asq-redo-btn" class="modern-btn modern-btn--retry" type="button"
+              style="min-width: 180px; display: none;">Redo</button>
           </div>
 
           <div id="asq-user-audio-box" class="ra-result"

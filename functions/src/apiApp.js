@@ -14,6 +14,10 @@ const createTeacherSchedulerRouter = require('./routes/teacher/scheduler');
 const entranceTestRoutes = require('./routes/entrance-tests');
 const createPracticeAttemptsRouter = require('./routes/practice-attempts');
 const createSharedPracticeAttemptsRouter = require('./routes/shared-practice-attempts');
+const {
+    practiceAttemptsLimiterByUid,
+    sharedPracticeAttemptsLimiter
+} = require('./middleware/practice-attempts-rate-limiter');
 const { TEST_VERSION } = require('./entrance-test/test36plus');
 const {
     generateClassCode,
@@ -286,7 +290,6 @@ const teacherSchedulerRouter = createTeacherSchedulerRouter({
 
 const practiceAttemptsRouter = createPracticeAttemptsRouter({
     db,
-    authMiddleware,
     sendSuccess,
     sendError,
     getStorageBucket
@@ -303,8 +306,8 @@ app.use('/admin', crmRouter);
 app.use('/api/admin', crmRouter);
 app.use('/api/teacher', teacherSchedulerRouter);
 app.use('/api/entrance-tests', entranceTestRoutes);
-app.use('/api/practice-attempts', practiceAttemptsRouter);
-app.use('/api/shared/practice-attempts', sharedPracticeAttemptsRouter);
+app.use('/api/practice-attempts', authMiddleware, practiceAttemptsLimiterByUid, practiceAttemptsRouter);
+app.use('/api/shared/practice-attempts', sharedPracticeAttemptsLimiter, sharedPracticeAttemptsRouter);
 
 app.get(['/config', '/api/config'], (req, res) => {
     return res.json({

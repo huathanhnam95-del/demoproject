@@ -128,7 +128,8 @@ function createApp(options = {}) {
     readingJourneyRoutes: require('../routes/reading-journey'),
     pronunciationTestRoutes: require('../routes/pronunciation-test'),
     readAloudRoutes: require('../routes/read-aloud'),
-    asqRoutes: require('../routes/asq')
+    practiceAttemptsRouter: require('../../functions/src/routes/practice-attempts'),
+    sharedPracticeAttemptsRouter: require('../../functions/src/routes/shared-practice-attempts')
   };
   const firebase = options.firebase || require('../utils/firebase');
   const circuitBreaker = options.circuitBreaker || require('../middleware/circuit-breaker');
@@ -213,7 +214,14 @@ function createApp(options = {}) {
   app.use('/api', routes.readingJourneyRoutes);
   app.use('/api', routes.pronunciationTestRoutes);
   app.use('/api', routes.readAloudRoutes);
-  app.use('/api', routes.asqRoutes);
+
+  // To simulate Firebase Functions authentication in local dev server:
+  // Normally Firebase passes a decoded token. In local dev, we need the authMiddleware.
+  const functionsAuthMiddleware = require('../middleware/auth-user');
+  const { practiceAttemptsLimiterByUid, sharedPracticeAttemptsLimiter } = require('../../functions/src/middleware/practice-attempts-rate-limiter');
+
+  app.use('/api/practice-attempts', functionsAuthMiddleware, practiceAttemptsLimiterByUid, routes.practiceAttemptsRouter);
+  app.use('/api/shared/practice-attempts', sharedPracticeAttemptsLimiter, routes.sharedPracticeAttemptsRouter);
 
   app.get('/api/health', async (_req, res) => {
     const memory = process.memoryUsage();

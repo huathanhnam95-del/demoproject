@@ -5,7 +5,10 @@
         scanIntervalMs: 250,
         perElementCooldownMs: 2000,
         clickRun: true,
-        log: true
+        log: true,
+        allowDangerous: false, // "Always allow", "Accept all"
+        skipCookiePrompts: true,
+        requireTopmost: false
     };
     const state = {
         timer: null,
@@ -13,6 +16,7 @@
         lastActionAt: 0,
         clickedAtByElement: new WeakMap(),
         ui: null,
+        uiEls: null,
         dragging: false,
         drag: { startX: 0, startY: 0, offX: 0, offY: 0 },
         cleanupFns: []
@@ -24,13 +28,33 @@
         const r = el.getBoundingClientRect();
         return { x: r.x, y: r.y, w: r.width, h: r.height };
     }
+    function isElement(el) {
+        return !!el && el.nodeType === 1;
+    }
+    function opacityNumber(style) {
+        const v = style && style.opacity != null ? Number(style.opacity) : 1;
+        return Number.isFinite(v) ? v : 1;
+    }
+    function isDisabledLike(el) {
+        if (!isElement(el)) return true;
+        // Native disabled
+        if ('disabled' in el && !!el.disabled) return true;
+        // ARIA disabled patterns
+        const ariaDisabled = el.getAttribute && String(el.getAttribute('aria-disabled') || '').toLowerCase();
+        if (ariaDisabled === 'true') return true;
+        const disabledAttr = el.getAttribute && el.getAttribute('disabled');
+        if (disabledAttr != null) return true;
+        return false;
+    }
     function isVisible(el) {
-        if (!el || el.nodeType !== 1) return false;
+        if (!isElement(el)) return false;
         const r = rect(el);
         if (r.w <= 0 || r.h <= 0) return false;
         const style = window.getComputedStyle(el);
         if (!style) return true;
-        if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return false;
+        if (style.display === 'none' || style.visibility === 'hidden') return false;
+        if (opacityNumber(style) <= 0.01) return false;
+        if (style.pointerEvents === 'none') return false;
         return true;
     }
     function isOnScreen(el) {
@@ -51,22 +75,33 @@
         return t(txt);
     }
     function labelOf(el) {
-        // Prefer shallow text to avoid parent containers grabbing nested labels
-        const shallow = shallowText(el);
-        const text = shallow || t(el.innerText || el.textContent || '');
+        // Prefer shallow text to avoid parent containers grabbing nested labels.
+        // Avoid innerText in hot paths (it can trigger layout); textContent is enough here.
+        const shallow = isElement(el) ? shallowText(el) : '';
+        const text = shallow || t((el && (el.textContent || '')) || '');
         const aria = t(el.getAttribute && el.getAttribute('aria-label'));
         const title = t(el.getAttribute && el.getAttribute('title'));
         return t([text, aria, title].filter(Boolean).join(' '));
+    }
+    function isTopmostClickable(el) {
+        if (!isElement(el)) return false;
+        const r = rect(el);
+        const cx = Math.max(0, Math.min(window.innerWidth - 1, r.x + r.w / 2));
+        const cy = Math.max(0, Math.min(window.innerHeight - 1, r.y + r.h / 2));
+        const top = document.elementFromPoint(cx, cy);
+        if (!top) return false;
+        return top === el || (el.contains && el.contains(top));
     }
     function safeClick(el, reason) {
         const now = Date.now();
         const lastClickedAt = state.clickedAtByElement.get(el) || 0;
         if (!el) return false;
         if (!isVisible(el)) return false;
-        if (el.disabled) return false;
+        if (isDisabledLike(el)) return false;
         if (now - lastClickedAt < CFG.perElementCooldownMs) return false;
         if (now - state.lastActionAt < 350) return false;
         if (!isOnScreen(el)) return false;  // only click what's visible — never scroll away
+        if (CFG.requireTopmost && !isTopmostClickable(el)) return false;
         try { el.focus(); } catch (_) { /* intentional ignore */ }
         try {
             el.click();
@@ -84,67 +119,89 @@
     }
     function scoreRunLabel(labLower) {
         if (!labLower) return -1;
-        if (labLower.includes('always run') || labLower === 'reject' || labLower.includes('collapse')) return -1;
+        if (labLower.includes('always run') || labLower.includes('reject') || labLower.includes('cancel') || labLower.includes('collapse') || labLower.includes('expand')) return -1;
 
-        const exact = ['run', 'accept', 'accept all', 'always allow', 'allow this conversation', 'allow', 'retry'];
+        const exactSafe = ['run', 'accept', 'allow this conversation', 'allow', 'retry', 'approve', 'yes', 'confirm'];
+        const exactDanger = ['accept all', 'always allow'];
+        const exact = CFG.allowDangerous ? exactSafe.concat(exactDanger) : exactSafe;
         if (exact.includes(labLower)) return 100;
 
-        const starts = ['run', 'accept', 'always allow', 'allow', 'retry'];
+        const startsSafe = ['run', 'accept', 'allow', 'retry', 'approve', 'yes', 'confirm'];
+        const startsDanger = ['always allow'];
+        const starts = CFG.allowDangerous ? startsSafe.concat(startsDanger) : startsSafe;
         if (starts.some(s => labLower.startsWith(s))) return 80;
 
-        const subs = ['always allow', 'accept all', 'retry'];
+        const subsSafe = ['retry', 'run command', 'approve'];
+        const subsDanger = ['always allow', 'accept all'];
+        const subs = CFG.allowDangerous ? subsSafe.concat(subsDanger) : subsSafe;
         if (subs.some(s => labLower.includes(s))) return 60;
-
-        if (labLower === 'expand') return 50;
-        if (labLower.includes('expand')) return 40;
 
         return -1;
     }
+    function looksLikeCookiePrompt(container) {
+        if (!CFG.skipCookiePrompts) return false;
+        if (!isElement(container)) return false;
+        const txt = t(container.textContent || '').toLowerCase();
+        if (!txt) return false;
+        return txt.includes('cookie') || txt.includes('cookies') || (txt.includes('privacy') && txt.includes('consent'));
+    }
     function isInsideApprovalPrompt(el, cache) {
         let container = el.parentElement;
+        const visited = [];
         // Walk up a few levels to find the prompt container
-        for (let depth = 0; container && depth < 6; depth++) {
-            if (cache.has(container)) return cache.get(container);
-            const buttons = container.querySelectorAll('button, [role="button"]');
-            // Optimistic abort: typical prompts won't have more than 15 buttons
-            if (buttons.length > 15) {
-                cache.set(container, false);
+        for (let depth = 0; container && depth < 20; depth++) {
+            if (cache.has(container)) {
+                const res = cache.get(container);
+                for (const v of visited) cache.set(v, res);
+                return res;
+            }
+            visited.push(container);
+            if (looksLikeCookiePrompt(container)) {
+                for (const v of visited) cache.set(v, false);
+                return false;
+            }
+            const buttons = container.querySelectorAll('button, [role="button"], [class*="button" i], [class*="btn" i]');
+            // Optimistic abort: typical prompts won't have more than 80 buttons
+            if (buttons.length > 80) {
+                for (const v of visited) cache.set(v, false);
                 return false;
             }
             for (const btn of buttons) {
                 if (btn === el) continue;
-                const lab = (shallowText(btn) || t(btn.textContent || '')).toLowerCase();
-                if (lab === 'reject' || lab.startsWith('reject') || 
+                const lab = labelOf(btn).toLowerCase();
+                if (lab === 'reject' || lab.startsWith('reject') ||
                     lab === 'deny' || lab.startsWith('deny') ||
-                    lab === 'cancel') {
-                    cache.set(container, true);
+                    lab === 'cancel' || lab.includes("don't allow") || lab.includes('decline') ||
+                    lab === 'not now' || lab === 'later' || lab === 'no') {
+                    for (const v of visited) cache.set(v, true);
                     return true;
                 }
             }
-            cache.set(container, false);
             container = container.parentElement;
         }
+        for (const v of visited) cache.set(v, false);
         return false;
     }
     function findBestRunButton() {
         const cache = new Map();
-        const candidates = Array.from(document.querySelectorAll('button, [role="button"], a[role="button"]'))
-            .filter(el => isVisible(el) && isOnScreen(el));
+        const allButtons = document.querySelectorAll('button, [role="button"], a[role="button"], [class*="button" i], [class*="btn" i]');
         let bestRun = null;
         let bestScore = -1;
         let bestY = -1;  // prefer buttons closer to bottom (newer prompts)
-        for (const el of candidates) {
+        for (const el of allButtons) {
             const ll = labelOf(el).toLowerCase();
             const s = scoreRunLabel(ll);
             if (s <= -1) continue;
-            // "Expand" buttons don't need approval context (they reveal it)
-            const isExpand = ll.includes('expand');
-            if (!isExpand && !isInsideApprovalPrompt(el, cache)) {
+
+            if (!isOnScreen(el) || !isVisible(el)) continue;
+
+            if (!isInsideApprovalPrompt(el, cache)) {
                 if (CFG.log) console.log('[auto-run] SKIP (no Reject sibling):', ll);
                 continue;
             }
-            if (CFG.log) console.log('[auto-run] candidate:', ll, '→ score:', s, '| y:', Math.round(rect(el).y));
+
             const elY = rect(el).y;
+            if (CFG.log) console.log('[auto-run] candidate:', ll, '→ score:', s, '| y:', Math.round(elY));
             if (s > bestScore || (s === bestScore && elY > bestY)) {
                 bestScore = s;
                 bestRun = el;
@@ -157,9 +214,8 @@
         const bestRun = findBestRunButton();
         if (CFG.clickRun && bestRun) {
             const lab = labelOf(bestRun).toLowerCase();
-            const reason = lab.includes('expand') ? 'Expand' :
-                           lab.includes('retry') ? 'Retry' :
-                           lab.includes('accept') ? 'Accept' : 'Run';
+            const reason = lab.includes('retry') ? 'Retry' :
+                lab.includes('accept') ? 'Accept' : 'Run';
             safeClick(bestRun, reason);
         }
         refreshHUD();
@@ -182,19 +238,23 @@
         else start();
     }
     function setStatus(msg) {
+        if (state.uiEls && state.uiEls.status) {
+            state.uiEls.status.textContent = msg;
+            return;
+        }
         if (!state.ui) return;
         const el = state.ui.querySelector('[data-role="status"]');
         if (el) el.textContent = msg;
     }
     function refreshHUD() {
         if (!state.ui) return;
-        const runningEl = state.ui.querySelector('[data-role="running"]');
-        const clicksEl = state.ui.querySelector('[data-role="clicks"]');
-        const intervalEl = state.ui.querySelector('[data-role="interval"]');
+        const runningEl = (state.uiEls && state.uiEls.running) ? state.uiEls.running : state.ui.querySelector('[data-role="running"]');
+        const clicksEl = (state.uiEls && state.uiEls.clicks) ? state.uiEls.clicks : state.ui.querySelector('[data-role="clicks"]');
+        const intervalEl = (state.uiEls && state.uiEls.interval) ? state.uiEls.interval : state.ui.querySelector('[data-role="interval"]');
         if (runningEl) runningEl.textContent = state.timer ? 'ON' : 'OFF';
         if (clicksEl) clicksEl.textContent = String(state.clicks);
         if (intervalEl) intervalEl.textContent = String(CFG.scanIntervalMs) + 'ms';
-        const btn = state.ui.querySelector('[data-role="toggle"]');
+        const btn = (state.uiEls && state.uiEls.toggle) ? state.uiEls.toggle : state.ui.querySelector('[data-role="toggle"]');
         if (btn) btn.textContent = state.timer ? 'Stop' : 'Start';
     }
     function removeHUD() {
@@ -209,6 +269,7 @@
             if (host) host.remove();
         }
         state.ui = null;
+        state.uiEls = null;
     }
     function createHUD() {
         const hostId = '__antigravity_auto_run_host__';
@@ -337,6 +398,42 @@
         txtRun.style.cssText = 'opacity:0.9;';
         optRun.appendChild(cbRun);
         optRun.appendChild(txtRun);
+
+        const optDanger = document.createElement('label');
+        optDanger.style.cssText = 'display:flex; gap:8px; align-items:center; cursor:pointer;';
+        const cbDanger = document.createElement('input');
+        cbDanger.type = 'checkbox';
+        cbDanger.checked = CFG.allowDangerous;
+        cbDanger.style.cssText = 'width:14px; height:14px;';
+        const txtDanger = document.createElement('span');
+        txtDanger.textContent = 'Allow "Always allow" / "Accept all"';
+        txtDanger.style.cssText = 'opacity:0.9;';
+        optDanger.appendChild(cbDanger);
+        optDanger.appendChild(txtDanger);
+
+        const optCookie = document.createElement('label');
+        optCookie.style.cssText = 'display:flex; gap:8px; align-items:center; cursor:pointer;';
+        const cbCookie = document.createElement('input');
+        cbCookie.type = 'checkbox';
+        cbCookie.checked = CFG.skipCookiePrompts;
+        cbCookie.style.cssText = 'width:14px; height:14px;';
+        const txtCookie = document.createElement('span');
+        txtCookie.textContent = 'Skip cookie prompts';
+        txtCookie.style.cssText = 'opacity:0.9;';
+        optCookie.appendChild(cbCookie);
+        optCookie.appendChild(txtCookie);
+
+        const optTopmost = document.createElement('label');
+        optTopmost.style.cssText = 'display:flex; gap:8px; align-items:center; cursor:pointer;';
+        const cbTopmost = document.createElement('input');
+        cbTopmost.type = 'checkbox';
+        cbTopmost.checked = CFG.requireTopmost;
+        cbTopmost.style.cssText = 'width:14px; height:14px;';
+        const txtTopmost = document.createElement('span');
+        txtTopmost.textContent = 'Require topmost target';
+        txtTopmost.style.cssText = 'opacity:0.9;';
+        optTopmost.appendChild(cbTopmost);
+        optTopmost.appendChild(txtTopmost);
         const optInterval = document.createElement('div');
         optInterval.style.cssText = 'display:flex; gap:8px; align-items:center;';
         const intervalLabel = document.createElement('div');
@@ -360,6 +457,9 @@
         optInterval.appendChild(intervalLabel);
         optInterval.appendChild(intervalInput);
         options.appendChild(optRun);
+        options.appendChild(optDanger);
+        options.appendChild(optCookie);
+        options.appendChild(optTopmost);
         options.appendChild(optInterval);
         const status = document.createElement('div');
         status.setAttribute('data-role', 'status');
@@ -379,6 +479,18 @@
         bind(toggleBtn, 'click', () => toggle());
         bind(cbRun, 'change', () => {
             CFG.clickRun = !!cbRun.checked;
+            refreshHUD();
+        });
+        bind(cbDanger, 'change', () => {
+            CFG.allowDangerous = !!cbDanger.checked;
+            refreshHUD();
+        });
+        bind(cbCookie, 'change', () => {
+            CFG.skipCookiePrompts = !!cbCookie.checked;
+            refreshHUD();
+        });
+        bind(cbTopmost, 'change', () => {
+            CFG.requireTopmost = !!cbTopmost.checked;
             refreshHUD();
         });
         bind(intervalInput, 'change', () => {
@@ -438,9 +550,18 @@
         }
         bind(header, 'mousedown', onMouseDown);
         // Bind to shadow and window root for dragging across the page
-        bind(window, 'mousemove', onMouseMove);
+        bind(window, 'mousemove', onMouseMove, { passive: true });
         bind(window, 'mouseup', onMouseUp);
         bind(document, 'keydown', keyHandler, true);
+
+        // Cache HUD references to avoid querySelector churn in the scan loop.
+        state.uiEls = {
+            status,
+            running: stats.querySelector('[data-role="running"]'),
+            clicks: stats.querySelector('[data-role="clicks"]'),
+            interval: stats.querySelector('[data-role="interval"]'),
+            toggle: toggleBtn
+        };
         return hud;
     }
     if (window.__antigravityAutoRunRemoveHUD) {

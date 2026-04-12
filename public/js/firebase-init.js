@@ -39,10 +39,12 @@ const isLocal = _h === 'localhost'
     || /^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(_h);
 
 if (isLocal) {
-    connectFirestoreEmulator(db, 'localhost', 8080);
-    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
-    connectFunctionsEmulator(functions, 'localhost', 5001);
-    console.warn('🔧 [Modular SDK] Firebase Emulators active — local data only.');
+    // Force 127.0.0.1 to avoid IPv6 resolution issues on some local setups
+    const EMULATOR_HOST = '127.0.0.1';
+    connectFirestoreEmulator(db, EMULATOR_HOST, 8080);
+    connectAuthEmulator(auth, `http://${EMULATOR_HOST}:9099`, { disableWarnings: true });
+    connectFunctionsEmulator(functions, EMULATOR_HOST, 5001);
+    console.warn(`🔧 [Modular SDK] Firebase Emulators active (${EMULATOR_HOST}) — local data only.`);
 }
 
 // Export instances

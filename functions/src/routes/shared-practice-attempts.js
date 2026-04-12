@@ -25,12 +25,34 @@ async function signReadUrl(bucket, storagePath, options = {}) {
     return url;
 }
 
+async function mapWithConcurrency(items, limit, fn) {
+    const list = Array.isArray(items) ? items : [];
+    const safeLimit = Math.max(1, Math.min(Number(limit) || 1, 20));
+    const out = new Array(list.length);
+    let next = 0;
+
+    const workers = Array.from({ length: Math.min(safeLimit, list.length) }, async () => {
+        while (next < list.length) {
+            const idx = next;
+            next += 1;
+            if (idx >= list.length) break;
+            out[idx] = await fn(list[idx], idx);
+        }
+    });
+
+    await Promise.all(workers);
+    return out;
+}
+
 module.exports = function createSharedPracticeAttemptsRouter(deps) {
     const { db, sendSuccess, sendError, getStorageBucket } = deps;
     const router = express.Router();
 
     router.get('/:shareId', async (req, res) => {
         try {
+            res.set('Cache-Control', 'no-store');
+            res.set('X-Robots-Tag', 'noindex');
+
             const shareId = cleanString(req.params?.shareId, 256);
             const token = cleanString(req.query?.token, 4096);
             if (!shareId || !token) return sendError(res, 404, 'NOT_FOUND', 'Shared attempt not found.');
@@ -71,18 +93,26 @@ module.exports = function createSharedPracticeAttemptsRouter(deps) {
 
             const feedback = [];
             if (feedbackSnap && Array.isArray(feedbackSnap.docs)) {
-                for (const doc of feedbackSnap.docs) {
+                const rows = feedbackSnap.docs.map((doc) => {
                     const data = doc.data() || {};
-                    const audioUrl = data.audioPath
-                        ? await signReadUrl(bucket, data.audioPath, { expiresMinutes: 15 }).catch(() => null)
-                        : null;
-                    feedback.push({
+                    return {
                         feedbackId: doc.id,
                         text: data.text || null,
-                        audioUrl,
+                        audioUrl: null,
+                        _audioPath: data.audioPath ? String(data.audioPath) : null,
                         createdAt: data.createdAt || null
-                    });
-                }
+                    };
+                });
+
+                const urls = await mapWithConcurrency(rows, 6, async (row) => {
+                    if (!row._audioPath) return null;
+                    return signReadUrl(bucket, row._audioPath, { expiresMinutes: 15 }).catch(() => null);
+                });
+                rows.forEach((row, idx) => {
+                    row.audioUrl = urls[idx] || null;
+                    delete row._audioPath;
+                    feedback.push(row);
+                });
             }
 
             return sendSuccess(res, {
@@ -102,4 +132,3 @@ module.exports = function createSharedPracticeAttemptsRouter(deps) {
 
     return router;
 };
-

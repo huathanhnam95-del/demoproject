@@ -113,15 +113,15 @@ async function waitForActivePanel(page, panelId) {
 
     const defaultState = await page.evaluate(() => {
       const englishScopeBtn = document.querySelector('#practice-scope-filter .practice-scope-btn[data-practice-scope="english"]');
-      const listeningBtn = document.querySelector('#practice-skill-filter .practice-skill-btn[data-practice-skill="listening"]');
+      const speakingBtn = document.querySelector('#practice-skill-filter .practice-skill-btn[data-practice-skill="speaking"]');
       return {
         englishPressed: englishScopeBtn ? englishScopeBtn.getAttribute('aria-pressed') : null,
-        listeningPressed: listeningBtn ? listeningBtn.getAttribute('aria-pressed') : null
+        speakingPressed: speakingBtn ? speakingBtn.getAttribute('aria-pressed') : null
       };
     });
 
     assert.strictEqual(defaultState.englishPressed, 'true', 'English Practice should be selected by default');
-    assert.strictEqual(defaultState.listeningPressed, 'true', 'Listening should be selected by default');
+    assert.strictEqual(defaultState.speakingPressed, 'true', 'Speaking should be selected by default');
 
     await page.click('#practice-skill-filter .practice-skill-btn[data-practice-skill="speaking"]');
 
@@ -197,6 +197,7 @@ async function waitForActivePanel(page, panelId) {
       };
     });
 
+    assert.strictEqual(restoredEnglishNotesState.speakingPressed, 'false', 'Speaking should no longer be pressed');
     assert.strictEqual(restoredEnglishNotesState.listeningPressed, 'true', 'Notes should remap back to Listening in English scope');
     assert.strictEqual(restoredEnglishNotesState.indicatorVisible, true, 'Switching back to English should preserve the active mode indicator');
     assert.strictEqual(restoredEnglishNotesState.modeName, 'Take Notes', 'Mode indicator should revert to the English Notes label');

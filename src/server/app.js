@@ -127,9 +127,7 @@ function createApp(options = {}) {
     entranceTestRoutes: require('../routes/entrance-tests'),
     readingJourneyRoutes: require('../routes/reading-journey'),
     pronunciationTestRoutes: require('../routes/pronunciation-test'),
-    readAloudRoutes: require('../routes/read-aloud'),
-    practiceAttemptsRouter: require('../../functions/src/routes/practice-attempts'),
-    sharedPracticeAttemptsRouter: require('../../functions/src/routes/shared-practice-attempts')
+    readAloudRoutes: require('../routes/read-aloud')
   };
   const firebase = options.firebase || require('../utils/firebase');
   const circuitBreaker = options.circuitBreaker || require('../middleware/circuit-breaker');
@@ -219,9 +217,19 @@ function createApp(options = {}) {
   // Normally Firebase passes a decoded token. In local dev, we need the authMiddleware.
   const functionsAuthMiddleware = require('../middleware/auth-user');
   const { practiceAttemptsLimiterByUid, sharedPracticeAttemptsLimiter } = require('../../functions/src/middleware/practice-attempts-rate-limiter');
+  const { sendSuccess: fnsSendSuccess, sendError: fnsSendError } = require('../../functions/src/utils/response-helper');
+  const createPracticeAttemptsRouter = require('../../functions/src/routes/practice-attempts');
+  const createSharedPracticeAttemptsRouter = require('../../functions/src/routes/shared-practice-attempts');
 
-  app.use('/api/practice-attempts', functionsAuthMiddleware, practiceAttemptsLimiterByUid, routes.practiceAttemptsRouter);
-  app.use('/api/shared/practice-attempts', sharedPracticeAttemptsLimiter, routes.sharedPracticeAttemptsRouter);
+  const routerDeps = {
+    db: firebase.db,
+    sendSuccess: fnsSendSuccess,
+    sendError: fnsSendError,
+    getStorageBucket: firebase.getStorageBucket
+  };
+
+  app.use('/api/practice-attempts', functionsAuthMiddleware, practiceAttemptsLimiterByUid, createPracticeAttemptsRouter(routerDeps));
+  app.use('/api/shared/practice-attempts', sharedPracticeAttemptsLimiter, createSharedPracticeAttemptsRouter(routerDeps));
 
   app.get('/api/health', async (_req, res) => {
     const memory = process.memoryUsage();

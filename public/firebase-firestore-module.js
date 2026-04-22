@@ -68,21 +68,29 @@ async function createOrUpdateUserProfile(userId, email, isNewUser = false) {
       // if the rule check for "exists" fails due to some race condition.
     }
 
-    if (!userDoc || !userDoc.exists() || isNewUser) {
-      // Create new user profile
+    if (!userDoc || !userDoc.exists()) {
+      // Brand-new user: create full profile with isAdmin: false
+      // NOTE: totalPoints is SERVER-ONLY (Cloud Functions) — do not write it here.
       const profileData = {
         email: email,
         createdAt: serverTimestamp(),
         lastLoginAt: serverTimestamp(),
         totalActiveSeconds: 0,
-        totalPoints: 0,
         unlockedModes: CORE_ALWAYS_UNLOCKED_MODES,
-        isAdmin: false // Explicitly set to false during client-side creation
+        isAdmin: false
       };
 
       log.debug('Creating new user profile:', profileData);
       await setDoc(userRef, profileData);
       log.log('✓ User profile created');
+    } else if (isNewUser) {
+      // Existing doc (e.g. from seed script) but first client login:
+      // Only update allowlisted fields — do NOT touch isAdmin, totalPoints, or email.
+      await updateDoc(userRef, {
+        lastLoginAt: serverTimestamp(),
+        unlockedModes: CORE_ALWAYS_UNLOCKED_MODES
+      });
+      log.log('✓ User profile updated (first client login, existing doc)');
     } else {
       // Update existing user profile
       await updateDoc(userRef, {
@@ -167,10 +175,10 @@ async function getUserProfile(userId) {
 
     // Cache to localStorage for future resilience
     try {
-        localStorage.setItem(cacheKey, JSON.stringify({
+      localStorage.setItem(cacheKey, JSON.stringify({
         email: userData.email,
         totalPoints: userData.totalPoints || 0,
-          unlockedModes: userData.unlockedModes || CORE_ALWAYS_UNLOCKED_MODES,
+        unlockedModes: userData.unlockedModes || CORE_ALWAYS_UNLOCKED_MODES,
         isAdmin: userData.isAdmin === true,
         englishLevel: userData.englishLevel,
         cachedAt: Date.now()

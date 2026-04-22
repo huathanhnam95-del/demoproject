@@ -6,15 +6,24 @@
  * so that localhost:8443 logins work identically to production.
  *
  * Usage:  node scripts/seed-emulator-admin.js
+#!/usr/bin/env node
+/**
+ * seed-emulator-admin.js
+ * 
+ * Seeds the local Firebase Auth + Firestore emulators with the admin account
+ * so that localhost:8443 logins work identically to production.
+ *
+ * Usage:  node scripts/seed-emulator-admin.js
  *
  * Prerequisites:
  *   - Firebase emulators running (Auth on 9099, Firestore on 8080)
  *   - start-emulators.bat  OR  backend\local_server\start_all_servers.bat
  */
 
-const AUTH_EMULATOR = 'http://localhost:9099';
-const FS_EMULATOR = 'http://localhost:8080';
+const AUTH_EMULATOR = 'http://127.0.0.1:9099';
+const FS_EMULATOR = 'http://127.0.0.1:8080';
 const PROJECT_ID = 'listening-tasks-3ae34';
+const API_KEY = 'AIzaSyB0vXX7NwOvME_XoaGiJlYaiLRcaHJtrIQ';
 
 // Admin credentials — mirrors production
 const ADMIN_EMAIL = String(process.env.EMULATOR_ADMIN_EMAIL || process.env.ADMIN_EMAIL || '').trim();
@@ -36,7 +45,7 @@ async function main() {
     let uid, idToken;
     try {
         const signUpRes = await fetch(
-            `${AUTH_EMULATOR}/identitytoolkit.googleapis.com/v1/accounts:signUp?key=fake-api-key`,
+            `${AUTH_EMULATOR}/identitytoolkit.googleapis.com/v1/accounts:signUp?key=${API_KEY}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -57,7 +66,7 @@ async function main() {
             console.log(`✓ Auth user CREATED  uid=${uid}`);
         } else if (signUpData?.error?.message === 'EMAIL_EXISTS') {
             const signInRes = await fetch(
-                `${AUTH_EMULATOR}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=fake-api-key`,
+                `${AUTH_EMULATOR}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${API_KEY}`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -85,7 +94,7 @@ async function main() {
     //     Use accounts:update (setAccountInfo) which emulator accepts via POST
     try {
         const verifyRes = await fetch(
-            `${AUTH_EMULATOR}/identitytoolkit.googleapis.com/v1/accounts:update?key=fake-api-key`,
+            `${AUTH_EMULATOR}/identitytoolkit.googleapis.com/v1/accounts:update?key=${API_KEY}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -109,12 +118,24 @@ async function main() {
     const userDocUrl =
         `${FS_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/users/${uid}`;
 
+    // Include ALL fields the client expects during profile creation/read.
+    // Without these, the client's setDoc becomes an "update" that violates
+    // the Firestore rules allowlist, causing PERMISSION_DENIED cascade.
+    const CORE_MODES = ['type', 'speak', 'extended', 'watch', 'notes', 'pronounce'];
     const firestoreDoc = {
         fields: {
             email: { stringValue: ADMIN_EMAIL },
             displayName: { stringValue: ADMIN_DISPLAY },
             isAdmin: { booleanValue: true },
-            createdAt: { timestampValue: new Date().toISOString() }
+            createdAt: { timestampValue: new Date().toISOString() },
+            lastLoginAt: { timestampValue: new Date().toISOString() },
+            totalActiveSeconds: { integerValue: '0' },
+            totalPoints: { integerValue: '0' },
+            unlockedModes: {
+                arrayValue: {
+                    values: CORE_MODES.map(m => ({ stringValue: m }))
+                }
+            }
         }
     };
 

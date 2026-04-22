@@ -125,8 +125,9 @@ async function provisionEmulatorUser(email, password) {
                     if (data.constraints.hardMaxSeconds !== eHard || data.constraints.uiMaxSeconds !== eUi) {
                         return { status: 400, body: `Constraint mismatch. Expected ${eHard}/${eUi}, got ${data.constraints?.hardMaxSeconds}/${data.constraints?.uiMaxSeconds}` };
                     }
-                    if (!data.attemptId || data.status !== 'awaiting_upload' || !data.audioPath) {
-                        return { status: 400, body: 'Missing required contract fields' };
+                    const audioPath = data.audioPath || data.upload?.path;
+                    if (!data.attemptId || data.status !== 'awaiting_upload' || !audioPath) {
+                        return { status: 400, body: `Missing required contract fields: attemptId=${data.attemptId} status=${data.status} audioPath=${audioPath}` };
                     }
                 }
 
@@ -172,7 +173,7 @@ async function provisionEmulatorUser(email, password) {
                 body: JSON.stringify({ practiceMode: 'repeat_sentence', attemptId: aid })
             });
             return res.status;
-        }, { aid: readAloudId });
+        }, { aid: readAloudId, tk: emulatorToken });
         assert.strictEqual(mismatchRes, 409, 'mode mismatch should return 409 ATTEMPT_ID_MODE_MISMATCH');
 
         console.log(TAG, 'Pass A1 checks complete!');

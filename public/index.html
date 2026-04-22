@@ -193,7 +193,11 @@
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
-    <div class="auth-container">
+    <div class="auth-container" style="position: relative;">
+      <!-- Close / Guest Button (top-right) -->
+      <button id="auth-close-btn" class="close-btn"
+        style="position: absolute; top: 10px; right: 14px; background: none; border: none; font-size: 1.6rem; cursor: pointer; color: #6b7280; z-index: 1;"
+        title="Close">×</button>
       <!-- Login Form -->
       <div id="login-form" class="auth-form">
         <h2>Login</h2>
@@ -211,6 +215,9 @@
         </form>
         <p class="auth-switch">
           Don't have an account? <a href="#" id="switch-to-signup">Sign up</a>
+        </p>
+        <p class="auth-switch" style="margin-top: 4px;">
+          <a href="#" id="auth-guest-link" style="color: #6b7280;">View as Guest</a>
         </p>
       </div>
 
@@ -236,6 +243,9 @@
         </form>
         <p class="auth-switch">
           Already have an account? <a href="#" id="switch-to-login">Login</a>
+        </p>
+        <p class="auth-switch" style="margin-top: 4px;">
+          <a href="#" id="auth-guest-link-signup" style="color: #6b7280;">View as Guest</a>
         </p>
       </div>
     </div>
@@ -1367,6 +1377,34 @@
                 </div>
               </div>
 
+              <!-- 7. Discussion Mode Card (SGD) -->
+              <div id="mode-btn-sgd" class="modern-card transition-card mode-switch-btn" data-practice-skill="speaking"
+                onclick="window.switchToMode('sgd')" tabindex="0" role="button" aria-label="Group Discussion mode">
+                <span class="badge new">New</span>
+                <div class="card-visual visual-sgd">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+                      <!-- Speaker heads / bubbles -->
+                      <circle cx="20" cy="25" r="8" stroke="currentColor" stroke-width="2.5" />
+                      <circle cx="52" cy="25" r="8" stroke="currentColor" stroke-width="2.5" />
+                      <circle cx="36" cy="45" r="8" stroke="currentColor" stroke-width="2.5" />
+                      <!-- Dynamic lines indicating speech -->
+                      <path d="M28 25H44" stroke="var(--visual-accent)" stroke-width="2.5" stroke-linecap="round"
+                        opacity="0.6" />
+                      <path d="M28 35L44 35" stroke="var(--visual-accent)" stroke-width="2.5" stroke-linecap="round"
+                        opacity="0.4" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Discussion</h3>
+                  <p>Summarize group conversations with multiple speakers.</p>
+                  <button class="card-cta">Practice Now</button>
+                  <a class="whats-this-link" style="display: none;"
+                    onclick="event.stopPropagation(); window.startTutorial('sgd', true);">What's this?</a>
+                </div>
+              </div>
+
               <!-- 6. Pronounce Mode Card -->
               <div id="mode-btn-pronounce" class="modern-card transition-card mode-switch-btn"
                 data-practice-skill="speaking" onclick="window.switchToMode('pronounce')" tabindex="0" role="button"
@@ -1640,6 +1678,8 @@
           <button id="tab-rfib" class="tab-btn" type="button">Dropdown</button>
           <button id="tab-watch" class="tab-btn" type="button">Watch</button>
           <button id="tab-notes" class="tab-btn" type="button">Take Notes</button>
+          <button id="tab-sgd" class="tab-btn" type="button">Discussion</button>
+          <button id="tab-essay" class="tab-btn" type="button">Write Essay</button>
           <button id="tab-pronounce" class="tab-btn" type="button">Pronounce</button>
           <button id="tab-read-aloud" class="tab-btn" type="button">Read Aloud</button>
           <button id="tab-asq" class="tab-btn" type="button">Quiz</button>
@@ -2655,6 +2695,236 @@
               <button id="notes-retry-btn" class="modern-btn modern-btn--retry" type="button">
                 Try Again
               </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SGD Mode Panel (Summarize Group Discussion) -->
+      <div id="mode-sgd" class="mode-panel" style="display: none;">
+        <div id="sgd-info-box" class="notification-box important-notice">
+          <span>📌 Based on PTE Academic's Summarize Group Discussion task</span>
+          <button class="info-box-close"
+            onclick="this.parentElement.style.display='none'; localStorage.setItem('sgdInfoDismissed','1')"
+            title="Don't show again">×</button>
+        </div>
+        <div class="question-selector">
+          <div class="question-id-display">
+            <label for="question-select-sgd">Question ID:</label>
+            <span id="current-question-id-sgd" class="current-question-id">1</span>
+          </div>
+          <div class="question-nav-row">
+            <button id="back-btn-sgd" class="nav-btn nav-btn-back" type="button" title="Previous Question">←
+              Back</button>
+            <select id="question-select-sgd" class="question-select question-select-narrow">
+              <option value="1">Loading...</option>
+            </select>
+            <button id="next-btn-sgd" class="nav-btn nav-btn-next" type="button" title="Next Question">Next →</button>
+          </div>
+          <div id="recommendation-controls-sgd" class="recommendation-controls">
+            <button id="recommended-btn-sgd" class="recommended-jump-btn" type="button" disabled>Recommended</button>
+            <span id="recommendation-summary-sgd" class="recommendation-summary is-hidden"></span>
+          </div>
+          <div class="question-filters-row">
+            <div id="difficulty-filter-container-sgd" class="difficulty-filter-dropdown" style="display: none;">
+              <button id="difficulty-filter-btn-sgd" class="difficulty-filter-btn" type="button">
+                <span id="difficulty-filter-label-sgd">Recommended</span>
+                <span class="filter-arrow">▼</span>
+              </button>
+              <div id="difficulty-filter-menu-sgd" class="difficulty-filter-menu" style="display: none;">
+                <div class="filter-option selected" data-value="all">
+                  <span class="filter-option-icon">📋</span>
+                  <span class="filter-option-text">Recommended</span>
+                </div>
+                <div class="filter-option" data-value="1">
+                  <span class="filter-option-icon">🟢</span>
+                  <span class="filter-option-text">Level 1 <span class="difficulty-tag easy">Easy</span></span>
+                </div>
+                <div class="filter-option" data-value="2">
+                  <span class="filter-option-icon">🟡</span>
+                  <span class="filter-option-text">Level 2 <span class="difficulty-tag medium">Medium</span></span>
+                </div>
+                <div class="filter-option" data-value="3">
+                  <span class="filter-option-icon">🔴</span>
+                  <span class="filter-option-text">Level 3 <span class="difficulty-tag hard">Hard</span></span>
+                </div>
+              </div>
+            </div>
+            <div class="status-filter-dropdown" id="status-filter-container-sgd">
+              <button id="status-filter-btn-sgd" class="status-filter-btn" type="button">
+                <span id="status-filter-label-sgd">All Questions</span>
+                <span class="filter-arrow">▼</span>
+              </button>
+              <div id="status-filter-menu-sgd" class="status-filter-menu" style="display: none;">
+                <div class="filter-option selected" data-value="all">
+                  <span class="filter-option-icon">📋</span>
+                  <span class="filter-option-text">All Questions</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="question-total">
+          <span>Total number of questions: <span id="total-questions-sgd">0</span></span>
+        </div>
+        <div class="controls">
+          <button id="play-sgd-btn" class="modern-btn modern-btn--play" type="button">Play</button>
+        </div>
+        <div id="score-sgd" class="score">Points: 0</div>
+
+        <!-- Practice Area (hidden until Play clicked) -->
+        <div id="sgd-practice-area" style="display: none;">
+          <!-- Step Progress Breadcrumb -->
+          <div id="sgd-step-progress" class="sgd-step-progress">
+            <div class="sgd-progress-step active" data-step="listen">
+              <span class="sgd-progress-dot"></span>
+              <span class="sgd-progress-label">Listen & Notes</span>
+            </div>
+            <div class="sgd-progress-connector"></div>
+            <div class="sgd-progress-step" data-step="record">
+              <span class="sgd-progress-dot"></span>
+              <span class="sgd-progress-label">Record</span>
+            </div>
+            <div class="sgd-progress-connector"></div>
+            <div class="sgd-progress-step" data-step="results">
+              <span class="sgd-progress-dot"></span>
+              <span class="sgd-progress-label">Results</span>
+            </div>
+          </div>
+
+          <!-- Step 1: Listen + Take Notes -->
+          <div id="sgd-step-listen" class="notes-step" style="display: none;">
+            <div class="notes-step-header">
+              <span class="notes-step-badge">Step 1</span>
+              <h4>Listen & Take Notes</h4>
+            </div>
+            <div id="sgd-topic" class="sgd-topic-display"></div>
+            <div class="notes-audio-player">
+              <audio id="sgd-audio" controls></audio>
+            </div>
+            <div id="sgd-audio-status" class="sgd-audio-status" role="status" aria-live="polite" hidden></div>
+            <div id="sgd-speaker-notes" class="sgd-speaker-notes">
+              <div class="sgd-speaker-tabs" id="sgd-speaker-tabs"></div>
+              <div class="sgd-note-panels" id="sgd-note-panels"></div>
+            </div>
+            <div class="notes-submit-controls">
+              <button id="sgd-next-step-btn" class="modern-btn modern-btn--check" type="button" disabled>
+                Proceed to Speaking →
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 2: Speaking (Recording) -->
+          <div id="sgd-step-record" class="notes-step" style="display: none;">
+            <div class="notes-step-header">
+              <span class="notes-step-badge">Step 2</span>
+              <h4>Summarize the Discussion</h4>
+            </div>
+            <div class="sgd-record-section">
+              <div class="sgd-record-instructions">
+                Speak for up to 2 minutes. Summarize the group discussion, covering what each speaker said.
+              </div>
+              <div class="sgd-timer" id="sgd-record-timer">2:00</div>
+              <div class="sgd-record-controls">
+                <button id="sgd-back-to-notes-btn" class="modern-btn modern-btn--retry" type="button">
+                  ← Back to Notes
+                </button>
+                <button id="sgd-record-btn" class="modern-btn modern-btn--record" type="button">
+                  🎙 Start Recording
+                </button>
+                <button id="sgd-stop-btn" class="modern-btn modern-btn--retry" type="button" style="display: none;">
+                  ⏹ Stop
+                </button>
+              </div>
+              <div id="sgd-playback-area" style="display: none;">
+                <audio id="sgd-recording-playback" controls style="width: 100%;"></audio>
+              </div>
+              <div class="notes-submit-controls">
+                <button id="sgd-submit-btn" class="modern-btn modern-btn--check" type="button" style="display: none;">
+                  Submit & Review Notes
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3: Results -->
+          <div id="sgd-step-results" class="notes-step" style="display: none;">
+            <div class="notes-step-header">
+              <span class="notes-step-badge">Results</span>
+              <h4>Review Your Results</h4>
+            </div>
+            <div id="sgd-results-container" class="sgd-results-container"></div>
+            <div class="notes-results-stats">
+              <span id="sgd-overall-accuracy">0</span>% overall accuracy
+            </div>
+            <div class="notes-results-controls">
+              <button id="sgd-retry-btn" class="modern-btn modern-btn--retry" type="button">Try Again</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════════════ Write Essay Mode ═══════════════ -->
+      </div>
+
+      <div id="mode-essay" class="mode-panel" style="display: none;">
+        <div id="essay-info-box" class="notification-box important-notice">
+            <span>✍️ Based on PTE Academic's Write Essay task — you have 20 minutes</span>
+            <button class="info-box-close"
+              onclick="this.parentElement.style.display='none'; localStorage.setItem('essayInfoDismissed','1')"
+              title="Don't show again">×</button>
+          </div>
+          <div class="question-selector">
+            <div class="question-id-display">
+              <label for="question-select-essay">Prompt ID:</label>
+              <span id="current-question-id-essay" class="current-question-id">1</span>
+            </div>
+            <div class="question-nav-row">
+              <button id="back-btn-essay" class="nav-btn nav-btn-back" type="button" title="Previous Prompt">←
+                Back</button>
+              <select id="question-select-essay" class="question-select question-select-narrow">
+                <option value="1">Loading...</option>
+              </select>
+              <button id="next-btn-essay" class="nav-btn nav-btn-next" type="button" title="Next Prompt">Next →</button>
+            </div>
+          </div>
+          <div class="question-total">
+            <span>Total prompts: <span id="total-questions-essay">0</span></span>
+          </div>
+          <div class="controls">
+            <button id="start-essay-btn" class="modern-btn modern-btn--play" type="button">Start Writing</button>
+          </div>
+
+          <!-- Practice Area (hidden until Start clicked) -->
+          <div id="essay-practice-area" style="display: none;">
+            <!-- Step 1: Write -->
+            <div id="essay-step-write" class="notes-step" style="display: none;">
+              <div class="notes-step-header">
+                <span class="notes-step-badge">Write Essay</span>
+                <div id="essay-timer" class="essay-timer">20:00</div>
+              </div>
+              <div id="essay-prompt-display" class="essay-prompt-display">
+                <p>Prompt will appear here…</p>
+              </div>
+              <div class="essay-input-area">
+                <textarea id="essay-input" class="essay-textarea"
+                  placeholder="Write your essay here. You should write between 200 and 300 words." rows="16"></textarea>
+                <div class="essay-input-footer">
+                  <span id="essay-word-count" class="essay-word-count essay-wc-bad">0 words</span>
+                  <button id="essay-submit-btn" class="modern-btn modern-btn--check" type="button">Submit Essay</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 2: Results -->
+            <div id="essay-step-results" class="notes-step" style="display: none;">
+              <div class="notes-step-header">
+                <span class="notes-step-badge">Results</span>
+                <h4>Your Essay Scores</h4>
+              </div>
+              <div id="essay-results-container" class="essay-results-container"></div>
+              <div class="notes-results-controls">
+                <button id="essay-retry-btn" class="modern-btn modern-btn--retry" type="button">Try Again</button>
+              </div>
             </div>
           </div>
         </div>
@@ -3738,6 +4008,123 @@
   <script src="/js/read-aloud-linking.js"></script>
   <script src="/read-aloud-mode.js"></script>
   <script src="/asq-mode.js"></script>
+  <script src="/content-difficulty-classifier.js"></script>
+  <script src="/sgd-mode.js"></script>
+  <script src="/write-essay-mode.js"></script>
+  <!-- Dialogflow Messenger Integration -->
+  <link rel="stylesheet"
+    href="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/themes/df-messenger-default.css">
+  <script src="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js"></script>
+  <df-messenger project-id="bel-chatbot-493104" agent-id="e12652c0-a4fe-42f0-ac63-27547b7cad18" language-code="vi"
+    max-query-length="-1">
+    <df-messenger-chat-bubble chat-title="BEL-Assistant Teacher" chat-icon="assets/chat/teacher-avatar.png">
+    </df-messenger-chat-bubble>
+  </df-messenger>
+
+  <!-- Custom Chatbot Trigger Widget -->
+  <div id="bel-chat-trigger" class="bel-chat-trigger"
+    onclick="const bubble = document.querySelector('df-messenger-chat-bubble'); if(bubble) { bubble.openChat(); }">
+    <div class="bel-chat-speech-bubble">Ask me! 💬</div>
+    <img src="assets/chat/teacher-avatar.png" alt="BEL Assistant Teacher" class="bel-chat-avatar" />
+  </div>
+  <script>
+    window.addEventListener('df-chat-open-changed', function (e) {
+      var trigger = document.getElementById('bel-chat-trigger');
+      if (trigger) trigger.style.display = e.detail.isOpen ? 'none' : 'flex';
+    });
+  </script>
+
+  <style>
+    /* --- Hide the default Dialogflow bubble --- */
+    df-messenger {
+      z-index: 998;
+      position: fixed;
+      --df-messenger-font-color: #000;
+      --df-messenger-font-family: Google Sans, sans-serif;
+      --df-messenger-chat-background: #f3f6fc;
+      --df-messenger-message-user-background: #d3e3fd;
+      --df-messenger-message-bot-background: #fff;
+      bottom: 24px;
+      right: 24px;
+    }
+
+    df-messenger-chat-bubble {
+      --df-messenger-chat-bubble-size: 0px !important;
+      --df-messenger-chat-bubble-icon-size: 0px !important;
+    }
+
+    /* --- Custom Floating Trigger --- */
+    .bel-chat-trigger {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.3));
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .bel-chat-trigger:hover {
+      transform: scale(1.15) translateY(-8px);
+    }
+
+    /* Speech bubble - Reduced by 20% */
+    .bel-chat-speech-bubble {
+      background: #1a73e8;
+      color: #fff;
+      font-family: 'Google Sans', 'Inter', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      padding: 14px 28px;
+      border-radius: 30px;
+      white-space: nowrap;
+      margin-bottom: 12px;
+      position: relative;
+      box-shadow: 0 4px 12px rgba(26, 115, 232, 0.45);
+      animation: bel-bubble-bounce 2.5s ease-in-out infinite;
+    }
+
+    /* Triangle pointer below the bubble */
+    .bel-chat-speech-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 12px solid transparent;
+      border-right: 12px solid transparent;
+      border-top: 12px solid #1a73e8;
+    }
+
+    /* Teacher avatar - larger and cleaner */
+    .bel-chat-avatar {
+      width: 110px;
+      height: 110px;
+      object-fit: contain;
+      border: none;
+      background: transparent !important;
+      outline: none;
+      pointer-events: none;
+      /* Let clicks pass to the trigger div */
+    }
+
+    @keyframes bel-bubble-bounce {
+
+      0%,
+      100% {
+        transform: translateY(0) scale(1);
+      }
+
+      50% {
+        transform: translateY(-10px) scale(1.05);
+      }
+    }
+  </style>
 </body>
 
 </html>

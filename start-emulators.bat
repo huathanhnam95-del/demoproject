@@ -1,4 +1,5 @@
 @echo off
+setlocal enabledelayedexpansion
 :: Start Firebase Emulators + local HTTPS dev server
 :: ---------------------------------------------------
 :: Emulator UI:  http://localhost:4000
@@ -30,10 +31,43 @@ echo.
 :: Start emulators in the background
 start "Firebase Emulators" cmd /c "set JAVA_HOME=%JAVA_HOME%&& set PATH=%JAVA_HOME%\bin;%PATH%&& npx firebase emulators:start --only firestore,auth,functions,storage --project listening-tasks-3ae34"
 
-:: Give emulators a moment to boot
-timeout /t 5 /nobreak >nul
+:: Wait for Auth emulator to become ready (up to 30 seconds)
+echo Waiting for emulators to start...
+set EMULATOR_READY=0
+for /L %%i in (1,1,30) do (
+    if !EMULATOR_READY!==0 (
+        timeout /t 1 /nobreak >nul
+        curl.exe -s -o nul -w "%%{http_code}" http://localhost:9099/ >nul 2>&1
+        if not errorlevel 1 set EMULATOR_READY=1
+    )
+)
 
-echo Emulators started. Now starting HTTPS server...
+if !EMULATOR_READY!==0 (
+    echo.
+    echo ERROR: Auth emulator failed to start on port 9099.
+    pause
+    exit /b 1
+)
+
+echo.
+echo Emulators started. Seeding admin account...
+echo.
+
+:: Load .env credentials and auto-seed admin account
+if exist ".env" (
+    for /f "usebackq tokens=1,* delims==" %%A in (".env") do (
+        set "_key=%%A"
+        if "!_key:~0,1!" neq "#" (
+            set "%%A=%%B"
+        )
+    )
+)
+
+if not defined EMULATOR_ADMIN_EMAIL set "EMULATOR_ADMIN_EMAIL=%ADMIN_EMAIL%"
+node scripts\seed-emulator-admin.js
+echo.
+
+echo Starting HTTPS server...
 echo.
 
 :: Start the HTTPS dev server with emulator env vars

@@ -13,6 +13,7 @@ class AsqMode {
     this.pendingTranscriptPromise = null;
     this.recordedBlobUrl = null;
     this.hasAudioSrc = false;
+    this.activeAttemptId = 0;
     /** @type {Record<string, HTMLElement|null>} Cached DOM refs, populated in init() */
     this.els = {};
   }
@@ -273,6 +274,39 @@ class AsqMode {
     else el.style.color = 'var(--text-muted)';
   }
 
+  invalidateActiveAttempt() {
+    this.activeAttemptId += 1;
+    return this.activeAttemptId;
+  }
+
+  isAttemptCurrent(attemptId) {
+    return attemptId === this.activeAttemptId && this.isActive;
+  }
+
+  pausePromptAudio() {
+    const { promptAudio, playBtn } = this.els;
+    if (promptAudio) {
+      try { promptAudio.pause(); } catch (_) { /* intentional */ }
+    }
+    if (playBtn) playBtn.textContent = 'Play';
+  }
+
+  resetRecordingControls({ showRecordButton = true, showRedoButton = false } = {}) {
+    const { recordBtn, stopBtn, redoBtn } = this.els;
+    this.isRecording = false;
+    if (recordBtn) {
+      recordBtn.disabled = false;
+      recordBtn.style.display = showRecordButton ? '' : 'none';
+    }
+    if (stopBtn) {
+      stopBtn.disabled = false;
+      stopBtn.style.display = 'none';
+    }
+    if (redoBtn) {
+      redoBtn.style.display = showRedoButton ? '' : 'none';
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Prompt audio + question text
   // ---------------------------------------------------------------------------
@@ -284,6 +318,7 @@ class AsqMode {
     const redoBtn = this.els.redoBtn;
     if (!audioEl) return;
 
+    this.pausePromptAudio();
     const src = this.getAudioSrcForId(this.currentId);
     audioEl.src = src || '';
     audioEl.load();
@@ -314,10 +349,9 @@ class AsqMode {
 
   /** Reset UI to re-attempt the current question */
   redoQuestion() {
+    this.invalidateActiveAttempt();
     this.resetResultUI();
-    const { recordBtn, redoBtn, statusMessage } = this.els;
-    if (recordBtn) recordBtn.style.display = '';
-    if (redoBtn) redoBtn.style.display = 'none';
+    this.resetRecordingControls({ showRecordButton: true, showRedoButton: false });
     this.setStatus('Play the prompt audio, then record your answer.', 'muted');
 
     // Hide question text again
@@ -483,6 +517,7 @@ class AsqMode {
     if (this.isRecording) return;
 
     const { recordBtn, stopBtn } = this.els;
+    const attemptId = this.invalidateActiveAttempt();
 
     const support = this.getRecordingSupportState();
     if (!support.supported) {
@@ -512,11 +547,14 @@ class AsqMode {
 
       recorder.onstop = async () => {
         this.stopMediaStream();
-        this.mediaRecorder = null;
-        this.isRecording = false;
+        if (this.mediaRecorder === recorder) {
+          this.mediaRecorder = null;
+        }
+        this.resetRecordingControls({ showRecordButton: true, showRedoButton: false });
 
-        if (recordBtn) recordBtn.disabled = false;
-        if (stopBtn) stopBtn.style.display = 'none';
+        if (!this.isAttemptCurrent(attemptId)) {
+          return;
+        }
 
         if (recordedChunks.length === 0) {
           this.setStatus('We could not capture that recording. Please try again.', 'error');
@@ -529,11 +567,17 @@ class AsqMode {
         try {
           this.setStatus('Transcribing...', 'muted');
           const transcript = await this.waitForTranscript({ timeoutMs: 5000 });
+          if (!this.isAttemptCurrent(attemptId)) {
+            return;
+          }
           const item = this.getCurrentItem();
           const localCheck = this.isTranscriptCorrect(transcript, item?.acceptedAnswers || []);
 
           let xpEarned = null;
           const scoringResult = await window.handleDualTrackScoring?.('asq', item?.id, transcript);
+          if (!this.isAttemptCurrent(attemptId)) {
+            return;
+          }
           if (scoringResult && scoringResult.success) {
             xpEarned = scoringResult.xpEarned;
           }
@@ -557,6 +601,9 @@ class AsqMode {
 
           this.setStatus(isCorrect ? 'Nice. Keep it short and clear.' : 'Try again and say one of the accepted answers.', isCorrect ? 'success' : 'error');
         } catch (error) {
+          if (!this.isAttemptCurrent(attemptId)) {
+            return;
+          }
           console.error('[ASQ] Transcription/scoring failed:', error);
           this.setStatus('Transcription failed. Please try again.', 'error');
         }
@@ -567,9 +614,7 @@ class AsqMode {
       recorder.start();
     } catch (error) {
       console.error('[ASQ] Microphone error:', error);
-      this.isRecording = false;
-      if (recordBtn) recordBtn.disabled = false;
-      if (stopBtn) stopBtn.style.display = 'none';
+      this.resetRecordingControls({ showRecordButton: true, showRedoButton: false });
       this.setStatus('Microphone access failed. Please allow mic permission and try again.', 'error');
       this.stopMediaStream();
       this.mediaRecorder = null;
@@ -589,6 +634,9 @@ class AsqMode {
   // ---------------------------------------------------------------------------
 
   async setQuestionById(id) {
+    this.invalidateActiveAttempt();
+    this.stopRecording();
+    this.stopMediaStream();
     this.currentId = String(id || '').trim() || null;
     if (!this.currentId) return;
     this.setPromptAudioForCurrent();
@@ -607,10 +655,17 @@ class AsqMode {
   }
 
   onExit() {
+    this.invalidateActiveAttempt();
     this.isActive = false;
+    this.pausePromptAudio();
     this.stopRecording();
     this.stopMediaStream();
+    this.resetRecordingControls({ showRecordButton: true, showRedoButton: false });
+    this.resetResultUI();
     this.clearRecordedAudio();
+    if (this.els.questionText) {
+      this.els.questionText.style.display = 'none';
+    }
   }
 
   async init() {

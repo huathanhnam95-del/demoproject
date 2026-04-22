@@ -495,6 +495,33 @@ function setupEventListeners() {
       });
     }
 
+    // --- Auth Overlay Close / View as Guest ---
+    const authCloseBtn = document.getElementById('auth-close-btn');
+    if (authCloseBtn) {
+      authCloseBtn.addEventListener('click', () => {
+        hideAuthOverlay();
+        handleGuestModeChoice();
+      });
+    }
+
+    const authGuestLink = document.getElementById('auth-guest-link');
+    if (authGuestLink) {
+      authGuestLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        hideAuthOverlay();
+        handleGuestModeChoice();
+      });
+    }
+
+    const authGuestLinkSignup = document.getElementById('auth-guest-link-signup');
+    if (authGuestLinkSignup) {
+      authGuestLinkSignup.addEventListener('click', (e) => {
+        e.preventDefault();
+        hideAuthOverlay();
+        handleGuestModeChoice();
+      });
+    }
+
     // --- Form Submissions ---
     // Note: IDs might be login-form-element vs login-form (container)
     // Checking index.html or previous context would confirm, but let's assume variables used before were correct.

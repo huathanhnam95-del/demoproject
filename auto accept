@@ -14,6 +14,9 @@
         timer: null,
         clicks: 0,
         lastActionAt: 0,
+        lastExpandClickAt: 0,
+        burstCount: 0,
+        burstStartAt: 0,
         clickedAtByElement: new WeakMap(),
         ui: null,
         uiEls: null,
@@ -88,9 +91,25 @@
         const r = rect(el);
         const cx = Math.max(0, Math.min(window.innerWidth - 1, r.x + r.w / 2));
         const cy = Math.max(0, Math.min(window.innerHeight - 1, r.y + r.h / 2));
-        const top = document.elementFromPoint(cx, cy);
-        if (!top) return false;
-        return top === el || (el.contains && el.contains(top));
+
+        // Penetrate shadow DOM for topmost check
+        const elements = document.elementsFromPoint(cx, cy);
+        if (!elements || elements.length === 0) return false;
+        const top = elements[0];
+        return top === el || el.contains(top) || (top.shadowRoot && top.shadowRoot.contains(el));
+    }
+    function queryAllDeep(selector, root = document) {
+        const results = [];
+        const stack = [root];
+        while (stack.length > 0) {
+            const current = stack.pop();
+            results.push(...current.querySelectorAll(selector));
+            const allNodes = current.querySelectorAll('*');
+            for (const node of allNodes) {
+                if (node.shadowRoot) stack.push(node.shadowRoot);
+            }
+        }
+        return results;
     }
     function safeClick(el, reason) {
         const now = Date.now();
@@ -104,7 +123,18 @@
         if (CFG.requireTopmost && !isTopmostClickable(el)) return false;
         try { el.focus(); } catch (_) { /* intentional ignore */ }
         try {
+            // Burst protection: max 10 clicks in 2 seconds
+            if (now - state.burstStartAt > 2000) {
+                state.burstStartAt = now;
+                state.burstCount = 0;
+            }
+            if (state.burstCount > 10) {
+                if (CFG.log) console.warn('[auto-run] Rate limit reached, skipping click');
+                return false;
+            }
+
             el.click();
+            state.burstCount += 1;
             state.clickedAtByElement.set(el, now);
             state.clicks += 1;
             state.lastActionAt = now;
@@ -182,40 +212,57 @@
         for (const v of visited) cache.set(v, false);
         return false;
     }
-    function findBestRunButton() {
+    function tick() {
+        const now = Date.now();
         const cache = new Map();
-        const allButtons = document.querySelectorAll('button, [role="button"], a[role="button"], [class*="button" i], [class*="btn" i]');
+
+        // Single deep scan for all buttons
+        const buttonSelector = 'button, [role="button"], a[role="button"], [class*="button" i], [class*="btn" i]';
+        const allButtons = queryAllDeep(buttonSelector);
+
+        // Priority 1: Expand a "Requires Input" panel
+        if (CFG.clickRun && (now - state.lastExpandClickAt > 5000)) {
+            for (const el of allButtons) {
+                const ll = labelOf(el).toLowerCase();
+                if (!ll.includes('expand')) continue;
+                if (!isOnScreen(el) || !isVisible(el)) continue;
+
+                let parent = el.parentElement || (el.getRootNode && el.getRootNode().host);
+                for (let depth = 0; parent && depth < 5; depth++) {
+                    const parentText = t(parent.textContent || '').toLowerCase();
+                    if (parentText.includes('requires input')) {
+                        state.lastExpandClickAt = now;
+                        safeClick(el, 'Expand (Requires Input)');
+                        return;
+                    }
+                    parent = parent.parentElement || (parent.getRootNode && parent.getRootNode().host);
+                }
+            }
+        }
+
+        // Priority 2: Click best Run/Accept button
         let bestRun = null;
         let bestScore = -1;
-        let bestY = -1;  // prefer buttons closer to bottom (newer prompts)
+        let bestY = -1;
         for (const el of allButtons) {
             const ll = labelOf(el).toLowerCase();
             const s = scoreRunLabel(ll);
             if (s <= -1) continue;
-
             if (!isOnScreen(el) || !isVisible(el)) continue;
 
-            if (!isInsideApprovalPrompt(el, cache)) {
-                if (CFG.log) console.log('[auto-run] SKIP (no Reject sibling):', ll);
-                continue;
-            }
+            if (!isInsideApprovalPrompt(el, cache)) continue;
 
             const elY = rect(el).y;
-            if (CFG.log) console.log('[auto-run] candidate:', ll, '→ score:', s, '| y:', Math.round(elY));
             if (s > bestScore || (s === bestScore && elY > bestY)) {
                 bestScore = s;
                 bestRun = el;
                 bestY = elY;
             }
         }
-        return bestRun;
-    }
-    function tick() {
-        const bestRun = findBestRunButton();
+
         if (CFG.clickRun && bestRun) {
             const lab = labelOf(bestRun).toLowerCase();
-            const reason = lab.includes('retry') ? 'Retry' :
-                lab.includes('accept') ? 'Accept' : 'Run';
+            const reason = lab.includes('retry') ? 'Retry' : lab.includes('accept') ? 'Accept' : 'Run';
             safeClick(bestRun, reason);
         }
         refreshHUD();

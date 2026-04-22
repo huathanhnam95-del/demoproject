@@ -716,7 +716,7 @@
       speaking: {
         label: 'Speaking',
         kind: 'live-skill',
-        modeIds: ['speak', 'pronounce', 'read-aloud', 'asq']
+        modeIds: ['speak', 'pronounce', 'read-aloud', 'asq', 'sgd']
       },
       listening: {
         label: 'Listening',
@@ -730,9 +730,8 @@
       },
       writing: {
         label: 'Writing',
-        kind: 'empty-skill',
-        modeIds: [],
-        emptyStateId: 'practice-writing-empty'
+        kind: 'live-skill',
+        modeIds: ['essay']
       }
     },
     modes: {
@@ -805,6 +804,20 @@
         hasTutorial: false,
         isLive: true,
         launcherVisible: true
+      },
+      essay: {
+        label: 'Write Essay',
+        skill: 'writing',
+        hasTutorial: false,
+        isLive: true,
+        launcherVisible: true
+      },
+      sgd: {
+        label: 'Discussion',
+        skill: 'speaking',
+        hasTutorial: false,
+        isLive: true,
+        launcherVisible: true
       }
     }
   };
@@ -820,12 +833,13 @@
       modeOverrides: Object.freeze({})
     },
     [SCOPE_PTE]: {
-      visibleModes: new Set(['read-aloud', 'speak', 'notes', 'extended', 'type', 'rfib']),
+      visibleModes: new Set(['read-aloud', 'speak', 'notes', 'extended', 'type', 'rfib', 'sgd']),
       modeOverrides: Object.freeze({
         speak: { label: 'Repeat Sentence' },
         notes: { label: 'Retell Lecture', skill: 'speaking' },
         type: { label: 'Write from Dictation' },
-        asq: { label: 'Answer Short Question' }
+        asq: { label: 'Answer Short Question' },
+        sgd: { label: 'Summarize Group Discussion' }
       })
     }
   };
@@ -1361,6 +1375,17 @@
   window.switchToMode = async function (mode) {
     if (!mode) return;
 
+    const leavingMode = currentActiveMode;
+    if (leavingMode === 'collo-dictate' && mode !== 'collo-dictate') {
+      window.ColloDictateMode?.onExit?.();
+    }
+    if (leavingMode === 'asq' && mode !== 'asq') {
+      window.ASQMode?.onExit?.();
+    }
+    if (leavingMode === 'sgd' && mode !== 'sgd') {
+      window.SGDMode?.onExit?.();
+    }
+
     // Sync Adaptive UI state upon switching
     if (typeof window.updateAdaptiveUI === 'function') {
       window.updateAdaptiveUI(mode);
@@ -1394,11 +1419,6 @@
     if (mode === 'watch' || mode === 'notes' || mode === 'rfib') {
       const assetsReady = await ensureModeAssets(mode);
       if (!assetsReady) return;
-    }
-
-    // Collo-dictate cleanup when switching away
-    if (currentActiveMode === 'collo-dictate' && mode !== 'collo-dictate') {
-      window.ColloDictateMode?.onExit?.();
     }
 
     // Map mode names to tab IDs and panel IDs
@@ -1500,11 +1520,15 @@
         await loadQuestion('type', currentTypeQuestionId);
       } else if (mode === 'collo-dictate' && typeof window.ColloDictateMode?.onEnter === 'function') {
         await window.ColloDictateMode.onEnter();
+      } else if (mode === 'sgd' && typeof window.SGDMode?.onEnter === 'function') {
+        await window.SGDMode.onEnter();
       } else if (mode === 'speak' && speakDatabase.length > 0) {
         log.log(`[switchToMode] Switching to Speak mode, reloading question ${currentSpeakQuestionId}`);
         await loadQuestion('speak', currentSpeakQuestionId);
       } else if (mode === 'notes' && window.TakeNotesMode && typeof window.TakeNotesMode.loadEntries === 'function') {
         window.TakeNotesMode.loadEntries();
+      } else if (mode === 'essay' && window.WriteEssayMode && typeof window.WriteEssayMode.init === 'function') {
+        window.WriteEssayMode.init();
       } else if (mode === 'read-aloud') {
         // Hide the type-mode question box that bleeds through
         const typeQuestionBox = document.getElementById('mode-type');
@@ -2980,6 +3004,10 @@
   const modeWatch = document.getElementById("mode-watch");
   const modeNotes = document.getElementById("mode-notes");
   const modePronounce = document.getElementById("mode-pronounce");
+  const modeSGD = document.getElementById("mode-sgd");
+  const tabSGD = document.getElementById("tab-sgd");
+  const modeEssay = document.getElementById("mode-essay");
+  const tabEssay = document.getElementById("tab-essay");
 
   // ============================================
   // Feedback Banner
@@ -4036,6 +4064,10 @@
     if (modeWatch) { modeWatch.classList.remove("active"); modeWatch.style.display = 'none'; }
     if (modeNotes) { modeNotes.classList.remove("active"); modeNotes.style.display = 'none'; }
     if (modePronounce) { modePronounce.classList.remove("active"); modePronounce.style.display = 'none'; }
+    if (modeSGD) { modeSGD.classList.remove("active"); modeSGD.style.display = 'none'; }
+    if (window.SGDMode && typeof window.SGDMode.reset === 'function') window.SGDMode.reset();
+    if (modeEssay) { modeEssay.classList.remove("active"); modeEssay.style.display = 'none'; }
+    if (window.WriteEssayMode && typeof window.WriteEssayMode.reset === 'function') window.WriteEssayMode.reset();
 
     // Rest active states
     document.querySelectorAll('.mode-switch-btn').forEach(btn => btn.classList.remove('active'));
@@ -4072,6 +4104,7 @@
     if (tabWatch) tabWatch.classList.remove("active");
     if (tabNotes) tabNotes.classList.remove("active");
     if (tabPronounce) tabPronounce.classList.remove("active");
+    if (tabSGD) tabSGD.classList.remove("active");
     modeSpeak.classList.add("active");
     modeSpeak.style.display = 'block';
     modeType.classList.remove("active");
@@ -4081,6 +4114,10 @@
     if (modeWatch) { modeWatch.classList.remove("active"); modeWatch.style.display = 'none'; }
     if (modeNotes) { modeNotes.classList.remove("active"); modeNotes.style.display = 'none'; }
     if (modePronounce) { modePronounce.classList.remove("active"); modePronounce.style.display = 'none'; }
+    if (modeSGD) { modeSGD.classList.remove("active"); modeSGD.style.display = 'none'; }
+    if (window.SGDMode && typeof window.SGDMode.reset === 'function') window.SGDMode.reset();
+    if (modeEssay) { modeEssay.classList.remove("active"); modeEssay.style.display = 'none'; }
+    if (window.WriteEssayMode && typeof window.WriteEssayMode.reset === 'function') window.WriteEssayMode.reset();
 
     // Rest active states
     document.querySelectorAll('.mode-switch-btn').forEach(btn => btn.classList.remove('active'));
@@ -4130,6 +4167,7 @@
     if (tabWatch) tabWatch.classList.remove("active");
     if (tabNotes) tabNotes.classList.remove("active");
     if (tabPronounce) tabPronounce.classList.remove("active");
+    if (tabSGD) tabSGD.classList.remove("active");
     modeExtended.classList.add("active");
     modeExtended.style.display = 'block';
     modeType.classList.remove("active");
@@ -4139,6 +4177,10 @@
     if (modeWatch) { modeWatch.classList.remove("active"); modeWatch.style.display = 'none'; }
     if (modeNotes) { modeNotes.classList.remove("active"); modeNotes.style.display = 'none'; }
     if (modePronounce) { modePronounce.classList.remove("active"); modePronounce.style.display = 'none'; }
+    if (modeSGD) { modeSGD.classList.remove("active"); modeSGD.style.display = 'none'; }
+    if (window.SGDMode && typeof window.SGDMode.reset === 'function') window.SGDMode.reset();
+    if (modeEssay) { modeEssay.classList.remove("active"); modeEssay.style.display = 'none'; }
+    if (window.WriteEssayMode && typeof window.WriteEssayMode.reset === 'function') window.WriteEssayMode.reset();
 
     // Rest active states
     document.querySelectorAll('.mode-switch-btn').forEach(btn => btn.classList.remove('active'));
@@ -4181,6 +4223,7 @@
       tabExtended.classList.remove("active");
       if (tabNotes) tabNotes.classList.remove("active");
       if (tabPronounce) tabPronounce.classList.remove("active");
+      if (tabSGD) tabSGD.classList.remove("active");
       if (modeWatch) { modeWatch.classList.add("active"); modeWatch.style.display = 'block'; }
       modeType.classList.remove("active");
       modeType.style.display = 'none';
@@ -4190,6 +4233,8 @@
       modeExtended.style.display = 'none';
       if (modeNotes) { modeNotes.classList.remove("active"); modeNotes.style.display = 'none'; }
       if (modePronounce) { modePronounce.classList.remove("active"); modePronounce.style.display = 'none'; }
+      if (modeSGD) { modeSGD.classList.remove("active"); modeSGD.style.display = 'none'; }
+      if (window.SGDMode && typeof window.SGDMode.reset === 'function') window.SGDMode.reset();
 
       // Highlight active mode button
       document.querySelectorAll('.mode-switch-btn').forEach(btn => btn.classList.remove('active'));
@@ -4255,6 +4300,7 @@
       tabExtended.classList.remove("active");
       if (tabWatch) tabWatch.classList.remove("active");
       if (tabPronounce) tabPronounce.classList.remove("active");
+      if (tabSGD) tabSGD.classList.remove("active");
       if (modeNotes) { modeNotes.classList.add("active"); modeNotes.style.display = 'block'; }
       modeType.classList.remove("active");
       modeType.style.display = 'none';
@@ -4264,6 +4310,8 @@
       modeExtended.style.display = 'none';
       if (modeWatch) { modeWatch.classList.remove("active"); modeWatch.style.display = 'none'; }
       if (modePronounce) { modePronounce.classList.remove("active"); modePronounce.style.display = 'none'; }
+      if (modeSGD) { modeSGD.classList.remove("active"); modeSGD.style.display = 'none'; }
+      if (window.SGDMode && typeof window.SGDMode.reset === 'function') window.SGDMode.reset();
 
       // Highlight active mode button
       document.querySelectorAll('.mode-switch-btn').forEach(btn => btn.classList.remove('active'));
@@ -4295,6 +4343,128 @@
     });
   }
 
+  // SGD mode tab handler
+  if (tabSGD) {
+    tabSGD.addEventListener("click", async () => {
+      document.getElementById('page-layout-wrapper')?.classList.remove('watch-active');
+      const watchQuestionPanel = document.getElementById('watch-question-panel');
+      if (watchQuestionPanel) watchQuestionPanel.style.display = 'none';
+      if (window.WatchMode && typeof window.WatchMode.pauseAndResetForTabSwitch === 'function') {
+        window.WatchMode.pauseAndResetForTabSwitch();
+      }
+      if (tabSGD) tabSGD.classList.add("active");
+      tabType.classList.remove("active");
+      tabSpeak.classList.remove("active");
+      tabExtended.classList.remove("active");
+      if (tabWatch) tabWatch.classList.remove("active");
+      if (tabNotes) tabNotes.classList.remove("active");
+      if (tabPronounce) tabPronounce.classList.remove("active");
+      if (tabEssay) tabEssay.classList.remove("active");
+      if (modeSGD) { modeSGD.classList.add("active"); modeSGD.style.display = 'block'; }
+      if (modeEssay) { modeEssay.classList.remove("active"); modeEssay.style.display = 'none'; }
+      if (window.WriteEssayMode && typeof window.WriteEssayMode.reset === 'function') window.WriteEssayMode.reset();
+      modeType.classList.remove("active");
+      modeType.style.display = 'none';
+      modeSpeak.classList.remove("active");
+      modeSpeak.style.display = 'none';
+      modeExtended.classList.remove("active");
+      modeExtended.style.display = 'none';
+      if (modeWatch) { modeWatch.classList.remove("active"); modeWatch.style.display = 'none'; }
+      if (modeNotes) { modeNotes.classList.remove("active"); modeNotes.style.display = 'none'; }
+      if (modePronounce) { modePronounce.classList.remove("active"); modePronounce.style.display = 'none'; }
+
+      // Highlight active mode button
+      document.querySelectorAll('.mode-switch-btn').forEach(btn => btn.classList.remove('active'));
+      const sgdModeBtn = document.querySelector('.mode-switch-btn[onclick*="sgd"]');
+      if (sgdModeBtn) sgdModeBtn.classList.add('active');
+
+      // Hide other panels
+      if (sameVocabPanelType) sameVocabPanelType.style.display = "none";
+      if (sameVocabPanelSpeak) sameVocabPanelSpeak.style.display = "none";
+      if (vocabularyPanel) vocabularyPanel.style.display = "none";
+      if (pronunciationPanel) pronunciationPanel.style.display = "none";
+      if (breakdownPanel) breakdownPanel.style.display = "none";
+
+      // Stop any active recordings
+      if (isRecording && recognition) {
+        recognition.stop();
+        isRecording = false;
+      }
+
+      // Reset Take Notes mode if it was active
+      if (window.TakeNotesMode && typeof window.TakeNotesMode.reset === 'function') {
+        window.TakeNotesMode.reset();
+      }
+
+      // Initialize SGD mode
+      if (window.SGDMode) {
+        window.SGDMode.loadEntries();
+      }
+    });
+  }
+
+  // Write Essay mode tab handler
+  if (tabEssay) {
+    tabEssay.addEventListener("click", async () => {
+      document.getElementById('page-layout-wrapper')?.classList.remove('watch-active');
+      const watchQuestionPanel = document.getElementById('watch-question-panel');
+      if (watchQuestionPanel) watchQuestionPanel.style.display = 'none';
+      if (window.WatchMode && typeof window.WatchMode.pauseAndResetForTabSwitch === 'function') {
+        window.WatchMode.pauseAndResetForTabSwitch();
+      }
+      if (tabEssay) tabEssay.classList.add("active");
+      tabType.classList.remove("active");
+      tabSpeak.classList.remove("active");
+      tabExtended.classList.remove("active");
+      if (tabWatch) tabWatch.classList.remove("active");
+      if (tabNotes) tabNotes.classList.remove("active");
+      if (tabSGD) tabSGD.classList.remove("active");
+      if (tabPronounce) tabPronounce.classList.remove("active");
+      if (modeEssay) { modeEssay.classList.add("active"); modeEssay.style.display = 'block'; }
+      modeType.classList.remove("active");
+      modeType.style.display = 'none';
+      modeSpeak.classList.remove("active");
+      modeSpeak.style.display = 'none';
+      modeExtended.classList.remove("active");
+      modeExtended.style.display = 'none';
+      if (modeWatch) { modeWatch.classList.remove("active"); modeWatch.style.display = 'none'; }
+      if (modeNotes) { modeNotes.classList.remove("active"); modeNotes.style.display = 'none'; }
+      if (modePronounce) { modePronounce.classList.remove("active"); modePronounce.style.display = 'none'; }
+      if (modeSGD) { modeSGD.classList.remove("active"); modeSGD.style.display = 'none'; }
+      if (window.SGDMode && typeof window.SGDMode.reset === 'function') window.SGDMode.reset();
+
+      // Highlight active mode button
+      document.querySelectorAll('.mode-switch-btn').forEach(btn => btn.classList.remove('active'));
+      const essayModeBtn = document.querySelector('.mode-switch-btn[onclick*="essay"]');
+      if (essayModeBtn) essayModeBtn.classList.add('active');
+
+      // Hide other panels
+      if (sameVocabPanelType) sameVocabPanelType.style.display = "none";
+      if (sameVocabPanelSpeak) sameVocabPanelSpeak.style.display = "none";
+      if (vocabularyPanel) vocabularyPanel.style.display = "none";
+      if (pronunciationPanel) pronunciationPanel.style.display = "none";
+      if (breakdownPanel) breakdownPanel.style.display = "none";
+
+      // Stop any active recordings
+      if (isRecording && recognition) {
+        recognition.stop();
+        isRecording = false;
+      }
+
+      // Reset Take Notes mode if it was active
+      if (window.TakeNotesMode && typeof window.TakeNotesMode.reset === 'function') {
+        window.TakeNotesMode.reset();
+      }
+
+      // Initialize Write Essay mode
+      if (window.WriteEssayMode && typeof window.WriteEssayMode.init === 'function') {
+        window.WriteEssayMode.init();
+      } else if (window.WriteEssayMode && typeof window.WriteEssayMode.loadEntries === 'function') {
+        window.WriteEssayMode.loadEntries();
+      }
+    });
+  }
+
   // Pronounce mode tab handler
   const tabPronounce = document.getElementById('tab-pronounce');
   // pronunciationPanel is already defined globally
@@ -4318,6 +4488,7 @@
       tabExtended.classList.remove("active");
       if (tabWatch) tabWatch.classList.remove("active");
       if (tabNotes) tabNotes.classList.remove("active");
+      if (tabSGD) tabSGD.classList.remove("active");
 
       modeType.classList.remove("active");
       modeType.style.display = 'none';
@@ -4327,6 +4498,10 @@
       modeExtended.style.display = 'none';
       if (modeWatch) { modeWatch.classList.remove("active"); modeWatch.style.display = 'none'; }
       if (modeNotes) { modeNotes.classList.remove("active"); modeNotes.style.display = 'none'; }
+      if (modeSGD) { modeSGD.classList.remove("active"); modeSGD.style.display = 'none'; }
+      if (window.SGDMode && typeof window.SGDMode.reset === 'function') window.SGDMode.reset();
+      if (modeEssay) { modeEssay.classList.remove("active"); modeEssay.style.display = 'none'; }
+      if (window.WriteEssayMode && typeof window.WriteEssayMode.reset === 'function') window.WriteEssayMode.reset();
       if (modePronounce) { modePronounce.classList.add("active"); modePronounce.style.display = 'block'; }
 
       // Highlight active mode button

@@ -201,8 +201,22 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 2 1 1 , 2 0 2 6 - 0 4 - 1 0 , E x e c u t e   A S Q   b r o w s e r   t e s t   p l a n , I n   P r o g r e s s , 
  
  212,2026-04-10,Create VBA macro for batch downloading links from Excel column E,Done,2026-04-10
-213,2026-04-11,Execute Speaking Attempts Browser Testing Plan (Attempt Sharing Flow),In Progress,
+213,2026-04-11,Execute Speaking Attempts Browser Testing Plan (Attempt Sharing Flow),Done,2026-04-15
 214,2026-04-11,Implement ASQ audio playback and hide question text before submission,Done,2026-04-11
 215,2026-04-11,Review debug and refactor auto accept script,Done,2026-04-11
 216,2026-04-11,Review debug and refactor ASQ quiz mode,Done,2026-04-11
 217,2026-04-12,Fix Firebase emulator connectivity issues,In Progress 
+218,2026-04-12,Review and commit all changes as V1.6.5 (no push),Done,2026-04-12
+219,2026-04-12,App Knowledge Base Document generation,Done,2026-04-12
+220,2026-04-12,Implement Write Essay mode for PTE Practice Writing section,Done,2026-04-12
+221,2026-04-12,Integrate Dialogflow Messenger chatbot UI,Done,2026-04-12
+222,2026-04-12,Fix local emulator admin login issue,Done,2026-04-13
+223,2026-04-13,Implement Summarize Group Discussion (SGD) mode for PTE Speaking,Done,2026-04-13
+225,2026-04-15,Customize Chatbot Avatar with Design #10,Done,2026-04-15
+224,2026-04-13,Review debug and refactor SGD mode (5 bugs + 5 UX + 3 refactors),Done,2026-04-13
+226,2026-04-19,SGD Note Taking UI vertical stack + Topic input field,Done,2026-04-20
+227,2026-04-20,Debug startup authentication 400 and Firestore permission denied errors,Done,2026-04-20
+228,2026-04-21,Wire SGD audio folder to questions,Done,2026-04-21
+229,2026-04-21,Review and debug auto accept script,Done,2026-04-21
+230,2026-04-22,Fix production CRM console errors (PATCH crmId + 404 schedule),Done,2026-04-22
+231,2026-04-22,Summarize and commit changes for V1.6.6 (no push),In Progress,

@@ -306,7 +306,7 @@ module.exports = function registerStudentRoutes(router, deps) {
                 user: req.user,
                 serverTimestamp
             });
-            return sendSuccess(res, { student }, 'Student profile updated.');
+            return sendSuccess(res, { studentId, crmId: student.crmId || null, student }, 'Student profile updated.');
         } catch (error) {
             if ((error?.message || '').includes('No student fields provided')) {
                 return sendError(res, 400, 'VALIDATION_ERROR', error.message);

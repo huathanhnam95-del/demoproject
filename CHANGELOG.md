@@ -1,3 +1,23 @@
+## [V1.6.6] - 2026-04-22
+
+### Added
+
+- **Write Essay Mode**: Implemented PTE Writing Essay practice mode with local Ollama-based vocabulary generation (CEFR A2-C2 topic-specific vocabulary for 453 prompts).
+- **Dialogflow Integration**: Integrated Dialogflow Messenger chatbot UI as an AI tutor evaluating essays against a 7-point PTE rubric.
+- **SGD Mode Implementation**: Implemented Summarize Group Discussion (SGD) practice mode for PTE Speaking.
+- **SGD Audio Integration**: Wired SGD audio folder to questions.
+
+### Improved
+
+- **SGD UI/UX**: Refactored SGD note-taking with vertical stack layout, topic input fields, and non-blocking recording feedback.
+- **Chatbot Customization**: Updated chatbot avatar with custom design #10 and refined widget scale/positioning.
+- **Auto Accept Script**: Refactored for performance and Shadow DOM support.
+
+### Fixed
+
+- **Authentication & Permissions**: Resolved 400 Bad Request on startup and Firestore permission denied errors.
+- **CRM Bug Fixes**: Fixed production CRM console errors (PATCH crmId response correction + 404 schedule endpoint requests).
+
 ## [V1.6.5] - 2026-04-12
 
 ### Added

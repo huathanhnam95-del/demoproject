@@ -24,7 +24,7 @@ const AdaptiveEngineUI = (() => {
         high: 5
     };
 
-    const MODE_TABS = ['type', 'speak', 'extended', 'notes', 'srs'];
+    const MODE_TABS = ['type', 'speak', 'extended', 'notes', 'sgd', 'srs'];
 
     let currentMode = 'type';
     let modal = null;

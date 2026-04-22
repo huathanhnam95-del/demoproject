@@ -37,6 +37,7 @@ async function checkMode(page, mode) {
     type: { difficulty: true, status: true },
     speak: { difficulty: true, status: true },
     extended: { difficulty: true, status: false },
+    sgd: { difficulty: true, status: true },
     rfib: { difficulty: false, status: false }
   };
 
@@ -144,7 +145,7 @@ async function checkSkillFilter(page, skill, expectedVisibleIds, expectedModeId)
   });
 
   await page.addInitScript(() => {
-    ['type', 'collo-dictate', 'speak', 'extended', 'watch', 'notes', 'pronounce', 'read-aloud'].forEach((mode) => {
+    ['type', 'collo-dictate', 'speak', 'extended', 'watch', 'notes', 'pronounce', 'read-aloud', 'sgd'].forEach((mode) => {
       localStorage.setItem(`${mode}ModeFirstUse`, 'true');
     });
   });
@@ -191,7 +192,7 @@ async function checkSkillFilter(page, skill, expectedVisibleIds, expectedModeId)
     assert.strictEqual(launcherSemantics.writingVisible, false, 'Writing empty state should start hidden');
     assert.strictEqual(launcherSemantics.tutorialButtonVisible, true, 'Tutorial button should be visible for the default Read Aloud mode');
 
-    for (const mode of ['type', 'speak', 'extended', 'rfib']) {
+    for (const mode of ['type', 'speak', 'extended', 'sgd', 'rfib']) {
       // eslint-disable-next-line no-await-in-loop
       await checkMode(page, mode);
     }
@@ -211,7 +212,8 @@ async function checkSkillFilter(page, skill, expectedVisibleIds, expectedModeId)
     await checkSkillFilter(page, 'speaking', [
       'mode-btn-speak',
       'mode-btn-pronounce',
-      'mode-btn-read-aloud'
+      'mode-btn-read-aloud',
+      'mode-btn-sgd'
     ], 'mode-extended');
 
     const readingState = await checkSkillFilter(page, 'reading', ['mode-btn-rfib'], 'mode-extended');

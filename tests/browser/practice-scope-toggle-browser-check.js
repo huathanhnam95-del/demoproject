@@ -185,11 +185,13 @@ async function waitForActivePanel(page, panelId) {
     await page.click('#practice-scope-filter .practice-scope-btn[data-practice-scope="english"]');
 
     const restoredEnglishNotesState = await page.evaluate(() => {
+      const speakingBtn = document.querySelector('#practice-skill-filter .practice-skill-btn[data-practice-skill="speaking"]');
       const listeningBtn = document.querySelector('#practice-skill-filter .practice-skill-btn[data-practice-skill="listening"]');
       const indicator = document.getElementById('current-mode-indicator');
       const modeName = document.getElementById('current-mode-name');
       const notesPanel = document.getElementById('mode-notes');
       return {
+        speakingPressed: speakingBtn ? speakingBtn.getAttribute('aria-pressed') : null,
         listeningPressed: listeningBtn ? listeningBtn.getAttribute('aria-pressed') : null,
         indicatorVisible: indicator ? getComputedStyle(indicator).display !== 'none' : false,
         modeName: modeName?.textContent?.trim() || '',

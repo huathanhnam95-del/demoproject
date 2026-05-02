@@ -1,8 +1,4 @@
-require('../../../public/js/crm/finance-workflow');
-
-const {
-    deriveFinanceWorkflowState
-} = globalThis.CrmFinanceWorkflow || {};
+const { deriveFinanceWorkflowState } = require('./finance-workflow');
 
 const COMMISSION_STATUSES = ['pending', 'approved', 'paid'];
 const SUPPORTED_CURRENCIES = ['VND', 'AUD', 'USD'];

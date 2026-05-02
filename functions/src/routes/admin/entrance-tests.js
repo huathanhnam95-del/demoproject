@@ -14,6 +14,8 @@ const {
     scoreSubmission
 } = require('../../entrance-test/test36plus');
 
+const DEFAULT_TEST_TYPE = TEST_VERSION;
+
 function cleanOptionalString(value) {
     const normalized = String(value || '').trim();
     return normalized || null;

@@ -1,7 +1,9 @@
 const express = require('express');
 const axios = require('axios');
 const https = require('https');
-const { db, admin, getStorageBucket } = require('../utils/firebase_admin_init');
+const { FieldValue } = require('firebase-admin/firestore');
+const { getStorage } = require('firebase-admin/storage');
+const { db } = require('../utils/firebase_admin_init');
 const { sendError, sendSuccess } = require('../crm/http-contracts');
 const { CRM_LEADS } = require('../crm/collections');
 const { buildLeadStageSyncPatch } = require('../crm/lead-service');
@@ -20,6 +22,17 @@ const router = express.Router();
 
 const HF_TOKEN = process.env.HUGGINGFACE_API_KEY;
 const ASR_MODEL = process.env.ENTRANCE_TEST_ASR_MODEL || 'openai/whisper-large-v3';
+
+function resolveStorageBucket() {
+    try {
+        const bucketName = String(process.env.CLIENT_FIREBASE_STORAGE_BUCKET || '').trim();
+        const storage = getStorage();
+        return bucketName ? storage.bucket(bucketName) : storage.bucket();
+    } catch (error) {
+        console.warn('[EntranceTest] Storage init failed:', error?.message || error);
+        return null;
+    }
+}
 
 function isPlainObject(value) {
     return !!value && typeof value === 'object' && !Array.isArray(value);
@@ -127,7 +140,7 @@ router.get('/session', async (req, res) => {
         if (!data.startedAt) {
             await ref.set({
                 status: 'started',
-                startedAt: admin.firestore.FieldValue.serverTimestamp()
+                startedAt: FieldValue.serverTimestamp()
             }, { merge: true });
         }
 
@@ -177,13 +190,13 @@ router.post('/progress', async (req, res) => {
 
             tx.set(ref, {
                 status: data.status === 'created' ? 'started' : (data.status || 'started'),
-                startedAt: data.startedAt || admin.firestore.FieldValue.serverTimestamp(),
+                startedAt: data.startedAt || FieldValue.serverTimestamp(),
                 progress: {
                     stepIndex: draft.stepIndex,
                     responses: draft.responses,
-                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                    updatedAt: FieldValue.serverTimestamp()
                 },
-                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                updatedAt: FieldValue.serverTimestamp()
             }, { merge: true });
 
             return {
@@ -210,7 +223,7 @@ router.post('/progress', async (req, res) => {
 router.post('/speaking/upload', express.raw({ type: () => true, limit: '25mb' }), async (req, res) => {
     try {
         if (!db) return sendError(res, 500, 'SERVER_CONFIG_ERROR', 'Firebase Admin not initialized.');
-        const bucket = await getStorageBucket();
+        const bucket = resolveStorageBucket();
         if (!bucket) return sendError(res, 500, 'SERVER_CONFIG_ERROR', 'Firebase Storage not initialized.');
 
         const token = String(req.query.token || '').trim();
@@ -282,7 +295,7 @@ router.post('/speaking/upload', express.raw({ type: () => true, limit: '25mb' })
 
         const updatePayload = {
             status: data.status === 'created' ? 'started' : (data.status || 'started'),
-            startedAt: data.startedAt || admin.firestore.FieldValue.serverTimestamp(),
+            startedAt: data.startedAt || FieldValue.serverTimestamp(),
             speaking: {
                 [questionId]: {
                     audio: {
@@ -297,10 +310,10 @@ router.post('/speaking/upload', express.raw({ type: () => true, limit: '25mb' })
                     transcriptCount: accuracy?.transcriptCount ?? null,
                     distance: accuracy?.distance ?? null,
                     asrError: asrError || null,
-                    uploadedAt: admin.firestore.FieldValue.serverTimestamp()
+                    uploadedAt: FieldValue.serverTimestamp()
                 }
             },
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            updatedAt: FieldValue.serverTimestamp()
         };
 
         await ref.set(updatePayload, { merge: true });
@@ -358,7 +371,7 @@ router.post('/submit', async (req, res) => {
                     if (leadSnap.exists) {
                         const leadPatch = buildLeadStageSyncPatch(leadSnap.data() || {}, 'test_completed', {
                             user: { uid: 'public-entrance-test', email: null },
-                            serverTimestamp: () => admin.firestore.FieldValue.serverTimestamp()
+                            serverTimestamp: () => FieldValue.serverTimestamp()
                         });
                         if (leadPatch) {
                             tx.set(leadRef, leadPatch, { merge: true });
@@ -371,7 +384,7 @@ router.post('/submit', async (req, res) => {
                 if (leadSnap.exists) {
                     const leadPatch = buildLeadStageSyncPatch(leadSnap.data() || {}, 'test_completed', {
                         user: { uid: 'public-entrance-test', email: null },
-                        serverTimestamp: () => admin.firestore.FieldValue.serverTimestamp()
+                        serverTimestamp: () => FieldValue.serverTimestamp()
                     });
                     if (leadPatch) {
                         tx.set(leadRef, leadPatch, { merge: true });
@@ -382,15 +395,15 @@ router.post('/submit', async (req, res) => {
             tx.set(ref, {
                 status: 'submitted',
                 deliveryToken: null,
-                startedAt: data.startedAt || admin.firestore.FieldValue.serverTimestamp(),
-                submittedAt: admin.firestore.FieldValue.serverTimestamp(),
+                startedAt: data.startedAt || FieldValue.serverTimestamp(),
+                submittedAt: FieldValue.serverTimestamp(),
                 responses: responses || null,
                 scoring,
                 submittedMeta: {
                     ip: req.ip || null,
                     userAgent: req.headers['user-agent'] || null
                 },
-                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                updatedAt: FieldValue.serverTimestamp()
             }, { merge: true });
 
             return { ok: true, scoringSummary: scoring.overall };

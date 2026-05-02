@@ -23,6 +23,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Run entrance test scoring stability
+        run: node tests/entrance-test-scoring-stability.test.js
+
+      - name: Run entrance test ASR content-type normalization
+        run: node tests/entrance-test-asr-content-type.test.js
+
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 

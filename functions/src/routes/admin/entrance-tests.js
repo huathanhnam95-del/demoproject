@@ -10,7 +10,8 @@ const {
     hashTokenToTestId,
     extensionFromContentType,
     computeWordAccuracyPercent,
-    buildPublicSession
+    buildPublicSession,
+    scoreSubmission
 } = require('../../entrance-test/test36plus');
 
 function cleanOptionalString(value) {
@@ -279,9 +280,24 @@ module.exports = function registerEntranceTestRoutes(router, deps) {
                 return sendError(res, 404, 'TEST_NOT_FOUND', 'Entrance test not found.');
             }
 
+            let scoring = context.test?.scoring || null;
+            const responses = context.test?.responses || null;
+            const testType = cleanOptionalString(context.test?.testType) || DEFAULT_TEST_TYPE;
+            if (responses && testType !== 'segmental_screening_v1') {
+                try {
+                    scoring = scoreSubmission(responses);
+                } catch (error) {
+                    // Fall back to persisted scoring if recompute fails for any reason.
+                    scoring = context.test?.scoring || null;
+                }
+            }
+
             return sendSuccess(res, {
                 testId,
-                test: context.test,
+                test: {
+                    ...(context.test || {}),
+                    scoring
+                },
                 lead: context.lead,
                 student: context.student,
                 session: buildPublicSession(testId)

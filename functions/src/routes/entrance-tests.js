@@ -10,6 +10,7 @@ const {
     TEST_VERSION,
     hashTokenToTestId,
     extensionFromContentType,
+    normalizeAsrContentType,
     computeWordAccuracyPercent,
     buildPublicSession,
     scoreSubmission
@@ -72,6 +73,7 @@ async function transcribeAudio(buffer, contentType) {
     if (!HF_TOKEN) {
         throw new Error('HUGGINGFACE_API_KEY is not configured on the server.');
     }
+    const asrContentType = normalizeAsrContentType(contentType) || 'application/octet-stream';
     const url = `https://router.huggingface.co/hf-inference/models/${ASR_MODEL}`;
     const res = await axios({
         method: 'POST',
@@ -79,7 +81,7 @@ async function transcribeAudio(buffer, contentType) {
         headers: {
             Authorization: `Bearer ${HF_TOKEN}`,
             Accept: 'application/json',
-            'Content-Type': contentType || 'application/octet-stream',
+            'Content-Type': asrContentType,
             'User-Agent': 'Mozilla/5.0'
         },
         httpsAgent: new https.Agent({ family: 4 }),

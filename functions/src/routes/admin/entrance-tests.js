@@ -1,4 +1,6 @@
 const crypto = require('crypto');
+const axios = require('axios');
+const https = require('https');
 const { ENTRANCE_TESTS, CRM_LEADS, CRM_STUDENTS } = require('../../crm/collections');
 const { ensureCrmIdOnDoc } = require('../../crm/business-id-service');
 const { buildLeadStageSyncPatch, mapLeadRecord } = require('../../crm/lead-service');
@@ -7,19 +9,30 @@ const { buildEntranceTestLinks } = require('../../crm/public-origin');
 const { buildEntranceTestAdminList } = require('../../crm/entrance-test-link-recovery');
 const { getStorage } = require('firebase-admin/storage');
 const {
+    TEST_36PLUS,
     TEST_VERSION,
     hashTokenToTestId,
     extensionFromContentType,
+    normalizeAsrContentType,
     computeWordAccuracyPercent,
     buildPublicSession,
     scoreSubmission
 } = require('../../entrance-test/test36plus');
 
 const DEFAULT_TEST_TYPE = TEST_VERSION;
+const HF_TOKEN = process.env.HUGGINGFACE_API_KEY;
+const ASR_MODEL = process.env.ENTRANCE_TEST_ASR_MODEL || 'openai/whisper-large-v3';
 
 function cleanOptionalString(value) {
     const normalized = String(value || '').trim();
     return normalized || null;
+}
+
+function getSpeakingQuestionExpectedText(questionId) {
+    const speaking = TEST_36PLUS.sections.find((s) => s.id === 'speaking');
+    const q = speaking?.questions?.find((x) => x.id === questionId) || null;
+    const expected = q?.expectedText ? String(q.expectedText) : '';
+    return expected.trim() || null;
 }
 
 function resolveStorageBucket(preferredBucketName) {
@@ -32,6 +45,35 @@ function resolveStorageBucket(preferredBucketName) {
         console.warn('[CRM EntranceTests] Storage init failed:', error?.message || error);
         return null;
     }
+}
+
+async function transcribeAudio(buffer, contentType) {
+    if (!HF_TOKEN) {
+        throw new Error('HUGGINGFACE_API_KEY is not configured on the server.');
+    }
+    const asrContentType = normalizeAsrContentType(contentType) || 'application/octet-stream';
+    const url = `https://router.huggingface.co/hf-inference/models/${ASR_MODEL}`;
+    const res = await axios({
+        method: 'POST',
+        url,
+        headers: {
+            Authorization: `Bearer ${HF_TOKEN}`,
+            Accept: 'application/json',
+            'Content-Type': asrContentType,
+            'User-Agent': 'Mozilla/5.0'
+        },
+        httpsAgent: new https.Agent({ family: 4 }),
+        data: buffer,
+        timeout: 120000,
+        validateStatus: () => true
+    });
+
+    if (res.status !== 200 || !res.data || typeof res.data.text !== 'string') {
+        const errMsg = res.data?.error || `ASR failed with status ${res.status}`;
+        throw new Error(String(errMsg));
+    }
+
+    return res.data.text;
 }
 
 async function generateUniqueTestIdentity(db) {
@@ -358,6 +400,81 @@ module.exports = function registerEntranceTestRoutes(router, deps) {
             return sendSuccess(res, { url });
         } catch (error) {
             return sendError(res, 500, 'AUDIO_URL_ERROR', 'Failed to generate audio URL.', error?.message || error);
+        }
+    });
+
+    router.post('/entrance-tests/:testId/speaking/retry-asr', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const bucket = resolveStorageBucket();
+            if (!bucket) {
+                return sendError(res, 500, 'SERVER_CONFIG_ERROR', 'Firebase Storage not initialized.');
+            }
+
+            const testId = cleanOptionalString(req.params.testId);
+            if (!testId || testId.length < 20) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'Invalid testId.');
+            }
+
+            const testRef = db.collection(ENTRANCE_TESTS).doc(testId);
+            const testSnap = await testRef.get();
+            if (!testSnap.exists) {
+                return sendError(res, 404, 'TEST_NOT_FOUND', 'Entrance test not found.');
+            }
+
+            const test = testSnap.data() || {};
+            const speaking = test.speaking && typeof test.speaking === 'object' ? test.speaking : {};
+            const questionIds = Object.keys(speaking);
+            if (questionIds.length === 0) {
+                return sendSuccess(res, { testId, retried: [] }, 'No speaking answers to retry.');
+            }
+
+            const retried = [];
+            for (const questionId of questionIds) {
+                const entry = speaking[questionId] || null;
+                const storagePath = entry?.audio?.storagePath || null;
+                if (!storagePath) continue;
+
+                const bucketName = cleanOptionalString(entry?.audio?.bucketName);
+                const targetBucket = resolveStorageBucket(bucketName) || bucket;
+                const contentType = cleanOptionalString(entry?.audio?.contentType) || 'application/octet-stream';
+                const expectedText = getSpeakingQuestionExpectedText(questionId);
+
+                let transcript = null;
+                let accuracy = null;
+                let asrError = null;
+
+                try {
+                    const [audioBuffer] = await targetBucket.file(storagePath).download();
+                    transcript = await transcribeAudio(audioBuffer, contentType);
+                    if (expectedText) {
+                        accuracy = computeWordAccuracyPercent(expectedText, transcript);
+                    }
+                } catch (error) {
+                    asrError = error?.message || String(error);
+                }
+
+                await testRef.update({
+                    [`speaking.${questionId}.transcript`]: transcript,
+                    [`speaking.${questionId}.accuracyPercent`]: accuracy?.percent ?? null,
+                    [`speaking.${questionId}.expectedCount`]: accuracy?.expectedCount ?? null,
+                    [`speaking.${questionId}.transcriptCount`]: accuracy?.transcriptCount ?? null,
+                    [`speaking.${questionId}.distance`]: accuracy?.distance ?? null,
+                    [`speaking.${questionId}.asrError`]: asrError,
+                    [`speaking.${questionId}.asrRetriedAt`]: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                });
+
+                retried.push({
+                    questionId,
+                    ok: !!transcript && !asrError,
+                    accuracyPercent: accuracy?.percent ?? null,
+                    asrError: asrError || null
+                });
+            }
+
+            return sendSuccess(res, { testId, retried }, 'Speaking ASR retried.');
+        } catch (error) {
+            return sendError(res, 500, 'RETRY_ASR_ERROR', 'Failed to retry speaking ASR.', error?.message || error);
         }
     });
 };

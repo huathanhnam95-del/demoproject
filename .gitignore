@@ -138,3 +138,15 @@ ffmpeg.zip
 
 # Speak audio xlsxs (duplicates)
 public/database/speak/audio/*.xlsx
+
+# Playwright browser cache
+.playwright-mcp/
+
+# Test screenshots
+tests/screenshots/
+
+# Debug scripts
+visio_debug_trace.ps1
+
+# Query scratch files
+query/

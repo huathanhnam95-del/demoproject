@@ -219,4 +219,6 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 228,2026-04-21,Wire SGD audio folder to questions,Done,2026-04-21
 229,2026-04-21,Review and debug auto accept script,Done,2026-04-21
 230,2026-04-22,Fix production CRM console errors (PATCH crmId + 404 schedule),Done,2026-04-22
-231,2026-04-22,Summarize and commit changes for V1.6.6 (no push),In Progress,
+231,2026-04-22,Summarize and commit changes for V1.6.6 (no push),Done,2026-05-04
+232,2026-05-04,Fix formatDateTime ReferenceError in lead-workspace.js bulk archive,Done,2026-05-04
+233,2026-05-04,Review debug and refactor all merge changes (PTE Practice integration audit),Done,2026-05-04

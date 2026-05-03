@@ -1,6 +1,12 @@
 const {
     CRM_STUDENTS
 } = require('../../crm/collections');
+const { getAuth } = require('../../utils/firebase_admin_init');
+
+function cleanOptionalString(value) {
+    const normalized = String(value || '').trim();
+    return normalized || null;
+}
 
 module.exports = function registerIdentityRoutes(router, deps) {
     const { db, sendSuccess, sendError, requireAdminHandlers, identity, writeAuditLog } = deps;
@@ -68,4 +74,52 @@ module.exports = function registerIdentityRoutes(router, deps) {
             return sendError(res, 500, 'LINK_FAILED', 'Failed to link user.', error?.message || error);
         }
     });
+
+    async function handleSetUserRole(req, res) {
+        try {
+            const targetUid = cleanOptionalString(req.params?.uid);
+            const role = cleanOptionalString(req.body?.role);
+            if (!targetUid) return sendError(res, 400, 'VALIDATION_ERROR', 'Missing uid.');
+            if (!role || !['teacher', 'none'].includes(role)) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'role must be "teacher" or "none".');
+            }
+
+            const isTeacher = role === 'teacher';
+            const auth = getAuth();
+            const user = await auth.getUser(targetUid);
+            const existing = user.customClaims || {};
+            await auth.setCustomUserClaims(targetUid, { ...existing, isTeacher });
+
+            await db.collection('users').doc(targetUid).set({
+                crmRole: isTeacher ? 'teacher' : null,
+                isTeacher,
+                crmRoleUpdatedAt: new Date().toISOString(),
+                crmRoleUpdatedBy: req.user?.uid || null
+            }, { merge: true });
+
+            await writeAuditLog?.({
+                action: 'user.role.set',
+                entityType: 'user',
+                entityId: targetUid,
+                metadata: { role }
+            }, { user: req.user });
+
+            return sendSuccess(res, {
+                uid: targetUid,
+                role,
+                claims: { ...existing, isTeacher }
+            }, 'Role updated.');
+        } catch (error) {
+            const msg = String(error?.message || error);
+            if (msg.includes('There is no user record corresponding')) {
+                return sendError(res, 404, 'USER_NOT_FOUND', 'User not found.');
+            }
+            return sendError(res, 500, 'ROLE_UPDATE_FAILED', 'Failed to update role.', error?.message || error);
+        }
+    }
+
+    // Grant or revoke teacher role for a Firebase Auth user (admin only).
+    // Body: { role: 'teacher' | 'none' }
+    router.post('/identity/users/:uid/role', ...requireAdminHandlers, handleSetUserRole);
+    router.post('/users/:uid/role', ...requireAdminHandlers, handleSetUserRole);
 };

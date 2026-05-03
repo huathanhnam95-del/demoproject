@@ -51,6 +51,9 @@ assert.deepStrictEqual(
         scheduledEndAt: '2026-03-23T10:00:00',
         timezone: 'Asia/Bangkok',
         durationMinutes: 60,
+        status: 'scheduled',
+        sessionOutcome: 'none',
+        contractCountState: 'counts',
         scheduledStartAtUtc: '2026-03-23T02:00:00.000Z',
         scheduledEndAtUtc: '2026-03-23T03:00:00.000Z',
         scheduledLocalDate: '2026-03-23',
@@ -130,6 +133,27 @@ assert.deepStrictEqual(summary, {
     remainingToScheduleCount: 14,
     overflowCount: 1,
     nextScheduledAt: '2026-03-25T11:00:00.000Z'
+});
+
+const summaryWithNonCounting = buildScheduleSummary({
+    totalInstructionMinutes: 24 * 60,
+    sessionMinutes: 90,
+    sessions: [
+        { unitType: 'contracted', status: 'scheduled', contractCountState: 'counts', scheduledStartAt: '2026-03-25T11:00:00.000Z' },
+        { unitType: 'contracted', status: 'scheduled', sessionOutcome: 'absent_makeup', contractCountState: 'does_not_count', scheduledStartAt: '2026-03-20T11:00:00.000Z' },
+        { unitType: 'contracted', status: 'completed', sessionOutcome: 'completed', contractCountState: 'counts', scheduledStartAt: '2026-03-21T11:00:00.000Z' },
+        { unitType: 'contracted', status: 'scheduled', sessionOutcome: 'absent_counted', contractCountState: 'counts', scheduledStartAt: '2026-03-22T11:00:00.000Z' }
+    ],
+    nowIso: '2026-03-22T00:00:00.000Z'
+});
+
+assert.deepStrictEqual(summaryWithNonCounting, {
+    contractedTargetCount: 16,
+    contractedAssignedCount: 3,
+    contractedCompletedCount: 2,
+    remainingToScheduleCount: 13,
+    overflowCount: 0,
+    nextScheduledAt: '2026-03-22T11:00:00.000Z'
 });
 
 assert.deepStrictEqual(
@@ -213,6 +237,23 @@ const addPreview = buildAddSessionPreview({
             scheduledEndAtUtc: '2026-03-26T03:00:00.000Z',
             scheduledLocalDate: '2026-03-26',
             scheduledLocalTime: '09:00'
+        },
+        {
+            sessionId: 'session-3',
+            classId: 'class-1',
+            teacherUid: 'teacher-1',
+            timezone: 'Asia/Bangkok',
+            durationMinutes: 60,
+            unitType: 'contracted',
+            status: 'cancelled',
+            sessionOutcome: 'none',
+            contractCountState: 'does_not_count',
+            contractUnitIndex: 5,
+            attendanceState: 'none',
+            scheduledStartAtUtc: '2026-03-28T03:00:00.000Z',
+            scheduledEndAtUtc: '2026-03-28T04:00:00.000Z',
+            scheduledLocalDate: '2026-03-28',
+            scheduledLocalTime: '10:00'
         }
     ]
 });
@@ -225,12 +266,65 @@ assert.strictEqual(addPreview.wouldCreateContractedCount, 0);
 assert.strictEqual(addPreview.wouldCreateOverflowCount, 2);
 assert.strictEqual(addPreview.canCommit, true);
 
+const addPreviewWithGap = buildAddSessionPreview({
+    classId: 'class-1',
+    courseId: 'course-1',
+    teacherUid: 'teacher-1',
+    totalInstructionMinutes: 180,
+    targetSessionCount: 3,
+    sessionMinutes: 60,
+    timezone: 'Asia/Bangkok',
+    targetLocalDate: '2026-04-05',
+    targetLocalTime: '10:00',
+    durationMinutes: 60,
+    addMode: 'recurring',
+    recurringCount: 2,
+    existingSessions: [
+        {
+            sessionId: 'session-a',
+            classId: 'class-1',
+            teacherUid: 'teacher-1',
+            timezone: 'Asia/Bangkok',
+            durationMinutes: 60,
+            unitType: 'contracted',
+            contractUnitIndex: 1,
+            status: 'scheduled',
+            contractCountState: 'counts',
+            attendanceState: 'none',
+            scheduledStartAtUtc: '2026-03-28T03:00:00.000Z',
+            scheduledEndAtUtc: '2026-03-28T04:00:00.000Z',
+            scheduledLocalDate: '2026-03-28',
+            scheduledLocalTime: '10:00'
+        },
+        {
+            sessionId: 'session-b',
+            classId: 'class-1',
+            teacherUid: 'teacher-1',
+            timezone: 'Asia/Bangkok',
+            durationMinutes: 60,
+            unitType: 'contracted',
+            contractUnitIndex: 2,
+            status: 'cancelled',
+            sessionOutcome: 'none',
+            contractCountState: 'does_not_count',
+            attendanceState: 'none',
+            scheduledStartAtUtc: '2026-03-31T03:00:00.000Z',
+            scheduledEndAtUtc: '2026-03-31T04:00:00.000Z',
+            scheduledLocalDate: '2026-03-31',
+            scheduledLocalTime: '10:00'
+        }
+    ]
+});
+
+assert.strictEqual(addPreviewWithGap.validOccurrences[0].contractUnitIndex, 3);
+
 const replacePreview = buildReplaceSessionPreview({
     classId: 'class-1',
     targetLocalDate: '2026-03-27',
     targetLocalTime: '09:00',
     timezone: 'Asia/Bangkok',
     durationMinutes: 60,
+    nowIso: '2026-03-26T00:00:00.000Z',
     existingSessions: [
         {
             sessionId: 'same-slot',

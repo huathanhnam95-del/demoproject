@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { FieldValue } = require('firebase-admin/firestore');
-const { db, getAuth } = require('./utils/firebase_admin_init');
+const { db, getAuth, getStorageBucket } = require('./utils/firebase_admin_init');
 const {
     sendSuccess,
     sendError
@@ -12,6 +12,12 @@ const { buildEntranceTestAdminList } = require('./crm/entrance-test-link-recover
 const createCrmRouter = require('./routes/admin/create-crm-router');
 const createTeacherSchedulerRouter = require('./routes/teacher/scheduler');
 const entranceTestRoutes = require('./routes/entrance-tests');
+const createPracticeAttemptsRouter = require('./routes/practice-attempts');
+const createSharedPracticeAttemptsRouter = require('./routes/shared-practice-attempts');
+const {
+    practiceAttemptsLimiterByUid,
+    sharedPracticeAttemptsLimiter
+} = require('./middleware/practice-attempts-rate-limiter');
 const { TEST_VERSION } = require('./entrance-test/test36plus');
 const {
     generateClassCode,
@@ -282,10 +288,26 @@ const teacherSchedulerRouter = createTeacherSchedulerRouter({
     serverTimestamp: () => FieldValue.serverTimestamp()
 });
 
+const practiceAttemptsRouter = createPracticeAttemptsRouter({
+    db,
+    sendSuccess,
+    sendError,
+    getStorageBucket
+});
+
+const sharedPracticeAttemptsRouter = createSharedPracticeAttemptsRouter({
+    db,
+    sendSuccess,
+    sendError,
+    getStorageBucket
+});
+
 app.use('/admin', crmRouter);
 app.use('/api/admin', crmRouter);
 app.use('/api/teacher', teacherSchedulerRouter);
 app.use('/api/entrance-tests', entranceTestRoutes);
+app.use('/api/practice-attempts', authMiddleware, practiceAttemptsLimiterByUid, practiceAttemptsRouter);
+app.use('/api/shared/practice-attempts', sharedPracticeAttemptsLimiter, sharedPracticeAttemptsRouter);
 
 app.get(['/config', '/api/config'], (req, res) => {
     return res.json({

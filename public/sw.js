@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'bel-offline-v9';
+const CACHE_VERSION = 'bel-offline-v12';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -8,8 +8,8 @@ const SHELL_URLS = [
   '/landing/',
   '/landing/index.html',
   '/offline.html',
-  '/style.css?v=20260327_practice_reading_live',
-  '/script.js?v=20260327_practice_reading_live',
+  '/style.css?v=20260410_watermarks',
+  '/script.js?v=20260410_watermarks',
   '/landing/landing.css',
   '/dictionary-service.js',
   '/collocations.json',
@@ -60,7 +60,7 @@ self.addEventListener('fetch', (event) => {
         .then((response) => {
           if (response && response.ok) {
             const copy = response.clone();
-            caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
+            caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy)).catch(() => { });
           }
           return response;
         })
@@ -88,9 +88,9 @@ self.addEventListener('fetch', (event) => {
         fetch(request)
           .then((response) => {
             if (!response || !response.ok) return;
-            caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, response.clone())).catch(() => {});
+            caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, response.clone())).catch(() => { });
           })
-          .catch(() => {});
+          .catch(() => { });
         return cached;
       }
 
@@ -98,7 +98,7 @@ self.addEventListener('fetch', (event) => {
         .then((response) => {
           if (response && response.ok) {
             const copy = response.clone();
-            caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
+            caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy)).catch(() => { });
           }
           return response;
         })

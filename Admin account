@@ -1,5 +1,6 @@
-Site to test on browser (development): localhost:8443. Always use this site to test codes and functions, unless stated otherwise.
-Site to test on browser (production): https://huathanhnam95-del.github.io/demoproject/
-Log in with Email: huathanhnam95@gmail.com
-Password: Alphaein@1new
-Make sure to check if the password is auto-filled or not. Log in without typing the password if auto-filled.
+This tracked note no longer stores local browser-test credentials.
+
+- Development browser target: `https://localhost:8443`
+- Production browser target: `https://huathanhnam95-del.github.io/demoproject/`
+- Local-only credential source: `C:\Cursor AI\.local\browser-test-credentials.md`
+- Reminder: do not copy the admin email, password, uid, or emulator `localId` into tracked files, reports, or screenshots.

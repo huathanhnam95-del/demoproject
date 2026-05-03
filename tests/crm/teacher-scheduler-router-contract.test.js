@@ -48,6 +48,7 @@ expectRoute(routes, 'POST /classrooms/:classId/sessions/add');
 expectRoute(routes, 'POST /classrooms/:classId/sessions/add-multi');
 expectRoute(routes, 'PATCH /sessions/:sessionId/reschedule');
 expectRoute(routes, 'POST /sessions/:sessionId/cancel');
+expectRoute(routes, 'POST /sessions/:sessionId/outcome');
 expectRoute(routes, 'POST /scheduler/activate-recurrences');
 
 console.log('teacher scheduler router contract passed');

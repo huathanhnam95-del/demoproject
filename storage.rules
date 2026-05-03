@@ -1,13 +1,86 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return request.auth != null && request.auth.token.isAdmin == true;
+    }
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    function isReasonableAudioUpload(maxBytes) {
+      return request.resource != null
+        && request.resource.size > 0
+        && request.resource.size <= maxBytes
+        && request.resource.contentType != null
+        && (
+          request.resource.contentType == 'audio/wav'
+          || request.resource.contentType == 'audio/x-wav'
+          || request.resource.contentType.matches('audio/.*wav.*')
+        );
+    }
+
+    function speakingAttemptDocPath(attemptId) {
+      return /databases/(default)/documents/speakingAttempts/$(attemptId);
+    }
+
+    function speakingAttemptExists(attemptId) {
+      return firestore.exists(speakingAttemptDocPath(attemptId));
+    }
+
+    function speakingAttemptData(attemptId) {
+      return firestore.get(speakingAttemptDocPath(attemptId)).data;
+    }
+
+    function feedbackDocPath(attemptId, feedbackId) {
+      return /databases/(default)/documents/speakingAttempts/$(attemptId)/feedback/$(feedbackId);
+    }
+
+    function feedbackExists(attemptId, feedbackId) {
+      return firestore.exists(feedbackDocPath(attemptId, feedbackId));
+    }
+
+    function feedbackData(attemptId, feedbackId) {
+      return firestore.get(feedbackDocPath(attemptId, feedbackId)).data;
+    }
+
     match /uploads/{classId}/{workId}/{uid}/{allPaths=**} {
       // Students can read/write their own submissions if they are verified students
       allow read, write: if request.auth != null 
                          && request.auth.uid == uid 
                          && request.auth.token.isStudent == true;
       // Admins can read everything
-      allow read: if request.auth != null && request.auth.token.isAdmin == true;
+      allow read: if isAdmin();
+    }
+
+    // Speaking attempt uploads (not gated by student status; retention is enforced server-side).
+    match /practice-attempts/{uid}/{attemptId}/student.wav {
+      // Strictly allow the expected filename; server signs reads via Admin SDK.
+      allow write: if isOwner(uid)
+        && isReasonableAudioUpload(30 * 1024 * 1024)
+        && speakingAttemptExists(attemptId)
+        && speakingAttemptData(attemptId).ownerUid == uid
+        && speakingAttemptData(attemptId).status == 'awaiting_upload'
+        && speakingAttemptData(attemptId).audio.studentPath == ('practice-attempts/' + uid + '/' + attemptId + '/student.wav');
+      allow read: if false;
+    }
+
+    // Teacher/admin feedback audio uploads.
+    match /practice-attempt-feedback/{attemptId}/{feedbackId}/{filename} {
+      // API writes feedback audio paths as: practice-attempt-feedback/{attemptId}/{feedbackId}/{uid}.wav
+      allow write: if isSignedIn()
+        && filename == (request.auth.uid + '.wav')
+        && isReasonableAudioUpload(30 * 1024 * 1024)
+        && feedbackExists(attemptId, feedbackId)
+        && feedbackData(attemptId, feedbackId).authorUid == request.auth.uid
+        && feedbackData(attemptId, feedbackId).status == 'awaiting_upload'
+        && feedbackData(attemptId, feedbackId).audioPath == ('practice-attempt-feedback/' + attemptId + '/' + feedbackId + '/' + request.auth.uid + '.wav');
+      allow read: if false;
     }
   }
 }

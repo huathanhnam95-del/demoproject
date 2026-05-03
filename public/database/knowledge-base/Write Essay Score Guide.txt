@@ -1,0 +1,88 @@
+Content:
+6
+• The essay fully addresses the prompt in depth, demonstrating full command of the argument by reformulating the issue seamlessly in own words and expanding on important points with specificity.
+• The argument is supported convincingly with subsidiary points and relevant examples throughout the response.
+5
+• The essay adequately addresses the prompt, presenting a persuasive argument with relevant ideas.
+• Main points are highlighted, and relevant supporting detail is given to support the response effectively, with minor exceptions.
+4
+• The essay adequately addresses the main point of the prompt. The argument is generally convincing, though lacks depth or nuance.
+• Supporting detail is inconsistent throughout the response. It is present for some points but weaker or missing for others.
+3
+• The essay is relevant to the prompt but does not address the main points adequately.
+• Supporting detail is often missing or inappropriate.
+2
+• The essay attempts to address the prompt, but does so superficially, with little relevant information and largely generic statements or over reliance on repeating language from the prompt.
+• Few supporting details are included. Ideas that are present lack relevance, with only tangential links to the topic.
+1
+• The essay attempts to address the prompt, but demonstrates an incomplete understanding of the prompt with communication limited to generic or repetitive phrasing, or repeating language from the prompt.
+• Supporting details, if present, are used in a disjointed or haphazard manner, with no clear links to the topic.
+0 The essay does not properly deal with the prompt.
+Form:
+2 Length is between 200 and 300 words
+1 Length is between 120 and 199 or between 301 and 380 words
+0 Length is less than 120 or more than 380 words. Essay is written in capital letters, contains no punctuation or only consists of bullet points or very short sentences
+Development, Structure and Coherence:
+6
+• The essay has an effective logical structure, flows smoothly, and can be followed with ease.
+• An argument is clear and cohesive, developed systematically at length. A well-developed introduction and conclusion are present. Ideas are organised cohesively into paragraphs, and paragraphs are clear and logically sequenced.
+• The essay uses a variety of connective devices effectively and consistently to convey relationships between ideas.
+5
+• The essay has a conventional and appropriate structure that follows logically, if not always smoothly.
+• An argument is clear, with some points developed at length. Introduction, conclusion and logical paragraphs are present.
+• The essay uses connective devices to link utterances into clear, coherent discourse, though there may be some gaps or abrupt transitions between one idea to the next.
+4
+• Conventional structure is mostly present, but some elements may be missing,requiring some effort to follow.
+• An argument is present but lacks development of some elements or may be difficult to follow. Simple paragraph breaks are present, but they are not always effective, and some elements or paragraphs are poorly linked.
+• The ideas in the response are not well connected. The lack of connection might come from an ordering of the ideas which is difficult to grasp, or a lack of language establishing coherence among ideas.
+3
+• Traces of the conventional structure are present, but the essay is composed of simple points or disconnected ideas.
+• A position/opinion is present, although it is not sufficiently developed into a logical argument and often lacks clarity. Essay does not make effective use of paragraphs or lacks paragraphs but presents ideas with some coherence and logical sequencing.
+• The response consists mainly of unconnected ideas, with little organizational structure evident, and requires significant effort to follow. The most frequently occurring connective devices link simple sentences and larger elements linearly, but more complex relationships are not expressed clearly or appropriately.
+Development, Structure and Coherence:
+2
+• There is little recognisable structure. Ideas are presented in a disorganised manner and are difficult to follow.
+• A position/opinion may be present but lacks development or clarity. The essay lacks coherence, and mainly consists of disconnected elements.
+• Can link groups of words with simple connective devices (e.g., “and”, “but” and “because”).
+1
+• Response consists of disconnected ideas. There is no hierarchy of ideas or coherence among points.
+• No clear position/opinion can be identified.
+• Words and short statements are linked with very basic linear connective devices (e.g., “and” or “then”).
+0 There is no recognisable structure. Grammar:
+2 Shows consistent grammatical control of complex language. Errors are rare and difficult to spot.
+1 Shows a relatively high degree of grammatical control. No mistakes which would lead to misunderstandings
+0 Contains mainly simple structures and/or several basic mistakes
+General Linguistic Range:
+6
+• A variety of expressions and vocabulary are used appropriately to formulate ideas with ease and precision throughout the response.
+• No signs of limitations restricting what can be communicated.
+• Errors in language use, if present, are rare and minor, and meaning is completely clear.
+5
+• A variety of expressions and vocabulary are used appropriately throughout the response.
+• Ideas are expressed clearly without much sign of restriction.
+• Occasional errors in language use are present, but the meaning is clear.
+4
+• The range of expression and vocabulary is sufficient to articulate basic ideas.
+• Most ideas are clear, but limitations are evident when conveying complex/ abstract ideas, causing repetition, circumlocution, and difficulty with formulation at times.
+• Errors in language use cause occasional lapses in clarity, but the main idea can still be followed.
+3
+• The range of expression and vocabulary is narrow and simple expressions are used repeatedly.
+• Communication is restricted to simple ideas that can be articulated through basic language.
+• Errors in language use cause some disruptions for the reader.
+2
+• Limited vocabulary and simple expressions dominate the response.
+• Communication is compromised and some ideas are unclear.
+• Basic errors in language use are common, causing frequent breakdowns and misunderstanding.
+1
+• Vocabulary and linguistic expression are highly restricted.
+• There are significant limitations in communication and ideas are generally unclear.
+• Errors in language use are pervasive and impede meaning.
+0 Meaning is not accessible.
+Vocabulary Range:
+2 Good command of a broad lexical repertoire, idiomatic expressions and colloquialisms
+1 Shows a good range of vocabulary for matters connected to general academic topics. Lexical shortcomings lead to circumlocution or some imprecision
+0 Contains mainly basic vocabulary insufficient to deal with the topic at the required level
+Spelling:
+2 Correct spelling
+1 One spelling error
+0 More than one spelling error

@@ -172,8 +172,11 @@ window.CrmStudentWorkspace = (function () {
                 elements.btnAddEntranceTest.textContent = 'Creating...';
             }
             try {
+                const testType = String(elements.entranceTestType?.value || 'entrance_test_36plus_v1').trim();
                 const json = await apiFetchJson(`/api/admin/students/${encodeURIComponent(modalState.studentId)}/entrance-tests`, {
-                    method: 'POST'
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ testType })
                 });
 
                 const testLink = entranceTestUi && typeof entranceTestUi.normalizeLearnerLink === 'function'

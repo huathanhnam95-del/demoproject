@@ -35,7 +35,7 @@
       }
 
       let settled = false;
-      let unsubscribe = function noop() {};
+      let unsubscribe = function noop() { };
       let nullTimer = null;
       let timeoutTimer = null;
 
@@ -151,6 +151,26 @@
 
     if (!Array.isArray(firebaseRef.apps) || firebaseRef.apps.length === 0) {
       firebaseRef.initializeApp(result.config);
+
+        // ── Compat Emulator Redirect ──
+        // Match the same "local dev" hostname logic we use on the server side:
+        // localhost, loopback, *.local, and RFC1918 IP ranges.
+        var h = String(window.location.hostname || '').trim().toLowerCase();
+        if (h.startsWith('[') && h.endsWith(']')) h = h.slice(1, -1); // IPv6 literal
+        var isLocal = h === 'localhost'
+          || h === '127.0.0.1'
+          || h === '::1'
+          || h.endsWith('.local')
+          || /^192\.168\.\d{1,3}\.\d{1,3}$/.test(h)
+          || /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h)
+          || /^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(h);
+        if (isLocal) {
+          try { firebaseRef.firestore().useEmulator('localhost', 8080); } catch (e) { /* already connected */ }
+          try { firebaseRef.auth().useEmulator('http://localhost:9099', { disableWarnings: true }); } catch (e) { /* */ }
+          try { if (firebaseRef.storage) firebaseRef.storage().useEmulator('localhost', 9199); } catch (e) { /* */ }
+          try { if (firebaseRef.functions) firebaseRef.functions().useEmulator('localhost', 5001); } catch (e) { /* */ }
+          console.warn('🔧 [AuthGuard] Compat emulators connected.');
+        }
     }
 
     await ensureCompatLocalPersistence(firebaseRef);

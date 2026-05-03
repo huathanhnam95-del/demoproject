@@ -19,7 +19,11 @@ const {
     scoreSubmission
 } = require('../../entrance-test/test36plus');
 
-const DEFAULT_TEST_TYPE = TEST_VERSION;
+const VALID_TEST_TYPES = new Set([
+    'entrance_test_36plus_v1',
+    'segmental_screening_v1'
+]);
+const DEFAULT_TEST_TYPE = 'entrance_test_36plus_v1';
 const HF_TOKEN = process.env.HUGGINGFACE_API_KEY;
 const ASR_MODEL = process.env.ENTRANCE_TEST_ASR_MODEL || 'openai/whisper-large-v3';
 
@@ -160,6 +164,11 @@ module.exports = function registerEntranceTestRoutes(router, deps) {
                 serverTimestamp
             });
             const lead = { ...(leadSnap.data() || {}), crmId: leadEnsure.crmId };
+            const testType = cleanOptionalString(req.body?.testType) || DEFAULT_TEST_TYPE;
+            if (!VALID_TEST_TYPES.has(testType)) {
+                return sendError(res, 400, 'INVALID_TEST_TYPE', `Invalid test type: ${testType}`);
+            }
+
             const { token, testId } = await generateUniqueTestIdentity(db);
             const testRef = db.collection(ENTRANCE_TESTS).doc(testId);
 
@@ -173,7 +182,8 @@ module.exports = function registerEntranceTestRoutes(router, deps) {
                     leadId,
                     studentId: cleanOptionalString(lead.studentId),
                     crmId: cleanOptionalString(lead.crmId),
-                    version: TEST_VERSION,
+                    testType,
+                    version: testType === 'segmental_screening_v1' ? 'segmental_screening_v1' : TEST_VERSION,
                     status: 'created',
                     deliveryToken: token,
                     createdAt: serverTimestamp(),
@@ -240,6 +250,11 @@ module.exports = function registerEntranceTestRoutes(router, deps) {
                 lead.crmId = leadEnsure.crmId;
             }
 
+            const testType = cleanOptionalString(req.body?.testType) || DEFAULT_TEST_TYPE;
+            if (!VALID_TEST_TYPES.has(testType)) {
+                return sendError(res, 400, 'INVALID_TEST_TYPE', `Invalid test type: ${testType}`);
+            }
+
             const { token, testId } = await generateUniqueTestIdentity(db);
             const testRef = db.collection(ENTRANCE_TESTS).doc(testId);
 
@@ -253,7 +268,8 @@ module.exports = function registerEntranceTestRoutes(router, deps) {
                     leadId,
                     studentId,
                     crmId: cleanOptionalString(student.crmId || lead?.crmId),
-                    version: TEST_VERSION,
+                    testType,
+                    version: testType === 'segmental_screening_v1' ? 'segmental_screening_v1' : TEST_VERSION,
                     status: 'created',
                     deliveryToken: token,
                     createdAt: serverTimestamp(),

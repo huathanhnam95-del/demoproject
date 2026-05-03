@@ -24,7 +24,7 @@ const AdaptiveEngineUI = (() => {
         high: 5
     };
 
-    const MODE_TABS = ['type', 'speak', 'extended', 'notes', 'srs'];
+    const MODE_TABS = ['type', 'speak', 'extended', 'notes', 'sgd', 'srs'];
 
     let currentMode = 'type';
     let modal = null;
@@ -44,8 +44,8 @@ const AdaptiveEngineUI = (() => {
             return;
         }
 
-        const viewProfileBtn = document.getElementById('panel-view-profile-btn');
-        if (viewProfileBtn) viewProfileBtn.addEventListener('click', openModal);
+        const adaptiveBtn = document.getElementById('profile-adaptive-settings-btn');
+        if (adaptiveBtn) adaptiveBtn.addEventListener('click', openModal);
 
         const closeBtn = document.getElementById('ae-close-btn');
         if (closeBtn) closeBtn.addEventListener('click', closeModal);

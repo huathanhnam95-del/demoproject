@@ -1,8 +1,0 @@
-2026-03-03T02:37:09.414Z [audit][iphone_se__fast] >> L1_landing_load
-2026-03-03T02:37:11.210Z [audit][iphone_se__fast] << L1_landing_load ok 1796ms
-2026-03-03T02:37:11.210Z [audit][iphone_se__fast] >> L2_landing_sections
-2026-03-03T02:37:12.861Z [audit][iphone_se__fast] << L2_landing_sections ok 1651ms
-2026-03-03T02:37:12.861Z [audit][iphone_se__fast] >> A1_click_demo_cta
-2026-03-03T02:37:26.125Z [audit][iphone_se__fast] << A1_click_demo_cta ok 13264ms
-2026-03-03T02:37:26.125Z [audit][iphone_se__fast] >> A2_open_app_direct
-2026-03-03T02:37:35.264Z [audit][iphone_se__fast] << A2_open_app_direct ok 9139ms

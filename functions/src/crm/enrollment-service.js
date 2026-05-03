@@ -8,6 +8,15 @@ function cleanOptionalString(value) {
     return normalized || null;
 }
 
+function cleanOptionalDate(value) {
+    if (value === null || value === undefined || value === '') return null;
+    if (value instanceof Date) return value;
+    if (typeof value?.toDate === 'function') return value.toDate();
+    if (typeof value === 'number' && Number.isFinite(value)) return new Date(value);
+    const parsed = Date.parse(String(value));
+    return Number.isFinite(parsed) ? new Date(parsed) : null;
+}
+
 function normalizeEnrollmentStatus(value, fallback = 'active') {
     const normalized = cleanOptionalString(value) || fallback;
     if (!ENROLLMENT_STATUSES.includes(normalized)) {
@@ -46,6 +55,8 @@ function buildEnrollmentCreateData(input, context = {}) {
         studentEmail: cleanOptionalString(payload.studentEmail),
         status: normalizeEnrollmentStatus(payload.status),
         notes: cleanOptionalString(payload.notes),
+        practiceAccessStartAt: cleanOptionalDate(payload.practiceAccessStartAt),
+        practiceAccessEndAt: cleanOptionalDate(payload.practiceAccessEndAt),
         createdAt: context.serverTimestamp ? context.serverTimestamp() : new Date(),
         createdBy: context.user?.uid || null,
         createdByEmail: context.user?.email || null
@@ -54,7 +65,16 @@ function buildEnrollmentCreateData(input, context = {}) {
 
 function buildEnrollmentPatchData(existing, input, context = {}) {
     const payload = input && typeof input === 'object' ? input : {};
-    const recognizedKeys = ['courseId', 'studentUid', 'studentName', 'studentEmail', 'status', 'notes'];
+    const recognizedKeys = [
+        'courseId',
+        'studentUid',
+        'studentName',
+        'studentEmail',
+        'status',
+        'notes',
+        'practiceAccessStartAt',
+        'practiceAccessEndAt'
+    ];
     const hasRecognizedPatch = recognizedKeys.some((key) => Object.prototype.hasOwnProperty.call(payload, key));
     if (!hasRecognizedPatch) {
         throw new Error('No enrollment fields provided for update.');
@@ -70,6 +90,12 @@ function buildEnrollmentPatchData(existing, input, context = {}) {
             ? normalizeEnrollmentStatus(payload.status, existing?.status || 'active')
             : (existing?.status || 'active'),
         notes: Object.prototype.hasOwnProperty.call(payload, 'notes') ? cleanOptionalString(payload.notes) : (existing?.notes ?? null),
+        practiceAccessStartAt: Object.prototype.hasOwnProperty.call(payload, 'practiceAccessStartAt')
+            ? cleanOptionalDate(payload.practiceAccessStartAt)
+            : (existing?.practiceAccessStartAt ?? null),
+        practiceAccessEndAt: Object.prototype.hasOwnProperty.call(payload, 'practiceAccessEndAt')
+            ? cleanOptionalDate(payload.practiceAccessEndAt)
+            : (existing?.practiceAccessEndAt ?? null),
         updatedAt: context.serverTimestamp ? context.serverTimestamp() : new Date(),
         updatedBy: context.user?.uid || null
     };
@@ -163,6 +189,8 @@ function mapEnrollmentRecord(doc, enrollmentId) {
         studentEmail: data.studentEmail || null,
         status: data.status || 'active',
         notes: data.notes || null,
+        practiceAccessStartAt: data.practiceAccessStartAt || null,
+        practiceAccessEndAt: data.practiceAccessEndAt || null,
         createdAt: data.createdAt || null,
         createdBy: data.createdBy || null,
         createdByEmail: data.createdByEmail || null,

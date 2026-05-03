@@ -32,17 +32,20 @@
      */
     async function init() {
         try {
-            // 1. Fetch Config from server
-            const configResponse = await fetch('/api/config');
-            const configResult = await configResponse.json();
-            if (!configResult.success) {
-                throw new Error('Failed to fetch server configuration');
-            }
-            firebaseConfig = configResult.config;
-
-            // 2. Initialize Firebase
-            if (!firebase.apps.length) {
-                firebase.initializeApp(firebaseConfig);
+            // 1. Initialize Firebase (via AuthSessionGuard so localhost routes to emulators)
+            if (window.AuthSessionGuard && typeof window.AuthSessionGuard.ensureCompatFirebaseFromConfig === 'function') {
+                firebaseConfig = await window.AuthSessionGuard.ensureCompatFirebaseFromConfig(firebase);
+            } else {
+                // Fallback for older shells that don't include auth-session-guard.js yet.
+                const configResponse = await fetch('/api/config', { cache: 'no-store' });
+                const configResult = await configResponse.json().catch(() => null);
+                if (!configResponse.ok || !configResult?.success || !configResult?.config?.apiKey) {
+                    throw new Error(configResult?.message || 'Failed to fetch server configuration');
+                }
+                firebaseConfig = configResult.config;
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
             }
 
             // Cache DOM elements

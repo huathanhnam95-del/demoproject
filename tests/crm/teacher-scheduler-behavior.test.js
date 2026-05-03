@@ -240,6 +240,140 @@ async function testAddMultiPersistsPattern() {
     assert.strictEqual(createdSessionDocs.length, 1);
 }
 
+async function testTeacherOutcomeUpdatesContractCounting() {
+    const db = createFakeDb({
+        [`${CRM_CLASSROOMS}/class-1`]: {
+            name: 'Class One',
+            primaryTeacherUid: 'teacher-1',
+            courseId: 'course-1',
+            createdAt: '2026-04-01T00:00:00.000Z',
+            scheduleConfig: {
+                totalInstructionMinutes: 60,
+                sessionMinutes: 60,
+                targetSessionCount: 1,
+                timezone: 'Asia/Bangkok',
+                durationStepMinutes: 30,
+                seedWeekdays: [],
+                seedStartTime: null,
+                scheduleVersion: 1
+            },
+            scheduleSummary: {
+                contractedTargetCount: 1,
+                contractedAssignedCount: 1,
+                contractedCompletedCount: 0,
+                remainingToScheduleCount: 0,
+                overflowCount: 0,
+                nextScheduledAt: '2026-04-06T03:00:00.000Z'
+            }
+        },
+        [`${CRM_SCHEDULED_SESSIONS}/session-1`]: {
+            sessionId: 'session-1',
+            classId: 'class-1',
+            teacherUid: 'teacher-1',
+            unitType: 'contracted',
+            contractUnitIndex: 1,
+            status: 'scheduled',
+            sessionOutcome: 'none',
+            contractCountState: 'counts',
+            attendanceState: 'none',
+            lockState: 'unlocked',
+            timezone: 'Asia/Bangkok',
+            durationMinutes: 60,
+            scheduledStartAtUtc: '2026-04-06T03:00:00.000Z',
+            scheduledEndAtUtc: '2026-04-06T04:00:00.000Z',
+            scheduledLocalDate: '2026-04-06',
+            scheduledLocalTime: '10:00'
+        }
+    });
+
+    const router = createTeacherSchedulerRouter({
+        db,
+        authMiddleware: (req, _res, next) => {
+            req.user = { uid: 'teacher-1', email: 'teacher@example.com' };
+            next();
+        },
+        sendSuccess: (res, data, message) => res.status(200).json({ success: true, ...(message ? { message } : {}), ...data }),
+        sendError: (res, status, error, message, details) => res.status(status).json({ success: false, error, message, ...(details ? { details } : {}) }),
+        serverTimestamp: () => 'SERVER_TS'
+    });
+
+    const handlers = getRouteHandlers(router, '/sessions/:sessionId/outcome', 'post');
+    const res = buildRes();
+    await invokeHandlers(handlers, {
+        params: { sessionId: 'session-1' },
+        body: { outcome: 'absent_makeup' }
+    }, res);
+
+    assert.strictEqual(res._status, 200);
+    assert.strictEqual(res._json.success, true);
+    assert.strictEqual(res._json.sessionId, 'session-1');
+
+    const session = db.docs.get(`${CRM_SCHEDULED_SESSIONS}/session-1`);
+    assert.strictEqual(session.sessionOutcome, 'absent_makeup');
+    assert.strictEqual(session.contractCountState, 'does_not_count');
+
+    const classroom = db.docs.get(`${CRM_CLASSROOMS}/class-1`);
+    assert.strictEqual(classroom.scheduleSummary.contractedAssignedCount, 0);
+    assert.strictEqual(classroom.scheduleSummary.remainingToScheduleCount, 1);
+
+    const cancelledDb = createFakeDb({
+        [`${CRM_CLASSROOMS}/class-2`]: {
+            name: 'Class Two',
+            primaryTeacherUid: 'teacher-1',
+            courseId: 'course-1',
+            scheduleConfig: {
+                totalInstructionMinutes: 60,
+                sessionMinutes: 60,
+                targetSessionCount: 1,
+                timezone: 'Asia/Bangkok',
+                durationStepMinutes: 30,
+                seedWeekdays: [],
+                seedStartTime: null,
+                scheduleVersion: 1
+            }
+        },
+        [`${CRM_SCHEDULED_SESSIONS}/session-2`]: {
+            sessionId: 'session-2',
+            classId: 'class-2',
+            teacherUid: 'teacher-1',
+            unitType: 'contracted',
+            contractUnitIndex: 1,
+            status: 'cancelled',
+            sessionOutcome: 'none',
+            contractCountState: 'does_not_count',
+            attendanceState: 'none',
+            lockState: 'unlocked',
+            timezone: 'Asia/Bangkok',
+            durationMinutes: 60,
+            scheduledStartAtUtc: '2026-04-06T03:00:00.000Z',
+            scheduledEndAtUtc: '2026-04-06T04:00:00.000Z',
+            scheduledLocalDate: '2026-04-06',
+            scheduledLocalTime: '10:00'
+        }
+    });
+
+    const cancelledRouter = createTeacherSchedulerRouter({
+        db: cancelledDb,
+        authMiddleware: (req, _res, next) => {
+            req.user = { uid: 'teacher-1', email: 'teacher@example.com' };
+            next();
+        },
+        sendSuccess: (res, data, message) => res.status(200).json({ success: true, ...(message ? { message } : {}), ...data }),
+        sendError: (res, status, error, message, details) => res.status(status).json({ success: false, error, message, ...(details ? { details } : {}) }),
+        serverTimestamp: () => 'SERVER_TS'
+    });
+
+    const cancelledHandlers = getRouteHandlers(cancelledRouter, '/sessions/:sessionId/outcome', 'post');
+    const cancelledRes = buildRes();
+    await invokeHandlers(cancelledHandlers, {
+        params: { sessionId: 'session-2' },
+        body: { outcome: 'completed' }
+    }, cancelledRes);
+
+    assert.strictEqual(cancelledRes._status, 409);
+    assert.strictEqual(cancelledRes._json.error, 'SESSION_LOCKED');
+}
+
 async function testTeacherApiErrorMessages() {
     const scriptPath = path.resolve(__dirname, '../../public/js/classroom-api.js');
     const source = fs.readFileSync(scriptPath, 'utf8');
@@ -298,6 +432,7 @@ async function testTeacherApiErrorMessages() {
 
 (async () => {
     await testAddMultiPersistsPattern();
+    await testTeacherOutcomeUpdatesContractCounting();
     await testTeacherApiErrorMessages();
     process.stdout.write('teacher scheduler behavior passed\n');
 })().catch((error) => {

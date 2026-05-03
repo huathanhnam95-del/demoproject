@@ -11,9 +11,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
+  <!-- Addendum A.1: Restrictive CSP -->
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://*.firebaseapp.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' http://localhost:11434 https://localhost:8443 https://www.gstatic.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com wss://*.googleapis.com https://*.cloudfunctions.net https://*.firebaseapp.com; frame-src 'self' https://*.firebaseapp.com;">
+
   <!-- Reuse main app design tokens -->
-  <link rel="stylesheet" href="style.css?v=20260401-crm-admin-livefix" />
-  <link rel="stylesheet" href="crm-admin.css?v=20260401-crm-admin-livefix" />
+  <link rel="stylesheet" href="style.css?v=20260406-gemma4-ollama-fix" />
+  <link rel="stylesheet" href="crm-admin.css?v=20260406-gemma4-ollama-fix" />
 </head>
 
 <body>
@@ -58,12 +62,21 @@
                 disabled>Settings</button></li>
             <li><button class="crm-nav-item" data-main="chatbot" data-label="Chatbots" data-coming-soon="true"
                 disabled>Chatbots</button></li>
+            <li id="nav-devtools-container"
+              style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color);">
+              <button class="crm-nav-item" data-main="devtools" data-label="🔧 Dev Tools"
+                style="color: var(--accent-color);">🔧 Dev Tools</button>
+            </li>
           </ul>
         </nav>
       </div>
 
       <div class="crm-header-right">
         <div class="crm-header-actions">
+          <span id="ollama-status-badge" class="ollama-status-badge offline" title="Ollama model status">Ollama:
+            Checking…</span>
+          <button id="btn-ollama-refresh" class="crm-icon-btn" type="button" title="Refresh Ollama status"
+            style="padding:2px 6px;font-size:12px;">&#x21bb;</button>
           <button class="crm-icon-btn" title="Notifications">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
               <path
@@ -81,6 +94,86 @@
     <!-- Content -->
     <!-- Content -->
     <main class="crm-content" aria-live="polite">
+      <!-- Dev Tools (Local Only) -->
+      <section class="crm-panel" data-panel="devtools" style="display: none;">
+        <div class="crm-panel-header">
+          <div>
+            <h2>🔧 Developer Tools</h2>
+            <p>Local emulator utilities. These tools are never visible in production.</p>
+          </div>
+        </div>
+        <div class="crm-dashboard-layout" style="margin-top: 24px;">
+          <div class="crm-main-col">
+            <section class="crm-workspace-card">
+              <div class="crm-section-header">
+                <div>
+                  <h3>Production → Emulator Sync</h3>
+                  <p class="crm-muted">Copy documents from production into the local emulator. This does not modify
+                    production data.</p>
+                </div>
+              </div>
+              <div style="padding: 18px;">
+                <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+                  <button id="btn-sync-full" class="crm-btn crm-btn-primary">Sync All Data</button>
+                  <button id="btn-sync-selected" class="crm-btn crm-btn-secondary" disabled>Sync Selected</button>
+                </div>
+
+                <div style="margin-bottom: 24px; max-width: 400px;">
+                  <label for="sync-limit-input" style="display: block; font-weight: 500; margin-bottom: 8px;">Max Docs
+                    per Collection:</label>
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <input type="range" id="sync-limit-input" min="1" max="10000" step="1" value="500"
+                      style="flex: 1;" />
+                    <span id="sync-limit-label"
+                      style="font-family: monospace; font-size: 14px; width: 56px; text-align: right;">500</span>
+                  </div>
+                </div>
+
+                <div id="sync-collection-list" class="crm-stack-list" style="max-height: 400px; overflow-y: auto;">
+                  <div class="crm-muted" style="padding: 12px;">Loading collections...</div>
+                </div>
+
+                <div id="sync-progress-container" style="display: none; margin-top: 24px;">
+                  <h4 style="margin-bottom: 8px;">Sync Progress</h4>
+                  <div class="crm-progress-bar"
+                    style="height: 12px; background: var(--hover-color); border-radius: 6px; overflow: hidden; margin-bottom: 8px;">
+                    <div id="sync-progress-fill"
+                      style="height: 100%; width: 0%; background: var(--accent-color); transition: width 0.2s linear;">
+                    </div>
+                  </div>
+                  <div id="sync-progress-text" class="crm-muted" style="font-family: monospace; font-size: 13px;">
+                    Preparing...</div>
+                  <div id="sync-results"
+                    style="margin-top: 16px; font-family: monospace; font-size: 13px; max-height: 200px; overflow-y: auto; background: var(--hover-color); padding: 12px; border-radius: 4px; display: none;">
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+          <div class="crm-side-col">
+            <section class="crm-workspace-card">
+              <div class="crm-section-header">
+                <div>
+                  <h3>Emulator Status</h3>
+                </div>
+              </div>
+              <div style="padding: 16px;">
+                <p id="devtools-status-summary">Checking prod-to-local sync capability...</p>
+                <p id="devtools-status-detail" class="crm-muted" style="margin-top: 8px;">The local admin API must expose sync routes before these tools become available.</p>
+                <p id="devtools-last-job" class="crm-muted" style="margin-top: 12px;">No sync job has run in this session.</p>
+                <div style="margin-top: 16px;">
+                  <a id="devtools-emulator-link" href="http://localhost:4000/firestore" target="_blank" rel="noopener noreferrer"
+                    class="crm-btn crm-btn-secondary"
+                    style="display: inline-block; text-decoration: none; text-align: center; width: 100%;">
+                    Open Firebase Emulator UI ↗
+                  </a>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+
       <!-- Dashboard -->
       <section class="crm-panel" data-panel="dashboard">
         <div class="crm-panel-header">
@@ -295,8 +388,29 @@
             <div id="teacher-scheduler-class-list" class="scheduler-class-list">
               <div class="crm-muted">No classes loaded yet.</div>
             </div>
-            <div class="teacher-scheduler-pattern-card">
-              <h4>Set weekly pattern</h4>
+          </aside>
+          <section class="scheduler-center">
+            <div class="teacher-scheduler-step-banner">
+              <div>
+                <strong>Step 1:</strong> Place this week
+                <span class="teacher-scheduler-step-divider">→</span>
+                <strong>Step 2:</strong> Activate recurrences
+              </div>
+              <button id="btn-teacher-scheduler-activate-recurrences" class="crm-btn-secondary" type="button">Activate
+                recurrences</button>
+            </div>
+            <div class="scheduler-toolbar">
+              <div class="crm-form-group">
+                <label for="teacher-scheduler-from-date">From</label>
+                <input type="date" id="teacher-scheduler-from-date" class="crm-input">
+              </div>
+              <div class="crm-form-group">
+                <label for="teacher-scheduler-to-date">To</label>
+                <input type="date" id="teacher-scheduler-to-date" class="crm-input">
+              </div>
+            </div>
+            <details class="teacher-scheduler-pattern-card">
+              <summary><strong>Set weekly pattern</strong></summary>
               <div class="crm-form-group">
                 <label for="teacher-scheduler-pattern-class">Classroom</label>
                 <select id="teacher-scheduler-pattern-class" class="crm-input"></select>
@@ -310,36 +424,20 @@
                 <input id="teacher-scheduler-pattern-time" type="time" class="crm-input" value="18:00">
               </div>
               <div id="teacher-scheduler-pattern-summary" class="crm-muted"></div>
-              <button id="btn-teacher-scheduler-place-week" class="crm-btn-primary" type="button">Place this week</button>
-            </div>
-          </aside>
-          <section class="scheduler-center">
-            <div class="teacher-scheduler-step-banner">
-              <div>
-                <strong>Step 1:</strong> Place this week
-                <span class="teacher-scheduler-step-divider">→</span>
-                <strong>Step 2:</strong> Activate recurrences
-              </div>
-              <button id="btn-teacher-scheduler-activate-recurrences" class="crm-btn-secondary" type="button">Activate recurrences</button>
-            </div>
-            <div class="scheduler-toolbar">
-              <div class="crm-form-group">
-                <label for="teacher-scheduler-from-date">From</label>
-                <input type="date" id="teacher-scheduler-from-date" class="crm-input">
-              </div>
-              <div class="crm-form-group">
-                <label for="teacher-scheduler-to-date">To</label>
-                <input type="date" id="teacher-scheduler-to-date" class="crm-input">
-              </div>
-            </div>
-            <div id="teacher-scheduler-activation-summary" class="teacher-scheduler-activation-summary" style="display:none;"></div>
+              <button id="btn-teacher-scheduler-place-week" class="crm-btn-primary" type="button">Place this
+                week</button>
+            </details>
+            <div id="teacher-scheduler-activation-summary" class="teacher-scheduler-activation-summary"
+              style="display:none;"></div>
             <div id="teacher-scheduler-calendar" class="scheduler-calendar">
               <div class="crm-muted">Teacher scheduler calendar will appear here.</div>
             </div>
+
           </section>
         </div>
 
-        <div id="teacher-scheduler-quick-add" class="teacher-scheduler-popover" aria-hidden="true" style="display:none;">
+        <div id="teacher-scheduler-quick-add" class="teacher-scheduler-popover" aria-hidden="true"
+          style="display:none;">
           <div class="teacher-scheduler-popover-title">Quick add session</div>
           <div class="crm-form-group">
             <label for="teacher-scheduler-quick-class">Classroom</label>
@@ -367,14 +465,42 @@
           </div>
         </div>
 
-        <div id="teacher-scheduler-session-bubble" class="teacher-scheduler-popover teacher-scheduler-session-bubble" aria-hidden="true" style="display:none;">
+        <div id="teacher-scheduler-session-bubble" class="teacher-scheduler-popover teacher-scheduler-session-bubble"
+          aria-hidden="true" style="display:none;">
           <div class="teacher-scheduler-popover-title" id="teacher-scheduler-session-bubble-title">Session</div>
           <div class="teacher-scheduler-session-meta" id="teacher-scheduler-session-bubble-meta"></div>
           <div class="teacher-scheduler-session-lock" id="teacher-scheduler-session-bubble-lock"></div>
+          <div class="crm-form-group" style="margin-top:10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <label for="teacher-scheduler-session-note" style="margin-bottom: 0;">Class Note</label>
+              <button id="btn-teacher-scheduler-voice-note" class="crm-btn-secondary" type="button"
+                style="padding: 2px 8px; font-size: 12px; display: flex; align-items: center; gap: 4px;">
+                &#127897; Dictate &amp; Auto&#8209;Draft
+              </button>
+            </div>
+            <textarea id="teacher-scheduler-session-note" class="crm-input" rows="3"
+              placeholder="Speak or type class notes…"></textarea>
+            <small id="teacher-scheduler-voice-status" class="crm-muted" aria-live="polite"
+              style="display: none; margin-top: 4px;"></small>
+          </div>
+          <div class="crm-form-group" style="margin-top:10px;">
+            <label for="teacher-scheduler-session-outcome">Outcome</label>
+            <select id="teacher-scheduler-session-outcome" class="crm-input">
+              <option value="">No outcome</option>
+              <option value="completed">Completed</option>
+              <option value="absent_counted">Absent (counts)</option>
+              <option value="absent_makeup">Absent (make-up)</option>
+            </select>
+          </div>
           <div class="crm-inline-fields">
-            <button id="btn-teacher-scheduler-open-attendance" class="crm-btn-secondary" type="button">Open attendance</button>
+            <button id="btn-teacher-scheduler-save-outcome" class="crm-btn-primary" type="button">Save</button>
+            <button id="btn-teacher-scheduler-undo-ai" class="crm-btn-secondary" type="button"
+              style="display:none;padding:2px 8px;font-size:12px;">Undo AI</button>
+            <button id="btn-teacher-scheduler-open-attendance" class="crm-btn-secondary" type="button">Open
+              attendance</button>
             <button id="btn-teacher-scheduler-cancel-session" class="crm-btn-secondary" type="button">Cancel</button>
-            <button id="btn-teacher-scheduler-duplicate-session" class="crm-btn-primary" type="button">Duplicate</button>
+            <button id="btn-teacher-scheduler-duplicate-session" class="crm-btn-primary"
+              type="button">Duplicate</button>
             <button id="btn-teacher-scheduler-close-bubble" class="crm-btn-secondary" type="button">Close</button>
           </div>
         </div>
@@ -513,6 +639,39 @@
               <div class="crm-muted">Select a lead to view activity.</div>
             </div>
           </section>
+          <section class="crm-workspace-card">
+            <div class="crm-section-header">
+              <div>
+                <h3>Entrance Tests</h3>
+                <p class="crm-muted">Generate single-use learner links.</p>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <select id="lead-entrance-test-type" class="crm-input" style="min-width: 200px;">
+                <option value="entrance_test_36plus_v1">Entrance Test 36+</option>
+                <option value="segmental_screening_v1">Segmental Screening</option>
+              </select>
+              <button id="btn-add-lead-entrance-test" class="crm-btn-primary" type="button" disabled>Add new
+                test</button>
+            </div>
+
+            <div class="crm-entrance-test-link-row" style="margin-top: 10px;">
+              <input id="lead-entrance-test-link" class="crm-input" type="text" readonly
+                placeholder="Generated link will appear here">
+              <button id="btn-copy-lead-entrance-test-link" class="crm-btn-secondary" type="button"
+                disabled>Copy</button>
+              <button id="btn-open-lead-entrance-test-link" class="crm-btn-secondary" type="button"
+                disabled>Open</button>
+            </div>
+
+            <small id="lead-entrance-test-link-note" class="text-muted">Create a test to generate a single-use learner
+              link you can send.</small>
+
+            <div id="lead-entrance-tests-list" class="crm-entrance-tests-list">
+              <div class="crm-muted">No tests yet.</div>
+            </div>
+          </section>
         </div>
         <div class="crm-workspace-grid">
           <section class="crm-workspace-card">
@@ -614,6 +773,24 @@
         <div class="crm-modal-content">
           <!-- Info Section -->
           <div id="student-info" class="crm-tab-content active">
+            <div class="crm-form-group"
+              style="margin-bottom: 24px; padding: 12px; border-radius: 8px; border: 1px solid #e0e0e0; background: #fafafa;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <label style="margin-bottom: 0; display: flex; align-items: center; gap: 4px;"><span>✨</span> AI Profile
+                  Snapshot
+                  <span id="ai-summary-date"
+                    style="display:none;font-size:11px;color:#888;font-weight:400;margin-left:8px;"></span>
+                </label>
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <button id="btn-stop-ai-summary" class="crm-btn-secondary" type="button"
+                    style="display:none;padding:4px 12px;font-size:13px;background:#fecaca;color:#991b1b;">Stop</button>
+                  <button id="btn-generate-ai-summary" class="crm-btn-secondary" type="button"
+                    style="padding: 4px 12px; font-size: 13px;">Generate with Gemma 4</button>
+                </div>
+              </div>
+              <div id="student-ai-summary-box" style="font-size: 14px; color: #555; line-height: 1.5; margin-top: 8px;">
+                Click 'Generate' to create a summary, or save the profile to auto-generate.</div>
+            </div>
             <div class="crm-form-grid">
               <div class="crm-form-group">
                 <label for="student-name">Full Name</label>
@@ -804,7 +981,14 @@
                   <p class="crm-muted">Create a single-use test link for this student. After submission, results will
                     appear here.</p>
                 </div>
-                <button id="btn-add-entrance-test" class="crm-btn-primary" type="button" disabled>Add new test</button>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <select id="entrance-test-type" class="crm-input" style="min-width: 200px;">
+                    <option value="entrance_test_36plus_v1">Entrance Test 36+</option>
+                    <option value="segmental_screening_v1">Segmental Screening</option>
+                  </select>
+                  <button id="btn-add-entrance-test" class="crm-btn-primary" type="button" disabled>Add new
+                    test</button>
+                </div>
               </div>
 
               <div class="crm-entrance-test-link-row">
@@ -814,7 +998,8 @@
                 <button id="btn-open-entrance-test-link" class="crm-btn-secondary" type="button" disabled>Open</button>
               </div>
 
-              <small id="entrance-test-link-note" class="text-muted">Create a test to generate a single-use learner link
+              <small id="entrance-test-link-note" class="text-muted">Create a test to generate a single-use learner
+                link
                 you can send.</small>
 
               <div id="entrance-tests-list" class="crm-entrance-tests-list">
@@ -848,7 +1033,8 @@
                 <input type="text" id="student-preferred-learning-hours" class="crm-input" placeholder="18:00-20:00">
               </div>
             </div>
-            <div id="student-schedule-prompt" class="crm-muted" style="margin-bottom: 16px;">Add the student's preferred
+            <div id="student-schedule-prompt" class="crm-muted" style="margin-bottom: 16px;">Add the student's
+              preferred
               days and hours to improve classroom recommendations.</div>
             <div class="crm-form-group">
               <label for="student-score-history">Score History</label>
@@ -918,7 +1104,8 @@
                 <div class="crm-section-header">
                   <div>
                     <h3>Recommended Classroom</h3>
-                    <p class="crm-muted">Rank active classrooms and create the recommended enrollment after payment.</p>
+                    <p class="crm-muted">Rank active classrooms and create the recommended enrollment after payment.
+                    </p>
                   </div>
                 </div>
                 <div class="crm-form-group">
@@ -968,7 +1155,8 @@
                   </div>
                 </div>
                 <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
-                  <button id="btn-create-student-invoice" class="crm-btn-primary" type="button">Create Invoice</button>
+                  <button id="btn-create-student-invoice" class="crm-btn-primary" type="button">Create
+                    Invoice</button>
                 </div>
                 <div id="student-invoice-list" class="crm-stack-list">
                   <div class="crm-muted">No invoices yet.</div>
@@ -1148,7 +1336,8 @@
           <div id="course-management" class="crm-tab-content" style="display: none;">
             <h3>Teacher Management</h3>
             <p class="text-muted">
-              Attach teachers (existing users) to this course. This does not yet save to the database, but prepares the
+              Attach teachers (existing users) to this course. This does not yet save to the database, but prepares
+              the
               UI flow.
             </p>
 
@@ -1240,7 +1429,8 @@
                       <span style="font-size:1.2em;">💡</span>
                       <div>
                         <strong style="font-size:0.85rem;">Suggested defaults available</strong><br>
-                        <span class="crm-muted" style="font-size:0.8rem;">Timezone: Asia/Bangkok · Start: 18:00 · Days:
+                        <span class="crm-muted" style="font-size:0.8rem;">Timezone: Asia/Bangkok · Start: 18:00 ·
+                          Days:
                           Mon, Wed, Fri · Session: 120 min</span>
                       </div>
                     </div>
@@ -1314,7 +1504,8 @@
                     <div class="crm-section-header">
                       <div>
                         <h3>Regenerate Future Schedule</h3>
-                        <p class="crm-muted">Preview a future-only duration change before replacing unlocked contracted
+                        <p class="crm-muted">Preview a future-only duration change before replacing unlocked
+                          contracted
                           sessions.</p>
                       </div>
                     </div>
@@ -1345,7 +1536,8 @@
                         Regeneration</button>
                     </div>
                     <div id="classroom-regeneration-preview" class="classroom-regeneration-preview crm-muted">
-                      Preview regeneration to review preserved sessions, blocked reasons, and the next contracted target
+                      Preview regeneration to review preserved sessions, blocked reasons, and the next contracted
+                      target
                       count.
                     </div>
                   </div>
@@ -1493,7 +1685,8 @@
                   <button id="btn-save-attendance-records" class="crm-btn-primary" type="button">Save
                     Attendance</button>
                 </div>
-                <div id="attendance-live-session-note" class="crm-muted" style="margin-top: 12px;">Create a live session
+                <div id="attendance-live-session-note" class="crm-muted" style="margin-top: 12px;">Create a live
+                  session
                   before class starts.</div>
               </section>
             </div>
@@ -1754,7 +1947,8 @@
           <div class="crm-delete-confirm-row">
             <input id="bulk-delete-confirm-input" class="crm-input" type="text" autocomplete="off" spellcheck="false"
               placeholder="archive">
-            <button id="btn-confirm-bulk-delete-warning" class="crm-btn-primary" type="button" disabled>Move to Recycle
+            <button id="btn-confirm-bulk-delete-warning" class="crm-btn-primary" type="button" disabled>Move to
+              Recycle
               Bin</button>
           </div>
         </section>
@@ -1780,41 +1974,42 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
-  <script src="js/auth-session-guard.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/classroom-api.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/utils.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/state.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/dom.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/courses.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/students.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/student-360.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/classrooms.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/leads.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/activities.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/enrollments.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/attendance.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/finance-workflow.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/finance.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/communications.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/scheduler-workspace.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/teacher-scheduler-workspace.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/student-finance.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/live-delivery.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/classroom-modal.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/student-modal.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/course-modal.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/lead-workspace.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/classroom-workspace.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/task-activity-workspace.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/communications-workspace.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/dashboard-workspace.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/student-directory-workspace.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/activity-surfaces.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/dashboard.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/governance.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/index.js?v=20260401-crm-admin-livefix"></script>
-  <script src="js/crm/entrance-test-link-state.js?v=20260401-crm-admin-livefix"></script>
-  <script src="crm-admin.js?v=20260401-crm-admin-livefix"></script>
+  <script src="js/auth-session-guard.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/classroom-api.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/utils.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/state.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/dom.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/courses.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/students.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/student-360.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/classrooms.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/leads.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/activities.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/enrollments.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/attendance.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/finance-workflow.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/finance.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/communications.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/scheduler-workspace.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/teacher-scheduler-workspace.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/student-finance.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/live-delivery.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/classroom-modal.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/student-modal.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/course-modal.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/lead-workspace.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/classroom-workspace.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/task-activity-workspace.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/communications-workspace.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/dashboard-workspace.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/student-directory-workspace.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/activity-surfaces.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/dashboard.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/governance.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/index.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/entrance-test-link-state.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/devtools-access.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="crm-admin.js?v=20260406-gemma4-ollama-fix"></script>
 </body>
 
 </html>

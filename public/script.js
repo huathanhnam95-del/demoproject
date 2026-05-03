@@ -484,6 +484,10 @@
           }
         });
 
+        if (typeof updatePracticeScopeToggleUI === 'function') {
+          updatePracticeScopeToggleUI();
+        }
+
         if (typeof renderPracticeLauncher === 'function') {
           renderPracticeLauncher();
         }
@@ -517,7 +521,18 @@
     // Initialize mode panels visibility based on default active dashboard panel
     const activePanel = document.querySelector('.dashboard-panel.active');
     const modePanels = document.querySelectorAll('.mode-panel');
+    const practiceScopeFilter = document.getElementById('practice-scope-filter');
     const practiceSkillFilter = document.getElementById('practice-skill-filter');
+
+    if (practiceScopeFilter) {
+      practiceScopeFilter.querySelectorAll('.practice-scope-btn[data-practice-scope]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const scope = button.dataset.practiceScope;
+          if (scope) setPracticeScope(scope);
+        });
+      });
+      updatePracticeScopeToggleUI();
+    }
 
     if (practiceSkillFilter) {
       practiceSkillFilter.querySelectorAll('.practice-skill-btn').forEach((button) => {
@@ -549,8 +564,8 @@
       if (activePanel.id === 'panel-srs') {
         modePanels.forEach(p => p.style.display = 'none');
       } else {
-        // Initialize with Read Aloud mode by default if in Learning Center
-        window.switchToMode('read-aloud');
+        modePanels.forEach(p => p.style.display = 'none');
+        updateCurrentModeIndicator('');
       }
     }
 
@@ -580,6 +595,17 @@
       resetGoalModalState(); // Clean up for next open
     });
 
+    // Close modal on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('mode-helper-modal');
+        if (modal && modal.style.display !== 'none') {
+          modal.style.display = 'none';
+          resetGoalModalState();
+        }
+      }
+    });
+
     // Mode Helper Multiple Choice Flow
     document.getElementById('mode-helper-submit-btn')?.addEventListener('click', handleGoalSubmit);
     document.getElementById('mode-helper-back-btn')?.addEventListener('click', handleSuggestionsBack);
@@ -589,6 +615,12 @@
     document.querySelectorAll('#mode-helper-modal input[name="goal"]').forEach(checkbox => {
       checkbox.addEventListener('change', enforceMaxGoalSelection);
     });
+
+    if (activePanel && activePanel.id !== 'panel-srs' && !currentActiveMode) {
+      const preferred = PRACTICE_LAUNCHER.defaultMode || 'read-aloud';
+      const defaultMode = isModeVisibleInScope(preferred) ? preferred : (isModeVisibleInScope('read-aloud') ? 'read-aloud' : 'type');
+      window.switchToMode?.(defaultMode);
+    }
   });
 
   /**
@@ -676,7 +708,7 @@
   window.resetGoalModalState = resetGoalModalState;
 
   // Track current active mode for tutorial button
-  let currentActiveMode = 'read-aloud';
+  let currentActiveMode = '';
   const PRACTICE_LAUNCHER = {
     defaultSkill: 'speaking',
     defaultMode: 'read-aloud',
@@ -684,7 +716,7 @@
       speaking: {
         label: 'Speaking',
         kind: 'live-skill',
-        modeIds: ['speak', 'pronounce', 'read-aloud']
+        modeIds: ['speak', 'pronounce', 'read-aloud', 'asq', 'sgd']
       },
       listening: {
         label: 'Listening',
@@ -698,14 +730,13 @@
       },
       writing: {
         label: 'Writing',
-        kind: 'empty-skill',
-        modeIds: [],
-        emptyStateId: 'practice-writing-empty'
+        kind: 'live-skill',
+        modeIds: ['essay']
       }
     },
     modes: {
       type: {
-        label: 'Type',
+        label: 'Dictate',
         skill: 'listening',
         hasTutorial: true,
         isLive: true,
@@ -719,7 +750,7 @@
         launcherVisible: true
       },
       speak: {
-        label: 'Speak',
+        label: 'Repeat',
         skill: 'speaking',
         hasTutorial: true,
         isLive: true,
@@ -733,7 +764,7 @@
         launcherVisible: true
       },
       extended: {
-        label: 'Fill',
+        label: 'Fill In the Blanks',
         skill: 'listening',
         hasTutorial: true,
         isLive: true,
@@ -747,7 +778,7 @@
         launcherVisible: true
       },
       notes: {
-        label: 'Note',
+        label: 'Take Notes',
         skill: 'listening',
         hasTutorial: true,
         isLive: true,
@@ -760,20 +791,239 @@
         isLive: true,
         launcherVisible: true
       },
+      asq: {
+        label: 'Quiz',
+        skill: 'speaking',
+        hasTutorial: false,
+        isLive: true,
+        launcherVisible: false
+      },
       rfib: {
         label: 'Fill in the blanks',
         skill: 'reading',
         hasTutorial: false,
         isLive: true,
         launcherVisible: true
+      },
+      essay: {
+        label: 'Write Essay',
+        skill: 'writing',
+        hasTutorial: false,
+        isLive: true,
+        launcherVisible: true
+      },
+      sgd: {
+        label: 'Discussion',
+        skill: 'speaking',
+        hasTutorial: false,
+        isLive: true,
+        launcherVisible: true
       }
     }
+  };
+
+  const SCOPE_ENGLISH = 'english';
+  const SCOPE_PTE = 'pte';
+  const VALID_SCOPES = new Set([SCOPE_ENGLISH, SCOPE_PTE]);
+  const PRACTICE_SCOPE_STORAGE_KEY = 'practiceScope';
+
+  const PRACTICE_SCOPE_CONFIG = {
+    [SCOPE_ENGLISH]: {
+      visibleModes: null,
+      modeOverrides: Object.freeze({})
+    },
+    [SCOPE_PTE]: {
+      visibleModes: new Set(['read-aloud', 'speak', 'notes', 'extended', 'type', 'rfib', 'sgd']),
+      modeOverrides: Object.freeze({
+        speak: { label: 'Repeat Sentence' },
+        notes: { label: 'Retell Lecture', skill: 'speaking' },
+        type: { label: 'Write from Dictation' },
+        asq: { label: 'Answer Short Question' },
+        sgd: { label: 'Summarize Group Discussion' }
+      })
+    }
+  };
+
+  function clonePlain(value) {
+    if (value === null || typeof value !== 'object') return value;
+    if (Array.isArray(value)) return value.map(clonePlain);
+    const cloned = {};
+    Object.entries(value).forEach(([key, val]) => {
+      cloned[key] = clonePlain(val);
+    });
+    return cloned;
+  }
+
+  const PracticeScopeManager = (() => {
+    let scope = SCOPE_ENGLISH;
+    const subscribers = new Set();
+
+    function readStoredScope() {
+      try {
+        const raw = localStorage.getItem(PRACTICE_SCOPE_STORAGE_KEY);
+        return VALID_SCOPES.has(raw) ? raw : null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function persistScope(nextScope) {
+      try {
+        localStorage.setItem(PRACTICE_SCOPE_STORAGE_KEY, nextScope);
+      } catch (_) {
+        // ignore
+      }
+    }
+
+    function syncMirror() {
+      window.appState = window.appState || {};
+      window.appState.practiceScope = scope;
+    }
+
+    function getScope() {
+      return scope;
+    }
+
+    function setScope(nextScope, { persist = true } = {}) {
+      if (!VALID_SCOPES.has(nextScope)) return false;
+      if (nextScope === scope) return false;
+      scope = nextScope;
+      syncMirror();
+      if (persist) persistScope(scope);
+      subscribers.forEach((fn) => {
+        try {
+          fn(scope);
+        } catch (error) {
+          console.error('[PracticeScopeManager] subscriber error:', error);
+        }
+      });
+      return true;
+    }
+
+    function subscribe(fn) {
+      if (typeof fn !== 'function') return () => { };
+      subscribers.add(fn);
+      return () => subscribers.delete(fn);
+    }
+
+    scope = readStoredScope() || SCOPE_ENGLISH;
+    syncMirror();
+
+    return Object.freeze({
+      getScope,
+      setScope,
+      subscribe,
+      SCOPE_ENGLISH,
+      SCOPE_PTE,
+      VALID_SCOPES
+    });
+  })();
+
+  window.PracticeScopeManager = PracticeScopeManager;
+
+  function getPracticeScope() {
+    return PracticeScopeManager.getScope();
+  }
+
+  function getPracticeScopeConfig(scope = getPracticeScope()) {
+    return PRACTICE_SCOPE_CONFIG[scope] || PRACTICE_SCOPE_CONFIG[SCOPE_ENGLISH];
+  }
+
+  function getResolvedModeMeta(mode, scope = getPracticeScope()) {
+    const baseMeta = PRACTICE_LAUNCHER.modes[mode] || null;
+    if (!baseMeta) return null;
+    const resolved = typeof structuredClone === 'function' ? structuredClone(baseMeta) : clonePlain(baseMeta);
+    const overrides = getPracticeScopeConfig(scope)?.modeOverrides?.[mode];
+    if (overrides && typeof overrides === 'object') {
+      Object.assign(resolved, overrides);
+    }
+    return resolved;
+  }
+
+  function isModeVisibleInScope(mode, scope = getPracticeScope()) {
+    const meta = getResolvedModeMeta(mode, scope);
+    if (!meta) return false;
+    if (meta.launcherVisible === false) return false;
+    const visibleModes = getPracticeScopeConfig(scope)?.visibleModes;
+    if (visibleModes instanceof Set) return visibleModes.has(mode);
+    return true;
+  }
+
+  function updatePracticeScopeToggleUI() {
+    const root = document.getElementById('practice-scope-filter');
+    if (!root) return;
+    const scope = getPracticeScope();
+    root.querySelectorAll('.practice-scope-btn[data-practice-scope]').forEach((btn) => {
+      const btnScope = btn.dataset.practiceScope;
+      const isActive = btnScope === scope;
+      btn.classList.toggle('is-active', isActive);
+      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    });
+  }
+
+  function updatePracticeScopeUI() {
+    updatePracticeScopeToggleUI();
+    renderPracticeLauncher();
+    if (currentActiveMode) {
+      updateCurrentModeIndicator(currentActiveMode);
+    }
+  }
+
+  async function maybeEnableAsqModeInLauncher() {
+    try {
+      const response = await fetch('/database/quiz/ASQ/audio/manifest.json', { method: 'HEAD' });
+      if (!response.ok) return;
+
+      const asqMeta = PRACTICE_LAUNCHER.modes.asq;
+      if (asqMeta) {
+        asqMeta.launcherVisible = true;
+      }
+      const pteVisible = PRACTICE_SCOPE_CONFIG?.[SCOPE_PTE]?.visibleModes;
+      if (pteVisible instanceof Set) {
+        pteVisible.add('asq');
+      }
+
+      renderPracticeLauncher();
+    } catch (_) {
+      // Keep ASQ hidden when assets are missing/unreachable.
+    }
+  }
+
+  function setPracticeScope(scope, { persist = true } = {}) {
+    const changed = PracticeScopeManager.setScope(scope, { persist });
+    if (!changed) return false;
+
+    updatePracticeScopeToggleUI();
+
+    if (currentActiveMode) {
+      const activeSkill = getSkillForMode(currentActiveMode);
+      if (activeSkill && activeSkill !== selectedPracticeSkill) {
+        setSelectedPracticeSkill(activeSkill, { render: false });
+      }
+    }
+
+    if (scope === SCOPE_PTE && currentActiveMode && !isModeVisibleInScope(currentActiveMode, scope)) {
+      window.switchToMode?.('read-aloud');
+      return true;
+    }
+
+    updatePracticeScopeUI();
+    return true;
+  }
+
+  window.setPracticeScope = setPracticeScope;
+  window.practiceVariantHooks = {
+    [SCOPE_ENGLISH]: {},
+    [SCOPE_PTE]: { notes: {} }
+  };
+  window.getPracticeVariantHooks = function (mode) {
+    return window.practiceVariantHooks?.[getPracticeScope()]?.[mode] || null;
   };
   const PRACTICE_SKILL_ORDER = Object.keys(PRACTICE_LAUNCHER.skills);
   let selectedPracticeSkill = PRACTICE_LAUNCHER.defaultSkill;
 
   function getModeMeta(mode) {
-    return PRACTICE_LAUNCHER.modes[mode] || null;
+    return getResolvedModeMeta(mode) || null;
   }
 
   function getSkillForMode(mode) {
@@ -788,6 +1038,7 @@
     if (!PRACTICE_SKILL_ORDER.includes(skill)) return false;
     const changed = selectedPracticeSkill !== skill;
     selectedPracticeSkill = skill;
+
     if (render) renderPracticeLauncher();
     return changed;
   }
@@ -801,17 +1052,24 @@
         const isActive = skill === selectedPracticeSkill;
         button.classList.toggle('is-active', isActive);
         button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-        button.setAttribute('aria-label', skillMeta?.label || button.textContent.trim() || skill);
+        button.setAttribute('aria-label', skillMeta?.label || button.querySelector('strong')?.textContent?.trim() || skill);
       });
     }
 
-    document.querySelectorAll('.tutorial-grid .mode-switch-btn[data-practice-skill]').forEach((card) => {
+    document.querySelectorAll('#panel-tutorials .tutorial-grid .mode-switch-btn[data-practice-skill]').forEach((card) => {
       const cardMode = card.id ? card.id.replace(/^mode-btn-/, '') : '';
       const modeMeta = getModeMeta(cardMode);
-      const cardSkill = card.dataset.practiceSkill;
-      const shouldShow = modeMeta?.launcherVisible !== false && cardSkill === selectedPracticeSkill;
+      const shouldShow = !!modeMeta && isModeVisibleInScope(cardMode) && modeMeta.skill === selectedPracticeSkill;
       card.hidden = !shouldShow;
       card.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
+
+      const title = card.querySelector('.card-body h3');
+      if (title && modeMeta?.label) {
+        title.textContent = modeMeta.label;
+      }
+      if (modeMeta?.label) {
+        card.setAttribute('aria-label', `${modeMeta.label} Practice mode`);
+      }
     });
 
     const writingEmptyState = document.getElementById('practice-writing-empty');
@@ -820,6 +1078,7 @@
       writingEmptyState.hidden = !shouldShow;
       writingEmptyState.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
     }
+
   }
 
   function renderPracticeSkillFilter() {
@@ -840,6 +1099,14 @@
    * @param {string} mode - The active mode name
    */
   function updateCurrentModeIndicator(mode) {
+    if (!mode) {
+      currentActiveMode = '';
+      window.appState = window.appState || {};
+      window.appState.currentMode = '';
+      const indicator = document.getElementById('current-mode-indicator');
+      if (indicator) indicator.style.display = 'none';
+      return;
+    }
     currentActiveMode = mode;
     window.appState = window.appState || {};
     window.appState.currentMode = mode;
@@ -968,6 +1235,7 @@
       const mapping = goalToModesMap[goal];
       if (mapping) {
         mapping.modes.forEach(mode => {
+          if (!isModeVisibleInScope(mode)) return;
           if (!seenModes.has(mode)) {
             seenModes.add(mode);
             suggestions.push({
@@ -980,6 +1248,18 @@
         });
       }
     });
+
+    if (suggestions.length === 0) {
+      const fallbackMode = 'read-aloud';
+      if (isModeVisibleInScope(fallbackMode)) {
+        suggestions.push({
+          mode: fallbackMode,
+          name: getModeDisplayName(fallbackMode),
+          description: 'Recommended in this practice scope.',
+          icon: '⭐'
+        });
+      }
+    }
 
     // Set the first mode as default to start
     selectedModeToStart = suggestions.length > 0 ? suggestions[0].mode : 'type';
@@ -1095,6 +1375,17 @@
   window.switchToMode = async function (mode) {
     if (!mode) return;
 
+    const leavingMode = currentActiveMode;
+    if (leavingMode === 'collo-dictate' && mode !== 'collo-dictate') {
+      window.ColloDictateMode?.onExit?.();
+    }
+    if (leavingMode === 'asq' && mode !== 'asq') {
+      window.ASQMode?.onExit?.();
+    }
+    if (leavingMode === 'sgd' && mode !== 'sgd') {
+      window.SGDMode?.onExit?.();
+    }
+
     // Sync Adaptive UI state upon switching
     if (typeof window.updateAdaptiveUI === 'function') {
       window.updateAdaptiveUI(mode);
@@ -1128,11 +1419,6 @@
     if (mode === 'watch' || mode === 'notes' || mode === 'rfib') {
       const assetsReady = await ensureModeAssets(mode);
       if (!assetsReady) return;
-    }
-
-    // Collo-dictate cleanup when switching away
-    if (currentActiveMode === 'collo-dictate' && mode !== 'collo-dictate') {
-      window.ColloDictateMode?.onExit?.();
     }
 
     // Map mode names to tab IDs and panel IDs
@@ -1234,11 +1520,15 @@
         await loadQuestion('type', currentTypeQuestionId);
       } else if (mode === 'collo-dictate' && typeof window.ColloDictateMode?.onEnter === 'function') {
         await window.ColloDictateMode.onEnter();
+      } else if (mode === 'sgd' && typeof window.SGDMode?.onEnter === 'function') {
+        await window.SGDMode.onEnter();
       } else if (mode === 'speak' && speakDatabase.length > 0) {
         log.log(`[switchToMode] Switching to Speak mode, reloading question ${currentSpeakQuestionId}`);
         await loadQuestion('speak', currentSpeakQuestionId);
       } else if (mode === 'notes' && window.TakeNotesMode && typeof window.TakeNotesMode.loadEntries === 'function') {
         window.TakeNotesMode.loadEntries();
+      } else if (mode === 'essay' && window.WriteEssayMode && typeof window.WriteEssayMode.init === 'function') {
+        window.WriteEssayMode.init();
       } else if (mode === 'read-aloud') {
         // Hide the type-mode question box that bleeds through
         const typeQuestionBox = document.getElementById('mode-type');
@@ -1246,6 +1536,10 @@
         // Trigger ReadAloud mode init
         if (window.ReadAloudMode && typeof window.ReadAloudMode.onEnter === 'function') {
           window.ReadAloudMode.onEnter();
+        }
+      } else if (mode === 'asq') {
+        if (window.ASQMode && typeof window.ASQMode.onEnter === 'function') {
+          window.ASQMode.onEnter();
         }
       }
 
@@ -1341,6 +1635,7 @@
     window.refreshLockedTabs();
     window.refreshLengthFilterLocks();
     updateActiveSkillControlLocks();
+    maybeEnableAsqModeInLauncher();
   });
 
   /**
@@ -2709,6 +3004,10 @@
   const modeWatch = document.getElementById("mode-watch");
   const modeNotes = document.getElementById("mode-notes");
   const modePronounce = document.getElementById("mode-pronounce");
+  const modeSGD = document.getElementById("mode-sgd");
+  const tabSGD = document.getElementById("tab-sgd");
+  const modeEssay = document.getElementById("mode-essay");
+  const tabEssay = document.getElementById("tab-essay");
 
   // ============================================
   // Feedback Banner
@@ -3765,6 +4064,10 @@
     if (modeWatch) { modeWatch.classList.remove("active"); modeWatch.style.display = 'none'; }
     if (modeNotes) { modeNotes.classList.remove("active"); modeNotes.style.display = 'none'; }
     if (modePronounce) { modePronounce.classList.remove("active"); modePronounce.style.display = 'none'; }
+    if (modeSGD) { modeSGD.classList.remove("active"); modeSGD.style.display = 'none'; }
+    if (window.SGDMode && typeof window.SGDMode.reset === 'function') window.SGDMode.reset();
+    if (modeEssay) { modeEssay.classList.remove("active"); modeEssay.style.display = 'none'; }
+    if (window.WriteEssayMode && typeof window.WriteEssayMode.reset === 'function') window.WriteEssayMode.reset();
 
     // Rest active states
     document.querySelectorAll('.mode-switch-btn').forEach(btn => btn.classList.remove('active'));
@@ -3801,6 +4104,7 @@
     if (tabWatch) tabWatch.classList.remove("active");
     if (tabNotes) tabNotes.classList.remove("active");
     if (tabPronounce) tabPronounce.classList.remove("active");
+    if (tabSGD) tabSGD.classList.remove("active");
     modeSpeak.classList.add("active");
     modeSpeak.style.display = 'block';
     modeType.classList.remove("active");
@@ -3810,6 +4114,10 @@
     if (modeWatch) { modeWatch.classList.remove("active"); modeWatch.style.display = 'none'; }
     if (modeNotes) { modeNotes.classList.remove("active"); modeNotes.style.display = 'none'; }
     if (modePronounce) { modePronounce.classList.remove("active"); modePronounce.style.display = 'none'; }
+    if (modeSGD) { modeSGD.classList.remove("active"); modeSGD.style.display = 'none'; }
+    if (window.SGDMode && typeof window.SGDMode.reset === 'function') window.SGDMode.reset();
+    if (modeEssay) { modeEssay.classList.remove("active"); modeEssay.style.display = 'none'; }
+    if (window.WriteEssayMode && typeof window.WriteEssayMode.reset === 'function') window.WriteEssayMode.reset();
 
     // Rest active states
     document.querySelectorAll('.mode-switch-btn').forEach(btn => btn.classList.remove('active'));
@@ -3859,6 +4167,7 @@
     if (tabWatch) tabWatch.classList.remove("active");
     if (tabNotes) tabNotes.classList.remove("active");
     if (tabPronounce) tabPronounce.classList.remove("active");
+    if (tabSGD) tabSGD.classList.remove("active");
     modeExtended.classList.add("active");
     modeExtended.style.display = 'block';
     modeType.classList.remove("active");
@@ -3868,6 +4177,10 @@
     if (modeWatch) { modeWatch.classList.remove("active"); modeWatch.style.display = 'none'; }
     if (modeNotes) { modeNotes.classList.remove("active"); modeNotes.style.display = 'none'; }
     if (modePronounce) { modePronounce.classList.remove("active"); modePronounce.style.display = 'none'; }
+    if (modeSGD) { modeSGD.classList.remove("active"); modeSGD.style.display = 'none'; }
+    if (window.SGDMode && typeof window.SGDMode.reset === 'function') window.SGDMode.reset();
+    if (modeEssay) { modeEssay.classList.remove("active"); modeEssay.style.display = 'none'; }
+    if (window.WriteEssayMode && typeof window.WriteEssayMode.reset === 'function') window.WriteEssayMode.reset();
 
     // Rest active states
     document.querySelectorAll('.mode-switch-btn').forEach(btn => btn.classList.remove('active'));
@@ -3910,6 +4223,7 @@
       tabExtended.classList.remove("active");
       if (tabNotes) tabNotes.classList.remove("active");
       if (tabPronounce) tabPronounce.classList.remove("active");
+      if (tabSGD) tabSGD.classList.remove("active");
       if (modeWatch) { modeWatch.classList.add("active"); modeWatch.style.display = 'block'; }
       modeType.classList.remove("active");
       modeType.style.display = 'none';
@@ -3919,6 +4233,8 @@
       modeExtended.style.display = 'none';
       if (modeNotes) { modeNotes.classList.remove("active"); modeNotes.style.display = 'none'; }
       if (modePronounce) { modePronounce.classList.remove("active"); modePronounce.style.display = 'none'; }
+      if (modeSGD) { modeSGD.classList.remove("active"); modeSGD.style.display = 'none'; }
+      if (window.SGDMode && typeof window.SGDMode.reset === 'function') window.SGDMode.reset();
 
       // Highlight active mode button
       document.querySelectorAll('.mode-switch-btn').forEach(btn => btn.classList.remove('active'));
@@ -3984,6 +4300,7 @@
       tabExtended.classList.remove("active");
       if (tabWatch) tabWatch.classList.remove("active");
       if (tabPronounce) tabPronounce.classList.remove("active");
+      if (tabSGD) tabSGD.classList.remove("active");
       if (modeNotes) { modeNotes.classList.add("active"); modeNotes.style.display = 'block'; }
       modeType.classList.remove("active");
       modeType.style.display = 'none';
@@ -3993,6 +4310,8 @@
       modeExtended.style.display = 'none';
       if (modeWatch) { modeWatch.classList.remove("active"); modeWatch.style.display = 'none'; }
       if (modePronounce) { modePronounce.classList.remove("active"); modePronounce.style.display = 'none'; }
+      if (modeSGD) { modeSGD.classList.remove("active"); modeSGD.style.display = 'none'; }
+      if (window.SGDMode && typeof window.SGDMode.reset === 'function') window.SGDMode.reset();
 
       // Highlight active mode button
       document.querySelectorAll('.mode-switch-btn').forEach(btn => btn.classList.remove('active'));
@@ -4024,6 +4343,128 @@
     });
   }
 
+  // SGD mode tab handler
+  if (tabSGD) {
+    tabSGD.addEventListener("click", async () => {
+      document.getElementById('page-layout-wrapper')?.classList.remove('watch-active');
+      const watchQuestionPanel = document.getElementById('watch-question-panel');
+      if (watchQuestionPanel) watchQuestionPanel.style.display = 'none';
+      if (window.WatchMode && typeof window.WatchMode.pauseAndResetForTabSwitch === 'function') {
+        window.WatchMode.pauseAndResetForTabSwitch();
+      }
+      if (tabSGD) tabSGD.classList.add("active");
+      tabType.classList.remove("active");
+      tabSpeak.classList.remove("active");
+      tabExtended.classList.remove("active");
+      if (tabWatch) tabWatch.classList.remove("active");
+      if (tabNotes) tabNotes.classList.remove("active");
+      if (tabPronounce) tabPronounce.classList.remove("active");
+      if (tabEssay) tabEssay.classList.remove("active");
+      if (modeSGD) { modeSGD.classList.add("active"); modeSGD.style.display = 'block'; }
+      if (modeEssay) { modeEssay.classList.remove("active"); modeEssay.style.display = 'none'; }
+      if (window.WriteEssayMode && typeof window.WriteEssayMode.reset === 'function') window.WriteEssayMode.reset();
+      modeType.classList.remove("active");
+      modeType.style.display = 'none';
+      modeSpeak.classList.remove("active");
+      modeSpeak.style.display = 'none';
+      modeExtended.classList.remove("active");
+      modeExtended.style.display = 'none';
+      if (modeWatch) { modeWatch.classList.remove("active"); modeWatch.style.display = 'none'; }
+      if (modeNotes) { modeNotes.classList.remove("active"); modeNotes.style.display = 'none'; }
+      if (modePronounce) { modePronounce.classList.remove("active"); modePronounce.style.display = 'none'; }
+
+      // Highlight active mode button
+      document.querySelectorAll('.mode-switch-btn').forEach(btn => btn.classList.remove('active'));
+      const sgdModeBtn = document.querySelector('.mode-switch-btn[onclick*="sgd"]');
+      if (sgdModeBtn) sgdModeBtn.classList.add('active');
+
+      // Hide other panels
+      if (sameVocabPanelType) sameVocabPanelType.style.display = "none";
+      if (sameVocabPanelSpeak) sameVocabPanelSpeak.style.display = "none";
+      if (vocabularyPanel) vocabularyPanel.style.display = "none";
+      if (pronunciationPanel) pronunciationPanel.style.display = "none";
+      if (breakdownPanel) breakdownPanel.style.display = "none";
+
+      // Stop any active recordings
+      if (isRecording && recognition) {
+        recognition.stop();
+        isRecording = false;
+      }
+
+      // Reset Take Notes mode if it was active
+      if (window.TakeNotesMode && typeof window.TakeNotesMode.reset === 'function') {
+        window.TakeNotesMode.reset();
+      }
+
+      // Initialize SGD mode
+      if (window.SGDMode) {
+        window.SGDMode.loadEntries();
+      }
+    });
+  }
+
+  // Write Essay mode tab handler
+  if (tabEssay) {
+    tabEssay.addEventListener("click", async () => {
+      document.getElementById('page-layout-wrapper')?.classList.remove('watch-active');
+      const watchQuestionPanel = document.getElementById('watch-question-panel');
+      if (watchQuestionPanel) watchQuestionPanel.style.display = 'none';
+      if (window.WatchMode && typeof window.WatchMode.pauseAndResetForTabSwitch === 'function') {
+        window.WatchMode.pauseAndResetForTabSwitch();
+      }
+      if (tabEssay) tabEssay.classList.add("active");
+      tabType.classList.remove("active");
+      tabSpeak.classList.remove("active");
+      tabExtended.classList.remove("active");
+      if (tabWatch) tabWatch.classList.remove("active");
+      if (tabNotes) tabNotes.classList.remove("active");
+      if (tabSGD) tabSGD.classList.remove("active");
+      if (tabPronounce) tabPronounce.classList.remove("active");
+      if (modeEssay) { modeEssay.classList.add("active"); modeEssay.style.display = 'block'; }
+      modeType.classList.remove("active");
+      modeType.style.display = 'none';
+      modeSpeak.classList.remove("active");
+      modeSpeak.style.display = 'none';
+      modeExtended.classList.remove("active");
+      modeExtended.style.display = 'none';
+      if (modeWatch) { modeWatch.classList.remove("active"); modeWatch.style.display = 'none'; }
+      if (modeNotes) { modeNotes.classList.remove("active"); modeNotes.style.display = 'none'; }
+      if (modePronounce) { modePronounce.classList.remove("active"); modePronounce.style.display = 'none'; }
+      if (modeSGD) { modeSGD.classList.remove("active"); modeSGD.style.display = 'none'; }
+      if (window.SGDMode && typeof window.SGDMode.reset === 'function') window.SGDMode.reset();
+
+      // Highlight active mode button
+      document.querySelectorAll('.mode-switch-btn').forEach(btn => btn.classList.remove('active'));
+      const essayModeBtn = document.querySelector('.mode-switch-btn[onclick*="essay"]');
+      if (essayModeBtn) essayModeBtn.classList.add('active');
+
+      // Hide other panels
+      if (sameVocabPanelType) sameVocabPanelType.style.display = "none";
+      if (sameVocabPanelSpeak) sameVocabPanelSpeak.style.display = "none";
+      if (vocabularyPanel) vocabularyPanel.style.display = "none";
+      if (pronunciationPanel) pronunciationPanel.style.display = "none";
+      if (breakdownPanel) breakdownPanel.style.display = "none";
+
+      // Stop any active recordings
+      if (isRecording && recognition) {
+        recognition.stop();
+        isRecording = false;
+      }
+
+      // Reset Take Notes mode if it was active
+      if (window.TakeNotesMode && typeof window.TakeNotesMode.reset === 'function') {
+        window.TakeNotesMode.reset();
+      }
+
+      // Initialize Write Essay mode
+      if (window.WriteEssayMode && typeof window.WriteEssayMode.init === 'function') {
+        window.WriteEssayMode.init();
+      } else if (window.WriteEssayMode && typeof window.WriteEssayMode.loadEntries === 'function') {
+        window.WriteEssayMode.loadEntries();
+      }
+    });
+  }
+
   // Pronounce mode tab handler
   const tabPronounce = document.getElementById('tab-pronounce');
   // pronunciationPanel is already defined globally
@@ -4047,6 +4488,7 @@
       tabExtended.classList.remove("active");
       if (tabWatch) tabWatch.classList.remove("active");
       if (tabNotes) tabNotes.classList.remove("active");
+      if (tabSGD) tabSGD.classList.remove("active");
 
       modeType.classList.remove("active");
       modeType.style.display = 'none';
@@ -4056,6 +4498,10 @@
       modeExtended.style.display = 'none';
       if (modeWatch) { modeWatch.classList.remove("active"); modeWatch.style.display = 'none'; }
       if (modeNotes) { modeNotes.classList.remove("active"); modeNotes.style.display = 'none'; }
+      if (modeSGD) { modeSGD.classList.remove("active"); modeSGD.style.display = 'none'; }
+      if (window.SGDMode && typeof window.SGDMode.reset === 'function') window.SGDMode.reset();
+      if (modeEssay) { modeEssay.classList.remove("active"); modeEssay.style.display = 'none'; }
+      if (window.WriteEssayMode && typeof window.WriteEssayMode.reset === 'function') window.WriteEssayMode.reset();
       if (modePronounce) { modePronounce.classList.add("active"); modePronounce.style.display = 'block'; }
 
       // Highlight active mode button
@@ -6788,8 +7234,10 @@
         window.currentAttemptContext = null;
       }
 
+      return result;
     } catch (e) {
       console.error('[Scoring] Cloud Function call failed:', e);
+      return null;
     }
   };
 

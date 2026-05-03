@@ -35,9 +35,10 @@ service cloud.firestore {
                       'englishLevel', 
                       'levelSelectedAt',
                       'practiceStats',
-                      'srsBonus'
+                      'srsBonus',
+                      'unlockedModes'
                       // REMOVED: totalPoints, coins, skillPoints, skillRatings, 
-                      // cefrLevels, srsBonus, skillsUpdatedAt, unlockedModes, 
+                      // cefrLevels, skillsUpdatedAt,
                       // vocabularyBookUnlocked, sentenceLengthFilterUnlocked
                     ]);
       
@@ -200,6 +201,38 @@ service cloud.firestore {
                     && request.auth.token.isStudent == true;
       allow read, update: if isAdmin() || (request.auth != null && resource.data.studentUid == request.auth.uid);
       allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // SERVER-OWNED SPEAKING ATTEMPT DATA
+    // ============================================
+    // These collections are mutated by Cloud Functions only.
+    match /speakingAttempts/{attemptId} {
+      allow read, write: if false;
+
+      match /feedback/{feedbackId} {
+        allow read, write: if false;
+      }
+    }
+
+    match /speakingAttemptShares/{shareId} {
+      allow read, write: if false;
+    }
+
+    match /speakingAttemptCounters/{uid} {
+      allow read, write: if false;
+    }
+
+    match /speakingAttemptEvents/{eventId} {
+      allow read, write: if false;
+    }
+
+    match /practiceAccessByUid/{uid} {
+      allow read, write: if false;
+    }
+
+    match /practiceAccessJobs/{jobId} {
+      allow read, write: if false;
     }
   }
 }

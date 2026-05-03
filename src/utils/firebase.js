@@ -147,10 +147,23 @@ try {
         const storageBucket = storageBucketNormalized || defaultBucket;
         initialBucketName = String(storageBucket || '').trim();
 
-        admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount),
-            storageBucket: storageBucket || undefined
-        });
+        const isEmulatorMode = !!(process.env.FIREBASE_AUTH_EMULATOR_HOST || process.env.FIRESTORE_EMULATOR_HOST);
+        if (isEmulatorMode) {
+            // In emulator mode, skip cert-based credentials.
+            // firebase-admin v13 with credential.cert() tries to validate JWT signatures
+            // against Google's real public keys, causing verifyIdToken to hang indefinitely
+            // on emulator tokens (which use alg: "none").
+            admin.initializeApp({
+                projectId: projectId || undefined,
+                storageBucket: storageBucket || undefined
+            });
+            console.warn('🔧 [Admin SDK] Emulator mode — initialized without cert credentials.');
+        } else {
+            admin.initializeApp({
+                credential: admin.credential.cert(serviceAccount),
+                storageBucket: storageBucket || undefined
+            });
+        }
         db = admin.firestore();
         try {
             bucket = admin.storage().bucket(storageBucket || undefined);
@@ -161,6 +174,15 @@ try {
             bucketVerified = false;
         }
         console.warn('[SECURE] Firebase Admin initialized.');
+        if (process.env.FIRESTORE_EMULATOR_HOST) {
+            console.warn(`🔧 [Admin SDK] Firestore targeting emulator: ${process.env.FIRESTORE_EMULATOR_HOST}`);
+        }
+        if (process.env.FIREBASE_AUTH_EMULATOR_HOST) {
+            console.warn(`🔧 [Admin SDK] Auth targeting emulator: ${process.env.FIREBASE_AUTH_EMULATOR_HOST}`);
+        }
+        if (process.env.FIREBASE_STORAGE_EMULATOR_HOST) {
+            console.warn(`🔧 [Admin SDK] Storage targeting emulator: ${process.env.FIREBASE_STORAGE_EMULATOR_HOST}`);
+        }
     } else {
         console.warn('[WARN] serviceAccountKey.json not found.');
     }

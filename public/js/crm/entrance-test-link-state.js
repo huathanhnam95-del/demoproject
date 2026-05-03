@@ -63,24 +63,24 @@ window.CrmEntranceTests = (function () {
   function buildViewModel(tests, createdTestLinks = new Map()) {
     const normalized = Array.isArray(tests)
       ? tests.map((test) => {
-          const testId = toText(test?.testId);
-          const status = toText(test?.status || 'created').toLowerCase();
-          const createdAt = test?.createdAt || null;
-          const startedAt = test?.startedAt || null;
-          const submittedAt = test?.submittedAt || null;
-          const resultLink = normalizeResultLink(test?.resultLink);
+        const testId = toText(test?.testId);
+        const status = toText(test?.status || 'created').toLowerCase();
+        const createdAt = test?.createdAt || null;
+        const startedAt = test?.startedAt || null;
+        const submittedAt = test?.submittedAt || null;
+        const resultLink = normalizeResultLink(test?.resultLink);
 
-          return {
-            ...test,
-            testId,
-            status,
-            createdAt,
-            startedAt,
-            submittedAt,
-            testLink: resolveTestLink({ ...test, testId, status }, createdTestLinks),
-            resultLink
-          };
-        })
+        return {
+          ...test,
+          testId,
+          status,
+          createdAt,
+          startedAt,
+          submittedAt,
+          testLink: resolveTestLink({ ...test, testId, status }, createdTestLinks),
+          resultLink
+        };
+      })
       : [];
 
     const latestActiveTest = normalized.find((test) => isActiveStatus(test.status) && toText(test.testLink)) || null;
@@ -128,10 +128,13 @@ window.CrmEntranceTests = (function () {
       const statusLabel = status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Created';
       const testLink = toText(test?.testLink);
       const resultLink = toText(test?.resultLink);
+      const testType = toText(test?.testType || 'entrance_test_36plus_v1');
+      const testTypeLabel = testType === 'segmental_screening_v1' ? 'Segmental' : 'Entrance 36+';
 
       return `
         <tr>
           <td><span class="crm-test-status ${escapeHtml(status)}">${escapeHtml(statusLabel)}</span></td>
+          <td>${escapeHtml(testTypeLabel)}</td>
           <td>${escapeHtml(formatCellDate(formatDateTime, test?.createdAt))}</td>
           <td>${escapeHtml(formatCellDate(formatDateTime, test?.startedAt))}</td>
           <td>${escapeHtml(formatCellDate(formatDateTime, test?.submittedAt))}</td>

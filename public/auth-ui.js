@@ -435,6 +435,12 @@ function setupEventListeners() {
     }
 
     // --- Panel Buttons (Logged In) ---
+    const panelViewProfileBtn = document.getElementById('panel-view-profile-btn');
+    if (panelViewProfileBtn) {
+      panelViewProfileBtn.removeEventListener('click', showAccountDetailsModal);
+      panelViewProfileBtn.addEventListener('click', showAccountDetailsModal);
+    }
+
     const panelLogoutBtn = document.getElementById('panel-logout-btn');
     if (panelLogoutBtn) {
       panelLogoutBtn.removeEventListener('click', handleLogout); // Safety
@@ -486,6 +492,33 @@ function setupEventListeners() {
       switchToLogin.addEventListener('click', (e) => {
         e.preventDefault();
         showLoginForm();
+      });
+    }
+
+    // --- Auth Overlay Close / View as Guest ---
+    const authCloseBtn = document.getElementById('auth-close-btn');
+    if (authCloseBtn) {
+      authCloseBtn.addEventListener('click', () => {
+        hideAuthOverlay();
+        handleGuestModeChoice();
+      });
+    }
+
+    const authGuestLink = document.getElementById('auth-guest-link');
+    if (authGuestLink) {
+      authGuestLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        hideAuthOverlay();
+        handleGuestModeChoice();
+      });
+    }
+
+    const authGuestLinkSignup = document.getElementById('auth-guest-link-signup');
+    if (authGuestLinkSignup) {
+      authGuestLinkSignup.addEventListener('click', (e) => {
+        e.preventDefault();
+        hideAuthOverlay();
+        handleGuestModeChoice();
       });
     }
 
@@ -1692,11 +1725,11 @@ async function checkFirstVisit() {
     && authFunctions
     && typeof authFunctions.onAuthStateChanged === 'function'
     ? await authSessionGuard.waitForInitialAuthResolution({
-        getCurrentUser: () => (authFunctions ? authFunctions.getCurrentUser() : null),
-        subscribe: (onStateChanged) => authFunctions.onAuthStateChanged(onStateChanged),
-        timeoutMs: 12000,
-        nullGraceMs: 250
-      })
+      getCurrentUser: () => (authFunctions ? authFunctions.getCurrentUser() : null),
+      subscribe: (onStateChanged) => authFunctions.onAuthStateChanged(onStateChanged),
+      timeoutMs: 12000,
+      nullGraceMs: 250
+    })
     : (authFunctions ? authFunctions.getCurrentUser() : null);
 
   if (!user && !isGuestMode) {

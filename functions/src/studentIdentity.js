@@ -1,5 +1,6 @@
 const { db, getAuth } = require('./utils/firebase_admin_init');
 const { FieldValue } = require('firebase-admin/firestore');
+const { enqueuePracticeAccessJob } = require('./crm/practice-access-service');
 
 /**
  * Generates a unique 6-character alphanumeric class code.
@@ -76,6 +77,9 @@ const claimProfile = async (uid, classCode) => {
     // 4. Update Custom Claims (Merging)
     await mergeCustomClaims(uid, { isStudent: true });
 
+    // Sync practice access/claims based on CRM entitlement rules.
+    await enqueuePracticeAccessJob(db, 'reconcileUid', uid, { runAfterAt: new Date() });
+
     return { success: true, studentId: studentDoc.id };
 };
 
@@ -125,6 +129,8 @@ const forceLinkProfile = async (studentId, targetUid) => {
 
     // Update Custom Claims (Merging)
     await mergeCustomClaims(targetUid, { isStudent: true });
+
+    await enqueuePracticeAccessJob(db, 'reconcileUid', targetUid, { runAfterAt: new Date() });
 
     return { success: true };
 };

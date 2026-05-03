@@ -2544,7 +2544,7 @@ class ReadAloudMode {
   async loadManifest() {
     if (this.hasLoadedManifest) return;
     try {
-      const res = await fetch('audio/ra/manifest.json');
+      const res = await fetch('/database/RA/Voice/audio/manifest.json');
       if (res.ok) {
         this.audioManifest = await res.json();
       }
@@ -2589,7 +2589,7 @@ class ReadAloudMode {
     if (!genderEntry || !genderEntry.files) return;
     const filename = genderEntry.files[this.selectedSpeed];
     if (filename) {
-      audioEl.src = `audio/ra/${filename}`;
+      audioEl.src = `/database/RA/Voice/audio/${filename}`;
       audioEl.load();
     }
   }

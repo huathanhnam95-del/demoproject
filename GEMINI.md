@@ -11,7 +11,7 @@
 ## Active State
 
 - **Status**: Active Development
-- **Phase**: Release V1.6.3
+- **Phase**: Release V1.6.6
 
 ## Instructions
 
@@ -113,7 +113,11 @@ These workflows add product thinking, automated QA, and release automation:
 
 ## Triggers & Protocols
 
-- **#council**: When the user types `#council [query]`, run `node scripts/summon_council.js "[query]" --out council_latest.txt` and then read the file `council_latest.txt` to present the full council output. The script auto-saves to a timestamped file if `--out` is omitted, but always use `--out` to have a predictable filename.
+- **#council**: When the user types `#council [query]`:
+  1. Write the relevant conversation context (chat history, prior analysis, key decisions) to a temp file at `/tmp/council_context.txt`.
+  2. Run `node scripts/summon_council.js "[query]" --context /tmp/council_context.txt --out council_latest.txt`.
+  3. Read `council_latest.txt` and present the full council output.
+  The `--context` flag injects the temp file's contents as inline context so council personas can analyze the conversation. The script auto-saves to a timestamped file if `--out` is omitted, but always use `--out` for a predictable filename.
 - **#hproto**: When the user types `#hproto`, immediately initiate the [Harness Engineering Protocol](.agent/workflows/harness-protocol.md) and guide the user through the Spec -> Plan -> Execute -> Verify loop.
 
 ## Response Formatting
@@ -126,7 +130,7 @@ These workflows add product thinking, automated QA, and release automation:
 
 - **Versioning Rule**: ALWAYS name commits and pushes with explicit version tags.
 - **Changelog Rule**: ALWAYS add a changelog summarizing all updates before pushing.
-- **Next Version**: `V1.6.4`
+- **Next Version**: `V1.6.7`
 - **SemVer Protocol**:
   - **Minor Push (Bug fixes, small edits)**: Increment the LAST digit (e.g., `1.0.0` -> `1.0.1`).
   - **Major Push (New functions, big updates)**: Increment the MIDDLE digit (e.g., `1.0.0` -> `1.1.0`).

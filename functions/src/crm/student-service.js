@@ -17,6 +17,15 @@ function cleanOptionalNumber(value) {
     return Number.isFinite(normalized) ? normalized : null;
 }
 
+function cleanOptionalDate(value) {
+    if (value === null || value === undefined || value === '') return null;
+    if (value instanceof Date) return value;
+    if (typeof value?.toDate === 'function') return value.toDate();
+    if (typeof value === 'number' && Number.isFinite(value)) return new Date(value);
+    const parsed = Date.parse(String(value));
+    return Number.isFinite(parsed) ? new Date(parsed) : null;
+}
+
 function cleanOptionalArray(value) {
     if (value === null || value === undefined || value === '') return [];
     const list = Array.isArray(value) ? value : String(value).split(',');
@@ -159,7 +168,19 @@ function normalizeStudentCore(input, fallback = {}) {
             : normalizeDocumentRefs(base.documentRefs),
         counselingNotes: Object.prototype.hasOwnProperty.call(source, 'counselingNotes')
             ? cleanOptionalString(source.counselingNotes)
-            : (base.counselingNotes ?? null)
+            : (base.counselingNotes ?? null),
+        practiceAccessOverrideMode: Object.prototype.hasOwnProperty.call(source, 'practiceAccessOverrideMode')
+            ? cleanOptionalString(source.practiceAccessOverrideMode)
+            : (base.practiceAccessOverrideMode ?? null),
+        practiceAccessOverrideStartAt: Object.prototype.hasOwnProperty.call(source, 'practiceAccessOverrideStartAt')
+            ? cleanOptionalDate(source.practiceAccessOverrideStartAt)
+            : (base.practiceAccessOverrideStartAt ?? null),
+        practiceAccessOverrideEndAt: Object.prototype.hasOwnProperty.call(source, 'practiceAccessOverrideEndAt')
+            ? cleanOptionalDate(source.practiceAccessOverrideEndAt)
+            : (base.practiceAccessOverrideEndAt ?? null),
+        practiceAccessOverrideNote: Object.prototype.hasOwnProperty.call(source, 'practiceAccessOverrideNote')
+            ? cleanOptionalString(source.practiceAccessOverrideNote)
+            : (base.practiceAccessOverrideNote ?? null)
     };
 }
 
@@ -191,7 +212,11 @@ function hasRecognizedPatch(input) {
         'scoreHistory',
         'contacts',
         'documentRefs',
-        'counselingNotes'
+        'counselingNotes',
+        'practiceAccessOverrideMode',
+        'practiceAccessOverrideStartAt',
+        'practiceAccessOverrideEndAt',
+        'practiceAccessOverrideNote'
     ];
     return knownKeys.some((key) => Object.prototype.hasOwnProperty.call(input, key));
 }
@@ -273,6 +298,10 @@ function mapStudentRecord(data, studentId) {
         contacts: normalizeContacts(source.contacts),
         documentRefs: normalizeDocumentRefs(source.documentRefs),
         counselingNotes: source.counselingNotes || null,
+        practiceAccessOverrideMode: source.practiceAccessOverrideMode || null,
+        practiceAccessOverrideStartAt: source.practiceAccessOverrideStartAt || null,
+        practiceAccessOverrideEndAt: source.practiceAccessOverrideEndAt || null,
+        practiceAccessOverrideNote: source.practiceAccessOverrideNote || null,
         class_code: source.class_code || null,
         linked_user_ids: Array.isArray(source.linked_user_ids) ? source.linked_user_ids : [],
         createdAt: source.createdAt || null,

@@ -8,6 +8,7 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const pointsLogic = require('./pointsLogic');
+const asqLogic = require('./asqLogic');
 const {
     computeAttemptCalibMult,
     deriveCoreProgressionUnlocks,
@@ -131,7 +132,10 @@ const submitAttempt = onCall({ maxInstances: 10 }, async (request) => {
             const today = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
             const dailyCount = (ledger.dailyDate === today) ? (ledger.dailyCount || 0) : 0;
 
-            const { xpMult, ratingMult } = computeRepeatMults(dailyCount, mode);
+            const { xpMult: baseXpMult, ratingMult: baseRatingMult } = computeRepeatMults(dailyCount, mode);
+            const modeImpactMult = mode === 'asq' ? 0.1 : 1.0;
+            const xpMult = baseXpMult * modeImpactMult;
+            const ratingMult = baseRatingMult * modeImpactMult;
             const effectiveRatingMult = ratingMult * assistCalibMult;
 
             // 6. Calculate points (Track A)
@@ -371,6 +375,24 @@ async function scoreContentMode(db, mode, contentId, payload, transaction) {
     const content = contentDoc.data();
     const canonical = content.text || '';
     const difficulty = content.difficultyMultiplier || 1.5;
+
+    if (mode === 'asq') {
+        const userText = String(payload.text || '');
+        const acceptedAnswers = Array.isArray(content.acceptedAnswers) ? content.acceptedAnswers : [];
+        const result = asqLogic.scoreAsqTranscript(userText, acceptedAnswers);
+
+        return {
+            accuracy: result.accuracy,
+            difficulty: difficulty,
+            details: {
+                type: 'asq_alias_match_v1',
+                acceptedAnswersCount: result.acceptedAliasCount,
+                transcriptTokensCount: result.transcriptTokensCount,
+                matchedAlias: result.matchedAlias,
+                wordErrors: result.wordErrors
+            }
+        };
+    }
 
     if (mode === 'extended' || mode === 'rfib') {
         const gaps = content.gaps || [];

@@ -308,8 +308,11 @@ window.CrmLeadWorkspace = (function () {
                 elements.btnAddLeadEntranceTest.textContent = 'Creating...';
             }
             try {
+                const testType = String(elements.leadEntranceTestType?.value || 'entrance_test_36plus_v1').trim();
                 const json = await apiFetchJson(`/api/admin/leads/${encodeURIComponent(modalState.leadId)}/entrance-tests`, {
-                    method: 'POST'
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ testType })
                 });
                 const testId = String(json.testId || '').trim();
                 const testLink = String(json.testLink || '').trim();
@@ -565,11 +568,11 @@ window.CrmLeadWorkspace = (function () {
           <tbody>
             ${leads.map((lead) => `
               ${(() => {
-                const isConverted = window.CrmLeads.isConvertedLead(lead);
-                const stageOptions = window.CrmLeads.getSelectableStages(lead.stage);
-                const leadId = String(lead.leadId || '').trim();
-                const checked = selectedLeadIds.has(leadId);
-                return `
+                    const isConverted = window.CrmLeads.isConvertedLead(lead);
+                    const stageOptions = window.CrmLeads.getSelectableStages(lead.stage);
+                    const leadId = String(lead.leadId || '').trim();
+                    const checked = selectedLeadIds.has(leadId);
+                    return `
               <tr>
                 <td style="width:56px; text-align:center; padding-left:14px; padding-right:14px;">
                   <input type="checkbox" data-lead-select="${escapeHtml(leadId)}" ${checked ? 'checked' : ''}>
@@ -598,7 +601,7 @@ window.CrmLeadWorkspace = (function () {
                 </td>
               </tr>
             `;
-              })()}
+                })()}
             `).join('')}
           </tbody>
         </table>

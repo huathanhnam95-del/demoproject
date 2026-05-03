@@ -127,19 +127,41 @@ export class DifficultyUI {
                         </label>
                         <p class="setting-desc">AI will promote/demote you between A1-C2 based on performance.</p>
                     </div>
-                    <div id="diff-s-manual-container" class="setting-group" style="display: ${settings.autoAdjustEnabled ? 'none' : 'block'};">
+                    <div id="diff-s-manual-container" class="setting-group setting-toggle-panel ${settings.autoAdjustEnabled ? 'setting-hidden' : 'setting-visible'}">
                         <label class="setting-label">Manual Level (CEFR)</label>
                         <select id="diff-s-manual-level" class="setting-select">
                             ${[1, 2, 3, 4, 5, 6].map(l => `<option value="${l}" ${settings.manualLevel === l ? 'selected' : ''}>${DifficultyConfig.LEVELS.NAMES[l]}</option>`).join('')}
                         </select>
                     </div>
-                    <div id="diff-s-sensitivity-container" class="setting-group" style="display: ${settings.autoAdjustEnabled ? 'block' : 'none'};">
+                    <div id="diff-s-sensitivity-container" class="setting-group setting-toggle-panel ${settings.autoAdjustEnabled ? 'setting-visible' : 'setting-hidden'}">
                         <label class="setting-label">Sensitivity</label>
-                        <select id="diff-s-sensitivity" class="setting-select">
-                            <option value="low" ${settings.adjustmentSensitivity === 'low' ? 'selected' : ''}>Low (Stable)</option>
-                            <option value="medium" ${settings.adjustmentSensitivity === 'medium' ? 'selected' : ''}>Medium (Recommended)</option>
-                            <option value="high" ${settings.adjustmentSensitivity === 'high' ? 'selected' : ''}>High (Responsive)</option>
-                        </select>
+                        <p class="setting-desc" style="margin-bottom: 12px;">How quickly your level adjusts based on performance.</p>
+                        <div class="sensitivity-options">
+                            <label class="sensitivity-card ${settings.adjustmentSensitivity === 'low' ? 'selected' : ''}" data-value="low">
+                                <input type="radio" name="diff-sensitivity" value="low" ${settings.adjustmentSensitivity === 'low' ? 'checked' : ''} style="display:none;">
+                                <div class="sensitivity-card-header">
+                                    <span class="sensitivity-icon">🛡️</span>
+                                    <strong>Low (Stable)</strong>
+                                </div>
+                                <p class="sensitivity-desc">Conservative. Needs 10+ consistent exercises before adjusting. Best if you prefer a steady pace with fewer surprises.</p>
+                            </label>
+                            <label class="sensitivity-card ${settings.adjustmentSensitivity === 'medium' ? 'selected' : ''}" data-value="medium">
+                                <input type="radio" name="diff-sensitivity" value="medium" ${settings.adjustmentSensitivity === 'medium' ? 'checked' : ''} style="display:none;">
+                                <div class="sensitivity-card-header">
+                                    <span class="sensitivity-icon">⚖️</span>
+                                    <strong>Medium (Recommended)</strong>
+                                </div>
+                                <p class="sensitivity-desc">Balanced. Adjusts every 5–7 exercises. Good for most learners — adapts without overreacting.</p>
+                            </label>
+                            <label class="sensitivity-card ${settings.adjustmentSensitivity === 'high' ? 'selected' : ''}" data-value="high">
+                                <input type="radio" name="diff-sensitivity" value="high" ${settings.adjustmentSensitivity === 'high' ? 'checked' : ''} style="display:none;">
+                                <div class="sensitivity-card-header">
+                                    <span class="sensitivity-icon">🚀</span>
+                                    <strong>High (Responsive)</strong>
+                                </div>
+                                <p class="sensitivity-desc">Aggressive. Can adjust after just 2–3 exercises. Great for experienced learners who want maximum challenge.</p>
+                            </label>
+                        </div>
                     </div>
                     <div style="text-align:right; margin-top:10px;">
                         <button id="diff-s-save" class="shop-item-btn buy" style="width: auto; padding: 12px 32px;">Save Settings</button>
@@ -157,18 +179,32 @@ export class DifficultyUI {
 
         toggle.addEventListener('change', () => {
             if (toggle.checked) {
-                manualContainer.style.display = 'none';
-                sensitivityContainer.style.display = 'block';
+                manualContainer.classList.remove('setting-visible');
+                manualContainer.classList.add('setting-hidden');
+                sensitivityContainer.classList.remove('setting-hidden');
+                sensitivityContainer.classList.add('setting-visible');
             } else {
-                manualContainer.style.display = 'block';
-                sensitivityContainer.style.display = 'none';
+                manualContainer.classList.remove('setting-hidden');
+                manualContainer.classList.add('setting-visible');
+                sensitivityContainer.classList.remove('setting-visible');
+                sensitivityContainer.classList.add('setting-hidden');
             }
         });
 
+        // Sensitivity card selection styling
+        const sensitivityCards = modal.querySelectorAll('.sensitivity-card');
+        sensitivityCards.forEach(card => {
+            card.addEventListener('click', () => {
+                sensitivityCards.forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+            });
+        });
+
         document.getElementById('diff-s-save').addEventListener('click', () => {
+            const checkedRadio = modal.querySelector('input[name="diff-sensitivity"]:checked');
             const newSettings = {
                 autoAdjustEnabled: toggle.checked,
-                adjustmentSensitivity: document.getElementById('diff-s-sensitivity').value,
+                adjustmentSensitivity: checkedRadio ? checkedRadio.value : 'medium',
                 manualLevel: parseInt(document.getElementById('diff-s-manual-level').value, 10)
             };
             onSave(newSettings);

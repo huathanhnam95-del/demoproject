@@ -161,4 +161,62 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 170,2026-04-02,Change Listening Practice to English Practice and hide Watch mode,Done,2026-04-02
 171,2026-04-02,Review and update Help me choose a mode options,Done,2026-04-03
 172,2026-04-02,Prepare V1.6.3 production release,Done,2026-04-02
-173,2026-05-03,Review changes and commit without pushing to production,Done,2026-05-03
+173,2026-04-03,Teacher Scheduler UI Overhaul - drag-drop + multi-slot + GCal style + resize + 409 + pattern panel,In Progress,
+174,2026-04-03,Fix CI deploy pipeline and bump version to V1.6.4,Done,2026-04-03
+175,2026-04-04,Fix Read Aloud mode panel stuck when switching skill tabs,Done,2026-04-04
+176,2026-04-05,Clean up ~80 IDE problems (Pyrefly, ESLint, uninitialized vars, type safety),Done,2026-04-05
+185,2026-04-05,Execute teacher scheduler session outcome makeup browser test plan,Done,2026-04-05
+177,2026-04-05,Rename practice mode labels and remove Pronounce Experimental badge,Done,2026-04-05
+179,2026-04-05,Improve adaptive difficulty badge clickability and add sensitivity level explanations,Done,2026-04-05
+180,2026-04-05,Move Segmental Screening from practice UI to entrance test option,Done,2026-04-05
+181,2026-04-05,Fix goal selection modal overflow at 100% zoom and add Esc key close,Done,2026-04-05
+182,2026-04-05,Teacher View Profile feature implementation plan,Done,2026-04-05
+183,2026-04-05,Add --context flag to council script for inline chat context,Done,2026-04-05
+184,2026-04-05,Refactor auto accept script (CPU optimization and Shadow DOM),Done,2026-04-05
+194,2026-04-06,Fix Dropdown UI persistence bug and implement interactive tutorial,Done,2026-04-07
+186,2026-04-05,Integrate Local Ollama Gemma 4,Done,2026-04-05
+187,2026-04-05,Create Visio Organization Chart CSV,Done,2026-04-05
+188,2026-04-06,Check daily usage limit for Gemma 4 CRM setup,Done,2026-04-06
+189,2026-04-06,Inspect computer specs and estimate capabilities,In Progress,
+190,2026-04-06,Execute Gemma4 Ollama CRM optimizations plan (7 areas),Done,2026-04-06
+191,2026-04-06,Auto-summary on save + fix summary persisting across students,Done,2026-04-06
+192,2026-04-06,Fix Read Aloud list audio missing issue due to outdated manifest fetch pathway,Done,2026-04-06
+193,2026-04-06,Plan PTE Practice mode and English Practice separation,Done,2026-04-06
+195,2026-04-07,Execute browser testing plan,Done,2026-04-07
+196,2026-04-07,Practice scope browser test remediation (fix persistence bug + add logged-in/recommendation scripts + manual verification),Done,2026-04-07
+197,2026-04-07,Firebase Emulator setup to isolate local CRM data from production,Done,2026-04-07
+198,2026-04-08,Fix logged-in browser test - emulator user provisioning + emailVerified + login flow rewrite,Done,2026-04-08
+199,2026-04-08,Firebase Emulator V2 remediation - compat SDK + Admin SDK + Functions + Storage + host detection,Done,2026-04-08
+200,2026-04-08,Continue Read Aloud audio generation with ElevenLabs API,In Progress,
+201,2026-04-09,Create standalone mockup preview of Premium App List design,Done,2026-04-09
+202,2026-04-08,Implement Production-to-Emulator Data Sync with CRM Dev Tools UI,Done,2026-04-09
+203,2026-04-09,Add auth-state assertion to logged-in test + fix dual-SDK issue + correct report,Done,2026-04-09
+204,2026-04-09,Implement skill selection redesign - segmented control + card grid replacing pills,Done,2026-04-09
+205,2026-04-09,Harden and optimize Prod-to-Local Sync (staged caps deterministic ordering parallel staging),Done,2026-04-09
+206,2026-04-10,Implement premium SVG watermarks and color styles for skill selection redesign,Done,2026-04-10
+207,2026-04-10,Seed emulator admin account to fix localhost login and console errors,Done,2026-04-10
+208,2026-04-10,Summon #council to review speaking attempt retention plan,Done,2026-04-10
+209,2026-04-10,Summon #council to review counter-argument,Done,2026-04-10
+210,2026-04-10,Summarize and commit changes for V1.6.4,Done,2026-04-10
+2 1 1 , 2 0 2 6 - 0 4 - 1 0 , E x e c u t e   A S Q   b r o w s e r   t e s t   p l a n , I n   P r o g r e s s , 
+ 
+ 212,2026-04-10,Create VBA macro for batch downloading links from Excel column E,Done,2026-04-10
+213,2026-04-11,Execute Speaking Attempts Browser Testing Plan (Attempt Sharing Flow),Done,2026-04-15
+214,2026-04-11,Implement ASQ audio playback and hide question text before submission,Done,2026-04-11
+215,2026-04-11,Review debug and refactor auto accept script,Done,2026-04-11
+216,2026-04-11,Review debug and refactor ASQ quiz mode,Done,2026-04-11
+217,2026-04-12,Fix Firebase emulator connectivity issues,In Progress 
+218,2026-04-12,Review and commit all changes as V1.6.5 (no push),Done,2026-04-12
+219,2026-04-12,App Knowledge Base Document generation,Done,2026-04-12
+220,2026-04-12,Implement Write Essay mode for PTE Practice Writing section,Done,2026-04-12
+221,2026-04-12,Integrate Dialogflow Messenger chatbot UI,Done,2026-04-12
+222,2026-04-12,Fix local emulator admin login issue,Done,2026-04-13
+223,2026-04-13,Implement Summarize Group Discussion (SGD) mode for PTE Speaking,Done,2026-04-13
+225,2026-04-15,Customize Chatbot Avatar with Design #10,Done,2026-04-15
+224,2026-04-13,Review debug and refactor SGD mode (5 bugs + 5 UX + 3 refactors),Done,2026-04-13
+226,2026-04-19,SGD Note Taking UI vertical stack + Topic input field,Done,2026-04-20
+227,2026-04-20,Debug startup authentication 400 and Firestore permission denied errors,Done,2026-04-20
+228,2026-04-21,Wire SGD audio folder to questions,Done,2026-04-21
+229,2026-04-21,Review and debug auto accept script,Done,2026-04-21
+230,2026-04-22,Fix production CRM console errors (PATCH crmId + 404 schedule),Done,2026-04-22
+231,2026-04-22,Summarize and commit changes for V1.6.6 (no push),In Progress,

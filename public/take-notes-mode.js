@@ -786,6 +786,11 @@
 
         // Save progress if user is logged in
         saveProgress(userNotes, matchedWords, transcriptWordCount);
+
+        window.getPracticeVariantHooks?.('notes')?.afterSubmit?.({
+            entryId: String(currentEntry?.id || ''),
+            userNotes
+        });
     }
 
     /**

@@ -220,6 +220,39 @@ body {
   gap: 20px;
 }
 
+.ollama-status-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.ollama-status-badge.online {
+  background: rgba(30, 142, 62, 0.18);
+  color: #a8f0bf;
+  border: 1px solid rgba(30, 142, 62, 0.35);
+}
+
+.ollama-status-badge.offline {
+  background: rgba(197, 48, 48, 0.18);
+  color: #fca5a5;
+  border: 1px solid rgba(197, 48, 48, 0.35);
+}
+
+.ollama-remote-warning {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #f59e0b;
+  border-radius: var(--crm-radius);
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  display: none;
+}
+
 .crm-icon-btn {
   background: transparent;
   border: none;
@@ -1594,7 +1627,6 @@ body {
 .scheduler-calendar-cell {
   border-right: 1px solid #edf2f7;
   border-bottom: 1px solid #edf2f7;
-  min-height: 58px;
 }
 
 .scheduler-calendar-head {
@@ -1651,6 +1683,7 @@ body {
 .scheduler-class-card.is-dragging,
 .scheduler-session-pill.is-dragging {
   opacity: 0.72;
+  pointer-events: none;
   box-shadow: 0 18px 32px rgba(15, 23, 42, 0.14);
 }
 
@@ -1662,6 +1695,95 @@ body {
   display: block;
   margin-top: 4px;
   color: var(--crm-text-muted);
+}
+
+/* --- Teacher scheduler (Google Calendar-style grid) --- */
+.teacher-scheduler-workspace .scheduler-calendar-grid {
+  grid-template-columns: 56px repeat(7, minmax(100px, 1fr));
+}
+
+.teacher-scheduler-workspace .scheduler-calendar-head {
+  padding: 8px 6px;
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.teacher-scheduler-workspace .scheduler-calendar-time {
+  padding: 0 6px;
+  height: 40px;
+  line-height: 40px;
+  font-size: 0.75rem;
+}
+
+.teacher-scheduler-workspace .scheduler-calendar-cell.teacher-scheduler-slot {
+  padding: 0;
+  min-height: 0;
+  height: 40px;
+  cursor: pointer;
+}
+
+.teacher-scheduler-workspace .scheduler-calendar-cell.teacher-scheduler-slot:hover {
+  background: rgba(27, 138, 79, 0.03);
+}
+
+.teacher-scheduler-workspace .scheduler-calendar-cell.teacher-scheduler-slot.is-drop-target {
+  background: #edf8f1;
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  border-radius: 4px;
+  padding: 2px 6px;
+  background: #dbedff;
+  border: none;
+  border-left: 4px solid #1a73e8;
+  color: #1a3353;
+  font-size: 0.72rem;
+  line-height: 1.3;
+  margin-bottom: 0;
+  overflow: hidden;
+  z-index: 3;
+  transition: box-shadow 0.15s ease;
+  text-align: left;
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  z-index: 5;
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill .pill-title {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill .pill-time {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #3c5a7a;
+  font-size: 0.68rem;
+}
+
+/* --- Resize handle at bottom of teacher session pill --- */
+.teacher-scheduler-workspace .scheduler-session-resize-handle {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  cursor: ns-resize;
+  border-radius: 0 0 4px 4px;
+  background: transparent;
+}
+
+.teacher-scheduler-workspace .scheduler-session-resize-handle:hover,
+.teacher-scheduler-workspace .scheduler-session-resize-handle.is-resizing {
+  background: rgba(26, 115, 232, 0.35);
 }
 
 .crm-compact-grid {
@@ -2242,17 +2364,22 @@ body {
 }
 
 .teacher-scheduler-pattern-card {
-  margin-top: 1rem;
-  padding: 0.9rem;
-  border-radius: 0.9rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.75rem;
   border: 1px solid rgba(30, 58, 95, 0.12);
   background: #f8fafc;
   display: grid;
-  gap: 0.6rem;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
-.teacher-scheduler-pattern-card h4 {
-  margin: 0;
+.teacher-scheduler-pattern-card>summary {
+  cursor: pointer;
+  user-select: none;
+}
+
+.teacher-scheduler-pattern-card[open]>summary {
+  margin-bottom: 0.5rem;
 }
 
 .teacher-scheduler-day-chip-row {

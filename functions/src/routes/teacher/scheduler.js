@@ -11,6 +11,7 @@ const {
     buildAddSessionPreview,
     buildScheduleSummary,
     buildScheduledSessionWriteData,
+    deriveContractCountState,
     normalizeScheduledSession
 } = require('../../crm/scheduling-service');
 
@@ -42,6 +43,15 @@ function toPositiveInteger(value, fallback = null) {
         return numeric;
     }
     return fallback;
+}
+
+function normalizeSessionOutcome(value) {
+    const normalized = String(value || '').trim().toLowerCase();
+    if (!normalized || normalized === 'none' || normalized === 'reset') return 'none';
+    if (normalized === 'completed') return 'completed';
+    if (normalized === 'absent_counted' || normalized === 'absent-counted') return 'absent_counted';
+    if (normalized === 'absent_makeup' || normalized === 'absent-makeup') return 'absent_makeup';
+    throw new Error('Invalid session outcome.');
 }
 
 function pad(value) {
@@ -107,7 +117,8 @@ function normalizeWeekdays(values) {
 function isLockedSession(session) {
     return String(session?.lockState || 'unlocked') === 'hard_locked'
         || String(session?.attendanceState || 'none') === 'in_progress'
-        || String(session?.attendanceState || 'none') === 'finalized';
+        || String(session?.attendanceState || 'none') === 'finalized'
+        || String(session?.status || 'scheduled') === 'cancelled';
 }
 
 function readExpectedScheduleVersion(payload) {
@@ -693,6 +704,7 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
 
             await sessionRef.set({
                 status: 'cancelled',
+                contractCountState: 'does_not_count',
                 version: Number(existing.version || 1) + 1,
                 updatedAt: serverTimestamp(),
                 updatedBy: teacherUid
@@ -713,6 +725,69 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
             }, 'Session cancelled.');
         } catch (error) {
             return sendError(res, 500, 'TEACHER_CANCEL_ERROR', 'Failed to cancel session.', error?.message || error);
+        }
+    });
+
+    router.post('/sessions/:sessionId/outcome', ...requireTeacherHandlers, async (req, res) => {
+        try {
+            const teacherUid = cleanOptionalString(req.user?.uid);
+            const sessionId = cleanOptionalString(req.params?.sessionId);
+            if (!teacherUid || !sessionId) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'Missing teacher or session identifier.');
+            }
+
+            const sessionOutcome = normalizeSessionOutcome(req.body?.outcome);
+            const sessionRef = db.collection(CRM_SCHEDULED_SESSIONS).doc(sessionId);
+            const sessionSnap = await sessionRef.get();
+            if (!sessionSnap.exists) {
+                return sendError(res, 404, 'SESSION_NOT_FOUND', 'Session not found.');
+            }
+
+            const existing = normalizeScheduledSession({ sessionId, ...(sessionSnap.data() || {}) });
+            if (cleanOptionalString(existing.teacherUid) !== teacherUid) {
+                return sendError(res, 403, 'FORBIDDEN', 'You can only update outcomes for your own sessions.');
+            }
+            if (String(existing.status || 'scheduled') === 'cancelled' || isLockedSession(existing)) {
+                return sendError(res, 409, 'SESSION_LOCKED', 'Locked or cancelled sessions cannot be updated.');
+            }
+
+            const access = await loadTeacherClassroom(db, cleanOptionalString(existing.classId), teacherUid);
+            if (access.status !== 'ok') {
+                return sendError(res, 403, 'FORBIDDEN', 'You can only update sessions for your own classrooms.');
+            }
+
+            const patch = {
+                sessionOutcome,
+                contractCountState: deriveContractCountState({
+                    ...existing,
+                    sessionOutcome
+                }),
+                version: Number(existing.version || 1) + 1,
+                updatedAt: serverTimestamp(),
+                updatedBy: teacherUid
+            };
+
+            await sessionRef.set(patch, { merge: true });
+            const scheduleState = await syncClassroomScheduleState(db, cleanOptionalString(existing.classId), { bumpVersion: true });
+
+            await writeAuditLog?.({
+                action: 'teacher.session.outcome',
+                entityType: 'scheduled_session',
+                entityId: sessionId,
+                metadata: { classId: existing.classId || null, sessionOutcome }
+            }, { user: req.user });
+
+            return sendSuccess(res, {
+                sessionId,
+                scheduleSummary: scheduleState?.scheduleSummary || null,
+                scheduleVersion: scheduleState?.scheduleConfig?.scheduleVersion || null
+            }, 'Session outcome updated.');
+        } catch (error) {
+            const message = String(error?.message || '');
+            if (message.includes('Invalid session outcome')) {
+                return sendError(res, 400, 'VALIDATION_ERROR', error.message);
+            }
+            return sendError(res, 500, 'TEACHER_OUTCOME_ERROR', 'Failed to update session outcome.', error?.message || error);
         }
     });
 
@@ -776,7 +851,11 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
 
                 const classSessions = await listClassSessions(db, classId);
                 const contractedAssignedCount = classSessions
-                    .filter((session) => session.unitType === 'contracted' && String(session.status || 'scheduled') !== 'cancelled')
+                    .filter((session) =>
+                        session.unitType === 'contracted'
+                        && String(session.status || 'scheduled') !== 'cancelled'
+                        && String(session.contractCountState || 'counts') !== 'does_not_count'
+                    )
                     .length;
                 const remaining = Math.max(targetSessionCount - contractedAssignedCount, 0);
                 if (remaining <= 0) {

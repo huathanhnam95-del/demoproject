@@ -10,6 +10,7 @@ const {
     buildClassroomMemberData,
     mapEnrollmentRecord
 } = require('../../crm/enrollment-service');
+const { enqueuePracticeAccessJob } = require('../../crm/practice-access-service');
 
 module.exports = function registerEnrollmentRoutes(router, deps) {
     const { db, sendSuccess, sendError, requireAdminHandlers, serverTimestamp, writeAuditLog } = deps;
@@ -74,6 +75,14 @@ module.exports = function registerEnrollmentRoutes(router, deps) {
                     studentId: enrollment.studentId
                 }
             }, { user: req.user });
+
+            // Enrollment changes may affect practice access windows.
+            if (enrollment.studentId) {
+                const studentSnap = await db.collection(CRM_STUDENTS).doc(enrollment.studentId).get().catch(() => null);
+                const linked = studentSnap && studentSnap.exists ? (studentSnap.data()?.linked_user_ids || []) : [];
+                const uids = Array.isArray(linked) ? linked.map((x) => String(x || '').trim()).filter(Boolean) : [];
+                await Promise.all(uids.map((targetUid) => enqueuePracticeAccessJob(db, 'reconcileUid', targetUid, { runAfterAt: new Date() })));
+            }
             return sendSuccess(res, {
                 enrollmentId: ref.id,
                 enrollment: mapEnrollmentRecord(snap, ref.id)
@@ -130,6 +139,14 @@ module.exports = function registerEnrollmentRoutes(router, deps) {
                     status: next.status
                 }
             }, { user: req.user });
+
+            // Enrollment changes may affect practice access windows.
+            if (next.studentId) {
+                const studentSnap = await db.collection(CRM_STUDENTS).doc(next.studentId).get().catch(() => null);
+                const linked = studentSnap && studentSnap.exists ? (studentSnap.data()?.linked_user_ids || []) : [];
+                const uids = Array.isArray(linked) ? linked.map((x) => String(x || '').trim()).filter(Boolean) : [];
+                await Promise.all(uids.map((targetUid) => enqueuePracticeAccessJob(db, 'reconcileUid', targetUid, { runAfterAt: new Date() })));
+            }
             return sendSuccess(res, {
                 enrollment: mapEnrollmentRecord(updatedSnap, enrollmentId)
             }, 'Enrollment updated.');

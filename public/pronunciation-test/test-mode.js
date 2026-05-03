@@ -45,6 +45,15 @@ class SegmentalScreeningApp {
     this.praatAPI = new PraatAPI(`${window.location.origin}/api/pronunciation-test`);
     this.testHooks = window.__PRON_TEST_TEST_HOOKS__ || null;
     this.lastAssessmentToken = 0;
+
+    // Entrance test integration
+    const urlParams = new URLSearchParams(window.location.search || '');
+    this.entranceToken = String(urlParams.get('entranceToken') || '').trim() || null;
+    this._entranceSubmitAttempted = false;
+    this._entranceSubmitStatus = null; // null | 'pending' | 'success' | 'error'
+    this._entranceSubmitAlreadyUsed = false;
+    this._entranceSubmitLastErrorStatus = null;
+    this._entranceSubmitPromise = null;
   }
 
   async init() {
@@ -250,8 +259,79 @@ class SegmentalScreeningApp {
     `;
   }
 
+  startEntranceSubmission(summaries) {
+    if (!this.entranceToken) return;
+    if (this._entranceSubmitAttempted) return;
+    if (this._entranceSubmitPromise) return;
+
+    this._entranceSubmitAttempted = true;
+    this._entranceSubmitStatus = 'pending';
+    this._entranceSubmitAlreadyUsed = false;
+    this._entranceSubmitLastErrorStatus = null;
+
+    const payload = {
+      token: this.entranceToken,
+      results: this.results,
+      contrastSummaries: summaries
+    };
+
+    this._entranceSubmitPromise = fetch('/api/entrance-tests/submit-segmental', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then(async (res) => {
+        let json = null;
+        try {
+          json = await res.json();
+        } catch (e) {
+          // ignore
+        }
+
+        if (!res.ok) {
+          const err = new Error(json?.message || `HTTP ${res.status}`);
+          err.status = res.status;
+          throw err;
+        }
+
+        return json;
+      })
+      .then(() => {
+        this._entranceSubmitStatus = 'success';
+      })
+      .catch((e) => {
+        const status = Number(e?.status || 0) || null;
+        if (status === 410) {
+          this._entranceSubmitStatus = 'success';
+          this._entranceSubmitAlreadyUsed = true;
+          return;
+        }
+
+        this._entranceSubmitStatus = 'error';
+        this._entranceSubmitLastErrorStatus = status;
+        console.error('[SegmentalScreening] Failed to submit entrance test results:', e);
+      })
+      .finally(() => {
+        this._entranceSubmitPromise = null;
+        this.renderSummary();
+      });
+  }
+
+  retryEntranceSubmission() {
+    if (!this.entranceToken) return;
+    if (this._entranceSubmitPromise) return;
+    this._entranceSubmitAttempted = false;
+    this._entranceSubmitStatus = null;
+    this._entranceSubmitAlreadyUsed = false;
+    this._entranceSubmitLastErrorStatus = null;
+    this.renderSummary();
+  }
+
   renderSummary() {
     const summaries = this.adaptiveSelection?.summaries || summarizeContrasts(this.results, this.bank?.contrastPriority || []);
+
+    this.startEntranceSubmission(summaries);
+
     const cards = summaries.map((summary) => {
       const scoreLabel = summary.score === null ? 'No valid score' : `${summary.score}`;
       return `
@@ -267,6 +347,28 @@ class SegmentalScreeningApp {
       ? this.adaptiveSelection.selectedContrasts.map((contrastId) => CONTRAST_LABELS[contrastId] || contrastId).join(', ')
       : 'None';
 
+    const exitHref = '/';
+    const exitText = this.entranceToken ? 'Done' : 'Back to practice';
+
+    let entranceSubmitNote = '';
+    if (this.entranceToken) {
+      if (this._entranceSubmitStatus === 'pending' || !this._entranceSubmitAttempted) {
+        entranceSubmitNote = '<p style="margin-top:12px; color: var(--pst-accent, #6b7280);">Submitting results to entrance test system…</p>';
+      } else if (this._entranceSubmitStatus === 'success') {
+        entranceSubmitNote = this._entranceSubmitAlreadyUsed
+          ? '<p style="margin-top:12px; color: var(--pst-accent, #10b981);">This screening link was already submitted.</p>'
+          : '<p style="margin-top:12px; color: var(--pst-accent, #10b981);">Results submitted to entrance test system.</p>';
+      } else if (this._entranceSubmitStatus === 'error') {
+        const statusText = this._entranceSubmitLastErrorStatus ? ` (HTTP ${this._entranceSubmitLastErrorStatus})` : '';
+        entranceSubmitNote = `
+          <p style="margin-top:12px; color: #ef4444;">
+            Could not submit results${statusText}. Please retry.
+            <button id="pst-entrance-retry" type="button" style="margin-left:8px; padding: 6px 10px; border: 1px solid #9ca3af; border-radius: 999px; background: transparent; cursor: pointer;">Retry</button>
+          </p>
+        `;
+      }
+    }
+
     this.root.innerHTML = `
       <section class="pst-shell">
         <div class="pst-topbar">
@@ -274,17 +376,26 @@ class SegmentalScreeningApp {
             <p class="pst-kicker">Segmental Screening</p>
             <h1 class="pst-title">Screen complete</h1>
           </div>
-          <a class="pst-exit" href="/">Back to practice</a>
+          <a class="pst-exit" href="${exitHref}">${exitText}</a>
         </div>
         <section class="pst-summary-hero">
           <p>The screen stays provisional in v1. No pass/fail or composite score is shown.</p>
           <p>Adaptive follow-up contrasts for the weakest or least-certain core results: <strong>${selectedText}</strong></p>
+          ${entranceSubmitNote}
         </section>
         <section class="pst-summary-grid">
           ${cards}
         </section>
       </section>
     `;
+
+    if (this.entranceToken && this._entranceSubmitStatus === 'error') {
+      const retryBtn = this.root.querySelector('#pst-entrance-retry');
+      if (retryBtn && !retryBtn.__entranceRetryBound) {
+        retryBtn.__entranceRetryBound = true;
+        retryBtn.addEventListener('click', () => this.retryEntranceSubmission());
+      }
+    }
   }
 
   buildProgressText(item) {
@@ -412,7 +523,7 @@ class SegmentalScreeningApp {
     source.start(0);
     const rendered = await offline.startRendering();
     if (typeof audioContext.close === 'function') {
-      await audioContext.close().catch(() => {});
+      await audioContext.close().catch(() => { });
     }
     return this.audioBufferToWav(rendered);
   }

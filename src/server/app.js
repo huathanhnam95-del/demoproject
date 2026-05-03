@@ -33,6 +33,68 @@ function setStaticCacheHeaders(res, filePath) {
   res.setHeader('Cache-Control', 'public, max-age=3600');
 }
 
+function isLocalHostname(hostname) {
+  const h = String(hostname || '').trim().toLowerCase();
+  if (!h) return false;
+  if (h === 'localhost' || h === '127.0.0.1' || h === '::1') return true;
+  if (h.endsWith('.local')) return true;
+  if (/^192\.168\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+  if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+  if (/^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+  return false;
+}
+
+function addConnectSrcAllowlist(policy, extraSources) {
+  const base = String(policy || '').trim();
+  if (!base) return '';
+
+  const extras = Array.isArray(extraSources) ? extraSources : [];
+  const directives = base
+    .split(';')
+    .map((d) => d.trim())
+    .filter(Boolean);
+
+  let found = false;
+  const updated = directives.map((directive) => {
+    if (!directive.startsWith('connect-src')) return directive;
+    found = true;
+
+    const parts = directive.split(/\s+/).filter(Boolean);
+    const name = parts[0];
+    const sources = parts.slice(1);
+
+    const out = new Set(sources);
+    for (const extra of extras) {
+      const value = String(extra || '').trim();
+      if (value) out.add(value);
+    }
+
+    return [name, ...Array.from(out)].join(' ');
+  });
+
+  if (!found) {
+    updated.push(['connect-src', "'self'", ...extras].join(' '));
+  }
+
+  return updated.join('; ');
+}
+
+function extractCspMetaContent(html) {
+  const text = String(html || '');
+  // Match a single meta tag only (do not span across multiple <meta> tags),
+  // otherwise we can accidentally capture the viewport meta's `content=` value.
+  const metaRegex = /<meta\b[^>]*http-equiv=["']Content-Security-Policy["'][^>]*>/i;
+  const meta = text.match(metaRegex)?.[0] || '';
+  if (!meta) return { metaTag: '', content: '' };
+
+  const contentMatch = meta.match(/content\s*=\s*"([^"]+)"/i)
+    || meta.match(/content\s*=\s*'([^']+)'/i);
+  return {
+    metaTag: meta,
+    content: contentMatch?.[1] || ''
+  };
+}
+
 function createRateLimiter({ windowMs, max, code, message }) {
   return rateLimit({
     windowMs,
@@ -96,6 +158,41 @@ function createApp(options = {}) {
   app.use('/api/ai-proxy', aiLimiter);
   app.use('/api/ai-feedback-stream', aiLimiter);
 
+  // Dev-only CSP override for CRM Admin so emulator connectivity is allowed locally.
+  // In production hosting, crm-admin.html is served as a static file with its own CSP meta tag.
+  app.get('/crm-admin.html', (req, res, next) => {
+    const isProd = String(process.env.NODE_ENV || '').trim().toLowerCase() === 'production';
+    if (isProd || !isLocalHostname(req.hostname)) {
+      return next();
+    }
+
+    try {
+      const filePath = path.join(publicDir, 'crm-admin.html');
+      const rawHtml = fs.readFileSync(filePath, 'utf-8');
+      const { metaTag, content } = extractCspMetaContent(rawHtml);
+
+      // Remove the meta CSP so we can provide a dev-only CSP header instead.
+      const html = metaTag ? rawHtml.replace(metaTag, '') : rawHtml;
+
+      const devPolicy = addConnectSrcAllowlist(content, [
+        'http://localhost:*',
+        'ws://localhost:*',
+        'http://127.0.0.1:*',
+        'ws://127.0.0.1:*'
+      ]);
+
+      if (devPolicy) {
+        res.setHeader('Content-Security-Policy', devPolicy);
+      }
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      res.type('html').send(html);
+    } catch (err) {
+      next(err);
+    }
+  });
+
   app.use(express.static(publicDir, {
     etag: true,
     lastModified: true,
@@ -115,6 +212,24 @@ function createApp(options = {}) {
   app.use('/api', routes.readingJourneyRoutes);
   app.use('/api', routes.pronunciationTestRoutes);
   app.use('/api', routes.readAloudRoutes);
+
+  // To simulate Firebase Functions authentication in local dev server:
+  // Normally Firebase passes a decoded token. In local dev, we need the authMiddleware.
+  const functionsAuthMiddleware = require('../middleware/auth-user');
+  const { practiceAttemptsLimiterByUid, sharedPracticeAttemptsLimiter } = require('../../functions/src/middleware/practice-attempts-rate-limiter');
+  const { sendSuccess: fnsSendSuccess, sendError: fnsSendError } = require('../../functions/src/utils/response-helper');
+  const createPracticeAttemptsRouter = require('../../functions/src/routes/practice-attempts');
+  const createSharedPracticeAttemptsRouter = require('../../functions/src/routes/shared-practice-attempts');
+
+  const routerDeps = {
+    db: firebase.db,
+    sendSuccess: fnsSendSuccess,
+    sendError: fnsSendError,
+    getStorageBucket: firebase.getStorageBucket
+  };
+
+  app.use('/api/practice-attempts', functionsAuthMiddleware, practiceAttemptsLimiterByUid, createPracticeAttemptsRouter(routerDeps));
+  app.use('/api/shared/practice-attempts', sharedPracticeAttemptsLimiter, createSharedPracticeAttemptsRouter(routerDeps));
 
   app.get('/api/health', async (_req, res) => {
     const memory = process.memoryUsage();

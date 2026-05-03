@@ -16,7 +16,8 @@ window.CrmLeadWorkspace = (function () {
             renderTaskList,
             renderActivityList,
             renderReminderBadgeMarkup,
-            escapeHtml
+            escapeHtml,
+            formatDateTime
         } = deps;
         const selectedLeadIds = new Set();
 

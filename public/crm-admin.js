@@ -1193,7 +1193,8 @@
         renderActivityList,
         renderReminderBadgeMarkup,
         escapeHtml,
-        openStudentProfile
+        openStudentProfile,
+        formatDateTime
       })
       : null;
     recycleBinController = window.CrmRecycleBinWorkspace && typeof window.CrmRecycleBinWorkspace.createController === 'function'

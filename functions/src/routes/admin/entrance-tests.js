@@ -5,6 +5,7 @@ const { buildLeadStageSyncPatch, mapLeadRecord } = require('../../crm/lead-servi
 const { mapStudentRecord } = require('../../crm/student-service');
 const { buildEntranceTestLinks } = require('../../crm/public-origin');
 const { buildEntranceTestAdminList } = require('../../crm/entrance-test-link-recovery');
+const { getStorage } = require('firebase-admin/storage');
 const {
     TEST_VERSION,
     hashTokenToTestId,
@@ -19,6 +20,18 @@ const DEFAULT_TEST_TYPE = TEST_VERSION;
 function cleanOptionalString(value) {
     const normalized = String(value || '').trim();
     return normalized || null;
+}
+
+function resolveStorageBucket(preferredBucketName) {
+    try {
+        const bucketName = cleanOptionalString(preferredBucketName)
+            || cleanOptionalString(process.env.CLIENT_FIREBASE_STORAGE_BUCKET);
+        if (!bucketName) return null;
+        return getStorage().bucket(bucketName);
+    } catch (error) {
+        console.warn('[CRM EntranceTests] Storage init failed:', error?.message || error);
+        return null;
+    }
 }
 
 async function generateUniqueTestIdentity(db) {
@@ -311,7 +324,7 @@ module.exports = function registerEntranceTestRoutes(router, deps) {
 
     router.get('/entrance-tests/:testId/speaking/:questionId/audio-url', ...requireAdminHandlers, async (req, res) => {
         try {
-            const bucket = deps.getStorageBucket ? await deps.getStorageBucket() : null;
+            const bucket = resolveStorageBucket();
             if (!bucket) {
                 return sendError(res, 500, 'SERVER_CONFIG_ERROR', 'Firebase Storage not initialized.');
             }
@@ -336,7 +349,7 @@ module.exports = function registerEntranceTestRoutes(router, deps) {
             }
 
             const bucketName = cleanOptionalString(entry?.audio?.bucketName);
-            const targetBucket = bucketName ? deps.admin.storage().bucket(bucketName) : bucket;
+            const targetBucket = resolveStorageBucket(bucketName) || bucket;
             const [url] = await targetBucket.file(storagePath).getSignedUrl({
                 action: 'read',
                 expires: Date.now() + 10 * 60 * 1000

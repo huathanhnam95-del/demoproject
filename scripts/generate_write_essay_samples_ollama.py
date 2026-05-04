@@ -887,12 +887,31 @@ def build_user_prompt(
         ]
     )
 
+    if prompt_type == "agree_disagree":
+        chunks.append(
+            "- For agree_disagree: STRICT RULE! BOTH body1 and body2 MUST argue the SAME direction favoring your stance. Do NOT write a balanced essay. Both paragraphs must support your opinion.\n"
+        )
+        chunks.append(
+            "- For agree_disagree: The conclusion MUST strongly reaffirm the chosen stance without contradicting the body.\n"
+        )
+
+    if prompt_type == "choose_between":
+        chunks.append(
+            "- For choose_between: STRICT RULE! The essay MUST discuss BOTH options before concluding. body1 must discuss the first option, body2 must discuss the second option.\n"
+        )
+        chunks.append(
+            f"- For choose_between: The conclusion MUST definitively pick the stated stance ({stance_statement}) after comparing both.\n"
+        )
+
     if prompt_type == "discuss_both_views":
         chunks.append(
             "- For discuss_both_views: body1 MUST start with \"On the one hand,\" and explain the side that matches your opinion.\n"
         )
         chunks.append(
             "- For discuss_both_views: body2 MUST start with \"On the other hand,\" and explain the opposite side.\n"
+        )
+        chunks.append(
+            "- For discuss_both_views: STRICT RULE! The conclusion MUST definitively pick the stated stance and not be vague.\n"
         )
 
     if prompt_type == "advantages_disadvantages":
@@ -904,6 +923,14 @@ def build_user_prompt(
         )
         chunks.append(
             "- For advantages_disadvantages: body2 should use a clear disadvantage word such as \"disadvantage\", \"drawback\", \"negative\", \"problem\", or \"risk\".\n"
+        )
+        chunks.append(
+            f"- For advantages_disadvantages: STRICT RULE! The conclusion MUST definitively align with the stated stance ({stance_statement}), clearly summarizing why the advantages or disadvantages are stronger.\n"
+        )
+
+    if prompt_type == "unknown":
+        chunks.append(
+            f"- STRICT RULE! The essay MUST logically support the assigned stance ({stance_statement}) without contradicting itself.\n"
         )
 
     if prompt_type == "problems_solutions":

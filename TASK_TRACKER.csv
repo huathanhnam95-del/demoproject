@@ -222,4 +222,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 231,2026-04-22,Summarize and commit changes for V1.6.6 (no push),Done,2026-05-04
 232,2026-05-04,Fix formatDateTime ReferenceError in lead-workspace.js bulk archive,Done,2026-05-04
 233,2026-05-04,Review debug and refactor all merge changes (PTE Practice integration audit),Done,2026-05-04
-234,2026-05-04,Wire DI + Essay launcher cards and mode panel + sync segmental route to production,In Progress,
+234,2026-05-04,Wire DI + Essay launcher cards and mode panel + sync segmental route to production,Done,2026-05-04

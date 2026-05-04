@@ -15,7 +15,7 @@
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
     rel="stylesheet" />
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-  <link rel="stylesheet" href="style.css?v=20260410_watermarks">
+  <link rel="stylesheet" href="style.css?v=20260504_back_btn_fix">
   <link rel="stylesheet" href="srs-review.css">
   <link rel="stylesheet" href="srs-onboarding.css">
   <link rel="stylesheet" href="pronunciation-analyzer/style.css">
@@ -1007,6 +1007,9 @@
       <div class="main-header">
         <div class="header-left">
           <h1>Practice</h1>
+          <button id="back-to-dashboard-btn" class="back-nav-btn" style="display: none;" onclick="window.exitCurrentMode()" aria-label="Go back to Dashboard">
+            <span class="back-icon">←</span> Back to Dashboard
+          </button>
           <div id="current-mode-indicator" class="mode-pill-indicator" style="display: none;" aria-live="polite">
             <span id="current-mode-name" class="mode-pill-name">Type</span>
             <button id="mode-tutorial-btn" class="mode-pill-tutorial" title="Learn about this mode">?</button>
@@ -3227,9 +3230,9 @@
       <div id="mode-read-aloud" class="mode-panel" style="display: none;">
         <!-- Filter/Config Bar -->
         <div class="question-selector"
-          style="border-bottom: none; padding: 10px 20px 0; align-items: center; flex-direction: column; gap: 12px;">
+          style="border-bottom: none; padding: 10px 20px 0; align-items: center; flex-direction: column; gap: 12px; margin: 0 auto; max-width: 900px;">
           <div
-            style="display:flex; align-items:center; justify-content:space-between; gap: 12px; width:100%; max-width:900px; flex-wrap:wrap;">
+            style="display:flex; align-items:center; justify-content:space-between; gap: 12px; width:100%; max-width:900px; margin: 0 auto; flex-wrap:wrap;">
             <select id="ra-question-select"
               style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-light); font-family: inherit; font-size: 0.95rem; background: white; flex: 1 1 320px; min-width: 240px;">
               <option value="random">🔀 Random Question</option>
@@ -3240,7 +3243,7 @@
               target</button>
           </div>
           <div id="ra-practice-target-drawer" hidden
-            style="width:100%; max-width:900px; display:flex; flex-direction:column; gap: 10px; padding: 12px 14px; border: 1px solid var(--border-light, #e5e7eb); border-radius: 14px; background: rgba(255,255,255,0.9); box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);">
+            style="width:100%; max-width:900px; margin: 0 auto; display:flex; flex-direction:column; gap: 10px; padding: 12px 14px; border: 1px solid var(--border-light, #e5e7eb); border-radius: 14px; background: rgba(255,255,255,0.9); box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);">
             <div class="read-aloud-filters" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
               <button class="ra-filter-pill active" id="ra-filter-all" type="button"
                 style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--brand-primary, #2563eb); background: rgba(37, 99, 235, 0.1); color: var(--brand-primary, #2563eb); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">All</button>
@@ -3564,7 +3567,7 @@
   <script src="js/lazy-loader.js"></script>
   <script type="module" src="js/collo-dictate-mode.js"></script>
   <script type="module" src="js/reading-journey.js"></script>
-  <script type="module" src="script.js?v=20260409_skill_cards"></script>
+  <script type="module" src="script.js?v=20260504_back_btn_fix"></script>
   <!-- Points Toast Notification Container -->
   <div id="points-toast-container" class="points-toast-container"></div>
 

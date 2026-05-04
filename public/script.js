@@ -1083,7 +1083,9 @@
 
     const writingEmptyState = document.getElementById('practice-writing-empty');
     if (writingEmptyState) {
-      const shouldShow = selectedPracticeSkill === 'writing';
+      const writingCards = Array.from(document.querySelectorAll('.tutorial-card[data-practice-skill="writing"]'));
+      const hasVisibleWritingCards = writingCards.some(card => !card.hidden && card.id !== 'practice-writing-empty');
+      const shouldShow = selectedPracticeSkill === 'writing' && !hasVisibleWritingCards;
       writingEmptyState.hidden = !shouldShow;
       writingEmptyState.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
     }
@@ -1122,12 +1124,14 @@
     const indicator = document.getElementById('current-mode-indicator');
     const modeName = document.getElementById('current-mode-name');
     const tutorialBtn = document.getElementById('mode-tutorial-btn');
+    const backBtn = document.getElementById('back-to-dashboard-btn');
     const modeMeta = getModeMeta(mode);
     const hasTutorial = !!modeMeta?.hasTutorial;
 
     if (indicator && modeName) {
       // Show the indicator
       indicator.style.display = 'inline-flex';
+      if (backBtn) backBtn.style.display = 'inline-flex';
 
       // Update mode name with display-friendly text
       modeName.textContent = modeMeta?.label || mode;
@@ -1376,6 +1380,36 @@
     }
   }
 
+  window.exitCurrentMode = function() {
+    // Hide all mode panels
+    document.querySelectorAll('.mode-panel').forEach(panel => {
+      panel.classList.remove('active');
+      panel.style.display = 'none';
+    });
+    
+    // Show the dashboard again
+    const dashboard = document.querySelector('.dashboard-modern-container');
+    if (dashboard) {
+      dashboard.style.display = 'block';
+    }
+    
+    // Hide indicator and back button
+    const indicator = document.getElementById('current-mode-indicator');
+    if (indicator) indicator.style.display = 'none';
+    const backBtn = document.getElementById('back-to-dashboard-btn');
+    if (backBtn) backBtn.style.display = 'none';
+    
+    currentActiveMode = '';
+    window.appState.currentMode = '';
+    
+    // Deselect tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.mode-switch-btn').forEach(btn => {
+      btn.classList.remove('is-active');
+      btn.setAttribute('aria-pressed', 'false');
+    });
+  };
+
   /**
    * Switch to a specific practice mode
    * Called by Learning Center mode buttons
@@ -1476,6 +1510,12 @@
       });
       modePanel.classList.add('active');
       modePanel.style.display = 'block';
+
+      // 2.1 Hide Dashboard so it doesn't overlap
+      const dashboard = document.querySelector('.dashboard-modern-container');
+      if (dashboard) {
+        dashboard.style.display = 'none';
+      }
 
       // 3. Update mode-switch-btn active states in Learning Center
       document.querySelectorAll('.mode-switch-btn').forEach(btn => {

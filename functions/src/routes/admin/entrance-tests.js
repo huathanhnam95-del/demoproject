@@ -493,4 +493,77 @@ module.exports = function registerEntranceTestRoutes(router, deps) {
             return sendError(res, 500, 'RETRY_ASR_ERROR', 'Failed to retry speaking ASR.', error?.message || error);
         }
     });
+
+    // --- Segmental screening submit route ---
+    router.post('/entrance-tests/submit-segmental', async (req, res) => {
+        try {
+            const token = cleanOptionalString(req.body?.token);
+            if (!token || token.length < 10) {
+                return sendError(res, 400, 'INVALID_TOKEN', 'Missing or invalid token.');
+            }
+
+            const testId = hashTokenToTestId(token);
+            const ref = db.collection(ENTRANCE_TESTS).doc(testId);
+
+            const result = await db.runTransaction(async (tx) => {
+                const snap = await tx.get(ref);
+                if (!snap.exists) {
+                    return { ok: false, status: 404, error: 'TEST_NOT_FOUND', message: 'This link is invalid.' };
+                }
+
+                const data = snap.data() || {};
+                if (data.testType !== 'segmental_screening_v1') {
+                    return { ok: false, status: 400, error: 'WRONG_TEST_TYPE', message: 'This endpoint is only for segmental screening tests.' };
+                }
+                if (data.status === 'submitted' || data.status === 'revoked') {
+                    return { ok: false, status: 410, error: 'TEST_LINK_USED', message: 'This link has already been used.' };
+                }
+
+                const results = req.body?.results || null;
+                const contrastSummaries = req.body?.contrastSummaries || null;
+
+                const leadId = cleanOptionalString(data.leadId);
+                const studentId = cleanOptionalString(data.studentId);
+
+                // Sync lead stage to test_completed
+                if (leadId) {
+                    const leadRef = db.collection(CRM_LEADS).doc(leadId);
+                    const leadSnap = await tx.get(leadRef);
+                    if (leadSnap.exists) {
+                        const leadPatch = buildLeadStageSyncPatch(leadSnap.data() || {}, 'test_completed', {
+                            user: { uid: 'public-entrance-test', email: null },
+                            serverTimestamp
+                        });
+                        if (leadPatch) {
+                            tx.set(leadRef, leadPatch, { merge: true });
+                        }
+                    }
+                }
+
+                tx.set(ref, {
+                    status: 'submitted',
+                    startedAt: data.startedAt || serverTimestamp(),
+                    submittedAt: serverTimestamp(),
+                    segmentalResults: results,
+                    segmentalSummaries: contrastSummaries,
+                    submittedMeta: {
+                        ip: req.ip || null,
+                        userAgent: req.headers['user-agent'] || null
+                    },
+                    updatedAt: serverTimestamp()
+                }, { merge: true });
+
+                return { ok: true };
+            });
+
+            if (!result.ok) {
+                return sendError(res, result.status, result.error, result.message);
+            }
+
+            return sendSuccess(res, { testId }, 'Segmental screening submitted.');
+        } catch (e) {
+            console.error('[CRM EntranceTests] /submit-segmental error:', e);
+            return sendError(res, 500, 'SUBMIT_ERROR', 'Failed to submit segmental screening.', e?.message || String(e));
+        }
+    });
 };

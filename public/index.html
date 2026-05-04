@@ -1496,10 +1496,48 @@
                 </div>
               </div>
 
-              <!-- Writing Skill Empty State -->
-              <div id="practice-writing-empty" class="practice-skill-empty-state" data-practice-skill="writing" hidden>
-                <h3>Writing is coming later</h3>
-                <p>We will add Writing modes in a future update.</p>
+              <!-- Essay Mode Card -->
+              <div id="mode-btn-essay" class="modern-card transition-card mode-switch-btn" data-practice-skill="writing"
+                onclick="window.switchToMode('essay')" tabindex="0" role="button" aria-label="Write Essay mode">
+                <span class="badge new">New</span>
+                <div class="card-visual visual-essay">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+                      <rect x="16" y="10" width="40" height="52" rx="6" stroke="currentColor" stroke-width="2.5" fill="var(--visual-bg)" />
+                      <line x1="24" y1="24" x2="48" y2="24" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" />
+                      <line x1="24" y1="32" x2="44" y2="32" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" opacity="0.7" />
+                      <line x1="24" y1="40" x2="46" y2="40" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" opacity="0.5" />
+                      <line x1="24" y1="48" x2="38" y2="48" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" opacity="0.3" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Write Essay</h3>
+                  <p>Write a 200–300 word essay on an academic topic.</p>
+                  <button class="card-cta">Practice Now</button>
+                </div>
+              </div>
+
+              <!-- Describe Image Mode Card -->
+              <div id="mode-btn-describe-image" class="modern-card transition-card mode-switch-btn" data-practice-skill="speaking"
+                onclick="window.switchToMode('describe-image')" tabindex="0" role="button" aria-label="Describe Image mode">
+                <span class="badge new">New</span>
+                <div class="card-visual visual-describe-image">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+                      <rect x="12" y="16" width="48" height="36" rx="6" stroke="currentColor" stroke-width="2.5" fill="var(--visual-bg)" />
+                      <circle cx="28" cy="30" r="5" stroke="var(--visual-accent)" stroke-width="2" fill="none" />
+                      <path d="M12 44l14-10 10 7 14-12 10 9" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                      <path d="M24 58l12-5 12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.5" />
+                      <circle cx="52" cy="22" r="3" fill="var(--visual-accent)" opacity="0.6" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Describe Image</h3>
+                  <p>Study an image then describe it aloud within 40 seconds.</p>
+                  <button class="card-cta">Practice Now</button>
+                </div>
               </div>
             </div>
             <div class="whats-this-container-compact">
@@ -1683,6 +1721,7 @@
           <button id="tab-pronounce" class="tab-btn" type="button">Pronounce</button>
           <button id="tab-read-aloud" class="tab-btn" type="button">Read Aloud</button>
           <button id="tab-asq" class="tab-btn" type="button">Quiz</button>
+          <button id="tab-describe-image" class="tab-btn" type="button">Describe Image</button>
         </div>
       </div>
 
@@ -2930,6 +2969,140 @@
         </div>
       </div>
 
+      <!-- Describe Image Mode Panel -->
+      <div id="mode-describe-image" class="mode-panel" style="display: none;">
+        <div id="di-info-box" class="notification-box important-notice">
+          <span>🖼️ PTE Describe Image — 25s prep + 40s recording</span>
+          <button class="info-box-close"
+            onclick="this.parentElement.style.display='none'; localStorage.setItem('diInfoDismissed','1')"
+            title="Don't show again">×</button>
+        </div>
+        <div class="question-selector">
+          <div class="question-id-display">
+            <label for="question-select-di">Image ID:</label>
+            <span id="current-question-id-di" class="current-question-id">1</span>
+          </div>
+          <div class="question-nav-row">
+            <button id="back-btn-di" class="nav-btn nav-btn-back" type="button" title="Previous Image">← Back</button>
+            <select id="question-select-di" class="question-select question-select-narrow">
+              <option value="0">Loading...</option>
+            </select>
+            <button id="next-btn-di" class="nav-btn nav-btn-next" type="button" title="Next Image">Next →</button>
+          </div>
+        </div>
+        <div class="question-total">
+          <span>Total images: <span id="total-questions-di">0</span></span>
+        </div>
+
+        <!-- Difficulty Filter -->
+        <div id="difficulty-filter-container-di" class="difficulty-filter-container" style="margin-bottom: 8px;">
+          <button id="difficulty-filter-btn-di" class="difficulty-filter-btn" type="button">
+            <span id="difficulty-filter-label-di">Recommended</span> ▾
+          </button>
+          <div id="difficulty-filter-menu-di" class="difficulty-filter-menu" style="display: none;">
+            <div class="filter-option" data-value="all">All</div>
+            <div class="filter-option" data-value="1">🟢 Level 1</div>
+            <div class="filter-option" data-value="2">🟡 Level 2</div>
+            <div class="filter-option" data-value="3">🔴 Level 3</div>
+          </div>
+        </div>
+
+        <!-- Image Preview (persistent, visible before practice starts) -->
+        <div id="di-image-preview" class="di-image-preview" style="margin-bottom: 12px;">
+          <div class="di-image-container" style="cursor: zoom-in; max-width: 500px; margin: 0 auto;">
+            <img id="di-preview-img" class="di-image" alt="Describe Image preview" style="width:100%; border-radius:8px; border:1px solid #e2e8f0;" />
+          </div>
+        </div>
+
+        <div class="controls">
+          <button id="play-di-btn" class="modern-btn modern-btn--play" type="button">Start Practice</button>
+        </div>
+
+        <!-- Practice Area (hidden until Start clicked) -->
+        <div id="di-practice-area" style="display: none;">
+          <!-- Progress Breadcrumb -->
+          <div id="di-step-progress" class="di-step-progress" style="display:flex; gap:8px; margin-bottom:12px;">
+            <span class="di-progress-step" data-step="prepare">1. Prepare</span>
+            <span class="di-progress-step" data-step="record">2. Record</span>
+            <span class="di-progress-step" data-step="review">3. Review</span>
+          </div>
+
+          <!-- Step 1: Prepare -->
+          <div id="di-step-prepare" class="notes-step" style="display: none;">
+            <div class="notes-step-header">
+              <span class="notes-step-badge">Preparation</span>
+              <span id="di-prep-timer" class="di-timer">00:00 / 00:25</span>
+            </div>
+            <div class="di-progress-bar"><div id="di-prep-bar-fill" class="di-bar-fill"></div></div>
+            <div id="di-image-container" class="di-image-container" style="cursor: zoom-in; max-width: 500px; margin: 12px auto;">
+              <img id="di-image" class="di-image" alt="Describe Image" style="width:100%; border-radius:8px;" />
+            </div>
+            <button id="di-zoom-btn" class="modern-btn modern-btn--compact" type="button" style="margin-top:4px;">🔍 Zoom</button>
+          </div>
+
+          <!-- Step 2: Record -->
+          <div id="di-step-record" class="notes-step" style="display: none;">
+            <div class="notes-step-header">
+              <span class="notes-step-badge">Recording</span>
+              <span id="di-record-timer" class="di-timer">00:00 / 00:40</span>
+            </div>
+            <div class="di-progress-bar"><div id="di-record-bar-fill" class="di-bar-fill"></div></div>
+            <div class="di-image-container" style="cursor: zoom-in; max-width: 400px; margin: 12px auto;">
+              <img id="di-image-record" class="di-image" alt="Image during recording" style="width:100%; border-radius:8px;" />
+            </div>
+            <div id="di-record-status" class="di-record-status">
+              <span id="di-record-status-text">Listening...</span>
+            </div>
+            <button id="di-stop-btn" class="modern-btn modern-btn--retry" type="button">⏹ Stop Recording</button>
+          </div>
+
+          <!-- Step 3: Review -->
+          <div id="di-step-review" class="notes-step" style="display: none;">
+            <div class="notes-step-header">
+              <span class="notes-step-badge">Review</span>
+              <h4>Listen to your recording</h4>
+            </div>
+            <audio id="di-recording-playback" controls style="width:100%; margin:8px 0;"></audio>
+            <div style="margin:8px 0;">
+              <strong>Transcript:</strong>
+              <p id="di-transcript" style="font-style:italic; color:#64748b;">No transcript detected.</p>
+            </div>
+            <div class="notes-results-controls">
+              <button id="di-retry-btn" class="modern-btn modern-btn--retry" type="button">Try Again</button>
+              <button id="di-submit-btn" class="modern-btn modern-btn--check" type="button">See Results</button>
+            </div>
+          </div>
+
+          <!-- Step 4: Results -->
+          <div id="di-step-results" class="notes-step" style="display: none;">
+            <div class="notes-step-header">
+              <span class="notes-step-badge">Results</span>
+              <h4>Sample Answer & Key Points</h4>
+            </div>
+            <div style="margin:8px 0;">
+              <strong>Sample Answer:</strong>
+              <div id="di-sample-answer" style="background:#f8fafc; padding:12px; border-radius:8px; margin:8px 0;"></div>
+            </div>
+            <div style="margin:8px 0;">
+              <strong>Key Points:</strong>
+              <ul id="di-key-points" style="padding-left:20px;"></ul>
+            </div>
+            <div class="notes-results-controls">
+              <button id="di-ai-btn" class="modern-btn modern-btn--check" type="button">🤖 AI Content Assessment</button>
+              <button id="di-results-retry-btn" class="modern-btn modern-btn--retry" type="button">Try Again</button>
+              <button id="di-next-question-btn" class="modern-btn modern-btn--play" type="button">Next Question</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Zoom Overlay -->
+        <div id="di-zoom-overlay" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.85); display:none;">
+          <div class="di-zoom-backdrop" style="position:absolute; inset:0;"></div>
+          <img id="di-zoom-image" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); max-width:90vw; max-height:90vh; border-radius:12px;" alt="Zoomed image" />
+          <button id="di-zoom-close" style="position:absolute; top:16px; right:16px; background:#fff; border:none; border-radius:50%; width:36px; height:36px; font-size:18px; cursor:pointer;">✕</button>
+        </div>
+      </div>
+
       <section class="animation-panel" style="display: none;">
         <div class="animation-header">
           <span>How to fix (step-by-step)</span>
@@ -4011,6 +4184,7 @@
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>
   <script src="/write-essay-mode.js"></script>
+  <script src="/describe-image-mode.js"></script>
   <!-- Dialogflow Messenger Integration -->
   <link rel="stylesheet"
     href="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/themes/df-messenger-default.css">

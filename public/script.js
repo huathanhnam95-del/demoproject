@@ -716,7 +716,7 @@
       speaking: {
         label: 'Speaking',
         kind: 'live-skill',
-        modeIds: ['speak', 'pronounce', 'read-aloud', 'asq', 'sgd']
+        modeIds: ['speak', 'pronounce', 'read-aloud', 'asq', 'sgd', 'describe-image']
       },
       listening: {
         label: 'Listening',
@@ -818,6 +818,13 @@
         hasTutorial: false,
         isLive: true,
         launcherVisible: true
+      },
+      'describe-image': {
+        label: 'Describe Image',
+        skill: 'speaking',
+        hasTutorial: false,
+        isLive: true,
+        launcherVisible: true
       }
     }
   };
@@ -833,13 +840,15 @@
       modeOverrides: Object.freeze({})
     },
     [SCOPE_PTE]: {
-      visibleModes: new Set(['read-aloud', 'speak', 'notes', 'extended', 'type', 'rfib', 'sgd']),
+      visibleModes: new Set(['read-aloud', 'speak', 'notes', 'extended', 'type', 'rfib', 'sgd', 'essay', 'describe-image']),
       modeOverrides: Object.freeze({
         speak: { label: 'Repeat Sentence' },
         notes: { label: 'Retell Lecture', skill: 'speaking' },
         type: { label: 'Write from Dictation' },
         asq: { label: 'Answer Short Question' },
-        sgd: { label: 'Summarize Group Discussion' }
+        sgd: { label: 'Summarize Group Discussion' },
+        essay: { label: 'Write Essay' },
+        'describe-image': { label: 'Describe Image' }
       })
     }
   };
@@ -1385,6 +1394,9 @@
     if (leavingMode === 'sgd' && mode !== 'sgd') {
       window.SGDMode?.onExit?.();
     }
+    if (leavingMode === 'describe-image' && mode !== 'describe-image') {
+      window.DescribeImageMode?.onExit?.();
+    }
 
     // Sync Adaptive UI state upon switching
     if (typeof window.updateAdaptiveUI === 'function') {
@@ -1540,6 +1552,10 @@
       } else if (mode === 'asq') {
         if (window.ASQMode && typeof window.ASQMode.onEnter === 'function') {
           window.ASQMode.onEnter();
+        }
+      } else if (mode === 'describe-image') {
+        if (window.DescribeImageMode && typeof window.DescribeImageMode.onEnter === 'function') {
+          window.DescribeImageMode.onEnter();
         }
       }
 

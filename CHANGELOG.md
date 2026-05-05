@@ -6,6 +6,8 @@
 
 ### Improved
 
+- **PTE Write Essay Optimization**: Finalized the massive generation pipeline, achieving **99.7% dataset coverage** (2,531 of 2,538 variants populated).
+- **Gemma4 Quality Audit**: Conducted an official scoring verification on the full dataset, achieving a **93.5% pass rate** on previously failing "hard" cases.
 - **Practice Dashboard SPA Routing**: Reconfigured Express catch-all routing to distinguish SPA navigation from static assets, added base href, and finalized History API integration across all practice modes.
 - **CRM Automation**: Resolved visa listener early return bug to ensure visa-to-English-level auto-filling works in the student modal.
 

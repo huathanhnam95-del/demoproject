@@ -40,6 +40,7 @@ const created = buildLeadCreateData({
     messengerThreadUrl: 'https://m.me/t/lead-nguyen',
     messengerLastContactAt: '2026-03-11T09:15:00Z',
     messengerStatus: 'awaiting_reply',
+    agentSourceId: 'agent-src-1',
     probability: 40,
     nextActionAt: '2026-03-12',
     lastContactAt: '2026-03-10'
@@ -60,6 +61,7 @@ assert.deepStrictEqual(created.preferredLearningHours, ['19:00-21:00']);
 assert.strictEqual(created.messengerThreadUrl, 'https://m.me/t/lead-nguyen');
 assert.strictEqual(created.messengerLastContactAt, '2026-03-11T09:15:00Z');
 assert.strictEqual(created.messengerStatus, 'awaiting_reply');
+assert.strictEqual(created.agentSourceId, 'agent-src-1');
 
 const patched = buildLeadPatchData(created, {
     stage: 'test_completed',
@@ -94,9 +96,10 @@ const conversion = buildLeadConversion({
 });
 
 assert.strictEqual(conversion.student.acquisitionSource, 'facebook');
+assert.strictEqual(conversion.student.agentSourceId, 'agent-src-1');
 assert.strictEqual(conversion.student.name, 'Nguyen Van Lead');
 assert.strictEqual(conversion.student.leadId, 'lead-1');
-assert.strictEqual(conversion.student.lifecycleStage, 'enrolled');
+assert.strictEqual(conversion.student.lifecycleStage, 'test_completed');
 assert.strictEqual(conversion.student.preferredSchedule, 'Days: Saturday | Hours: 09:00-11:00');
 assert.strictEqual(conversion.student.notes.includes('Needs weekend IELTS writing support'), true);
 assert.strictEqual(conversion.student.counselingNotes.includes('Messenger: follow_up_sent'), true);
@@ -116,6 +119,7 @@ assert.deepStrictEqual(mapped.preferredLearningHours, ['09:00-11:00']);
 assert.strictEqual(mapped.messengerThreadUrl, 'https://m.me/t/lead-nguyen');
 assert.strictEqual(mapped.messengerLastContactAt, '2026-03-11T09:15:00Z');
 assert.strictEqual(mapped.messengerStatus, 'follow_up_sent');
+assert.strictEqual(mapped.agentSourceId, 'agent-src-1');
 
 const legacyFacebookMapped = mapLeadRecord({
     id: 'legacy-lead-1',
@@ -139,7 +143,8 @@ const urlOnlyConversion = buildLeadConversion({
 });
 
 assert.strictEqual(urlOnlyConversion.student.name, 'https://facebook.com/url.only');
-assert.strictEqual(urlOnlyConversion.student.facebook, 'https://facebook.com/url.only');
+assert.strictEqual(urlOnlyConversion.student.facebook, null);
+assert.strictEqual(urlOnlyConversion.student.facebookProfileUrl, 'https://facebook.com/url.only');
 
 assert.throws(
     () => buildLeadCreateData({}, context),

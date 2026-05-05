@@ -62,6 +62,39 @@
     }
   };
 
+  // PTE score requirements by visa type and target English level.
+  // Each entry maps to { target (optional), scores }.
+  const VISA_SCORE_MAP = {
+    '462':      { target: 'Functional', scores: { overall: 30, listening: 30, reading: 30, speaking: 30, writing: 30 } },
+    '482':      { target: 'Vocational', scores: { overall: 36, listening: 36, reading: 36, speaking: 36, writing: 36 } },
+    '186':      { target: 'Competent',  scores: { overall: 50, listening: 50, reading: 50, speaking: 50, writing: 50 } },
+    '491':      { target: 'Competent',  scores: { overall: 50, listening: 50, reading: 50, speaking: 50, writing: 50 } },
+    '10points': { target: 'Proficient', scores: { overall: 65, listening: 65, reading: 65, speaking: 65, writing: 65 } },
+    '20points': { target: 'Superior',   scores: { overall: 79, listening: 79, reading: 79, speaking: 79, writing: 79 } },
+    '485':      { target: '485',        scores: { overall: 55, listening: 40, reading: 42, speaking: 39, writing: 41 } }
+  };
+
+  const TARGET_LEVEL_SCORES = {
+    'Functional': { overall: 30, listening: 30, reading: 30, speaking: 30, writing: 30 },
+    'Vocational':  { overall: 36, listening: 36, reading: 36, speaking: 36, writing: 36 },
+    'Competent':   { overall: 50, listening: 50, reading: 50, speaking: 50, writing: 50 },
+    'Proficient':  { overall: 65, listening: 65, reading: 65, speaking: 65, writing: 65 },
+    'Superior':    { overall: 79, listening: 79, reading: 79, speaking: 79, writing: 79 },
+    '485':         { overall: 55, listening: 40, reading: 42, speaking: 39, writing: 41 }
+  };
+
+  function applyScoresToForm(scores, els) {
+    if (!scores) return;
+    if (els.inputScoreOverall) els.inputScoreOverall.value = scores.overall;
+    if (els.inputScoreListening) els.inputScoreListening.value = scores.listening;
+    if (els.inputScoreReading) els.inputScoreReading.value = scores.reading;
+    if (els.inputScoreSpeaking) els.inputScoreSpeaking.value = scores.speaking;
+    if (els.inputScoreWriting) els.inputScoreWriting.value = scores.writing;
+    if (window.CrmStudents && typeof window.CrmStudents.syncScoreDecorations === 'function') {
+      window.CrmStudents.syncScoreDecorations(els);
+    }
+  }
+
   const state = {
     ...DEFAULT_ROUTE,
     studentLookup: '',
@@ -342,6 +375,8 @@
     elements.inputScoreWriting = document.getElementById('score-writing');
     elements.inputStudentDueDate = document.getElementById('student-due-date');
     elements.inputStudentLevel = document.getElementById('student-level');
+    elements.inputVisaType = document.getElementById('student-visa-type');
+    elements.inputTargetLevel = document.getElementById('student-target-level');
     elements.inputTargetExam = document.getElementById('student-target-exam');
     elements.inputTargetScore = document.getElementById('student-target-score');
     elements.inputPreferredSchedule = document.getElementById('student-preferred-schedule');
@@ -1519,6 +1554,31 @@
       });
     });
 
+    // Visa Type and Target Level Automation
+    if (elements.inputVisaType && elements.inputTargetLevel) {
+      elements.inputVisaType.addEventListener('change', () => {
+        const type = elements.inputVisaType.value;
+        if (!type) return;
+
+        const mapping = VISA_SCORE_MAP[type];
+        if (mapping) {
+          elements.inputTargetLevel.value = mapping.target;
+          applyScoresToForm(mapping.scores, elements);
+        } else {
+          // "other" or unrecognised — clear the target level, leave scores alone
+          elements.inputTargetLevel.value = '';
+        }
+      });
+
+      elements.inputTargetLevel.addEventListener('change', () => {
+        const level = elements.inputTargetLevel.value;
+        if (!level) return;
+
+        const scores = TARGET_LEVEL_SCORES[level];
+        applyScoresToForm(scores, elements);
+      });
+    }
+
     // Save Student
     if (elements.btnSaveStudent) {
       elements.btnSaveStudent.addEventListener('click', () => {
@@ -1685,6 +1745,8 @@
       elements.inputScoreWriting,
       elements.inputStudentDueDate,
       elements.inputStudentLevel,
+      elements.inputVisaType,
+      elements.inputTargetLevel,
       elements.inputTargetExam,
       elements.inputTargetScore,
       elements.inputPreferredSchedule,
@@ -1903,13 +1965,15 @@
         facebook: String(elements.inputStudentFacebook?.value || '').trim(),
         facebookProfileUrl: String(elements.inputStudentFacebookProfileUrl?.value || '').trim(),
         learningProfile: {
-          overall: null,
-          listening: null,
-          reading: null,
-          speaking: null,
-          writing: null,
+          overall: elements.inputScoreOverall?.value ? Number(elements.inputScoreOverall.value) : null,
+          listening: elements.inputScoreListening?.value ? Number(elements.inputScoreListening.value) : null,
+          reading: elements.inputScoreReading?.value ? Number(elements.inputScoreReading.value) : null,
+          speaking: elements.inputScoreSpeaking?.value ? Number(elements.inputScoreSpeaking.value) : null,
+          writing: elements.inputScoreWriting?.value ? Number(elements.inputScoreWriting.value) : null,
           entryLevel: String(elements.inputStudentLevel?.value || '').trim(),
-          testResultDueDate: String(elements.inputStudentDueDate?.value || '').trim()
+          testResultDueDate: String(elements.inputStudentDueDate?.value || '').trim(),
+          visaType: String(elements.inputVisaType?.value || '').trim(),
+          targetLevel: String(elements.inputTargetLevel?.value || '').trim()
         }
       };
 

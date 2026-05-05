@@ -617,9 +617,31 @@
     });
 
     if (activePanel && activePanel.id !== 'panel-srs' && !currentActiveMode) {
-      const preferred = PRACTICE_LAUNCHER.defaultMode || 'read-aloud';
-      const defaultMode = isModeVisibleInScope(preferred) ? preferred : (isModeVisibleInScope('read-aloud') ? 'read-aloud' : 'type');
-      window.switchToMode?.(defaultMode);
+      // Check if the URL contains a specific mode route (deep-link / refresh)
+      const urlRoute = PracticeRouter.initFromURL();
+      if (urlRoute && urlRoute.mode) {
+        // URL has a mode — navigate to it (use replaceState since this is initial load)
+        window.switchToMode?.(urlRoute.mode);
+        // Replace the initial history entry so we don't push duplicate
+        window.history.replaceState(
+          { mode: urlRoute.mode, questionId: urlRoute.questionId, source: 'practice-router' },
+          '',
+          window.location.pathname
+        );
+        // If a question ID is specified, dispatch event for mode scripts to handle
+        if (urlRoute.questionId) {
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('practice-route-question', {
+              detail: { mode: urlRoute.mode, questionId: urlRoute.questionId }
+            }));
+          }, 300);
+        }
+      } else {
+        // No URL route — use default mode and set initial URL
+        const preferred = PRACTICE_LAUNCHER.defaultMode || 'read-aloud';
+        const defaultMode = isModeVisibleInScope(preferred) ? preferred : (isModeVisibleInScope('read-aloud') ? 'read-aloud' : 'type');
+        window.switchToMode?.(defaultMode);
+      }
     }
   });
 
@@ -929,6 +951,180 @@
   })();
 
   window.PracticeScopeManager = PracticeScopeManager;
+
+  // =========================================================================
+  //  PracticeRouter — URL-based navigation with History API
+  //  Enables browser back/forward between modes and deep-linking.
+  //  URL schema: /practice/{skill}/{mode}[/{questionId}]
+  //  Only mode changes push history entries; question changes use replaceState.
+  // =========================================================================
+  const PracticeRouter = (() => {
+    let _isPopstateNavigation = false;
+    let _initialized = false;
+
+    /**
+     * Build URL path for a given mode + optional question ID.
+     * @param {string} mode - e.g. 'read-aloud', 'asq', 'type'
+     * @param {string|number|null} questionId - optional question identifier
+     * @returns {string} URL path like /practice/speaking/read-aloud/42
+     */
+    function buildPath(mode, questionId) {
+      if (!mode) return '/practice';
+      const meta = getResolvedModeMeta?.(mode) || PRACTICE_LAUNCHER.modes[mode];
+      const skill = meta?.skill || 'speaking';
+      let path = `/practice/${skill}/${mode}`;
+      if (questionId != null && questionId !== '' && questionId !== 'random') {
+        path += `/${questionId}`;
+      }
+      return path;
+    }
+
+    /**
+     * Parse a URL pathname into { skill, mode, questionId }.
+     * Handles: /practice, /practice/speaking/read-aloud, /practice/speaking/read-aloud/42
+     * Also handles root / and non-practice paths gracefully.
+     */
+    function parseRoute(pathname) {
+      const clean = (pathname || '/').replace(/\/+$/, '') || '/';
+      const segments = clean.split('/').filter(Boolean);
+
+      // Must start with 'practice' or be empty
+      if (segments[0] !== 'practice' && segments.length > 0) {
+        // Not a practice route — could be /landing, /crm-admin, etc.
+        return { skill: null, mode: null, questionId: null, isPractice: false };
+      }
+
+      return {
+        skill: segments[1] || null,
+        mode: segments[2] || null,
+        questionId: segments[3] || null,
+        isPractice: true
+      };
+    }
+
+    /**
+     * Push a new history entry (mode change).
+     * Called from switchToMode.
+     */
+    function pushRoute(mode, questionId) {
+      if (_isPopstateNavigation) return; // Don't push when responding to popstate
+      const path = buildPath(mode, questionId);
+      const currentPath = window.location.pathname.replace(/\/+$/, '') || '/';
+      if (currentPath === path) return; // Already at this path
+      try {
+        window.history.pushState(
+          { mode: mode || '', questionId: questionId || null, source: 'practice-router' },
+          '',
+          path
+        );
+      } catch (_) { /* pushState may fail in some contexts */ }
+    }
+
+    /**
+     * Replace current history entry (question change within same mode).
+     * Called from question selectors.
+     */
+    function replaceRoute(mode, questionId) {
+      const path = buildPath(mode, questionId);
+      try {
+        window.history.replaceState(
+          { mode: mode || '', questionId: questionId || null, source: 'practice-router' },
+          '',
+          path
+        );
+      } catch (_) { /* replaceState may fail in some contexts */ }
+    }
+
+    /**
+     * Initialize from the current URL on page load.
+     * Returns { mode, questionId } if a mode route was detected, or null for dashboard.
+     */
+    function initFromURL() {
+      const route = parseRoute(window.location.pathname);
+      if (!route.isPractice || !route.mode) return null;
+
+      // Validate that the mode exists
+      const meta = PRACTICE_LAUNCHER.modes[route.mode];
+      if (!meta) return null;
+
+      return { mode: route.mode, questionId: route.questionId };
+    }
+
+    /**
+     * Set up the popstate listener for browser back/forward.
+     */
+    function setupPopstateListener() {
+      window.addEventListener('popstate', async (event) => {
+        _isPopstateNavigation = true;
+        try {
+          const route = parseRoute(window.location.pathname);
+
+          if (!route.isPractice || !route.mode) {
+            // Back to dashboard
+            if (typeof window.exitCurrentMode === 'function') {
+              window.exitCurrentMode();
+            }
+            return;
+          }
+
+          // Validate mode exists
+          const meta = PRACTICE_LAUNCHER.modes[route.mode];
+          if (!meta) {
+            if (typeof window.exitCurrentMode === 'function') {
+              window.exitCurrentMode();
+            }
+            return;
+          }
+
+          // Switch to the mode from the URL
+          if (typeof window.switchToMode === 'function') {
+            await window.switchToMode(route.mode);
+          }
+
+          // If a specific question ID is in the URL, try to navigate to it
+          if (route.questionId) {
+            _navigateToQuestion(route.mode, route.questionId);
+          }
+        } finally {
+          _isPopstateNavigation = false;
+        }
+      });
+    }
+
+    /**
+     * Try to navigate to a specific question within the current mode.
+     * This dispatches a custom event that mode-specific scripts can listen to.
+     */
+    function _navigateToQuestion(mode, questionId) {
+      // Dispatch a custom event that mode scripts can hook into
+      window.dispatchEvent(new CustomEvent('practice-route-question', {
+        detail: { mode, questionId }
+      }));
+    }
+
+    /**
+     * Check if current navigation is triggered by popstate (browser back/forward).
+     */
+    function isPopstateNavigation() {
+      return _isPopstateNavigation;
+    }
+
+    if (!_initialized) {
+      _initialized = true;
+      setupPopstateListener();
+    }
+
+    return Object.freeze({
+      pushRoute,
+      replaceRoute,
+      parseRoute,
+      buildPath,
+      initFromURL,
+      isPopstateNavigation
+    });
+  })();
+
+  window.PracticeRouter = PracticeRouter;
 
   function getPracticeScope() {
     return PracticeScopeManager.getScope();
@@ -1408,6 +1604,9 @@
       btn.classList.remove('is-active');
       btn.setAttribute('aria-pressed', 'false');
     });
+
+    // Update URL for browser back/forward navigation
+    PracticeRouter.pushRoute(null);
   };
 
   /**
@@ -1630,6 +1829,9 @@
           }
         });
       }, 50);
+
+      // 7. Update URL for browser back/forward navigation
+      PracticeRouter.pushRoute(mode);
     }
   };
 

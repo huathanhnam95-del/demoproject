@@ -47,7 +47,8 @@ module.exports = function registerCourseRoutes(router, deps) {
 
             return sendSuccess(res, { courseId: ref.id }, 'Course created.');
         } catch (error) {
-            if ((error?.message || '').includes('course name')) {
+            if ((error?.message || '').includes('course name')
+                || (error?.message || '').includes('Agent commission rate')) {
                 return sendError(res, 400, 'VALIDATION_ERROR', error.message);
             }
             return sendError(res, 500, 'CREATE_COURSE_ERROR', 'Failed to create course.', error?.message || error);
@@ -81,7 +82,9 @@ module.exports = function registerCourseRoutes(router, deps) {
             const updatedSnap = await ref.get();
             return sendSuccess(res, { course: mapCourseRecord(updatedSnap, courseId) }, 'Course updated.');
         } catch (error) {
-            if ((error?.message || '').includes('course name') || (error?.message || '').includes('No course fields')) {
+            if ((error?.message || '').includes('course name')
+                || (error?.message || '').includes('No course fields')
+                || (error?.message || '').includes('Agent commission rate')) {
                 return sendError(res, 400, 'VALIDATION_ERROR', error.message);
             }
             return sendError(res, 500, 'UPDATE_COURSE_ERROR', 'Failed to update course.', error?.message || error);

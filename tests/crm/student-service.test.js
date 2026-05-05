@@ -16,6 +16,7 @@ const context = {
 const created = buildStudentCreateData({
     name: 'Alice Nguyen',
     email: 'alice@example.com',
+    agentSourceId: 'agent-src-1',
     preferredLearningDays: ['Tuesday', 'Thursday'],
     preferredLearningHours: ['19:00-21:00'],
     preferredSchedule: 'Weeknights',
@@ -26,12 +27,15 @@ const created = buildStudentCreateData({
         speaking: '82',
         writing: '80',
         entryLevel: 'B1',
-        testResultDueDate: '2026-03-20'
+        testResultDueDate: '2026-03-20',
+        visaType: '482',
+        targetLevel: 'Vocational'
     }
 }, context);
 
 assert.strictEqual(created.name, 'Alice Nguyen');
 assert.strictEqual(created.email, 'alice@example.com');
+assert.strictEqual(created.agentSourceId, 'agent-src-1');
 assert.strictEqual(created.lifecycleStage, 'potential');
 assert.strictEqual(created.ownerUid, 'admin-1');
 assert.deepStrictEqual(created.preferredLearningDays, ['Tuesday', 'Thursday']);
@@ -44,26 +48,34 @@ assert.deepStrictEqual(created.learningProfile, {
     speaking: 82,
     writing: 80,
     entryLevel: 'B1',
-    testResultDueDate: '2026-03-20'
+    testResultDueDate: '2026-03-20',
+    visaType: '482',
+    targetLevel: 'Vocational'
 });
 
 const patched = buildStudentPatchData(created, {
     label: 'High Priority',
+    agentSourceId: 'agent-src-2',
     preferredLearningDays: ['Saturday'],
     preferredLearningHours: ['09:00-11:00'],
     learningProfile: {
         speaking: '90',
-        testResultDueDate: '2026-03-25'
+        testResultDueDate: '2026-03-25',
+        visaType: '186',
+        targetLevel: 'Competent'
     }
 }, context);
 
 assert.strictEqual(patched.label, 'High Priority');
+assert.strictEqual(patched.agentSourceId, 'agent-src-2');
 assert.strictEqual(patched.name, 'Alice Nguyen');
 assert.deepStrictEqual(patched.preferredLearningDays, ['Saturday']);
 assert.deepStrictEqual(patched.preferredLearningHours, ['09:00-11:00']);
 assert.strictEqual(patched.learningProfile.listening, 86);
 assert.strictEqual(patched.learningProfile.speaking, 90);
 assert.strictEqual(patched.learningProfile.testResultDueDate, '2026-03-25');
+assert.strictEqual(patched.learningProfile.visaType, '186');
+assert.strictEqual(patched.learningProfile.targetLevel, 'Competent');
 assert.strictEqual(patched.updatedAt, 'SERVER_TS');
 assert.strictEqual(patched.updatedBy, 'admin-1');
 
@@ -73,8 +85,11 @@ const mapped = mapStudentRecord({
 });
 
 assert.strictEqual(mapped.studentId, 'student-1');
+assert.strictEqual(mapped.agentSourceId, 'agent-src-2');
 assert.strictEqual(mapped.lifecycleStage, 'potential');
 assert.strictEqual(mapped.learningProfile.entryLevel, 'B1');
+assert.strictEqual(mapped.learningProfile.visaType, '186');
+assert.strictEqual(mapped.learningProfile.targetLevel, 'Competent');
 assert.deepStrictEqual(mapped.preferredLearningDays, ['Saturday']);
 assert.deepStrictEqual(mapped.preferredLearningHours, ['09:00-11:00']);
 

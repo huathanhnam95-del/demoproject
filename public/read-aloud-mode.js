@@ -732,6 +732,11 @@ class ReadAloudMode {
     this.renderPromptForCurrentView();
     this.updateUIForState();
 
+    // Update URL with current question ID (replaceState — no history entry per question)
+    if (window.PracticeRouter && this.currentQuestionId) {
+      window.PracticeRouter.replaceRoute('read-aloud', this.currentQuestionId);
+    }
+
     if (this.getRecordingSupportState().supported) {
       this.startPrepTimer();
     } else {
@@ -2690,4 +2695,17 @@ class ReadAloudMode {
 
 document.addEventListener('DOMContentLoaded', () => {
   window.ReadAloudMode = new ReadAloudMode();
+
+  // Deep-link support: listen for PracticeRouter question navigation events
+  window.addEventListener('practice-route-question', (event) => {
+    const { mode, questionId } = event.detail || {};
+    if (mode !== 'read-aloud' || !questionId || !window.ReadAloudMode) return;
+    const ra = window.ReadAloudMode;
+    if (!ra.isActive || !ra.hasLoadedDatabase || !ra.database) return;
+    // Find the database index by question ID
+    const idx = ra.database.findIndex((row) => String(row.ID) === String(questionId));
+    if (idx >= 0) {
+      ra.loadSpecificPrompt(idx);
+    }
+  });
 });

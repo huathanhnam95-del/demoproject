@@ -640,6 +640,11 @@ class AsqMode {
     this.currentId = String(id || '').trim() || null;
     if (!this.currentId) return;
     this.setPromptAudioForCurrent();
+
+    // Update URL with current question ID (replaceState — no history entry per question)
+    if (window.PracticeRouter && this.currentId) {
+      window.PracticeRouter.replaceRoute('asq', this.currentId);
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -733,4 +738,15 @@ class AsqMode {
 
 document.addEventListener('DOMContentLoaded', () => {
   window.ASQMode = new AsqMode();
+
+  // Deep-link support: listen for PracticeRouter question navigation events
+  window.addEventListener('practice-route-question', (event) => {
+    const { mode, questionId } = event.detail || {};
+    if (mode !== 'asq' || !questionId || !window.ASQMode) return;
+    const asq = window.ASQMode;
+    if (!asq.isActive || asq.database.length === 0) return;
+    asq.setQuestionById(questionId);
+    // Sync the dropdown
+    if (asq.els.select) asq.els.select.value = questionId;
+  });
 });

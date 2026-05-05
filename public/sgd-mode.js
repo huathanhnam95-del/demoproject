@@ -713,6 +713,11 @@
         if (el.questionSelect) el.questionSelect.value = index;
         reset();
         refreshRecommendationUI();
+
+        // Update URL with current question ID (replaceState — no history entry per question)
+        if (window.PracticeRouter && currentEntry.id) {
+            window.PracticeRouter.replaceRoute('sgd', currentEntry.id);
+        }
     }
 
     /* ──────────────────────────── STEP PROGRESS ───────────────────── */
@@ -1532,4 +1537,15 @@
     }
 
     window.SGDMode = { init, reset, loadEntries, applyFilters: applyFilter, onEnter, onExit };
+
+    // Deep-link support: listen for PracticeRouter question navigation events
+    window.addEventListener('practice-route-question', (event) => {
+        const { mode, questionId } = event.detail || {};
+        if (mode !== 'sgd' || !questionId) return;
+        if (!hasLoadedEntries || filteredEntries.length === 0) return;
+        const idx = filteredEntries.findIndex((e) => String(e.id) === String(questionId));
+        if (idx >= 0) {
+            selectEntry(idx);
+        }
+    });
 })();

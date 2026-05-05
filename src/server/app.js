@@ -310,7 +310,15 @@ function createApp(options = {}) {
     });
   });
 
-  app.get(/^(?!\/api).*$/, (_req, res) => {
+  // SPA catch-all: serve index.html ONLY for navigation requests (paths without
+  // a file extension).  Static-asset requests (.js, .css, .json, .png, etc.) that
+  // weren't matched by express.static above should 404 naturally so the browser
+  // gets an appropriate error instead of HTML content with a wrong MIME type.
+  app.get(/^(?!\/api).*$/, (req, res, next) => {
+    // If the URL path contains a file extension, it's a static asset miss — skip.
+    if (/\.\w{2,5}(\?.*)?$/.test(req.path)) {
+      return next();
+    }
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');

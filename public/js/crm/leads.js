@@ -48,6 +48,7 @@ window.CrmLeads = (function () {
             messengerLastContactAt: getValue(elements.inputLeadMessengerLastContactAt),
             messengerStatus: getValue(elements.inputLeadMessengerStatus),
             source: getValue(elements.inputLeadSource),
+            agentSourceId: getValue(elements.inputLeadAgentSource),
             stage: getValue(elements.inputLeadStage) || 'new',
             probability: getNumberValue(elements.inputLeadProbability)
         };
@@ -84,6 +85,7 @@ window.CrmLeads = (function () {
             zalo: String(lead?.zalo || '').trim(),
             facebook,
             acquisitionSource: String(lead?.source || '').trim(),
+            agentSourceId: String(lead?.agentSourceId || '').trim(),
             lifecycleStage: 'potential',
             notes: notesParts.join(' | '),
             preferredSchedule: preferredScheduleParts.join(' | '),

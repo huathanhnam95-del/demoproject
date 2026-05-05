@@ -47,7 +47,9 @@ window.CrmStudents = (function () {
                 speaking: getNumberValue(elements.inputScoreSpeaking),
                 writing: getNumberValue(elements.inputScoreWriting),
                 entryLevel: getValue(elements.inputStudentLevel),
-                testResultDueDate: getValue(elements.inputStudentDueDate)
+                testResultDueDate: getValue(elements.inputStudentDueDate),
+                visaType: getValue(elements.inputVisaType),
+                targetLevel: getValue(elements.inputTargetLevel)
             }
         };
     }
@@ -99,6 +101,8 @@ window.CrmStudents = (function () {
         if (elements.inputScoreWriting) elements.inputScoreWriting.value = learning.writing ?? '';
         if (elements.inputStudentDueDate) elements.inputStudentDueDate.value = String(learning.testResultDueDate || '');
         if (elements.inputStudentLevel) elements.inputStudentLevel.value = String(learning.entryLevel || '');
+        if (elements.inputVisaType) elements.inputVisaType.value = String(learning.visaType || '');
+        if (elements.inputTargetLevel) elements.inputTargetLevel.value = String(learning.targetLevel || '');
         syncScoreDecorations(elements);
     }
 

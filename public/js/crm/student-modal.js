@@ -61,6 +61,8 @@ window.CrmStudentModal = (function () {
                 elements.inputStudentZalo,
                 elements.inputStudentFacebook,
                 elements.inputStudentFacebookProfileUrl,
+                elements.inputStudentAcquisitionSource,
+                elements.inputStudentAgentSource,
                 elements.inputScoreOverall,
                 elements.inputScoreListening,
                 elements.inputScoreReading,
@@ -68,6 +70,8 @@ window.CrmStudentModal = (function () {
                 elements.inputScoreWriting,
                 elements.inputStudentDueDate,
                 elements.inputStudentLevel,
+                elements.inputVisaType,
+                elements.inputTargetLevel,
                 elements.inputTargetExam,
                 elements.inputTargetScore,
                 elements.inputPreferredSchedule,
@@ -312,6 +316,61 @@ window.CrmStudentModal = (function () {
                     } finally {
                         elements.btnConfirmHandshake.disabled = false;
                     }
+                });
+            }
+
+            // ── Visa Type / Target Level Automation ──
+            const VISA_SCORE_MAP = {
+                '462':      { target: 'Functional', scores: { overall: 30, listening: 30, reading: 30, speaking: 30, writing: 30 } },
+                '482':      { target: 'Vocational', scores: { overall: 36, listening: 36, reading: 36, speaking: 36, writing: 36 } },
+                '186':      { target: 'Competent',  scores: { overall: 50, listening: 50, reading: 50, speaking: 50, writing: 50 } },
+                '491':      { target: 'Competent',  scores: { overall: 50, listening: 50, reading: 50, speaking: 50, writing: 50 } },
+                '10points': { target: 'Proficient', scores: { overall: 65, listening: 65, reading: 65, speaking: 65, writing: 65 } },
+                '20points': { target: 'Superior',   scores: { overall: 79, listening: 79, reading: 79, speaking: 79, writing: 79 } },
+                '485':      { target: '485',        scores: { overall: 55, listening: 40, reading: 42, speaking: 39, writing: 41 } }
+            };
+
+            const TARGET_LEVEL_SCORES = {
+                'Functional': { overall: 30, listening: 30, reading: 30, speaking: 30, writing: 30 },
+                'Vocational':  { overall: 36, listening: 36, reading: 36, speaking: 36, writing: 36 },
+                'Competent':   { overall: 50, listening: 50, reading: 50, speaking: 50, writing: 50 },
+                'Proficient':  { overall: 65, listening: 65, reading: 65, speaking: 65, writing: 65 },
+                'Superior':    { overall: 79, listening: 79, reading: 79, speaking: 79, writing: 79 },
+                '485':         { overall: 55, listening: 40, reading: 42, speaking: 39, writing: 41 }
+            };
+
+            function applyScoresToForm(scores) {
+                if (!scores) return;
+                if (elements.inputScoreOverall) elements.inputScoreOverall.value = scores.overall;
+                if (elements.inputScoreListening) elements.inputScoreListening.value = scores.listening;
+                if (elements.inputScoreReading) elements.inputScoreReading.value = scores.reading;
+                if (elements.inputScoreSpeaking) elements.inputScoreSpeaking.value = scores.speaking;
+                if (elements.inputScoreWriting) elements.inputScoreWriting.value = scores.writing;
+                if (window.CrmStudents && typeof window.CrmStudents.syncScoreDecorations === 'function') {
+                    window.CrmStudents.syncScoreDecorations(elements);
+                }
+            }
+
+            if (elements.inputVisaType && elements.inputTargetLevel) {
+                elements.inputVisaType.addEventListener('change', () => {
+                    const type = elements.inputVisaType.value;
+                    if (!type) return;
+
+                    const mapping = VISA_SCORE_MAP[type];
+                    if (mapping) {
+                        elements.inputTargetLevel.value = mapping.target;
+                        applyScoresToForm(mapping.scores);
+                    } else {
+                        elements.inputTargetLevel.value = '';
+                    }
+                });
+
+                elements.inputTargetLevel.addEventListener('change', () => {
+                    const level = elements.inputTargetLevel.value;
+                    if (!level) return;
+
+                    const scores = TARGET_LEVEL_SCORES[level];
+                    applyScoresToForm(scores);
                 });
             }
         }

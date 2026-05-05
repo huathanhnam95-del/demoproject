@@ -3,6 +3,7 @@ const path = require('path');
 const {
     CRM_LEADS,
     CRM_STUDENTS,
+    CRM_AGENT_SOURCES,
     CRM_COURSES,
     CRM_CLASSROOMS,
     CRM_TASKS,
@@ -23,6 +24,7 @@ const {
 const IMPORT_COLLECTIONS = new Set([
     CRM_LEADS,
     CRM_STUDENTS,
+    CRM_AGENT_SOURCES,
     CRM_COURSES,
     CRM_CLASSROOMS,
     CRM_TASKS,

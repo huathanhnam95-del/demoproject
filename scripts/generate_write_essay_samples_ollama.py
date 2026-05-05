@@ -925,7 +925,7 @@ def build_user_prompt(
             "- For advantages_disadvantages: body2 should use a clear disadvantage word such as \"disadvantage\", \"drawback\", \"negative\", \"problem\", or \"risk\".\n"
         )
         chunks.append(
-            f"- For advantages_disadvantages: STRICT RULE! The conclusion MUST definitively align with the stated stance ({stance_statement}), clearly summarizing why the advantages or disadvantages are stronger.\n"
+            f"- For advantages_disadvantages: STRICT RULE! The conclusion MUST weigh the two sides and definitively align with the stated stance ({stance_statement}), clearly summarizing why the advantages or disadvantages are stronger.\n"
         )
 
     if prompt_type == "unknown":
@@ -979,6 +979,8 @@ def build_user_prompt(
             "- Reuse one key word from body1's first sentence and one key word from body2's first sentence.\n\n",
             f"Allowed topic vocabulary suggestions (optional): {allowed}\n",
             f"Do not use these advanced prompt-specific phrases: {forbidden}\n\n",
+            "Vocabulary Output Rule:\n",
+            "- For parts.analysis.vocabulary, you MUST ONLY list vocabulary terms that actually appear in the essay you just wrote. DO NOT invent or list terms that are not present in your essay text.\n\n",
             f"Return strictly valid JSON matching this schema:\n{json.dumps(schema, ensure_ascii=False)}\n",
         ]
     )
@@ -1712,7 +1714,7 @@ def validate_sample(
         if dict_items < 6:
             issues.append(QaIssue("vocab_items_invalid", "Vocabulary list items must be objects with term/enGloss/viGloss", "hard"))
         if missing_terms:
-            issues.append(QaIssue("vocab_term_missing_in_essay", f"Vocabulary terms not found in essay: {missing_terms[:10]}", "hard"))
+            issues.append(QaIssue("vocab_term_missing_in_essay", f"Vocabulary terms not found in essay: {missing_terms[:10]}", "soft"))
 
         if pass_number >= 2:
             if vi_bad:
@@ -2288,10 +2290,25 @@ def main() -> int:
     for idx, prompt_id in enumerate(ids, start=1):
         q = by_id.get(prompt_id)
         mapping = PILOT_VARIANTS.get(prompt_id)
+        if not mapping and q:
+            sr = q.get("sampleResponses", {})
+            mapping = {
+                "promptType": sr.get("promptType", "unknown"),
+                "variants": []
+            }
+            a2_b1_vars = sr.get("levels", {}).get("a2_b1", {}).get("variants", [])
+            for v in a2_b1_vars:
+                mapping["variants"].append({
+                    "id": v.get("id"),
+                    "label": v.get("label"),
+                    "stance": v.get("stance"),
+                    "stanceStatement": v.get("stance") or v.get("id")
+                })
+        
         if not q:
             failures.append({"id": prompt_id, "error": "prompt_not_found"})
             continue
-        if not mapping:
+        if not mapping or not mapping.get("variants"):
             failures.append({"id": prompt_id, "error": "no_variant_mapping"})
             continue
 

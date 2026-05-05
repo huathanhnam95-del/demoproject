@@ -15,6 +15,15 @@ function cleanOptionalNumber(value) {
     return Number.isFinite(normalized) ? normalized : null;
 }
 
+function normalizeRateBps(value) {
+    if (value === null || value === undefined || value === '') return null;
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return null;
+    const rounded = Math.round(numeric);
+    if (rounded < 0 || rounded > 10000) return null;
+    return rounded;
+}
+
 function normalizeCurrency(value) {
     const normalized = String(value || '').trim().toUpperCase();
     return SUPPORTED_CURRENCIES.includes(normalized) ? normalized : DEFAULT_CURRENCY;
@@ -80,6 +89,9 @@ function buildInvoiceCreateData(input, context = {}) {
         status: netAmount > 0 ? 'open' : 'paid',
         refundStatus: cleanOptionalString(input?.refundStatus) || 'none',
         notes: cleanOptionalString(input?.notes),
+        agentSourceId: cleanOptionalString(input?.agentSourceId),
+        agentCommissionBps: normalizeRateBps(input?.agentCommissionBps),
+        paidAt: null,
         commissionSplits: normalizeCommissionSplits(input?.commissionSplits),
         createdAt: context.serverTimestamp ? context.serverTimestamp() : new Date(),
         createdBy: context.user?.uid || null,
@@ -223,6 +235,36 @@ function buildCommissionRecords({ invoiceId, paymentId, studentId, enrollmentId,
         }));
 }
 
+function buildAgentSourceCommissionRecord({ invoice, paymentId }, context = {}) {
+    const sourceInvoice = invoice && typeof invoice === 'object' ? invoice : {};
+    const agentSourceId = cleanOptionalString(sourceInvoice.agentSourceId);
+    const rateBps = normalizeRateBps(sourceInvoice.agentCommissionBps);
+    if (!agentSourceId || !rateBps || rateBps <= 0) return null;
+
+    const currency = normalizeCurrency(sourceInvoice.currency || context.currency);
+    const baseAmount = normalizeMoney(sourceInvoice.netAmount, currency);
+    if (baseAmount <= 0) return null;
+    const amount = normalizeMoney((baseAmount * rateBps) / 10000, currency);
+    if (amount <= 0) return null;
+
+    return {
+        invoiceId: cleanOptionalString(sourceInvoice.invoiceId) || null,
+        paymentId: cleanOptionalString(paymentId) || null,
+        studentId: cleanOptionalString(sourceInvoice.studentId) || null,
+        enrollmentId: cleanOptionalString(sourceInvoice.enrollmentId) || null,
+        courseId: cleanOptionalString(sourceInvoice.courseId) || null,
+        role: 'agent_source',
+        agentSourceId,
+        rateBps,
+        baseAmount,
+        amount,
+        currency,
+        status: 'pending',
+        createdAt: context.serverTimestamp ? context.serverTimestamp() : new Date(),
+        createdBy: context.user?.uid || null
+    };
+}
+
 function summarizeFinance({ invoices, payments }) {
     const invoiceList = Array.isArray(invoices) ? invoices : [];
     const paymentList = Array.isArray(payments) ? payments : [];
@@ -287,6 +329,9 @@ function mapInvoiceRecord(doc, invoiceId) {
         status: data.status || 'open',
         refundStatus: data.refundStatus || 'none',
         notes: data.notes || null,
+        agentSourceId: data.agentSourceId || null,
+        agentCommissionBps: normalizeRateBps(data.agentCommissionBps),
+        paidAt: data.paidAt || null,
         commissionSplits: normalizeCommissionSplits(data.commissionSplits),
         createdAt: data.createdAt || null,
         createdBy: data.createdBy || null,
@@ -323,6 +368,7 @@ module.exports = {
     buildPaidEnrollmentSyncPatch,
     applyPaymentToInvoice,
     buildCommissionRecords,
+    buildAgentSourceCommissionRecord,
     summarizeFinance,
     deriveFinanceWorkflowState,
     mapInvoiceRecord,

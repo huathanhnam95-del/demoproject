@@ -59,7 +59,9 @@ function normalizeLearningProfile(input, fallback = {}) {
         speaking: Object.prototype.hasOwnProperty.call(source, 'speaking') ? cleanOptionalNumber(source.speaking) : (base.speaking ?? null),
         writing: Object.prototype.hasOwnProperty.call(source, 'writing') ? cleanOptionalNumber(source.writing) : (base.writing ?? null),
         entryLevel: Object.prototype.hasOwnProperty.call(source, 'entryLevel') ? cleanOptionalString(source.entryLevel) : (base.entryLevel ?? null),
-        testResultDueDate: Object.prototype.hasOwnProperty.call(source, 'testResultDueDate') ? cleanOptionalString(source.testResultDueDate) : (base.testResultDueDate ?? null)
+        testResultDueDate: Object.prototype.hasOwnProperty.call(source, 'testResultDueDate') ? cleanOptionalString(source.testResultDueDate) : (base.testResultDueDate ?? null),
+        visaType: Object.prototype.hasOwnProperty.call(source, 'visaType') ? cleanOptionalString(source.visaType) : (base.visaType ?? null),
+        targetLevel: Object.prototype.hasOwnProperty.call(source, 'targetLevel') ? cleanOptionalString(source.targetLevel) : (base.targetLevel ?? null)
     };
 }
 
@@ -139,6 +141,9 @@ function normalizeStudentCore(input, fallback = {}) {
         acquisitionSource: Object.prototype.hasOwnProperty.call(source, 'acquisitionSource')
             ? cleanOptionalString(source.acquisitionSource)
             : (base.acquisitionSource ?? null),
+        agentSourceId: Object.prototype.hasOwnProperty.call(source, 'agentSourceId')
+            ? cleanOptionalString(source.agentSourceId)
+            : (base.agentSourceId ?? null),
         leadId: Object.prototype.hasOwnProperty.call(source, 'leadId')
             ? cleanOptionalString(source.leadId)
             : (base.leadId ?? null),
@@ -201,6 +206,7 @@ function hasRecognizedPatch(input) {
         'crmId',
         'lifecycleStage',
         'acquisitionSource',
+        'agentSourceId',
         'leadId',
         'ownerUid',
         'notes',
@@ -286,6 +292,7 @@ function mapStudentRecord(data, studentId) {
         crmId: source.crmId || null,
         lifecycleStage: normalizeLifecycleStage(source.lifecycleStage),
         acquisitionSource: source.acquisitionSource || null,
+        agentSourceId: source.agentSourceId || null,
         leadId: source.leadId || null,
         ownerUid: source.ownerUid || null,
         notes: source.notes || null,

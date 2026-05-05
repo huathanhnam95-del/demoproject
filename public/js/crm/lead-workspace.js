@@ -60,6 +60,7 @@ window.CrmLeadWorkspace = (function () {
                 elements.inputLeadRealName,
                 elements.inputLeadDateOfBirth,
                 elements.inputLeadSource,
+                elements.inputLeadAgentSource,
                 elements.inputLeadProbability,
                 elements.inputLeadLearningNeeds,
                 elements.inputLeadPreferredLearningDays,

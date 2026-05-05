@@ -644,6 +644,11 @@
     }
     renderCurrentQuestion({ freshAttempt: false });
     updateQuestionButtons();
+
+    // Update URL with current question ID (replaceState — no history entry per question)
+    if (window.PracticeRouter && state.currentQuestion?.id != null) {
+      window.PracticeRouter.replaceRoute('rfib', state.currentQuestion.id);
+    }
   }
 
   async function navigateQuestion(delta) {
@@ -656,6 +661,11 @@
     state.currentAttempt = buildAttempt(state.currentQuestion);
     renderCurrentQuestion({ freshAttempt: false });
     updateQuestionButtons();
+
+    // Update URL with current question ID (replaceState — no history entry per question)
+    if (window.PracticeRouter && state.currentQuestion?.id != null) {
+      window.PracticeRouter.replaceRoute('rfib', state.currentQuestion.id);
+    }
   }
 
   async function playAudio(variant) {
@@ -785,4 +795,12 @@
     activate,
     reset
   };
+
+  // Deep-link support: listen for PracticeRouter question navigation events
+  window.addEventListener('practice-route-question', (event) => {
+    const { mode, questionId } = event.detail || {};
+    if (mode !== 'rfib' || !questionId) return;
+    if (state.questions.length === 0) return;
+    loadQuestionById(questionId, { freshAttempt: true });
+  });
 })();

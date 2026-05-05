@@ -106,6 +106,9 @@ function normalizeLeadCore(input, fallback = {}) {
             ? cleanOptionalString(source.messengerStatus)
             : (base.messengerStatus ?? null),
         source: Object.prototype.hasOwnProperty.call(source, 'source') ? cleanOptionalString(source.source) : (base.source ?? null),
+        agentSourceId: Object.prototype.hasOwnProperty.call(source, 'agentSourceId')
+            ? cleanOptionalString(source.agentSourceId)
+            : (base.agentSourceId ?? null),
         ownerUid: Object.prototype.hasOwnProperty.call(source, 'ownerUid') ? cleanOptionalString(source.ownerUid) : (base.ownerUid ?? null),
         stage: Object.prototype.hasOwnProperty.call(source, 'stage')
             ? normalizeLeadStage(source.stage)
@@ -154,7 +157,7 @@ function buildLeadPatchData(existing, input, context = {}) {
         'name', 'label', 'phone', 'email', 'zalo', 'facebook',
         'facebookDisplayName', 'facebookProfileUrl', 'realName', 'dateOfBirth',
         'learningNeeds', 'preferredLearningDays', 'preferredLearningHours',
-        'messengerThreadUrl', 'messengerLastContactAt', 'messengerStatus', 'source',
+        'messengerThreadUrl', 'messengerLastContactAt', 'messengerStatus', 'source', 'agentSourceId',
         'ownerUid', 'stage', 'probability', 'nextActionAt', 'lastContactAt',
         'lossReason', 'notes', 'studentId'
     ].some((key) => Object.prototype.hasOwnProperty.call(input || {}, key));
@@ -221,6 +224,7 @@ function buildLeadConversion({ leadId, lead, context = {} }) {
         crmId: cleanOptionalString(lead.crmId) || cleanOptionalString(context.crmId) || null,
         ownerUid: lead.ownerUid || context.user?.uid || null,
         acquisitionSource: lead.source || null,
+        agentSourceId: lead.agentSourceId || null,
         leadId,
         lifecycleStage: studentLifecycleStage,
         notes: joinNonEmpty([lead.notes, notes]),
@@ -287,6 +291,7 @@ function mapLeadRecord(doc, leadId) {
         messengerLastContactAt: data.messengerLastContactAt || null,
         messengerStatus: data.messengerStatus || null,
         source: data.source || null,
+        agentSourceId: data.agentSourceId || null,
         ownerUid: data.ownerUid || null,
         stage: data.stage || 'new',
         probability: data.probability ?? null,

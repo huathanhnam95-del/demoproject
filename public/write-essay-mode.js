@@ -14,7 +14,6 @@
 
     const ESSAY_JSON_PATH = 'database/Write Essay/essay-questions-with-vocab.json';
     const MAX_ESSAY_TIME_SECONDS = 20 * 60; // 20 minutes
-    const FIRESTORE_LOAD_TIMEOUT_MS = 8000;
 
     // State
     let entries = [];
@@ -24,6 +23,7 @@
     let isInitialized = false;
     let hasLoadedEntries = false;
     let loadEntriesPromise = null;
+    let isSubmitting = false;
 
     // Timer state
     let essayTimerId = null;
@@ -48,10 +48,15 @@
 
     function reset() {
         stopTimer();
+        isSubmitting = false;
         if (el.practiceArea) el.practiceArea.style.display = 'none';
         if (el.stepWrite) el.stepWrite.style.display = 'none';
         if (el.stepResults) el.stepResults.style.display = 'none';
-        if (el.essayInput) el.essayInput.value = '';
+        if (el.essayInput) { el.essayInput.value = ''; el.essayInput.readOnly = false; }
+        if (el.startBtn) el.startBtn.style.display = '';
+        if (el.questionSelect) el.questionSelect.disabled = false;
+        if (el.backBtn) el.backBtn.disabled = false;
+        if (el.nextBtn) el.nextBtn.disabled = false;
         updateWordCount();
     }
 
@@ -184,6 +189,11 @@
         if (el.currentQuestionId) el.currentQuestionId.textContent = currentEntry.id;
         if (el.questionSelect) el.questionSelect.value = index;
         reset();
+
+        // Update URL with current question ID (replaceState — no history entry per question)
+        if (window.PracticeRouter && currentEntry.id) {
+            window.PracticeRouter.replaceRoute('write-essay', currentEntry.id);
+        }
     }
 
     /* ──────────────────────────── PRACTICE FLOW ──────────────────── */
@@ -193,6 +203,12 @@
         el.practiceArea.style.display = 'block';
         el.stepWrite.style.display = 'block';
         el.stepResults.style.display = 'none';
+
+        // Lock UI
+        if (el.startBtn) el.startBtn.style.display = 'none';
+        if (el.questionSelect) el.questionSelect.disabled = true;
+        if (el.backBtn) el.backBtn.disabled = true;
+        if (el.nextBtn) el.nextBtn.disabled = true;
 
         // Show prompt
         if (el.promptDisplay) {
@@ -316,19 +332,27 @@
         return { score: 0, detail: `${spellingErrors} spelling errors detected`, errors: spellingErrors };
     }
 
+    // Cache the callable function
+    let assessWritingFn = null;
+
     /**
      * Score Grammar (0-2) — calls assessWriting Cloud Function (Gemini 1.5 Flash)
      * Returns a promise
      */
     async function scoreGrammar(text) {
         try {
-            // Check if Firebase Functions is available
-            if (typeof firebase === 'undefined' || !firebase.functions) {
-                return { score: -1, detail: 'AI grammar check unavailable (Firebase not loaded)', corrections: [] };
+            if (!assessWritingFn) {
+                if (window.__FIREBASE_INTERNAL__ && window.__FIREBASE_INTERNAL__.functions) {
+                    const { httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js');
+                    assessWritingFn = httpsCallable(window.__FIREBASE_INTERNAL__.functions, 'assessWriting');
+                } else if (typeof firebase !== 'undefined' && firebase.functions) {
+                    assessWritingFn = firebase.functions().httpsCallable('assessWriting');
+                } else {
+                    return { score: -1, detail: 'AI grammar check unavailable (Firebase not loaded)', corrections: [] };
+                }
             }
 
-            const assessWriting = firebase.functions().httpsCallable('assessWriting');
-            const result = await assessWriting({
+            const result = await assessWritingFn({
                 text: text.substring(0, 2000), // Max 2000 chars
                 context: {
                     entryType: 'pte_essay',
@@ -378,6 +402,7 @@
     /* ──────────────────────────── SUBMIT & DISPLAY ───────────────── */
 
     async function submitEssay() {
+        if (isSubmitting) return;
         stopTimer();
         const text = el.essayInput ? el.essayInput.value.trim() : '';
         if (!text || text.split(/\s+/).length < 5) {
@@ -386,77 +411,33 @@
             return;
         }
 
-        // Disable submit while scoring
+        isSubmitting = true;
+
+        // Lock UI while scoring
         if (el.submitBtn) {
             el.submitBtn.disabled = true;
-            el.submitBtn.textContent = '⏳ Processing…';
+            el.submitBtn.textContent = '⏳ Scoring with AI…';
         }
+        if (el.essayInput) el.essayInput.readOnly = true;
 
         const formResult = scoreForm(text);
         const spellingResult = scoreSpelling(text);
 
-        // Instead of calling assessWriting, we send the essay to the Gen AI Builder Chatbot
-        const dfMessenger = document.querySelector('df-messenger');
-        if (dfMessenger) {
-            // Expand the chatbot interface
-            try { dfMessenger.setAttribute('expand', 'true'); } catch (e) { /* ignore error safely */ }
-
-            // Build the payload
-            let targetVocabSection = '';
-            if (currentEntry.targetVocabulary && Object.keys(currentEntry.targetVocabulary).length > 0) {
-                targetVocabSection = `
-Additionally, here is a curated Topic-Specific Vocabulary list organized by CEFR level for this prompt:
-${JSON.stringify(currentEntry.targetVocabulary, null, 2)}
-
-If my Vocabulary Range is lacking, please suggest words from the target vocabulary list above (appropriate to my current level) and provide example sentences based on my essay's ideas to help me expand my range.`;
-            }
-
-            // Send the query to the bot so it evaluates the essay against all PTE criteria
-            const payload = `Please review my PTE Essay and provide detailed feedback and scoring based on the 7 standard criteria:
-1. Content (0-6)
-2. Form (0-2)
-3. Development, Structure and Coherence (0-6)
-4. Grammar (0-2)
-5. General Linguistic Range (0-6)
-6. Vocabulary Range (0-2)
-7. Spelling (0-2)
-
-Here is the Prompt:
-${currentEntry.prompt}
-${targetVocabSection}
-
-Here is my Essay:
-${text}`;
-            try {
-                if (typeof dfMessenger.sendQuery === 'function') {
-                    dfMessenger.sendQuery(payload);
-                } else {
-                    // Fallback to sending a custom event or rendering custom text
-                    dfMessenger.renderCustomText('Please review my PTE Essay... (Query sent to bot)');
-                }
-            } catch (err) {
-                console.error('[WriteEssay] Error sending to chatbot', err);
-            }
-        }
-
-        // We use a placeholder for Grammar result to show that it is being assessed by the bot
-        const grammarResult = {
-            score: -1,
-            detail: 'Sent to AI Tutor for review. Please check the chat window!',
-            corrections: [],
-            aiFeedback: ''
-        };
+        // Call the Gemini Cloud Function for grammar scoring
+        const grammarResult = await scoreGrammar(text);
 
         // Display results
         el.stepWrite.style.display = 'none';
         el.stepResults.style.display = 'block';
         displayResults(formResult, grammarResult, spellingResult, text);
 
-        // Re-enable submit
+        // Restore UI state
         if (el.submitBtn) {
             el.submitBtn.disabled = false;
             el.submitBtn.textContent = 'Submit Essay';
         }
+        if (el.essayInput) el.essayInput.readOnly = false;
+        isSubmitting = false;
     }
 
     function displayResults(formResult, grammarResult, spellingResult, text) {
@@ -809,5 +790,16 @@ ${text}`;
         reset: reset,
         loadEntries: loadEntries
     };
+
+    // Deep-link support: listen for PracticeRouter question navigation events
+    window.addEventListener('practice-route-question', (event) => {
+        const { mode, questionId } = event.detail || {};
+        if (mode !== 'write-essay' || !questionId) return;
+        if (!hasLoadedEntries || filteredEntries.length === 0) return;
+        const idx = filteredEntries.findIndex((e) => String(e.id) === String(questionId));
+        if (idx >= 0) {
+            selectEntry(idx);
+        }
+    });
 
 })();

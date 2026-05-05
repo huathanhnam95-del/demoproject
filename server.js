@@ -1,4 +1,7 @@
 require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
+const { spawn } = require('child_process');
 
 function assertLocalFirebaseIsolationEnv() {
   const isProd = String(process.env.NODE_ENV || '').trim().toLowerCase() === 'production';
@@ -50,16 +53,68 @@ const { createApp, startServer, attachGracefulShutdown } = require('./src/server
 if (require.main === module) {
   assertLocalFirebaseIsolationEnv();
 
-  const aiWorker = require('./src/workers/ai-worker');
-  const server = startServer({
-    app: createApp({ projectRoot: __dirname }),
-    projectRoot: __dirname,
-    port: process.env.PORT || 8443
-  });
+  async function maybeAutoSeedEmulatorAdmin() {
+    const isProd = String(process.env.NODE_ENV || '').trim().toLowerCase() === 'production';
+    const allowProd = String(process.env.ALLOW_PROD_FIREBASE || '').trim() === '1';
+    if (isProd || allowProd) return;
 
-  aiWorker.start();
-  attachGracefulShutdown(server, {
-    beforeClose: () => aiWorker.stop()
+    if (String(process.env.DISABLE_AUTO_SEED_ADMIN || '').trim() === '1') return;
+
+    const hasAuthEmu = !!String(process.env.FIREBASE_AUTH_EMULATOR_HOST || '').trim();
+    const hasFsEmu = !!String(process.env.FIRESTORE_EMULATOR_HOST || '').trim();
+    if (!hasAuthEmu || !hasFsEmu) return;
+
+    const repoRoot = __dirname;
+    const credPath = path.join(repoRoot, '.local', 'browser-test-credentials.md');
+    const hasCredsFile = fs.existsSync(credPath);
+    const hasCredsEnv = !!String(process.env.EMULATOR_ADMIN_PASSWORD || '').trim();
+    if (!hasCredsFile && !hasCredsEnv) return;
+
+    await new Promise((resolve) => {
+      const child = spawn(
+        process.execPath,
+        [path.join(repoRoot, 'scripts', 'seed-emulator-admin.js')],
+        {
+          stdio: 'inherit',
+          env: {
+            ...process.env,
+            // Keep server startup snappy if emulators aren't up yet.
+            BEL_EMULATOR_WAIT_MS: String(process.env.BEL_EMULATOR_WAIT_MS || 15000)
+          }
+        }
+      );
+
+      child.on('exit', (code) => {
+        if (code && code !== 0) {
+          console.warn(`[WARN] Admin emulator seed failed (exit ${code}). Continuing startup.`);
+        }
+        resolve();
+      });
+
+      child.on('error', (err) => {
+        console.warn('[WARN] Admin emulator seed error:', err?.message || err);
+        resolve();
+      });
+    });
+  }
+
+  (async () => {
+    await maybeAutoSeedEmulatorAdmin();
+
+    const aiWorker = require('./src/workers/ai-worker');
+    const server = startServer({
+      app: createApp({ projectRoot: __dirname }),
+      projectRoot: __dirname,
+      port: process.env.PORT || 8443
+    });
+
+    aiWorker.start();
+    attachGracefulShutdown(server, {
+      beforeClose: () => aiWorker.stop()
+    });
+  })().catch((err) => {
+    console.error('[FATAL] Failed to start server:', err?.message || err);
+    process.exit(1);
   });
 }
 

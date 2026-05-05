@@ -41,6 +41,19 @@ function normalizePositiveInteger(value, label) {
     return numeric;
 }
 
+function normalizeCommissionBps(value) {
+    if (value === null || value === undefined || value === '') return null;
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) {
+        throw new Error('Agent commission rate must be a number.');
+    }
+    const rounded = Math.round(numeric);
+    if (rounded < 0 || rounded > 10000) {
+        throw new Error('Agent commission rate must be between 0 and 10000 bps.');
+    }
+    return rounded;
+}
+
 function normalizeDeliveryTemplate(rawTemplate) {
     if (!rawTemplate || typeof rawTemplate !== 'object') return null;
 
@@ -144,6 +157,7 @@ function buildCourseCreateData(input, context = {}) {
         level: cleanOptionalString(input.level),
         category: cleanOptionalString(input.category),
         status: cleanOptionalString(input.status, 'active') || 'active',
+        agentCommissionBps: normalizeCommissionBps(input.agentCommissionBps),
         description: cleanOptionalString(input.description),
         teachers: sanitizeTeachers(input.teachers),
         deliveryTemplate: normalizeDeliveryTemplate(input.deliveryTemplate),
@@ -168,6 +182,9 @@ function buildCoursePatchData(existing, input, context = {}) {
                 : cleanOptionalString(input[key]);
         }
     }
+    if (Object.prototype.hasOwnProperty.call(input || {}, 'agentCommissionBps')) {
+        patch.agentCommissionBps = normalizeCommissionBps(input.agentCommissionBps);
+    }
     if (Object.prototype.hasOwnProperty.call(input || {}, 'teachers')) {
         patch.teachers = sanitizeTeachers(input.teachers);
     }
@@ -191,6 +208,12 @@ function buildCoursePatchData(existing, input, context = {}) {
 
 function mapCourseRecord(doc, courseId) {
     const data = doc && typeof doc.data === 'function' ? doc.data() : (doc || {});
+    let agentCommissionBps = null;
+    try {
+        agentCommissionBps = normalizeCommissionBps(data.agentCommissionBps);
+    } catch (_error) {
+        agentCommissionBps = null;
+    }
     return {
         courseId: courseId || doc?.id || null,
         name: data.name || '',
@@ -199,6 +222,7 @@ function mapCourseRecord(doc, courseId) {
         level: data.level || null,
         category: data.category || null,
         status: data.status || 'active',
+        agentCommissionBps,
         description: data.description || null,
         teachers: Array.isArray(data.teachers) ? data.teachers : [],
         deliveryTemplate: data.deliveryTemplate || null,
@@ -339,6 +363,7 @@ module.exports = {
     mapClassroomMembers,
     mapClassroomRecord,
     mapCourseRecord,
+    normalizeCommissionBps,
     normalizeScheduleConfig,
     normalizeStringList,
     sanitizeTeachers

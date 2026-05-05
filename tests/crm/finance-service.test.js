@@ -7,6 +7,7 @@ const {
     buildPaidEnrollmentSyncPatch,
     applyPaymentToInvoice,
     buildCommissionRecords,
+    buildAgentSourceCommissionRecord,
     summarizeFinance,
     deriveFinanceWorkflowState
 } = require('../../functions/src/crm/finance-service');
@@ -25,6 +26,8 @@ const invoice = buildInvoiceCreateData({
     studentId: 'student-1',
     enrollmentId: 'enrollment-1',
     courseId: 'course-1',
+    agentSourceId: 'agent-src-1',
+    agentCommissionBps: 1000,
     amount: 1000,
     discountAmount: 100,
     dueDate: '2026-03-20',
@@ -39,6 +42,9 @@ assert.strictEqual(invoice.amount, 1000);
 assert.strictEqual(invoice.discountAmount, 100);
 assert.strictEqual(invoice.netAmount, 900);
 assert.strictEqual(invoice.outstandingAmount, 900);
+assert.strictEqual(invoice.agentSourceId, 'agent-src-1');
+assert.strictEqual(invoice.agentCommissionBps, 1000);
+assert.strictEqual(invoice.paidAt, null);
 
 const invoicePatch = buildInvoicePatchData(invoice, {
     refundStatus: 'requested',
@@ -129,6 +135,49 @@ const commissions = buildCommissionRecords({
 
 assert.strictEqual(commissions.length, 3);
 assert.strictEqual(commissions[0].status, 'pending');
+
+const agentCommission = buildAgentSourceCommissionRecord({
+    invoice: {
+        invoiceId: 'invoice-1',
+        studentId: 'student-1',
+        enrollmentId: 'enrollment-1',
+        courseId: 'course-1',
+        currency: 'VND',
+        netAmount: 900,
+        agentSourceId: 'agent-src-1',
+        agentCommissionBps: 1000
+    },
+    paymentId: 'payment-1'
+}, context);
+
+assert.ok(agentCommission);
+assert.strictEqual(agentCommission.role, 'agent_source');
+assert.strictEqual(agentCommission.invoiceId, 'invoice-1');
+assert.strictEqual(agentCommission.paymentId, 'payment-1');
+assert.strictEqual(agentCommission.agentSourceId, 'agent-src-1');
+assert.strictEqual(agentCommission.rateBps, 1000);
+assert.strictEqual(agentCommission.baseAmount, 900);
+assert.strictEqual(agentCommission.amount, 90);
+
+assert.strictEqual(buildAgentSourceCommissionRecord({
+    invoice: {
+        invoiceId: 'invoice-1',
+        netAmount: 900,
+        agentSourceId: null,
+        agentCommissionBps: 1000
+    },
+    paymentId: 'payment-1'
+}, context), null);
+
+assert.strictEqual(buildAgentSourceCommissionRecord({
+    invoice: {
+        invoiceId: 'invoice-1',
+        netAmount: 900,
+        agentSourceId: 'agent-src-1',
+        agentCommissionBps: 0
+    },
+    paymentId: 'payment-1'
+}, context), null);
 
 const summary = summarizeFinance({
     invoices: [

@@ -15,6 +15,7 @@ const {
 } = require('../../crm/http-contracts');
 const registerStudentRoutes = require('./students');
 const registerCourseRoutes = require('./courses');
+const registerAgentSourceRoutes = require('./agent-sources');
 const registerIdentityRoutes = require('./identity');
 const registerLeadRoutes = require('./leads');
 const registerEntranceTestRoutes = require('./entrance-tests');
@@ -228,6 +229,7 @@ module.exports = function createCrmRouter(rawDeps) {
 
     registerStudentRoutes(router, routeDeps);
     registerCourseRoutes(router, routeDeps);
+    registerAgentSourceRoutes(router, routeDeps);
     registerIdentityRoutes(router, routeDeps);
     registerLeadRoutes(router, routeDeps);
     registerEntranceTestRoutes(router, routeDeps);

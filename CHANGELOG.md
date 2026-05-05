@@ -1,3 +1,19 @@
+## [V1.6.7] - 2026-05-05
+
+### Added
+
+- **Write Essay Mode Remediation**: Finalized AI grammar scoring integration and hardened UI state management.
+
+### Improved
+
+- **Practice Dashboard SPA Routing**: Reconfigured Express catch-all routing to distinguish SPA navigation from static assets, added base href, and finalized History API integration across all practice modes.
+- **CRM Automation**: Resolved visa listener early return bug to ensure visa-to-English-level auto-filling works in the student modal.
+
+### Fixed
+
+- **formatDateTime Reference**: Resolved ReferenceError in CRM admin and workspace scripts.
+- **Deep-Link Rendering**: Fixed 404-driven dependency gaps for styles and scripts on practice mode pages.
+
 ## [V1.6.6] - 2026-04-22
 
 ### Added

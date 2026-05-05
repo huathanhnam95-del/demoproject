@@ -33,7 +33,12 @@ window.CrmCourseModal = (function () {
                 elements.inputCourseLabel,
                 elements.inputCourseLevel,
                 elements.inputCourseCategory,
-                elements.inputCourseDescription
+                elements.inputCourseAgentCommissionPercent,
+                elements.inputCourseDescription,
+                elements.inputCourseTotalHours,
+                elements.inputCourseDefaultSessionMinutes,
+                elements.inputCourseDurationStep,
+                elements.inputCourseTimezone
             ];
             infoInputs.forEach((el) => {
                 if (el) el.value = '';

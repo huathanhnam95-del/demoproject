@@ -223,3 +223,9 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 232,2026-05-04,Fix formatDateTime ReferenceError in lead-workspace.js bulk archive,Done,2026-05-04
 233,2026-05-04,Review debug and refactor all merge changes (PTE Practice integration audit),Done,2026-05-04
 234,2026-05-04,Wire DI + Essay launcher cards and mode panel + sync segmental route to production,Done,2026-05-04
+235,2026-05-04,Fix ASQ/DI question picker overflow + implement URL-based routing with browser back support,Done,2026-05-04
+236,2026-05-05,Automating CRM Student Visa Integration,Done,2026-05-05
+237,2026-05-05,Fix visa automation listeners not binding (student-modal.js early return bypass),Done,2026-05-05
+238,2026-05-05,Fix broken UI on deep-link SPA routes (base href + catch-all regex),Done,2026-05-05
+239,2026-05-05,Remediating Write Essay Mode (AI Feedback & UI State Locking),Done,2026-05-05
+240,2026-05-05,Review and commit all changes as V1.6.7 and prepare push to production,Done,2026-05-05

@@ -10,7 +10,7 @@ window.CrmCourses = (function () {
         };
     }
 
-    function normalizeCourse(raw) {
+function normalizeCourse(raw) {
         const data = raw.data ? raw.data() : raw;
         return {
             id: raw.id || data.id || data.courseId || null,
@@ -20,6 +20,7 @@ window.CrmCourses = (function () {
             level: data.level || null,
             category: data.category || null,
             status: data.status || 'active',
+            agentCommissionBps: Number.isFinite(Number(data.agentCommissionBps)) ? Math.round(Number(data.agentCommissionBps)) : null,
             description: data.description || null,
             teachers: Array.isArray(data.teachers) ? data.teachers : [],
             deliveryTemplate: data.deliveryTemplate || null
@@ -30,6 +31,8 @@ window.CrmCourses = (function () {
         const totalHours = Number(elements.inputCourseTotalHours?.value || 0);
         const sessionMinutes = Number(elements.inputCourseDefaultSessionMinutes?.value || 0);
         const durationStepMinutes = Number(elements.inputCourseDurationStep?.value || 30);
+        const commissionPercent = Number(elements.inputCourseAgentCommissionPercent?.value || 0);
+        const agentCommissionBps = Number.isFinite(commissionPercent) ? Math.round(commissionPercent * 100) : null;
 
         return {
             name: String(elements.inputCourseName?.value || '').trim(),
@@ -38,6 +41,7 @@ window.CrmCourses = (function () {
             level: String(elements.inputCourseLevel?.value || '').trim(),
             category: String(elements.inputCourseCategory?.value || '').trim(),
             status: String(elements.inputCourseStatus?.value || '').trim() || 'active',
+            agentCommissionBps: Number.isFinite(agentCommissionBps) ? agentCommissionBps : null,
             description: String(elements.inputCourseDescription?.value || '').trim(),
             teachers: Array.from(elements.courseTeachersList?.querySelectorAll('li[data-email]') || [])
                 .map((li) => String(li.dataset.email || '').trim())
@@ -58,6 +62,10 @@ window.CrmCourses = (function () {
         if (elements.inputCourseLevel) elements.inputCourseLevel.value = String(course?.level || '');
         if (elements.inputCourseCategory) elements.inputCourseCategory.value = String(course?.category || '');
         if (elements.inputCourseStatus) elements.inputCourseStatus.value = String(course?.status || 'active');
+        if (elements.inputCourseAgentCommissionPercent) {
+            const bps = Number(course?.agentCommissionBps);
+            elements.inputCourseAgentCommissionPercent.value = Number.isFinite(bps) ? String(bps / 100) : '';
+        }
         if (elements.inputCourseDescription) elements.inputCourseDescription.value = String(course?.description || '');
         if (elements.inputCourseTotalHours) {
             const minutes = Number(course?.deliveryTemplate?.totalInstructionMinutes || 0);

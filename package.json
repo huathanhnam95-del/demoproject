@@ -4,8 +4,9 @@
   "description": "Dictation practice app",
   "scripts": {
     "start": "node server.js",
-    "emulators": "npx firebase emulators:start --only firestore,auth,functions,storage --project listening-tasks-3ae34",
-    "dev": "start cmd /c \"npx firebase emulators:start --only firestore,auth,functions,storage --project listening-tasks-3ae34\" && timeout /t 5 && set FIRESTORE_EMULATOR_HOST=localhost:8080&& set FIREBASE_AUTH_EMULATOR_HOST=localhost:9099&& set FIREBASE_STORAGE_EMULATOR_HOST=localhost:9199&& set STORAGE_EMULATOR_HOST=http://localhost:9199&& node server.js",
+    "emulators": "node scripts/emulators-start.js",
+    "seed:admin-emulator": "node scripts/seed-emulator-admin.js",
+    "dev": "start-emulators.bat",
     "setup": "node setup-https.js",
     "update-db": "node update-database.js",
     "sync-rules": "node sync-points-rules.js points-rules.csv",

@@ -5,7 +5,9 @@ const {
     buildClassroomCreateData,
     buildClassroomPatchData,
     computeMissingReviewItems,
-    mapClassroomMembers
+    mapClassroomMembers,
+    mapCourseRecord,
+    normalizeCommissionBps
 } = require('../../functions/src/crm/course-service');
 
 const context = {
@@ -18,6 +20,7 @@ const context = {
 
 const course = buildCourseCreateData({
     name: 'PTE Foundation',
+    agentCommissionBps: 850,
     teachers: ['Teacher@One.com', 'teacher2@example.com'],
     deliveryTemplate: {
         totalHours: 24,
@@ -26,6 +29,7 @@ const course = buildCourseCreateData({
     }
 }, context);
 assert.strictEqual(course.name, 'PTE Foundation');
+assert.strictEqual(course.agentCommissionBps, 850);
 assert.deepStrictEqual(course.teachers, ['teacher@one.com', 'teacher2@example.com']);
 assert.deepStrictEqual(course.deliveryTemplate, {
     totalInstructionMinutes: 1440,
@@ -36,6 +40,7 @@ assert.deepStrictEqual(course.deliveryTemplate, {
 
 const patchedCourse = buildCoursePatchData(course, {
     status: 'inactive',
+    agentCommissionBps: 1200,
     teachers: ['mentor@example.com'],
     deliveryTemplate: {
         totalHours: 30,
@@ -45,6 +50,7 @@ const patchedCourse = buildCoursePatchData(course, {
     }
 }, context);
 assert.strictEqual(patchedCourse.status, 'inactive');
+assert.strictEqual(patchedCourse.agentCommissionBps, 1200);
 assert.deepStrictEqual(patchedCourse.teachers, ['mentor@example.com']);
 assert.deepStrictEqual(patchedCourse.deliveryTemplate, {
     totalInstructionMinutes: 1800,
@@ -148,6 +154,20 @@ const preservedTargetPatch = buildClassroomPatchData(classroom, {
 }, context);
 assert.strictEqual(preservedTargetPatch.scheduleConfig.targetSessionCount, 16);
 assert.strictEqual(preservedTargetPatch.scheduleConfig.scheduleVersion, 1);
+
+const mappedCourse = mapCourseRecord({
+    id: 'course-1',
+    name: 'PTE Foundation',
+    agentCommissionBps: 975
+});
+assert.strictEqual(mappedCourse.courseId, 'course-1');
+assert.strictEqual(mappedCourse.agentCommissionBps, 975);
+
+assert.strictEqual(normalizeCommissionBps(12.4), 12);
+assert.strictEqual(normalizeCommissionBps('250'), 250);
+assert.strictEqual(normalizeCommissionBps(null), null);
+assert.throws(() => normalizeCommissionBps(-1), /between 0 and 10000/);
+assert.throws(() => normalizeCommissionBps(10001), /between 0 and 10000/);
 
 const members = mapClassroomMembers([
     { id: 'uid-member-1', studentId: 'student-1', studentName: 'Alice' },

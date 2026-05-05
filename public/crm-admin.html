@@ -55,8 +55,7 @@
             <li><button class="crm-nav-item" data-main="staff" data-label="Staff" data-coming-soon="true"
                 disabled>Staff</button>
             </li>
-            <li><button class="crm-nav-item" data-main="agents" data-label="Agents" data-coming-soon="true"
-                disabled>Agents</button>
+            <li><button class="crm-nav-item" data-main="agents" data-label="Agents">Agents</button>
             </li>
             <li><button class="crm-nav-item" data-main="settings" data-label="Settings" data-coming-soon="true"
                 disabled>Settings</button></li>
@@ -545,6 +544,12 @@
               <input type="text" id="lead-source" class="crm-input" placeholder="e.g. facebook, referral">
             </div>
             <div class="crm-form-group">
+              <label for="lead-agent-source">Agent Source</label>
+              <select id="lead-agent-source" class="crm-input">
+                <option value="">No agent source</option>
+              </select>
+            </div>
+            <div class="crm-form-group">
               <label for="lead-stage">Stage</label>
               <select id="lead-stage" class="crm-input">
                 <option value="new">New</option>
@@ -743,8 +748,103 @@
           </section>
         </div>
       </section>
+
+      <section class="crm-panel" data-panel="agents" style="display: none;">
+        <div class="crm-panel-header">
+          <div>
+            <h2>Agent Management</h2>
+            <p>Manage collaborator sources and export monthly commission reports.</p>
+          </div>
+          <button id="btn-refresh-agent-sources" class="crm-btn-secondary" type="button">Refresh</button>
+        </div>
+        <div class="crm-dashboard-layout">
+          <div class="crm-main-col">
+            <section class="crm-workspace-card">
+              <div class="crm-section-header">
+                <div>
+                  <h3>Agent Source</h3>
+                  <p class="crm-muted">Create and maintain human collaborator sources.</p>
+                </div>
+              </div>
+              <div class="crm-form-grid crm-compact-grid">
+                <div class="crm-form-group">
+                  <label for="agent-source-name">Name</label>
+                  <input id="agent-source-name" type="text" class="crm-input" placeholder="e.g. Nguyen Counseling Team">
+                </div>
+                <div class="crm-form-group">
+                  <label for="agent-source-status">Status</label>
+                  <select id="agent-source-status" class="crm-input">
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+                <div class="crm-form-group">
+                  <label for="agent-source-notes">Notes</label>
+                  <input id="agent-source-notes" type="text" class="crm-input" placeholder="Optional notes">
+                </div>
+              </div>
+              <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
+                <button id="btn-create-agent-source" class="crm-btn-primary" type="button">Save Agent Source</button>
+              </div>
+            </section>
+
+            <section class="crm-workspace-card" style="margin-top: 18px;">
+              <div class="crm-section-header">
+                <div>
+                  <h3>Monthly Export</h3>
+                  <p class="crm-muted">Export paid invoices and calculated commissions by agent source.</p>
+                </div>
+              </div>
+              <div class="crm-inline-fields">
+                <input id="agent-report-month" type="month" class="crm-input" />
+                <button id="btn-export-agent-report" class="crm-btn-secondary" type="button">Export XLSX</button>
+              </div>
+            </section>
+          </div>
+          <div class="crm-side-col">
+            <section class="crm-workspace-card">
+              <div class="crm-section-header">
+                <div>
+                  <h3>Agent Sources</h3>
+                  <p class="crm-muted">Select an item to edit details quickly.</p>
+                </div>
+              </div>
+              <div id="agent-sources-list" class="crm-stack-list">
+                <div class="crm-muted">No agent sources yet.</div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
+
+  <button id="bel-chat-launcher" class="crm-btn-primary" type="button"
+    style="position: fixed; right: 24px; bottom: 24px; z-index: 9999;">BEL Assistant</button>
+  <aside id="bel-chat-drawer"
+    style="position: fixed; right: 24px; bottom: 80px; width: min(460px, calc(100vw - 32px)); height: min(76vh, 680px); background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 18px 42px rgba(15, 23, 42, 0.2); z-index: 9999; display: none; overflow: hidden;">
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid #e5e7eb;">
+      <div>
+        <strong>BEL Assistant</strong>
+        <div id="bel-chat-context" class="crm-muted" style="font-size: 12px;">Ready</div>
+      </div>
+      <button id="bel-chat-close" class="crm-btn-secondary" type="button">Close</button>
+    </div>
+    <div id="bel-chat-thread" style="padding: 12px; height: calc(100% - 172px); overflow: auto;">
+      <div class="crm-muted">Ask BEL to fill fields in the current page. Review the preview, then apply.</div>
+    </div>
+    <div id="bel-chat-preview" style="padding: 8px 12px; border-top: 1px solid #e5e7eb; max-height: 138px; overflow: auto;">
+      <div class="crm-muted">No pending actions.</div>
+    </div>
+    <div style="padding: 10px 12px; border-top: 1px solid #e5e7eb;">
+      <textarea id="bel-chat-input" class="crm-input" rows="2"
+        placeholder="Example: Create a lead for Linh, source Facebook, phone 0909..., agent Nguyen Team"></textarea>
+      <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 8px;">
+        <button id="bel-chat-apply" class="crm-btn-secondary" type="button" disabled>Apply Preview</button>
+        <button id="bel-chat-send" class="crm-btn-primary" type="button">Generate Fill Plan</button>
+      </div>
+    </div>
+  </aside>
 
   <!-- New Student Modal -->
   <div id="crm-student-modal" class="crm-modal-overlay" aria-hidden="true" style="display: none;">
@@ -816,6 +916,17 @@
                 <label for="student-facebook">Facebook Name</label>
                 <input type="text" id="student-facebook" name="facebook" class="crm-input"
                   placeholder="Enter Facebook name">
+              </div>
+              <div class="crm-form-group">
+                <label for="student-acquisition-source">Acquisition Source</label>
+                <input type="text" id="student-acquisition-source" name="acquisition_source" class="crm-input"
+                  placeholder="e.g. facebook, referral">
+              </div>
+              <div class="crm-form-group">
+                <label for="student-agent-source">Agent Source</label>
+                <select id="student-agent-source" name="agent_source_id" class="crm-input">
+                  <option value="">No agent source</option>
+                </select>
               </div>
             </div>
             <div id="student-activity-hub" class="crm-workspace-grid" style="margin-top: 24px;">
@@ -964,6 +1075,32 @@
             </div>
 
             <div class="crm-form-grid" style="margin-top: 32px;">
+              <div class="crm-form-group">
+                <label for="student-visa-type">Visa Type</label>
+                <select id="student-visa-type" name="visa_type" class="crm-input">
+                  <option value="">-- Select Visa --</option>
+                  <option value="462">Visa 462</option>
+                  <option value="482">Visa 482</option>
+                  <option value="485">Visa 485</option>
+                  <option value="186">Visa 186</option>
+                  <option value="491">Visa 491</option>
+                  <option value="10points">10 points</option>
+                  <option value="20points">20 points</option>
+                  <option value="other">Other / None</option>
+                </select>
+              </div>
+              <div class="crm-form-group">
+                <label for="student-target-level">English Target Level</label>
+                <select id="student-target-level" name="target_level" class="crm-input">
+                  <option value="">-- Select Level --</option>
+                  <option value="Functional">Functional</option>
+                  <option value="Vocational">Vocational</option>
+                  <option value="Competent">Competent</option>
+                  <option value="Proficient">Proficient</option>
+                  <option value="Superior">Superior</option>
+                  <option value="485">Visa 485 specific</option>
+                </select>
+              </div>
               <div class="crm-form-group">
                 <label for="student-due-date">Test Result Due Date</label>
                 <input type="text" id="student-due-date" name="due_date" class="crm-input" placeholder="Select date">
@@ -1303,6 +1440,11 @@
                   <option value="inactive">Inactive</option>
                   <option value="draft">Draft</option>
                 </select>
+              </div>
+              <div class="crm-form-group">
+                <label for="course-agent-commission-percent">Agent Commission (%)</label>
+                <input type="number" id="course-agent-commission-percent" name="course_agent_commission_percent"
+                  class="crm-input" min="0" max="100" step="0.01" placeholder="e.g. 10">
               </div>
               <div class="crm-form-group">
                 <label for="course-description">Description</label>
@@ -2009,6 +2151,7 @@
   <script src="js/crm/index.js?v=20260406-gemma4-ollama-fix"></script>
   <script src="js/crm/entrance-test-link-state.js?v=20260406-gemma4-ollama-fix"></script>
   <script src="js/crm/devtools-access.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/crm/bel-assistant.js?v=20260406-gemma4-ollama-fix"></script>
   <script src="crm-admin.js?v=20260406-gemma4-ollama-fix"></script>
 </body>
 

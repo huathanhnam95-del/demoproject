@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base href="/">
   <meta name="theme-color" content="#f4f4f6">
   <title>Dictation Practice | AI Language Learning</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2915,6 +2916,11 @@
               onclick="this.parentElement.style.display='none'; localStorage.setItem('essayInfoDismissed','1')"
               title="Don't show again">×</button>
           </div>
+          <script>
+            if (localStorage.getItem('essayInfoDismissed') === '1') {
+              document.getElementById('essay-info-box').style.display = 'none';
+            }
+          </script>
           <div class="question-selector">
             <div class="question-id-display">
               <label for="question-select-essay">Prompt ID:</label>
@@ -2980,7 +2986,7 @@
             onclick="this.parentElement.style.display='none'; localStorage.setItem('diInfoDismissed','1')"
             title="Don't show again">×</button>
         </div>
-        <div class="question-selector">
+        <div class="question-selector" style="max-width: 900px; margin: 0 auto;">
           <div class="question-id-display">
             <label for="question-select-di">Image ID:</label>
             <span id="current-question-id-di" class="current-question-id">1</span>
@@ -2993,12 +2999,12 @@
             <button id="next-btn-di" class="nav-btn nav-btn-next" type="button" title="Next Image">Next →</button>
           </div>
         </div>
-        <div class="question-total">
+        <div class="question-total" style="max-width: 900px; margin: 0 auto;">
           <span>Total images: <span id="total-questions-di">0</span></span>
         </div>
 
         <!-- Difficulty Filter -->
-        <div id="difficulty-filter-container-di" class="difficulty-filter-container" style="margin-bottom: 8px;">
+        <div id="difficulty-filter-container-di" class="difficulty-filter-container" style="margin-bottom: 8px; max-width: 900px; margin-left: auto; margin-right: auto;">
           <button id="difficulty-filter-btn-di" class="difficulty-filter-btn" type="button">
             <span id="difficulty-filter-label-di">Recommended</span> ▾
           </button>
@@ -3178,7 +3184,7 @@
       <!-- ASQ (Quiz) Mode Panel -->
       <div id="mode-asq" class="mode-panel" style="display: none;">
         <div class="question-selector"
-          style="border-bottom: none; padding: 10px 20px 0; align-items: center; flex-direction: column; gap: 12px;">
+          style="border-bottom: none; padding: 10px 20px 0; align-items: center; flex-direction: column; gap: 12px; max-width: 900px; margin: 0 auto;">
           <div
             style="display:flex; align-items:center; justify-content:space-between; gap: 12px; width:100%; max-width:900px; flex-wrap:wrap;">
             <select id="asq-question-select"
@@ -3767,6 +3773,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
   <script>
     // Initialize Firebase compat SDK with same config for watch-mode.js
     if (!firebase.apps.length) {

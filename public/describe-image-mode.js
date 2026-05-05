@@ -190,6 +190,11 @@
 
         // Always update the persistent preview image
         setImageWithFallback(el.diPreviewImg, currentEntry);
+
+        // Update URL with current question ID (replaceState — no history entry per question)
+        if (window.PracticeRouter && currentEntry.id) {
+            window.PracticeRouter.replaceRoute('describe-image', currentEntry.id);
+        }
     }
 
     /* ──────────────────────────── EVENT LISTENERS ──────────────────────────── */
@@ -647,6 +652,20 @@ Please provide:
     /* ──────────────────────────── EXPOSE ──────────────────────────── */
 
     window.DescribeImageMode = { init, reset, onEnter, onExit, loadEntries };
+
+    // Deep-link support: listen for PracticeRouter question navigation events
+    window.addEventListener('practice-route-question', (event) => {
+        const { mode, questionId } = event.detail || {};
+        if (mode !== 'describe-image' || !questionId) return;
+        if (!hasLoadedEntries || filteredEntries.length === 0) return;
+        const idx = filteredEntries.findIndex((e) => String(e.id) === String(questionId));
+        if (idx >= 0) {
+            currentEntryIndex = idx;
+            currentEntry = filteredEntries[idx];
+            updateQuestionDisplay();
+            reset();
+        }
+    });
 
     // Auto-init when DOM is ready
     if (document.readyState === 'loading') {

@@ -283,9 +283,7 @@ async function checkSkillFilter(page, skill, expectedVisibleIds, expectedModeId)
     await checkSkillFilter(page, 'speaking', [
       'mode-btn-speak',
       'mode-btn-pronounce',
-      'mode-btn-read-aloud',
-      'mode-btn-sgd',
-      'mode-btn-describe-image'
+      'mode-btn-read-aloud'
     ], 'mode-extended');
 
     const readingState = await checkSkillFilter(page, 'reading', ['mode-btn-rfib'], 'mode-extended');

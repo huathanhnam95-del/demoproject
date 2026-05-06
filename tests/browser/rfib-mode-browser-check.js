@@ -137,6 +137,101 @@ async function clickByScript(page, selector) {
   }, selector);
 }
 
+async function setupFirebaseMocks(context) {
+  // Mock Firebase App
+  await context.route('**/firebase-app.js', (route) => {
+    route.fulfill({
+      contentType: 'application/javascript',
+      body: `
+        export const initializeApp = () => ({ name: '[DEFAULT]' });
+        export const getApp = () => ({ name: '[DEFAULT]' });
+      `
+    });
+  });
+
+  // Mock Firebase Auth
+  await context.route('**/firebase-auth.js', (route) => {
+    route.fulfill({
+      contentType: 'application/javascript',
+      body: `
+        export const getAuth = () => ({ currentUser: null });
+        export const connectAuthEmulator = () => {};
+        export const onAuthStateChanged = (auth, cb) => { 
+          setTimeout(() => cb(null), 10); 
+          return () => {}; 
+        };
+        export const setPersistence = () => Promise.resolve();
+        export const browserLocalPersistence = 'local';
+        export const signInWithEmailAndPassword = () => Promise.resolve({ user: {} });
+        export const signOut = () => Promise.resolve();
+        export const createUserWithEmailAndPassword = () => Promise.resolve({ user: {} });
+        export const sendPasswordResetEmail = () => Promise.resolve();
+        export const sendEmailVerification = () => Promise.resolve();
+      `
+    });
+  });
+
+  // Mock Firebase Firestore
+  await context.route('**/firebase-firestore.js', (route) => {
+    route.fulfill({
+      contentType: 'application/javascript',
+      body: `
+        export const getFirestore = () => ({ _type: 'firestore' });
+        export const connectFirestoreEmulator = () => {};
+        export const collection = (db, path) => ({ _type: 'collection', path });
+        export const doc = (db, path, ...segments) => ({ 
+          _type: 'doc', 
+          path: [path, ...segments].filter(Boolean).join('/') 
+        });
+        export const getDoc = async (docRef) => ({ 
+          exists: () => false, 
+          data: () => ({}) 
+        });
+        export const getDocs = async (q) => ({ empty: true, docs: [] });
+        export const setDoc = async () => {};
+        export const updateDoc = async () => {};
+        export const deleteDoc = async () => {};
+        export const addDoc = async () => ({ id: 'mock-id' });
+        export const query = (ref) => ref;
+        export const where = () => ({});
+        export const limit = () => ({});
+        export const orderBy = () => ({});
+        export const serverTimestamp = () => new Date();
+        export const increment = (v) => v;
+        export const arrayUnion = (...v) => v;
+        export const arrayRemove = (...v) => v;
+        export const Timestamp = { 
+          now: () => new Date(), 
+          fromDate: (d) => d 
+        };
+        export const writeBatch = () => ({ 
+          set: () => {}, 
+          update: () => {}, 
+          commit: async () => {} 
+        });
+        export const runTransaction = async (db, cb) => cb({ 
+          get: async () => ({ exists: () => false }), 
+          set: () => {}, 
+          update: () => {} 
+        });
+        export const setLogLevel = () => {};
+      `
+    });
+  });
+
+  // Mock Firebase Functions
+  await context.route('**/firebase-functions.js', (route) => {
+    route.fulfill({
+      contentType: 'application/javascript',
+      body: `
+        export const getFunctions = () => ({});
+        export const connectFunctionsEmulator = () => {};
+        export const httpsCallable = () => async () => ({ data: {} });
+      `
+    });
+  });
+}
+
 (async () => {
   const args = parseArgs(process.argv);
   const port = await getFreePort();
@@ -162,7 +257,16 @@ async function clickByScript(page, selector) {
 
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1440, height: 1200 } });
+
+  // ── Firebase Mocking ───────────────────────────────────────────
+  await setupFirebaseMocks(context);
+
   const page = await context.newPage();
+  
+  // Disable emulators explicitly in the browser context
+  await page.addInitScript(() => {
+    window.__DISABLE_FIREBASE_EMULATORS__ = true;
+  });
   const errors = [];
 
   page.on('pageerror', (error) => errors.push(error.message));

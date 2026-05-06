@@ -25,8 +25,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Functions dependencies
-        run: npm ci --prefix functions
 
       - name: Build read-aloud connected speech index
         run: npm run build:read-aloud:connected-speech-index
@@ -36,5 +34,5 @@ jobs:
         with:
           credentials_json: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_LISTENING_TASKS_3AE34 }}'
 
-      - name: Deploy to Firebase (Hosting + Functions)
-        run: npx firebase-tools deploy --project listening-tasks-3ae34 --only functions:api,hosting --non-interactive
+      - name: Deploy to Firebase Hosting
+        run: npx firebase-tools deploy --project listening-tasks-3ae34 --only hosting --non-interactive

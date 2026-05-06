@@ -5,8 +5,8 @@
 (function () {
     'use strict';
 
-    const DI_JSON_PATH = 'database/Describe Image/describe-image-questions.json';
-    const DI_IMAGE_DIR = 'database/Describe Image/DI/';
+    const DI_JSON_PATH = '/database/Describe Image/describe-image-questions.json';
+    const DI_IMAGE_DIR = '/database/Describe Image/DI/';
     const PREP_SECONDS = 25;
     const RECORD_SECONDS = 40;
 

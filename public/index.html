@@ -190,7 +190,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.6.4</div>
+  <div id="version-indicator" class="version-indicator">V1.6.7</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -1149,7 +1149,184 @@
               </button>
             </div>
             <div class="tutorial-grid">
-              <!-- 1. Type Mode Card -->
+              <!-- 1. Read Aloud Mode Card (PTE 1) -->
+              <div id="mode-btn-read-aloud" class="modern-card transition-card mode-switch-btn"
+                data-practice-skill="speaking" onclick="window.switchToMode('read-aloud')" tabindex="0" role="button"
+                aria-label="Read Aloud mode">
+                <span class="badge new">New</span>
+                <div class="card-visual visual-read-aloud">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
+                      <rect x="16" y="12" width="32" height="40" rx="4" stroke="currentColor" stroke-width="2"
+                        fill="var(--visual-bg)" />
+                      <line x1="24" y1="22" x2="40" y2="22" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" />
+                      <line x1="24" y1="30" x2="40" y2="30" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" />
+                      <line x1="24" y1="38" x2="32" y2="38" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" />
+                      <path d="M52 28a8 8 0 0 1 0 16" stroke="var(--visual-accent)" stroke-width="2"
+                        stroke-linecap="round" />
+                      <path d="M58 24a14 14 0 0 1 0 24" stroke="var(--visual-accent)" stroke-width="2"
+                        stroke-linecap="round" opacity="0.5" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Read Aloud</h3>
+                  <p>Read text aloud to check your accuracy.</p>
+                  <button class="card-cta">Practice Now</button>
+                  <a class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('read-aloud', true);">What's this?</a>
+                </div>
+              </div>
+
+              <!-- 2. Speak Mode Card (PTE 2: Repeat Sentence) -->
+              <div id="mode-btn-speak" class="modern-card transition-card mode-switch-btn"
+                data-practice-skill="speaking" onclick="window.switchToMode('speak')" tabindex="0" role="button"
+                aria-label="Repeat Sentence mode">
+                <div class="card-visual visual-speak">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
+                      <!-- Microphone -->
+                      <rect class="mic-body" x="28" y="14" width="16" height="24" rx="8" stroke="currentColor"
+                        stroke-width="3" fill="var(--visual-bg)" />
+                      <path class="mic-stand" d="M36 42v8M28 50h16" stroke="currentColor" stroke-width="3"
+                        stroke-linecap="round" />
+                      <!-- Transcript lines -->
+                      <rect class="transcript-line" x="12" y="58" width="16" height="3" rx="1.5" fill="currentColor"
+                        opacity="0" />
+                      <rect class="transcript-line" x="30" y="58" width="12" height="3" rx="1.5" fill="currentColor"
+                        opacity="0" />
+                      <rect class="transcript-line" x="44" y="58" width="18" height="3" rx="1.5" fill="currentColor"
+                        opacity="0" />
+                      <!-- Checkmark -->
+                      <path class="check-draw" d="M52 20l5 5 10-10" stroke="var(--visual-accent)" stroke-width="3"
+                        stroke-linecap="round" stroke-linejoin="round" opacity="0" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Repeat Sentence</h3>
+                  <p>Record your voice and verify transcription.</p>
+                  <button class="card-cta">Practice Now</button>
+                  <a class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('speak', true);">What's this?</a>
+                </div>
+              </div>
+
+              <!-- 3. Describe Image Mode Card (PTE 3) -->
+              <div id="mode-btn-describe-image" class="modern-card transition-card mode-switch-btn" data-practice-skill="speaking"
+                onclick="window.switchToMode('describe-image')" tabindex="0" role="button" aria-label="Describe Image mode">
+                <span class="badge new">New</span>
+                <div class="card-visual visual-describe-image">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+                      <rect x="12" y="16" width="48" height="36" rx="6" stroke="currentColor" stroke-width="2.5" fill="var(--visual-bg)" />
+                      <circle cx="28" cy="30" r="5" stroke="var(--visual-accent)" stroke-width="2" fill="none" />
+                      <path d="M12 44l14-10 10 7 14-12 10 9" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                      <path d="M24 58l12-5 12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.5" />
+                      <circle cx="52" cy="22" r="3" fill="var(--visual-accent)" opacity="0.6" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Describe Image</h3>
+                  <p>Study an image then describe it aloud within 40 seconds.</p>
+                  <button class="card-cta">Practice Now</button>
+                </div>
+              </div>
+
+              <!-- 4. Note Mode Card (PTE 4: Retell Lecture) -->
+              <div id="mode-btn-notes" class="modern-card transition-card mode-switch-btn"
+                data-practice-skill="speaking" onclick="window.switchToMode('notes')" tabindex="0" role="button"
+                aria-label="Retell Lecture mode">
+                <span class="badge">New</span>
+                <div class="card-visual visual-notes">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
+                      <!-- Video tile (left) -->
+                      <rect x="6" y="20" width="24" height="16" rx="3" stroke="currentColor" stroke-width="2"
+                        fill="var(--visual-bg)" />
+                      <polygon points="14,24 14,32 20,28" fill="currentColor" />
+                      <!-- Arrow transfer -->
+                      <path class="transfer-arrow" d="M34 28h8l-2-2M34 28h8l-2 2" stroke="var(--visual-accent)"
+                        stroke-width="2" stroke-linecap="round" />
+                      <!-- Note page (right) -->
+                      <rect x="46" y="16" width="20" height="28" rx="3" stroke="currentColor" stroke-width="2"
+                        fill="var(--visual-bg)" />
+                      <path class="note-line" d="M50 24h12" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" opacity="0" />
+                      <path class="note-line" d="M50 30h10" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" opacity="0" />
+                      <path class="note-line" d="M50 36h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        opacity="0" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Retell Lecture</h3>
+                  <p>Watch videos and engage in note-taking.</p>
+                  <button class="card-cta">Practice Now</button>
+                  <a class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('notes', true);">What's this?</a>
+                </div>
+              </div>
+
+              <!-- 5. ASQ (Quiz) Mode Card (PTE 5: Answer Short Question) -->
+              <div id="mode-btn-asq" class="modern-card transition-card mode-switch-btn" data-practice-skill="speaking"
+                onclick="window.switchToMode('asq')" tabindex="0" role="button" aria-label="Answer Short Questions mode">
+                <span class="badge new">New</span>
+                <div class="card-visual visual-read-aloud">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+                      <rect x="14" y="14" width="44" height="36" rx="8" stroke="currentColor" stroke-width="2"
+                        fill="var(--visual-bg)" />
+                      <path d="M30 56l6-6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                      <circle cx="36" cy="30" r="10" stroke="var(--visual-accent)" stroke-width="2" fill="none" />
+                      <path d="M36 24v7" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" />
+                      <circle cx="36" cy="36" r="1.8" fill="var(--visual-accent)" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Answer Short Questions</h3>
+                  <p>Listen to a short question and answer out loud.</p>
+                  <button class="card-cta">Practice Now</button>
+                </div>
+              </div>
+
+              <!-- 6. Discussion Mode Card (PTE 6: SGD) -->
+              <div id="mode-btn-sgd" class="modern-card transition-card mode-switch-btn" data-practice-skill="speaking"
+                onclick="window.switchToMode('sgd')" tabindex="0" role="button" aria-label="Summarize Group Discussion mode">
+                <span class="badge new">New</span>
+                <div class="card-visual visual-sgd">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+                      <!-- Speaker heads / bubbles -->
+                      <circle cx="20" cy="25" r="8" stroke="currentColor" stroke-width="2.5" />
+                      <circle cx="52" cy="25" r="8" stroke="currentColor" stroke-width="2.5" />
+                      <circle cx="36" cy="45" r="8" stroke="currentColor" stroke-width="2.5" />
+                      <!-- Dynamic lines indicating speech -->
+                      <path d="M28 25H44" stroke="var(--visual-accent)" stroke-width="2.5" stroke-linecap="round"
+                        opacity="0.6" />
+                      <path d="M28 35L44 35" stroke="var(--visual-accent)" stroke-width="2.5" stroke-linecap="round"
+                        opacity="0.4" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Summarize Group Discussion</h3>
+                  <p>Summarize group conversations with multiple speakers.</p>
+                  <button class="card-cta">Practice Now</button>
+                  <a class="whats-this-link" style="display: none;"
+                    onclick="event.stopPropagation(); window.startTutorial('sgd', true);">What's this?</a>
+                </div>
+              </div>
+
+              <!-- Other Modes -->
+              <!-- Type Mode Card -->
               <div id="mode-btn-type" class="modern-card transition-card mode-switch-btn"
                 data-practice-skill="listening" onclick="window.switchToMode('type')" tabindex="0" role="button"
                 aria-label="Dictate Practice mode">
@@ -1187,7 +1364,7 @@
                 </div>
               </div>
 
-              <!-- 2. Collo-dictate Mode Card -->
+              <!-- Collo-dictate Mode Card -->
               <div id="mode-btn-collo-dictate" class="modern-card transition-card mode-switch-btn"
                 data-practice-skill="listening" onclick="window.switchToMode('collo-dictate')" tabindex="0"
                 role="button" aria-label="Collo-dictate mode (Collocation dictation)">
@@ -1222,41 +1399,7 @@
                 </div>
               </div>
 
-              <!-- 3. Speak Mode Card -->
-              <div id="mode-btn-speak" class="modern-card transition-card mode-switch-btn"
-                data-practice-skill="speaking" onclick="window.switchToMode('speak')" tabindex="0" role="button"
-                aria-label="Repeat Practice mode">
-                <div class="card-visual visual-speak">
-                  <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
-                      <!-- Microphone -->
-                      <rect class="mic-body" x="28" y="14" width="16" height="24" rx="8" stroke="currentColor"
-                        stroke-width="3" fill="var(--visual-bg)" />
-                      <path class="mic-stand" d="M36 42v8M28 50h16" stroke="currentColor" stroke-width="3"
-                        stroke-linecap="round" />
-                      <!-- Transcript lines -->
-                      <rect class="transcript-line" x="12" y="58" width="16" height="3" rx="1.5" fill="currentColor"
-                        opacity="0" />
-                      <rect class="transcript-line" x="30" y="58" width="12" height="3" rx="1.5" fill="currentColor"
-                        opacity="0" />
-                      <rect class="transcript-line" x="44" y="58" width="18" height="3" rx="1.5" fill="currentColor"
-                        opacity="0" />
-                      <!-- Checkmark -->
-                      <path class="check-draw" d="M52 20l5 5 10-10" stroke="var(--visual-accent)" stroke-width="3"
-                        stroke-linecap="round" stroke-linejoin="round" opacity="0" />
-                    </svg>
-                  </div>
-                </div>
-                <div class="card-body">
-                  <h3>Repeat</h3>
-                  <p>Record your voice and verify transcription.</p>
-                  <button class="card-cta">Practice Now</button>
-                  <a class="whats-this-link"
-                    onclick="event.stopPropagation(); window.startTutorial('speak', true);">What's this?</a>
-                </div>
-              </div>
-
-              <!-- 3. Fill Mode Card -->
+              <!-- Fill Mode Card -->
               <div id="mode-btn-extended" class="modern-card transition-card mode-switch-btn"
                 data-practice-skill="listening" onclick="window.switchToMode('extended')" tabindex="0" role="button"
                 aria-label="Fill In the Blanks mode">
@@ -1287,7 +1430,7 @@
                 </div>
               </div>
 
-              <!-- 4. Reading Fill Mode Card -->
+              <!-- Reading Fill Mode Card -->
               <div id="mode-btn-rfib" class="modern-card transition-card mode-switch-btn" data-practice-skill="reading"
                 onclick="window.switchToMode('rfib')" tabindex="0" role="button" aria-label="Dropdown mode">
                 <span class="badge">New</span>
@@ -1313,7 +1456,7 @@
                 </div>
               </div>
 
-              <!-- 5. Watch Mode Card -->
+              <!-- Watch Mode Card -->
               <div id="mode-btn-watch" class="modern-card transition-card mode-switch-btn"
                 data-practice-skill="listening" onclick="window.switchToMode('watch')" tabindex="0" role="button"
                 aria-label="Watch Video mode" style="display: none;">
@@ -1344,72 +1487,7 @@
                 </div>
               </div>
 
-
-              <!-- 6. Note Mode Card -->
-              <div id="mode-btn-notes" class="modern-card transition-card mode-switch-btn"
-                data-practice-skill="listening" onclick="window.switchToMode('notes')" tabindex="0" role="button"
-                aria-label="Note taking mode">
-                <span class="badge">New</span>
-                <div class="card-visual visual-notes">
-                  <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
-                      <!-- Video tile (left) -->
-                      <rect x="6" y="20" width="24" height="16" rx="3" stroke="currentColor" stroke-width="2"
-                        fill="var(--visual-bg)" />
-                      <polygon points="14,24 14,32 20,28" fill="currentColor" />
-                      <!-- Arrow transfer -->
-                      <path class="transfer-arrow" d="M34 28h8l-2-2M34 28h8l-2 2" stroke="var(--visual-accent)"
-                        stroke-width="2" stroke-linecap="round" />
-                      <!-- Note page (right) -->
-                      <rect x="46" y="16" width="20" height="28" rx="3" stroke="currentColor" stroke-width="2"
-                        fill="var(--visual-bg)" />
-                      <path class="note-line" d="M50 24h12" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" opacity="0" />
-                      <path class="note-line" d="M50 30h10" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" opacity="0" />
-                      <path class="note-line" d="M50 36h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        opacity="0" />
-                    </svg>
-                  </div>
-                </div>
-                <div class="card-body">
-                  <h3>Take Notes</h3>
-                  <p>Watch videos and engage in note-taking.</p>
-                  <button class="card-cta">Practice Now</button>
-                  <a class="whats-this-link"
-                    onclick="event.stopPropagation(); window.startTutorial('notes', true);">What's this?</a>
-                </div>
-              </div>
-
-              <!-- 7. Discussion Mode Card (SGD) -->
-              <div id="mode-btn-sgd" class="modern-card transition-card mode-switch-btn" data-practice-skill="speaking"
-                onclick="window.switchToMode('sgd')" tabindex="0" role="button" aria-label="Group Discussion mode">
-                <span class="badge new">New</span>
-                <div class="card-visual visual-sgd">
-                  <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
-                      <!-- Speaker heads / bubbles -->
-                      <circle cx="20" cy="25" r="8" stroke="currentColor" stroke-width="2.5" />
-                      <circle cx="52" cy="25" r="8" stroke="currentColor" stroke-width="2.5" />
-                      <circle cx="36" cy="45" r="8" stroke="currentColor" stroke-width="2.5" />
-                      <!-- Dynamic lines indicating speech -->
-                      <path d="M28 25H44" stroke="var(--visual-accent)" stroke-width="2.5" stroke-linecap="round"
-                        opacity="0.6" />
-                      <path d="M28 35L44 35" stroke="var(--visual-accent)" stroke-width="2.5" stroke-linecap="round"
-                        opacity="0.4" />
-                    </svg>
-                  </div>
-                </div>
-                <div class="card-body">
-                  <h3>Discussion</h3>
-                  <p>Summarize group conversations with multiple speakers.</p>
-                  <button class="card-cta">Practice Now</button>
-                  <a class="whats-this-link" style="display: none;"
-                    onclick="event.stopPropagation(); window.startTutorial('sgd', true);">What's this?</a>
-                </div>
-              </div>
-
-              <!-- 6. Pronounce Mode Card -->
+              <!-- Pronounce Mode Card -->
               <div id="mode-btn-pronounce" class="modern-card transition-card mode-switch-btn"
                 data-practice-skill="speaking" onclick="window.switchToMode('pronounce')" tabindex="0" role="button"
                 aria-label="Pronunciation mode">
@@ -1444,62 +1522,6 @@
                 </div>
               </div>
 
-              <!-- 8. Read Aloud Mode Card -->
-              <div id="mode-btn-read-aloud" class="modern-card transition-card mode-switch-btn"
-                data-practice-skill="speaking" onclick="window.switchToMode('read-aloud')" tabindex="0" role="button"
-                aria-label="Read Aloud mode">
-                <span class="badge new">New</span>
-                <div class="card-visual visual-read-aloud">
-                  <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
-                      <rect x="16" y="12" width="32" height="40" rx="4" stroke="currentColor" stroke-width="2"
-                        fill="var(--visual-bg)" />
-                      <line x1="24" y1="22" x2="40" y2="22" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" />
-                      <line x1="24" y1="30" x2="40" y2="30" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" />
-                      <line x1="24" y1="38" x2="32" y2="38" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" />
-                      <path d="M52 28a8 8 0 0 1 0 16" stroke="var(--visual-accent)" stroke-width="2"
-                        stroke-linecap="round" />
-                      <path d="M58 24a14 14 0 0 1 0 24" stroke="var(--visual-accent)" stroke-width="2"
-                        stroke-linecap="round" opacity="0.5" />
-                    </svg>
-                  </div>
-                </div>
-                <div class="card-body">
-                  <h3>Read Aloud</h3>
-                  <p>Read text aloud to check your accuracy.</p>
-                  <button class="card-cta">Practice Now</button>
-                  <a class="whats-this-link"
-                    onclick="event.stopPropagation(); window.startTutorial('read-aloud', true);">What's this?</a>
-                </div>
-              </div>
-
-              <!-- 9. ASQ (Quiz) Mode Card -->
-              <div id="mode-btn-asq" class="modern-card transition-card mode-switch-btn" data-practice-skill="speaking"
-                onclick="window.switchToMode('asq')" tabindex="0" role="button" aria-label="Quiz mode">
-                <span class="badge new">New</span>
-                <div class="card-visual visual-read-aloud">
-                  <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
-                      <rect x="14" y="14" width="44" height="36" rx="8" stroke="currentColor" stroke-width="2"
-                        fill="var(--visual-bg)" />
-                      <path d="M30 56l6-6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round" />
-                      <circle cx="36" cy="30" r="10" stroke="var(--visual-accent)" stroke-width="2" fill="none" />
-                      <path d="M36 24v7" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" />
-                      <circle cx="36" cy="36" r="1.8" fill="var(--visual-accent)" />
-                    </svg>
-                  </div>
-                </div>
-                <div class="card-body">
-                  <h3>Quiz</h3>
-                  <p>Listen to a short question and answer out loud.</p>
-                  <button class="card-cta">Practice Now</button>
-                </div>
-              </div>
-
               <!-- Essay Mode Card -->
               <div id="mode-btn-essay" class="modern-card transition-card mode-switch-btn" data-practice-skill="writing"
                 onclick="window.switchToMode('essay')" tabindex="0" role="button" aria-label="Write Essay mode">
@@ -1518,28 +1540,6 @@
                 <div class="card-body">
                   <h3>Write Essay</h3>
                   <p>Write a 200–300 word essay on an academic topic.</p>
-                  <button class="card-cta">Practice Now</button>
-                </div>
-              </div>
-
-              <!-- Describe Image Mode Card -->
-              <div id="mode-btn-describe-image" class="modern-card transition-card mode-switch-btn" data-practice-skill="speaking"
-                onclick="window.switchToMode('describe-image')" tabindex="0" role="button" aria-label="Describe Image mode">
-                <span class="badge new">New</span>
-                <div class="card-visual visual-describe-image">
-                  <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
-                      <rect x="12" y="16" width="48" height="36" rx="6" stroke="currentColor" stroke-width="2.5" fill="var(--visual-bg)" />
-                      <circle cx="28" cy="30" r="5" stroke="var(--visual-accent)" stroke-width="2" fill="none" />
-                      <path d="M12 44l14-10 10 7 14-12 10 9" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                      <path d="M24 58l12-5 12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.5" />
-                      <circle cx="52" cy="22" r="3" fill="var(--visual-accent)" opacity="0.6" />
-                    </svg>
-                  </div>
-                </div>
-                <div class="card-body">
-                  <h3>Describe Image</h3>
-                  <p>Study an image then describe it aloud within 40 seconds.</p>
                   <button class="card-cta">Practice Now</button>
                 </div>
               </div>

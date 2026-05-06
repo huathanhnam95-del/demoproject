@@ -2304,23 +2304,6 @@ const SRSReview = (function () {
         });
 
         log.debug(`Mode Selected: ${selectedMode}. New Weights:`, JSON.stringify(reviewSession.modeWeights));
-        log.debug(`Mode selected: ${reviewSession.currentMode}`);
-
-        // ============================================
-        // SRS MODE TUTORIALS (Contextual, First-Time)
-        // ============================================
-        // Trigger tutorial for each mode on first encounter
-        if (window.VocabTutorial) {
-            if (selectedMode === 'listen' && VocabTutorial.shouldShow('srsListenType')) {
-                // Slight delay to let UI render first
-                setTimeout(() => VocabTutorial.startSRSListenTypeTutorial(), 200);
-            } else if (selectedMode === 'speak' && VocabTutorial.shouldShow('srsListenRepeat')) {
-                setTimeout(() => VocabTutorial.startSRSListenRepeatTutorial(), 200);
-            } else if (selectedMode === 'cloze' && VocabTutorial.shouldShow('srsCloze')) {
-                setTimeout(() => VocabTutorial.startSRSClozeTutorial(), 200);
-            }
-        }
-
         // Reset inputs and results
         if (elements.srsInput) elements.srsInput.value = '';
         if (elements.srsResultContainer) elements.srsResultContainer.style.display = 'none';
@@ -2489,6 +2472,28 @@ const SRSReview = (function () {
             // DictionaryService not available
             if (elements.srsVietnamese) elements.srsVietnamese.textContent = currentWord.vietnameseTranslation || '';
             if (elements.srsExample) elements.srsExample.textContent = currentWord.example || currentWord.sentence || '';
+        }
+
+        // ============================================
+        // SRS MODE TUTORIALS (Contextual, First-Time)
+        // ============================================
+        // Trigger tutorial for each mode on first encounter, after DOM has settled
+        // and check that we are still on the same word/mode
+        if (window.VocabTutorial) {
+            setTimeout(() => {
+                // Double check we haven't advanced to a different word or mode
+                if (reviewSession.currentIndex >= reviewSession.wordsToReview.length) return;
+                const activeWord = reviewSession.wordsToReview[reviewSession.currentIndex];
+                if (activeWord !== currentWord || reviewSession.currentMode !== selectedMode) return;
+                
+                if (selectedMode === 'listen' && VocabTutorial.shouldShow('srsListenType')) {
+                    VocabTutorial.startSRSListenTypeTutorial();
+                } else if (selectedMode === 'speak' && VocabTutorial.shouldShow('srsListenRepeat')) {
+                    VocabTutorial.startSRSListenRepeatTutorial();
+                } else if (selectedMode === 'cloze' && VocabTutorial.shouldShow('srsCloze')) {
+                    VocabTutorial.startSRSClozeTutorial();
+                }
+            }, 100);
         }
     }
 
@@ -4671,6 +4676,11 @@ const SRSReview = (function () {
 
         if (writingChallenge) {
             writingChallenge.show(queuedItem, calculateUserLevel(), resolvedId, onComplete);
+            
+            // Trigger tutorial if needed
+            if (window.VocabTutorial && window.VocabTutorial.shouldShow('writingChallenge')) {
+                setTimeout(() => window.VocabTutorial.startWritingChallengeTutorial(), 300);
+            }
         } else {
             console.warn('WritingChallenge module not initialized');
             clearActiveWritingChallengeContext(resolvedId);

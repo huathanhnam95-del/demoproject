@@ -12,7 +12,7 @@
 (function () {
     'use strict';
 
-    const ESSAY_JSON_PATH = 'database/Write Essay/essay-questions-with-vocab.json';
+    const ESSAY_JSON_PATH = '/database/Write Essay/essay-questions-with-vocab.json';
     const MAX_ESSAY_TIME_SECONDS = 20 * 60; // 20 minutes
 
     // State

@@ -846,7 +846,7 @@
         skill: 'speaking',
         hasTutorial: false,
         isLive: true,
-        launcherVisible: true
+        launcherVisible: false
       }
     }
   };
@@ -858,19 +858,23 @@
 
   const PRACTICE_SCOPE_CONFIG = {
     [SCOPE_ENGLISH]: {
-      visibleModes: null,
+      visibleModes: new Set([
+        'read-aloud', 'speak', 'notes', 'extended', 'type', 'rfib', 'essay', 'pronounce', 'collo-dictate'
+      ]),
       modeOverrides: Object.freeze({})
     },
     [SCOPE_PTE]: {
-      visibleModes: new Set(['read-aloud', 'speak', 'notes', 'extended', 'type', 'rfib', 'sgd', 'essay', 'describe-image']),
+      visibleModes: new Set([
+        'read-aloud', 'speak', 'describe-image', 'notes', 'asq', 'sgd', 'essay', 'type', 'rfib', 'extended'
+      ]),
       modeOverrides: Object.freeze({
         speak: { label: 'Repeat Sentence' },
         notes: { label: 'Retell Lecture', skill: 'speaking' },
         type: { label: 'Write from Dictation' },
-        asq: { label: 'Answer Short Question' },
+        asq: { launcherVisible: true, label: 'Answer Short Questions' },
         sgd: { label: 'Summarize Group Discussion' },
         essay: { label: 'Write Essay' },
-        'describe-image': { label: 'Describe Image' }
+        'describe-image': { launcherVisible: true, label: 'Describe Image' }
       })
     }
   };
@@ -969,10 +973,12 @@
      * @returns {string} URL path like /practice/speaking/read-aloud/42
      */
     function buildPath(mode, questionId) {
-      if (!mode) return '/practice';
+      const scope = PracticeScopeManager.getScope();
+      const prefix = scope === SCOPE_PTE ? '/pte-practice' : '/practice';
+      if (!mode) return prefix;
       const meta = getResolvedModeMeta?.(mode) || PRACTICE_LAUNCHER.modes[mode];
       const skill = meta?.skill || 'speaking';
-      let path = `/practice/${skill}/${mode}`;
+      let path = `${prefix}/${skill}/${mode}`;
       if (questionId != null && questionId !== '' && questionId !== 'random') {
         path += `/${questionId}`;
       }
@@ -988,9 +994,10 @@
       const clean = (pathname || '/').replace(/\/+$/, '') || '/';
       const segments = clean.split('/').filter(Boolean);
 
-      // Must start with 'practice' or be empty
-      if (segments[0] !== 'practice' && segments.length > 0) {
-        // Not a practice route — could be /landing, /crm-admin, etc.
+      const isPte = segments[0] === 'pte-practice';
+      const isEnglish = segments[0] === 'practice';
+
+      if (!isPte && !isEnglish && segments.length > 0) {
         return { skill: null, mode: null, questionId: null, isPractice: false };
       }
 
@@ -998,7 +1005,8 @@
         skill: segments[1] || null,
         mode: segments[2] || null,
         questionId: segments[3] || null,
-        isPractice: true
+        isPractice: true,
+        scope: isPte ? SCOPE_PTE : SCOPE_ENGLISH
       };
     }
 
@@ -1041,7 +1049,14 @@
      */
     function initFromURL() {
       const route = parseRoute(window.location.pathname);
-      if (!route.isPractice || !route.mode) return null;
+      if (!route.isPractice) return null;
+
+      // Sync scope from URL prefix
+      if (route.scope) {
+        setPracticeScope(route.scope, { persist: true });
+      }
+
+      if (!route.mode) return null;
 
       // Validate that the mode exists
       const meta = PRACTICE_LAUNCHER.modes[route.mode];
@@ -1148,10 +1163,15 @@
   function isModeVisibleInScope(mode, scope = getPracticeScope()) {
     const meta = getResolvedModeMeta(mode, scope);
     if (!meta) return false;
-    if (meta.launcherVisible === false) return false;
+
+    // 1. Priority: Scope-specific visibleModes Set
     const visibleModes = getPracticeScopeConfig(scope)?.visibleModes;
-    if (visibleModes instanceof Set) return visibleModes.has(mode);
-    return true;
+    if (visibleModes instanceof Set) {
+      return visibleModes.has(mode);
+    }
+
+    // 2. Fallback: Check launcherVisible flag in resolved meta (includes overrides)
+    return meta.launcherVisible !== false;
   }
 
   function updatePracticeScopeToggleUI() {
@@ -1179,14 +1199,12 @@
       const response = await fetch('/database/quiz/ASQ/audio/manifest.json', { method: 'HEAD' });
       if (!response.ok) return;
 
-      const asqMeta = PRACTICE_LAUNCHER.modes.asq;
-      if (asqMeta) {
-        asqMeta.launcherVisible = true;
-      }
-      const pteVisible = PRACTICE_SCOPE_CONFIG?.[SCOPE_PTE]?.visibleModes;
-      if (pteVisible instanceof Set) {
-        pteVisible.add('asq');
-      }
+    // The PTE scope config now includes 'asq' in its visibleModes Set by default
+    // We only need to ensure the manifest is actually usable
+    const pteVisible = PRACTICE_SCOPE_CONFIG?.[SCOPE_PTE]?.visibleModes;
+    if (pteVisible instanceof Set) {
+      pteVisible.add('asq');
+    }
 
       renderPracticeLauncher();
     } catch (_) {

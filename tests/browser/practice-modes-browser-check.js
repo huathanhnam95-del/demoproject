@@ -6,6 +6,74 @@ const { chromium } = require('playwright');
 
 const CORRUPTION_MARKERS = ['Ã°', 'Ã¢', 'â†', 'âœ', 'ðŸ'];
 
+async function setupFirebaseMocks(context) {
+  await context.route('**/firebase-app.js', (route) => {
+    route.fulfill({
+      contentType: 'application/javascript',
+      body: `
+        export const initializeApp = () => ({ name: '[DEFAULT]' });
+        export const getApp = () => ({ name: '[DEFAULT]' });
+      `
+    });
+  });
+  await context.route('**/firebase-auth.js', (route) => {
+    route.fulfill({
+      contentType: 'application/javascript',
+      body: `
+        export const getAuth = () => ({ currentUser: null });
+        export const connectAuthEmulator = () => {};
+        export const onAuthStateChanged = (auth, cb) => { setTimeout(() => cb(null), 10); return () => {}; };
+        export const setPersistence = () => Promise.resolve();
+        export const browserLocalPersistence = 'local';
+        export const signInWithEmailAndPassword = () => Promise.resolve({ user: {} });
+        export const signOut = () => Promise.resolve();
+        export const createUserWithEmailAndPassword = () => Promise.resolve({ user: {} });
+        export const sendPasswordResetEmail = () => Promise.resolve();
+        export const sendEmailVerification = () => Promise.resolve();
+      `
+    });
+  });
+  await context.route('**/firebase-firestore.js', (route) => {
+    route.fulfill({
+      contentType: 'application/javascript',
+      body: `
+        export const getFirestore = () => ({ _type: 'firestore' });
+        export const connectFirestoreEmulator = () => {};
+        export const collection = (db, path) => ({ _type: 'collection', path });
+        export const doc = (db, path, ...segments) => ({ _type: 'doc', path: [path, ...segments].filter(Boolean).join('/') });
+        export const getDoc = async () => ({ exists: () => false, data: () => ({}) });
+        export const getDocs = async () => ({ empty: true, docs: [] });
+        export const setDoc = async () => {};
+        export const updateDoc = async () => {};
+        export const deleteDoc = async () => {};
+        export const addDoc = async () => ({ id: 'mock-id' });
+        export const query = (ref) => ref;
+        export const where = () => ({});
+        export const limit = () => ({});
+        export const orderBy = () => ({});
+        export const serverTimestamp = () => new Date();
+        export const increment = (v) => v;
+        export const arrayUnion = (...v) => v;
+        export const arrayRemove = (...v) => v;
+        export const Timestamp = { now: () => new Date(), fromDate: (d) => d };
+        export const writeBatch = () => ({ set: () => {}, update: () => {}, commit: async () => {} });
+        export const runTransaction = async (db, cb) => cb({ get: async () => ({ exists: () => false }), set: () => {}, update: () => {} });
+        export const setLogLevel = () => {};
+      `
+    });
+  });
+  await context.route('**/firebase-functions.js', (route) => {
+    route.fulfill({
+      contentType: 'application/javascript',
+      body: `
+        export const getFunctions = () => ({});
+        export const connectFunctionsEmulator = () => {};
+        export const httpsCallable = () => async () => ({ data: {} });
+      `
+    });
+  });
+}
+
 function startHarnessServer() {
   const app = express();
   const publicDir = path.join(__dirname, '..', '..', 'public');
@@ -133,7 +201,10 @@ async function checkSkillFilter(page, skill, expectedVisibleIds, expectedModeId)
 (async () => {
   const { server, origin } = await startHarnessServer();
   const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage({ viewport: { width: 1440, height: 1200 } });
+  const context = await browser.newContext({ viewport: { width: 1440, height: 1200 } });
+  await setupFirebaseMocks(context);
+  const page = await context.newPage();
+  await page.addInitScript(() => { window.__DISABLE_FIREBASE_EMULATORS__ = true; });
   const pageErrors = [];
   const consoleWarnings = [];
 
@@ -213,15 +284,15 @@ async function checkSkillFilter(page, skill, expectedVisibleIds, expectedModeId)
       'mode-btn-speak',
       'mode-btn-pronounce',
       'mode-btn-read-aloud',
-      'mode-btn-sgd'
+      'mode-btn-sgd',
+      'mode-btn-describe-image'
     ], 'mode-extended');
 
     const readingState = await checkSkillFilter(page, 'reading', ['mode-btn-rfib'], 'mode-extended');
     assert.equal(readingState.readingVisible, true, 'Reading live card should be visible');
     assert.equal(readingState.writingVisible, false, 'Writing empty state should stay hidden in Reading');
 
-    const writingState = await checkSkillFilter(page, 'writing', ['practice-writing-empty'], 'mode-extended');
-    assert.equal(writingState.writingVisible, true, 'Writing empty state should be visible');
+    const writingState = await checkSkillFilter(page, 'writing', ['mode-btn-essay'], 'mode-extended');
 
     await page.evaluate(async () => {
       await window.switchToMode('read-aloud');

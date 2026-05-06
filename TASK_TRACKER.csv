@@ -229,3 +229,5 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 238,2026-05-05,Fix broken UI on deep-link SPA routes (base href + catch-all regex),Done,2026-05-05
 239,2026-05-05,Remediating Write Essay Mode (AI Feedback & UI State Locking),Done,2026-05-05
 240,2026-05-05,Review and commit all changes as V1.6.7 and prepare push to production,Done,2026-05-05
+241,2026-05-06,Hardening RFIB CI Pipeline via Firebase Mocking,Done,2026-05-06
+242,2026-05-06,Fix CI pipeline: remove ghost submodules and update practice-modes test expectations,In Progress,

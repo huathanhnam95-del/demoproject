@@ -173,6 +173,7 @@ class ReadAloudMode {
     });
 
     // Question Picker v7 bindings (Read Aloud only)
+    document.getElementById('ra-v7-prev-btn')?.addEventListener('click', () => this.loadPreviousPrompt());
     document.getElementById('ra-v7-next-btn')?.addEventListener('click', () => this.loadNextPrompt());
     document.getElementById('ra-v7-question-pill')?.addEventListener('click', () => this.openQuestionPickerV7('jump'));
     document.getElementById('ra-v7-filters-btn')?.addEventListener('click', () => this.openQuestionPickerV7('filters'));
@@ -916,6 +917,14 @@ class ReadAloudMode {
 
     const recoveringPreviousPrompt = preferLastPrompt && !this.currentPromptRow && !!this.lastPromptRow;
     this.loadNextPrompt({ rememberPrompt: !recoveringPreviousPrompt });
+  }
+
+  loadPreviousPrompt() {
+    if (this.lastPromptRow) {
+      this.applyPromptRow(this.lastPromptRow, this.beginPromptLoad(), { rememberPrompt: false });
+    } else {
+      this.loadNextPrompt();
+    }
   }
 
   async loadNextPrompt(options = {}) {

@@ -637,10 +637,14 @@
           }, 300);
         }
       } else {
-        // No URL route — use default mode and set initial URL
-        const preferred = PRACTICE_LAUNCHER.defaultMode || 'read-aloud';
-        const defaultMode = isModeVisibleInScope(preferred) ? preferred : (isModeVisibleInScope('read-aloud') ? 'read-aloud' : 'type');
-        window.switchToMode?.(defaultMode);
+        // No URL route — ensure we are on the dashboard in a clean state
+        if (typeof window.exitCurrentMode === 'function') {
+          window.exitCurrentMode();
+        } else {
+          const preferred = PRACTICE_LAUNCHER.defaultMode || 'read-aloud';
+          const defaultMode = isModeVisibleInScope(preferred) ? preferred : (isModeVisibleInScope('read-aloud') ? 'read-aloud' : 'type');
+          window.switchToMode?.(defaultMode);
+        }
       }
     }
   });
@@ -964,7 +968,15 @@
   // =========================================================================
   const PracticeRouter = (() => {
     let _isPopstateNavigation = false;
+    let _lastPopstateAt = 0;
     let _initialized = false;
+    const POPSTATE_GRACE_MS = 600;
+
+    function isPopstateNavigationWindow() {
+      if (_isPopstateNavigation) return true;
+      if (!_lastPopstateAt) return false;
+      return Date.now() - _lastPopstateAt < POPSTATE_GRACE_MS;
+    }
 
     /**
      * Build URL path for a given mode + optional question ID.
@@ -1015,7 +1027,7 @@
      * Called from switchToMode.
      */
     function pushRoute(mode, questionId) {
-      if (_isPopstateNavigation) return; // Don't push when responding to popstate
+      if (isPopstateNavigationWindow()) return; // URL is already correct for this history entry
       const path = buildPath(mode, questionId);
       const currentPath = window.location.pathname.replace(/\/+$/, '') || '/';
       if (currentPath === path) return; // Already at this path
@@ -1033,7 +1045,10 @@
      * Called from question selectors.
      */
     function replaceRoute(mode, questionId) {
+      if (isPopstateNavigationWindow()) return; // URL is already correct for this history entry
       const path = buildPath(mode, questionId);
+      const currentPath = window.location.pathname.replace(/\/+$/, '') || '/';
+      if (currentPath === path) return; // Already at this path
       try {
         window.history.replaceState(
           { mode: mode || '', questionId: questionId || null, source: 'practice-router' },
@@ -1071,8 +1086,16 @@
     function setupPopstateListener() {
       window.addEventListener('popstate', async (event) => {
         _isPopstateNavigation = true;
+        _lastPopstateAt = Date.now();
         try {
           const route = parseRoute(window.location.pathname);
+
+          // Sync scope from URL prefix (matches initFromURL behavior)
+          if (route.scope) {
+            try {
+              setPracticeScope(route.scope, { persist: true });
+            } catch (_) { /* ignore */ }
+          }
 
           if (!route.isPractice || !route.mode) {
             // Back to dashboard

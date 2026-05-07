@@ -22,6 +22,7 @@
   <link rel="stylesheet" href="pronunciation-analyzer/style.css">
   <link rel="stylesheet" href="pronunciation-analyzer/syllable-verifier.css">
   <link rel="stylesheet" href="rfib-mode.css">
+  <link rel="stylesheet" href="read-aloud-question-picker-v7.css?v=20260507_ra_v7">
   <link rel="stylesheet" href="style-scaffolding.css?v=20260123_mode_fix">
   <link rel="stylesheet" href="/site-header.css">
   <script src="/js/site-header.js" defer></script>
@@ -3234,9 +3235,161 @@
 
       <!-- Read Aloud Mode Panel -->
       <div id="mode-read-aloud" class="mode-panel" style="display: none;">
+        <!-- Question Picker v7 (Read Aloud only) -->
+        <div class="ra-v7-picker-bar" id="ra-v7-picker-bar">
+          <div class="ra-v7-picker-inner">
+            <div class="ra-v7-nav" role="group" aria-label="Read Aloud navigation">
+              <button id="ra-v7-prev-btn" class="ra-v7-icon-btn" type="button" disabled aria-disabled="true"
+                title="Previous prompt">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke="currentColor"
+                  stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                <span class="ra-v7-sr-only" data-label>Previous</span>
+              </button>
+
+              <button id="ra-v7-question-pill" class="ra-v7-question-pill" type="button" aria-haspopup="dialog"
+                aria-controls="ra-v7-sheet" title="Jump to a question">
+                Select a question…
+              </button>
+
+              <button id="ra-v7-next-btn" class="ra-v7-icon-btn" type="button" title="Next prompt">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke="currentColor"
+                  stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+                </svg>
+                <span class="ra-v7-sr-only" data-label>Next</span>
+              </button>
+            </div>
+
+            <div class="ra-v7-actions">
+              <button id="ra-v7-filters-btn" class="ra-v7-filters-btn" type="button" aria-haspopup="dialog"
+                aria-controls="ra-v7-sheet" title="Filters">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke="currentColor"
+                  stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
+                  </path>
+                </svg>
+                <span data-label>Filters</span>
+                <span id="ra-v7-filters-count" class="ra-v7-count-badge" style="display:none;">0</span>
+              </button>
+
+              <div class="ra-v7-audio-group" aria-label="Read Aloud audio shortcuts">
+                <button id="header-ra-play-audio-btn" class="ra-v7-audio-btn" type="button" title="Play sample audio">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke="currentColor"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 18V6l12 6-12 6z"></path>
+                  </svg>
+                  <span class="ra-v7-sr-only" data-label>Play sample</span>
+                </button>
+                <button id="header-ra-play-recording-btn" class="ra-v7-audio-btn" type="button"
+                  title="Play your recording" disabled aria-disabled="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke="currentColor"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 1a3 3 0 013 3v6a3 3 0 01-6 0V4a3 3 0 013-3z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 10v1a7 7 0 01-14 0v-1"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 18v4m-4 0h8"></path>
+                  </svg>
+                  <span class="ra-v7-sr-only" data-label>Play recording</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="ra-v7-backdrop" class="ra-v7-backdrop" aria-hidden="true"></div>
+        <div id="ra-v7-sheet" class="ra-v7-sheet" role="dialog" aria-modal="true" aria-labelledby="ra-v7-sheet-title"
+          tabindex="-1">
+          <span class="ra-v7-grabber" aria-hidden="true"></span>
+          <div class="ra-v7-sheet-header">
+            <div class="ra-v7-sheet-title" id="ra-v7-sheet-title">Question Picker</div>
+            <button id="ra-v7-sheet-close" class="ra-v7-sheet-close" type="button" aria-label="Close">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke="currentColor"
+                stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+
+          <div class="ra-v7-tabs" role="tablist" aria-label="Question Picker tabs">
+            <button id="ra-v7-tab-jump" class="ra-v7-tab" type="button" role="tab" aria-selected="true"
+              aria-controls="ra-v7-panel-jump">Jump</button>
+            <button id="ra-v7-tab-filters" class="ra-v7-tab" type="button" role="tab" aria-selected="false"
+              aria-controls="ra-v7-panel-filters">Filters</button>
+          </div>
+
+          <div class="ra-v7-sheet-body">
+            <div id="ra-v7-panel-jump" role="tabpanel" aria-labelledby="ra-v7-tab-jump">
+              <label class="ra-v7-sr-only" for="ra-v7-jump-search">Search</label>
+              <input id="ra-v7-jump-search" class="ra-v7-search" type="search" autocomplete="off"
+                placeholder="Search questions…">
+
+              <div class="ra-v7-section-title">Questions</div>
+              <div id="ra-v7-jump-list" class="ra-v7-list" role="listbox" aria-label="Questions">
+                <!-- JS injects list items -->
+              </div>
+            </div>
+
+            <div id="ra-v7-panel-filters" role="tabpanel" aria-labelledby="ra-v7-tab-filters" style="display:none;">
+              <div class="ra-v7-section-title">Sample Audio</div>
+              <div class="ra-v7-list" role="radiogroup" aria-label="Sample audio">
+                <button class="ra-v7-list-item" type="button" role="radio" aria-checked="true"
+                  data-filter-kind="sample-audio" data-filter="all">
+                  <span class="ra-v7-list-primary">All</span>
+                  <span class="ra-v7-list-secondary">Include questions with or without audio</span>
+                </button>
+                <button class="ra-v7-list-item" type="button" role="radio" aria-checked="false"
+                  data-filter-kind="sample-audio" data-filter="available">
+                  <span class="ra-v7-list-primary">Audio available</span>
+                  <span class="ra-v7-list-secondary">Only prompts with sample audio</span>
+                </button>
+                <button class="ra-v7-list-item" type="button" role="radio" aria-checked="false"
+                  data-filter-kind="sample-audio" data-filter="unavailable">
+                  <span class="ra-v7-list-primary">No audio</span>
+                  <span class="ra-v7-list-secondary">Only prompts without sample audio</span>
+                </button>
+              </div>
+
+              <div class="ra-v7-section-title">Prompt Feature</div>
+              <div class="ra-v7-list" role="radiogroup" aria-label="Prompt feature">
+                <button class="ra-v7-list-item" type="button" role="radio" aria-checked="true"
+                  data-filter-kind="prompt-feature" data-filter="all">
+                  <span class="ra-v7-list-primary">All prompts</span>
+                  <span class="ra-v7-list-secondary">No feature filter</span>
+                </button>
+                <button class="ra-v7-list-item" type="button" role="radio" aria-checked="false"
+                  data-filter-kind="prompt-feature" data-filter="any_connected">
+                  <span class="ra-v7-list-primary">Any connected speech</span>
+                  <span class="ra-v7-list-secondary">Prompt contains any connected speech feature</span>
+                </button>
+                <button class="ra-v7-list-item" type="button" role="radio" aria-checked="false"
+                  data-filter-kind="prompt-feature" data-filter="linking">
+                  <span class="ra-v7-list-primary">Linking</span>
+                  <span class="ra-v7-list-secondary">Prompt contains linking opportunities</span>
+                </button>
+                <button class="ra-v7-list-item" type="button" role="radio" aria-checked="false"
+                  data-filter-kind="prompt-feature" data-filter="reduced_words">
+                  <span class="ra-v7-list-primary">Reduced words</span>
+                  <span class="ra-v7-list-secondary">Prompt contains reduced word phrases</span>
+                </button>
+                <button class="ra-v7-list-item" type="button" role="radio" aria-checked="false"
+                  data-filter-kind="prompt-feature" data-filter="sound_changes">
+                  <span class="ra-v7-list-primary">Sound changes</span>
+                  <span class="ra-v7-list-secondary">Prompt contains sound change patterns</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="ra-v7-footer">
+            <button id="ra-v7-done-btn" class="ra-v7-done-btn" type="button">Done</button>
+          </div>
+        </div>
+
         <!-- Filter/Config Bar -->
         <div class="question-selector"
-          style="border-bottom: none; padding: 10px 20px 0; align-items: center; flex-direction: column; gap: 12px; margin: 0 auto; max-width: 900px;">
+          style="display:none; border-bottom: none; padding: 10px 20px 0; align-items: center; flex-direction: column; gap: 12px; margin: 0 auto; max-width: 900px;">
           <div
             style="display:flex; align-items:center; justify-content:space-between; gap: 12px; width:100%; max-width:900px; margin: 0 auto; flex-wrap:wrap;">
             <select id="ra-question-select"

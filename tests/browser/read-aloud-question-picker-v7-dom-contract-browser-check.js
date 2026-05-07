@@ -1,0 +1,411 @@
+const assert = require('assert');
+const net = require('net');
+const path = require('path');
+const { chromium } = require('playwright');
+
+function getFreePort() {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer();
+    server.listen(0, '127.0.0.1', () => {
+      const address = server.address();
+      const port = typeof address === 'object' && address ? address.port : null;
+      server.close(() => {
+        if (typeof port === 'number') {
+          resolve(port);
+          return;
+        }
+        reject(new Error('Failed to allocate free port'));
+      });
+    });
+    server.on('error', reject);
+  });
+}
+
+async function setupFirebaseMocks(context) {
+  await context.route('**/firebase-app.js', (route) => {
+    route.fulfill({
+      contentType: 'application/javascript',
+      body: `
+        export const initializeApp = () => ({ name: '[DEFAULT]' });
+        export const getApp = () => ({ name: '[DEFAULT]' });
+      `
+    });
+  });
+
+  await context.route('**/firebase-auth.js', (route) => {
+    route.fulfill({
+      contentType: 'application/javascript',
+      body: `
+        export const getAuth = () => ({ currentUser: null });
+        export const connectAuthEmulator = () => {};
+        export const onAuthStateChanged = (_auth, cb) => {
+          setTimeout(() => cb(null), 10);
+          return () => {};
+        };
+        export const setPersistence = () => Promise.resolve();
+        export const browserLocalPersistence = 'local';
+        export const signInWithEmailAndPassword = () => Promise.resolve({ user: {} });
+        export const signOut = () => Promise.resolve();
+        export const createUserWithEmailAndPassword = () => Promise.resolve({ user: {} });
+        export const sendPasswordResetEmail = () => Promise.resolve();
+        export const sendEmailVerification = () => Promise.resolve();
+      `
+    });
+  });
+
+  await context.route('**/firebase-firestore.js', (route) => {
+    route.fulfill({
+      contentType: 'application/javascript',
+      body: `
+        export const getFirestore = () => ({ _type: 'firestore' });
+        export const connectFirestoreEmulator = () => {};
+        export const collection = (db, path) => ({ _type: 'collection', path });
+        export const doc = (db, path, ...segments) => ({
+          _type: 'doc',
+          path: [path, ...segments].filter(Boolean).join('/')
+        });
+        export const getDoc = async () => ({
+          exists: () => false,
+          data: () => ({})
+        });
+        export const getDocs = async () => ({ empty: true, docs: [] });
+        export const setDoc = async () => {};
+        export const updateDoc = async () => {};
+        export const deleteDoc = async () => {};
+        export const addDoc = async () => ({ id: 'mock-id' });
+        export const query = (ref) => ref;
+        export const where = () => ({});
+        export const limit = () => ({});
+        export const orderBy = () => ({});
+        export const serverTimestamp = () => new Date();
+        export const increment = (v) => v;
+        export const arrayUnion = (...v) => v;
+        export const arrayRemove = (...v) => v;
+        export const Timestamp = {
+          now: () => new Date(),
+          fromDate: (d) => d
+        };
+        export const writeBatch = () => ({
+          set: () => {},
+          update: () => {},
+          commit: async () => {}
+        });
+        export const runTransaction = async (_db, cb) => cb({
+          get: async () => ({ exists: () => false }),
+          set: () => {},
+          update: () => {}
+        });
+        export const setLogLevel = () => {};
+      `
+    });
+  });
+
+  await context.route('**/firebase-functions.js', (route) => {
+    route.fulfill({
+      contentType: 'application/javascript',
+      body: `
+        export const getFunctions = () => ({});
+        export const connectFunctionsEmulator = () => {};
+        export const httpsCallable = () => async () => ({ data: {} });
+      `
+    });
+  });
+}
+
+async function clickByScript(page, selector) {
+  await page.evaluate((sel) => {
+    document.querySelector(sel)?.click();
+  }, selector);
+}
+
+async function mockWorkbookRows(page, rows) {
+  await page.evaluate((mockRows) => {
+    if (!window.XLSX || !window.XLSX.utils || !window.XLSX.utils.sheet_to_json) {
+      throw new Error('XLSX not available for mocking');
+    }
+    const originalSheetToJson = window.XLSX.utils.sheet_to_json.bind(window.XLSX.utils);
+    window.__raMockRows = mockRows;
+
+    window.XLSX.read = () => ({
+      SheetNames: ['Sheet1'],
+      Sheets: {
+        Sheet1: {
+          __mockRows: window.__raMockRows
+        }
+      }
+    });
+
+    window.XLSX.utils.sheet_to_json = (worksheet) => {
+      if (Array.isArray(worksheet?.__mockRows)) {
+        return worksheet.__mockRows.slice();
+      }
+      return originalSheetToJson(worksheet);
+    };
+  }, rows);
+}
+
+async function assertV7ButtonStructure(page, label) {
+  const state = await page.evaluate(() => {
+    function describeButton(id) {
+      const el = document.getElementById(id);
+      if (!el) return { exists: false, hasSvg: false, hasDataLabel: false };
+      return {
+        exists: true,
+        hasSvg: !!el.querySelector('svg'),
+        hasDataLabel: !!el.querySelector('[data-label]')
+      };
+    }
+    const pill = document.getElementById('ra-v7-question-pill');
+    const select = document.getElementById('ra-question-select');
+    const selected = select?.selectedOptions?.length
+      ? select.selectedOptions[0]
+      : Array.from(select?.options || []).find((opt) => opt.value === select?.value);
+    return {
+      pickerBarExists: !!document.getElementById('ra-v7-picker-bar'),
+      pillExists: !!pill,
+      pillText: String(pill?.textContent || '').trim(),
+      selectedLabel: String(selected?.textContent || '').trim(),
+      prev: describeButton('ra-v7-prev-btn'),
+      next: describeButton('ra-v7-next-btn'),
+      filters: describeButton('ra-v7-filters-btn'),
+      playSample: describeButton('header-ra-play-audio-btn'),
+      playRecording: describeButton('header-ra-play-recording-btn')
+    };
+  });
+
+  assert.equal(state.pickerBarExists, true, `[${label}] Expected v7 picker bar to exist.`);
+  assert.equal(state.pillExists, true, `[${label}] Expected v7 question pill to exist.`);
+  assert.ok(state.pillText.length > 0, `[${label}] Expected pill text to be non-empty.`);
+  if (state.selectedLabel) {
+    assert.equal(state.pillText, state.selectedLabel, `[${label}] Expected pill text to match selected option.`);
+  }
+
+  for (const [key, value] of Object.entries({
+    'prev button': state.prev,
+    'next button': state.next,
+    'filters button': state.filters,
+    'header sample-audio button': state.playSample,
+    'header recording button': state.playRecording
+  })) {
+    assert.equal(value.exists, true, `[${label}] Missing ${key}.`);
+    assert.equal(value.hasSvg, true, `[${label}] Expected ${key} to contain an <svg>.`);
+    assert.equal(value.hasDataLabel, true, `[${label}] Expected ${key} to contain a [data-label] span.`);
+  }
+}
+
+(async () => {
+  const port = await getFreePort();
+  const baseUrl = `http://127.0.0.1:${port}`;
+  let server = null;
+
+  const express = require('express');
+  const http = require('http');
+  const publicDir = path.join(process.cwd(), 'public');
+  const app = express();
+  app.use(express.static(publicDir));
+  app.get('/', (_req, res) => {
+    res.setHeader('Cache-Control', 'no-store');
+    res.sendFile(path.join(publicDir, 'index.html'));
+  });
+  server = http.createServer(app);
+  await new Promise((resolve) => {
+    server.listen(port, '127.0.0.1', resolve);
+  });
+
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({
+    viewport: { width: 1440, height: 1000 },
+    serviceWorkers: 'block'
+  });
+  await setupFirebaseMocks(context);
+
+  await context.addInitScript(() => {
+    class FakeMediaRecorder {
+      constructor(stream) {
+        this.stream = stream;
+        this.state = 'inactive';
+        this.mimeType = 'audio/wav';
+        this.listeners = {};
+      }
+
+      addEventListener(type, handler) {
+        if (!this.listeners[type]) this.listeners[type] = [];
+        this.listeners[type].push(handler);
+      }
+
+      start() {
+        this.state = 'recording';
+      }
+
+      stop() {
+        if (this.state !== 'recording') return;
+        this.state = 'inactive';
+        const blob = new Blob([new Uint8Array([1, 2, 3, 4])], { type: this.mimeType });
+        (this.listeners.dataavailable || []).forEach((handler) => handler({ data: blob }));
+        (this.listeners.stop || []).forEach((handler) => handler());
+      }
+    }
+
+    Object.defineProperty(window, 'MediaRecorder', {
+      configurable: true,
+      writable: true,
+      value: FakeMediaRecorder
+    });
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: {
+        getUserMedia: async () => ({
+          getTracks() {
+            return [{
+              stop() {}
+            }];
+          }
+        })
+      }
+    });
+
+    const originalPlay = window.HTMLMediaElement.prototype.play;
+    Object.defineProperty(window.HTMLMediaElement.prototype, 'play', {
+      configurable: true,
+      writable: true,
+      value: function play() {
+        this.__raPausedState = false;
+        return Promise.resolve(originalPlay ? originalPlay.call(this).catch(() => { }) : undefined);
+      }
+    });
+    const originalPause = window.HTMLMediaElement.prototype.pause;
+    Object.defineProperty(window.HTMLMediaElement.prototype, 'pause', {
+      configurable: true,
+      writable: true,
+      value: function pause() {
+        this.__raPausedState = true;
+        return originalPause ? originalPause.call(this) : undefined;
+      }
+    });
+    Object.defineProperty(window.HTMLMediaElement.prototype, 'paused', {
+      configurable: true,
+      get() {
+        return this.__raPausedState !== false;
+      }
+    });
+  });
+
+  await context.route('**/database/RA/RA.xlsx', async (route) => {
+    await route.fulfill({
+      status: 200,
+      headers: { 'Cache-Control': 'no-store' },
+      body: Buffer.from([1, 2, 3, 4])
+    });
+  });
+
+  await context.route('**/database/RA/Voice/audio/manifest.json', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      headers: { 'Cache-Control': 'no-store' },
+      body: JSON.stringify({
+        1: {
+          male: { files: { 100: 'dummy.wav' } }
+        }
+      })
+    });
+  });
+
+  await context.route('**/database/RA/Voice/audio/dummy.wav', async (route) => {
+    await route.fulfill({
+      status: 200,
+      headers: {
+        'Cache-Control': 'no-store',
+        'Content-Type': 'audio/wav'
+      },
+      body: Buffer.from([82, 73, 70, 70]) // RIFF header stub
+    });
+  });
+
+  await context.route('**/api/read-aloud/assess', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      headers: { 'Cache-Control': 'no-store' },
+      body: JSON.stringify({
+        success: true,
+        accuracyScore: 92,
+        recognizedText: 'Pick it up now',
+        words: [],
+        connectedSpeech: { status: 'not_applicable' }
+      })
+    });
+  });
+
+  const page = await context.newPage();
+  const consoleLines = [];
+  page.on('console', (msg) => consoleLines.push(`${msg.type()}: ${msg.text()}`));
+
+  try {
+    await page.goto(`${baseUrl}/index.html`, { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() => typeof window.switchToMode === 'function', { timeout: 30000 });
+    await clickByScript(page, '#vocab-alert-ok');
+
+    await page.waitForFunction(() => typeof window.XLSX === 'object' && !!window.XLSX.utils, { timeout: 30000 });
+    await mockWorkbookRows(page, [
+      {
+        ID: 1,
+        ANSWER: 'Pick / it up now',
+        'ANSWER FOR COMPARE OR TRANSCRIPT': 'Pick it up now',
+        'ANSWER CHUNKED': 'Pick / it up now',
+        'Word count': 4
+      },
+      {
+        ID: 2,
+        ANSWER: 'I can / take it to / the store',
+        'ANSWER FOR COMPARE OR TRANSCRIPT': 'I can take it to the store',
+        'ANSWER CHUNKED': 'I can / take it to / the store',
+        'Word count': 7
+      }
+    ]);
+
+    await page.evaluate(() => window.switchToMode('read-aloud'));
+    await page.waitForFunction(() => window.ReadAloudMode?.currentPromptReady, { timeout: 30000 });
+    await page.waitForFunction(() => {
+      const panel = document.getElementById('mode-read-aloud');
+      return !!panel && panel.classList.contains('active');
+    }, { timeout: 30000 });
+
+    await assertV7ButtonStructure(page, 'initial');
+
+    await page.evaluate(() => document.getElementById('ra-record-btn')?.click());
+    await page.waitForFunction(() => {
+      const stopBtn = document.getElementById('ra-stop-btn');
+      return !!stopBtn && getComputedStyle(stopBtn).display !== 'none';
+    }, { timeout: 30000 });
+
+    await assertV7ButtonStructure(page, 'recording');
+
+    await page.evaluate(() => document.getElementById('ra-stop-btn')?.click());
+    await page.waitForFunction(() => {
+      const status = document.getElementById('ra-status-message');
+      return !!status && /analysis complete/i.test(String(status.textContent || ''));
+    }, { timeout: 30000 });
+
+    await assertV7ButtonStructure(page, 'after-results');
+
+    // Move to next prompt deterministically and re-check structure.
+    await page.evaluate(async () => {
+      await window.ReadAloudMode.loadSpecificPrompt(1);
+    });
+    await page.waitForFunction(() => window.ReadAloudMode?.currentPromptReady && String(window.ReadAloudMode.currentQuestionId || '') === '2', { timeout: 30000 });
+    await assertV7ButtonStructure(page, 'after-next');
+
+    const throttleWarning = consoleLines.find((line) => line.toLowerCase().includes('throttling navigation to prevent the browser from hanging'));
+    assert(!throttleWarning, `Unexpected navigation throttling warning: ${throttleWarning}`);
+
+    console.log('Read Aloud Question Picker v7 DOM contract check passed.');
+  } finally {
+    await browser.close();
+    if (server) {
+      await new Promise((resolve) => server.close(resolve));
+    }
+  }
+})().catch((error) => {
+  console.error(error.stack || error.message);
+  process.exit(1);
+});
+

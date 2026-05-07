@@ -69,6 +69,11 @@ class ReadAloudMode {
     this.hasAssessmentResult = false;
     this.userRecordingUrl = null;
 
+    // Question Picker v7 (Read Aloud only)
+    this.v7JumpQuery = '';
+    this.v7SheetTab = 'jump';
+    this.v7LastFocusedElement = null;
+
     this.bindEvents();
   }
 
@@ -167,6 +172,27 @@ class ReadAloudMode {
       }
     });
 
+    // Question Picker v7 bindings (Read Aloud only)
+    document.getElementById('ra-v7-next-btn')?.addEventListener('click', () => this.loadNextPrompt());
+    document.getElementById('ra-v7-question-pill')?.addEventListener('click', () => this.openQuestionPickerV7('jump'));
+    document.getElementById('ra-v7-filters-btn')?.addEventListener('click', () => this.openQuestionPickerV7('filters'));
+    document.getElementById('ra-v7-sheet-close')?.addEventListener('click', () => this.closeQuestionPickerV7());
+    document.getElementById('ra-v7-done-btn')?.addEventListener('click', () => this.closeQuestionPickerV7());
+    document.getElementById('ra-v7-backdrop')?.addEventListener('click', () => this.closeQuestionPickerV7());
+    document.getElementById('ra-v7-tab-jump')?.addEventListener('click', () => this.setQuestionPickerV7Tab('jump'));
+    document.getElementById('ra-v7-tab-filters')?.addEventListener('click', () => this.setQuestionPickerV7Tab('filters'));
+    document.getElementById('ra-v7-jump-search')?.addEventListener('input', (event) => {
+      this.v7JumpQuery = String(event?.target?.value || '');
+      this.renderQuestionPickerV7JumpList();
+    });
+    document.getElementById('ra-v7-jump-list')?.addEventListener('click', (event) => this.handleQuestionPickerV7JumpClick(event));
+    document.getElementById('ra-v7-panel-filters')?.addEventListener('click', (event) => this.handleQuestionPickerV7FilterClick(event));
+    document.addEventListener('keydown', (event) => this.handleQuestionPickerV7Keydown(event), true);
+
+    // Header audio shortcuts (v7 proxy buttons)
+    document.getElementById('header-ra-play-audio-btn')?.addEventListener('click', () => this.playAudio());
+    document.getElementById('header-ra-play-recording-btn')?.addEventListener('click', () => this.playRecordedAudio());
+
     document.getElementById('ra-toggle-chunking-btn')?.addEventListener('click', () => this.togglePromptGuide('chunking'));
     document.getElementById('ra-toggle-connected-off-btn')?.addEventListener('click', () => this.setConnectedSpeechLevel('off'));
     document.getElementById('ra-toggle-linking-btn')?.addEventListener('click', () => this.setConnectedSpeechLevel('linking'));
@@ -213,6 +239,254 @@ class ReadAloudMode {
 
     const panel = document.getElementById('mode-read-aloud');
     if (panel) observer.observe(panel, { attributes: true });
+  }
+
+  isQuestionPickerV7Open() {
+    const sheet = document.getElementById('ra-v7-sheet');
+    return !!sheet && sheet.classList.contains('is-open');
+  }
+
+  openQuestionPickerV7(tab = 'jump') {
+    const sheet = document.getElementById('ra-v7-sheet');
+    const backdrop = document.getElementById('ra-v7-backdrop');
+    if (!sheet || !backdrop) return;
+
+    this.v7LastFocusedElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+    backdrop.classList.add('is-open');
+    sheet.classList.add('is-open');
+    this.setQuestionPickerV7Tab(tab);
+
+    // Ensure contents are up-to-date before focusing.
+    this.refreshQuestionPickerV7UI({ rebuildJumpList: true });
+
+    const focusTarget = tab === 'filters'
+      ? sheet.querySelector('#ra-v7-panel-filters button')
+      : document.getElementById('ra-v7-jump-search');
+
+    if (focusTarget && typeof focusTarget.focus === 'function') {
+      setTimeout(() => {
+        try { focusTarget.focus(); } catch (_) { /* ignore */ }
+      }, 0);
+    } else if (typeof sheet.focus === 'function') {
+      setTimeout(() => {
+        try { sheet.focus(); } catch (_) { /* ignore */ }
+      }, 0);
+    }
+  }
+
+  closeQuestionPickerV7() {
+    const sheet = document.getElementById('ra-v7-sheet');
+    const backdrop = document.getElementById('ra-v7-backdrop');
+    if (!sheet || !backdrop) return;
+    backdrop.classList.remove('is-open');
+    sheet.classList.remove('is-open');
+
+    const restoreTarget = this.v7LastFocusedElement;
+    this.v7LastFocusedElement = null;
+    if (restoreTarget && document.contains(restoreTarget) && typeof restoreTarget.focus === 'function') {
+      setTimeout(() => {
+        try { restoreTarget.focus(); } catch (_) { /* ignore */ }
+      }, 0);
+    }
+  }
+
+  setQuestionPickerV7Tab(tab) {
+    const normalized = tab === 'filters' ? 'filters' : 'jump';
+    this.v7SheetTab = normalized;
+
+    const tabJump = document.getElementById('ra-v7-tab-jump');
+    const tabFilters = document.getElementById('ra-v7-tab-filters');
+    const panelJump = document.getElementById('ra-v7-panel-jump');
+    const panelFilters = document.getElementById('ra-v7-panel-filters');
+
+    const isJump = normalized === 'jump';
+    if (tabJump) tabJump.setAttribute('aria-selected', isJump ? 'true' : 'false');
+    if (tabFilters) tabFilters.setAttribute('aria-selected', isJump ? 'false' : 'true');
+    if (panelJump) panelJump.style.display = isJump ? '' : 'none';
+    if (panelFilters) panelFilters.style.display = isJump ? 'none' : '';
+  }
+
+  handleQuestionPickerV7Keydown(event) {
+    if (!event || event.key !== 'Escape') return;
+    if (!this.isQuestionPickerV7Open()) return;
+    event.preventDefault();
+    this.closeQuestionPickerV7();
+  }
+
+  handleQuestionPickerV7JumpClick(event) {
+    const list = document.getElementById('ra-v7-jump-list');
+    if (!list) return;
+    const target = event?.target instanceof Element ? event.target : null;
+    const button = target?.closest?.('button[data-value]') || null;
+    if (!button || !list.contains(button)) return;
+
+    const value = String(button.dataset.value || '');
+    const select = document.getElementById('ra-question-select');
+    if (!select) return;
+
+    select.value = value;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    this.closeQuestionPickerV7();
+  }
+
+  handleQuestionPickerV7FilterClick(event) {
+    const panel = document.getElementById('ra-v7-panel-filters');
+    if (!panel) return;
+    const target = event?.target instanceof Element ? event.target : null;
+    const button = target?.closest?.('button[data-filter-kind][data-filter]') || null;
+    if (!button || !panel.contains(button)) return;
+
+    const kind = String(button.dataset.filterKind || '');
+    const value = String(button.dataset.filter || '');
+
+    if (kind === 'sample-audio') {
+      this.setSampleAudioFilter(value);
+      return;
+    }
+
+    if (kind === 'prompt-feature') {
+      this.setPromptFeatureFilter(value);
+    }
+  }
+
+  getQuestionPickerV7Options() {
+    const select = document.getElementById('ra-question-select');
+    if (!select) return [];
+    return Array.from(select.options || []).map((option) => ({
+      value: String(option.value || ''),
+      label: String(option.textContent || '').trim()
+    }));
+  }
+
+  updateQuestionPickerV7Pill() {
+    const pill = document.getElementById('ra-v7-question-pill');
+    const select = document.getElementById('ra-question-select');
+    if (!pill || !select) return;
+
+    const selected = select.selectedOptions && select.selectedOptions.length
+      ? select.selectedOptions[0]
+      : Array.from(select.options).find((opt) => opt.value === select.value);
+
+    const label = String(selected?.textContent || '').trim();
+    pill.textContent = label || 'Select a question…';
+  }
+
+  renderQuestionPickerV7JumpList() {
+    const container = document.getElementById('ra-v7-jump-list');
+    const select = document.getElementById('ra-question-select');
+    if (!container || !select) return;
+
+    const query = String(this.v7JumpQuery || '').trim().toLowerCase();
+    const currentValue = String(select.value || '');
+    const options = this.getQuestionPickerV7Options();
+
+    container.innerHTML = '';
+
+    const filtered = query
+      ? options.filter((opt) => opt.label.toLowerCase().includes(query))
+      : options;
+
+    if (!filtered.length) {
+      const empty = document.createElement('div');
+      empty.style.padding = '12px 14px';
+      empty.style.color = '#6b7280';
+      empty.textContent = 'No matches.';
+      container.appendChild(empty);
+      return;
+    }
+
+    filtered.forEach((opt) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'ra-v7-list-item';
+      button.dataset.value = opt.value;
+      button.setAttribute('role', 'option');
+
+      const isCurrent = opt.value === currentValue;
+      button.setAttribute('aria-selected', isCurrent ? 'true' : 'false');
+      if (isCurrent) button.classList.add('is-current');
+
+      const primary = document.createElement('span');
+      primary.className = 'ra-v7-list-primary';
+      primary.textContent = opt.label || opt.value;
+
+      const secondary = document.createElement('span');
+      secondary.className = 'ra-v7-list-secondary';
+      secondary.textContent = opt.value === 'random' ? 'Random question' : `Value: ${opt.value}`;
+
+      button.appendChild(primary);
+      button.appendChild(secondary);
+      container.appendChild(button);
+    });
+  }
+
+  refreshQuestionPickerV7Filters() {
+    const panel = document.getElementById('ra-v7-panel-filters');
+    if (!panel) return;
+
+    const buttons = Array.from(panel.querySelectorAll('button[data-filter-kind][data-filter]'));
+    buttons.forEach((button) => {
+      const kind = String(button.dataset.filterKind || '');
+      const value = String(button.dataset.filter || '');
+
+      const selected = kind === 'sample-audio'
+        ? value === this.sampleAudioFilter
+        : value === this.promptFeatureFilter;
+
+      const disablePromptFilter = kind === 'prompt-feature'
+        && value !== 'all'
+        && !this.promptFeatureIndexReady;
+
+      button.disabled = disablePromptFilter;
+      button.setAttribute('aria-disabled', disablePromptFilter ? 'true' : 'false');
+      button.setAttribute('aria-checked', selected ? 'true' : 'false');
+      button.classList.toggle('is-current', selected);
+    });
+
+    const badge = document.getElementById('ra-v7-filters-count');
+    if (badge) {
+      const count = (this.sampleAudioFilter !== 'all' ? 1 : 0) + (this.promptFeatureFilter !== 'all' ? 1 : 0);
+      badge.textContent = String(count);
+      badge.style.display = count > 0 ? '' : 'none';
+    }
+  }
+
+  refreshQuestionPickerV7AudioShortcuts() {
+    const playSample = document.getElementById('header-ra-play-audio-btn');
+    if (playSample) {
+      const hasSample = !!(this.audioManifest && this.currentQuestionId && this.audioManifest[this.currentQuestionId]);
+      playSample.disabled = !hasSample;
+      playSample.setAttribute('aria-disabled', hasSample ? 'false' : 'true');
+    }
+
+    const playRecording = document.getElementById('header-ra-play-recording-btn');
+    if (playRecording) {
+      const canPlay = !!this.userRecordingUrl && this.state !== 'RECORDING' && this.state !== 'REQUESTING_MIC';
+      playRecording.disabled = !canPlay;
+      playRecording.setAttribute('aria-disabled', canPlay ? 'false' : 'true');
+    }
+  }
+
+  refreshQuestionPickerV7NavState() {
+    const nextBtn = document.getElementById('ra-v7-next-btn');
+    if (nextBtn) {
+      const allowNext = this.state !== 'RECORDING';
+      nextBtn.disabled = !allowNext;
+      nextBtn.setAttribute('aria-disabled', allowNext ? 'false' : 'true');
+      nextBtn.style.display = allowNext ? '' : 'none';
+    }
+  }
+
+  refreshQuestionPickerV7UI(options = {}) {
+    const { rebuildJumpList = false } = options;
+    this.updateQuestionPickerV7Pill();
+    this.refreshQuestionPickerV7Filters();
+    this.refreshQuestionPickerV7AudioShortcuts();
+    this.refreshQuestionPickerV7NavState();
+    if (rebuildJumpList) {
+      this.renderQuestionPickerV7JumpList();
+    }
   }
 
   async onEnter() {
@@ -315,6 +589,7 @@ class ReadAloudMode {
     const preferLastPrompt = filterType === 'all';
     this.sampleAudioFilter = filterType;
     this.refreshFilterControls();
+    this.refreshQuestionPickerV7UI({ rebuildJumpList: true });
 
     if (this.hasLoadedDatabase) {
       this.syncPromptAfterFilterChange({ preferLastPrompt });
@@ -329,6 +604,7 @@ class ReadAloudMode {
     const previousFilter = this.promptFeatureFilter;
     this.promptFeatureFilter = filterType;
     this.refreshFilterControls();
+    this.refreshQuestionPickerV7UI({ rebuildJumpList: true });
 
     if (this.hasLoadedDatabase) {
       this.syncPromptAfterFilterChange({
@@ -379,6 +655,9 @@ class ReadAloudMode {
         status.textContent = this.promptFeatureIndexError || 'Prompt index unavailable.';
       }
     }
+
+    // Keep v7 sheet filter controls in sync even if legacy pills are hidden.
+    this.refreshQuestionPickerV7Filters();
   }
 
   async loadPromptFeatureIndex() {
@@ -567,6 +846,8 @@ class ReadAloudMode {
     const optionValue = String(originalIndex);
     const hasOption = Array.from(select.options).some((option) => option.value === optionValue);
     select.value = hasOption ? optionValue : 'random';
+
+    this.refreshQuestionPickerV7UI({ rebuildJumpList: this.isQuestionPickerV7Open() });
   }
 
   populateQuestionSelect(selectedRow = this.currentPromptRow) {
@@ -598,6 +879,7 @@ class ReadAloudMode {
 
     select.style.display = 'block';
     this.syncQuestionSelectValue(selectedRow);
+    this.refreshQuestionPickerV7UI({ rebuildJumpList: true });
   }
 
   syncPromptAfterFilterChange(options = {}) {
@@ -1336,6 +1618,8 @@ class ReadAloudMode {
     if (!shouldShow) {
       playBtn.textContent = 'Play your recording';
     }
+
+    this.refreshQuestionPickerV7AudioShortcuts();
   }
 
   clearRecordedAudio() {
@@ -1418,8 +1702,13 @@ class ReadAloudMode {
   updateUIForState() {
     if (!this.getRecordingSupportState().supported) {
       this.applyUnsupportedState();
+      this.refreshQuestionPickerV7NavState();
+      this.refreshQuestionPickerV7AudioShortcuts();
       return;
     }
+
+    this.refreshQuestionPickerV7NavState();
+    this.refreshQuestionPickerV7AudioShortcuts();
 
     const prepTimerBox = document.getElementById('ra-prep-timer-box');
     const recordTimerBox = document.getElementById('ra-record-timer-box');
@@ -2574,6 +2863,7 @@ class ReadAloudMode {
         playBtn.title = 'Listen to reference audio';
       }
       this.updateAudioSrc();
+      this.refreshQuestionPickerV7AudioShortcuts();
       return;
     }
 
@@ -2583,6 +2873,8 @@ class ReadAloudMode {
       playBtn.style.opacity = '0.5';
       playBtn.title = 'Audio not yet generated for this text';
     }
+
+    this.refreshQuestionPickerV7AudioShortcuts();
   }
 
   updateAudioSrc() {

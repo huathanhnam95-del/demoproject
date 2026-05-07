@@ -25,9 +25,14 @@
       const readyState = scriptElement.readyState || '';
       if (
         scriptElement.dataset.belLoaded === 'true' ||
+        scriptElement.dataset.belFailed === 'true' ||
         readyState === 'loaded' ||
         readyState === 'complete'
       ) {
+        if (scriptElement.dataset.belFailed === 'true') {
+          reject(new Error(`Failed to load script: ${absoluteUrl}`));
+          return;
+        }
         resolve();
         return;
       }
@@ -48,10 +53,14 @@
 
       scriptElement.addEventListener('error', () => {
         cleanup();
+        scriptElement.dataset.belFailed = 'true';
+        try { scriptElement.remove(); } catch { /* ignore */ }
         reject(new Error(`Failed to load script: ${absoluteUrl}`));
       }, { once: true });
 
       timeoutId = setTimeout(() => {
+        scriptElement.dataset.belFailed = 'true';
+        try { scriptElement.remove(); } catch { /* ignore */ }
         reject(new Error(`Timed out loading script: ${absoluteUrl}`));
       }, SCRIPT_LOAD_TIMEOUT_MS);
     });
@@ -65,9 +74,17 @@
 
     const existingScript = findExistingScript(absoluteUrl);
     if (existingScript) {
-      const promise = waitForExistingScript(existingScript, absoluteUrl);
-      scriptPromises.set(absoluteUrl, promise);
-      return promise;
+      if (existingScript.dataset.belFailed === 'true') {
+        try { existingScript.remove(); } catch { /* ignore */ }
+      } else {
+        const promise = waitForExistingScript(existingScript, absoluteUrl)
+          .catch((error) => {
+            scriptPromises.delete(absoluteUrl);
+            throw error;
+          });
+        scriptPromises.set(absoluteUrl, promise);
+        return promise;
+      }
     }
 
     const promise = new Promise((resolve, reject) => {
@@ -86,21 +103,32 @@
       script.addEventListener('load', () => {
         cleanup();
         script.dataset.belLoaded = 'true';
+        script.dataset.belFailed = 'false';
         resolve();
       }, { once: true });
       script.addEventListener('error', () => {
         cleanup();
+        scriptPromises.delete(absoluteUrl);
+        script.dataset.belFailed = 'true';
+        try { script.remove(); } catch { /* ignore */ }
         reject(new Error(`Failed to load script: ${absoluteUrl}`));
       }, { once: true });
       document.head.appendChild(script);
 
       timeoutId = setTimeout(() => {
+        scriptPromises.delete(absoluteUrl);
+        script.dataset.belFailed = 'true';
+        try { script.remove(); } catch { /* ignore */ }
         reject(new Error(`Timed out loading script: ${absoluteUrl}`));
       }, SCRIPT_LOAD_TIMEOUT_MS);
     });
 
-    scriptPromises.set(absoluteUrl, promise);
-    return promise;
+    const wrapped = promise.catch((error) => {
+      scriptPromises.delete(absoluteUrl);
+      throw error;
+    });
+    scriptPromises.set(absoluteUrl, wrapped);
+    return wrapped;
   }
 
   async function ensureCompromiseLoaded() {

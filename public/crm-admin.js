@@ -499,11 +499,10 @@
     elements.inputClassroomSeedStartDate = document.getElementById('classroom-seed-start-date');
     elements.inputClassroomSeedStartTime = document.getElementById('classroom-seed-start-time');
     elements.inputClassroomSeedWeekdays = document.getElementById('classroom-seed-weekdays');
+    elements.inputClassroomSeedWeekdaysSelector = document.getElementById('classroom-seed-weekdays-selector');
     elements.inputClassroomAllowedStartTime = document.getElementById('classroom-allowed-start-time');
     elements.inputClassroomAllowedEndTime = document.getElementById('classroom-allowed-end-time');
     elements.inputClassroomDurationStep = document.getElementById('classroom-duration-step');
-    elements.inputClassroomMeetingDays = document.getElementById('classroom-meeting-days');
-    elements.inputClassroomMeetingHours = document.getElementById('classroom-meeting-hours');
     elements.btnSaveClassroomScheduling = document.getElementById('btn-save-classroom-scheduling');
     elements.schedulingSuggestionBanner = document.getElementById('scheduling-suggestion-banner');
     elements.btnApplySchedulingDefaults = document.getElementById('btn-apply-scheduling-defaults');
@@ -512,6 +511,7 @@
     elements.inputClassroomRegenerateFromDate = document.getElementById('classroom-regenerate-from-date');
     elements.inputClassroomRegenerateSessionMinutes = document.getElementById('classroom-regenerate-session-minutes');
     elements.inputClassroomRegenerateWeekdays = document.getElementById('classroom-regenerate-weekdays');
+    elements.inputClassroomRegenerateWeekdaysSelector = document.getElementById('classroom-regenerate-weekdays-selector');
     elements.inputClassroomRegenerateStartTime = document.getElementById('classroom-regenerate-start-time');
     elements.btnPreviewClassroomRegeneration = document.getElementById('btn-preview-classroom-regeneration');
     elements.btnApplyClassroomRegeneration = document.getElementById('btn-apply-classroom-regeneration');
@@ -653,6 +653,21 @@
     elements.btnPostAnnouncement = document.getElementById('btn-post-announcement');
     elements.inputStreamPost = document.getElementById('stream-post-content');
     elements.streamPostsContainer = document.getElementById('stream-posts-container');
+
+    // BEL Assistant
+    elements.belChatLauncher = document.getElementById('bel-chat-launcher');
+    elements.belChatDrawer = document.getElementById('bel-chat-drawer');
+    elements.belChatClose = document.getElementById('bel-chat-close');
+    elements.belChatContext = document.getElementById('bel-chat-context');
+    elements.belChatThread = document.getElementById('bel-chat-thread');
+    elements.belChatPreview = document.getElementById('bel-chat-preview');
+    elements.belChatInput = document.getElementById('bel-chat-input');
+    elements.belChatSend = document.getElementById('bel-chat-send');
+    elements.belChatApply = document.getElementById('bel-chat-apply');
+
+    // Teacher Searchable Dropdown
+    elements.classroomTeacherSearch = document.getElementById('classroom-teacher-search');
+    elements.classroomTeacherDropdown = document.getElementById('classroom-teacher-dropdown');
   }
 
   function normalizeAdminCapabilities(source) {
@@ -1043,6 +1058,25 @@
         refreshOllamaStatus().catch(() => { });
       });
     }
+
+    // Initialize BEL Assistant
+    if (typeof window.CrmBelAssistant === 'object' && elements.belChatLauncher) {
+      const belController = window.CrmBelAssistant.createController({
+        elements,
+        showToast,
+        fetchGemmaJSON,
+        getActivePanel: () => {
+          return state.sub ? `${state.main}/${state.sub}` : state.main;
+        }
+      });
+      belController.init();
+      // Store reference so panel changes can notify the assistant
+      state._belController = belController;
+    }
+
+    // Initialize teacher searchable dropdown
+    initTeacherSearchDropdown();
+    initWeekdaySelector();
 
     if (elements.btnGenerateAiSummary) {
       let studentSummaryAbort = null;
@@ -2649,8 +2683,8 @@
 
   function renderClassroomSchedulePrompt() {
     if (!elements.attendanceSchedulePrompt) return;
-    const meetingDays = String(elements.inputClassroomMeetingDays?.value || modalState.classroomRecord?.meetingDays?.join(', ') || '').trim();
-    const meetingHours = String(elements.inputClassroomMeetingHours?.value || modalState.classroomRecord?.meetingHours?.join(', ') || '').trim();
+    const weekdays = String(elements.inputClassroomSeedWeekdays?.value || modalState.classroomRecord?.scheduleConfig?.seedWeekdays?.join(', ') || '').trim();
+    const startTime = String(elements.inputClassroomSeedStartTime?.value || modalState.classroomRecord?.scheduleConfig?.seedStartTime || '').trim();
     const session = getSelectedLiveSession();
     const liveState = session
       ? `Live session: ${session.title || 'Untitled'} (${session.status || 'draft'})`
@@ -2659,9 +2693,9 @@
       <div class="crm-task-item">
         <div class="crm-task-head">
           <strong>Scheduling Guidance</strong>
-          <span class="crm-task-priority ${(meetingDays || meetingHours) ? 'low' : 'high'}">${(meetingDays || meetingHours) ? 'ready' : 'missing'}</span>
+          <span class="crm-task-priority ${(weekdays || startTime) ? 'low' : 'high'}">${(weekdays || startTime) ? 'ready' : 'missing'}</span>
         </div>
-        <div class="crm-task-meta">${escapeHtml([meetingDays ? `Days: ${meetingDays}` : '', meetingHours ? `Hours: ${meetingHours}` : ''].filter(Boolean).join(' | ') || 'Meeting days and hours are not defined yet.')}</div>
+        <div class="crm-task-meta">${escapeHtml([weekdays ? `Days: ${weekdays}` : '', startTime ? `Start: ${startTime}` : ''].filter(Boolean).join(' | ') || 'Default weekdays and start time are not defined yet.')}</div>
         <div class="crm-timeline-meta" style="margin-top: 6px;">${escapeHtml(liveState)}</div>
         <div class="crm-task-actions">
           <button type="button" class="crm-btn-secondary" data-action="edit-classroom-schedule">Edit Classroom Schedule</button>
@@ -4284,6 +4318,11 @@
         console.error('[CRM Admin] Recycle bin refresh failed:', error);
       });
     }
+
+    // Notify BEL assistant of route change
+    if (state._belController && typeof state._belController.onRouteChange === 'function') {
+      state._belController.onRouteChange(activePanel);
+    }
   }
 
   function loadSchedulerWorkspace() {
@@ -4636,16 +4675,18 @@
     if (elements.inputClassroomStatus) elements.inputClassroomStatus.value = 'draft';
     if (elements.inputClassroomTotalHours) elements.inputClassroomTotalHours.value = '';
     if (elements.inputClassroomPrimaryTeacher) elements.inputClassroomPrimaryTeacher.value = '';
+    if (elements.classroomTeacherSearch) elements.classroomTeacherSearch.value = '';
     if (elements.inputClassroomSessionMinutes) elements.inputClassroomSessionMinutes.value = '';
     if (elements.inputClassroomScheduleTimezone) elements.inputClassroomScheduleTimezone.value = '';
     if (elements.inputClassroomSeedStartDate) elements.inputClassroomSeedStartDate.value = '';
     if (elements.inputClassroomSeedStartTime) elements.inputClassroomSeedStartTime.value = '';
-    if (elements.inputClassroomSeedWeekdays) elements.inputClassroomSeedWeekdays.value = '';
+    if (elements.inputClassroomSeedWeekdays) {
+      elements.inputClassroomSeedWeekdays.value = '';
+      initWeekdaySelector(); // Re-bind and sync
+    }
     if (elements.inputClassroomAllowedStartTime) elements.inputClassroomAllowedStartTime.value = '';
     if (elements.inputClassroomAllowedEndTime) elements.inputClassroomAllowedEndTime.value = '';
     if (elements.inputClassroomDurationStep) elements.inputClassroomDurationStep.value = '';
-    if (elements.inputClassroomMeetingDays) elements.inputClassroomMeetingDays.value = '';
-    if (elements.inputClassroomMeetingHours) elements.inputClassroomMeetingHours.value = '';
     if (elements.inputClassroomRegenerateFromDate) elements.inputClassroomRegenerateFromDate.value = '';
     if (elements.inputClassroomRegenerateSessionMinutes) elements.inputClassroomRegenerateSessionMinutes.value = '';
     if (elements.inputClassroomRegenerateWeekdays) elements.inputClassroomRegenerateWeekdays.value = '';
@@ -6222,6 +6263,222 @@
       clearDevToolsPollTimer();
       return false;
     }
+  }
+
+  /* ── Teacher Searchable Dropdown ─────────────────────────── */
+
+  let _teacherCache = null;
+
+  async function fetchTeacherList() {
+    if (_teacherCache) return _teacherCache;
+    try {
+      const db = firebase.firestore();
+      const snap = await db.collection('users').where('role', 'in', ['admin', 'teacher']).get();
+      const list = [];
+      snap.forEach((doc) => {
+        const d = doc.data();
+        list.push({
+          uid: doc.id,
+          displayName: d.displayName || d.name || '',
+          email: d.email || ''
+        });
+      });
+      list.sort((a, b) => {
+        const nameA = (a.displayName || a.email).toLowerCase();
+        const nameB = (b.displayName || b.email).toLowerCase();
+        return nameA.localeCompare(nameB);
+      });
+      _teacherCache = list;
+      return list;
+    } catch (e) {
+      console.warn('[CRM] Failed to fetch teacher list:', e);
+      return [];
+    }
+  }
+
+  function initTeacherSearchDropdown() {
+    const search = elements.classroomTeacherSearch;
+    const dropdown = elements.classroomTeacherDropdown;
+    const hidden = elements.inputClassroomPrimaryTeacher;
+    if (!search || !dropdown || !hidden) return;
+
+    let teachers = [];
+    let open = false;
+
+    function renderList(filter) {
+      const term = String(filter || '').toLowerCase();
+      const matches = term
+        ? teachers.filter((t) => {
+            const name = (t.displayName || '').toLowerCase();
+            const email = (t.email || '').toLowerCase();
+            return name.includes(term) || email.includes(term);
+          })
+        : teachers;
+
+      dropdown.innerHTML = '';
+      if (!matches.length) {
+        const li = document.createElement('li');
+        li.className = 'no-results';
+        li.textContent = term ? 'No teachers found' : 'Loading…';
+        dropdown.appendChild(li);
+        return;
+      }
+
+      matches.forEach((t) => {
+        const li = document.createElement('li');
+        const label = t.displayName || t.email || t.uid;
+        li.innerHTML = `${escapeHtml(label)}<span class="teacher-email">${escapeHtml(t.email)}</span>`;
+        li.dataset.uid = t.uid;
+        if (t.uid === hidden.value) li.classList.add('is-active');
+        li.addEventListener('click', () => selectTeacher(t));
+        dropdown.appendChild(li);
+      });
+    }
+
+    function selectTeacher(t) {
+      hidden.value = t.uid;
+      search.value = t.displayName || t.email || t.uid;
+      close();
+      hidden.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    function show() {
+      if (open) return;
+      open = true;
+      dropdown.style.display = 'block';
+      renderList(search.value);
+    }
+
+    function close() {
+      open = false;
+      dropdown.style.display = 'none';
+    }
+
+    // Populate display name from UID (when editing existing classroom)
+    function syncDisplayFromUid() {
+      const uid = String(hidden.value || '').trim();
+      if (!uid || !teachers.length) return;
+      const match = teachers.find((t) => t.uid === uid);
+      if (match) {
+        search.value = match.displayName || match.email || uid;
+      } else {
+        search.value = uid; // Fallback to raw UID
+      }
+    }
+
+    search.addEventListener('focus', async () => {
+      if (!teachers.length) {
+        teachers = await fetchTeacherList();
+      }
+      show();
+    });
+
+    search.addEventListener('input', () => {
+      // If user types, clear the hidden UID until they select
+      if (!open) show();
+      renderList(search.value);
+    });
+
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+      if (!search.contains(e.target) && !dropdown.contains(e.target)) {
+        close();
+      }
+    });
+
+    // Keyboard navigation
+    search.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { close(); return; }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const items = Array.from(dropdown.querySelectorAll('li:not(.no-results)'));
+        if (!items.length) return;
+        const current = dropdown.querySelector('.is-active');
+        let idx = items.indexOf(current);
+        if (e.key === 'ArrowDown') idx = Math.min(idx + 1, items.length - 1);
+        else idx = Math.max(idx - 1, 0);
+        items.forEach((li) => li.classList.remove('is-active'));
+        items[idx].classList.add('is-active');
+        items[idx].scrollIntoView({ block: 'nearest' });
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const active = dropdown.querySelector('.is-active');
+        if (active && active.dataset.uid) {
+          const t = teachers.find((x) => x.uid === active.dataset.uid);
+          if (t) selectTeacher(t);
+        }
+      }
+    });
+
+    // Expose a sync function so applyToForm can set display name from UID
+    elements._syncTeacherDisplay = async () => {
+      if (!teachers.length) teachers = await fetchTeacherList();
+      syncDisplayFromUid();
+    };
+  }
+
+  /* ── Weekday Multi-Select ─────────────────────────── */
+
+  function initWeekdaySelector() {
+    const selectors = [
+      { 
+        id: 'classroom-seed-weekdays-selector', 
+        hiddenId: 'classroom-seed-weekdays',
+        type: 'seed' 
+      },
+      { 
+        id: 'classroom-regenerate-weekdays-selector', 
+        hiddenId: 'classroom-regenerate-weekdays',
+        type: 'regenerate' 
+      }
+    ];
+
+    selectors.forEach(({ id, hiddenId, type }) => {
+      const container = document.getElementById(id);
+      const hidden = document.getElementById(hiddenId);
+      if (!container || !hidden) return;
+
+      const buttons = container.querySelectorAll('.crm-weekday-btn');
+      buttons.forEach(btn => {
+        // Remove existing listener by replacing node
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+
+        newBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          newBtn.classList.toggle('active');
+          
+          const activeDays = Array.from(container.querySelectorAll('.crm-weekday-btn.active'))
+            .map(b => b.dataset.day);
+          hidden.value = activeDays.join(',');
+          
+          // Trigger change so any other listeners know
+          hidden.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+      });
+
+      // Initial sync
+      _syncWeekdayUI(container, hidden);
+
+      if (type === 'seed') {
+        elements._syncWeekdaySelector = (t) => {
+          if (t === 'seed') {
+            const c = document.getElementById(id);
+            const h = document.getElementById(hiddenId);
+            if (c && h) _syncWeekdayUI(c, h);
+          }
+        };
+      }
+    });
+  }
+
+  function _syncWeekdayUI(container, hidden) {
+    const activeDays = String(hidden.value || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+    container.querySelectorAll('.crm-weekday-btn').forEach(btn => {
+      btn.classList.toggle('active', activeDays.includes(btn.dataset.day));
+    });
   }
 
   window.CrmAdminDialogs.showBulkDeleteWarning = showBulkDeleteWarningModal;

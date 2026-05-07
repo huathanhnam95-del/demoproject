@@ -234,3 +234,8 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 243,2026-05-06,Reorder PTE tasks and update practice routing,Done,2026-05-06
 244,2026-05-06,Fix essays and DI not loading in production (relative fetch paths on deep SPA routes),Done,2026-05-06
 245,2026-05-06,Final PTE Dashboard Reorganization (Task sequence + Describe Image exclusion),In Progress,
+246,2026-05-07,Commit and push all changes to production (V1.6.8),Done,2026-05-07
+247,2026-05-07,CRM UX: teacher searchable dropdown + seed wording fix + BEL assistant init,Done,2026-05-07
+248,2026-05-07,"CRM UI: Fix overflows + multi-select weekdays + remove meeting fields",Done,2026-05-07
+99,2026-05-07,Fix V7 Read Aloud Question Picker buttons and cache,Done,2026-05-07
+249,2026-05-07,Fix 3s classroom modal open delay - show modal first + cache courses,In Progress,

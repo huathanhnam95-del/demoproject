@@ -1,3 +1,25 @@
+## [V1.6.9] - 2026-05-07
+
+### Improved
+
+- **Classroom Modal Performance**: Eliminated 3s delay when opening classroom modal by rendering the modal immediately and deferring all data fetching (courses, modules, classwork, live sessions) to parallel background requests via `Promise.all`.
+- **Course Catalog Caching**: Added 60-second in-memory cache to `CrmCourses.fetchCourses()` preventing redundant `/api/admin/courses` API calls across modal resets and re-opens.
+- **Teacher Searchable Dropdown**: Replaced the raw UID text input for Primary Teacher with a searchable dropdown that queries Firestore users with autocomplete, keyboard navigation, and display name resolution.
+- **Weekday Multi-Select**: Replaced plain text "mon,wed,fri" inputs with interactive toggle-button weekday selectors for both seed and regeneration scheduling forms.
+- **CRM Label Clarity**: Renamed "Seed Start Date/Time/Weekdays" labels to "Default Start Date/Time/Weekdays" for better admin comprehension.
+- **Global Box-Sizing**: Applied `box-sizing: border-box` reset to all CRM elements to prevent layout overflow issues.
+- **BEL Assistant Init**: Wired `CrmBelAssistant` module initialization into the CRM admin controller with route-change notification support.
+- **Cache Busting**: Updated all CRM script and stylesheet references to `v=20260507-v1.6.9`.
+
+### Fixed
+
+- **Init Function Scope**: Fixed a premature function closure in `crm-admin.js` that orphaned the AI summary button handler outside its parent scope.
+- **Redundant Course Fetch**: Removed duplicate `populateClassroomCourseOptions()` call from `resetClassroomModal()` that was triggering unnecessary network traffic on every modal open.
+
+### Removed
+
+- **Legacy Meeting Fields**: Removed deprecated "Meeting Days" and "Meeting Hours" form fields and their associated `syncMeetingFieldsFromSeed` logic from `classrooms.js`, replaced by the weekday selector component.
+
 ## [V1.6.7] - 2026-05-05
 
 ### Added

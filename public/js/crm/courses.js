@@ -10,7 +10,7 @@ window.CrmCourses = (function () {
         };
     }
 
-function normalizeCourse(raw) {
+    function normalizeCourse(raw) {
         const data = raw.data ? raw.data() : raw;
         return {
             id: raw.id || data.id || data.courseId || null,
@@ -88,13 +88,24 @@ function normalizeCourse(raw) {
         }
     }
 
-    async function fetchCourses() {
+    // --- Course cache: avoid redundant /api/admin/courses calls ---
+    let _courseCache = null;
+    let _courseCacheTime = 0;
+    const COURSE_CACHE_TTL_MS = 60000; // 60 seconds
+
+    async function fetchCourses(options = {}) {
+        const now = Date.now();
+        if (!options.forceRefresh && _courseCache && (now - _courseCacheTime) < COURSE_CACHE_TTL_MS) {
+            return _courseCache;
+        }
         const headers = await getAuthHeaders();
         const res = await fetch('/api/admin/courses', { method: 'GET', headers });
         if (!res.ok) throw new Error(`Failed to fetch courses (HTTP ${res.status})`);
         const json = await res.json();
         const courses = (json.courses || []).map(normalizeCourse);
         courses.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+        _courseCache = courses;
+        _courseCacheTime = now;
         return courses;
     }
 

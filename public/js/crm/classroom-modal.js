@@ -75,9 +75,6 @@ window.CrmClassroomModal = (function () {
             if (elements.inputClassroomName) elements.inputClassroomName.value = '';
             if (elements.inputClassroomCourseId) {
                 elements.inputClassroomCourseId.value = '';
-                populateClassroomCourseOptions().catch((e) => {
-                    console.error('[CRM Admin] Failed to populate classroom course options:', e);
-                });
             }
             if (elements.inputClassroomStatus) elements.inputClassroomStatus.value = 'draft';
             if (elements.inputClassroomTotalHours) elements.inputClassroomTotalHours.value = '';

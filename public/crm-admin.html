@@ -16,8 +16,8 @@
     content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://*.firebaseapp.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' http://localhost:11434 https://localhost:8443 https://www.gstatic.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com wss://*.googleapis.com https://*.cloudfunctions.net https://*.firebaseapp.com; frame-src 'self' https://*.firebaseapp.com;">
 
   <!-- Reuse main app design tokens -->
-  <link rel="stylesheet" href="style.css?v=20260406-gemma4-ollama-fix" />
-  <link rel="stylesheet" href="crm-admin.css?v=20260406-gemma4-ollama-fix" />
+  <link rel="stylesheet" href="style.css?v=20260507-v1.6.9" />
+  <link rel="stylesheet" href="crm-admin.css?v=20260507-v1.6.9" />
 </head>
 
 <body>
@@ -1589,9 +1589,11 @@
                       <input type="number" id="classroom-total-hours" class="crm-input" min="0.5" step="0.5"
                         placeholder="e.g. 24">
                     </div>
-                    <div class="crm-form-group">
-                      <label for="classroom-primary-teacher">Primary Teacher UID</label>
-                      <input type="text" id="classroom-primary-teacher" class="crm-input" placeholder="Teacher UID">
+                    <div class="crm-form-group" style="position: relative;">
+                      <label for="classroom-teacher-search">Primary Teacher</label>
+                      <input type="hidden" id="classroom-primary-teacher">
+                      <input type="text" id="classroom-teacher-search" class="crm-input" placeholder="Search teacher by name or email…" autocomplete="off">
+                      <ul id="classroom-teacher-dropdown" class="crm-teacher-dropdown" style="display: none;"></ul>
                     </div>
                     <div class="crm-form-group">
                       <label for="classroom-session-minutes">Session Minutes</label>
@@ -1603,16 +1605,25 @@
                       <input type="text" id="classroom-schedule-timezone" class="crm-input" placeholder="Asia/Bangkok">
                     </div>
                     <div class="crm-form-group">
-                      <label for="classroom-seed-start-date">Seed Start Date</label>
+                      <label for="classroom-seed-start-date">Default Start Date</label>
                       <input type="date" id="classroom-seed-start-date" class="crm-input">
                     </div>
                     <div class="crm-form-group">
-                      <label for="classroom-seed-start-time">Seed Start Time</label>
+                      <label for="classroom-seed-start-time">Default Start Time</label>
                       <input type="time" id="classroom-seed-start-time" class="crm-input">
                     </div>
                     <div class="crm-form-group">
-                      <label for="classroom-seed-weekdays">Seed Weekdays</label>
-                      <input type="text" id="classroom-seed-weekdays" class="crm-input" placeholder="mon,wed,fri">
+                      <label>Default Weekdays</label>
+                      <div class="crm-weekday-selector" id="classroom-seed-weekdays-selector">
+                        <button type="button" class="crm-weekday-btn" data-day="mon">Mon</button>
+                        <button type="button" class="crm-weekday-btn" data-day="tue">Tue</button>
+                        <button type="button" class="crm-weekday-btn" data-day="wed">Wed</button>
+                        <button type="button" class="crm-weekday-btn" data-day="thu">Thu</button>
+                        <button type="button" class="crm-weekday-btn" data-day="fri">Fri</button>
+                        <button type="button" class="crm-weekday-btn" data-day="sat">Sat</button>
+                        <button type="button" class="crm-weekday-btn" data-day="sun">Sun</button>
+                      </div>
+                      <input type="hidden" id="classroom-seed-weekdays">
                     </div>
                     <div class="crm-form-group">
                       <label for="classroom-allowed-start-time">Allowed Start Time</label>
@@ -1626,14 +1637,6 @@
                       <label for="classroom-duration-step">Duration Step Minutes</label>
                       <input type="number" id="classroom-duration-step" class="crm-input" min="15" step="15"
                         placeholder="30">
-                    </div>
-                    <div class="crm-form-group">
-                      <label for="classroom-meeting-days">Meeting Days</label>
-                      <input type="text" id="classroom-meeting-days" class="crm-input" placeholder="Mon, Wed, Fri">
-                    </div>
-                    <div class="crm-form-group">
-                      <label for="classroom-meeting-hours">Meeting Hours</label>
-                      <input type="text" id="classroom-meeting-hours" class="crm-input" placeholder="18:00-20:00">
                     </div>
                   </div>
                   <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
@@ -1662,12 +1665,20 @@
                           step="15" placeholder="120">
                       </div>
                       <div class="crm-form-group">
-                        <label for="classroom-regenerate-weekdays">Seed Weekdays</label>
-                        <input type="text" id="classroom-regenerate-weekdays" class="crm-input"
-                          placeholder="mon,wed,fri">
+                        <label>Default Weekdays</label>
+                        <div class="crm-weekday-selector" id="classroom-regenerate-weekdays-selector">
+                          <button type="button" class="crm-weekday-btn" data-day="mon">Mon</button>
+                          <button type="button" class="crm-weekday-btn" data-day="tue">Tue</button>
+                          <button type="button" class="crm-weekday-btn" data-day="wed">Wed</button>
+                          <button type="button" class="crm-weekday-btn" data-day="thu">Thu</button>
+                          <button type="button" class="crm-weekday-btn" data-day="fri">Fri</button>
+                          <button type="button" class="crm-weekday-btn" data-day="sat">Sat</button>
+                          <button type="button" class="crm-weekday-btn" data-day="sun">Sun</button>
+                        </div>
+                        <input type="hidden" id="classroom-regenerate-weekdays">
                       </div>
                       <div class="crm-form-group">
-                        <label for="classroom-regenerate-start-time">Seed Start Time</label>
+                        <label for="classroom-regenerate-start-time">Default Start Time</label>
                         <input type="time" id="classroom-regenerate-start-time" class="crm-input">
                       </div>
                     </div>
@@ -2116,43 +2127,43 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
-  <script src="js/auth-session-guard.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/classroom-api.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/utils.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/state.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/dom.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/courses.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/students.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/student-360.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/classrooms.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/leads.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/activities.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/enrollments.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/attendance.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/finance-workflow.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/finance.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/communications.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/scheduler-workspace.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/teacher-scheduler-workspace.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/student-finance.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/live-delivery.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/classroom-modal.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/student-modal.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/course-modal.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/lead-workspace.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/classroom-workspace.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/task-activity-workspace.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/communications-workspace.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/dashboard-workspace.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/student-directory-workspace.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/activity-surfaces.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/dashboard.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/governance.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/index.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/entrance-test-link-state.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/devtools-access.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="js/crm/bel-assistant.js?v=20260406-gemma4-ollama-fix"></script>
-  <script src="crm-admin.js?v=20260406-gemma4-ollama-fix"></script>
+  <script src="js/auth-session-guard.js?v=20260507-v1.6.9"></script>
+  <script src="js/classroom-api.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/utils.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/state.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/dom.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/courses.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/students.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/student-360.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/classrooms.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/leads.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/activities.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/enrollments.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/attendance.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/finance-workflow.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/finance.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/communications.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/scheduler-workspace.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/teacher-scheduler-workspace.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/student-finance.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/live-delivery.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/classroom-modal.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/student-modal.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/course-modal.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/lead-workspace.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/classroom-workspace.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/task-activity-workspace.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/communications-workspace.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/dashboard-workspace.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/student-directory-workspace.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/activity-surfaces.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/dashboard.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/governance.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/index.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/entrance-test-link-state.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/devtools-access.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/bel-assistant.js?v=20260507-v1.6.9"></script>
+  <script src="crm-admin.js?v=20260507-v1.6.9"></script>
 </body>
 
 </html>

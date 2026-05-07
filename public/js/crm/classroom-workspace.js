@@ -619,7 +619,7 @@ window.CrmClassroomWorkspace = (function () {
             if (!classroomId) return;
 
             resetClassroomModal();
-            await populateClassroomCourseOptions({ selectedValue: classroom.courseId || '' });
+            // Show the modal IMMEDIATELY — populate form with what we have, open modal, then fetch async data
             if (window.CrmClassrooms && typeof window.CrmClassrooms.applyToForm === 'function') {
                 window.CrmClassrooms.applyToForm(elements, classroom);
             }
@@ -632,7 +632,9 @@ window.CrmClassroomWorkspace = (function () {
                 elements.classroomTitle.textContent = classroom.name || 'Classroom';
             }
             openClassroomModal();
+            // Load course options and tab data in parallel (non-blocking, after modal is visible)
             await Promise.all([
+                populateClassroomCourseOptions({ selectedValue: classroom.courseId || '' }),
                 loadClassroomModules(classroomId),
                 loadClassroomClasswork(classroomId),
                 loadClassroomStream(classroomId),

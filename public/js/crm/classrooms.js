@@ -12,22 +12,12 @@ window.CrmClassrooms = (function () {
             .split(',')
             .map((day) => day.trim())
             .filter(Boolean);
-        const meetingDays = String(elements.inputClassroomMeetingDays?.value || '')
-            .split(',')
-            .map((day) => day.trim())
-            .filter(Boolean);
-        const meetingHours = String(elements.inputClassroomMeetingHours?.value || '')
-            .split(',')
-            .map((hour) => hour.trim())
-            .filter(Boolean);
 
         return {
             name: String(elements.inputClassroomName?.value || '').trim(),
             courseId: String(elements.inputClassroomCourseId?.value || '').trim(),
             status: String(elements.inputClassroomStatus?.value || '').trim() || 'draft',
             primaryTeacherUid: String(elements.inputClassroomPrimaryTeacher?.value || '').trim(),
-            meetingDays,
-            meetingHours,
             scheduleConfig: {
                 totalInstructionMinutes: Number.isFinite(totalHours) && totalHours > 0
                     ? Math.round(totalHours * 60)
@@ -55,6 +45,10 @@ window.CrmClassrooms = (function () {
             elements.inputClassroomTotalHours.value = minutes > 0 ? String((minutes / 60).toFixed(minutes % 60 === 0 ? 0 : 1)) : '';
         }
         if (elements.inputClassroomPrimaryTeacher) elements.inputClassroomPrimaryTeacher.value = String(classroom?.primaryTeacherUid || '');
+        // Sync teacher search display name from UID
+        if (typeof elements._syncTeacherDisplay === 'function') {
+            elements._syncTeacherDisplay().catch(() => { });
+        }
         if (elements.inputClassroomSessionMinutes) {
             elements.inputClassroomSessionMinutes.value = String(classroom?.scheduleConfig?.sessionMinutes || '');
         }
@@ -81,16 +75,10 @@ window.CrmClassrooms = (function () {
                 ? classroom.scheduleConfig.seedWeekdays.join(',')
                 : '';
             elements.inputClassroomSeedWeekdays.value = weekdays;
-        }
-        if (elements.inputClassroomMeetingDays) {
-            elements.inputClassroomMeetingDays.value = Array.isArray(classroom?.meetingDays)
-                ? classroom.meetingDays.join(', ')
-                : '';
-        }
-        if (elements.inputClassroomMeetingHours) {
-            elements.inputClassroomMeetingHours.value = Array.isArray(classroom?.meetingHours)
-                ? classroom.meetingHours.join(', ')
-                : '';
+            // Sync the multi-select UI
+            if (typeof elements._syncWeekdaySelector === 'function') {
+                elements._syncWeekdaySelector('seed');
+            }
         }
     }
 
@@ -164,43 +152,13 @@ window.CrmClassrooms = (function () {
             elements.inputClassroomScheduleTimezone.value = timezone;
         }
 
-        // After course defaults, sync meeting fields
-        syncMeetingFieldsFromSeed(elements);
     }
 
-    /**
-     * Auto-sync Meeting Days and Meeting Hours from seed configuration.
-     * - Seed Weekdays → Meeting Days (capitalized)
-     * - Seed Start Time + Session Minutes → Meeting Hours range
-     */
-    function syncMeetingFieldsFromSeed(elements) {
-        // Sync weekdays → meeting days
-        const seedWeekdays = String(elements.inputClassroomSeedWeekdays?.value || '').trim();
-        if (seedWeekdays && elements.inputClassroomMeetingDays) {
-            const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
-            const formatted = seedWeekdays.split(',').map((d) => capitalize(d.trim())).filter(Boolean).join(', ');
-            elements.inputClassroomMeetingDays.value = formatted;
-        }
-
-        // Sync start time + duration → meeting hours
-        const seedStartTime = String(elements.inputClassroomSeedStartTime?.value || '').trim();
-        const sessionMinutes = Number(elements.inputClassroomSessionMinutes?.value || 0);
-        if (seedStartTime && sessionMinutes > 0 && elements.inputClassroomMeetingHours) {
-            const [hh, mi] = seedStartTime.split(':').map(Number);
-            if (Number.isFinite(hh) && Number.isFinite(mi)) {
-                const totalEnd = hh * 60 + mi + sessionMinutes;
-                const endH = String(Math.floor(totalEnd / 60) % 24).padStart(2, '0');
-                const endM = String(totalEnd % 60).padStart(2, '0');
-                elements.inputClassroomMeetingHours.value = `${seedStartTime}-${endH}:${endM}`;
-            }
-        }
-    }
 
     return {
         applyToForm,
         applyDefaults,
         applyCourseDefaults,
-        syncMeetingFieldsFromSeed,
         buildPayload
     };
 })();

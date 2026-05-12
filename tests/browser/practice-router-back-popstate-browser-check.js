@@ -168,8 +168,20 @@ async function clickByScript(page, selector) {
   });
 
   try {
-    await page.goto(`${baseUrl}/index.html`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${baseUrl}/`, { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => typeof window.switchToMode === 'function', { timeout: 30000 });
+
+    // Regression guard: background mode scripts (e.g. Describe Image) must not rewrite the URL
+    // to a question deep-link while the user is still on the dashboard.
+    await page.waitForFunction(() => {
+      const select = document.getElementById('question-select-di');
+      return !!select && select.options && select.options.length > 0;
+    }, { timeout: 30000 });
+    const dashboardPath = await page.evaluate(() => window.location.pathname);
+    assert.ok(
+      !/\/(practice|pte-practice)\/[^/]+\/[^/]+(\/|$)/.test(String(dashboardPath || '')),
+      `Unexpected dashboard deep-link route: ${dashboardPath}`
+    );
 
     // Normalize to a known UI state (dismiss any initial modals).
     await clickByScript(page, '#vocab-alert-ok');
@@ -238,4 +250,3 @@ async function clickByScript(page, selector) {
   console.error(error.stack || error.message);
   process.exit(1);
 });
-

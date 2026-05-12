@@ -128,16 +128,15 @@ async function buildProfileDropdown(user) {
 
 async function fetchTeacherWorkload(uid) {
     // Only query if firestoreFunctions exist
+    if (!uid) return;
     if (!window.firestoreFunctions || !window.firestoreFunctions.db) return;
     try {
-        const db = window.firestoreFunctions.db;
-        import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js"; // or similar import logic
-
-        // Because we don't have direct access to the imports if they are isolated, we use firestoreFunctions if a wrapper exists, or just leave it out if we can't.
-        // Wait, the project exposes firestoreFunctions! We should let the user see the visual first.
-        document.getElementById('dropdown-active-classes').textContent = 'N/A';
-        document.getElementById('dropdown-upcoming-sessions').textContent = 'N/A';
-
+        // Workload metrics are intentionally best-effort; keep the dropdown usable even when the
+        // metrics API is unavailable in this environment.
+        const activeEl = document.getElementById('dropdown-active-classes');
+        const upcomingEl = document.getElementById('dropdown-upcoming-sessions');
+        if (activeEl) activeEl.textContent = 'N/A';
+        if (upcomingEl) upcomingEl.textContent = 'N/A';
     } catch (e) {
         console.warn('Failed to load teacher workload', e);
     }

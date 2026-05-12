@@ -608,6 +608,18 @@ window.ClassroomAPI = (function () {
         return res.json();
     }
 
+    // Admin: Fetch teacher/admin users via server API (bypasses Firestore rules)
+    async function fetchTeachers() {
+        const headers = await getHeaders();
+        const res = await fetch('/api/admin/teachers', {
+            method: 'GET',
+            headers
+        });
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        const json = await res.json();
+        return json.teachers || [];
+    }
+
     return {
         fetchCourses,
         fetchClassrooms,
@@ -653,6 +665,7 @@ window.ClassroomAPI = (function () {
         regenerateClassroomSchedule,
         openScheduledAttendanceSession,
         gradeSubmission,
-        returnSubmissionForRevision
+        returnSubmissionForRevision,
+        fetchTeachers
     };
 })();

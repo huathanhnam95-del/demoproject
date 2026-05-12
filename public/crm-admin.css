@@ -582,6 +582,26 @@ body {
   background-color: #cbd5e0;
 }
 
+.crm-btn-text {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: var(--crm-primary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.crm-btn-text:hover {
+  text-decoration: underline;
+}
+
+.crm-btn-text:focus-visible {
+  outline: 2px solid rgba(27, 138, 79, 0.45);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
 .crm-input {
   width: 100%;
   padding: 10px 12px;
@@ -1136,238 +1156,6 @@ body {
   background: #ffffff;
 }
 
-.scheduler-action-container {
-  max-width: 1120px;
-  height: 84vh;
-}
-
-.scheduler-action-body {
-  display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
-}
-
-.scheduler-action-sidebar {
-  background:
-    radial-gradient(circle at top left, rgba(27, 138, 79, 0.08), transparent 46%),
-    linear-gradient(180deg, #f8fbfa 0%, #ffffff 100%);
-  border-right: 1px solid #edf2f7;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.scheduler-action-summary-card {
-  border: 1px solid #e5efe9;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
-  padding: 16px;
-  display: grid;
-  gap: 12px;
-}
-
-.scheduler-action-summary-row {
-  display: grid;
-  gap: 4px;
-}
-
-.scheduler-action-summary-row span {
-  color: var(--crm-text-muted);
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.scheduler-action-summary-row strong {
-  color: var(--crm-text-main);
-  font-size: 0.96rem;
-  line-height: 1.4;
-}
-
-.scheduler-action-note {
-  padding: 0 4px;
-}
-
-.scheduler-action-content {
-  padding: 24px;
-  overflow-y: auto;
-}
-
-.scheduler-action-switcher {
-  display: inline-flex;
-  gap: 8px;
-  padding: 6px;
-  border-radius: 999px;
-  background: #f2f6f4;
-  border: 1px solid #e1ebe6;
-  margin-bottom: 18px;
-}
-
-.scheduler-action-switcher-btn {
-  border: none;
-  background: transparent;
-  color: var(--crm-text-muted);
-  padding: 10px 16px;
-  border-radius: 999px;
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.scheduler-action-switcher-btn.active {
-  background: #ffffff;
-  color: var(--crm-primary);
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
-}
-
-.scheduler-action-panel {
-  display: grid;
-  gap: 16px;
-}
-
-.scheduler-action-option-list {
-  display: grid;
-  gap: 12px;
-}
-
-.scheduler-action-option {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 14px;
-  align-items: start;
-  padding: 16px 18px;
-  border: 1px solid #dce7e1;
-  border-radius: 16px;
-  background: #ffffff;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.scheduler-action-option:hover {
-  border-color: rgba(27, 138, 79, 0.42);
-  box-shadow: 0 10px 24px rgba(27, 138, 79, 0.08);
-}
-
-.scheduler-action-option input {
-  margin-top: 4px;
-}
-
-.scheduler-action-option strong {
-  display: block;
-  color: var(--crm-text-main);
-  margin-bottom: 4px;
-}
-
-.scheduler-action-option span {
-  display: block;
-  color: var(--crm-text-muted);
-  font-size: 0.9rem;
-  line-height: 1.5;
-}
-
-.scheduler-action-grid {
-  max-width: 280px;
-}
-
-.scheduler-action-preview-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.scheduler-action-preview-card {
-  display: grid;
-  gap: 4px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  border: 1px solid #dbe7e1;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fbfa 100%);
-}
-
-.scheduler-action-preview-card span {
-  color: var(--crm-text-muted);
-  font-size: 0.78rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.scheduler-action-preview-card strong {
-  color: var(--crm-text-main);
-  font-size: 1.15rem;
-}
-
-.scheduler-action-warning {
-  min-height: 22px;
-  margin: 0;
-}
-
-.scheduler-action-list {
-  display: grid;
-  gap: 10px;
-  max-height: 42vh;
-  overflow-y: auto;
-  padding-right: 4px;
-}
-
-.scheduler-action-session-choice {
-  width: 100%;
-  display: grid;
-  gap: 8px;
-  text-align: left;
-  padding: 14px 16px;
-  border-radius: 14px;
-  border: 1px solid #dbe7e1;
-  background: #ffffff;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.scheduler-action-session-choice:hover {
-  border-color: rgba(27, 138, 79, 0.42);
-  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
-}
-
-.scheduler-action-session-choice.is-selected {
-  border-color: var(--crm-primary);
-  background: rgba(27, 138, 79, 0.06);
-}
-
-.scheduler-action-session-choice-main {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.scheduler-action-session-choice-main strong {
-  color: var(--crm-text-main);
-  font-size: 0.95rem;
-}
-
-.scheduler-action-session-choice-main span,
-.scheduler-action-session-choice-meta {
-  color: var(--crm-text-muted);
-  font-size: 0.88rem;
-}
-
-@media (max-width: 1080px) {
-  .scheduler-action-body {
-    grid-template-columns: 1fr;
-  }
-
-  .scheduler-action-sidebar {
-    border-right: none;
-    border-bottom: 1px solid #edf2f7;
-  }
-
-  .scheduler-action-preview-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
 
 .crm-icon-btn.text-dark {
   color: var(--crm-text-muted);

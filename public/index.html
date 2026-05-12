@@ -16,7 +16,7 @@
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
     rel="stylesheet" />
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-  <link rel="stylesheet" href="style.css?v=20260504_back_btn_fix">
+  <link rel="stylesheet" href="style.css?v=20260508_practice_router_fix">
   <link rel="stylesheet" href="srs-review.css">
   <link rel="stylesheet" href="srs-onboarding.css">
   <link rel="stylesheet" href="pronunciation-analyzer/style.css">
@@ -895,7 +895,7 @@
           </a>
           <a id="panel-crm-admin-link" href="crm-admin.html" class="panel-btn primary"
             style="display: none; text-decoration: none; text-align: center;">
-            🗂️ CRM Admin
+            🗂️ CRM
           </a>
           <a id="panel-classroom-link" href="classroom.html" class="panel-btn primary"
             style="display: none; text-decoration: none; text-align: center;">
@@ -2968,12 +2968,14 @@
             <div id="essay-step-results" class="notes-step" style="display: none;">
               <div class="notes-step-header">
                 <span class="notes-step-badge">Results</span>
-                <h4>Your Essay Scores</h4>
+                <h4 id="essay-results-title">Your Essay Scores</h4>
               </div>
               <div id="essay-results-container" class="essay-results-container"></div>
-              <div class="notes-results-controls">
+              <div class="notes-results-controls essay-results-controls">
                 <button id="essay-retry-btn" class="modern-btn modern-btn--retry" type="button">Try Again</button>
+                <button id="essay-ai-score-btn" class="modern-btn modern-btn--play" type="button">Submit to AI scoring</button>
               </div>
+              <div id="essay-ai-score-hint" class="essay-ai-score-hint" style="display:none;"></div>
             </div>
           </div>
         </div>
@@ -3726,7 +3728,7 @@
   <script src="js/lazy-loader.js"></script>
   <script type="module" src="js/collo-dictate-mode.js"></script>
   <script type="module" src="js/reading-journey.js"></script>
-  <script type="module" src="script.js?v=20260504_back_btn_fix"></script>
+  <script type="module" src="script.js?v=20260508_practice_router_fix"></script>
   <!-- Points Toast Notification Container -->
   <div id="points-toast-container" class="points-toast-container"></div>
 
@@ -4346,7 +4348,7 @@
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>
-  <script src="/write-essay-mode.js"></script>
+  <script src="/write-essay-mode.js?v=20260509_write_essay_feedback_ai_scoring"></script>
   <script src="/describe-image-mode.js"></script>
   <!-- Dialogflow Messenger Integration -->
   <link rel="stylesheet"

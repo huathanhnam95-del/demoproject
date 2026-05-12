@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'bel-offline-v12';
+const CACHE_VERSION = 'bel-offline-v14';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -8,8 +8,9 @@ const SHELL_URLS = [
   '/landing/',
   '/landing/index.html',
   '/offline.html',
-  '/style.css?v=20260410_watermarks',
-  '/script.js?v=20260410_watermarks',
+  '/style.css?v=20260508_practice_router_fix',
+  '/script.js?v=20260508_practice_router_fix',
+  '/write-essay-mode.js?v=20260509_write_essay_feedback_ai_scoring',
   '/landing/landing.css',
   '/dictionary-service.js',
   '/collocations.json',
@@ -43,6 +44,11 @@ function isSameOrigin(requestUrl) {
   }
 }
 
+function isFreshAssetRequest(requestUrl) {
+  const pathname = requestUrl.pathname || '';
+  return requestUrl.searchParams.has('v') || pathname.endsWith('.js') || pathname.endsWith('.css');
+}
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
@@ -51,6 +57,24 @@ self.addEventListener('fetch', (event) => {
   const requestUrl = new URL(request.url);
   if (requestUrl.pathname.startsWith('/api/')) {
     event.respondWith(fetch(request));
+    return;
+  }
+
+  if (isFreshAssetRequest(requestUrl)) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response && response.ok) {
+            const copy = response.clone();
+            caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy)).catch(() => { });
+          }
+          return response;
+        })
+        .catch(async () => {
+          const cached = await caches.match(request);
+          return cached || new Response('Offline', { status: 503, statusText: 'Offline' });
+        })
+    );
     return;
   }
 

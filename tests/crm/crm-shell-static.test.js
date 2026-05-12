@@ -9,7 +9,7 @@ function read(relativePath) {
 const html = read('public/crm-admin.html');
 const js = read('public/crm-admin.js');
 const packageJson = JSON.parse(read('package.json'));
-const CRM_ADMIN_ASSET_VERSION = '20260406-gemma4-ollama-fix';
+const CRM_ADMIN_ASSET_VERSION = '20260507-v1.6.9';
 
 const panelIds = new Set(Array.from(html.matchAll(/data-panel="([^"]+)"/g), (match) => match[1]));
 const localAssetRefs = Array.from(
@@ -21,6 +21,25 @@ for (const ref of localAssetRefs) {
     assert(
         ref.includes(`?v=${CRM_ADMIN_ASSET_VERSION}`),
         `CRM admin asset "${ref}" must include the shared cache-busting version token.`
+    );
+}
+
+for (const marker of [
+    'ðŸ',     // common mojibake prefix for emojis
+    'â€¦',    // ellipsis
+    'â†',     // arrows (→, ↗, etc.)
+    'â–',     // triangles (▶, etc.)
+    'âœ',     // sparkles (✨, etc.)
+    'â€”',    // em dash (—)
+    'Â·',     // middle dot (·)
+    'Ã…',     // Å and similar accented characters
+    'Ã',      // general UTF-8-as-latin1 corruption marker
+    'Â',      // often appears before ©, ·, nbsp, etc.
+    '�'       // replacement character
+]) {
+    assert(
+        !html.includes(marker),
+        `CRM admin HTML contains text-encoding corruption marker "${marker}".`
     );
 }
 
@@ -151,8 +170,8 @@ assert(
     html.includes('student-preferred-learning-days') &&
     html.includes('student-preferred-learning-hours') &&
     html.includes('student-schedule-prompt') &&
-    html.includes('classroom-meeting-days') &&
-    html.includes('classroom-meeting-hours') &&
+    html.includes('classroom-seed-weekdays') &&
+    html.includes('classroom-session-minutes') &&
     html.includes('attendance-schedule-prompt'),
     'CRM admin page must expose structured schedule inputs for students and classrooms.'
 );
@@ -197,7 +216,8 @@ assert(
     js.includes('let classroomModalController = null;') &&
     js.includes('classroomModalController = window.CrmClassroomModal') &&
     js.includes('elements.btnCreateLiveSession = document.getElementById(\'btn-create-live-session\')') &&
-    js.includes('elements.inputClassroomMeetingDays = document.getElementById(\'classroom-meeting-days\')') &&
+    js.includes('elements.inputClassroomSessionMinutes = document.getElementById(\'classroom-session-minutes\')') &&
+    js.includes('elements.inputClassroomSeedWeekdays = document.getElementById(\'classroom-seed-weekdays\')') &&
     js.includes('elements.attendanceSchedulePrompt = document.getElementById(\'attendance-schedule-prompt\')') &&
     js.includes('function renderClassroomSchedulePrompt()') &&
     js.includes('async function loadLiveSessions(classId, options = {})') &&
@@ -249,16 +269,16 @@ assert(
 );
 
 assert(
-    html.includes('id="scheduler-workspace"'),
-    'CRM admin page must expose the scheduler workspace container in courses/classes.'
+    html.includes('id="teacher-scheduler-workspace"'),
+    'CRM admin page must expose the teacher scheduler workspace container.'
 );
 assert(
-    html.includes('id="scheduler-calendar"'),
-    'CRM admin page must expose the scheduler calendar surface.'
+    html.includes('id="teacher-scheduler-calendar"'),
+    'CRM admin page must expose the teacher scheduler calendar surface.'
 );
 assert(
-    html.includes('id="scheduler-class-rail"'),
-    'CRM admin page must expose the scheduler right rail for draggable class cards.'
+    html.includes('id="teacher-scheduler-class-list"'),
+    'CRM admin page must expose the teacher scheduler class list surface.'
 );
 assert(
     html.includes('id="bulk-delete-warning-modal"') &&
@@ -293,9 +313,9 @@ assert(
 );
 
 assert(
-    js.includes('loadSchedulerWorkspace') &&
-    js.includes('refreshSchedulerWorkspace'),
-    'crm-admin.js must wire scheduler workspace lifecycle helpers.'
+    js.includes('refreshTeacherSchedulerWorkspace') &&
+    js.includes('teacherSchedulerController'),
+    'crm-admin.js must wire teacher scheduler workspace lifecycle helpers.'
 );
 assert(
     js.includes('window.CrmDevToolsAccess') &&

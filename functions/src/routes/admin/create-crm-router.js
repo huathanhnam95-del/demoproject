@@ -50,6 +50,34 @@ const {
     buildHomeworkSubmissionReturnPatch,
     buildHomeworkSubmissionGradePatch
 } = require('../../crm/homework-service');
+const { getAuth } = require('../../utils/firebase_admin_init');
+
+function cleanOptionalString(value, fallback = null) {
+    const normalized = String(value || '').trim();
+    return normalized || fallback;
+}
+
+function cleanEmail(value) {
+    const normalized = String(value || '').trim().toLowerCase();
+    return normalized || null;
+}
+
+function resolveAuthClient(deps) {
+    if (deps?.admin && typeof deps.admin.auth === 'function') {
+        try {
+            return deps.admin.auth();
+        } catch (error) {
+            void error;
+        }
+    }
+
+    try {
+        return getAuth();
+    } catch (error) {
+        void error;
+        return null;
+    }
+}
 
 function resolveServerTimestampFactory(deps) {
     if (typeof deps.serverTimestamp === 'function') {
@@ -245,6 +273,128 @@ module.exports = function createCrmRouter(rawDeps) {
     registerReadAloudReportingRoutes(router, routeDeps);
     registerGovernanceRoutes(router, routeDeps);
     registerLiveSessionRoutes(router, routeDeps);
+
+    // --- Teacher list (bypasses client Firestore security rules) ---
+    router.get('/teachers', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const [teacherSnap, crmRoleSnap] = await Promise.all([
+                deps.db.collection(USERS).where('isTeacher', '==', true).get(),
+                deps.db.collection(USERS).where('crmRole', '==', 'teacher').get()
+            ]);
+
+            const dedupe = new Map();
+            for (const snap of [teacherSnap, crmRoleSnap]) {
+                snap.forEach((doc) => {
+                    const d = doc.data() || {};
+                    const uid = String(doc.id || '').trim();
+                    if (!uid) return;
+                    if (dedupe.has(uid)) return;
+                    dedupe.set(uid, {
+                        uid,
+                        displayName: d.displayName || d.name || '',
+                        email: d.email || ''
+                    });
+                });
+            }
+
+            const teachers = Array.from(dedupe.values());
+
+            teachers.sort((a, b) => {
+                const nameA = (a.displayName || a.email).toLowerCase();
+                const nameB = (b.displayName || b.email).toLowerCase();
+                return nameA.localeCompare(nameB);
+            });
+
+            return sendSuccess(res, { teachers, count: teachers.length });
+        } catch (error) {
+            return sendError(res, 500, 'LIST_TEACHERS_ERROR', 'Failed to list teachers.', error?.message || error);
+        }
+    });
+
+    // --- Create teacher account (admin only, no email verification required) ---
+    router.post('/teachers', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const email = cleanEmail(req.body?.email);
+            const password = cleanOptionalString(req.body?.password);
+            const displayName = cleanOptionalString(req.body?.displayName);
+
+            if (!email) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'Email is required.');
+            }
+            if (!password) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'Password is required.');
+            }
+            if (password.length < 6) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'Password must be at least 6 characters.');
+            }
+
+            const auth = resolveAuthClient(deps);
+            if (!auth) {
+                return sendError(res, 500, 'SERVER_CONFIG_ERROR', 'Firebase Auth is not initialized.');
+            }
+
+            let userRecord;
+            try {
+                userRecord = await auth.createUser({
+                    email,
+                    password,
+                    displayName: displayName || undefined,
+                    emailVerified: true
+                });
+            } catch (error) {
+                const code = String(error?.code || error?.errorInfo?.code || '').trim();
+                if (code === 'auth/email-already-exists') {
+                    return sendError(res, 409, 'EMAIL_ALREADY_EXISTS', 'A user with this email already exists.');
+                }
+                if (code === 'auth/invalid-password') {
+                    return sendError(res, 400, 'INVALID_PASSWORD', error?.message || 'Invalid password.');
+                }
+                if (code === 'auth/invalid-email') {
+                    return sendError(res, 400, 'INVALID_EMAIL', 'Invalid email address.');
+                }
+                return sendError(res, 500, 'CREATE_TEACHER_ERROR', 'Failed to create teacher account.', error?.message || error);
+            }
+
+            const uid = String(userRecord?.uid || '').trim();
+            if (!uid) {
+                return sendError(res, 500, 'CREATE_TEACHER_ERROR', 'Teacher UID missing from auth response.');
+            }
+
+            const fresh = await auth.getUser(uid);
+            const existingClaims = fresh?.customClaims && typeof fresh.customClaims === 'object'
+                ? fresh.customClaims
+                : {};
+            await auth.setCustomUserClaims(uid, { ...existingClaims, isTeacher: true, isStudent: true });
+
+            await deps.db.collection(USERS).doc(uid).set({
+                email,
+                displayName: displayName || null,
+                isTeacher: true,
+                crmRole: 'teacher',
+                crmRoleUpdatedAt: new Date().toISOString(),
+                crmRoleUpdatedBy: req.user?.uid || null,
+                teacherCreatedAt: new Date().toISOString(),
+                teacherCreatedBy: req.user?.uid || null
+            }, { merge: true });
+
+            await writeAuditLog({
+                action: 'teacher.create',
+                entityType: 'user',
+                entityId: uid,
+                metadata: { email }
+            }, { user: req.user });
+
+            return sendSuccess(res, {
+                teacher: {
+                    uid,
+                    email,
+                    displayName: displayName || ''
+                }
+            }, 'Teacher created.');
+        } catch (error) {
+            return sendError(res, 500, 'CREATE_TEACHER_ERROR', 'Failed to create teacher account.', error?.message || error);
+        }
+    });
 
     router.post('/classrooms', ...requireAdminHandlers, async (req, res) => {
         try {

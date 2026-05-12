@@ -638,13 +638,7 @@
         }
       } else {
         // No URL route — ensure we are on the dashboard in a clean state
-        if (typeof window.exitCurrentMode === 'function') {
-          window.exitCurrentMode();
-        } else {
-          const preferred = PRACTICE_LAUNCHER.defaultMode || 'read-aloud';
-          const defaultMode = isModeVisibleInScope(preferred) ? preferred : (isModeVisibleInScope('read-aloud') ? 'read-aloud' : 'type');
-          window.switchToMode?.(defaultMode);
-        }
+        // No URL route: stay on the dashboard (do not rewrite the URL or auto-enter a mode).
       }
     }
   });
@@ -1046,6 +1040,16 @@
      */
     function replaceRoute(mode, questionId) {
       if (isPopstateNavigationWindow()) return; // URL is already correct for this history entry
+      // Guard against inactive mode scripts rewriting the URL while the user is on the dashboard.
+      // Only allow question-level URL updates when the mode is active (or already reflected in the URL).
+      if (mode) {
+        const activeMode = String(window.appState?.currentMode || '').trim();
+        if (activeMode !== String(mode)) {
+          const currentRoute = parseRoute(window.location.pathname);
+          const urlMode = String(currentRoute?.mode || '').trim();
+          if (urlMode !== String(mode)) return;
+        }
+      }
       const path = buildPath(mode, questionId);
       const currentPath = window.location.pathname.replace(/\/+$/, '') || '/';
       if (currentPath === path) return; // Already at this path

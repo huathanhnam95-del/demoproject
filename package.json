@@ -56,6 +56,7 @@
     "cheerio": "^1.2.0",
     "compression": "^1.8.1",
     "cors": "^2.8.6",
+    "docx": "^9.6.1",
     "dotenv": "^17.2.3",
     "exceljs": "^4.4.0",
     "express": "^5.2.1",

@@ -62,7 +62,7 @@ assert.strictEqual(mappedLead.facebookProfileUrl, 'https://facebook.com/lead.ngu
 assert.deepStrictEqual(Array.from(mappedLead.preferredLearningDays || []), ['Tuesday', 'Thursday']);
 assert.deepStrictEqual(Array.from(mappedLead.preferredLearningHours || []), ['19:00-21:00', '20:00-22:00']);
 assert.strictEqual(mappedLead.messengerStatus, 'awaiting_reply');
-assert.strictEqual(mappedStudent.lifecycleStage, 'enrolled');
+assert.strictEqual(mappedStudent.lifecycleStage, 'counseling');
 assert.strictEqual(mappedStudent.acquisitionSource, 'facebook');
 assert.strictEqual(mappedStudent.facebook, 'Lead Nguyen FB');
 assert.strictEqual(helper.summarize([mappedLead]).counseling, 1);

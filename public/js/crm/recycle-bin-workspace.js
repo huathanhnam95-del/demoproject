@@ -53,7 +53,7 @@ window.CrmRecycleBinWorkspace = (function () {
                 'students/data': 'Student Data',
                 students: 'Students',
                 'courses/courses': 'Courses Catalog',
-                'courses/classes': 'Class Scheduling',
+                'courses/classes': 'Class Scheduling (legacy)',
                 'courses/class-management': 'Class Management',
                 courses: 'Courses',
                 classrooms: 'Classrooms'

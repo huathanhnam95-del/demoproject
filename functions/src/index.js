@@ -17,6 +17,7 @@ const { useActiveSkill } = require('./useActiveSkill');
 const { syncProgressionUnlocks } = require('./syncProgressionUnlocks');
 const { migrateUserCoins } = require('./migrateCoins');
 const { assessWriting } = require('./assessWriting');
+const { scoreEssay } = require('./scoreEssay');
 
 const { onRequest } = require('firebase-functions/v2/https');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
@@ -114,6 +115,7 @@ module.exports = {
     syncProgressionUnlocks,
     migrateUserCoins,
     assessWriting,
+    scoreEssay,
     api: onRequest({ region: 'us-central1' }, apiApp),
     crmAutomationRunner: onSchedule({ region: 'us-central1', schedule: 'every 24 hours' }, async () => {
         await runCrmAutomationQueue();

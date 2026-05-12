@@ -20,6 +20,14 @@ function hasVersionQuery(req) {
 }
 
 function setStaticCacheHeaders(res, filePath) {
+  const baseName = path.basename(String(filePath || ''));
+  if (baseName === 'sw.js') {
+    // Service workers should always be revalidated so clients can receive updates promptly.
+    // Avoid long-lived HTTP caching here even when other assets are aggressively cached.
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    return;
+  }
+
   if (filePath.endsWith('.html')) {
     res.setHeader('Cache-Control', 'no-cache, private');
     return;
@@ -157,6 +165,19 @@ function createApp(options = {}) {
   app.use('/api/', globalLimiter);
   app.use('/api/ai-proxy', aiLimiter);
   app.use('/api/ai-feedback-stream', aiLimiter);
+
+  // Emergency escape hatch for local dev: force-clear service worker + Cache Storage for this origin.
+  // Useful when a buggy service worker has pinned clients to a stale UI.
+  app.get('/__clear-site-data', (_req, res) => {
+    res.setHeader('Clear-Site-Data', '"cache", "storage", "executionContexts"');
+    res.setHeader('Cache-Control', 'no-store');
+    res.type('html').send(`<!doctype html>
+<meta charset="utf-8">
+<title>Clearing site data…</title>
+<style>body{font-family:system-ui,Segoe UI,Arial,sans-serif;padding:24px;line-height:1.4}</style>
+<h1>Clearing site data…</h1>
+<p>Close this tab, then reload the app.</p>`);
+  });
 
   // Dev-only CSP override for CRM Admin so emulator connectivity is allowed locally.
   // In production hosting, crm-admin.html is served as a static file with its own CSP meta tag.

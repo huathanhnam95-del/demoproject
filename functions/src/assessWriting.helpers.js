@@ -21,6 +21,9 @@ function extractVertexText(response) {
     if (typeof response?.text === 'function') {
         return response.text();
     }
+    if (typeof response?.text === 'string') {
+        return response.text;
+    }
 
     const parts = response?.candidates?.[0]?.content?.parts;
     if (Array.isArray(parts) && parts.length > 0) {
@@ -28,6 +31,11 @@ function extractVertexText(response) {
     }
 
     throw new Error('No text found in Vertex AI response');
+}
+
+async function extractGeneratedText(result) {
+    const response = result && result.response ? await result.response : result;
+    return extractVertexText(response);
 }
 
 function buildModelPrompt(text, context = {}) {
@@ -50,6 +58,7 @@ function buildModelPrompt(text, context = {}) {
 
 module.exports = {
     buildModelPrompt,
+    extractGeneratedText,
     extractJsonObject,
     extractVertexText,
     truncateForLog

@@ -42,18 +42,11 @@
                 <li><button data-sub="courses">Catalog</button></li>
                 <li><button data-sub="classes">Classes</button></li>
                 <li><button data-sub="teacher-schedule">Teacher Schedule</button></li>
-                <li><button data-sub="zoom-links" data-coming-soon="true" disabled>Zoom Links</button></li>
-                <li><button data-sub="materials" data-coming-soon="true" disabled>Materials</button></li>
-                <li><button data-sub="planning" data-coming-soon="true" disabled>Planning</button></li>
-                <li><button data-sub="new-planning" data-coming-soon="true" disabled>New Planning</button></li>
-                <li><button data-sub="admission-calendar" data-coming-soon="true" disabled>Admission Calendar</button>
-                </li>
                 <li><button data-sub="class-management">Class Management</button></li>
               </ul>
             </li>
             <li><button class="crm-nav-item" data-main="enquiry" data-label="Enquiry">Enquiry</button></li>
-            <li><button class="crm-nav-item" data-main="staff" data-label="Staff" data-coming-soon="true"
-                disabled>Staff</button>
+            <li><button class="crm-nav-item" data-main="staff" data-label="Staff">Staff</button>
             </li>
             <li><button class="crm-nav-item" data-main="agents" data-label="Agents">Agents</button>
             </li>
@@ -746,6 +739,94 @@
               <div class="crm-muted">No automations yet.</div>
             </div>
           </section>
+        </div>
+      </section>
+
+      <!-- Staff -->
+      <section class="crm-panel" data-panel="staff">
+        <div class="crm-panel-header">
+          <div>
+            <h2>Staff</h2>
+            <p>Create teacher accounts and manage staff access.</p>
+          </div>
+          <div class="crm-inline-fields">
+            <button id="btn-staff-refresh" class="crm-btn-secondary" type="button">Refresh</button>
+          </div>
+        </div>
+
+        <div class="crm-dashboard-layout">
+          <div class="crm-main-col">
+            <section class="crm-workspace-card">
+              <div class="crm-section-header">
+                <div>
+                  <h3>Create teacher account</h3>
+                  <p class="crm-muted">Teachers can log in immediately (no email verification required).</p>
+                </div>
+              </div>
+              <div style="padding: 18px;">
+                <div class="crm-form-grid">
+                  <div class="crm-form-group">
+                    <label for="staff-teacher-email">Email</label>
+                    <input id="staff-teacher-email" type="email" class="crm-input" placeholder="teacher@example.com" autocomplete="off">
+                  </div>
+                  <div class="crm-form-group">
+                    <label for="staff-teacher-display-name">Display name</label>
+                    <input id="staff-teacher-display-name" type="text" class="crm-input" placeholder="Teacher name" autocomplete="off">
+                  </div>
+                </div>
+
+                <div class="crm-form-grid" style="margin-top: 12px;">
+                  <div class="crm-form-group">
+                    <label for="staff-teacher-password">Temporary password</label>
+                    <input id="staff-teacher-password" type="password" class="crm-input" placeholder="Set an initial password" autocomplete="new-password">
+                  </div>
+                  <div class="crm-form-group">
+                    <label>&nbsp;</label>
+                    <div class="crm-inline-fields" style="gap: 10px; justify-content: flex-end;">
+                      <button id="btn-staff-generate-password" class="crm-btn-secondary" type="button">Generate</button>
+                      <button id="btn-staff-toggle-password" class="crm-btn-secondary" type="button">Show</button>
+                      <button id="btn-staff-copy-password" class="crm-btn-secondary" type="button">Copy</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="staff-create-teacher-error" class="crm-muted" style="margin-top: 10px; color: #c00; display:none;"></div>
+                <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 14px;">
+                  <button id="btn-staff-create-teacher" class="crm-btn-primary" type="button">Create teacher</button>
+                </div>
+              </div>
+            </section>
+
+            <section class="crm-workspace-card" style="margin-top: 16px;">
+              <div class="crm-section-header">
+                <div>
+                  <h3>Teachers</h3>
+                  <p class="crm-muted">Accounts with teacher access.</p>
+                </div>
+              </div>
+              <div style="padding: 18px;">
+                <div id="staff-teacher-list" class="crm-table-container">
+                  <div class="crm-muted">Loading teachers...</div>
+                </div>
+              </div>
+            </section>
+          </div>
+          <div class="crm-side-col">
+            <section class="crm-workspace-card">
+              <div class="crm-section-header">
+                <div>
+                  <h3>Notes</h3>
+                  <p class="crm-muted">Teacher accounts can access CRM Teacher Schedule only.</p>
+                </div>
+              </div>
+              <div style="padding: 16px;">
+                <div class="crm-muted" style="line-height: 1.5;">
+                  Share the generated password with the teacher. They can change it later from the practice page
+                  account panel.
+                </div>
+              </div>
+            </section>
+          </div>
         </div>
       </section>
 
@@ -2145,6 +2226,7 @@
   <script src="js/crm/communications.js?v=20260507-v1.6.9"></script>
   <script src="js/crm/scheduler-workspace.js?v=20260507-v1.6.9"></script>
   <script src="js/crm/teacher-scheduler-workspace.js?v=20260507-v1.6.9"></script>
+  <script src="js/crm/staff-workspace.js?v=20260507-v1.6.9"></script>
   <script src="js/crm/student-finance.js?v=20260507-v1.6.9"></script>
   <script src="js/crm/live-delivery.js?v=20260507-v1.6.9"></script>
   <script src="js/crm/classroom-modal.js?v=20260507-v1.6.9"></script>

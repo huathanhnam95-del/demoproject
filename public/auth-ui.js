@@ -886,7 +886,7 @@ function updateAccountPanelState() {
     isGuestMode = false; // Clear guest mode when logged in
     sessionStorage.removeItem('guestMode');
 
-    // Show admin links for admin users
+    // Show CRM link for admin/teacher users (admin-only for Watch Admin)
     const watchAdminLink = document.getElementById('panel-admin-link');
     const crmAdminLink = document.getElementById('panel-crm-admin-link');
 
@@ -902,9 +902,9 @@ function updateAccountPanelState() {
     }
 
     if (watchAdminLink || crmAdminLink) {
-      resolveAdminAccess(user).then(isAdmin => {
+      Promise.all([resolveAdminAccess(user), resolveTeacherAccess(user)]).then(([isAdmin, isTeacher]) => {
         if (watchAdminLink) watchAdminLink.style.display = isAdmin ? 'flex' : 'none';
-        if (crmAdminLink) crmAdminLink.style.display = isAdmin ? 'flex' : 'none';
+        if (crmAdminLink) crmAdminLink.style.display = (isAdmin || isTeacher) ? 'flex' : 'none';
 
         if (isAdmin) {
           // Seed cache for admin user to ensure full access
@@ -1014,6 +1014,34 @@ async function resolveAdminAccess(user) {
 
   setCachedAdminAccess(user.uid, isAdmin);
   return isAdmin;
+}
+
+async function resolveTeacherAccess(user) {
+  if (!user?.uid) return false;
+
+  // 1) Fast path: custom claim
+  try {
+    const tokenResult = await user.getIdTokenResult();
+    if (tokenResult?.claims?.isTeacher === true) {
+      return true;
+    }
+  } catch (e) {
+    // ignore; fallback to profile
+  }
+
+  // 2) Fallback: Firestore profile (crmRole/isTeacher)
+  if (firestoreFunctions && typeof firestoreFunctions.getUserProfile === 'function') {
+    try {
+      const result = await firestoreFunctions.getUserProfile(user.uid);
+      const data = result?.success && result?.data ? result.data : {};
+      const crmRole = String(data?.crmRole || '').trim().toLowerCase();
+      return data?.isTeacher === true || crmRole === 'teacher';
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  return false;
 }
 
 async function isAdminViaServer(user) {

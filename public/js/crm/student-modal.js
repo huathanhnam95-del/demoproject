@@ -321,21 +321,21 @@ window.CrmStudentModal = (function () {
 
             // ── Visa Type / Target Level Automation ──
             const VISA_SCORE_MAP = {
-                '462':      { target: 'Functional', scores: { overall: 30, listening: 30, reading: 30, speaking: 30, writing: 30 } },
-                '482':      { target: 'Vocational', scores: { overall: 36, listening: 36, reading: 36, speaking: 36, writing: 36 } },
-                '186':      { target: 'Competent',  scores: { overall: 50, listening: 50, reading: 50, speaking: 50, writing: 50 } },
-                '491':      { target: 'Competent',  scores: { overall: 50, listening: 50, reading: 50, speaking: 50, writing: 50 } },
-                '10points': { target: 'Proficient', scores: { overall: 65, listening: 65, reading: 65, speaking: 65, writing: 65 } },
-                '20points': { target: 'Superior',   scores: { overall: 79, listening: 79, reading: 79, speaking: 79, writing: 79 } },
+                '462':      { target: 'Functional', scores: { overall: 24, listening: 'N/A', reading: 'N/A', speaking: 'N/A', writing: 'N/A' } },
+                '482':      { target: 'Vocational', scores: { overall: 'N/A', listening: 33, reading: 36, speaking: 24, writing: 29 } },
+                '186':      { target: 'Competent',  scores: { overall: 'N/A', listening: 47, reading: 48, speaking: 54, writing: 51 } },
+                '491':      { target: 'Competent',  scores: { overall: 'N/A', listening: 47, reading: 48, speaking: 54, writing: 51 } },
+                '10points': { target: 'Proficient', scores: { overall: 'N/A', listening: 65, reading: 65, speaking: 65, writing: 65 } },
+                '20points': { target: 'Superior',   scores: { overall: 'N/A', listening: 69, reading: 70, speaking: 88, writing: 85 } },
                 '485':      { target: '485',        scores: { overall: 55, listening: 40, reading: 42, speaking: 39, writing: 41 } }
             };
 
             const TARGET_LEVEL_SCORES = {
-                'Functional': { overall: 30, listening: 30, reading: 30, speaking: 30, writing: 30 },
-                'Vocational':  { overall: 36, listening: 36, reading: 36, speaking: 36, writing: 36 },
-                'Competent':   { overall: 50, listening: 50, reading: 50, speaking: 50, writing: 50 },
-                'Proficient':  { overall: 65, listening: 65, reading: 65, speaking: 65, writing: 65 },
-                'Superior':    { overall: 79, listening: 79, reading: 79, speaking: 79, writing: 79 },
+                'Functional': { overall: 24, listening: 'N/A', reading: 'N/A', speaking: 'N/A', writing: 'N/A' },
+                'Vocational':  { overall: 'N/A', listening: 33, reading: 36, speaking: 24, writing: 29 },
+                'Competent':   { overall: 'N/A', listening: 47, reading: 48, speaking: 54, writing: 51 },
+                'Proficient':  { overall: 'N/A', listening: 65, reading: 65, speaking: 65, writing: 65 },
+                'Superior':    { overall: 'N/A', listening: 69, reading: 70, speaking: 88, writing: 85 },
                 '485':         { overall: 55, listening: 40, reading: 42, speaking: 39, writing: 41 }
             };
 

@@ -1,5 +1,6 @@
 const assert = require('assert');
 const express = require('express');
+const fs = require('fs');
 const http = require('http');
 const path = require('path');
 const { chromium } = require('playwright');
@@ -379,6 +380,9 @@ async function main() {
       await route.fulfill({
         status: 200,
         contentType: 'application/javascript',
+        headers: {
+          'access-control-allow-origin': '*'
+        },
         body: buildHtml2PdfStubScript()
       });
     });
@@ -451,40 +455,24 @@ async function main() {
     await page.locator('#crm-export-pdf-btn').waitFor({ state: 'visible' });
     await page.waitForFunction(() => document.querySelectorAll('#crm-result-root details').length >= 4);
 
-    await page.evaluate(() => window.__exportResultPdf());
+    const boot = await page.evaluate(() => ({
+      hasJsPdfGlobal: !!(window.jspdf && window.jspdf.jsPDF),
+      hasGenerator: typeof window.generateEntranceTestPdf === 'function'
+    }));
+    assert.ok(boot.hasJsPdfGlobal, 'Expected jsPDF global to be available.');
+    assert.ok(boot.hasGenerator, 'Expected PDF generator to be available.');
 
-    await page.waitForFunction(() => !document.querySelector('.crm-result-pdf-shell'));
-
-    const probe = await page.evaluate(() => window.__html2pdfProbe);
-
-    assert(probe, 'PDF export probe data should be available.');
-    assert.ok(Array.isArray(probe.setCalls) && probe.setCalls.length >= 1, 'PDF export should create at least one html2pdf worker call.');
-    assert.ok(Array.isArray(probe.fromCalls) && probe.fromCalls.length >= 1, 'PDF export should render at least one page node.');
-    assert.strictEqual(probe.toPdfCount, 1, 'PDF export should create the initial PDF exactly once.');
-    assert.strictEqual(probe.toCanvasCount, Math.max(probe.fromCalls.length - 1, 0), 'PDF export should render later pages as canvases.');
-    assert.strictEqual(probe.pdfAddPageCount, Math.max(probe.fromCalls.length - 1, 0), 'PDF export should add one jsPDF page for each additional rendered page.');
-    assert.strictEqual(probe.pdfAddImageCount, probe.fromCalls.length, 'PDF export should draw one image per rendered PDF page.');
-    assert.ok(Array.isArray(probe.renderCalls) && probe.renderCalls.length === probe.fromCalls.length, 'PDF export should record one render call per page node.');
-    assert.ok(probe.pageCount > 1, 'The sample export should span multiple PDF pages.');
-    assert.ok(probe.renderCalls.every((call) => call.sourceClassName === 'crm-result-pdf-page'), 'Each render call should target a dedicated PDF page wrapper.');
-    assert.ok(probe.renderCalls.every((call) => call.width === 1120), `Each render call should use the fixed 1120px PDF page width. Got: ${JSON.stringify(probe.renderCalls.map((call) => call.width))}`);
-    assert.ok(probe.renderCalls.every((call) => call.height === 1584), `Each render call should use the fixed 1584px PDF page height. Got: ${JSON.stringify(probe.renderCalls.map((call) => call.height))}`);
-    assert.strictEqual(probe.setCalls.every((call) => call?.html2canvas?.windowWidth === undefined), true, 'html2canvas should not force windowWidth because that shrinks wide-screen captures.');
-    assert.strictEqual(probe.setCalls.every((call) => call?.html2canvas?.width === 1120), true, 'html2canvas should pin width to each PDF page width.');
-    assert.strictEqual(probe.setCalls.every((call) => call?.html2canvas?.height === 1584), true, 'html2canvas should pin height to each PDF page height.');
-    assert.strictEqual(probe.setCalls.every((call) => call?.pagebreak === undefined), true, 'Per-page rendering should not depend on html2pdf page-break mode.');
-    assert.strictEqual(probe.pageCount, probe.fromCalls.length, 'Export shell page count should match the number of rendered page nodes.');
-    assert.strictEqual(probe.gridCount, 0, 'PDF capture should omit the lead and student card grid.');
-    assert.ok(probe.questionUnifiedCount >= 4, 'PDF capture should keep questions as unified blocks for pagination.');
-    assert.strictEqual(probe.questionBreakInside, 'avoid', 'Individual questions should stay intact within the PDF capture.');
-    assert.strictEqual(probe.audioCount, 0, 'Audio players should be removed from the PDF capture.');
-    assert.strictEqual(probe.crmHeaderCount, 0, 'Live CRM header controls should not be inside the PDF capture.');
-    assert.strictEqual(probe.exportBtnCount, 0, 'Export button should not be inside the PDF capture.');
-    assert.match(probe.sourceText || '', /Entrance Test Result/, 'PDF shell should include the report header.');
-    assert.match(probe.sourceText || '', /Bui Do Minh Nguyen/, 'PDF shell should still include the student name in the header.');
-    assert.match(probe.sourceText || '', /Generated on/, 'PDF shell should include the generated timestamp footer.');
-    assert.ok(!/Enquiry/.test(probe.sourceText || ''), 'PDF shell should exclude the enquiry card.');
-    assert.ok(!/Student\s*\n/.test(probe.sourceText || ''), 'PDF shell should not include the full Student card.');
+    fs.mkdirSync('tmp', { recursive: true });
+    const downloadPromise = page.waitForEvent('download', { timeout: 60000 });
+    await page.click('#crm-export-pdf-btn');
+    const download = await downloadPromise;
+    const filename = download.suggestedFilename();
+    assert.ok(/\.pdf$/i.test(filename), `Expected a .pdf download filename. Got: ${filename}`);
+    assert.ok(/^entrance-test-/i.test(filename), `Expected entrance test pdf filename prefix. Got: ${filename}`);
+    const savePath = path.join('tmp', 'crm-entrance-test-result.pdf');
+    await download.saveAs(savePath);
+    const stat = fs.statSync(savePath);
+    assert.ok(stat.size > 1024, `Expected non-trivial PDF download. size=${stat.size}`);
 
     console.log('crm entrance test pdf browser check passed');
 

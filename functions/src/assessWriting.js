@@ -11,22 +11,29 @@
  */
 
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
-const { VertexAI } = require('@google-cloud/vertexai');
 const admin = require('firebase-admin');
 const {
     buildModelPrompt,
+    extractGeneratedText,
     extractJsonObject,
     extractVertexText,
     truncateForLog
 } = require('./assessWriting.helpers');
+const {
+    DEFAULT_VERTEX_LOCATION,
+    getGeminiModel,
+    normalizeScalar,
+    shouldUseGeminiFallback
+} = require('./geminiVertexModels');
 
-// Initialize Vertex AI
-// GCLOUD_PROJECT is automatically populated in Firebase Functions environments.
-const project = process.env.GCLOUD_PROJECT || process.env.FIREBASE_PROJECT_ID;
-const location = process.env.GOOGLE_CLOUD_LOCATION || 'us-central1';
-
-const vertexAI = new VertexAI({ project, location });
 const db = admin.firestore();
+
+const DEFAULT_MODEL = 'gemini-3-flash-preview';
+const FALLBACK_MODEL = 'gemini-3.1-flash-lite';
+const JSON_GENERATION_CONFIG = {
+    responseMimeType: 'application/json',
+    temperature: 0.2
+};
 
 const assessWriting = onCall({ maxInstances: 10 }, async (request) => {
     // 1. Auth Check
@@ -66,7 +73,20 @@ const assessWriting = onCall({ maxInstances: 10 }, async (request) => {
 
     try {
         // 3. Perform Gemini Analysis (Using FLASH for efficiency)
-        const model = vertexAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const primaryModelName = normalizeScalar(process.env.AI_WRITING_GEMINI_MODEL) || DEFAULT_MODEL;
+        const fallbackModelName = normalizeScalar(process.env.AI_WRITING_GEMINI_FALLBACK_MODEL) || FALLBACK_MODEL;
+        const primaryLocation = normalizeScalar(process.env.AI_WRITING_VERTEX_LOCATION) || DEFAULT_VERTEX_LOCATION;
+        const fallbackLocation = normalizeScalar(process.env.AI_WRITING_FALLBACK_VERTEX_LOCATION) || primaryLocation;
+        const primaryModel = getGeminiModel({
+            modelName: primaryModelName,
+            location: primaryLocation,
+            generationConfig: JSON_GENERATION_CONFIG
+        });
+        const fallbackModel = getGeminiModel({
+            modelName: fallbackModelName,
+            location: fallbackLocation,
+            generationConfig: JSON_GENERATION_CONFIG
+        });
 
         const systemPrompt = `
         You are an advanced AI writing assistant (Grammarly Pro style). 
@@ -80,15 +100,31 @@ const assessWriting = onCall({ maxInstances: 10 }, async (request) => {
 
         const prompt = buildModelPrompt(text, context);
 
-        const result = await model.generateContent(systemPrompt + prompt);
-        const response = await result.response;
-        const textResponse = extractVertexText(response);
         let analysis;
+        let rawTextResponse = '';
+
         try {
-            analysis = extractJsonObject(textResponse);
-        } catch (parseError) {
-            parseError.rawResponse = textResponse;
-            throw parseError;
+            const result = await primaryModel.generateContent(systemPrompt + prompt);
+            rawTextResponse = await extractGeneratedText(result);
+            analysis = extractJsonObject(rawTextResponse);
+        } catch (error) {
+            if (!shouldUseGeminiFallback(error)) {
+                if (typeof rawTextResponse === 'string' && rawTextResponse) {
+                    error.rawResponse = rawTextResponse;
+                }
+                throw error;
+            }
+
+            try {
+                const result = await fallbackModel.generateContent(systemPrompt + prompt);
+                rawTextResponse = await extractGeneratedText(result);
+                analysis = extractJsonObject(rawTextResponse);
+            } catch (fallbackError) {
+                if (typeof rawTextResponse === 'string' && rawTextResponse) {
+                    fallbackError.rawResponse = rawTextResponse;
+                }
+                throw fallbackError;
+            }
         }
 
         // 4. Update Usage Record
@@ -125,5 +161,6 @@ module.exports = {
     assessWriting,
     buildModelPrompt,
     extractJsonObject,
+    extractGeneratedText,
     extractVertexText
 };

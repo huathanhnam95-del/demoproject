@@ -239,3 +239,8 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 248,2026-05-07,"CRM UI: Fix overflows + multi-select weekdays + remove meeting fields",Done,2026-05-07
 99,2026-05-07,Fix V7 Read Aloud Question Picker buttons and cache,Done,2026-05-07
 249,2026-05-07,Fix 3s classroom modal open delay - show modal first + cache courses,In Progress,
+250,2026-05-09,Remove Home/About Us header links and fix logo destination to practice page,Done,2026-05-09
+251,2026-05-09,Browser testing audit - AI Essay Scoring and CRM Teacher Account flows,Done,2026-05-09
+252,2026-05-09,Execute Write Essay Browser Test Plan,Done,2026-05-09
+253,2026-05-11,Humanize Marxist-Leninist political essay,Done,2026-05-11
+254,2026-05-11,Fix CRM English target level PTE mappings,Done,2026-05-11

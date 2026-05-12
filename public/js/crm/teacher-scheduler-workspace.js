@@ -894,7 +894,7 @@ window.TeacherSchedulerWorkspace = (function () {
                         return;
                     }
                     beginPointerDrag('session', sessionId, pill, evt);
-                });
+                }, true);
             }
 
             document.addEventListener('mousemove', (evt) => {
@@ -912,7 +912,7 @@ window.TeacherSchedulerWorkspace = (function () {
                     state.pointerDrag.sourceEl?.classList.add('is-dragging');
                 }
                 updateDropTarget(findSlotFromPoint(evt.clientX, evt.clientY));
-            });
+            }, true);
 
             document.addEventListener('mouseup', (evt) => {
                 if (state.resizeDrag) {
@@ -948,7 +948,7 @@ window.TeacherSchedulerWorkspace = (function () {
                 handleSessionDrop(drag.id, targetDate, targetTime).catch((error) => {
                     showToast?.(error?.message || 'Failed to reschedule.', 'error');
                 });
-            });
+            }, true);
 
             document.addEventListener('keydown', (evt) => {
                 if (evt.key !== 'Escape') return;

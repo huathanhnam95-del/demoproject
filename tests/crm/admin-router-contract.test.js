@@ -67,6 +67,7 @@ expectRoute(routes, 'GET /students/:studentId/classroom-matches');
 expectRoute(routes, 'GET /courses');
 expectRoute(routes, 'POST /courses');
 expectRoute(routes, 'PATCH /courses/:courseId');
+expectRoute(routes, 'GET /teachers');
 expectRoute(routes, 'GET /agent-sources');
 expectRoute(routes, 'POST /agent-sources');
 expectRoute(routes, 'PATCH /agent-sources/:agentSourceId');

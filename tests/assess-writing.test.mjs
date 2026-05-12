@@ -3,6 +3,7 @@ import { createRequire } from 'node:module';
 import Module from 'node:module';
 
 const require = createRequire(import.meta.url);
+process.env.GCLOUD_PROJECT = process.env.GCLOUD_PROJECT || 'test-project';
 const {
   buildModelPrompt,
   extractJsonObject,
@@ -76,27 +77,17 @@ async function runAssessWritingWithStubs({
       };
     }
 
-    if (request === '@google-cloud/vertexai') {
+    if (request === '@google/genai') {
       return {
-        VertexAI: class {
-          getGenerativeModel() {
-            return {
+        GoogleGenAI: class {
+          constructor() {
+            this.models = {
               generateContent: async () => {
-                calls.generate += 1;
-                if (generateThrows) {
-                  throw generateThrows;
-                }
-                return {
-                  response: {
-                    candidates: [
-                      {
-                        content: {
-                          parts: [{ text: generatedText }]
-                        }
-                      }
-                    ]
+                  calls.generate += 1;
+                  if (generateThrows) {
+                    throw generateThrows;
                   }
-                };
+                  return { text: generatedText };
               }
             };
           }
@@ -129,7 +120,9 @@ async function runAssessWritingWithStubs({
   };
 
   const modulePath = require.resolve('../functions/src/assessWriting.js');
+  const geminiModelsPath = require.resolve('../functions/src/geminiVertexModels.js');
   delete require.cache[modulePath];
+  delete require.cache[geminiModelsPath];
 
   try {
     const { assessWriting } = require('../functions/src/assessWriting.js');
@@ -137,6 +130,7 @@ async function runAssessWritingWithStubs({
   } finally {
     Module._load = originalLoad;
     delete require.cache[modulePath];
+    delete require.cache[geminiModelsPath];
   }
 }
 
@@ -167,7 +161,7 @@ assert.deepEqual(missingDocHarness.calls, { get: 1, set: 1, generate: 1 });
 const providerFailureHarness = await runAssessWritingWithStubs({
   userDocExists: true,
   userData: { aiWritingStats: { lastDate: '2026-03-27', count: 0 } },
-  generateThrows: new Error('provider unavailable')
+  generateThrows: new Error('provider exploded')
 });
 await assert.rejects(
   providerFailureHarness.assessWriting({

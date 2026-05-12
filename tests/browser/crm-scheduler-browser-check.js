@@ -35,8 +35,17 @@ function addDays(date, days) {
   return next;
 }
 
+async function waitForPredicate(predicate, timeoutMs, intervalMs = 50) {
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < timeoutMs) {
+    if (predicate()) return true;
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
+  return false;
+}
+
 async function dragBetween(page, sourceSelector, targetSelector) {
-  await page.evaluate(({ sourceSelector: sourceQuery, targetSelector: targetQuery }) => {
+  const activated = await page.evaluate(({ sourceSelector: sourceQuery, targetSelector: targetQuery }) => {
     const source = document.querySelector(sourceQuery);
     const target = document.querySelector(targetQuery);
     if (!source || !target) {
@@ -50,49 +59,41 @@ async function dragBetween(page, sourceSelector, targetSelector) {
     const targetX = targetBox.left + (targetBox.width / 2);
     const targetY = targetBox.top + (targetBox.height / 2);
 
-    source.dispatchEvent(new MouseEvent('mousedown', {
-      bubbles: true,
-      cancelable: true,
-      clientX: sourceX,
-      clientY: sourceY,
-      button: 0,
-      buttons: 1
-    }));
+    const hit = document.elementFromPoint(sourceX, sourceY);
+    const pill = hit?.closest?.('.teacher-scheduler-session-pill[data-session-id]') || null;
+    if (!pill) {
+      throw new Error(`Drag start hit-test failed for ${sourceQuery}.`);
+    }
 
-    document.dispatchEvent(new MouseEvent('mousemove', {
+    const mkEvent = (type, x, y, buttons) => new MouseEvent(type, {
       bubbles: true,
       cancelable: true,
-      clientX: sourceX + 8,
-      clientY: sourceY + 8,
+      view: window,
+      clientX: x,
+      clientY: y,
       button: 0,
-      buttons: 1
-    }));
+      buttons
+    });
 
-    document.dispatchEvent(new MouseEvent('mousemove', {
-      bubbles: true,
-      cancelable: true,
-      clientX: targetX,
-      clientY: targetY,
-      button: 0,
-      buttons: 1
-    }));
+    source.dispatchEvent(mkEvent('mousedown', sourceX, sourceY, 1));
+    // cross the activation threshold (~6px) so the workspace marks the pill as dragging
+    document.dispatchEvent(mkEvent('mousemove', sourceX + 8, sourceY + 8, 1));
+    document.dispatchEvent(mkEvent('mousemove', targetX, targetY, 1));
 
-    document.dispatchEvent(new MouseEvent('mouseup', {
-      bubbles: true,
-      cancelable: true,
-      clientX: targetX,
-      clientY: targetY,
-      button: 0,
-      buttons: 0
-    }));
-  }, {
-    sourceSelector,
-    targetSelector
-  });
+    const isActive = source.classList.contains('is-dragging') || target.classList.contains('is-drop-target');
+    document.dispatchEvent(mkEvent('mouseup', targetX, targetY, 0));
+    return isActive;
+  }, { sourceSelector, targetSelector });
+
+  if (!activated) {
+    throw new Error(`Drag did not activate for ${sourceSelector}.`);
+  }
 }
 
 function buildHarnessState() {
-  const weekStart = startOfWeek(new Date());
+  // Anchor the harness calendar to next week so seeded sessions are always in the future
+  // (teacher scheduler locks past sessions from being moved).
+  const weekStart = startOfWeek(addDays(new Date(), 7));
   const previewNowIso = new Date(weekStart);
   previewNowIso.setDate(previewNowIso.getDate() - 1);
   previewNowIso.setHours(0, 0, 0, 0);
@@ -556,6 +557,17 @@ function startHarnessServer() {
     responseJson(res, { success: true, classrooms: state.classrooms });
   });
 
+  app.get('/api/admin/teachers', (req, res) => {
+    responseJson(res, {
+      success: true,
+      teachers: [
+        { uid: 'teacher-1', displayName: 'Teacher One', email: 'teacher1@example.com' },
+        { uid: 'teacher-2', displayName: 'Teacher Two', email: 'teacher2@example.com' }
+      ],
+      count: 2
+    });
+  });
+
   app.get('/api/admin/scheduler/workspace', (req, res) => {
     state.refreshSummaries();
     responseJson(res, {
@@ -563,6 +575,114 @@ function startHarnessServer() {
       classrooms: state.classrooms,
       sessions: state.activeSessions().map((session) => normalizeScheduledSession(session))
     });
+  });
+
+  app.get('/api/teacher/scheduler/workspace', (req, res) => {
+    const from = String(req.query?.from || '').trim();
+    const to = String(req.query?.to || '').trim();
+    state.refreshSummaries();
+
+    let sessions = state.activeSessions().map((session) => normalizeScheduledSession(session));
+    if (from) sessions = sessions.filter((session) => String(session.scheduledLocalDate || '') >= from);
+    if (to) sessions = sessions.filter((session) => String(session.scheduledLocalDate || '') <= to);
+
+    responseJson(res, {
+      success: true,
+      classrooms: state.classrooms,
+      sessions,
+      from,
+      to
+    });
+  });
+
+  app.post('/api/teacher/classrooms/:classId/sessions/add', (req, res) => {
+    requestLog.push({ method: req.method, path: req.path, body: req.body || {} });
+    const classroom = state.getClassroom(req.params.classId);
+    if (!classroom) {
+      return responseJson(res, { success: false, error: 'NOT_FOUND', message: 'Missing classroom.' }, 404);
+    }
+
+    const durationMinutes = Number(req.body?.durationMinutes || classroom.scheduleConfig?.sessionMinutes || 60) || 60;
+    const teacherUid = classroom.primaryTeacherUid || null;
+    const proposal = normalizeScheduledSession({
+      sessionId: 'proposal',
+      classId: classroom.classroomId || classroom.id,
+      courseId: classroom.courseId || null,
+      teacherUid,
+      ...buildCanonicalScheduledWindow({
+        targetLocalDate: req.body?.targetLocalDate,
+        targetLocalTime: req.body?.targetLocalTime,
+        timezone: req.body?.timezone || classroom.scheduleConfig?.timezone || 'UTC',
+        durationMinutes
+      }),
+      durationMinutes,
+      timezone: req.body?.timezone || classroom.scheduleConfig?.timezone || 'UTC',
+      status: 'scheduled',
+      attendanceState: 'none',
+      lockState: 'unlocked',
+      version: 1
+    });
+
+    if (state.hasTeacherConflict(proposal)) {
+      return responseJson(res, { success: false, error: 'TEACHER_CONFLICT', message: 'Teacher conflict.' }, 409);
+    }
+
+    const existingOverflow = state.listClassSessions(classroom.classroomId || classroom.id)
+      .filter((session) => String(session.unitType || '') === 'overflow' && String(session.status || '') !== 'cancelled');
+
+    const session = state.createSession(req.params.classId, {
+      courseId: classroom.courseId || null,
+      teacherUid,
+      ...buildCanonicalScheduledWindow({
+        targetLocalDate: req.body?.targetLocalDate,
+        targetLocalTime: req.body?.targetLocalTime,
+        timezone: req.body?.timezone || classroom.scheduleConfig?.timezone || 'UTC',
+        durationMinutes
+      }),
+      unitType: 'overflow',
+      overflowSequence: existingOverflow.length + 1,
+      status: 'scheduled',
+      attendanceState: 'none',
+      lockState: 'unlocked',
+      timezone: req.body?.timezone || classroom.scheduleConfig?.timezone || 'UTC',
+      durationMinutes,
+      version: 1
+    });
+
+    state.bumpScheduleVersion(req.params.classId);
+    responseJson(res, { success: true, session });
+  });
+
+  app.post('/api/teacher/classrooms/:classId/sessions/add-multi', (req, res) => {
+    requestLog.push({ method: req.method, path: req.path, body: req.body || {} });
+    responseJson(res, { success: true, createdSessions: [], skippedOccurrences: [] });
+  });
+
+  app.patch('/api/teacher/sessions/:sessionId/reschedule', (req, res) => {
+    requestLog.push({ method: req.method, path: req.path, body: req.body || {} });
+    const existing = state.sessions.find((session) => String(session.sessionId || '') === String(req.params.sessionId || ''));
+    if (!existing) {
+      return responseJson(res, { success: false, error: 'NOT_FOUND', message: 'Missing session.' }, 404);
+    }
+
+    const proposal = normalizeScheduledSession({
+      ...existing,
+      ...buildCanonicalScheduledWindow({
+        targetLocalDate: req.body?.targetLocalDate,
+        targetLocalTime: req.body?.targetLocalTime,
+        timezone: req.body?.timezone || existing.timezone || 'UTC',
+        durationMinutes: req.body?.durationMinutes || existing.durationMinutes || 60
+      }),
+      timezone: req.body?.timezone || existing.timezone || 'UTC',
+      durationMinutes: req.body?.durationMinutes || existing.durationMinutes || 60
+    });
+
+    if (state.hasTeacherConflict(proposal, [req.params.sessionId])) {
+      return responseJson(res, { success: false, error: 'TEACHER_CONFLICT', message: 'Teacher conflict.' }, 409);
+    }
+
+    const session = state.rescheduleSession(req.params.sessionId, req.body || {});
+    responseJson(res, { success: true, session });
   });
 
   app.get('/api/admin/leads', (req, res) => {
@@ -883,6 +1003,11 @@ function startHarnessServer() {
   page.on('pageerror', (error) => {
     errors.push(error.message);
   });
+  page.on('requestfailed', (request) => {
+    const failure = request.failure();
+    const errorText = failure && failure.errorText ? failure.errorText : 'requestfailed';
+    errors.push(`${errorText}: ${request.url()}`);
+  });
   page.on('console', (message) => {
     if (message.type() === 'error') {
       const text = message.text();
@@ -902,142 +1027,138 @@ function startHarnessServer() {
   });
 
   try {
-    await page.goto(`${origin}/crm-admin.html#courses/classes`, { waitUntil: 'domcontentloaded' });
-    await page.waitForSelector('#scheduler-class-list .scheduler-class-card');
-    await page.waitForSelector('#scheduler-calendar .scheduler-calendar-slot');
+    await page.goto(`${origin}/crm-admin.html#courses/teacher-schedule`, { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('#teacher-scheduler-class-list .teacher-scheduler-class-card');
+    await page.waitForSelector('#teacher-scheduler-calendar .teacher-scheduler-slot[data-date][data-time]');
 
-    const weekStart = startOfWeek(new Date());
+    // Match the harness seed calendar (next week) so sessions remain movable (not locked as "past").
+    const weekStart = startOfWeek(addDays(new Date(), 7));
     const recurringDate = toLocalDateInput(addDays(weekStart, 1));
     const replaceDate = toLocalDateInput(addDays(weekStart, 4));
     const conflictDate = toLocalDateInput(addDays(weekStart, 0));
-    const classCardSelector = '#scheduler-class-list .scheduler-class-card[data-classroom-id="class-1"]';
-    const lockedClassCardSelector = '#scheduler-class-list .scheduler-class-card[data-classroom-id="class-locked"]';
-    const recurringTarget = page.locator(`#scheduler-calendar .scheduler-calendar-slot[data-date="${recurringDate}"][data-time="09:00"]`);
-    const replaceTarget = page.locator(`#scheduler-calendar .scheduler-calendar-slot[data-date="${replaceDate}"][data-time="10:30"]`);
-    const replaceTargetSelector = `#scheduler-calendar .scheduler-calendar-slot[data-date="${replaceDate}"][data-time="10:30"]`;
-    const recurringTargetSelector = `#scheduler-calendar .scheduler-calendar-slot[data-date="${recurringDate}"][data-time="09:00"]`;
-    const conflictTargetSelector = `#scheduler-calendar .scheduler-calendar-slot[data-date="${conflictDate}"][data-time="11:00"]`;
-    await recurringTarget.scrollIntoViewIfNeeded();
-    await replaceTarget.scrollIntoViewIfNeeded();
+    const weekEnd = toLocalDateInput(addDays(weekStart, 6));
+
+    // The teacher scheduler defaults to the current week; switch to the seeded range.
+    await page.locator('#teacher-scheduler-from-date').fill(conflictDate);
+    await page.locator('#teacher-scheduler-to-date').fill(weekEnd);
+    await page.click('#btn-teacher-scheduler-refresh');
+    await page.waitForSelector(`#teacher-scheduler-calendar .teacher-scheduler-slot[data-date="${conflictDate}"][data-time]`);
+
+    const classCardSelector = '#teacher-scheduler-class-list .teacher-scheduler-class-card[data-classroom-id="class-1"]';
+    const sessionPillSelector = '#teacher-scheduler-calendar .teacher-scheduler-session-pill[data-session-id="session-1"]';
+    const originalSlotSelector = `#teacher-scheduler-calendar .teacher-scheduler-slot[data-date="${recurringDate}"][data-time="09:00"]`;
+    const conflictTargetSelector = `#teacher-scheduler-calendar .teacher-scheduler-slot[data-date="${conflictDate}"][data-time="11:00"]`;
+    const placeTargetSelector = `#teacher-scheduler-calendar .teacher-scheduler-slot[data-date="${conflictDate}"][data-time="12:00"]`;
+    const rescheduleTargetSelector = `#teacher-scheduler-calendar .teacher-scheduler-slot[data-date="${conflictDate}"][data-time="13:00"]`;
+
+    await page.waitForSelector(sessionPillSelector);
     await page.locator(classCardSelector).scrollIntoViewIfNeeded();
-
-    await page.locator('#scheduler-teacher-filter').focus();
-    await dragBetween(page, classCardSelector, recurringTargetSelector);
-    await page.locator('#scheduler-action-modal').waitFor({ state: 'visible' });
-    await page.keyboard.press('Escape');
-    await page.locator('#scheduler-action-modal').waitFor({ state: 'hidden' });
-    await page.waitForFunction(() => document.activeElement && document.activeElement.id === 'scheduler-teacher-filter');
-
-    await dragBetween(page, classCardSelector, recurringTargetSelector);
-    await page.locator('#scheduler-action-modal').waitFor({ state: 'visible' });
-    await page.locator('#scheduler-action-add-recurring').check();
-    await page.locator('#scheduler-action-recurring-count').fill('3');
-    await page.waitForFunction(() => {
-      const requested = document.querySelector('#scheduler-action-preview-requested')?.textContent?.trim();
-      const valid = document.querySelector('#scheduler-action-preview-valid')?.textContent?.trim();
-      const skipped = document.querySelector('#scheduler-action-preview-skipped')?.textContent?.trim();
-      const overflow = document.querySelector('#scheduler-action-preview-overflow')?.textContent?.trim();
-      return requested === '3' && valid === '2' && skipped === '1' && overflow === '2';
-    });
-    await page.locator('#btn-confirm-scheduler-action').click();
-    await page.locator('#scheduler-action-modal').waitFor({ state: 'hidden' });
-
-    await page.waitForFunction(() => {
-      const card = document.querySelector('#scheduler-class-list .scheduler-class-card[data-classroom-id="class-1"]');
-      return card && /overflow 2/i.test(card.textContent || '');
-    });
-
-    const railAfterRecurring = await page.locator('#scheduler-class-list .scheduler-class-card[data-classroom-id="class-1"]').textContent();
-    assert.match(String(railAfterRecurring || ''), /Assigned 2\/2/i);
-    assert.match(String(railAfterRecurring || ''), /overflow 2/i);
-
-    await page.locator(lockedClassCardSelector).scrollIntoViewIfNeeded();
-    await replaceTarget.scrollIntoViewIfNeeded();
-    await dragBetween(page, lockedClassCardSelector, replaceTargetSelector);
-    await page.locator('#scheduler-action-modal').waitFor({ state: 'visible' });
-    await page.locator('#scheduler-action-replace-button').click();
-    await page.waitForFunction(() => {
-      const summary = document.querySelector('#scheduler-action-replace-summary')?.textContent || '';
-      return /attendance started/i.test(summary);
-    });
-    await page.waitForFunction(() => {
-      const confirm = document.querySelector('#btn-confirm-scheduler-action');
-      return !!confirm && confirm.disabled;
-    });
-    const lockedReplaceSummary = await page.locator('#scheduler-action-replace-summary').textContent();
-    assert.match(String(lockedReplaceSummary || ''), /attendance started/i);
-    await page.keyboard.press('Escape');
-    await page.locator('#scheduler-action-modal').waitFor({ state: 'hidden' });
-
-    await replaceTarget.scrollIntoViewIfNeeded();
-    await page.locator(classCardSelector).scrollIntoViewIfNeeded();
-    await dragBetween(page, classCardSelector, replaceTargetSelector);
-    await page.locator('#scheduler-action-modal').waitFor({ state: 'visible' });
-    await page.locator('#scheduler-action-replace-button').click();
-    const replacementChoice = page.locator('#scheduler-action-replace-list [data-session-id="session-2"]');
-    await replacementChoice.focus();
-    await page.keyboard.press('Enter');
-    await page.waitForFunction(() => {
-      const selected = document.querySelector('#scheduler-action-replace-list [data-session-id="session-2"].is-selected');
-      return !!selected;
-    });
-    await page.locator('#btn-confirm-scheduler-action').click();
-    await page.locator('#scheduler-action-modal').waitFor({ state: 'hidden' });
-
-    await page.waitForFunction((selector) => {
-      const target = document.querySelector(selector);
-      return target && /Unit 2/i.test(target.textContent || '');
-    }, replaceTargetSelector);
-
-    const replaceCellText = await replaceTarget.textContent();
-    assert.match(String(replaceCellText || ''), /Unit 2/i);
-
-    await page.locator('#scheduler-calendar .scheduler-session-pill[data-session-id="session-1"]').scrollIntoViewIfNeeded();
+    await page.locator(originalSlotSelector).scrollIntoViewIfNeeded();
     await page.locator(conflictTargetSelector).scrollIntoViewIfNeeded();
-    await dragBetween(page, '#scheduler-calendar .scheduler-session-pill[data-session-id="session-1"]', conflictTargetSelector);
+
+    // Sanity check: placement mode wiring must be active before drag assertions.
+    await page.click(classCardSelector);
+    await page.waitForFunction((selector) => {
+      const el = document.querySelector(selector);
+      return !!el && el.classList.contains('is-armed');
+    }, classCardSelector);
+    await page.keyboard.press('Escape');
+
+    // Negative case: conflict placement should not call the API
+    await page.click(classCardSelector);
+    await page.waitForFunction((selector) => {
+      const el = document.querySelector(selector);
+      return !!el && el.classList.contains('is-armed');
+    }, classCardSelector);
+    await page.click(conflictTargetSelector);
     await page.waitForTimeout(300);
+    assert.ok(
+      !requestLog.some((entry) => entry.path === '/api/teacher/classrooms/class-1/sessions/add'),
+      'Unexpected teacher add request on conflict placement.'
+    );
     const conflictCellText = await page.locator(conflictTargetSelector).textContent();
     assert.doesNotMatch(String(conflictCellText || ''), /Mr\. Long/i);
-    const originalCellText = await page.locator(recurringTargetSelector).textContent();
+    const originalCellText = await page.locator(originalSlotSelector).textContent();
     assert.match(String(originalCellText || ''), /Mr\. Long/i);
+    await page.keyboard.press('Escape');
+
+    // Place a session via placement mode
+    await page.click(classCardSelector);
+    await page.waitForFunction((selector) => {
+      const el = document.querySelector(selector);
+      return !!el && el.classList.contains('is-armed');
+    }, classCardSelector);
+    await page.locator(placeTargetSelector).scrollIntoViewIfNeeded();
+    await page.click(placeTargetSelector);
+    await page.waitForFunction((selector) => {
+      const el = document.querySelector(selector);
+      return !!el && /Mr\. Long/i.test(el.textContent || '');
+    }, placeTargetSelector);
+    await page.keyboard.press('Escape');
+
+    // Negative case: dragging onto a conflicting slot should be blocked client-side (no API call)
+    const initialTeacherRescheduleCount = requestLog.filter(
+      (entry) => entry.path === '/api/teacher/sessions/session-1/reschedule'
+    ).length;
+    await page.locator(sessionPillSelector).scrollIntoViewIfNeeded();
+    await dragBetween(page, sessionPillSelector, conflictTargetSelector);
+    await page.waitForTimeout(300);
+    assert.strictEqual(
+      requestLog.filter((entry) => entry.path === '/api/teacher/sessions/session-1/reschedule').length,
+      initialTeacherRescheduleCount,
+      'Unexpected teacher reschedule request on conflict drag.'
+    );
+    await page.waitForSelector(`${originalSlotSelector} .teacher-scheduler-session-pill[data-session-id="session-1"]`);
+    assert.strictEqual(
+      await page.locator(`${conflictTargetSelector} .teacher-scheduler-session-pill[data-session-id="session-1"]`).count(),
+      0,
+      'Session pill moved into conflict slot unexpectedly.'
+    );
+
+    // Reschedule session-1 to a safe slot (drag + API + refresh)
+    await page.locator(rescheduleTargetSelector).scrollIntoViewIfNeeded();
+    await dragBetween(page, sessionPillSelector, rescheduleTargetSelector);
+    assert.ok(
+      await waitForPredicate(
+        () => requestLog.some((entry) => entry.path === '/api/teacher/sessions/session-1/reschedule'),
+        30000
+      ),
+      'Expected Teacher Schedule reschedule request to be logged.'
+    );
+    const updatedSession = state.sessions.find((session) => String(session.sessionId || '') === 'session-1') || null;
+    assert.ok(updatedSession, 'Missing session-1 after reschedule.');
+    assert.strictEqual(String(updatedSession.scheduledLocalDate || ''), conflictDate);
+    assert.strictEqual(String(updatedSession.scheduledLocalTime || '').slice(0, 5), '13:00');
+    await page.evaluate(() => {
+      const btn = document.getElementById('btn-teacher-scheduler-refresh');
+      if (btn) btn.click();
+    });
+    await page.waitForSelector(`${rescheduleTargetSelector} .teacher-scheduler-session-pill[data-session-id="session-1"]`);
 
     const requestPaths = requestLog.map((entry) => entry.path);
-    assert.ok(requestPaths.includes('/api/admin/classrooms/class-1/sessions/add-preview'));
-    assert.ok(requestPaths.includes('/api/admin/classrooms/class-1/sessions/add-batch'));
-    assert.ok(requestPaths.includes('/api/admin/classrooms/class-locked/sessions/replace-preview'));
-    assert.ok(requestPaths.includes('/api/admin/classrooms/class-1/sessions/replace-preview'));
-    assert.ok(requestPaths.includes('/api/admin/classrooms/class-1/sessions/replace'));
-    assert.ok(requestPaths.includes('/api/admin/sessions/session-1/reschedule'));
+    assert.ok(requestPaths.includes('/api/teacher/classrooms/class-1/sessions/add'));
+    assert.ok(requestPaths.includes('/api/teacher/sessions/session-1/reschedule'));
 
-    const addPreviewRequest = [...requestLog]
-      .reverse()
-      .find((entry) => entry.path === '/api/admin/classrooms/class-1/sessions/add-preview' && entry.body.addMode === 'recurring');
-    assert.strictEqual(addPreviewRequest.body.targetLocalDate, recurringDate);
-    assert.strictEqual(addPreviewRequest.body.targetLocalTime, '09:00');
-    assert.strictEqual(addPreviewRequest.body.addMode, 'recurring');
-    assert.strictEqual(Number(addPreviewRequest.body.recurringCount), 3);
+    const teacherAddRequest = requestLog.find((entry) => entry.path === '/api/teacher/classrooms/class-1/sessions/add');
+    assert.ok(teacherAddRequest);
+    assert.strictEqual(teacherAddRequest.body.targetLocalDate, conflictDate);
+    assert.strictEqual(teacherAddRequest.body.targetLocalTime, '12:00');
 
-    const addBatchRequest = requestLog.find((entry) => entry.path === '/api/admin/classrooms/class-1/sessions/add-batch');
-    assert.strictEqual(addBatchRequest.body.targetLocalDate, recurringDate);
-    assert.strictEqual(addBatchRequest.body.targetLocalTime, '09:00');
+    const teacherRescheduleRequest = requestLog.find((entry) => entry.path === '/api/teacher/sessions/session-1/reschedule');
+    assert.ok(teacherRescheduleRequest);
+    assert.strictEqual(teacherRescheduleRequest.body.targetLocalDate, conflictDate);
+    assert.strictEqual(teacherRescheduleRequest.body.targetLocalTime, '13:00');
 
-    const replaceRequest = requestLog.find((entry) => entry.path === '/api/admin/classrooms/class-1/sessions/replace');
-    assert.strictEqual(replaceRequest.body.replacedSessionId, 'session-2');
-    assert.strictEqual(replaceRequest.body.targetLocalDate, replaceDate);
-    assert.strictEqual(replaceRequest.body.targetLocalTime, '10:30');
-
-    const rescheduleRequest = requestLog.find((entry) => entry.path === '/api/admin/sessions/session-1/reschedule');
-    assert.strictEqual(rescheduleRequest.body.targetLocalDate, conflictDate);
-    assert.strictEqual(rescheduleRequest.body.targetLocalTime, '11:00');
-
-    await page.goto(`${origin}/crm-admin.html#courses/class-management`, { waitUntil: 'domcontentloaded' });
+    await page.evaluate(() => {
+      window.location.hash = '#courses/class-management';
+    });
     await page.waitForSelector('#class-management-grid .crm-classroom-link[data-classroom-id="class-1"]');
     await page.click('#class-management-grid .crm-classroom-link[data-classroom-id="class-1"]');
     await page.waitForSelector('#crm-classroom-modal', { state: 'visible' });
     await page.click('.crm-sidebar-item[data-tab="scheduling"]');
     await page.locator('#classroom-regenerate-from-date').fill(replaceDate);
     await page.locator('#classroom-regenerate-session-minutes').fill('60');
-    await page.locator('#classroom-regenerate-weekdays').fill('fri');
+    await page.click('#classroom-regenerate-weekdays-selector .crm-weekday-btn[data-day="fri"]');
     await page.locator('#classroom-regenerate-start-time').fill('12:00');
     await page.click('#btn-preview-classroom-regeneration');
     await page.waitForTimeout(1000);

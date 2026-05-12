@@ -9,9 +9,7 @@
   const homeHref = locale === 'vi' ? '/landing/vi/' : '/landing/en/';
 
   const links = [
-    { id: 'home', label: 'Home', href: homeHref },
-    { id: 'practice', label: 'Practice', href: '/index.html' },
-    { id: 'about', label: 'About Us', href: '/about/' }
+    { id: 'practice', label: 'Practice', href: '/index.html' }
   ];
 
   const header = document.createElement('header');
@@ -23,7 +21,7 @@
 
   const brand = document.createElement('a');
   brand.className = 'site-header__brand';
-  brand.href = homeHref;
+  brand.href = '/index.html';
   brand.innerHTML = `
     <span class="site-header__brand-mark" aria-hidden="true">BEL</span>
     <span class="site-header__brand-copy">

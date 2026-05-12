@@ -30,11 +30,6 @@
         { id: 'courses', label: 'Courses' },
         { id: 'classes', label: 'Classes' },
         { id: 'teacher-schedule', label: 'Teacher Schedule' },
-        { id: 'zoom-links', label: 'Zoom Links' },
-        { id: 'materials', label: 'Materials' },
-        { id: 'planning', label: 'Planning' },
-        { id: 'new-planning', label: 'New Planning' },
-        { id: 'admission-calendar', label: 'Admission Calendar' },
         { id: 'class-management', label: 'Class Management' }
       ]
     },
@@ -99,7 +94,8 @@
     ...DEFAULT_ROUTE,
     studentLookup: '',
     studentReturnRoute: null,
-    devToolsAvailable: false
+    devToolsAvailable: false,
+    accessMode: 'unknown'
   };
   const elements = {};
   const dataCache = {
@@ -114,8 +110,9 @@
   const selectedClassroomIds = new Set();
   let adminCapabilities = { ...DEFAULT_ADMIN_CAPABILITIES };
   let dashboardController = null;
-  let schedulerController = null;
   let teacherSchedulerController = null;
+  let teacherSchedulerInitialized = false;
+  let staffWorkspaceController = null;
   let studentFinanceController = null;
   let liveDeliveryController = null;
   let studentModalController = null;
@@ -547,40 +544,8 @@
     elements.inputLiveSessionMeetingId = document.getElementById('input-live-session-meeting-id');
     elements.inputLiveSessionPasscode = document.getElementById('input-live-session-passcode');
     elements.inputLiveSessionNotes = document.getElementById('input-live-session-notes');
-    elements.schedulerWorkspace = document.getElementById('scheduler-workspace');
-    elements.schedulerCalendar = document.getElementById('scheduler-calendar');
-    elements.schedulerClassRail = document.getElementById('scheduler-class-rail');
-    elements.schedulerClassList = document.getElementById('scheduler-class-list');
-    elements.btnRefreshScheduler = document.getElementById('btn-refresh-scheduler');
-    elements.btnSeedScheduler = document.getElementById('btn-seed-scheduler');
-    elements.inputSchedulerTeacherFilter = document.getElementById('scheduler-teacher-filter');
-    elements.inputSchedulerFromDate = document.getElementById('scheduler-from-date');
-    elements.inputSchedulerToDate = document.getElementById('scheduler-to-date');
     elements.classroomScheduleSummary = document.getElementById('classroom-schedule-summary');
-    elements.schedulerActionModal = document.getElementById('scheduler-action-modal');
-    elements.btnCloseSchedulerActionModal = document.getElementById('btn-close-scheduler-action-modal');
-    elements.btnCancelSchedulerAction = document.getElementById('btn-cancel-scheduler-action');
-    elements.btnConfirmSchedulerAction = document.getElementById('btn-confirm-scheduler-action');
-    elements.schedulerActionTitle = document.getElementById('scheduler-action-title');
-    elements.schedulerActionBadge = document.getElementById('scheduler-action-badge');
-    elements.schedulerActionClassName = document.getElementById('scheduler-action-class-name');
-    elements.schedulerActionTargetDateTime = document.getElementById('scheduler-action-target-datetime');
-    elements.schedulerActionTeacher = document.getElementById('scheduler-action-teacher');
-    elements.schedulerActionContractSummary = document.getElementById('scheduler-action-contract-summary');
-    elements.schedulerActionAddButton = document.getElementById('scheduler-action-add-button');
-    elements.schedulerActionReplaceButton = document.getElementById('scheduler-action-replace-button');
-    elements.schedulerActionAddPanel = document.getElementById('scheduler-action-add-panel');
-    elements.schedulerActionReplacePanel = document.getElementById('scheduler-action-replace-panel');
-    elements.schedulerActionAddOnce = document.getElementById('scheduler-action-add-once');
-    elements.schedulerActionAddRecurring = document.getElementById('scheduler-action-add-recurring');
-    elements.schedulerActionRecurringCount = document.getElementById('scheduler-action-recurring-count');
-    elements.schedulerActionAddWarning = document.getElementById('scheduler-action-add-warning');
-    elements.schedulerActionPreviewRequested = document.getElementById('scheduler-action-preview-requested');
-    elements.schedulerActionPreviewValid = document.getElementById('scheduler-action-preview-valid');
-    elements.schedulerActionPreviewSkipped = document.getElementById('scheduler-action-preview-skipped');
-    elements.schedulerActionPreviewOverflow = document.getElementById('scheduler-action-preview-overflow');
-    elements.schedulerActionReplaceSummary = document.getElementById('scheduler-action-replace-summary');
-    elements.schedulerActionReplaceList = document.getElementById('scheduler-action-replace-list');
+
     elements.teacherSchedulerWorkspace = document.getElementById('teacher-scheduler-workspace');
     elements.teacherSchedulerClassList = document.getElementById('teacher-scheduler-class-list');
     elements.teacherSchedulerCalendar = document.getElementById('teacher-scheduler-calendar');
@@ -616,6 +581,18 @@
     elements.btnTeacherSchedulerCancelSession = document.getElementById('btn-teacher-scheduler-cancel-session');
     elements.btnTeacherSchedulerDuplicateSession = document.getElementById('btn-teacher-scheduler-duplicate-session');
     elements.btnTeacherSchedulerCloseBubble = document.getElementById('btn-teacher-scheduler-close-bubble');
+
+    elements.btnStaffRefresh = document.getElementById('btn-staff-refresh');
+    elements.staffTeacherEmail = document.getElementById('staff-teacher-email');
+    elements.staffTeacherDisplayName = document.getElementById('staff-teacher-display-name');
+    elements.staffTeacherPassword = document.getElementById('staff-teacher-password');
+    elements.btnStaffGeneratePassword = document.getElementById('btn-staff-generate-password');
+    elements.btnStaffTogglePassword = document.getElementById('btn-staff-toggle-password');
+    elements.btnStaffCopyPassword = document.getElementById('btn-staff-copy-password');
+    elements.btnStaffCreateTeacher = document.getElementById('btn-staff-create-teacher');
+    elements.staffCreateTeacherError = document.getElementById('staff-create-teacher-error');
+    elements.staffTeacherList = document.getElementById('staff-teacher-list');
+
     elements.bulkDeleteWarningModal = document.getElementById('bulk-delete-warning-modal');
     elements.bulkDeleteWarningTitle = document.getElementById('bulk-delete-warning-title');
     elements.bulkDeleteWarningBadge = document.getElementById('bulk-delete-warning-badge');
@@ -809,7 +786,15 @@
   function isLocalhostUrl(urlStr) {
     try {
       const parsed = new URL(urlStr);
-      return ['localhost', '127.0.0.1', '[::1]'].includes(parsed.hostname.toLowerCase());
+      return ['localhost', '127.0.0.1', '0.0.0.0', '::1'].includes(parsed.hostname.toLowerCase());
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function isLikelyLocalEnvironment() {
+    try {
+      return isLocalhostUrl(window.location.origin);
     } catch (_) {
       return false;
     }
@@ -1023,33 +1008,56 @@
   /* ──────────────────────────────────────────────────────────── */
 
   async function init() {
-    showGateMessage('Checking admin access…', 'Please wait');
+    showGateMessage('Checking access…', 'Please wait');
 
     await initFirebaseFromServer();
 
     const user = await waitForAuthUser({ timeoutMs: 12000, nullGraceMs: 1500 });
     if (!user) {
-      showGateMessage('Please log in as admin first.', 'Redirecting to the app…');
+      showGateMessage('Please log in first.', 'Redirecting to the app…');
       setTimeout(() => window.location.replace('index.html'), 1800);
       return;
     }
 
     const adminOk = await isAdminUser(user);
-    if (!adminOk) {
-      showGateMessage('Access denied.', 'Admin privileges required.');
+    const teacherOk = adminOk ? false : await isTeacherUser(user);
+    if (!adminOk && !teacherOk) {
+      showGateMessage('Access denied.', 'Admin or teacher privileges required.');
       setTimeout(() => window.location.replace('index.html'), 2200);
       return;
     }
+    state.accessMode = adminOk ? 'admin' : 'teacher';
 
     // Ready
     hideGate();
     setupScoreDecorations();
     setupMoneyInputs();
 
-    await initDevTools();
+    if (state.accessMode === 'admin') {
+      if (isLikelyLocalEnvironment()) {
+        await initDevTools();
+      }
+    }
 
     // Initialize Ollama health status
-    checkOllamaHealth().catch(() => { });
+    const shouldAutoCheckOllama = (() => {
+      try {
+        // Avoid noisy CORS console errors on production when Ollama is not explicitly configured.
+        if (localStorage.getItem('crm:ollama_base_url')) return true;
+      } catch (_) {
+        // ignore storage errors
+      }
+      return isLikelyLocalEnvironment();
+    })();
+
+    if (shouldAutoCheckOllama) {
+      checkOllamaHealth().catch(() => { });
+    } else {
+      _ollamaHealth.online = false;
+      _ollamaHealth.model = localStorage.getItem('crm:ollama_model') || 'gemma4:latest';
+      _ollamaHealth.lastCheck = Date.now();
+      updateOllamaStatusUI();
+    }
 
     // Bind Ollama refresh button
     const ollamaRefreshBtn = document.getElementById('btn-ollama-refresh');
@@ -1059,24 +1067,26 @@
       });
     }
 
-    // Initialize BEL Assistant
-    if (typeof window.CrmBelAssistant === 'object' && elements.belChatLauncher) {
-      const belController = window.CrmBelAssistant.createController({
-        elements,
-        showToast,
-        fetchGemmaJSON,
-        getActivePanel: () => {
-          return state.sub ? `${state.main}/${state.sub}` : state.main;
-        }
-      });
-      belController.init();
-      // Store reference so panel changes can notify the assistant
-      state._belController = belController;
-    }
+    if (state.accessMode === 'admin') {
+      // Initialize BEL Assistant
+      if (typeof window.CrmBelAssistant === 'object' && elements.belChatLauncher) {
+        const belController = window.CrmBelAssistant.createController({
+          elements,
+          showToast,
+          fetchGemmaJSON,
+          getActivePanel: () => {
+            return state.sub ? `${state.main}/${state.sub}` : state.main;
+          }
+        });
+        belController.init();
+        // Store reference so panel changes can notify the assistant
+        state._belController = belController;
+      }
 
-    // Initialize teacher searchable dropdown
-    initTeacherSearchDropdown();
-    initWeekdaySelector();
+      // Initialize teacher searchable dropdown
+      initTeacherSearchDropdown();
+      initWeekdaySelector();
+    }
 
     if (elements.btnGenerateAiSummary) {
       let studentSummaryAbort = null;
@@ -1198,14 +1208,6 @@
         formatDateTime,
         escapeHtml,
         getAdminCapabilities
-      })
-      : null;
-    schedulerController = window.CrmSchedulerWorkspace && typeof window.CrmSchedulerWorkspace.createController === 'function'
-      ? window.CrmSchedulerWorkspace.createController({
-        elements,
-        modalState,
-        showToast,
-        escapeHtml
       })
       : null;
     teacherSchedulerController = window.TeacherSchedulerWorkspace && typeof window.TeacherSchedulerWorkspace.createController === 'function'
@@ -1370,57 +1372,70 @@
         populateClassroomCourseOptions
       })
       : null;
-    setupTabs();
-    setupLeadComposer();
-    setupActivitySurfaces();
-    if (schedulerController && typeof schedulerController.init === 'function') {
-      schedulerController.init();
+    staffWorkspaceController = state.accessMode === 'admin'
+      && window.CrmStaffWorkspace
+      && typeof window.CrmStaffWorkspace.createController === 'function'
+      ? window.CrmStaffWorkspace.createController({
+        elements,
+        showToast,
+        apiFetchJson,
+        escapeHtml
+      })
+      : null;
+    if (staffWorkspaceController && typeof staffWorkspaceController.init === 'function') {
+      staffWorkspaceController.init();
     }
-    if (teacherSchedulerController && typeof teacherSchedulerController.init === 'function') {
-      teacherSchedulerController.init();
+    setupTabs();
+    if (state.accessMode === 'admin') {
+      setupLeadComposer();
+      setupActivitySurfaces();
+    } else {
+      applyTeacherModeLockdown();
     }
     applyRouteFromHash({ initial: true });
     render();
 
-    refreshStudentLists().catch((e) => {
-      console.error('[CRM Admin] Failed to load student lists:', e);
-      showToast(e?.message || 'Failed to load student list.', 'error');
-    });
+    if (state.accessMode === 'admin') {
+      refreshStudentLists().catch((e) => {
+        console.error('[CRM Admin] Failed to load student lists:', e);
+        showToast(e?.message || 'Failed to load student list.', 'error');
+      });
 
-    refreshClassroomList().catch((e) => {
-      console.error('[CRM Admin] Failed to load classrooms:', e);
-      showToast(e?.message || 'Failed to load classrooms.', 'error');
-    });
+      refreshClassroomList().catch((e) => {
+        console.error('[CRM Admin] Failed to load classrooms:', e);
+        showToast(e?.message || 'Failed to load classrooms.', 'error');
+      });
 
-    refreshCourseCatalog().catch((e) => {
-      console.error('[CRM Admin] Failed to load course catalog:', e);
-      showToast(e?.message || 'Failed to load courses.', 'error');
-    });
+      refreshCourseCatalog().catch((e) => {
+        console.error('[CRM Admin] Failed to load course catalog:', e);
+        showToast(e?.message || 'Failed to load courses.', 'error');
+      });
 
-    refreshLeadPipeline().catch((e) => {
-      console.error('[CRM Admin] Failed to load leads:', e);
-      showToast(e?.message || 'Failed to load leads.', 'error');
-    });
+      refreshLeadPipeline().catch((e) => {
+        console.error('[CRM Admin] Failed to load leads:', e);
+        showToast(e?.message || 'Failed to load leads.', 'error');
+      });
 
-    refreshOpenTaskSnapshot().catch((e) => {
-      console.error('[CRM Admin] Failed to load task reminders:', e);
-      showToast(e?.message || 'Failed to load task reminders.', 'error');
-    });
+      refreshOpenTaskSnapshot().catch((e) => {
+        console.error('[CRM Admin] Failed to load task reminders:', e);
+        showToast(e?.message || 'Failed to load task reminders.', 'error');
+      });
 
-    refreshAttendanceRiskSnapshot().catch((e) => {
-      console.error('[CRM Admin] Failed to load attendance risk snapshot:', e);
-      showToast(e?.message || 'Failed to load attendance summaries.', 'error');
-    });
+      refreshAttendanceRiskSnapshot().catch((e) => {
+        console.error('[CRM Admin] Failed to load attendance risk snapshot:', e);
+        showToast(e?.message || 'Failed to load attendance summaries.', 'error');
+      });
 
-    refreshCommunicationsManager().catch((e) => {
-      console.error('[CRM Admin] Failed to load communications manager:', e);
-      showToast(e?.message || 'Failed to load communications manager.', 'error');
-    });
+      refreshCommunicationsManager().catch((e) => {
+        console.error('[CRM Admin] Failed to load communications manager:', e);
+        showToast(e?.message || 'Failed to load communications manager.', 'error');
+      });
 
-    refreshDashboard().catch((e) => {
-      console.error('[CRM Admin] Failed to load dashboard:', e);
-      showToast(e?.message || 'Failed to load dashboard.', 'error');
-    });
+      refreshDashboard().catch((e) => {
+        console.error('[CRM Admin] Failed to load dashboard:', e);
+        showToast(e?.message || 'Failed to load dashboard.', 'error');
+      });
+    }
   }
 
   async function initFirebaseFromServer() {
@@ -1499,10 +1514,82 @@
     }
   }
 
+  async function isTeacherUser(user) {
+    const claimOk = await isTeacherViaClaims(user);
+    if (claimOk !== null) return claimOk;
+    return isTeacherViaFirestore(user?.uid);
+  }
+
+  async function isTeacherViaClaims(user) {
+    try {
+      if (!user?.getIdTokenResult) return null;
+      const tokenResult = await user.getIdTokenResult();
+      const claims = tokenResult?.claims && typeof tokenResult.claims === 'object'
+        ? tokenResult.claims
+        : {};
+      if (claims.isTeacher === true) return true;
+      if (claims.isAdmin === true) return true;
+      return false;
+    } catch (e) {
+      void e;
+      return null;
+    }
+  }
+
+  async function isTeacherViaFirestore(uid) {
+    if (!uid) return false;
+    try {
+      const snap = await firebase.firestore().collection('users').doc(uid).get();
+      const data = snap.exists ? snap.data() : null;
+      const crmRole = String(data?.crmRole || '').trim().toLowerCase();
+      return data?.isTeacher === true || crmRole === 'teacher';
+    } catch (e) {
+      console.warn('[CRM Admin] Failed to read user profile for isTeacher check:', e?.message || e);
+      return false;
+    }
+  }
+
+  function applyTeacherModeLockdown() {
+    if (!elements.navItems || !elements.dropdownItems || !elements.panels) return;
+
+    elements.navItems.forEach((btn) => {
+      const main = String(btn?.dataset?.main || '').trim();
+      const allow = main === 'courses';
+      btn.style.display = allow ? '' : 'none';
+      btn.disabled = !allow;
+      btn.setAttribute('aria-disabled', allow ? 'false' : 'true');
+    });
+
+    elements.dropdownItems.forEach((btn) => {
+      const sub = String(btn?.dataset?.sub || '').trim();
+      const allow = sub === 'teacher-schedule';
+      btn.style.display = allow ? '' : 'none';
+      btn.disabled = !allow;
+      btn.setAttribute('aria-disabled', allow ? 'false' : 'true');
+    });
+
+    elements.panels.forEach((panel) => {
+      const id = String(panel?.dataset?.panel || '').trim();
+      if (id !== 'courses/teacher-schedule') {
+        panel.style.display = 'none';
+      }
+    });
+  }
+
   function setupTabs() {
     // Main Nav Items
     elements.navItems.forEach((btn) => {
       btn.addEventListener('click', () => {
+        if (state.accessMode === 'teacher') {
+          const main = String(btn?.dataset?.main || '').trim();
+          if (main !== 'courses') {
+            state.main = 'courses';
+            state.sub = 'teacher-schedule';
+            updateHash();
+            render();
+            return;
+          }
+        }
         if (state.studentLookup) {
           clearStudentProfileState();
         }
@@ -1522,6 +1609,16 @@
     elements.dropdownItems.forEach((btn) => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
+        if (state.accessMode === 'teacher') {
+          const requestedSub = String(btn?.dataset?.sub || '').trim();
+          if (requestedSub !== 'teacher-schedule') {
+            state.main = 'courses';
+            state.sub = 'teacher-schedule';
+            updateHash();
+            render();
+            return;
+          }
+        }
         if (state.studentLookup) {
           clearStudentProfileState();
         }
@@ -4142,7 +4239,7 @@
   function isValidSub(main, sub) {
     if (main === 'courses') {
       // Allow the new sub tabs for courses
-      const courseSubs = ['courses', 'classes', 'teacher-schedule', 'zoom-links', 'materials', 'planning', 'new-planning', 'admission-calendar', 'class-management'];
+      const courseSubs = ['courses', 'teacher-schedule', 'zoom-links', 'materials', 'planning', 'new-planning', 'admission-calendar', 'class-management'];
       return courseSubs.includes(sub);
     }
     const group = ROUTES[main];
@@ -4151,6 +4248,24 @@
   }
 
   function applyRouteFromHash({ initial = false } = {}) {
+    if (state.accessMode === 'teacher') {
+      if (state.studentLookup) {
+        clearStudentProfileState();
+      }
+
+      state.main = 'courses';
+      state.sub = 'teacher-schedule';
+      const canonical = getRouteHash(state.main, state.sub);
+      if (window.location.hash !== canonical) {
+        try {
+          window.history.replaceState(null, '', canonical);
+        } catch (_) {
+          updateHash();
+        }
+      }
+      return;
+    }
+
     const raw = (window.location.hash || '').replace(/^#/, '').trim();
     if (!raw) {
       if (state.studentLookup) {
@@ -4258,6 +4373,23 @@
       return;
     }
 
+    if (main === 'courses' && sub === 'classes') {
+      if (state.studentLookup) {
+        clearStudentProfileState();
+      }
+      state.main = 'courses';
+      state.sub = 'teacher-schedule';
+      const canonical = getRouteHash(state.main, state.sub);
+      if (window.location.hash !== canonical) {
+        try {
+          window.history.replaceState(null, '', canonical);
+        } catch (_) {
+          updateHash();
+        }
+      }
+      return;
+    }
+
     if (state.studentLookup) {
       clearStudentProfileState();
     }
@@ -4301,15 +4433,22 @@
       });
     }
 
-    if (activePanel === 'courses/classes') {
-      refreshSchedulerWorkspace().catch((error) => {
-        console.error('[CRM Admin] Scheduler refresh failed:', error);
-      });
-    }
+
 
     if (activePanel === 'courses/teacher-schedule') {
-      refreshTeacherSchedulerWorkspace().catch((error) => {
-        console.error('[CRM Admin] Teacher scheduler refresh failed:', error);
+      if (!teacherSchedulerInitialized && teacherSchedulerController && typeof teacherSchedulerController.init === 'function') {
+        teacherSchedulerInitialized = true;
+        teacherSchedulerController.init();
+      } else {
+        refreshTeacherSchedulerWorkspace().catch((error) => {
+          console.error('[CRM Admin] Teacher scheduler refresh failed:', error);
+        });
+      }
+    }
+
+    if (activePanel === 'staff') {
+      refreshStaffWorkspace().catch((error) => {
+        console.error('[CRM Admin] Staff refresh failed:', error);
       });
     }
 
@@ -4325,19 +4464,16 @@
     }
   }
 
-  function loadSchedulerWorkspace() {
-    if (!schedulerController || typeof schedulerController.load !== 'function') return Promise.resolve();
-    return schedulerController.load();
-  }
 
-  function refreshSchedulerWorkspace() {
-    if (!schedulerController || typeof schedulerController.refresh !== 'function') return Promise.resolve();
-    return schedulerController.refresh();
-  }
 
   function refreshTeacherSchedulerWorkspace() {
     if (!teacherSchedulerController || typeof teacherSchedulerController.refresh !== 'function') return Promise.resolve();
     return teacherSchedulerController.refresh();
+  }
+
+  function refreshStaffWorkspace() {
+    if (!staffWorkspaceController || typeof staffWorkspaceController.refresh !== 'function') return Promise.resolve();
+    return staffWorkspaceController.refresh();
   }
 
   function refreshRecycleBin() {
@@ -5232,7 +5368,7 @@
     if (elements.classroomTitle) elements.classroomTitle.textContent = payload.name;
     renderClassroomSchedulePrompt();
     await refreshClassroomList();
-    await refreshSchedulerWorkspace().catch(() => { });
+
   }
 
   function buildRegenerationRequestPayload() {
@@ -5274,7 +5410,7 @@
     renderClassroomScheduleSummary(res.scheduleSummary || null);
     renderRegenerationPreview(null);
     await refreshClassroomList();
-    await refreshSchedulerWorkspace().catch(() => { });
+
   }
 
   async function refreshClassroomList() {
@@ -6272,22 +6408,11 @@
   async function fetchTeacherList() {
     if (_teacherCache) return _teacherCache;
     try {
-      const db = firebase.firestore();
-      const snap = await db.collection('users').where('role', 'in', ['admin', 'teacher']).get();
-      const list = [];
-      snap.forEach((doc) => {
-        const d = doc.data();
-        list.push({
-          uid: doc.id,
-          displayName: d.displayName || d.name || '',
-          email: d.email || ''
-        });
-      });
-      list.sort((a, b) => {
-        const nameA = (a.displayName || a.email).toLowerCase();
-        const nameB = (b.displayName || b.email).toLowerCase();
-        return nameA.localeCompare(nameB);
-      });
+      if (!window.ClassroomAPI || typeof window.ClassroomAPI.fetchTeachers !== 'function') {
+        console.warn('[CRM] ClassroomAPI.fetchTeachers not available');
+        return [];
+      }
+      const list = await window.ClassroomAPI.fetchTeachers();
       _teacherCache = list;
       return list;
     } catch (e) {
@@ -6498,4 +6623,20 @@
       setTimeout(() => toast.remove(), 220);
     }, 2600);
   }
+
+  // Handle advanced scheduling toggle
+  document.addEventListener('click', (e) => {
+    const toggleBtn = e.target.closest('#toggle-advanced-scheduling');
+    if (toggleBtn) {
+      const advancedFields = document.getElementById('advanced-scheduling-fields');
+      const toggleIcon = document.getElementById('advanced-scheduling-icon');
+      if (advancedFields) {
+        const isHidden = advancedFields.style.display === 'none';
+        advancedFields.style.display = isHidden ? 'block' : 'none';
+        if (toggleIcon) {
+            toggleIcon.textContent = isHidden ? '▼' : '▶';
+        }
+      }
+    }
+  });
 })();

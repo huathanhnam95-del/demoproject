@@ -1,12 +1,7 @@
 /**
  * Write Essay Mode Module (PTE Practice → Writing)
- * Handles the Write Essay practice mode in the learner app
- * Flow: Select prompt → Read prompt → Write essay (textarea, word count) → Submit → Scoring
- *
- * Scoring rubrics (PTE):
- *   Form (0-2): Word count based
- *   Grammar (0-2): AI-assessed via assessWriting Cloud Function
- *   Spelling (0-2): Error count based
+ * Handles the Write Essay practice mode in the learner app.
+ * Submit Essay shows feedback only; AI scoring is a separate login-gated action.
  */
 
 (function () {
@@ -24,6 +19,20 @@
     let hasLoadedEntries = false;
     let loadEntriesPromise = null;
     let isSubmitting = false;
+    let isAiScoring = false;
+    let activeFeedbackRequestId = 0;
+
+    // Last submitted essay snapshot (used for AI scoring + re-rendering)
+    let lastSubmittedEssayText = '';
+    let lastSubmittedEssayPrompt = '';
+    let lastSubmittedEssayWordCount = 0;
+    let lastBasicFeedbackHtml = '';
+    let lastBasicFeedbackSectionsHtml = '';
+
+    // Cached resources / callables
+    let scoreEssayFn = null;
+    let rubricTextCache = null;
+    let rubricTextPromise = null;
 
     // Timer state
     let essayTimerId = null;
@@ -49,6 +58,13 @@
     function reset() {
         stopTimer();
         isSubmitting = false;
+        isAiScoring = false;
+        activeFeedbackRequestId = 0;
+        lastSubmittedEssayText = '';
+        lastSubmittedEssayPrompt = '';
+        lastSubmittedEssayWordCount = 0;
+        lastBasicFeedbackHtml = '';
+        lastBasicFeedbackSectionsHtml = '';
         if (el.practiceArea) el.practiceArea.style.display = 'none';
         if (el.stepWrite) el.stepWrite.style.display = 'none';
         if (el.stepResults) el.stepResults.style.display = 'none';
@@ -57,6 +73,10 @@
         if (el.questionSelect) el.questionSelect.disabled = false;
         if (el.backBtn) el.backBtn.disabled = false;
         if (el.nextBtn) el.nextBtn.disabled = false;
+        if (el.resultsContainer) el.resultsContainer.innerHTML = '';
+        if (el.resultsTitle) el.resultsTitle.textContent = 'Your Essay Scores';
+        if (el.aiScoreHint) { el.aiScoreHint.style.display = 'none'; el.aiScoreHint.innerHTML = ''; }
+        if (el.aiScoreBtn) { el.aiScoreBtn.disabled = false; el.aiScoreBtn.textContent = 'Submit to AI scoring'; }
         updateWordCount();
     }
 
@@ -84,8 +104,11 @@
 
         // Step 2: Results
         el.stepResults = document.getElementById('essay-step-results');
+        el.resultsTitle = document.getElementById('essay-results-title');
         el.resultsContainer = document.getElementById('essay-results-container');
         el.retryBtn = document.getElementById('essay-retry-btn');
+        el.aiScoreBtn = document.getElementById('essay-ai-score-btn');
+        el.aiScoreHint = document.getElementById('essay-ai-score-hint');
     }
 
     /* ──────────────────────────── EVENT LISTENERS ────────────────── */
@@ -98,6 +121,7 @@
         if (el.essayInput) el.essayInput.addEventListener('input', updateWordCount);
         if (el.submitBtn) el.submitBtn.addEventListener('click', submitEssay);
         if (el.retryBtn) el.retryBtn.addEventListener('click', retryPractice);
+        if (el.aiScoreBtn) el.aiScoreBtn.addEventListener('click', submitToAiScoring);
     }
 
     /* ──────────────────────────── DATA LOADING ───────────────────── */
@@ -309,96 +333,6 @@
         return { score: 1, detail: `${count} words — acceptable but not ideal (aim for 200-300)` };
     }
 
-    /**
-     * Score Spelling (0-2) — simple client-side check using misspelled word detection
-     */
-    function scoreSpelling(text) {
-        // Use a simple heuristic: check for common misspelling patterns
-        // In production, call LanguageTool or browser spell API
-        const words = text.replace(/[^a-zA-Z\s'-]/g, '').split(/\s+/).filter(w => w.length > 0);
-        let spellingErrors = 0;
-
-        // Check each word against a simple validation (length, repeated chars)
-        for (const word of words) {
-            const clean = word.toLowerCase().replace(/['-]/g, '');
-            if (clean.length < 2) continue;
-            // Detect obvious errors: triple letters, no vowels in long words
-            if (/(.)\1\1/.test(clean)) spellingErrors++;
-            else if (clean.length > 4 && !/[aeiou]/i.test(clean)) spellingErrors++;
-        }
-
-        if (spellingErrors === 0) return { score: 2, detail: 'No spelling errors detected', errors: spellingErrors };
-        if (spellingErrors === 1) return { score: 1, detail: '1 spelling error detected', errors: spellingErrors };
-        return { score: 0, detail: `${spellingErrors} spelling errors detected`, errors: spellingErrors };
-    }
-
-    // Cache the callable function
-    let assessWritingFn = null;
-
-    /**
-     * Score Grammar (0-2) — calls assessWriting Cloud Function (Gemini 1.5 Flash)
-     * Returns a promise
-     */
-    async function scoreGrammar(text) {
-        try {
-            if (!assessWritingFn) {
-                if (window.__FIREBASE_INTERNAL__ && window.__FIREBASE_INTERNAL__.functions) {
-                    const { httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js');
-                    assessWritingFn = httpsCallable(window.__FIREBASE_INTERNAL__.functions, 'assessWriting');
-                } else if (typeof firebase !== 'undefined' && firebase.functions) {
-                    assessWritingFn = firebase.functions().httpsCallable('assessWriting');
-                } else {
-                    return { score: -1, detail: 'AI grammar check unavailable (Firebase not loaded)', corrections: [] };
-                }
-            }
-
-            const result = await assessWritingFn({
-                text: text.substring(0, 2000), // Max 2000 chars
-                context: {
-                    entryType: 'pte_essay',
-                    promptText: currentEntry?.prompt || '',
-                }
-            });
-
-            if (result.data?.limited) {
-                return { score: -1, detail: result.data.message || 'Rate limit reached', corrections: [] };
-            }
-
-            if (!result.data?.success) {
-                return { score: -1, detail: 'AI analysis failed', corrections: [] };
-            }
-
-            // Extract grammar corrections
-            const corrections = (result.data.corrections || []).filter(c =>
-                c.type === 'grammar' || c.type === 'punctuation'
-            );
-            const grammarCount = corrections.length;
-
-            let score, detail;
-            if (grammarCount === 0) {
-                score = 2;
-                detail = 'Consistent grammatical control. Errors are rare and difficult to spot.';
-            } else if (grammarCount <= 2) {
-                score = 1;
-                detail = 'Relatively high degree of grammatical control. No mistakes which would lead to misunderstandings.';
-            } else {
-                score = 0;
-                detail = 'Contains mainly simple structures and/or several basic mistakes.';
-            }
-
-            return {
-                score,
-                detail,
-                corrections,
-                aiFeedback: result.data.feedback || '',
-                aiScore: result.data.score
-            };
-        } catch (error) {
-            console.error('[WriteEssay] Grammar scoring error:', error);
-            return { score: -1, detail: 'AI grammar check failed: ' + (error.message || 'Unknown error'), corrections: [] };
-        }
-    }
-
     /* ──────────────────────────── SUBMIT & DISPLAY ───────────────── */
 
     async function submitEssay() {
@@ -412,24 +346,48 @@
         }
 
         isSubmitting = true;
+        const requestId = ++activeFeedbackRequestId;
 
-        // Lock UI while scoring
+        // Lock UI while analyzing (feedback-only; no numeric scores).
         if (el.submitBtn) {
             el.submitBtn.disabled = true;
-            el.submitBtn.textContent = '⏳ Scoring with AI…';
+            el.submitBtn.textContent = '⏳ Analyzing…';
         }
         if (el.essayInput) el.essayInput.readOnly = true;
 
-        const formResult = scoreForm(text);
-        const spellingResult = scoreSpelling(text);
+        lastSubmittedEssayText = text;
+        lastSubmittedEssayPrompt = currentEntry?.prompt || '';
+        lastSubmittedEssayWordCount = getWordCount();
 
-        // Call the Gemini Cloud Function for grammar scoring
-        const grammarResult = await scoreGrammar(text);
+        if (el.resultsTitle) el.resultsTitle.textContent = 'Your Essay Feedback';
+        if (el.resultsContainer) {
+            el.resultsContainer.innerHTML = `<div class="essay-feedback-loading">Checking Form, Grammar, and Spelling…</div>`;
+        }
+
+        const formResult = scoreForm(text);
+        const langTool = await checkWithLanguageTool(text);
+        if (requestId !== activeFeedbackRequestId) return; // stale
+
+        const feedbackSectionsHtml = renderBasicFeedbackSectionsHtml({
+            essayText: text,
+            formResult,
+            langTool
+        });
+
+        const feedbackHtml = renderBasicFeedbackHtml({
+            essayText: text,
+            promptText: lastSubmittedEssayPrompt,
+            wordCount: lastSubmittedEssayWordCount,
+            feedbackSectionsHtml
+        });
+
+        lastBasicFeedbackSectionsHtml = feedbackSectionsHtml;
+        lastBasicFeedbackHtml = feedbackHtml;
 
         // Display results
         el.stepWrite.style.display = 'none';
         el.stepResults.style.display = 'block';
-        displayResults(formResult, grammarResult, spellingResult, text);
+        displayFeedbackOnly({ feedbackHtml });
 
         // Restore UI state
         if (el.submitBtn) {
@@ -438,58 +396,17 @@
         }
         if (el.essayInput) el.essayInput.readOnly = false;
         isSubmitting = false;
+
+        updateAiScoreButtonState();
     }
 
-    function displayResults(formResult, grammarResult, spellingResult, text) {
+    function displayFeedbackOnly({ feedbackHtml }) {
         if (!el.resultsContainer) return;
-
-        const totalMax = 6; // 2+2+2
-        const validScores = [formResult, grammarResult, spellingResult].filter(r => r.score >= 0);
-        const totalScore = validScores.reduce((sum, r) => sum + r.score, 0);
-        const totalPossible = validScores.length * 2;
-        const percentage = totalPossible > 0 ? Math.round((totalScore / totalPossible) * 100) : 0;
 
         const sampleResponses = currentEntry && currentEntry.sampleResponses ? currentEntry.sampleResponses : null;
         const sampleHtml = renderSampleEssays(sampleResponses);
 
-        el.resultsContainer.innerHTML = `
-            <div class="essay-results-summary">
-                <div class="essay-results-score-circle">
-                    <span class="essay-score-number">${totalScore}</span>
-                    <span class="essay-score-divider">/</span>
-                    <span class="essay-score-total">${totalPossible}</span>
-                </div>
-                <div class="essay-results-percentage">${percentage}%</div>
-            </div>
-
-            <div class="essay-results-breakdown">
-                ${renderScoreRow('📏 Form', formResult, 2)}
-                ${renderScoreRow('📝 Grammar', grammarResult, 2)}
-                ${renderScoreRow('🔤 Spelling', spellingResult, 2)}
-            </div>
-
-            ${grammarResult.corrections && grammarResult.corrections.length > 0 ? `
-                <div class="essay-corrections">
-                    <h4>Grammar & Punctuation Corrections</h4>
-                    <ul class="essay-corrections-list">
-                        ${grammarResult.corrections.map(c => `
-                            <li class="essay-correction-item">
-                                <span class="correction-original">${escapeHtml(c.original)}</span>
-                                → <span class="correction-replacement">${escapeHtml(c.replacement)}</span>
-                                <span class="correction-reason">${escapeHtml(c.reason || '')}</span>
-                            </li>
-                        `).join('')}
-                    </ul>
-                </div>
-            ` : ''}
-
-            ${grammarResult.aiFeedback ? `
-                <div class="essay-ai-feedback">
-                    <h4>💡 AI Feedback</h4>
-                    <p>${escapeHtml(grammarResult.aiFeedback)}</p>
-                </div>
-            ` : ''}
-        `;
+        el.resultsContainer.innerHTML = feedbackHtml || '';
 
         if (sampleHtml) {
             el.resultsContainer.insertAdjacentHTML('beforeend', sampleHtml);
@@ -498,7 +415,7 @@
     }
 
     function renderScoreRow(label, result, maxScore) {
-        const score = result.score;
+        const score = typeof result?.score === 'number' ? result.score : -1;
         const isUnavailable = score < 0;
         const badgeClass = isUnavailable ? 'essay-score-na' :
             score === maxScore ? 'essay-score-full' :
@@ -510,9 +427,588 @@
                 <div class="essay-score-badge ${badgeClass}">
                     ${isUnavailable ? 'N/A' : `${score}/${maxScore}`}
                 </div>
-                <div class="essay-score-detail">${escapeHtml(result.detail)}</div>
+                <div class="essay-score-detail">${escapeHtml(result?.detail || '')}</div>
             </div>
         `;
+    }
+
+    async function checkWithLanguageTool(text) {
+        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const timeoutMs = 12000;
+        let timeoutId = null;
+
+        try {
+            if (controller) timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+            const response = await fetch('https://api.languagetool.org/v2/check', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    text: String(text || ''),
+                    language: 'en-US'
+                }),
+                signal: controller ? controller.signal : undefined
+            });
+            if (!response.ok) {
+                throw new Error(`LanguageTool HTTP ${response.status}`);
+            }
+            const data = await response.json();
+            return { ok: true, data };
+        } catch (error) {
+            console.warn('[WriteEssay] LanguageTool unavailable:', error);
+            return { ok: false, error: error?.message || String(error) };
+        } finally {
+            if (timeoutId) clearTimeout(timeoutId);
+        }
+    }
+
+    function renderBasicFeedbackHtml({ essayText, promptText, wordCount, feedbackSectionsHtml }) {
+        return `
+            ${renderSubmittedEssayBlockHtml({ essayText, promptText, wordCount })}
+            ${feedbackSectionsHtml || ''}
+        `;
+    }
+
+    function renderSubmittedEssayBlockHtml({ essayText, promptText, wordCount }) {
+        const prompt = String(promptText || '').trim();
+        const paras = splitEssayParagraphs(String(essayText || ''));
+        const essayHtml = paras.length > 0
+            ? paras.map(p => `<p>${escapeHtml(p)}</p>`).join('')
+            : `<p>${escapeHtml(String(essayText || '').trim())}</p>`;
+
+        return `
+            <div class="essay-submitted">
+                <div class="essay-submitted-header">
+                    <h4>Your submitted essay</h4>
+                    <div class="essay-submitted-meta">${Number(wordCount || 0)} words</div>
+                </div>
+                ${prompt ? `
+                    <div class="essay-submitted-prompt">
+                        <div class="essay-submitted-prompt-label">Prompt</div>
+                        <div class="essay-submitted-prompt-text">${escapeHtml(prompt)}</div>
+                    </div>
+                ` : ''}
+                <div class="essay-submitted-body">
+                    ${essayHtml}
+                </div>
+            </div>
+        `;
+    }
+
+    function renderBasicFeedbackSectionsHtml({ essayText, formResult, langTool }) {
+        const form = formResult || { score: 0, detail: '' };
+        const wordCount = lastSubmittedEssayWordCount || getWordCount();
+
+        const formTips = [];
+        if (form.score >= 2) {
+            formTips.push('Length is in the ideal range (200–300 words).');
+            formTips.push('Keep using paragraphs (intro → body → conclusion) so your ideas are easy to follow.');
+        } else if (form.score === 1) {
+            formTips.push('Length is acceptable, but not ideal.');
+            formTips.push('Aim for 200–300 words by adding 1–2 specific examples or explanations.');
+        } else {
+            formTips.push('Length/format needs fixing to meet PTE rules.');
+            formTips.push('Write 200–300 words (minimum acceptable: 120–380).');
+            formTips.push('Avoid ALL CAPS and make sure you use punctuation (.,!?).');
+        }
+
+        const formHtml = `
+            <div class="essay-feedback-card">
+                <div class="essay-feedback-card-title">Form</div>
+                <div class="essay-feedback-card-subtitle">${escapeHtml(form.detail || `${wordCount} words`)}</div>
+                <ul class="essay-feedback-bullets">
+                    ${formTips.map(t => `<li>${escapeHtml(t)}</li>`).join('')}
+                </ul>
+            </div>
+        `;
+
+        const langOk = Boolean(langTool && langTool.ok && langTool.data);
+        const matches = langOk && Array.isArray(langTool.data.matches) ? langTool.data.matches : [];
+        const corrections = matches.map(m => buildLanguageToolCorrection(essayText, m)).filter(Boolean);
+        const spellingCorrections = corrections.filter(c => c.bucket === 'spelling');
+        const grammarCorrections = corrections.filter(c => c.bucket !== 'spelling');
+
+        const grammarHtml = renderLanguageFeedbackCard({
+            title: 'Grammar',
+            subtitle: langOk ? `${grammarCorrections.length} issue${grammarCorrections.length === 1 ? '' : 's'} found` : 'Grammar check unavailable',
+            corrections: grammarCorrections,
+            essayText,
+            fallbackTips: [
+                'Use complete sentences and avoid run-ons.',
+                'Check subject–verb agreement (e.g., “people are”, “a person is”).',
+                'Use punctuation to separate ideas (comma, full stop).'
+            ],
+            showRewriteExamples: true,
+            unavailable: !langOk
+        });
+
+        const spellingHtml = renderLanguageFeedbackCard({
+            title: 'Spelling',
+            subtitle: langOk ? `${spellingCorrections.length} possible misspelling${spellingCorrections.length === 1 ? '' : 's'}` : 'Spelling check unavailable',
+            corrections: spellingCorrections,
+            essayText,
+            fallbackTips: [
+                'Re-read slowly and check long words and endings (-ed, -s).',
+                'Watch common confusion pairs (their/there/they’re, affect/effect).'
+            ],
+            showRewriteExamples: false,
+            unavailable: !langOk
+        });
+
+        const noteHtml = !langOk ? `
+            <div class="essay-feedback-note">
+                Grammar/spelling service is temporarily unavailable. Try again later for detailed correction suggestions.
+            </div>
+        ` : '';
+
+        return `
+            <div class="essay-feedback-sections">
+                ${formHtml}
+                ${noteHtml}
+                ${grammarHtml}
+                ${spellingHtml}
+            </div>
+        `;
+    }
+
+    function buildLanguageToolCorrection(text, match) {
+        if (!match || typeof match !== 'object') return null;
+        const offset = Number(match.offset);
+        const length = Number(match.length);
+        if (!Number.isFinite(offset) || !Number.isFinite(length) || offset < 0 || length < 0) return null;
+
+        const rule = match.rule || {};
+        const issueType = String(rule.issueType || '').toLowerCase();
+        const categoryId = String(rule.category?.id || '').toLowerCase();
+        const categoryName = String(rule.category?.name || '').toLowerCase();
+
+        const isSpelling = issueType === 'misspelling' || categoryId.includes('typo') || categoryName.includes('typo');
+        const bucket = isSpelling ? 'spelling' : (categoryId.includes('punct') ? 'punctuation' : (issueType || 'grammar'));
+
+        const original = String(text || '').slice(offset, offset + length);
+        const replacement = Array.isArray(match.replacements) && match.replacements.length > 0
+            ? String(match.replacements[0]?.value || '')
+            : '';
+
+        return {
+            bucket,
+            offset,
+            length,
+            original,
+            replacement,
+            message: String(match.message || ''),
+            shortMessage: String(match.shortMessage || ''),
+            ruleId: String(rule.id || ''),
+            categoryId: String(rule.category?.id || ''),
+            categoryName: String(rule.category?.name || ''),
+            issueType
+        };
+    }
+
+    function renderLanguageFeedbackCard({ title, subtitle, corrections, essayText, fallbackTips, showRewriteExamples, unavailable }) {
+        const list = Array.isArray(corrections) ? corrections : [];
+        const hasCorrections = list.length > 0;
+        const isUnavailable = Boolean(unavailable);
+
+        const patterns = buildIssuePatternSummary(list);
+        const patternsHtml = patterns.length > 0 ? `
+            <div class="essay-feedback-patterns">
+                ${patterns.map(p => `<span class="essay-feedback-pattern">${escapeHtml(p)}</span>`).join('')}
+            </div>
+        ` : '';
+
+        const maxItems = 12;
+        const items = list.slice(0, maxItems);
+        const hiddenCount = Math.max(0, list.length - items.length);
+
+        const correctionsHtml = isUnavailable ? `
+            <div class="essay-feedback-empty">Detailed suggestions are unavailable right now.</div>
+        ` : (hasCorrections ? `
+            <ul class="essay-feedback-fixes">
+                ${items.map(c => renderLanguageCorrectionItem(essayText, c)).join('')}
+            </ul>
+            ${hiddenCount > 0 ? `<div class="essay-feedback-more">+ ${hiddenCount} more issue${hiddenCount === 1 ? '' : 's'} not shown</div>` : ''}
+        ` : `
+            <div class="essay-feedback-empty">No issues found.</div>
+        `);
+
+        const rewriteExamples = showRewriteExamples ? buildRewriteExamples(essayText, list) : [];
+        const rewritesHtml = rewriteExamples.length > 0 ? `
+            <div class="essay-feedback-rewrites">
+                <div class="essay-feedback-rewrites-title">Quick rewrite example${rewriteExamples.length === 1 ? '' : 's'}</div>
+                ${rewriteExamples.map(ex => `
+                    <div class="essay-feedback-rewrite">
+                        <div class="essay-feedback-rewrite-before">${escapeHtml(ex.before)}</div>
+                        <div class="essay-feedback-rewrite-after">${escapeHtml(ex.after)}</div>
+                    </div>
+                `).join('')}
+            </div>
+        ` : '';
+
+        const fallbackHtml = (!hasCorrections && Array.isArray(fallbackTips) && fallbackTips.length > 0) ? `
+            <ul class="essay-feedback-bullets">
+                ${fallbackTips.map(t => `<li>${escapeHtml(t)}</li>`).join('')}
+            </ul>
+        ` : '';
+
+        return `
+            <div class="essay-feedback-card">
+                <div class="essay-feedback-card-title">${escapeHtml(title)}</div>
+                <div class="essay-feedback-card-subtitle">${escapeHtml(subtitle || '')}</div>
+                ${patternsHtml}
+                ${correctionsHtml}
+                ${rewritesHtml}
+                ${fallbackHtml}
+            </div>
+        `;
+    }
+
+    function buildIssuePatternSummary(corrections) {
+        const list = Array.isArray(corrections) ? corrections : [];
+        const counts = new Map();
+        list.forEach((c) => {
+            const key = String(c.bucket || 'other');
+            counts.set(key, (counts.get(key) || 0) + 1);
+        });
+        const sorted = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+        return sorted.slice(0, 4).map(([bucket, count]) => `${bucket}: ${count}`);
+    }
+
+    function renderLanguageCorrectionItem(text, correction) {
+        const c = correction || {};
+        const replacement = c.replacement ? c.replacement : '(no suggestion)';
+        const reason = c.shortMessage || c.message || '';
+        const contextHtml = renderContextHtml(text, c.offset, c.length);
+
+        return `
+            <li class="essay-feedback-fix">
+                <div class="essay-feedback-fix-top">
+                    <span class="essay-feedback-original">${escapeHtml(c.original || '')}</span>
+                    <span class="essay-feedback-arrow">→</span>
+                    <span class="essay-feedback-replacement">${escapeHtml(replacement)}</span>
+                </div>
+                ${reason ? `<div class="essay-feedback-reason">${escapeHtml(reason)}</div>` : ''}
+                ${contextHtml ? `<div class="essay-feedback-context">${contextHtml}</div>` : ''}
+            </li>
+        `;
+    }
+
+    function renderContextHtml(text, offset, length) {
+        const t = String(text || '');
+        const o = Number(offset);
+        const l = Number(length);
+        if (!Number.isFinite(o) || !Number.isFinite(l) || o < 0 || l <= 0 || o >= t.length) return '';
+
+        const ctx = 30;
+        const start = Math.max(0, o - ctx);
+        const end = Math.min(t.length, o + l + ctx);
+        const prefix = start > 0 ? '…' : '';
+        const suffix = end < t.length ? '…' : '';
+
+        const before = escapeHtml(t.slice(start, o));
+        const mid = escapeHtml(t.slice(o, o + l));
+        const after = escapeHtml(t.slice(o + l, end));
+        return `${escapeHtml(prefix)}${before}<mark class="essay-feedback-mark">${mid}</mark>${after}${escapeHtml(suffix)}`;
+    }
+
+    function splitIntoSentenceSpans(text) {
+        const t = String(text || '');
+        const spans = [];
+        const re = /[^.!?]+(?:[.!?]+|$)/g;
+        let m;
+        while ((m = re.exec(t)) !== null) {
+            const raw = String(m[0] || '');
+            const cleaned = raw.trim();
+            if (!cleaned) continue;
+            spans.push({ start: m.index, end: m.index + raw.length, text: cleaned });
+        }
+        return spans;
+    }
+
+    function applyCorrectionsToText(text, corrections) {
+        let out = String(text || '');
+        const sorted = (corrections || [])
+            .filter(c => c && typeof c.offset === 'number' && typeof c.length === 'number' && typeof c.replacement === 'string')
+            .sort((a, b) => b.offset - a.offset);
+        sorted.forEach((c) => {
+            const start = Math.max(0, c.offset);
+            const end = Math.max(start, c.offset + c.length);
+            out = out.slice(0, start) + c.replacement + out.slice(end);
+        });
+        return out;
+    }
+
+    function buildRewriteExamples(fullText, corrections) {
+        const spans = splitIntoSentenceSpans(fullText);
+        if (spans.length === 0) return [];
+        const usable = (corrections || []).filter(c => c && typeof c.offset === 'number' && typeof c.length === 'number' && c.replacement);
+        if (usable.length === 0) return [];
+
+        const scored = spans.map((span) => {
+            const related = usable.filter(c => c.offset >= span.start && (c.offset + c.length) <= span.end);
+            return { span, corrections: related, count: related.length };
+        }).filter(x => x.count > 0);
+
+        scored.sort((a, b) => b.count - a.count);
+        return scored.slice(0, 2).map((x) => {
+            const local = x.corrections.map(c => ({
+                offset: c.offset - x.span.start,
+                length: c.length,
+                replacement: c.replacement
+            }));
+            const before = x.span.text;
+            const after = applyCorrectionsToText(x.span.text, local).trim();
+            return after && after !== before ? { before, after } : null;
+        }).filter(Boolean);
+    }
+
+    function isGuestMode() {
+        return sessionStorage.getItem('guestMode') === 'true';
+    }
+
+    function getCurrentUser() {
+        return window.__FIREBASE_INTERNAL__?.auth?.currentUser || window.auth?.currentUser || null;
+    }
+
+    function updateAiScoreButtonState() {
+        if (!el.aiScoreBtn) return;
+        if (!lastSubmittedEssayText) {
+            el.aiScoreBtn.disabled = true;
+            return;
+        }
+
+        const user = getCurrentUser();
+        const allowed = Boolean(user) && !isGuestMode();
+        el.aiScoreBtn.disabled = !allowed;
+
+        if (!el.aiScoreHint) return;
+
+        if (allowed) {
+            el.aiScoreHint.style.display = 'none';
+            el.aiScoreHint.innerHTML = '';
+            return;
+        }
+
+        el.aiScoreHint.style.display = 'block';
+        el.aiScoreHint.innerHTML = `
+            <div class="essay-ai-score-hint-text">AI scoring requires login.</div>
+            <button id="essay-ai-score-login-btn" class="modern-btn modern-btn--hint" type="button">Log in</button>
+        `;
+
+        const btn = document.getElementById('essay-ai-score-login-btn');
+        if (btn) {
+            btn.addEventListener('click', () => {
+                if (typeof window.showLoginForm === 'function') {
+                    window.showLoginForm();
+                } else {
+                    alert('Please log in to use AI scoring.');
+                }
+            });
+        }
+    }
+
+    async function getRubricText() {
+        if (rubricTextCache) return rubricTextCache;
+        if (rubricTextPromise) return rubricTextPromise;
+
+        rubricTextPromise = fetch('/database/knowledge-base/Write Essay Score Guide.txt', { cache: 'no-store' })
+            .then((resp) => {
+                if (!resp.ok) throw new Error(`Rubric not found (${resp.status})`);
+                return resp.text();
+            })
+            .then((txt) => {
+                rubricTextCache = String(txt || '');
+                return rubricTextCache;
+            })
+            .catch((err) => {
+                rubricTextPromise = null;
+                throw err;
+            });
+
+        return rubricTextPromise;
+    }
+
+    async function getScoreEssayCallable() {
+        if (scoreEssayFn) return scoreEssayFn;
+        if (window.__FIREBASE_INTERNAL__ && window.__FIREBASE_INTERNAL__.functions) {
+            const { httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js');
+            scoreEssayFn = httpsCallable(window.__FIREBASE_INTERNAL__.functions, 'scoreEssay');
+            return scoreEssayFn;
+        }
+        if (typeof firebase !== 'undefined' && firebase.functions) {
+            scoreEssayFn = firebase.functions().httpsCallable('scoreEssay');
+            return scoreEssayFn;
+        }
+        throw new Error('AI scoring unavailable (Firebase functions not loaded)');
+    }
+
+    async function submitToAiScoring() {
+        if (isAiScoring) return;
+        if (!lastSubmittedEssayText) {
+            alert('Please submit your essay first.');
+            return;
+        }
+
+        updateAiScoreButtonState();
+        if (el.aiScoreBtn && el.aiScoreBtn.disabled) {
+            return;
+        }
+
+        isAiScoring = true;
+        if (el.aiScoreBtn) {
+            el.aiScoreBtn.disabled = true;
+            el.aiScoreBtn.textContent = '⏳ AI scoring…';
+        }
+        if (el.aiScoreHint) el.aiScoreHint.style.display = 'none';
+
+        try {
+            const rubricText = await getRubricText();
+            const callable = await getScoreEssayCallable();
+            const result = await callable({
+                text: String(lastSubmittedEssayText || '').slice(0, 6000),
+                promptText: String(lastSubmittedEssayPrompt || '').slice(0, 2000),
+                rubricText: String(rubricText || '').slice(0, 15000),
+                context: {
+                    entryType: 'pte_essay',
+                    questionId: currentEntry?.id || ''
+                }
+            });
+
+            const data = result?.data || {};
+            if (data?.limited) {
+                alert(data.message || 'AI scoring is limited. Please try again later.');
+                return;
+            }
+            if (!data?.success) {
+                throw new Error(data?.message || 'AI scoring failed');
+            }
+
+            if (el.resultsTitle) el.resultsTitle.textContent = 'Your Essay Scores';
+            displayAiScoreResults(data);
+
+            if (data.teacherAdviceChat) {
+                postTeacherAdviceToChat(String(data.teacherAdviceChat));
+            }
+        } catch (error) {
+            console.error('[WriteEssay] scoreEssay failed:', error);
+            alert('AI scoring failed. Please try again.');
+        } finally {
+            isAiScoring = false;
+            if (el.aiScoreBtn) {
+                el.aiScoreBtn.textContent = 'Submit to AI scoring';
+            }
+            updateAiScoreButtonState();
+        }
+    }
+
+    function displayAiScoreResults(data) {
+        if (!el.resultsContainer) return;
+
+        const overall = data.overall || {};
+        const total = Number(overall.total || 0);
+        const maxTotal = Number(overall.maxTotal || 0);
+        const percent = Number.isFinite(Number(overall.percent)) ? Number(overall.percent) : (maxTotal > 0 ? Math.round((total / maxTotal) * 100) : 0);
+
+        const scores = data.scores && typeof data.scores === 'object' ? data.scores : {};
+        const ordered = [
+            { key: 'content', label: 'Content', max: 6 },
+            { key: 'form', label: 'Form', max: 2 },
+            { key: 'development_structure_coherence', label: 'Development, Structure and Coherence', max: 6 },
+            { key: 'grammar', label: 'Grammar', max: 2 },
+            { key: 'general_linguistic_range', label: 'General Linguistic Range', max: 6 },
+            { key: 'vocabulary_range', label: 'Vocabulary Range', max: 2 },
+            { key: 'spelling', label: 'Spelling', max: 2 }
+        ];
+
+        const breakdownHtml = ordered.map((item) => {
+            const s = scores[item.key] || {};
+            const detailParts = [];
+            const rationale = s.rationale || s.detail || '';
+            if (rationale) detailParts.push(String(rationale));
+
+            const fixTips = Array.isArray(s.fixTips) ? s.fixTips : [];
+            if (fixTips.length > 0) {
+                detailParts.push('Fix: ' + fixTips.slice(0, 2).join(' | '));
+            }
+
+            const evidence = Array.isArray(s.evidence) ? s.evidence : [];
+            if (evidence.length > 0) {
+                detailParts.push('Evidence: ' + evidence.slice(0, 1).join(''));
+            }
+
+            return renderScoreRow(item.label, {
+                score: Number.isFinite(Number(s.score)) ? Number(s.score) : -1,
+                detail: detailParts.join(' ')
+            }, item.max);
+        }).join('');
+
+        const basicFeedbackDetails = lastBasicFeedbackSectionsHtml ? `
+            <details class="essay-basic-feedback">
+                <summary>Basic feedback (Form/Grammar/Spelling)</summary>
+                <div class="essay-basic-feedback-body">
+                    ${lastBasicFeedbackSectionsHtml}
+                </div>
+            </details>
+        ` : '';
+
+        el.resultsContainer.innerHTML = `
+            ${renderSubmittedEssayBlockHtml({
+                essayText: lastSubmittedEssayText,
+                promptText: lastSubmittedEssayPrompt,
+                wordCount: lastSubmittedEssayWordCount
+            })}
+
+            <div class="essay-results-summary">
+                <div class="essay-results-score-circle">
+                    <span class="essay-score-number">${total}</span>
+                    <span class="essay-score-divider">/</span>
+                    <span class="essay-score-total">${maxTotal}</span>
+                </div>
+                <div class="essay-results-percentage">${percent}%</div>
+            </div>
+
+            <div class="essay-results-breakdown">
+                ${breakdownHtml}
+            </div>
+
+            ${basicFeedbackDetails}
+        `;
+
+        const sampleResponses = currentEntry && currentEntry.sampleResponses ? currentEntry.sampleResponses : null;
+        const sampleHtml = renderSampleEssays(sampleResponses);
+        if (sampleHtml) {
+            el.resultsContainer.insertAdjacentHTML('beforeend', sampleHtml);
+            initSampleEssaysUI(sampleResponses);
+        }
+    }
+
+    function postTeacherAdviceToChat(text) {
+        const advice = String(text || '').trim();
+        if (!advice) return;
+
+        const openChat = () => {
+            const bubble = document.querySelector('df-messenger-chat-bubble');
+            if (bubble && typeof bubble.openChat === 'function') {
+                bubble.openChat();
+            }
+        };
+
+        const render = () => {
+            const df = document.querySelector('df-messenger');
+            if (df && typeof df.renderCustomText === 'function') {
+                df.renderCustomText(advice, true);
+                return true;
+            }
+            return false;
+        };
+
+        openChat();
+        if (render()) return;
+
+        const handler = () => {
+            render();
+        };
+        window.addEventListener('df-messenger-loaded', handler, { once: true });
+        window.addEventListener('dfMessengerLoaded', handler, { once: true });
     }
 
     /* ──────────────────────────── HELPERS ────────────────────────── */
@@ -788,7 +1284,8 @@
     window.WriteEssayMode = {
         init: init,
         reset: reset,
-        loadEntries: loadEntries
+        loadEntries: loadEntries,
+        updateAiScoreButtonState: updateAiScoreButtonState
     };
 
     // Deep-link support: listen for PracticeRouter question navigation events

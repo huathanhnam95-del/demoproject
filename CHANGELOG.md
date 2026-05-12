@@ -1,3 +1,21 @@
+## [V1.7.0] - 2026-05-12
+
+### Added
+
+- **Write Essay Testing**: Finalized comprehensive browser test suite for essay feedback and AI scoring.
+- **CRM Staff Management**: Re-enabled and finalized the CRM Staff management interface in the admin panel.
+
+### Improved
+
+- **PTE CRM Mappings**: Updated the CRM Student Modal English target level score mappings to accurately reflect official PTE visa point requirements, explicitly displaying "N/A" for non-applicable sections.
+- **Lead Conversion Logic**: Improved state handling and API triggers to ensure seamless conversion of leads into active student records within the management system.
+- **Header Navigation**: Cleaned up practice environment navigation by removing redundant "About Us" and "Home" links, and redirected the primary logo to the default practice page.
+- **AI Score Visibility**: Implemented user-specific visibility rules for AI scoring buttons based on authentication state.
+
+### Fixed
+
+- **assessWriting Function**: Resolved 500 errors in the `assessWriting` cloud function to restore stable AI essay scoring.
+
 ## [V1.6.9] - 2026-05-07
 
 ### Improved

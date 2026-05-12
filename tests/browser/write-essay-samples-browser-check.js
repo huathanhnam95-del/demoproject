@@ -61,6 +61,15 @@ function buildEssayText() {
 
     assert.deepStrictEqual(pageErrors, [], `Expected no page errors, got: ${pageErrors.join(' | ')}`);
 
+    const writeEssayScriptSrc = await page.evaluate(() => {
+      const script = document.querySelector('script[src*="write-essay-mode.js"]');
+      return script ? String(script.getAttribute('src') || '') : '';
+    });
+    assert.ok(
+      /\bwrite-essay-mode\.js\?v=/.test(writeEssayScriptSrc),
+      `Write Essay script should be cache-busted, got: ${writeEssayScriptSrc || '(missing)'}`
+    );
+
     await page.evaluate(async () => {
       await window.switchToMode('essay');
       window.WriteEssayMode?.loadEntries?.();
@@ -90,17 +99,17 @@ function buildEssayText() {
       );
     }, { timeout: 20000 });
 
-    // Select a pilot prompt that has 2 sample variants (Agree/Disagree).
+    // Select a pilot prompt that has sample variants + idea flow (mindmap/flowchart).
     await page.evaluate(() => {
       const select = document.getElementById('question-select-essay');
       if (!select) return;
       let target = null;
       for (const opt of Array.from(select.options || [])) {
         const t = String(opt.textContent || '').trim();
-        if (/^2\\s*[–-]\\s*/.test(t)) { target = String(opt.value); break; }
+        if (/^4\\s*[–-]\\s*/.test(t)) { target = String(opt.value); break; }
       }
-      // Fallback: when entries are sorted by ID, ID=2 should be index 1.
-      if (target == null && select.options.length > 1) target = '1';
+      // Fallback: when entries are sorted by ID, ID=4 should be index 3.
+      if (target == null && select.options.length > 3) target = '3';
       if (target == null) return;
       select.value = target;
       select.dispatchEvent(new Event('change', { bubbles: true }));
@@ -108,7 +117,7 @@ function buildEssayText() {
     await page.waitForTimeout(250);
     await page.waitForFunction(() => {
       const cur = document.getElementById('current-question-id-essay');
-      return cur && cur.textContent && cur.textContent.trim() === '2';
+      return cur && cur.textContent && cur.textContent.trim() === '4';
     }, { timeout: 10000 });
 
     // Some environments show onboarding overlays (preloader/entry modal) that can intercept pointer events.
@@ -126,7 +135,39 @@ function buildEssayText() {
     await page.waitForTimeout(150);
 
     await page.evaluate(() => document.getElementById('essay-submit-btn')?.click());
-    await page.waitForTimeout(900);
+
+    await page.waitForFunction(() => {
+      const submitted = document.querySelector('.essay-submitted');
+      const aiBtn = document.getElementById('essay-ai-score-btn');
+      const aiHint = document.getElementById('essay-ai-score-hint');
+      const hintVisible = aiHint ? getComputedStyle(aiHint).display !== 'none' : false;
+      return Boolean(submitted && aiBtn && hintVisible);
+    }, { timeout: 20000 });
+
+    // Basic submit should show the submitted essay + feedback-only (no numeric score summary).
+    const basicResultsState = await page.evaluate(() => {
+      const submitted = document.querySelector('.essay-submitted');
+      const hasOverallScore = Boolean(document.querySelector('.essay-results-summary'));
+      const aiBtn = document.getElementById('essay-ai-score-btn');
+      const aiHint = document.getElementById('essay-ai-score-hint');
+      const aiHintVisible = aiHint ? getComputedStyle(aiHint).display !== 'none' : false;
+      const title = document.getElementById('essay-results-title')?.textContent?.trim() || '';
+      return {
+        hasSubmittedEssay: Boolean(submitted),
+        hasOverallScore,
+        aiBtnExists: Boolean(aiBtn),
+        aiBtnDisabled: aiBtn ? Boolean(aiBtn.disabled) : null,
+        aiHintVisible,
+        title
+      };
+    });
+
+    assert.strictEqual(basicResultsState.hasSubmittedEssay, true, 'Results should show the submitted essay after clicking Submit Essay');
+    assert.strictEqual(basicResultsState.hasOverallScore, false, 'Basic submit should not render numeric score summary');
+    assert.strictEqual(basicResultsState.title, 'Your Essay Feedback', 'Basic submit should use the feedback-only title');
+    assert.strictEqual(basicResultsState.aiBtnExists, true, 'Results should include the Submit to AI scoring button');
+    assert.strictEqual(basicResultsState.aiBtnDisabled, true, 'AI scoring button should be disabled when not logged in');
+    assert.strictEqual(basicResultsState.aiHintVisible, true, 'AI scoring hint should be visible when not logged in');
 
     const samplePanel = await page.evaluate(() => {
       const details = document.querySelector('details.essay-samples');

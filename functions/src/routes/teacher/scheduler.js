@@ -323,7 +323,79 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
     const writeAuditLog = typeof deps.writeAuditLog === 'function' ? deps.writeAuditLog : null;
 
     const router = express.Router();
-    const requireTeacherHandlers = [deps.authMiddleware].filter(Boolean);
+
+    const teacherAccessCache = new Map();
+    const TEACHER_ACCESS_CACHE_TTL_MS = 5 * 60 * 1000;
+
+    function getCachedTeacherAccess(uid) {
+        const key = cleanOptionalString(uid);
+        if (!key) return null;
+        const entry = teacherAccessCache.get(key);
+        if (!entry) return null;
+        if ((Date.now() - entry.atMs) > TEACHER_ACCESS_CACHE_TTL_MS) {
+            teacherAccessCache.delete(key);
+            return null;
+        }
+        return entry.value || null;
+    }
+
+    function setCachedTeacherAccess(uid, value) {
+        const key = cleanOptionalString(uid);
+        if (!key) return;
+        teacherAccessCache.set(key, { atMs: Date.now(), value });
+    }
+
+    async function resolveTeacherAccess(user) {
+        const uid = cleanOptionalString(user?.uid);
+        if (!uid) return { uid: null, isTeacher: false, isAdmin: false, ok: false };
+
+        const claimTeacher = user?.isTeacher === true;
+        const adminEmail = cleanOptionalString(deps.adminEmail || process.env.ADMIN_EMAIL);
+        const tokenEmail = cleanOptionalString(user?.email);
+        const emailAdmin = !!(adminEmail && tokenEmail && tokenEmail.toLowerCase() === adminEmail.toLowerCase());
+        const claimAdmin = user?.isAdmin === true || emailAdmin;
+        if (claimTeacher || claimAdmin) {
+            return { uid, isTeacher: claimTeacher, isAdmin: claimAdmin, ok: true };
+        }
+
+        const cached = getCachedTeacherAccess(uid);
+        if (cached) return cached;
+
+        let profileTeacher = false;
+        let profileAdmin = false;
+        try {
+            const snap = await db.collection('users').doc(uid).get();
+            const data = snap.exists ? (snap.data() || {}) : {};
+            profileAdmin = data.isAdmin === true;
+            profileTeacher = data.isTeacher === true || String(data.crmRole || '').trim().toLowerCase() === 'teacher';
+        } catch (error) {
+            void error;
+        }
+
+        const resolved = {
+            uid,
+            isTeacher: profileTeacher,
+            isAdmin: profileAdmin,
+            ok: profileTeacher || profileAdmin
+        };
+        setCachedTeacherAccess(uid, resolved);
+        return resolved;
+    }
+
+    async function requireTeacherAccess(req, res, next) {
+        try {
+            const access = await resolveTeacherAccess(req.user);
+            if (!access.ok) {
+                return sendError(res, 403, 'FORBIDDEN', 'Teacher privileges required.');
+            }
+            req.teacherAccess = access;
+            return next();
+        } catch (error) {
+            return sendError(res, 500, 'AUTHZ_ERROR', 'Failed to verify teacher access.', error?.message || error);
+        }
+    }
+
+    const requireTeacherHandlers = [deps.authMiddleware, requireTeacherAccess].filter(Boolean);
 
     router.get('/scheduler/workspace', ...requireTeacherHandlers, async (req, res) => {
         try {

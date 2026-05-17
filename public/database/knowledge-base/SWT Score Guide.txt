@@ -1,0 +1,36 @@
+Content:
+4
+• The summary captures ALL main points of the passage accurately.
+• Main ideas are expressed clearly and precisely, demonstrating full understanding of the source text.
+• Appropriate paraphrasing is used throughout; the response does not copy directly from the source text.
+3
+• The summary captures MOST main points of the passage.
+• Main ideas are generally expressed clearly, with minor omissions or inaccuracies.
+• Some effective paraphrasing is present, though occasional direct copying may occur.
+2
+• The summary captures SOME main points of the passage.
+• Some main ideas are present, but significant points are omitted or inaccurately represented.
+• Limited paraphrasing; relies noticeably on language from the source text.
+1
+• The summary captures FEW main points of the passage.
+• Only one or two relevant ideas are included. Most key points are missed entirely.
+• Minimal or no paraphrasing; largely copies phrases directly from the source text.
+0
+• The summary does not capture any main points of the passage, OR the response is irrelevant to the passage, OR no response is provided.
+Form:
+1
+• The response is written as ONE single, complete sentence.
+• The sentence begins with an uppercase letter and ends with a period (full stop).
+• The word count is between 5 and 75 words inclusive.
+0
+• The response contains more than one sentence, OR is not a complete sentence (e.g., a fragment or list).
+• The word count is fewer than 5 words or more than 75 words.
+• The response is written entirely in capital letters, contains no punctuation, or consists only of bullet points.
+Grammar:
+2 Shows consistent grammatical control of complex language. Errors are rare and difficult to spot.
+1 Shows a relatively high degree of grammatical control. No mistakes which would lead to misunderstandings.
+0 Contains mainly simple structures and/or several basic mistakes.
+Vocabulary:
+2 Good command of a broad lexical repertoire, idiomatic expressions and colloquialisms.
+1 Shows a good range of vocabulary for matters connected to general academic topics. Lexical shortcomings lead to circumlocution or some imprecision.
+0 Contains mainly basic vocabulary insufficient to deal with the topic at the required level.

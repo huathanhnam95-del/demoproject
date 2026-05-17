@@ -56,7 +56,15 @@ docs/audits/**/*.webm
 # Temporary / cloned repos
 tmp_skills_repo/
 _tmp/
+_tmp*/
 tmp/
+Kokoro-FastAPI/
+essay_temp/
+
+# Workspace-local document drafts and ad hoc screenshots
+/*.docx
+~$*.docx
+rts-nav-active-live-check.png
 
 # Scratch scripts (one-off fix/rebuild scripts)
 fix.js

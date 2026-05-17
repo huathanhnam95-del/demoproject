@@ -613,7 +613,8 @@ window.CrmLeadWorkspace = (function () {
 
         async function refreshLeadPipeline() {
             const json = await apiFetchJson('/api/admin/leads?limit=200', { method: 'GET' });
-            const leads = Array.isArray(json.leads) ? json.leads : [];
+            const rawLeads = Array.isArray(json.leads) ? json.leads : [];
+            const leads = rawLeads.filter((lead) => !window.CrmLeads.isConvertedLead(lead));
             dataCache.leads = leads;
             pruneLeadSelection(leads.map((lead) => lead.leadId));
             renderLeadStageBoard(leads);

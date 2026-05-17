@@ -17087,6 +17087,40 @@ body.readingjourney-active #readingjourney-root {
   color: #64748b;
 }
 
+@media (max-width: 640px) {
+  .main-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .header-left {
+    width: 100%;
+    min-width: 0;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .mode-pill-indicator {
+    min-width: 0;
+    max-width: 100%;
+    flex: 1 1 auto;
+  }
+
+  .mode-pill-name,
+  .difficulty-badge .diff-level-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .difficulty-badge {
+    align-self: flex-start;
+    max-width: 100%;
+  }
+}
+
 .rj-path-arrow {
   font-size: 16px;
   color: #94a3b8;
@@ -20491,7 +20525,331 @@ body.readingjourney-active #readingjourney-root {
   margin: 0;
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   RTS (Respond To Situation) Mode
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Step Progress Breadcrumb ── */
+.rts-step-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 20px;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.04), rgba(139, 92, 246, 0.03));
+  border-radius: 14px;
+  border: 1px solid rgba(99, 102, 241, 0.08);
+}
+
+.rts-step-dot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted, #9ca3af);
+  padding: 6px 14px;
+  border-radius: 999px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.rts-step-dot.active {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+}
+
+.rts-step-dot.completed {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+}
+
+.rts-step-icon {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.rts-step-connector {
+  width: 24px;
+  height: 2px;
+  background: rgba(99, 102, 241, 0.15);
+  flex-shrink: 0;
+}
+
+/* ── Step Card (shared wrapper) ── */
+.rts-step-card {
+  animation: rts-fadeIn 0.35s ease;
+}
+
+@keyframes rts-fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Prompt Card ── */
+.rts-prompt-card {
+  font-size: 1.05rem;
+  line-height: 1.75;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.04), rgba(99, 102, 241, 0.03));
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  border-radius: 14px;
+  margin-bottom: 16px;
+  color: var(--text-main, #1f2937);
+}
+
+.rts-prompt-card--faded {
+  opacity: 0.65;
+  font-size: 0.95rem;
+}
+
+/* ── Audio Countdown Card ── */
+.rts-countdown-card {
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  color: #fff;
+  border-radius: 16px;
+  padding: 32px 28px;
+  text-align: center;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 16px rgba(79, 70, 229, 0.2);
+}
+
+.rts-countdown-icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.rts-countdown-label {
+  font-size: 1.05rem;
+  margin-bottom: 16px;
+  opacity: 0.95;
+}
+
+.rts-countdown-bar-track {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 6px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.rts-countdown-bar-fill {
+  background: #fff;
+  height: 100%;
+  width: 100%;
+  border-radius: 6px;
+  transition: width 0.1s linear;
+}
+
+/* ── Timer Card ── */
+.rts-timer-card {
+  border-radius: 16px;
+  padding: 28px 24px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.rts-timer-card--prep {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.06), rgba(251, 191, 36, 0.04));
+  border: 1px solid rgba(245, 158, 11, 0.15);
+}
+
+.rts-timer-card--record {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.05), rgba(220, 38, 38, 0.03));
+  border: 1px solid rgba(239, 68, 68, 0.12);
+}
+
+.rts-timer-emoji {
+  font-size: 1.8rem;
+  margin-bottom: 8px;
+}
+
+.rts-timer-label {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-muted, #6b7280);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.rts-timer-display {
+  font-size: 2.8rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-main, #111827);
+  margin-bottom: 16px;
+  letter-spacing: -0.02em;
+}
+
+/* ── Progress Bar ── */
+.rts-progress-track {
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 6px;
+  height: 6px;
+  overflow: hidden;
+}
+
+.rts-progress-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.15s linear;
+}
+
+.rts-progress-fill--prep {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.rts-progress-fill--record {
+  background: linear-gradient(90deg, #ef4444, #f87171);
+}
+
+/* ── Recording Indicator ── */
+.rts-record-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #dc2626;
+  margin-bottom: 8px;
+}
+
+.rts-record-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: rts-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes rts-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+/* ── Results: Playback Card ── */
+.rts-playback-card {
+  background: #fff;
+  border: 1px solid var(--border-light, #e5e7eb);
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 14px;
+}
+
+.rts-playback-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.rts-playback-icon {
+  font-size: 1.1rem;
+}
+
+.rts-playback-title {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--text-main, #111827);
+}
+
+.rts-audio-controls {
+  width: 100%;
+  border-radius: 8px;
+  height: 40px;
+}
+
+/* ── Results: Transcript Display ── */
+.rts-transcript-card {
+  background: #fff;
+  border: 1px solid var(--border-light, #e5e7eb);
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 14px;
+}
+
+.rts-transcript-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.rts-transcript-icon {
+  font-size: 1.1rem;
+}
+
+.rts-transcript-title {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--text-main, #111827);
+}
+
+.rts-transcript-display {
+  padding: 14px 16px;
+  background: linear-gradient(135deg, rgba(249, 250, 251, 0.8), rgba(243, 244, 246, 0.5));
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--text-main, #374151);
+  min-height: 56px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.rts-transcript-display:empty::before,
+.rts-transcript-display.rts-no-transcript::before {
+  content: 'No transcript detected.';
+  color: var(--text-muted, #9ca3af);
+  font-style: italic;
+}
+
+/* ── Results: Action Buttons ── */
+.rts-results-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding-top: 4px;
+}
+
 /* ── Responsive ── */
+@media (max-width: 768px) {
+  .rts-step-progress {
+    gap: 0;
+    padding: 10px 12px;
+  }
+
+  .rts-step-dot {
+    font-size: 0.75rem;
+    padding: 5px 8px;
+  }
+
+  .rts-step-connector {
+    width: 12px;
+  }
+
+  .rts-timer-display {
+    font-size: 2rem;
+  }
+
+  .rts-countdown-card {
+    padding: 24px 20px;
+  }
+
+  .rts-prompt-card {
+    padding: 16px 18px;
+    font-size: 0.95rem;
+  }
+}
+
+/* ── Responsive ── */
+
 @media (max-width: 768px) {
   .essay-prompt-display {
     padding: 14px 16px;

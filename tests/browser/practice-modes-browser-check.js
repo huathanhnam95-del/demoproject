@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const assert = require('assert');
 const express = require('express');
 const http = require('http');
@@ -216,7 +217,7 @@ async function checkSkillFilter(page, skill, expectedVisibleIds, expectedModeId)
   });
 
   await page.addInitScript(() => {
-    ['type', 'collo-dictate', 'speak', 'extended', 'watch', 'notes', 'pronounce', 'read-aloud', 'sgd'].forEach((mode) => {
+    ['type', 'collo-dictate', 'speak', 'extended', 'watch', 'notes', 'pronounce', 'read-aloud', 'sgd', 'swt'].forEach((mode) => {
       localStorage.setItem(`${mode}ModeFirstUse`, 'true');
     });
   });
@@ -291,6 +292,7 @@ async function checkSkillFilter(page, skill, expectedVisibleIds, expectedModeId)
     assert.equal(readingState.writingVisible, false, 'Writing empty state should stay hidden in Reading');
 
     const writingState = await checkSkillFilter(page, 'writing', ['mode-btn-essay'], 'mode-extended');
+    assert.equal(writingState.writingVisible, false, 'Writing empty state should stay hidden when Essay is available');
 
     await page.evaluate(async () => {
       await window.switchToMode('read-aloud');

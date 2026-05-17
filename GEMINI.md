@@ -123,8 +123,8 @@ These workflows add product thinking, automated QA, and release automation:
 ## Response Formatting
 
 - **Timestamp Rule**: ALWAYS include the Start time and End time of every response, on two separate lines at the end. Format:
-  - `⏱️ Start: [ISO timestamp]`
-  - `⏱️ End: [ISO timestamp]`
+  - `⏱️ Start: [Vietnam Time]`
+  - `⏱️ End: [Vietnam Time]`
 
 ## Versioning & Commits
 

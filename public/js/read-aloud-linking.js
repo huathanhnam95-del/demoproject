@@ -228,7 +228,9 @@
     if (!analysis || !Array.isArray(analysis.boundaries)) {
       return '';
     }
-    const focusFamily = normalizeConnectedSpeechCategory(options.focusFamily || '');
+    const focusFamily = String(options.focusFamily || '').trim()
+      ? normalizeConnectedSpeechCategory(options.focusFamily)
+      : '';
 
     const eligible = analysis.boundaries.filter((boundary) => (
       !boundary.blocked && (boundary.confidence === 'high' || boundary.confidence === 'medium')
@@ -595,7 +597,9 @@
   function renderFallbackList(container, analysis, options = {}) {
     if (!container) return 0;
     container.innerHTML = '';
-    const focusFamily = normalizeConnectedSpeechCategory(options.focusFamily || '');
+    const focusFamily = String(options.focusFamily || '').trim()
+      ? normalizeConnectedSpeechCategory(options.focusFamily)
+      : '';
     const sourceBoundaries = Array.isArray(options.boundaries) ? options.boundaries : analysis.boundaries;
     const eligible = sourceBoundaries.filter((boundary) => (
       !boundary.blocked && (boundary.confidence === 'high' || boundary.confidence === 'medium')

@@ -1,4 +1,25 @@
 class ReadAloudMode {
+  static KOKORO_VOICES = {
+    male: [
+      { id: 'am_echo', name: 'Echo', accent: 'American' },
+      { id: 'am_eric', name: 'Eric', accent: 'American' },
+      { id: 'am_fenrir', name: 'Fenrir', accent: 'American' },
+      { id: 'am_liam', name: 'Liam', accent: 'American' },
+      { id: 'am_michael', name: 'Michael', accent: 'American' },
+      { id: 'am_puck', name: 'Puck', accent: 'American' },
+      { id: 'bm_fable', name: 'Fable', accent: 'British' },
+      { id: 'bm_george', name: 'George', accent: 'British' },
+      { id: 'bm_lewis', name: 'Lewis', accent: 'British' },
+    ],
+    female: [
+      { id: 'af_alloy', name: 'Alloy', accent: 'American' },
+      { id: 'af_bella', name: 'Bella', accent: 'American' },
+      { id: 'af_heart', name: 'Heart', accent: 'American' },
+      { id: 'af_kore', name: 'Kore', accent: 'American' },
+      { id: 'af_sarah', name: 'Sarah', accent: 'American' },
+      { id: 'bf_emma', name: 'Emma', accent: 'British' },
+    ],
+  };
   constructor() {
     this.isActive = false;
     this.isEntering = false;
@@ -40,14 +61,18 @@ class ReadAloudMode {
     this.guideExplanationsExpanded = null;
     this.guideExplanationsToggled = false;
 
-    // ElevenLabs audio state
+    // Kokoro TTS voice state
     this.audioManifest = null;
     this.currentQuestionId = null;
-    this.selectedGender = 'male';
+    this.selectedGender = null;
+    this.selectedVoiceId = null;
+    this.selectedVoiceName = null;
+    this.selectedVoiceAccent = null;
     this.selectedSpeed = '100';
     this.hasLoadedManifest = false;
     this.sampleAudioFilter = 'all';
     this.promptFeatureFilter = 'all';
+    this.voiceDropdownOpen = false;
     this.promptFeatureIndex = new Map();
     this.promptFeatureIndexReady = false;
     this.promptFeatureIndexPromise = null;
@@ -156,9 +181,15 @@ class ReadAloudMode {
     document.getElementById('ra-record-btn')?.addEventListener('click', () => this.handleRecordClick());
     document.getElementById('ra-stop-btn')?.addEventListener('click', () => this.stopRecordingManually());
     document.getElementById('ra-play-recording-btn')?.addEventListener('click', () => this.playRecordedAudio());
+    document.getElementById('ra-check-btn')?.addEventListener('click', () => this.handleCheckResult());
+    document.getElementById('ra-retry-btn')?.addEventListener('click', () => this.retryCurrentPrompt());
 
     document.getElementById('ra-voice-male')?.addEventListener('click', () => this.setGender('male'));
     document.getElementById('ra-voice-female')?.addEventListener('click', () => this.setGender('female'));
+    document.getElementById('ra-voice-picker-btn')?.addEventListener('click', () => this.randomizeVoice());
+    document.getElementById('ra-voice-dropdown-toggle')?.addEventListener('click', (e) => { e.stopPropagation(); this.toggleVoiceDropdown(); });
+    document.getElementById('ra-voice-dropdown-list')?.addEventListener('click', (e) => this.handleVoiceDropdownClick(e));
+    document.addEventListener('click', () => this.closeVoiceDropdown());
     document.getElementById('ra-speed-100')?.addEventListener('click', () => this.setSpeed('100'));
     document.getElementById('ra-speed-80')?.addEventListener('click', () => this.setSpeed('80'));
     document.getElementById('ra-play-audio-btn')?.addEventListener('click', () => this.playAudio());
@@ -1607,15 +1638,42 @@ class ReadAloudMode {
     const resultBox = document.getElementById('ra-result-box');
     const accuracyElement = document.getElementById('ra-accuracy-value');
     const feedbackElement = document.getElementById('ra-transcript-feedback');
+    const checkBtn = document.getElementById('ra-check-btn');
+    const retryBtn = document.getElementById('ra-retry-btn');
     if (resultBox) resultBox.style.display = 'none';
     if (accuracyElement) accuracyElement.textContent = '--';
     if (feedbackElement) feedbackElement.innerHTML = '';
+    if (checkBtn) checkBtn.style.display = 'none';
+    if (retryBtn) retryBtn.style.display = 'none';
   }
 
   showAssessmentDisplay() {
     this.hasAssessmentResult = true;
     const resultBox = document.getElementById('ra-result-box');
+    const checkBtn = document.getElementById('ra-check-btn');
+    const retryBtn = document.getElementById('ra-retry-btn');
     if (resultBox) resultBox.style.display = 'block';
+    if (checkBtn) checkBtn.style.display = 'inline-flex';
+    if (retryBtn) retryBtn.style.display = 'none';
+  }
+
+  handleCheckResult() {
+    const checkBtn = document.getElementById('ra-check-btn');
+    const retryBtn = document.getElementById('ra-retry-btn');
+    if (checkBtn) checkBtn.style.display = 'none';
+    if (retryBtn) retryBtn.style.display = 'inline-flex';
+  }
+
+  retryCurrentPrompt() {
+    this.stopTimer();
+    this.state = 'PREP';
+    this.resetAssessmentDisplay();
+    this.clearRecordedAudio();
+    this.renderPromptForCurrentView();
+    this.updateUIForState();
+    if (this.getRecordingSupportState().supported) {
+      this.startPrepTimer();
+    }
   }
 
   updateRecordedAudioControl() {
@@ -2152,7 +2210,9 @@ class ReadAloudMode {
       }
     }
 
-    this.renderConnectedSpeechResults(payload.connectedSpeech);
+    this.renderConnectedSpeechResults(payload.connectedSpeech, {
+      transcriptText: payload.recognizedText || this.currentPromptPlainText
+    });
   }
 
   clearConnectedSpeechResults() {
@@ -2380,12 +2440,13 @@ class ReadAloudMode {
     this.syncGuideSelectionState();
   }
 
-  async renderConnectedSpeechResults(connectedSpeech) {
+  async renderConnectedSpeechResults(connectedSpeech, options = {}) {
     const box = document.getElementById('ra-connected-speech-box');
     const label = document.getElementById('ra-connected-speech-label');
     const list = document.getElementById('ra-connected-speech-list');
+    const meta = document.getElementById('ra-connected-speech-meta');
     const summary = document.getElementById('ra-connected-speech-summary');
-    if (!box || !label || !list || !summary) return;
+    if (!box || !label || !list || !meta || !summary) return;
 
     if (!connectedSpeech || connectedSpeech.status === 'not_applicable') {
       this.hideConnectedSpeechPanel();
@@ -2398,6 +2459,7 @@ class ReadAloudMode {
     this.currentGuideHasVisibleAssimilation = false;
     box.style.display = 'block';
     label.textContent = 'Speech Coach';
+    meta.textContent = 'Feedback';
     list.innerHTML = '';
 
     const wrapper = document.getElementById('ra-transcript-feedback');
@@ -2423,12 +2485,14 @@ class ReadAloudMode {
       summary.textContent = `You nailed ${detectedCount} pattern${detectedCount === 1 ? '' : 's'}! ${notDetectedCount} still need${notDetectedCount === 1 ? 's' : ''} practice.`;
     }
 
+    const transcriptText = String(options.transcriptText || this.currentPromptPlainText || '').trim();
+
     // Aggregate events into reduced-word groups vs linking issues/successes
     const events = Array.isArray(connectedSpeech.events) ? connectedSpeech.events : [];
     const { groupedReduced, linkingIssues, linkingSuccesses } = this._aggregateSpeechEvents(events);
 
     // Build annotated paragraph with token highlights + SVG overlay
-    const usedTokenAnnotation = await this._buildAnnotatedParagraph(events, wrapper);
+    const usedTokenAnnotation = await this._buildAnnotatedParagraph(events, wrapper, transcriptText);
 
     // Append legend if annotation succeeded
     if (usedTokenAnnotation && wrapper) {
@@ -2523,16 +2587,17 @@ class ReadAloudMode {
   }
 
   /** Build annotated paragraph with token highlights and SVG linking overlay */
-  async _buildAnnotatedParagraph(events, wrapper) {
+  async _buildAnnotatedParagraph(events, wrapper, transcriptText = this.currentPromptPlainText) {
     const annotatedContainer = document.createElement('div');
     annotatedContainer.className = 'sc-annotated-paragraph';
+    const paragraphText = String(transcriptText || this.currentPromptPlainText || '').trim();
 
     let usedTokenAnnotation = false;
-    if (window.ReadAloudLinking && this.currentPromptPlainText) {
+    if (window.ReadAloudLinking && paragraphText) {
       try {
         const analysisOptions = { connectedSpeechLevel: 'sound_changes', enabledRuleSet: 'connected-speech-v3' };
-        const targetPromptKey = this.currentPromptId || 'result_eval';
-        const analysis = await this.getPromptAnalysis(targetPromptKey, this.currentPromptPlainText, analysisOptions);
+        const targetPromptKey = `result:${this.currentQuestionId || 'unknown'}:${paragraphText}`;
+        const analysis = await this.getPromptAnalysis(targetPromptKey, paragraphText, analysisOptions);
         const tokens = analysis.tokens;
         if (tokens && tokens.length > 0) {
           const wordMap = window.ReadAloudLinking.renderLinkingLayer(annotatedContainer, { tokens, boundaries: [], tokenAnnotations: [] });
@@ -2598,7 +2663,7 @@ class ReadAloudMode {
 
     if (!usedTokenAnnotation) {
       if (wrapper) wrapper.innerHTML = '';
-      annotatedContainer.textContent = this.currentPromptPlainText || '';
+      annotatedContainer.textContent = paragraphText;
       if (wrapper) wrapper.appendChild(annotatedContainer);
     }
 
@@ -2866,10 +2931,11 @@ class ReadAloudMode {
 
     if (this.audioManifest && this.currentQuestionId && this.audioManifest[this.currentQuestionId]) {
       if (playBtn) {
-        playBtn.disabled = false;
-        playBtn.innerHTML = 'Play';
-        playBtn.style.opacity = '1';
-        playBtn.title = 'Listen to reference audio';
+        const hasVoiceAudio = this._resolveAudioFilename() !== null;
+        playBtn.disabled = !hasVoiceAudio && !this.selectedVoiceId;
+        playBtn.innerHTML = hasVoiceAudio ? '▶ Play' : (this.selectedVoiceId ? '▶ Play' : 'Pick a voice');
+        playBtn.style.opacity = hasVoiceAudio || this.selectedVoiceId ? '1' : '0.5';
+        playBtn.title = hasVoiceAudio ? 'Listen to reference audio' : 'Select a voice first';
       }
       this.updateAudioSrc();
       this.refreshQuestionPickerV7AudioShortcuts();
@@ -2886,14 +2952,44 @@ class ReadAloudMode {
     this.refreshQuestionPickerV7AudioShortcuts();
   }
 
+  /** Resolve the audio filename for the current question + selected voice */
+  _resolveAudioFilename() {
+    if (!this.audioManifest || !this.currentQuestionId || !this.selectedGender) return null;
+    const entry = this.audioManifest[this.currentQuestionId];
+    if (!entry) return null;
+    const genderBlock = entry[this.selectedGender];
+    if (!genderBlock) return null;
+
+    // New schema: gender -> voiceId -> { name, accent, files: { "100": filename, "80": filename } }
+    if (this.selectedVoiceId && genderBlock[this.selectedVoiceId]) {
+      const voiceEntry = genderBlock[this.selectedVoiceId];
+      if (voiceEntry.files) {
+        return voiceEntry.files[this.selectedSpeed] || voiceEntry.files['100'] || Object.values(voiceEntry.files)[0] || null;
+      }
+    }
+
+    // Legacy schema: gender -> { voiceId, voiceName, files: { "100": filename, "80": filename } }
+    if (genderBlock.files) {
+      return genderBlock.files[this.selectedSpeed] || genderBlock.files['100'] || genderBlock.files['80'] || null;
+    }
+
+    // Fallback: pick any available voice for this gender in new schema
+    if (this.selectedGender) {
+      const voices = ReadAloudMode.KOKORO_VOICES[this.selectedGender] || [];
+      for (const v of voices) {
+        if (genderBlock[v.id] && genderBlock[v.id].files) {
+          const f = genderBlock[v.id].files[this.selectedSpeed] || genderBlock[v.id].files['100'] || Object.values(genderBlock[v.id].files)[0];
+          if (f) return f;
+        }
+      }
+    }
+    return null;
+  }
+
   updateAudioSrc() {
     const audioEl = document.getElementById('ra-elevenlabs-audio');
-    if (!audioEl || !this.audioManifest || !this.currentQuestionId) return;
-    const entry = this.audioManifest[this.currentQuestionId];
-    if (!entry) return;
-    const genderEntry = entry[this.selectedGender];
-    if (!genderEntry || !genderEntry.files) return;
-    const filename = genderEntry.files[this.selectedSpeed];
+    if (!audioEl) return;
+    const filename = this._resolveAudioFilename();
     if (filename) {
       audioEl.src = `/database/RA/Voice/audio/${filename}`;
       audioEl.load();
@@ -2901,6 +2997,15 @@ class ReadAloudMode {
   }
 
   setGender(gender) {
+    // Stop any playing audio
+    const audioEl = document.getElementById('ra-elevenlabs-audio');
+    if (audioEl && !audioEl.paused) {
+      audioEl.pause();
+      audioEl.currentTime = 0;
+      const playBtn = document.getElementById('ra-play-audio-btn');
+      if (playBtn) playBtn.textContent = '▶ Play';
+    }
+
     this.selectedGender = gender;
     const maleBtn = document.getElementById('ra-voice-male');
     const femaleBtn = document.getElementById('ra-voice-female');
@@ -2931,7 +3036,94 @@ class ReadAloudMode {
         maleBtn.style.boxShadow = 'none';
       }
     }
+    this.randomizeVoice();
+    this.renderVoiceDropdown();
+    this.closeVoiceDropdown();
+  }
+
+  randomizeVoice() {
+    if (!this.selectedGender) return;
+    const voices = ReadAloudMode.KOKORO_VOICES[this.selectedGender];
+    if (!voices || voices.length === 0) return;
+    const randomVoice = voices[Math.floor(Math.random() * voices.length)];
+    this.selectedVoiceId = randomVoice.id;
+    this.selectedVoiceName = randomVoice.name;
+    this.selectedVoiceAccent = randomVoice.accent;
+    this._updateVoicePickerDisplay();
     this.updateAudioSrc();
+    this.updateAudioPlayerVisibility();
+  }
+
+  setVoice(voiceId) {
+    if (!this.selectedGender) return;
+    const voices = ReadAloudMode.KOKORO_VOICES[this.selectedGender];
+    const voice = voices?.find(v => v.id === voiceId);
+    if (!voice) return;
+    this.selectedVoiceId = voice.id;
+    this.selectedVoiceName = voice.name;
+    this.selectedVoiceAccent = voice.accent;
+    this._updateVoicePickerDisplay();
+    this.updateAudioSrc();
+    this.updateAudioPlayerVisibility();
+    this.closeVoiceDropdown();
+  }
+
+  _updateVoicePickerDisplay() {
+    const pickerBtn = document.getElementById('ra-voice-picker-btn');
+    if (!pickerBtn) return;
+    if (this.selectedVoiceName) {
+      pickerBtn.innerHTML = `🎲 ${this.selectedVoiceName} <span style="color: var(--text-muted); font-weight: 400;">— ${this.selectedVoiceAccent}</span>`;
+    } else {
+      pickerBtn.innerHTML = '🎲 Pick a voice';
+    }
+    // Update checkmark in dropdown
+    const listEl = document.getElementById('ra-voice-dropdown-list');
+    if (listEl) {
+      listEl.querySelectorAll('.ra-voice-option').forEach(opt => {
+        const check = opt.querySelector('.ra-voice-check');
+        if (check) check.style.visibility = opt.dataset.voiceId === this.selectedVoiceId ? 'visible' : 'hidden';
+      });
+    }
+  }
+
+  renderVoiceDropdown() {
+    const listEl = document.getElementById('ra-voice-dropdown-list');
+    if (!listEl || !this.selectedGender) return;
+    const voices = ReadAloudMode.KOKORO_VOICES[this.selectedGender] || [];
+    listEl.innerHTML = voices.map(v => {
+      const isSelected = v.id === this.selectedVoiceId;
+      return `<div class="ra-voice-option" data-voice-id="${v.id}" role="option" tabindex="0"
+        style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; cursor: pointer; border-radius: 6px; transition: background 0.15s;"
+        onmouseenter="this.style.background='rgba(59,130,246,0.08)'" onmouseleave="this.style.background='transparent'">
+        <span class="ra-voice-check" style="visibility: ${isSelected ? 'visible' : 'hidden'}; font-size: 0.85rem; color: #3b82f6;">✓</span>
+        <span style="font-weight: 500; font-size: 0.85rem;">${v.name}</span>
+        <span style="color: var(--text-muted, #6b7280); font-size: 0.8rem; font-weight: 400;">— ${v.accent}</span>
+      </div>`;
+    }).join('');
+  }
+
+  toggleVoiceDropdown() {
+    this.voiceDropdownOpen = !this.voiceDropdownOpen;
+    const listEl = document.getElementById('ra-voice-dropdown-list');
+    const toggleBtn = document.getElementById('ra-voice-dropdown-toggle');
+    if (listEl) listEl.style.display = this.voiceDropdownOpen ? 'block' : 'none';
+    if (toggleBtn) toggleBtn.textContent = this.voiceDropdownOpen ? '▴' : '▾';
+  }
+
+  closeVoiceDropdown() {
+    this.voiceDropdownOpen = false;
+    const listEl = document.getElementById('ra-voice-dropdown-list');
+    const toggleBtn = document.getElementById('ra-voice-dropdown-toggle');
+    if (listEl) listEl.style.display = 'none';
+    if (toggleBtn) toggleBtn.textContent = '▾';
+  }
+
+  handleVoiceDropdownClick(e) {
+    const option = e.target.closest('.ra-voice-option');
+    if (!option) return;
+    e.stopPropagation();
+    const voiceId = option.dataset.voiceId;
+    if (voiceId) this.setVoice(voiceId);
   }
 
   setSpeed(speed) {

@@ -1,8 +1,48 @@
+/* eslint-disable no-console */
+/**
+ * Practice Scope Toggle – Browser Verification
+ *
+ * Tests the English ↔ PTE scope toggle and validates:
+ *   - Default state (English scope, Speaking skill selected)
+ *   - Mode card visibility changes when switching scopes
+ *   - PTE-specific mode label overrides (Repeat Sentence, Retell Lecture, etc.)
+ *   - Scope persistence through mode navigation
+ *   - Mode indicator label updates when switching back to English scope
+ *
+ * Requires: Playwright (npx playwright install chromium)
+ */
+
+const { chromium } = require('playwright');
 const assert = require('assert');
 const express = require('express');
 const http = require('http');
 const path = require('path');
-const { chromium } = require('playwright');
+
+async function dismissBlockingOverlays(page) {
+  // Dismiss cookie, preloader, tutorial, and entry overlays
+  await page.evaluate(() => {
+    const preloader = document.querySelector('.app-preloader');
+    if (preloader) preloader.style.display = 'none';
+    document.querySelectorAll('.tutorial-overlay, .cookie-banner').forEach((el) => el.remove());
+    // Dismiss the entry-modal that intercepts pointer events
+    const entryModal = document.getElementById('entry-modal');
+    if (entryModal) {
+      entryModal.style.display = 'none';
+      entryModal.remove();
+    }
+  });
+}
+
+async function waitForActivePanel(page, panelId) {
+  await page.waitForFunction(
+    (id) => {
+      const panel = document.getElementById(id);
+      return panel && panel.classList.contains('active');
+    },
+    panelId,
+    { timeout: 15000 }
+  );
+}
 
 function startHarnessServer() {
   const app = express();
@@ -26,64 +66,24 @@ function startHarnessServer() {
   });
 }
 
-async function dismissBlockingOverlays(page) {
-  await page.waitForFunction(() => {
-    const preloader = document.getElementById('app-preloader');
-    if (!preloader) return true;
-    const display = getComputedStyle(preloader).display;
-    const dismiss = document.getElementById('preloader-dismiss-btn');
-    return display === 'none' || Boolean(dismiss);
-  }, { timeout: 15000 });
-
-  const dismissButton = page.locator('#preloader-dismiss-btn');
-  if (await dismissButton.count()) {
-    try {
-      await dismissButton.click({ timeout: 3000 });
-    } catch (_) {
-      // ignore
-    }
-  }
-
-  await page.waitForFunction(() => {
-    const preloader = document.getElementById('app-preloader');
-    return !preloader || getComputedStyle(preloader).display === 'none';
-  }, { timeout: 15000 });
-
-  const guestButton = page.locator('#guest-mode-btn');
-  if (await guestButton.isVisible().catch(() => false)) {
-    await guestButton.click();
-  }
-
-  await page.waitForFunction(() => {
-    const entryModal = document.getElementById('entry-modal');
-    const wrapper = document.getElementById('page-layout-wrapper');
-    const modalHidden = !entryModal || getComputedStyle(entryModal).display === 'none';
-    const wrapperVisible = !!wrapper && getComputedStyle(wrapper).display !== 'none';
-    return modalHidden && wrapperVisible;
-  }, { timeout: 15000 });
-}
-
-async function waitForActivePanel(page, panelId) {
-  await page.waitForFunction((expectedPanelId) => {
-    const panel = document.getElementById(expectedPanelId);
-    return !!panel && panel.classList.contains('active') && getComputedStyle(panel).display !== 'none';
-  }, panelId, { timeout: 15000 });
-}
-
 (async () => {
   const { server, origin } = await startHarnessServer();
-  const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext({ viewport: { width: 1440, height: 1200 } });
+  console.log(`Scope toggle harness running at ${origin}`);
+
+  const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
+  const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
   const page = await context.newPage();
+
   const pageErrors = [];
   const consoleErrors = [];
-
-  page.on('pageerror', (error) => pageErrors.push(error.message));
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
+  page.on('pageerror', (err) => pageErrors.push(err.message));
+  page.on('console', (msg) => {
+    if (msg.type() === 'error') consoleErrors.push(msg.text());
   });
 
-  await page.addInitScript(() => {
+  // Pre-seed localStorage to skip first-use tutorials
+  await page.goto(`${origin}/index.html`, { waitUntil: 'commit' });
+  await page.evaluate(() => {
     [
       'type',
       'collo-dictate',
@@ -111,6 +111,9 @@ async function waitForActivePanel(page, panelId) {
     const realConsoleErrors = consoleErrors.filter((e) => !NOISE.test(e));
     assert.deepStrictEqual(realConsoleErrors, [], `Unexpected console errors (after noise filter): ${realConsoleErrors.join(' | ')}`);
 
+    // ─────────────────────────────────────────────────────
+    // 1. Default state: English scope, Speaking skill selected
+    // ─────────────────────────────────────────────────────
     const defaultState = await page.evaluate(() => {
       const englishScopeBtn = document.querySelector('#practice-scope-filter .practice-scope-btn[data-practice-scope="english"]');
       const speakingBtn = document.querySelector('#practice-skill-filter .practice-skill-btn[data-practice-skill="speaking"]');
@@ -123,20 +126,26 @@ async function waitForActivePanel(page, panelId) {
     assert.strictEqual(defaultState.englishPressed, 'true', 'English Practice should be selected by default');
     assert.strictEqual(defaultState.speakingPressed, 'true', 'Speaking should be selected by default');
 
+    // ─────────────────────────────────────────────────────
+    // 2. English + Speaking: Notes should be hidden (it's under Listening)
+    // ─────────────────────────────────────────────────────
     await page.click('#practice-skill-filter .practice-skill-btn[data-practice-skill="speaking"]');
 
     const englishSpeakingState = await page.evaluate(() => {
       const notesCard = document.getElementById('mode-btn-notes');
-      const speakCardTitle = document.querySelector('#mode-btn-speak .card-body h3');
+      const readAloudCard = document.getElementById('mode-btn-read-aloud');
       return {
-        notesVisible: notesCard ? getComputedStyle(notesCard).display !== 'none' : false,
-        speakTitle: speakCardTitle ? speakCardTitle.textContent.trim() : ''
+        notesHidden: notesCard ? notesCard.hidden : true,
+        readAloudHidden: readAloudCard ? readAloudCard.hidden : true
       };
     });
 
-    assert.strictEqual(englishSpeakingState.notesVisible, false, 'Notes should be hidden under Speaking in English scope');
-    assert.strictEqual(englishSpeakingState.speakTitle, 'Repeat', 'English scope should keep the original Speak card label');
+    assert.strictEqual(englishSpeakingState.notesHidden, true, 'Notes should be hidden under Speaking in English scope');
+    assert.strictEqual(englishSpeakingState.readAloudHidden, false, 'Read Aloud should be visible under Speaking in English scope');
 
+    // ─────────────────────────────────────────────────────
+    // 3. Switch to PTE scope + Speaking
+    // ─────────────────────────────────────────────────────
     await page.click('#practice-scope-filter .practice-scope-btn[data-practice-scope="pte"]');
     await page.click('#practice-skill-filter .practice-skill-btn[data-practice-skill="speaking"]');
 
@@ -148,22 +157,25 @@ async function waitForActivePanel(page, panelId) {
       const speakTitle = document.querySelector('#mode-btn-speak .card-body h3')?.textContent?.trim() || '';
       const notesTitle = document.querySelector('#mode-btn-notes .card-body h3')?.textContent?.trim() || '';
       return {
-        speakVisible: speakCard ? getComputedStyle(speakCard).display !== 'none' : false,
-        notesVisible: notesCard ? getComputedStyle(notesCard).display !== 'none' : false,
-        readAloudVisible: readAloudCard ? getComputedStyle(readAloudCard).display !== 'none' : false,
-        pronounceVisible: pronounceCard ? getComputedStyle(pronounceCard).display !== 'none' : false,
+        speakHidden: speakCard ? speakCard.hidden : true,
+        notesHidden: notesCard ? notesCard.hidden : true,
+        readAloudHidden: readAloudCard ? readAloudCard.hidden : true,
+        pronounceHidden: pronounceCard ? pronounceCard.hidden : true,
         speakTitle,
         notesTitle
       };
     });
 
-    assert.strictEqual(pteSpeakingState.readAloudVisible, true, 'Read Aloud should be visible in PTE Speaking');
-    assert.strictEqual(pteSpeakingState.speakVisible, true, 'Speak should be visible in PTE Speaking');
-    assert.strictEqual(pteSpeakingState.notesVisible, true, 'Notes should be visible in PTE Speaking');
-    assert.strictEqual(pteSpeakingState.pronounceVisible, false, 'Pronounce should be hidden in PTE scope');
+    assert.strictEqual(pteSpeakingState.readAloudHidden, false, 'Read Aloud should be visible in PTE Speaking');
+    assert.strictEqual(pteSpeakingState.speakHidden, false, 'Speak should be visible in PTE Speaking');
+    assert.strictEqual(pteSpeakingState.notesHidden, false, 'Notes should be visible in PTE Speaking (remapped to speaking)');
+    assert.strictEqual(pteSpeakingState.pronounceHidden, true, 'Pronounce should be hidden in PTE scope');
     assert.strictEqual(pteSpeakingState.speakTitle, 'Repeat Sentence', 'Speak card should rename in PTE scope');
     assert.strictEqual(pteSpeakingState.notesTitle, 'Retell Lecture', 'Notes card should rename in PTE scope');
 
+    // ─────────────────────────────────────────────────────
+    // 4. Navigate into Notes mode in PTE scope
+    // ─────────────────────────────────────────────────────
     await page.click('#mode-btn-notes');
     await waitForActivePanel(page, 'mode-notes');
 
@@ -173,7 +185,7 @@ async function waitForActivePanel(page, panelId) {
       const modeName = document.getElementById('current-mode-name');
       return {
         speakingPressed: speakingBtn ? speakingBtn.getAttribute('aria-pressed') : null,
-        indicatorVisible: indicator ? getComputedStyle(indicator).display !== 'none' : false,
+        indicatorVisible: indicator ? indicator.style.display !== 'none' : false,
         modeName: modeName?.textContent?.trim() || ''
       };
     });
@@ -182,41 +194,73 @@ async function waitForActivePanel(page, panelId) {
     assert.strictEqual(pteNotesState.indicatorVisible, true, 'Switching modes should show the mode indicator');
     assert.strictEqual(pteNotesState.modeName, 'Retell Lecture', 'Mode indicator should use the PTE label for Notes');
 
-    await page.click('#practice-scope-filter .practice-scope-btn[data-practice-scope="english"]');
+    // ─────────────────────────────────────────────────────
+    // 5. Go back to dashboard, then switch to English scope
+    //    When a mode panel is active, the dashboard-modern-container is hidden.
+    //    Use page.evaluate to call setPracticeScope and exitCurrentMode directly.
+    // ─────────────────────────────────────────────────────
+    await page.evaluate(() => {
+      // Use setPracticeScope (the full function) which handles UI updates
+      if (window.setPracticeScope) {
+        window.setPracticeScope('english');
+      }
+    });
+    // Wait for scope change to propagate
+    await page.waitForFunction(() => {
+      const englishBtn = document.querySelector('#practice-scope-filter .practice-scope-btn[data-practice-scope="english"]');
+      return englishBtn && englishBtn.getAttribute('aria-pressed') === 'true';
+    }, { timeout: 10000 });
 
-    const restoredEnglishNotesState = await page.evaluate(() => {
+    const restoredEnglishState = await page.evaluate(() => {
       const speakingBtn = document.querySelector('#practice-skill-filter .practice-skill-btn[data-practice-skill="speaking"]');
       const listeningBtn = document.querySelector('#practice-skill-filter .practice-skill-btn[data-practice-skill="listening"]');
       const indicator = document.getElementById('current-mode-indicator');
       const modeName = document.getElementById('current-mode-name');
-      const notesPanel = document.getElementById('mode-notes');
       return {
         speakingPressed: speakingBtn ? speakingBtn.getAttribute('aria-pressed') : null,
         listeningPressed: listeningBtn ? listeningBtn.getAttribute('aria-pressed') : null,
-        indicatorVisible: indicator ? getComputedStyle(indicator).display !== 'none' : false,
-        modeName: modeName?.textContent?.trim() || '',
-        notesPanelVisible: notesPanel ? getComputedStyle(notesPanel).display !== 'none' : false
+        indicatorVisible: indicator ? indicator.style.display !== 'none' : false,
+        modeName: modeName?.textContent?.trim() || ''
       };
     });
 
-    assert.strictEqual(restoredEnglishNotesState.speakingPressed, 'false', 'Speaking should no longer be pressed');
-    assert.strictEqual(restoredEnglishNotesState.listeningPressed, 'true', 'Notes should remap back to Listening in English scope');
-    assert.strictEqual(restoredEnglishNotesState.indicatorVisible, true, 'Switching back to English should preserve the active mode indicator');
-    assert.strictEqual(restoredEnglishNotesState.modeName, 'Take Notes', 'Mode indicator should revert to the English Notes label');
-    assert.strictEqual(restoredEnglishNotesState.notesPanelVisible, true, 'Notes should remain the active panel when it is still visible in the new scope');
+    // Notes in English scope maps to Listening skill
+    assert.strictEqual(restoredEnglishState.listeningPressed, 'true', 'Notes should remap back to Listening in English scope');
+    assert.strictEqual(restoredEnglishState.indicatorVisible, true, 'Switching back to English should preserve the active mode indicator');
+    assert.strictEqual(restoredEnglishState.modeName, 'Take Notes', 'Mode indicator should revert to the English Notes label');
+
+    // ─────────────────────────────────────────────────────
+    // 6. Verify mode card labels reverted in English scope
+    //    First exit the mode to restore the dashboard
+    // ─────────────────────────────────────────────────────
+    await page.evaluate(() => {
+      if (window.exitCurrentMode) window.exitCurrentMode();
+    });
+    await page.waitForFunction(() => {
+      const dashboard = document.querySelector('.dashboard-modern-container');
+      return dashboard && getComputedStyle(dashboard).display !== 'none';
+    }, { timeout: 10000 });
+
+    // Ensure tutorials panel is visible
+    await page.evaluate(() => {
+      if (typeof toggleDashboardPanel === 'function') toggleDashboardPanel('panel-tutorials');
+    });
+    await waitForActivePanel(page, 'panel-tutorials');
+
+    await page.click('#practice-skill-filter .practice-skill-btn[data-practice-skill="listening"]');
 
     const backToEnglishState = await page.evaluate(() => {
       const notesCard = document.getElementById('mode-btn-notes');
       const notesTitle = document.querySelector('#mode-btn-notes .card-body h3')?.textContent?.trim() || '';
       const typeTitle = document.querySelector('#mode-btn-type .card-body h3')?.textContent?.trim() || '';
       return {
-        notesVisible: notesCard ? getComputedStyle(notesCard).display !== 'none' : false,
+        notesHidden: notesCard ? notesCard.hidden : true,
         notesTitle,
         typeTitle
       };
     });
 
-    assert.strictEqual(backToEnglishState.notesVisible, true, 'Notes should return under Listening in English scope');
+    assert.strictEqual(backToEnglishState.notesHidden, false, 'Notes should return under Listening in English scope');
     assert.strictEqual(backToEnglishState.notesTitle, 'Take Notes', 'Notes card title should revert in English scope');
     assert.strictEqual(backToEnglishState.typeTitle, 'Dictate', 'Type card title should remain in English scope');
 

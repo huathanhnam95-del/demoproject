@@ -205,7 +205,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 214,2026-04-11,Implement ASQ audio playback and hide question text before submission,Done,2026-04-11
 215,2026-04-11,Review debug and refactor auto accept script,Done,2026-04-11
 216,2026-04-11,Review debug and refactor ASQ quiz mode,Done,2026-04-11
-217,2026-04-12,Fix Firebase emulator connectivity issues,In Progress 
+217,2026-04-12,Fix Firebase emulator connectivity issues,In Progress
 218,2026-04-12,Review and commit all changes as V1.6.5 (no push),Done,2026-04-12
 219,2026-04-12,App Knowledge Base Document generation,Done,2026-04-12
 220,2026-04-12,Implement Write Essay mode for PTE Practice Writing section,Done,2026-04-12
@@ -244,3 +244,16 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 252,2026-05-09,Execute Write Essay Browser Test Plan,Done,2026-05-09
 253,2026-05-11,Humanize Marxist-Leninist political essay,Done,2026-05-11
 254,2026-05-11,Fix CRM English target level PTE mappings,Done,2026-05-11
+255,2026-05-12,Fix CRM Lead Conversion Visibility,Done,2026-05-12
+256,2026-05-12,Integrate Kokoro-FastAPI local TTS engine for Read Aloud batch generation,Done,2026-05-12
+257,2026-05-13,Implement Summarize Written Text (SWT) practice mode,Done,2026-05-13
+258,2026-05-13,Implement Kokoro TTS multi-voice system for Read Aloud (15 voices + UI redesign),Done,2026-05-17
+259,2026-05-13,Batch-generate mainPoints for 404 SWT questions via Gemma4/Ollama,Done,2026-05-13
+260,2026-05-13,Review debug and refactor all SWT-related code,Done,2026-05-13
+261,2026-05-14,Implement Respond To a Situation (RTS) practice mode,Done,2026-05-14
+262,2026-05-14,Implement RTS AI Scoring Pipeline + Sample Response Generation,Done,2026-05-17
+263,2026-05-14,Write detailed step-by-step browser test for RTS mode,Done,2026-05-14
+264,2026-05-15,Fix 5 stale browser tests (launcher/scope/DI/SGD/essay) to match current app,Done,2026-05-15
+265,2026-05-16,RTS Mode UI redesign — v7 picker + practice polish + read-only transcript,Done,2026-05-17
+266,2026-05-16,Fix SWT mode bugs (loading and AI scoring) and execute browser test plan,Done,2026-05-16
+267,2026-05-16,Debug and fix RTS browser test for v7 picker,Done,2026-05-16

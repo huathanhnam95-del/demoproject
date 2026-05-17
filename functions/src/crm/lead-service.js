@@ -211,7 +211,7 @@ function buildLeadConversion({ leadId, lead, context = {} }) {
         test_completed: 'test_completed',
         counseling: 'counseling',
         trial: 'trial'
-    })[leadStage] || 'potential';
+    })[leadStage] || 'enrolled';
 
     const student = buildStudentCreateData({
         name: studentName,

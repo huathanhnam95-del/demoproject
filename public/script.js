@@ -736,7 +736,7 @@
       speaking: {
         label: 'Speaking',
         kind: 'live-skill',
-        modeIds: ['speak', 'pronounce', 'read-aloud', 'asq', 'sgd', 'describe-image']
+        modeIds: ['speak', 'pronounce', 'read-aloud', 'asq', 'sgd', 'describe-image', 'rts']
       },
       listening: {
         label: 'Listening',
@@ -751,7 +751,7 @@
       writing: {
         label: 'Writing',
         kind: 'live-skill',
-        modeIds: ['essay']
+        modeIds: ['essay', 'swt']
       }
     },
     modes: {
@@ -832,6 +832,13 @@
         isLive: true,
         launcherVisible: true
       },
+      swt: {
+        label: 'Summarize Written Text',
+        skill: 'writing',
+        hasTutorial: false,
+        isLive: true,
+        launcherVisible: true
+      },
       sgd: {
         label: 'Discussion',
         skill: 'speaking',
@@ -841,6 +848,13 @@
       },
       'describe-image': {
         label: 'Describe Image',
+        skill: 'speaking',
+        hasTutorial: false,
+        isLive: true,
+        launcherVisible: false
+      },
+      rts: {
+        label: 'Respond To Situation',
         skill: 'speaking',
         hasTutorial: false,
         isLive: true,
@@ -863,7 +877,7 @@
     },
     [SCOPE_PTE]: {
       visibleModes: new Set([
-        'read-aloud', 'speak', 'describe-image', 'notes', 'asq', 'sgd', 'essay', 'type', 'rfib', 'extended'
+        'read-aloud', 'speak', 'describe-image', 'notes', 'asq', 'sgd', 'essay', 'swt', 'type', 'rfib', 'extended', 'rts'
       ]),
       modeOverrides: Object.freeze({
         speak: { label: 'Repeat Sentence' },
@@ -872,7 +886,9 @@
         asq: { launcherVisible: true, label: 'Answer Short Questions' },
         sgd: { label: 'Summarize Group Discussion' },
         essay: { label: 'Write Essay' },
-        'describe-image': { launcherVisible: true, label: 'Describe Image' }
+        swt: { label: 'Summarize Written Text' },
+        'describe-image': { launcherVisible: true, label: 'Describe Image' },
+        rts: { launcherVisible: true, label: 'Respond To Situation' }
       })
     }
   };
@@ -1675,6 +1691,15 @@
     if (leavingMode === 'describe-image' && mode !== 'describe-image') {
       window.DescribeImageMode?.onExit?.();
     }
+    if (leavingMode === 'swt' && mode !== 'swt') {
+      if (window.SWTMode?.shouldConfirmExit?.() && !window.confirm('Leaving Summarize Written Text will discard your current draft. Continue?')) {
+        return;
+      }
+      window.SWTMode?.onExit?.();
+    }
+    if (leavingMode === 'rts' && mode !== 'rts') {
+      window.RTSMode?.onExit?.();
+    }
 
     // Sync Adaptive UI state upon switching
     if (typeof window.updateAdaptiveUI === 'function') {
@@ -1840,6 +1865,14 @@
       } else if (mode === 'describe-image') {
         if (window.DescribeImageMode && typeof window.DescribeImageMode.onEnter === 'function') {
           window.DescribeImageMode.onEnter();
+        }
+      } else if (mode === 'swt') {
+        if (window.SWTMode && typeof window.SWTMode.onEnter === 'function') {
+          await window.SWTMode.onEnter();
+        }
+      } else if (mode === 'rts') {
+        if (window.RTSMode && typeof window.RTSMode.onEnter === 'function') {
+          window.RTSMode.onEnter();
         }
       }
 

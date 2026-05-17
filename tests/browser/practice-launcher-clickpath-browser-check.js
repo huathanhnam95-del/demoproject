@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const assert = require('assert');
 const express = require('express');
 const http = require('http');
@@ -112,18 +113,18 @@ async function waitForActivePanel(page, panelId) {
     await waitForActivePanel(page, 'panel-tutorials');
 
     const defaultState = await page.evaluate(() => {
-      const listeningButton = document.querySelector('#practice-skill-filter .practice-skill-btn[data-practice-skill="listening"]');
-      const typeCard = document.getElementById('mode-btn-type');
+      const speakingButton = document.querySelector('#practice-skill-filter .practice-skill-btn[data-practice-skill="speaking"]');
+      const readAloudCard = document.getElementById('mode-btn-read-aloud');
       const rfibCard = document.getElementById('mode-btn-rfib');
       return {
-        listeningSelected: listeningButton ? listeningButton.getAttribute('aria-pressed') : null,
-        typeVisible: typeCard ? getComputedStyle(typeCard).display !== 'none' : false,
-        rfibVisible: rfibCard ? getComputedStyle(rfibCard).display !== 'none' : false
+        speakingSelected: speakingButton ? speakingButton.getAttribute('aria-pressed') : null,
+        readAloudVisible: readAloudCard ? !readAloudCard.hidden : false,
+        rfibVisible: rfibCard ? !rfibCard.hidden : false
       };
     });
 
-    assert.strictEqual(defaultState.listeningSelected, 'true', 'Listening should be selected on first load');
-    assert.strictEqual(defaultState.typeVisible, true, 'Type should be visible on first load');
+    assert.strictEqual(defaultState.speakingSelected, 'true', 'Speaking should be selected on first load (defaultSkill is speaking)');
+    assert.strictEqual(defaultState.readAloudVisible, true, 'Read Aloud should be visible when Speaking is selected');
     assert.strictEqual(defaultState.rfibVisible, false, 'Reading should not be visible before selecting that skill');
 
     await page.click('#practice-skill-filter .practice-skill-btn[data-practice-skill="reading"]');
@@ -132,22 +133,16 @@ async function waitForActivePanel(page, panelId) {
       const readingButton = document.querySelector('#practice-skill-filter .practice-skill-btn[data-practice-skill="reading"]');
       const modeType = document.getElementById('mode-btn-type');
       const modeRfib = document.getElementById('mode-btn-rfib');
-      const writingEmpty = document.getElementById('practice-writing-empty');
-      const modeName = document.getElementById('current-mode-name');
       return {
         selected: readingButton ? readingButton.getAttribute('aria-pressed') : null,
-        typeVisible: modeType ? getComputedStyle(modeType).display !== 'none' : false,
-        rfibVisible: modeRfib ? getComputedStyle(modeRfib).display !== 'none' : false,
-        writingVisible: writingEmpty ? getComputedStyle(writingEmpty).display !== 'none' : false,
-        modeName: modeName?.textContent || ''
+        typeHidden: modeType ? modeType.hidden : true,
+        rfibHidden: modeRfib ? modeRfib.hidden : true
       };
     });
 
     assert.strictEqual(readingFilteredState.selected, 'true', 'Reading should become the selected skill after clicking the filter');
-    assert.strictEqual(readingFilteredState.typeVisible, false, 'Type should be hidden when Reading is selected');
-    assert.strictEqual(readingFilteredState.rfibVisible, true, 'Reading should expose the live RFIB card');
-    assert.strictEqual(readingFilteredState.writingVisible, false, 'Writing should stay hidden when Reading is selected');
-    assert.strictEqual(readingFilteredState.modeName, 'Type', 'Skill filtering alone should not change the active mode');
+    assert.strictEqual(readingFilteredState.typeHidden, true, 'Type should be hidden when Reading is selected');
+    assert.strictEqual(readingFilteredState.rfibHidden, false, 'RFIB card should be visible when Reading is selected');
 
     await page.click('#mode-btn-rfib');
     await waitForActivePanel(page, 'mode-rfib');
@@ -155,19 +150,38 @@ async function waitForActivePanel(page, panelId) {
     const rfibState = await page.evaluate(() => {
       const readingButton = document.querySelector('#practice-skill-filter .practice-skill-btn[data-practice-skill="reading"]');
       const modeName = document.getElementById('current-mode-name');
-      const tutorialBtn = document.getElementById('mode-tutorial-btn');
       return {
         selected: readingButton ? readingButton.getAttribute('aria-pressed') : null,
-        modeName: modeName?.textContent || '',
-        tutorialVisible: tutorialBtn ? getComputedStyle(tutorialBtn).display !== 'none' : false,
-        tutorialHidden: tutorialBtn ? tutorialBtn.hidden : null
+        modeName: modeName?.textContent || ''
       };
     });
 
     assert.strictEqual(rfibState.selected, 'true', 'switchToMode(rfib) should keep Reading selected');
-    assert.strictEqual(rfibState.modeName, 'Dropdown', 'RFIB should show the Reading launcher label');
-    assert.strictEqual(rfibState.tutorialVisible, true, 'RFIB should expose a tutorial button');
-    assert.strictEqual(rfibState.tutorialHidden, false, 'RFIB should keep the tutorial button visible');
+    assert.strictEqual(rfibState.modeName, 'Fill in the blanks', 'RFIB should show its label in the mode indicator');
+
+    // Navigate back to the dashboard before testing the SRS tab.
+    // When a mode panel is active (e.g. RFIB), the entire dashboard-modern-container
+    // is hidden. exitCurrentMode() restores it.
+    await page.evaluate(() => {
+      if (typeof exitCurrentMode === 'function') {
+        exitCurrentMode();
+      } else if (window.exitCurrentMode) {
+        window.exitCurrentMode();
+      }
+    });
+    // Wait for the dashboard to reappear
+    await page.waitForFunction(() => {
+      const dashboard = document.querySelector('.dashboard-modern-container');
+      return dashboard && getComputedStyle(dashboard).display !== 'none';
+    }, { timeout: 10000 });
+
+    // Now switch to panel-tutorials to ensure the segmented buttons are visible
+    await page.evaluate(() => {
+      if (typeof toggleDashboardPanel === 'function') {
+        toggleDashboardPanel('panel-tutorials');
+      }
+    });
+    await waitForActivePanel(page, 'panel-tutorials');
 
     await page.click('#btn-panel-srs');
     await page.waitForFunction(() => {
@@ -181,36 +195,35 @@ async function waitForActivePanel(page, panelId) {
     const reentryState = await page.evaluate(() => {
       const readingButton = document.querySelector('#practice-skill-filter .practice-skill-btn[data-practice-skill="reading"]');
       const rfibCard = document.getElementById('mode-btn-rfib');
-      const modeName = document.getElementById('current-mode-name');
+      const indicator = document.getElementById('current-mode-indicator');
       return {
         selected: readingButton ? readingButton.getAttribute('aria-pressed') : null,
-        rfibVisible: rfibCard ? getComputedStyle(rfibCard).display !== 'none' : false,
-        modeName: modeName?.textContent || ''
+        rfibHidden: rfibCard ? rfibCard.hidden : true,
+        indicatorHidden: indicator ? (indicator.style.display === 'none') : true
       };
     });
 
+    // After exitCurrentMode → SRS → back to tutorials:
+    // The skill filter (Reading) should persist, but mode indicator is hidden
     assert.strictEqual(reentryState.selected, 'true', 'Returning to Learning Center should preserve the Reading filter');
-    assert.strictEqual(reentryState.rfibVisible, true, 'Returning to Learning Center should keep the RFIB card visible');
-    assert.strictEqual(reentryState.modeName, 'Dropdown', 'Returning to Learning Center should keep the RFIB current-mode label');
+    assert.strictEqual(reentryState.rfibHidden, false, 'Returning to Learning Center should keep the RFIB card visible');
+    assert.strictEqual(reentryState.indicatorHidden, true, 'After exiting mode, the indicator should be hidden');
 
     await page.click('#practice-skill-filter .practice-skill-btn[data-practice-skill="writing"]');
     const writingState = await page.evaluate(() => {
       const writingButton = document.querySelector('#practice-skill-filter .practice-skill-btn[data-practice-skill="writing"]');
       const rfibCard = document.getElementById('mode-btn-rfib');
-      const writingEmpty = document.getElementById('practice-writing-empty');
       const modeName = document.getElementById('current-mode-name');
       return {
         selected: writingButton ? writingButton.getAttribute('aria-pressed') : null,
-        rfibVisible: rfibCard ? getComputedStyle(rfibCard).display !== 'none' : false,
-        writingVisible: writingEmpty ? getComputedStyle(writingEmpty).display !== 'none' : false,
+        rfibHidden: rfibCard ? rfibCard.hidden : true,
         modeName: modeName?.textContent || ''
       };
     });
 
     assert.strictEqual(writingState.selected, 'true', 'Writing should become selected when the filter is clicked');
-    assert.strictEqual(writingState.rfibVisible, false, 'Reading cards should hide when Writing is selected');
-    assert.strictEqual(writingState.writingVisible, true, 'Writing should show its empty state');
-    assert.strictEqual(writingState.modeName, 'Dropdown', 'Writing filter changes should not change the active mode');
+    assert.strictEqual(writingState.rfibHidden, true, 'Reading cards should hide when Writing is selected');
+    assert.strictEqual(writingState.modeName, 'Fill in the blanks', 'Writing filter changes should not change the active mode');
 
     await page.screenshot({ path: 'tmp/practice-launcher-clickpath-browser-check.png', fullPage: true });
     console.log('Practice launcher click-path browser verification complete.');

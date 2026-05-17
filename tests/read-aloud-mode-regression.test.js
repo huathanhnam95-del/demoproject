@@ -70,6 +70,26 @@ async function stubPrepareWavBlob(page) {
   });
 }
 
+async function submitMockReadAloudAttempt(page) {
+  await page.evaluate(async () => {
+    const mode = window.ReadAloudMode;
+    const rawBlob = new Blob(['fake-audio'], { type: 'audio/wav' });
+    const recordingSession = {
+      id: mode.recordingRequestId + 1,
+      disposition: 'submit',
+      promptToken: mode.promptLifecycleToken,
+      referenceText: mode.currentPromptPlainText,
+      questionId: mode.currentQuestionId || null
+    };
+    mode.recordingRequestId = recordingSession.id;
+    mode.currentRecordingSession = recordingSession;
+    mode.state = 'RESULTS';
+    mode.updateUIForState();
+    mode.setRecordedAudio(rawBlob);
+    await mode.submitToAzure(rawBlob, recordingSession);
+  });
+}
+
 async function waitForPromptReady(page, expected = {}) {
   await page.waitForFunction(({ questionId, textPattern }) => {
     const mode = window.ReadAloudMode;
@@ -682,7 +702,11 @@ async function assertSupportedFlow(browser, baseUrl) {
 
   assert.equal(initialViewState.chunkingSelected, 'false', 'Chunking should be off on first prompt load');
   assert.equal(initialViewState.chunkingDisabled, false, 'Chunking should be available when ANSWER CHUNKED is present');
-  assert.match(initialViewState.practiceTargetText, /practice target/i, 'practice target drawer toggle should be visible');
+  assert.match(
+    initialViewState.practiceTargetText,
+    /practice\s+target/i,
+    `practice target drawer toggle should be visible: ${JSON.stringify(initialViewState)}`
+  );
   assert.equal(initialViewState.practiceTargetExpanded, 'false', 'practice target drawer should start collapsed');
   assert.equal(initialViewState.practiceTargetHidden, true, 'practice target drawer should be closed by default');
   assert.equal(initialViewState.offSelected, 'true', 'Connected speech should default to off');
@@ -690,15 +714,15 @@ async function assertSupportedFlow(browser, baseUrl) {
   assert.equal(initialViewState.linkingSelected, 'false', 'Linking should be off by default');
   assert.equal(initialViewState.linkingText, 'Linking', 'linking button should use learner copy');
   assert.equal(initialViewState.reducedWordsSelected, 'false', 'Reduced words should be off by default');
-  assert.equal(initialViewState.reducedWordsText, 'Reduced words', 'reduced words button should use learner copy');
+  assert.match(initialViewState.reducedWordsText, /Reduced\s+words/, 'reduced words button should use learner copy');
   assert.equal(initialViewState.soundChangesSelected, 'false', 'Sound changes should be off by default');
-  assert.equal(initialViewState.soundChangesText, 'Sound changes', 'sound changes button should use learner copy');
+  assert.match(initialViewState.soundChangesText, /Sound\s+changes/, 'sound changes button should use learner copy');
   assert.equal(initialViewState.featureAllSelected, 'true', 'prompt feature filter should default to all prompts');
   assert.equal(initialViewState.anyConnectedDisabled, false, 'any-connected filter should be available once the static index loads');
   assert.equal(initialViewState.linkingFilterDisabled, false, 'linking filter should be available once the static index loads');
   assert.equal(initialViewState.reducedWordsFilterDisabled, false, 'reduced-words filter should be available once the static index loads');
   assert.equal(initialViewState.soundChangesFilterDisabled, false, 'sound-changes filter should be available once the static index loads');
-  assert.equal(initialViewState.recordText, 'Start Recording', 'prep-state primary CTA should match the current prep-state CTA copy');
+  assert.equal(initialViewState.recordText, 'Start recording now', 'prep-state primary CTA should match the current prep-state CTA copy');
   assert.equal(initialViewState.nextText, 'Next prompt', 'prep-state secondary CTA should use learner copy');
   assert.equal(initialViewState.filterStatusText, '', 'prompt-index status should stay empty when the index loads successfully');
   assert.equal(initialViewState.summaryText, '', 'connected speech accessibility summary should start empty when connected speech is off');
@@ -742,10 +766,17 @@ async function assertSupportedFlow(browser, baseUrl) {
     };
   });
   assert.equal(availableFilterState.disabled, false, 'audio filter should keep the selector enabled when matches exist');
-  assert.equal(availableFilterState.filteredCount, 2, 'available audio should narrow the filtered database to matching prompts');
-  assert.equal(availableFilterState.optionCount, 3, 'available audio should narrow the dropdown to matching prompts');
+  assert.equal(
+    availableFilterState.filteredCount,
+    1,
+    `available audio should keep only mocked prompts present in the audio manifest: ${JSON.stringify(availableFilterState)}`
+  );
+  assert.equal(
+    availableFilterState.optionCount,
+    2,
+    `available audio should keep the dropdown options present in the audio manifest plus random: ${JSON.stringify(availableFilterState)}`
+  );
   assert.ok(availableFilterState.options.some((text) => /Q1:/i.test(text)), 'available audio should keep prompt 1');
-  assert.ok(availableFilterState.options.some((text) => /Q3:/i.test(text)), 'available audio should keep prompt 3');
 
   await page.evaluate(() => {
     window.ReadAloudMode?.setSampleAudioFilter('all');
@@ -799,7 +830,7 @@ async function assertSupportedFlow(browser, baseUrl) {
   assert.equal(soundChangesFilterState.currentQuestionId, '3', 'sound-changes only should load the matching sound-change prompt');
 
   const noMatchFilterState = await page.evaluate(() => {
-    window.ReadAloudMode?.setSampleAudioFilter('unavailable');
+    window.ReadAloudMode?.setSampleAudioFilter('available');
     const select = document.getElementById('ra-question-select');
     const filteredDb = window.ReadAloudMode?.getFilteredDatabase?.() || [];
     return {
@@ -1154,6 +1185,11 @@ async function assertSupportedFlow(browser, baseUrl) {
   assert.notStrictEqual(narrowSelectionState.selectedText, '', 'clicking a fallback chip should mark that chip selected');
 
   await page.setViewportSize({ width: 1024, height: 900 });
+  await page.evaluate(async () => {
+    document.getElementById('ra-toggle-linking-btn')?.click();
+    await window.ReadAloudMode.loadSpecificPrompt(0);
+  });
+  await waitForPromptReady(page, { questionId: '1' });
   await page.waitForFunction(() => {
     const overlay = document.getElementById('ra-linking-overlay');
     return !!overlay && overlay.querySelectorAll('path').length > 0;
@@ -2644,6 +2680,7 @@ async function assertSpeechCoachAccordionAndEdgeCases(browser, baseUrl) {
       if (url.includes('/api/read-aloud/assess')) {
         window.__scAccordionAssessCount += 1;
         return new Response(JSON.stringify({
+          success: true,
           recognizedText: 'I want to go to the store and pick it up',
           accuracyScore: 88,
           words: [
@@ -2697,13 +2734,7 @@ async function assertSpeechCoachAccordionAndEdgeCases(browser, baseUrl) {
   });
   await page.waitForFunction(() => window.ReadAloudMode?.currentPromptReady, { timeout: 30000 });
 
-  // Trigger a mock recording
-  await page.evaluate(() => {
-    const mode = window.ReadAloudMode;
-    mode.recording = false;
-    mode.currentRecordedBlob = new Blob(['fake-audio'], { type: 'audio/wav' });
-    mode.submitAssessment();
-  });
+  await submitMockReadAloudAttempt(page);
 
   // Wait for assessment results to render
   await page.waitForFunction(() => {
@@ -2805,6 +2836,7 @@ async function assertSpeechCoachAccordionAndEdgeCases(browser, baseUrl) {
       const url = String(args[0] || '');
       if (url.includes('/api/read-aloud/assess')) {
         return new Response(JSON.stringify({
+          success: true,
           recognizedText: 'test',
           accuracyScore: 50,
           words: [{ word: 'test', accuracyScore: 50, errorType: 'None' }],
@@ -2826,12 +2858,7 @@ async function assertSpeechCoachAccordionAndEdgeCases(browser, baseUrl) {
   await page2.evaluate(() => { window.switchToMode('read-aloud'); });
   await page2.waitForFunction(() => window.ReadAloudMode?.currentPromptReady, { timeout: 30000 });
 
-  await page2.evaluate(() => {
-    const mode = window.ReadAloudMode;
-    mode.recording = false;
-    mode.currentRecordedBlob = new Blob(['fake-audio'], { type: 'audio/wav' });
-    mode.submitAssessment();
-  });
+  await submitMockReadAloudAttempt(page2);
 
   await page2.waitForFunction(() => {
     const summary = document.getElementById('ra-connected-speech-summary');

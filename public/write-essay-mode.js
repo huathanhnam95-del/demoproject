@@ -33,6 +33,7 @@
     let scoreEssayFn = null;
     let rubricTextCache = null;
     let rubricTextPromise = null;
+    let authStateRefreshBound = false;
 
     // Timer state
     let essayTimerId = null;
@@ -51,6 +52,7 @@
             return;
         }
         setupEventListeners();
+        registerAuthStateRefresh();
         loadEntries();
         isInitialized = true;
     }
@@ -804,6 +806,22 @@
                 }
             });
         }
+    }
+
+    function registerAuthStateRefresh() {
+        if (authStateRefreshBound) return;
+        const register = window.authUI && (
+            window.authUI.onAuthStateChanged ||
+            window.authUI.onAuthStateChange
+        );
+        if (typeof register !== 'function') return;
+
+        authStateRefreshBound = true;
+        register(() => {
+            if (el.stepResults && el.stepResults.style.display === 'block' && lastSubmittedEssayText) {
+                updateAiScoreButtonState();
+            }
+        });
     }
 
     async function getRubricText() {

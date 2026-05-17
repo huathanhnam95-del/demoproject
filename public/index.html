@@ -1326,6 +1326,29 @@
                 </div>
               </div>
 
+              <!-- 7. Respond To Situation Mode Card (PTE 7: RTS) -->
+              <div id="mode-btn-rts" class="modern-card transition-card mode-switch-btn" data-practice-skill="speaking"
+                onclick="window.switchToMode('rts')" tabindex="0" role="button" aria-label="Respond To Situation mode">
+                <span class="badge new">New</span>
+                <div class="card-visual visual-sgd">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+                      <!-- Speech bubble -->
+                      <rect x="12" y="14" width="48" height="30" rx="8" stroke="currentColor" stroke-width="2.5" fill="var(--visual-bg)" />
+                      <path d="M24 44l6 10 6-10" stroke="currentColor" stroke-width="2.5" fill="var(--visual-bg)" />
+                      <!-- Exclamation / situation icon -->
+                      <circle cx="36" cy="26" r="4" fill="var(--visual-accent)" opacity="0.8" />
+                      <line x1="36" y1="31" x2="36" y2="38" stroke="var(--visual-accent)" stroke-width="2.5" stroke-linecap="round" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Respond To Situation</h3>
+                  <p>Listen to a scenario and respond with your opinion.</p>
+                  <button class="card-cta">Practice Now</button>
+                </div>
+              </div>
+
               <!-- Other Modes -->
               <!-- Type Mode Card -->
               <div id="mode-btn-type" class="modern-card transition-card mode-switch-btn"
@@ -1544,6 +1567,28 @@
                   <button class="card-cta">Practice Now</button>
                 </div>
               </div>
+
+              <!-- SWT Mode Card -->
+              <div id="mode-btn-swt" class="modern-card transition-card mode-switch-btn" data-practice-skill="writing"
+                onclick="window.switchToMode('swt')" tabindex="0" role="button" aria-label="Summarize Written Text mode">
+                <span class="badge new">New</span>
+                <div class="card-visual visual-essay">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+                      <rect x="16" y="10" width="40" height="52" rx="6" stroke="currentColor" stroke-width="2.5" fill="var(--visual-bg)" />
+                      <line x1="24" y1="22" x2="48" y2="22" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" />
+                      <line x1="24" y1="30" x2="48" y2="30" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" opacity="0.7" />
+                      <line x1="24" y1="38" x2="48" y2="38" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" opacity="0.5" />
+                      <path d="M24 50 L36 46 L48 50" stroke="var(--visual-accent)" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.8" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Summarize Written Text</h3>
+                  <p>Summarize a passage in one sentence (5–75 words).</p>
+                  <button class="card-cta">Practice Now</button>
+                </div>
+              </div>
             </div>
             <div class="whats-this-container-compact">
               <button id="what-is-this-btn" class="btn-secondary btn-compact">
@@ -1723,10 +1768,12 @@
           <button id="tab-notes" class="tab-btn" type="button">Take Notes</button>
           <button id="tab-sgd" class="tab-btn" type="button">Discussion</button>
           <button id="tab-essay" class="tab-btn" type="button">Write Essay</button>
+          <button id="tab-swt" class="tab-btn" type="button">SWT</button>
           <button id="tab-pronounce" class="tab-btn" type="button">Pronounce</button>
           <button id="tab-read-aloud" class="tab-btn" type="button">Read Aloud</button>
           <button id="tab-asq" class="tab-btn" type="button">Quiz</button>
           <button id="tab-describe-image" class="tab-btn" type="button">Describe Image</button>
+          <button id="tab-rts" class="tab-btn" type="button">RTS</button>
         </div>
       </div>
 
@@ -2981,6 +3028,234 @@
         </div>
       </div>
 
+      <!-- Summarize Written Text Mode Panel -->
+      <div id="mode-swt" class="mode-panel" style="display: none;">
+        <div id="swt-info-box" class="notification-box important-notice">
+          <span>📝 PTE Summarize Written Text — Write ONE sentence summarizing the passage (10 min)</span>
+          <button class="info-box-close" title="Don't show again">&times;</button>
+        </div>
+
+        <!-- v7 Question Picker -->
+        <div class="ra-v7-picker-bar" id="swt-v7-picker-bar">
+          <div class="ra-v7-picker-inner">
+            <div class="ra-v7-nav" role="group" aria-label="SWT navigation">
+              <button id="swt-v7-prev-btn" class="ra-v7-icon-btn" type="button" disabled title="Previous question">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+              </button>
+              <button id="swt-v7-question-pill" class="ra-v7-question-pill" type="button" aria-haspopup="dialog" title="Jump to a question">Select a question…</button>
+              <button id="swt-v7-next-btn" class="ra-v7-icon-btn" type="button" title="Next question">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="swt-v7-backdrop" class="ra-v7-backdrop" aria-hidden="true"></div>
+        <div id="swt-v7-sheet" class="ra-v7-sheet" role="dialog" aria-modal="true" tabindex="-1">
+          <span class="ra-v7-grabber" aria-hidden="true"></span>
+          <div class="ra-v7-sheet-header">
+            <div class="ra-v7-sheet-title">Question Picker</div>
+            <button id="swt-v7-sheet-close" class="ra-v7-sheet-close" type="button" aria-label="Close">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+          </div>
+          <div class="ra-v7-sheet-body">
+            <div id="swt-v7-panel-jump" role="tabpanel">
+              <label class="ra-v7-sr-only" for="swt-v7-jump-search">Search</label>
+              <input id="swt-v7-jump-search" class="ra-v7-search" type="search" autocomplete="off" placeholder="Search questions…">
+              <div class="ra-v7-section-title">Questions</div>
+              <div id="swt-v7-jump-list" class="ra-v7-list" role="listbox" aria-label="Questions"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Start Button -->
+        <div class="controls">
+          <button id="start-swt-btn" class="modern-btn modern-btn--play" type="button">Start Writing</button>
+        </div>
+
+        <!-- Practice Area -->
+        <div id="swt-practice-area" style="display: none;">
+          <!-- Step 1: Write -->
+          <div id="swt-step-write" class="notes-step" style="display: none;">
+            <div class="notes-step-header">
+              <span class="notes-step-badge">Summarize Written Text</span>
+              <div id="swt-timer" class="essay-timer">10:00</div>
+            </div>
+            <div id="swt-source-display" class="essay-prompt-display">
+              <p>Source text will appear here…</p>
+            </div>
+            <div class="essay-input-area">
+              <textarea id="swt-input" class="essay-textarea"
+                placeholder="Write your summary in ONE single sentence (5-75 words)." rows="5"></textarea>
+              <div class="essay-input-footer">
+                <span id="swt-word-count" class="essay-word-count essay-wc-bad">0 words</span>
+                <button id="swt-submit-btn" class="modern-btn modern-btn--check" type="button">Submit Summary</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2: Results -->
+          <div id="swt-step-results" class="notes-step" style="display: none;">
+            <div class="notes-step-header">
+              <span class="notes-step-badge">Results</span>
+              <h4>Your SWT Scores</h4>
+            </div>
+            <div id="swt-results-container" class="essay-results-container"></div>
+            <div class="notes-results-controls essay-results-controls">
+              <button id="swt-retry-btn" class="modern-btn modern-btn--retry" type="button">Try Again</button>
+              <button id="swt-ai-score-btn" class="modern-btn modern-btn--play" type="button" style="display:none;">Submit to AI scoring</button>
+            </div>
+            <div id="swt-ai-score-hint" class="essay-ai-score-hint" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Respond To Situation Mode Panel -->
+      <div id="mode-rts" class="mode-panel" style="display: none;">
+
+        <!-- v7 Question Picker Bar -->
+        <div class="ra-v7-picker-bar" id="rts-v7-picker-bar">
+          <div class="ra-v7-picker-inner">
+            <div class="ra-v7-nav" role="group" aria-label="RTS navigation">
+              <button id="rts-v7-prev-btn" class="ra-v7-icon-btn" type="button" disabled title="Previous question">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+              </button>
+              <button id="rts-v7-question-pill" class="ra-v7-question-pill" type="button" aria-haspopup="dialog" title="Jump to a question">Select a question…</button>
+              <button id="rts-v7-next-btn" class="ra-v7-icon-btn" type="button" title="Next question">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- v7 Bottom Sheet (question search / jump list) -->
+        <div id="rts-v7-backdrop" class="ra-v7-backdrop" aria-hidden="true"></div>
+        <div id="rts-v7-sheet" class="ra-v7-sheet" role="dialog" aria-modal="true" tabindex="-1">
+          <span class="ra-v7-grabber" aria-hidden="true"></span>
+          <div class="ra-v7-sheet-header">
+            <div class="ra-v7-sheet-title">Question Picker</div>
+            <button id="rts-v7-sheet-close" class="ra-v7-sheet-close" type="button" aria-label="Close">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+          </div>
+          <div class="ra-v7-sheet-body">
+            <div id="rts-v7-panel-jump" role="tabpanel">
+              <label class="ra-v7-sr-only" for="rts-v7-jump-search">Search</label>
+              <input id="rts-v7-jump-search" class="ra-v7-search" type="search" autocomplete="off" placeholder="Search questions…">
+              <div class="ra-v7-section-title">Questions</div>
+              <div id="rts-v7-jump-list" class="ra-v7-list" role="listbox" aria-label="Questions"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Play Button -->
+        <div style="max-width: 900px; margin: 16px auto; text-align: center;">
+          <button id="play-rts-btn" class="modern-btn modern-btn--play" type="button">
+            ▶ Start
+          </button>
+        </div>
+
+        <!-- Practice Area (hidden until Start) -->
+        <div id="rts-practice-area" style="display: none; max-width: 900px; margin: 0 auto;">
+          <!-- Step Progress Breadcrumb -->
+          <div id="rts-step-progress" class="rts-step-progress">
+            <span class="rts-step-dot active" data-step="audio">
+              <span class="rts-step-icon">🔊</span> Audio
+            </span>
+            <span class="rts-step-connector"></span>
+            <span class="rts-step-dot" data-step="prep">
+              <span class="rts-step-icon">💭</span> Prep
+            </span>
+            <span class="rts-step-connector"></span>
+            <span class="rts-step-dot" data-step="record">
+              <span class="rts-step-icon">🎙️</span> Record
+            </span>
+            <span class="rts-step-connector"></span>
+            <span class="rts-step-dot" data-step="results">
+              <span class="rts-step-icon">📊</span> Results
+            </span>
+          </div>
+
+          <!-- Step 1: Audio Countdown + Playback -->
+          <div id="rts-step-audio" class="rts-step-card" style="display: none;">
+            <div id="rts-prompt-text" class="rts-prompt-card"></div>
+            <div id="rts-audio-countdown-box" class="rts-countdown-card">
+              <div class="rts-countdown-icon">🎧</div>
+              <div id="rts-audio-countdown-text" class="rts-countdown-label">The clip will play in <strong id="rts-audio-countdown-timer">15</strong> seconds</div>
+              <div class="rts-countdown-bar-track">
+                <div id="rts-audio-countdown-bar-fill" class="rts-countdown-bar-fill"></div>
+              </div>
+            </div>
+            <audio id="rts-audio-player" preload="auto"></audio>
+          </div>
+
+          <!-- Step 2: Preparation -->
+          <div id="rts-step-prep" class="rts-step-card" style="display: none;">
+            <div id="rts-prompt-text-prep" class="rts-prompt-card"></div>
+            <div class="rts-timer-card rts-timer-card--prep">
+              <div class="rts-timer-emoji">💭</div>
+              <div class="rts-timer-label">Prepare your response</div>
+              <div id="rts-prep-timer" class="rts-timer-display">00:10</div>
+              <div class="rts-progress-track">
+                <div id="rts-prep-bar-fill" class="rts-progress-fill rts-progress-fill--prep" style="width: 100%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3: Recording -->
+          <div id="rts-step-record" class="rts-step-card" style="display: none;">
+            <div id="rts-prompt-text-record" class="rts-prompt-card rts-prompt-card--faded"></div>
+            <div class="rts-timer-card rts-timer-card--record">
+              <div id="rts-record-status" class="rts-record-indicator">
+                <span class="rts-record-dot"></span>
+                <span id="rts-record-status-text">Recording…</span>
+              </div>
+              <div id="rts-record-timer" class="rts-timer-display">00:40</div>
+              <div class="rts-progress-track">
+                <div id="rts-record-bar-fill" class="rts-progress-fill rts-progress-fill--record" style="width: 100%;"></div>
+              </div>
+              <div style="text-align: center; margin-top: 16px;">
+                <button id="rts-stop-btn" class="modern-btn modern-btn--retry" type="button">⏹ Stop Recording</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 4: Results -->
+          <div id="rts-step-results" class="rts-step-card" style="display: none;">
+            <!-- Playback Card -->
+            <div class="rts-playback-card">
+              <div class="rts-playback-header">
+                <span class="rts-playback-icon">🎧</span>
+                <span class="rts-playback-title">Your Recording</span>
+              </div>
+              <audio id="rts-recording-playback" controls class="rts-audio-controls"></audio>
+            </div>
+
+            <!-- Transcript Display (read-only) -->
+            <div class="rts-transcript-card">
+              <div class="rts-transcript-header">
+                <span class="rts-transcript-icon">📝</span>
+                <span class="rts-transcript-title">Transcript</span>
+              </div>
+              <div id="rts-transcript" class="rts-transcript-display"
+                aria-label="Transcript of your recorded response">No transcript detected.</div>
+            </div>
+
+            <!-- AI Score Results Container (dynamically populated) -->
+            <div id="rts-results-container" class="essay-results-container"></div>
+
+            <div class="rts-results-actions">
+              <button id="rts-retry-btn" class="modern-btn modern-btn--retry" type="button">🔄 Try Again</button>
+              <button id="rts-ai-score-btn" class="modern-btn modern-btn--play" type="button">🤖 Submit to AI Scoring</button>
+              <button id="rts-next-question-btn" class="modern-btn modern-btn--play" type="button">Next Question →</button>
+            </div>
+            <div id="rts-ai-score-hint" class="essay-ai-score-hint" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+
+
       <!-- Describe Image Mode Panel -->
       <div id="mode-describe-image" class="mode-panel" style="display: none;">
         <div id="di-info-box" class="notification-box important-notice">
@@ -3513,31 +3788,30 @@
 
           </div>
 
-          <!-- Audio Player (ElevenLabs) -->
+          <!-- Audio Player (Kokoro TTS) -->
           <div id="ra-audio-player" class="ra-audio-player"
             style="display: none; margin-bottom: 20px; padding: 15px; background: var(--bg-secondary); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
-            <div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;">
-              <span
-                style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">🔊
-                Listen</span>
-              <div class="ra-toggle-group"
-                style="display: flex; border-radius: 8px; overflow: hidden; border: 2px solid #e5e7eb; background: #e5e7eb;">
-                <button id="ra-voice-male" class="ra-toggle-btn ra-toggle-active" type="button"
-                  style="padding: 6px 14px; font-size: 0.85rem; border: none; cursor: pointer; background: #3b82f6; color: #ffffff; font-weight: 600; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 6px;">♂
-                  Male</button>
-                <button id="ra-voice-female" class="ra-toggle-btn" type="button"
-                  style="padding: 6px 14px; font-size: 0.85rem; border: none; cursor: pointer; background: transparent; color: #4b5563; font-weight: 500; transition: all 0.2s; border-radius: 6px;">♀
-                  Female</button>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <!-- Row 1: Label + Gender Toggle + Play -->
+              <div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;">
+                <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">🔊 Listen</span>
+                <div class="ra-toggle-group" style="display: flex; border-radius: 8px; overflow: hidden; border: 2px solid #e5e7eb; background: #e5e7eb;">
+                  <button id="ra-voice-male" class="ra-toggle-btn" type="button" style="padding: 6px 14px; font-size: 0.85rem; border: none; cursor: pointer; background: transparent; color: #4b5563; font-weight: 500; transition: all 0.2s; border-radius: 6px;">♂ Male</button>
+                  <button id="ra-voice-female" class="ra-toggle-btn" type="button" style="padding: 6px 14px; font-size: 0.85rem; border: none; cursor: pointer; background: transparent; color: #4b5563; font-weight: 500; transition: all 0.2s; border-radius: 6px;">♀ Female</button>
+                </div>
+                              <div class="ra-toggle-group" style="display: flex; border-radius: 8px; overflow: hidden; border: 2px solid #e5e7eb; background: #e5e7eb;">
+                  <button id="ra-speed-100" class="ra-toggle-btn ra-toggle-active" type="button" style="padding: 6px 14px; font-size: 0.85rem; border: none; cursor: pointer; background: #3b82f6; color: #ffffff; font-weight: 600; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 6px;">Normal</button>
+                  <button id="ra-speed-80" class="ra-toggle-btn" type="button" style="padding: 6px 14px; font-size: 0.85rem; border: none; cursor: pointer; background: transparent; color: #4b5563; font-weight: 500; transition: all 0.2s; border-radius: 6px;">Slow</button>
+                </div>
+                <button id="ra-play-audio-btn" class="modern-btn modern-btn--play" type="button" style="min-width: 80px; padding: 6px 16px; font-size: 0.9rem;" disabled>Pick a voice</button>
               </div>
-              <div class="ra-toggle-group"
-                style="display: flex; border-radius: 8px; overflow: hidden; border: 2px solid #e5e7eb; background: #e5e7eb;">
-                <button id="ra-speed-100" class="ra-toggle-btn ra-toggle-active" type="button"
-                  style="padding: 6px 14px; font-size: 0.85rem; border: none; cursor: pointer; background: #3b82f6; color: #ffffff; font-weight: 600; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 6px;">Normal</button>
-                <button id="ra-speed-80" class="ra-toggle-btn" type="button"
-                  style="padding: 6px 14px; font-size: 0.85rem; border: none; cursor: pointer; background: transparent; color: #4b5563; font-weight: 500; transition: all 0.2s; border-radius: 6px;">Slow</button>
+              <!-- Row 2: Voice Picker + Dropdown -->
+              <div style="position: relative; display: flex; align-items: center; justify-content: center; gap: 0;">
+                <button id="ra-voice-picker-btn" type="button" style="padding: 7px 14px; font-size: 0.85rem; border: 2px solid #e5e7eb; border-right: none; cursor: pointer; background: var(--bg-primary, #fff); color: var(--text-primary, #1f2937); font-weight: 500; transition: all 0.2s; border-radius: 8px 0 0 8px; min-width: 160px; text-align: left;" title="Click to randomize voice">🎲 Pick a voice</button>
+                <button id="ra-voice-dropdown-toggle" type="button" style="padding: 7px 10px; font-size: 0.85rem; border: 2px solid #e5e7eb; cursor: pointer; background: var(--bg-primary, #fff); color: var(--text-primary, #1f2937); font-weight: 500; transition: all 0.2s; border-radius: 0 8px 8px 0;" title="Open voice list">▾</button>
+                <div id="ra-voice-dropdown-list" style="display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 4px; min-width: 240px; max-height: 280px; overflow-y: auto; background: var(--bg-primary, #fff); border: 2px solid #e5e7eb; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 50; padding: 6px;">
+                </div>
               </div>
-              <button id="ra-play-audio-btn" class="modern-btn modern-btn--play" type="button"
-                style="min-width: 80px; padding: 6px 16px; font-size: 0.9rem;">▶ Play</button>
             </div>
             <audio id="ra-elevenlabs-audio" preload="auto"></audio>
           </div>
@@ -3561,10 +3835,13 @@
             style="display: none; width: 100%; margin-bottom: 20px; text-align: left; padding: 18px 20px; border: 1px solid #d1d5db; border-radius: 12px; background: linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(37, 99, 235, 0.05) 100%); box-shadow: 0 4px 10px rgba(15, 23, 42, 0.05);">
             <div
               style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom: 16px; flex-wrap: wrap;">
-              <div style="display:flex; align-items:center; gap:10px;">
+              <div style="display:flex; align-items:center; gap:10px; flex-wrap: wrap;">
                 <div id="ra-connected-speech-label"
                   style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);">
                   Speech Coach</div>
+                <div id="ra-connected-speech-meta"
+                  style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);">
+                  Preview</div>
                 <button id="ra-speech-coach-toggle" type="button" aria-expanded="true" title="Hide/show Speech Coach"
                   style="padding: 3px 10px; border-radius: 999px; border: 1px solid #d1d5db; background: #fff; color: #4b5563; font-size: 0.72rem; font-weight: 600; cursor: pointer; white-space: nowrap;">👁
                   Hide</button>
@@ -3580,10 +3857,10 @@
                 style="padding: 6px 14px; border: none; border-radius: 999px; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); color: #1d4ed8; font-size: 0.85rem; font-weight: 600; cursor: pointer;">Linking
                 + Reduced Words</button>
             </div>
-          </div>
-          <div id="ra-connected-speech-list"
-            style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
-            <!-- JS will inject 2 columns here -->
+            <div id="ra-connected-speech-list"
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
+              <!-- JS will inject 2 columns here -->
+            </div>
           </div>
         </div>
 
@@ -4349,7 +4626,9 @@
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>
   <script src="/write-essay-mode.js?v=20260509_write_essay_feedback_ai_scoring"></script>
+  <script src="/swt-mode.js?v=20260513_swt_refactor"></script>
   <script src="/describe-image-mode.js"></script>
+  <script src="/rts-mode.js"></script>
   <!-- Dialogflow Messenger Integration -->
   <link rel="stylesheet"
     href="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/themes/df-messenger-default.css">

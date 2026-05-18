@@ -8,6 +8,7 @@ function read(relativePath) {
 
 const html = read('public/crm-admin.html');
 const js = read('public/crm-admin.js');
+const agentSourcesWorkspace = read('public/js/crm/agent-sources-workspace.js');
 const packageJson = JSON.parse(read('package.json'));
 const CRM_ADMIN_ASSET_VERSION = '20260507-v1.6.9';
 
@@ -147,6 +148,11 @@ assert(
     'CRM admin page must load the student directory workspace helper before crm-admin.js.'
 );
 assert(
+    html.includes('js/crm/agent-sources-workspace.js') &&
+    html.indexOf('js/crm/agent-sources-workspace.js') < html.indexOf('crm-admin.js'),
+    'CRM admin page must load the agent sources workspace helper before crm-admin.js.'
+);
+assert(
     html.includes('js/crm/devtools-access.js') &&
     html.indexOf('js/crm/devtools-access.js') < html.indexOf('crm-admin.js'),
     'CRM admin page must load the devtools access helper before crm-admin.js.'
@@ -266,6 +272,18 @@ assert(
     js.includes('CRM ID') &&
     js.includes("crmId || '"),
     'crm-admin.js and the student directory must surface the public CRM ID instead of the internal document ID.'
+);
+assert(
+    js.includes('let agentSourcesController = null;') &&
+    js.includes('agentSourcesController = state.accessMode === \'admin\'') &&
+    js.includes('elements.inputLeadAgentSource = document.getElementById(\'lead-agent-source\')') &&
+    js.includes('elements.inputStudentAgentSource = document.getElementById(\'student-agent-source\')') &&
+    js.includes('elements.btnCreateAgentSource = document.getElementById(\'btn-create-agent-source\')') &&
+    agentSourcesWorkspace.includes('window.CrmAgentSourcesWorkspace') &&
+    agentSourcesWorkspace.includes('/api/admin/agent-sources?limit=500') &&
+    agentSourcesWorkspace.includes('/api/admin/agent-sources/report?') &&
+    agentSourcesWorkspace.includes('btnCreateAgentSource.addEventListener(\'click\''),
+    'CRM admin must wire agent-source create, refresh, list, export, and linked dropdown hydration.'
 );
 
 assert(

@@ -44082,12 +44082,132 @@
       "voiceName": "Mark",
       "files": {
         "100": "RA_1005_male_100.mp3"
+      },
+      "am_echo": {
+        "name": "Echo",
+        "accent": "American",
+        "files": {
+          "80": "RA_1005_am_echo_80.mp3",
+          "100": "RA_1005_am_echo_100.mp3"
+        }
+      },
+      "am_eric": {
+        "name": "Eric",
+        "accent": "American",
+        "files": {
+          "80": "RA_1005_am_eric_80.mp3",
+          "100": "RA_1005_am_eric_100.mp3"
+        }
+      },
+      "am_fenrir": {
+        "name": "Fenrir",
+        "accent": "American",
+        "files": {
+          "80": "RA_1005_am_fenrir_80.mp3",
+          "100": "RA_1005_am_fenrir_100.mp3"
+        }
+      },
+      "am_liam": {
+        "name": "Liam",
+        "accent": "American",
+        "files": {
+          "80": "RA_1005_am_liam_80.mp3",
+          "100": "RA_1005_am_liam_100.mp3"
+        }
+      },
+      "am_michael": {
+        "name": "Michael",
+        "accent": "American",
+        "files": {
+          "80": "RA_1005_am_michael_80.mp3",
+          "100": "RA_1005_am_michael_100.mp3"
+        }
+      },
+      "am_puck": {
+        "name": "Puck",
+        "accent": "American",
+        "files": {
+          "80": "RA_1005_am_puck_80.mp3",
+          "100": "RA_1005_am_puck_100.mp3"
+        }
+      },
+      "bm_fable": {
+        "name": "Fable",
+        "accent": "British",
+        "files": {
+          "80": "RA_1005_bm_fable_80.mp3",
+          "100": "RA_1005_bm_fable_100.mp3"
+        }
+      },
+      "bm_george": {
+        "name": "George",
+        "accent": "British",
+        "files": {
+          "80": "RA_1005_bm_george_80.mp3",
+          "100": "RA_1005_bm_george_100.mp3"
+        }
+      },
+      "bm_lewis": {
+        "name": "Lewis",
+        "accent": "British",
+        "files": {
+          "80": "RA_1005_bm_lewis_80.mp3",
+          "100": "RA_1005_bm_lewis_100.mp3"
+        }
       }
     },
     "female": {
       "voiceId": "kdmDKE6EkgrWrrykO9Qt",
       "voiceName": "Alexandra",
-      "files": {}
+      "files": {},
+      "af_alloy": {
+        "name": "Alloy",
+        "accent": "American",
+        "files": {
+          "80": "RA_1005_af_alloy_80.mp3",
+          "100": "RA_1005_af_alloy_100.mp3"
+        }
+      },
+      "af_bella": {
+        "name": "Bella",
+        "accent": "American",
+        "files": {
+          "80": "RA_1005_af_bella_80.mp3",
+          "100": "RA_1005_af_bella_100.mp3"
+        }
+      },
+      "af_heart": {
+        "name": "Heart",
+        "accent": "American",
+        "files": {
+          "80": "RA_1005_af_heart_80.mp3",
+          "100": "RA_1005_af_heart_100.mp3"
+        }
+      },
+      "af_kore": {
+        "name": "Kore",
+        "accent": "American",
+        "files": {
+          "80": "RA_1005_af_kore_80.mp3",
+          "100": "RA_1005_af_kore_100.mp3"
+        }
+      },
+      "af_sarah": {
+        "name": "Sarah",
+        "accent": "American",
+        "files": {
+          "80": "RA_1005_af_sarah_80.mp3",
+          "100": "RA_1005_af_sarah_100.mp3"
+        }
+      },
+      "bf_emma": {
+        "name": "Emma",
+        "accent": "British",
+        "files": {
+          "80": "RA_1005_bf_emma_80.mp3",
+          "100": "RA_1005_bf_emma_100.mp3"
+        }
+      }
     }
   },
   "1006": {
@@ -48412,12 +48532,132 @@
       "voiceName": "Michael C. Vincent",
       "files": {
         "100": "RA_1062_male_100.mp3"
+      },
+      "am_echo": {
+        "name": "Echo",
+        "accent": "American",
+        "files": {
+          "80": "RA_1062_am_echo_80.mp3",
+          "100": "RA_1062_am_echo_100.mp3"
+        }
+      },
+      "am_eric": {
+        "name": "Eric",
+        "accent": "American",
+        "files": {
+          "80": "RA_1062_am_eric_80.mp3",
+          "100": "RA_1062_am_eric_100.mp3"
+        }
+      },
+      "am_fenrir": {
+        "name": "Fenrir",
+        "accent": "American",
+        "files": {
+          "80": "RA_1062_am_fenrir_80.mp3",
+          "100": "RA_1062_am_fenrir_100.mp3"
+        }
+      },
+      "am_liam": {
+        "name": "Liam",
+        "accent": "American",
+        "files": {
+          "80": "RA_1062_am_liam_80.mp3",
+          "100": "RA_1062_am_liam_100.mp3"
+        }
+      },
+      "am_michael": {
+        "name": "Michael",
+        "accent": "American",
+        "files": {
+          "80": "RA_1062_am_michael_80.mp3",
+          "100": "RA_1062_am_michael_100.mp3"
+        }
+      },
+      "am_puck": {
+        "name": "Puck",
+        "accent": "American",
+        "files": {
+          "80": "RA_1062_am_puck_80.mp3",
+          "100": "RA_1062_am_puck_100.mp3"
+        }
+      },
+      "bm_fable": {
+        "name": "Fable",
+        "accent": "British",
+        "files": {
+          "80": "RA_1062_bm_fable_80.mp3",
+          "100": "RA_1062_bm_fable_100.mp3"
+        }
+      },
+      "bm_george": {
+        "name": "George",
+        "accent": "British",
+        "files": {
+          "80": "RA_1062_bm_george_80.mp3",
+          "100": "RA_1062_bm_george_100.mp3"
+        }
+      },
+      "bm_lewis": {
+        "name": "Lewis",
+        "accent": "British",
+        "files": {
+          "80": "RA_1062_bm_lewis_80.mp3",
+          "100": "RA_1062_bm_lewis_100.mp3"
+        }
       }
     },
     "female": {
       "voiceId": "kPzsL2i3teMYv0FxEYQ6",
       "voiceName": "Brittney",
-      "files": {}
+      "files": {},
+      "af_alloy": {
+        "name": "Alloy",
+        "accent": "American",
+        "files": {
+          "80": "RA_1062_af_alloy_80.mp3",
+          "100": "RA_1062_af_alloy_100.mp3"
+        }
+      },
+      "af_bella": {
+        "name": "Bella",
+        "accent": "American",
+        "files": {
+          "80": "RA_1062_af_bella_80.mp3",
+          "100": "RA_1062_af_bella_100.mp3"
+        }
+      },
+      "af_heart": {
+        "name": "Heart",
+        "accent": "American",
+        "files": {
+          "80": "RA_1062_af_heart_80.mp3",
+          "100": "RA_1062_af_heart_100.mp3"
+        }
+      },
+      "af_kore": {
+        "name": "Kore",
+        "accent": "American",
+        "files": {
+          "80": "RA_1062_af_kore_80.mp3",
+          "100": "RA_1062_af_kore_100.mp3"
+        }
+      },
+      "af_sarah": {
+        "name": "Sarah",
+        "accent": "American",
+        "files": {
+          "80": "RA_1062_af_sarah_80.mp3",
+          "100": "RA_1062_af_sarah_100.mp3"
+        }
+      },
+      "bf_emma": {
+        "name": "Emma",
+        "accent": "British",
+        "files": {
+          "80": "RA_1062_bf_emma_80.mp3",
+          "100": "RA_1062_bf_emma_100.mp3"
+        }
+      }
     }
   },
   "1065": {
@@ -48426,12 +48666,132 @@
       "voiceName": "Adam",
       "files": {
         "100": "RA_1065_male_100.mp3"
+      },
+      "am_echo": {
+        "name": "Echo",
+        "accent": "American",
+        "files": {
+          "80": "RA_1065_am_echo_80.mp3",
+          "100": "RA_1065_am_echo_100.mp3"
+        }
+      },
+      "am_eric": {
+        "name": "Eric",
+        "accent": "American",
+        "files": {
+          "80": "RA_1065_am_eric_80.mp3",
+          "100": "RA_1065_am_eric_100.mp3"
+        }
+      },
+      "am_fenrir": {
+        "name": "Fenrir",
+        "accent": "American",
+        "files": {
+          "80": "RA_1065_am_fenrir_80.mp3",
+          "100": "RA_1065_am_fenrir_100.mp3"
+        }
+      },
+      "am_liam": {
+        "name": "Liam",
+        "accent": "American",
+        "files": {
+          "80": "RA_1065_am_liam_80.mp3",
+          "100": "RA_1065_am_liam_100.mp3"
+        }
+      },
+      "am_michael": {
+        "name": "Michael",
+        "accent": "American",
+        "files": {
+          "80": "RA_1065_am_michael_80.mp3",
+          "100": "RA_1065_am_michael_100.mp3"
+        }
+      },
+      "am_puck": {
+        "name": "Puck",
+        "accent": "American",
+        "files": {
+          "80": "RA_1065_am_puck_80.mp3",
+          "100": "RA_1065_am_puck_100.mp3"
+        }
+      },
+      "bm_fable": {
+        "name": "Fable",
+        "accent": "British",
+        "files": {
+          "80": "RA_1065_bm_fable_80.mp3",
+          "100": "RA_1065_bm_fable_100.mp3"
+        }
+      },
+      "bm_george": {
+        "name": "George",
+        "accent": "British",
+        "files": {
+          "80": "RA_1065_bm_george_80.mp3",
+          "100": "RA_1065_bm_george_100.mp3"
+        }
+      },
+      "bm_lewis": {
+        "name": "Lewis",
+        "accent": "British",
+        "files": {
+          "80": "RA_1065_bm_lewis_80.mp3",
+          "100": "RA_1065_bm_lewis_100.mp3"
+        }
       }
     },
     "female": {
       "voiceId": "56AoDkrOh6qfVPDXZ7Pt",
       "voiceName": "Cassidy",
-      "files": {}
+      "files": {},
+      "af_alloy": {
+        "name": "Alloy",
+        "accent": "American",
+        "files": {
+          "80": "RA_1065_af_alloy_80.mp3",
+          "100": "RA_1065_af_alloy_100.mp3"
+        }
+      },
+      "af_bella": {
+        "name": "Bella",
+        "accent": "American",
+        "files": {
+          "80": "RA_1065_af_bella_80.mp3",
+          "100": "RA_1065_af_bella_100.mp3"
+        }
+      },
+      "af_heart": {
+        "name": "Heart",
+        "accent": "American",
+        "files": {
+          "80": "RA_1065_af_heart_80.mp3",
+          "100": "RA_1065_af_heart_100.mp3"
+        }
+      },
+      "af_kore": {
+        "name": "Kore",
+        "accent": "American",
+        "files": {
+          "80": "RA_1065_af_kore_80.mp3",
+          "100": "RA_1065_af_kore_100.mp3"
+        }
+      },
+      "af_sarah": {
+        "name": "Sarah",
+        "accent": "American",
+        "files": {
+          "80": "RA_1065_af_sarah_80.mp3",
+          "100": "RA_1065_af_sarah_100.mp3"
+        }
+      },
+      "bf_emma": {
+        "name": "Emma",
+        "accent": "British",
+        "files": {
+          "80": "RA_1065_bf_emma_80.mp3",
+          "100": "RA_1065_bf_emma_100.mp3"
+        }
+      }
     }
   },
   "1069": {
@@ -48842,12 +49202,132 @@
       "voiceName": "Mark",
       "files": {
         "100": "RA_1075_male_100.mp3"
+      },
+      "am_echo": {
+        "name": "Echo",
+        "accent": "American",
+        "files": {
+          "80": "RA_1075_am_echo_80.mp3",
+          "100": "RA_1075_am_echo_100.mp3"
+        }
+      },
+      "am_eric": {
+        "name": "Eric",
+        "accent": "American",
+        "files": {
+          "80": "RA_1075_am_eric_80.mp3",
+          "100": "RA_1075_am_eric_100.mp3"
+        }
+      },
+      "am_fenrir": {
+        "name": "Fenrir",
+        "accent": "American",
+        "files": {
+          "80": "RA_1075_am_fenrir_80.mp3",
+          "100": "RA_1075_am_fenrir_100.mp3"
+        }
+      },
+      "am_liam": {
+        "name": "Liam",
+        "accent": "American",
+        "files": {
+          "80": "RA_1075_am_liam_80.mp3",
+          "100": "RA_1075_am_liam_100.mp3"
+        }
+      },
+      "am_michael": {
+        "name": "Michael",
+        "accent": "American",
+        "files": {
+          "80": "RA_1075_am_michael_80.mp3",
+          "100": "RA_1075_am_michael_100.mp3"
+        }
+      },
+      "am_puck": {
+        "name": "Puck",
+        "accent": "American",
+        "files": {
+          "80": "RA_1075_am_puck_80.mp3",
+          "100": "RA_1075_am_puck_100.mp3"
+        }
+      },
+      "bm_fable": {
+        "name": "Fable",
+        "accent": "British",
+        "files": {
+          "80": "RA_1075_bm_fable_80.mp3",
+          "100": "RA_1075_bm_fable_100.mp3"
+        }
+      },
+      "bm_george": {
+        "name": "George",
+        "accent": "British",
+        "files": {
+          "80": "RA_1075_bm_george_80.mp3",
+          "100": "RA_1075_bm_george_100.mp3"
+        }
+      },
+      "bm_lewis": {
+        "name": "Lewis",
+        "accent": "British",
+        "files": {
+          "80": "RA_1075_bm_lewis_80.mp3",
+          "100": "RA_1075_bm_lewis_100.mp3"
+        }
       }
     },
     "female": {
       "voiceId": "yM93hbw8Qtvdma2wCnJG",
       "voiceName": "Ivanna",
-      "files": {}
+      "files": {},
+      "af_alloy": {
+        "name": "Alloy",
+        "accent": "American",
+        "files": {
+          "80": "RA_1075_af_alloy_80.mp3",
+          "100": "RA_1075_af_alloy_100.mp3"
+        }
+      },
+      "af_bella": {
+        "name": "Bella",
+        "accent": "American",
+        "files": {
+          "80": "RA_1075_af_bella_80.mp3",
+          "100": "RA_1075_af_bella_100.mp3"
+        }
+      },
+      "af_heart": {
+        "name": "Heart",
+        "accent": "American",
+        "files": {
+          "80": "RA_1075_af_heart_80.mp3",
+          "100": "RA_1075_af_heart_100.mp3"
+        }
+      },
+      "af_kore": {
+        "name": "Kore",
+        "accent": "American",
+        "files": {
+          "80": "RA_1075_af_kore_80.mp3",
+          "100": "RA_1075_af_kore_100.mp3"
+        }
+      },
+      "af_sarah": {
+        "name": "Sarah",
+        "accent": "American",
+        "files": {
+          "80": "RA_1075_af_sarah_80.mp3",
+          "100": "RA_1075_af_sarah_100.mp3"
+        }
+      },
+      "bf_emma": {
+        "name": "Emma",
+        "accent": "British",
+        "files": {
+          "80": "RA_1075_bf_emma_80.mp3",
+          "100": "RA_1075_bf_emma_100.mp3"
+        }
+      }
     }
   },
   "1076": {
@@ -49124,12 +49604,132 @@
       "voiceName": "Mark",
       "files": {
         "100": "RA_1080_male_100.mp3"
+      },
+      "am_echo": {
+        "name": "Echo",
+        "accent": "American",
+        "files": {
+          "80": "RA_1080_am_echo_80.mp3",
+          "100": "RA_1080_am_echo_100.mp3"
+        }
+      },
+      "am_eric": {
+        "name": "Eric",
+        "accent": "American",
+        "files": {
+          "80": "RA_1080_am_eric_80.mp3",
+          "100": "RA_1080_am_eric_100.mp3"
+        }
+      },
+      "am_fenrir": {
+        "name": "Fenrir",
+        "accent": "American",
+        "files": {
+          "80": "RA_1080_am_fenrir_80.mp3",
+          "100": "RA_1080_am_fenrir_100.mp3"
+        }
+      },
+      "am_liam": {
+        "name": "Liam",
+        "accent": "American",
+        "files": {
+          "80": "RA_1080_am_liam_80.mp3",
+          "100": "RA_1080_am_liam_100.mp3"
+        }
+      },
+      "am_michael": {
+        "name": "Michael",
+        "accent": "American",
+        "files": {
+          "80": "RA_1080_am_michael_80.mp3",
+          "100": "RA_1080_am_michael_100.mp3"
+        }
+      },
+      "am_puck": {
+        "name": "Puck",
+        "accent": "American",
+        "files": {
+          "80": "RA_1080_am_puck_80.mp3",
+          "100": "RA_1080_am_puck_100.mp3"
+        }
+      },
+      "bm_fable": {
+        "name": "Fable",
+        "accent": "British",
+        "files": {
+          "80": "RA_1080_bm_fable_80.mp3",
+          "100": "RA_1080_bm_fable_100.mp3"
+        }
+      },
+      "bm_george": {
+        "name": "George",
+        "accent": "British",
+        "files": {
+          "80": "RA_1080_bm_george_80.mp3",
+          "100": "RA_1080_bm_george_100.mp3"
+        }
+      },
+      "bm_lewis": {
+        "name": "Lewis",
+        "accent": "British",
+        "files": {
+          "80": "RA_1080_bm_lewis_80.mp3",
+          "100": "RA_1080_bm_lewis_100.mp3"
+        }
       }
     },
     "female": {
       "voiceId": "aMSt68OGf4xUZAnLpTU8",
       "voiceName": "Juniper",
-      "files": {}
+      "files": {},
+      "af_alloy": {
+        "name": "Alloy",
+        "accent": "American",
+        "files": {
+          "80": "RA_1080_af_alloy_80.mp3",
+          "100": "RA_1080_af_alloy_100.mp3"
+        }
+      },
+      "af_bella": {
+        "name": "Bella",
+        "accent": "American",
+        "files": {
+          "80": "RA_1080_af_bella_80.mp3",
+          "100": "RA_1080_af_bella_100.mp3"
+        }
+      },
+      "af_heart": {
+        "name": "Heart",
+        "accent": "American",
+        "files": {
+          "80": "RA_1080_af_heart_80.mp3",
+          "100": "RA_1080_af_heart_100.mp3"
+        }
+      },
+      "af_kore": {
+        "name": "Kore",
+        "accent": "American",
+        "files": {
+          "80": "RA_1080_af_kore_80.mp3",
+          "100": "RA_1080_af_kore_100.mp3"
+        }
+      },
+      "af_sarah": {
+        "name": "Sarah",
+        "accent": "American",
+        "files": {
+          "80": "RA_1080_af_sarah_80.mp3",
+          "100": "RA_1080_af_sarah_100.mp3"
+        }
+      },
+      "bf_emma": {
+        "name": "Emma",
+        "accent": "British",
+        "files": {
+          "80": "RA_1080_bf_emma_80.mp3",
+          "100": "RA_1080_bf_emma_100.mp3"
+        }
+      }
     }
   },
   "1081": {
@@ -54464,6 +55064,115 @@
         "files": {
           "80": "RA_1206_bf_emma_80.mp3",
           "100": "RA_1206_bf_emma_100.mp3"
+        }
+      }
+    }
+  },
+  "1217": {
+    "female": {
+      "af_alloy": {
+        "name": "Alloy",
+        "accent": "American",
+        "files": {
+          "80": "RA_1217_af_alloy_80.mp3",
+          "100": "RA_1217_af_alloy_100.mp3"
+        }
+      },
+      "af_bella": {
+        "name": "Bella",
+        "accent": "American",
+        "files": {
+          "80": "RA_1217_af_bella_80.mp3",
+          "100": "RA_1217_af_bella_100.mp3"
+        }
+      },
+      "af_heart": {
+        "name": "Heart",
+        "accent": "American",
+        "files": {
+          "80": "RA_1217_af_heart_80.mp3",
+          "100": "RA_1217_af_heart_100.mp3"
+        }
+      },
+      "af_kore": {
+        "name": "Kore",
+        "accent": "American",
+        "files": {
+          "80": "RA_1217_af_kore_80.mp3",
+          "100": "RA_1217_af_kore_100.mp3"
+        }
+      },
+      "af_sarah": {
+        "name": "Sarah",
+        "accent": "American",
+        "files": {
+          "80": "RA_1217_af_sarah_80.mp3",
+          "100": "RA_1217_af_sarah_100.mp3"
+        }
+      },
+      "bf_emma": {
+        "name": "Emma",
+        "accent": "British",
+        "files": {
+          "80": "RA_1217_bf_emma_80.mp3",
+          "100": "RA_1217_bf_emma_100.mp3"
+        }
+      }
+    },
+    "male": {
+      "am_echo": {
+        "name": "Echo",
+        "accent": "American",
+        "files": {
+          "80": "RA_1217_am_echo_80.mp3",
+          "100": "RA_1217_am_echo_100.mp3"
+        }
+      },
+      "am_eric": {
+        "name": "Eric",
+        "accent": "American",
+        "files": {
+          "80": "RA_1217_am_eric_80.mp3",
+          "100": "RA_1217_am_eric_100.mp3"
+        }
+      },
+      "am_fenrir": {
+        "name": "Fenrir",
+        "accent": "American",
+        "files": {
+          "80": "RA_1217_am_fenrir_80.mp3",
+          "100": "RA_1217_am_fenrir_100.mp3"
+        }
+      },
+      "am_liam": {
+        "name": "Liam",
+        "accent": "American",
+        "files": {
+          "80": "RA_1217_am_liam_80.mp3",
+          "100": "RA_1217_am_liam_100.mp3"
+        }
+      },
+      "am_michael": {
+        "name": "Michael",
+        "accent": "American",
+        "files": {
+          "80": "RA_1217_am_michael_80.mp3",
+          "100": "RA_1217_am_michael_100.mp3"
+        }
+      },
+      "am_puck": {
+        "name": "Puck",
+        "accent": "American",
+        "files": {
+          "80": "RA_1217_am_puck_80.mp3",
+          "100": "RA_1217_am_puck_100.mp3"
+        }
+      },
+      "bm_fable": {
+        "name": "Fable",
+        "accent": "British",
+        "files": {
+          "100": "RA_1217_bm_fable_100.mp3"
         }
       }
     }

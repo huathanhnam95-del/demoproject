@@ -53,12 +53,16 @@ function createOkRouter(routePath, payload) {
         return router;
       })(),
       adminRoutes: createOkRouter('/status', { success: true }),
+      teacherSchedulerRoutes: createOkRouter('/teacher', { success: true }),
+      classroomsRoutes: createOkRouter('/classrooms', { success: true }),
       entranceTestRoutes: createOkRouter('/status', { success: true }),
       readingJourneyRoutes: (() => {
         const router = express.Router();
         router.get('/reading-journey/health', (_req, res) => res.json({ success: true, enabled: true }));
         return router;
-      })()
+      })(),
+      pronunciationTestRoutes: createOkRouter('/pronunciation-test/ping', { success: true }),
+      readAloudRoutes: createOkRouter('/read-aloud/health', { success: true })
     },
     firebase: {
       db: null

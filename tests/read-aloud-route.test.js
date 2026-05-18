@@ -121,6 +121,7 @@ async function postAssessment(baseUrl, { audioBuffer, referenceText, questionId,
         return router;
       })(),
       adminRoutes: createOkRouter('/status', { success: true }),
+      teacherSchedulerRoutes: createOkRouter('/teacher', { success: true }),
       classroomsRoutes: createOkRouter('/classrooms', { success: true }),
       entranceTestRoutes: createOkRouter('/status', { success: true }),
       readingJourneyRoutes: createOkRouter('/reading-journey/health', { success: true }),

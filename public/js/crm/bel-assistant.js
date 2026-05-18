@@ -324,6 +324,15 @@ ${prompt}`;
                 });
                 elements.belChatSend.__belBound = true;
             }
+            if (elements.belChatInput && !elements.belChatInput.__belKeyBound) {
+                elements.belChatInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        generatePlan();
+                    }
+                });
+                elements.belChatInput.__belKeyBound = true;
+            }
             if (elements.belChatApply && !elements.belChatApply.__belBound) {
                 elements.belChatApply.addEventListener('click', applyPendingActions);
                 elements.belChatApply.__belBound = true;

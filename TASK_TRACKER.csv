@@ -257,3 +257,6 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 265,2026-05-16,RTS Mode UI redesign — v7 picker + practice polish + read-only transcript,Done,2026-05-17
 266,2026-05-16,Fix SWT mode bugs (loading and AI scoring) and execute browser test plan,Done,2026-05-16
 267,2026-05-16,Debug and fix RTS browser test for v7 picker,Done,2026-05-16
+268,2026-05-18,Fix BEL Assistant chat drawer scroll and Enter key submission,Done,2026-05-18
+269,2026-05-18,Review and push all changes to production,In Progress,
+

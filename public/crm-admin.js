@@ -103,6 +103,7 @@
     students: [],
     courses: [],
     classrooms: [],
+    agentSources: [],
     openTasks: [],
     attendanceRiskByStudentId: new Map()
   };
@@ -120,6 +121,7 @@
   let classroomModalController = null;
   let studentDirectoryController = null;
   let leadWorkspaceController = null;
+  let agentSourcesController = null;
   let recycleBinController = null;
   let communicationsController = null;
   let devToolsPollTimer = null;
@@ -297,6 +299,7 @@
     elements.inputLeadEmail = document.getElementById('lead-email');
     elements.inputLeadPhone = document.getElementById('lead-phone');
     elements.inputLeadSource = document.getElementById('lead-source');
+    elements.inputLeadAgentSource = document.getElementById('lead-agent-source');
     elements.inputLeadStage = document.getElementById('lead-stage');
     elements.inputLeadProbability = document.getElementById('lead-probability');
     elements.leadWorkspace = document.getElementById('lead-workspace');
@@ -365,6 +368,8 @@
     elements.inputStudentZalo = document.getElementById('student-zalo');
     elements.inputStudentFacebook = document.getElementById('student-facebook');
     elements.inputStudentFacebookProfileUrl = document.getElementById('student-facebook-profile-url');
+    elements.inputStudentAcquisitionSource = document.getElementById('student-acquisition-source');
+    elements.inputStudentAgentSource = document.getElementById('student-agent-source');
     elements.inputScoreOverall = document.getElementById('score-overall');
     elements.inputScoreListening = document.getElementById('score-listening');
     elements.inputScoreReading = document.getElementById('score-reading');
@@ -592,6 +597,16 @@
     elements.btnStaffCreateTeacher = document.getElementById('btn-staff-create-teacher');
     elements.staffCreateTeacherError = document.getElementById('staff-create-teacher-error');
     elements.staffTeacherList = document.getElementById('staff-teacher-list');
+
+    elements.btnRefreshAgentSources = document.getElementById('btn-refresh-agent-sources');
+    elements.inputAgentSourceName = document.getElementById('agent-source-name');
+    elements.inputAgentSourceStatus = document.getElementById('agent-source-status');
+    elements.inputAgentSourceNotes = document.getElementById('agent-source-notes');
+    elements.btnNewAgentSource = document.getElementById('btn-new-agent-source');
+    elements.btnCreateAgentSource = document.getElementById('btn-create-agent-source');
+    elements.agentSourcesList = document.getElementById('agent-sources-list');
+    elements.inputAgentReportMonth = document.getElementById('agent-report-month');
+    elements.btnExportAgentReport = document.getElementById('btn-export-agent-report');
 
     elements.bulkDeleteWarningModal = document.getElementById('bulk-delete-warning-modal');
     elements.bulkDeleteWarningTitle = document.getElementById('bulk-delete-warning-title');
@@ -1268,6 +1283,18 @@
         formatDateTime
       })
       : null;
+    agentSourcesController = state.accessMode === 'admin'
+      && window.CrmAgentSourcesWorkspace
+      && typeof window.CrmAgentSourcesWorkspace.createController === 'function'
+      ? window.CrmAgentSourcesWorkspace.createController({
+        elements,
+        dataCache,
+        showToast,
+        apiFetchJson,
+        escapeHtml,
+        formatDateTime
+      })
+      : null;
     recycleBinController = window.CrmRecycleBinWorkspace && typeof window.CrmRecycleBinWorkspace.createController === 'function'
       ? window.CrmRecycleBinWorkspace.createController({
         elements,
@@ -1384,6 +1411,13 @@
       : null;
     if (staffWorkspaceController && typeof staffWorkspaceController.init === 'function') {
       staffWorkspaceController.init();
+    }
+    if (agentSourcesController && typeof agentSourcesController.init === 'function') {
+      agentSourcesController.init();
+      agentSourcesController.refresh().catch((error) => {
+        console.error('[CRM Admin] Failed to load agent sources:', error);
+        showToast(error?.message || 'Failed to load agent sources.', 'error');
+      });
     }
     setupTabs();
     if (state.accessMode === 'admin') {
@@ -1996,6 +2030,7 @@
       elements.inputLeadEmail,
       elements.inputLeadPhone,
       elements.inputLeadSource,
+      elements.inputLeadAgentSource,
       elements.inputLeadProbability
     ];
     inputs.forEach((input) => {
@@ -2095,6 +2130,8 @@
         zalo: String(elements.inputStudentZalo?.value || '').trim(),
         facebook: String(elements.inputStudentFacebook?.value || '').trim(),
         facebookProfileUrl: String(elements.inputStudentFacebookProfileUrl?.value || '').trim(),
+        acquisitionSource: String(elements.inputStudentAcquisitionSource?.value || '').trim(),
+        agentSourceId: String(elements.inputStudentAgentSource?.value || '').trim(),
         learningProfile: {
           overall: elements.inputScoreOverall?.value ? Number(elements.inputScoreOverall.value) : null,
           listening: elements.inputScoreListening?.value ? Number(elements.inputScoreListening.value) : null,

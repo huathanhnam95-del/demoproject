@@ -1,3 +1,20 @@
+## [V1.7.1] - 2026-05-18
+
+### Added
+
+- **Kokoro Multi-Voice TTS system**: Integrated high-quality local Kokoro-FastAPI engine for Read Aloud mode with gender-aware randomized voice picker UI, accent-labeled dropdown support (15 voices), slow/normal speed options, and automatic generation of voice-keyed audio assets + manifest tracking.
+- **Summarize Written Text (SWT) Mode**: Full client-side integration with v7 question picker, precise timing via `requestAnimationFrame`, double-submission guards, and server-side Firebase AI scoring using Gemini.
+- **Respond To a Situation (RTS) Mode**: Completed Speaking practice mode with full client-side state machine (IDLE, PREP, RECORDING, RESULTS) and UI timers, integrated automated scoring pipeline, and detailed browser test plan.
+
+### Improved
+
+- **BEL Assistant Chat UI**: Refactored chat drawer using a flexbox container layout to resolve scroll/clipping issues, and implemented Enter key submission for the chat textarea.
+- **Test Suite Integrity**: Hardened Express router registration against concurrent injection gaps, resolving mounting crashes across Route and Scalability test suites.
+
+### Fixed
+
+- **Express Startup Crashes**: Mocked missing routes inside test environment specifications to allow clean server startup and testing.
+
 ## [V1.7.0] - 2026-05-12
 
 ### Added

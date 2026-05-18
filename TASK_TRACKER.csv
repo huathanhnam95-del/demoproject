@@ -259,4 +259,5 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 267,2026-05-16,Debug and fix RTS browser test for v7 picker,Done,2026-05-16
 268,2026-05-18,Fix BEL Assistant chat drawer scroll and Enter key submission,Done,2026-05-18
 269,2026-05-18,Review and push all changes to production,Done,2026-05-18
+270,2026-05-18,Fix GitHub Actions checkout failure in deploy workflow,In Progress,
 

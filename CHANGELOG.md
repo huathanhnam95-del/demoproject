@@ -1,4 +1,17 @@
+## [V1.7.3] - 2026-05-18
+
+### Fixed
+
+- **GitHub Actions Deployment Workflow**: Fixed checkout step in `deploy.yml` by using `ref: ${{ github.event.workflow_run.head_branch }}` instead of `head_sha` to prevent exit code 128 (arbitrary SHA fetching restriction).
+
+## [V1.7.2] - 2026-05-18
+
+### Staged
+
+- **Read Aloud voice assets optimization**: Excluded ongoing generating Read Aloud audio assets from source control using `.gitignore` and updated assets manifest tracking.
+
 ## [V1.7.1] - 2026-05-18
+
 
 ### Added
 

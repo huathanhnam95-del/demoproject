@@ -451,24 +451,16 @@
 
   async function getScoreSWTFn() {
     if (scoreSWTFn) return scoreSWTFn;
-    try {
-      if (window.__FIREBASE_INTERNAL__ && window.__FIREBASE_INTERNAL__.functions) {
-        const { httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js');
-        scoreSWTFn = httpsCallable(window.__FIREBASE_INTERNAL__.functions, 'scoreSWT');
-        return scoreSWTFn;
-      }
-      if (typeof firebase !== 'undefined' && firebase.functions) {
-        scoreSWTFn = firebase.functions().httpsCallable('scoreSWT');
-        return scoreSWTFn;
-      }
-    } catch (err) {
-      console.warn('[SWT] getScoreSWTFn error:', err);
+    if (window.__FIREBASE_INTERNAL__ && window.__FIREBASE_INTERNAL__.functions) {
+      const { httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js');
+      scoreSWTFn = httpsCallable(window.__FIREBASE_INTERNAL__.functions, 'scoreSWT');
+      return scoreSWTFn;
     }
-    // Fallback
-    const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js');
-    const functions = window.__FIREBASE_INTERNAL__?.functions || (window.firebaseApp ? getFunctions(window.firebaseApp) : getFunctions());
-    scoreSWTFn = httpsCallable(functions, 'scoreSWT');
-    return scoreSWTFn;
+    if (typeof firebase !== 'undefined' && firebase.functions) {
+      scoreSWTFn = firebase.functions().httpsCallable('scoreSWT');
+      return scoreSWTFn;
+    }
+    throw new Error('AI scoring unavailable (Firebase functions not loaded)');
   }
 
   // ── AI Scoring ──

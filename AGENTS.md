@@ -3,6 +3,7 @@
 ## Response Timestamps
 
 - In every final response to the user, include both `Start time` and `End time`.
+- Use a human-readable Vietnam Time format (e.g., `Wednesday, May 20, 2026, 05:23:10 AM`) instead of ISO 8601 string representation.
 - Apply this as a default workspace behavior for all tasks unless a higher-priority instruction overrides it.
 
 ## Browser Testing Credentials

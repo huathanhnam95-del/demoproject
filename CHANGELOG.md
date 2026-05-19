@@ -1,9 +1,21 @@
+## [V1.7.6] - 2026-05-20
+
+### Added
+
+- **Audio Playback & UI/UX Test Suite**: Created a Playwright integration test at `tests/browser/read-aloud-audio-matching-check.js` to verify voice playability matching transcripts, speeds, and genders across local and production environments, alongside UI/UX assertions for speed/gender active states, connected speech guides, and the V7 question picker drawer.
+- **Headed Browser Mode**: Enabled `--headed` execution in the Playwright test suite to launch a fully visible browser with interactive slow-motion delays.
+
+### Improved
+
+- **Kokoro Audio Pipeline Concurrency**: Integrated concurrency control and rename retries in `kokoro_batch_all_voices.js` to accelerate audio asset generation and prevent file locks.
+
 ## [V1.7.5] - 2026-05-19
 
 ### Fixed
 
 - **GitHub Actions Deployment Workflow**: Completely resolved deployment failures under `workflow_run`. Removed the restricted `ref` argument, defined `contents: read` permissions, and eliminated `"pinTag": true` from the `/api/**` rewrite in `firebase.json` to prevent hosting-only deployments from failing due to restricted Cloud Functions API listing lookups.
 - **UI Hardening and Robustness**: Implemented safe property navigation for global `VocabularyBook` calls and unified header button rendering to prevent duplicate DOM node injections.
+- **Summarize Written Text (SWT) Scoring Initialization**: Resolved a critical initialization crash on load in `swt-mode.js` by refactoring the Firestore check. Instead of directly querying the `window.__FIREBASE_INTERNAL__` object which is initially undefined or incomplete during early loading, it now delegates to `FirebaseService.checkScoringCapability()` with a listener-backed fallback. This ensures the UI is correctly constructed and populated without throwing `TypeError` or stalling.
 
 ## [V1.7.4] - 2026-05-19
 

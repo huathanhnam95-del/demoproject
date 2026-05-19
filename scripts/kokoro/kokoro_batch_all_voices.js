@@ -103,7 +103,24 @@ function loadManifest() {
 function saveManifest(manifest) {
   const tmpPath = MANIFEST_PATH + '.tmp';
   fs.writeFileSync(tmpPath, JSON.stringify(manifest, null, 2));
-  fs.renameSync(tmpPath, MANIFEST_PATH);
+  
+  let retries = 3;
+  while (retries > 0) {
+    try {
+      fs.renameSync(tmpPath, MANIFEST_PATH);
+      break;
+    } catch (err) {
+      if (err.code === 'EPERM' && retries > 1) {
+        retries--;
+        // Atomics.wait is a hacky synchronous sleep in JS, but requires SharedArrayBuffer.
+        // Instead, just busy wait or rely on the fact that this is a script
+        const start = Date.now();
+        while (Date.now() - start < 100) {} // busy wait 100ms
+        continue;
+      }
+      throw err;
+    }
+  }
 }
 
 function logError(qId, voiceId, error) {
@@ -115,6 +132,7 @@ async function processQuestion(prompt, voices, manifest, stats) {
   const qId = String(prompt.id);
   const text = prepareText(prompt);
 
+  const tasks = [];
   for (const voice of voices) {
     for (const speedCfg of SPEEDS) {
       const filename = `RA_${qId}_${voice.id}_${speedCfg.key}.mp3`;
@@ -131,6 +149,22 @@ async function processQuestion(prompt, voices, manifest, stats) {
         stats.dryRun++;
         continue;
       }
+
+      tasks.push({ voice, speedCfg, filename, filepath });
+    }
+  }
+
+  if (tasks.length === 0) return;
+
+  // Use a concurrency limit of 5 to batch requests on the GPU
+  const CONCURRENCY = 5;
+  let activeIndex = 0;
+
+  async function worker() {
+    while (activeIndex < tasks.length) {
+      const taskIndex = activeIndex++;
+      if (taskIndex >= tasks.length) break;
+      const { voice, speedCfg, filename, filepath } = tasks[taskIndex];
 
       try {
         const buffer = await generateAudio(text, voice.id, speedCfg.speed);
@@ -157,6 +191,9 @@ async function processQuestion(prompt, voices, manifest, stats) {
       }
     }
   }
+
+  const workers = Array.from({ length: Math.min(CONCURRENCY, tasks.length) }, worker);
+  await Promise.all(workers);
 }
 
 async function main() {

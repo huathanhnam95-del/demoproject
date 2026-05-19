@@ -198,14 +198,13 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 208,2026-04-10,Summon #council to review speaking attempt retention plan,Done,2026-04-10
 209,2026-04-10,Summon #council to review counter-argument,Done,2026-04-10
 210,2026-04-10,Summarize and commit changes for V1.6.4,Done,2026-04-10
-2 1 1 , 2 0 2 6 - 0 4 - 1 0 , E x e c u t e   A S Q   b r o w s e r   t e s t   p l a n , I n   P r o g r e s s , 
- 
- 212,2026-04-10,Create VBA macro for batch downloading links from Excel column E,Done,2026-04-10
+211,2026-04-10,Execute ASQ browser test plan,Done,2026-04-15
+212,2026-04-10,Create VBA macro for batch downloading links from Excel column E,Done,2026-04-10
 213,2026-04-11,Execute Speaking Attempts Browser Testing Plan (Attempt Sharing Flow),Done,2026-04-15
 214,2026-04-11,Implement ASQ audio playback and hide question text before submission,Done,2026-04-11
 215,2026-04-11,Review debug and refactor auto accept script,Done,2026-04-11
 216,2026-04-11,Review debug and refactor ASQ quiz mode,Done,2026-04-11
-217,2026-04-12,Fix Firebase emulator connectivity issues,In Progress
+217,2026-04-12,Fix Firebase emulator connectivity issues,Done,2026-05-05
 218,2026-04-12,Review and commit all changes as V1.6.5 (no push),Done,2026-04-12
 219,2026-04-12,App Knowledge Base Document generation,Done,2026-04-12
 220,2026-04-12,Implement Write Essay mode for PTE Practice Writing section,Done,2026-04-12
@@ -238,7 +237,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 247,2026-05-07,CRM UX: teacher searchable dropdown + seed wording fix + BEL assistant init,Done,2026-05-07
 248,2026-05-07,"CRM UI: Fix overflows + multi-select weekdays + remove meeting fields",Done,2026-05-07
 99,2026-05-07,Fix V7 Read Aloud Question Picker buttons and cache,Done,2026-05-07
-249,2026-05-07,Fix 3s classroom modal open delay - show modal first + cache courses,In Progress,
+249,2026-05-07,Fix 3s classroom modal open delay - show modal first + cache courses,Done,2026-05-09
 250,2026-05-09,Remove Home/About Us header links and fix logo destination to practice page,Done,2026-05-09
 251,2026-05-09,Browser testing audit - AI Essay Scoring and CRM Teacher Account flows,Done,2026-05-09
 252,2026-05-09,Execute Write Essay Browser Test Plan,Done,2026-05-09
@@ -266,3 +265,6 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 272,2026-05-19,Refactor UI Navigation (Remove Side Banners and Move Profile Button),Done,2026-05-19
 273,2026-05-19,Verify UI Refactoring via Browser Testing,Done,2026-05-19
 274,2026-05-19,Check and resolve GitHub Actions deploy errors,Done,2026-05-19
+275,2026-05-19,Debug SWT question loading issue,Done,2026-05-19
+276,2026-05-19,Batch audio generation for all remaining Read Aloud questions,Done,2026-05-19
+277,2026-05-19,Verify Read Aloud voice mapping and playability,Done,2026-05-19

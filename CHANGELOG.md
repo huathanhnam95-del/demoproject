@@ -1,3 +1,10 @@
+## [V1.7.5] - 2026-05-19
+
+### Fixed
+
+- **GitHub Actions Deployment Workflow**: Completely resolved checkout errors under `workflow_run` by removing the restricted `ref` argument and explicitly defining `contents: read` permissions, enabling robust checkout of the default branch.
+- **UI Hardening and Robustness**: Implemented safe property navigation for global `VocabularyBook` calls and unified header button rendering to prevent duplicate DOM node injections.
+
 ## [V1.7.4] - 2026-05-19
 
 ### Added

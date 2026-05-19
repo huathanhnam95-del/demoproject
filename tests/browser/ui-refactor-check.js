@@ -102,13 +102,33 @@ let consoleErrors = [];
     console.log('✅ Side banner toggles are successfully hidden!');
 
     console.log('Verifying profile/account button is in the site header...');
-    const accountBtnInHeader = await page.evaluate(() => {
+    const accountButtonState = await page.evaluate(() => {
       const headerNav = document.querySelector('.site-header__links');
-      const accountBtn = document.getElementById('account-panel-toggle');
-      return headerNav && accountBtn && headerNav.contains(accountBtn);
+      const buttons = Array.from(document.querySelectorAll('#account-panel-toggle'));
+      const panelOwnButton = document.querySelector('#account-panel-side > #account-panel-toggle');
+      return {
+        count: buttons.length,
+        inHeader: Boolean(headerNav && buttons[0] && headerNav.contains(buttons[0])),
+        panelOwnButtonExists: Boolean(panelOwnButton),
+        accessibleName: buttons[0]?.getAttribute('aria-label') || buttons[0]?.title || ''
+      };
     });
 
-    assert.ok(accountBtnInHeader, 'Account panel toggle button should be placed inside the site header links navigation');
+    assert.deepStrictEqual(
+      accountButtonState,
+      { count: 1, inHeader: true, panelOwnButtonExists: false, accessibleName: 'Account' },
+      'Account panel toggle should be a single header-owned control'
+    );
+    await page.click('#account-panel-toggle');
+    await page.waitForFunction(() => {
+      const panel = document.getElementById('account-panel-side');
+      return !!panel && panel.classList.contains('expanded');
+    }, { timeout: 5000 });
+    await page.click('#panel-close-btn');
+    await page.waitForFunction(() => {
+      const panel = document.getElementById('account-panel-side');
+      return !!panel && !panel.classList.contains('expanded');
+    }, { timeout: 5000 });
     console.log('✅ Account/profile button is correctly placed in the site header!');
 
     // Switch to panel-srs (For Growth section)
@@ -150,7 +170,7 @@ let consoleErrors = [];
     console.log('✅ Track Progress card correctly triggers the Progress side panel!');
 
     console.log('🎉 All UI refactoring checks passed successfully!');
-    
+
     // Screenshot
     const fs = require('fs');
     fs.mkdirSync(path.join(__dirname, '..', '..', 'tmp'), { recursive: true });

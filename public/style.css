@@ -4707,7 +4707,6 @@ textarea:focus {
   }
 
   .progress-panel-side.expanded .progress-panel-toggle {
-  display: none !important;
     left: 320px;
   }
 
@@ -4762,7 +4761,6 @@ textarea:focus {
   }
 
   .progress-panel-side.expanded .progress-panel-toggle {
-  display: none !important;
     display: none;
   }
 
@@ -4801,6 +4799,10 @@ textarea:focus {
 .account-panel-toggle:hover {
   background: var(--primary-hover);
   box-shadow: -2px 0 12px rgba(0, 0, 0, 0.15);
+}
+
+.account-panel-side>.account-panel-toggle {
+  display: none !important;
 }
 
 .toggle-icon {
@@ -5498,7 +5500,6 @@ textarea:focus {
 
 /* Toggle Button - Fixed on left edge, always visible */
 .progress-panel-toggle {
-  display: none !important;
   position: fixed;
   top: 50%;
   left: 0;
@@ -5529,7 +5530,6 @@ textarea:focus {
 
 /* When panel is open, move toggle button to the right of the panel */
 .progress-panel-side.expanded .progress-panel-toggle {
-  display: none !important;
   left: 420px;
   border-radius: 0 8px 8px 0;
 }
@@ -8008,7 +8008,6 @@ textarea:focus {
 }
 
 .vocab-panel-toggle {
-  display: none !important;
   /* Reset default button styles */
   appearance: none;
   -webkit-appearance: none;
@@ -8043,6 +8042,11 @@ textarea:focus {
   /* Push down significantly to avoid middle and overlapping progress */
   /* If Progress is centered at 50vh, let's put this at ~65vh */
   margin-top: 65vh;
+}
+
+.progress-panel-toggle,
+.vocab-panel-toggle {
+  display: none !important;
 }
 
 .vocab-panel-content {
@@ -8112,7 +8116,6 @@ textarea:focus {
 }
 
 .vocab-panel-side.expanded .vocab-panel-toggle {
-  display: none !important;
   border-radius: 0;
   /* Flatten left side when connected */
   box-shadow: none;
@@ -8121,14 +8124,12 @@ textarea:focus {
 
 /* Panel Exclusivity: Hide Vocab toggle when Progress panel is open */
 .progress-panel-side.expanded~.vocab-panel-side .vocab-panel-toggle {
-  display: none !important;
   opacity: 0;
   pointer-events: none;
 }
 
 /* Panel Exclusivity: Hide Progress toggle when Vocab panel is open */
 .progress-panel-side:has(~ .vocab-panel-side.expanded) .progress-panel-toggle {
-  display: none !important;
   opacity: 0;
   pointer-events: none;
 }
@@ -9874,7 +9875,6 @@ textarea:focus {
   .progress-panel-toggle,
   .account-panel-toggle,
   .vocab-panel-toggle {
-  display: none !important;
     display: none !important;
   }
 

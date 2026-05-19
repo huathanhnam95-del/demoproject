@@ -44,12 +44,23 @@
     }
     nav.appendChild(anchor);
   });
-  
-  const accountBtn = document.createElement('button');
+  const accountBtn = document.getElementById('account-panel-toggle') || document.createElement('button');
   accountBtn.id = 'account-panel-toggle';
   accountBtn.className = 'site-header__account-btn';
+  accountBtn.type = 'button';
   accountBtn.title = 'Account';
-  accountBtn.innerHTML = '<span class="toggle-icon">??</span>';
+  accountBtn.setAttribute('aria-label', 'Account');
+
+  let accountIcon = accountBtn.querySelector('.toggle-icon');
+  if (!accountIcon) {
+    accountIcon = document.createElement('span');
+    accountIcon.className = 'toggle-icon';
+    accountBtn.replaceChildren(accountIcon);
+  }
+  accountIcon.setAttribute('aria-hidden', 'true');
+  if (!accountIcon.textContent.trim() || accountIcon.textContent.trim() === '??') {
+    accountIcon.textContent = '\uD83D\uDC64';
+  }
   nav.appendChild(accountBtn);
 
   inner.appendChild(brand);

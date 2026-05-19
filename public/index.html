@@ -1605,7 +1605,7 @@
             </div>
             <div class="growth-grid">
               <div class="modern-card srs-card-modern"
-                onclick="VocabularyBook.showListModal()" tabindex="0" role="button"
+                onclick="if(window.VocabularyBook?.showListModal) { VocabularyBook.showListModal(); }" tabindex="0" role="button"
                 aria-label="Open Vocab Book">
                 <div class="card-visual visual-srs">
                   <div class="anim-container">

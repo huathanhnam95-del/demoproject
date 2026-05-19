@@ -11,7 +11,7 @@
 ## Active State
 
 - **Status**: Active Development
-- **Phase**: Release V1.7.4
+- **Phase**: Release V1.7.5
 
 ## Instructions
 

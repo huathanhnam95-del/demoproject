@@ -1,8 +1,8 @@
 {
   "indexVersion": "1",
-  "generatedAt": "2026-05-13T17:27:06.960Z",
+  "generatedAt": "2026-05-19T01:42:42.369Z",
   "sourceWorkbookSha256": "7701b5cef9e04bfbec64809cfbb58c96f5c1a3074f6bd2da16b07d27623c0651",
-  "audioManifestSha256": "78b294c48170c3f636087518e2c76577227d37c6d279416b7dc86ed51782771d",
+  "audioManifestSha256": "994c184c0bde2424cecb3248cc8e7b54ee9ab956df92f8f5b4913bc40ff28abe",
   "prompts": [
     {
       "rowKey": "id:731",

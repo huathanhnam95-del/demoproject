@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const assert = require('assert');
 const express = require('express');
 const http = require('http');

@@ -13,6 +13,13 @@ function startHarnessServer() {
     res.setHeader('Cache-Control', 'no-store');
     res.sendFile(path.join(publicDir, 'index.html'));
   });
+  app.get(/^(?!\/api).*$/, (req, res, next) => {
+    if (/\.\w{2,5}(\?.*)?$/.test(req.path)) {
+      return next();
+    }
+    res.setHeader('Cache-Control', 'no-store');
+    res.sendFile(path.join(publicDir, 'index.html'));
+  });
 
   return new Promise((resolve) => {
     const server = http.createServer(app);
@@ -56,7 +63,7 @@ function buildEssayText() {
   });
 
   try {
-    await page.goto(`${origin}/index.html`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${origin}/pte-practice/writing/essay/4`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(2000);
 
     assert.deepStrictEqual(pageErrors, [], `Expected no page errors, got: ${pageErrors.join(' | ')}`);
@@ -69,12 +76,6 @@ function buildEssayText() {
       /\bwrite-essay-mode\.js\?v=/.test(writeEssayScriptSrc),
       `Write Essay script should be cache-busted, got: ${writeEssayScriptSrc || '(missing)'}`
     );
-
-    await page.evaluate(async () => {
-      await window.switchToMode('essay');
-      window.WriteEssayMode?.loadEntries?.();
-    });
-    await page.waitForTimeout(800);
 
     const modeVisible = await page.evaluate(() => {
       const panel = document.getElementById('mode-essay');
@@ -99,6 +100,14 @@ function buildEssayText() {
       );
     }, { timeout: 20000 });
 
+    const routeSelectedPrompt = await page.evaluate(() => document.getElementById('current-question-id-essay')?.textContent?.trim() || '');
+    assert.strictEqual(routeSelectedPrompt, '4', 'Direct Write Essay route should select prompt 4 before manual interaction');
+    const routePathAfterLoad = await page.evaluate(() => window.location.pathname);
+    assert.ok(
+      routePathAfterLoad.endsWith('/pte-practice/writing/essay/4'),
+      `Direct Write Essay route should keep prompt 4 in the URL, got: ${routePathAfterLoad}`
+    );
+
     // Select a pilot prompt that has sample variants + idea flow (mindmap/flowchart).
     await page.evaluate(() => {
       const select = document.getElementById('question-select-essay');
@@ -119,6 +128,24 @@ function buildEssayText() {
       const cur = document.getElementById('current-question-id-essay');
       return cur && cur.textContent && cur.textContent.trim() === '4';
     }, { timeout: 10000 });
+
+    const promptPreview = await page.evaluate(() => {
+      const preview = document.getElementById('essay-prompt-preview');
+      const panel = document.getElementById('mode-essay');
+      const previewRect = preview?.getBoundingClientRect();
+      const panelRect = panel?.getBoundingClientRect();
+      return {
+        visible: Boolean(preview && getComputedStyle(preview).display !== 'none' && previewRect.width > 0 && previewRect.height > 0),
+        textLength: preview?.innerText?.trim()?.length || 0,
+        insidePanel: Boolean(panel && preview && panel.contains(preview)),
+        withinPanel: Boolean(previewRect && panelRect && previewRect.left >= panelRect.left - 1 && previewRect.right <= panelRect.right + 1),
+        text: preview?.innerText?.trim()?.slice(0, 80) || ''
+      };
+    });
+    assert.strictEqual(promptPreview.visible, true, 'Write Essay prompt preview should be visible before Start Writing');
+    assert.ok(promptPreview.textLength > 30, `Prompt preview should contain the selected question, got: ${promptPreview.text}`);
+    assert.strictEqual(promptPreview.insidePanel, true, 'Prompt preview should stay inside Write Essay panel');
+    assert.strictEqual(promptPreview.withinPanel, true, 'Prompt preview should not overflow the Write Essay panel horizontally');
 
     // Some environments show onboarding overlays (preloader/entry modal) that can intercept pointer events.
     // Use a DOM click to keep this check resilient and focus on verifying sample rendering.

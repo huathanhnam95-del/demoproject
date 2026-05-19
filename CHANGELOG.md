@@ -1,3 +1,14 @@
+## [V1.7.4] - 2026-05-19
+
+### Added
+
+- **UI Refactoring Playwright Test Suite**: Updated `tests/browser/ui-refactor-check.js` to assert click behaviors, popup state animations, and modal visibility of the new centered Vocab Book list modal `#vocab-list-modal`.
+
+### Improved
+
+- **Vocab Book Card Modal Navigation**: Replaced the deprecated floating sidebar trigger on the `.srs-card-modern` card click with a direct call to `VocabularyBook.showListModal()`, providing a cleaner and more focused user experience.
+- **Vocabulary Book Global Methods**: Exposed `showListModal` and `hideListModal` in the global `VocabularyBook` namespace in `public/vocab-book.js` for clean external invocation.
+
 ## [V1.7.3] - 2026-05-18
 
 ### Fixed

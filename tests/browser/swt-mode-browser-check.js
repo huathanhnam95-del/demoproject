@@ -95,6 +95,13 @@ function startHarnessServer() {
   app.get('/favicon.ico', (_req, res) => {
     res.status(204).end();
   });
+  app.get(/^(?!\/api).*$/, (req, res, next) => {
+    if (/\.\w{2,5}(\?.*)?$/.test(req.path)) {
+      return next();
+    }
+    res.setHeader('Cache-Control', 'no-store');
+    res.sendFile(path.join(publicDir, 'index.html'));
+  });
 
   return new Promise((resolve) => {
     const server = http.createServer(app);
@@ -146,10 +153,8 @@ function startHarnessServer() {
   });
 
   try {
-    await page.goto(`${origin}/index.html`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${origin}/pte-practice/writing/swt`, { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => Boolean(window.switchToMode && window.SWTMode));
-
-    await page.evaluate(async () => window.switchToMode('swt'));
     await page.waitForFunction(() => {
       const pill = document.getElementById('swt-v7-question-pill');
       return pill && pill.textContent.includes('#1');
@@ -159,6 +164,7 @@ function startHarnessServer() {
       modeVisible: getComputedStyle(document.getElementById('mode-swt')).display !== 'none',
       startDisabled: document.getElementById('start-swt-btn').disabled,
       sourceLength: document.getElementById('swt-source-display').innerText.length,
+      panelInsideContainer: document.querySelector('.container')?.contains(document.getElementById('mode-swt')) || false,
       formInvalid: window.SWTMode.__debug.scoreForm('The text has one sentence. It has another sentence.').score,
       formInvalidNoLetters: window.SWTMode.__debug.scoreForm('123 456 789 000 111.').score,
       formValidWithAbbreviation: window.SWTMode.__debug.scoreForm('The policy encouraged cleaner transport investment across the U.S.').score
@@ -167,11 +173,67 @@ function startHarnessServer() {
     assert.strictEqual(initialState.modeVisible, true, 'SWT mode should be visible');
     assert.strictEqual(initialState.startDisabled, false, 'Start button should be enabled after questions load');
     assert.ok(initialState.sourceLength > 100, 'Source text should render');
+    assert.strictEqual(initialState.panelInsideContainer, true, 'SWT panel should stay inside the practice card container');
     assert.strictEqual(initialState.formInvalid, 0, 'Form scorer should reject multiple sentences');
     assert.strictEqual(initialState.formInvalidNoLetters, 0, 'Form scorer should reject numeric-only summaries');
     assert.strictEqual(initialState.formValidWithAbbreviation, 1, 'Form scorer should allow final abbreviations');
 
     await page.click('#start-swt-btn');
+    await page.waitForSelector('#swt-step-write', { state: 'visible' });
+    const startedLayout = await page.evaluate(() => {
+      const container = document.querySelector('.container');
+      const panel = document.getElementById('mode-swt');
+      const source = document.getElementById('swt-source-display');
+      const containerRect = container.getBoundingClientRect();
+      const panelRect = panel.getBoundingClientRect();
+      const sourceRect = source.getBoundingClientRect();
+      return {
+        sourceVisible: getComputedStyle(source).display !== 'none' && sourceRect.width > 0 && sourceRect.height > 0,
+        sourceLength: source.innerText.length,
+        panelWithinContainer: panelRect.left >= containerRect.left - 1 && panelRect.right <= containerRect.right + 1,
+        sourceWithinContainer: sourceRect.left >= containerRect.left - 1 && sourceRect.right <= containerRect.right + 1,
+        noDocumentHorizontalOverflow: document.documentElement.scrollWidth <= window.innerWidth + 1
+      };
+    });
+    assert.strictEqual(startedLayout.sourceVisible, true, 'SWT source text should be visible after Start Writing');
+    assert.ok(startedLayout.sourceLength > 100, 'Visible SWT source text should include the selected passage');
+    assert.strictEqual(startedLayout.panelWithinContainer, true, 'SWT panel should not overflow the practice card horizontally');
+    assert.strictEqual(startedLayout.sourceWithinContainer, true, 'SWT passage should not overflow the practice card horizontally');
+    assert.strictEqual(startedLayout.noDocumentHorizontalOverflow, true, 'SWT route should not create page-level horizontal overflow');
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    const mobileLayout = await page.evaluate(() => {
+      const overflowing = Array.from(document.querySelectorAll('#mode-swt, #mode-swt *'))
+        .map((el) => {
+          const style = getComputedStyle(el);
+          const rect = el.getBoundingClientRect();
+          if (el.closest('[aria-hidden="true"]')) {
+            return null;
+          }
+          if (style.display === 'none' || style.visibility === 'hidden' || rect.width <= 0 || rect.height <= 0) {
+            return null;
+          }
+          if (rect.left < -1 || rect.right > window.innerWidth + 1) {
+            return {
+              id: el.id || '',
+              className: String(el.className || ''),
+              left: Math.round(rect.left),
+              right: Math.round(rect.right),
+              width: Math.round(rect.width)
+            };
+          }
+          return null;
+        })
+        .filter(Boolean);
+      return {
+        noDocumentHorizontalOverflow: document.documentElement.scrollWidth <= window.innerWidth + 1,
+        overflowing
+      };
+    });
+    assert.strictEqual(mobileLayout.noDocumentHorizontalOverflow, true, 'SWT mobile route should not create page-level horizontal overflow');
+    assert.deepStrictEqual(mobileLayout.overflowing, [], `SWT mobile UI should not render visible side overflow: ${JSON.stringify(mobileLayout.overflowing)}`);
+    await page.setViewportSize({ width: 1440, height: 1200 });
+
     await page.fill('#swt-input', 'The passage explains that major sports events are joining climate initiatives to reduce emissions and encourage wider environmental action.');
 
     const lockedState = await page.evaluate(() => ({

@@ -1605,8 +1605,8 @@
             </div>
             <div class="growth-grid">
               <div class="modern-card srs-card-modern"
-                onclick="if(window.SRSReview) { SRSReview.startReviewSession(); }" tabindex="0" role="button"
-                aria-label="Start Daily Review">
+                onclick="VocabularyBook.showListModal()" tabindex="0" role="button"
+                aria-label="Open Vocab Book">
                 <div class="card-visual visual-srs">
                   <div class="anim-container">
                     <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
@@ -1632,8 +1632,8 @@
                 </div>
                 <div class="card-body">
                   <span class="badge">Essential</span>
-                  <h3>Daily Review</h3>
-                  <p>Spaced repetition flashcards for your saved words.</p>
+                  <h3>Vocab Book</h3>
+                  <p>Manage and review your saved vocabulary words.</p>
                   <div id="dashboard-srs-summary" class="dashboard-srs-status">
                     <span id="dashboard-srs-text">Loading schedule...</span>
                   </div>
@@ -2986,6 +2986,9 @@
           <div class="question-total">
             <span>Total prompts: <span id="total-questions-essay">0</span></span>
           </div>
+          <div id="essay-prompt-preview" class="essay-prompt-display essay-prompt-preview" aria-live="polite">
+            <p>Prompt will appear here...</p>
+          </div>
           <div class="controls">
             <button id="start-essay-btn" class="modern-btn modern-btn--play" type="button">Start Writing</button>
           </div>
@@ -3026,7 +3029,6 @@
             </div>
           </div>
         </div>
-      </div>
 
       <!-- Summarize Written Text Mode Panel -->
       <div id="mode-swt" class="mode-panel" style="display: none;">
@@ -3051,7 +3053,7 @@
         </div>
 
         <div id="swt-v7-backdrop" class="ra-v7-backdrop" aria-hidden="true"></div>
-        <div id="swt-v7-sheet" class="ra-v7-sheet" role="dialog" aria-modal="true" tabindex="-1">
+        <div id="swt-v7-sheet" class="ra-v7-sheet" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
           <span class="ra-v7-grabber" aria-hidden="true"></span>
           <div class="ra-v7-sheet-header">
             <div class="ra-v7-sheet-title">Question Picker</div>

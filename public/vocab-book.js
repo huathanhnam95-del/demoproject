@@ -2082,7 +2082,9 @@ const VocabularyBook = (function () {
         updateSRSDueBadge: updateSRSDueBadge,
         promoteToMastered: promoteToMastered,
         lemmatize: lemmatize,
-        getMissCount: getMissCount
+        getMissCount: getMissCount,
+        showListModal: showListModal,
+        hideListModal: hideListModal
     };
 
 })();

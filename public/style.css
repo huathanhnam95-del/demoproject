@@ -392,11 +392,17 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   padding: 10px 16px;
   border-radius: 8px;
   margin-bottom: 16px;
   font-size: 0.9rem;
   position: relative;
+}
+
+.notification-box>span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .notification-box.important-notice {
@@ -4701,6 +4707,7 @@ textarea:focus {
   }
 
   .progress-panel-side.expanded .progress-panel-toggle {
+  display: none !important;
     left: 320px;
   }
 
@@ -4755,6 +4762,7 @@ textarea:focus {
   }
 
   .progress-panel-side.expanded .progress-panel-toggle {
+  display: none !important;
     display: none;
   }
 
@@ -5490,6 +5498,7 @@ textarea:focus {
 
 /* Toggle Button - Fixed on left edge, always visible */
 .progress-panel-toggle {
+  display: none !important;
   position: fixed;
   top: 50%;
   left: 0;
@@ -5520,6 +5529,7 @@ textarea:focus {
 
 /* When panel is open, move toggle button to the right of the panel */
 .progress-panel-side.expanded .progress-panel-toggle {
+  display: none !important;
   left: 420px;
   border-radius: 0 8px 8px 0;
 }
@@ -7998,6 +8008,7 @@ textarea:focus {
 }
 
 .vocab-panel-toggle {
+  display: none !important;
   /* Reset default button styles */
   appearance: none;
   -webkit-appearance: none;
@@ -8101,6 +8112,7 @@ textarea:focus {
 }
 
 .vocab-panel-side.expanded .vocab-panel-toggle {
+  display: none !important;
   border-radius: 0;
   /* Flatten left side when connected */
   box-shadow: none;
@@ -8109,12 +8121,14 @@ textarea:focus {
 
 /* Panel Exclusivity: Hide Vocab toggle when Progress panel is open */
 .progress-panel-side.expanded~.vocab-panel-side .vocab-panel-toggle {
+  display: none !important;
   opacity: 0;
   pointer-events: none;
 }
 
 /* Panel Exclusivity: Hide Progress toggle when Vocab panel is open */
 .progress-panel-side:has(~ .vocab-panel-side.expanded) .progress-panel-toggle {
+  display: none !important;
   opacity: 0;
   pointer-events: none;
 }
@@ -9860,6 +9874,7 @@ textarea:focus {
   .progress-panel-toggle,
   .account-panel-toggle,
   .vocab-panel-toggle {
+  display: none !important;
     display: none !important;
   }
 
@@ -19753,6 +19768,36 @@ body.readingjourney-active #readingjourney-root {
   margin-bottom: 20px;
 }
 
+#mode-swt .notification-box {
+  width: 100%;
+  box-sizing: border-box;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+#mode-swt .notification-box span {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}
+
+#mode-swt .info-box-close {
+  flex: 0 0 auto;
+}
+
+#mode-swt .ra-v7-nav,
+#mode-swt .ra-v7-question-pill,
+#mode-swt .notes-step,
+#mode-swt .essay-prompt-display {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+#mode-swt .essay-prompt-display p {
+  overflow-wrap: anywhere;
+}
+
 .essay-prompt-label {
   font-size: 0.85rem;
   font-weight: 700;
@@ -20853,6 +20898,26 @@ body.readingjourney-active #readingjourney-root {
 @media (max-width: 768px) {
   .essay-prompt-display {
     padding: 14px 16px;
+  }
+
+  #mode-swt .notification-box {
+    padding: 10px 12px;
+  }
+
+  #mode-swt .ra-v7-picker-inner {
+    padding-inline: 0;
+  }
+
+  #mode-swt .ra-v7-nav {
+    width: 100%;
+  }
+
+  #mode-swt .ra-v7-question-pill {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .essay-textarea {

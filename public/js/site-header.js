@@ -44,6 +44,13 @@
     }
     nav.appendChild(anchor);
   });
+  
+  const accountBtn = document.createElement('button');
+  accountBtn.id = 'account-panel-toggle';
+  accountBtn.className = 'site-header__account-btn';
+  accountBtn.title = 'Account';
+  accountBtn.innerHTML = '<span class="toggle-icon">??</span>';
+  nav.appendChild(accountBtn);
 
   inner.appendChild(brand);
   inner.appendChild(nav);

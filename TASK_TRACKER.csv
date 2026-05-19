@@ -260,4 +260,8 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 268,2026-05-18,Fix BEL Assistant chat drawer scroll and Enter key submission,Done,2026-05-18
 269,2026-05-18,Review and push all changes to production,Done,2026-05-18
 270,2026-05-18,Fix GitHub Actions checkout failure in deploy workflow,Done,2026-05-18
+271,2026-05-19,Resume Kokoro TTS batch audio generation,Done,2026-05-19
 
+
+272,2026-05-19,Refactor UI Navigation (Remove Side Banners and Move Profile Button),Done,2026-05-19
+273,2026-05-19,Verify UI Refactoring via Browser Testing,Done,2026-05-19

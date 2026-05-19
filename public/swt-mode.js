@@ -121,6 +121,7 @@
     d.backdrop.classList.add('is-visible');
     d.backdrop.setAttribute('aria-hidden', 'false');
     d.sheet.classList.add('is-open');
+    d.sheet.setAttribute('aria-hidden', 'false');
     if (d.questionPill) d.questionPill.setAttribute('aria-expanded', 'true');
     renderJumpList();
     if (d.jumpSearch) { d.jumpSearch.value = ''; d.jumpSearch.focus(); }
@@ -132,6 +133,7 @@
     d.backdrop.classList.remove('is-visible');
     d.backdrop.setAttribute('aria-hidden', 'true');
     d.sheet.classList.remove('is-open');
+    d.sheet.setAttribute('aria-hidden', 'true');
     if (d.questionPill) d.questionPill.setAttribute('aria-expanded', 'false');
   }
 

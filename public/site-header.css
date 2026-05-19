@@ -181,3 +181,23 @@ body.has-site-header[data-site-section="home"] .hero {
     padding-inline: 12px;
   }
 }
+
+.site-header__account-btn {
+  background: transparent;
+  border: 1px solid var(--border-light);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-color);
+  font-size: 1.1rem;
+  transition: all 0.2s ease;
+  margin-left: 12px;
+}
+.site-header__account-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-color);
+}

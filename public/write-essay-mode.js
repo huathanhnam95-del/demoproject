@@ -18,6 +18,7 @@
     let isInitialized = false;
     let hasLoadedEntries = false;
     let loadEntriesPromise = null;
+    let pendingRouteQuestionId = null;
     let isSubmitting = false;
     let isAiScoring = false;
     let activeFeedbackRequestId = 0;
@@ -53,6 +54,7 @@
         }
         setupEventListeners();
         registerAuthStateRefresh();
+        pendingRouteQuestionId = getCurrentRouteQuestionId();
         loadEntries();
         isInitialized = true;
     }
@@ -79,6 +81,7 @@
         if (el.resultsTitle) el.resultsTitle.textContent = 'Your Essay Scores';
         if (el.aiScoreHint) { el.aiScoreHint.style.display = 'none'; el.aiScoreHint.innerHTML = ''; }
         if (el.aiScoreBtn) { el.aiScoreBtn.disabled = false; el.aiScoreBtn.textContent = 'Submit to AI scoring'; }
+        renderPromptPreview();
         updateWordCount();
     }
 
@@ -92,6 +95,7 @@
         el.questionSelect = document.getElementById('question-select-essay');
         el.totalQuestions = document.getElementById('total-questions-essay');
         el.startBtn = document.getElementById('start-essay-btn');
+        el.promptPreview = document.getElementById('essay-prompt-preview');
 
         // Practice area
         el.practiceArea = document.getElementById('essay-practice-area');
@@ -155,6 +159,7 @@
 
                 applyFilter();
                 hasLoadedEntries = true;
+                applyPendingRouteQuestion();
             } catch (error) {
                 hasLoadedEntries = false;
                 console.error('[WriteEssay] Error loading entries:', error);
@@ -177,8 +182,12 @@
         } else {
             if (el.startBtn) el.startBtn.disabled = false;
             if (el.questionSelect) el.questionSelect.disabled = false;
-            currentEntryIndex = 0;
-            selectEntry(currentEntryIndex);
+            const routeQuestionId = pendingRouteQuestionId || getCurrentRouteQuestionId();
+            const routeIndex = routeQuestionId
+                ? filteredEntries.findIndex((e) => String(e.id) === String(routeQuestionId))
+                : -1;
+            currentEntryIndex = routeIndex >= 0 ? routeIndex : 0;
+            selectEntry(currentEntryIndex, { updateRoute: true });
         }
     }
 
@@ -208,7 +217,7 @@
     function goToPrevious() { if (currentEntryIndex > 0) selectEntry(currentEntryIndex - 1); }
     function goToNext() { if (currentEntryIndex < filteredEntries.length - 1) selectEntry(currentEntryIndex + 1); }
 
-    function selectEntry(index) {
+    function selectEntry(index, { updateRoute = true } = {}) {
         if (index < 0 || index >= filteredEntries.length) return;
         currentEntryIndex = index;
         currentEntry = filteredEntries[index];
@@ -217,9 +226,43 @@
         reset();
 
         // Update URL with current question ID (replaceState — no history entry per question)
-        if (window.PracticeRouter && currentEntry.id) {
-            window.PracticeRouter.replaceRoute('write-essay', currentEntry.id);
+        if (updateRoute && window.PracticeRouter && currentEntry.id) {
+            window.PracticeRouter.replaceRoute('essay', currentEntry.id);
         }
+    }
+
+    function getCurrentRouteQuestionId() {
+        const stateQuestionId = window.history?.state?.mode === 'essay'
+            ? window.history.state.questionId
+            : null;
+        if (!window.PracticeRouter || typeof window.PracticeRouter.parseRoute !== 'function') {
+            return stateQuestionId || null;
+        }
+        const route = window.PracticeRouter.parseRoute(window.location.pathname);
+        if (route?.mode === 'essay' && route.questionId) return route.questionId;
+        return stateQuestionId || null;
+    }
+
+    function applyPendingRouteQuestion() {
+        const questionId = pendingRouteQuestionId || getCurrentRouteQuestionId();
+        if (!questionId || filteredEntries.length === 0) return false;
+        const idx = filteredEntries.findIndex((e) => String(e.id) === String(questionId));
+        if (idx < 0) return false;
+        pendingRouteQuestionId = null;
+        selectEntry(idx, { updateRoute: false });
+        return true;
+    }
+
+    function renderPromptPreview() {
+        if (!el.promptPreview) return;
+        const prompt = String(currentEntry?.prompt || '').trim();
+        if (!prompt) {
+            el.promptPreview.innerHTML = '<p>Prompt will appear here...</p>';
+            el.promptPreview.style.display = 'block';
+            return;
+        }
+        el.promptPreview.innerHTML = `<div class="essay-prompt-text">${escapeHtml(prompt)}</div>`;
+        el.promptPreview.style.display = isPracticeActive() ? 'none' : 'block';
     }
 
     /* ──────────────────────────── PRACTICE FLOW ──────────────────── */
@@ -229,6 +272,7 @@
         el.practiceArea.style.display = 'block';
         el.stepWrite.style.display = 'block';
         el.stepResults.style.display = 'none';
+        if (el.promptPreview) el.promptPreview.style.display = 'none';
 
         // Lock UI
         if (el.startBtn) el.startBtn.style.display = 'none';
@@ -257,6 +301,10 @@
     function retryPractice() {
         reset();
         startPractice();
+    }
+
+    function isPracticeActive() {
+        return Boolean(el.practiceArea && getComputedStyle(el.practiceArea).display !== 'none');
     }
 
     /* ──────────────────────────── TIMER ──────────────────────────── */
@@ -1309,11 +1357,14 @@
     // Deep-link support: listen for PracticeRouter question navigation events
     window.addEventListener('practice-route-question', (event) => {
         const { mode, questionId } = event.detail || {};
-        if (mode !== 'write-essay' || !questionId) return;
-        if (!hasLoadedEntries || filteredEntries.length === 0) return;
+        if (mode !== 'essay' || !questionId) return;
+        if (!hasLoadedEntries || filteredEntries.length === 0) {
+            pendingRouteQuestionId = questionId;
+            return;
+        }
         const idx = filteredEntries.findIndex((e) => String(e.id) === String(questionId));
         if (idx >= 0) {
-            selectEntry(idx);
+            selectEntry(idx, { updateRoute: false });
         }
     });
 

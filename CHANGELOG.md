@@ -2,7 +2,7 @@
 
 ### Fixed
 
-- **GitHub Actions Deployment Workflow**: Completely resolved checkout errors under `workflow_run` by removing the restricted `ref` argument and explicitly defining `contents: read` permissions, enabling robust checkout of the default branch.
+- **GitHub Actions Deployment Workflow**: Completely resolved deployment failures under `workflow_run`. Removed the restricted `ref` argument, defined `contents: read` permissions, and eliminated `"pinTag": true` from the `/api/**` rewrite in `firebase.json` to prevent hosting-only deployments from failing due to restricted Cloud Functions API listing lookups.
 - **UI Hardening and Robustness**: Implemented safe property navigation for global `VocabularyBook` calls and unified header button rendering to prevent duplicate DOM node injections.
 
 ## [V1.7.4] - 2026-05-19

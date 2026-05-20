@@ -26,3 +26,11 @@
 - Treat the rest of the user request as the council prompt, and include any files under discussion as context arguments so the council can ground its analysis in evidence.
 - Unless a specific output path is needed, allow the script to write its default timestamped `council_output_*.txt` file and matching `.telemetry.json` file in the repo root.
 - Use the council output as advisory support for the task, then continue with a concise synthesis and the next implementation or review step.
+
+## Developing New Practice Modes
+
+When implementing a new practice mode (e.g., in PTE Practice or English Practice), always complete the following checklist:
+- **Routing & Tabs**: Register the new mode button inside the tab headers in `public/index.html` (e.g., `<button id="tab-[mode]" class="tab-btn" type="button" ...>`).
+- **Dashboard Visibility**: Add the static visual card for the mode in the dashboard grid under `#panel-tutorials .tutorial-grid` inside `public/index.html`. Ensure `data-practice-skill` matches the skill category (e.g., `reading`, `listening`, `speaking`, `writing`) and `id="mode-btn-[mode]"` matches the mode ID.
+- **Launcher Meta**: Configure the mode metadata in the `PRACTICE_LAUNCHER` object in `public/script.js` under both `skills.[category].modeIds` and `modes.[mode]`.
+- **E2E Testing**: Add automated E2E browser tests in `tests/browser/` that verify the full user flow, ensuring `sessionStorage` mock is applied to bypass the onboarding welcome modal when necessary.

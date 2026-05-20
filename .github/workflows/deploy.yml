@@ -25,6 +25,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Run version synchronization
+        run: npm run version:sync
 
       - name: Build read-aloud connected speech index
         run: npm run build:read-aloud:connected-speech-index

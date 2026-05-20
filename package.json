@@ -1,6 +1,6 @@
 {
   "name": "dictation-practice",
-  "version": "1.7.7",
+  "version": "1.7.8",
   "description": "Dictation practice app",
   "scripts": {
     "start": "node server.js",
@@ -12,7 +12,8 @@
     "sync-rules": "node sync-points-rules.js points-rules.csv",
     "build:read-aloud:connected-speech-index": "node scripts/read-aloud/build-connected-speech-index.js",
     "report:read-aloud:connected-speech-coverage": "node scripts/read-aloud/report-connected-speech-coverage.js",
-    "deploy": "npm run build:read-aloud:connected-speech-index && firebase deploy --only hosting",
+    "version:sync": "node scripts/sync-version.js",
+    "deploy": "npm run version:sync && npm run build:read-aloud:connected-speech-index && firebase deploy --only hosting",
     "lint": "eslint .",
     "lint:crm": "eslint \"public/crm-admin.js\" \"public/js/classroom-api.js\" \"public/js/crm/*.js\" \"functions/src/routes/admin/*.js\" \"functions/src/crm/*.js\" \"src/routes/admin.js\" --quiet",
     "verify:crm": "node scripts/crm/verify-crm-suite.js",

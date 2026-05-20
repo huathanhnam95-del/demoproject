@@ -1,4 +1,11 @@
+## [V1.7.8] - 2026-05-20
+
+### Added
+
+- **Automated Version Synchronization**: Created an automation script (`scripts/sync-version.js`) and integrated it into the deployment workflow (`deploy.yml`) and `package.json` scripts to automatically sync the HTML version indicator, cache-busting tokens, static assertion tests, and conductor metadata with `package.json` version bumps.
+
 ## [V1.7.7] - 2026-05-20
+
 
 ### Fixed
 

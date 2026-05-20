@@ -1481,6 +1481,39 @@
                 </div>
               </div>
 
+              <!-- Reading Multiple Choice Multiple Answers Card -->
+              <div id="mode-btn-rmcma" class="modern-card transition-card mode-switch-btn" data-practice-skill="reading"
+                onclick="window.switchToMode('rmcma')" tabindex="0" role="button" aria-label="Multiple Choice Multiple Answers mode">
+                <span class="badge">New</span>
+                <div class="card-visual visual-fill">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
+                      <!-- Passages/Lines representation -->
+                      <rect x="8" y="16" width="30" height="3" rx="1" fill="currentColor" opacity="0.55" />
+                      <rect x="8" y="23" width="20" height="3" rx="1" fill="currentColor" opacity="0.55" />
+                      <!-- Multiple choice checkbox boxes -->
+                      <rect x="44" y="16" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5" fill="none" />
+                      <rect x="44" y="26" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5" fill="none" />
+                      <rect x="44" y="36" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5" fill="none" />
+                      <!-- Checked status for multiple answers -->
+                      <path d="M46 19l1 1 2-2" stroke="var(--visual-accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                      <path d="M46 39l1 1 2-2" stroke="var(--visual-accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                      <!-- Option texts -->
+                      <rect x="54" y="18" width="10" height="2" rx="0.5" fill="currentColor" />
+                      <rect x="54" y="28" width="10" height="2" rx="0.5" fill="currentColor" opacity="0.3" />
+                      <rect x="54" y="38" width="10" height="2" rx="0.5" fill="currentColor" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Multiple Choice Multiple Answers</h3>
+                  <p>Read passages and select all correct options to complete the questions.</p>
+                  <button class="card-cta">Practice Now</button>
+                  <a class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('rmcma', true);">What's this?</a>
+                </div>
+              </div>
+
               <!-- Watch Mode Card -->
               <div id="mode-btn-watch" class="modern-card transition-card mode-switch-btn"
                 data-practice-skill="listening" onclick="window.switchToMode('watch')" tabindex="0" role="button"

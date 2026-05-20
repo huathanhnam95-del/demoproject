@@ -1,4 +1,11 @@
+## [V1.7.7] - 2026-05-20
+
+### Fixed
+
+- **Visual Version Indicator Mismatch**: Corrected the visual version indicator at the bottom-right of the landing/practice pages to correctly match the active release. Updated hardcoded occurrences in `public/index.html` and cache-busting version strings in `public/crm-admin.html` to `V1.7.7`.
+
 ## [V1.7.6] - 2026-05-20
+
 
 ### Added
 

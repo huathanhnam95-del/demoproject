@@ -136,7 +136,7 @@ async function processQuestion(prompt, voices, manifest, stats) {
   for (const voice of voices) {
     for (const speedCfg of SPEEDS) {
       const filename = `RA_${qId}_${voice.id}_${speedCfg.key}.mp3`;
-      const filepath = path.join(AUDIO_DIR, filename);
+      const filepath = path.join(AUDIO_DIR, qId, filename);
 
       // Skip if already exists (resume support)
       if (fs.existsSync(filepath)) {
@@ -168,6 +168,10 @@ async function processQuestion(prompt, voices, manifest, stats) {
 
       try {
         const buffer = await generateAudio(text, voice.id, speedCfg.speed);
+        const folder = path.dirname(filepath);
+        if (!fs.existsSync(folder)) {
+          fs.mkdirSync(folder, { recursive: true });
+        }
         fs.writeFileSync(filepath, buffer);
         stats.generated++;
 

@@ -1,0 +1,44 @@
+Loading local manifest.json...
+Local manifest contains 1002 question entries.
+Fetching production manifest from https://betterenglishlearning.com/database/RA/Voice/audio/manifest.json...
+Production manifest contains 582 question entries.
+WARNING: Manifest mismatch!
+Number of keys only in local manifest: 420
+Sample local-only keys: [
+  "7",
+  "12",
+  "14",
+  "20",
+  "21",
+  "25",
+  "30",
+  "31",
+  "33",
+  "34"
+]
+Number of keys only in production manifest: 0
+Total audio files in production manifest: 16750
+Checking 200 random audio files on production server...
+Total audio files in local manifest: 30617
+Checking 200 random audio files on local server (https://localhost:8443)...
+
+=========================================
+--- Production & Local Verification Summary ---
+Production - Checked: 200, Success (200): 197, Failures: 3
+Local      - Checked: 200, Success (200): 200, Failures: 0
+=========================================
+
+Production failed assets details (first 10): [
+  {
+    "filename": "RA_1261_bf_emma_80.mp3",
+    "error": "timeout of 20000ms exceeded"
+  },
+  {
+    "filename": "RA_349_af_heart_80.mp3",
+    "error": "timeout of 20000ms exceeded"
+  },
+  {
+    "filename": "RA_23_af_bella_80.mp3",
+    "error": "timeout of 20000ms exceeded"
+  }
+]

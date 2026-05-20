@@ -1,3 +1,16 @@
+## [V1.7.9] - 2026-05-20
+
+### Added
+
+- **Question-Level Audio Subdirectories**: Reorganized and grouped all 30,000+ Read Aloud voice assets into separate subfolders named after their respective question ID (`public/database/RA/Voice/audio/{id}/`).
+- **Dynamic Subdirectory Path Resolution**: Updated `public/read-aloud-mode.js` path builders to dynamically resolve the new question folder structure when loading files.
+- **Subdirectory Audio Batching & Scanning**: Updated `scripts/kokoro/kokoro_batch_all_voices.js` and `scripts/kokoro/kokoro_manifest_builder.js` to batch write audios to question-specific folders and perform recursive scans to assemble the manifest.
+
+### Fixed
+
+- **Guest Mode Firestore Permission Denied**: Corrected a bug in `database-service.js`'s `currentUser` detection where the Firebase Auth instance was treated as a valid authenticated user object (due to a fallback check). Checking `auth.uid` first and falling back to `auth.currentUser` prevents unauthorized Firestore write attempts in guest/unauthenticated mode.
+- **Browser Testing Audit**: Verified the complete Read Aloud playability and UI/UX flow in the browser, passing all Playwright integration tests.
+
 ## [V1.7.8] - 2026-05-20
 
 ### Added

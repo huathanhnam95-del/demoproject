@@ -46,9 +46,24 @@ function main() {
     manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf-8'));
   }
 
-  // Scan audio directory
-  const files = fs.readdirSync(AUDIO_DIR).filter(f => f.endsWith('.mp3'));
-  console.log(`Found ${files.length} MP3 files in ${AUDIO_DIR}`);
+  // Scan audio directory recursively for MP3 files
+  const getAllMp3Files = (dir) => {
+    let results = [];
+    const list = fs.readdirSync(dir);
+    for (const file of list) {
+      const fullPath = path.join(dir, file);
+      const stat = fs.statSync(fullPath);
+      if (stat && stat.isDirectory()) {
+        results = results.concat(getAllMp3Files(fullPath));
+      } else if (file.endsWith('.mp3')) {
+        results.push(file);
+      }
+    }
+    return results;
+  };
+
+  const files = getAllMp3Files(AUDIO_DIR);
+  console.log(`Found ${files.length} MP3 files in ${AUDIO_DIR} and its subdirectories`);
 
   let kokoroCount = 0;
   let legacyCount = 0;

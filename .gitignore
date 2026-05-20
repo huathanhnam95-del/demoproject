@@ -4,7 +4,8 @@ node_modules/
 # Database audio files (too large for git)
 database/type/audio/
 database/speak/audio/
-public/database/RA/Voice/audio/*.mp3
+public/database/RA/Voice/audio/
+!public/database/RA/Voice/audio/manifest.json
 
 # Backup files
 *.backup.*

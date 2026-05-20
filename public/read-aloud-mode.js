@@ -2991,7 +2991,7 @@ class ReadAloudMode {
     if (!audioEl) return;
     const filename = this._resolveAudioFilename();
     if (filename) {
-      audioEl.src = `/database/RA/Voice/audio/${filename}`;
+      audioEl.src = `/database/RA/Voice/audio/${this.currentQuestionId}/${filename}`;
       audioEl.load();
     }
   }

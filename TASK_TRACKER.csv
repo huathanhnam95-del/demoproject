@@ -271,3 +271,5 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 278,2026-05-20,Deploy V1.7.6 release and voice audio assets,Done,2026-05-20
 279,2026-05-20,Investigate production site version mismatch,Done,2026-05-20
 280,2026-05-20,Automate version synchronization across project,Done,2026-05-20
+281,2026-05-20,Review SWT and essay workflow and deploy browser tests,Done,2026-05-20
+282,2026-05-20,Group Read Aloud audios by question ID into subfolders,Done,2026-05-20

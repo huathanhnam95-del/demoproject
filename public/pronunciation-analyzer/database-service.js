@@ -51,7 +51,7 @@ export class DatabaseService {
 
                 // Update search count (fire and forget) - only if authenticated to avoid permission errors
                 const auth = window.auth || (window.firebaseAuth && window.firebaseAuth.currentUser);
-                const currentUser = auth ? auth.currentUser || auth : null; // Handle both auth object or user object
+                const currentUser = auth ? (auth.uid ? auth : auth.currentUser) : null; // Handle both auth object or user object
 
                 if (currentUser) {
                     updateDoc(docRef, {
@@ -81,6 +81,14 @@ export class DatabaseService {
         if (!this.isAvailable()) return false;
 
         const normalizedWord = wordData.word.toLowerCase().trim();
+
+        // Prevent guest users or unauthenticated users from saving word references to database
+        const auth = window.auth || (window.firebaseAuth && window.firebaseAuth.currentUser);
+        const currentUser = auth ? (auth.uid ? auth : auth.currentUser) : null;
+        if (!currentUser) {
+            console.log('📚 User not authenticated. Skipping database save for:', normalizedWord);
+            return false;
+        }
 
         try {
             const docRef = doc(this.db, this.collectionName, normalizedWord);

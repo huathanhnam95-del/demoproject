@@ -1,3 +1,15 @@
+## [V1.8.0] - 2026-05-20
+
+### Added
+
+- **Multiple Choice Multiple Answers (RMCMA) Mode**: Implemented the new reading practice mode under PTE Practice -> Reading.
+  - Parsed and unzipped the Excel question database containing passages, question stems, shuffled options, and correct answers marked with `[x]`.
+  - Enriched the Excel sheet with Gemini API to automatically generate detailed explanations for the correct answers.
+  - Implemented high-fidelity V7-themed reading UI featuring a responsive passage view, shuffled multiple-choice cards, and custom CSS selection states.
+  - Created color-coded correction feedback (green borders for correctly chosen options, red text with icons, and grayed-out/disabled state for unselected incorrect options).
+  - Built a retractable, toggleable explanation panel under a "Show explanation" button that reveals Gemini-generated insights.
+  - Added full test coverage via a Playwright browser test suite that verifies route initialization, card interactions, scoring rules, explanation triggers, and retry/reset flows.
+
 ## [V1.7.9] - 2026-05-20
 
 ### Added

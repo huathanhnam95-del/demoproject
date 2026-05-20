@@ -746,7 +746,7 @@
       reading: {
         label: 'Reading',
         kind: 'live-skill',
-        modeIds: ['rfib']
+        modeIds: ['rfib', 'rmcma']
       },
       writing: {
         label: 'Writing',
@@ -825,6 +825,13 @@
         isLive: true,
         launcherVisible: true
       },
+      rmcma: {
+        label: 'Multiple Choice Multiple Answers',
+        skill: 'reading',
+        hasTutorial: false,
+        isLive: true,
+        launcherVisible: true
+      },
       essay: {
         label: 'Write Essay',
         skill: 'writing',
@@ -871,13 +878,13 @@
   const PRACTICE_SCOPE_CONFIG = {
     [SCOPE_ENGLISH]: {
       visibleModes: new Set([
-        'read-aloud', 'speak', 'notes', 'extended', 'type', 'rfib', 'essay', 'pronounce', 'collo-dictate'
+        'read-aloud', 'speak', 'notes', 'extended', 'type', 'rfib', 'rmcma', 'essay', 'pronounce', 'collo-dictate'
       ]),
       modeOverrides: Object.freeze({})
     },
     [SCOPE_PTE]: {
       visibleModes: new Set([
-        'read-aloud', 'speak', 'describe-image', 'notes', 'asq', 'sgd', 'essay', 'swt', 'type', 'rfib', 'extended', 'rts'
+        'read-aloud', 'speak', 'describe-image', 'notes', 'asq', 'sgd', 'essay', 'swt', 'type', 'rfib', 'rmcma', 'extended', 'rts'
       ]),
       modeOverrides: Object.freeze({
         speak: { label: 'Repeat Sentence' },
@@ -1619,7 +1626,7 @@
   };
 
   async function ensureModeAssets(mode) {
-    if (!['watch', 'notes', 'rfib'].includes(mode)) return true;
+    if (!['watch', 'notes', 'rfib', 'rmcma'].includes(mode)) return true;
     if (!window.BELLazyLoader || typeof window.BELLazyLoader.ensureModeScripts !== 'function') {
       return true;
     }
@@ -1700,6 +1707,9 @@
     if (leavingMode === 'rts' && mode !== 'rts') {
       window.RTSMode?.onExit?.();
     }
+    if (leavingMode === 'rmcma' && mode !== 'rmcma') {
+      window.RMCMAMode?.onExit?.();
+    }
 
     // Sync Adaptive UI state upon switching
     if (typeof window.updateAdaptiveUI === 'function') {
@@ -1731,7 +1741,7 @@
       return;
     }
 
-    if (mode === 'watch' || mode === 'notes' || mode === 'rfib') {
+    if (mode === 'watch' || mode === 'notes' || mode === 'rfib' || mode === 'rmcma') {
       const assetsReady = await ensureModeAssets(mode);
       if (!assetsReady) return;
     }
@@ -1848,6 +1858,8 @@
         await loadQuestion('speak', currentSpeakQuestionId);
       } else if (mode === 'notes' && window.TakeNotesMode && typeof window.TakeNotesMode.loadEntries === 'function') {
         window.TakeNotesMode.loadEntries();
+      } else if (mode === 'rmcma' && window.RMCMAMode && typeof window.RMCMAMode.activate === 'function') {
+        await window.RMCMAMode.activate();
       } else if (mode === 'essay' && window.WriteEssayMode && typeof window.WriteEssayMode.init === 'function') {
         window.WriteEssayMode.init();
       } else if (mode === 'read-aloud') {

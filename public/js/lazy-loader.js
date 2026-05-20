@@ -186,6 +186,16 @@
     loadedModes.add('rfib');
   }
 
+  async function ensureRmcmaModeLoaded() {
+    if (loadedModes.has('rmcma') || window.RMCMAMode) {
+      loadedModes.add('rmcma');
+      return;
+    }
+    await ensureXlsxLoaded();
+    await loadScript('rmcma-mode.js');
+    loadedModes.add('rmcma');
+  }
+
   async function ensureModeScripts(mode) {
     if (mode === 'watch') {
       await ensureWatchModeLoaded();
@@ -199,6 +209,10 @@
       await ensureRfibModeLoaded();
       return true;
     }
+    if (mode === 'rmcma') {
+      await ensureRmcmaModeLoaded();
+      return true;
+    }
     return false;
   }
 
@@ -207,6 +221,7 @@
     ensureWatchModeLoaded,
     ensureNotesModeLoaded,
     ensureRfibModeLoaded,
+    ensureRmcmaModeLoaded,
     ensureCompromiseLoaded
   };
 })();

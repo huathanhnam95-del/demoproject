@@ -22,6 +22,7 @@
   <link rel="stylesheet" href="pronunciation-analyzer/style.css">
   <link rel="stylesheet" href="pronunciation-analyzer/syllable-verifier.css">
   <link rel="stylesheet" href="rfib-mode.css">
+  <link rel="stylesheet" href="rmcma-mode.css">
   <link rel="stylesheet" href="read-aloud-question-picker-v7.css?v=20260507_ra_v7">
   <link rel="stylesheet" href="style-scaffolding.css?v=20260123_mode_fix">
   <link rel="stylesheet" href="/site-header.css">
@@ -191,7 +192,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.7.9</div>
+  <div id="version-indicator" class="version-indicator">V1.8.0</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -1764,6 +1765,7 @@
           <button id="tab-speak" class="tab-btn" type="button">Repeat</button>
           <button id="tab-extended" class="tab-btn" type="button">Fill In the Blanks</button>
           <button id="tab-rfib" class="tab-btn" type="button">Dropdown</button>
+          <button id="tab-rmcma" class="tab-btn" type="button">RMCMA</button>
           <button id="tab-watch" class="tab-btn" type="button">Watch</button>
           <button id="tab-notes" class="tab-btn" type="button">Take Notes</button>
           <button id="tab-sgd" class="tab-btn" type="button">Discussion</button>
@@ -2574,7 +2576,99 @@
         <div id="rfib-result-box" class="rfib-result-box" aria-live="polite"></div>
       </div>
 
-      <!-- Watch Mode Panel -->
+      <!-- RMCMA Mode Panel -->
+<div id="mode-rmcma" class="mode-panel" style="display: none;">
+  <!-- v7 Question Picker -->
+  <div class="ra-v7-picker-bar" id="rmcma-v7-picker-bar">
+    <div class="ra-v7-picker-inner">
+      <div class="ra-v7-nav" role="group" aria-label="RMCMA navigation">
+        <button id="rmcma-v7-prev-btn" class="ra-v7-icon-btn" type="button" disabled title="Previous question">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+        </button>
+        <button id="rmcma-v7-question-pill" class="ra-v7-question-pill" type="button" aria-haspopup="dialog" title="Jump to a question">Select a question...</button>
+        <button id="rmcma-v7-next-btn" class="ra-v7-icon-btn" type="button" title="Next question">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="rmcma-v7-backdrop" class="ra-v7-backdrop" aria-hidden="true"></div>
+  <div id="rmcma-v7-sheet" class="ra-v7-sheet" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
+    <span class="ra-v7-grabber" aria-hidden="true"></span>
+    <div class="ra-v7-sheet-header">
+      <div class="ra-v7-sheet-title">Question Picker</div>
+      <button id="rmcma-v7-sheet-close" class="ra-v7-sheet-close" type="button" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+    <div class="ra-v7-sheet-body">
+      <div id="rmcma-v7-panel-jump" role="tabpanel">
+        <label class="ra-v7-sr-only" for="rmcma-v7-jump-search">Search</label>
+        <input id="rmcma-v7-jump-search" class="ra-v7-search" type="search" autocomplete="off" placeholder="Search questions...">
+        <div class="ra-v7-section-title">Questions</div>
+        <div id="rmcma-v7-jump-list" class="ra-v7-list" role="listbox" aria-label="Questions"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RMCMA Main Split Container -->
+  <div class="rmcma-container">
+    <div class="rmcma-split-layout">
+      <!-- Left Panel: Reading Passage -->
+      <div class="rmcma-passage-card">
+        <div class="rmcma-card-header">
+          <span class="rmcma-kicker">Reading passage</span>
+        </div>
+        <div id="rmcma-passage-text" class="rmcma-passage-text">
+          <!-- Passage content will be populated here -->
+        </div>
+      </div>
+
+      <!-- Right Panel: Question and Choices -->
+      <div class="rmcma-question-card">
+        <div class="rmcma-card-header">
+          <span class="rmcma-kicker">Question prompt</span>
+        </div>
+        <div class="rmcma-question-content">
+          <p id="rmcma-question-prompt" class="rmcma-question-prompt">
+            <!-- Question prompt will be populated here -->
+          </p>
+          <div class="rmcma-subtitle">Select one or more options:</div>
+          <div id="rmcma-choices-container" class="rmcma-choices-list">
+            <!-- Choice list will be populated here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions and Results Panel -->
+    <div class="rmcma-footer-actions">
+      <div class="rmcma-buttons-row">
+        <button id="rmcma-submit-btn" class="modern-btn modern-btn--check" type="button">Submit</button>
+        <button id="rmcma-retry-btn" class="modern-btn modern-btn--retry" type="button" style="display: none;">Retry</button>
+        <button id="rmcma-explanation-toggle" class="modern-btn modern-btn--secondary" type="button" style="display: none;">Show explanation</button>
+      </div>
+
+      <!-- Score Banner -->
+      <div id="rmcma-result-box" class="rmcma-result-box" style="display: none;">
+        <!-- Correction summary will be shown here -->
+      </div>
+
+      <!-- Accordion Explanation Panel -->
+      <div id="rmcma-explanation-panel" class="rmcma-explanation-panel" style="display: none;">
+        <div class="rmcma-explanation-card">
+          <div class="rmcma-explanation-header">Detailed Explanation</div>
+          <div id="rmcma-explanation-content" class="rmcma-explanation-content">
+            <!-- HTML Explanation will be populated here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Watch Mode Panel -->
       <div id="mode-watch" class="mode-panel" style="display: none;">
         <!-- Video Selection View -->
         <div id="watch-video-list-view" class="watch-video-list-view">

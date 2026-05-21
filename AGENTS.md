@@ -34,3 +34,7 @@ When implementing a new practice mode (e.g., in PTE Practice or English Practice
 - **Dashboard Visibility**: Add the static visual card for the mode in the dashboard grid under `#panel-tutorials .tutorial-grid` inside `public/index.html`. Ensure `data-practice-skill` matches the skill category (e.g., `reading`, `listening`, `speaking`, `writing`) and `id="mode-btn-[mode]"` matches the mode ID.
 - **Launcher Meta**: Configure the mode metadata in the `PRACTICE_LAUNCHER` object in `public/script.js` under both `skills.[category].modeIds` and `modes.[mode]`.
 - **E2E Testing**: Add automated E2E browser tests in `tests/browser/` that verify the full user flow, ensuring `sessionStorage` mock is applied to bypass the onboarding welcome modal when necessary.
+
+## Deployment Rule
+
+- **Do not automatically push to production**: Only push/deploy to production when the user explicitly asks you to. Do not perform automated pushes to the remote repository.

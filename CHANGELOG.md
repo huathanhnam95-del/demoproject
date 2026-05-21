@@ -1,4 +1,26 @@
+## [V1.8.2] - 2026-05-22
+
+### Added
+
+- **Drag & Drop (D&D) Reading Practice Mode**:
+  - Implemented client-side UI, interactive drag-and-drop interaction, and automatic dataset parsing.
+  - Added dedicated styles `public/dd-mode.css`, runtime script `public/dd-mode.js`, and verification tests `tests/browser/dd-mode-browser-check.js`.
+  - Configured and launched D&D practice mode card in the PTE dashboard.
+
+### Improved
+
+- **Layout Decluttering**:
+  - Standardized card structures by removing nested card borders and shadows ("boxes in boxes") across ROP, RMCMA, and D&D modes.
+  - Streamlined container background flow to align intermediate layout card elements naturally.
+
+### Fixed
+
+- **CI/CD Build Pipeline**:
+  - Fixed exit code 128 failure on GitHub Actions by removing ghost submodule entry `tmp_skills_repo` from the git index.
+  - Configured `.gitignore` to exclude local `scratch/` workspace folders.
+
 ## [V1.8.1] - 2026-05-21
+
 
 ### Added
 

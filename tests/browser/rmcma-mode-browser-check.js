@@ -271,6 +271,7 @@ async function retryAndAssertReset(page) {
   await page.addInitScript(() => {
     window.__DISABLE_FIREBASE_EMULATORS__ = true;
     window.sessionStorage.setItem('guestMode', 'true');
+    localStorage.setItem('practiceScope', 'pte');
   });
 
   const errors = [];

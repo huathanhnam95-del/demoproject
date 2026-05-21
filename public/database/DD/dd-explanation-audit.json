@@ -1,0 +1,58 @@
+{
+  "totalQuestions": 1036,
+  "totalBlanks": 16,
+  "passedBlanks": 11,
+  "failedBlanks": 5,
+  "failures": [
+    {
+      "questionId": 4,
+      "questionTitle": "#4 Dark Matter",
+      "blankId": "q4-b1",
+      "answer": "collaborate",
+      "explanation": "",
+      "errors": [
+        "Explanation is missing or empty"
+      ]
+    },
+    {
+      "questionId": 4,
+      "questionTitle": "#4 Dark Matter",
+      "blankId": "q4-b2",
+      "answer": "overlap",
+      "explanation": "",
+      "errors": [
+        "Explanation is missing or empty"
+      ]
+    },
+    {
+      "questionId": 4,
+      "questionTitle": "#4 Dark Matter",
+      "blankId": "q4-b3",
+      "answer": "discoveries",
+      "explanation": "",
+      "errors": [
+        "Explanation is missing or empty"
+      ]
+    },
+    {
+      "questionId": 4,
+      "questionTitle": "#4 Dark Matter",
+      "blankId": "q4-b4",
+      "answer": "involve",
+      "explanation": "",
+      "errors": [
+        "Explanation is missing or empty"
+      ]
+    },
+    {
+      "questionId": 4,
+      "questionTitle": "#4 Dark Matter",
+      "blankId": "q4-b5",
+      "answer": "laboratory",
+      "explanation": "",
+      "errors": [
+        "Explanation is missing or empty"
+      ]
+    }
+  ]
+}

@@ -746,7 +746,7 @@
       reading: {
         label: 'Reading',
         kind: 'live-skill',
-        modeIds: ['rfib', 'rmcma', 'rop']
+        modeIds: ['rfib', 'dd', 'rmcma', 'rop']
       },
       writing: {
         label: 'Writing',
@@ -825,6 +825,13 @@
         isLive: true,
         launcherVisible: true
       },
+      dd: {
+        label: 'Drag & Drop',
+        skill: 'reading',
+        hasTutorial: false,
+        isLive: true,
+        launcherVisible: true
+      },
       rmcma: {
         label: 'Multiple Choice Multiple Answers',
         skill: 'reading',
@@ -885,13 +892,13 @@
   const PRACTICE_SCOPE_CONFIG = {
     [SCOPE_ENGLISH]: {
       visibleModes: new Set([
-        'read-aloud', 'speak', 'notes', 'extended', 'type', 'rfib', 'rmcma', 'rop', 'essay', 'pronounce', 'collo-dictate'
+        'read-aloud', 'speak', 'notes', 'extended', 'type', 'rfib', 'essay', 'pronounce', 'collo-dictate'
       ]),
       modeOverrides: Object.freeze({})
     },
     [SCOPE_PTE]: {
       visibleModes: new Set([
-        'read-aloud', 'speak', 'describe-image', 'notes', 'asq', 'sgd', 'essay', 'swt', 'type', 'rfib', 'rmcma', 'rop', 'extended', 'rts'
+        'read-aloud', 'speak', 'describe-image', 'notes', 'asq', 'sgd', 'essay', 'swt', 'type', 'rfib', 'dd', 'rmcma', 'rop', 'extended', 'rts'
       ]),
       modeOverrides: Object.freeze({
         speak: { label: 'Repeat Sentence' },
@@ -903,7 +910,8 @@
         swt: { label: 'Summarize Written Text' },
         'describe-image': { launcherVisible: true, label: 'Describe Image' },
         rts: { launcherVisible: true, label: 'Respond To Situation' },
-        rop: { label: 'Re-order Paragraph' }
+        rop: { label: 'Re-order Paragraph' },
+        dd: { label: 'Drag & Drop' }
       })
     }
   };
@@ -1634,7 +1642,7 @@
   };
 
   async function ensureModeAssets(mode) {
-    if (!['watch', 'notes', 'rfib', 'rmcma', 'rop'].includes(mode)) return true;
+    if (!['watch', 'notes', 'rfib', 'rmcma', 'rop', 'dd'].includes(mode)) return true;
     if (!window.BELLazyLoader || typeof window.BELLazyLoader.ensureModeScripts !== 'function') {
       return true;
     }
@@ -1721,6 +1729,12 @@
     if (leavingMode === 'rop' && mode !== 'rop') {
       window.ROPMode?.onExit?.();
     }
+    if (leavingMode === 'dd' && mode !== 'dd') {
+      if (window.DDMode?.shouldConfirmExit?.() && !window.confirm('Leaving Drag & Drop will discard your current attempt. Continue?')) {
+        return;
+      }
+      window.DDMode?.onExit?.();
+    }
 
     // Sync Adaptive UI state upon switching
     if (typeof window.updateAdaptiveUI === 'function') {
@@ -1752,7 +1766,7 @@
       return;
     }
 
-    if (mode === 'watch' || mode === 'notes' || mode === 'rfib' || mode === 'rmcma' || mode === 'rop') {
+    if (mode === 'watch' || mode === 'notes' || mode === 'rfib' || mode === 'rmcma' || mode === 'rop' || mode === 'dd') {
       const assetsReady = await ensureModeAssets(mode);
       if (!assetsReady) return;
     }
@@ -1873,6 +1887,8 @@
         await window.RMCMAMode.activate();
       } else if (mode === 'rop' && window.ROPMode && typeof window.ROPMode.activate === 'function') {
         await window.ROPMode.activate();
+      } else if (mode === 'dd' && window.DDMode && typeof window.DDMode.activate === 'function') {
+        await window.DDMode.activate();
       } else if (mode === 'essay' && window.WriteEssayMode && typeof window.WriteEssayMode.init === 'function') {
         window.WriteEssayMode.init();
       } else if (mode === 'read-aloud') {

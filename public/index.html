@@ -22,6 +22,7 @@
   <link rel="stylesheet" href="pronunciation-analyzer/style.css">
   <link rel="stylesheet" href="pronunciation-analyzer/syllable-verifier.css">
   <link rel="stylesheet" href="rfib-mode.css">
+  <link rel="stylesheet" href="dd-mode.css">
   <link rel="stylesheet" href="rmcma-mode.css">
   <link rel="stylesheet" href="rop-mode.css">
   <link rel="stylesheet" href="read-aloud-question-picker-v7.css?v=20260507_ra_v7">
@@ -193,7 +194,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.1</div>
+  <div id="version-indicator" class="version-indicator">V1.8.2</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -1482,6 +1483,34 @@
                 </div>
               </div>
 
+              <!-- Reading Drag & Drop Card -->
+              <div id="mode-btn-dd" class="modern-card transition-card mode-switch-btn" data-practice-skill="reading"
+                onclick="window.switchToMode('dd')" tabindex="0" role="button" aria-label="Drag & Drop mode">
+                <span class="badge">New</span>
+                <div class="card-visual visual-fill">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
+                      <!-- Representing puzzle/drag elements -->
+                      <rect x="8" y="24" width="12" height="4" rx="2" fill="currentColor" opacity="0.55" />
+                      <rect class="blank-slot" x="24" y="20" width="22" height="12" rx="4" stroke="currentColor"
+                        stroke-width="2" stroke-dasharray="4 2" fill="none" />
+                      <rect x="50" y="24" width="14" height="4" rx="2" fill="currentColor" opacity="0.55" />
+                      <!-- Draggable chip -->
+                      <rect class="word-chip" x="28" y="44" width="16" height="8" rx="3" fill="var(--visual-accent)" />
+                      <!-- Curved drag arrow pointing from draggable chip to slot -->
+                      <path d="M36 40 Q38 32 36 30" stroke="var(--visual-accent)" stroke-width="2" stroke-dasharray="2 2" fill="none" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Drag & Drop</h3>
+                  <p>Read passages and drag option blocks into the correct blanks.</p>
+                  <button class="card-cta">Practice Now</button>
+                  <a class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('dd', true);">What's this?</a>
+                </div>
+              </div>
+
               <!-- Reading Multiple Choice Multiple Answers Card -->
               <div id="mode-btn-rmcma" class="modern-card transition-card mode-switch-btn" data-practice-skill="reading"
                 onclick="window.switchToMode('rmcma')" tabindex="0" role="button" aria-label="Multiple Choice Multiple Answers mode">
@@ -1830,6 +1859,7 @@
           <button id="tab-speak" class="tab-btn" type="button">Repeat</button>
           <button id="tab-extended" class="tab-btn" type="button">Fill In the Blanks</button>
           <button id="tab-rfib" class="tab-btn" type="button">Dropdown</button>
+          <button id="tab-dd" class="tab-btn" type="button">Drag & Drop</button>
            <button id="tab-rmcma" class="tab-btn" type="button">RMCMA</button>
           <button id="tab-rop" class="tab-btn" type="button">ROP</button>
           <button id="tab-watch" class="tab-btn" type="button">Watch</button>
@@ -2640,6 +2670,71 @@
         </div>
 
         <div id="rfib-result-box" class="rfib-result-box" aria-live="polite"></div>
+      </div>
+
+      <!-- Drag & Drop Mode Panel -->
+      <div id="mode-dd" class="mode-panel" style="display: none;">
+        <!-- v7 Question Picker -->
+        <div class="ra-v7-picker-bar" id="dd-v7-picker-bar">
+          <div class="ra-v7-picker-inner">
+            <div class="ra-v7-nav" role="group" aria-label="Drag & Drop navigation">
+              <button id="dd-v7-prev-btn" class="ra-v7-icon-btn" type="button" disabled title="Previous question">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+              </button>
+              <button id="dd-v7-question-pill" class="ra-v7-question-pill" type="button" aria-haspopup="dialog" title="Jump to a question">Select a question...</button>
+              <button id="dd-v7-next-btn" class="ra-v7-icon-btn" type="button" title="Next question">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="dd-v7-backdrop" class="ra-v7-backdrop" aria-hidden="true"></div>
+        <div id="dd-v7-sheet" class="ra-v7-sheet" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
+          <span class="ra-v7-grabber" aria-hidden="true"></span>
+          <div class="ra-v7-sheet-header">
+            <div class="ra-v7-sheet-title">Question Picker</div>
+            <button id="dd-v7-sheet-close" class="ra-v7-sheet-close" type="button" aria-label="Close">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+          </div>
+          <div class="ra-v7-sheet-body">
+            <div id="dd-v7-panel-jump" role="tabpanel">
+              <label class="ra-v7-sr-only" for="dd-v7-jump-search">Search</label>
+              <input id="dd-v7-jump-search" class="ra-v7-search" type="search" autocomplete="off" placeholder="Search questions...">
+              <div class="ra-v7-section-title">Questions</div>
+              <div id="dd-v7-jump-list" class="ra-v7-list" role="listbox" aria-label="Questions"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dd-header-card">
+          <div class="dd-header-copy">
+            <div class="dd-kicker">Reading comprehension</div>
+            <h2>Drag & Drop (Fill in the blanks)</h2>
+            <p>Drag the words from the box at the bottom and drop them into the correct blanks in the passage, or click a word then click a blank to place it.</p>
+          </div>
+        </div>
+
+        <div class="dd-passage-card">
+          <div id="dd-passage" class="dd-passage" aria-live="polite"></div>
+        </div>
+
+        <div class="dd-word-bank-card">
+          <div class="dd-card-header">
+            <span class="dd-kicker">Word Bank</span>
+          </div>
+          <div id="dd-word-bank" class="dd-word-bank"></div>
+        </div>
+
+        <div class="dd-actions">
+          <button id="dd-submit-btn" class="modern-btn modern-btn--check" type="button" disabled>Submit</button>
+          <button id="dd-retry-btn" class="modern-btn modern-btn--retry" type="button" style="display: none;">Retry</button>
+          <button id="dd-next-question-btn" class="modern-btn modern-btn--next" type="button" style="display: none;">Next Question</button>
+        </div>
+
+        <div id="dd-result-summary" class="dd-result-summary-box" style="display: none;" aria-live="polite"></div>
+        <div id="dd-results" class="dd-results-container" style="display: none;"></div>
       </div>
 
       <!-- RMCMA Mode Panel -->

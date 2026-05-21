@@ -87,7 +87,7 @@ async function waitForActivePanel(page, panelId) {
   });
 
   await page.addInitScript(() => {
-    ['type', 'collo-dictate', 'speak', 'extended', 'watch', 'notes', 'pronounce', 'read-aloud', 'rfib'].forEach((mode) => {
+    ['type', 'collo-dictate', 'speak', 'extended', 'watch', 'notes', 'pronounce', 'read-aloud', 'rfib', 'dd'].forEach((mode) => {
       localStorage.setItem(`${mode}ModeFirstUse`, 'true');
     });
   });

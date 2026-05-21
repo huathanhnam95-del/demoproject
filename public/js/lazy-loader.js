@@ -206,6 +206,15 @@
     loadedModes.add('rop');
   }
 
+  async function ensureDdModeLoaded() {
+    if (loadedModes.has('dd') || window.DDMode) {
+      loadedModes.add('dd');
+      return;
+    }
+    await loadScript('dd-mode.js');
+    loadedModes.add('dd');
+  }
+
   async function ensureModeScripts(mode) {
     if (mode === 'watch') {
       await ensureWatchModeLoaded();
@@ -217,6 +226,10 @@
     }
     if (mode === 'rfib') {
       await ensureRfibModeLoaded();
+      return true;
+    }
+    if (mode === 'dd') {
+      await ensureDdModeLoaded();
       return true;
     }
     if (mode === 'rmcma') {
@@ -235,6 +248,7 @@
     ensureWatchModeLoaded,
     ensureNotesModeLoaded,
     ensureRfibModeLoaded,
+    ensureDdModeLoaded,
     ensureRmcmaModeLoaded,
     ensureRopModeLoaded,
     ensureCompromiseLoaded

@@ -38,3 +38,7 @@ When implementing a new practice mode (e.g., in PTE Practice or English Practice
 ## Deployment Rule
 
 - **Do not automatically push to production**: Only push/deploy to production when the user explicitly asks you to. Do not perform automated pushes to the remote repository.
+
+## UI Design Rules
+
+- **Avoid Nested Card Structures ("Boxes in Boxes")**: When designing or styling UI layouts, avoid wrapping components in multiple layers of cards or nested container boxes. Layout elements should flow naturally on the parent `.container` background, minimizing borders, shadows, and backdrop-filters on intermediate layout cards. Set horizontal paddings on intermediate elements to 0 where necessary to align with the main container boundaries.

@@ -282,3 +282,9 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 289,2026-05-21,Verify ROP database classification and integrate login logout reload wiring,Done,2026-05-21
 290,2026-05-21,Implement ROP pair-wise cohesion feedback and clean transition metadata,Done,2026-05-21
 291,2026-05-21,Release V1.8.1 - Sync version and commit ROP updates,Done,2026-05-21
+292,2026-05-21,Implement Drag & Drop reading practice mode,Done,2026-05-21
+293,2026-05-21,Check ROP mode implementation and explanation generation,Done,2026-05-21
+294,2026-05-21,Fix MCMA and ROP practice scope visibility,Done,2026-05-21
+295,2026-05-21,Declutter UI cards and reduce nested box layering,Done,2026-05-21
+296,2026-05-22,Debug CI verify pipeline and deploy V1.8.2 release,In Progress,
+

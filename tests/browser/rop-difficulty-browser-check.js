@@ -162,6 +162,7 @@ async function setupFirebaseMocks(context) {
   await page.addInitScript(() => {
     window.__DISABLE_FIREBASE_EMULATORS__ = true;
     window.sessionStorage.setItem('guestMode', 'true');
+    window.localStorage.setItem('practiceScope', 'pte');
     
     // Set up window.shopModule getter/setter to prevent shop-module.js from overriding the unlock status
     let currentShopModule = {

@@ -62,6 +62,8 @@ _tmp*/
 tmp/
 Kokoro-FastAPI/
 essay_temp/
+scratch/
+
 
 # Workspace-local document drafts and ad hoc screenshots
 /*.docx

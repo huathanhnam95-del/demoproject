@@ -286,5 +286,6 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 293,2026-05-21,Check ROP mode implementation and explanation generation,Done,2026-05-21
 294,2026-05-21,Fix MCMA and ROP practice scope visibility,Done,2026-05-21
 295,2026-05-21,Declutter UI cards and reduce nested box layering,Done,2026-05-21
-296,2026-05-22,Debug CI verify pipeline and deploy V1.8.2 release,In Progress,
+296,2026-05-22,Debug CI verify pipeline and deploy V1.8.2 release,Done,2026-05-22
+297,2026-05-22,Debug SWT question loading issue,In Progress,
 

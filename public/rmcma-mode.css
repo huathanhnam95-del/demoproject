@@ -123,8 +123,10 @@
 
 /* Choice card designs */
 .rmcma-choice-card {
+  appearance: none;
   position: relative;
   display: flex;
+  width: 100%;
   align-items: flex-start;
   gap: 12px;
   padding: 14px 18px;
@@ -132,14 +134,25 @@
   border: 1px solid rgba(110, 84, 54, 0.14);
   background: #ffffff;
   cursor: pointer;
+  font: inherit;
+  text-align: left;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
 }
 
-.rmcma-choice-card:hover {
+.rmcma-choice-card:not(:disabled):hover {
   transform: translateY(-2px);
   border-color: var(--rmcma-accent);
   box-shadow: 0 6px 16px rgba(184, 109, 45, 0.08);
+}
+
+.rmcma-choice-card:focus-visible {
+  outline: 3px solid rgba(90, 130, 168, 0.32);
+  outline-offset: 2px;
+}
+
+.rmcma-choice-card:disabled {
+  cursor: default;
 }
 
 .rmcma-choice-checkbox {

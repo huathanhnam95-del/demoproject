@@ -196,6 +196,16 @@
     loadedModes.add('rmcma');
   }
 
+  async function ensureRopModeLoaded() {
+    if (loadedModes.has('rop') || window.ROPMode) {
+      loadedModes.add('rop');
+      return;
+    }
+    await ensureXlsxLoaded();
+    await loadScript('rop-mode.js');
+    loadedModes.add('rop');
+  }
+
   async function ensureModeScripts(mode) {
     if (mode === 'watch') {
       await ensureWatchModeLoaded();
@@ -213,6 +223,10 @@
       await ensureRmcmaModeLoaded();
       return true;
     }
+    if (mode === 'rop') {
+      await ensureRopModeLoaded();
+      return true;
+    }
     return false;
   }
 
@@ -222,6 +236,7 @@
     ensureNotesModeLoaded,
     ensureRfibModeLoaded,
     ensureRmcmaModeLoaded,
+    ensureRopModeLoaded,
     ensureCompromiseLoaded
   };
 })();

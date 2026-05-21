@@ -5,10 +5,10 @@ import openpyxl
 import requests
 
 # --- API Configuration ---
-API_KEY = "AQ.Ab8RN6IevtwiomI4-zHShe_gVo__PYPcY0HlDukIul9qHdxZig"
-PROJECT_ID = "gen-lang-client-0677756745"
-LOCATION = "us-central1"
-MODEL = "gemini-2.5-flash"
+API_KEY = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
+PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT", "gen-lang-client-0677756745")
+LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
+MODEL = os.environ.get("RMCMA_EXPLANATION_MODEL", "gemini-2.5-flash")
 
 EXCEL_PATH = r"C:\Cursor AI\public\database\RMCMA\RMCMA\RMCMA.xlsx"
 
@@ -71,6 +71,9 @@ def parse_rmcma_content(text):
     }
 
 def generate_explanation(parsed_data):
+    if not API_KEY:
+        raise RuntimeError("Set GOOGLE_API_KEY or GEMINI_API_KEY before generating RMCMA explanations.")
+
     passage = parsed_data['passage']
     question = parsed_data['question']
     

@@ -23,6 +23,34 @@
     return div.innerHTML;
   }
 
+  function sanitizeExplanationHtml(rawHtml) {
+    const allowedTags = new Set(['P', 'STRONG', 'B', 'EM', 'I', 'UL', 'OL', 'LI', 'BR', 'H3', 'H4']);
+    const template = document.createElement('template');
+    template.innerHTML = String(rawHtml || '');
+
+    const cleanNode = (node) => {
+      if (node.nodeType === Node.COMMENT_NODE) {
+        node.remove();
+        return;
+      }
+
+      if (node.nodeType !== Node.ELEMENT_NODE) return;
+
+      if (!allowedTags.has(node.tagName)) {
+        const childNodes = Array.from(node.childNodes);
+        node.replaceWith(...childNodes);
+        childNodes.forEach(cleanNode);
+        return;
+      }
+
+      Array.from(node.attributes).forEach((attribute) => node.removeAttribute(attribute.name));
+      Array.from(node.childNodes).forEach(cleanNode);
+    };
+
+    Array.from(template.content.childNodes).forEach(cleanNode);
+    return template.innerHTML;
+  }
+
   function shuffleArray(array) {
     const arr = [...array];
     for (let i = arr.length - 1; i > 0; i--) {
@@ -291,9 +319,11 @@
     if (elements.choicesContainer) {
       elements.choicesContainer.innerHTML = '';
       state.shuffledChoices.forEach((choice, idx) => {
-        const card = document.createElement('div');
+        const card = document.createElement('button');
+        card.type = 'button';
         card.className = 'rmcma-choice-card';
         card.dataset.index = idx;
+        card.setAttribute('aria-pressed', 'false');
         card.innerHTML = `
           <div class="rmcma-choice-checkbox"></div>
           <div class="rmcma-choice-text">${escapeHtml(choice.text)}</div>
@@ -340,7 +370,9 @@
     if (elements.choicesContainer) {
       const cards = elements.choicesContainer.querySelectorAll('.rmcma-choice-card');
       cards.forEach((card, i) => {
-        card.classList.toggle('is-selected', state.selectedIndices.has(i));
+        const isSelected = state.selectedIndices.has(i);
+        card.classList.toggle('is-selected', isSelected);
+        card.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
       });
     }
 
@@ -358,7 +390,7 @@
     // Disable choices interaction
     const cards = elements.choicesContainer.querySelectorAll('.rmcma-choice-card');
     cards.forEach((card) => {
-      card.style.pointerEvents = 'none';
+      card.disabled = true;
     });
 
     let correctCount = 0;
@@ -421,7 +453,7 @@
     if (elements.explanationToggle && state.currentQuestion.explanation) {
       elements.explanationToggle.style.display = 'block';
       if (elements.explanationContent) {
-        elements.explanationContent.innerHTML = state.currentQuestion.explanation;
+        elements.explanationContent.innerHTML = sanitizeExplanationHtml(state.currentQuestion.explanation);
       }
     }
   }

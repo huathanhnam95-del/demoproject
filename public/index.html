@@ -23,6 +23,7 @@
   <link rel="stylesheet" href="pronunciation-analyzer/syllable-verifier.css">
   <link rel="stylesheet" href="rfib-mode.css">
   <link rel="stylesheet" href="rmcma-mode.css">
+  <link rel="stylesheet" href="rop-mode.css">
   <link rel="stylesheet" href="read-aloud-question-picker-v7.css?v=20260507_ra_v7">
   <link rel="stylesheet" href="style-scaffolding.css?v=20260123_mode_fix">
   <link rel="stylesheet" href="/site-header.css">
@@ -1514,6 +1515,37 @@
                 </div>
               </div>
 
+              <!-- Reading Re-order Paragraph Card -->
+              <div id="mode-btn-rop" class="modern-card transition-card mode-switch-btn" data-practice-skill="reading"
+                onclick="window.switchToMode('rop')" tabindex="0" role="button" aria-label="Re-order Paragraph mode">
+                <span class="badge">New</span>
+                <div class="card-visual visual-fill">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
+                      <!-- Left source list boxes -->
+                      <rect x="8" y="14" width="22" height="10" rx="2" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.6" />
+                      <rect x="8" y="28" width="22" height="10" rx="2" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.6" />
+                      <rect x="8" y="42" width="22" height="10" rx="2" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.6" />
+
+                      <!-- Drag arrow/connector indicator -->
+                      <path d="M34 26 L38 26 L38 32 L42 28 M38 26 L42 30" stroke="var(--visual-accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.8" />
+
+                      <!-- Right target list boxes (reordered) -->
+                      <rect x="42" y="14" width="22" height="10" rx="2" stroke="var(--visual-accent)" stroke-width="1.5" fill="none" />
+                      <rect x="42" y="28" width="22" height="10" rx="2" stroke="currentColor" stroke-width="1.5" fill="none" />
+                      <rect x="42" y="42" width="22" height="10" rx="2" stroke="currentColor" stroke-width="1.5" fill="none" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Re-order Paragraph</h3>
+                  <p>Drag and drop paragraphs from the left to target slots on the right to restore the correct sequence.</p>
+                  <button class="card-cta">Practice Now</button>
+                  <a class="whats-this-link"
+                    onclick="event.stopPropagation(); window.startTutorial('rop', true);">What's this?</a>
+                </div>
+              </div>
+
               <!-- Watch Mode Card -->
               <div id="mode-btn-watch" class="modern-card transition-card mode-switch-btn"
                 data-practice-skill="listening" onclick="window.switchToMode('watch')" tabindex="0" role="button"
@@ -1798,7 +1830,8 @@
           <button id="tab-speak" class="tab-btn" type="button">Repeat</button>
           <button id="tab-extended" class="tab-btn" type="button">Fill In the Blanks</button>
           <button id="tab-rfib" class="tab-btn" type="button">Dropdown</button>
-          <button id="tab-rmcma" class="tab-btn" type="button">RMCMA</button>
+           <button id="tab-rmcma" class="tab-btn" type="button">RMCMA</button>
+          <button id="tab-rop" class="tab-btn" type="button">ROP</button>
           <button id="tab-watch" class="tab-btn" type="button">Watch</button>
           <button id="tab-notes" class="tab-btn" type="button">Take Notes</button>
           <button id="tab-sgd" class="tab-btn" type="button">Discussion</button>
@@ -2693,6 +2726,112 @@
         <div class="rmcma-explanation-card">
           <div class="rmcma-explanation-header">Detailed Explanation</div>
           <div id="rmcma-explanation-content" class="rmcma-explanation-content">
+            <!-- HTML Explanation will be populated here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ROP Mode Panel -->
+<div id="mode-rop" class="mode-panel" style="display: none;">
+  <!-- v7 Question Picker -->
+  <div class="ra-v7-picker-bar" id="rop-v7-picker-bar">
+    <div class="ra-v7-picker-inner">
+      <div class="ra-v7-nav" role="group" aria-label="ROP navigation">
+        <button id="rop-v7-prev-btn" class="ra-v7-icon-btn" type="button" disabled title="Previous question">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+        </button>
+        <button id="rop-v7-question-pill" class="ra-v7-question-pill" type="button" aria-haspopup="dialog" title="Jump to a question">Select a question...</button>
+        <button id="rop-v7-next-btn" class="ra-v7-icon-btn" type="button" title="Next question">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="rop-v7-backdrop" class="ra-v7-backdrop" aria-hidden="true"></div>
+  <div id="rop-v7-sheet" class="ra-v7-sheet" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
+    <span class="ra-v7-grabber" aria-hidden="true"></span>
+    <div class="ra-v7-sheet-header">
+      <div class="ra-v7-sheet-title">Question Picker</div>
+      <button id="rop-v7-sheet-close" class="ra-v7-sheet-close" type="button" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+    <div class="ra-v7-sheet-body">
+      <div id="rop-v7-panel-jump" role="tabpanel">
+        <label class="ra-v7-sr-only" for="rop-v7-jump-search">Search</label>
+        <input id="rop-v7-jump-search" class="ra-v7-search" type="search" autocomplete="off" placeholder="Search questions...">
+        <div class="ra-v7-section-title">Questions</div>
+        <div id="rop-v7-jump-list" class="ra-v7-list" role="listbox" aria-label="Questions"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROP Main Drag & Drop Container -->
+  <div class="rop-container">
+    <div class="rop-instructions">
+      The text boxes in the left panel have been shuffled. Drag and drop them to the right panel or use the arrows in the center column to restore the original paragraph order.
+    </div>
+
+    <div class="rop-workspace">
+      <!-- Left Column: Source Boxes -->
+      <div class="rop-workspace-card rop-source-card">
+        <div class="rop-card-header">
+          <span class="rop-kicker">Source paragraphs</span>
+        </div>
+        <div id="rop-source-list" class="rop-list-area" role="listbox" aria-label="Source paragraphs">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Center Column: Control Buttons -->
+      <div class="rop-controls-column">
+        <button id="rop-btn-move-right" class="rop-arrow-btn" type="button" title="Move to right" disabled>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+        </button>
+        <button id="rop-btn-move-left" class="rop-arrow-btn" type="button" title="Move to left" disabled>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+        </button>
+        <button id="rop-btn-move-up" class="rop-arrow-btn" type="button" title="Move up" disabled>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"></path></svg>
+        </button>
+        <button id="rop-btn-move-down" class="rop-arrow-btn" type="button" title="Move down" disabled>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+      </div>
+
+      <!-- Right Column: Target Slots/Boxes -->
+      <div class="rop-workspace-card rop-target-card">
+        <div class="rop-card-header">
+          <span class="rop-kicker">Target order</span>
+        </div>
+        <div id="rop-target-list" class="rop-list-area" role="listbox" aria-label="Target order">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions and Results Panel -->
+    <div class="rop-footer-actions">
+      <div class="rop-buttons-row">
+        <button id="rop-submit-btn" class="modern-btn modern-btn--check" type="button">Submit</button>
+        <button id="rop-retry-btn" class="modern-btn modern-btn--retry" type="button" style="display: none;">Retry</button>
+        <button id="rop-explanation-toggle" class="modern-btn modern-btn--secondary" type="button" style="display: none;">Show explanation</button>
+      </div>
+
+      <!-- Score Banner -->
+      <div id="rop-result-box" class="rop-result-box" style="display: none;">
+        <!-- Correction summary and scores will be shown here -->
+      </div>
+
+      <!-- Accordion Explanation Panel -->
+      <div id="rop-explanation-panel" class="rop-explanation-panel" style="display: none;">
+        <div class="rop-explanation-card">
+          <div class="rop-explanation-header">Detailed Explanation</div>
+          <div id="rop-explanation-content" class="rop-explanation-content">
             <!-- HTML Explanation will be populated here -->
           </div>
         </div>

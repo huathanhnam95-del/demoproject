@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const assert = require('assert');
 const path = require('path');
 const net = require('net');
@@ -22,35 +23,29 @@ function getFreePort() {
   });
 }
 
-function parseAnswers(answerText) {
-  const parts = String(answerText || '').split(/\n-+\n|---\n|\n---/);
-  let choicesRaw = '';
-  if (parts.length >= 3) {
-    choicesRaw = parts.slice(2).join('\n');
-  } else {
-    const simpleParts = String(answerText || '').split('---');
-    if (simpleParts.length >= 3) {
-      choicesRaw = simpleParts.slice(2).join('\n');
-    }
-  }
-
-  const choices = [];
-  choicesRaw.split('\n').forEach((line) => {
-    const cleanLine = line.trim();
-    if (!cleanLine) return;
-    const match = cleanLine.match(/^\[([xX\s]*)\]\s*(.*)$/);
+function parseParagraphs(text) {
+  if (!text) return [];
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const paragraphs = [];
+  for (const line of lines) {
+    const match = line.match(/^(\d+)[.)\s]\s*(.*)$/);
     if (match) {
-      choices.push({
-        text: match[2].trim(),
-        isCorrect: match[1].toLowerCase().includes('x')
+      paragraphs.push({
+        originalIndex: parseInt(match[1], 10),
+        text: match[2].trim()
+      });
+    } else {
+      paragraphs.push({
+        originalIndex: paragraphs.length + 1,
+        text: line
       });
     }
-  });
-  return choices;
+  }
+  return paragraphs;
 }
 
 async function getSmokeQuestion() {
-  const xlsxPath = path.join(process.cwd(), 'public', 'database', 'RMCMA', 'RMCMA', 'RMCMA.xlsx');
+  const xlsxPath = path.join(process.cwd(), 'public', 'database', 'ROP', 'ROP', 'ROP.xlsx');
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.readFile(xlsxPath);
   const sheet = workbook.worksheets[0];
@@ -59,16 +54,16 @@ async function getSmokeQuestion() {
   const row = sheet.getRow(2);
   const id = row.getCell(1).value;
   const title = row.getCell(2).value;
-  const answerText = row.getCell(3).value;
-  const explanation = row.getCell(4).value;
+  const answerText = row.getCell(4).value || row.getCell(3).value; // ENRICHED_ANSWER or ANSWER
+  const explanation = row.getCell(5).value;
 
-  const choices = parseAnswers(answerText);
-  assert(choices.length > 0, `Expected choices to be parsed for question ${id}`);
+  const paragraphs = parseParagraphs(answerText);
+  assert(paragraphs.length > 0, `Expected paragraphs to be parsed for question ${id}`);
 
   return {
     id,
     title,
-    choices,
+    paragraphs,
     explanation
   };
 }
@@ -216,157 +211,199 @@ async function setupFirebaseMocks(context) {
     await page.goto(`${baseUrl}/index.html`, { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => typeof window.switchToMode === 'function', { timeout: 30000 });
 
-    // Exercise the learner click path: Reading skill filter -> RMCMA card.
+    // Exercise the learner click path: Reading skill filter -> ROP card.
     const readingSkillButton = page.locator('.practice-skill-btn[data-practice-skill="reading"]');
     await readingSkillButton.click();
     await page.waitForFunction(() => {
       const button = document.querySelector('.practice-skill-btn[data-practice-skill="reading"]');
-      const card = document.getElementById('mode-btn-rmcma');
+      const card = document.getElementById('mode-btn-rop');
       return button?.classList.contains('is-active') &&
         card &&
         getComputedStyle(card).display !== 'none';
     }, { timeout: 10000 });
 
-    const rmcmaCard = page.locator('#mode-btn-rmcma');
-    await rmcmaCard.click();
+    const ropCard = page.locator('#mode-btn-rop');
+    await ropCard.click();
     
     // Wait for container to become active and visible
     await page.waitForFunction(() => {
-      const panel = document.getElementById('mode-rmcma');
+      const panel = document.getElementById('mode-rop');
       return !!panel && panel.classList.contains('active') && getComputedStyle(panel).display !== 'none';
     }, { timeout: 30000 });
 
     // Wait for the Excel workbook to be fetched and first question loaded
     await page.waitForFunction(() => {
-      const text = document.getElementById('rmcma-passage-text')?.textContent || '';
-      return text.length > 20 && !text.includes('Loading');
+      const cards = document.querySelectorAll('#rop-source-list .rop-item');
+      return cards.length > 0;
     }, { timeout: 30000 });
 
     // Verify correct question title is shown in question picker pill
-    const pillText = await page.locator('#rmcma-v7-question-pill').textContent();
+    const pillText = await page.locator('#rop-v7-question-pill').textContent();
     assert(pillText.includes(target.title), `Pill text "${pillText}" does not contain expected title "${target.title}"`);
 
-    // Verify all choices are rendered
-    const choicesCount = await page.locator('#rmcma-choices-container .rmcma-choice-card').count();
-    assert.equal(choicesCount, target.choices.length, `Expected ${target.choices.length} choices, found ${choicesCount}`);
+    // Verify all source paragraphs are rendered
+    const sourceCount = await page.locator('#rop-source-list .rop-item').count();
+    assert.equal(sourceCount, target.paragraphs.length, `Expected ${target.paragraphs.length} paragraphs in source list, found ${sourceCount}`);
 
-    // Navigation controls should move through the question list and back.
-    await page.locator('#rmcma-v7-next-btn').click();
+    // Click navigation next and check title change
+    await page.locator('#rop-v7-next-btn').click();
     await page.waitForFunction((firstTitle) => {
-      const pill = document.getElementById('rmcma-v7-question-pill')?.textContent || '';
+      const pill = document.getElementById('rop-v7-question-pill')?.textContent || '';
       return !pill.includes(firstTitle);
     }, target.title, { timeout: 5000 });
-    await page.locator('#rmcma-v7-prev-btn').click();
+
+    // Move back
+    await page.locator('#rop-v7-prev-btn').click();
     await page.waitForFunction((firstTitle) => {
-      const pill = document.getElementById('rmcma-v7-question-pill')?.textContent || '';
+      const pill = document.getElementById('rop-v7-question-pill')?.textContent || '';
       return pill.includes(firstTitle);
     }, target.title, { timeout: 5000 });
 
-    // Question picker should open, search, and close cleanly.
-    await page.locator('#rmcma-v7-question-pill').click();
-    await page.waitForFunction(() => {
-      const sheet = document.getElementById('rmcma-v7-sheet');
-      return sheet?.classList.contains('is-open');
-    }, { timeout: 5000 });
-    await page.locator('#rmcma-v7-jump-search').fill(String(target.id));
-    await page.waitForFunction((expectedTitle) => {
-      const list = document.getElementById('rmcma-v7-jump-list')?.textContent || '';
-      return list.includes(expectedTitle);
-    }, target.title, { timeout: 5000 });
-    await page.locator('#rmcma-v7-sheet-close').click();
-    await page.waitForFunction(() => {
-      const sheet = document.getElementById('rmcma-v7-sheet');
-      return !sheet?.classList.contains('is-open');
-    }, { timeout: 5000 });
+    // Try selection and move controls
+    const firstItem = page.locator('#rop-source-list .rop-item').first();
+    await firstItem.click();
 
-    // Select the correct choices by checking their texts
-    const correctChoices = target.choices.filter(c => c.isCorrect);
-    
-    // We will click all option cards that correspond to correct choices
-    for (const choice of correctChoices) {
-      // Find the card element having this text
-      const choiceCard = page.locator('#rmcma-choices-container .rmcma-choice-card', { hasText: choice.text });
-      await choiceCard.click();
+    // Verify selected class
+    const isSelected = await firstItem.evaluate(el => el.classList.contains('is-selected'));
+    assert(isSelected, 'First item should have class "is-selected"');
+
+    // Move right button should be enabled
+    const moveRightBtn = page.locator('#rop-btn-move-right');
+    assert.equal(await moveRightBtn.getAttribute('disabled'), null, 'Move right button should be enabled after selection');
+
+    // Click move right
+    await moveRightBtn.click();
+
+    // Check it moved to target list
+    const targetCount = await page.locator('#rop-target-list .rop-item').count();
+    assert.equal(targetCount, 1, 'Target list should contain exactly 1 item');
+
+    // Select target item
+    const targetItem = page.locator('#rop-target-list .rop-item').first();
+    await targetItem.click();
+
+    // Move left button should be enabled
+    const moveLeftBtn = page.locator('#rop-btn-move-left');
+    assert.equal(await moveLeftBtn.getAttribute('disabled'), null, 'Move left button should be enabled after selection in target');
+
+    // Click move left to return it
+    await moveLeftBtn.click();
+    const sourceCountReturned = await page.locator('#rop-source-list .rop-item').count();
+    assert.equal(sourceCountReturned, target.paragraphs.length, 'All items should be back in source list');
+
+    // Now, move all items from source to target to enable submit
+    for (let i = 0; i < target.paragraphs.length; i++) {
+      const currentFirstItem = page.locator('#rop-source-list .rop-item').first();
+      await currentFirstItem.click();
+      await moveRightBtn.click();
     }
 
+    // Verify target count is now correct
+    const targetCountFull = await page.locator('#rop-target-list .rop-item').count();
+    assert.equal(targetCountFull, target.paragraphs.length, 'All items should be in target list');
+
     // Submit button should be enabled
-    const submitBtn = page.locator('#rmcma-submit-btn');
-    await assert.equal(await submitBtn.getAttribute('disabled'), null, 'Submit button should be enabled after selections');
+    const submitBtn = page.locator('#rop-submit-btn');
+    assert.equal(await submitBtn.getAttribute('disabled'), null, 'Submit button should be enabled when source list is empty');
 
     // Click submit
     await submitBtn.click();
 
-    // Verify correction colors and class names
-    // Correctly chosen should have class `is-correct-selected`
-    for (const choice of target.choices) {
-      const card = page.locator('#rmcma-choices-container .rmcma-choice-card', { hasText: choice.text });
-      if (choice.isCorrect) {
-        // Since we clicked it, it must have class `is-correct-selected`
-        const hasClass = await card.evaluate(el => el.classList.contains('is-correct-selected'));
-        assert(hasClass, `Choice "${choice.text}" should have class "is-correct-selected"`);
-      } else {
-        // Incorrect, unselected choice should have class `is-disabled`
-        const hasClass = await card.evaluate(el => el.classList.contains('is-disabled'));
-        assert(hasClass, `Choice "${choice.text}" should have class "is-disabled"`);
-      }
-    }
-
-    // Verify score banner
-    const resultBox = page.locator('#rmcma-result-box');
+    // Result box should be visible
+    const resultBox = page.locator('#rop-result-box');
     await page.waitForFunction(() => {
-      const box = document.getElementById('rmcma-result-box');
+      const box = document.getElementById('rop-result-box');
       return !!box && getComputedStyle(box).display !== 'none';
     }, { timeout: 5000 });
 
-    const scoreText = await resultBox.textContent();
-    assert(scoreText.includes(`${correctChoices.length}`), `Expected score banner to mention correct choices count: ${scoreText}`);
+    const resultBoxText = await resultBox.textContent();
+    assert(resultBoxText.includes('Score:'), 'Result box should contain score text');
 
-    // Verify explanation toggle button is visible
-    const explanationToggle = page.locator('#rmcma-explanation-toggle');
-    await assert.equal(await explanationToggle.isVisible(), true, 'Explanation toggle should be visible after submit');
+    // Verify visual connectors were rendered between adjacent boxes
+    const connectorCount = await page.locator('#rop-target-list .rop-card-connector').count();
+    assert.equal(connectorCount, target.paragraphs.length - 1, 'Correct number of visual connectors should be rendered');
+    
+    // Check first connector class
+    const connectorClasses = await page.locator('#rop-target-list .rop-card-connector').first().getAttribute('class');
+    assert(connectorClasses.includes('is-correct') || connectorClasses.includes('is-incorrect'), 'Connectors should have correctness classes');
 
-    // Click toggle to show explanation
+    // Explanation panel toggle should be visible
+    const explanationToggle = page.locator('#rop-explanation-toggle');
+    assert.equal(await explanationToggle.isVisible(), true, 'Explanation toggle button should be visible');
+
+    // Click explanation toggle
     await explanationToggle.click();
 
-    // Verify explanation content is displayed
-    const explanationPanel = page.locator('#rmcma-explanation-panel');
+    // Explanation content should display
+    const explanationPanel = page.locator('#rop-explanation-panel');
     await page.waitForFunction(() => {
-      const panel = document.getElementById('rmcma-explanation-panel');
+      const panel = document.getElementById('rop-explanation-panel');
       return !!panel && getComputedStyle(panel).display !== 'none';
     }, { timeout: 5000 });
 
-    const explanationContent = await page.locator('#rmcma-explanation-content').innerHTML();
-    assert(explanationContent.length > 50, 'Explanation content should be populated with analyzed text');
+    const explanationContent = await page.locator('#rop-explanation-content').innerHTML();
+    assert(explanationContent.length > 50, 'Explanation panel should show content');
+
+    // Verify cohesion highlight hover interaction
+    const firstCohesionLink = page.locator('#rop-explanation-content .cohesion-link').first();
+    if (await firstCohesionLink.count() > 0) {
+      const dataLinkVal = await firstCohesionLink.getAttribute('data-link');
+      
+      // Hover over the cohesion link
+      await firstCohesionLink.hover();
+      await page.waitForTimeout(100);
+      
+      // Verify all spans with the same data-link are highlighted
+      const highlightedCount = await page.evaluate((group) => {
+        const matching = document.querySelectorAll(`.cohesion-link[data-link="${group}"]`);
+        return Array.from(matching).every(el => el.classList.contains('cohesion-link-hovered')) ? matching.length : 0;
+      }, dataLinkVal);
+      
+      assert(highlightedCount > 0, 'Matching cohesion links should have cohesion-link-hovered class');
+      
+      // Move mouse away (unhover) by hovering over the explanation header
+      await page.locator('.rop-explanation-header').hover();
+      await page.waitForTimeout(100);
+      
+      // Verify highlights are removed
+      const remainingHighlighted = await page.evaluate((group) => {
+        return document.querySelectorAll(`.cohesion-link[data-link="${group}"].cohesion-link-hovered`).length;
+      }, dataLinkVal);
+      
+      assert.equal(remainingHighlighted, 0, 'Hover highlights should be cleared on mouseout');
+    }
 
     // Click retry
-    const retryBtn = page.locator('#rmcma-retry-btn');
+    const retryBtn = page.locator('#rop-retry-btn');
     await retryBtn.click();
 
-    // Verify everything is reset
-    const resetState = await page.evaluate(() => {
-      const cards = Array.from(document.querySelectorAll('#rmcma-choices-container .rmcma-choice-card'));
-      const hasSelected = cards.some(c => c.classList.contains('is-selected') || c.classList.contains('is-correct-selected'));
-      const resultBoxDisplay = getComputedStyle(document.getElementById('rmcma-result-box')).display;
-      const explanationDisplay = getComputedStyle(document.getElementById('rmcma-explanation-panel')).display;
+    // Verify states reset
+    const finalState = await page.evaluate(() => {
+      const sourceCount = document.querySelectorAll('#rop-source-list .rop-item').length;
+      const targetCount = document.querySelectorAll('#rop-target-list .rop-item').length;
+      const resultBoxDisplay = getComputedStyle(document.getElementById('rop-result-box')).display;
+      const explanationDisplay = getComputedStyle(document.getElementById('rop-explanation-panel')).display;
       return {
-        hasSelected,
+        sourceCount,
+        targetCount,
         resultBoxVisible: resultBoxDisplay !== 'none',
         explanationVisible: explanationDisplay !== 'none'
       };
     });
 
-    assert.equal(resetState.hasSelected, false, 'Choices should be cleared after retry');
-    assert.equal(resetState.resultBoxVisible, false, 'Result box should be hidden after retry');
-    assert.equal(resetState.explanationVisible, false, 'Explanation panel should be hidden after retry');
+    assert.equal(finalState.sourceCount, target.paragraphs.length, 'All items should be back in source list after retry');
+    assert.equal(finalState.targetCount, 0, 'Target list should be empty after retry');
+    assert.equal(finalState.resultBoxVisible, false, 'Result box should be hidden');
+    assert.equal(finalState.explanationVisible, false, 'Explanation should be hidden');
 
     if (errors.length) {
       throw new Error(errors.join('\n'));
     }
 
-    console.log('RMCMA browser check passed successfully.');
+    console.log('ROP browser check passed successfully.');
   } catch (err) {
     try {
-      const screenshotPath = path.join('C:\\Users\\Admin\\.gemini\\antigravity-ide\\brain\\f4292bd5-1f01-42ab-b60b-8e5bba4c315e', 'screenshot.png');
+      const screenshotPath = path.join(process.cwd(), 'rop_screenshot.png');
       await page.screenshot({ path: screenshotPath, fullPage: true });
       console.log(`Saved failure screenshot to: ${screenshotPath}`);
     } catch (ssErr) {

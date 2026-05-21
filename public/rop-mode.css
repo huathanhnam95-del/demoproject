@@ -1,0 +1,434 @@
+#mode-rop {
+  --rop-paper: #fffaf2;
+  --rop-ink: #2c2418;
+  --rop-muted: #6f5f4e;
+  --rop-border: rgba(110, 84, 54, 0.18);
+  --rop-accent: #b86d2d;
+  --rop-accent-soft: rgba(184, 109, 45, 0.14);
+  --rop-success: #1f7a4d;
+  --rop-success-bg: rgba(31, 122, 77, 0.06);
+  --rop-success-border: rgba(31, 122, 77, 0.5);
+  --rop-danger: #9b2f3a;
+  --rop-danger-bg: rgba(155, 47, 58, 0.06);
+  --rop-danger-border: rgba(155, 47, 58, 0.5);
+  
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top right, rgba(184, 109, 45, 0.12), transparent 30%),
+    radial-gradient(circle at left bottom, rgba(90, 130, 168, 0.1), transparent 28%),
+    linear-gradient(180deg, #fff 0%, #fffdf8 100%);
+  padding: 8px 2px 18px;
+}
+
+#mode-rop::before {
+  content: "";
+  position: absolute;
+  inset: 18px;
+  border-radius: 28px;
+  border: 1px solid rgba(184, 109, 45, 0.08);
+  pointer-events: none;
+}
+
+.rop-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.rop-instructions {
+  font-size: 0.96rem;
+  color: var(--rop-muted);
+  background: var(--rop-accent-soft);
+  border-radius: 12px;
+  padding: 12px 18px;
+  margin-bottom: 20px;
+  border-left: 4px solid var(--rop-accent);
+  line-height: 1.5;
+}
+
+.rop-workspace {
+  display: grid;
+  grid-template-columns: 1fr 50px 1fr;
+  gap: 15px;
+  margin-bottom: 24px;
+  align-items: stretch;
+}
+
+@media (max-width: 800px) {
+  .rop-workspace {
+    grid-template-columns: 1fr;
+  }
+  .rop-controls-column {
+    flex-direction: row !important;
+    justify-content: center;
+    gap: 15px;
+    margin: 10px 0;
+  }
+}
+
+.rop-workspace-card {
+  border: 1px solid var(--rop-border);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 18px 45px rgba(42, 31, 18, 0.04);
+  backdrop-filter: blur(8px);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.rop-card-header {
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(110, 84, 54, 0.08);
+  padding-bottom: 8px;
+}
+
+.rop-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.76rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--rop-accent);
+  font-weight: 700;
+}
+
+.rop-list-area {
+  min-height: 380px;
+  border: 2px dashed rgba(110, 84, 54, 0.12);
+  border-radius: 16px;
+  background: rgba(110, 84, 54, 0.02);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  max-height: 520px;
+  transition: all 0.25s ease;
+}
+
+.rop-list-area.drag-over {
+  background: rgba(184, 109, 45, 0.04);
+  border-color: var(--rop-accent);
+}
+
+/* ROP Drag & Drop Card Item */
+.rop-item {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--rop-border);
+  border-radius: 12px;
+  padding: 14px 18px;
+  cursor: grab;
+  user-select: none;
+  font-family: 'Lora', serif;
+  font-size: 1.02rem;
+  line-height: 1.6;
+  color: var(--rop-ink);
+  box-shadow: 0 4px 12px rgba(42, 31, 18, 0.02);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.rop-item:active {
+  cursor: grabbing;
+}
+
+.rop-item.is-selected {
+  border-color: var(--rop-accent);
+  background: var(--rop-accent-soft);
+  box-shadow: 0 8px 20px rgba(184, 109, 45, 0.15);
+}
+
+.rop-item.is-dragging {
+  opacity: 0.4;
+  transform: scale(0.98);
+  border-style: dashed;
+}
+
+/* Handle icon for drag */
+.rop-item-handle {
+  display: flex;
+  align-items: center;
+  color: var(--rop-muted);
+  opacity: 0.4;
+  padding-top: 4px;
+  cursor: grab;
+}
+
+.rop-item:hover .rop-item-handle {
+  opacity: 0.8;
+}
+
+.rop-item-content {
+  flex: 1;
+}
+
+/* Connectors and correctness styling post-submission */
+.rop-item.pair-correct {
+  border-color: var(--rop-success);
+  background: var(--rop-success-bg);
+}
+
+.rop-item.pair-incorrect {
+  border-color: var(--rop-danger);
+  background: var(--rop-danger-bg);
+}
+
+/* Vertical visual connector lines linking adjacent boxes */
+.rop-card-connector {
+  width: 4px;
+  height: 12px;
+  align-self: center;
+  margin: -12px auto;
+  position: relative;
+  z-index: 5;
+  border-radius: 2px;
+  transition: all 0.25s ease;
+}
+
+.rop-card-connector.is-correct {
+  background-color: var(--rop-success);
+  box-shadow: 0 0 6px var(--rop-success-border);
+}
+
+.rop-card-connector.is-incorrect {
+  background-color: var(--rop-danger);
+  box-shadow: 0 0 6px var(--rop-danger-border);
+}
+
+/* Number indicators shown after submit */
+.rop-badge-number {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  background: var(--rop-muted);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  font-family: var(--font-primary, sans-serif);
+}
+
+.rop-badge-number.is-correct {
+  background: var(--rop-success);
+}
+
+.rop-badge-number.is-incorrect {
+  background: var(--rop-danger);
+}
+
+/* Center Controls Column */
+.rop-controls-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+.rop-arrow-btn {
+  background: #fff;
+  border: 1px solid var(--rop-border);
+  color: var(--rop-ink);
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+}
+
+.rop-arrow-btn:hover:not(:disabled) {
+  background: var(--rop-accent-soft);
+  color: var(--rop-accent);
+  border-color: var(--rop-accent);
+  transform: translateY(-1px);
+}
+
+.rop-arrow-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.rop-arrow-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+/* Footer Actions & Scores */
+.rop-footer-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.rop-buttons-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.rop-result-box {
+  border: 1px solid var(--rop-border);
+  border-radius: 20px;
+  background: #fffdf8;
+  padding: 16px 24px;
+  box-shadow: 0 10px 30px rgba(42, 31, 18, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rop-score-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--rop-ink);
+}
+
+.rop-score-display .score-badge {
+  background: var(--rop-accent);
+  color: #ffffff;
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 0.95rem;
+}
+
+.rop-score-display .score-badge.max-score {
+  background: var(--rop-success);
+}
+
+.rop-pair-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.92rem;
+  color: var(--rop-muted);
+}
+
+.rop-pair-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rop-pair-status {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.rop-pair-status.correct {
+  background: var(--rop-success);
+}
+
+.rop-pair-status.incorrect {
+  background: var(--rop-danger);
+}
+
+/* Accordion Explanation Panel */
+.rop-explanation-panel {
+  animation: ropSlideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes ropSlideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.rop-explanation-card {
+  border: 1px solid var(--rop-border);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 15px 40px rgba(42, 31, 18, 0.03);
+  padding: 24px;
+}
+
+.rop-explanation-header {
+  font-size: 1.08rem;
+  font-weight: 600;
+  color: var(--rop-ink);
+  border-bottom: 1px solid rgba(110, 84, 54, 0.08);
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rop-explanation-content {
+  font-size: 0.98rem;
+  color: var(--rop-ink);
+  line-height: 1.7;
+}
+
+.rop-explanation-content p {
+  margin-bottom: 12px;
+}
+
+.rop-explanation-content ul {
+  padding-left: 20px;
+  margin-bottom: 12px;
+}
+
+.rop-explanation-content li {
+  margin-bottom: 6px;
+}
+
+/* Cohesion Highlighting Hover */
+.cohesion-link {
+  border-bottom: 2px dotted var(--rop-accent);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.cohesion-link:hover,
+.cohesion-link.cohesion-link-hovered {
+  background-color: var(--rop-accent-soft);
+  border-bottom-style: solid;
+}
+
+/* Tooltip on cohesion-link */
+.cohesion-link::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--rop-ink);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  z-index: 10;
+  pointer-events: none;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+  font-family: var(--font-primary, sans-serif);
+}
+
+.cohesion-link:hover::after {
+  opacity: 1;
+  visibility: visible;
+}

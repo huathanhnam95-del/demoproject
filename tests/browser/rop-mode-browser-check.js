@@ -198,6 +198,7 @@ async function setupFirebaseMocks(context) {
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('console', (msg) => {
+    console.log('PAGE LOG:', msg.text());
     if (msg.type() === 'error') {
       const text = msg.text();
       if (!text.includes('Failed to load resource')) {
@@ -356,6 +357,10 @@ async function setupFirebaseMocks(context) {
       // Verify all spans with the same data-link are highlighted
       const highlightedCount = await page.evaluate((group) => {
         const matching = document.querySelectorAll(`.cohesion-link[data-link="${group}"]`);
+        console.log("Matching cohesion-link count for group:", group, matching.length);
+        matching.forEach((el, index) => {
+          console.log(`Element ${index} tag: ${el.tagName}, class list: ${Array.from(el.classList).join(' ')}, text: ${el.textContent}`);
+        });
         return Array.from(matching).every(el => el.classList.contains('cohesion-link-hovered')) ? matching.length : 0;
       }, dataLinkVal);
       

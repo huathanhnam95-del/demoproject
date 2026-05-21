@@ -7,10 +7,8 @@ import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # --- API Configuration ---
-API_KEY = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
-PROJECT_ID = "gen-lang-client-0677756745"
-LOCATION = "us-central1"
-MODEL = "gemini-2.5-flash"
+OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "gemma4:latest")
 
 EXCEL_PATH = r"C:\Cursor AI\public\database\ROP\ROP\ROP.xlsx"
 
@@ -29,6 +27,25 @@ def parse_paragraphs(text):
             paragraphs.append(line)
     return paragraphs
 
+def parse_json_response(raw: str):
+    """Try to parse JSON from the Ollama response, handling markdown fences."""
+    text = raw.strip()
+    if text.startswith("```"):
+        lines = text.split("\n")
+        lines = [l for l in lines if not l.strip().startswith("```")]
+        text = "\n".join(lines)
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        # Try to find JSON object in the text using regex
+        m = re.search(r"\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}", text, re.DOTALL)
+        if m:
+            try:
+                return json.loads(m.group())
+            except json.JSONDecodeError:
+                pass
+    return None
+
 def generate_enrichment(paragraphs):
     paras_input = "\n".join([f"{i+1}. {p}" for i, p in enumerate(paragraphs)])
     
@@ -44,9 +61,9 @@ Task Instructions:
    - Lexical cohesion: synonyms, keyword repetition, collocations, or transitional words/phrases (however, therefore, thus, in addition).
 2. Rewrite the paragraphs by adding cohesive linking span tags. Wrap the cohesive markers (such as pronouns, repeating keywords, transitional words) and their referents in `<span class="cohesion-link" data-link="groupN" data-tooltip="Tooltip description">...</span>` tags where N is a number starting from 1 (e.g. group1, group2) representing each cohesive relationship.
    For example, in paragraph 1 you might wrap:
-   "<span class="cohesion-link" data-link="group1" data-tooltip="Referenced by: This process">endothermic reaction</span>"
+   "<span class=\"cohesion-link\" data-link=\"group1\" data-tooltip=\"Referenced by: This process\">endothermic reaction</span>"
    And in paragraph 2:
-   "<span class="cohesion-link" data-link="group1" data-tooltip="Reference to: endothermic reaction">This process</span>"
+   "<span class=\"cohesion-link\" data-link=\"group1\" data-tooltip=\"Reference to: endothermic reaction\">This process</span>"
 3. Do NOT modify the text inside the paragraphs besides wrapping elements in the `<span>` tags. Keep formatting intact.
 4. Generate a detailed, educational explanation in HTML format that details the logical flow, focusing heavily on Grammatical Cohesion and Lexical Cohesion that link the paragraphs together (refer to the group link numbers).
 5. Output the result strictly in this JSON format:
@@ -66,22 +83,26 @@ Rules:
 - Tone must be encouraging, supportive, and educational.
 """
 
-    url = f"https://{LOCATION}-aiplatform.googleapis.com/v1/projects/{PROJECT_ID}/locations/{LOCATION}/publishers/google/models/{MODEL}:generateContent?key={API_KEY}"
+    url = f"{OLLAMA_BASE_URL}/api/generate"
     payload = {
-        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-        "generationConfig": {
+        "model": OLLAMA_MODEL,
+        "prompt": prompt,
+        "stream": False,
+        "format": "json",
+        "options": {
             "temperature": 0.2,
-            "responseMimeType": "application/json"
+            "num_predict": 2048
         }
     }
     
     try:
-        response = requests.post(url, json=payload, timeout=45)
+        response = requests.post(url, json=payload, timeout=180)
         if response.status_code == 200:
             res_json = response.json()
-            content_text = res_json['candidates'][0]['content']['parts'][0]['text']
-            # Parse JSON out of response
-            data = json.loads(content_text.strip())
+            content_text = res_json.get("response", "")
+            data = parse_json_response(content_text)
+            if data is None:
+                print(f"Failed to parse JSON response. Raw text was:\n{content_text}")
             return data
         else:
             print(f"API Error ({response.status_code}): {response.text}")

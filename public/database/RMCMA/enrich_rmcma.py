@@ -5,10 +5,8 @@ import openpyxl
 import requests
 
 # --- API Configuration ---
-API_KEY = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
-PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT", "gen-lang-client-0677756745")
-LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
-MODEL = os.environ.get("RMCMA_EXPLANATION_MODEL", "gemini-2.5-flash")
+OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "gemma4:latest")
 
 EXCEL_PATH = r"C:\Cursor AI\public\database\RMCMA\RMCMA\RMCMA.xlsx"
 
@@ -71,9 +69,6 @@ def parse_rmcma_content(text):
     }
 
 def generate_explanation(parsed_data):
-    if not API_KEY:
-        raise RuntimeError("Set GOOGLE_API_KEY or GEMINI_API_KEY before generating RMCMA explanations.")
-
     passage = parsed_data['passage']
     question = parsed_data['question']
     
@@ -107,19 +102,22 @@ Task Instructions:
    - Make the tone supportive, encouraging, and highly instructional.
 """
     
-    url = f"https://{LOCATION}-aiplatform.googleapis.com/v1/projects/{PROJECT_ID}/locations/{LOCATION}/publishers/google/models/{MODEL}:generateContent?key={API_KEY}"
+    url = f"{OLLAMA_BASE_URL}/api/generate"
     
     payload = {
-        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-        "generationConfig": {
-            "temperature": 0.2
+        "model": OLLAMA_MODEL,
+        "prompt": prompt,
+        "stream": False,
+        "options": {
+            "temperature": 0.2,
+            "num_predict": 1024
         }
     }
     
     try:
-        response = requests.post(url, json=payload, timeout=30)
+        response = requests.post(url, json=payload, timeout=90)
         if response.status_code == 200:
-            return response.json()['candidates'][0]['content']['parts'][0]['text']
+            return response.json().get("response", "").strip()
         else:
             print(f"API Error ({response.status_code}): {response.text}")
             return None

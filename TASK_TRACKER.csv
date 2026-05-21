@@ -275,3 +275,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 282,2026-05-20,Group Read Aloud audios by question ID into subfolders,Done,2026-05-20
 283,2026-05-20,Implement RMCMA reading practice mode,Done,2026-05-20
 284,2026-05-21,Implement Re-order Paragraph reading practice mode,Done,2026-05-21
+285,2026-05-21,Use local GemmaAI for ROP and RMCMA enrichment,Done,2026-05-21

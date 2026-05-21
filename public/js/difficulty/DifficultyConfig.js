@@ -83,6 +83,14 @@ export const DifficultyConfig = {
             4: { maxReplays: 3, showTranscript: false },
             5: { maxReplays: 2, showTranscript: false },
             6: { maxReplays: 2, showTranscript: false }
+        },
+        rop: {
+            1: { maxAttempts: 3 },
+            2: { maxAttempts: 3 },
+            3: { maxAttempts: 2 },
+            4: { maxAttempts: 2 },
+            5: { maxAttempts: 1 },
+            6: { maxAttempts: 1 }
         }
     },
     getContentTierForLevel(level) {

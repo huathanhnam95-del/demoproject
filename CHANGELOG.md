@@ -1,3 +1,15 @@
+## [V1.8.1] - 2026-05-21
+
+### Added
+
+- **Re-order Paragraphs (ROP) Adjacent Pair-Wise Cohesion Feedback**:
+  - Automatically enriched all 755 ROP database rows with transition cohesion reason metadata as JSON mappings in Column G (`COHESION_REASONS`).
+  - Added pairwise cohesion feedback cards for incorrect adjacent user transitions (escaped and capped at a maximum of 4 cards) in `public/rop-mode.js`.
+  - Added optional "Explain my exact order" button, spinner, and integration with `POST /api/rop/explain-order` mapping correct and user sequences.
+  - Implemented the `/api/rop/explain-order` endpoint in `src/server/app.js` utilizing the local Ollama instance with rate limiting.
+  - Integrated ROP difficulty filter dropdown and dynamic jump search views.
+  - Added two new E2E Playwright tests (`tests/browser/rop-mode-browser-check.js` and `tests/browser/rop-difficulty-browser-check.js`) to verify full practice flows, correctness, critique APIs, error handling, and difficulty filters.
+
 ## [V1.8.0] - 2026-05-20
 
 ### Added

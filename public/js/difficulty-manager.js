@@ -23,10 +23,11 @@ const DifficultyManager = (function () {
         srs: null,
         extended: null,
         rfib: null,
-        notes: null
+        notes: null,
+        rop: null
     };
     const STORAGE_VERSION = 3;
-    const SUPPORTED_MODES = ['type', 'speak', 'srs', 'extended', 'rfib', 'notes'];
+    const SUPPORTED_MODES = ['type', 'speak', 'srs', 'extended', 'rfib', 'notes', 'rop'];
 
     // --- Modules ---
     const logic = new DifficultyLogic();
@@ -334,15 +335,15 @@ const DifficultyManager = (function () {
     }
 
     function updateIndicator() {
-        // Simple heuristic for active mode (can be improved)
         let activeMode = 'type';
         if (document.querySelector('#tab-speak.active')) activeMode = 'speak';
         else if (document.querySelector('#tab-extended.active')) activeMode = 'extended';
         else if (document.querySelector('#tab-rfib.active')) activeMode = 'rfib';
         else if (document.querySelector('#tab-notes.active')) activeMode = 'notes';
         else if (document.querySelector('#tab-srs.active')) activeMode = 'srs';
+        else if (document.querySelector('#tab-rop.active')) activeMode = 'rop';
 
-        const settings = getCurrentSettings(activeMode); // Resolve level
+        const settings = getCurrentSettings(activeMode);
         ui.updateBadge(activeMode, settings.level, !globalSettings.autoAdjustEnabled);
     }
 

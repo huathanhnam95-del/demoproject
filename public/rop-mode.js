@@ -6,6 +6,7 @@
   const state = {
     initialized: false,
     questions: [],
+    filteredQuestions: [],
     currentQuestionIndex: 0,
     currentQuestion: null,
     sourceItems: [], // items currently on the left
@@ -102,6 +103,13 @@
     elements.resultBox = document.getElementById('rop-result-box');
     elements.explanationPanel = document.getElementById('rop-explanation-panel');
     elements.explanationContent = document.getElementById('rop-explanation-content');
+
+    // cohesion and critique elements
+    elements.cohesionFeedback = document.getElementById('rop-cohesion-feedback');
+    elements.critiqueBtn = document.getElementById('rop-critique-btn');
+    elements.critiqueSpinner = document.getElementById('rop-critique-spinner');
+    elements.critiquePanel = document.getElementById('rop-critique-panel');
+    elements.critiqueContent = document.getElementById('rop-critique-content');
   }
 
   function setupEventListeners() {
@@ -115,7 +123,7 @@
 
     if (elements.nextBtn) {
       elements.nextBtn.addEventListener('click', () => {
-        if (state.currentQuestionIndex < state.questions.length - 1) {
+        if (state.currentQuestionIndex < state.filteredQuestions.length - 1) {
           loadQuestion(state.currentQuestionIndex + 1);
         }
       });
@@ -202,6 +210,11 @@
       elements.explanationToggle.addEventListener('click', toggleExplanation);
     }
 
+    // Critique button
+    if (elements.critiqueBtn) {
+      elements.critiqueBtn.addEventListener('click', requestAiCritique);
+    }
+
     // Setup drag & drop on container areas
     setupDragAndDrop(elements.sourceList);
     setupDragAndDrop(elements.targetList);
@@ -239,7 +252,7 @@
 
   /* Picker controls */
   function openPicker() {
-    if (!elements.sheet || !elements.backdrop || state.questions.length === 0) return;
+    if (!elements.sheet || !elements.backdrop || state.filteredQuestions.length === 0) return;
     state.pickerOpen = true;
     elements.backdrop.classList.add('is-visible');
     elements.backdrop.setAttribute('aria-hidden', 'false');
@@ -269,7 +282,7 @@
     if (!elements.jumpList) return;
     const cleanFilter = filter.toLowerCase().trim();
 
-    const itemsHtml = state.questions
+    const itemsHtml = state.filteredQuestions
       .map((q, idx) => {
         const isActive = idx === state.currentQuestionIndex;
         const matchesFilter = !cleanFilter ||
@@ -296,7 +309,7 @@
       elements.prevBtn.disabled = state.currentQuestionIndex <= 0;
     }
     if (elements.nextBtn) {
-      elements.nextBtn.disabled = state.currentQuestionIndex >= state.questions.length - 1;
+      elements.nextBtn.disabled = state.currentQuestionIndex >= state.filteredQuestions.length - 1;
     }
     if (elements.questionPill && state.currentQuestion) {
       elements.questionPill.textContent = `#${state.currentQuestion.id} — ${state.currentQuestion.title}`;
@@ -323,12 +336,24 @@
     state.questions = rawData.map((row) => {
       const answerSource = row.ENRICHED_ANSWER || row.ANSWER || '';
       const paragraphs = parseParagraphs(answerSource);
+      const rawLevel = Number(row.LEVEL || row.level);
+
+      let cohesionReasons = {};
+      try {
+        if (row.COHESION_REASONS) {
+          cohesionReasons = JSON.parse(String(row.COHESION_REASONS));
+        }
+      } catch (err) {
+        console.warn(`[ROPMode] Failed to parse cohesion reasons for question #${row.ID}:`, err);
+      }
 
       return {
         id: Number(row.ID) || 0,
         title: String(row.TITLE || '').trim(),
         paragraphs: paragraphs,
-        explanation: String(row.EXPLANATION || '').trim()
+        explanation: String(row.EXPLANATION || '').trim(),
+        cohesionReasons: cohesionReasons,
+        level: [1, 2, 3].includes(rawLevel) ? rawLevel : null
       };
     }).sort((a, b) => a.id - b.id);
   }
@@ -336,20 +361,23 @@
   /* Parse paragraphs from line-by-line format */
   function parseParagraphs(text) {
     if (!text) return [];
-    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    const parts = text.split(/\r?\n(?=\s*\d+[.)\s])/g);
     const paragraphs = [];
 
-    for (const line of lines) {
-      const match = line.match(/^(\d+)[.)\s]\s*(.*)$/);
+    for (const part of parts) {
+      const cleanPart = part.trim();
+      if (!cleanPart) continue;
+
+      const match = cleanPart.match(/^\s*(\d+)[.)\s]\s*([\s\S]*)$/);
       if (match) {
         paragraphs.push({
           originalIndex: parseInt(match[1], 10),
-          text: match[2].trim()
+          text: match[2].replace(/\r?\n/g, ' ').replace(/\s+/g, ' ').trim()
         });
       } else {
         paragraphs.push({
           originalIndex: paragraphs.length + 1,
-          text: line
+          text: cleanPart.replace(/\r?\n/g, ' ').replace(/\s+/g, ' ').trim()
         });
       }
     }
@@ -358,10 +386,10 @@
 
   /* Load Question */
   function loadQuestion(index) {
-    if (index < 0 || index >= state.questions.length) return;
+    if (index < 0 || index >= state.filteredQuestions.length) return;
 
     state.currentQuestionIndex = index;
-    state.currentQuestion = state.questions[index];
+    state.currentQuestion = state.filteredQuestions[index];
     state.selectedItemId = null;
     state.submitted = false;
     state.explanationVisible = false;
@@ -407,6 +435,22 @@
       elements.explanationContent.innerHTML = '';
     }
 
+    // Reset cohesion and critique UI
+    if (elements.cohesionFeedback) {
+      elements.cohesionFeedback.style.display = 'none';
+      elements.cohesionFeedback.innerHTML = '';
+    }
+    if (elements.critiqueBtn) {
+      elements.critiqueBtn.style.display = 'none';
+      elements.critiqueBtn.disabled = false;
+    }
+    if (elements.critiquePanel) {
+      elements.critiquePanel.style.display = 'none';
+    }
+    if (elements.critiqueContent) {
+      elements.critiqueContent.innerHTML = '';
+    }
+
     updateControlButtons();
   }
 
@@ -426,7 +470,7 @@
         card.classList.add('is-selected');
       }
       card.dataset.originalIndex = item.originalIndex;
-      
+
       // Make draggable unless submitted
       if (!state.submitted) {
         card.setAttribute('draggable', 'true');
@@ -525,11 +569,11 @@
 
     // Shift in DOM
     toContainer.appendChild(cardEl);
-    
+
     // Deselect after moving so selection state is clean
     state.selectedItemId = null;
     cardEl.classList.remove('is-selected');
-    
+
     // Sync array lists and refresh buttons
     syncStateFromDOM();
   }
@@ -716,12 +760,58 @@
     // Refresh right items view to render correct badges and highlight HTML cohesion links
     renderTargetResults(pairResults);
 
+    // Render cohesion feedback cards for incorrect adjacent user transitions (up to 4 cards)
+    const incorrectPairs = pairResults.filter(p => !p.isCorrect);
+    const maxFeedbackCards = 4;
+    const cardsToRender = incorrectPairs.slice(0, maxFeedbackCards);
+    const finalParagraphIndex = correctSequence[correctSequence.length - 1];
+
+    if (cardsToRender.length > 0 && elements.cohesionFeedback) {
+      const feedbackCardsHtml = cardsToRender.map((res) => {
+        const A = res.firstIndex;
+        const B = res.secondIndex;
+        let content = '';
+        if (A === finalParagraphIndex) {
+          content = `Paragraph ${A} is the concluding paragraph.`;
+        } else if (B === 1) {
+          content = `Paragraph 1 is the starting paragraph.`;
+        } else {
+          const key = `${A}-${A+1}`;
+          const reason = state.currentQuestion.cohesionReasons?.[key] || '';
+          content = `Paragraph ${A} should be followed by Paragraph ${A+1}.${reason ? ' ' + escapeHtml(reason) : ''}`;
+        }
+        return `
+          <div class="rop-cohesion-card">
+            <div class="rop-cohesion-card-icon">⚠️</div>
+            <div class="rop-cohesion-card-text">${content}</div>
+          </div>
+        `;
+      }).join('');
+
+      elements.cohesionFeedback.innerHTML = `
+        <div class="rop-cohesion-header">Cohesion Feedback</div>
+        <div class="rop-cohesion-grid">${feedbackCardsHtml}</div>
+      `;
+      elements.cohesionFeedback.style.display = 'block';
+    } else if (elements.cohesionFeedback) {
+      elements.cohesionFeedback.style.display = 'none';
+      elements.cohesionFeedback.innerHTML = '';
+    }
+
     // Toggle button visibilities
     if (elements.submitBtn) {
       elements.submitBtn.style.display = 'none';
     }
     if (elements.retryBtn) {
       elements.retryBtn.style.display = 'block';
+    }
+    // Show AI critique button if user is not 100% correct
+    if (elements.critiqueBtn) {
+      if (score < maxPossibleScore) {
+        elements.critiqueBtn.style.display = 'block';
+      } else {
+        elements.critiqueBtn.style.display = 'none';
+      }
     }
 
     // Show explanation panel if explanations exist
@@ -743,11 +833,11 @@
       if (idx > 0) {
         const precedingPair = pairResults[idx - 1];
         const isPairCorrect = precedingPair && precedingPair.isCorrect;
-        
+
         const connector = document.createElement('div');
         connector.className = `rop-card-connector ${isPairCorrect ? 'is-correct' : 'is-incorrect'}`;
         elements.targetList.appendChild(connector);
-        
+
         pairClass = isPairCorrect ? 'pair-correct' : 'pair-incorrect';
       }
 
@@ -788,7 +878,122 @@
     }
   }
 
+  async function requestAiCritique() {
+    if (!state.currentQuestion || state.sourceItems.length > 0) return;
+
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      if (window.authUI && typeof window.authUI.showLoginModal === 'function') {
+        window.authUI.showLoginModal();
+      } else {
+        alert('Please log in to use the AI order critique feature.');
+      }
+      return;
+    }
+
+    const correctSequence = state.currentQuestion.paragraphs.map(p => p.originalIndex);
+    const userSequence = state.targetItems.map(item => item.originalIndex);
+    const paragraphsObj = {};
+    state.currentQuestion.paragraphs.forEach(p => {
+      paragraphsObj[String(p.originalIndex)] = p.text;
+    });
+
+    if (elements.critiqueBtn) elements.critiqueBtn.disabled = true;
+    if (elements.critiqueSpinner) elements.critiqueSpinner.style.display = 'inline-block';
+    if (elements.critiquePanel) elements.critiquePanel.style.display = 'none';
+    if (elements.critiqueContent) elements.critiqueContent.innerHTML = '';
+
+    try {
+      const idToken = await user.getIdToken();
+      const response = await fetch('/api/rop/explain-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({
+          correctSequence,
+          userSequence,
+          paragraphs: paragraphsObj
+        })
+      });
+
+      const resJson = await response.json().catch(() => null);
+
+      if (response.ok && resJson && resJson.success && resJson.data?.critique) {
+        if (elements.critiqueContent) {
+          elements.critiqueContent.textContent = resJson.data.critique;
+        }
+        if (elements.critiquePanel) {
+          elements.critiquePanel.style.display = 'block';
+        }
+      } else {
+        const errorMsg = resJson?.message || 'Failed to generate AI critique. Please try again.';
+        if (elements.critiqueContent) {
+          elements.critiqueContent.textContent = errorMsg;
+        }
+        if (elements.critiquePanel) {
+          elements.critiquePanel.style.display = 'block';
+        }
+      }
+    } catch (err) {
+      console.error('[ROPMode] AI critique request failed:', err);
+      if (elements.critiqueContent) {
+        elements.critiqueContent.textContent = 'An error occurred while calling the AI critique service. Please try again later.';
+      }
+      if (elements.critiquePanel) {
+        elements.critiquePanel.style.display = 'block';
+      }
+    } finally {
+      if (elements.critiqueBtn) elements.critiqueBtn.disabled = false;
+      if (elements.critiqueSpinner) elements.critiqueSpinner.style.display = 'none';
+    }
+  }
+
   /* Global Controller Hooks */
+  function applyFilters() {
+    const selected = window.DifficultyFilter?.getCurrentDifficulty('rop') || 'all';
+    const adaptive = !!window.DifficultyManager?.getGlobalSettings?.()?.autoAdjustEnabled;
+
+    let targetLevel = null;
+    if (selected !== 'all') {
+      targetLevel = Number(selected);
+    } else if (adaptive && window.DifficultyManager?.isCalibrated?.('rop')) {
+      targetLevel = window.DifficultyManager.getContentTier?.('rop') ?? null;
+    }
+
+    state.filteredQuestions = targetLevel
+      ? state.questions.filter(q => q.level === targetLevel)
+      : [...state.questions];
+
+    // After filtering, make sure we have questions
+    if (state.filteredQuestions.length === 0) {
+      state.currentQuestionIndex = 0;
+      state.currentQuestion = null;
+      updateNavigationUI();
+      if (elements.sourceList) {
+        elements.sourceList.innerHTML = '<div style="padding: 20px; color: var(--rop-muted);">No questions available for this difficulty level.</div>';
+      }
+      if (elements.targetList) elements.targetList.innerHTML = '';
+      if (elements.submitBtn) elements.submitBtn.style.display = 'none';
+      if (elements.retryBtn) elements.retryBtn.style.display = 'none';
+      if (elements.explanationToggle) elements.explanationToggle.style.display = 'none';
+      if (elements.resultBox) elements.resultBox.style.display = 'none';
+      if (elements.explanationPanel) elements.explanationPanel.style.display = 'none';
+      return;
+    }
+
+    let newIndex = 0;
+    if (state.currentQuestion) {
+      const idx = state.filteredQuestions.findIndex(q => q.id === state.currentQuestion.id);
+      if (idx !== -1) {
+        newIndex = idx;
+      }
+    }
+
+    loadQuestion(newIndex);
+  }
+
   async function activate() {
     cacheElements();
     if (!state.initialized) {
@@ -812,7 +1017,7 @@
     }
 
     if (state.questions.length > 0) {
-      loadQuestion(0);
+      applyFilters();
     }
   }
 
@@ -825,6 +1030,7 @@
 
   window.ROPMode = {
     activate,
-    onExit
+    onExit,
+    applyFilters
   };
 })();

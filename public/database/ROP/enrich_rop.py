@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import re
 import json
@@ -6,20 +7,25 @@ import openpyxl
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+sys.stdout.reconfigure(encoding='utf-8')
+
 # --- API Configuration ---
 OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "gemma4:latest")
 
 EXCEL_PATH = r"C:\Cursor AI\public\database\ROP\ROP\ROP.xlsx"
 
+def safe_save(wb, path):
+    temp_path = path + ".tmp.xlsx"
+    wb.save(temp_path)
+    os.replace(temp_path, path)
+
 def parse_paragraphs(text):
     if not text:
         return []
-    # Standard splitting by newline
     lines = [line.strip() for line in text.split('\n') if line.strip()]
     paragraphs = []
     for line in lines:
-        # Match pattern like "1. ", "1) ", "1 ", etc.
         match = re.match(r'^(\d+)[.)\s]\s*(.*)$', line)
         if match:
             paragraphs.append(match.group(2).strip())
@@ -37,7 +43,6 @@ def parse_json_response(raw: str):
     try:
         return json.loads(text)
     except json.JSONDecodeError:
-        # Try to find JSON object in the text using regex
         m = re.search(r"\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}", text, re.DOTALL)
         if m:
             try:
@@ -48,7 +53,7 @@ def parse_json_response(raw: str):
 
 def generate_enrichment(paragraphs):
     paras_input = "\n".join([f"{i+1}. {p}" for i, p in enumerate(paragraphs)])
-    
+
     prompt = f"""
 You are an expert English language tutor specializing in the PTE Academic reading section, specifically "Re-order Paragraphs".
 Given the correct sequential order of paragraphs below:
@@ -65,7 +70,7 @@ Task Instructions:
    And in paragraph 2:
    "<span class=\"cohesion-link\" data-link=\"group1\" data-tooltip=\"Reference to: endothermic reaction\">This process</span>"
 3. Do NOT modify the text inside the paragraphs besides wrapping elements in the `<span>` tags. Keep formatting intact.
-4. Generate a detailed, educational explanation in HTML format that details the logical flow, focusing heavily on Grammatical Cohesion and Lexical Cohesion that link the paragraphs together (refer to the group link numbers).
+4. Generate a concise, educational explanation in HTML format (strictly under 200 words) that details the logical flow, focusing on Grammatical Cohesion and Lexical Cohesion that link the paragraphs together (refer to the group link numbers).
 5. Output the result strictly in this JSON format:
 {{
   "enriched_paragraphs": [
@@ -79,7 +84,7 @@ Task Instructions:
 Rules:
 - Do NOT wrap in markdown backticks.
 - Return raw JSON content only.
-- Write explanation using standard HTML: <p>, <strong>, <ul>, <li>. Do NOT include <html> or <body> tags.
+- Write explanation using standard HTML: <p>, <strong>, <ul>, <li>. Do NOT include <html> or <body> tags. Keep it under 200 words.
 - Tone must be encouraging, supportive, and educational.
 """
 
@@ -91,121 +96,121 @@ Rules:
         "format": "json",
         "options": {
             "temperature": 0.2,
-            "num_predict": 2048
+            "num_ctx": 8192,
+            "num_predict": 4096
         }
     }
-    
-    try:
-        response = requests.post(url, json=payload, timeout=180)
-        if response.status_code == 200:
-            res_json = response.json()
-            content_text = res_json.get("response", "")
-            data = parse_json_response(content_text)
-            if data is None:
-                print(f"Failed to parse JSON response. Raw text was:\n{content_text}")
-            return data
-        else:
-            print(f"API Error ({response.status_code}): {response.text}")
-            return None
-    except Exception as e:
-        print(f"Exception during request: {e}")
-        return None
 
-def process_row(row_idx, q_id, title, answer_text):
+    for attempt in range(1, 4):
+        try:
+            response = requests.post(url, json=payload, timeout=180)
+            if response.status_code == 200:
+                res_json = response.json()
+                content_text = res_json.get("response", "")
+                data = parse_json_response(content_text)
+                if data is not None:
+                    return data
+                print(f"Attempt {attempt}/3: Failed to parse JSON response. Raw text length: {len(content_text)}")
+            else:
+                print(f"Attempt {attempt}/3: API Error ({response.status_code}): {response.text}")
+        except Exception as e:
+            print(f"Attempt {attempt}/3: Exception during request: {e}")
+        time.sleep(2)
+    return None
+
+def worker(row_idx, q_id, answer_text):
     paras = parse_paragraphs(answer_text)
     if not paras:
-        return row_idx, q_id, None, None
-    
-    result = generate_enrichment(paras)
-    if not result:
-        return row_idx, q_id, None, None
-    
-    # Reassemble enriched answers with index prefixes
-    enriched_paras = result.get("enriched_paragraphs", [])
-    enriched_text = ""
-    if enriched_paras and len(enriched_paras) == len(paras):
-        enriched_text = "\n".join([f"{i+1}. {p}" for i, p in enumerate(enriched_paras)])
-    else:
-        # Fallback if AI returned incorrect count
-        enriched_text = "\n".join([f"{i+1}. {p}" for i, p in enumerate(paras)])
-        
-    explanation = result.get("explanation", "")
-    return row_idx, q_id, enriched_text, explanation
+        return row_idx, None, None
+    try:
+        result = generate_enrichment(paras)
+        if result:
+            enriched_paras = result.get("enriched_paragraphs", [])
+            enriched_text = ""
+            if enriched_paras and len(enriched_paras) == len(paras):
+                cleaned_paras = []
+                for p in enriched_paras:
+                    p_clean = re.sub(r'^\d+[.)\s]\s*', '', p)
+                    cleaned_paras.append(p_clean)
+                enriched_text = "\n".join([f"{i+1}. {p}" for i, p in enumerate(cleaned_paras)])
+            else:
+                enriched_text = "\n".join([f"{i+1}. {p}" for i, p in enumerate(paras)])
+            explanation = result.get("explanation", "")
+            return row_idx, enriched_text, explanation
+    except Exception as e:
+        print(f"Row {row_idx} worker exception: {e}")
+    return row_idx, None, None
 
 def main():
     print(f"Loading workbook: {EXCEL_PATH}...")
     wb = openpyxl.load_workbook(EXCEL_PATH)
     sheet = wb.active
-    
+
     # Check headers
-    # Ensure there are at least 5 columns
     c4 = sheet.cell(row=1, column=4).value
     c5 = sheet.cell(row=1, column=5).value
-    
+
     if c4 != "ENRICHED_ANSWER":
         sheet.cell(row=1, column=4, value="ENRICHED_ANSWER")
-        wb.save(EXCEL_PATH)
+        safe_save(wb, EXCEL_PATH)
         print("Added Column D header 'ENRICHED_ANSWER'")
     if c5 != "EXPLANATION":
         sheet.cell(row=1, column=5, value="EXPLANATION")
-        wb.save(EXCEL_PATH)
+        safe_save(wb, EXCEL_PATH)
         print("Added Column E header 'EXPLANATION'")
-        
+
     max_row = sheet.max_row
     tasks = []
-    
+
     # Identify rows that need processing
     for row_idx in range(2, max_row + 1):
         q_id = sheet.cell(row=row_idx, column=1).value
-        title = sheet.cell(row=row_idx, column=2).value
         answer_text = sheet.cell(row=row_idx, column=3).value
         existing_explanation = sheet.cell(row=row_idx, column=5).value
-        
-        # If we already have a long explanation, skip
+
         if existing_explanation and len(str(existing_explanation).strip()) > 20:
             continue
-            
-        tasks.append((row_idx, q_id, title, answer_text))
-        
+
+        tasks.append((row_idx, q_id, answer_text))
+
     total_tasks = len(tasks)
     print(f"Pending tasks to enrich: {total_tasks}")
     if total_tasks == 0:
         print("No pending tasks. Enrichment complete.")
         return
 
-    # For testing/safety, we will let the script run and print row-by-row logs.
     success_count = 0
     fail_count = 0
-    
-    # We can process the tasks one-by-one or in parallel.
-    # To run a fast demo/validation, we will do it in parallel but safely.
-    # Limit max workers to 4 to avoid hitting API rate limits.
-    with ThreadPoolExecutor(max_workers=4) as executor:
-        future_to_row = {
-            executor.submit(process_row, row_idx, q_id, title, answer_text): (row_idx, q_id)
-            for row_idx, q_id, title, answer_text in tasks
+
+    # Using 3 workers for heavier explanation task to prevent local Ollama timeout/thrashing
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        futures = {
+            executor.submit(worker, row_idx, q_id, answer_text): (row_idx, q_id)
+            for row_idx, q_id, answer_text in tasks
         }
-        
-        for future in as_completed(future_to_row):
-            row_idx, q_id = future_to_row[future]
+
+        for future in as_completed(futures):
+            row_idx, q_id = futures[future]
             try:
-                row_idx, q_id, enriched_text, explanation = future.result()
+                row_idx, enriched_text, explanation = future.result()
                 if explanation and enriched_text:
-                    # Thread-safe write by reloading and saving
-                    wb_write = openpyxl.load_workbook(EXCEL_PATH)
-                    sheet_write = wb_write.active
-                    sheet_write.cell(row=row_idx, column=4, value=enriched_text)
-                    sheet_write.cell(row=row_idx, column=5, value=explanation)
-                    wb_write.save(EXCEL_PATH)
+                    sheet.cell(row=row_idx, column=4, value=enriched_text)
+                    sheet.cell(row=row_idx, column=5, value=explanation)
                     success_count += 1
                     print(f"Row {row_idx}/{max_row} (ID {q_id}): Enriched. ({success_count}/{total_tasks})")
+
+                    # Save periodically
+                    if success_count % 3 == 0:
+                        safe_save(wb, EXCEL_PATH)
+                        print("Saved progress to ROP.xlsx.")
                 else:
                     fail_count += 1
-                    print(f"Row {row_idx}/{max_row} (ID {q_id}): Failed to generate enrichment.")
+                    print(f"Row {row_idx}/{max_row} (ID {q_id}): Failed to enrich.")
             except Exception as exc:
                 fail_count += 1
-                print(f"Row {row_idx} (ID {q_id}) exception: {exc}")
-                
+                print(f"Row {row_idx} exception: {exc}")
+
+    safe_save(wb, EXCEL_PATH)
     print(f"\nProcessing finished! Success: {success_count}, Failed: {fail_count}")
 
 if __name__ == "__main__":

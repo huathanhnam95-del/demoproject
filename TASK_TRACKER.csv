@@ -276,3 +276,9 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 283,2026-05-20,Implement RMCMA reading practice mode,Done,2026-05-20
 284,2026-05-21,Implement Re-order Paragraph reading practice mode,Done,2026-05-21
 285,2026-05-21,Use local GemmaAI for ROP and RMCMA enrichment,Done,2026-05-21
+286,2026-05-21,Generate ROP explanations using local GemmaAI,Done,2026-05-21
+287,2026-05-21,Write implementation plan to categorize ROP questions by difficulty,Done,2026-05-21
+288,2026-05-21,Implement ROP difficulty filtering and parsing updates,Done,2026-05-21
+289,2026-05-21,Verify ROP database classification and integrate login logout reload wiring,Done,2026-05-21
+290,2026-05-21,Implement ROP pair-wise cohesion feedback and clean transition metadata,Done,2026-05-21
+291,2026-05-21,Release V1.8.1 - Sync version and commit ROP updates,Done,2026-05-21

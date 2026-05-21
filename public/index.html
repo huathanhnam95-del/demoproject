@@ -193,7 +193,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.0</div>
+  <div id="version-indicator" class="version-indicator">V1.8.1</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -2748,6 +2748,32 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
         </button>
       </div>
+
+      <!-- ROP Difficulty Filter -->
+      <div id="difficulty-filter-container-rop" class="difficulty-filter-dropdown">
+        <button id="difficulty-filter-btn-rop" class="difficulty-filter-btn" type="button">
+          <span id="difficulty-filter-label-rop">Recommended</span>
+          <span class="filter-arrow">▼</span>
+        </button>
+        <div id="difficulty-filter-menu-rop" class="difficulty-filter-menu" style="display: none;">
+          <div class="filter-option selected" data-value="all">
+            <span class="filter-option-icon">ALL</span>
+            <span class="filter-option-text">Recommended</span>
+          </div>
+          <div class="filter-option" data-value="1">
+            <span class="filter-option-icon">L1</span>
+            <span class="filter-option-text">Level 1 <span class="difficulty-tag easy">Easy</span></span>
+          </div>
+          <div class="filter-option" data-value="2">
+            <span class="filter-option-icon">L2</span>
+            <span class="filter-option-text">Level 2 <span class="difficulty-tag medium">Medium</span></span>
+          </div>
+          <div class="filter-option" data-value="3">
+            <span class="filter-option-icon">L3</span>
+            <span class="filter-option-text">Level 3 <span class="difficulty-tag hard">Hard</span></span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2820,11 +2846,33 @@
         <button id="rop-submit-btn" class="modern-btn modern-btn--check" type="button">Submit</button>
         <button id="rop-retry-btn" class="modern-btn modern-btn--retry" type="button" style="display: none;">Retry</button>
         <button id="rop-explanation-toggle" class="modern-btn modern-btn--secondary" type="button" style="display: none;">Show explanation</button>
+        <button id="rop-critique-btn" class="modern-btn modern-btn--ai" type="button" style="display: none;">
+          <span class="btn-spinner" id="rop-critique-spinner" style="display: none;"></span>
+          <span class="btn-text">Explain my exact order</span>
+        </button>
       </div>
 
       <!-- Score Banner -->
       <div id="rop-result-box" class="rop-result-box" style="display: none;">
         <!-- Correction summary and scores will be shown here -->
+      </div>
+
+      <!-- Cohesion Feedback Cards -->
+      <div id="rop-cohesion-feedback" class="rop-cohesion-feedback" style="display: none;">
+        <!-- Pairwise transition reasons will be shown here -->
+      </div>
+
+      <!-- AI Critique Panel -->
+      <div id="rop-critique-panel" class="rop-critique-panel" style="display: none;">
+        <div class="rop-critique-card">
+          <div class="rop-critique-header">
+            <span class="critique-header-icon">🤖</span>
+            <span>AI Order Critique</span>
+          </div>
+          <div id="rop-critique-content" class="rop-critique-content">
+            <!-- AI critique critique will be populated here -->
+          </div>
+        </div>
       </div>
 
       <!-- Accordion Explanation Panel -->

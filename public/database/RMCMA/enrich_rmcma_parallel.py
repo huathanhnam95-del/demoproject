@@ -109,7 +109,8 @@ Task Instructions:
         "stream": False,
         "options": {
             "temperature": 0.2,
-            "num_predict": 1024
+            "num_ctx": 8192,
+            "num_predict": 2048
         }
     }
     

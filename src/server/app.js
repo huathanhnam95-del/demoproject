@@ -164,6 +164,7 @@ function createApp(options = {}) {
 
   app.use('/api/', globalLimiter);
   app.use('/api/ai-proxy', aiLimiter);
+  app.use('/api/rop/explain-order', aiLimiter);
   app.use('/api/ai-feedback-stream', aiLimiter);
 
   // Emergency escape hatch for local dev: force-clear service worker + Cache Storage for this origin.

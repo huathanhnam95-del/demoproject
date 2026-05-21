@@ -85,10 +85,15 @@ async function setupFirebaseMocks(context) {
     route.fulfill({
       contentType: 'application/javascript',
       body: `
-        export const getAuth = () => ({ currentUser: null });
+        let mockUser = null;
+        let authCallback = null;
+        export const getAuth = () => ({ 
+          get currentUser() { return mockUser; }
+        });
         export const connectAuthEmulator = () => {};
         export const onAuthStateChanged = (auth, cb) => { 
-          setTimeout(() => cb(null), 10); 
+          authCallback = cb;
+          setTimeout(() => cb(mockUser), 10); 
           return () => {}; 
         };
         export const setPersistence = () => Promise.resolve();
@@ -98,6 +103,30 @@ async function setupFirebaseMocks(context) {
         export const createUserWithEmailAndPassword = () => Promise.resolve({ user: {} });
         export const sendPasswordResetEmail = () => Promise.resolve();
         export const sendEmailVerification = () => Promise.resolve();
+        window.__setMockUser = (user) => {
+          mockUser = user ? {
+            getIdToken: () => Promise.resolve('mock-token-123'),
+            getIdTokenResult: () => Promise.resolve({ claims: {} }),
+            email: user.email,
+            uid: user.uid || 'mock-uid-123',
+            metadata: {
+              lastSignInTime: new Date().toUTCString(),
+              creationTime: new Date().toUTCString()
+            }
+          } : null;
+          if (window.firebase && typeof window.firebase.auth === 'function') {
+            try {
+              const compatAuth = window.firebase.auth();
+              Object.defineProperty(compatAuth, 'currentUser', {
+                get: () => mockUser,
+                configurable: true
+              });
+            } catch (e) {
+              console.error('Failed to sync mockUser to global firebase:', e);
+            }
+          }
+          if (authCallback) authCallback(mockUser);
+        };
       `
     });
   });
@@ -118,7 +147,7 @@ async function setupFirebaseMocks(context) {
           exists: () => false, 
           data: () => ({}) 
         });
-        export const getDocs = async (q) => ({ empty: true, docs: [] });
+        export const getDocs = async (q) => ({ empty: true, docs: [], forEach: () => {} });
         export const setDoc = async () => {};
         export const updateDoc = async () => {};
         export const deleteDoc = async () => {};
@@ -187,6 +216,33 @@ async function setupFirebaseMocks(context) {
   const context = await browser.newContext({ viewport: { width: 1440, height: 1200 } });
 
   await setupFirebaseMocks(context);
+
+  let explainOrderApiFail = false;
+  await context.route('**/api/rop/explain-order', async (route) => {
+    // Delay slightly to test the spinner
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    if (explainOrderApiFail) {
+      route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: false,
+          message: 'Internal Server Error from Mock API'
+        })
+      });
+    } else {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          data: {
+            critique: 'This is a mock sequence critique.'
+          }
+        })
+      });
+    }
+  });
 
   const page = await context.newPage();
   
@@ -400,6 +456,128 @@ async function setupFirebaseMocks(context) {
     assert.equal(finalState.targetCount, 0, 'Target list should be empty after retry');
     assert.equal(finalState.resultBoxVisible, false, 'Result box should be hidden');
     assert.equal(finalState.explanationVisible, false, 'Explanation should be hidden');
+
+    // --- PHASE 2: Cohesion Feedback and AI Critique (E2E Test) ---
+    console.log('Starting E2E tests for Cohesion Feedback and AI Critique...');
+
+    // 1. Mock Firebase Auth so currentUser returns a mock logged-in user
+    console.log('Logging in mock user...');
+    await page.evaluate(() => {
+      window.__setMockUser({ email: 'admin@test.com' });
+    });
+
+    // 2. Navigate to Question #669 (Monarch Butterflies)
+    console.log('Navigating to Question #669...');
+    await page.click('#rop-v7-question-pill');
+    await page.waitForSelector('#rop-v7-sheet', { state: 'visible', timeout: 5000 });
+    await page.fill('#rop-v7-jump-search', '669');
+    await page.click('#rop-v7-jump-list .ra-v7-list-item');
+    
+    // Wait for the new question to render (we know it's Monarch Butterflies because it has 4 paragraphs)
+    await page.waitForFunction(() => {
+      const pill = document.getElementById('rop-v7-question-pill');
+      return pill && pill.textContent.includes('669');
+    }, { timeout: 10000 });
+
+    const monarchSourceCount = await page.locator('#rop-source-list .rop-item').count();
+    assert.equal(monarchSourceCount, 4, 'Expected Monarch Butterflies to have 4 paragraphs');
+
+    // 3. Submit a wrong order (specifically 2, 1, 3, 4)
+    console.log('Submitting wrong sequence: 2, 1, 3, 4...');
+    // We click and move item with data-original-index="2"
+    await page.locator('#rop-source-list .rop-item[data-original-index="2"]').click();
+    await moveRightBtn.click();
+    // Then 1
+    await page.locator('#rop-source-list .rop-item[data-original-index="1"]').click();
+    await moveRightBtn.click();
+    // Then 3
+    await page.locator('#rop-source-list .rop-item[data-original-index="3"]').click();
+    await moveRightBtn.click();
+    // Then 4
+    await page.locator('#rop-source-list .rop-item[data-original-index="4"]').click();
+    await moveRightBtn.click();
+
+    // Verify all 4 moved to target list
+    const monarchTargetCount = await page.locator('#rop-target-list .rop-item').count();
+    assert.equal(monarchTargetCount, 4, 'All items should be in target list');
+
+    // Submit
+    const monarchSubmitBtn = page.locator('#rop-submit-btn');
+    await monarchSubmitBtn.click();
+
+    // Wait for result box
+    await page.waitForFunction(() => {
+      const box = document.getElementById('rop-result-box');
+      return box && getComputedStyle(box).display !== 'none';
+    }, { timeout: 5000 });
+
+    // Verify score is 1/3 (max is 3 transitions)
+    const monarchScoreText = await page.locator('#rop-result-box .rop-score-display').textContent();
+    assert(monarchScoreText.includes('1 / 3'), `Score should be 1 / 3, got: ${monarchScoreText}`);
+
+    // Verify pairwise cohesion feedback cards are visible (capped at 4, text escaped)
+    const cohesionFeedback = page.locator('#rop-cohesion-feedback');
+    await page.waitForSelector('#rop-cohesion-feedback', { state: 'visible', timeout: 5000 });
+
+    const feedbackCards = page.locator('#rop-cohesion-feedback .rop-cohesion-card');
+    const cardCount = await feedbackCards.count();
+    assert.equal(cardCount, 2, `Expected 2 incorrect pair feedback cards, found: ${cardCount}`);
+
+    const card1Text = await feedbackCards.nth(0).textContent();
+    const card2Text = await feedbackCards.nth(1).textContent();
+    console.log('Cohesion Card 1 Text:', card1Text);
+    console.log('Cohesion Card 2 Text:', card2Text);
+
+    assert(card1Text.includes('Paragraph 1 is the starting paragraph.'), 'Card 1 should advise about start paragraph');
+    assert(card2Text.includes('Paragraph 1 should be followed by Paragraph 2.'), 'Card 2 should advise about transition 1-2');
+
+    // 4. Test AI sequence critique success path
+    console.log('Testing AI critique success path...');
+    const critiqueBtn = page.locator('#rop-critique-btn');
+    assert.equal(await critiqueBtn.isVisible(), true, 'AI Critique button should be visible');
+
+    // Click critique button
+    await critiqueBtn.click();
+
+    // Assert spinner is visible during mock API delay
+    const spinner = page.locator('#rop-critique-spinner');
+    await page.waitForSelector('#rop-critique-spinner', { state: 'visible', timeout: 1000 });
+    console.log('Critique spinner shown during request.');
+
+    // Wait for response to finish and critique content to display
+    const critiqueContent = page.locator('#rop-critique-content');
+    await page.waitForSelector('#rop-critique-panel', { state: 'visible', timeout: 5000 });
+
+    const critiqueText = await critiqueContent.textContent();
+    assert.equal(critiqueText, 'This is a mock sequence critique.', `Unexpected critique text: ${critiqueText}`);
+    console.log('AI critique success response rendered correctly.');
+
+    // Spinner should be hidden now
+    await page.waitForSelector('#rop-critique-spinner', { state: 'hidden', timeout: 2000 });
+
+    // 5. Test AI sequence critique error path
+    console.log('Testing AI critique error path...');
+    // Enable API failure mock
+    explainOrderApiFail = true;
+
+    // Click critique button again (it should be enabled)
+    assert.equal(await critiqueBtn.isEnabled(), true, 'AI Critique button should be enabled');
+    await critiqueBtn.click();
+
+    // Assert spinner is visible
+    await page.waitForSelector('#rop-critique-spinner', { state: 'visible', timeout: 1000 });
+
+    // Wait for failure response to render the error message
+    await page.waitForFunction(() => {
+      const content = document.getElementById('rop-critique-content')?.textContent || '';
+      return content.includes('Internal Server Error from Mock API');
+    }, { timeout: 5000 });
+
+    console.log('AI critique error response handled and displayed correctly.');
+
+    // Spinner should be hidden, critique button re-enabled
+    await page.waitForSelector('#rop-critique-spinner', { state: 'hidden', timeout: 2000 });
+    assert.equal(await critiqueBtn.isEnabled(), true, 'AI Critique button should be enabled after failure');
 
     if (errors.length) {
       throw new Error(errors.join('\n'));

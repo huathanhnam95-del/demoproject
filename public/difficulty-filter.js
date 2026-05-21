@@ -1,12 +1,14 @@
 /**
  * Difficulty Filter Module
+/**
+ * Difficulty Filter Module
  * Handles filtering questions by difficulty level (1, 2, 3)
  */
 
 const DifficultyFilter = (() => {
     'use strict';
 
-    const SUPPORTED_MODES = ['type', 'speak', 'extended', 'notes'];
+    const SUPPORTED_MODES = ['type', 'speak', 'extended', 'notes', 'rop'];
     const STORAGE_PREFIX = 'questionDifficulty';
     const LEGACY_STORAGE_PREFIX = 'difficultyFilter';
     const VALID_VALUES = new Set(['all', '1', '2', '3']);
@@ -16,7 +18,8 @@ const DifficultyFilter = (() => {
         type: 'all',
         speak: 'all',
         extended: 'all',
-        notes: 'all'
+        notes: 'all',
+        rop: 'all'
     };
     let isInitialized = false;
 
@@ -134,8 +137,10 @@ const DifficultyFilter = (() => {
         if (mode === 'notes') {
             if (window.TakeNotesMode && typeof window.TakeNotesMode.applyFilters === 'function') {
                 window.TakeNotesMode.applyFilters();
-            } else {
-                console.debug('[DifficultyFilter] TakeNotesMode not ready yet, filter saved but not applied.');
+            }
+        } else if (mode === 'rop') {
+            if (window.ROPMode && typeof window.ROPMode.applyFilters === 'function') {
+                window.ROPMode.applyFilters();
             }
         } else if (typeof window.populateQuestionSelect === 'function') {
             window.populateQuestionSelect(mode);

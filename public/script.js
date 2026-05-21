@@ -8857,7 +8857,7 @@
         window.checkFilterUnlockStatus(userId);
       }
 
-      ['type', 'speak', 'extended', 'notes'].forEach((mode) => {
+      ['type', 'speak', 'extended', 'notes', 'rop'].forEach((mode) => {
         window.DifficultyFilter?.reloadSavedDifficulty?.(mode);
       });
       window.DifficultyFilter?.updateFilterVisibility?.();
@@ -8893,7 +8893,7 @@
         const container = document.getElementById(`length-filter-container-${mode}`);
         if (container) container.style.display = 'none';
       });
-      ['type', 'speak', 'extended', 'notes'].forEach((mode) => {
+      ['type', 'speak', 'extended', 'notes', 'rop'].forEach((mode) => {
         window.DifficultyFilter?.reloadSavedDifficulty?.(mode);
       });
       window.DifficultyFilter?.updateFilterVisibility?.();

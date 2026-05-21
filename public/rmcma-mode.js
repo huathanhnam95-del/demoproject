@@ -162,6 +162,7 @@
     elements.backdrop.classList.add('is-visible');
     elements.backdrop.setAttribute('aria-hidden', 'false');
     elements.sheet.classList.add('is-open');
+    elements.sheet.setAttribute('aria-hidden', 'false');
     if (elements.questionPill) {
       elements.questionPill.setAttribute('aria-expanded', 'true');
     }
@@ -178,9 +179,48 @@
     elements.backdrop.classList.remove('is-visible');
     elements.backdrop.setAttribute('aria-hidden', 'true');
     elements.sheet.classList.remove('is-open');
+    elements.sheet.setAttribute('aria-hidden', 'true');
     if (elements.questionPill) {
       elements.questionPill.setAttribute('aria-expanded', 'false');
     }
+  }
+
+  function resetFeedbackUI() {
+    state.explanationVisible = false;
+    if (elements.retryBtn) {
+      elements.retryBtn.style.display = 'none';
+    }
+    if (elements.explanationToggle) {
+      elements.explanationToggle.style.display = 'none';
+      elements.explanationToggle.textContent = 'Show explanation';
+    }
+    if (elements.resultBox) {
+      elements.resultBox.style.display = 'none';
+      elements.resultBox.innerHTML = '';
+    }
+    if (elements.explanationPanel) {
+      elements.explanationPanel.style.display = 'none';
+    }
+    if (elements.explanationContent) {
+      elements.explanationContent.innerHTML = '';
+    }
+  }
+
+  function setLoadingState(message) {
+    if (elements.passageText) {
+      elements.passageText.textContent = message;
+    }
+    if (elements.questionPrompt) {
+      elements.questionPrompt.textContent = '';
+    }
+    if (elements.choicesContainer) {
+      elements.choicesContainer.innerHTML = '';
+    }
+    if (elements.submitBtn) {
+      elements.submitBtn.style.display = 'block';
+      elements.submitBtn.disabled = true;
+    }
+    resetFeedbackUI();
   }
 
   function renderJumpList(filter = '') {
@@ -338,23 +378,7 @@
       elements.submitBtn.style.display = 'block';
       elements.submitBtn.disabled = true; // Disabled until at least one option selected
     }
-    if (elements.retryBtn) {
-      elements.retryBtn.style.display = 'none';
-    }
-    if (elements.explanationToggle) {
-      elements.explanationToggle.style.display = 'none';
-      elements.explanationToggle.textContent = 'Show explanation';
-    }
-    if (elements.resultBox) {
-      elements.resultBox.style.display = 'none';
-      elements.resultBox.innerHTML = '';
-    }
-    if (elements.explanationPanel) {
-      elements.explanationPanel.style.display = 'none';
-    }
-    if (elements.explanationContent) {
-      elements.explanationContent.innerHTML = '';
-    }
+    resetFeedbackUI();
   }
 
   function selectChoice(idx) {
@@ -480,17 +504,12 @@
     }
 
     if (state.questions.length === 0) {
-      // Show general loading feedback
-      if (elements.passageText) {
-        elements.passageText.textContent = 'Loading reading questions...';
-      }
+      setLoadingState('Loading reading questions...');
       try {
         await loadData();
       } catch (error) {
         console.error('[RMCMAMode] Error loading excel database:', error);
-        if (elements.passageText) {
-          elements.passageText.textContent = 'Failed to load question database. Please check your network connection and reload.';
-        }
+        setLoadingState('Failed to load question database. Please check your network connection and reload.');
         return;
       }
     }

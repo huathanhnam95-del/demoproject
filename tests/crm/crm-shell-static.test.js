@@ -10,7 +10,7 @@ const html = read('public/crm-admin.html');
 const js = read('public/crm-admin.js');
 const agentSourcesWorkspace = read('public/js/crm/agent-sources-workspace.js');
 const packageJson = JSON.parse(read('package.json'));
-const CRM_ADMIN_ASSET_VERSION = '20260520-v1.8.0';
+const CRM_ADMIN_ASSET_VERSION = '20260521-v1.8.1';
 
 const panelIds = new Set(Array.from(html.matchAll(/data-panel="([^"]+)"/g), (match) => match[1]));
 const localAssetRefs = Array.from(

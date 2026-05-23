@@ -238,6 +238,12 @@ async function setupFirebaseMocks(context) {
     const expectedScoreText = `${target.blanks.length} / ${target.blanks.length}`;
     assert(summaryText.includes(expectedScoreText), `Expected score ${expectedScoreText} in result summary, got: ${summaryText}`);
 
+    // Verify explanation header is visible (Requirement 1)
+    const isHeaderVisible = await page.locator('#dd-explanation-header').isVisible();
+    assert(isHeaderVisible, 'Explanation header should be visible after submission');
+    const headerText = await page.locator('#dd-explanation-header').textContent();
+    assert.equal(headerText, 'Show explanation', 'Explanation header text should be "Show explanation"');
+
     // Verify that detailed cards show "Correct" and have explanations
     const resultCards = page.locator('#dd-results .dd-result-card');
     const cardCount = await resultCards.count();
@@ -288,6 +294,9 @@ async function setupFirebaseMocks(context) {
     // Place incorrect word in blank 1
     await page.locator('#dd-word-bank .dd-option-chip', { hasText: incorrectWord }).click();
     await page.locator(`#dd-passage .dd-blank-slot[data-blank-id="${target.blanks[0].blankId}"]`).click();
+
+    // Verify Submit button is enabled after filling just one blank (Requirement 2)
+    assert.equal(await submitBtn.getAttribute('disabled'), null, 'Submit button should be enabled after filling just one blank');
 
     // Place correct words in remaining blanks
     for (let i = 1; i < target.blanks.length; i++) {

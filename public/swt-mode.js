@@ -64,7 +64,7 @@
   // ── Data Loading ──
   async function loadQuestions() {
     try {
-      const res = await fetch('/database/Summarize Written Text/SWT/swt-questions.json');
+      const res = await fetch(`/database/Summarize Written Text/SWT/swt-questions.json?v=${Date.now()}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const rawQuestions = await res.json();
       if (!Array.isArray(rawQuestions)) {

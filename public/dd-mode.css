@@ -267,6 +267,13 @@
   background-color: rgba(155, 47, 58, 0.06);
 }
 
+#dd-explanation-header {
+  margin: 28px 0 12px;
+  font-family: 'Lora', serif;
+  font-size: 1.35rem;
+  color: var(--dd-ink);
+}
+
 .dd-results-container {
   display: flex;
   flex-direction: column;

@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'bel-offline-v14';
+const CACHE_VERSION = 'bel-offline-v15';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -55,8 +55,7 @@ self.addEventListener('fetch', (event) => {
   if (!isSameOrigin(request.url)) return;
 
   const requestUrl = new URL(request.url);
-  if (requestUrl.pathname.startsWith('/api/')) {
-    event.respondWith(fetch(request));
+  if (requestUrl.pathname.startsWith('/api/') || requestUrl.pathname.startsWith('/database/')) {
     return;
   }
 

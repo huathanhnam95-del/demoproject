@@ -1,3 +1,21 @@
+## [V1.8.3] - 2026-05-23
+
+### Added
+
+- **Multiple Choice Single Answer (RMCSA) Reading Practice Mode**:
+  - Implemented client-side UI, circular radio selector interaction, and binary scoring logic (1 point for correct, 0 points for incorrect).
+  - Added custom styles `public/rmcsa-mode.css`, runtime logic `public/rmcsa-mode.js`, and E2E browser check tests `tests/browser/rmcsa-mode-browser-check.js`.
+  - Configured launcher card in the PTE dashboard, tab headers in `public/index.html`, script router launcher (`public/script.js`), and lazy loader (`public/js/lazy-loader.js`).
+- **AI Explanation & Enrichment**:
+  - Enriched Excel question database `public/database/RMCSA/RMCSA/RMCSA.xlsx` with detailed option-level explanations using local GemmaAI via Ollama, utilizing the `public/database/RMCSA/enrich_rmcsa.py` processing script.
+
+### Improved
+
+- **Offline Cache Handling**:
+  - Updated service worker fetch handling in `public/sw.js` to bypass offline cache for all database `/database/` resources.
+- **Deep-Link Practice Routing**:
+  - Integrated full deep-link question selection routing and event listeners across ROP, RMCMA, D&D, and RMCSA modes.
+
 ## [V1.8.2] - 2026-05-22
 
 ### Added

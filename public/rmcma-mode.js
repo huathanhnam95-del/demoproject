@@ -51,6 +51,14 @@
     return template.innerHTML;
   }
 
+  function parseMarkdownInHtml(html) {
+    if (!html) return '';
+    let parsed = html;
+    parsed = parsed.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    parsed = parsed.replace(/`(.*?)`/g, '<span class="rop-highlight">$1</span>');
+    return parsed;
+  }
+
   function shuffleArray(array) {
     const arr = [...array];
     for (let i = arr.length - 1; i > 0; i--) {
@@ -340,6 +348,10 @@
     closePicker();
     updateNavigationUI();
     renderQuestion();
+
+    if (window.PracticeRouter && state.currentQuestion?.id != null) {
+      window.PracticeRouter.replaceRoute('rmcma', state.currentQuestion.id);
+    }
   }
 
   function renderQuestion() {
@@ -477,7 +489,7 @@
     if (elements.explanationToggle && state.currentQuestion.explanation) {
       elements.explanationToggle.style.display = 'block';
       if (elements.explanationContent) {
-        elements.explanationContent.innerHTML = sanitizeExplanationHtml(state.currentQuestion.explanation);
+        elements.explanationContent.innerHTML = parseMarkdownInHtml(sanitizeExplanationHtml(state.currentQuestion.explanation));
       }
     }
   }
@@ -492,6 +504,17 @@
     } else {
       elements.explanationPanel.style.display = 'none';
       elements.explanationToggle.textContent = 'Show explanation';
+    }
+  }
+
+  async function loadQuestionById(questionId) {
+    if (state.questions.length === 0) {
+      await loadData();
+    }
+    const numericId = Number(questionId);
+    const index = state.questions.findIndex(q => Number(q.id) === numericId);
+    if (index !== -1) {
+      loadQuestion(index);
     }
   }
 
@@ -515,7 +538,12 @@
     }
 
     if (state.questions.length > 0) {
-      loadQuestion(0);
+      const urlRoute = window.PracticeRouter ? window.PracticeRouter.initFromURL() : null;
+      if (urlRoute && urlRoute.mode === 'rmcma' && urlRoute.questionId) {
+        await loadQuestionById(urlRoute.questionId);
+      } else {
+        loadQuestion(0);
+      }
     }
   }
 
@@ -530,4 +558,11 @@
     activate,
     onExit
   };
+
+  // Deep-link support: listen for PracticeRouter question navigation events
+  window.addEventListener('practice-route-question', async (event) => {
+    const { mode, questionId } = event.detail || {};
+    if (mode !== 'rmcma' || !questionId) return;
+    await loadQuestionById(questionId);
+  });
 })();

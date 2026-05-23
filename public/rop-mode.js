@@ -64,6 +64,67 @@
     return template.innerHTML;
   }
 
+  function parseMarkdownInHtml(html) {
+    if (!html) return '';
+    let parsed = html;
+    parsed = parsed.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    parsed = parsed.replace(/`(.*?)`/g, '<span class="rop-highlight">$1</span>');
+    return parsed;
+  }
+
+  function parseMarkdownToHtml(text) {
+    if (!text) return '';
+    let escaped = escapeHtml(text);
+    escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    escaped = escaped.replace(/`(.*?)`/g, '<span class="rop-highlight">$1</span>');
+    escaped = escaped.replace(/\n/g, '<br>');
+    return escaped;
+  }
+
+  function isCritiquePanelVisible() {
+    return elements.critiquePanel && elements.critiquePanel.style.display === 'block';
+  }
+
+  function updateReviewSplitVisibility(showSplit) {
+    if (!elements.reviewSplit || !elements.workspace || !elements.footerActions || !elements.reviewRight) return;
+
+    if (showSplit) {
+      elements.workspace.style.display = 'none';
+      elements.reviewSplit.style.display = 'grid';
+
+      if (elements.resultBox) elements.reviewRight.appendChild(elements.resultBox);
+      if (elements.cohesionFeedback) elements.reviewRight.appendChild(elements.cohesionFeedback);
+      if (elements.critiquePanel) elements.reviewRight.appendChild(elements.critiquePanel);
+      if (elements.explanationPanel) elements.reviewRight.appendChild(elements.explanationPanel);
+
+      renderCorrectParagraphs();
+    } else {
+      elements.workspace.style.display = 'grid';
+      elements.reviewSplit.style.display = 'none';
+
+      if (elements.resultBox) elements.footerActions.appendChild(elements.resultBox);
+      if (elements.cohesionFeedback) elements.footerActions.appendChild(elements.cohesionFeedback);
+      if (elements.critiquePanel) elements.footerActions.appendChild(elements.critiquePanel);
+      if (elements.explanationPanel) elements.footerActions.appendChild(elements.explanationPanel);
+    }
+  }
+
+  function renderCorrectParagraphs() {
+    if (!elements.correctOrderList || !state.currentQuestion) return;
+    elements.correctOrderList.innerHTML = '';
+
+    state.currentQuestion.paragraphs.forEach((p, idx) => {
+      const card = document.createElement('div');
+      card.className = 'rop-correct-item';
+      card.innerHTML = `
+        <span class="rop-correct-badge">#${idx + 1}</span>
+        <div class="rop-item-content">${p.text}</div>
+      `;
+      elements.correctOrderList.appendChild(card);
+    });
+  }
+
+
   function shuffleArray(array) {
     const arr = [...array];
     for (let i = arr.length - 1; i > 0; i--) {
@@ -110,6 +171,13 @@
     elements.critiqueSpinner = document.getElementById('rop-critique-spinner');
     elements.critiquePanel = document.getElementById('rop-critique-panel');
     elements.critiqueContent = document.getElementById('rop-critique-content');
+
+    // split-screen review elements
+    elements.reviewSplit = document.getElementById('rop-review-split');
+    elements.correctOrderList = document.getElementById('rop-correct-order-list');
+    elements.reviewRight = document.getElementById('rop-review-right');
+    elements.footerActions = document.querySelector('.rop-footer-actions');
+    elements.workspace = document.querySelector('.rop-workspace');
   }
 
   function setupEventListeners() {
@@ -404,6 +472,14 @@
     closePicker();
     updateNavigationUI();
     renderQuestion();
+
+    // Reset split-screen view
+    updateReviewSplitVisibility(false);
+
+    // Sync route
+    if (window.PracticeRouter && state.currentQuestion?.id != null) {
+      window.PracticeRouter.replaceRoute('rop', state.currentQuestion.id);
+    }
   }
 
   function renderQuestion() {
@@ -818,7 +894,7 @@
     if (elements.explanationToggle && state.currentQuestion.explanation) {
       elements.explanationToggle.style.display = 'block';
       if (elements.explanationContent) {
-        elements.explanationContent.innerHTML = sanitizeExplanationHtml(state.currentQuestion.explanation);
+        elements.explanationContent.innerHTML = parseMarkdownInHtml(sanitizeExplanationHtml(state.currentQuestion.explanation));
       }
     }
   }
@@ -876,6 +952,7 @@
       elements.explanationPanel.style.display = 'none';
       elements.explanationToggle.textContent = 'Show explanation';
     }
+    updateReviewSplitVisibility(state.explanationVisible || isCritiquePanelVisible());
   }
 
   async function requestAiCritique() {
@@ -922,7 +999,7 @@
 
       if (response.ok && resJson && resJson.success && resJson.data?.critique) {
         if (elements.critiqueContent) {
-          elements.critiqueContent.textContent = resJson.data.critique;
+          elements.critiqueContent.innerHTML = parseMarkdownToHtml(resJson.data.critique);
         }
         if (elements.critiquePanel) {
           elements.critiquePanel.style.display = 'block';
@@ -930,7 +1007,7 @@
       } else {
         const errorMsg = resJson?.message || 'Failed to generate AI critique. Please try again.';
         if (elements.critiqueContent) {
-          elements.critiqueContent.textContent = errorMsg;
+          elements.critiqueContent.innerHTML = parseMarkdownToHtml(errorMsg);
         }
         if (elements.critiquePanel) {
           elements.critiquePanel.style.display = 'block';
@@ -939,7 +1016,7 @@
     } catch (err) {
       console.error('[ROPMode] AI critique request failed:', err);
       if (elements.critiqueContent) {
-        elements.critiqueContent.textContent = 'An error occurred while calling the AI critique service. Please try again later.';
+        elements.critiqueContent.innerHTML = parseMarkdownToHtml('An error occurred while calling the AI critique service. Please try again later.');
       }
       if (elements.critiquePanel) {
         elements.critiquePanel.style.display = 'block';
@@ -947,6 +1024,7 @@
     } finally {
       if (elements.critiqueBtn) elements.critiqueBtn.disabled = false;
       if (elements.critiqueSpinner) elements.critiqueSpinner.style.display = 'none';
+      updateReviewSplitVisibility(state.explanationVisible || isCritiquePanelVisible());
     }
   }
 
@@ -994,6 +1072,28 @@
     loadQuestion(newIndex);
   }
 
+  async function loadQuestionById(questionId) {
+    if (state.questions.length === 0) {
+      await loadData();
+    }
+    const numericId = Number(questionId);
+    const index = state.questions.findIndex(q => q.id === numericId);
+    if (index === -1) return;
+
+    // Check if the question is in the current filtered questions
+    let filteredIndex = state.filteredQuestions.findIndex(q => q.id === numericId);
+    if (filteredIndex === -1) {
+      // Not in filtered list, reset difficulty to all
+      if (window.DifficultyFilter && typeof window.DifficultyFilter.setCurrentDifficulty === 'function') {
+        window.DifficultyFilter.setCurrentDifficulty('rop', 'all');
+      }
+      state.currentQuestion = state.questions[index];
+      applyFilters();
+    } else {
+      loadQuestion(filteredIndex);
+    }
+  }
+
   async function activate() {
     cacheElements();
     if (!state.initialized) {
@@ -1017,7 +1117,12 @@
     }
 
     if (state.questions.length > 0) {
-      applyFilters();
+      const urlRoute = window.PracticeRouter ? window.PracticeRouter.initFromURL() : null;
+      if (urlRoute && urlRoute.mode === 'rop' && urlRoute.questionId) {
+        await loadQuestionById(urlRoute.questionId);
+      } else {
+        applyFilters();
+      }
     }
   }
 
@@ -1033,4 +1138,11 @@
     onExit,
     applyFilters
   };
+
+  // Deep-link support: listen for PracticeRouter question navigation events
+  window.addEventListener('practice-route-question', async (event) => {
+    const { mode, questionId } = event.detail || {};
+    if (mode !== 'rop' || !questionId) return;
+    await loadQuestionById(questionId);
+  });
 })();

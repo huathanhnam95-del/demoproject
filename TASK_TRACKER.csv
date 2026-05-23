@@ -287,5 +287,10 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 294,2026-05-21,Fix MCMA and ROP practice scope visibility,Done,2026-05-21
 295,2026-05-21,Declutter UI cards and reduce nested box layering,Done,2026-05-21
 296,2026-05-22,Debug CI verify pipeline and deploy V1.8.2 release,Done,2026-05-22
-297,2026-05-22,Debug SWT question loading issue,In Progress,
-
+297,2026-05-22,Debug SWT question loading issue,Done,2026-05-22
+298,2026-05-22,Fix ROP container resizing during paragraph movement,Done,2026-05-22
+299,2026-05-22,Update Drag and Drop mode submissions and explanations,Done,2026-05-22
+300,2026-05-22,Implement ROP split-screen UX and routing updates,Done,2026-05-22
+301,2026-05-22,Add highlights and bolds in ROP AI explanations,Done,2026-05-22
+302,2026-05-23,Investigate and resolve dev server and emulator connection refused errors,Done,2026-05-23
+303,2026-05-23,Implement RMCSA reading practice mode with GemmaAI explanations,Done,2026-05-23

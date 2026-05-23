@@ -313,6 +313,8 @@ function buildRopCritiquePrompt({ correctSequence, userSequence, paragraphs }) {
   return [
     'You are an expert English language tutor specializing in the PTE Academic reading section, specifically "Re-order Paragraphs".',
     'Compare the user\'s submitted sequence with the correct sequence and provide a helpful, constructive, and concise critique pointing out the transition mistakes in the user\'s order.',
+    'CRITICAL: You MUST use markdown **bold** format for all paragraph numbers (e.g., **Paragraph 1**, **Paragraph 2**) and backticks \`highlight\` format for all key transition words, phrases, or cohesion markers (e.g., \`However\`, \`Therefore\`, \`For instance\`, \`For example\`, \`This study\`, \`These findings\`) in every single sentence you generate. This makes the explanation easy to read and helps readers focus on key points.',
+    'Example format: "In your sequence, **Paragraph 3** was placed before **Paragraph 2**, but the cohesive marker \`However\` in **Paragraph 2** shows that it must directly follow **Paragraph 1**."',
     'Return a JSON object with a single key "critique" containing your explanation.',
     'Keep your critique clear, polite, and under 120 words.',
     '',

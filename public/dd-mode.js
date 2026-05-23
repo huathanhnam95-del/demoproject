@@ -25,6 +25,15 @@
     return div.innerHTML;
   }
 
+  function parseMarkdownToHtml(text) {
+    if (!text) return '';
+    let escaped = escapeHtml(text);
+    escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    escaped = escaped.replace(/`(.*?)`/g, '<span class="rop-highlight">$1</span>');
+    escaped = escaped.replace(/\n/g, '<br>');
+    return escaped;
+  }
+
   function shuffleArray(array) {
     const arr = [...array];
     for (let i = arr.length - 1; i > 0; i--) {
@@ -58,6 +67,7 @@
 
     // Score & Feedback
     elements.resultSummary = document.getElementById('dd-result-summary');
+    elements.explanationHeader = document.getElementById('dd-explanation-header');
     elements.resultsContainer = document.getElementById('dd-results');
   }
 
@@ -273,6 +283,7 @@
   }
 
   async function loadData() {
+    if (state.questions.length > 0) return state.questions;
     if (state.loadingPromise) return state.loadingPromise;
     state.loadingPromise = (async () => {
       const response = await fetch(`${DATA_URL}?v=${Date.now()}`);
@@ -311,9 +322,9 @@
     loadQuestionById(q.id);
   }
 
-  function loadQuestionById(questionId, options = {}) {
+  function loadQuestionByIdSync(questionId) {
     const index = state.questionIndexById.get(Number(questionId));
-    if (index === undefined) return;
+    if (index === undefined) return false;
 
     state.currentQuestionIndex = index;
     state.currentQuestion = state.questions[index];
@@ -329,6 +340,19 @@
     closePicker();
     updateNavigationUI();
     renderQuestion();
+
+    if (window.PracticeRouter && state.currentQuestion?.id != null) {
+      window.PracticeRouter.replaceRoute('dd', state.currentQuestion.id);
+    }
+    return true;
+  }
+
+  async function loadQuestionById(questionId, options = {}) {
+    if (state.questions.length > 0) {
+      if (loadQuestionByIdSync(questionId)) return;
+    }
+    await loadData();
+    loadQuestionByIdSync(questionId);
   }
 
   function renderQuestion() {
@@ -354,6 +378,9 @@
     if (elements.resultSummary) {
       elements.resultSummary.style.display = 'none';
       elements.resultSummary.innerHTML = '';
+    }
+    if (elements.explanationHeader) {
+      elements.explanationHeader.style.display = 'none';
     }
     if (elements.resultsContainer) {
       elements.resultsContainer.style.display = 'none';
@@ -473,12 +500,11 @@
     state.placements[blankId] = option;
     state.selectedOptionId = null;
 
-    // Check if all slots are filled
-    const allBlanks = state.currentQuestion.segments.filter(s => s.type === 'blank');
-    const allFilled = allBlanks.every(b => !!state.placements[b.blankId]);
+    // Check if any slot is filled
+    const hasAnyFilled = Object.keys(state.placements).length > 0;
     
     if (elements.submitBtn) {
-      elements.submitBtn.disabled = !allFilled;
+      elements.submitBtn.disabled = !hasAnyFilled;
     }
 
     renderQuestionLayout();
@@ -490,8 +516,10 @@
     }
     state.selectedOptionId = null;
 
+    // Check if any slot is filled
+    const hasAnyFilled = Object.keys(state.placements).length > 0;
     if (elements.submitBtn) {
-      elements.submitBtn.disabled = true;
+      elements.submitBtn.disabled = !hasAnyFilled;
     }
 
     renderQuestionLayout();
@@ -561,6 +589,10 @@
       elements.resultSummary.innerHTML = `You scored <strong>${correctCount} / ${totalBlanks}</strong> points.`;
     }
 
+    if (elements.explanationHeader) {
+      elements.explanationHeader.style.display = 'block';
+    }
+
     // 3. Render detailed result cards
     renderDetailedResults(results);
   }
@@ -625,7 +657,7 @@
         cue1.className = 'dd-result-card-cue-item';
         cue1.innerHTML = `
           <div class="dd-result-card-cue-title">Coherence Cue</div>
-          <div class="dd-result-card-cue-text">${escapeHtml(res.blank.coherenceCue)}</div>
+          <div class="dd-result-card-cue-text">${parseMarkdownToHtml(res.blank.coherenceCue)}</div>
         `;
         cuesDiv.appendChild(cue1);
       }
@@ -635,7 +667,7 @@
         cue2.className = 'dd-result-card-cue-item';
         cue2.innerHTML = `
           <div class="dd-result-card-cue-title">Grammar & Vocab Cue</div>
-          <div class="dd-result-card-cue-text">${escapeHtml(res.blank.vocabGrammarCue)}</div>
+          <div class="dd-result-card-cue-text">${parseMarkdownToHtml(res.blank.vocabGrammarCue)}</div>
         `;
         cuesDiv.appendChild(cue2);
       }
@@ -653,7 +685,7 @@
           distDiv.innerHTML = `
             <div class="dd-result-card-distractor-title">Distractor Analysis</div>
             <ul class="dd-result-card-distractor-list">
-              <li>Why <strong>${escapeHtml(res.placed.text)}</strong> is incorrect: ${escapeHtml(distNote.reason)}</li>
+              <li>Why <strong>${escapeHtml(res.placed.text)}</strong> is incorrect: ${parseMarkdownToHtml(distNote.reason)}</li>
             </ul>
           `;
           body.appendChild(distDiv);
@@ -666,7 +698,7 @@
         expDiv.className = 'dd-result-card-explanation-box';
         expDiv.innerHTML = `
           <div class="dd-result-card-explanation-title">Explanation</div>
-          <div class="dd-result-card-explanation-text">${escapeHtml(res.blank.explanation)}</div>
+          <div class="dd-result-card-explanation-text">${parseMarkdownToHtml(res.blank.explanation)}</div>
         `;
         body.appendChild(expDiv);
       }
@@ -688,8 +720,11 @@
         elements.panel.style.display = 'block';
       }
 
-      if (state.currentQuestion) {
-        loadQuestionById(state.currentQuestion.id);
+      const urlRoute = window.PracticeRouter ? window.PracticeRouter.initFromURL() : null;
+      if (urlRoute && urlRoute.mode === 'dd' && urlRoute.questionId) {
+        await loadQuestionById(urlRoute.questionId);
+      } else if (state.currentQuestion) {
+        await loadQuestionById(state.currentQuestion.id);
       }
       state.initialized = true;
     },
@@ -708,4 +743,11 @@
       return placementCount > 0;
     }
   };
+
+  // Deep-link support: listen for PracticeRouter question navigation events
+  window.addEventListener('practice-route-question', async (event) => {
+    const { mode, questionId } = event.detail || {};
+    if (mode !== 'dd' || !questionId) return;
+    await loadQuestionById(questionId);
+  });
 })();

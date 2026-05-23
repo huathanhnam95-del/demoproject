@@ -294,3 +294,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 301,2026-05-22,Add highlights and bolds in ROP AI explanations,Done,2026-05-22
 302,2026-05-23,Investigate and resolve dev server and emulator connection refused errors,Done,2026-05-23
 303,2026-05-23,Implement RMCSA reading practice mode with GemmaAI explanations,Done,2026-05-23
+304,2026-05-23,Implement LMCMA listening practice mode with Kokoro TTS and GemmaAI,In Progress,

@@ -7,7 +7,7 @@
   - Added custom styles `public/rmcsa-mode.css`, runtime logic `public/rmcsa-mode.js`, and E2E browser check tests `tests/browser/rmcsa-mode-browser-check.js`.
   - Configured launcher card in the PTE dashboard, tab headers in `public/index.html`, script router launcher (`public/script.js`), and lazy loader (`public/js/lazy-loader.js`).
 - **AI Explanation & Enrichment**:
-  - Enriched Excel question database `public/database/RMCSA/RMCSA/RMCSA.xlsx` with detailed option-level explanations using local GemmaAI via Ollama, utilizing the `public/database/RMCSA/enrich_rmcsa.py` processing script.
+  - Seeded sample explanations in `public/database/RMCSA/RMCSA/RMCSA.xlsx` and added `public/database/RMCSA/enrich_rmcsa.py` for full option-level explanation enrichment via local GemmaAI/Ollama.
 
 ### Improved
 

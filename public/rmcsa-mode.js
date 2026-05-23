@@ -370,12 +370,15 @@
     // Render choices
     if (elements.choicesContainer) {
       elements.choicesContainer.innerHTML = '';
+      elements.choicesContainer.setAttribute('role', 'radiogroup');
+      elements.choicesContainer.setAttribute('aria-label', 'Answer options');
       state.shuffledChoices.forEach((choice, idx) => {
         const card = document.createElement('button');
         card.type = 'button';
         card.className = 'rmcsa-choice-card';
         card.dataset.index = idx;
-        card.setAttribute('aria-pressed', 'false');
+        card.setAttribute('role', 'radio');
+        card.setAttribute('aria-checked', 'false');
         card.innerHTML = `
           <div class="rmcsa-choice-radio"></div>
           <div class="rmcsa-choice-text">${escapeHtml(choice.text)}</div>
@@ -406,7 +409,7 @@
       cards.forEach((card, i) => {
         const isSelected = state.selectedIndices.has(i);
         card.classList.toggle('is-selected', isSelected);
-        card.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+        card.setAttribute('aria-checked', isSelected ? 'true' : 'false');
       });
     }
 

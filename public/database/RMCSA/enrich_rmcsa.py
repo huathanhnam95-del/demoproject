@@ -1,3 +1,4 @@
+import argparse
 import os
 import time
 import re
@@ -8,7 +9,39 @@ import requests
 OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "gemma4:latest")
 
-EXCEL_PATH = r"C:\Cursor AI\public\database\RMCSA\RMCSA\RMCSA.xlsx"
+DEFAULT_EXCEL_PATH = r"C:\Cursor AI\public\database\RMCSA\RMCSA\RMCSA.xlsx"
+
+
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser(
+        description="Generate RMCSA option explanations with local Ollama and write them into the workbook."
+    )
+    parser.add_argument(
+        "--workbook",
+        default=os.environ.get("RMCSA_EXCEL_PATH", DEFAULT_EXCEL_PATH),
+        help="Path to the RMCSA workbook.",
+    )
+    parser.add_argument(
+        "--base-url",
+        default=OLLAMA_BASE_URL,
+        help="Ollama base URL.",
+    )
+    parser.add_argument(
+        "--model",
+        default=OLLAMA_MODEL,
+        help="Ollama model name.",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Maximum number of missing explanations to generate. Omit to process all missing rows.",
+    )
+    args = parser.parse_args(argv)
+    if args.limit is not None and args.limit < 1:
+        parser.error("--limit must be 1 or greater when provided")
+    return args
+
 
 def parse_rmcsa_content(text):
     if not text:
@@ -68,7 +101,7 @@ def parse_rmcsa_content(text):
         'choices': choices
     }
 
-def generate_explanation(parsed_data):
+def generate_explanation(parsed_data, base_url, model):
     passage = parsed_data['passage']
     question = parsed_data['question']
     
@@ -102,10 +135,10 @@ Task Instructions:
    - Make the tone supportive, encouraging, and highly instructional.
 """
     
-    url = f"{OLLAMA_BASE_URL}/api/generate"
+    url = f"{base_url}/api/generate"
     
     payload = {
-        "model": OLLAMA_MODEL,
+        "model": model,
         "prompt": prompt,
         "stream": False,
         "options": {
@@ -126,9 +159,11 @@ Task Instructions:
         print(f"Exception during request: {e}")
         return None
 
-def main():
-    print(f"Loading workbook: {EXCEL_PATH}...")
-    wb = openpyxl.load_workbook(EXCEL_PATH)
+
+def main(argv=None):
+    args = parse_args(argv)
+    print(f"Loading workbook: {args.workbook}...")
+    wb = openpyxl.load_workbook(args.workbook)
     sheet = wb.active
     
     # Ensure header column D is 'EXPLANATION'
@@ -162,17 +197,16 @@ def main():
             continue
             
         print(f"Row {row_idx} (ID {q_id}): Querying Ollama...")
-        explanation = generate_explanation(parsed)
+        explanation = generate_explanation(parsed, args.base_url, args.model)
         
         if explanation:
             sheet.cell(row=row_idx, column=4, value=explanation)
             success_count += 1
             print(f"Row {row_idx} (ID {q_id}): Successfully enriched.")
             # Save progress incrementally to avoid loss on failure
-            wb.save(EXCEL_PATH)
-            # Only generate 2 explanations to verify integration during implementation phase, per User review policy
-            if success_count >= 2:
-                print("Generated 2 explanations for verification. Stopping batch execution as per user manual run preference.")
+            wb.save(args.workbook)
+            if args.limit is not None and success_count >= args.limit:
+                print(f"Reached --limit {args.limit}. Stopping batch execution.")
                 break
         else:
             print(f"Row {row_idx} (ID {q_id}): Failed to generate explanation.")
@@ -182,8 +216,9 @@ def main():
         time.sleep(1.0)
         
     print(f"\nProcessing finished! Success: {success_count}, Skipped: {skip_count}, Failed: {fail_count}")
-    wb.save(EXCEL_PATH)
+    wb.save(args.workbook)
     print("Workbook saved successfully.")
+
 
 if __name__ == "__main__":
     main()

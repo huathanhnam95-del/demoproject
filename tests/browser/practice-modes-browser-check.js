@@ -108,6 +108,7 @@ async function checkMode(page, mode) {
     extended: { difficulty: true, status: false },
     sgd: { difficulty: true, status: true },
     rfib: { difficulty: false, status: false },
+    rmcsa: { difficulty: false, status: false },
     rmcma: { difficulty: false, status: false },
     rop: { difficulty: true, status: false },
     dd: { difficulty: false, status: false }
@@ -121,7 +122,7 @@ async function checkMode(page, mode) {
     const difficultyContainer = document.getElementById(`difficulty-filter-container-${targetMode}`);
     const statusContainer = document.getElementById(`status-filter-container-${targetMode}`);
 
-    const isV7 = targetMode === 'rmcma' || targetMode === 'rop' || targetMode === 'dd';
+    const isV7 = targetMode === 'rmcsa' || targetMode === 'rmcma' || targetMode === 'rop' || targetMode === 'dd';
     const questionSelect = isV7
       ? document.getElementById(`${targetMode}-v7-question-pill`)
       : (targetMode === 'rfib'
@@ -275,7 +276,7 @@ async function checkSkillFilter(page, skill, expectedVisibleIds, expectedModeId)
     assert.strictEqual(launcherSemantics.writingVisible, false, 'Writing empty state should start hidden');
     assert.strictEqual(launcherSemantics.tutorialButtonVisible, true, 'Tutorial button should be visible for the default Read Aloud mode');
 
-    for (const mode of ['type', 'speak', 'extended', 'sgd', 'rfib', 'rmcma', 'rop', 'dd']) {
+    for (const mode of ['type', 'speak', 'extended', 'sgd', 'rfib', 'rmcsa', 'rmcma', 'rop', 'dd']) {
       // eslint-disable-next-line no-await-in-loop
       await checkMode(page, mode);
     }
@@ -313,6 +314,7 @@ async function checkSkillFilter(page, skill, expectedVisibleIds, expectedModeId)
     const pteReadingState = await checkSkillFilter(page, 'reading', [
       'mode-btn-rfib',
       'mode-btn-dd',
+      'mode-btn-rmcsa',
       'mode-btn-rmcma',
       'mode-btn-rop'
     ], 'mode-extended');

@@ -746,7 +746,7 @@
       reading: {
         label: 'Reading',
         kind: 'live-skill',
-        modeIds: ['rfib', 'dd', 'rmcma', 'rop']
+        modeIds: ['rfib', 'dd', 'rmcsa', 'rmcma', 'rop']
       },
       writing: {
         label: 'Writing',
@@ -832,6 +832,13 @@
         isLive: true,
         launcherVisible: true
       },
+      rmcsa: {
+        label: 'Multiple Choice Single Answer',
+        skill: 'reading',
+        hasTutorial: false,
+        isLive: true,
+        launcherVisible: true
+      },
       rmcma: {
         label: 'Multiple Choice Multiple Answers',
         skill: 'reading',
@@ -898,7 +905,7 @@
     },
     [SCOPE_PTE]: {
       visibleModes: new Set([
-        'read-aloud', 'speak', 'describe-image', 'notes', 'asq', 'sgd', 'essay', 'swt', 'type', 'rfib', 'dd', 'rmcma', 'rop', 'extended', 'rts'
+        'read-aloud', 'speak', 'describe-image', 'notes', 'asq', 'sgd', 'essay', 'swt', 'type', 'rfib', 'dd', 'rmcsa', 'rmcma', 'rop', 'extended', 'rts'
       ]),
       modeOverrides: Object.freeze({
         speak: { label: 'Repeat Sentence' },
@@ -1642,7 +1649,7 @@
   };
 
   async function ensureModeAssets(mode) {
-    if (!['watch', 'notes', 'rfib', 'rmcma', 'rop', 'dd'].includes(mode)) return true;
+    if (!['watch', 'notes', 'rfib', 'rmcsa', 'rmcma', 'rop', 'dd'].includes(mode)) return true;
     if (!window.BELLazyLoader || typeof window.BELLazyLoader.ensureModeScripts !== 'function') {
       return true;
     }
@@ -1723,6 +1730,9 @@
     if (leavingMode === 'rts' && mode !== 'rts') {
       window.RTSMode?.onExit?.();
     }
+    if (leavingMode === 'rmcsa' && mode !== 'rmcsa') {
+      window.RMCSAMode?.onExit?.();
+    }
     if (leavingMode === 'rmcma' && mode !== 'rmcma') {
       window.RMCMAMode?.onExit?.();
     }
@@ -1766,7 +1776,7 @@
       return;
     }
 
-    if (mode === 'watch' || mode === 'notes' || mode === 'rfib' || mode === 'rmcma' || mode === 'rop' || mode === 'dd') {
+    if (mode === 'watch' || mode === 'notes' || mode === 'rfib' || mode === 'rmcsa' || mode === 'rmcma' || mode === 'rop' || mode === 'dd') {
       const assetsReady = await ensureModeAssets(mode);
       if (!assetsReady) return;
     }
@@ -1883,6 +1893,8 @@
         await loadQuestion('speak', currentSpeakQuestionId);
       } else if (mode === 'notes' && window.TakeNotesMode && typeof window.TakeNotesMode.loadEntries === 'function') {
         window.TakeNotesMode.loadEntries();
+      } else if (mode === 'rmcsa' && window.RMCSAMode && typeof window.RMCSAMode.activate === 'function') {
+        await window.RMCSAMode.activate();
       } else if (mode === 'rmcma' && window.RMCMAMode && typeof window.RMCMAMode.activate === 'function') {
         await window.RMCMAMode.activate();
       } else if (mode === 'rop' && window.ROPMode && typeof window.ROPMode.activate === 'function') {

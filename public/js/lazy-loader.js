@@ -196,6 +196,36 @@
     loadedModes.add('rmcma');
   }
 
+  async function ensureLmcmaModeLoaded() {
+    if (loadedModes.has('lmcma') || window.LMCMAMode) {
+      loadedModes.add('lmcma');
+      return;
+    }
+    await ensureXlsxLoaded();
+    await loadScript('lmcma-mode.js');
+    loadedModes.add('lmcma');
+  }
+
+  async function ensureLmcsaModeLoaded() {
+    if (loadedModes.has('lmcsa') || window.LMCSAMode) {
+      loadedModes.add('lmcsa');
+      return;
+    }
+    await ensureXlsxLoaded();
+    await loadScript('lmcsa-mode.js');
+    loadedModes.add('lmcsa');
+  }
+
+  async function ensureHcsModeLoaded() {
+    if (loadedModes.has('hcs') || window.HCSMode) {
+      loadedModes.add('hcs');
+      return;
+    }
+    await ensureXlsxLoaded();
+    await loadScript('hcs-mode.js');
+    loadedModes.add('hcs');
+  }
+
   async function ensureRmcsaModeLoaded() {
     if (loadedModes.has('rmcsa') || window.RMCSAMode) {
       loadedModes.add('rmcsa');
@@ -246,6 +276,18 @@
       await ensureRmcmaModeLoaded();
       return true;
     }
+    if (mode === 'lmcma') {
+      await ensureLmcmaModeLoaded();
+      return true;
+    }
+    if (mode === 'lmcsa') {
+      await ensureLmcsaModeLoaded();
+      return true;
+    }
+    if (mode === 'hcs') {
+      await ensureHcsModeLoaded();
+      return true;
+    }
     if (mode === 'rmcsa') {
       await ensureRmcsaModeLoaded();
       return true;
@@ -264,8 +306,11 @@
     ensureRfibModeLoaded,
     ensureDdModeLoaded,
     ensureRmcmaModeLoaded,
+    ensureLmcmaModeLoaded,
+    ensureLmcsaModeLoaded,
     ensureRmcsaModeLoaded,
     ensureRopModeLoaded,
+    ensureHcsModeLoaded,
     ensureCompromiseLoaded
   };
 })();

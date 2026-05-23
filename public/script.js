@@ -741,7 +741,7 @@
       listening: {
         label: 'Listening',
         kind: 'live-skill',
-        modeIds: ['type', 'collo-dictate', 'extended', 'watch', 'notes']
+        modeIds: ['type', 'collo-dictate', 'extended', 'watch', 'notes', 'lmcma', 'lmcsa', 'hcs']
       },
       reading: {
         label: 'Reading',
@@ -833,15 +833,36 @@
         launcherVisible: true
       },
       rmcsa: {
-        label: 'Multiple Choice Single Answer',
+        label: 'Multiple Choice, Single Answer',
         skill: 'reading',
         hasTutorial: false,
         isLive: true,
         launcherVisible: true
       },
       rmcma: {
-        label: 'Multiple Choice Multiple Answers',
+        label: 'Multiple Choice, Multiple Answers',
         skill: 'reading',
+        hasTutorial: false,
+        isLive: true,
+        launcherVisible: true
+      },
+      lmcma: {
+        label: 'Multiple Choice, Multiple Answers',
+        skill: 'listening',
+        hasTutorial: false,
+        isLive: true,
+        launcherVisible: true
+      },
+      lmcsa: {
+        label: 'Multiple Choice, Single Answer',
+        skill: 'listening',
+        hasTutorial: false,
+        isLive: true,
+        launcherVisible: true
+      },
+      hcs: {
+        label: 'Highlight Correct Summary',
+        skill: 'listening',
         hasTutorial: false,
         isLive: true,
         launcherVisible: true
@@ -905,7 +926,7 @@
     },
     [SCOPE_PTE]: {
       visibleModes: new Set([
-        'read-aloud', 'speak', 'describe-image', 'notes', 'asq', 'sgd', 'essay', 'swt', 'type', 'rfib', 'dd', 'rmcsa', 'rmcma', 'rop', 'extended', 'rts'
+        'read-aloud', 'speak', 'describe-image', 'notes', 'asq', 'sgd', 'essay', 'swt', 'type', 'rfib', 'dd', 'rmcsa', 'rmcma', 'rop', 'extended', 'rts', 'lmcma', 'lmcsa', 'hcs'
       ]),
       modeOverrides: Object.freeze({
         speak: { label: 'Repeat Sentence' },
@@ -918,7 +939,10 @@
         'describe-image': { launcherVisible: true, label: 'Describe Image' },
         rts: { launcherVisible: true, label: 'Respond To Situation' },
         rop: { label: 'Re-order Paragraph' },
-        dd: { label: 'Drag & Drop' }
+        dd: { label: 'Drag & Drop' },
+        lmcma: { label: 'Multiple Choice, Multiple Answers' },
+        lmcsa: { label: 'Multiple Choice, Single Answer' },
+        hcs: { label: 'Highlight Correct Summary' }
       })
     }
   };
@@ -1649,7 +1673,7 @@
   };
 
   async function ensureModeAssets(mode) {
-    if (!['watch', 'notes', 'rfib', 'rmcsa', 'rmcma', 'rop', 'dd'].includes(mode)) return true;
+    if (!['watch', 'notes', 'rfib', 'rmcsa', 'rmcma', 'rop', 'dd', 'lmcma', 'lmcsa', 'hcs'].includes(mode)) return true;
     if (!window.BELLazyLoader || typeof window.BELLazyLoader.ensureModeScripts !== 'function') {
       return true;
     }
@@ -1736,6 +1760,15 @@
     if (leavingMode === 'rmcma' && mode !== 'rmcma') {
       window.RMCMAMode?.onExit?.();
     }
+    if (leavingMode === 'lmcma' && mode !== 'lmcma') {
+      window.LMCMAMode?.onExit?.();
+    }
+    if (leavingMode === 'lmcsa' && mode !== 'lmcsa') {
+      window.LMCSAMode?.onExit?.();
+    }
+    if (leavingMode === 'hcs' && mode !== 'hcs') {
+      window.HCSMode?.onExit?.();
+    }
     if (leavingMode === 'rop' && mode !== 'rop') {
       window.ROPMode?.onExit?.();
     }
@@ -1776,7 +1809,7 @@
       return;
     }
 
-    if (mode === 'watch' || mode === 'notes' || mode === 'rfib' || mode === 'rmcsa' || mode === 'rmcma' || mode === 'rop' || mode === 'dd') {
+    if (mode === 'watch' || mode === 'notes' || mode === 'rfib' || mode === 'rmcsa' || mode === 'rmcma' || mode === 'rop' || mode === 'dd' || mode === 'lmcma' || mode === 'lmcsa' || mode === 'hcs') {
       const assetsReady = await ensureModeAssets(mode);
       if (!assetsReady) return;
     }
@@ -1897,6 +1930,12 @@
         await window.RMCSAMode.activate();
       } else if (mode === 'rmcma' && window.RMCMAMode && typeof window.RMCMAMode.activate === 'function') {
         await window.RMCMAMode.activate();
+      } else if (mode === 'lmcma' && window.LMCMAMode && typeof window.LMCMAMode.activate === 'function') {
+        await window.LMCMAMode.activate();
+      } else if (mode === 'lmcsa' && window.LMCSAMode && typeof window.LMCSAMode.activate === 'function') {
+        await window.LMCSAMode.activate();
+      } else if (mode === 'hcs' && window.HCSMode && typeof window.HCSMode.activate === 'function') {
+        await window.HCSMode.activate();
       } else if (mode === 'rop' && window.ROPMode && typeof window.ROPMode.activate === 'function') {
         await window.ROPMode.activate();
       } else if (mode === 'dd' && window.DDMode && typeof window.DDMode.activate === 'function') {

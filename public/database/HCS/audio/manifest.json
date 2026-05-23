@@ -1,0 +1,1382 @@
+{
+  "1": [
+    {
+      "id": "af_bella",
+      "name": "Bella",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_1_af_bella.mp3"
+    },
+    {
+      "id": "am_fenrir",
+      "name": "Fenrir",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_1_am_fenrir.mp3"
+    },
+    {
+      "id": "bm_lewis",
+      "name": "Lewis",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_1_bm_lewis.mp3"
+    }
+  ],
+  "2": [
+    {
+      "id": "af_heart",
+      "name": "Heart",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_2_af_heart.mp3"
+    },
+    {
+      "id": "am_liam",
+      "name": "Liam",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_2_am_liam.mp3"
+    },
+    {
+      "id": "bf_emma",
+      "name": "Emma",
+      "gender": "female",
+      "accent": "British",
+      "file": "HCS_2_bf_emma.mp3"
+    }
+  ],
+  "3": [
+    {
+      "id": "af_kore",
+      "name": "Kore",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_3_af_kore.mp3"
+    },
+    {
+      "id": "am_michael",
+      "name": "Michael",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_3_am_michael.mp3"
+    },
+    {
+      "id": "bm_fable",
+      "name": "Fable",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_3_bm_fable.mp3"
+    }
+  ],
+  "4": [
+    {
+      "id": "af_sarah",
+      "name": "Sarah",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_4_af_sarah.mp3"
+    },
+    {
+      "id": "am_puck",
+      "name": "Puck",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_4_am_puck.mp3"
+    },
+    {
+      "id": "bm_george",
+      "name": "George",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_4_bm_george.mp3"
+    }
+  ],
+  "5": [
+    {
+      "id": "af_alloy",
+      "name": "Alloy",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_5_af_alloy.mp3"
+    },
+    {
+      "id": "am_echo",
+      "name": "Echo",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_5_am_echo.mp3"
+    },
+    {
+      "id": "bm_lewis",
+      "name": "Lewis",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_5_bm_lewis.mp3"
+    }
+  ],
+  "6": [
+    {
+      "id": "af_bella",
+      "name": "Bella",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_6_af_bella.mp3"
+    },
+    {
+      "id": "am_eric",
+      "name": "Eric",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_6_am_eric.mp3"
+    },
+    {
+      "id": "bf_emma",
+      "name": "Emma",
+      "gender": "female",
+      "accent": "British",
+      "file": "HCS_6_bf_emma.mp3"
+    }
+  ],
+  "7": [
+    {
+      "id": "af_heart",
+      "name": "Heart",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_7_af_heart.mp3"
+    },
+    {
+      "id": "am_fenrir",
+      "name": "Fenrir",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_7_am_fenrir.mp3"
+    },
+    {
+      "id": "bm_fable",
+      "name": "Fable",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_7_bm_fable.mp3"
+    }
+  ],
+  "8": [
+    {
+      "id": "af_kore",
+      "name": "Kore",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_8_af_kore.mp3"
+    },
+    {
+      "id": "am_liam",
+      "name": "Liam",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_8_am_liam.mp3"
+    },
+    {
+      "id": "bm_george",
+      "name": "George",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_8_bm_george.mp3"
+    }
+  ],
+  "9": [
+    {
+      "id": "af_sarah",
+      "name": "Sarah",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_9_af_sarah.mp3"
+    },
+    {
+      "id": "am_michael",
+      "name": "Michael",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_9_am_michael.mp3"
+    },
+    {
+      "id": "bm_lewis",
+      "name": "Lewis",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_9_bm_lewis.mp3"
+    }
+  ],
+  "10": [
+    {
+      "id": "af_alloy",
+      "name": "Alloy",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_10_af_alloy.mp3"
+    },
+    {
+      "id": "am_puck",
+      "name": "Puck",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_10_am_puck.mp3"
+    },
+    {
+      "id": "bf_emma",
+      "name": "Emma",
+      "gender": "female",
+      "accent": "British",
+      "file": "HCS_10_bf_emma.mp3"
+    }
+  ],
+  "11": [
+    {
+      "id": "af_bella",
+      "name": "Bella",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_11_af_bella.mp3"
+    },
+    {
+      "id": "am_echo",
+      "name": "Echo",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_11_am_echo.mp3"
+    },
+    {
+      "id": "bm_fable",
+      "name": "Fable",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_11_bm_fable.mp3"
+    }
+  ],
+  "12": [
+    {
+      "id": "af_heart",
+      "name": "Heart",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_12_af_heart.mp3"
+    },
+    {
+      "id": "am_eric",
+      "name": "Eric",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_12_am_eric.mp3"
+    },
+    {
+      "id": "bm_george",
+      "name": "George",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_12_bm_george.mp3"
+    }
+  ],
+  "13": [
+    {
+      "id": "af_kore",
+      "name": "Kore",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_13_af_kore.mp3"
+    },
+    {
+      "id": "am_fenrir",
+      "name": "Fenrir",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_13_am_fenrir.mp3"
+    },
+    {
+      "id": "bm_lewis",
+      "name": "Lewis",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_13_bm_lewis.mp3"
+    }
+  ],
+  "14": [
+    {
+      "id": "af_sarah",
+      "name": "Sarah",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_14_af_sarah.mp3"
+    },
+    {
+      "id": "am_liam",
+      "name": "Liam",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_14_am_liam.mp3"
+    },
+    {
+      "id": "bf_emma",
+      "name": "Emma",
+      "gender": "female",
+      "accent": "British",
+      "file": "HCS_14_bf_emma.mp3"
+    }
+  ],
+  "15": [
+    {
+      "id": "af_alloy",
+      "name": "Alloy",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_15_af_alloy.mp3"
+    },
+    {
+      "id": "am_michael",
+      "name": "Michael",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_15_am_michael.mp3"
+    },
+    {
+      "id": "bm_fable",
+      "name": "Fable",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_15_bm_fable.mp3"
+    }
+  ],
+  "16": [
+    {
+      "id": "af_bella",
+      "name": "Bella",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_16_af_bella.mp3"
+    },
+    {
+      "id": "am_puck",
+      "name": "Puck",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_16_am_puck.mp3"
+    },
+    {
+      "id": "bm_george",
+      "name": "George",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_16_bm_george.mp3"
+    }
+  ],
+  "20": [
+    {
+      "id": "af_alloy",
+      "name": "Alloy",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_20_af_alloy.mp3"
+    },
+    {
+      "id": "am_liam",
+      "name": "Liam",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_20_am_liam.mp3"
+    },
+    {
+      "id": "bm_george",
+      "name": "George",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_20_bm_george.mp3"
+    }
+  ],
+  "21": [
+    {
+      "id": "af_bella",
+      "name": "Bella",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_21_af_bella.mp3"
+    },
+    {
+      "id": "am_michael",
+      "name": "Michael",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_21_am_michael.mp3"
+    },
+    {
+      "id": "bm_lewis",
+      "name": "Lewis",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_21_bm_lewis.mp3"
+    }
+  ],
+  "22": [
+    {
+      "id": "af_heart",
+      "name": "Heart",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_22_af_heart.mp3"
+    },
+    {
+      "id": "am_puck",
+      "name": "Puck",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_22_am_puck.mp3"
+    },
+    {
+      "id": "bf_emma",
+      "name": "Emma",
+      "gender": "female",
+      "accent": "British",
+      "file": "HCS_22_bf_emma.mp3"
+    }
+  ],
+  "23": [
+    {
+      "id": "af_kore",
+      "name": "Kore",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_23_af_kore.mp3"
+    },
+    {
+      "id": "am_echo",
+      "name": "Echo",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_23_am_echo.mp3"
+    },
+    {
+      "id": "bm_fable",
+      "name": "Fable",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_23_bm_fable.mp3"
+    }
+  ],
+  "24": [
+    {
+      "id": "af_sarah",
+      "name": "Sarah",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_24_af_sarah.mp3"
+    },
+    {
+      "id": "am_eric",
+      "name": "Eric",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_24_am_eric.mp3"
+    },
+    {
+      "id": "bm_george",
+      "name": "George",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_24_bm_george.mp3"
+    }
+  ],
+  "25": [
+    {
+      "id": "af_alloy",
+      "name": "Alloy",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_25_af_alloy.mp3"
+    },
+    {
+      "id": "am_fenrir",
+      "name": "Fenrir",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_25_am_fenrir.mp3"
+    },
+    {
+      "id": "bm_lewis",
+      "name": "Lewis",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_25_bm_lewis.mp3"
+    }
+  ],
+  "26": [
+    {
+      "id": "af_bella",
+      "name": "Bella",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_26_af_bella.mp3"
+    },
+    {
+      "id": "am_liam",
+      "name": "Liam",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_26_am_liam.mp3"
+    },
+    {
+      "id": "bf_emma",
+      "name": "Emma",
+      "gender": "female",
+      "accent": "British",
+      "file": "HCS_26_bf_emma.mp3"
+    }
+  ],
+  "27": [
+    {
+      "id": "af_heart",
+      "name": "Heart",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_27_af_heart.mp3"
+    },
+    {
+      "id": "am_michael",
+      "name": "Michael",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_27_am_michael.mp3"
+    },
+    {
+      "id": "bm_fable",
+      "name": "Fable",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_27_bm_fable.mp3"
+    }
+  ],
+  "28": [
+    {
+      "id": "af_kore",
+      "name": "Kore",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_28_af_kore.mp3"
+    },
+    {
+      "id": "am_puck",
+      "name": "Puck",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_28_am_puck.mp3"
+    },
+    {
+      "id": "bm_george",
+      "name": "George",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_28_bm_george.mp3"
+    }
+  ],
+  "29": [
+    {
+      "id": "af_sarah",
+      "name": "Sarah",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_29_af_sarah.mp3"
+    },
+    {
+      "id": "am_echo",
+      "name": "Echo",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_29_am_echo.mp3"
+    },
+    {
+      "id": "bm_lewis",
+      "name": "Lewis",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_29_bm_lewis.mp3"
+    }
+  ],
+  "30": [
+    {
+      "id": "af_alloy",
+      "name": "Alloy",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_30_af_alloy.mp3"
+    },
+    {
+      "id": "am_eric",
+      "name": "Eric",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_30_am_eric.mp3"
+    },
+    {
+      "id": "bf_emma",
+      "name": "Emma",
+      "gender": "female",
+      "accent": "British",
+      "file": "HCS_30_bf_emma.mp3"
+    }
+  ],
+  "31": [
+    {
+      "id": "af_bella",
+      "name": "Bella",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_31_af_bella.mp3"
+    },
+    {
+      "id": "am_fenrir",
+      "name": "Fenrir",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_31_am_fenrir.mp3"
+    },
+    {
+      "id": "bm_fable",
+      "name": "Fable",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_31_bm_fable.mp3"
+    }
+  ],
+  "32": [
+    {
+      "id": "af_heart",
+      "name": "Heart",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_32_af_heart.mp3"
+    },
+    {
+      "id": "am_liam",
+      "name": "Liam",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_32_am_liam.mp3"
+    },
+    {
+      "id": "bm_george",
+      "name": "George",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_32_bm_george.mp3"
+    }
+  ],
+  "33": [
+    {
+      "id": "af_kore",
+      "name": "Kore",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_33_af_kore.mp3"
+    },
+    {
+      "id": "am_michael",
+      "name": "Michael",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_33_am_michael.mp3"
+    },
+    {
+      "id": "bm_lewis",
+      "name": "Lewis",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_33_bm_lewis.mp3"
+    }
+  ],
+  "34": [
+    {
+      "id": "af_sarah",
+      "name": "Sarah",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_34_af_sarah.mp3"
+    },
+    {
+      "id": "am_puck",
+      "name": "Puck",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_34_am_puck.mp3"
+    },
+    {
+      "id": "bf_emma",
+      "name": "Emma",
+      "gender": "female",
+      "accent": "British",
+      "file": "HCS_34_bf_emma.mp3"
+    }
+  ],
+  "35": [
+    {
+      "id": "af_alloy",
+      "name": "Alloy",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_35_af_alloy.mp3"
+    },
+    {
+      "id": "am_echo",
+      "name": "Echo",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_35_am_echo.mp3"
+    },
+    {
+      "id": "bm_fable",
+      "name": "Fable",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_35_bm_fable.mp3"
+    }
+  ],
+  "36": [
+    {
+      "id": "af_bella",
+      "name": "Bella",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_36_af_bella.mp3"
+    },
+    {
+      "id": "am_eric",
+      "name": "Eric",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_36_am_eric.mp3"
+    },
+    {
+      "id": "bm_george",
+      "name": "George",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_36_bm_george.mp3"
+    }
+  ],
+  "37": [
+    {
+      "id": "af_heart",
+      "name": "Heart",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_37_af_heart.mp3"
+    },
+    {
+      "id": "am_fenrir",
+      "name": "Fenrir",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_37_am_fenrir.mp3"
+    },
+    {
+      "id": "bm_lewis",
+      "name": "Lewis",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_37_bm_lewis.mp3"
+    }
+  ],
+  "38": [
+    {
+      "id": "af_kore",
+      "name": "Kore",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_38_af_kore.mp3"
+    },
+    {
+      "id": "am_liam",
+      "name": "Liam",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_38_am_liam.mp3"
+    },
+    {
+      "id": "bf_emma",
+      "name": "Emma",
+      "gender": "female",
+      "accent": "British",
+      "file": "HCS_38_bf_emma.mp3"
+    }
+  ],
+  "39": [
+    {
+      "id": "af_sarah",
+      "name": "Sarah",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_39_af_sarah.mp3"
+    },
+    {
+      "id": "am_michael",
+      "name": "Michael",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_39_am_michael.mp3"
+    },
+    {
+      "id": "bm_fable",
+      "name": "Fable",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_39_bm_fable.mp3"
+    }
+  ],
+  "60": [
+    {
+      "id": "af_alloy",
+      "name": "Alloy",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_60_af_alloy.mp3"
+    },
+    {
+      "id": "am_eric",
+      "name": "Eric",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_60_am_eric.mp3"
+    },
+    {
+      "id": "bm_george",
+      "name": "George",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_60_bm_george.mp3"
+    }
+  ],
+  "61": [
+    {
+      "id": "af_bella",
+      "name": "Bella",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_61_af_bella.mp3"
+    },
+    {
+      "id": "am_fenrir",
+      "name": "Fenrir",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_61_am_fenrir.mp3"
+    },
+    {
+      "id": "bm_lewis",
+      "name": "Lewis",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_61_bm_lewis.mp3"
+    }
+  ],
+  "79": [
+    {
+      "id": "af_sarah",
+      "name": "Sarah",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_79_af_sarah.mp3"
+    },
+    {
+      "id": "am_fenrir",
+      "name": "Fenrir",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_79_am_fenrir.mp3"
+    },
+    {
+      "id": "bm_fable",
+      "name": "Fable",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_79_bm_fable.mp3"
+    }
+  ],
+  "80": [
+    {
+      "id": "af_alloy",
+      "name": "Alloy",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_80_af_alloy.mp3"
+    },
+    {
+      "id": "am_liam",
+      "name": "Liam",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_80_am_liam.mp3"
+    },
+    {
+      "id": "bm_george",
+      "name": "George",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_80_bm_george.mp3"
+    }
+  ],
+  "81": [
+    {
+      "id": "af_bella",
+      "name": "Bella",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_81_af_bella.mp3"
+    },
+    {
+      "id": "am_michael",
+      "name": "Michael",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_81_am_michael.mp3"
+    },
+    {
+      "id": "bm_lewis",
+      "name": "Lewis",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_81_bm_lewis.mp3"
+    }
+  ],
+  "83": [
+    {
+      "id": "af_kore",
+      "name": "Kore",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_83_af_kore.mp3"
+    },
+    {
+      "id": "am_echo",
+      "name": "Echo",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_83_am_echo.mp3"
+    },
+    {
+      "id": "bm_fable",
+      "name": "Fable",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_83_bm_fable.mp3"
+    }
+  ],
+  "84": [
+    {
+      "id": "af_sarah",
+      "name": "Sarah",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_84_af_sarah.mp3"
+    },
+    {
+      "id": "am_eric",
+      "name": "Eric",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_84_am_eric.mp3"
+    },
+    {
+      "id": "bm_george",
+      "name": "George",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_84_bm_george.mp3"
+    }
+  ],
+  "85": [
+    {
+      "id": "af_alloy",
+      "name": "Alloy",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_85_af_alloy.mp3"
+    },
+    {
+      "id": "am_fenrir",
+      "name": "Fenrir",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_85_am_fenrir.mp3"
+    },
+    {
+      "id": "bm_lewis",
+      "name": "Lewis",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_85_bm_lewis.mp3"
+    }
+  ],
+  "86": [
+    {
+      "id": "af_bella",
+      "name": "Bella",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_86_af_bella.mp3"
+    },
+    {
+      "id": "am_liam",
+      "name": "Liam",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_86_am_liam.mp3"
+    },
+    {
+      "id": "bf_emma",
+      "name": "Emma",
+      "gender": "female",
+      "accent": "British",
+      "file": "HCS_86_bf_emma.mp3"
+    }
+  ],
+  "87": [
+    {
+      "id": "af_heart",
+      "name": "Heart",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_87_af_heart.mp3"
+    },
+    {
+      "id": "am_michael",
+      "name": "Michael",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_87_am_michael.mp3"
+    },
+    {
+      "id": "bm_fable",
+      "name": "Fable",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_87_bm_fable.mp3"
+    }
+  ],
+  "88": [
+    {
+      "id": "af_kore",
+      "name": "Kore",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_88_af_kore.mp3"
+    },
+    {
+      "id": "am_puck",
+      "name": "Puck",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_88_am_puck.mp3"
+    },
+    {
+      "id": "bm_george",
+      "name": "George",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_88_bm_george.mp3"
+    }
+  ],
+  "89": [
+    {
+      "id": "af_sarah",
+      "name": "Sarah",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_89_af_sarah.mp3"
+    },
+    {
+      "id": "am_echo",
+      "name": "Echo",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_89_am_echo.mp3"
+    },
+    {
+      "id": "bm_lewis",
+      "name": "Lewis",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_89_bm_lewis.mp3"
+    }
+  ],
+  "90": [
+    {
+      "id": "af_alloy",
+      "name": "Alloy",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_90_af_alloy.mp3"
+    },
+    {
+      "id": "am_eric",
+      "name": "Eric",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_90_am_eric.mp3"
+    },
+    {
+      "id": "bf_emma",
+      "name": "Emma",
+      "gender": "female",
+      "accent": "British",
+      "file": "HCS_90_bf_emma.mp3"
+    }
+  ],
+  "91": [
+    {
+      "id": "af_bella",
+      "name": "Bella",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_91_af_bella.mp3"
+    },
+    {
+      "id": "am_fenrir",
+      "name": "Fenrir",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_91_am_fenrir.mp3"
+    },
+    {
+      "id": "bm_fable",
+      "name": "Fable",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_91_bm_fable.mp3"
+    }
+  ],
+  "92": [
+    {
+      "id": "af_heart",
+      "name": "Heart",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_92_af_heart.mp3"
+    },
+    {
+      "id": "am_liam",
+      "name": "Liam",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_92_am_liam.mp3"
+    },
+    {
+      "id": "bm_george",
+      "name": "George",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_92_bm_george.mp3"
+    }
+  ],
+  "93": [
+    {
+      "id": "af_kore",
+      "name": "Kore",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_93_af_kore.mp3"
+    },
+    {
+      "id": "am_michael",
+      "name": "Michael",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_93_am_michael.mp3"
+    },
+    {
+      "id": "bm_lewis",
+      "name": "Lewis",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_93_bm_lewis.mp3"
+    }
+  ],
+  "94": [
+    {
+      "id": "af_sarah",
+      "name": "Sarah",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_94_af_sarah.mp3"
+    },
+    {
+      "id": "am_puck",
+      "name": "Puck",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_94_am_puck.mp3"
+    },
+    {
+      "id": "bf_emma",
+      "name": "Emma",
+      "gender": "female",
+      "accent": "British",
+      "file": "HCS_94_bf_emma.mp3"
+    }
+  ],
+  "95": [
+    {
+      "id": "af_alloy",
+      "name": "Alloy",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_95_af_alloy.mp3"
+    },
+    {
+      "id": "am_echo",
+      "name": "Echo",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_95_am_echo.mp3"
+    },
+    {
+      "id": "bm_fable",
+      "name": "Fable",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_95_bm_fable.mp3"
+    }
+  ],
+  "97": [
+    {
+      "id": "af_heart",
+      "name": "Heart",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_97_af_heart.mp3"
+    },
+    {
+      "id": "am_fenrir",
+      "name": "Fenrir",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_97_am_fenrir.mp3"
+    },
+    {
+      "id": "bm_lewis",
+      "name": "Lewis",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_97_bm_lewis.mp3"
+    }
+  ],
+  "98": [
+    {
+      "id": "af_kore",
+      "name": "Kore",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_98_af_kore.mp3"
+    },
+    {
+      "id": "am_liam",
+      "name": "Liam",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_98_am_liam.mp3"
+    },
+    {
+      "id": "bf_emma",
+      "name": "Emma",
+      "gender": "female",
+      "accent": "British",
+      "file": "HCS_98_bf_emma.mp3"
+    }
+  ],
+  "99": [
+    {
+      "id": "af_sarah",
+      "name": "Sarah",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_99_af_sarah.mp3"
+    },
+    {
+      "id": "am_michael",
+      "name": "Michael",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_99_am_michael.mp3"
+    },
+    {
+      "id": "bm_fable",
+      "name": "Fable",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_99_bm_fable.mp3"
+    }
+  ],
+  "100": [
+    {
+      "id": "af_alloy",
+      "name": "Alloy",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_100_af_alloy.mp3"
+    },
+    {
+      "id": "am_puck",
+      "name": "Puck",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_100_am_puck.mp3"
+    },
+    {
+      "id": "bm_george",
+      "name": "George",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_100_bm_george.mp3"
+    }
+  ],
+  "117": [
+    {
+      "id": "af_heart",
+      "name": "Heart",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_117_af_heart.mp3"
+    },
+    {
+      "id": "am_michael",
+      "name": "Michael",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_117_am_michael.mp3"
+    },
+    {
+      "id": "bm_lewis",
+      "name": "Lewis",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_117_bm_lewis.mp3"
+    }
+  ],
+  "124": [
+    {
+      "id": "af_sarah",
+      "name": "Sarah",
+      "gender": "female",
+      "accent": "American",
+      "file": "HCS_124_af_sarah.mp3"
+    },
+    {
+      "id": "am_puck",
+      "name": "Puck",
+      "gender": "male",
+      "accent": "American",
+      "file": "HCS_124_am_puck.mp3"
+    },
+    {
+      "id": "bm_george",
+      "name": "George",
+      "gender": "male",
+      "accent": "British",
+      "file": "HCS_124_bm_george.mp3"
+    }
+  ]
+}

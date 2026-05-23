@@ -1,0 +1,653 @@
+#mode-lmcsa {
+  --lmcsa-paper: #f4f7fc;
+  --lmcsa-ink: #1e293b;
+  --lmcsa-muted: #64748b;
+  --lmcsa-border: rgba(37, 99, 235, 0.15);
+  --lmcsa-accent: #2563eb;
+  --lmcsa-accent-hover: #1d4ed8;
+  --lmcsa-accent-soft: rgba(37, 99, 235, 0.08);
+  --lmcsa-accent-softer: rgba(37, 99, 235, 0.04);
+  --lmcsa-success: #16a34a;
+  --lmcsa-success-bg: rgba(22, 163, 74, 0.06);
+  --lmcsa-success-border: rgba(22, 163, 74, 0.4);
+  --lmcsa-danger: #dc2626;
+  --lmcsa-danger-bg: rgba(220, 38, 38, 0.06);
+  --lmcsa-danger-border: rgba(220, 38, 38, 0.4);
+  
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.1), transparent 35%),
+    radial-gradient(circle at left bottom, rgba(59, 130, 246, 0.08), transparent 30%),
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  padding: 8px 2px 18px;
+}
+
+#mode-lmcsa::before {
+  display: none;
+}
+
+.lmcsa-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.lmcsa-split-layout {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 24px;
+  margin-bottom: 20px;
+  align-items: stretch;
+}
+
+.lmcsa-audio-card,
+.lmcsa-question-card,
+.lmcsa-explanation-card {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  padding: 16px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.lmcsa-card-header {
+  margin-bottom: 16px;
+  border-bottom: 1px solid rgba(37, 99, 235, 0.08);
+  padding-bottom: 12px;
+}
+
+.lmcsa-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.76rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--lmcsa-accent);
+  font-weight: 700;
+}
+
+/* Premium Audio Player Island */
+.lmcsa-audio-player-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(37, 99, 235, 0.1);
+  border-radius: 24px;
+  padding: 30px;
+  box-shadow: 0 10px 30px -10px rgba(37, 99, 235, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  align-items: stretch;
+  margin-top: 8px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.lmcsa-audio-player-card:hover {
+  border-color: rgba(37, 99, 235, 0.18);
+  box-shadow: 0 12px 36px -8px rgba(37, 99, 235, 0.1);
+}
+
+/* Visualizer Bars */
+.lmcsa-visualizer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  height: 48px;
+  margin: 10px 0;
+}
+
+.lmcsa-vis-bar {
+  width: 4px;
+  height: 8px;
+  background-color: var(--lmcsa-accent);
+  border-radius: 2px;
+  opacity: 0.3;
+  transition: height 0.15s ease, opacity 0.15s ease;
+}
+
+.lmcsa-visualizer.is-playing .lmcsa-vis-bar {
+  opacity: 0.85;
+  animation: lmcsa-bounce 1s ease-in-out infinite alternate;
+}
+
+.lmcsa-vis-bar:nth-child(1) { animation-delay: 0.1s; }
+.lmcsa-vis-bar:nth-child(2) { animation-delay: 0.3s; }
+.lmcsa-vis-bar:nth-child(3) { animation-delay: 0.5s; }
+.lmcsa-vis-bar:nth-child(4) { animation-delay: 0.2s; }
+.lmcsa-vis-bar:nth-child(5) { animation-delay: 0.4s; }
+.lmcsa-vis-bar:nth-child(6) { animation-delay: 0.6s; }
+.lmcsa-vis-bar:nth-child(7) { animation-delay: 0.15s; }
+
+@keyframes lmcsa-bounce {
+  0% { height: 8px; }
+  100% { height: 36px; }
+}
+
+/* Audio Controls */
+.lmcsa-audio-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Play/Pause Button */
+.lmcsa-play-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, var(--lmcsa-accent) 0%, #1d4ed8 100%);
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.35);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.lmcsa-play-btn:hover {
+  transform: scale(1.06);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45);
+}
+
+.lmcsa-play-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+  box-shadow: none;
+}
+
+.lmcsa-play-btn:active {
+  transform: scale(0.96);
+}
+
+.lmcsa-play-btn svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+/* Progress Area */
+.lmcsa-progress-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-grow: 1;
+}
+
+.lmcsa-timeline-wrapper {
+  position: relative;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.lmcsa-timeline {
+  width: 100%;
+  height: 6px;
+  background: rgba(37, 99, 235, 0.1);
+  border-radius: 3px;
+  position: relative;
+  overflow: visible;
+}
+
+.lmcsa-timeline-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--lmcsa-accent) 0%, #3b82f6 100%);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.lmcsa-timeline-thumb {
+  position: absolute;
+  top: 50%;
+  left: 0%;
+  width: 12px;
+  height: 12px;
+  background: #ffffff;
+  border: 2px solid var(--lmcsa-accent);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+  transition: transform 0.1s ease;
+}
+
+.lmcsa-timeline-wrapper:hover .lmcsa-timeline-thumb {
+  transform: translate(-50%, -50%) scale(1.3);
+}
+
+.lmcsa-time-display {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
+  font-size: 0.75rem;
+  color: var(--lmcsa-muted);
+  font-weight: 500;
+}
+
+/* Selector settings */
+.lmcsa-settings-row {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  align-items: center;
+  border-top: 1px solid rgba(37, 99, 235, 0.08);
+  padding-top: 18px;
+}
+
+.lmcsa-setting-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-grow: 1;
+  min-width: 140px;
+}
+
+.lmcsa-setting-label {
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--lmcsa-muted);
+  font-weight: 700;
+}
+
+/* Voice Dropdown Picker */
+.lmcsa-voice-select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.lmcsa-voice-select {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  padding: 10px 16px;
+  padding-right: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(37, 99, 235, 0.15);
+  background-color: #ffffff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.88rem;
+  color: var(--lmcsa-ink);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lmcsa-voice-select:hover {
+  border-color: var(--lmcsa-accent);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.06);
+}
+
+.lmcsa-voice-select:focus {
+  outline: none;
+  border-color: var(--lmcsa-accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.lmcsa-voice-select-wrapper::after {
+  content: "\25BE";
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.65rem;
+  color: var(--lmcsa-muted);
+  pointer-events: none;
+}
+
+/* Speed Button Group */
+.lmcsa-speed-group {
+  display: flex;
+  background: rgba(37, 99, 235, 0.05);
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(37, 99, 235, 0.05);
+  align-self: flex-start;
+}
+
+.lmcsa-speed-btn {
+  border: none;
+  background: transparent;
+  color: var(--lmcsa-muted);
+  padding: 6px 12px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.lmcsa-speed-btn:hover {
+  color: var(--lmcsa-accent);
+}
+
+.lmcsa-speed-btn.is-active {
+  background: #ffffff;
+  color: var(--lmcsa-accent);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* Question Prompts & Subtitles */
+.lmcsa-question-prompt {
+  font-family: 'Outfit', sans-serif;
+  color: var(--lmcsa-ink);
+  font-weight: 600;
+  font-size: 1.15rem;
+  line-height: 1.5;
+  margin: 0 0 16px 0;
+}
+
+.lmcsa-subtitle {
+  font-size: 0.86rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--lmcsa-muted);
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.lmcsa-choices-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Choice card designs */
+.lmcsa-choice-card {
+  appearance: none;
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(37, 99, 235, 0.12);
+  background: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+
+.lmcsa-choice-card:not(:disabled):hover {
+  transform: translateY(-2px);
+  border-color: var(--lmcsa-accent);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.06);
+}
+
+.lmcsa-choice-card:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.2);
+  outline-offset: 2px;
+}
+
+.lmcsa-choice-card:disabled {
+  cursor: default;
+}
+
+/* Radio button appearance */
+.lmcsa-choice-radio {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid rgba(37, 99, 235, 0.25);
+  background: #fff;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  margin-top: 2px;
+}
+
+.lmcsa-choice-radio::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  opacity: 0;
+  transition: all 0.15s ease;
+}
+
+.lmcsa-choice-text {
+  font-family: 'Outfit', sans-serif;
+  color: var(--lmcsa-ink);
+  font-size: 0.98rem;
+  line-height: 1.45;
+}
+
+/* Active Selected state */
+.lmcsa-choice-card.is-selected {
+  border-color: var(--lmcsa-accent);
+  background: var(--lmcsa-accent-soft);
+}
+
+.lmcsa-choice-card.is-selected .lmcsa-choice-radio {
+  background: var(--lmcsa-accent);
+  border-color: var(--lmcsa-accent);
+}
+
+.lmcsa-choice-card.is-selected .lmcsa-choice-radio::after {
+  opacity: 1;
+}
+
+/* Correctly selected choice: Solid green border and soft green bg */
+.lmcsa-choice-card.is-correct-selected {
+  border-color: var(--lmcsa-success);
+  background: var(--lmcsa-success-bg);
+  pointer-events: none;
+}
+.lmcsa-choice-card.is-correct-selected .lmcsa-choice-radio {
+  background: var(--lmcsa-success);
+  border-color: var(--lmcsa-success);
+}
+.lmcsa-choice-card.is-correct-selected .lmcsa-choice-radio::after {
+  opacity: 1;
+}
+
+/* Incorrectly selected choice: Solid red border and soft red bg */
+.lmcsa-choice-card.is-incorrect-selected {
+  border-color: var(--lmcsa-danger);
+  background: var(--lmcsa-danger-bg);
+  pointer-events: none;
+}
+.lmcsa-choice-card.is-incorrect-selected .lmcsa-choice-radio {
+  background: var(--lmcsa-danger);
+  border-color: var(--lmcsa-danger);
+}
+.lmcsa-choice-card.is-incorrect-selected .lmcsa-choice-radio::after {
+  opacity: 1;
+}
+
+/* Missed correct answer: Dashed green border and very soft green bg */
+.lmcsa-choice-card.is-missed-correct {
+  border: 2px dashed var(--lmcsa-success);
+  background: rgba(22, 163, 74, 0.04);
+  pointer-events: none;
+}
+.lmcsa-choice-card.is-missed-correct .lmcsa-choice-radio {
+  border-color: var(--lmcsa-success);
+  border-style: dashed;
+}
+
+/* Disabled state for unselected incorrect options after submit */
+.lmcsa-choice-card.is-disabled {
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+/* Actions footer */
+.lmcsa-footer-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 10px;
+}
+
+.lmcsa-buttons-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Result panel */
+.lmcsa-result-box {
+  padding: 16px 20px;
+  border-radius: 18px;
+  border: 1px solid var(--lmcsa-border);
+  background: rgba(255, 255, 255, 0.88);
+  display: flex;
+  flex-direction: column;
+}
+
+.lmcsa-result-header {
+  font-weight: 800;
+  font-size: 1.1rem;
+  margin-bottom: 4px;
+}
+
+.lmcsa-result-header.is-correct {
+  color: var(--lmcsa-success);
+}
+
+.lmcsa-result-header.is-incorrect {
+  color: var(--lmcsa-danger);
+}
+
+.lmcsa-result-desc {
+  font-size: 0.92rem;
+  color: var(--lmcsa-muted);
+}
+
+/* Explanation Panel accordion styling */
+.lmcsa-explanation-panel {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.lmcsa-explanation-card {
+  padding: 24px;
+  background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+  border: 1px solid rgba(37, 99, 235, 0.12);
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.02);
+}
+
+.lmcsa-explanation-header {
+  font-weight: 700;
+  color: var(--lmcsa-accent);
+  font-size: 0.96rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 12px;
+  border-bottom: 1px dashed rgba(37, 99, 235, 0.2);
+  padding-bottom: 6px;
+}
+
+.lmcsa-explanation-content {
+  font-size: 0.96rem;
+  color: var(--lmcsa-ink);
+  line-height: 1.65;
+}
+
+.lmcsa-explanation-content p {
+  margin: 0 0 12px 0;
+}
+
+.lmcsa-explanation-content strong {
+  color: var(--lmcsa-accent);
+}
+
+.lmcsa-inline-code {
+  display: inline-block;
+  padding: 0 0.25em;
+  border-radius: 4px;
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--lmcsa-accent);
+  font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
+  font-size: 0.92em;
+}
+
+/* Transcript Container (Shown after submit) */
+.lmcsa-transcript-section {
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid rgba(37, 99, 235, 0.1);
+  border-radius: 20px;
+}
+
+.lmcsa-transcript-header {
+  font-weight: 700;
+  color: var(--lmcsa-accent);
+  font-size: 0.96rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 12px;
+  border-bottom: 1px dashed rgba(37, 99, 235, 0.2);
+  padding-bottom: 6px;
+}
+
+.lmcsa-transcript-text {
+  font-family: 'Lora', serif;
+  color: var(--lmcsa-ink);
+  font-size: 1.04rem;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+/* Responsive queries */
+@media (max-width: 900px) {
+  .lmcsa-split-layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .lmcsa-audio-player-card {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  #mode-lmcsa {
+    padding-inline: 0;
+  }
+  
+  .lmcsa-audio-card,
+  .lmcsa-question-card,
+  .lmcsa-explanation-card {
+    padding: 12px 0;
+  }
+  
+  .lmcsa-result-box {
+    border-radius: 16px;
+    padding: 16px;
+  }
+  
+  .lmcsa-settings-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+}

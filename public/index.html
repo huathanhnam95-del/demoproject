@@ -30,6 +30,7 @@
   <link rel="stylesheet" href="lmcsa-mode.css">
   <link rel="stylesheet" href="hcs-mode.css">
   <link rel="stylesheet" href="smw-mode.css">
+  <link rel="stylesheet" href="hiw-mode.css">
   <link rel="stylesheet" href="read-aloud-question-picker-v7.css?v=20260507_ra_v7">
   <link rel="stylesheet" href="style-scaffolding.css?v=20260123_mode_fix">
   <link rel="stylesheet" href="/site-header.css">
@@ -1704,6 +1705,35 @@
                 </div>
               </div>
 
+              <!-- HIW Mode Card -->
+              <div id="mode-btn-hiw" class="modern-card transition-card mode-switch-btn" data-practice-skill="listening"
+                onclick="window.switchToMode('hiw')" tabindex="0" role="button" aria-label="Highlight Incorrect Words mode">
+                <span class="badge new">New</span>
+                <div class="card-visual visual-hiw">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+                      <!-- Document structure -->
+                      <rect x="14" y="16" width="44" height="40" rx="4" stroke="currentColor" stroke-width="2" fill="var(--visual-bg)" />
+                      <!-- Text lines -->
+                      <line x1="20" y1="26" x2="52" y2="26" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.3" />
+                      <!-- Highlighted incorrect word block (yellow highlight) -->
+                      <rect x="20" y="32" width="20" height="8" rx="2" fill="var(--visual-accent)" opacity="0.8" />
+                      <line x1="22" y1="36" x2="38" y2="36" stroke="white" stroke-width="2" stroke-linecap="round" />
+                      <line x1="44" y1="36" x2="52" y2="36" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.3" />
+                      <!-- Another line with a incorrect selection (red highlight) -->
+                      <rect x="34" y="42" width="18" height="8" rx="2" fill="#ef4444" opacity="0.8" />
+                      <line x1="36" y1="46" x2="50" y2="46" stroke="white" stroke-width="2" stroke-linecap="round" />
+                      <line x1="20" y1="46" x2="30" y2="46" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.3" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Highlight Incorrect Words</h3>
+                  <p>Listen to an audio recording and select the words in the transcript that do not match what is said.</p>
+                  <button class="card-cta">Practice Now</button>
+                </div>
+              </div>
+
               <!-- Watch Mode Card -->
               <div id="mode-btn-watch" class="modern-card transition-card mode-switch-btn"
                 data-practice-skill="listening" onclick="window.switchToMode('watch')" tabindex="0" role="button"
@@ -1993,6 +2023,7 @@
           <button id="tab-lmcsa" class="tab-btn" type="button">LMCSA</button>
           <button id="tab-hcs" class="tab-btn" type="button">HCS</button>
           <button id="tab-smw" class="tab-btn" type="button">SMW</button>
+          <button id="tab-hiw" class="tab-btn" type="button">HIW</button>
           <button id="tab-rmcsa" class="tab-btn" type="button">RMCSA</button>
           <button id="tab-rmcma" class="tab-btn" type="button">RMCMA</button>
           <button id="tab-rop" class="tab-btn" type="button">ROP</button>
@@ -3700,6 +3731,166 @@
 
   <!-- Audio Element -->
   <audio id="smw-audio-element" style="display: none;"></audio>
+</div>
+
+<!-- HIW Mode Panel -->
+<div id="mode-hiw" class="mode-panel" style="display: none;">
+  <!-- v7 Question Picker -->
+  <div class="ra-v7-picker-bar" id="hiw-v7-picker-bar">
+    <div class="ra-v7-picker-inner">
+      <div class="ra-v7-nav" role="group" aria-label="HIW navigation">
+        <button id="hiw-v7-prev-btn" class="ra-v7-icon-btn" type="button" disabled title="Previous question">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+        </button>
+        <button id="hiw-v7-question-pill" class="ra-v7-question-pill" type="button" aria-haspopup="dialog" aria-expanded="false">
+          Loading...
+        </button>
+        <button id="hiw-v7-next-btn" class="ra-v7-icon-btn" type="button" title="Next question">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="hiw-v7-backdrop" class="ra-v7-backdrop" aria-hidden="true"></div>
+  <div id="hiw-v7-sheet" class="ra-v7-sheet" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
+    <span class="ra-v7-grabber" aria-hidden="true"></span>
+    <div class="ra-v7-sheet-header">
+      <div class="ra-v7-sheet-title">Question Picker</div>
+      <button id="hiw-v7-sheet-close" class="ra-v7-sheet-close" type="button" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+    <div class="ra-v7-sheet-body">
+      <div id="hiw-v7-panel-jump" role="tabpanel">
+        <label class="ra-v7-sr-only" for="hiw-v7-jump-search">Search</label>
+        <input id="hiw-v7-jump-search" class="ra-v7-search" type="search" autocomplete="off" placeholder="Search questions...">
+        <div class="ra-v7-section-title">Questions</div>
+        <div id="hiw-v7-jump-list" class="ra-v7-list" role="listbox" aria-label="Questions"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HIW Main Split Container -->
+  <div class="hiw-container">
+    <div class="hiw-split-layout">
+      <!-- Left Panel: Premium Audio Player -->
+      <div class="hiw-audio-card">
+        <div class="hiw-card-header">
+          <span class="hiw-kicker">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; vertical-align: middle;"><path d="M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+            Audio Source
+          </span>
+        </div>
+        <div class="hiw-audio-player-card">
+          <!-- Animated visualizer bars -->
+          <div class="hiw-visualizer" id="hiw-visualizer">
+            <span class="hiw-vis-bar"></span>
+            <span class="hiw-vis-bar"></span>
+            <span class="hiw-vis-bar"></span>
+            <span class="hiw-vis-bar"></span>
+            <span class="hiw-vis-bar"></span>
+            <span class="hiw-vis-bar"></span>
+            <span class="hiw-vis-bar"></span>
+          </div>
+
+          <!-- Controls row -->
+          <div class="hiw-audio-controls-row">
+            <button id="hiw-play-btn" class="hiw-play-btn" type="button" aria-label="Play audio" aria-disabled="true" disabled>
+              <!-- Play Icon -->
+              <svg id="hiw-play-icon" viewBox="0 0 24 24" width="24" height="24"><polygon points="8,5 19,12 8,19"></polygon></svg>
+              <!-- Pause Icon -->
+              <svg id="hiw-pause-icon" viewBox="0 0 24 24" width="24" height="24" style="display: none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+            </button>
+
+            <div class="hiw-progress-container">
+              <div id="hiw-timeline-wrapper" class="hiw-timeline-wrapper">
+                <div class="hiw-timeline">
+                  <div id="hiw-timeline-fill" class="hiw-timeline-fill"></div>
+                  <div id="hiw-timeline-thumb" class="hiw-timeline-thumb"></div>
+                </div>
+              </div>
+              <div class="hiw-time-display">
+                <span id="hiw-time-current">00:00</span>
+                <span id="hiw-time-duration">00:00</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Settings selectors -->
+          <div class="hiw-settings-row">
+            <!-- Voice Picker -->
+            <div class="hiw-setting-group">
+              <span class="hiw-setting-label">Voice Accent</span>
+              <div class="hiw-voice-select-wrapper">
+                <select id="hiw-voice-select" class="hiw-voice-select" aria-label="Select voice model">
+                  <!-- Option will be populated dynamically -->
+                </select>
+              </div>
+            </div>
+
+            <!-- Speed selector -->
+            <div class="hiw-setting-group">
+              <span class="hiw-setting-label">Playback Speed</span>
+              <div class="hiw-speed-group">
+                <button class="hiw-speed-btn" data-speed="0.8" type="button">0.8x</button>
+                <button class="hiw-speed-btn is-active" data-speed="1.0" type="button">1.0x</button>
+                <button class="hiw-speed-btn" data-speed="1.2" type="button">1.2x</button>
+              </div>
+            </div>
+
+            <!-- Volume selector -->
+            <div class="hiw-setting-group">
+              <span class="hiw-setting-label">Volume</span>
+              <div class="hiw-volume-container">
+                <span id="hiw-volume-icon" class="hiw-volume-icon">🔊</span>
+                <input type="range" id="hiw-volume-slider" class="hiw-volume-slider" min="0" max="1" step="0.05" value="1.0" aria-label="Volume">
+                <span id="hiw-volume-text" class="hiw-volume-text">100%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel: Transcription Passage -->
+      <div class="hiw-text-card">
+        <div class="hiw-card-header">
+          <span class="hiw-kicker">Transcription passage</span>
+        </div>
+        <p class="hiw-result-desc" style="margin-top: 4px; margin-bottom: 12px; font-weight: 500;">
+          Identify the words in the text that do not match the spoken audio. Click them to highlight.
+        </p>
+        <div id="hiw-passage-container" class="hiw-passage-container">
+          <!-- Text passage with clickable word tokens will be generated here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions and Results Panel -->
+    <div class="hiw-footer-actions">
+      <div class="hiw-buttons-row">
+        <button id="hiw-submit-btn" class="modern-btn modern-btn--check" type="button" disabled>Submit</button>
+        <button id="hiw-retry-btn" class="modern-btn modern-btn--retry" type="button" style="display: none;">Retry</button>
+        <button id="hiw-explanation-toggle" class="modern-btn modern-btn--secondary" type="button" aria-expanded="false" style="display: none;">Show explanation</button>
+      </div>
+
+      <!-- Score Banner -->
+      <div id="hiw-result-box" class="hiw-result-box" role="status" aria-live="polite" style="display: none;"></div>
+
+      <!-- Accordion Explanation Panel -->
+      <div id="hiw-explanation-panel" class="hiw-explanation-panel" style="display: none;">
+        <div class="hiw-explanation-card">
+          <div class="hiw-explanation-header">Detailed Explanation</div>
+          <div id="hiw-explanation-content" class="hiw-explanation-content">
+            <!-- HTML Explanation will be populated here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio Element -->
+  <audio id="hiw-audio-element" style="display: none;"></audio>
 </div>
 
 <!-- HCS Mode Panel -->

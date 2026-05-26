@@ -139,6 +139,7 @@ async function loadQuestionsAndPrepareExcel() {
       
       if (String(currentTranscript).trim() !== cleanTranscript) {
         row.getCell(4).value = cleanTranscript;
+        row.commit();
         xlModified = true;
       }
 

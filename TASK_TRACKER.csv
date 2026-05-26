@@ -300,6 +300,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 307,2026-05-23,Implement HCS Highlight Correct Summary practice mode with Kokoro TTS and GemmaAI,Done,2026-05-23
 308,2026-05-23,Implement Select Missing Word practice mode,Done,2026-05-23
 309,2026-05-24,Investigate IP address 199.36.158.100 source,Done,2026-05-24
-310,2026-05-25,Implement Highlight Incorrect Words listening practice mode,In Progress,
+310,2026-05-25,Implement Highlight Incorrect Words listening practice mode,Done,2026-05-26
 311,2026-05-26,Review debug and refactor SMW mode,Done,2026-05-26
 312,2026-05-26,Reduce SMW beep volume by 30 percent,Done,2026-05-26
+313,2026-05-26,Reduce SMW beep further and add volume changer,Done,2026-05-26

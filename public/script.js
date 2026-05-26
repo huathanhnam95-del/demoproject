@@ -741,7 +741,7 @@
       listening: {
         label: 'Listening',
         kind: 'live-skill',
-        modeIds: ['type', 'collo-dictate', 'extended', 'watch', 'notes', 'lmcma', 'lmcsa', 'hcs']
+        modeIds: ['type', 'collo-dictate', 'extended', 'watch', 'notes', 'lmcma', 'lmcsa', 'hcs', 'smw', 'hiw']
       },
       reading: {
         label: 'Reading',
@@ -867,6 +867,20 @@
         isLive: true,
         launcherVisible: true
       },
+      smw: {
+        label: 'Select Missing Word',
+        skill: 'listening',
+        hasTutorial: false,
+        isLive: true,
+        launcherVisible: true
+      },
+      hiw: {
+        label: 'Highlight Incorrect Words',
+        skill: 'listening',
+        hasTutorial: false,
+        isLive: true,
+        launcherVisible: true
+      },
       rop: {
         label: 'Re-order Paragraph',
         skill: 'reading',
@@ -926,7 +940,7 @@
     },
     [SCOPE_PTE]: {
       visibleModes: new Set([
-        'read-aloud', 'speak', 'describe-image', 'notes', 'asq', 'sgd', 'essay', 'swt', 'type', 'rfib', 'dd', 'rmcsa', 'rmcma', 'rop', 'extended', 'rts', 'lmcma', 'lmcsa', 'hcs'
+        'read-aloud', 'speak', 'describe-image', 'notes', 'asq', 'sgd', 'essay', 'swt', 'type', 'rfib', 'dd', 'rmcsa', 'rmcma', 'rop', 'extended', 'rts', 'lmcma', 'lmcsa', 'hcs', 'smw', 'hiw'
       ]),
       modeOverrides: Object.freeze({
         speak: { label: 'Repeat Sentence' },
@@ -942,7 +956,9 @@
         dd: { label: 'Drag & Drop' },
         lmcma: { label: 'Multiple Choice, Multiple Answers' },
         lmcsa: { label: 'Multiple Choice, Single Answer' },
-        hcs: { label: 'Highlight Correct Summary' }
+        hcs: { label: 'Highlight Correct Summary' },
+        smw: { label: 'Select Missing Word' },
+        hiw: { label: 'Highlight Incorrect Words' }
       })
     }
   };
@@ -1673,7 +1689,7 @@
   };
 
   async function ensureModeAssets(mode) {
-    if (!['watch', 'notes', 'rfib', 'rmcsa', 'rmcma', 'rop', 'dd', 'lmcma', 'lmcsa', 'hcs'].includes(mode)) return true;
+    if (!['watch', 'notes', 'rfib', 'rmcsa', 'rmcma', 'rop', 'dd', 'lmcma', 'lmcsa', 'hcs', 'smw', 'hiw'].includes(mode)) return true;
     if (!window.BELLazyLoader || typeof window.BELLazyLoader.ensureModeScripts !== 'function') {
       return true;
     }
@@ -1769,6 +1785,12 @@
     if (leavingMode === 'hcs' && mode !== 'hcs') {
       window.HCSMode?.onExit?.();
     }
+    if (leavingMode === 'smw' && mode !== 'smw') {
+      window.SMWMode?.onExit?.();
+    }
+    if (leavingMode === 'hiw' && mode !== 'hiw') {
+      window.HIWMode?.onExit?.();
+    }
     if (leavingMode === 'rop' && mode !== 'rop') {
       window.ROPMode?.onExit?.();
     }
@@ -1809,7 +1831,7 @@
       return;
     }
 
-    if (mode === 'watch' || mode === 'notes' || mode === 'rfib' || mode === 'rmcsa' || mode === 'rmcma' || mode === 'rop' || mode === 'dd' || mode === 'lmcma' || mode === 'lmcsa' || mode === 'hcs') {
+    if (mode === 'watch' || mode === 'notes' || mode === 'rfib' || mode === 'rmcsa' || mode === 'rmcma' || mode === 'rop' || mode === 'dd' || mode === 'lmcma' || mode === 'lmcsa' || mode === 'hcs' || mode === 'smw' || mode === 'hiw') {
       const assetsReady = await ensureModeAssets(mode);
       if (!assetsReady) return;
     }
@@ -1936,6 +1958,10 @@
         await window.LMCSAMode.activate();
       } else if (mode === 'hcs' && window.HCSMode && typeof window.HCSMode.activate === 'function') {
         await window.HCSMode.activate();
+      } else if (mode === 'smw' && window.SMWMode && typeof window.SMWMode.activate === 'function') {
+        await window.SMWMode.activate();
+      } else if (mode === 'hiw' && window.HIWMode && typeof window.HIWMode.activate === 'function') {
+        await window.HIWMode.activate();
       } else if (mode === 'rop' && window.ROPMode && typeof window.ROPMode.activate === 'function') {
         await window.ROPMode.activate();
       } else if (mode === 'dd' && window.DDMode && typeof window.DDMode.activate === 'function') {

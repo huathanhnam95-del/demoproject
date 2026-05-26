@@ -216,6 +216,16 @@
     loadedModes.add('lmcsa');
   }
 
+  async function ensureSmwModeLoaded() {
+    if (loadedModes.has('smw') || window.SMWMode) {
+      loadedModes.add('smw');
+      return;
+    }
+    await ensureXlsxLoaded();
+    await loadScript('smw-mode.js');
+    loadedModes.add('smw');
+  }
+
   async function ensureHcsModeLoaded() {
     if (loadedModes.has('hcs') || window.HCSMode) {
       loadedModes.add('hcs');
@@ -244,6 +254,16 @@
     await ensureXlsxLoaded();
     await loadScript('rop-mode.js');
     loadedModes.add('rop');
+  }
+
+  async function ensureHiwModeLoaded() {
+    if (loadedModes.has('hiw') || window.HIWMode) {
+      loadedModes.add('hiw');
+      return;
+    }
+    await ensureXlsxLoaded();
+    await loadScript('hiw-mode.js');
+    loadedModes.add('hiw');
   }
 
   async function ensureDdModeLoaded() {
@@ -288,12 +308,20 @@
       await ensureHcsModeLoaded();
       return true;
     }
+    if (mode === 'smw') {
+      await ensureSmwModeLoaded();
+      return true;
+    }
     if (mode === 'rmcsa') {
       await ensureRmcsaModeLoaded();
       return true;
     }
     if (mode === 'rop') {
       await ensureRopModeLoaded();
+      return true;
+    }
+    if (mode === 'hiw') {
+      await ensureHiwModeLoaded();
       return true;
     }
     return false;
@@ -308,8 +336,10 @@
     ensureRmcmaModeLoaded,
     ensureLmcmaModeLoaded,
     ensureLmcsaModeLoaded,
+    ensureSmwModeLoaded,
     ensureRmcsaModeLoaded,
     ensureRopModeLoaded,
+    ensureHiwModeLoaded,
     ensureHcsModeLoaded,
     ensureCompromiseLoaded
   };

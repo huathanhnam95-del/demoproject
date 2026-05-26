@@ -302,3 +302,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 309,2026-05-24,Investigate IP address 199.36.158.100 source,Done,2026-05-24
 310,2026-05-25,Implement Highlight Incorrect Words listening practice mode,In Progress,
 311,2026-05-26,Review debug and refactor SMW mode,Done,2026-05-26
+312,2026-05-26,Reduce SMW beep volume by 30 percent,Done,2026-05-26

@@ -1,3 +1,11 @@
+## [V1.8.5] - 2026-05-26
+
+### Improved
+
+- **Select Missing Word (SMW) Beep Volume Adjustment**:
+  - Reduced the volume of the source `beep.mp3` sound by 30% using ffmpeg (volume factor 0.7).
+  - Automatically processed and rebuilt all 267 pre-generated audio files in `public/database/SMW/audio` by trimming the old beep at the end (last 0.8s) and appending the quieter version.
+
 ## [V1.8.4] - 2026-05-26
 
 ### Fixed

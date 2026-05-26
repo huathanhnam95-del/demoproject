@@ -19,7 +19,9 @@
     explanationVisible: false,
     currentSpeed: 1.0,
     activeVoiceId: null,
-    activeLoadedMetadataListener: null
+    activeLoadedMetadataListener: null,
+    volume: parseFloat(localStorage.getItem('smw-volume') || '1.0'),
+    preMuteVolume: null
   };
 
   const elements = {};
@@ -158,6 +160,9 @@
     elements.timeDuration = document.getElementById('smw-time-duration');
     elements.voiceSelect = document.getElementById('smw-voice-select');
     elements.speedBtns = document.querySelectorAll('.smw-speed-btn');
+    elements.volumeSlider = document.getElementById('smw-volume-slider');
+    elements.volumeText = document.getElementById('smw-volume-text');
+    elements.volumeIcon = document.getElementById('smw-volume-icon');
 
     // practice card elements
     elements.passageText = document.getElementById('smw-passage-text'); // audio transcript text container
@@ -277,6 +282,59 @@
         }
       });
     });
+
+    if (elements.volumeSlider) {
+      elements.volumeSlider.value = state.volume;
+      if (elements.volumeText) {
+        elements.volumeText.textContent = `${Math.round(state.volume * 100)}%`;
+      }
+      updateVolumeIcon(state.volume);
+
+      elements.volumeSlider.addEventListener('input', (e) => {
+        const vol = parseFloat(e.target.value);
+        if (Number.isFinite(vol)) {
+          state.volume = vol;
+          localStorage.setItem('smw-volume', String(vol));
+          if (elements.audioElement) {
+            elements.audioElement.volume = vol;
+          }
+          if (elements.volumeText) {
+            elements.volumeText.textContent = `${Math.round(vol * 100)}%`;
+          }
+          updateVolumeIcon(vol);
+        }
+      });
+    }
+
+    if (elements.volumeIcon) {
+      elements.volumeIcon.addEventListener('click', () => {
+        if (!elements.audioElement || !elements.volumeSlider) return;
+        if (state.volume > 0) {
+          state.preMuteVolume = state.volume;
+          state.volume = 0;
+        } else {
+          state.volume = state.preMuteVolume || 1.0;
+        }
+        elements.volumeSlider.value = state.volume;
+        elements.audioElement.volume = state.volume;
+        if (elements.volumeText) {
+          elements.volumeText.textContent = `${Math.round(state.volume * 100)}%`;
+        }
+        updateVolumeIcon(state.volume);
+        localStorage.setItem('smw-volume', String(state.volume));
+      });
+    }
+  }
+
+  function updateVolumeIcon(vol) {
+    if (!elements.volumeIcon) return;
+    if (vol === 0) {
+      elements.volumeIcon.textContent = '🔈';
+    } else if (vol < 0.5) {
+      elements.volumeIcon.textContent = '🔉';
+    } else {
+      elements.volumeIcon.textContent = '🔊';
+    }
   }
 
   /* Audio player logic */
@@ -285,6 +343,7 @@
 
     if (elements.audioElement.paused) {
       elements.audioElement.playbackRate = state.currentSpeed;
+      elements.audioElement.volume = state.volume;
       elements.audioElement.play().catch((err) => {
         console.error('[SMWMode] Play failed:', err);
       });
@@ -377,11 +436,13 @@
     const curTime = elements.audioElement.currentTime;
 
     elements.audioElement.src = audioUrl;
+    elements.audioElement.volume = state.volume;
     elements.audioElement.load();
 
     const restoreState = () => {
       elements.audioElement.currentTime = curTime;
       elements.audioElement.playbackRate = state.currentSpeed;
+      elements.audioElement.volume = state.volume;
       if (wasPlaying) {
         elements.audioElement.play().catch((err) => console.log('[SMWMode] Switch play failed:', err));
       }
@@ -413,8 +474,9 @@
     }
   }
 
-  function closePicker() {
+  function closePicker({ restoreFocus = true } = {}) {
     if (!elements.sheet || !elements.backdrop) return;
+    const shouldRestoreFocus = restoreFocus && state.pickerOpen;
     state.pickerOpen = false;
     elements.backdrop.classList.remove('is-visible');
     elements.backdrop.setAttribute('aria-hidden', 'true');
@@ -422,6 +484,9 @@
     elements.sheet.setAttribute('aria-hidden', 'true');
     if (elements.questionPill) {
       elements.questionPill.setAttribute('aria-expanded', 'false');
+      if (shouldRestoreFocus) {
+        elements.questionPill.focus();
+      }
     }
   }
 
@@ -661,6 +726,7 @@
         const firstVoiceUrl = `/database/SMW/audio/${qId}/${voices[0].file}`;
         if (elements.audioElement) {
           elements.audioElement.src = firstVoiceUrl;
+          elements.audioElement.volume = state.volume;
           elements.audioElement.load();
         }
         setAudioControlsEnabled(true);
@@ -698,7 +764,9 @@
         card.type = 'button';
         card.className = 'smw-choice-card';
         card.dataset.index = idx;
-        card.setAttribute('aria-pressed', 'false');
+        card.setAttribute('role', 'radio');
+        card.setAttribute('aria-checked', 'false');
+        card.tabIndex = idx === 0 ? 0 : -1;
         
         const radio = document.createElement('div');
         radio.className = 'smw-choice-radio';
@@ -710,6 +778,7 @@
         card.appendChild(textDiv);
 
         card.addEventListener('click', () => selectChoice(idx));
+        card.addEventListener('keydown', (event) => handleChoiceKeydown(event, idx));
         elements.choicesContainer.appendChild(card);
       });
     }
@@ -720,6 +789,27 @@
       elements.submitBtn.disabled = true; // Disabled until an option is selected
     }
     resetFeedbackUI();
+  }
+
+  function handleChoiceKeydown(event, idx) {
+    if (state.submitted || state.shuffledChoices.length === 0) return;
+
+    let nextIndex = idx;
+    if (event.key === 'ArrowDown' || event.key === 'ArrowRight') {
+      nextIndex = (idx + 1) % state.shuffledChoices.length;
+    } else if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') {
+      nextIndex = (idx - 1 + state.shuffledChoices.length) % state.shuffledChoices.length;
+    } else if (event.key === 'Home') {
+      nextIndex = 0;
+    } else if (event.key === 'End') {
+      nextIndex = state.shuffledChoices.length - 1;
+    } else {
+      return;
+    }
+
+    event.preventDefault();
+    selectChoice(nextIndex);
+    elements.choicesContainer?.querySelectorAll('.smw-choice-card')[nextIndex]?.focus();
   }
 
   function selectChoice(idx) {
@@ -735,7 +825,8 @@
       cards.forEach((card, i) => {
         const isSelected = state.selectedIndices.has(i);
         card.classList.toggle('is-selected', isSelected);
-        card.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+        card.setAttribute('aria-checked', isSelected ? 'true' : 'false');
+        card.tabIndex = isSelected ? 0 : -1;
       });
     }
 
@@ -848,15 +939,13 @@
     }
   }
 
-  async function loadQuestionById(questionId) {
+  async function loadQuestionByIdOrFirst(questionId) {
     if (state.questions.length === 0) {
       await loadData();
     }
     const numericId = Number(questionId);
     const index = state.questions.findIndex(q => Number(q.id) === numericId);
-    if (index !== -1) {
-      loadQuestion(index);
-    }
+    loadQuestion(index === -1 ? 0 : index);
   }
 
   /* Global Controller Hooks */
@@ -865,6 +954,17 @@
     if (!state.initialized) {
       setupEventListeners();
       state.initialized = true;
+    }
+
+    if (elements.volumeSlider) {
+      elements.volumeSlider.value = state.volume;
+    }
+    if (elements.volumeText) {
+      elements.volumeText.textContent = `${Math.round(state.volume * 100)}%`;
+    }
+    updateVolumeIcon(state.volume);
+    if (elements.audioElement) {
+      elements.audioElement.volume = state.volume;
     }
 
     if (state.questions.length === 0) {
@@ -881,7 +981,7 @@
     if (state.questions.length > 0) {
       const urlRoute = window.PracticeRouter ? window.PracticeRouter.initFromURL() : null;
       if (urlRoute && urlRoute.mode === 'smw' && urlRoute.questionId) {
-        await loadQuestionById(urlRoute.questionId);
+        await loadQuestionByIdOrFirst(urlRoute.questionId);
       } else {
         loadQuestion(0);
       }
@@ -889,7 +989,7 @@
   }
 
   function onExit() {
-    closePicker();
+    closePicker({ restoreFocus: false });
     // Stop audio playback
     if (elements.audioElement) {
       if (state.activeLoadedMetadataListener) {
@@ -916,6 +1016,6 @@
   window.addEventListener('practice-route-question', async (event) => {
     const { mode, questionId } = event.detail || {};
     if (mode !== 'smw' || !questionId) return;
-    await loadQuestionById(questionId);
+    await loadQuestionByIdOrFirst(questionId);
   });
 })();

@@ -1,3 +1,20 @@
+## [V1.8.6] - 2026-05-26
+
+### Added
+
+- **Select Missing Word (SMW) Audio Volume Slider**:
+  - Integrated a premium, interactive volume slider into the settings panel of the SMW audio player.
+  - Saved volume preferences persistently in `localStorage` under `smw-volume`.
+  - Added click-to-mute/unmute interactive toggle functionality directly on the volume speaker icon.
+  - Dynamically set the `<audio>` element volume to matches current state on load, playback, and voice change.
+  - Styled volume controls with custom glassmorphic and range track rules in `public/smw-mode.css`.
+
+### Improved
+
+- **Select Missing Word (SMW) Beep Volume Reduction**:
+  - Reduced the volume of the SMW beep sound by a further 50% (resulting in 35% of the original volume).
+  - Reprocessed all 267 audio files in `public/database/SMW/audio` with the new quieter beep.
+
 ## [V1.8.5] - 2026-05-26
 
 ### Improved

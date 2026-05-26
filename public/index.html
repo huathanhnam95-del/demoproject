@@ -199,7 +199,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.5</div>
+  <div id="version-indicator" class="version-indicator">V1.8.6</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -3640,6 +3640,16 @@
                 <button class="smw-speed-btn" data-speed="1.2" type="button">1.2x</button>
               </div>
             </div>
+
+            <!-- Volume selector -->
+            <div class="smw-setting-group">
+              <span class="smw-setting-label">Volume</span>
+              <div class="smw-volume-container">
+                <span id="smw-volume-icon" class="smw-volume-icon">🔊</span>
+                <input type="range" id="smw-volume-slider" class="smw-volume-slider" min="0" max="1" step="0.05" value="1.0" aria-label="Volume">
+                <span id="smw-volume-text" class="smw-volume-text">100%</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -3654,7 +3664,7 @@
             <!-- Question prompt will be populated here -->
           </p>
           <div class="smw-subtitle">Select the correct option to complete the recording:</div>
-          <div id="smw-choices-container" class="smw-choices-list">
+          <div id="smw-choices-container" class="smw-choices-list" role="radiogroup" aria-label="Missing word choices">
             <!-- Choice list will be populated here -->
           </div>
         </div>

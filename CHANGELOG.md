@@ -1,3 +1,16 @@
+## [V1.8.4] - 2026-05-26
+
+### Fixed
+
+- **Select Missing Word (SMW) Playback Race & Event Listener Leak**:
+  - Implemented dynamic event listener cleanup in `changeVoice()` using a saved state reference `state.activeLoadedMetadataListener`.
+  - Cleared any pending loadedmetadata listener during question changes in `loadQuestion()` and component exit in `onExit()` to prevent playback state corruption.
+- **Transcript Highlight Parsing**:
+  - Simplified the trailing `[BEEP]` check and text extraction in `submitAnswers()` using a case-insensitive regular expression `/\[BEEP\]\s*$/i`.
+  - Cleaned up dead `else if` conditional paths that were redundant.
+- **Passage Text UI Reset**:
+  - Updated `resetFeedbackUI()` to clear the transcript text container `#smw-passage-text` when resetting question state.
+
 ## [V1.8.3] - 2026-05-23
 
 ### Added

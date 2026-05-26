@@ -29,6 +29,7 @@
   <link rel="stylesheet" href="lmcma-mode.css">
   <link rel="stylesheet" href="lmcsa-mode.css">
   <link rel="stylesheet" href="hcs-mode.css">
+  <link rel="stylesheet" href="smw-mode.css">
   <link rel="stylesheet" href="read-aloud-question-picker-v7.css?v=20260507_ra_v7">
   <link rel="stylesheet" href="style-scaffolding.css?v=20260123_mode_fix">
   <link rel="stylesheet" href="/site-header.css">
@@ -198,7 +199,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.3</div>
+  <div id="version-indicator" class="version-indicator">V1.8.4</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -1683,6 +1684,26 @@
                 </div>
               </div>
 
+              <!-- SMW Mode Card -->
+              <div id="mode-btn-smw" class="modern-card transition-card mode-switch-btn" data-practice-skill="listening"
+                onclick="window.switchToMode('smw')" tabindex="0" role="button" aria-label="Select Missing Word mode">
+                <span class="badge new">New</span>
+                <div class="card-visual visual-smw">
+                  <div class="anim-container">
+                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+                      <path d="M14 26h10l12-10v36L24 42H14V26z" stroke="currentColor" stroke-width="2" fill="var(--visual-bg)" />
+                      <rect x="46" y="26" width="16" height="8" rx="2" fill="var(--visual-accent)" opacity="0.8" />
+                      <circle cx="54" cy="46" r="3" fill="currentColor" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Select Missing Word</h3>
+                  <p>Listen to an audio recording and select the correct option that completes it.</p>
+                  <button class="card-cta">Practice Now</button>
+                </div>
+              </div>
+
               <!-- Watch Mode Card -->
               <div id="mode-btn-watch" class="modern-card transition-card mode-switch-btn"
                 data-practice-skill="listening" onclick="window.switchToMode('watch')" tabindex="0" role="button"
@@ -1971,6 +1992,7 @@
           <button id="tab-lmcma" class="tab-btn" type="button">LMCMA</button>
           <button id="tab-lmcsa" class="tab-btn" type="button">LMCSA</button>
           <button id="tab-hcs" class="tab-btn" type="button">HCS</button>
+          <button id="tab-smw" class="tab-btn" type="button">SMW</button>
           <button id="tab-rmcsa" class="tab-btn" type="button">RMCSA</button>
           <button id="tab-rmcma" class="tab-btn" type="button">RMCMA</button>
           <button id="tab-rop" class="tab-btn" type="button">ROP</button>
@@ -3511,6 +3533,163 @@
 
   <!-- Audio Element -->
   <audio id="lmcsa-audio-element" style="display: none;"></audio>
+</div>
+
+<!-- SMW Mode Panel -->
+<div id="mode-smw" class="mode-panel" style="display: none;">
+  <!-- v7 Question Picker -->
+  <div class="ra-v7-picker-bar" id="smw-v7-picker-bar">
+    <div class="ra-v7-picker-inner">
+      <div class="ra-v7-nav" role="group" aria-label="SMW navigation">
+        <button id="smw-v7-prev-btn" class="ra-v7-icon-btn" type="button" disabled title="Previous question">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+        </button>
+        <button id="smw-v7-question-pill" class="ra-v7-question-pill" type="button" aria-haspopup="dialog" aria-expanded="false">
+          Loading...
+        </button>
+        <button id="smw-v7-next-btn" class="ra-v7-icon-btn" type="button" title="Next question">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="smw-v7-backdrop" class="ra-v7-backdrop" aria-hidden="true"></div>
+  <div id="smw-v7-sheet" class="ra-v7-sheet" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
+    <span class="ra-v7-grabber" aria-hidden="true"></span>
+    <div class="ra-v7-sheet-header">
+      <div class="ra-v7-sheet-title">Question Picker</div>
+      <button id="smw-v7-sheet-close" class="ra-v7-sheet-close" type="button" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+    <div class="ra-v7-sheet-body">
+      <div id="smw-v7-panel-jump" role="tabpanel">
+        <label class="ra-v7-sr-only" for="smw-v7-jump-search">Search</label>
+        <input id="smw-v7-jump-search" class="ra-v7-search" type="search" autocomplete="off" placeholder="Search questions...">
+        <div class="ra-v7-section-title">Questions</div>
+        <div id="smw-v7-jump-list" class="ra-v7-list" role="listbox" aria-label="Questions"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SMW Main Split Container -->
+  <div class="smw-container">
+    <div class="smw-split-layout">
+      <!-- Left Panel: Premium Audio Player -->
+      <div class="smw-audio-card">
+        <div class="smw-card-header">
+          <span class="smw-kicker">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; vertical-align: middle;"><path d="M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+            Select Missing Word
+          </span>
+        </div>
+        <div class="smw-audio-player-card">
+          <!-- Animated visualizer bars -->
+          <div class="smw-visualizer" id="smw-visualizer">
+            <span class="smw-vis-bar"></span>
+            <span class="smw-vis-bar"></span>
+            <span class="smw-vis-bar"></span>
+            <span class="smw-vis-bar"></span>
+            <span class="smw-vis-bar"></span>
+            <span class="smw-vis-bar"></span>
+            <span class="smw-vis-bar"></span>
+          </div>
+
+          <!-- Controls row -->
+          <div class="smw-audio-controls-row">
+            <button id="smw-play-btn" class="smw-play-btn" type="button" aria-label="Play audio" aria-disabled="true" disabled>
+              <!-- Play Icon -->
+              <svg id="smw-play-icon" viewBox="0 0 24 24" width="24" height="24"><polygon points="8,5 19,12 8,19"></polygon></svg>
+              <!-- Pause Icon -->
+              <svg id="smw-pause-icon" viewBox="0 0 24 24" width="24" height="24" style="display: none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+            </button>
+
+            <div class="smw-progress-container">
+              <div id="smw-timeline-wrapper" class="smw-timeline-wrapper">
+                <div class="smw-timeline">
+                  <div id="smw-timeline-fill" class="smw-timeline-fill"></div>
+                  <div id="smw-timeline-thumb" class="smw-timeline-thumb"></div>
+                </div>
+              </div>
+              <div class="smw-time-display">
+                <span id="smw-time-current">00:00</span>
+                <span id="smw-time-duration">00:00</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Settings selectors -->
+          <div class="smw-settings-row">
+            <!-- Voice Picker -->
+            <div class="smw-setting-group">
+              <span class="smw-setting-label">Voice Accent</span>
+              <div class="smw-voice-select-wrapper">
+                <select id="smw-voice-select" class="smw-voice-select" aria-label="Select voice model">
+                  <!-- Option will be populated dynamically -->
+                </select>
+              </div>
+            </div>
+
+            <!-- Speed selector -->
+            <div class="smw-setting-group">
+              <span class="smw-setting-label">Playback Speed</span>
+              <div class="smw-speed-group">
+                <button class="smw-speed-btn" data-speed="0.8" type="button">0.8x</button>
+                <button class="smw-speed-btn is-active" data-speed="1.0" type="button">1.0x</button>
+                <button class="smw-speed-btn" data-speed="1.2" type="button">1.2x</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel: Question and Choices -->
+      <div class="smw-question-card">
+        <div class="smw-card-header">
+          <span class="smw-kicker">Question prompt</span>
+        </div>
+        <div class="smw-question-content">
+          <p id="smw-question-prompt" class="smw-question-prompt">
+            <!-- Question prompt will be populated here -->
+          </p>
+          <div class="smw-subtitle">Select the correct option to complete the recording:</div>
+          <div id="smw-choices-container" class="smw-choices-list">
+            <!-- Choice list will be populated here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions and Results Panel -->
+    <div class="smw-footer-actions">
+      <div class="smw-buttons-row">
+        <button id="smw-submit-btn" class="modern-btn modern-btn--check" type="button" disabled>Submit</button>
+        <button id="smw-retry-btn" class="modern-btn modern-btn--retry" type="button" style="display: none;">Retry</button>
+        <button id="smw-explanation-toggle" class="modern-btn modern-btn--secondary" type="button" aria-expanded="false" style="display: none;">Show explanation</button>
+      </div>
+
+      <!-- Score Banner -->
+      <div id="smw-result-box" class="smw-result-box" role="status" aria-live="polite" style="display: none;"></div>
+
+      <!-- Accordion Explanation Panel -->
+      <div id="smw-explanation-panel" class="smw-explanation-panel" style="display: none;">
+        <div class="smw-transcript-section" style="margin-bottom: 20px;">
+          <div class="smw-transcript-header">Audio Transcript</div>
+          <div id="smw-passage-text" class="smw-transcript-text"></div>
+        </div>
+        <div class="smw-explanation-card">
+          <div class="smw-explanation-header">Detailed Explanation</div>
+          <div id="smw-explanation-content" class="smw-explanation-content">
+            <!-- HTML Explanation will be populated here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio Element -->
+  <audio id="smw-audio-element" style="display: none;"></audio>
 </div>
 
 <!-- HCS Mode Panel -->

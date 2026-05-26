@@ -298,3 +298,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 305,2026-05-23,Implement LMCSA listening practice mode with Kokoro TTS,Done,2026-05-23
 306,2026-05-23,Rename practice modes to Multiple Choice Multiple Answers and Single Answer,Done,2026-05-23
 307,2026-05-23,Implement HCS Highlight Correct Summary practice mode with Kokoro TTS and GemmaAI,Done,2026-05-23
+308,2026-05-23,Implement Select Missing Word practice mode,Done,2026-05-23
+309,2026-05-24,Investigate IP address 199.36.158.100 source,Done,2026-05-24
+310,2026-05-25,Implement Highlight Incorrect Words listening practice mode,In Progress,
+311,2026-05-26,Review debug and refactor SMW mode,Done,2026-05-26

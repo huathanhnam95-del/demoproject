@@ -1,6 +1,6 @@
 {
   "name": "dictation-practice",
-  "version": "1.8.3",
+  "version": "1.8.4",
   "description": "Dictation practice app",
   "scripts": {
     "start": "node server.js",
@@ -31,6 +31,9 @@
     "test:crm:entrance-test-result-pdf:browser": "node tests/browser/crm-entrance-test-result-pdf-browser-check.js",
     "test:reading-journey:quiz:browser": "node tests/browser/reading-journey-quiz-browser-check.js",
     "test:rfib:browser": "node tests/browser/rfib-mode-browser-check.js",
+    "test:rmcsa:guardrails": "node tests/rmcsa-explanation-guardrails.test.js && python tests/rmcsa_enrichment_parser.test.py",
+    "test:rmcsa:browser": "node tests/browser/rmcsa-mode-browser-check.js",
+    "verify:rmcsa": "npm run test:rmcsa:guardrails && npm run test:rmcsa:browser",
     "test:rfib:lazy-loader-retry:browser": "node tests/browser/lazy-loader-retry-rfib-browser-check.js",
     "test:practice-router:back:browser": "node tests/browser/practice-router-back-popstate-browser-check.js",
     "test:read-aloud:v7:browser": "node tests/browser/read-aloud-question-picker-v7-dom-contract-browser-check.js",
@@ -46,7 +49,10 @@
     "test:connected-speech:backend": "python backend/test_connected_speech_worker.py",
     "eval:read-aloud:connected-speech": "node scripts/evals/read-aloud-connected-speech-metrics.js data/evals/read-aloud-connected-speech/template.csv",
     "report:read-aloud:connected-speech": "node scripts/evals/read-aloud-connected-speech-report.js",
-    "eval:read-aloud:connected-speech:parity": "node scripts/evals/read-aloud-connected-speech-parity.js tests/fixtures/read-aloud-connected-speech/parity-cases.json"
+    "eval:read-aloud:connected-speech:parity": "node scripts/evals/read-aloud-connected-speech-parity.js tests/fixtures/read-aloud-connected-speech/parity-cases.json",
+    "test:smw:data": "node tests/smw-data-guardrails.test.js && python tests/smw_explanation_sanitizer.test.py",
+    "test:smw:browser": "node tests/browser/smw-mode-browser-check.js",
+    "verify:smw": "npm run test:smw:data && npm run test:smw:browser"
   },
   "dependencies": {
     "@google-cloud/vertexai": "^1.10.0",

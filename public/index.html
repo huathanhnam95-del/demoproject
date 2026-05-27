@@ -31,6 +31,7 @@
   <link rel="stylesheet" href="hcs-mode.css">
   <link rel="stylesheet" href="smw-mode.css">
   <link rel="stylesheet" href="hiw-mode.css">
+  <link rel="stylesheet" href="sst-mode.css">
   <link rel="stylesheet" href="read-aloud-question-picker-v7.css?v=20260507_ra_v7">
   <link rel="stylesheet" href="style-scaffolding.css?v=20260123_mode_fix">
   <link rel="stylesheet" href="/site-header.css">
@@ -200,7 +201,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.6</div>
+  <div id="version-indicator" class="version-indicator">V1.8.7</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -1359,6 +1360,27 @@
               </div>
 
               <!-- Other Modes -->
+              <!-- SST Mode Card -->
+              <div id="mode-btn-sst" class="modern-card transition-card mode-switch-btn"
+                data-practice-skill="listening" onclick="window.switchToMode('sst')" tabindex="0" role="button"
+                aria-label="Summarize Spoken Text mode">
+                <span class="badge new">New</span>
+                <div class="card-visual visual-type">
+                  <div class="anim-container">
+                    <svg class="ctx-icon ctx-type" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+                      <path d="M10 26h15M10 35h26M10 44h20" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                      <circle cx="52" cy="34" r="13" stroke="var(--visual-accent)" stroke-width="2"/>
+                      <path d="M48 29v10l9-5-9-5z" fill="var(--visual-accent)"/>
+                    </svg>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>Summarize Spoken Text</h3>
+                  <p>Listen once and summarize the lecture in 50-70 words.</p>
+                  <button class="card-cta">Practice Now</button>
+                </div>
+              </div>
+
               <!-- Type Mode Card -->
               <div id="mode-btn-type" class="modern-card transition-card mode-switch-btn"
                 data-practice-skill="listening" onclick="window.switchToMode('type')" tabindex="0" role="button"
@@ -2020,6 +2042,7 @@
           <button id="tab-rfib" class="tab-btn" type="button">Dropdown</button>
           <button id="tab-dd" class="tab-btn" type="button">Drag & Drop</button>
           <button id="tab-lmcma" class="tab-btn" type="button">LMCMA</button>
+          <button id="tab-sst" class="tab-btn" type="button">SST</button>
           <button id="tab-lmcsa" class="tab-btn" type="button">LMCSA</button>
           <button id="tab-hcs" class="tab-btn" type="button">HCS</button>
           <button id="tab-smw" class="tab-btn" type="button">SMW</button>
@@ -3409,6 +3432,52 @@
 
   <!-- Audio Element -->
   <audio id="lmcma-audio-element" style="display: none;"></audio>
+</div>
+
+<!-- SST Mode Panel -->
+<div id="mode-sst" class="mode-panel" style="display: none;">
+  <div class="sst-nav" role="group" aria-label="Summarize Spoken Text question navigation">
+    <button id="sst-prev-btn" class="ra-v7-icon-btn" type="button" aria-label="Previous question">Previous</button>
+    <select id="sst-question-select" class="sst-question-select" aria-label="Select a question"></select>
+    <button id="sst-next-btn" class="ra-v7-icon-btn" type="button" aria-label="Next question">Next</button>
+  </div>
+  <div class="sst-container">
+    <p class="sst-instructions">You will hear a short lecture. Write a summary for a fellow student who was not present at the lecture. You should write 50-70 words. You have 10 minutes to finish this task. Your response will be judged on the quality of your writing and on how well your response presents the key points presented in the lecture.</p>
+    <div class="sst-title-row">
+      <h2 id="sst-question-title">Loading Summarize Spoken Text...</h2>
+      <span id="sst-timer" class="sst-timer" aria-live="polite">10:00</span>
+    </div>
+    <section class="sst-audio" aria-label="Lecture audio">
+      <button id="sst-play-btn" class="sst-play-btn" type="button" disabled aria-label="Play lecture once">
+        <span id="sst-play-icon" class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
+        <span id="sst-play-label">Play lecture</span>
+      </button>
+      <div class="sst-progress-wrap">
+        <div class="sst-progress" aria-hidden="true">
+          <div id="sst-progress-fill" class="sst-progress-fill"></div>
+        </div>
+        <input id="sst-seek" class="sst-seek" type="range" min="0" max="100" step="0.1" value="0" disabled aria-label="Lecture audio timeline; seeking is available after submission">
+      </div>
+      <span id="sst-audio-time" class="sst-audio-time">00:00 / 00:00</span>
+      <label class="sst-volume-label" for="sst-volume">Volume</label>
+      <input id="sst-volume" class="sst-volume" type="range" min="0" max="1" step="0.05" value="1">
+    </section>
+    <p id="sst-audio-status" class="sst-status" role="status" aria-live="polite">Select Play when you are ready. Audio plays once.</p>
+    <label class="sst-response-label" for="sst-response">Your summary</label>
+    <textarea id="sst-response" class="sst-response" rows="9" spellcheck="true" placeholder="Write your 50-70 word summary here..."></textarea>
+    <div class="sst-meta">
+      <span>Total Word Count: <strong id="sst-word-count">0</strong></span>
+      <span class="sst-target">Target: 50-70 words</span>
+    </div>
+    <div class="sst-actions">
+      <button id="sst-submit-btn" class="modern-btn modern-btn--check" type="button" disabled>Submit</button>
+      <button id="sst-retry-btn" class="modern-btn modern-btn--retry" type="button" style="display: none;">Try again</button>
+      <button id="sst-ai-score-btn" class="modern-btn modern-btn--secondary" type="button" style="display: none;">Get AI practice feedback</button>
+    </div>
+    <p id="sst-ai-hint" class="sst-status" style="display: none;" aria-live="polite"></p>
+    <div id="sst-results" class="sst-results" aria-live="polite"></div>
+  </div>
+  <audio id="sst-audio-element" preload="metadata" style="display: none;"></audio>
 </div>
 
 <!-- LMCSA Mode Panel -->

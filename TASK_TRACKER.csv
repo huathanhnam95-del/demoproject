@@ -304,3 +304,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 311,2026-05-26,Review debug and refactor SMW mode,Done,2026-05-26
 312,2026-05-26,Reduce SMW beep volume by 30 percent,Done,2026-05-26
 313,2026-05-26,Reduce SMW beep further and add volume changer,Done,2026-05-26
+314,2026-05-26,Review new SST mode and use local Gemma AI to analyze points extraction logic,Done,2026-05-26
+315,2026-05-26,Audit all SST questions in the database using local Gemma AI,Done,2026-05-26
+316,2026-05-27,Revise flagged SST expected main points based on Gemma audit,Done,2026-05-27
+317,2026-05-27,Re-audit revised SST expected main points using local Gemma AI,Done,2026-05-27

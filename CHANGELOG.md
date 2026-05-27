@@ -1,4 +1,15 @@
+## [V1.8.7] - 2026-05-27
+
+### Fixed
+
+- **SST Expected Main Points Quality Refinements**:
+  - Successfully updated all 585 questions in the database (`public/database/SST/SST/SST.xlsx`) with high-fidelity expected main points, correcting 291 flagged questions.
+  - Fine-tuned 4 specific edge cases (Q457, Q535, Q552, Q658) with tailored, highly accurate points to resolve remaining semantic mismatches.
+  - Re-audited the database using local Gemma AI to achieve a 100% quality pass rate (585/585 questions).
+  - Validated database structure, count constraints, and E2E browser behavior via automated test suites.
+
 ## [V1.8.6] - 2026-05-26
+
 
 ### Added
 

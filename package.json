@@ -1,6 +1,6 @@
 {
   "name": "dictation-practice",
-  "version": "1.8.6",
+  "version": "1.8.7",
   "description": "Dictation practice app",
   "scripts": {
     "start": "node server.js",
@@ -52,7 +52,11 @@
     "eval:read-aloud:connected-speech:parity": "node scripts/evals/read-aloud-connected-speech-parity.js tests/fixtures/read-aloud-connected-speech/parity-cases.json",
     "test:smw:data": "node tests/smw-data-guardrails.test.js && python tests/smw_explanation_sanitizer.test.py",
     "test:smw:browser": "node tests/browser/smw-mode-browser-check.js",
-    "verify:smw": "npm run test:smw:data && npm run test:smw:browser"
+    "verify:smw": "npm run test:smw:data && npm run test:smw:browser",
+    "test:sst:unit": "node tests/sst-form-scoring.test.js && node tests/sst-shell-wiring.test.js && node tests/sst-kokoro-guardrails.test.js",
+    "test:sst:data": "node tests/sst-data-guardrails.test.js",
+    "test:sst:browser": "node tests/browser/sst-mode-browser-check.js",
+    "verify:sst": "npm run test:sst:unit && npm run test:sst:data && npm run test:sst:browser"
   },
   "dependencies": {
     "@google-cloud/vertexai": "^1.10.0",

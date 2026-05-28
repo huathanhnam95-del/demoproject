@@ -4,11 +4,13 @@ import urllib.error
 import time
 import os
 import sys
+import re
 import openpyxl
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
 MODEL_NAME = "gemma4:latest"
 EXCEL_PATH = r"c:\Cursor AI\public\database\HCS\HCS\HCS.xlsx"
+POSITION_REFERENCE_RE = r"\b((first|second|third|fourth|1st|2nd|3rd|4th)\s+(choice|option|paragraph|summary|distractor|one)|(choice|option|paragraph|summary|distractor)\s*(1|2|3|4|one|two|three|four|first|second|third|fourth))\b"
 
 SYSTEM_PROMPT = """You are a premium PTE Academic content developer. Your task is to write a Highlight Correct Summary (HCS) question based on the provided Audio Transcript.
 Output a JSON object with the following fields:
@@ -16,7 +18,7 @@ Output a JSON object with the following fields:
 2. "choices": An array of exactly 4 choices (paragraphs). One choice must be the correct summary, and the other three must be plausible but incorrect distractors. Each choice is an object:
    - "text": The summary paragraph text.
    - "isCorrect": true for the correct summary, false for incorrect.
-3. "explanation": A detailed explanation of why the correct option is correct (referencing/quoting the transcript) and why the other options are incorrect. Use clean HTML with tags: <p>, <strong>, <b>, <em>, <i>, <ul>, <ol>, <li>, <br>, <h3>, <h4>. Do not use any markdown formatting or code blocks inside the explanation.
+3. "explanation": A detailed explanation of why the correct summary is correct (referencing/quoting the transcript) and why the other summaries are incorrect. The learner UI shuffles answer order, so NEVER refer to choices by position or label such as "first choice", "second option", "Choice 1", "Option 2", or "Distractor 3". Refer to summaries by their content instead. Use clean HTML with tags: <p>, <strong>, <b>, <em>, <i>, <ul>, <ol>, <li>, <br>, <h3>, <h4>. Do not use any markdown formatting or code blocks inside the explanation.
 
 Output ONLY a raw, valid JSON string. Do not wrap the JSON in markdown code blocks like ```json.
 """
@@ -68,6 +70,7 @@ def format_answer_column(question, choices):
     # ---
     # [] Distractor text...
     # [x] Correct summary text...
+    validate_choices(choices)
     lines = [
         "---",
         question,
@@ -77,6 +80,33 @@ def format_answer_column(question, choices):
         marker = "[x]" if choice.get("isCorrect") else "[]"
         lines.append(f"{marker} {choice.get('text')}")
     return "\n".join(lines)
+
+def validate_choices(choices):
+    if not isinstance(choices, list) or len(choices) != 4:
+        raise ValueError("HCS payload must contain exactly 4 choices")
+
+    correct_count = 0
+    for idx, choice in enumerate(choices, start=1):
+        if not isinstance(choice, dict):
+            raise ValueError(f"HCS choice {idx} must be an object")
+        if not str(choice.get("text", "")).strip():
+            raise ValueError(f"HCS choice {idx} must contain non-empty text")
+        if bool(choice.get("isCorrect")):
+            correct_count += 1
+
+    if correct_count != 1:
+        raise ValueError("HCS payload must contain exactly 1 correct choice")
+
+def validate_hcs_payload(payload):
+    if not isinstance(payload, dict):
+        raise ValueError("HCS payload must be a JSON object")
+    if not str(payload.get("question", "")).strip():
+        raise ValueError("HCS payload must contain a non-empty question")
+    if not str(payload.get("explanation", "")).strip():
+        raise ValueError("HCS payload must contain a non-empty explanation")
+    if re.search(POSITION_REFERENCE_RE, str(payload.get("explanation", "")), flags=re.IGNORECASE):
+        raise ValueError("HCS explanation must not refer to choices by position or number")
+    validate_choices(payload.get("choices"))
 
 def main():
     print(f"Loading Excel file: {EXCEL_PATH}...")
@@ -125,9 +155,12 @@ def main():
         parsed_data = None
         for attempt in range(3):
             parsed_data = generate_hcs_data(transcript)
-            if parsed_data and "choices" in parsed_data and "explanation" in parsed_data:
+            try:
+                validate_hcs_payload(parsed_data)
                 break
-            print(f"  Attempt {attempt+1} failed or returned invalid format. Retrying...")
+            except ValueError as validation_error:
+                parsed_data = None
+                print(f"  Attempt {attempt+1} returned invalid HCS data: {validation_error}. Retrying...")
             time.sleep(1)
             
         if parsed_data:

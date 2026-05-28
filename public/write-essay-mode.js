@@ -951,8 +951,9 @@
             if (el.resultsTitle) el.resultsTitle.textContent = 'Your Essay Scores';
             displayAiScoreResults(data);
 
-            if (data.teacherAdviceChat) {
-                postTeacherAdviceToChat(String(data.teacherAdviceChat));
+            const teacherAdviceForChat = String(data.teacherAdviceChat || data.teacherAdvice || '').trim();
+            if (teacherAdviceForChat) {
+                postTeacherAdviceToChat(teacherAdviceForChat);
             }
         } catch (error) {
             console.error('[WriteEssay] scoreEssay failed:', error);

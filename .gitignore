@@ -6,6 +6,8 @@ database/type/audio/
 database/speak/audio/
 public/database/RA/Voice/audio/
 !public/database/RA/Voice/audio/manifest.json
+public/database/Highlight Incorrect Words/audio/*/
+public/database/SST/audio/*/
 
 # Backup files
 *.backup.*

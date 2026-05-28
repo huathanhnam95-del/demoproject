@@ -1,3 +1,33 @@
+## [V1.8.8] - 2026-05-28
+
+### Added
+
+- **Highlight Correct Summary (HCS) Listening Practice Mode**:
+  - Full client-side integration with v7 question picker, shuffled choices container, speed controls (0.75x to 1.5x), and Kokoro TTS multi-voice support (60 voice variants).
+  - Shuffled option rendering with option-level independent explanations generated via local GemmaAI.
+  - Interactive retry/reset behavior and retractable explanation disclosure panels.
+  - Visual glassmorphic design and E2E Playwright test suite passing.
+
+- **Multiple Choice Single Answer (RMCSA) Reading Practice Mode**:
+  - Implemented client-side UI, circular radio selector interaction, and binary scoring logic.
+  - Option-level explanations generated and sanitized.
+  - Added robust parsing fallback for multi-line and multi-paragraph answers.
+
+- **Highlight Incorrect Words (HIW) Listening Practice Mode**:
+  - Cleaned up transcript comparison logic by adding automatic Column D generation.
+  - Passed all data guardrails and Playwright browser check test suites.
+
+- **Select Missing Word (SMW) Listening Practice Mode**:
+  - Integrated interactive volume slider and speaker icon toggle (persistent in localStorage).
+  - Reduced beep volume by an additional 50% (processed all 267 audio files).
+  - Added keyboard navigation, radio group attributes, and modal focus management.
+
+### Fixed
+
+- **General Fixes & Improvements**:
+  - Center-aligned Vocab Book modals and unified header button rendering.
+  - Fixed teacher advice fallback parsing (`teacherAdvice` vs `teacherAdviceChat`) in `swt-mode.js` and `write-essay-mode.js`.
+
 ## [V1.8.7] - 2026-05-27
 
 ### Fixed

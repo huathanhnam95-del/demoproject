@@ -1,6 +1,6 @@
 {
   "name": "dictation-practice",
-  "version": "1.8.7",
+  "version": "1.8.8",
   "description": "Dictation practice app",
   "scripts": {
     "start": "node server.js",

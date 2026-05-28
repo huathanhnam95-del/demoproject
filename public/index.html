@@ -201,7 +201,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.7</div>
+  <div id="version-indicator" class="version-indicator">V1.8.8</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -4001,7 +4001,7 @@
   <div class="hcs-container">
     <div class="hcs-split-layout">
       <!-- Left side: Audio Player -->
-      <div class="hcs-audio-card">
+      <div class="hcs-audio-section">
         <div class="hcs-card-header">
           <span class="hcs-kicker">
             <span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle;">headset</span>
@@ -4009,7 +4009,7 @@
           </span>
         </div>
         
-        <div class="hcs-audio-player-card">
+        <div class="hcs-audio-player">
           <!-- Visualizer -->
           <div class="hcs-visualizer" id="hcs-visualizer">
             <span class="hcs-vis-bar"></span>
@@ -4066,7 +4066,7 @@
       </div>
 
       <!-- Right side: Questions and choices -->
-      <div class="hcs-question-card">
+      <div class="hcs-question-section">
         <div class="hcs-card-header">
           <span class="hcs-kicker">
             <span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle;">format_list_bulleted</span>
@@ -4093,7 +4093,7 @@
     </div>
 
     <!-- Explanations and Transcript disclosure -->
-    <div class="hcs-question-card" style="margin-top: 0; padding-top: 0;">
+    <div class="hcs-explanation-section" style="margin-top: 0; padding-top: 0;">
       <!-- Score Banner -->
       <div id="hcs-result-box" class="hcs-result-box" role="status" aria-live="polite" style="display: none;"></div>
 
@@ -4103,7 +4103,7 @@
           <div class="hcs-transcript-header">Audio Transcript</div>
           <div id="hcs-passage-text" class="hcs-transcript-text"></div>
         </div>
-        <div class="hcs-explanation-card">
+        <div class="hcs-explanation-section">
           <div class="hcs-explanation-header">Detailed Explanation</div>
           <div id="hcs-explanation-content" class="hcs-explanation-content">
             <!-- HTML Explanation will be populated here -->

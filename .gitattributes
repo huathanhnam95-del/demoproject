@@ -3,3 +3,4 @@ public/database/RA/Voice/audio/RA_*_am_*.mp3 filter=lfs diff=lfs merge=lfs -text
 public/database/RA/Voice/audio/RA_*_bf_*.mp3 filter=lfs diff=lfs merge=lfs -text
 public/database/RA/Voice/audio/RA_*_bm_*.mp3 filter=lfs diff=lfs merge=lfs -text
 public/database/RTS/audio/*.mp3 filter=lfs diff=lfs merge=lfs -text
+public/database/SST/audio/**/*.mp3 filter=lfs diff=lfs merge=lfs -text

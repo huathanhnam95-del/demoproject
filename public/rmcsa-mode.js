@@ -68,6 +68,40 @@
     return arr;
   }
 
+  function parseRmcsaAnswer(answerText) {
+    const normalized = String(answerText || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+    let parts = normalized
+      .split(/\n\s*-{3,}\s*\n/)
+      .map((part) => part.trim())
+      .filter(Boolean);
+
+    if (parts.length < 3) {
+      parts = normalized
+        .split(/-{3,}/)
+        .map((part) => part.trim())
+        .filter(Boolean);
+    }
+
+    const passage = parts.length >= 1 ? parts[0] : normalized;
+    const question = parts.length >= 2 ? parts[1] : '';
+    const choicesRaw = parts.length >= 3 ? parts.slice(2).join('\n') : '';
+
+    const choices = [];
+    choicesRaw.split('\n').forEach((line) => {
+      const cleanLine = line.trim();
+      if (!cleanLine) return;
+      const match = cleanLine.match(/^\[([xX\s]*)\]\s*(.*)$/);
+      if (match) {
+        choices.push({
+          text: match[2].trim(),
+          isCorrect: match[1].toLowerCase().includes('x')
+        });
+      }
+    });
+
+    return { passage, question, choices };
+  }
+
   function cacheElements() {
     // v7 question picker elements
     elements.prevBtn = document.getElementById('rmcsa-v7-prev-btn');
@@ -287,46 +321,14 @@
     const rawData = XLSX.utils.sheet_to_json(sheet);
 
     state.questions = rawData.map((row) => {
-      const parts = String(row.ANSWER || '').split(/\n-+\n|---\n|\n---/);
-      let passage = '';
-      let question = '';
-      let choicesRaw = '';
-
-      if (parts.length >= 3) {
-        passage = parts[0].strip ? parts[0].strip() : parts[0].trim();
-        question = parts[1].strip ? parts[1].strip() : parts[1].trim();
-        choicesRaw = parts.slice(2).join('\n');
-      } else {
-        // Fallback: simpler split
-        const simpleParts = String(row.ANSWER || '').split('---');
-        if (simpleParts.length >= 3) {
-          passage = simpleParts[0].trim();
-          question = simpleParts[1].trim();
-          choicesRaw = simpleParts.slice(2).join('\n');
-        } else {
-          passage = String(row.ANSWER || '').trim();
-        }
-      }
-
-      const choices = [];
-      choicesRaw.split('\n').forEach((line) => {
-        const cleanLine = line.trim();
-        if (!cleanLine) return;
-        const match = cleanLine.match(/^\[([xX\s]*)\]\s*(.*)$/);
-        if (match) {
-          choices.push({
-            text: match[2].trim(),
-            isCorrect: match[1].toLowerCase().includes('x')
-          });
-        }
-      });
+      const parsed = parseRmcsaAnswer(row.ANSWER);
 
       return {
         id: Number(row.ID) || 0,
         title: String(row.TITLE || '').trim(),
-        passage,
-        question,
-        choices,
+        passage: parsed.passage,
+        question: parsed.question,
+        choices: parsed.choices,
         explanation: String(row.EXPLANATION || '').trim()
       };
     }).sort((a, b) => a.id - b.id);

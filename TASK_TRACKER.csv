@@ -308,3 +308,5 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 315,2026-05-26,Audit all SST questions in the database using local Gemma AI,Done,2026-05-26
 316,2026-05-27,Revise flagged SST expected main points based on Gemma audit,Done,2026-05-27
 317,2026-05-27,Re-audit revised SST expected main points using local Gemma AI,Done,2026-05-27
+318,2026-05-28,Release V1.8.8 - review and deploy all practice mode updates to production,Done,2026-05-28
+

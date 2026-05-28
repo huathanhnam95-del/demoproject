@@ -110,6 +110,10 @@ function logError(qId, voiceId, error) {
   fs.appendFileSync(ERROR_LOG_PATH, line);
 }
 
+function shouldFailGenerationRun(stats) {
+  return Boolean(stats && stats.failed > 0);
+}
+
 async function loadQuestions() {
   const workbook = new Excel.Workbook();
   await workbook.xlsx.readFile(EXCEL_PATH);
@@ -239,10 +243,20 @@ async function main() {
   console.log(`Failed: ${stats.failed}`);
   if (DRY_RUN) console.log(`Would generate: ${stats.dryRun}`);
   console.log(`Time: ${elapsed}s`);
-  if (stats.failed > 0) console.log(`Error log: ${ERROR_LOG_PATH}`);
+  if (shouldFailGenerationRun(stats)) {
+    console.log(`Error log: ${ERROR_LOG_PATH}`);
+    process.exitCode = 1;
+  }
 }
 
-main().catch(err => {
-  console.error('Fatal error:', err);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch(err => {
+    console.error('Fatal error:', err);
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  selectVoicesForQuestion,
+  shouldFailGenerationRun,
+};

@@ -4,11 +4,21 @@ const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 const net = require('net');
+const os = require('os');
 const { chromium } = require('playwright');
 const ExcelJS = require('exceljs');
 
+const EXPECTED_HCS_QUESTION_COUNT = 60;
+
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function getArtifactPath(filename) {
+  const artifactDir = process.env.HCS_BROWSER_ARTIFACT_DIR ||
+    path.join(os.tmpdir(), 'cursor-ai-hcs-browser-artifacts');
+  fs.mkdirSync(artifactDir, { recursive: true });
+  return path.join(artifactDir, filename);
 }
 
 function getFreePort() {
@@ -81,10 +91,7 @@ async function getWorkbookQuestions() {
     const transcript = row.getCell(4).value;
     const explanation = row.getCell(5).value;
     const choices = parseAnswers(answerText);
-    if (!id || !choices.length) return;
-
-    // Filter to only include questions with generated explanations
-    if (!explanation || String(explanation).trim().length < 20) return;
+    if (!id) return;
 
     questions.push({
       id,
@@ -95,7 +102,11 @@ async function getWorkbookQuestions() {
     });
   });
 
-  assert(questions.length > 0, 'Expected at least one HCS question in the workbook with generated explanations');
+  assert.equal(
+    questions.length,
+    EXPECTED_HCS_QUESTION_COUNT,
+    `Expected ${EXPECTED_HCS_QUESTION_COUNT} HCS workbook rows, found ${questions.length}`
+  );
   return questions;
 }
 
@@ -103,27 +114,32 @@ function validateWorkbookAssets(questions) {
   const manifestPath = path.join(process.cwd(), 'public', 'database', 'HCS', 'audio', 'manifest.json');
   assert(fs.existsSync(manifestPath), 'Expected HCS audio manifest to exist');
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  const questionIds = new Set(questions.map((question) => String(question.id)));
+  const manifestIds = Object.keys(manifest).sort((a, b) => Number(a) - Number(b));
+  const missingManifestIds = [...questionIds].filter((id) => !Object.prototype.hasOwnProperty.call(manifest, id));
+  const extraManifestIds = manifestIds.filter((id) => !questionIds.has(id));
+
+  assert.deepEqual(missingManifestIds, [], 'Every HCS question should have an audio manifest entry');
+  assert.deepEqual(extraManifestIds, [], 'HCS audio manifest should not contain stale question entries');
 
   for (const question of questions) {
     const id = String(question.id);
     assert(String(question.transcript || '').trim().length > 20, `Question ${id} should have a transcript`);
     assert(String(question.explanation || '').trim().length > 20, `Question ${id} should have an explanation`);
-    assert(question.choices.length >= 2, `Question ${id} should have at least two choices`);
+    assert.equal(question.choices.length, 4, `Question ${id} should have exactly 4 choices`);
     assert(question.choices.some((choice) => choice.isCorrect), `Question ${id} should have at least one correct choice`);
     assert.equal(question.choices.filter((choice) => choice.isCorrect).length, 1, `Question ${id} should have exactly one correct choice`);
     assert(question.choices.some((choice) => !choice.isCorrect), `Question ${id} should have at least one incorrect choice`);
 
-    // Only validate audio files if manifest entry exists for this question
     const voices = manifest[id];
-    if (voices) {
-      assert.equal(voices.length, 3, `Question ${id} should have exactly 3 voice variants`);
-      assert.equal(new Set(voices.map((voice) => voice.id)).size, 3, `Question ${id} should use 3 unique voices`);
+    assert(Array.isArray(voices), `Question ${id} should have audio voices in manifest`);
+    assert.equal(voices.length, 3, `Question ${id} should have exactly 3 voice variants`);
+    assert.equal(new Set(voices.map((voice) => voice.id)).size, 3, `Question ${id} should use 3 unique voices`);
 
-      for (const voice of voices) {
-        const audioPath = path.join(process.cwd(), 'public', 'database', 'HCS', 'audio', id, voice.file || '');
-        assert(fs.existsSync(audioPath), `Expected audio file for question ${id}: ${voice.file}`);
-        assert(fs.statSync(audioPath).size > 1000, `Audio file for question ${id} is unexpectedly small: ${voice.file}`);
-      }
+    for (const voice of voices) {
+      const audioPath = path.join(process.cwd(), 'public', 'database', 'HCS', 'audio', id, voice.file || '');
+      assert(fs.existsSync(audioPath), `Expected audio file for question ${id}: ${voice.file}`);
+      assert(fs.statSync(audioPath).size > 1000, `Audio file for question ${id} is unexpectedly small: ${voice.file}`);
     }
   }
 }
@@ -489,7 +505,7 @@ async function retryAndAssertReset(page) {
     assert(!/<script|onerror=|onclick=/i.test(explanationContent), 'Explanation content should be sanitized');
 
     try {
-      const successScreenshotPath = path.join(process.cwd(), 'tests', 'browser', 'hcs-success-screenshot.png');
+      const successScreenshotPath = getArtifactPath('hcs-success-screenshot.png');
       await page.screenshot({ path: successScreenshotPath, fullPage: true });
       console.log(`Saved success screenshot to: ${successScreenshotPath}`);
     } catch (ssErr) {
@@ -511,7 +527,7 @@ async function retryAndAssertReset(page) {
     console.log('HCS browser check passed successfully.');
   } catch (err) {
     try {
-      const screenshotPath = path.join(process.cwd(), 'tests', 'browser', 'hcs-failure-screenshot.png');
+      const screenshotPath = getArtifactPath('hcs-failure-screenshot.png');
       await page.screenshot({ path: screenshotPath, fullPage: true });
       console.log(`Saved failure screenshot to: ${screenshotPath}`);
     } catch (ssErr) {

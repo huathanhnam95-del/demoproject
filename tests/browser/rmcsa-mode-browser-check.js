@@ -25,17 +25,19 @@ function getFreePort() {
 }
 
 function parseAnswers(answerText) {
-  const parts = String(answerText || '').split(/\n-+\n|---\n|\n---/);
-  let choicesRaw = '';
-  if (parts.length >= 3) {
-    choicesRaw = parts.slice(2).join('\n');
-  } else {
-    const simpleParts = String(answerText || '').split('---');
-    if (simpleParts.length >= 3) {
-      choicesRaw = simpleParts.slice(2).join('\n');
-    }
+  const normalized = String(answerText || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+  let parts = normalized
+    .split(/\n\s*-{3,}\s*\n/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (parts.length < 3) {
+    parts = normalized
+      .split(/-{3,}/)
+      .map((part) => part.trim())
+      .filter(Boolean);
   }
 
+  const choicesRaw = parts.length >= 3 ? parts.slice(2).join('\n') : '';
   const choices = [];
   choicesRaw.split('\n').forEach((line) => {
     const cleanLine = line.trim();
@@ -51,6 +53,27 @@ function parseAnswers(answerText) {
   return choices;
 }
 
+function stripHtml(value) {
+  return decodeHtmlEntities(String(value || '').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
+}
+
+function decodeHtmlEntities(value) {
+  const named = {
+    amp: '&',
+    lt: '<',
+    gt: '>',
+    quot: '"',
+    apos: "'",
+    nbsp: ' '
+  };
+  return String(value || '').replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (entity, body) => {
+    const key = body.toLowerCase();
+    if (key.startsWith('#x')) return String.fromCodePoint(Number.parseInt(key.slice(2), 16));
+    if (key.startsWith('#')) return String.fromCodePoint(Number.parseInt(key.slice(1), 10));
+    return Object.prototype.hasOwnProperty.call(named, key) ? named[key] : entity;
+  });
+}
+
 async function getWorkbookQuestions() {
   const xlsxPath = path.join(process.cwd(), 'public', 'database', 'RMCSA', 'RMCSA', 'RMCSA.xlsx');
   const workbook = new ExcelJS.Workbook();
@@ -58,6 +81,7 @@ async function getWorkbookQuestions() {
   const sheet = workbook.worksheets[0];
 
   const questions = [];
+  const explanationFailures = [];
   sheet.eachRow((row, rowNumber) => {
     if (rowNumber === 1) return;
     const id = row.getCell(1).value;
@@ -73,9 +97,27 @@ async function getWorkbookQuestions() {
       choices,
       explanation
     });
+
+    const plainExplanation = stripHtml(explanation);
+    const correctChoices = choices.filter((choice) => choice.isCorrect);
+    if (plainExplanation.length < 200) {
+      explanationFailures.push(`Q${id} ${title}: explanation is missing or too short`);
+    }
+    if (correctChoices.length !== 1) {
+      explanationFailures.push(`Q${id} ${title}: expected exactly 1 correct choice, found ${correctChoices.length}`);
+    }
+    for (const correctChoice of correctChoices) {
+      if (!plainExplanation.toLowerCase().includes(correctChoice.text.toLowerCase())) {
+        explanationFailures.push(`Q${id} ${title}: explanation does not mention correct answer`);
+      }
+    }
   });
 
   assert(questions.length > 0, 'Expected at least one RMCSA question in the workbook');
+  assert(
+    explanationFailures.length === 0,
+    `RMCSA workbook explanation guard failed:\n${explanationFailures.slice(0, 20).join('\n')}`
+  );
   return questions;
 }
 
@@ -242,7 +284,7 @@ async function retryAndAssertReset(page) {
   const target = questions.find((question) => {
     const correctCount = question.choices.filter((choice) => choice.isCorrect).length;
     const incorrectCount = question.choices.filter((choice) => !choice.isCorrect).length;
-    return correctCount === 1 && incorrectCount >= 1;
+    return correctCount === 1 && incorrectCount >= 1 && stripHtml(question.explanation).length >= 200;
   }) || firstQuestion;
   const baseUrl = `http://127.0.0.1:${port}`;
   

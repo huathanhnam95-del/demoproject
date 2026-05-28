@@ -741,7 +741,7 @@
       listening: {
         label: 'Listening',
         kind: 'live-skill',
-        modeIds: ['type', 'collo-dictate', 'extended', 'watch', 'notes', 'lmcma', 'lmcsa', 'hcs', 'smw', 'hiw']
+        modeIds: ['sst', 'type', 'collo-dictate', 'extended', 'watch', 'notes', 'lmcma', 'lmcsa', 'hcs', 'smw', 'hiw']
       },
       reading: {
         label: 'Reading',
@@ -755,6 +755,13 @@
       }
     },
     modes: {
+      sst: {
+        label: 'Summarize Spoken Text',
+        skill: 'listening',
+        hasTutorial: false,
+        isLive: true,
+        launcherVisible: true
+      },
       type: {
         label: 'Dictate',
         skill: 'listening',
@@ -940,7 +947,7 @@
     },
     [SCOPE_PTE]: {
       visibleModes: new Set([
-        'read-aloud', 'speak', 'describe-image', 'notes', 'asq', 'sgd', 'essay', 'swt', 'type', 'rfib', 'dd', 'rmcsa', 'rmcma', 'rop', 'extended', 'rts', 'lmcma', 'lmcsa', 'hcs', 'smw', 'hiw'
+        'read-aloud', 'speak', 'describe-image', 'notes', 'asq', 'sgd', 'essay', 'swt', 'sst', 'type', 'rfib', 'dd', 'rmcsa', 'rmcma', 'rop', 'extended', 'rts', 'lmcma', 'lmcsa', 'hcs', 'smw', 'hiw'
       ]),
       modeOverrides: Object.freeze({
         speak: { label: 'Repeat Sentence' },
@@ -950,6 +957,7 @@
         sgd: { label: 'Summarize Group Discussion' },
         essay: { label: 'Write Essay' },
         swt: { label: 'Summarize Written Text' },
+        sst: { label: 'Summarize Spoken Text' },
         'describe-image': { launcherVisible: true, label: 'Describe Image' },
         rts: { launcherVisible: true, label: 'Respond To Situation' },
         rop: { label: 'Re-order Paragraph' },
@@ -1689,7 +1697,7 @@
   };
 
   async function ensureModeAssets(mode) {
-    if (!['watch', 'notes', 'rfib', 'rmcsa', 'rmcma', 'rop', 'dd', 'lmcma', 'lmcsa', 'hcs', 'smw', 'hiw'].includes(mode)) return true;
+    if (!['watch', 'notes', 'rfib', 'rmcsa', 'rmcma', 'rop', 'dd', 'lmcma', 'lmcsa', 'hcs', 'smw', 'hiw', 'sst'].includes(mode)) return true;
     if (!window.BELLazyLoader || typeof window.BELLazyLoader.ensureModeScripts !== 'function') {
       return true;
     }
@@ -1767,6 +1775,12 @@
       }
       window.SWTMode?.onExit?.();
     }
+    if (leavingMode === 'sst' && mode !== 'sst') {
+      if (window.SSTMode?.shouldConfirmExit?.() && !window.confirm('Leaving Summarize Spoken Text will discard your current attempt. Continue?')) {
+        return;
+      }
+      window.SSTMode?.onExit?.();
+    }
     if (leavingMode === 'rts' && mode !== 'rts') {
       window.RTSMode?.onExit?.();
     }
@@ -1831,7 +1845,7 @@
       return;
     }
 
-    if (mode === 'watch' || mode === 'notes' || mode === 'rfib' || mode === 'rmcsa' || mode === 'rmcma' || mode === 'rop' || mode === 'dd' || mode === 'lmcma' || mode === 'lmcsa' || mode === 'hcs' || mode === 'smw' || mode === 'hiw') {
+    if (mode === 'watch' || mode === 'notes' || mode === 'rfib' || mode === 'rmcsa' || mode === 'rmcma' || mode === 'rop' || mode === 'dd' || mode === 'lmcma' || mode === 'lmcsa' || mode === 'hcs' || mode === 'smw' || mode === 'hiw' || mode === 'sst') {
       const assetsReady = await ensureModeAssets(mode);
       if (!assetsReady) return;
     }
@@ -1960,6 +1974,8 @@
         await window.HCSMode.activate();
       } else if (mode === 'smw' && window.SMWMode && typeof window.SMWMode.activate === 'function') {
         await window.SMWMode.activate();
+      } else if (mode === 'sst' && window.SSTMode && typeof window.SSTMode.activate === 'function') {
+        await window.SSTMode.activate();
       } else if (mode === 'hiw' && window.HIWMode && typeof window.HIWMode.activate === 'function') {
         await window.HIWMode.activate();
       } else if (mode === 'rop' && window.ROPMode && typeof window.ROPMode.activate === 'function') {

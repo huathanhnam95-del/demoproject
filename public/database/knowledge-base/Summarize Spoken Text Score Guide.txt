@@ -1,0 +1,58 @@
+Summarize Spoken Text (SST) - PTE Listening and Writing Practice Score Guide
+
+Task instruction
+You will hear a short lecture. Write a summary for a fellow student who was not present at the lecture.
+You should write 50-70 words. You have 10 minutes to finish this task.
+Your response is judged on the quality of your writing and on how well it presents the key points in the lecture.
+
+Scoring note
+This application provides AI practice feedback. Pearson PTE reports that Summarize Spoken Text Content also includes human expert review before a final official task score is finalized.
+
+Traits scored: Content, Form, Grammar, Vocabulary, Spelling
+Maximum total: 12
+
+Content (maximum 4)
+4
+- The source text is summarised comprehensively, demonstrating full comprehension of the source text.
+- Paraphrasing is used effectively to communicate a clear and accurate summary, and extraneous details are removed. All main ideas are correctly identified and synthesized in a concise and coherent manner.
+- Summary flows smoothly and makes skilled use of appropriate and varied connective devices.
+
+3
+- The source text is summarised adequately, demonstrating good comprehension of the source text.
+- Paraphrasing is used, but not consistently well, and extraneous details may interfere with the clarity of the summary. Main ideas are correctly identified, with some minor omissions. Ideas are connected, but not synthesized efficiently.
+- Summary can be followed logically and makes effective use of simple or repetitive connective devices.
+
+2
+- The source text is summarised partially, demonstrating basic comprehension of the source text.
+- There is no discernment between main points and peripheral detail. Ideas are identified, but the response relies heavily on repeating excerpts from the source text without synthesizing ideas and reformulating in own words.
+- Repetitive or inappropriate connective devices are used to join ideas. Response can be followed with effort.
+
+1
+- The response is relevant but not meaningfully summarised, demonstrating limited comprehension of the source text.
+- The response is composed of disconnected ideas or excerpts from the source text without any context or attempt at synthesis. Main ideas are omitted or misrepresented.
+- The response lacks coherence and is difficult to follow.
+
+0
+- Response is too limited to assign a higher score and demonstrates no comprehension of the source text.
+
+Form (maximum 2)
+2 - Contains 50-70 words.
+1 - Contains 40-49 words or 71-100 words.
+0 - Contains less than 40 words or more than 100 words. Summary is written in capital letters, contains no punctuation or consists only of bullet points or very short sentences.
+
+Grammar (maximum 2)
+2 - Correct grammatical structures.
+1 - Contains grammatical errors with no hindrance to communication.
+0 - Defective grammatical structure which could hinder communications.
+
+Vocabulary (maximum 2)
+2 - Appropriate choice of words.
+1 - Some lexical errors but with no hindrance to communication.
+0 - Defective word choice which could hinder communication.
+
+Spelling (maximum 2)
+2 - Correct spelling.
+1 - One spelling error.
+0 - More than one spelling errors.
+
+Source: Pearson PTE Academic Test Taker Score Guide, Part 3 Listening, Summarize Spoken Text, pages 41-43.

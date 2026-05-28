@@ -9,6 +9,21 @@ OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "gemma4:latest")
 
 EXCEL_PATH = r"C:\Cursor AI\public\database\RMCMA\RMCMA\RMCMA.xlsx"
+CHOICE_RE = re.compile(r'^\[([xX\s]*)\]\s*(.*)$')
+
+
+def parse_choice_line(line):
+    match = CHOICE_RE.match(line.strip())
+    if not match:
+        return None
+    return {
+        'text': match.group(2).strip(),
+        'is_correct': 'x' in match.group(1).lower()
+    }
+
+
+def is_negative_prompt(question):
+    return bool(re.search(r'\b(false|incorrect|not true|not correct)\b', question or '', re.IGNORECASE))
 
 def parse_rmcma_content(text):
     if not text:
@@ -28,14 +43,9 @@ def parse_rmcma_content(text):
                 choices = []
                 question_lines = []
                 for line in lines:
-                    trimmed = line.strip()
-                    if trimmed.startswith('[]') or trimmed.startswith('[x]'):
-                        is_correct = trimmed.startswith('[x]')
-                        choice_text = trimmed[3:].strip()
-                        choices.append({
-                            'text': choice_text,
-                            'is_correct': is_correct
-                        })
+                    parsed_choice = parse_choice_line(line)
+                    if parsed_choice:
+                        choices.append(parsed_choice)
                     else:
                         if not choices:
                             question_lines.append(line)
@@ -53,14 +63,9 @@ def parse_rmcma_content(text):
     
     choices = []
     for line in choices_str.split('\n'):
-        trimmed = line.strip()
-        if trimmed.startswith('[]') or trimmed.startswith('[x]'):
-            is_correct = trimmed.startswith('[x]')
-            choice_text = trimmed[3:].strip()
-            choices.append({
-                'text': choice_text,
-                'is_correct': is_correct
-            })
+        parsed_choice = parse_choice_line(line)
+        if parsed_choice:
+            choices.append(parsed_choice)
             
     return {
         'passage': passage,
@@ -71,16 +76,27 @@ def parse_rmcma_content(text):
 def generate_explanation(parsed_data):
     passage = parsed_data['passage']
     question = parsed_data['question']
+    negative_prompt = is_negative_prompt(question)
     
     options_lines = []
     for c in parsed_data['choices']:
-        label = "(Correct)" if c['is_correct'] else "(Incorrect)"
+        label = "Selected answer" if c['is_correct'] else "Not selected"
         options_lines.append(f"- {c['text']} {label}")
     options_text = "\n".join(options_lines)
+    negative_guidance = """
+Important logic note:
+This is a negative-prompt question. The selected answers are the statements that are false or incorrect according to the passage.
+Do not label options as simply "Correct" or "Incorrect" because that can confuse answer-key correctness with statement truth.
+For each option, use "Selected" or "Not selected", then explain whether the statement itself is true or false according to the passage.
+""" if negative_prompt else """
+Important logic note:
+Use "Selected" or "Not selected" when discussing the answer key, and separately explain whether each option is supported by the passage.
+Avoid bare "Correct" or "Incorrect" labels that could be misread as statement truth rather than answer-key status.
+"""
     
     prompt = f"""
 You are an expert PTE Academic tutor.
-Analyze the following reading passage, question, and options, and provide a clear, detailed, and easy-to-understand explanation of the correct and incorrect answers.
+Analyze the following reading passage, question, and options, and provide a clear, detailed, and easy-to-understand explanation of the answer key.
 
 PASSAGE:
 {passage}
@@ -91,9 +107,11 @@ QUESTION:
 OPTIONS:
 {options_text}
 
+{negative_guidance}
+
 Task Instructions:
-1. Explain why the correct options are correct by citing relevant information or context from the passage.
-2. Explain why each incorrect option is wrong, pointing out where the passage contradicts it or why it is not mentioned/relevant.
+1. Explain why each selected answer belongs in the answer key by citing relevant information or context from the passage.
+2. Explain why each not-selected option does not belong in the answer key, pointing out where the passage contradicts it, supports it, or does not mention it.
 3. Write the response in clean HTML format. Use standard HTML tags:
    - Use <p> for paragraphs.
    - Use <strong> for emphasis.
@@ -162,7 +180,7 @@ def main():
             fail_count += 1
             continue
             
-        print(f"Row {row_idx} (ID {q_id}): Querying Gemini...")
+        print(f"Row {row_idx} (ID {q_id}): Querying Ollama ({OLLAMA_MODEL})...")
         explanation = generate_explanation(parsed)
         
         if explanation:

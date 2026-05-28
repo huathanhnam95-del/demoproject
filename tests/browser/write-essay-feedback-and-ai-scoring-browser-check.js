@@ -74,7 +74,7 @@ const path = require('path');
         vocabulary_range: { score: 1, rationale: 'Basic.' },
         spelling: { score: 0, rationale: 'Many typos.' }
       },
-      teacherAdvice: 'Focus on your vocabulary and spelling to improve your score.'
+      teacherAdviceChat: 'Focus on your vocabulary and spelling to improve your score.'
     };
 
     window.showLoginForm = () => {
@@ -209,6 +209,7 @@ const path = require('path');
       // Ensure the mock is where the app looks
       if (!window.__FIREBASE_INTERNAL__) window.__FIREBASE_INTERNAL__ = {};
       if (!window.__FIREBASE_INTERNAL__.auth) window.__FIREBASE_INTERNAL__.auth = {};
+      window.__FIREBASE_INTERNAL__.functions = {};
       Object.defineProperty(window.__FIREBASE_INTERNAL__.auth, 'currentUser', {
           get: () => window.mockUser,
           configurable: true
@@ -222,69 +223,32 @@ const path = require('path');
     const aiBtnEnabled = await page.$eval('#essay-ai-score-btn', btn => !btn.disabled);
     assert.strictEqual(aiBtnEnabled, true, 'AI scoring button should be enabled for logged-in users');
 
-    // Instead of clicking AI scoring (which requires real Firebase auth),
-    // directly inject mock AI score data to test the display pipeline
     await page.evaluate(() => {
-      const mockData = {
-        success: true,
-        overall: { total: 18, maxTotal: 26, percent: 69 },
-        scores: {
-          content: { score: 4, rationale: 'Good topic coverage', fixTips: ['Add more examples'], evidence: ['Uses relevant examples'] },
-          form: { score: 2, rationale: 'Ideal length', fixTips: [] },
-          development_structure_coherence: { score: 4, rationale: 'Clear structure', fixTips: ['Improve transitions'] },
-          grammar: { score: 2, rationale: 'Few grammatical errors', fixTips: [] },
-          general_linguistic_range: { score: 3, rationale: 'Adequate range', fixTips: ['Use more complex sentences'] },
-          vocabulary_range: { score: 2, rationale: 'Good vocabulary', fixTips: [] },
-          spelling: { score: 1, rationale: 'Minor spelling errors', fixTips: ['Check commonly confused words'] }
-        },
-        teacherAdviceChat: 'Focus on improving your content depth and linguistic range.'
-      };
-
-      // Update the results title
-      const title = document.getElementById('essay-results-title');
-      if (title) title.textContent = 'Your Essay Scores';
-
-      // Call the internal display via the results container update
-      const container = document.getElementById('essay-results-container');
-      if (!container) return;
-
-      // Build score rows HTML (same format as displayAiScoreResults)
-      const ordered = [
-        { key: 'content', label: 'Content', max: 6 },
-        { key: 'form', label: 'Form', max: 2 },
-        { key: 'development_structure_coherence', label: 'Development, Structure and Coherence', max: 6 },
-        { key: 'grammar', label: 'Grammar', max: 2 },
-        { key: 'general_linguistic_range', label: 'General Linguistic Range', max: 6 },
-        { key: 'vocabulary_range', label: 'Vocabulary Range', max: 2 },
-        { key: 'spelling', label: 'Spelling', max: 2 }
-      ];
-
-      const breakdownHtml = ordered.map(item => {
-        const s = mockData.scores[item.key] || {};
-        const score = typeof s.score === 'number' ? s.score : -1;
-        const badgeClass = score === item.max ? 'essay-score-full' :
-          score > 0 ? 'essay-score-partial' : 'essay-score-zero';
-        return `
-          <div class="essay-score-row">
-            <div class="essay-score-label">${item.label}</div>
-            <div class="essay-score-badge ${badgeClass}">${score}/${item.max}</div>
-            <div class="essay-score-detail">${s.rationale || ''}</div>
-          </div>
-        `;
-      }).join('');
-
-      container.innerHTML = `
-        <div class="essay-results-summary">
-          <div class="essay-results-score-circle">
-            <span class="essay-score-number">${mockData.overall.total}</span>
-            <span class="essay-score-divider">/</span>
-            <span class="essay-score-total">${mockData.overall.maxTotal}</span>
-          </div>
-          <div class="essay-results-percentage">${mockData.overall.percent}%</div>
-        </div>
-        <div class="essay-results-breakdown">${breakdownHtml}</div>
-      `;
+      window.__essayRenderedAdvice = [];
+      window.__essayChatOpened = false;
+      const messenger = document.querySelector('df-messenger');
+      if (messenger) {
+        messenger.renderCustomText = (text, showBotAvatar) => {
+          window.__essayRenderedAdvice.push({ text, showBotAvatar });
+        };
+      }
+      const bubble = document.querySelector('df-messenger-chat-bubble');
+      if (bubble) {
+        bubble.openChat = () => { window.__essayChatOpened = true; };
+      }
     });
+    await page.evaluate(() => {
+      const aiBtn = document.getElementById('essay-ai-score-btn');
+      if (aiBtn) aiBtn.click();
+    });
+    await page.waitForFunction(() => {
+      const results = document.getElementById('essay-results-container');
+      return results
+        && results.innerText.includes('12')
+        && results.innerText.includes('Content')
+        && Array.isArray(window.__essayRenderedAdvice)
+        && window.__essayRenderedAdvice.some((item) => item.text.includes('Focus on your vocabulary and spelling'));
+    }, { timeout: 30000 });
 
     // Verify AI score display
     const hasScoreRows = await page.evaluate(() => {
@@ -297,7 +261,7 @@ const path = require('path');
       const el = document.querySelector('.essay-score-number');
       return el ? el.textContent : '';
     });
-    assert.strictEqual(totalScore, '18', 'Total score should display 18');
+    assert.strictEqual(totalScore, '12', 'Total score should display 12');
 
     const scoreRowCount = await page.evaluate(() => {
       return document.querySelectorAll('.essay-score-row').length;
@@ -311,17 +275,25 @@ const path = require('path');
     });
     assert.strictEqual(hasDfMessenger, true, 'df-messenger element should exist for teacher advice integration');
 
-    // Verify we can simulate the teacher advice flow
     const adviceTest = await page.evaluate(() => {
       try {
-        // Test that the chat bubble element exists
         const bubble = document.querySelector('df-messenger-chat-bubble');
-        return { hasBubble: bubble !== null, error: null };
+        return {
+          hasBubble: bubble !== null,
+          chatOpened: Boolean(window.__essayChatOpened),
+          renderedAdvice: window.__essayRenderedAdvice || [],
+          error: null
+        };
       } catch (e) {
-        return { hasBubble: false, error: e.message };
+        return { hasBubble: false, chatOpened: false, renderedAdvice: [], error: e.message };
       }
     });
     assert.strictEqual(adviceTest.hasBubble, true, 'df-messenger chat bubble should exist for advice routing');
+    assert.strictEqual(adviceTest.chatOpened, true, 'BEL chat should open when Write Essay teacher advice is sent');
+    assert.ok(
+      adviceTest.renderedAdvice.some((item) => item.text.includes('Focus on your vocabulary and spelling')),
+      'BEL chat should receive Write Essay teacher advice'
+    );
 
     console.log('✅ Write Essay Feedback and AI Scoring Check PASSED');
   } catch (err) {

@@ -508,8 +508,9 @@
         renderAIResults(data);
         aiScoreCompleted = true;
         // Push to BEL chat
-        if (data.teacherAdviceChat) {
-          postTeacherAdviceToChat(data.teacherAdviceChat);
+        const teacherAdviceForChat = String(data.teacherAdviceChat || data.teacherAdvice || '').trim();
+        if (teacherAdviceForChat) {
+          postTeacherAdviceToChat(teacherAdviceForChat);
         }
       } else if (d.aiScoreHint) {
         preserveAiHint = true;
@@ -594,7 +595,7 @@
     const overallPct = Number.isFinite(Number(overall.percent)) ? Number(overall.percent) : 0;
     const overallTotal = Number.isFinite(Number(overall.total)) ? Number(overall.total) : 0;
     const overallMax = Number.isFinite(Number(overall.maxTotal)) ? Number(overall.maxTotal) : 9;
-    const teacherAdvice = String(data?.teacherAdviceChat || '').trim();
+    const teacherAdvice = String(data?.teacherAdviceChat || data?.teacherAdvice || '').trim();
     const teacherAdviceHtml = teacherAdvice ? `
       <div class="essay-submitted">
         <h4>Teacher advice</h4>

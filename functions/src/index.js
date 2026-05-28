@@ -19,6 +19,7 @@ const { migrateUserCoins } = require('./migrateCoins');
 const { assessWriting } = require('./assessWriting');
 const { scoreEssay } = require('./scoreEssay');
 const { scoreSWT } = require('./scoreSWT');
+const { scoreSST } = require('./scoreSST');
 const { scoreRTS } = require('./scoreRTS');
 
 const { onRequest } = require('firebase-functions/v2/https');
@@ -119,6 +120,7 @@ module.exports = {
     assessWriting,
     scoreEssay,
     scoreSWT,
+    scoreSST,
     scoreRTS,
     api: onRequest({ region: 'us-central1' }, apiApp),
     crmAutomationRunner: onSchedule({ region: 'us-central1', schedule: 'every 24 hours' }, async () => {

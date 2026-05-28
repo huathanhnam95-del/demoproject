@@ -240,7 +240,7 @@ async function releaseDailyRTSScore(userRef, { today }) {
   }
 }
 
-const scoreRTS = onCall({ maxInstances: 10 }, async (request) => {
+const scoreRTS = onCall({ maxInstances: 10, timeoutSeconds: 180 }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }

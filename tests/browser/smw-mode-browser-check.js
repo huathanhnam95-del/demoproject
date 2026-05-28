@@ -238,7 +238,7 @@ async function assertScore(page, expectedScore, totalCorrectChoices, expectedHea
   await page.waitForFunction(() => {
     const box = document.getElementById('smw-result-box');
     return !!box && getComputedStyle(box).display !== 'none';
-  }, { timeout: 5000 });
+  }, undefined, { timeout: 5000 });
 
   const scoreText = await resultBox.textContent();
   assert(
@@ -338,9 +338,26 @@ async function retryAndAssertReset(page) {
   });
 
   try {
-    // Navigate to page
+    // An invalid deep link should fall back to a usable first question.
     await page.goto(`${baseUrl}/index.html`, { waitUntil: 'domcontentloaded' });
-    await page.waitForFunction(() => typeof window.switchToMode === 'function', { timeout: 30000 });
+    await page.waitForFunction(() => typeof window.switchToMode === 'function', undefined, { timeout: 30000 });
+    await page.evaluate(async () => {
+      window.history.replaceState({}, '', '/pte-practice/listening/smw/not-a-real-question');
+      await window.switchToMode('smw');
+    });
+    await page.waitForFunction((expectedTitle) => {
+      const pill = document.getElementById('smw-v7-question-pill')?.textContent || '';
+      const choices = document.querySelectorAll('#smw-choices-container .smw-choice-card');
+      return pill.includes(expectedTitle) && choices.length > 0;
+    }, firstQuestion.title, { timeout: 5000 });
+    assert(
+      !new URL(page.url()).pathname.endsWith('/not-a-real-question'),
+      `Invalid deep link should be replaced after loading the fallback question: ${page.url()}`
+    );
+
+    // Navigate to a fresh page for the full learner flow.
+    await page.goto(`${baseUrl}/index.html`, { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() => typeof window.switchToMode === 'function', undefined, { timeout: 30000 });
 
     // Click Listening skill button
     const listeningSkillButton = page.locator('.practice-skill-btn[data-practice-skill="listening"]');
@@ -351,7 +368,7 @@ async function retryAndAssertReset(page) {
       return button?.classList.contains('is-active') &&
         card &&
         getComputedStyle(card).display !== 'none';
-    }, { timeout: 10000 });
+    }, undefined, { timeout: 10000 });
 
     const smwCard = page.locator('#mode-btn-smw');
     await smwCard.click();
@@ -360,14 +377,14 @@ async function retryAndAssertReset(page) {
     await page.waitForFunction(() => {
       const panel = document.getElementById('mode-smw');
       return !!panel && panel.classList.contains('active') && getComputedStyle(panel).display !== 'none';
-    }, { timeout: 30000 });
+    }, undefined, { timeout: 30000 });
 
     // Wait for Excel workbook to load and first question to render
     await page.waitForFunction(() => {
       const prompt = document.getElementById('smw-question-prompt')?.textContent || '';
       const choices = document.querySelectorAll('#smw-choices-container .smw-choice-card');
       return prompt.length > 10 && choices.length > 0 && !prompt.includes('Loading');
-    }, { timeout: 30000 });
+    }, undefined, { timeout: 30000 });
 
     // Verify correct question title is shown in question picker pill
     let pillText = await page.locator('#smw-v7-question-pill').textContent();
@@ -390,13 +407,22 @@ async function retryAndAssertReset(page) {
     await page.waitForFunction(() => {
       const sheet = document.getElementById('smw-v7-sheet');
       return sheet?.classList.contains('is-open') && sheet.getAttribute('aria-hidden') === 'false';
-    }, { timeout: 5000 });
+    }, undefined, { timeout: 5000 });
+
+    await page.keyboard.press('Escape');
+    await page.waitForFunction(() => {
+      const sheet = document.getElementById('smw-v7-sheet');
+      return !sheet?.classList.contains('is-open') &&
+        document.activeElement === document.getElementById('smw-v7-question-pill');
+    }, undefined, { timeout: 5000 });
+    await page.locator('#smw-v7-question-pill').click();
+    await page.waitForFunction(() => document.getElementById('smw-v7-sheet')?.classList.contains('is-open'), undefined, { timeout: 5000 });
 
     await page.locator('#smw-v7-jump-search').fill('__no_matching_question__');
     await page.waitForFunction(() => {
       const list = document.getElementById('smw-v7-jump-list')?.textContent || '';
       return list.includes('No matching questions');
-    }, { timeout: 5000 });
+    }, undefined, { timeout: 5000 });
 
     await page.locator('#smw-v7-jump-search').fill(String(target.id));
     await page.waitForFunction((expectedTitle) => {
@@ -407,14 +433,30 @@ async function retryAndAssertReset(page) {
     await page.waitForFunction(() => {
       const sheet = document.getElementById('smw-v7-sheet');
       return !sheet?.classList.contains('is-open') && sheet.getAttribute('aria-hidden') === 'true';
-    }, { timeout: 5000 });
+    }, undefined, { timeout: 5000 });
 
     pillText = await page.locator('#smw-v7-question-pill').textContent();
     assert(pillText.includes(target.title), `Pill text "${pillText}" does not contain selected title "${target.title}"`);
 
     // Verify choices count
+    const choicesGroup = page.locator('#smw-choices-container');
     const choicesCount = await page.locator('#smw-choices-container .smw-choice-card').count();
     assert.equal(choicesCount, target.choices.length, `Expected ${target.choices.length} choices, found ${choicesCount}`);
+    assert.equal(await choicesGroup.getAttribute('role'), 'radiogroup', 'SMW choices should be exposed as a radio group');
+    assert.equal(await choicesGroup.getAttribute('aria-label'), 'Missing word choices', 'SMW radio group should have an accessible label');
+
+    const submitBtn = page.locator('#smw-submit-btn');
+    assert.equal(await submitBtn.isDisabled(), true, 'Submit button should start disabled');
+    const firstRenderedChoice = choicesGroup.locator('.smw-choice-card').nth(0);
+    const secondRenderedChoice = choicesGroup.locator('.smw-choice-card').nth(1);
+    assert.equal(await firstRenderedChoice.getAttribute('role'), 'radio', 'Each SMW choice should be exposed as a radio option');
+    assert.equal(await firstRenderedChoice.getAttribute('aria-checked'), 'false', 'A fresh SMW question should start unselected');
+    assert.equal(await firstRenderedChoice.getAttribute('tabindex'), '0', 'The first choice should be keyboard reachable initially');
+    await firstRenderedChoice.focus();
+    await page.keyboard.press('ArrowDown');
+    assert.equal(await secondRenderedChoice.getAttribute('aria-checked'), 'true', 'Arrow keys should select the next SMW choice');
+    assert.equal(await secondRenderedChoice.getAttribute('tabindex'), '0', 'Keyboard-selected SMW choice should become the tab stop');
+    assert.equal(await submitBtn.isDisabled(), false, 'Keyboard selection should enable Submit');
 
     // Verify speed button group interaction
     const speedGroup = page.locator('.smw-speed-group');
@@ -434,10 +476,6 @@ async function retryAndAssertReset(page) {
         return audio && (audio.currentSrc || audio.src) !== previousSrc;
       }, initialAudioSrc, { timeout: 5000 });
     }
-
-    // Submit should start disabled until a selection is made
-    const submitBtn = page.locator('#smw-submit-btn');
-    assert.equal(await submitBtn.isDisabled(), true, 'Submit button should start disabled');
 
     // Incorrect score path: select one incorrect answer.
     const correctChoices = target.choices.filter(c => c.isCorrect);
@@ -476,7 +514,7 @@ async function retryAndAssertReset(page) {
     await page.waitForFunction(() => {
       const panel = document.getElementById('smw-explanation-panel');
       return !!panel && getComputedStyle(panel).display !== 'none';
-    }, { timeout: 5000 });
+    }, undefined, { timeout: 5000 });
 
     // Verify audio transcript has been revealed and trailing [BEEP] replaced
     const transcriptHtml = await page.locator('#smw-passage-text').innerHTML();
@@ -499,7 +537,7 @@ async function retryAndAssertReset(page) {
     await page.waitForFunction(() => {
       const panel = document.getElementById('smw-explanation-panel');
       return !!panel && getComputedStyle(panel).display === 'none';
-    }, { timeout: 5000 });
+    }, undefined, { timeout: 5000 });
 
     await retryAndAssertReset(page);
 

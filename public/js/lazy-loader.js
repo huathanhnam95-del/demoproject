@@ -226,6 +226,16 @@
     loadedModes.add('smw');
   }
 
+  async function ensureSstModeLoaded() {
+    if (loadedModes.has('sst') || window.SSTMode) {
+      loadedModes.add('sst');
+      return;
+    }
+    await ensureXlsxLoaded();
+    await loadScript('sst-mode.js');
+    loadedModes.add('sst');
+  }
+
   async function ensureHcsModeLoaded() {
     if (loadedModes.has('hcs') || window.HCSMode) {
       loadedModes.add('hcs');
@@ -312,6 +322,10 @@
       await ensureSmwModeLoaded();
       return true;
     }
+    if (mode === 'sst') {
+      await ensureSstModeLoaded();
+      return true;
+    }
     if (mode === 'rmcsa') {
       await ensureRmcsaModeLoaded();
       return true;
@@ -337,6 +351,7 @@
     ensureLmcmaModeLoaded,
     ensureLmcsaModeLoaded,
     ensureSmwModeLoaded,
+    ensureSstModeLoaded,
     ensureRmcsaModeLoaded,
     ensureRopModeLoaded,
     ensureHiwModeLoaded,

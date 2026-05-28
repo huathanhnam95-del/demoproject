@@ -1,0 +1,551 @@
+{
+  "generatedAt": "2026-05-23T09:31:11.344Z",
+  "workbookPath": "C:\\Cursor AI\\public\\database\\HCS\\HCS\\HCS.xlsx",
+  "rowCount": 60,
+  "statusCounts": {
+    "pass": 60
+  },
+  "issueCounts": {},
+  "results": [
+    {
+      "id": "1",
+      "title": "#1 Cliche",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, clearly identifying the central contrast between literary and visual clichés and providing strong, detailed justification for the correct summary.",
+      "explanationPlainLength": 1877
+    },
+    {
+      "id": "2",
+      "title": "#2 HCS",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly useful and factually accurate, successfully distinguishing the overarching theme (multiple benefits) from the supporting examples (variation in size or specific species).",
+      "explanationPlainLength": 1731
+    },
+    {
+      "id": "3",
+      "title": "#3 HCS",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, logically structured, and provides excellent justification for both the correct summary and the distractors.",
+      "explanationPlainLength": 1739
+    },
+    {
+      "id": "4",
+      "title": "#4 Revolution",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, clearly justifying the correct summary by emphasizing its role as a comprehensive synthesis of the most modern historical perspective.",
+      "explanationPlainLength": 1667
+    },
+    {
+      "id": "5",
+      "title": "#5 Anthropology",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is factually accurate, logically sound, and highly useful for teaching the concept of synthesizing the main academic argument over listing supporting details.",
+      "explanationPlainLength": 1912
+    },
+    {
+      "id": "6",
+      "title": "#6 Creative Imagination",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, logically structured, and effectively uses textual evidence to justify both the correct summary and the rejection of the distractors.",
+      "explanationPlainLength": 1942
+    },
+    {
+      "id": "7",
+      "title": "#7 HCS",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is factually accurate, highly detailed, and provides excellent reasoning for both the correct summary and the distractors.",
+      "explanationPlainLength": 1895
+    },
+    {
+      "id": "8",
+      "title": "#8 Ernest Hemingway",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, logically structured, and provides excellent reasoning for both the correct choice and the distractors.",
+      "explanationPlainLength": 1476
+    },
+    {
+      "id": "9",
+      "title": "#9 HCS",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, logically structured, and effectively guides the learner to the central theme of the passage: the evolution and democratization of the practice.",
+      "explanationPlainLength": 1867
+    },
+    {
+      "id": "10",
+      "title": "#10 HCS",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is factually accurate, highly detailed, and effectively teaches the concept of comprehensive synthesis required for summary questions.",
+      "explanationPlainLength": 1785
+    },
+    {
+      "id": "11",
+      "title": "#11 Hand",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is comprehensive, factually accurate, and provides excellent pedagogical reasoning for both the correct choice and the distractors.",
+      "explanationPlainLength": 1790
+    },
+    {
+      "id": "12",
+      "title": "#12 HCS",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, logically structured, and provides excellent justification for both the correct summary and the distractors.",
+      "explanationPlainLength": 1512
+    },
+    {
+      "id": "13",
+      "title": "#13 HCS",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is factually accurate, logically structured, and highly useful for teaching summary synthesis skills.",
+      "explanationPlainLength": 1685
+    },
+    {
+      "id": "14",
+      "title": "#14 Urban Development",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, clearly defining the central conflict and effectively using the concept of 'balance' to explain why the distractors are too narrow.",
+      "explanationPlainLength": 1778
+    },
+    {
+      "id": "15",
+      "title": "#15 Workplace Models",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, comprehensive, and provides excellent justification for both the correct summary and the distractors.",
+      "explanationPlainLength": 1842
+    },
+    {
+      "id": "16",
+      "title": "#16 HCS",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, factually aligned with the transcript, and provides excellent pedagogical value by systematically dismantling the flaws in the distractors.",
+      "explanationPlainLength": 1695
+    },
+    {
+      "id": "20",
+      "title": "#20 Noise Exposure",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, factually aligned with the transcript, and provides excellent, detailed reasoning for the learner.",
+      "explanationPlainLength": 1700
+    },
+    {
+      "id": "21",
+      "title": "#21 Wagner",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is factually accurate, logically structured, and highly useful for teaching the concept of identifying the main argument versus supporting details.",
+      "explanationPlainLength": 1783
+    },
+    {
+      "id": "22",
+      "title": "#22 Social Media",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, detailed, and effectively guides the learner through the necessary synthesis of the passage's argument (benefits + problem + root cause + solution).",
+      "explanationPlainLength": 1877
+    },
+    {
+      "id": "23",
+      "title": "#23 Petersburg",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is factually accurate, logically structured, and highly useful for teaching the concept of comprehensive summarization.",
+      "explanationPlainLength": 1684
+    },
+    {
+      "id": "24",
+      "title": "#24 Cook",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, effectively linking the summary's focus on comparative outcomes to the transcript's main argument.",
+      "explanationPlainLength": 1894
+    },
+    {
+      "id": "25",
+      "title": "#25 Anti-brain",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, comprehensive, and effectively guides the learner by detailing the structural relationship between the argument's cause, conflict, and resolution.",
+      "explanationPlainLength": 1815
+    },
+    {
+      "id": "26",
+      "title": "#26 Extinct Animals",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is factually accurate, highly detailed, and effectively guides the learner by linking the summary's claims directly to the transcript's examples.",
+      "explanationPlainLength": 1747
+    },
+    {
+      "id": "27",
+      "title": "#27 Mosquitoes",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is factually accurate, logically structured, and provides excellent guidance on why the correct summary achieves comprehensive scope while the distractors are too narrow.",
+      "explanationPlainLength": 1725
+    },
+    {
+      "id": "28",
+      "title": "#28 Pathogens",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, factually aligned with the transcript, and provides excellent pedagogical reasoning for why the correct summary achieves comprehensive synthesis.",
+      "explanationPlainLength": 1769
+    },
+    {
+      "id": "29",
+      "title": "#29 Read",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, factually aligned with the transcript, and provides excellent, structured reasoning for both the correct summary and the distractors.",
+      "explanationPlainLength": 1829
+    },
+    {
+      "id": "30",
+      "title": "#30 Washington",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is factually accurate, logically structured, and highly useful for teaching the concept of comprehensive summarization.",
+      "explanationPlainLength": 1861
+    },
+    {
+      "id": "31",
+      "title": "#31 Hieroglyphics",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is factually accurate, highly detailed, and provides excellent pedagogical justification for why the correct summary captures the core narrative process.",
+      "explanationPlainLength": 1965
+    },
+    {
+      "id": "32",
+      "title": "#32 The Mayans",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, logically structured, and effectively guides the learner by emphasizing that comprehensive scope is the key differentiator between the correct summary and the distractors.",
+      "explanationPlainLength": 2102
+    },
+    {
+      "id": "33",
+      "title": "#33 Laws",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is comprehensive, factually accurate, and provides excellent pedagogical reasoning for both the correct summary and the distractors.",
+      "explanationPlainLength": 1871
+    },
+    {
+      "id": "34",
+      "title": "#34 Advertising",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, comprehensive, and effectively teaches the learner how to identify the necessary scope and depth required for a complete summary.",
+      "explanationPlainLength": 1839
+    },
+    {
+      "id": "35",
+      "title": "#35 Green Light",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is factually accurate, highly detailed, and effectively teaches the learner how to distinguish between a comprehensive summary and mere supporting details.",
+      "explanationPlainLength": 1742
+    },
+    {
+      "id": "36",
+      "title": "#36 Harder Objects",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, comprehensive, and effectively guides the learner by detailing both the strengths of the correct summary and the specific deficiencies of the distractors.",
+      "explanationPlainLength": 1852
+    },
+    {
+      "id": "37",
+      "title": "#37 Winter",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is comprehensive, factually accurate, and effectively guides the learner by linking the summary's components directly to the transcript's main arguments.",
+      "explanationPlainLength": 1714
+    },
+    {
+      "id": "38",
+      "title": "#38 Chemistry",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, logically structured, and effectively guides the learner on the difference between synthesis (summary) and mere detail recall.",
+      "explanationPlainLength": 1698
+    },
+    {
+      "id": "39",
+      "title": "#39 Hurricane",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, comprehensive, and effectively guides the learner by detailing how the correct summary covers all major thematic points while pointing out the specific limitations of the distractors.",
+      "explanationPlainLength": 1661
+    },
+    {
+      "id": "60",
+      "title": "#60 Pancake Ice",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, factually aligned with the transcript, and provides excellent pedagogical value by teaching the concept of synthesis.",
+      "explanationPlainLength": 1951
+    },
+    {
+      "id": "61",
+      "title": "#61 Ugly Building",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, logically structured, and effectively guides the learner by tracing the speaker's argumentative shift from subjective complaint to objective conclusion.",
+      "explanationPlainLength": 2175
+    },
+    {
+      "id": "79",
+      "title": "#79 Procrastination",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, clearly defining the crucial shift from behavioral recognition to deep emotional and motivational self-awareness.",
+      "explanationPlainLength": 1856
+    },
+    {
+      "id": "80",
+      "title": "#80 Mental Health",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is factually accurate, clearly links the summary to the transcript's core message, and provides strong, useful rationale for dismissing the distractors.",
+      "explanationPlainLength": 1895
+    },
+    {
+      "id": "81",
+      "title": "#81 What Democracy Breeds",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, comprehensive, and effectively guides the learner by clearly contrasting the core mechanism (sensitivity to slight variations) with the distractors' narrow or overly broad focus.",
+      "explanationPlainLength": 1951
+    },
+    {
+      "id": "83",
+      "title": "#83 Welfare Programs",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, factually aligned with the transcript, and provides excellent pedagogical value by clearly contrasting the scope of the correct summary with the distractors.",
+      "explanationPlainLength": 1794
+    },
+    {
+      "id": "84",
+      "title": "#84 Health Insurance",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, clearly linking the summary's focus on the non-group market's discrimination and resulting vulnerability to the core argument of the transcript.",
+      "explanationPlainLength": 1769
+    },
+    {
+      "id": "85",
+      "title": "#85 Reversible Diseases",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, logically structured, and effectively uses the transcript's nuances to justify the correct summary and dismiss the distractors.",
+      "explanationPlainLength": 1880
+    },
+    {
+      "id": "86",
+      "title": "#86 Less Expectation of Love",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, logically structured, and provides excellent textual justification for both the correct summary and the elimination of distractors.",
+      "explanationPlainLength": 1823
+    },
+    {
+      "id": "87",
+      "title": "#87 HCS",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, comprehensive, and provides excellent pedagogical reasoning for both the correct summary and the distractors.",
+      "explanationPlainLength": 2154
+    },
+    {
+      "id": "88",
+      "title": "#88 Nonviolent Communication",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, comprehensive, and effectively uses the transcript details to justify both the correct summary and the weaknesses of the distractors.",
+      "explanationPlainLength": 1967
+    },
+    {
+      "id": "89",
+      "title": "#89 20 Hours",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, logically structured, and provides excellent justification for both the correct answer and the distractors.",
+      "explanationPlainLength": 1529
+    },
+    {
+      "id": "90",
+      "title": "#90 Palliative Care",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, logically structured, and effectively guides the learner on how to synthesize both the medical evidence and the philosophical core message.",
+      "explanationPlainLength": 1892
+    },
+    {
+      "id": "91",
+      "title": "#91 Expectation",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate and useful because it successfully distinguishes between the specific anecdote (the jeans) and the speaker's generalized psychological thesis.",
+      "explanationPlainLength": 1968
+    },
+    {
+      "id": "92",
+      "title": "#92 Malaria",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, factually aligned with the transcript, and provides excellent justification by correctly using the passage's caveats to dismiss the distractors.",
+      "explanationPlainLength": 1880
+    },
+    {
+      "id": "93",
+      "title": "#93 Alzheimer’s Disease",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, logically structured, and effectively teaches the learner the difference between capturing the overall scope (the correct summary) versus focusing only on specific details (the distractors).",
+      "explanationPlainLength": 1937
+    },
+    {
+      "id": "94",
+      "title": "#94 Overwork In Japan",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly useful, accurately guiding the learner to understand that the correct summary captures the full scope and narrative progression (problem to consequence) rather than just listing isolated facts.",
+      "explanationPlainLength": 1719
+    },
+    {
+      "id": "95",
+      "title": "#95 Saving Money",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, logically structured, and provides excellent pedagogical value by systematically explaining why the distractors fail to capture the overarching principle of environmental change.",
+      "explanationPlainLength": 1882
+    },
+    {
+      "id": "97",
+      "title": "#97 Mountains",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is factually accurate, highly comprehensive, and effectively guides the learner by detailing how the correct summary synthesizes all three major limiting factors discussed in the transcript.",
+      "explanationPlainLength": 1853
+    },
+    {
+      "id": "98",
+      "title": "#98 Friendship",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, detailed, and effectively guides the learner through the reasoning by correctly identifying the core advice and the nuances missed by the distractors.",
+      "explanationPlainLength": 1643
+    },
+    {
+      "id": "99",
+      "title": "#99 Communication between Couples",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, providing comprehensive justification for the correct summary's synthesis while precisely identifying the factual limitations of the distractors.",
+      "explanationPlainLength": 1723
+    },
+    {
+      "id": "100",
+      "title": "#100 Romance",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, comprehensive, and effectively guides the learner through the reasoning for both the correct summary and the distractors.",
+      "explanationPlainLength": 1535
+    },
+    {
+      "id": "117",
+      "title": "#117 Sodium",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, logically structured, and provides excellent justification for both the correct summary and the weaknesses of the distractors.",
+      "explanationPlainLength": 1920
+    },
+    {
+      "id": "124",
+      "title": "#124 DNA Model",
+      "status": "pass",
+      "issues": [],
+      "semanticStatus": "pass",
+      "semanticNotes": "The explanation is highly accurate, logically structured, and effectively guides the learner by detailing the specific conceptual gaps in the distractors.",
+      "explanationPlainLength": 1885
+    }
+  ]
+}

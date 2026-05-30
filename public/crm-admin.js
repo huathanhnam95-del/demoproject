@@ -111,6 +111,8 @@
   const selectedClassroomIds = new Set();
   let adminCapabilities = { ...DEFAULT_ADMIN_CAPABILITIES };
   let dashboardController = null;
+  let schedulerController = null;
+  let schedulerInitialized = false;
   let teacherSchedulerController = null;
   let teacherSchedulerInitialized = false;
   let staffWorkspaceController = null;
@@ -437,6 +439,8 @@
     elements.btnOpenEntranceTestLink = document.getElementById('btn-open-entrance-test-link');
     elements.entranceTestLinkNote = document.getElementById('entrance-test-link-note');
     elements.entranceTestsList = document.getElementById('entrance-tests-list');
+    elements.btnRefreshStudentPteAttempts = document.getElementById('btn-refresh-student-pte-attempts');
+    elements.studentPteAttemptsList = document.getElementById('student-pte-attempts-list');
 
     // Identity Elements
     elements.inputClassCodeDisplay = document.getElementById('crm-class-code-display');
@@ -471,6 +475,7 @@
     elements.inputCourseLevel = document.getElementById('course-level');
     elements.inputCourseCategory = document.getElementById('course-category');
     elements.inputCourseStatus = document.getElementById('course-status');
+    elements.inputCourseAgentCommissionPercent = document.getElementById('course-agent-commission-percent');
     elements.inputCourseDescription = document.getElementById('course-description');
     elements.inputCourseTotalHours = document.getElementById('course-total-hours');
     elements.inputCourseDefaultSessionMinutes = document.getElementById('course-default-session-minutes');
@@ -550,6 +555,39 @@
     elements.inputLiveSessionPasscode = document.getElementById('input-live-session-passcode');
     elements.inputLiveSessionNotes = document.getElementById('input-live-session-notes');
     elements.classroomScheduleSummary = document.getElementById('classroom-schedule-summary');
+
+    elements.schedulerWorkspace = document.getElementById('scheduler-workspace');
+    elements.schedulerClassList = document.getElementById('scheduler-class-list');
+    elements.schedulerCalendar = document.getElementById('scheduler-calendar');
+    elements.btnRefreshScheduler = document.getElementById('btn-refresh-scheduler');
+    elements.btnSeedScheduler = document.getElementById('btn-seed-scheduler');
+    elements.inputSchedulerTeacherFilter = document.getElementById('scheduler-teacher-filter');
+    elements.inputSchedulerFromDate = document.getElementById('scheduler-from-date');
+    elements.inputSchedulerToDate = document.getElementById('scheduler-to-date');
+    elements.schedulerActionModal = document.getElementById('scheduler-action-modal');
+    elements.schedulerActionTitle = document.getElementById('scheduler-action-title');
+    elements.schedulerActionBadge = document.getElementById('scheduler-action-badge');
+    elements.btnCloseSchedulerActionModal = document.getElementById('btn-close-scheduler-action-modal');
+    elements.schedulerActionClassName = document.getElementById('scheduler-action-class-name');
+    elements.schedulerActionTargetDateTime = document.getElementById('scheduler-action-target-datetime');
+    elements.schedulerActionTeacher = document.getElementById('scheduler-action-teacher');
+    elements.schedulerActionContractSummary = document.getElementById('scheduler-action-contract-summary');
+    elements.schedulerActionAddButton = document.getElementById('scheduler-action-add-button');
+    elements.schedulerActionReplaceButton = document.getElementById('scheduler-action-replace-button');
+    elements.schedulerActionAddPanel = document.getElementById('scheduler-action-add-panel');
+    elements.schedulerActionReplacePanel = document.getElementById('scheduler-action-replace-panel');
+    elements.schedulerActionAddOnce = document.getElementById('scheduler-action-add-once');
+    elements.schedulerActionAddRecurring = document.getElementById('scheduler-action-add-recurring');
+    elements.schedulerActionRecurringCount = document.getElementById('scheduler-action-recurring-count');
+    elements.schedulerActionPreviewRequested = document.getElementById('scheduler-action-preview-requested');
+    elements.schedulerActionPreviewValid = document.getElementById('scheduler-action-preview-valid');
+    elements.schedulerActionPreviewSkipped = document.getElementById('scheduler-action-preview-skipped');
+    elements.schedulerActionPreviewOverflow = document.getElementById('scheduler-action-preview-overflow');
+    elements.schedulerActionAddWarning = document.getElementById('scheduler-action-add-warning');
+    elements.schedulerActionReplaceSummary = document.getElementById('scheduler-action-replace-summary');
+    elements.schedulerActionReplaceList = document.getElementById('scheduler-action-replace-list');
+    elements.btnCancelSchedulerAction = document.getElementById('btn-cancel-scheduler-action');
+    elements.btnConfirmSchedulerAction = document.getElementById('btn-confirm-scheduler-action');
 
     elements.teacherSchedulerWorkspace = document.getElementById('teacher-scheduler-workspace');
     elements.teacherSchedulerClassList = document.getElementById('teacher-scheduler-class-list');
@@ -1225,6 +1263,14 @@
         getAdminCapabilities
       })
       : null;
+    schedulerController = window.CrmSchedulerWorkspace && typeof window.CrmSchedulerWorkspace.createController === 'function'
+      ? window.CrmSchedulerWorkspace.createController({
+        elements,
+        modalState,
+        showToast,
+        escapeHtml
+      })
+      : null;
     teacherSchedulerController = window.TeacherSchedulerWorkspace && typeof window.TeacherSchedulerWorkspace.createController === 'function'
       ? window.TeacherSchedulerWorkspace.createController({
         elements,
@@ -1786,6 +1832,36 @@
       });
     }
 
+    if (elements.btnRefreshStudentPteAttempts) {
+      elements.btnRefreshStudentPteAttempts.addEventListener('click', () => {
+        refreshStudentPteAttempts().catch((e) => {
+          console.error('[CRM Admin] Refresh PTE attempts failed:', e);
+          showToast(e?.message || 'Failed to load PTE attempts.', 'error');
+        });
+      });
+    }
+    if (elements.studentPteAttemptsList) {
+      elements.studentPteAttemptsList.addEventListener('click', async (event) => {
+        const btn = event.target.closest('.btn-view-pte-attempt');
+        if (!btn) return;
+        const attemptId = String(btn.dataset.attemptId || '').trim();
+        if (!attemptId) return;
+        try {
+          const json = await apiFetchJson(`/api/practice-attempts/${encodeURIComponent(attemptId)}`, { method: 'GET' });
+          const attempt = json.attempt || {};
+          const playable = attempt.media?.find((item) => item.url)?.url || attempt.audio?.studentUrl || '';
+          if (playable) {
+            window.open(playable, '_blank', 'noopener');
+          } else {
+            showToast(`${attempt.modeLabel || attempt.practiceMode || 'Attempt'} loaded. No media file is attached.`, 'info');
+          }
+        } catch (e) {
+          console.error('[CRM Admin] Failed to open PTE attempt:', e);
+          showToast(e?.message || 'Failed to open PTE attempt.', 'error');
+        }
+      });
+    }
+
     // Copy Entrance Test Link
     if (elements.btnCopyEntranceTestLink) {
       elements.btnCopyEntranceTestLink.addEventListener('click', async () => {
@@ -1947,6 +2023,7 @@
       }
     }
     if (elements.entranceTestsList) elements.entranceTestsList.innerHTML = '<div class="crm-muted">No tests yet.</div>';
+    if (elements.studentPteAttemptsList) elements.studentPteAttemptsList.innerHTML = '<div class="crm-muted">Open a saved student profile to load attempts.</div>';
 
     if (elements.handshakePreview) elements.handshakePreview.style.display = 'none';
     if (elements.linkedUidsUl) elements.linkedUidsUl.innerHTML = '<li class="text-muted">No accounts linked yet.</li>';
@@ -1991,6 +2068,7 @@
       elements.inputCourseLabel,
       elements.inputCourseLevel,
       elements.inputCourseCategory,
+      elements.inputCourseAgentCommissionPercent,
       elements.inputCourseDescription,
       elements.inputCourseTotalHours,
       elements.inputCourseDefaultSessionMinutes,
@@ -2174,6 +2252,11 @@
     const totalHours = Number(elements.inputCourseTotalHours?.value || 0);
     const defaultSessionMinutes = Number(elements.inputCourseDefaultSessionMinutes?.value || 0);
     const durationStepMinutes = Number(elements.inputCourseDurationStep?.value || 30);
+    const rawCommissionPercent = String(elements.inputCourseAgentCommissionPercent?.value || '').trim();
+    const commissionPercent = rawCommissionPercent ? Number(rawCommissionPercent) : null;
+    const agentCommissionBps = Number.isFinite(commissionPercent)
+      ? Math.round(commissionPercent * 100)
+      : null;
     return {
       name: String(elements.inputCourseName?.value || '').trim(),
       code: String(elements.inputCourseCode?.value || '').trim(),
@@ -2181,6 +2264,7 @@
       level: String(elements.inputCourseLevel?.value || '').trim(),
       category: String(elements.inputCourseCategory?.value || '').trim(),
       status: String(elements.inputCourseStatus?.value || '').trim() || 'active',
+      agentCommissionBps,
       description: String(elements.inputCourseDescription?.value || '').trim(),
       teachers: getCourseTeachers(),
       deliveryTemplate: {
@@ -2239,6 +2323,10 @@
     if (elements.inputCourseLevel) elements.inputCourseLevel.value = String(course?.level || '');
     if (elements.inputCourseCategory) elements.inputCourseCategory.value = String(course?.category || '');
     if (elements.inputCourseStatus) elements.inputCourseStatus.value = String(course?.status || 'active');
+    if (elements.inputCourseAgentCommissionPercent) {
+      const bps = Number(course?.agentCommissionBps);
+      elements.inputCourseAgentCommissionPercent.value = Number.isFinite(bps) ? String(bps / 100) : '';
+    }
     if (elements.inputCourseDescription) elements.inputCourseDescription.value = String(course?.description || '');
     if (elements.inputCourseTotalHours) {
       const minutes = Number(course?.deliveryTemplate?.totalInstructionMinutes || 0);
@@ -2285,7 +2373,7 @@
       if (!courseId) throw new Error('Course ID missing from server response.');
 
       modalState.courseId = courseId;
-      await refreshCourseCatalog();
+      await refreshCourseCatalog({ forceRefresh: true });
 
       showToast(method === 'PATCH' ? 'Course updated.' : 'Course saved.', 'success');
       resetCourseModal();
@@ -3777,6 +3865,7 @@
     }
 
     await refreshEntranceTestsList(studentSession);
+    await refreshStudentPteAttempts(studentSession);
     await refreshStudentIdentity(studentSession);
     await refreshStudentTimeline(studentSession);
     await refreshStudentFinance(studentSession);
@@ -4088,6 +4177,66 @@
     }
   }
 
+  function renderStudentPteAttempts(attempts) {
+    if (!elements.studentPteAttemptsList) return;
+    if (!Array.isArray(attempts) || attempts.length === 0) {
+      elements.studentPteAttemptsList.innerHTML = '<div class="crm-muted">No PTE attempts yet.</div>';
+      return;
+    }
+    const rows = attempts.map((attempt) => {
+      const attemptId = String(attempt.attemptId || '').trim();
+      const label = String(attempt.modeLabel || attempt.practiceMode || 'PTE attempt').trim();
+      const score = attempt.score === null || attempt.score === undefined ? '—' : escapeHtml(String(attempt.score));
+      return `
+        <tr>
+          <td>${escapeHtml(label)}</td>
+          <td>${formatDateTime(attempt.submittedAt || attempt.createdAt)}</td>
+          <td>${score}</td>
+          <td>${attemptId ? `<button type="button" class="crm-btn-secondary btn-view-pte-attempt" data-attempt-id="${escapeHtml(attemptId)}">View</button>` : '—'}</td>
+        </tr>
+      `;
+    }).join('');
+    elements.studentPteAttemptsList.innerHTML = `
+      <table class="crm-entrance-tests-table">
+        <thead>
+          <tr>
+            <th>Mode</th>
+            <th>Submitted</th>
+            <th>Score</th>
+            <th>Review</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  async function refreshStudentPteAttempts(session = null) {
+    const studentId = String(session?.studentId || modalState.studentId || '').trim();
+    if (!studentId) {
+      if (elements.studentPteAttemptsList) {
+        elements.studentPteAttemptsList.innerHTML = '<div class="crm-muted">Save the student profile to load attempts.</div>';
+      }
+      return;
+    }
+    if (session && !isActiveStudentSession(session)) return;
+    if (elements.studentPteAttemptsList) {
+      elements.studentPteAttemptsList.innerHTML = '<div class="crm-muted">Loading attempts...</div>';
+    }
+    try {
+      const json = await apiFetchJson(`/api/practice-attempts?scope=review&studentId=${encodeURIComponent(studentId)}`, {
+        method: 'GET'
+      });
+      if (session && !isActiveStudentSession(session)) return;
+      renderStudentPteAttempts(json.attempts || []);
+    } catch (error) {
+      console.error('[CRM Admin] Failed to load PTE attempts:', error);
+      if (elements.studentPteAttemptsList) {
+        elements.studentPteAttemptsList.innerHTML = '<div class="crm-muted">PTE attempts could not be loaded.</div>';
+      }
+    }
+  }
+
   async function refreshEntranceTestsList(session = null) {
     const studentId = String(session?.studentId || modalState.studentId || '').trim();
     if (!studentId) return;
@@ -4276,7 +4425,7 @@
   function isValidSub(main, sub) {
     if (main === 'courses') {
       // Allow the new sub tabs for courses
-      const courseSubs = ['courses', 'teacher-schedule', 'zoom-links', 'materials', 'planning', 'new-planning', 'admission-calendar', 'class-management'];
+      const courseSubs = ['courses', 'classes', 'teacher-schedule', 'zoom-links', 'materials', 'planning', 'new-planning', 'admission-calendar', 'class-management'];
       return courseSubs.includes(sub);
     }
     const group = ROUTES[main];
@@ -4410,7 +4559,7 @@
       return;
     }
 
-    if (main === 'courses' && sub === 'classes') {
+    if (state.accessMode === 'teacher' && main === 'courses' && sub === 'classes') {
       if (state.studentLookup) {
         clearStudentProfileState();
       }
@@ -4472,6 +4621,17 @@
 
 
 
+    if (activePanel === 'courses/classes') {
+      if (!schedulerInitialized && schedulerController && typeof schedulerController.init === 'function') {
+        schedulerInitialized = true;
+        schedulerController.init();
+      } else {
+        refreshSchedulerWorkspace().catch((error) => {
+          console.error('[CRM Admin] Scheduler refresh failed:', error);
+        });
+      }
+    }
+
     if (activePanel === 'courses/teacher-schedule') {
       if (!teacherSchedulerInitialized && teacherSchedulerController && typeof teacherSchedulerController.init === 'function') {
         teacherSchedulerInitialized = true;
@@ -4502,6 +4662,11 @@
   }
 
 
+
+  function refreshSchedulerWorkspace() {
+    if (!schedulerController || typeof schedulerController.refresh !== 'function') return Promise.resolve();
+    return schedulerController.refresh();
+  }
 
   function refreshTeacherSchedulerWorkspace() {
     if (!teacherSchedulerController || typeof teacherSchedulerController.refresh !== 'function') return Promise.resolve();
@@ -5692,9 +5857,9 @@
     }
   }
 
-  async function fetchCoursesFromCatalog() {
+  async function fetchCoursesFromCatalog(options = {}) {
     if (window.CrmCourses && typeof window.CrmCourses.fetchCourses === 'function') {
-      return window.CrmCourses.fetchCourses();
+      return window.CrmCourses.fetchCourses(options);
     }
     if (window.ClassroomAPI && typeof window.ClassroomAPI.fetchCourses === 'function') {
       return window.ClassroomAPI.fetchCourses();
@@ -5724,7 +5889,7 @@
     return courses;
   }
 
-  async function refreshCourseCatalog() {
+  async function refreshCourseCatalog(options = {}) {
     const container = elements.courseCatalogContainer;
     if (!container) return;
 
@@ -5748,7 +5913,7 @@
         });
         container.__crmCourseLinkHandlerBound = true;
       }
-      const courses = await fetchCoursesFromCatalog();
+      const courses = await fetchCoursesFromCatalog(options);
       dataCache.courses = courses;
       pruneSelectionSet(selectedCourseIds, courses.map((course) => course.id || course.courseId));
       await populateClassroomCourseOptions({ selectedValue: elements.inputClassroomCourseId?.value || '' });

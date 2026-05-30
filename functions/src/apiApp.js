@@ -292,7 +292,8 @@ const practiceAttemptsRouter = createPracticeAttemptsRouter({
     db,
     sendSuccess,
     sendError,
-    getStorageBucket
+    getStorageBucket,
+    serverTimestamp: () => FieldValue.serverTimestamp()
 });
 
 const sharedPracticeAttemptsRouter = createSharedPracticeAttemptsRouter({

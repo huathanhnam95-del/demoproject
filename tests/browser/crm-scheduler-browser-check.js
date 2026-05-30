@@ -90,6 +90,44 @@ async function dragBetween(page, sourceSelector, targetSelector) {
   }
 }
 
+async function dragElementBetween(page, sourceSelector, targetSelector) {
+  const activated = await page.evaluate(({ sourceSelector: sourceQuery, targetSelector: targetQuery }) => {
+    const source = document.querySelector(sourceQuery);
+    const target = document.querySelector(targetQuery);
+    if (!source || !target) {
+      throw new Error('Missing drag source or target.');
+    }
+
+    const sourceBox = source.getBoundingClientRect();
+    const targetBox = target.getBoundingClientRect();
+    const sourceX = sourceBox.left + (sourceBox.width / 2);
+    const sourceY = sourceBox.top + (sourceBox.height / 2);
+    const targetX = targetBox.left + (targetBox.width / 2);
+    const targetY = targetBox.top + (targetBox.height / 2);
+
+    const mkEvent = (type, x, y, buttons) => new MouseEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      view: window,
+      clientX: x,
+      clientY: y,
+      button: 0,
+      buttons
+    });
+
+    source.dispatchEvent(mkEvent('mousedown', sourceX, sourceY, 1));
+    document.dispatchEvent(mkEvent('mousemove', sourceX + 8, sourceY + 8, 1));
+    document.dispatchEvent(mkEvent('mousemove', targetX, targetY, 1));
+    const isActive = source.classList.contains('is-dragging') || target.classList.contains('is-drop-target');
+    document.dispatchEvent(mkEvent('mouseup', targetX, targetY, 0));
+    return isActive;
+  }, { sourceSelector, targetSelector });
+
+  if (!activated) {
+    throw new Error(`Drag did not activate for ${sourceSelector}.`);
+  }
+}
+
 function buildHarnessState() {
   // Anchor the harness calendar to next week so seeded sessions are always in the future
   // (teacher scheduler locks past sessions from being moved).
@@ -102,6 +140,7 @@ function buildHarnessState() {
   const classOneSecondDate = toLocalDateInput(addDays(weekStart, 3));
   const teacherConflictDate = toLocalDateInput(addDays(weekStart, 0));
   const lockedClassDate = toLocalDateInput(addDays(weekStart, 5));
+  const seedClassDate = toLocalDateInput(addDays(weekStart, 2));
 
   const courses = [
     {
@@ -171,6 +210,27 @@ function buildHarnessState() {
         targetSessionCount: 1,
         timezone,
         planningStatus: 'seeded',
+        durationStepMinutes: 30,
+        scheduleVersion: 1
+      },
+      scheduleSummary: null
+    },
+    {
+      classroomId: 'class-seed',
+      id: 'class-seed',
+      name: 'New Seed Class',
+      courseId: 'course-1',
+      status: 'active',
+      primaryTeacherUid: 'teacher-2',
+      scheduleConfig: {
+        totalInstructionMinutes: 60,
+        sessionMinutes: 60,
+        targetSessionCount: 1,
+        timezone,
+        seedStartDate: seedClassDate,
+        seedStartTime: '14:00',
+        seedWeekdays: [3],
+        planningStatus: 'configured',
         durationStepMinutes: 30,
         scheduleVersion: 1
       },
@@ -395,6 +455,62 @@ function buildHarnessState() {
     return normalizeScheduledSession(session);
   }
 
+  function seedSchedule(classId, payload) {
+    const classroom = getClassroom(classId);
+    if (!classroom) {
+      throw new Error(`Missing classroom ${classId}`);
+    }
+    const existingContracted = listClassSessions(classId).filter((session) =>
+      String(session.unitType || '') === 'contracted'
+      && String(session.status || 'scheduled') !== 'cancelled'
+    );
+    if (existingContracted.length) {
+      return { blocked: true };
+    }
+    const targetCount = Number(classroom.scheduleConfig?.targetSessionCount || 0) || 1;
+    const weekdays = Array.isArray(payload.weekdayNumbers) && payload.weekdayNumbers.length
+      ? payload.weekdayNumbers
+      : (Array.isArray(classroom.scheduleConfig?.seedWeekdays) ? classroom.scheduleConfig.seedWeekdays : [1]);
+    const startDate = String(payload.startDate || classroom.scheduleConfig?.seedStartDate || seedClassDate);
+    const startTime = String(payload.startTime || classroom.scheduleConfig?.seedStartTime || '14:00');
+    const createdSessions = [];
+    let cursor = new Date(`${startDate}T00:00:00`);
+    while (createdSessions.length < targetCount) {
+      const day = cursor.getDay();
+      if (weekdays.map(Number).includes(day)) {
+        const localDate = toLocalDateInput(cursor);
+        const session = createSession(classId, {
+          courseId: classroom.courseId || null,
+          teacherUid: payload.teacherUid || classroom.primaryTeacherUid || null,
+          ...buildCanonicalScheduledWindow({
+            targetLocalDate: localDate,
+            targetLocalTime: startTime,
+            timezone: classroom.scheduleConfig?.timezone || timezone,
+            durationMinutes: classroom.scheduleConfig?.sessionMinutes || 60
+          }),
+          unitType: 'contracted',
+          contractUnitIndex: createdSessions.length + 1,
+          seedBatchId: payload.seedBatchId || `${classId}-seed`,
+          status: 'scheduled',
+          attendanceState: 'none',
+          lockState: 'unlocked',
+          timezone: classroom.scheduleConfig?.timezone || timezone,
+          durationMinutes: classroom.scheduleConfig?.sessionMinutes || 60,
+          version: 1
+        });
+        createdSessions.push(session);
+      }
+      cursor = addDays(cursor, 1);
+    }
+    classroom.scheduleConfig = {
+      ...classroom.scheduleConfig,
+      planningStatus: 'seeded',
+      scheduleVersion: Number(classroom.scheduleConfig?.scheduleVersion || 0) + 1
+    };
+    computeSummary(classId);
+    return { blocked: false, createdSessions };
+  }
+
   function regenerateSchedule(classId, preview, payload) {
     const classroom = getClassroom(classId);
     const fromDate = String(preview.regenerateFromDate || payload.regenerateFromDate || '').trim();
@@ -436,6 +552,7 @@ function buildHarnessState() {
     refreshSummaries,
     createSession,
     bumpScheduleVersion,
+    seedSchedule,
     regenerateSchedule,
     replaceSession,
     rescheduleSession
@@ -574,6 +691,23 @@ function startHarnessServer() {
       success: true,
       classrooms: state.classrooms,
       sessions: state.activeSessions().map((session) => normalizeScheduledSession(session))
+    });
+  });
+
+  app.post('/api/admin/classrooms/:classId/sessions/seed', (req, res) => {
+    requestLog.push({ method: req.method, path: req.path, body: req.body || {} });
+    const result = state.seedSchedule(req.params.classId, req.body || {});
+    if (result.blocked) {
+      return responseJson(res, {
+        success: false,
+        error: 'SCHEDULE_ALREADY_SEEDED',
+        message: 'This class already has scheduled contracted sessions.'
+      }, 409);
+    }
+    responseJson(res, {
+      success: true,
+      count: result.createdSessions.length,
+      scheduleSummary: state.computeSummary(req.params.classId)
     });
   });
 
@@ -1003,6 +1137,7 @@ function startHarnessServer() {
   page.on('pageerror', (error) => {
     errors.push(error.message);
   });
+
   page.on('requestfailed', (request) => {
     const failure = request.failure();
     const errorText = failure && failure.errorText ? failure.errorText : 'requestfailed';
@@ -1027,6 +1162,10 @@ function startHarnessServer() {
   });
 
   try {
+    await page.goto(`${origin}/crm-admin.html#courses/classes`, { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('#scheduler-class-list .scheduler-class-card[data-classroom-id="class-1"]');
+    await page.waitForSelector('#scheduler-calendar .scheduler-calendar-slot[data-date][data-time]');
+
     await page.goto(`${origin}/crm-admin.html#courses/teacher-schedule`, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('#teacher-scheduler-class-list .teacher-scheduler-class-card');
     await page.waitForSelector('#teacher-scheduler-calendar .teacher-scheduler-slot[data-date][data-time]');
@@ -1037,6 +1176,95 @@ function startHarnessServer() {
     const replaceDate = toLocalDateInput(addDays(weekStart, 4));
     const conflictDate = toLocalDateInput(addDays(weekStart, 0));
     const weekEnd = toLocalDateInput(addDays(weekStart, 6));
+    const seedDate = toLocalDateInput(addDays(weekStart, 2));
+
+    await page.goto(`${origin}/crm-admin.html#courses/classes`, { waitUntil: 'domcontentloaded' });
+    await page.locator('#scheduler-from-date').fill(conflictDate);
+    await page.locator('#scheduler-to-date').fill(weekEnd);
+    await page.click('#btn-refresh-scheduler');
+    await page.waitForSelector(`#scheduler-calendar .scheduler-calendar-slot[data-date="${conflictDate}"][data-time]`);
+
+    const adminClassCardSelector = '#scheduler-class-list .scheduler-class-card[data-classroom-id="class-1"]';
+    const seedClassCardSelector = '#scheduler-class-list .scheduler-class-card[data-classroom-id="class-seed"]';
+    const adminAddTargetSelector = `#scheduler-calendar .scheduler-calendar-slot[data-date="${conflictDate}"][data-time="15:00"]`;
+    const adminReplaceTargetSelector = `#scheduler-calendar .scheduler-calendar-slot[data-date="${conflictDate}"][data-time="16:00"]`;
+    const seedTargetSelector = `#scheduler-calendar .scheduler-calendar-slot[data-date="${seedDate}"][data-time="14:00"]`;
+
+    await page.click(seedClassCardSelector);
+    await page.click('#btn-seed-scheduler');
+    assert.ok(
+      await waitForPredicate(
+        () => requestLog.some((entry) => entry.path === '/api/admin/classrooms/class-seed/sessions/seed'),
+        30000
+      ),
+      'Expected admin seed request for selected class.'
+    );
+    await page.waitForSelector(`${seedTargetSelector} .scheduler-session-pill`);
+
+    await page.locator(adminClassCardSelector).scrollIntoViewIfNeeded();
+    await page.locator(adminAddTargetSelector).scrollIntoViewIfNeeded();
+    await dragElementBetween(page, adminClassCardSelector, adminAddTargetSelector);
+    await page.waitForSelector('#scheduler-action-modal[aria-hidden="false"]');
+    assert.ok(
+      await waitForPredicate(
+        () => requestLog.some((entry) => entry.path === '/api/admin/classrooms/class-1/sessions/add-preview'),
+        30000
+      ),
+      'Expected admin add preview request after dragging a class to the scheduler.'
+    );
+    await page.waitForFunction(() => {
+      const btn = document.getElementById('btn-confirm-scheduler-action');
+      return !!btn && !btn.disabled && /Confirm Add/i.test(btn.textContent || '');
+    });
+    await page.click('#btn-confirm-scheduler-action');
+    assert.ok(
+      await waitForPredicate(
+        () => requestLog.some((entry) => entry.path === '/api/admin/classrooms/class-1/sessions/add-batch'),
+        30000
+      ),
+      'Expected admin add batch request after confirming scheduler add.'
+    );
+
+    await page.waitForSelector('#scheduler-action-modal[aria-hidden="true"]', { state: 'attached' });
+    await page.waitForSelector(adminClassCardSelector);
+    await page.locator(adminClassCardSelector).scrollIntoViewIfNeeded();
+    await page.locator(adminReplaceTargetSelector).scrollIntoViewIfNeeded();
+    await dragElementBetween(page, adminClassCardSelector, adminReplaceTargetSelector);
+    await page.waitForSelector('#scheduler-action-modal[aria-hidden="false"]', { state: 'visible' });
+    await page.click('#scheduler-action-replace-button');
+    assert.ok(
+      await waitForPredicate(
+        () => requestLog.some((entry) => entry.path === '/api/admin/classrooms/class-1/sessions/replace-preview'),
+        30000
+      ),
+      'Expected admin replace preview request after switching to replace mode.'
+    );
+    await page.waitForSelector('#scheduler-action-replace-list .scheduler-action-session-choice[data-session-id="session-2"]');
+    await page.click('#scheduler-action-replace-list .scheduler-action-session-choice[data-session-id="session-2"]');
+    await page.waitForFunction(() => {
+      const btn = document.getElementById('btn-confirm-scheduler-action');
+      return !!btn && !btn.disabled && /Confirm Replace/i.test(btn.textContent || '');
+    });
+    await page.click('#btn-confirm-scheduler-action');
+    assert.ok(
+      await waitForPredicate(
+        () => requestLog.some((entry) => entry.path === '/api/admin/classrooms/class-1/sessions/replace'),
+        30000
+      ),
+      'Expected admin replace request after confirming scheduler replace.'
+    );
+
+    const adminAddRequest = requestLog.find((entry) => entry.path === '/api/admin/classrooms/class-1/sessions/add-batch');
+    assert.ok(adminAddRequest);
+    assert.strictEqual(adminAddRequest.body.targetLocalDate, conflictDate);
+    assert.strictEqual(adminAddRequest.body.targetLocalTime, '15:00');
+
+    const adminReplaceRequest = requestLog.find((entry) => entry.path === '/api/admin/classrooms/class-1/sessions/replace');
+    assert.ok(adminReplaceRequest);
+    assert.strictEqual(adminReplaceRequest.body.targetLocalDate, conflictDate);
+    assert.strictEqual(adminReplaceRequest.body.targetLocalTime, '16:00');
+
+    await page.goto(`${origin}/crm-admin.html#courses/teacher-schedule`, { waitUntil: 'domcontentloaded' });
 
     // The teacher scheduler defaults to the current week; switch to the seeded range.
     await page.locator('#teacher-scheduler-from-date').fill(conflictDate);
@@ -1051,7 +1279,10 @@ function startHarnessServer() {
     const placeTargetSelector = `#teacher-scheduler-calendar .teacher-scheduler-slot[data-date="${conflictDate}"][data-time="12:00"]`;
     const rescheduleTargetSelector = `#teacher-scheduler-calendar .teacher-scheduler-slot[data-date="${conflictDate}"][data-time="13:00"]`;
 
-    await page.waitForSelector(sessionPillSelector);
+    await page.waitForFunction(({ classCardSelector: cardSelector, sessionPillSelector: pillSelector }) => (
+      !!document.querySelector(cardSelector) && !!document.querySelector(pillSelector)
+    ), { classCardSelector, sessionPillSelector });
+    await page.waitForTimeout(100);
     await page.locator(classCardSelector).scrollIntoViewIfNeeded();
     await page.locator(originalSlotSelector).scrollIntoViewIfNeeded();
     await page.locator(conflictTargetSelector).scrollIntoViewIfNeeded();

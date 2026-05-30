@@ -326,7 +326,7 @@
           </div>
           <div class="crm-inline-fields">
             <button id="btn-refresh-scheduler" class="crm-btn-secondary" type="button">Refresh</button>
-            <button id="btn-seed-scheduler" class="crm-btn-primary" type="button">Seed Schedule</button>
+            <button id="btn-seed-scheduler" class="crm-btn-primary" type="button">Generate First Schedule</button>
           </div>
         </div>
         <div id="scheduler-workspace" class="scheduler-workspace">
@@ -1227,6 +1227,19 @@
                 <div class="crm-muted">No tests yet.</div>
               </div>
             </div>
+
+            <div class="crm-entrance-test-panel">
+              <div class="crm-entrance-test-header">
+                <div>
+                  <h4>PTE Practice Attempts</h4>
+                  <p class="crm-muted">Submitted learner attempts linked to this CRM student.</p>
+                </div>
+                <button id="btn-refresh-student-pte-attempts" class="crm-btn-secondary" type="button">Refresh</button>
+              </div>
+              <div id="student-pte-attempts-list" class="crm-entrance-tests-list">
+                <div class="crm-muted">Open a saved student profile to load attempts.</div>
+              </div>
+            </div>
           </div>
 
           <div id="student-overview" class="crm-tab-content" style="display: none;">
@@ -1724,8 +1737,8 @@
                     </div>
                   </div>
                   <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
-                    <button id="btn-save-classroom-scheduling" class="crm-btn-primary" type="button">Generate
-                      Schedule</button>
+                    <button id="btn-save-classroom-scheduling" class="crm-btn-primary" type="button">Save Scheduling
+                      Setup</button>
                   </div>
                   <div id="attendance-schedule-prompt" class="crm-muted" style="margin-top: 12px;">Define meeting days
                     and hours so attendance and live delivery guidance can stay aligned.</div>

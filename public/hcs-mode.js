@@ -779,6 +779,12 @@
       elements.retryBtn.style.display = 'block';
     }
 
+    window.PTEAttemptArchive?.saveChoiceAttempt?.('hcs', state, {
+      score,
+      maxScore: 1,
+      correct: score === 1
+    }).catch((error) => console.warn('[PTE Archive] HCS save failed:', error));
+
     // Render transcript and explanation post-submission
     if (elements.passageText) {
       elements.passageText.textContent = state.currentQuestion.transcript || 'No transcript available for this audio.';

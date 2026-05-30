@@ -10,10 +10,10 @@ assert.ok(fs.existsSync(rulesPath), 'storage.rules should exist');
 
 const rules = fs.readFileSync(rulesPath, 'utf8');
 
-// Attempt audio upload contract (server writes studentPath = practice-attempts/{uid}/{attemptId}/student.wav).
+// Legacy attempt audio upload contract (server writes studentPath = practice-attempts/{uid}/{attemptId}/student.wav).
 assert.ok(
   rules.includes('match /practice-attempts/{uid}/{attemptId}/student.wav'),
-  'storage.rules should allow writes for practice-attempts/{uid}/{attemptId}/student.wav'
+  'storage.rules should keep legacy writes for practice-attempts/{uid}/{attemptId}/student.wav'
 );
 assert.ok(
   rules.includes("speakingAttemptData(attemptId).status == 'awaiting_upload'"),
@@ -22,6 +22,22 @@ assert.ok(
 assert.ok(
   rules.includes("speakingAttemptData(attemptId).audio.studentPath == ('practice-attempts/' + uid + '/' + attemptId + '/student.wav')"),
   'attempt uploads should require storage path to match attempt audio.studentPath'
+);
+assert.ok(
+  rules.includes('match /practice-attempts/{uid}/{attemptId}/{slotFile}'),
+  'storage.rules should allow slot-based PTE archive media writes'
+);
+assert.ok(
+  rules.includes('isAllowedAttemptMediaUpload(50 * 1024 * 1024)'),
+  'slot-based attempt uploads should allow bounded WAV/WebM media'
+);
+assert.ok(
+  rules.includes("speakingAttemptData(attemptId).mediaSlots[slotFile].storagePath == ('practice-attempts/' + uid + '/' + attemptId + '/' + slotFile)"),
+  'slot-based uploads should require the path to match the prepared media slot'
+);
+assert.ok(
+  rules.includes("speakingAttemptData(attemptId).mediaSlots[slotFile].status == 'awaiting_upload'"),
+  'slot-based uploads should require awaiting_upload status for that slot'
 );
 
 // Feedback audio upload contract (server writes audioPath = practice-attempt-feedback/{attemptId}/{feedbackId}/{uid}.wav).

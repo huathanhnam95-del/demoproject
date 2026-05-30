@@ -792,6 +792,17 @@
         // Save progress if user is logged in
         saveProgress(userNotes, matchedWords, transcriptWordCount);
 
+        window.PTEAttemptArchive?.saveTextAttempt?.('notes', {
+            ...(currentEntry || {}),
+            audioPath: currentEntry?.audioPath || currentEntry?.audio || currentEntry?.file || null,
+            transcript
+        }, userNotes, {
+            score: matchedWords.length,
+            maxScore: transcriptWordCount,
+            matchedWords,
+            transcriptWordCount
+        }, { scoringSource: 'client' }).catch((error) => console.warn('[PTE Archive] Retell Lecture save failed:', error));
+
         window.getPracticeVariantHooks?.('notes')?.afterSubmit?.({
             entryId: String(currentEntry?.id || ''),
             userNotes

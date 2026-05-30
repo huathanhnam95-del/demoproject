@@ -39,6 +39,7 @@
     let recordingTimerId = null;
     let recordingSeconds = 0;
     let recordingBlobUrl = null;
+    let recordingBlob = null;
 
     // Recommendation engine state
     let sgdRecommendationEngine = null;
@@ -186,6 +187,7 @@
             URL.revokeObjectURL(recordingBlobUrl);
             recordingBlobUrl = null;
         }
+        recordingBlob = null;
         if (el.recordingPlayback) {
             el.recordingPlayback.removeAttribute('src');
             el.recordingPlayback.load();
@@ -1072,6 +1074,7 @@
         hide(el.playbackArea);
         hide(el.submitBtn);
         if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
+        recordingBlob = null;
 
         // Remove recording-active indicator
         const timerEl = el.recordTimer;
@@ -1095,6 +1098,7 @@
         try {
             // Bug fix: clean up previous recording blob if re-recording
             if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
+            recordingBlob = null;
 
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             recordedChunks = [];
@@ -1108,6 +1112,7 @@
                 stream.getTracks().forEach(t => t.stop());
                 if (recordedChunks.length > 0) {
                     const blob = new Blob(recordedChunks, { type: recorder.mimeType || 'audio/webm' });
+                    recordingBlob = blob;
                     recordingBlobUrl = URL.createObjectURL(blob);
                     if (el.recordingPlayback) el.recordingPlayback.src = recordingBlobUrl;
                     show(el.playbackArea);
@@ -1200,6 +1205,32 @@
             }
 
             saveProgress(userNotes, result);
+            window.PTEAttemptArchive?.saveAttempt?.({
+                practiceMode: 'sgd',
+                promptSnapshot: {
+                    promptId: currentEntry?.id || null,
+                    title: currentEntry?.title || '',
+                    text: currentEntry?.prompt || currentEntry?.scenario || '',
+                    sourceAssetPaths: [currentEntry?.audioPath || currentEntry?.audio || currentEntry?.videoPath].filter(Boolean),
+                    data: currentEntry || null
+                },
+                responseSnapshot: {
+                    notes: userNotes,
+                    transcript: Object.values(userNotes || {}).join(' ')
+                },
+                answerSnapshot: {
+                    keyPoints: currentEntry?.keyPoints || [],
+                    sampleAnswer: currentEntry?.sampleAnswer || null
+                },
+                resultSnapshot: result,
+                scoringSource: 'client',
+                media: recordingBlob ? [{
+                    slot: 'student',
+                    label: 'Student summary',
+                    blob: recordingBlob,
+                    contentType: recordingBlob.type || 'audio/webm'
+                }] : []
+            }).catch((error) => console.warn('[PTE Archive] SGD save failed:', error));
 
             window.getPracticeVariantHooks?.('sgd')?.afterSubmit?.({
                 entryId: String(currentEntry?.id || ''), userNotes
@@ -1525,6 +1556,7 @@
         clearSpeakerNotes();
         sgdAttemptStartTime = null;
         if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
+        recordingBlob = null;
         startPractice();
     }
 

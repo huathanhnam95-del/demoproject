@@ -22,5 +22,17 @@ assert.ok(
   src.includes(".where('visibility', '==', 'shared')"),
   'shared endpoint should return only shared-visibility feedback'
 );
+assert.ok(
+  src.includes('buildPublicAttemptPayload'),
+  'shared endpoint should build a redacted public attempt payload'
+);
+assert.ok(
+  !src.includes('ownerUid: attempt.ownerUid'),
+  'shared endpoint should not expose ownerUid in the public payload'
+);
+assert.ok(
+  src.includes('media: publicMedia'),
+  'shared endpoint should return only public media URLs from the sanitized media manifest'
+);
 
 console.log('Shared practice attempts privacy contract test passed.');

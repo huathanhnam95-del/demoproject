@@ -65,9 +65,13 @@ window.CrmSchedulerWorkspace = (function () {
             sat: 6,
             saturday: 6
         };
-        return String(value || '')
-            .split(',')
-            .map((item) => map[String(item || '').trim().toLowerCase()])
+        const source = Array.isArray(value) ? value : String(value || '').split(',');
+        return source
+            .map((item) => {
+                const token = String(item || '').trim().toLowerCase();
+                if (/^[0-6]$/.test(token)) return Number(token);
+                return map[token];
+            })
             .filter((item) => Number.isInteger(item));
     }
 
@@ -95,6 +99,7 @@ window.CrmSchedulerWorkspace = (function () {
             fromDate: null,
             toDate: null,
             teacherFilter: '',
+            selectedClassroomId: '',
             pointerDrag: null,
             suppressedSessionClickId: null,
             schedulerAction: null,
@@ -184,8 +189,10 @@ window.CrmSchedulerWorkspace = (function () {
                 const assigned = Number(summary.contractedAssignedCount || 0);
                 const target = Number(summary.contractedTargetCount || 0);
                 const overflow = Number(summary.overflowCount || 0);
+                const classroomId = String(classroom.classroomId || classroom.id || '').trim();
+                const selected = classroomId && classroomId === state.selectedClassroomId;
                 return `
-                    <div class="scheduler-class-card" data-classroom-id="${escapeHtml(classroom.classroomId || '')}">
+                    <div class="scheduler-class-card ${selected ? 'is-selected' : ''}" data-classroom-id="${escapeHtml(classroomId)}" tabindex="0" role="button" aria-pressed="${selected ? 'true' : 'false'}">
                         <div class="scheduler-class-card-title">${htmlEscape(classroom.name || 'Classroom')}</div>
                         <div class="scheduler-class-card-meta">
                             Assigned ${assigned}/${target || 0}${overflow > 0 ? `, overflow ${overflow}` : ''}
@@ -400,6 +407,14 @@ window.CrmSchedulerWorkspace = (function () {
                     </button>
                 `;
             }).join('');
+        }
+
+        function selectClassroom(classroomId) {
+            const cleaned = String(classroomId || '').trim();
+            if (!cleaned) return;
+            state.selectedClassroomId = cleaned;
+            renderClassRail();
+            refreshSchedulerSummaryCard();
         }
 
         function renderSchedulerActionModal() {
@@ -760,6 +775,18 @@ window.CrmSchedulerWorkspace = (function () {
                     if (!card) return;
                     beginPointerDrag('class', card.dataset.classroomId, card, evt);
                 });
+                elements.schedulerClassList.addEventListener('click', (evt) => {
+                    const card = closestEventTarget(evt, '.scheduler-class-card[data-classroom-id]');
+                    if (!card) return;
+                    selectClassroom(card.dataset.classroomId);
+                });
+                elements.schedulerClassList.addEventListener('keydown', (evt) => {
+                    if (evt.key !== 'Enter' && evt.key !== ' ') return;
+                    const card = closestEventTarget(evt, '.scheduler-class-card[data-classroom-id]');
+                    if (!card) return;
+                    evt.preventDefault();
+                    selectClassroom(card.dataset.classroomId);
+                });
             }
 
             if (elements.schedulerCalendar) {
@@ -822,8 +849,9 @@ window.CrmSchedulerWorkspace = (function () {
                 return;
             }
 
-            const classroom = modalState?.classroomId
-                ? classrooms.find((row) => String(row.classroomId || '') === String(modalState.classroomId || ''))
+            const selectedId = state.selectedClassroomId || modalState?.classroomId || '';
+            const classroom = selectedId
+                ? classrooms.find((row) => String(row.classroomId || row.id || '') === String(selectedId))
                 : classrooms[0];
             if (!classroom) return;
 
@@ -860,6 +888,9 @@ window.CrmSchedulerWorkspace = (function () {
             const json = await window.ClassroomAPI.fetchSchedulerWorkspace({ teacherUid, from, to });
             state.classrooms = Array.isArray(json?.classrooms) ? json.classrooms : [];
             state.sessions = Array.isArray(json?.sessions) ? json.sessions : [];
+            if (state.selectedClassroomId && !state.classrooms.some((row) => String(row.classroomId || row.id || '') === state.selectedClassroomId)) {
+                state.selectedClassroomId = '';
+            }
             state.teacherFilter = teacherUid;
             state.fromDate = from || null;
             state.toDate = to || null;
@@ -879,20 +910,33 @@ window.CrmSchedulerWorkspace = (function () {
 
             if (elements.btnSeedScheduler) {
                 elements.btnSeedScheduler.addEventListener('click', async () => {
-                    if (!modalState?.classroomId) {
-                        showToast?.('Open a classroom first, then generate its schedule.', 'error');
+                    const classId = state.selectedClassroomId || modalState?.classroomId || '';
+                    const classroom = state.classrooms.find((row) => String(row.classroomId || row.id || '') === String(classId || ''));
+                    if (!classId || !classroom) {
+                        showToast?.('Select a class first, then generate its first schedule.', 'error');
                         return;
                     }
                     try {
-                        const payload = window.CrmClassrooms && typeof window.CrmClassrooms.buildPayload === 'function'
-                            ? window.CrmClassrooms.buildPayload(elements)
-                            : {};
-                        await window.ClassroomAPI.updateClassroomScheduleConfig(modalState.classroomId, payload);
-                        await window.ClassroomAPI.seedClassroomSessions(modalState.classroomId, {
-                            startDate: String(elements.inputClassroomSeedStartDate?.value || '').trim(),
-                            startTime: String(elements.inputClassroomSeedStartTime?.value || '').trim(),
-                            weekdayNumbers: parseWeekdayNumbers(elements.inputClassroomSeedWeekdays?.value || ''),
-                            teacherUid: String(elements.inputClassroomPrimaryTeacher?.value || '').trim() || null
+                        const modalMatchesSelection = modalState?.classroomId && String(modalState.classroomId) === String(classId);
+                        if (modalMatchesSelection && window.CrmClassrooms && typeof window.CrmClassrooms.buildPayload === 'function') {
+                            const payload = window.CrmClassrooms.buildPayload(elements);
+                            await window.ClassroomAPI.updateClassroomScheduleConfig(classId, payload);
+                        }
+                        const scheduleConfig = classroom.scheduleConfig || {};
+                        const useModalFields = !!modalMatchesSelection;
+                        await window.ClassroomAPI.seedClassroomSessions(classId, {
+                            startDate: useModalFields
+                                ? String(elements.inputClassroomSeedStartDate?.value || '').trim()
+                                : String(scheduleConfig.seedStartDate || '').trim(),
+                            startTime: useModalFields
+                                ? String(elements.inputClassroomSeedStartTime?.value || '').trim()
+                                : String(scheduleConfig.seedStartTime || '').trim(),
+                            weekdayNumbers: parseWeekdayNumbers(useModalFields
+                                ? elements.inputClassroomSeedWeekdays?.value
+                                : scheduleConfig.seedWeekdays),
+                            teacherUid: useModalFields
+                                ? (String(elements.inputClassroomPrimaryTeacher?.value || '').trim() || null)
+                                : (classroom.primaryTeacherUid || null)
                         });
                         showToast?.('Schedule generated.', 'success');
                         await refresh();

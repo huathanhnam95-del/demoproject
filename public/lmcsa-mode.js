@@ -778,6 +778,12 @@
       elements.retryBtn.style.display = 'block';
     }
 
+    window.PTEAttemptArchive?.saveChoiceAttempt?.('lmcsa', state, {
+      score,
+      maxScore: 1,
+      correct: score === 1
+    }).catch((error) => console.warn('[PTE Archive] LMCSA save failed:', error));
+
     // Render transcript and explanation post-submission
     if (elements.passageText) {
       elements.passageText.textContent = state.currentQuestion.transcript || 'No transcript available for this audio.';

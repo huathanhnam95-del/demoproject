@@ -741,7 +741,7 @@
       listening: {
         label: 'Listening',
         kind: 'live-skill',
-        modeIds: ['sst', 'type', 'collo-dictate', 'extended', 'watch', 'notes', 'lmcma', 'lmcsa', 'hcs', 'smw', 'hiw']
+        modeIds: ['sst', 'lmcma', 'extended', 'hcs', 'lmcsa', 'smw', 'hiw', 'type', 'collo-dictate', 'notes', 'watch']
       },
       reading: {
         label: 'Reading',
@@ -6227,12 +6227,22 @@
     const gapInputs = gappedTranscript.querySelectorAll('.gap-input');
     let correctCount = 0;
     let totalGaps = gapInputs.length;
+    const gapResults = [];
 
     gapInputs.forEach(input => {
       const userAnswer = input.value.trim().toLowerCase();
       const correctAnswer = input.dataset.correct.toLowerCase();
       const correctAnswerDisplay = input.dataset.correct; // Keep original case for display
       const userAnswerDisplay = input.value.trim(); // Keep original case for display
+      const isCorrect = userAnswer === correctAnswer;
+
+      gapResults.push({
+        gapId: input.dataset.gapId || String(gapResults.length + 1),
+        userAnswer: userAnswerDisplay,
+        normalizedUserAnswer: userAnswer,
+        correctAnswer: correctAnswerDisplay,
+        isCorrect
+      });
 
       // Get the speaker icon (next sibling)
       const speakerIcon = input.nextElementSibling;
@@ -6250,7 +6260,7 @@
       replacementSpan.style.verticalAlign = 'baseline';
       replacementSpan.style.textAlign = 'center';
 
-      if (userAnswer === correctAnswer) {
+      if (isCorrect) {
         // Correct: green color, bold, green box highlight
         replacementSpan.style.backgroundColor = '#dcfce7';
         replacementSpan.style.color = '#166534';
@@ -6301,6 +6311,7 @@
     randomizeBlanksBtn.style.display = 'inline-block';
 
     // Show result message in custom box
+    const isFullyCorrect = totalGaps > 0 && correctCount === totalGaps;
     checkResultExtended.textContent = `You got ${correctCount} out of ${totalGaps} gaps correct!`;
     checkResultExtended.style.display = 'block';
 
@@ -6323,6 +6334,35 @@
     if (window.handleDualTrackScoring) {
       window.handleDualTrackScoring('extended', currentExtendedQuestionId || 'extended', correctCount, totalGaps);
     }
+
+    const extendedQuestion = extendedDatabase.find(q => q.id === currentExtendedQuestionId) || null;
+    window.PTEAttemptArchive?.saveAttempt?.({
+      practiceMode: 'extended',
+      promptSnapshot: {
+        promptId: currentExtendedQuestionId || 'extended',
+        text: extendedCorrectTranscript || extendedGappedTranscript || '',
+        sourceAssetPaths: [extendedQuestion?.audioFile].filter(Boolean),
+        data: extendedQuestion
+      },
+      responseSnapshot: {
+        answers: gapResults.map(({ gapId, userAnswer }) => ({ gapId, userAnswer }))
+      },
+      answerSnapshot: {
+        blanks: gapResults.map(({ gapId, correctAnswer, userAnswer, isCorrect }) => ({
+          gapId,
+          correctAnswer,
+          userAnswer,
+          isCorrect
+        }))
+      },
+      resultSnapshot: {
+        score: correctCount,
+        maxScore: totalGaps,
+        correct: isFullyCorrect,
+        results: gapResults
+      },
+      scoringSource: 'client'
+    }).catch((error) => log.warn('[PTE Archive] Extended save failed:', error));
 
     // Vocabulary Book tracking for Fill mode
     if (window.VocabularyBook) {
@@ -6465,12 +6505,22 @@
     const phraseInputs = phrasesTranscript.querySelectorAll('.phrase-input');
     let correctCount = 0;
     let totalPhrases = phraseInputs.length;
+    const phraseResults = [];
 
     phraseInputs.forEach(input => {
       const userAnswer = input.value.trim().toLowerCase();
       const correctAnswer = input.dataset.correct.toLowerCase();
       const correctAnswerDisplay = input.dataset.correct; // Keep original case for display
       const userAnswerDisplay = input.value.trim(); // Keep original case for display
+      const isCorrect = userAnswer === correctAnswer;
+
+      phraseResults.push({
+        phraseId: input.dataset.phraseId || input.dataset.gapId || String(phraseResults.length + 1),
+        userAnswer: userAnswerDisplay,
+        normalizedUserAnswer: userAnswer,
+        correctAnswer: correctAnswerDisplay,
+        isCorrect
+      });
 
       // Split into words for comparison
       const userWords = userAnswer.split(/\s+/).filter(w => w.length > 0);
@@ -6490,7 +6540,7 @@
       replacementSpan.style.verticalAlign = 'baseline';
       replacementSpan.style.textAlign = 'center';
 
-      if (userAnswer === correctAnswer) {
+      if (isCorrect) {
         // All words correct: green color, bold, green box highlight
         replacementSpan.style.backgroundColor = '#dcfce7';
         replacementSpan.style.color = '#166534';
@@ -6561,6 +6611,7 @@
     redoPhrasesBtn.style.display = 'inline-block';
 
     // Show result message
+    const isFullyCorrect = totalPhrases > 0 && correctCount === totalPhrases;
     checkResultPhrases.textContent = `You got ${correctCount} out of ${totalPhrases} phrases correct!`;
     checkResultPhrases.style.display = 'block';
 
@@ -6584,6 +6635,35 @@
       // Note: Phrases also contributes to the 'extended' mode pool for proficiency
       window.handleDualTrackScoring('extended', currentExtendedQuestionId || 'extended', correctCount, totalPhrases);
     }
+
+    const extendedQuestion = extendedDatabase.find(q => q.id === currentExtendedQuestionId) || null;
+    window.PTEAttemptArchive?.saveAttempt?.({
+      practiceMode: 'extended',
+      promptSnapshot: {
+        promptId: currentExtendedQuestionId || 'extended',
+        text: extendedCorrectTranscript || extendedGappedTranscript || '',
+        sourceAssetPaths: [extendedQuestion?.audioFile].filter(Boolean),
+        data: extendedQuestion
+      },
+      responseSnapshot: {
+        phrases: phraseResults.map(({ phraseId, userAnswer }) => ({ phraseId, userAnswer }))
+      },
+      answerSnapshot: {
+        phrases: phraseResults.map(({ phraseId, correctAnswer, userAnswer, isCorrect }) => ({
+          phraseId,
+          correctAnswer,
+          userAnswer,
+          isCorrect
+        }))
+      },
+      resultSnapshot: {
+        score: correctCount,
+        maxScore: totalPhrases,
+        correct: isFullyCorrect,
+        results: phraseResults
+      },
+      scoringSource: 'client'
+    }).catch((error) => log.warn('[PTE Archive] Extended phrases save failed:', error));
   });
 
   // Redo Phrases button
@@ -7704,7 +7784,7 @@
         window.currentAttemptContext = null;
       }
 
-      return result;
+      return result ? { ...result, attemptId } : { attemptId, success: false };
     } catch (e) {
       console.error('[Scoring] Cloud Function call failed:', e);
       return null;
@@ -7807,6 +7887,18 @@
 
       // Persist per-question progress (progress bar + dropdown tier)
       recordPracticeAttempt(currentTypeQuestionId, !hasErrors, 'type');
+
+      window.PTEAttemptArchive?.saveTextAttempt?.('type', {
+        id: currentTypeQuestionId,
+        text: correctSentenceType,
+        source: 'write-from-dictation'
+      }, userAnswer, {
+        score: scoreValue,
+        maxScore: totalWords,
+        correct: !hasErrors,
+        wordAccuracy,
+        diff
+      }, { scoringSource: 'client' }).catch((error) => log.warn('[PTE Archive] WFD save failed:', error));
 
       // Vocabulary Book tracking
       if (window.VocabularyBook) {
@@ -7915,6 +8007,18 @@
 
       // Persist per-question progress (progress bar + dropdown tier)
       recordPracticeAttempt(currentSpeakQuestionId, !hasErrors, 'speak');
+
+      window.PTEAttemptArchive?.saveTextAttempt?.('speak', {
+        id: currentSpeakQuestionId,
+        text: correctSentenceSpeak,
+        source: 'repeat-sentence'
+      }, userAnswer, {
+        score: scoreValue,
+        maxScore: totalWords,
+        correct: !hasErrors,
+        wordAccuracy,
+        diff
+      }, { scoringSource: 'client' }).catch((error) => log.warn('[PTE Archive] Repeat Sentence save failed:', error));
 
       // Vocabulary Book tracking
       if (window.VocabularyBook) {

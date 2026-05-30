@@ -72,6 +72,26 @@ async function safeDeleteFile(bucket, path) {
     }
 }
 
+function collectAttemptMediaPaths(attempt) {
+    const paths = new Set();
+    const legacyPath = String(attempt?.audio?.studentPath || '').trim();
+    if (legacyPath) paths.add(legacyPath);
+
+    const media = Array.isArray(attempt?.media) ? attempt.media : [];
+    media.forEach((item) => {
+        const path = String(item?.storagePath || '').trim();
+        if (path) paths.add(path);
+    });
+
+    const mediaSlots = attempt?.mediaSlots && typeof attempt.mediaSlots === 'object' ? attempt.mediaSlots : {};
+    Object.values(mediaSlots).forEach((slot) => {
+        const path = String(slot?.storagePath || '').trim();
+        if (path) paths.add(path);
+    });
+
+    return Array.from(paths);
+}
+
 async function deleteFeedbackCascade(db, attemptId, bucket) {
     const feedbackRef = db.collection(SPEAKING_ATTEMPTS).doc(attemptId).collection('feedback');
 
@@ -102,6 +122,22 @@ async function deleteFeedbackCascade(db, attemptId, bucket) {
     }
 }
 
+async function decrementBookmarkCounterIfNeeded(db, attempt) {
+    const uid = String(attempt?.ownerUid || '').trim();
+    if (!uid) return;
+    if (String(attempt?.retentionState || '') !== RETENTION.nonstudentBookmarked) return;
+    const counterRef = db.collection(SPEAKING_ATTEMPT_COUNTERS).doc(uid);
+    await db.runTransaction(async (tx) => {
+        const snap = await tx.get(counterRef);
+        const current = Math.max(0, Number(snap.data()?.nonStudentBookmarkCount || 0));
+        tx.set(counterRef, {
+            uid,
+            nonStudentBookmarkCount: Math.max(0, current - 1),
+            updatedAt: FieldValue.serverTimestamp()
+        }, { merge: true });
+    }).catch(() => null);
+}
+
 async function deleteAttemptCascade(db, attemptId) {
     const bucket = await getStorageBucket();
     const attemptRef = db.collection(SPEAKING_ATTEMPTS).doc(attemptId);
@@ -110,15 +146,14 @@ async function deleteAttemptCascade(db, attemptId) {
     const attempt = snap.data() || {};
 
     const shareId = String(attempt.shareId || '').trim();
-    const studentPath = String(attempt.audio?.studentPath || '').trim();
+    const mediaPaths = collectAttemptMediaPaths(attempt);
 
     await deleteFeedbackCascade(db, attemptId, bucket);
     if (shareId) {
         await db.collection(SPEAKING_ATTEMPT_SHARES).doc(shareId).delete().catch(() => null);
     }
-    if (studentPath) {
-        await safeDeleteFile(bucket, studentPath);
-    }
+    await Promise.all(mediaPaths.map((path) => safeDeleteFile(bucket, path).catch(() => null)));
+    await decrementBookmarkCounterIfNeeded(db, attempt);
 
     await attemptRef.delete().catch(() => null);
 }
@@ -167,10 +202,8 @@ async function runSpeakingAttemptCleanup(db, options = {}) {
         const bucket = await getStorageBucket();
         for (const doc of draftSnap.docs) {
             const data = doc.data() || {};
-            const studentPath = String(data.audio?.studentPath || '').trim();
-            if (studentPath) {
-                await safeDeleteFile(bucket, studentPath).catch(() => null);
-            }
+            const mediaPaths = collectAttemptMediaPaths(data);
+            await Promise.all(mediaPaths.map((path) => safeDeleteFile(bucket, path).catch(() => null)));
             await doc.ref.delete().catch(() => null);
         }
     }

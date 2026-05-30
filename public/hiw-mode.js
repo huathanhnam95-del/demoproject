@@ -826,6 +826,34 @@
       elements.retryBtn.style.display = 'block';
     }
 
+    window.PTEAttemptArchive?.saveAttempt?.({
+      practiceMode: 'hiw',
+      promptSnapshot: window.PTEAttemptArchive.summarizeQuestion(state.currentQuestion),
+      responseSnapshot: {
+        selectedTokens: state.tokens.filter((token) => token.selected).map((token) => ({
+          index: token.index,
+          text: token.text
+        }))
+      },
+      answerSnapshot: {
+        tokens: state.tokens.map((token) => ({
+          index: token.index,
+          text: token.text,
+          keyedIncorrectWord: !!token.isMismatched,
+          spokenWord: token.correctWord || null,
+          selected: !!token.selected
+        }))
+      },
+      resultSnapshot: {
+        score: finalScore,
+        maxScore,
+        correctSelections,
+        incorrectSelections,
+        missedSelections
+      },
+      scoringSource: 'client'
+    }).catch((error) => console.warn('[PTE Archive] HIW save failed:', error));
+
     // Render explanation accordion
     if (elements.explanationToggle && (state.currentQuestion.explanation || state.currentQuestion.transcript)) {
       elements.explanationToggle.style.display = 'block';

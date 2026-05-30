@@ -34,7 +34,10 @@
     let mediaRecorder = null;
     let recordedChunks = [];
     let recordingBlobUrl = null;
+    let recordingBlob = null;
     let recordingSessionToken = 0;
+    let archiveAttemptId = null;
+    let archiveSavePromise = null;
 
     // AI scoring state
     let scoreRTSFn = null;
@@ -77,6 +80,28 @@
         const d = document.createElement('div');
         d.textContent = str || '';
         return d.innerHTML;
+    }
+
+    function rememberArchiveSave(promise) {
+        archiveSavePromise = Promise.resolve(promise || null)
+            .then((result) => {
+                archiveAttemptId = result?.attemptId || archiveAttemptId;
+                return archiveAttemptId;
+            })
+            .catch((error) => {
+                console.warn('[PTE Archive] RTS save failed:', error);
+                return null;
+            });
+        return archiveSavePromise;
+    }
+
+    async function ensureArchiveAttemptId() {
+        if (archiveAttemptId) return archiveAttemptId;
+        if (archiveSavePromise) {
+            const attemptId = await archiveSavePromise;
+            return attemptId || archiveAttemptId;
+        }
+        return null;
     }
 
     /* ──────────────────────────── INIT ──────────────────────────── */
@@ -123,6 +148,9 @@
         currentStep = 'idle';
         transcriptText = '';
         if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
+        recordingBlob = null;
+        archiveAttemptId = null;
+        archiveSavePromise = null;
         recordedChunks = [];
         if (el.rtsRecordingPlayback) {
             try {
@@ -442,6 +470,7 @@
         recordedChunks = [];
         transcriptText = '';
         if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
+        recordingBlob = null;
 
         // Request mic
         let stream;
@@ -527,6 +556,7 @@
             return;
         }
         const blob = new Blob(recordedChunks, { type: recordedChunks[0].type || 'audio/webm' });
+        recordingBlob = blob;
         recordingBlobUrl = URL.createObjectURL(blob);
         showResults(recordingBlobUrl);
     }
@@ -598,6 +628,36 @@
 
         // Update AI score button state
         updateAiScoreButtonState();
+
+        archiveAttemptId = null;
+        archiveSavePromise = null;
+        rememberArchiveSave(window.PTEAttemptArchive?.saveAttempt?.({
+            practiceMode: 'rts',
+            promptSnapshot: {
+                promptId: currentEntry?.id || null,
+                title: currentEntry?.title || '',
+                text: currentEntry?.answer || currentEntry?.prompt || '',
+                sourceAssetPaths: [currentEntry?.audioPath || currentEntry?.audio || currentEntry?.mediaPath].filter(Boolean),
+                data: currentEntry || null
+            },
+            responseSnapshot: {
+                transcript: getTranscriptForScoring() || transcriptText || ''
+            },
+            answerSnapshot: {
+                sampleResponse: currentEntry?.sampleResponse || currentEntry?.sampleResponses || null
+            },
+            resultSnapshot: {
+                submitted: true,
+                hasAudio: !!recordingBlob
+            },
+            scoringSource: 'client',
+            media: recordingBlob ? [{
+                slot: 'student',
+                label: 'Student response',
+                blob: recordingBlob,
+                contentType: recordingBlob.type || 'audio/webm'
+            }] : []
+        }));
     }
 
     /* ──────────────────────────── AI SCORING ──────────────────────────── */
@@ -713,6 +773,22 @@
 
             displayAiScoreResults(data);
             hasAiScoreResult = true;
+            const savedArchiveAttemptId = await ensureArchiveAttemptId();
+            if (savedArchiveAttemptId) {
+                window.PTEAttemptArchive?.patchAttempt?.(savedArchiveAttemptId, {
+                    resultSnapshot: {
+                        overall: data.overall || null,
+                        scores: data.scores || null,
+                        responseAnalysis: data.responseAnalysis || null,
+                        teacherAdvice: data.teacherAdvice || null
+                    },
+                    scoringSnapshot: {
+                        source: 'ai',
+                        success: data.success === true,
+                        teacherAdviceChat: data.teacherAdviceChat || null
+                    }
+                }).catch((error) => console.warn('[PTE Archive] RTS AI patch failed:', error));
+            }
         } catch (error) {
             console.error('[RTS] scoreRTS failed:', error);
             alert('AI scoring failed. Please try again.');

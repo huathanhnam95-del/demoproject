@@ -118,6 +118,11 @@ assert(
     'CRM admin page must load the course modal helper before crm-admin.js.'
 );
 assert(
+    html.includes('js/crm/scheduler-workspace.js') &&
+    html.indexOf('js/crm/scheduler-workspace.js') < html.indexOf('crm-admin.js'),
+    'CRM admin page must load the admin scheduler workspace helper before crm-admin.js.'
+);
+assert(
     html.includes('js/crm/lead-workspace.js') &&
     html.indexOf('js/crm/lead-workspace.js') < html.indexOf('crm-admin.js'),
     'CRM admin page must load the lead workspace helper before crm-admin.js.'
@@ -233,6 +238,16 @@ assert(
     'crm-admin.js must bind and implement the live-delivery session workflow in the active shell.'
 );
 assert(
+    js.includes('let schedulerController = null;') &&
+    js.includes('schedulerController = window.CrmSchedulerWorkspace') &&
+    js.includes('elements.schedulerWorkspace = document.getElementById(\'scheduler-workspace\')') &&
+    js.includes('elements.schedulerClassList = document.getElementById(\'scheduler-class-list\')') &&
+    js.includes('elements.schedulerCalendar = document.getElementById(\'scheduler-calendar\')') &&
+    js.includes('elements.btnRefreshScheduler = document.getElementById(\'btn-refresh-scheduler\')') &&
+    js.includes('elements.btnSeedScheduler = document.getElementById(\'btn-seed-scheduler\')'),
+    'crm-admin.js must bind and instantiate the admin Class Scheduling workspace, not only the teacher scheduler.'
+);
+assert(
     js.includes('async function refreshAttendanceRiskSnapshot()'),
     'crm-admin.js must define the shared attendance risk snapshot helper required during shell init and classroom updates.'
 );
@@ -310,8 +325,21 @@ assert(
 assert(
     html.includes('id="course-total-hours"') &&
     html.includes('id="course-default-session-minutes"') &&
-    html.includes('id="course-timezone"'),
-    'Course modal must expose delivery template scheduling fields.'
+    html.includes('id="course-timezone"') &&
+    html.includes('id="course-agent-commission-percent"'),
+    'Course modal must expose delivery template scheduling fields and the agent commission field.'
+);
+assert(
+    js.includes('elements.inputCourseAgentCommissionPercent = document.getElementById(\'course-agent-commission-percent\')') &&
+    js.includes('agentCommissionBps') &&
+    js.includes('inputCourseAgentCommissionPercent'),
+    'crm-admin.js must bind, serialize, reset, and hydrate course agent commission in the active course modal path.'
+);
+assert(
+    js.includes('async function fetchCoursesFromCatalog(options = {})') &&
+    js.includes('window.CrmCourses.fetchCourses(options)') &&
+    js.includes('refreshCourseCatalog({ forceRefresh: true })'),
+    'Course saves must force-refresh the cached course catalog so newly created courses are immediately selectable.'
 );
 assert(
     html.includes('id="classroom-primary-teacher"') &&
@@ -334,6 +362,18 @@ assert(
     js.includes('refreshTeacherSchedulerWorkspace') &&
     js.includes('teacherSchedulerController'),
     'crm-admin.js must wire teacher scheduler workspace lifecycle helpers.'
+);
+assert(
+    js.includes('refreshSchedulerWorkspace') &&
+    js.includes("'classes'") &&
+    js.includes("activePanel === 'courses/classes'"),
+    'crm-admin.js must refresh the admin Class Scheduling workspace when the courses/classes panel is active.'
+);
+assert(
+    js.includes("state.accessMode === 'teacher' && main === 'courses' && sub === 'classes'") &&
+    js.includes("state.sub = 'teacher-schedule'") &&
+    js.includes('getRouteHash(state.main, state.sub)'),
+    'Teacher-only CRM users must continue to be redirected from courses/classes to courses/teacher-schedule.'
 );
 assert(
     js.includes('window.CrmDevToolsAccess') &&

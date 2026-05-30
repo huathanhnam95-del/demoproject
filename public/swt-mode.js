@@ -22,6 +22,8 @@
   let lastSubmittedWordCount = 0;
   let lastSubmittedFormResult = null;
   let lastSubmittedQuestion = null;
+  let lastArchiveAttemptId = null;
+  let lastArchiveSavePromise = null;
   let hasAiScoreResult = false;
   let scoreSWTFn = null;
   let authStateRefreshBound = false;
@@ -59,6 +61,28 @@
       aiScoreBtn: $('swt-ai-score-btn'),
       aiScoreHint: $('swt-ai-score-hint')
     };
+  }
+
+  function rememberArchiveSave(promise) {
+    lastArchiveSavePromise = Promise.resolve(promise || null)
+      .then((result) => {
+        lastArchiveAttemptId = result?.attemptId || lastArchiveAttemptId;
+        return lastArchiveAttemptId;
+      })
+      .catch((error) => {
+        console.warn('[PTE Archive] SWT save failed:', error);
+        return null;
+      });
+    return lastArchiveSavePromise;
+  }
+
+  async function ensureArchiveAttemptId() {
+    if (lastArchiveAttemptId) return lastArchiveAttemptId;
+    if (lastArchiveSavePromise) {
+      const attemptId = await lastArchiveSavePromise;
+      return attemptId || lastArchiveAttemptId;
+    }
+    return null;
   }
 
   // ── Data Loading ──
@@ -347,6 +371,8 @@
     lastSubmittedWordCount = wordCount;
     lastSubmittedFormResult = formResult;
     lastSubmittedQuestion = questions[currentIndex] || null;
+    lastArchiveAttemptId = null;
+    lastArchiveSavePromise = null;
     hasAiScoreResult = false;
 
     if (d.resultsContainer) {
@@ -366,6 +392,12 @@
     } else {
       updateAiScoreButtonState();
     }
+    rememberArchiveSave(window.PTEAttemptArchive?.saveTextAttempt?.('swt', lastSubmittedQuestion, text, {
+      score: formResult.score,
+      maxScore: 1,
+      form: formResult,
+      wordCount
+    }, { scoringSource: 'client-form' }));
     renderPicker();
   }
 
@@ -623,6 +655,23 @@
 
     if (d.aiScoreBtn) d.aiScoreBtn.style.display = 'none';
     if (d.aiScoreHint) d.aiScoreHint.style.display = 'none';
+
+    ensureArchiveAttemptId().then((archiveAttemptId) => {
+      if (!archiveAttemptId) return;
+      window.PTEAttemptArchive?.patchAttempt?.(archiveAttemptId, {
+        resultSnapshot: {
+          overall,
+          scores,
+          mainPointsAnalysis,
+          teacherAdvice: data?.teacherAdvice || null
+        },
+        scoringSnapshot: {
+          source: 'ai',
+          success: data?.success === true,
+          teacherAdviceChat: data?.teacherAdviceChat || null
+        }
+      }).catch((error) => console.warn('[PTE Archive] SWT AI patch failed:', error));
+    }).catch((error) => console.warn('[PTE Archive] SWT AI patch skipped:', error));
   }
 
   // ── BEL Chat Integration ──

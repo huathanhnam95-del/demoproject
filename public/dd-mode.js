@@ -595,6 +595,35 @@
 
     // 3. Render detailed result cards
     renderDetailedResults(results);
+
+    window.PTEAttemptArchive?.saveAttempt?.({
+      practiceMode: 'dd',
+      promptSnapshot: window.PTEAttemptArchive.summarizeQuestion(state.currentQuestion),
+      responseSnapshot: {
+        placements: Object.fromEntries(Object.entries(state.placements || {}).map(([blankId, placed]) => [
+          blankId,
+          placed ? { id: placed.id || null, text: placed.text || null } : null
+        ]))
+      },
+      answerSnapshot: {
+        blanks: blanks.map((blank) => ({
+          blankId: blank.blankId,
+          answer: blank.answer,
+          options: blank.options || null
+        }))
+      },
+      resultSnapshot: {
+        score: correctCount,
+        maxScore: totalBlanks,
+        results: results.map((item) => ({
+          blankId: item.blank.blankId,
+          placed: item.placed ? { id: item.placed.id || null, text: item.placed.text || null } : null,
+          correctAnswer: item.blank.answer,
+          isCorrect: item.isCorrect
+        }))
+      },
+      scoringSource: 'client'
+    }).catch((error) => console.warn('[PTE Archive] DD save failed:', error));
   }
 
   function renderDetailedResults(results) {

@@ -380,8 +380,7 @@ window.ClassroomAPI = (function () {
             headers,
             body: JSON.stringify(data)
         });
-        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-        return res.json();
+        return parseJsonResponse(res);
     }
 
     async function seedClassroomSessions(classId, data) {
@@ -391,8 +390,7 @@ window.ClassroomAPI = (function () {
             headers,
             body: JSON.stringify(data)
         });
-        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-        return res.json();
+        return parseJsonResponse(res);
     }
 
     async function addClassroomSession(classId, data) {
@@ -423,8 +421,7 @@ window.ClassroomAPI = (function () {
             headers,
             body: JSON.stringify(data)
         });
-        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-        return res.json();
+        return parseJsonResponse(res);
     }
 
     async function addClassroomSessionBatch(classId, data) {
@@ -434,8 +431,7 @@ window.ClassroomAPI = (function () {
             headers,
             body: JSON.stringify(data)
         });
-        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-        return res.json();
+        return parseJsonResponse(res);
     }
 
     async function teacherAddClassroomSessionMulti(classId, data) {
@@ -455,8 +451,7 @@ window.ClassroomAPI = (function () {
             headers,
             body: JSON.stringify(data)
         });
-        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-        return res.json();
+        return parseJsonResponse(res);
     }
 
     async function previewClassroomSessionReplace(classId, data) {
@@ -466,8 +461,7 @@ window.ClassroomAPI = (function () {
             headers,
             body: JSON.stringify(data)
         });
-        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-        return res.json();
+        return parseJsonResponse(res);
     }
 
     async function rescheduleScheduledSession(sessionId, data) {
@@ -477,8 +471,7 @@ window.ClassroomAPI = (function () {
             headers,
             body: JSON.stringify(data)
         });
-        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-        return res.json();
+        return parseJsonResponse(res);
     }
 
     async function teacherRescheduleScheduledSession(sessionId, data) {

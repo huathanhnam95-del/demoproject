@@ -247,7 +247,8 @@ function createApp(options = {}) {
     db: firebase.db,
     sendSuccess: fnsSendSuccess,
     sendError: fnsSendError,
-    getStorageBucket: firebase.getStorageBucket
+    getStorageBucket: firebase.getStorageBucket,
+    serverTimestamp: () => firebase.admin.firestore.FieldValue.serverTimestamp()
   };
 
   app.use('/api/practice-attempts', functionsAuthMiddleware, practiceAttemptsLimiterByUid, createPracticeAttemptsRouter(routerDeps));

@@ -41,6 +41,11 @@ function isLockedSession(session) {
         || String(session?.status || 'scheduled') === 'cancelled';
 }
 
+function isActiveContractedSession(session) {
+    return String(session?.unitType || 'contracted') === 'contracted'
+        && String(session?.status || 'scheduled') !== 'cancelled';
+}
+
 function readExpectedScheduleVersion(payload) {
     const numeric = Number(payload?.expectedScheduleVersion);
     return Number.isInteger(numeric) && numeric > 0 ? numeric : null;
@@ -314,6 +319,13 @@ module.exports = function registerSchedulingRoutes(router, deps) {
 
             const classroom = classroomSnap.data() || {};
             const scheduleConfig = classroom.scheduleConfig || {};
+            const existingSessions = await listClassSessions(db, classId);
+            const existingContractedSessions = existingSessions.filter(isActiveContractedSession);
+            if (existingContractedSessions.length) {
+                return sendError(res, 409, 'SCHEDULE_ALREADY_SEEDED', 'This class already has scheduled contracted sessions. Use schedule regeneration for future changes.', {
+                    existingSessionCount: existingContractedSessions.length
+                });
+            }
             const sessions = buildSeedSessions({
                 classId,
                 courseId: classroom.courseId || null,

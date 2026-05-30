@@ -152,9 +152,9 @@ async function provisionEmulatorUser(email, password) {
         const rlRes = await testPrepare('retell_lecture', 45, 40);
         assert.strictEqual(rlRes.status, 200, 'prepare retell_lecture should succeed');
 
-        console.log(TAG, 'Testing future_mode (60/60 fallback)...');
+        console.log(TAG, 'Testing future_mode rejection...');
         const fmRes = await testPrepare('some_future_mode_key', 60, 60);
-        assert.strictEqual(fmRes.status, 200, 'prepare future_mode should succeed');
+        assert.strictEqual(fmRes.status, 400, 'prepare future_mode should reject modes outside the PTE allowlist');
 
         // B3: Prepare idempotency
         console.log(TAG, 'Testing idempotency...');

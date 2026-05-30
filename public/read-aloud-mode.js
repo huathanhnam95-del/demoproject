@@ -1918,6 +1918,7 @@ class ReadAloudMode {
           return;
         }
         const rawBlob = new Blob(recordedChunks, { type: activeRecorder.mimeType || 'audio/webm' });
+        recordingSession.rawBlob = rawBlob;
         this.setRecordedAudio(rawBlob);
         await this.submitToAzure(rawBlob, recordingSession);
       });
@@ -2025,6 +2026,7 @@ class ReadAloudMode {
       if (!this.shouldApplyAssessment(recordingSession)) return;
       if (statusMsg) statusMsg.textContent = 'Formatting audio...';
       const wavBlob = await this.prepareWavBlob(rawBlob);
+      recordingSession.wavBlob = wavBlob;
       if (!this.shouldApplyAssessment(recordingSession)) return;
 
       if (statusMsg) statusMsg.textContent = 'Analyzing pronunciation...';
@@ -2213,6 +2215,45 @@ class ReadAloudMode {
     this.renderConnectedSpeechResults(payload.connectedSpeech, {
       transcriptText: payload.recognizedText || this.currentPromptPlainText
     });
+
+    window.PTEAttemptArchive?.saveAttempt?.({
+      practiceMode: 'read-aloud',
+      promptSnapshot: {
+        promptId: recordingSession.questionId || null,
+        text: recordingSession.referenceText || this.currentPromptPlainText || '',
+        source: 'read-aloud',
+        data: {
+          promptKey: this.activePromptKey || null,
+          promptToken: recordingSession.promptToken || null
+        }
+      },
+      responseSnapshot: {
+        recognizedText: payload.recognizedText || '',
+        referenceText: recordingSession.referenceText || ''
+      },
+      answerSnapshot: {
+        referenceText: recordingSession.referenceText || '',
+        words: payload.words || []
+      },
+      resultSnapshot: {
+        accuracyScore: payload.accuracyScore,
+        fluencyScore: payload.fluencyScore,
+        completenessScore: payload.completenessScore,
+        pronScore: payload.pronScore,
+        connectedSpeech: payload.connectedSpeech || null
+      },
+      scoringSnapshot: {
+        source: 'azure',
+        success: true
+      },
+      scoringSource: 'azure',
+      media: recordingSession.wavBlob ? [{
+        slot: 'student',
+        label: 'Student read aloud',
+        blob: recordingSession.wavBlob,
+        contentType: 'audio/wav'
+      }] : []
+    }).catch((error) => console.warn('[PTE Archive] Read Aloud save failed:', error));
   }
 
   clearConnectedSpeechResults() {

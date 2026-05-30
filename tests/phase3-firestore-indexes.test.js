@@ -34,4 +34,17 @@ assert.ok(
   'firestore.indexes.json should define the jobs status/type/createdAt composite index used by queue-service.claimNextJob'
 );
 
+const pteReviewIndex = (indexes.indexes || []).find((index) =>
+  index.collectionGroup === 'speakingAttempts'
+  && Array.isArray(index.fields)
+  && index.fields.some((field) => field.fieldPath === 'practiceScope')
+  && index.fields.some((field) => field.fieldPath === 'crmStudentId')
+  && index.fields.some((field) => field.fieldPath === 'submittedAt')
+);
+
+assert.ok(
+  pteReviewIndex,
+  'firestore.indexes.json should define the PTE attempt review index for practiceScope/crmStudentId/submittedAt'
+);
+
 console.log('Phase 3 Firestore indexes test passed.');

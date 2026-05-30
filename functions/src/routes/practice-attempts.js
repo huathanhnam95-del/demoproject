@@ -15,10 +15,74 @@ const {
 } = require('../practice-attempts/attempt-constraints');
 const { parseWavMetadata } = require('../practice-attempts/wav-audio');
 
-const SPEAKING_ATTEMPTS = 'speakingAttempts';
+const ATTEMPTS_COLLECTION = 'speakingAttempts';
+const SPEAKING_ATTEMPTS = ATTEMPTS_COLLECTION;
 const SPEAKING_ATTEMPT_SHARES = 'speakingAttemptShares';
 const SPEAKING_ATTEMPT_COUNTERS = 'speakingAttemptCounters';
 const SPEAKING_ATTEMPT_EVENTS = 'speakingAttemptEvents';
+const ARCHIVE_SCHEMA_VERSION = 2;
+const ARCHIVE_TOTAL_JSON_LIMIT = 700 * 1024;
+const ARCHIVE_STRING_LIMIT = 12000;
+const ARCHIVE_ARRAY_LIMIT = 120;
+const ARCHIVE_OBJECT_KEY_LIMIT = 120;
+const ARCHIVE_ADVICE_LIMIT = 8000;
+const ARCHIVE_SLOT_MAX_BYTES = 50 * 1024 * 1024;
+
+const PTE_MODE_META = Object.freeze({
+    'read-aloud': { canonicalMode: 'read_aloud', label: 'Read Aloud', skill: 'speaking', mediaKind: 'audio' },
+    speak: { canonicalMode: 'repeat_sentence', label: 'Repeat Sentence', skill: 'speaking', mediaKind: 'audio' },
+    'describe-image': { canonicalMode: 'describe_image', label: 'Describe Image', skill: 'speaking', mediaKind: 'audio' },
+    notes: { canonicalMode: 'retell_lecture', label: 'Retell Lecture', skill: 'speaking', mediaKind: 'audio' },
+    asq: { canonicalMode: 'answer_short_question', label: 'Answer Short Question', skill: 'speaking', mediaKind: 'audio' },
+    sgd: { canonicalMode: 'summarize_group_discussion', label: 'Summarize Group Discussion', skill: 'speaking', mediaKind: 'audio' },
+    essay: { canonicalMode: 'write_essay', label: 'Write Essay', skill: 'writing' },
+    swt: { canonicalMode: 'summarize_written_text', label: 'Summarize Written Text', skill: 'writing' },
+    sst: { canonicalMode: 'summarize_spoken_text', label: 'Summarize Spoken Text', skill: 'listening' },
+    type: { canonicalMode: 'write_from_dictation', label: 'Write From Dictation', skill: 'listening' },
+    rfib: { canonicalMode: 'reading_fill_in_the_blanks', label: 'Reading Fill in the Blanks', skill: 'reading' },
+    dd: { canonicalMode: 'drag_and_drop_fill_blanks', label: 'Drag and Drop Fill Blanks', skill: 'reading' },
+    rmcsa: { canonicalMode: 'reading_multiple_choice_single_answer', label: 'Reading Multiple Choice Single Answer', skill: 'reading' },
+    rmcma: { canonicalMode: 'reading_multiple_choice_multiple_answers', label: 'Reading Multiple Choice Multiple Answers', skill: 'reading' },
+    rop: { canonicalMode: 'reorder_paragraphs', label: 'Re-order Paragraphs', skill: 'reading' },
+    extended: { canonicalMode: 'listening_fill_in_the_blanks', label: 'Listening Fill in the Blanks', skill: 'listening' },
+    rts: { canonicalMode: 'respond_to_situation', label: 'Respond to a Situation', skill: 'speaking', mediaKind: 'audio' },
+    lmcma: { canonicalMode: 'listening_multiple_choice_multiple_answers', label: 'Listening Multiple Choice Multiple Answers', skill: 'listening' },
+    lmcsa: { canonicalMode: 'listening_multiple_choice_single_answer', label: 'Listening Multiple Choice Single Answer', skill: 'listening' },
+    hcs: { canonicalMode: 'highlight_correct_summary', label: 'Highlight Correct Summary', skill: 'listening' },
+    smw: { canonicalMode: 'select_missing_word', label: 'Select Missing Word', skill: 'listening' },
+    hiw: { canonicalMode: 'highlight_incorrect_words', label: 'Highlight Incorrect Words', skill: 'listening' }
+});
+
+const PTE_MODE_ALIASES = Object.freeze({
+    readaloud: 'read-aloud',
+    read_aloud: 'read-aloud',
+    'read-aloud': 'read-aloud',
+    repeatsentence: 'speak',
+    repeat_sentence: 'speak',
+    'repeat-sentence': 'speak',
+    retelllecture: 'notes',
+    retell_lecture: 'notes',
+    'retell-lecture': 'notes',
+    answer_short_question: 'asq',
+    describe_image: 'describe-image',
+    summarize_group_discussion: 'sgd',
+    write_essay: 'essay',
+    summarize_written_text: 'swt',
+    summarize_spoken_text: 'sst',
+    write_from_dictation: 'type',
+    reading_fill_in_the_blanks: 'rfib',
+    drag_and_drop_fill_blanks: 'dd',
+    reading_multiple_choice_single_answer: 'rmcsa',
+    reading_multiple_choice_multiple_answers: 'rmcma',
+    reorder_paragraphs: 'rop',
+    listening_fill_in_the_blanks: 'extended',
+    respond_to_situation: 'rts',
+    listening_multiple_choice_multiple_answers: 'lmcma',
+    listening_multiple_choice_single_answer: 'lmcsa',
+    highlight_correct_summary: 'hcs',
+    select_missing_word: 'smw',
+    highlight_incorrect_words: 'hiw'
+});
 
 const RETENTION = {
     student: 'student_permanent',
@@ -36,6 +100,120 @@ function cleanString(value, maxLen) {
     if (!text) return null;
     if (Number.isFinite(maxLen) && maxLen > 0) return text.slice(0, maxLen);
     return text;
+}
+
+function cleanFieldName(value, fallback) {
+    const text = cleanString(value, 80);
+    if (!text) return fallback;
+    const safe = text.replace(/[^A-Za-z0-9_.-]+/g, '-').replace(/^-+|-+$/g, '');
+    if (safe === '__proto__' || safe === 'constructor' || safe === 'prototype') return fallback;
+    return safe || fallback;
+}
+
+function normalizePteModeKey(input) {
+    const raw = cleanString(input, 80);
+    if (!raw) return null;
+    const lowered = raw.toLowerCase();
+    const compact = lowered.replace(/[\s-]+/g, '_');
+    return PTE_MODE_ALIASES[lowered]
+        || PTE_MODE_ALIASES[compact]
+        || (PTE_MODE_META[lowered] ? lowered : null)
+        || (PTE_MODE_META[compact] ? compact : null);
+}
+
+function resolvePteModeMeta(input) {
+    const modeId = normalizePteModeKey(input);
+    const meta = modeId ? PTE_MODE_META[modeId] : null;
+    if (!meta) return null;
+    return {
+        modeId,
+        canonicalMode: meta.canonicalMode,
+        label: meta.label,
+        skill: meta.skill,
+        mediaKind: meta.mediaKind || null
+    };
+}
+
+function assertPteArchiveRequest(body = {}) {
+    const requestedScope = cleanString(body?.practiceScope, 32);
+    if (requestedScope !== 'pte') {
+        throw createHttpError(400, 'INVALID_PRACTICE_SCOPE', 'PTE attempt archives only accept practiceScope "pte".');
+    }
+    const modeMeta = resolvePteModeMeta(body?.practiceMode || body?.mode || body?.canonicalMode);
+    if (!modeMeta) {
+        throw createHttpError(400, 'INVALID_PRACTICE_MODE', 'Practice mode is not supported by the PTE attempt archive.');
+    }
+    return modeMeta;
+}
+
+function getArchiveJsonSize(value) {
+    try {
+        return Buffer.byteLength(JSON.stringify(value), 'utf8');
+    } catch (_) {
+        return ARCHIVE_TOTAL_JSON_LIMIT + 1;
+    }
+}
+
+function shouldUseAdviceLimit(path) {
+    return /advice|feedback|explanation|analysis|comment/i.test(String(path || ''));
+}
+
+function sanitizeArchiveSnapshot(input, options = {}) {
+    const maxDepth = Number.isFinite(options.maxDepth) ? options.maxDepth : 8;
+
+    function visit(value, path, depth) {
+        if (value === null || value === undefined) return null;
+        if (typeof value === 'boolean') return value;
+        if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+        if (typeof value === 'string') {
+            const limit = shouldUseAdviceLimit(path) ? ARCHIVE_ADVICE_LIMIT : ARCHIVE_STRING_LIMIT;
+            const truncated = value.length > limit;
+            if (!truncated) return value;
+            return {
+                value: value.slice(0, limit),
+                truncated: true,
+                originalLength: value.length
+            };
+        }
+        if (value instanceof Date) return value.toISOString();
+        if (typeof value?.toDate === 'function') {
+            const date = value.toDate();
+            return date instanceof Date ? date.toISOString() : null;
+        }
+        if (depth >= maxDepth) return { truncated: true, reason: 'maxDepth' };
+        if (Array.isArray(value)) {
+            const out = value.slice(0, ARCHIVE_ARRAY_LIMIT).map((item, index) => visit(item, `${path}.${index}`, depth + 1));
+            if (value.length > ARCHIVE_ARRAY_LIMIT) {
+                out.push({ truncated: true, omittedCount: value.length - ARCHIVE_ARRAY_LIMIT });
+            }
+            return out;
+        }
+        if (!isPlainObject(value)) return null;
+
+        const out = {};
+        const entries = Object.entries(value).slice(0, ARCHIVE_OBJECT_KEY_LIMIT);
+        entries.forEach(([key, child]) => {
+            const cleanKey = cleanFieldName(key, null);
+            if (!cleanKey) return;
+            out[cleanKey] = visit(child, `${path}.${cleanKey}`, depth + 1);
+        });
+        if (Object.keys(value).length > ARCHIVE_OBJECT_KEY_LIMIT) {
+            out._truncated = {
+                truncated: true,
+                omittedKeyCount: Object.keys(value).length - ARCHIVE_OBJECT_KEY_LIMIT
+            };
+        }
+        return out;
+    }
+
+    let sanitized = visit(input, options.rootName || 'snapshot', 0);
+    if (getArchiveJsonSize(sanitized) <= ARCHIVE_TOTAL_JSON_LIMIT) return sanitized;
+    sanitized = {
+        truncated: true,
+        reason: 'documentJsonLimit',
+        summary: visit(options.summary || null, 'summary', 0)
+    };
+    return sanitized;
 }
 
 function toFiniteNumber(value, fallback) {
@@ -72,6 +250,10 @@ function buildAttemptAudioPath(uid, attemptId) {
     return `practice-attempts/${uid}/${attemptId}/student.wav`;
 }
 
+function buildAttemptMediaPath(uid, attemptId, slotFile) {
+    return `practice-attempts/${uid}/${attemptId}/${slotFile}`;
+}
+
 function buildFeedbackAudioPath(attemptId, feedbackId, uid) {
     return `practice-attempt-feedback/${attemptId}/${feedbackId}/${uid}.wav`;
 }
@@ -84,13 +266,168 @@ function isAllowedWavContentType(contentType) {
         || lowered.includes('wav');
 }
 
+function isAllowedWebmContentType(contentType) {
+    const lowered = String(contentType || '').trim().toLowerCase();
+    if (!lowered) return false;
+    return lowered === 'audio/webm'
+        || lowered === 'video/webm'
+        || lowered.includes('webm');
+}
+
+function isAllowedArchiveMediaContentType(contentType) {
+    return isAllowedWavContentType(contentType) || isAllowedWebmContentType(contentType);
+}
+
+function inferMediaExtension(contentType, fallback = 'webm') {
+    if (isAllowedWavContentType(contentType)) return 'wav';
+    if (isAllowedWebmContentType(contentType)) return 'webm';
+    return fallback;
+}
+
+function sanitizeMediaSlotFile(value, contentType, index = 0) {
+    const ext = inferMediaExtension(contentType, 'webm');
+    const raw = cleanString(value, 128) || `student-${index + 1}.${ext}`;
+    const normalized = raw.replace(/[\\/:*?"<>|]+/g, '-').replace(/\s+/g, '-');
+    const safe = normalized.toLowerCase().replace(/[^a-z0-9_.-]+/g, '-').replace(/^-+|-+$/g, '');
+    if (!safe) return `student-${index + 1}.${ext}`;
+    if (!/\.(wav|webm)$/.test(safe)) return `${safe}.${ext}`;
+    return safe;
+}
+
+function sanitizeMediaSlots(inputSlots, { uid, attemptId } = {}) {
+    const list = Array.isArray(inputSlots)
+        ? inputSlots
+        : (isPlainObject(inputSlots) ? Object.entries(inputSlots).map(([slotFile, data]) => ({ slotFile, ...(isPlainObject(data) ? data : {}) })) : []);
+    const out = {};
+    list.slice(0, 12).forEach((slot, index) => {
+        if (!isPlainObject(slot)) return;
+        const contentType = cleanString(slot.contentType, 80) || 'audio/webm';
+        if (!isAllowedArchiveMediaContentType(contentType)) return;
+        const slotFile = sanitizeMediaSlotFile(slot.slotFile || slot.fileName || slot.name, contentType, index);
+        const storagePath = buildAttemptMediaPath(uid, attemptId, slotFile);
+        const clientReportedDurationMs = toFiniteNumber(slot.clientReportedDurationMs ?? slot.durationMs, null);
+        out[slotFile] = {
+            slotFile,
+            slot: cleanFieldName(slot.slot || slot.kind || 'student', 'student'),
+            label: cleanString(slot.label, 120) || 'Student recording',
+            storagePath,
+            contentType: cleanString(contentType, 80),
+            status: 'awaiting_upload',
+            sizeBytes: null,
+            durationMs: null,
+            clientReportedDurationMs: Number.isFinite(clientReportedDurationMs) ? Math.max(0, Math.round(clientReportedDurationMs)) : null,
+            durationSource: null,
+            md5Hash: null,
+            generation: null,
+            validatedAt: null
+        };
+    });
+    return out;
+}
+
+function buildPreparedMediaSlots(inputSlots, { uid, attemptId, modeMeta } = {}) {
+    const provided = sanitizeMediaSlots(inputSlots, { uid, attemptId });
+    if (Object.keys(provided).length) return provided;
+    if (!modeMeta?.mediaKind) return {};
+    const defaultContentType = modeMeta.modeId === 'read-aloud' ? 'audio/wav' : 'audio/webm';
+    const defaultFile = modeMeta.modeId === 'read-aloud' ? 'student.wav' : 'student.webm';
+    return sanitizeMediaSlots([{
+        slot: 'student',
+        label: 'Student recording',
+        slotFile: defaultFile,
+        contentType: defaultContentType
+    }], { uid, attemptId });
+}
+
+function normalizeMediaSlotsForResponse(mediaSlots) {
+    if (!isPlainObject(mediaSlots)) return [];
+    return Object.values(mediaSlots).map((slot) => ({
+        slotFile: slot.slotFile || null,
+        slot: slot.slot || null,
+        label: slot.label || null,
+        path: slot.storagePath || null,
+        storagePath: slot.storagePath || null,
+        contentType: slot.contentType || null,
+        status: slot.status || null,
+        clientReportedDurationMs: slot.clientReportedDurationMs || null,
+        sizeBytes: slot.sizeBytes || null,
+        durationMs: slot.durationMs || null,
+        durationSource: slot.durationSource || null
+    }));
+}
+
+function buildArchiveSnapshotsFromBody(body = {}) {
+    return {
+        promptSnapshot: sanitizeArchiveSnapshot(body.promptSnapshot || body.prompt || null, { rootName: 'promptSnapshot' }),
+        responseSnapshot: sanitizeArchiveSnapshot(body.responseSnapshot || body.response || null, { rootName: 'responseSnapshot' }),
+        answerSnapshot: sanitizeArchiveSnapshot(body.answerSnapshot || body.answers || body.keyedAnswerData || null, { rootName: 'answerSnapshot' }),
+        resultSnapshot: sanitizeArchiveSnapshot(body.resultSnapshot || body.result || body.score || null, { rootName: 'resultSnapshot' }),
+        timingSnapshot: sanitizeArchiveSnapshot(body.timingSnapshot || body.timing || null, { rootName: 'timingSnapshot' }),
+        scoringSnapshot: sanitizeArchiveSnapshot(body.scoringSnapshot || body.scoring || null, { rootName: 'scoringSnapshot' })
+    };
+}
+
+async function validatePreparedMediaSlots(bucket, slots, constraints) {
+    const mediaSlots = isPlainObject(slots) ? { ...slots } : {};
+    const media = [];
+    const entries = Object.entries(mediaSlots);
+    for (const [slotFile, slot] of entries) {
+        const storagePath = cleanString(slot?.storagePath, 1024);
+        if (!storagePath) continue;
+        const validation = await validateAttemptMediaUploadFromFile(bucket.file(storagePath), {
+            maxBytes: Math.min(ARCHIVE_SLOT_MAX_BYTES, constraints?.maxUploadBytes || ARCHIVE_SLOT_MAX_BYTES),
+            maxDurationMs: constraints?.hardMaxMs || null,
+            clientReportedDurationMs: slot?.clientReportedDurationMs
+        });
+        if (!validation.ok) {
+            throw createHttpError(
+                validation.status || 400,
+                validation.code || 'INVALID_MEDIA',
+                validation.message || 'Uploaded media is invalid.',
+                validation.details || null
+            );
+        }
+        const nextSlot = {
+            ...slot,
+            status: 'uploaded',
+            contentType: validation.metadata.contentType,
+            sizeBytes: validation.metadata.sizeBytes,
+            durationMs: validation.metadata.durationMs,
+            clientReportedDurationMs: validation.metadata.clientReportedDurationMs ?? slot?.clientReportedDurationMs ?? null,
+            durationSource: validation.metadata.durationSource,
+            md5Hash: validation.metadata.md5Hash,
+            generation: validation.metadata.generation,
+            validatedAt: validation.metadata.validatedAt
+        };
+        mediaSlots[slotFile] = nextSlot;
+        media.push({
+            slotFile,
+            slot: nextSlot.slot || 'student',
+            label: nextSlot.label || null,
+            storagePath,
+            contentType: nextSlot.contentType,
+            sizeBytes: nextSlot.sizeBytes,
+            durationMs: nextSlot.durationMs,
+            clientReportedDurationMs: nextSlot.clientReportedDurationMs || null,
+            durationSource: nextSlot.durationSource,
+            validatedAt: nextSlot.validatedAt
+        });
+    }
+    return { mediaSlots, media };
+}
+
 function sanitizePromptSnapshot(input) {
-    const prompt = isPlainObject(input) ? input : {};
+    const prompt = sanitizeArchiveSnapshot(isPlainObject(input) ? input : {}, { rootName: 'promptSnapshot' });
     return {
         promptId: cleanString(prompt.promptId, 128),
         title: cleanString(prompt.title, 200),
         text: cleanString(prompt.text, 4000),
-        source: cleanString(prompt.source, 200)
+        source: cleanString(prompt.source, 200),
+        assetPath: cleanString(prompt.assetPath || prompt.sourceAssetPath, 1024),
+        sourceAssetPaths: Array.isArray(prompt.sourceAssetPaths)
+            ? prompt.sourceAssetPaths.map((item) => cleanString(item, 1024)).filter(Boolean).slice(0, 20)
+            : [],
+        data: prompt
     };
 }
 
@@ -166,6 +503,18 @@ async function mapWithConcurrency(items, limit, fn) {
     return out;
 }
 
+async function signMediaSlots(bucket, mediaSlots, constraints) {
+    const slots = normalizeMediaSlotsForResponse(mediaSlots);
+    const pairs = await mapWithConcurrency(slots, 6, async (slot) => {
+        if (!slot.storagePath) return [slot.slotFile, null];
+        const url = await signReadUrl(bucket, slot.storagePath, {
+            expiresMinutes: constraints?.signedReadUrlMinutes || DEFAULT_SIGNED_READ_URL_MINUTES
+        }).catch(() => null);
+        return [slot.slotFile, url];
+    });
+    return Object.fromEntries(pairs.filter(([slotFile]) => !!slotFile));
+}
+
 function createHttpError(status, code, message, details) {
     const err = new Error(message || 'Request failed');
     err.status = status;
@@ -175,11 +524,17 @@ function createHttpError(status, code, message, details) {
 }
 
 function buildAccessSnapshot(resolved, now) {
+    const linkedStudentIds = Array.isArray(resolved?.linkedStudentIds)
+        ? resolved.linkedStudentIds.map((id) => cleanString(id, 128)).filter(Boolean)
+        : [];
+    const studentId = cleanString(resolved?.studentId, 128);
+    if (studentId && !linkedStudentIds.includes(studentId)) linkedStudentIds.unshift(studentId);
     return {
         resolvedAt: now,
         effectiveStatus: resolved?.effectiveStatus || 'nonstudent',
         source: resolved?.source || 'none',
-        studentId: resolved?.studentId || null,
+        studentId: studentId || null,
+        linkedStudentIds,
         enrollmentIds: Array.isArray(resolved?.enrollmentIds) ? resolved.enrollmentIds : [],
         effectiveWindowStartAt: resolved?.effectiveWindowStartAt || null,
         effectiveWindowEndAt: resolved?.effectiveWindowEndAt || null
@@ -198,7 +553,7 @@ function logRouteEvent(routeName, payload) {
     }
 }
 
-async function appendAttemptEvent(db, event) {
+async function appendAttemptEvent(db, event, serverTimestamp = () => FieldValue.serverTimestamp()) {
     try {
         await db.collection(SPEAKING_ATTEMPT_EVENTS).add({
             eventType: cleanString(event?.eventType, 80) || 'unknown',
@@ -209,7 +564,7 @@ async function appendAttemptEvent(db, event) {
             feedbackId: cleanString(event?.feedbackId, 128) || null,
             resultCode: cleanString(event?.resultCode, 80) || null,
             meta: isPlainObject(event?.meta) ? event.meta : {},
-            createdAt: FieldValue.serverTimestamp()
+            createdAt: serverTimestamp()
         });
     } catch (error) {
         logRouteEvent('attempt-event-write-failed', {
@@ -217,6 +572,56 @@ async function appendAttemptEvent(db, event) {
             error: String(error?.message || error)
         });
     }
+}
+
+function addStudentIdFromValue(out, value) {
+    const id = cleanString(value, 128);
+    if (id) out.add(id);
+}
+
+function collectStudentIdsFromContainer(out, value) {
+    if (!value) return;
+    if (typeof value === 'string') {
+        addStudentIdFromValue(out, value);
+        return;
+    }
+    if (Array.isArray(value)) {
+        value.forEach((item) => collectStudentIdsFromContainer(out, item));
+        return;
+    }
+    if (!isPlainObject(value)) return;
+    addStudentIdFromValue(out, value.studentId || value.crmStudentId || value.id || value.uid);
+    ['studentIds', 'crmStudentIds', 'linkedStudentIds', 'memberStudentIds', 'students', 'members', 'studentRefs'].forEach((key) => {
+        if (Object.prototype.hasOwnProperty.call(value, key)) collectStudentIdsFromContainer(out, value[key]);
+    });
+}
+
+async function resolveTeacherStudentIds(db, uid) {
+    const allowed = new Set();
+    if (!uid) return allowed;
+
+    const classroomQueries = [
+        db.collection('crmClassrooms').where('primaryTeacherUid', '==', uid).limit(200).get(),
+        db.collection('crmClassrooms').where('teacherUid', '==', uid).limit(200).get(),
+        db.collection('crmClassrooms').where('teacherUids', 'array-contains', uid).limit(200).get()
+    ];
+    const studentQueries = [
+        db.collection('crmStudents').where('teacherUid', '==', uid).limit(200).get(),
+        db.collection('crmStudents').where('teacherUids', 'array-contains', uid).limit(200).get(),
+        db.collection('crmStudents').where('assignedTeacherUid', '==', uid).limit(200).get()
+    ];
+
+    const snaps = await Promise.allSettled([...classroomQueries, ...studentQueries]);
+    snaps.forEach((result) => {
+        if (result.status !== 'fulfilled') return;
+        const docs = Array.isArray(result.value?.docs) ? result.value.docs : [];
+        docs.forEach((doc) => {
+            addStudentIdFromValue(allowed, doc.id);
+            collectStudentIdsFromContainer(allowed, doc.data() || {});
+        });
+    });
+
+    return allowed;
 }
 
 async function resolveReviewerAccess(db, user) {
@@ -235,18 +640,28 @@ async function resolveReviewerAccess(db, user) {
 
     const isAdmin = claimAdmin || profileAdmin;
     const isTeacher = claimTeacher || profileTeacher;
+    const allowedStudentIds = isAdmin ? null : (isTeacher ? await resolveTeacherStudentIds(db, uid) : new Set());
     return {
         uid,
         isAdmin,
         isTeacher,
-        isReviewer: isAdmin || isTeacher
+        isReviewer: isAdmin || isTeacher,
+        allowedStudentIds
     };
 }
 
 function ensureAttemptOwnerOrReviewer({ attempt, uid, reviewer }) {
     if (!attempt) return { ok: false, status: 404, code: 'NOT_FOUND', message: 'Attempt not found.' };
     if (String(attempt.ownerUid || '') === String(uid || '')) return { ok: true };
-    if (reviewer?.isReviewer) return { ok: true };
+    if (reviewer?.isAdmin) return { ok: true };
+    if (reviewer?.isTeacher && reviewer.allowedStudentIds instanceof Set) {
+        const attemptStudentIds = new Set();
+        addStudentIdFromValue(attemptStudentIds, attempt.crmStudentId);
+        collectStudentIdsFromContainer(attemptStudentIds, attempt.crmStudentIds || attempt.accessSnapshot?.linkedStudentIds || attempt.accessSnapshot?.studentId);
+        for (const studentId of attemptStudentIds) {
+            if (reviewer.allowedStudentIds.has(studentId)) return { ok: true };
+        }
+    }
     return { ok: false, status: 403, code: 'FORBIDDEN', message: 'Access denied.' };
 }
 
@@ -352,6 +767,100 @@ async function validateWavUploadFromFile(file, options = {}) {
     };
 }
 
+async function validateAttemptMediaUploadFromFile(file, options = {}) {
+    const maxBytes = Number.isFinite(options.maxBytes) ? options.maxBytes : ARCHIVE_SLOT_MAX_BYTES;
+    const maxDurationMs = Number.isFinite(options.maxDurationMs) ? options.maxDurationMs : null;
+
+    const [exists] = await file.exists();
+    if (!exists) {
+        return {
+            ok: false,
+            status: 400,
+            code: 'UPLOAD_MISSING',
+            message: 'Media upload not found.'
+        };
+    }
+
+    const [meta] = await file.getMetadata().catch(() => [null]);
+    const contentType = String(meta?.contentType || '').trim().toLowerCase();
+    const sizeBytes = Number(meta?.size || 0);
+    if (!contentType || !isAllowedArchiveMediaContentType(contentType)) {
+        return {
+            ok: false,
+            status: 400,
+            code: 'INVALID_MEDIA',
+            message: 'Uploaded media must be WAV or WebM.'
+        };
+    }
+    if (!Number.isFinite(sizeBytes) || sizeBytes <= 0) {
+        return {
+            ok: false,
+            status: 400,
+            code: 'INVALID_MEDIA',
+            message: 'Uploaded media is empty.'
+        };
+    }
+    if (sizeBytes > maxBytes) {
+        return {
+            ok: false,
+            status: 400,
+            code: 'INVALID_MEDIA',
+            message: 'Uploaded media is too large.',
+            details: { maxUploadBytes: maxBytes, sizeBytes }
+        };
+    }
+
+    if (isAllowedWavContentType(contentType)) {
+        const wavValidation = await validateWavUploadFromFile(file, { maxBytes, maxDurationMs });
+        if (!wavValidation.ok) return wavValidation;
+        return {
+            ok: true,
+            metadata: {
+                ...wavValidation.metadata,
+                durationSource: 'wav_metadata',
+                clientReportedDurationMs: null
+            }
+        };
+    }
+
+    const clientReportedDurationMs = toFiniteNumber(options.clientReportedDurationMs, null);
+    if (!Number.isFinite(clientReportedDurationMs) || clientReportedDurationMs <= 0) {
+        return {
+            ok: false,
+            status: 400,
+            code: 'MEDIA_DURATION_REQUIRED',
+            message: 'WebM uploads require client-reported duration metadata.'
+        };
+    }
+    if (Number.isFinite(maxDurationMs) && Number.isFinite(clientReportedDurationMs) && clientReportedDurationMs > maxDurationMs) {
+        return {
+            ok: false,
+            status: 400,
+            code: 'AUDIO_DURATION_EXCEEDED',
+            message: 'Uploaded audio exceeds the allowed duration.',
+            details: {
+                durationMs: clientReportedDurationMs,
+                maxDurationMs,
+                durationSource: 'client_reported'
+            }
+        };
+    }
+
+    return {
+        ok: true,
+        metadata: {
+            sizeBytes,
+            contentType,
+            durationMs: Number.isFinite(clientReportedDurationMs) ? Math.max(0, Math.round(clientReportedDurationMs)) : null,
+            clientReportedDurationMs: Number.isFinite(clientReportedDurationMs) ? Math.max(0, Math.round(clientReportedDurationMs)) : null,
+            durationSource: 'client_reported',
+            md5Hash: cleanString(meta?.md5Hash, 256) || null,
+            generation: cleanString(meta?.generation, 128) || null,
+            validatedAt: new Date()
+        }
+    };
+}
+
 function sanitizeVisibility(value, fallback = 'private') {
     const normalized = cleanString(value, 16);
     if (normalized === 'shared') return 'shared';
@@ -359,11 +868,17 @@ function sanitizeVisibility(value, fallback = 'private') {
     return fallback;
 }
 
-function summarizeAttemptForList(doc, data, signedUrl) {
+function summarizeAttemptForList(doc, data, signedUrl, mediaUrls = {}) {
     return {
         attemptId: doc.id,
         ownerUid: data.ownerUid || null,
+        schemaVersion: data.schemaVersion || 1,
+        practiceScope: data.practiceScope || null,
         practiceMode: data.practiceMode || null,
+        canonicalMode: data.canonicalMode || null,
+        modeLabel: data.modeLabel || null,
+        skill: data.skill || null,
+        crmStudentId: data.crmStudentId || null,
         status: data.status || null,
         createdAt: data.createdAt || null,
         submittedAt: data.submittedAt || null,
@@ -380,12 +895,20 @@ function summarizeAttemptForList(doc, data, signedUrl) {
         audio: {
             studentUrl: signedUrl || null,
             durationMs: data.audio?.durationMs || null
-        }
+        },
+        media: normalizeMediaSlotsForResponse(data.mediaSlots).map((slot) => ({
+            ...slot,
+            url: mediaUrls[slot.slotFile] || null
+        })),
+        score: data.resultSnapshot?.score ?? data.score ?? null
     };
 }
 
 module.exports = function createPracticeAttemptsRouter(deps) {
     const { db, sendSuccess, sendError, getStorageBucket } = deps;
+    const serverTimestamp = typeof deps.serverTimestamp === 'function'
+        ? deps.serverTimestamp
+        : () => FieldValue.serverTimestamp();
     const router = express.Router();
 
     router.post('/prepare', async (req, res) => {
@@ -394,13 +917,21 @@ module.exports = function createPracticeAttemptsRouter(deps) {
             const uid = cleanString(req.user?.uid, 128);
             if (!uid) return sendError(res, 401, 'UNAUTHORIZED', 'Missing user identity.');
 
-            const constraints = getModeConstraints(req.body?.practiceMode);
-            if (!constraints) {
-                return sendError(res, 400, 'VALIDATION_ERROR', 'Invalid practiceMode.');
+            const prepareBody = {
+                ...req.body,
+                practiceScope: cleanString(req.body?.practiceScope, 32) || 'pte'
+            };
+            let modeMeta;
+            try {
+                modeMeta = assertPteArchiveRequest(prepareBody);
+            } catch (error) {
+                return sendError(res, Number(error?.status || 400), cleanString(error?.code, 64) || 'VALIDATION_ERROR', error?.message || 'Invalid practice attempt request.');
             }
+            const constraints = getModeConstraints(modeMeta.canonicalMode);
 
             const requestedAttemptId = cleanString(req.body?.attemptId, 128);
             const promptSnapshot = sanitizePromptSnapshot(req.body?.promptSnapshot);
+            const requestedMediaSlots = req.body?.mediaSlots || req.body?.media;
             const now = new Date();
 
             const txResult = await db.runTransaction(async (tx) => {
@@ -415,14 +946,16 @@ module.exports = function createPracticeAttemptsRouter(deps) {
                         throw createHttpError(409, 'ATTEMPT_ID_CONFLICT', 'attemptId belongs to another user.');
                     }
 
-                    const existingMode = normalizePracticeMode(existing.practiceMode);
-                    if (existingMode !== constraints.practiceMode) {
+                    const existingMode = normalizePteModeKey(existing.practiceMode) || normalizePteModeKey(existing.canonicalMode);
+                    if (existingMode !== modeMeta.modeId) {
                         throw createHttpError(409, 'ATTEMPT_ID_MODE_MISMATCH', 'attemptId is bound to a different practiceMode.');
                     }
 
                     const expectedAudioPath = buildAttemptAudioPath(uid, attemptId);
                     const existingStatus = String(existing.status || '').trim();
                     const existingAudioPath = cleanString(existing.audio?.studentPath, 1024);
+                    const nextMediaSlots = buildPreparedMediaSlots(requestedMediaSlots, { uid, attemptId, modeMeta });
+                    const hasExistingMediaSlots = Object.keys(existing.mediaSlots || {}).length > 0;
                     if (existingStatus === 'awaiting_upload' && existingAudioPath !== expectedAudioPath) {
                         // Keep Storage rules deterministic: prepared attempts must always use the canonical path.
                         tx.set(attemptRef, {
@@ -430,14 +963,20 @@ module.exports = function createPracticeAttemptsRouter(deps) {
                                 studentPath: expectedAudioPath,
                                 contentType: 'audio/wav'
                             },
-                            updatedAt: FieldValue.serverTimestamp()
+                            mediaSlots: Object.keys(nextMediaSlots).length ? nextMediaSlots : (existing.mediaSlots || {}),
+                            updatedAt: serverTimestamp()
+                        }, { merge: true });
+                    } else if (!hasExistingMediaSlots && Object.keys(nextMediaSlots).length) {
+                        tx.set(attemptRef, {
+                            mediaSlots: nextMediaSlots,
+                            updatedAt: serverTimestamp()
                         }, { merge: true });
                     }
 
                     if (!isPlainObject(existing.constraintSnapshot)) {
                         tx.set(attemptRef, {
                             constraintSnapshot: toConstraintSnapshot(constraints, now),
-                            updatedAt: FieldValue.serverTimestamp()
+                            updatedAt: serverTimestamp()
                         }, { merge: true });
                     }
 
@@ -446,18 +985,25 @@ module.exports = function createPracticeAttemptsRouter(deps) {
                         attemptId,
                         status: existingStatus || 'awaiting_upload',
                         audioPath: (existingStatus === 'awaiting_upload' ? expectedAudioPath : (existingAudioPath || expectedAudioPath)),
+                        mediaSlots: Object.keys(existing.mediaSlots || {}).length ? existing.mediaSlots : nextMediaSlots,
                         constraints: resolveConstraintSnapshot(existing) || constraints
                     };
                 }
 
                 const audioPath = buildAttemptAudioPath(uid, attemptId);
+                const mediaSlots = buildPreparedMediaSlots(requestedMediaSlots, { uid, attemptId, modeMeta });
                 tx.set(attemptRef, {
                     attemptId,
+                    schemaVersion: 2,
                     ownerUid: uid,
-                    practiceMode: constraints.practiceMode,
+                    practiceScope: 'pte',
+                    practiceMode: modeMeta.modeId,
+                    canonicalMode: modeMeta.canonicalMode,
+                    modeLabel: modeMeta.label,
+                    skill: modeMeta.skill,
                     promptSnapshot,
                     status: 'awaiting_upload',
-                    createdAt: FieldValue.serverTimestamp(),
+                    createdAt: serverTimestamp(),
                     submittedAt: null,
                     audio: {
                         studentPath: audioPath,
@@ -468,19 +1014,21 @@ module.exports = function createPracticeAttemptsRouter(deps) {
                         generation: null,
                         validatedAt: null
                     },
+                    mediaSlots,
+                    media: [],
                     constraintSnapshot: toConstraintSnapshot(constraints, now),
                     retentionState: null,
                     deleteAfterAt: null,
                     bookmark: {
                         active: false,
                         bookmarkedAt: null,
-                        lastChangedAt: FieldValue.serverTimestamp()
+                        lastChangedAt: serverTimestamp()
                     },
                     accessSnapshot: null,
                     promotion: null,
                     shareId: null,
                     deletionState: null,
-                    updatedAt: FieldValue.serverTimestamp()
+                    updatedAt: serverTimestamp()
                 });
 
                 return {
@@ -488,6 +1036,7 @@ module.exports = function createPracticeAttemptsRouter(deps) {
                     attemptId,
                     status: 'awaiting_upload',
                     audioPath,
+                    mediaSlots,
                     constraints
                 };
             });
@@ -499,6 +1048,7 @@ module.exports = function createPracticeAttemptsRouter(deps) {
                     path: txResult.audioPath,
                     contentType: 'audio/wav'
                 },
+                mediaSlots: normalizeMediaSlotsForResponse(txResult.mediaSlots),
                 constraints: {
                     hardMaxSeconds: txResult.constraints.hardMaxSeconds,
                     uiMaxSeconds: txResult.constraints.uiMaxSeconds,
@@ -518,7 +1068,7 @@ module.exports = function createPracticeAttemptsRouter(deps) {
                 uid,
                 attemptId: txResult.attemptId,
                 resultCode: txResult.created ? 'CREATED' : 'RETURNED_EXISTING'
-            });
+            }, serverTimestamp);
 
             return sendSuccess(res, responsePayload);
         } catch (error) {
@@ -531,6 +1081,283 @@ module.exports = function createPracticeAttemptsRouter(deps) {
                 resultCode: code,
                 error: String(error?.message || error)
             });
+            return sendError(res, status, code, message, error?.details || (status >= 500 ? (error?.message || error) : null));
+        }
+    });
+
+    router.post('/save', async (req, res) => {
+        const routeName = 'POST /api/practice-attempts/save';
+        try {
+            const uid = cleanString(req.user?.uid, 128);
+            if (!uid) return sendError(res, 401, 'UNAUTHORIZED', 'Missing user identity.');
+
+            const modeMeta = assertPteArchiveRequest(req.body || {});
+            if (req.body?.invalidated === true && req.body?.archiveInvalidated !== true) {
+                return sendSuccess(res, {
+                    archived: false,
+                    reason: 'invalidated'
+                }, 'Invalidated attempt was not archived.');
+            }
+
+             const constraints = getModeConstraints(modeMeta.canonicalMode);
+            const requestedAttemptId = cleanString(req.body?.attemptId, 128);
+            const idempotencyKey = cleanString(req.body?.idempotencyKey, 128);
+            let attemptId = requestedAttemptId;
+            let existingDoc = null;
+
+            if (idempotencyKey) {
+                const dupSnap = await db.collection(ATTEMPTS_COLLECTION)
+                    .where('ownerUid', '==', uid)
+                    .where('idempotencyKey', '==', idempotencyKey)
+                    .limit(1)
+                    .get();
+                if (!dupSnap.empty) {
+                    existingDoc = dupSnap.docs[0].data();
+                    attemptId = dupSnap.docs[0].id;
+                }
+            }
+
+            if (!attemptId) {
+                attemptId = db.collection(ATTEMPTS_COLLECTION).doc().id;
+            }
+            const attemptRef = db.collection(ATTEMPTS_COLLECTION).doc(attemptId);
+            const firstSnap = existingDoc ? null : await attemptRef.get();
+            const existing = existingDoc || (firstSnap?.exists ? (firstSnap.data() || {}) : null);
+
+            if (existing) {
+                if (cleanString(existing.ownerUid, 128) !== uid) {
+                    return sendError(res, 409, 'ATTEMPT_ID_CONFLICT', 'attemptId belongs to another user.');
+                }
+                const existingMode = normalizePteModeKey(existing.practiceMode) || normalizePteModeKey(existing.canonicalMode);
+                if (existingMode && existingMode !== modeMeta.modeId) {
+                    return sendError(res, 409, 'ATTEMPT_ID_MODE_MISMATCH', 'attemptId is bound to a different practiceMode.');
+                }
+            }
+
+            const bodySlotsProvided = Object.prototype.hasOwnProperty.call(req.body || {}, 'mediaSlots')
+                || Object.prototype.hasOwnProperty.call(req.body || {}, 'media');
+            const nextSlots = bodySlotsProvided
+                ? buildPreparedMediaSlots(req.body?.mediaSlots || req.body?.media, { uid, attemptId, modeMeta })
+                : (isPlainObject(existing?.mediaSlots) ? existing.mediaSlots : {});
+
+            let validatedMedia = { mediaSlots: nextSlots, media: Array.isArray(existing?.media) ? existing.media : [] };
+            if (Object.keys(nextSlots).length) {
+                const bucket = await getStorageBucket();
+                validatedMedia = await validatePreparedMediaSlots(bucket, nextSlots, constraints);
+            }
+
+            const now = new Date();
+            const resolved = await resolvePracticeAccessForUid(db, uid, { now });
+            const accessSnapshot = buildAccessSnapshot(resolved, now);
+            const retentionState = resolved?.effectiveStatus === 'student' ? RETENTION.student : RETENTION.nonstudentTtl;
+            const deleteAfterAt = resolved?.effectiveStatus === 'student'
+                ? null
+                : addDays(now, NON_STUDENT_TTL_DAYS);
+            
+            let snapshots = buildArchiveSnapshotsFromBody(req.body || {});
+            if (getArchiveJsonSize(snapshots) > ARCHIVE_TOTAL_JSON_LIMIT) {
+                const keys = ['promptSnapshot', 'responseSnapshot', 'answerSnapshot', 'resultSnapshot', 'timingSnapshot', 'scoringSnapshot'];
+                keys.sort((a, b) => getArchiveJsonSize(snapshots[b]) - getArchiveJsonSize(snapshots[a]));
+                for (const key of keys) {
+                    if (getArchiveJsonSize(snapshots) <= ARCHIVE_TOTAL_JSON_LIMIT) break;
+                    if (snapshots[key]) {
+                        snapshots[key] = {
+                            truncated: true,
+                            reason: 'documentJsonLimit'
+                        };
+                    }
+                }
+            }
+
+            const payload = {
+                attemptId,
+                schemaVersion: 2,
+                practiceScope: 'pte',
+                ownerUid: uid,
+                practiceMode: modeMeta.modeId,
+                canonicalMode: modeMeta.canonicalMode,
+                modeLabel: modeMeta.label,
+                skill: modeMeta.skill,
+                status: 'submitted',
+                submittedAt: existing?.submittedAt || serverTimestamp(),
+                promptSnapshot: snapshots.promptSnapshot,
+                responseSnapshot: snapshots.responseSnapshot,
+                answerSnapshot: snapshots.answerSnapshot,
+                resultSnapshot: snapshots.resultSnapshot,
+                timingSnapshot: snapshots.timingSnapshot,
+                scoringSnapshot: snapshots.scoringSnapshot,
+                mediaSlots: validatedMedia.mediaSlots,
+                media: validatedMedia.media,
+                constraintSnapshot: toConstraintSnapshot(constraints, now),
+                retentionState,
+                deleteAfterAt,
+                accessSnapshot,
+                crmStudentId: accessSnapshot.studentId || null,
+                crmStudentIds: accessSnapshot.linkedStudentIds || [],
+                scoringSource: cleanString(req.body?.scoringSource, 80) || null,
+                idempotencyKey: idempotencyKey,
+                updatedAt: serverTimestamp()
+            };
+
+            if (!existing) {
+                payload.createdAt = serverTimestamp();
+                payload.bookmark = {
+                    active: false,
+                    bookmarkedAt: null,
+                    lastChangedAt: serverTimestamp()
+                };
+                payload.shareId = null;
+                payload.promotion = null;
+                payload.deletionState = null;
+            }
+
+            const primaryMedia = validatedMedia.media.find((item) => item.slot === 'student') || validatedMedia.media[0] || null;
+            if (primaryMedia) {
+                payload.audio = {
+                    studentPath: primaryMedia.storagePath,
+                    contentType: primaryMedia.contentType,
+                    sizeBytes: primaryMedia.sizeBytes,
+                    durationMs: primaryMedia.durationMs,
+                    clientReportedDurationMs: primaryMedia.clientReportedDurationMs || null,
+                    durationSource: primaryMedia.durationSource || null,
+                    md5Hash: primaryMedia.md5Hash || null,
+                    generation: primaryMedia.generation || null,
+                    validatedAt: primaryMedia.validatedAt || null
+                };
+            } else if (!existing?.audio) {
+                payload.audio = {
+                    studentPath: null,
+                    contentType: null,
+                    sizeBytes: null,
+                    durationMs: null,
+                    md5Hash: null,
+                    generation: null,
+                    validatedAt: null
+                };
+            }
+
+            await attemptRef.set(payload, { merge: true });
+
+            logRouteEvent(routeName, {
+                uid,
+                attemptId,
+                resultCode: existing ? 'UPDATED' : 'CREATED',
+                practiceMode: modeMeta.modeId
+            });
+            await appendAttemptEvent(db, {
+                eventType: existing ? 'attempt.archive.updated' : 'attempt.archive.created',
+                routeName,
+                uid,
+                attemptId,
+                resultCode: existing ? 'UPDATED' : 'CREATED',
+                meta: {
+                    practiceMode: modeMeta.modeId,
+                    hasMedia: validatedMedia.media.length > 0
+                }
+            }, serverTimestamp);
+
+            return sendSuccess(res, {
+                attemptId,
+                archived: true,
+                alreadySubmitted: String(existing?.status || '') === 'submitted',
+                retentionState,
+                deleteAfterAt,
+                media: normalizeMediaSlotsForResponse(validatedMedia.mediaSlots)
+            }, 'Attempt archived.');
+        } catch (error) {
+            const status = Number(error?.status || 500);
+            const code = cleanString(error?.code, 64) || 'SAVE_ATTEMPT_ERROR';
+            const message = status >= 500 ? 'Failed to save attempt archive.' : (error?.message || 'Invalid attempt archive request.');
+            logRouteEvent(routeName, {
+                uid: cleanString(req.user?.uid, 128),
+                attemptId: cleanString(req.body?.attemptId, 128),
+                resultCode: code,
+                error: String(error?.message || error)
+            });
+            return sendError(res, status, code, message, error?.details || (status >= 500 ? (error?.message || error) : null));
+        }
+    });
+
+    router.patch('/:attemptId/result', async (req, res) => {
+        const routeName = 'PATCH /api/practice-attempts/:attemptId/result';
+        try {
+            const uid = cleanString(req.user?.uid, 128);
+            const attemptId = cleanString(req.params?.attemptId, 128);
+            if (!uid) return sendError(res, 401, 'UNAUTHORIZED', 'Missing user identity.');
+            if (!attemptId) return sendError(res, 400, 'VALIDATION_ERROR', 'Missing attemptId.');
+
+            const attemptRef = db.collection(ATTEMPTS_COLLECTION).doc(attemptId);
+            const snap = await attemptRef.get();
+            if (!snap.exists) return sendError(res, 404, 'NOT_FOUND', 'Attempt not found.');
+            const attempt = snap.data() || {};
+            if (cleanString(attempt.ownerUid, 128) !== uid) {
+                return sendError(res, 403, 'FORBIDDEN', 'Only the owner can patch this attempt.');
+            }
+            if (String(attempt.practiceScope || '') !== 'pte') {
+                return sendError(res, 400, 'INVALID_PRACTICE_SCOPE', 'Only PTE archive attempts can be patched here.');
+            }
+
+            const patch = {
+                updatedAt: serverTimestamp()
+            };
+            if (Object.prototype.hasOwnProperty.call(req.body || {}, 'resultSnapshot') || Object.prototype.hasOwnProperty.call(req.body || {}, 'result')) {
+                patch.resultSnapshot = sanitizeArchiveSnapshot(req.body.resultSnapshot || req.body.result, { rootName: 'resultSnapshot' });
+            }
+            if (Object.prototype.hasOwnProperty.call(req.body || {}, 'scoringSnapshot') || Object.prototype.hasOwnProperty.call(req.body || {}, 'scoring')) {
+                patch.scoringSnapshot = sanitizeArchiveSnapshot(req.body.scoringSnapshot || req.body.scoring, { rootName: 'scoringSnapshot' });
+            }
+            if (Object.prototype.hasOwnProperty.call(req.body || {}, 'responseSnapshot') || Object.prototype.hasOwnProperty.call(req.body || {}, 'response')) {
+                patch.responseSnapshot = sanitizeArchiveSnapshot(req.body.responseSnapshot || req.body.response, { rootName: 'responseSnapshot' });
+            }
+            if (Object.keys(patch).length <= 1) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'No patchable archive fields provided.');
+            }
+
+            const mergedSnapshots = {
+                promptSnapshot: attempt.promptSnapshot || null,
+                responseSnapshot: Object.prototype.hasOwnProperty.call(patch, 'responseSnapshot') ? patch.responseSnapshot : (attempt.responseSnapshot || null),
+                answerSnapshot: attempt.answerSnapshot || null,
+                resultSnapshot: Object.prototype.hasOwnProperty.call(patch, 'resultSnapshot') ? patch.resultSnapshot : (attempt.resultSnapshot || null),
+                timingSnapshot: attempt.timingSnapshot || null,
+                scoringSnapshot: Object.prototype.hasOwnProperty.call(patch, 'scoringSnapshot') ? patch.scoringSnapshot : (attempt.scoringSnapshot || null)
+            };
+
+            if (getArchiveJsonSize(mergedSnapshots) > ARCHIVE_TOTAL_JSON_LIMIT) {
+                const keys = ['promptSnapshot', 'responseSnapshot', 'answerSnapshot', 'resultSnapshot', 'timingSnapshot', 'scoringSnapshot'];
+                keys.sort((a, b) => getArchiveJsonSize(mergedSnapshots[b]) - getArchiveJsonSize(mergedSnapshots[a]));
+                for (const key of keys) {
+                    if (getArchiveJsonSize(mergedSnapshots) <= ARCHIVE_TOTAL_JSON_LIMIT) break;
+                    if (mergedSnapshots[key]) {
+                        mergedSnapshots[key] = {
+                            truncated: true,
+                            reason: 'documentJsonLimit'
+                        };
+                    }
+                }
+                if (Object.prototype.hasOwnProperty.call(patch, 'responseSnapshot')) patch.responseSnapshot = mergedSnapshots.responseSnapshot;
+                if (Object.prototype.hasOwnProperty.call(patch, 'resultSnapshot')) patch.resultSnapshot = mergedSnapshots.resultSnapshot;
+                if (Object.prototype.hasOwnProperty.call(patch, 'scoringSnapshot')) patch.scoringSnapshot = mergedSnapshots.scoringSnapshot;
+                
+                keys.forEach(key => {
+                    if (mergedSnapshots[key]?.truncated && attempt[key] && !attempt[key].truncated) {
+                        patch[key] = mergedSnapshots[key];
+                    }
+                });
+            }
+
+            await attemptRef.set(patch, { merge: true });
+            await appendAttemptEvent(db, {
+                eventType: 'attempt.archive.patched',
+                routeName,
+                uid,
+                attemptId,
+                resultCode: 'PATCHED'
+            }, serverTimestamp);
+            return sendSuccess(res, { attemptId, patched: true }, 'Attempt archive updated.');
+        } catch (error) {
+            const status = Number(error?.status || 500);
+            const code = cleanString(error?.code, 64) || 'PATCH_ATTEMPT_ERROR';
+            const message = status >= 500 ? 'Failed to patch attempt archive.' : (error?.message || 'Invalid attempt patch request.');
             return sendError(res, status, code, message, error?.details || (status >= 500 ? (error?.message || error) : null));
         }
     });
@@ -612,7 +1439,7 @@ module.exports = function createPracticeAttemptsRouter(deps) {
 
                 tx.set(attemptRef, {
                     status: 'submitted',
-                    submittedAt: FieldValue.serverTimestamp(),
+                    submittedAt: serverTimestamp(),
                     retentionState,
                     deleteAfterAt,
                     accessSnapshot,
@@ -626,7 +1453,7 @@ module.exports = function createPracticeAttemptsRouter(deps) {
                         generation: validation.metadata.generation,
                         validatedAt: validation.metadata.validatedAt
                     },
-                    updatedAt: FieldValue.serverTimestamp()
+                    updatedAt: serverTimestamp()
                 }, { merge: true });
 
                 return { alreadySubmitted: false };
@@ -702,30 +1529,56 @@ module.exports = function createPracticeAttemptsRouter(deps) {
                     return sendError(res, 403, 'FORBIDDEN', 'Teacher/admin access required.');
                 }
 
-                const snap = await db.collection(SPEAKING_ATTEMPTS)
+                const requestedStudentId = cleanString(req.query?.studentId || req.query?.crmStudentId, 128);
+                if (reviewer.isTeacher && !reviewer.isAdmin) {
+                    if (!requestedStudentId || !reviewer.allowedStudentIds.has(requestedStudentId)) {
+                        return sendError(res, 403, 'FORBIDDEN', 'Teacher access is limited to linked CRM students.');
+                    }
+                }
+
+                let reviewQuery = db.collection(SPEAKING_ATTEMPTS)
+                    .where('practiceScope', '==', 'pte')
                     .where('status', '==', 'submitted')
-                    .orderBy('submittedAt', 'desc')
-                    .limit(50)
-                    .get();
+                    .orderBy('submittedAt', 'desc');
+                if (requestedStudentId) {
+                    reviewQuery = db.collection(SPEAKING_ATTEMPTS)
+                        .where('practiceScope', '==', 'pte')
+                        .where('crmStudentId', '==', requestedStudentId)
+                        .where('status', '==', 'submitted')
+                        .orderBy('submittedAt', 'desc');
+                }
+                const snap = await reviewQuery.limit(50).get();
 
                 const rows = snap.docs.map((doc) => ({ doc, data: doc.data() || {} }));
-                const urls = await mapWithConcurrency(rows, 6, async (row) => {
+                const signed = await mapWithConcurrency(rows, 6, async (row) => {
                     const audioPath = cleanString(row.data.audio?.studentPath, 1024);
-                    if (!audioPath) return null;
                     const constraints = resolveConstraintSnapshot(row.data);
-                    return signReadUrl(bucket, audioPath, {
+                    const mediaUrls = await signMediaSlots(bucket, row.data.mediaSlots, constraints);
+                    if (!audioPath) return { audioUrl: null, mediaUrls };
+                    const audioUrl = await signReadUrl(bucket, audioPath, {
                         expiresMinutes: constraints?.signedReadUrlMinutes || DEFAULT_SIGNED_READ_URL_MINUTES
                     }).catch(() => null);
+                    return { audioUrl, mediaUrls };
                 });
 
-                const attempts = rows.map((row, index) => summarizeAttemptForList(row.doc, row.data, urls[index]));
+                const attempts = rows.map((row, index) => {
+                    const item = signed[index] || {};
+                    return summarizeAttemptForList(row.doc, row.data, item.audioUrl || null, item.mediaUrls || {});
+                });
                 logRouteEvent(routeName, { uid, resultCode: 'OK_REVIEW', attemptCount: attempts.length });
                 return sendSuccess(res, { attempts });
             }
 
+            const requestedPracticeScope = cleanString(req.query?.practiceScope, 32);
+            let mineQuery = db.collection(SPEAKING_ATTEMPTS)
+                .where('ownerUid', '==', uid)
+                .where('status', '==', 'submitted');
+            if (requestedPracticeScope === 'pte') {
+                mineQuery = mineQuery.where('practiceScope', '==', 'pte');
+            }
+
             const [snap, counterSnap] = await Promise.all([
-                db.collection(SPEAKING_ATTEMPTS)
-                    .where('ownerUid', '==', uid)
+                mineQuery
                     .orderBy('createdAt', 'desc')
                     .limit(50)
                     .get(),
@@ -733,16 +1586,21 @@ module.exports = function createPracticeAttemptsRouter(deps) {
             ]);
 
             const rows = snap.docs.map((doc) => ({ doc, data: doc.data() || {} }));
-            const urls = await mapWithConcurrency(rows, 6, async (row) => {
+            const signed = await mapWithConcurrency(rows, 6, async (row) => {
                 const audioPath = cleanString(row.data.audio?.studentPath, 1024);
-                if (!audioPath) return null;
                 const constraints = resolveConstraintSnapshot(row.data);
-                return signReadUrl(bucket, audioPath, {
+                const mediaUrls = await signMediaSlots(bucket, row.data.mediaSlots, constraints);
+                if (!audioPath) return { audioUrl: null, mediaUrls };
+                const audioUrl = await signReadUrl(bucket, audioPath, {
                     expiresMinutes: constraints?.signedReadUrlMinutes || DEFAULT_SIGNED_READ_URL_MINUTES
                 }).catch(() => null);
+                return { audioUrl, mediaUrls };
             });
 
-            const attempts = rows.map((row, index) => summarizeAttemptForList(row.doc, row.data, urls[index]));
+            const attempts = rows.map((row, index) => {
+                const item = signed[index] || {};
+                return summarizeAttemptForList(row.doc, row.data, item.audioUrl || null, item.mediaUrls || {});
+            });
             const nonStudentBookmarkCount = Math.max(0, Number(counterSnap.data()?.nonStudentBookmarkCount || 0));
 
             logRouteEvent(routeName, { uid, resultCode: 'OK_MINE', attemptCount: attempts.length });
@@ -785,14 +1643,26 @@ module.exports = function createPracticeAttemptsRouter(deps) {
                     expiresMinutes: constraints?.signedReadUrlMinutes || DEFAULT_SIGNED_READ_URL_MINUTES
                 }).catch(() => null)
                 : null;
+            const mediaUrls = await signMediaSlots(bucket, attempt.mediaSlots, constraints);
 
             logRouteEvent(routeName, { uid, attemptId, resultCode: 'OK' });
             return sendSuccess(res, {
                 attempt: {
                     attemptId,
                     ownerUid: attempt.ownerUid || null,
+                    schemaVersion: attempt.schemaVersion || 1,
+                    practiceScope: attempt.practiceScope || null,
                     practiceMode: attempt.practiceMode || null,
+                    canonicalMode: attempt.canonicalMode || null,
+                    modeLabel: attempt.modeLabel || null,
+                    skill: attempt.skill || null,
+                    crmStudentId: attempt.crmStudentId || null,
                     promptSnapshot: attempt.promptSnapshot || null,
+                    responseSnapshot: attempt.responseSnapshot || null,
+                    answerSnapshot: attempt.answerSnapshot || null,
+                    resultSnapshot: attempt.resultSnapshot || null,
+                    timingSnapshot: attempt.timingSnapshot || null,
+                    scoringSnapshot: attempt.scoringSnapshot || null,
                     status: attempt.status || null,
                     createdAt: attempt.createdAt || null,
                     submittedAt: attempt.submittedAt || null,
@@ -813,7 +1683,11 @@ module.exports = function createPracticeAttemptsRouter(deps) {
                         contentType: attempt.audio?.contentType || null,
                         durationMs: attempt.audio?.durationMs || null,
                         validatedAt: attempt.audio?.validatedAt || null
-                    }
+                    },
+                    media: normalizeMediaSlotsForResponse(attempt.mediaSlots).map((slot) => ({
+                        ...slot,
+                        url: mediaUrls[slot.slotFile] || null
+                    }))
                 }
             });
         } catch (error) {
@@ -880,10 +1754,10 @@ module.exports = function createPracticeAttemptsRouter(deps) {
                             deleteAfterAt: null,
                             bookmark: {
                                 active: true,
-                                bookmarkedAt: FieldValue.serverTimestamp(),
-                                lastChangedAt: FieldValue.serverTimestamp()
+                                bookmarkedAt: serverTimestamp(),
+                                lastChangedAt: serverTimestamp()
                             },
-                            updatedAt: FieldValue.serverTimestamp()
+                            updatedAt: serverTimestamp()
                         }, { merge: true });
                     } else {
                         const submittedAt = asDate(attempt.submittedAt);
@@ -898,19 +1772,19 @@ module.exports = function createPracticeAttemptsRouter(deps) {
                             bookmark: {
                                 active: false,
                                 bookmarkedAt: null,
-                                lastChangedAt: FieldValue.serverTimestamp()
+                                lastChangedAt: serverTimestamp()
                             },
-                            updatedAt: FieldValue.serverTimestamp()
+                            updatedAt: serverTimestamp()
                         }, { merge: true });
                     }
                 } else {
                     tx.set(attemptRef, {
                         bookmark: {
                             active: nextActive,
-                            bookmarkedAt: nextActive ? FieldValue.serverTimestamp() : null,
-                            lastChangedAt: FieldValue.serverTimestamp()
+                            bookmarkedAt: nextActive ? serverTimestamp() : null,
+                            lastChangedAt: serverTimestamp()
                         },
-                        updatedAt: FieldValue.serverTimestamp()
+                        updatedAt: serverTimestamp()
                     }, { merge: true });
                 }
 
@@ -921,7 +1795,7 @@ module.exports = function createPracticeAttemptsRouter(deps) {
                 tx.set(counterRef, {
                     uid,
                     nonStudentBookmarkCount: count,
-                    updatedAt: FieldValue.serverTimestamp()
+                    updatedAt: serverTimestamp()
                 }, { merge: true });
 
                 return {
@@ -1044,8 +1918,8 @@ module.exports = function createPracticeAttemptsRouter(deps) {
             if (existingShareId && rotate) {
                 await db.collection(SPEAKING_ATTEMPT_SHARES).doc(existingShareId).set({
                     status: 'revoked',
-                    revokedAt: FieldValue.serverTimestamp(),
-                    updatedAt: FieldValue.serverTimestamp()
+                    revokedAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
                 }, { merge: true }).catch(() => null);
             }
 
@@ -1060,12 +1934,12 @@ module.exports = function createPracticeAttemptsRouter(deps) {
                 token,
                 tokenHash,
                 status: 'active',
-                createdAt: FieldValue.serverTimestamp(),
-                updatedAt: FieldValue.serverTimestamp()
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
             });
             await attemptRef.set({
                 shareId,
-                updatedAt: FieldValue.serverTimestamp()
+                updatedAt: serverTimestamp()
             }, { merge: true });
 
             logRouteEvent(routeName, {
@@ -1119,14 +1993,14 @@ module.exports = function createPracticeAttemptsRouter(deps) {
             if (shareId) {
                 await db.collection(SPEAKING_ATTEMPT_SHARES).doc(shareId).set({
                     status: 'revoked',
-                    revokedAt: FieldValue.serverTimestamp(),
-                    updatedAt: FieldValue.serverTimestamp()
+                    revokedAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
                 }, { merge: true }).catch(() => null);
             }
 
             await attemptRef.set({
                 shareId: null,
-                updatedAt: FieldValue.serverTimestamp()
+                updatedAt: serverTimestamp()
             }, { merge: true });
 
             logRouteEvent(routeName, {
@@ -1174,6 +2048,8 @@ module.exports = function createPracticeAttemptsRouter(deps) {
             const attemptSnap = await db.collection(SPEAKING_ATTEMPTS).doc(attemptId).get();
             if (!attemptSnap.exists) return sendError(res, 404, 'NOT_FOUND', 'Attempt not found.');
             const attempt = attemptSnap.data() || {};
+            const authz = ensureAttemptOwnerOrReviewer({ attempt, uid, reviewer });
+            if (!authz.ok) return sendError(res, authz.status, authz.code, authz.message);
             if (String(attempt.status || '') !== 'submitted') {
                 return sendError(res, 409, 'ATTEMPT_NOT_SUBMITTED', 'Attempt must be submitted before feedback can be added.');
             }
@@ -1196,9 +2072,9 @@ module.exports = function createPracticeAttemptsRouter(deps) {
                 md5Hash: null,
                 generation: null,
                 validatedAt: null,
-                createdAt: FieldValue.serverTimestamp(),
+                createdAt: serverTimestamp(),
                 completedAt: null,
-                updatedAt: FieldValue.serverTimestamp()
+                updatedAt: serverTimestamp()
             });
 
             logRouteEvent(routeName, {
@@ -1242,6 +2118,12 @@ module.exports = function createPracticeAttemptsRouter(deps) {
 
             const reviewer = await resolveReviewerAccess(db, req.user);
             if (!reviewer.isReviewer) return sendError(res, 403, 'FORBIDDEN', 'Teacher/admin access required.');
+
+            const attemptSnap = await db.collection(SPEAKING_ATTEMPTS).doc(attemptId).get();
+            if (!attemptSnap.exists) return sendError(res, 404, 'NOT_FOUND', 'Attempt not found.');
+            const attempt = attemptSnap.data() || {};
+            const authz = ensureAttemptOwnerOrReviewer({ attempt, uid, reviewer });
+            if (!authz.ok) return sendError(res, authz.status, authz.code, authz.message);
 
             const feedbackRef = db.collection(SPEAKING_ATTEMPTS).doc(attemptId).collection('feedback').doc(feedbackId);
             const snap = await feedbackRef.get();
@@ -1305,8 +2187,8 @@ module.exports = function createPracticeAttemptsRouter(deps) {
                 md5Hash: audioMetadata?.md5Hash || null,
                 generation: audioMetadata?.generation || null,
                 validatedAt: audioMetadata?.validatedAt || null,
-                completedAt: FieldValue.serverTimestamp(),
-                updatedAt: FieldValue.serverTimestamp()
+                completedAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
             }, { merge: true });
 
             logRouteEvent(routeName, {
@@ -1414,6 +2296,12 @@ module.exports = function createPracticeAttemptsRouter(deps) {
             const reviewer = await resolveReviewerAccess(db, req.user);
             if (!reviewer.isReviewer) return sendError(res, 403, 'FORBIDDEN', 'Teacher/admin access required.');
 
+            const attemptSnap = await db.collection(SPEAKING_ATTEMPTS).doc(attemptId).get();
+            if (!attemptSnap.exists) return sendError(res, 404, 'NOT_FOUND', 'Attempt not found.');
+            const attempt = attemptSnap.data() || {};
+            const authz = ensureAttemptOwnerOrReviewer({ attempt, uid, reviewer });
+            if (!authz.ok) return sendError(res, authz.status, authz.code, authz.message);
+
             const feedbackRef = db.collection(SPEAKING_ATTEMPTS).doc(attemptId).collection('feedback').doc(feedbackId);
             const snap = await feedbackRef.get();
             if (!snap.exists) return sendError(res, 404, 'NOT_FOUND', 'Feedback not found.');
@@ -1441,7 +2329,7 @@ module.exports = function createPracticeAttemptsRouter(deps) {
                 return sendError(res, 400, 'VALIDATION_ERROR', 'Feedback must include text or audio.');
             }
 
-            patch.updatedAt = FieldValue.serverTimestamp();
+            patch.updatedAt = serverTimestamp();
             await feedbackRef.set(patch, { merge: true });
 
             logRouteEvent(routeName, {
@@ -1483,6 +2371,12 @@ module.exports = function createPracticeAttemptsRouter(deps) {
 
             const reviewer = await resolveReviewerAccess(db, req.user);
             if (!reviewer.isReviewer) return sendError(res, 403, 'FORBIDDEN', 'Teacher/admin access required.');
+
+            const attemptSnap = await db.collection(SPEAKING_ATTEMPTS).doc(attemptId).get();
+            if (!attemptSnap.exists) return sendError(res, 404, 'NOT_FOUND', 'Attempt not found.');
+            const attempt = attemptSnap.data() || {};
+            const authz = ensureAttemptOwnerOrReviewer({ attempt, uid, reviewer });
+            if (!authz.ok) return sendError(res, authz.status, authz.code, authz.message);
 
             const feedbackRef = db.collection(SPEAKING_ATTEMPTS).doc(attemptId).collection('feedback').doc(feedbackId);
             const snap = await feedbackRef.get();

@@ -29,6 +29,8 @@
     let lastSubmittedEssayWordCount = 0;
     let lastBasicFeedbackHtml = '';
     let lastBasicFeedbackSectionsHtml = '';
+    let lastArchiveAttemptId = null;
+    let lastArchiveSavePromise = null;
 
     // Cached resources / callables
     let scoreEssayFn = null;
@@ -69,6 +71,8 @@
         lastSubmittedEssayWordCount = 0;
         lastBasicFeedbackHtml = '';
         lastBasicFeedbackSectionsHtml = '';
+        lastArchiveAttemptId = null;
+        lastArchiveSavePromise = null;
         if (el.practiceArea) el.practiceArea.style.display = 'none';
         if (el.stepWrite) el.stepWrite.style.display = 'none';
         if (el.stepResults) el.stepResults.style.display = 'none';
@@ -408,6 +412,8 @@
         lastSubmittedEssayText = text;
         lastSubmittedEssayPrompt = currentEntry?.prompt || '';
         lastSubmittedEssayWordCount = getWordCount();
+        lastArchiveAttemptId = null;
+        lastArchiveSavePromise = null;
 
         if (el.resultsTitle) el.resultsTitle.textContent = 'Your Essay Feedback';
         if (el.resultsContainer) {
@@ -438,6 +444,13 @@
         el.stepWrite.style.display = 'none';
         el.stepResults.style.display = 'block';
         displayFeedbackOnly({ feedbackHtml });
+        rememberArchiveSave(window.PTEAttemptArchive?.saveTextAttempt?.('essay', currentEntry, text, {
+            wordCount: lastSubmittedEssayWordCount,
+            form: formResult,
+            languageTool: langTool?.ok ? {
+                matchCount: Array.isArray(langTool.data?.matches) ? langTool.data.matches.length : 0
+            } : { unavailable: true }
+        }, { scoringSource: 'client-basic' }));
 
         // Restore UI state
         if (el.submitBtn) {
@@ -462,6 +475,28 @@
             el.resultsContainer.insertAdjacentHTML('beforeend', sampleHtml);
             initSampleEssaysUI(sampleResponses);
         }
+    }
+
+    function rememberArchiveSave(promise) {
+        lastArchiveSavePromise = Promise.resolve(promise || null)
+            .then((result) => {
+                lastArchiveAttemptId = result?.attemptId || lastArchiveAttemptId;
+                return lastArchiveAttemptId;
+            })
+            .catch((error) => {
+                console.warn('[PTE Archive] Essay save failed:', error);
+                return null;
+            });
+        return lastArchiveSavePromise;
+    }
+
+    async function ensureArchiveAttemptId() {
+        if (lastArchiveAttemptId) return lastArchiveAttemptId;
+        if (lastArchiveSavePromise) {
+            const attemptId = await lastArchiveSavePromise;
+            return attemptId || lastArchiveAttemptId;
+        }
+        return null;
     }
 
     function renderScoreRow(label, result, maxScore) {
@@ -950,6 +985,21 @@
 
             if (el.resultsTitle) el.resultsTitle.textContent = 'Your Essay Scores';
             displayAiScoreResults(data);
+            const archiveAttemptId = await ensureArchiveAttemptId();
+            if (archiveAttemptId) {
+                window.PTEAttemptArchive?.patchAttempt?.(archiveAttemptId, {
+                    resultSnapshot: {
+                        overall: data.overall || null,
+                        scores: data.scores || null,
+                        teacherAdvice: data.teacherAdvice || null
+                    },
+                    scoringSnapshot: {
+                        source: 'ai',
+                        success: data.success === true,
+                        teacherAdviceChat: data.teacherAdviceChat || null
+                    }
+                }).catch((error) => console.warn('[PTE Archive] Essay AI patch failed:', error));
+            }
 
             const teacherAdviceForChat = String(data.teacherAdviceChat || data.teacherAdvice || '').trim();
             if (teacherAdviceForChat) {

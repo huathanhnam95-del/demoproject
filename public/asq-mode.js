@@ -594,6 +594,33 @@ class AsqMode {
             xpEarned
           });
 
+          window.PTEAttemptArchive?.saveAttempt?.({
+            practiceMode: 'asq',
+            promptSnapshot: {
+              promptId: item?.id || null,
+              text: item?.question || item?.prompt || '',
+              data: item || null
+            },
+            responseSnapshot: { transcript },
+            answerSnapshot: {
+              acceptedAnswers: item?.acceptedAnswers || [],
+              answerDisplay: item?.answerDisplay || ''
+            },
+            resultSnapshot: {
+              correct: isCorrect,
+              localCheck,
+              xpEarned,
+              scoringResult
+            },
+            scoringSource: scoringResult?.success ? 'dual-track' : 'client',
+            media: [{
+              slot: 'student',
+              label: 'Student answer',
+              blob: rawBlob,
+              contentType: rawBlob.type || 'audio/webm'
+            }]
+          }).catch((archiveError) => console.warn('[PTE Archive] ASQ save failed:', archiveError));
+
           if (!transcript) {
             this.setStatus('No speech detected. Try again and keep your answer short.', 'error');
             return;

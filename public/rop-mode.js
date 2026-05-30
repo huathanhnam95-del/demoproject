@@ -890,6 +890,34 @@
       }
     }
 
+    window.PTEAttemptArchive?.saveAttempt?.({
+      practiceMode: 'rop',
+      promptSnapshot: window.PTEAttemptArchive.summarizeQuestion(state.currentQuestion),
+      responseSnapshot: {
+        selectedOrder: state.targetItems.map((item, index) => ({
+          position: index,
+          id: item.id || item.originalIndex,
+          originalIndex: item.originalIndex,
+          text: item.text || item.paragraph || ''
+        }))
+      },
+      answerSnapshot: {
+        correctOrder: state.currentQuestion.paragraphs.map((item, index) => ({
+          position: index,
+          id: item.id || item.originalIndex,
+          originalIndex: item.originalIndex,
+          text: item.text || item.paragraph || ''
+        })),
+        pairResults
+      },
+      resultSnapshot: {
+        score,
+        maxScore: maxPossibleScore,
+        pairResults
+      },
+      scoringSource: 'client'
+    }).catch((error) => console.warn('[PTE Archive] ROP save failed:', error));
+
     // Show explanation panel if explanations exist
     if (elements.explanationToggle && state.currentQuestion.explanation) {
       elements.explanationToggle.style.display = 'block';

@@ -485,6 +485,13 @@
       elements.retryBtn.style.display = 'block';
     }
 
+    window.PTEAttemptArchive?.saveChoiceAttempt?.('rmcma', state, {
+      score: finalScore,
+      maxScore: totalCorrectChoices,
+      correctCount,
+      incorrectCount
+    }).catch((error) => console.warn('[PTE Archive] RMCMA save failed:', error));
+
     // Show explanation toggle if explanation is present
     if (elements.explanationToggle && state.currentQuestion.explanation) {
       elements.explanationToggle.style.display = 'block';

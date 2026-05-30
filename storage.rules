@@ -25,6 +25,21 @@ service firebase.storage {
         );
     }
 
+    function isAllowedAttemptMediaUpload(maxBytes) {
+      return request.resource != null
+        && request.resource.size > 0
+        && request.resource.size <= maxBytes
+        && request.resource.contentType != null
+        && (
+          request.resource.contentType == 'audio/wav'
+          || request.resource.contentType == 'audio/x-wav'
+          || request.resource.contentType.matches('audio/.*wav.*')
+          || request.resource.contentType == 'audio/webm'
+          || request.resource.contentType == 'video/webm'
+          || request.resource.contentType.matches('.*webm.*')
+        );
+    }
+
     function speakingAttemptDocPath(attemptId) {
       return /databases/(default)/documents/speakingAttempts/$(attemptId);
     }
@@ -67,6 +82,19 @@ service firebase.storage {
         && speakingAttemptData(attemptId).ownerUid == uid
         && speakingAttemptData(attemptId).status == 'awaiting_upload'
         && speakingAttemptData(attemptId).audio.studentPath == ('practice-attempts/' + uid + '/' + attemptId + '/student.wav');
+      allow read: if false;
+    }
+
+    // Slot-based PTE attempt media uploads.
+    match /practice-attempts/{uid}/{attemptId}/{slotFile} {
+      allow write: if isOwner(uid)
+        && slotFile != 'student.wav'
+        && isAllowedAttemptMediaUpload(50 * 1024 * 1024)
+        && speakingAttemptExists(attemptId)
+        && speakingAttemptData(attemptId).ownerUid == uid
+        && speakingAttemptData(attemptId).status == 'awaiting_upload'
+        && speakingAttemptData(attemptId).mediaSlots[slotFile].status == 'awaiting_upload'
+        && speakingAttemptData(attemptId).mediaSlots[slotFile].storagePath == ('practice-attempts/' + uid + '/' + attemptId + '/' + slotFile);
       allow read: if false;
     }
 

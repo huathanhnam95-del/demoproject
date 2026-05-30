@@ -733,6 +733,29 @@
       await window.recordPracticeAttempt(state.currentQuestion.id, isPerfect, 'rfib');
     }
 
+    window.PTEAttemptArchive?.saveAttempt?.({
+      practiceMode: 'rfib',
+      promptSnapshot: window.PTEAttemptArchive.summarizeQuestion(state.currentQuestion),
+      responseSnapshot: {
+        answers
+      },
+      answerSnapshot: {
+        blanks: results.map((result) => ({
+          index: result.index,
+          correctAnswer: result.correctAnswer,
+          userAnswer: result.userAnswer,
+          isCorrect: result.isCorrect
+        }))
+      },
+      resultSnapshot: {
+        score: correct,
+        maxScore: total,
+        correct: isPerfect,
+        results
+      },
+      scoringSource: 'client'
+    }).catch((error) => console.warn('[PTE Archive] RFIB save failed:', error));
+
     await maybeCaptureVocabulary(results);
   }
 

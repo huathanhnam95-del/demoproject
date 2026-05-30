@@ -7,7 +7,22 @@ const MODE_ALIASES = {
     'repeat-sentence': 'repeat_sentence',
     retelllecture: 'retell_lecture',
     retell_lecture: 'retell_lecture',
-    'retell-lecture': 'retell_lecture'
+    'retell-lecture': 'retell_lecture',
+    describeimage: 'describe_image',
+    describe_image: 'describe_image',
+    'describe-image': 'describe_image',
+    answershortquestion: 'answer_short_question',
+    answer_short_question: 'answer_short_question',
+    'answer-short-question': 'answer_short_question',
+    asq: 'answer_short_question',
+    respondtosituation: 'respond_to_situation',
+    respond_to_situation: 'respond_to_situation',
+    'respond-to-situation': 'respond_to_situation',
+    rts: 'respond_to_situation',
+    summarizegroupdiscussion: 'summarize_group_discussion',
+    summarize_group_discussion: 'summarize_group_discussion',
+    'summarize-group-discussion': 'summarize_group_discussion',
+    sgd: 'summarize_group_discussion'
 };
 
 const DEFAULT_MAX_UPLOAD_BYTES = 30 * 1024 * 1024;
@@ -29,6 +44,22 @@ const MODE_CONSTRAINTS = {
     retell_lecture: {
         hardMaxMs: 45 * 1000,
         uiMaxSeconds: 40
+    },
+    describe_image: {
+        hardMaxMs: 40 * 1000,
+        uiMaxSeconds: 40
+    },
+    answer_short_question: {
+        hardMaxMs: 10 * 1000,
+        uiMaxSeconds: 10
+    },
+    respond_to_situation: {
+        hardMaxMs: 40 * 1000,
+        uiMaxSeconds: 40
+    },
+    summarize_group_discussion: {
+        hardMaxMs: 120 * 1000,
+        uiMaxSeconds: 120
     }
 };
 

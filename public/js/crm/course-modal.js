@@ -85,7 +85,7 @@ window.CrmCourseModal = (function () {
                 if (!courseId) throw new Error('Course ID missing from server response.');
 
                 modalState.courseId = courseId;
-                await refreshCourseCatalog();
+                await refreshCourseCatalog({ forceRefresh: true });
 
                 showToast(method === 'PATCH' ? 'Course updated.' : 'Course saved.', 'success');
                 resetCourseModal();

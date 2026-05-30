@@ -477,6 +477,12 @@
       elements.retryBtn.style.display = 'block';
     }
 
+    window.PTEAttemptArchive?.saveChoiceAttempt?.('rmcsa', state, {
+      score: correctCount,
+      maxScore: 1,
+      correct: selectedCorrect
+    }).catch((error) => console.warn('[PTE Archive] RMCSA save failed:', error));
+
     // Show explanation toggle if explanation is present
     if (elements.explanationToggle && state.currentQuestion.explanation) {
       elements.explanationToggle.style.display = 'block';

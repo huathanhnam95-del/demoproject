@@ -15,6 +15,10 @@ function cleanString(value, maxLen) {
     return text;
 }
 
+function isPlainObject(value) {
+    return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
 async function signReadUrl(bucket, storagePath, options = {}) {
     const expiresMinutes = Number.isFinite(options.expiresMinutes) ? options.expiresMinutes : 15;
     const expires = Date.now() + expiresMinutes * 60 * 1000;
@@ -42,6 +46,65 @@ async function mapWithConcurrency(items, limit, fn) {
 
     await Promise.all(workers);
     return out;
+}
+
+function normalizeMediaSlots(mediaSlots) {
+    if (!isPlainObject(mediaSlots)) return [];
+    return Object.values(mediaSlots).map((slot) => ({
+        slotFile: cleanString(slot?.slotFile, 128),
+        slot: cleanString(slot?.slot, 80),
+        label: cleanString(slot?.label, 120),
+        storagePath: cleanString(slot?.storagePath, 1024),
+        contentType: cleanString(slot?.contentType, 80),
+        status: cleanString(slot?.status, 80),
+        durationMs: Number.isFinite(Number(slot?.durationMs)) ? Number(slot.durationMs) : null,
+        clientReportedDurationMs: Number.isFinite(Number(slot?.clientReportedDurationMs)) ? Number(slot.clientReportedDurationMs) : null,
+        durationSource: cleanString(slot?.durationSource, 80)
+    })).filter((slot) => slot.slotFile && slot.storagePath && (!slot.status || slot.status === 'uploaded'));
+}
+
+async function buildPublicMedia(bucket, attempt) {
+    const mediaSlots = normalizeMediaSlots(attempt.mediaSlots);
+    const rows = await mapWithConcurrency(mediaSlots, 6, async (slot) => {
+        const url = await signReadUrl(bucket, slot.storagePath, { expiresMinutes: 15 }).catch(() => null);
+        return {
+            slotFile: slot.slotFile,
+            slot: slot.slot,
+            label: slot.label,
+            contentType: slot.contentType,
+            durationMs: slot.durationMs,
+            clientReportedDurationMs: slot.clientReportedDurationMs,
+            durationSource: slot.durationSource,
+            url
+        };
+    });
+    return rows.filter((row) => !!row.url);
+}
+
+async function buildPublicAttemptPayload({ bucket, attemptId, attempt }) {
+    const publicMedia = await buildPublicMedia(bucket, attempt);
+    const legacyStudentUrl = attempt.audio?.studentPath
+        ? await signReadUrl(bucket, attempt.audio.studentPath, { expiresMinutes: 15 }).catch(() => null)
+        : null;
+
+    return {
+        attemptId,
+        schemaVersion: attempt.schemaVersion || 1,
+        practiceScope: attempt.practiceScope || null,
+        practiceMode: attempt.practiceMode || null,
+        canonicalMode: attempt.canonicalMode || null,
+        modeLabel: attempt.modeLabel || null,
+        skill: attempt.skill || null,
+        promptSnapshot: attempt.promptSnapshot || null,
+        responseSnapshot: attempt.responseSnapshot || null,
+        answerSnapshot: attempt.answerSnapshot || null,
+        resultSnapshot: attempt.resultSnapshot || null,
+        timingSnapshot: attempt.timingSnapshot || null,
+        scoringSnapshot: attempt.scoringSnapshot || null,
+        submittedAt: attempt.submittedAt || null,
+        media: publicMedia,
+        audio: { studentUrl: legacyStudentUrl }
+    };
 }
 
 module.exports = function createSharedPracticeAttemptsRouter(deps) {
@@ -76,9 +139,6 @@ module.exports = function createSharedPracticeAttemptsRouter(deps) {
             if (String(attempt.status || '') !== 'submitted') return sendError(res, 404, 'NOT_FOUND', 'Shared attempt not found.');
 
             const bucket = await getStorageBucket();
-            const studentUrl = attempt.audio?.studentPath
-                ? await signReadUrl(bucket, attempt.audio.studentPath, { expiresMinutes: 15 }).catch(() => null)
-                : null;
 
             const feedbackSnap = await db
                 .collection(SPEAKING_ATTEMPTS)
@@ -116,13 +176,7 @@ module.exports = function createSharedPracticeAttemptsRouter(deps) {
             }
 
             return sendSuccess(res, {
-                attempt: {
-                    attemptId,
-                    practiceMode: attempt.practiceMode || null,
-                    promptSnapshot: attempt.promptSnapshot || null,
-                    submittedAt: attempt.submittedAt || null,
-                    audio: { studentUrl }
-                },
+                attempt: await buildPublicAttemptPayload({ bucket, attemptId, attempt }),
                 feedback
             });
         } catch (error) {

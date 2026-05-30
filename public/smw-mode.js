@@ -896,6 +896,12 @@
       elements.retryBtn.style.display = 'block';
     }
 
+    window.PTEAttemptArchive?.saveChoiceAttempt?.('smw', state, {
+      score,
+      maxScore: 1,
+      correct: score === 1
+    }).catch((error) => console.warn('[PTE Archive] SMW save failed:', error));
+
     // Render transcript and explanation post-submission
     if (elements.passageText) {
       let rawTranscript = state.currentQuestion.transcript || 'No transcript available for this audio.';

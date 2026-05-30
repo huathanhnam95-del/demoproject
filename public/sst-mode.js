@@ -23,6 +23,8 @@
     aiRequestId: 0,
     aiScoring: false,
     submission: null,
+    archiveAttemptId: null,
+    archiveSavePromise: null,
     scoreFn: null,
     elements: null
   };
@@ -67,6 +69,26 @@
       return { score: 1, detail: `${count} words receives partial Form credit.` };
     }
     return { score: 0, detail: `${count} words is outside the accepted 40-100 range.` };
+  }
+  function rememberArchiveSave(promise) {
+    state.archiveSavePromise = Promise.resolve(promise || null)
+      .then((result) => {
+        state.archiveAttemptId = result?.attemptId || state.archiveAttemptId;
+        return state.archiveAttemptId;
+      })
+      .catch((error) => {
+        console.warn('[PTE Archive] SST save failed:', error);
+        return null;
+      });
+    return state.archiveSavePromise;
+  }
+  async function ensureArchiveAttemptId() {
+    if (state.archiveAttemptId) return state.archiveAttemptId;
+    if (state.archiveSavePromise) {
+      const attemptId = await state.archiveSavePromise;
+      return attemptId || state.archiveAttemptId;
+    }
+    return null;
   }
   function formatTime(seconds) {
     const value = Math.max(0, Math.floor(seconds));
@@ -181,6 +203,8 @@
     state.invalidated = false;
     state.ended = false;
     state.submission = null;
+    state.archiveAttemptId = null;
+    state.archiveSavePromise = null;
     state.aiScoring = false;
     state.aiRequestId += 1;
     state.feedbackRequestId += 1;
@@ -406,6 +430,8 @@
       mainPoints: question?.mainPoints || [],
       audio: state.selectedAudio
     };
+    state.archiveAttemptId = null;
+    state.archiveSavePromise = null;
     state.elements.response.disabled = true;
     state.elements.submit.disabled = true;
     state.elements.play.disabled = false;
@@ -416,6 +442,16 @@
     setStatus(autoSubmitted ? 'Time expired. Your response was submitted. Audio review is now available.' : 'Response submitted. Review your feedback below or replay the lecture.');
     const form = scoreForm(text);
     renderSubmittedBase(form, renderRow('Provisional Grammar', { detail: 'Checking...' }, 2) + renderRow('Provisional Spelling', { detail: 'Checking...' }, 2));
+    rememberArchiveSave(window.PTEAttemptArchive?.saveTextAttempt?.('sst', {
+      ...(question || {}),
+      audioPath: state.selectedAudio || question?.audioPath || question?.audio || null,
+      transcript: question?.transcript || ''
+    }, text, {
+      form,
+      wordCount: state.submission.wordCount,
+      autoSubmitted,
+      submitted: true
+    }, { scoringSource: 'client-form' }));
     if (text) updateAiButton();
     const requestId = ++state.feedbackRequestId;
     const languageResult = await checkLanguage(text);
@@ -486,6 +522,22 @@
       <div class="sst-score-grid">${rows}</div>${analysisHtml}${renderPoints(state.submission.mainPoints)}
       ${advice ? `<div class="sst-advice"><h3>Teacher advice</h3><p>${newlineToHtml(advice)}</p></div>` : ''}`;
     state.elements.ai.style.display = 'none';
+    ensureArchiveAttemptId().then((archiveAttemptId) => {
+      if (!archiveAttemptId) return;
+      window.PTEAttemptArchive?.patchAttempt?.(archiveAttemptId, {
+        resultSnapshot: {
+          overall,
+          scores,
+          mainPointsAnalysis: analysis,
+          teacherAdvice: data.teacherAdvice || null
+        },
+        scoringSnapshot: {
+          source: 'ai',
+          success: data.success === true,
+          teacherAdviceChat: data.teacherAdviceChat || null
+        }
+      }).catch((error) => console.warn('[PTE Archive] SST AI patch failed:', error));
+    }).catch((error) => console.warn('[PTE Archive] SST AI patch skipped:', error));
   }
   async function handleAiScore() {
     if (!state.submission?.text || state.aiScoring) return;

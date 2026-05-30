@@ -29,6 +29,7 @@
     let mediaRecorder = null;
     let recordedChunks = [];
     let recordingBlobUrl = null;
+    let recordingBlob = null;
     let recordingSessionToken = 0;
 
     // Speech recognition
@@ -102,6 +103,7 @@
         transcriptText = '';
         if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
         recordedChunks = [];
+        recordingBlob = null;
         if (el.diRecordingPlayback) {
             try {
                 el.diRecordingPlayback.pause();
@@ -371,6 +373,7 @@
     async function startRecordingSession() {
         try {
             if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
+            recordingBlob = null;
 
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             const sessionToken = ++recordingSessionToken;
@@ -388,6 +391,7 @@
                 if (sessionToken !== recordingSessionToken) return;
                 if (recordedChunks.length > 0) {
                     const blob = new Blob(recordedChunks, { type: recorder.mimeType || 'audio/webm' });
+                    recordingBlob = blob;
                     recordingBlobUrl = URL.createObjectURL(blob);
                     if (el.diRecordingPlayback) el.diRecordingPlayback.src = recordingBlobUrl;
                 }
@@ -510,6 +514,7 @@
 
     function retryRecording() {
         if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
+        recordingBlob = null;
         transcriptText = '';
         goToStep('preparing');
     }
@@ -552,6 +557,34 @@
                 el.diKeyPoints.appendChild(li);
             }
         }
+
+        window.PTEAttemptArchive?.saveAttempt?.({
+            practiceMode: 'describe-image',
+            promptSnapshot: {
+                promptId: currentEntry.id || currentEntry.title || null,
+                title: currentEntry.title || '',
+                text: currentEntry.prompt || currentEntry.title || '',
+                sourceAssetPaths: [currentEntry.imagePath || currentEntry.image || currentEntry.src].filter(Boolean),
+                data: currentEntry
+            },
+            responseSnapshot: {
+                transcript: transcriptText || ''
+            },
+            answerSnapshot: {
+                keyPoints: currentEntry.keyPoints || [],
+                sampleAnswer: currentEntry.sampleAnswer || null
+            },
+            resultSnapshot: {
+                submitted: true
+            },
+            scoringSource: 'client',
+            media: recordingBlob ? [{
+                slot: 'student',
+                label: 'Student description',
+                blob: recordingBlob,
+                contentType: recordingBlob.type || 'audio/webm'
+            }] : []
+        }).catch((error) => console.warn('[PTE Archive] Describe Image save failed:', error));
     }
 
     function escapeHtml(text) {

@@ -864,6 +864,21 @@
                   <input id="agent-source-notes" type="text" class="crm-input" placeholder="Optional notes">
                 </div>
               </div>
+              <div class="crm-section-header" style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+                <div>
+                  <h4>Course Commission Rates</h4>
+                  <p class="crm-muted">Configure custom rates for specific courses. Defaults to the course's default rate if not set.</p>
+                </div>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 12px;">
+                <select id="agent-course-select" class="crm-input" style="flex: 1;">
+                  <option value="">Select a course to add...</option>
+                </select>
+                <button id="btn-add-agent-course" class="crm-btn-secondary" type="button">Add Course</button>
+              </div>
+              <div id="agent-course-rates-container" class="crm-stack-list" style="margin-bottom: 15px;">
+                <div class="crm-muted" style="padding: 10px;">No course commission rates configured.</div>
+              </div>
               <div class="crm-inline-fields" style="justify-content: flex-end; margin-top: 12px;">
                 <button id="btn-new-agent-source" class="crm-btn-secondary" type="button">New</button>
                 <button id="btn-create-agent-source" class="crm-btn-primary" type="button">Save Agent Source</button>

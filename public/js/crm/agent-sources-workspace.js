@@ -35,6 +35,8 @@ window.CrmAgentSourcesWorkspace = (function () {
 
         let bound = false;
         let selectedAgentSourceId = '';
+        let activeCourses = [];
+        let localCourseRates = {}; // courseId -> percent
 
         function getAgentSources() {
             dataCache.agentSources = normalizeList(dataCache.agentSources);
@@ -63,6 +65,55 @@ window.CrmAgentSourcesWorkspace = (function () {
             hydrateSelect(elements.inputStudentAgentSource);
         }
 
+        async function loadCoursesDropdown() {
+            if (!elements.selectAgentCourse) return;
+            try {
+                if (window.CrmCourses && typeof window.CrmCourses.fetchCourses === 'function') {
+                    activeCourses = await window.CrmCourses.fetchCourses();
+                } else if (window.ClassroomAPI && typeof window.ClassroomAPI.fetchCourses === 'function') {
+                    activeCourses = await window.ClassroomAPI.fetchCourses();
+                } else {
+                    activeCourses = [];
+                }
+                const select = elements.selectAgentCourse;
+                select.innerHTML = '<option value="">Select a course to add...</option>' + 
+                    activeCourses.map((c) => {
+                        const label = c.code ? `${c.name} (${c.code})` : c.name;
+                        return `<option value="${escapeHtml(c.id)}">${escapeHtml(label)}</option>`;
+                    }).join('');
+            } catch (error) {
+                console.error('[CRM Admin] Failed to load courses for agent custom rates dropdown:', error);
+                activeCourses = [];
+            }
+        }
+
+        function renderCourseRatesList() {
+            if (!elements.agentCourseRatesContainer) return;
+            const entries = Object.entries(localCourseRates);
+            if (entries.length === 0) {
+                elements.agentCourseRatesContainer.innerHTML = '<div class="crm-muted" style="padding: 10px;">No course commission rates configured.</div>';
+                return;
+            }
+
+            elements.agentCourseRatesContainer.innerHTML = entries.map(([courseId, percent]) => {
+                const course = activeCourses.find(c => String(c.id) === String(courseId));
+                const courseName = course 
+                    ? (course.code ? `${course.name} (${course.code})` : course.name)
+                    : `Course (ID: ${courseId})`;
+                const ratePercent = Number.isFinite(percent) ? percent : 0;
+                return `
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed var(--border-color);">
+                        <div style="font-weight: 500; font-size: 13px;">${escapeHtml(courseName)}</div>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <input type="number" class="crm-input agent-course-rate-input" data-course-id="${escapeHtml(courseId)}" value="${ratePercent}" step="0.1" min="0" max="100" style="width: 70px; text-align: right; padding: 4px 8px; font-size: 13px;">
+                            <span class="crm-muted" style="font-size: 13px; margin-right: 8px;">%</span>
+                            <button type="button" class="crm-tag-remove btn-remove-agent-course" data-course-id="${escapeHtml(courseId)}" style="cursor: pointer; padding: 2px 6px; font-size: 14px; line-height: 1; border: none; background: transparent; color: var(--error-color) || '#ff4d4f';">✕</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
         function setBusy(isBusy) {
             if (!elements.btnCreateAgentSource) return;
             elements.btnCreateAgentSource.disabled = !!isBusy;
@@ -76,6 +127,8 @@ window.CrmAgentSourcesWorkspace = (function () {
             if (elements.inputAgentSourceName) elements.inputAgentSourceName.value = '';
             if (elements.inputAgentSourceStatus) elements.inputAgentSourceStatus.value = 'active';
             if (elements.inputAgentSourceNotes) elements.inputAgentSourceNotes.value = '';
+            localCourseRates = {};
+            renderCourseRatesList();
             setBusy(false);
             renderList();
         }
@@ -89,6 +142,14 @@ window.CrmAgentSourcesWorkspace = (function () {
             if (elements.inputAgentSourceName) elements.inputAgentSourceName.value = clean(agentSource.name);
             if (elements.inputAgentSourceStatus) elements.inputAgentSourceStatus.value = clean(agentSource.status || 'active') || 'active';
             if (elements.inputAgentSourceNotes) elements.inputAgentSourceNotes.value = clean(agentSource.notes);
+            
+            localCourseRates = {};
+            if (agentSource && agentSource.courseRates) {
+                Object.entries(agentSource.courseRates).forEach(([courseId, bps]) => {
+                    localCourseRates[courseId] = Number.isFinite(bps) ? (bps / 100) : 0;
+                });
+            }
+            renderCourseRatesList();
             setBusy(false);
             renderList();
         }
@@ -119,15 +180,24 @@ window.CrmAgentSourcesWorkspace = (function () {
         }
 
         function buildPayload() {
+            const courseRates = {};
+            Object.entries(localCourseRates).forEach(([courseId, percent]) => {
+                const num = Number(percent);
+                if (Number.isFinite(num)) {
+                    courseRates[courseId] = Math.round(num * 100);
+                }
+            });
             return {
                 name: clean(elements.inputAgentSourceName?.value),
                 status: clean(elements.inputAgentSourceStatus?.value || 'active') || 'active',
-                notes: clean(elements.inputAgentSourceNotes?.value) || null
+                notes: clean(elements.inputAgentSourceNotes?.value) || null,
+                courseRates
             };
         }
 
         async function refresh() {
             if (!apiFetchJson) return [];
+            await loadCoursesDropdown();
             const json = await apiFetchJson('/api/admin/agent-sources?limit=500', { method: 'GET' });
             dataCache.agentSources = normalizeList(json?.agentSources);
             hydrateLinkedSelects();
@@ -261,6 +331,51 @@ window.CrmAgentSourcesWorkspace = (function () {
                         console.error('[CRM Admin] Export agent source report failed:', error);
                         showToast?.(error?.message || 'Failed to export agent source report.', 'error');
                     });
+                });
+            }
+
+            if (elements.btnAddAgentCourse && elements.selectAgentCourse) {
+                elements.btnAddAgentCourse.addEventListener('click', () => {
+                    const courseId = elements.selectAgentCourse.value;
+                    if (!courseId) {
+                        showToast?.('Please select a course to add.', 'error');
+                        return;
+                    }
+                    if (localCourseRates[courseId] !== undefined) {
+                        showToast?.('This course is already added.', 'error');
+                        return;
+                    }
+                    const course = activeCourses.find(c => String(c.id) === String(courseId));
+                    const defaultRateBps = course?.agentCommissionBps || 0;
+                    localCourseRates[courseId] = defaultRateBps / 100;
+                    renderCourseRatesList();
+                    elements.selectAgentCourse.value = '';
+                });
+            }
+
+            if (elements.agentCourseRatesContainer) {
+                elements.agentCourseRatesContainer.addEventListener('input', (event) => {
+                    const input = event.target && typeof event.target.closest === 'function'
+                        ? event.target.closest('.agent-course-rate-input')
+                        : null;
+                    if (!input) return;
+                    const courseId = input.dataset.courseId;
+                    const val = parseFloat(input.value);
+                    if (Number.isFinite(val)) {
+                        localCourseRates[courseId] = val;
+                    } else {
+                        localCourseRates[courseId] = 0;
+                    }
+                });
+
+                elements.agentCourseRatesContainer.addEventListener('click', (event) => {
+                    const btn = event.target && typeof event.target.closest === 'function'
+                        ? event.target.closest('.btn-remove-agent-course')
+                        : null;
+                    if (!btn) return;
+                    const courseId = btn.dataset.courseId;
+                    delete localCourseRates[courseId];
+                    renderCourseRatesList();
                 });
             }
         }

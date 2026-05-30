@@ -645,6 +645,9 @@
     elements.agentSourcesList = document.getElementById('agent-sources-list');
     elements.inputAgentReportMonth = document.getElementById('agent-report-month');
     elements.btnExportAgentReport = document.getElementById('btn-export-agent-report');
+    elements.selectAgentCourse = document.getElementById('agent-course-select');
+    elements.btnAddAgentCourse = document.getElementById('btn-add-agent-course');
+    elements.agentCourseRatesContainer = document.getElementById('agent-course-rates-container');
 
     elements.bulkDeleteWarningModal = document.getElementById('bulk-delete-warning-modal');
     elements.bulkDeleteWarningTitle = document.getElementById('bulk-delete-warning-title');

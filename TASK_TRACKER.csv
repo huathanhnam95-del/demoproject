@@ -309,4 +309,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 316,2026-05-27,Revise flagged SST expected main points based on Gemma audit,Done,2026-05-27
 317,2026-05-27,Re-audit revised SST expected main points using local Gemma AI,Done,2026-05-27
 318,2026-05-28,Release V1.8.8 - review and deploy all practice mode updates to production,Done,2026-05-28
-
+319,2026-05-28,Reorder PTE Listening practice modes,Done,2026-05-28
+320,2026-05-28,Redesign HIW and Multiple Choice listening modes layout,Done,2026-05-28
+321,2026-05-30,Fix PTE attempt archiving scoring and scope flow bugs,Done,2026-05-30
+322,2026-05-30,Configure custom agent course commission rates and export agent reports,Done,2026-05-30

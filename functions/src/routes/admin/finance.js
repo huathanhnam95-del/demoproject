@@ -6,7 +6,8 @@ const {
     CRM_STUDENTS,
     CRM_COURSES,
     CRM_CLASSROOMS,
-    CLASSROOM_MEMBERS
+    CLASSROOM_MEMBERS,
+    CRM_AGENT_SOURCES
 } = require('../../crm/collections');
 const {
     buildInvoiceCreateData,
@@ -75,10 +76,22 @@ module.exports = function registerFinanceRoutes(router, deps) {
                 course = courseSnap.data() || {};
             }
 
+            let agentCommissionBps = course?.agentCommissionBps ?? null;
+            if (student.agentSourceId && requestedCourseId) {
+                const agentSourceSnap = await db.collection(CRM_AGENT_SOURCES).doc(student.agentSourceId).get();
+                if (agentSourceSnap.exists) {
+                    const agentSourceData = agentSourceSnap.data() || {};
+                    const customCourseRate = agentSourceData.courseRates?.[requestedCourseId];
+                    if (Number.isFinite(customCourseRate)) {
+                        agentCommissionBps = customCourseRate;
+                    }
+                }
+            }
+
             const invoice = buildInvoiceCreateData({
                 ...(req.body || {}),
                 agentSourceId: student.agentSourceId || null,
-                agentCommissionBps: course?.agentCommissionBps ?? null
+                agentCommissionBps
             }, {
                 user: req.user,
                 serverTimestamp

@@ -17,7 +17,8 @@ const created = buildAgentSourceCreateData({
     notes: 'Premium partner',
     courseRates: {
         'course-1': 1500,
-        'course-2': '1250'
+        'course-2': '1250',
+        '  course-3  ': '999.6'
     }
 }, context);
 
@@ -25,7 +26,8 @@ assert.strictEqual(created.name, 'Agent Alpha');
 assert.strictEqual(created.status, 'active');
 assert.deepStrictEqual(created.courseRates, {
     'course-1': 1500,
-    'course-2': 1250
+    'course-2': 1250,
+    'course-3': 1000
 });
 
 // Test patch
@@ -52,5 +54,28 @@ assert.deepStrictEqual(mapped.courseRates, {
     'course-1': 1800,
     'course-3': 1000
 });
+
+assert.throws(
+    () => buildAgentSourceCreateData({
+        name: 'Bad Blank Course',
+        courseRates: { ' ': 1000 }
+    }, context),
+    /course id/i
+);
+
+assert.throws(
+    () => buildAgentSourceCreateData({
+        name: 'Bad High Rate',
+        courseRates: { 'course-1': 10001 }
+    }, context),
+    /between 0 and 10000/i
+);
+
+assert.throws(
+    () => buildAgentSourcePatchData(created, {
+        courseRates: { 'course-1': 'not-a-rate' }
+    }, context),
+    /must be a number/i
+);
 
 console.log('agent source service unit tests passed');

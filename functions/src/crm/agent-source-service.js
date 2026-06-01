@@ -13,25 +13,52 @@ function normalizeStatus(value, fallback = 'active') {
     return normalized;
 }
 
-function normalizeRateBps(value) {
-    if (value === null || value === undefined || value === '') return null;
+function normalizeRateBps(value, label = 'Agent source course rate') {
+    if (value === null || value === undefined || value === '') {
+        throw new Error(`${label} must be a number.`);
+    }
     const numeric = Number(value);
-    if (!Number.isFinite(numeric)) return null;
+    if (!Number.isFinite(numeric)) {
+        throw new Error(`${label} must be a number.`);
+    }
     const rounded = Math.round(numeric);
-    if (rounded < 0 || rounded > 10000) return null;
+    if (rounded < 0 || rounded > 10000) {
+        throw new Error(`${label} must be between 0 and 10000 bps.`);
+    }
     return rounded;
 }
 
-function normalizeCourseRates(raw) {
-    const rates = raw && typeof raw === 'object' ? raw : {};
-    const next = {};
+function normalizeCourseRates(raw, options = {}) {
+    const strict = options.strict !== false;
+    if (raw === null || raw === undefined || raw === '') return {};
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+        if (strict) {
+            throw new Error('Agent source course rates must be an object map.');
+        }
+        return {};
+    }
+    const entries = [];
+    const rates = raw;
     Object.entries(rates).forEach(([courseId, bps]) => {
-        const normalized = normalizeRateBps(bps);
-        if (normalized !== null) {
-            next[courseId] = normalized;
+        const normalizedCourseId = String(courseId || '').trim();
+        if (!normalizedCourseId) {
+            if (strict) {
+                throw new Error('Agent source course rate requires a course id.');
+            }
+            return;
+        }
+        try {
+            entries.push([
+                normalizedCourseId,
+                normalizeRateBps(bps, `Agent source course rate for ${normalizedCourseId}`)
+            ]);
+        } catch (error) {
+            if (strict) {
+                throw error;
+            }
         }
     });
-    return next;
+    return Object.fromEntries(entries);
 }
 
 function buildAgentSourceCreateData(input, context = {}) {
@@ -95,7 +122,7 @@ function mapAgentSourceRecord(doc, agentSourceId) {
         name: cleanOptionalString(data.name),
         status: cleanOptionalString(data.status) || 'active',
         notes: cleanOptionalString(data.notes),
-        courseRates: data.courseRates && typeof data.courseRates === 'object' ? data.courseRates : {},
+        courseRates: normalizeCourseRates(data.courseRates, { strict: false }),
         createdAt: data.createdAt || null,
         createdBy: data.createdBy || null,
         createdByEmail: data.createdByEmail || null,

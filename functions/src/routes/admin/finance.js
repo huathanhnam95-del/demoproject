@@ -29,6 +29,15 @@ const {
     buildStudentPatchData
 } = require('../../crm/student-service');
 
+function normalizeRateBps(value) {
+    if (value === null || value === undefined || value === '') return null;
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return null;
+    const rounded = Math.round(numeric);
+    if (rounded < 0 || rounded > 10000) return null;
+    return rounded;
+}
+
 module.exports = function registerFinanceRoutes(router, deps) {
     const { db, sendSuccess, sendError, requireAdminHandlers, serverTimestamp, writeAuditLog } = deps;
 
@@ -76,14 +85,15 @@ module.exports = function registerFinanceRoutes(router, deps) {
                 course = courseSnap.data() || {};
             }
 
-            let agentCommissionBps = course?.agentCommissionBps ?? null;
+            let agentCommissionBps = normalizeRateBps(course?.agentCommissionBps);
             if (student.agentSourceId && requestedCourseId) {
                 const agentSourceSnap = await db.collection(CRM_AGENT_SOURCES).doc(student.agentSourceId).get();
                 if (agentSourceSnap.exists) {
                     const agentSourceData = agentSourceSnap.data() || {};
                     const customCourseRate = agentSourceData.courseRates?.[requestedCourseId];
-                    if (Number.isFinite(customCourseRate)) {
-                        agentCommissionBps = customCourseRate;
+                    const customCourseRateBps = normalizeRateBps(customCourseRate);
+                    if (customCourseRateBps !== null) {
+                        agentCommissionBps = customCourseRateBps;
                     }
                 }
             }

@@ -1160,6 +1160,13 @@ function startHarnessServer() {
       body: firebaseStub
     });
   });
+  await page.route('http://localhost:11434/**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ version: 'browser-test' })
+    });
+  });
 
   try {
     await page.goto(`${origin}/crm-admin.html#courses/classes`, { waitUntil: 'domcontentloaded' });
@@ -1199,6 +1206,11 @@ function startHarnessServer() {
       ),
       'Expected admin seed request for selected class.'
     );
+    const seedRequest = requestLog.find((entry) => entry.path === '/api/admin/classrooms/class-seed/sessions/seed');
+    assert.strictEqual(seedRequest.body.startDate, seedDate);
+    assert.strictEqual(seedRequest.body.startTime, '14:00');
+    assert.deepStrictEqual(seedRequest.body.weekdayNumbers, [3]);
+    assert.strictEqual(seedRequest.body.teacherUid, 'teacher-2');
     await page.waitForSelector(`${seedTargetSelector} .scheduler-session-pill`);
 
     await page.locator(adminClassCardSelector).scrollIntoViewIfNeeded();

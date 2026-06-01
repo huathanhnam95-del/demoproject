@@ -83,6 +83,21 @@ function formatMoney(value, currency) {
     }).format(amount);
 }
 
+function normalizeRateBpsCandidate(value) {
+    if (value === null || value === undefined || value === '') return null;
+    const rounded = Math.round(Number(value));
+    if (!Number.isFinite(rounded) || rounded < 0 || rounded > 10000) return null;
+    return rounded;
+}
+
+function firstValidRateBps(...values) {
+    for (const value of values) {
+        const normalized = normalizeRateBpsCandidate(value);
+        if (normalized !== null) return normalized;
+    }
+    return 0;
+}
+
 async function fetchDocsByIds(db, collectionName, ids) {
     const uniqueIds = Array.from(new Set((Array.isArray(ids) ? ids : [])
         .map((id) => String(id || '').trim())
@@ -185,6 +200,9 @@ module.exports = function registerAgentSourceRoutes(router, deps) {
             if ((error?.message || '').includes('Invalid agent source status')) {
                 return sendError(res, 400, 'VALIDATION_ERROR', error.message);
             }
+            if ((error?.message || '').includes('Agent source')) {
+                return sendError(res, 400, 'VALIDATION_ERROR', error.message);
+            }
             return sendError(res, 500, 'UPDATE_AGENT_SOURCE_ERROR', 'Failed to update agent source.', error?.message || error);
         }
     });
@@ -240,7 +258,11 @@ module.exports = function registerAgentSourceRoutes(router, deps) {
                 const commission = commissionByInvoiceId.get(String(invoice.invoiceId || '').trim()) || null;
                 const currency = String(invoice.currency || commission?.currency || 'VND').toUpperCase();
                 const tuition = roundMoney(invoice.netAmount, currency);
-                const rateBps = Number(commission?.rateBps ?? source?.courseRates?.[invoice.courseId] ?? invoice.agentCommissionBps ?? 0);
+                const rateBps = firstValidRateBps(
+                    commission?.rateBps,
+                    invoice.agentCommissionBps,
+                    source?.courseRates?.[invoice.courseId]
+                );
                 const computedCommission = roundMoney((tuition * rateBps) / 10000, currency);
                 const commissionAmount = roundMoney(commission?.amount ?? computedCommission, currency);
                 const paidAtDate = toDate(invoice.paidAt);

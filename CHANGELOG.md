@@ -1,3 +1,36 @@
+## [V1.8.10] - 2026-06-01
+
+### Added
+
+- **E2E & Integration Tests**:
+  - Added new integration tests: `tests/crm/agent-course-rates-route-behavior.test.js`, `tests/crm/agent-source-route-behavior.test.js`, `tests/crm/agent-source-workspace.test.js`, and `tests/crm/finance-route-behavior.test.js`.
+  - Added Playwright E2E browser tests for Agent Source management and verified focus-visible highlights.
+  - Added Playwright network mocking for local Ollama instance requests (port 11434).
+
+### Improved
+
+- **Testing Infrastructure**:
+  - Extracted shared fake database and route execution mocks to `tests/crm/route-test-helpers.js` to eliminate code duplication across route test files.
+- **Task Tracking & Version Management**:
+  - Automated version synchronization across `GEMINI.md`, `package.json`, and browser files.
+
+## [V1.8.9] - 2026-05-30
+
+### Added
+
+- **Custom Agent Course Commission Rates**:
+  - Added customizable course commission rates (in basis points) for agent sources.
+  - Developed commission reporting system calculating tuition agent commissions with correct override hierarchy: explicit commission overrides -> default course rates -> fallback defaults.
+  - Added validation logic throwing error for rate out of bounds or invalid course/agent keys.
+
+### Improved
+
+- **Agent Management UI**:
+  - Enhanced workspace cards with modern interactive states, focus rings, and hover outlines.
+  - Wired full keyboard event listeners (`Enter` and `Space`) to cards for accessibility compliance.
+- **Classroom Scheduler**:
+  - Simplified the seed generation flow to use stored default schedule configurations rather than modal inputs, preventing state mismatches.
+
 ## [V1.8.8] - 2026-05-28
 
 ### Added

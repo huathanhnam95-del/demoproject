@@ -1635,6 +1635,37 @@ body {
   background: #f8fafc;
 }
 
+.crm-agent-source-card {
+  cursor: pointer;
+  transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.crm-agent-source-card:hover,
+.crm-agent-source-card.active {
+  border-color: rgba(27, 138, 79, 0.42);
+  background: #f0fdf4;
+}
+
+.crm-agent-source-card.active {
+  box-shadow: inset 4px 0 0 var(--crm-primary);
+}
+
+.crm-agent-source-card:focus-visible {
+  outline: 3px solid rgba(27, 138, 79, 0.22);
+  outline-offset: 3px;
+}
+
+.crm-agent-source-name {
+  color: var(--crm-primary);
+  font-weight: 700;
+}
+
+.crm-agent-source-card:hover .crm-agent-source-name,
+.crm-agent-source-card.active .crm-agent-source-name {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .crm-timeline-head,
 .crm-task-head {
   display: flex;

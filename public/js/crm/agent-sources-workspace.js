@@ -18,11 +18,27 @@ window.CrmAgentSourcesWorkspace = (function () {
                 name: clean(item?.name),
                 status: clean(item?.status || 'active').toLowerCase() || 'active',
                 notes: clean(item?.notes),
+                courseRates: normalizeCourseRates(item?.courseRates),
                 createdAt: item?.createdAt || null,
                 updatedAt: item?.updatedAt || null
             }))
             .filter((item) => item.agentSourceId || item.name)
             .sort((left, right) => left.name.localeCompare(right.name));
+    }
+
+    function normalizeCourseRates(raw) {
+        const rates = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+        return Object.fromEntries(Object.entries(rates)
+            .map(([courseId, bps]) => [clean(courseId), Math.round(Number(bps))])
+            .filter(([courseId, bps]) => courseId && Number.isFinite(bps) && bps >= 0 && bps <= 10000));
+    }
+
+    function getCourseId(course) {
+        return clean(course?.id || course?.courseId);
+    }
+
+    function getCourseLabel(course) {
+        return course?.code ? `${course.name} (${course.code})` : course?.name;
     }
 
     function createController(deps = {}) {
@@ -68,23 +84,39 @@ window.CrmAgentSourcesWorkspace = (function () {
         async function loadCoursesDropdown() {
             if (!elements.selectAgentCourse) return;
             try {
+                let courses = [];
                 if (window.CrmCourses && typeof window.CrmCourses.fetchCourses === 'function') {
-                    activeCourses = await window.CrmCourses.fetchCourses();
+                    courses = await window.CrmCourses.fetchCourses({ forceRefresh: true });
                 } else if (window.ClassroomAPI && typeof window.ClassroomAPI.fetchCourses === 'function') {
-                    activeCourses = await window.ClassroomAPI.fetchCourses();
-                } else {
-                    activeCourses = [];
+                    courses = await window.ClassroomAPI.fetchCourses();
                 }
+                activeCourses = (Array.isArray(courses) ? courses : [])
+                    .filter((course) => String(course.status || 'active').toLowerCase() === 'active');
                 const select = elements.selectAgentCourse;
-                select.innerHTML = '<option value="">Select a course to add...</option>' + 
+                select.innerHTML = '<option value="">Select a course to add...</option>' +
                     activeCourses.map((c) => {
-                        const label = c.code ? `${c.name} (${c.code})` : c.name;
-                        return `<option value="${escapeHtml(c.id)}">${escapeHtml(label)}</option>`;
+                        const courseId = getCourseId(c);
+                        const label = getCourseLabel(c);
+                        return `<option value="${escapeHtml(courseId)}">${escapeHtml(label)}</option>`;
                     }).join('');
             } catch (error) {
                 console.error('[CRM Admin] Failed to load courses for agent custom rates dropdown:', error);
                 activeCourses = [];
             }
+        }
+
+        function validateCourseRatePercent(value) {
+            if (clean(value) === '') {
+                throw new Error('Course commission rate is required.');
+            }
+            const numeric = Number(value);
+            if (!Number.isFinite(numeric)) {
+                throw new Error('Course commission rate must be a number.');
+            }
+            if (numeric < 0 || numeric > 100) {
+                throw new Error('Course commission rate must be between 0 and 100%.');
+            }
+            return numeric;
         }
 
         function renderCourseRatesList() {
@@ -96,18 +128,19 @@ window.CrmAgentSourcesWorkspace = (function () {
             }
 
             elements.agentCourseRatesContainer.innerHTML = entries.map(([courseId, percent]) => {
-                const course = activeCourses.find(c => String(c.id) === String(courseId));
-                const courseName = course 
-                    ? (course.code ? `${course.name} (${course.code})` : course.name)
+                const course = activeCourses.find(c => getCourseId(c) === String(courseId));
+                const courseName = course
+                    ? getCourseLabel(course)
                     : `Course (ID: ${courseId})`;
-                const ratePercent = Number.isFinite(percent) ? percent : 0;
+                const numericPercent = Number(percent);
+                const ratePercent = Number.isFinite(numericPercent) ? numericPercent : '';
                 return `
                     <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed var(--border-color);">
                         <div style="font-weight: 500; font-size: 13px;">${escapeHtml(courseName)}</div>
                         <div style="display: flex; align-items: center; gap: 6px;">
                             <input type="number" class="crm-input agent-course-rate-input" data-course-id="${escapeHtml(courseId)}" value="${ratePercent}" step="0.1" min="0" max="100" style="width: 70px; text-align: right; padding: 4px 8px; font-size: 13px;">
                             <span class="crm-muted" style="font-size: 13px; margin-right: 8px;">%</span>
-                            <button type="button" class="crm-tag-remove btn-remove-agent-course" data-course-id="${escapeHtml(courseId)}" style="cursor: pointer; padding: 2px 6px; font-size: 14px; line-height: 1; border: none; background: transparent; color: var(--error-color) || '#ff4d4f';">✕</button>
+                            <button type="button" class="crm-tag-remove btn-remove-agent-course" data-course-id="${escapeHtml(courseId)}" style="cursor: pointer; padding: 2px 6px; font-size: 14px; line-height: 1; border: none; background: transparent; color: var(--error-color, #ff4d4f);">x</button>
                         </div>
                     </div>
                 `;
@@ -142,7 +175,7 @@ window.CrmAgentSourcesWorkspace = (function () {
             if (elements.inputAgentSourceName) elements.inputAgentSourceName.value = clean(agentSource.name);
             if (elements.inputAgentSourceStatus) elements.inputAgentSourceStatus.value = clean(agentSource.status || 'active') || 'active';
             if (elements.inputAgentSourceNotes) elements.inputAgentSourceNotes.value = clean(agentSource.notes);
-            
+
             localCourseRates = {};
             if (agentSource && agentSource.courseRates) {
                 Object.entries(agentSource.courseRates).forEach(([courseId, bps]) => {
@@ -167,9 +200,9 @@ window.CrmAgentSourcesWorkspace = (function () {
                 const statusClass = row.status === 'active' ? 'medium' : 'low';
                 const timestamp = row.updatedAt || row.createdAt || null;
                 return `
-                    <div class="crm-task-item${selected ? ' active' : ''}" data-agent-source-id="${escapeHtml(row.agentSourceId)}">
+                    <div class="crm-task-item crm-agent-source-card${selected ? ' active' : ''}" role="button" tabindex="0" aria-label="Edit agent source" data-agent-source-id="${escapeHtml(row.agentSourceId)}">
                         <div class="crm-task-head">
-                            <button type="button" class="crm-student-link crm-agent-source-select" data-agent-source-id="${escapeHtml(row.agentSourceId)}">${escapeHtml(row.name || 'Unnamed agent source')}</button>
+                            <span class="crm-agent-source-name">${escapeHtml(row.name || 'Unnamed agent source')}</span>
                             <span class="crm-task-priority ${escapeHtml(statusClass)}">${escapeHtml(row.status || 'active')}</span>
                         </div>
                         ${row.notes ? `<div class="crm-task-meta">${escapeHtml(row.notes)}</div>` : ''}
@@ -182,10 +215,10 @@ window.CrmAgentSourcesWorkspace = (function () {
         function buildPayload() {
             const courseRates = {};
             Object.entries(localCourseRates).forEach(([courseId, percent]) => {
-                const num = Number(percent);
-                if (Number.isFinite(num)) {
-                    courseRates[courseId] = Math.round(num * 100);
-                }
+                const normalizedCourseId = clean(courseId);
+                if (!normalizedCourseId) return;
+                const num = validateCourseRatePercent(percent);
+                courseRates[normalizedCourseId] = Math.round(num * 100);
             });
             return {
                 name: clean(elements.inputAgentSourceName?.value),
@@ -284,6 +317,33 @@ window.CrmAgentSourcesWorkspace = (function () {
             showToast?.('Agent source report exported.', 'success');
         }
 
+        function getEventElement(event) {
+            const target = event?.target || null;
+            if (target && target.nodeType === 3) return target.parentElement;
+            return target;
+        }
+
+        function getAgentSourceCardFromEvent(event) {
+            const target = getEventElement(event);
+            const card = target && typeof target.closest === 'function'
+                ? target.closest('.crm-agent-source-card[data-agent-source-id]')
+                : null;
+            if (!card || !elements.agentSourcesList?.contains?.(card)) return null;
+            return card;
+        }
+
+        function selectAgentSource(agentSourceId) {
+            const id = clean(agentSourceId);
+            if (!id) return false;
+            const row = getAgentSources().find((item) => item.agentSourceId === id) || null;
+            if (!row) return false;
+            applyToForm(row);
+            if (elements.inputAgentSourceName && typeof elements.inputAgentSourceName.focus === 'function') {
+                elements.inputAgentSourceName.focus();
+            }
+            return true;
+        }
+
         function bindEvents() {
             if (bound) return;
             bound = true;
@@ -315,13 +375,17 @@ window.CrmAgentSourcesWorkspace = (function () {
 
             if (elements.agentSourcesList) {
                 elements.agentSourcesList.addEventListener('click', (event) => {
-                    const button = event.target && typeof event.target.closest === 'function'
-                        ? event.target.closest('.crm-agent-source-select[data-agent-source-id]')
-                        : null;
-                    if (!button || !elements.agentSourcesList.contains(button)) return;
-                    const id = clean(button.dataset.agentSourceId);
-                    const row = getAgentSources().find((item) => item.agentSourceId === id) || null;
-                    applyToForm(row);
+                    const card = getAgentSourceCardFromEvent(event);
+                    if (!card) return;
+                    selectAgentSource(card.dataset.agentSourceId);
+                });
+
+                elements.agentSourcesList.addEventListener('keydown', (event) => {
+                    if (event.key !== 'Enter' && event.key !== ' ') return;
+                    const card = getAgentSourceCardFromEvent(event);
+                    if (!card) return;
+                    event.preventDefault();
+                    selectAgentSource(card.dataset.agentSourceId);
                 });
             }
 
@@ -336,7 +400,7 @@ window.CrmAgentSourcesWorkspace = (function () {
 
             if (elements.btnAddAgentCourse && elements.selectAgentCourse) {
                 elements.btnAddAgentCourse.addEventListener('click', () => {
-                    const courseId = elements.selectAgentCourse.value;
+                    const courseId = clean(elements.selectAgentCourse.value);
                     if (!courseId) {
                         showToast?.('Please select a course to add.', 'error');
                         return;
@@ -345,7 +409,7 @@ window.CrmAgentSourcesWorkspace = (function () {
                         showToast?.('This course is already added.', 'error');
                         return;
                     }
-                    const course = activeCourses.find(c => String(c.id) === String(courseId));
+                    const course = activeCourses.find(c => getCourseId(c) === String(courseId));
                     const defaultRateBps = course?.agentCommissionBps || 0;
                     localCourseRates[courseId] = defaultRateBps / 100;
                     renderCourseRatesList();
@@ -360,12 +424,7 @@ window.CrmAgentSourcesWorkspace = (function () {
                         : null;
                     if (!input) return;
                     const courseId = input.dataset.courseId;
-                    const val = parseFloat(input.value);
-                    if (Number.isFinite(val)) {
-                        localCourseRates[courseId] = val;
-                    } else {
-                        localCourseRates[courseId] = 0;
-                    }
+                    localCourseRates[courseId] = input.value;
                 });
 
                 elements.agentCourseRatesContainer.addEventListener('click', (event) => {

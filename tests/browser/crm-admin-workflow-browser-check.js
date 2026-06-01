@@ -6,6 +6,7 @@ const { chromium } = require('playwright');
 const PUBLIC_DIR = path.join(process.cwd(), 'public');
 const BASE_ORIGIN = 'https://betterenglishlearning.com';
 const ENQUIRY_URL = `${BASE_ORIGIN}/crm-admin.html#enquiry`;
+const AGENTS_URL = `${BASE_ORIGIN}/crm-admin.html#agents`;
 const COURSES_URL = `${BASE_ORIGIN}/crm-admin.html#courses/courses`;
 const CLASS_MANAGEMENT_URL = `${BASE_ORIGIN}/crm-admin.html#courses/class-management`;
 const CLASSES_URL = `${BASE_ORIGIN}/crm-admin.html#courses/classes`;
@@ -570,6 +571,8 @@ async function main() {
   const requestLog = [];
   const consoleErrors = [];
   const pageErrors = [];
+  fs.mkdirSync(path.join(process.cwd(), 'tmp'), { recursive: true });
+  const agentSourceScreenshotPath = path.join('tmp', 'crm-agent-source-browser-check.png');
   const browser = await chromium.launch({ headless: true });
 
   try {
@@ -629,6 +632,20 @@ async function main() {
       const failure = request.failure();
       consoleErrors.push(`${failure?.errorText || 'requestfailed'}: ${request.url()}`);
     });
+
+    await page.goto(AGENTS_URL, { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('#agent-sources-list .crm-agent-source-card[data-agent-source-id="agent-source-1"]');
+    await page.click('#agent-sources-list .crm-agent-source-card[data-agent-source-id="agent-source-1"]');
+    await page.waitForFunction(() => document.getElementById('agent-source-name')?.value === 'Referral Team');
+    assert.strictEqual(await page.inputValue('#agent-source-name'), 'Referral Team');
+    assert.strictEqual(await page.textContent('#btn-create-agent-source'), 'Update Agent Source');
+    assert.strictEqual(
+      await page.$eval('#agent-sources-list .crm-agent-source-card[data-agent-source-id="agent-source-1"]', (el) => el.classList.contains('active')),
+      true
+    );
+    assert.strictEqual(await page.evaluate(() => document.activeElement?.id || ''), 'agent-source-name');
+    await page.screenshot({ path: agentSourceScreenshotPath });
+    console.log(`Screenshot saved to ${agentSourceScreenshotPath}`);
 
     await page.goto(ENQUIRY_URL, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('#lead-list-container');

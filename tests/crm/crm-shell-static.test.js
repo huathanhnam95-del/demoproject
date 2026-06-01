@@ -9,8 +9,9 @@ function read(relativePath) {
 const html = read('public/crm-admin.html');
 const js = read('public/crm-admin.js');
 const agentSourcesWorkspace = read('public/js/crm/agent-sources-workspace.js');
+const schedulerWorkspace = read('public/js/crm/scheduler-workspace.js');
 const packageJson = JSON.parse(read('package.json'));
-const CRM_ADMIN_ASSET_VERSION = '20260530-v1.8.9';
+const CRM_ADMIN_ASSET_VERSION = '20260601-v1.8.10';
 
 const panelIds = new Set(Array.from(html.matchAll(/data-panel="([^"]+)"/g), (match) => match[1]));
 const localAssetRefs = Array.from(
@@ -248,6 +249,14 @@ assert(
     'crm-admin.js must bind and instantiate the admin Class Scheduling workspace, not only the teacher scheduler.'
 );
 assert(
+    schedulerWorkspace.includes('state.selectedClassroomId = String(state.classrooms[0].classroomId || state.classrooms[0].id || \'\').trim()') &&
+    schedulerWorkspace.includes('seedClassroomSessions(classId, {') &&
+    schedulerWorkspace.includes('startDate: String(scheduleConfig.seedStartDate || \'\').trim()') &&
+    schedulerWorkspace.includes('weekdayNumbers: parseWeekdayNumbers(scheduleConfig.seedWeekdays)') &&
+    !schedulerWorkspace.includes('updateClassroomScheduleConfig'),
+    'Admin scheduler first-generation must use the saved selected class setup instead of reading or saving modal state.'
+);
+assert(
     js.includes('async function refreshAttendanceRiskSnapshot()'),
     'crm-admin.js must define the shared attendance risk snapshot helper required during shell init and classroom updates.'
 );
@@ -297,8 +306,16 @@ assert(
     agentSourcesWorkspace.includes('window.CrmAgentSourcesWorkspace') &&
     agentSourcesWorkspace.includes('/api/admin/agent-sources?limit=500') &&
     agentSourcesWorkspace.includes('/api/admin/agent-sources/report?') &&
-    agentSourcesWorkspace.includes('btnCreateAgentSource.addEventListener(\'click\''),
+    agentSourcesWorkspace.includes('btnCreateAgentSource.addEventListener(\'click\'') &&
+    agentSourcesWorkspace.includes('crm-agent-source-card') &&
+    agentSourcesWorkspace.includes('agentSourcesList.addEventListener(\'keydown\''),
     'CRM admin must wire agent-source create, refresh, list, export, and linked dropdown hydration.'
+);
+assert(
+    agentSourcesWorkspace.includes('fetchCourses({ forceRefresh: true })') &&
+    agentSourcesWorkspace.includes('String(course.status || \'active\').toLowerCase() === \'active\'') &&
+    agentSourcesWorkspace.includes('validateCourseRatePercent'),
+    'Agent source course-rate editor must refresh the active course catalog and validate percentages before save.'
 );
 
 assert(

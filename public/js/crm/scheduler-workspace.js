@@ -87,7 +87,6 @@ window.CrmSchedulerWorkspace = (function () {
     function createController(deps = {}) {
         const {
             elements,
-            modalState,
             showToast,
             escapeHtml: externalEscapeHtml
         } = deps;
@@ -836,7 +835,7 @@ window.CrmSchedulerWorkspace = (function () {
             }
         }
 
-        async function refreshSchedulerSummaryCard() {
+        function refreshSchedulerSummaryCard() {
             if (!elements.classroomScheduleSummary) return;
             const classrooms = state.classrooms;
             if (!classrooms.length) {
@@ -849,7 +848,7 @@ window.CrmSchedulerWorkspace = (function () {
                 return;
             }
 
-            const selectedId = state.selectedClassroomId || modalState?.classroomId || '';
+            const selectedId = state.selectedClassroomId || '';
             const classroom = selectedId
                 ? classrooms.find((row) => String(row.classroomId || row.id || '') === String(selectedId))
                 : classrooms[0];
@@ -891,12 +890,15 @@ window.CrmSchedulerWorkspace = (function () {
             if (state.selectedClassroomId && !state.classrooms.some((row) => String(row.classroomId || row.id || '') === state.selectedClassroomId)) {
                 state.selectedClassroomId = '';
             }
+            if (!state.selectedClassroomId && state.classrooms.length) {
+                state.selectedClassroomId = String(state.classrooms[0].classroomId || state.classrooms[0].id || '').trim();
+            }
             state.teacherFilter = teacherUid;
             state.fromDate = from || null;
             state.toDate = to || null;
             renderClassRail();
             renderCalendarGrid();
-            await refreshSchedulerSummaryCard();
+            refreshSchedulerSummaryCard();
         }
 
         function bindControls() {
@@ -910,33 +912,19 @@ window.CrmSchedulerWorkspace = (function () {
 
             if (elements.btnSeedScheduler) {
                 elements.btnSeedScheduler.addEventListener('click', async () => {
-                    const classId = state.selectedClassroomId || modalState?.classroomId || '';
+                    const classId = state.selectedClassroomId || '';
                     const classroom = state.classrooms.find((row) => String(row.classroomId || row.id || '') === String(classId || ''));
                     if (!classId || !classroom) {
                         showToast?.('Select a class first, then generate its first schedule.', 'error');
                         return;
                     }
                     try {
-                        const modalMatchesSelection = modalState?.classroomId && String(modalState.classroomId) === String(classId);
-                        if (modalMatchesSelection && window.CrmClassrooms && typeof window.CrmClassrooms.buildPayload === 'function') {
-                            const payload = window.CrmClassrooms.buildPayload(elements);
-                            await window.ClassroomAPI.updateClassroomScheduleConfig(classId, payload);
-                        }
                         const scheduleConfig = classroom.scheduleConfig || {};
-                        const useModalFields = !!modalMatchesSelection;
                         await window.ClassroomAPI.seedClassroomSessions(classId, {
-                            startDate: useModalFields
-                                ? String(elements.inputClassroomSeedStartDate?.value || '').trim()
-                                : String(scheduleConfig.seedStartDate || '').trim(),
-                            startTime: useModalFields
-                                ? String(elements.inputClassroomSeedStartTime?.value || '').trim()
-                                : String(scheduleConfig.seedStartTime || '').trim(),
-                            weekdayNumbers: parseWeekdayNumbers(useModalFields
-                                ? elements.inputClassroomSeedWeekdays?.value
-                                : scheduleConfig.seedWeekdays),
-                            teacherUid: useModalFields
-                                ? (String(elements.inputClassroomPrimaryTeacher?.value || '').trim() || null)
-                                : (classroom.primaryTeacherUid || null)
+                            startDate: String(scheduleConfig.seedStartDate || '').trim(),
+                            startTime: String(scheduleConfig.seedStartTime || '').trim(),
+                            weekdayNumbers: parseWeekdayNumbers(scheduleConfig.seedWeekdays),
+                            teacherUid: classroom.primaryTeacherUid || null
                         });
                         showToast?.('Schedule generated.', 'success');
                         await refresh();

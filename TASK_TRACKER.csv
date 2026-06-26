@@ -314,3 +314,23 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 321,2026-05-30,Fix PTE attempt archiving scoring and scope flow bugs,Done,2026-05-30
 322,2026-05-30,Configure custom agent course commission rates and export agent reports,Done,2026-05-30
 323,2026-06-01,Deploy V1.8.10 release - commit and push all changes,Done,2026-06-01
+324,2026-06-01,Investigate Kokoro AI audio file locations,Done,2026-06-01
+325,2026-06-02,Generate Pepe Frog Hello Kitty style image,Done,2026-06-02
+326,2026-06-02,Generate Pepe Frog Pudge Dota 2 style image,Done,2026-06-02
+327,2026-06-02,Generate Pepe Frog Io Dota 2 style image,Done,2026-06-02
+328,2026-06-02,Provide design concepts for 10 Dota 2 Pepe heroes,Done,2026-06-02
+329,2026-06-02,Refine Pepe Dota 2 hero concepts using default skins,Done,2026-06-02
+330,2026-06-02,Generate Pepe Dota 2 hero images,Done,2026-06-02
+331,2026-06-02,Generate 20 additional Pepe Dota 2 hero headshots,Done,2026-06-02
+332,2026-06-03,Add Witcher 3 background to Pepe image,Done,2026-06-03
+333,2026-06-03,Locate Kokoro AI audio file storage directories,Done,2026-06-03
+334,2026-06-03,Check commit and push status of Kokoro AI audio files,Done,2026-06-03
+335,2026-06-03,Check for historical versions of RA audio in Git,Done,2026-06-03
+336,2026-06-03,Investigate C drive space reduction,In Progress,
+337,2026-06-06,Check if all RFIB audio files are pushed to production,Done,2026-06-06
+338,2026-06-06,Generate missing RFIB beginner audio files using Kokoro AI,Done,2026-06-06
+339,2026-06-09,Change 8.0 IELTS to 8.5 IELTS in Downloaded PDF,Done,2026-06-09
+340,2026-06-26,Explain git lfs folder,Done,2026-06-26
+341,2026-06-26,Explain git objects folder,Done,2026-06-26
+342,2026-06-26,Optimize and clean up Git LFS and objects,In Progress,
+343,2026-06-26,Clean up and uninstall Figma,Done,2026-06-26

@@ -1,4 +1,14 @@
+## [V1.8.11] - 2026-06-26
+
+### Removed
+
+- **Figma MCP Server**:
+  - Removed the `figma-mcp-server` directory and its code, uninstalling Figma from the workspace.
+  - Removed `start-figma-mcp.bat` batch script.
+  - Removed `mcp_config.json` configuration file.
+
 ## [V1.8.10] - 2026-06-01
+
 
 ### Added
 

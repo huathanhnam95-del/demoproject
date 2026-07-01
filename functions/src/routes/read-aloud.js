@@ -1,5 +1,6 @@
 const express = require('express');
 const multer = require('multer');
+const Busboy = require('busboy');
 const { randomUUID } = require('crypto');
 const fs = require('fs');
 const path = require('path');
@@ -26,14 +27,135 @@ const CONNECTED_SPEECH_INDEX_PATH = fs.existsSync(path.join(__dirname, '..', 'da
 let connectedSpeechIndexCache = null;
 let connectedSpeechIndexPromise = null;
 const READ_ALOUD_MAX_ASSESSMENT_DURATION_MS = 45000;
+const READ_ALOUD_UPLOAD_LIMIT_BYTES = 20 * 1024 * 1024;
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 20 * 1024 * 1024 } // 20MB limit for longer audio
+  limits: { fileSize: READ_ALOUD_UPLOAD_LIMIT_BYTES } // 20MB limit for longer audio
 });
 const ALIGNMENT_MODES = new Set(['heuristic', 'shadow_mfa', 'mfa_primary']);
 
 function safeJsonParse(value) {
   try { return JSON.parse(value); } catch (_) { return null; }
+}
+
+function isMultipartRequest(req) {
+  return String(req.headers?.['content-type'] || '').toLowerCase().startsWith('multipart/form-data');
+}
+
+function appendMultipartField(body, fieldName, value) {
+  if (Object.prototype.hasOwnProperty.call(body, fieldName)) {
+    const existing = body[fieldName];
+    body[fieldName] = Array.isArray(existing) ? existing.concat(value) : [existing, value];
+    return;
+  }
+  body[fieldName] = value;
+}
+
+function parseRawMultipartRequest(req) {
+  console.log('[ReadAloud] parseRawMultipartRequest - rawBody length:', req.rawBody ? req.rawBody.length : 'undefined', 'content-type:', req.headers?.['content-type']);
+  return new Promise((resolve, reject) => {
+    const body = {};
+    let audioFile = null;
+    let audioFileTooLarge = false;
+    let settled = false;
+
+    function fail(error) {
+      if (settled) return;
+      settled = true;
+      reject(error);
+    }
+
+    let busboy;
+    try {
+      busboy = Busboy({
+        headers: req.headers,
+        limits: {
+          fileSize: READ_ALOUD_UPLOAD_LIMIT_BYTES,
+          files: 1
+        }
+      });
+    } catch (error) {
+      fail(error);
+      return;
+    }
+
+    busboy.on('field', (fieldName, value) => {
+      appendMultipartField(body, fieldName, value);
+    });
+
+    busboy.on('file', (fieldName, stream, info = {}) => {
+      if (fieldName !== 'audio' || audioFile) {
+        stream.resume();
+        return;
+      }
+
+      const chunks = [];
+      let size = 0;
+      stream.on('data', (chunk) => {
+        const buffer = Buffer.from(chunk);
+        size += buffer.length;
+        chunks.push(buffer);
+      });
+      stream.on('limit', () => {
+        audioFileTooLarge = true;
+      });
+      stream.on('error', fail);
+      stream.on('end', () => {
+        if (audioFileTooLarge) return;
+        audioFile = {
+          fieldname: fieldName,
+          originalname: info.filename || '',
+          encoding: info.encoding || '7bit',
+          mimetype: info.mimeType || 'application/octet-stream',
+          buffer: Buffer.concat(chunks),
+          size
+        };
+      });
+    });
+
+    busboy.on('error', fail);
+    busboy.on('finish', () => {
+      if (settled) return;
+      if (audioFileTooLarge) {
+        const error = new Error('Uploaded file exceeds the allowed size.');
+        error.code = 'LIMIT_FILE_SIZE';
+        fail(error);
+        return;
+      }
+      settled = true;
+      req.body = body;
+      if (audioFile) req.file = audioFile;
+      resolve();
+    });
+
+    busboy.end(req.rawBody || Buffer.alloc(0));
+  });
+}
+
+function handleUploadParseError(res, error) {
+  if (error?.code === 'LIMIT_FILE_SIZE') {
+    return sendError(res, 413, 'PAYLOAD_TOO_LARGE', 'Uploaded file exceeds the allowed size.');
+  }
+  return sendError(res, 400, 'INVALID_REQUEST', 'Multipart request could not be processed.', {
+    reason: error?.message || 'parse_failed'
+  });
+}
+
+function parseReadAloudUpload(req, res, next) {
+  if (isMultipartRequest(req) && Buffer.isBuffer(req.rawBody)) {
+    parseRawMultipartRequest(req)
+      .then(() => next())
+      .catch((error) => handleUploadParseError(res, error));
+    return;
+  }
+
+  upload.single('audio')(req, res, (error) => {
+    if (error) {
+      handleUploadParseError(res, error);
+      return;
+    }
+    next();
+  });
 }
 
 function parseMockAzurePayload() {
@@ -513,7 +635,7 @@ function hasOnlyZeroAzurePronunciationScores(nbest) {
   return scores.length > 0 && scores.every((score) => score === 0);
 }
 
-router.post('/read-aloud/assess', upload.single('audio'), async (req, res) => {
+router.post('/read-aloud/assess', parseReadAloudUpload, async (req, res) => {
   try {
     if (!req.file || !Buffer.isBuffer(req.file.buffer)) {
       return sendError(res, 400, 'INVALID_INPUT', 'Missing audio file.');

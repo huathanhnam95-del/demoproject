@@ -33,6 +33,37 @@ async function stopServer(server) {
   });
 }
 
+function captureRawBodyForMultipart(req, _res, next) {
+  const contentType = String(req.headers['content-type'] || '').toLowerCase();
+  if (!contentType.startsWith('multipart/form-data')) {
+    next();
+    return;
+  }
+
+  const chunks = [];
+  req.on('data', (chunk) => {
+    chunks.push(Buffer.from(chunk));
+  });
+  req.on('end', () => {
+    req.rawBody = Buffer.concat(chunks);
+    next();
+  });
+  req.on('error', next);
+}
+
+function createFirebaseRawBodyApp(readAloudRoutes) {
+  const app = express();
+  app.use('/api', captureRawBodyForMultipart, readAloudRoutes);
+  app.use((error, _req, res, _next) => {
+    res.status(500).json({
+      success: false,
+      error: error?.code || 'UNHANDLED_ERROR',
+      message: error?.message || 'Unhandled error.'
+    });
+  });
+  return app;
+}
+
 function createMonoPcmWavBuffer({ sampleRate = 16000, durationMs = 200, amplitude = 1000 } = {}) {
   const sampleCount = Math.max(1, Math.round(sampleRate * (durationMs / 1000)));
   const dataLength = sampleCount * 2;
@@ -137,6 +168,7 @@ async function postAssessment(baseUrl, { audioBuffer, referenceText, questionId,
   });
 
   const { server, baseUrl } = await startServer(app);
+  const { server: rawBodyServer, baseUrl: rawBodyBaseUrl } = await startServer(createFirebaseRawBodyApp(readAloudRoutes));
 
   try {
     global.fetch = async (...args) => {
@@ -276,6 +308,15 @@ async function postAssessment(baseUrl, { audioBuffer, referenceText, questionId,
     assert.strictEqual(persistedAttempts[0].audioStatus, 'complete', 'persistence should store audio status');
     assert.strictEqual(persistedAttempts[0].workerStatus, 'not_applicable', 'persistence should store worker status');
     assert.deepStrictEqual(persistedAttempts[0].eventFamilyCounts, {}, 'persistence should store empty family counts when no connected speech is applicable');
+
+    result = await postAssessment(rawBodyBaseUrl, {
+      audioBuffer: createMonoPcmWavBuffer({ durationMs: 240 }),
+      referenceText: 'Pick it up now',
+      questionId: '1'
+    });
+    assert.strictEqual(result.response.status, 200, 'Firebase rawBody multipart uploads should parse and reach assessment logic');
+    assert.strictEqual(result.payload.success, true);
+    assert.strictEqual(result.payload.accuracyScore, 92);
 
     process.env.READ_ALOUD_AZURE_MOCK_RESPONSE = JSON.stringify({
       RecognitionStatus: 'Success',
@@ -572,6 +613,7 @@ async function postAssessment(baseUrl, { audioBuffer, referenceText, questionId,
     connectedSpeechStorage.uploadConnectedSpeechAudio = originalUpload;
     connectedSpeechStorage.persistConnectedSpeechAttempt = originalPersist;
     global.fetch = originalFetch;
+    await stopServer(rawBodyServer);
     await stopServer(server);
   }
 

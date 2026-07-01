@@ -47,4 +47,18 @@ assert.ok(
   'firestore.indexes.json should define the PTE attempt review index for practiceScope/crmStudentId/submittedAt'
 );
 
+const pteLearnerHistoryIndex = (indexes.indexes || []).find((index) =>
+  index.collectionGroup === 'speakingAttempts'
+  && Array.isArray(index.fields)
+  && index.fields.some((field) => field.fieldPath === 'ownerUid')
+  && index.fields.some((field) => field.fieldPath === 'status')
+  && index.fields.some((field) => field.fieldPath === 'practiceScope')
+  && index.fields.some((field) => field.fieldPath === 'createdAt' && field.order === 'DESCENDING')
+);
+
+assert.ok(
+  pteLearnerHistoryIndex,
+  'firestore.indexes.json should define the learner PTE history index for ownerUid/status/practiceScope/createdAt'
+);
+
 console.log('Phase 3 Firestore indexes test passed.');

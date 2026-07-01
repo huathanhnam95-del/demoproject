@@ -900,7 +900,17 @@ function summarizeAttemptForList(doc, data, signedUrl, mediaUrls = {}) {
             ...slot,
             url: mediaUrls[slot.slotFile] || null
         })),
-        score: data.resultSnapshot?.score ?? data.score ?? null
+        score: data.resultSnapshot?.score ?? data.score ?? null,
+        promptId: data.promptSnapshot?.promptId || data.promptSnapshot?.id || null,
+        responseSummary: data.responseSnapshot?.text 
+            || data.responseSnapshot?.userAnswer 
+            || (Array.isArray(data.responseSnapshot?.selectedOptions) 
+                ? data.responseSnapshot.selectedOptions.map(o => o.text || o).join(', ') 
+                : null) 
+            || (Array.isArray(data.responseSnapshot?.order) 
+                ? data.responseSnapshot.order.join(' → ') 
+                : null)
+            || null
     };
 }
 

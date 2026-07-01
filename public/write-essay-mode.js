@@ -78,6 +78,9 @@
         if (el.stepResults) el.stepResults.style.display = 'none';
         if (el.essayInput) { el.essayInput.value = ''; el.essayInput.readOnly = false; }
         if (el.startBtn) el.startBtn.style.display = '';
+        const toggleBtn = document.getElementById('essay-history-toggle');
+        if (toggleBtn) toggleBtn.style.display = '';
+
         if (el.questionSelect) el.questionSelect.disabled = false;
         if (el.backBtn) el.backBtn.disabled = false;
         if (el.nextBtn) el.nextBtn.disabled = false;
@@ -233,6 +236,10 @@
         if (updateRoute && window.PracticeRouter && currentEntry.id) {
             window.PracticeRouter.replaceRoute('essay', currentEntry.id);
         }
+
+        if (window.PTEAttemptArchive && typeof window.PTEAttemptArchive.updateHistoryUI === 'function') {
+            window.PTEAttemptArchive.updateHistoryUI('essay', currentEntry?.id);
+        }
     }
 
     function getCurrentRouteQuestionId() {
@@ -280,6 +287,11 @@
 
         // Lock UI
         if (el.startBtn) el.startBtn.style.display = 'none';
+        const toggleBtn = document.getElementById('essay-history-toggle');
+        const historyContainer = document.getElementById('essay-history-container');
+        if (toggleBtn) toggleBtn.style.display = 'none';
+        if (historyContainer) historyContainer.style.display = 'none';
+
         if (el.questionSelect) el.questionSelect.disabled = true;
         if (el.backBtn) el.backBtn.disabled = true;
         if (el.nextBtn) el.nextBtn.disabled = true;

@@ -921,6 +921,16 @@
     const scores = result.scores || result.breakdown || null;
     if (isPlainObject(scores)) {
       const rows = [];
+      if (result.wordCount !== undefined) {
+        rows.push(`
+          <div class="pte-attempt-review-score-row">
+            <div class="pte-attempt-review-score-meta">
+              <span>Word Count</span>
+              <span class="pte-attempt-review-score-badge">${result.wordCount} words</span>
+            </div>
+          </div>
+        `);
+      }
       for (const [key, val] of Object.entries(scores)) {
         if (isPlainObject(val)) {
           const scoreVal = val.score !== undefined ? val.score : null;
@@ -946,6 +956,60 @@
             </div>
           `);
         }
+      }
+      if (rows.length) {
+        breakdownHtml = `
+          <div class="pte-attempt-review-scores-grid">
+            ${rows.join('')}
+          </div>
+        `;
+      }
+    }
+
+    // Fallback: Client-side basic feedback breakdown
+    if (!overallScoreHtml && !breakdownHtml && (result.wordCount !== undefined || result.form !== undefined)) {
+      const rows = [];
+      if (result.wordCount !== undefined) {
+        rows.push(`
+          <div class="pte-attempt-review-score-row">
+            <div class="pte-attempt-review-score-meta">
+              <span>Word Count</span>
+              <span class="pte-attempt-review-score-badge">${result.wordCount} words</span>
+            </div>
+          </div>
+        `);
+      }
+      if (result.form !== undefined && isPlainObject(result.form)) {
+        const formScore = result.form.score !== undefined ? result.form.score : null;
+        const formMax = result.form.max !== undefined ? result.form.max : 2;
+        const formDetail = result.form.detail || result.form.rationale || '';
+        rows.push(`
+          <div class="pte-attempt-review-score-row">
+            <div class="pte-attempt-review-score-meta">
+              <span>Form</span>
+              ${formScore !== null ? `<span class="pte-attempt-review-score-badge">${formScore}/${formMax}</span>` : ''}
+            </div>
+            ${formDetail ? `<div class="pte-attempt-review-score-rationale">${escapeHtml(formDetail)}</div>` : ''}
+          </div>
+        `);
+      }
+      if (result.languageTool !== undefined && isPlainObject(result.languageTool)) {
+        let ltText = '';
+        if (result.languageTool.unavailable) {
+          ltText = 'Check unavailable';
+        } else if (result.languageTool.matchCount !== undefined) {
+          ltText = `${result.languageTool.matchCount} issue${result.languageTool.matchCount === 1 ? '' : 's'} found`;
+        } else {
+          ltText = 'Spelling/grammar check complete';
+        }
+        rows.push(`
+          <div class="pte-attempt-review-score-row">
+            <div class="pte-attempt-review-score-meta">
+              <span>Spelling & Grammar</span>
+              <span class="pte-attempt-review-score-badge">${escapeHtml(ltText)}</span>
+            </div>
+          </div>
+        `);
       }
       if (rows.length) {
         breakdownHtml = `

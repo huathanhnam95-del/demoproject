@@ -216,13 +216,42 @@
         if (el.totalQuestions) el.totalQuestions.textContent = filteredEntries.length;
     }
 
-    function onQuestionSelectChange() {
-        const i = parseInt(el.questionSelect.value, 10);
-        if (!isNaN(i)) selectEntry(i);
+    function shouldConfirmExit() {
+        return Boolean(el.stepWrite && getComputedStyle(el.stepWrite).display !== 'none');
     }
 
-    function goToPrevious() { if (currentEntryIndex > 0) selectEntry(currentEntryIndex - 1); }
-    function goToNext() { if (currentEntryIndex < filteredEntries.length - 1) selectEntry(currentEntryIndex + 1); }
+    function onQuestionSelectChange() {
+        const i = parseInt(el.questionSelect.value, 10);
+        if (isNaN(i)) return;
+
+        if (shouldConfirmExit()) {
+            const confirmLeave = window.confirm("Are you sure you want to navigate to another question? Your current essay draft and progress will be lost.");
+            if (!confirmLeave) {
+                if (el.questionSelect) el.questionSelect.value = currentEntryIndex;
+                return;
+            }
+        }
+        selectEntry(i);
+    }
+
+    function goToPrevious() {
+        if (currentEntryIndex <= 0) return;
+        if (shouldConfirmExit()) {
+            const confirmLeave = window.confirm("Are you sure you want to navigate to another question? Your current essay draft and progress will be lost.");
+            if (!confirmLeave) return;
+        }
+        selectEntry(currentEntryIndex - 1);
+    }
+
+    function goToNext() {
+        if (currentEntryIndex >= filteredEntries.length - 1) return;
+        if (shouldConfirmExit()) {
+            const confirmLeave = window.confirm("Are you sure you want to navigate to another question? Your current essay draft and progress will be lost.");
+            if (!confirmLeave) return;
+        }
+        selectEntry(currentEntryIndex + 1);
+    }
+
 
     function selectEntry(index, { updateRoute = true } = {}) {
         if (index < 0 || index >= filteredEntries.length) return;
@@ -292,9 +321,8 @@
         if (toggleBtn) toggleBtn.style.display = 'none';
         if (historyContainer) historyContainer.style.display = 'none';
 
-        if (el.questionSelect) el.questionSelect.disabled = true;
-        if (el.backBtn) el.backBtn.disabled = true;
-        if (el.nextBtn) el.nextBtn.disabled = true;
+        // Navigation buttons are not disabled; navigation is instead gated by a confirmation dialog in event handlers.
+
 
         // Show prompt
         if (el.promptDisplay) {
@@ -1414,7 +1442,8 @@
         init: init,
         reset: reset,
         loadEntries: loadEntries,
-        updateAiScoreButtonState: updateAiScoreButtonState
+        updateAiScoreButtonState: updateAiScoreButtonState,
+        shouldConfirmExit: shouldConfirmExit
     };
 
     // Deep-link support: listen for PracticeRouter question navigation events

@@ -149,8 +149,12 @@ async function waitForLayout(page, timeout = 15000) {
                         responseSnapshot: {
                             text: isSwt ? 'Mocked swt response' : 'Mocked essay response'
                         },
-                        resultSnapshot: {
-                            overall: { total: isSwt ? 1 : 78, maxTotal: isSwt ? 1 : 90, percent: 86 }
+                        resultSnapshot: isSwt ? {
+                            overall: { total: 1, maxTotal: 1, percent: 100 }
+                        } : {
+                            wordCount: 220,
+                            form: { score: 2, max: 2, rationale: 'Form is perfect.' },
+                            languageTool: { matchCount: 3 }
                         }
                     }
                 })
@@ -290,7 +294,13 @@ async function waitForLayout(page, timeout = 15000) {
         // Assert review modal body has the user answer
         await page.waitForFunction(() => {
             const body = document.querySelector('.pte-attempt-review-body');
-            return body && body.textContent.includes('Mocked essay response');
+            return body && body.textContent.includes('Mocked essay response')
+                && body.textContent.includes('220 words')
+                && body.textContent.includes('Form')
+                && body.textContent.includes('2/2')
+                && body.textContent.includes('Form is perfect.')
+                && body.textContent.includes('Spelling & Grammar')
+                && body.textContent.includes('3 issues found');
         }, { timeout: 5000 });
         
         // Close modal

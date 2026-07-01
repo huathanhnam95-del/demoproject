@@ -1716,6 +1716,44 @@
   }
 
   window.exitCurrentMode = function() {
+    const leavingMode = currentActiveMode;
+    if (leavingMode === 'essay') {
+      if (window.WriteEssayMode?.shouldConfirmExit?.() && !window.confirm('Leaving Write Essay will discard your current draft. Continue?')) {
+        return;
+      }
+    }
+    if (leavingMode === 'swt') {
+      if (window.SWTMode?.shouldConfirmExit?.() && !window.confirm('Leaving Summarize Written Text will discard your current draft. Continue?')) {
+        return;
+      }
+      window.SWTMode?.onExit?.();
+    }
+    if (leavingMode === 'sst') {
+      if (window.SSTMode?.shouldConfirmExit?.() && !window.confirm('Leaving Summarize Spoken Text will discard your current attempt. Continue?')) {
+        return;
+      }
+      window.SSTMode?.onExit?.();
+    }
+    if (leavingMode === 'dd') {
+      if (window.DDMode?.shouldConfirmExit?.() && !window.confirm('Leaving Drag & Drop will discard your current attempt. Continue?')) {
+        return;
+      }
+      window.DDMode?.onExit?.();
+    }
+    if (leavingMode === 'collo-dictate') window.ColloDictateMode?.onExit?.();
+    if (leavingMode === 'asq') window.ASQMode?.onExit?.();
+    if (leavingMode === 'sgd') window.SGDMode?.onExit?.();
+    if (leavingMode === 'describe-image') window.DescribeImageMode?.onExit?.();
+    if (leavingMode === 'rts') window.RTSMode?.onExit?.();
+    if (leavingMode === 'rmcsa') window.RMCSAMode?.onExit?.();
+    if (leavingMode === 'rmcma') window.RMCMAMode?.onExit?.();
+    if (leavingMode === 'lmcma') window.LMCMAMode?.onExit?.();
+    if (leavingMode === 'lmcsa') window.LMCSAMode?.onExit?.();
+    if (leavingMode === 'hcs') window.HCSMode?.onExit?.();
+    if (leavingMode === 'smw') window.SMWMode?.onExit?.();
+    if (leavingMode === 'hiw') window.HIWMode?.onExit?.();
+    if (leavingMode === 'rop') window.ROPMode?.onExit?.();
+
     // Hide all mode panels
     document.querySelectorAll('.mode-panel').forEach(panel => {
       panel.classList.remove('active');
@@ -1757,6 +1795,11 @@
     if (!mode) return;
 
     const leavingMode = currentActiveMode;
+    if (leavingMode === 'essay' && mode !== 'essay') {
+      if (window.WriteEssayMode?.shouldConfirmExit?.() && !window.confirm('Leaving Write Essay will discard your current draft. Continue?')) {
+        return;
+      }
+    }
     if (leavingMode === 'collo-dictate' && mode !== 'collo-dictate') {
       window.ColloDictateMode?.onExit?.();
     }

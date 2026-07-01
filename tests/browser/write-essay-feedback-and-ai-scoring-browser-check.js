@@ -154,6 +154,83 @@ const path = require('path');
       return area && getComputedStyle(area).display !== 'none';
     }, { timeout: 10000 });
 
+    // Test Navigation Confirmation: Cancel Case (Next button)
+    let dialogDismissed = false;
+    page.once('dialog', async dialog => {
+      console.log(`[TEST] Intercepted dialog: ${dialog.message()}`);
+      assert.ok(dialog.message().includes('navigate to another question'), 'Dialog message should match');
+      await dialog.dismiss(); // Cancel
+      dialogDismissed = true;
+    });
+    await page.evaluate(() => {
+      const nextBtn = document.getElementById('next-btn-essay');
+      if (nextBtn) nextBtn.click();
+    });
+    let currentQIdx = await page.evaluate(() => {
+      return document.getElementById('question-select-essay').value;
+    });
+    assert.strictEqual(currentQIdx, '0', 'Question should not have changed after cancel');
+    assert.strictEqual(dialogDismissed, true, 'Cancel dialog should have been triggered');
+
+    // Test Navigation Confirmation: Dropdown Cancel Case (Dropdown change)
+    let dropdownDismissed = false;
+    page.once('dialog', async dialog => {
+      console.log(`[TEST] Intercepted dropdown dialog: ${dialog.message()}`);
+      await dialog.dismiss(); // Cancel
+      dropdownDismissed = true;
+    });
+    await page.evaluate(() => {
+      const select = document.getElementById('question-select-essay');
+      if (select) {
+        select.value = '1';
+        select.dispatchEvent(new Event('change'));
+      }
+    });
+    currentQIdx = await page.evaluate(() => {
+      return document.getElementById('question-select-essay').value;
+    });
+    assert.strictEqual(currentQIdx, '0', 'Question select should have reverted to index 0 after cancel');
+    assert.strictEqual(dropdownDismissed, true, 'Dropdown cancel dialog should have been triggered');
+
+    // Test Navigation Confirmation: Confirm Case (Next button)
+    let dialogAccepted = false;
+    page.once('dialog', async dialog => {
+      console.log(`[TEST] Intercepted dialog: ${dialog.message()}`);
+      await dialog.accept(); // OK
+      dialogAccepted = true;
+    });
+    await page.evaluate(() => {
+      const nextBtn = document.getElementById('next-btn-essay');
+      if (nextBtn) nextBtn.click();
+    });
+    let newQIdx = await page.evaluate(() => {
+      return document.getElementById('question-select-essay').value;
+    });
+    assert.strictEqual(newQIdx, '1', 'Question should have changed to index 1 after confirmation');
+    assert.strictEqual(dialogAccepted, true, 'Confirm dialog should have been accepted');
+    let isPracticeHidden = await page.evaluate(() => {
+      const area = document.getElementById('essay-practice-area');
+      return !area || getComputedStyle(area).display === 'none';
+    });
+    assert.strictEqual(isPracticeHidden, true, 'Practice session should be reset after navigation');
+
+    // Reset back to question 0 and start again for the rest of the feedback test
+    await page.evaluate(() => {
+      const select = document.getElementById('question-select-essay');
+      if (select) {
+          select.value = '0';
+          select.dispatchEvent(new Event('change'));
+      }
+    });
+    await page.evaluate(() => {
+        const startBtn = document.getElementById('start-essay-btn');
+        if (startBtn) startBtn.click();
+    });
+    await page.waitForFunction(() => {
+      const area = document.getElementById('essay-practice-area');
+      return area && getComputedStyle(area).display !== 'none';
+    }, { timeout: 10000 });
+
     // 3. Type and Submit as Guest
     const essayText = 'This is a test essay about the impact of technology on society. It has several sentences to meet the minimum length requirement for basic feedback.';
     // Use evaluate to set the value directly (bypasses visibility issues)

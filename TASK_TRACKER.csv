@@ -356,4 +356,8 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 363,2026-06-26,Scan pip cache folder,Done,2026-06-26
 364,2026-07-01,Investigate Read Aloud assessment error,Done,2026-07-01
 365,2026-07-01,Add previous attempts history toggle UI and details review modal for PTE Practice modes,Done,2026-07-01
+366,2026-07-01,Add confirmation prompt before navigating away from active Write Essay practice,Done,2026-07-01
+367,2026-07-01,Fix attempts detail modal to render basic feedback metrics when AI scores are missing,Done,2026-07-01
+
+
 

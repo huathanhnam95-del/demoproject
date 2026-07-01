@@ -355,3 +355,5 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 362,2026-06-26,Scan installed apps over 1GB,Done,2026-06-26
 363,2026-06-26,Scan pip cache folder,Done,2026-06-26
 364,2026-07-01,Investigate Read Aloud assessment error,Done,2026-07-01
+365,2026-07-01,Add previous attempts history toggle UI and details review modal for PTE Practice modes,Done,2026-07-01
+

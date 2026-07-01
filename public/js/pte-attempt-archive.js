@@ -23,7 +23,10 @@
 
   function getCurrentUser() {
     try {
-      return window.firebase?.auth?.().currentUser || null;
+      return window.__FIREBASE_INTERNAL__?.auth?.currentUser 
+        || window.auth?.currentUser 
+        || window.firebase?.auth?.().currentUser 
+        || null;
     } catch (_) {
       return null;
     }
@@ -1245,6 +1248,28 @@
   // Clear cache on auth change
   window.addEventListener('auth-state-changed', () => {
     cachedAttempts = null;
+    // Find active history containers and refresh them if they are visible
+    ['essay', 'swt'].forEach(mode => {
+      const historyContainer = document.getElementById(`${mode}-history-container`);
+      if (historyContainer && historyContainer.style.display !== 'none') {
+        // Find questionId from DOM
+        let questionId = null;
+        if (mode === 'essay') {
+          const elId = document.getElementById('current-question-id-essay');
+          questionId = elId ? elId.textContent : null;
+        } else if (mode === 'swt') {
+          // For SWT, let's get the active question ID
+          const pill = document.getElementById('swt-v7-question-pill');
+          if (pill && pill.textContent) {
+            const match = pill.textContent.match(/^#(\S+)/);
+            questionId = match ? match[1] : null;
+          }
+        }
+        if (questionId) {
+          refreshHistoryList(mode, questionId, historyContainer);
+        }
+      }
+    });
   });
 
   window.PTEAttemptArchive = {

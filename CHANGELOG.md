@@ -1,3 +1,12 @@
+## [V1.8.14] - 2026-07-01
+
+### Fixed
+
+- **Attempts Detail Modal basic feedback**:
+  - Fixed details modal popup to display Word Count, Form score, and Spelling & Grammar check issue counts when AI scores are missing.
+- **Write Essay exit confirmation**:
+  - Integrated draft loss navigation warnings when leaving or switching questions in Write Essay, Summarize Written Text, and other active session areas.
+
 ## [V1.8.13] - 2026-07-01
 
 ### Added

@@ -1,0 +1,69 @@
+{
+  "2": {
+    "suppressBaselineEventIds": [
+      "q-2-catenation-2-3"
+    ],
+    "blockedBoundaries": [
+      {
+        "leftWordIndex": 2,
+        "rightWordIndex": 3
+      }
+    ],
+    "familyThresholds": {
+      "yod_coalescence": {
+        "detectedThresholdMs": 220,
+        "uncertainThresholdMs": 300
+      },
+      "weak_form_reduction": {
+        "detectedThresholdMs": 120,
+        "uncertainThresholdMs": 220
+      }
+    ],
+    "extraEvents": [
+      {
+        "eventId": "q-2-yod_coalescence-0-1",
+        "family": "yod_coalescence",
+        "phrase": "Did you",
+        "leftWord": "did",
+        "rightWord": "you",
+        "startWordIndex": 0,
+        "endWordIndex": 1,
+        "allowedVariants": [
+          "canonical",
+          "coalesced"
+        ],
+        "detectorConfig": {
+          "phraseType": "fixed_template"
+        },
+        "feedbackTemplates": {
+          "detected": "Good smoothing in \"did you\".",
+          "not_detected": "Try smoothing \"did you\" more.",
+          "uncertain": "We could not judge \"did you\" reliably."
+        }
+      }
+    ],
+    "feedbackTemplatesByEventId": {
+      "q-2-yod_coalescence-0-1": {
+        "detected": "Good smoothing in \"did you\".",
+        "not_detected": "Try smoothing \"did you\" more.",
+        "uncertain": "We could not judge \"did you\" reliably."
+      }
+    }
+  },
+  "4": {
+    "familyThresholds": {
+      "catenation": {
+        "detectedThresholdMs": 120,
+        "uncertainThresholdMs": 210
+      }
+    }
+  },
+  "5": {
+    "familyThresholds": {
+      "weak_form_reduction": {
+        "detectedThresholdMs": 130,
+        "uncertainThresholdMs": 230
+      }
+    }
+  }
+}

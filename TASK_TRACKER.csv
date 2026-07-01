@@ -332,5 +332,26 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 339,2026-06-09,Change 8.0 IELTS to 8.5 IELTS in Downloaded PDF,Done,2026-06-09
 340,2026-06-26,Explain git lfs folder,Done,2026-06-26
 341,2026-06-26,Explain git objects folder,Done,2026-06-26
-342,2026-06-26,Optimize and clean up Git LFS and objects,In Progress,
+342,2026-06-26,Optimize and clean up Git LFS and objects,Done,2026-06-26
 343,2026-06-26,Clean up and uninstall Figma,Done,2026-06-26
+344,2026-06-26,Explain Windows Software Development Kit,Done,2026-06-26
+345,2026-06-26,Check if NIKKE and Guild Wars 2 are installed,Done,2026-06-26
+346,2026-06-26,Explain Visual Studio Build Tools 2022,Done,2026-06-26
+347,2026-06-26,Explain Android Studio and Chrome AppData Local Folders,Done,2026-06-26
+348,2026-06-26,Analyze AppData Local Microsoft folder,Done,2026-06-26
+349,2026-06-26,Analyze npm-cache folder,Done,2026-06-26
+350,2026-06-26,Explain AppData Local Temp folder,Done,2026-06-26
+351,2026-06-26,Explain Microsoft and npm-cache AppData folders,Done,2026-06-26
+352,2026-06-26,Explain uv AppData Local folder,Done,2026-06-26
+353,2026-06-26,Run uv cache clean command,Done,2026-06-26
+354,2026-06-26,Explain User .cache folder,Done,2026-06-26
+355,2026-06-26,Explain User .git and .gradle folders,Done,2026-06-26
+356,2026-06-26,Scan home directory for removable folders,Done,2026-06-26
+357,2026-06-26,Scan AppData Roaming folder for removable folders,Done,2026-06-26
+358,2026-06-26,Scan global npm folder,Done,2026-06-26
+359,2026-06-26,Run npm cache clean force command,Done,2026-06-26
+360,2026-06-26,Uninstall global gemini-cli,Done,2026-06-26
+361,2026-06-26,Uninstall global perplexity-ask server,Done,2026-06-26
+362,2026-06-26,Scan installed apps over 1GB,Done,2026-06-26
+363,2026-06-26,Scan pip cache folder,Done,2026-06-26
+364,2026-07-01,Investigate Read Aloud assessment error,Done,2026-07-01

@@ -14,6 +14,8 @@ const createTeacherSchedulerRouter = require('./routes/teacher/scheduler');
 const entranceTestRoutes = require('./routes/entrance-tests');
 const createPracticeAttemptsRouter = require('./routes/practice-attempts');
 const createSharedPracticeAttemptsRouter = require('./routes/shared-practice-attempts');
+const readAloudRoutes = require('./routes/read-aloud');
+const pronunciationTestRoutes = require('./routes/pronunciation-test');
 const {
     practiceAttemptsLimiterByUid,
     sharedPracticeAttemptsLimiter
@@ -309,6 +311,8 @@ app.use('/api/teacher', teacherSchedulerRouter);
 app.use('/api/entrance-tests', entranceTestRoutes);
 app.use('/api/practice-attempts', authMiddleware, practiceAttemptsLimiterByUid, practiceAttemptsRouter);
 app.use('/api/shared/practice-attempts', sharedPracticeAttemptsLimiter, sharedPracticeAttemptsRouter);
+app.use('/api', readAloudRoutes);
+app.use('/api', pronunciationTestRoutes);
 
 app.get(['/config', '/api/config'], (req, res) => {
     return res.json({

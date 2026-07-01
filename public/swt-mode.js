@@ -167,6 +167,10 @@
     renderPicker();
     renderSource();
     closePicker();
+
+    if (window.PTEAttemptArchive && typeof window.PTEAttemptArchive.updateHistoryUI === 'function') {
+      window.PTEAttemptArchive.updateHistoryUI('swt', questions[index]?.id);
+    }
   }
 
   function setNavigationLocked(locked) {
@@ -310,6 +314,11 @@
     lastSubmittedQuestion = null;
     hasAiScoreResult = false;
     if (d.startBtn) d.startBtn.style.display = 'none';
+    const toggleBtn = document.getElementById('swt-history-toggle');
+    const historyContainer = document.getElementById('swt-history-container');
+    if (toggleBtn) toggleBtn.style.display = 'none';
+    if (historyContainer) historyContainer.style.display = 'none';
+
     if (d.practiceArea) d.practiceArea.style.display = 'block';
     if (d.stepWrite) d.stepWrite.style.display = 'block';
     if (d.stepResults) d.stepResults.style.display = 'none';
@@ -735,6 +744,9 @@
     hasAiScoreResult = false;
     if (d.stepResults) d.stepResults.style.display = 'none';
     if (d.startBtn) d.startBtn.style.display = 'inline-flex';
+    const toggleBtn = document.getElementById('swt-history-toggle');
+    if (toggleBtn) toggleBtn.style.display = '';
+
     if (d.practiceArea) d.practiceArea.style.display = 'none';
     if (d.submitBtn) d.submitBtn.disabled = false;
     if (d.textarea) {
@@ -853,6 +865,10 @@
     resetAttempt({ clearDraft: true });
     renderPicker();
     renderSource();
+
+    if (window.PTEAttemptArchive && typeof window.PTEAttemptArchive.updateHistoryUI === 'function') {
+      window.PTEAttemptArchive.updateHistoryUI('swt', questions[currentIndex]?.id);
+    }
   }
 
   function onExit() {

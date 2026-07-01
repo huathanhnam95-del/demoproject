@@ -23,7 +23,10 @@
 
   function getCurrentUser() {
     try {
-      return window.firebase?.auth?.().currentUser || null;
+      return window.__FIREBASE_INTERNAL__?.auth?.currentUser 
+        || window.auth?.currentUser 
+        || window.firebase?.auth?.().currentUser 
+        || null;
     } catch (_) {
       return null;
     }
@@ -749,6 +752,75 @@
         color: #64748b;
         font-weight: 500;
       }
+      .history-attempts-section {
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+        text-align: left;
+        width: 100%;
+        max-width: 900px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .history-attempts-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 12px;
+      }
+      .history-attempt-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 10px 12px;
+        background: rgba(255, 255, 255, 0.6);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        border-radius: 8px;
+        margin-bottom: 8px;
+        transition: background-color 0.2s;
+      }
+      .history-attempt-item:hover {
+        background: rgba(255, 255, 255, 0.9);
+      }
+      .history-attempt-meta {
+        font-size: 0.85rem;
+        color: #6b7280;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 130px;
+      }
+      .history-attempt-date {
+        font-weight: 550;
+        color: #374151;
+      }
+      .history-attempt-content {
+        flex: 1;
+        font-size: 0.85rem;
+        color: #4b5563;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .history-attempt-audio {
+        max-height: 28px;
+        width: 180px;
+      }
+      .history-details-btn {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #4f46e5;
+        background: rgba(99, 102, 241, 0.08);
+        border: none;
+        padding: 6px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .history-details-btn:hover {
+        background: rgba(99, 102, 241, 0.15);
+      }
     `;
     document.head.appendChild(style);
   }
@@ -1018,6 +1090,188 @@
     }
   });
 
+  let cachedAttempts = null;
+  let fetchingAttemptsPromise = null;
+
+  async function fetchUserAttemptsCached() {
+    const user = getCurrentUser();
+    if (!user) {
+      cachedAttempts = null;
+      return null;
+    }
+    if (fetchingAttemptsPromise) return fetchingAttemptsPromise;
+    fetchingAttemptsPromise = (async () => {
+      try {
+        const data = await listAttempts({ scope: 'mine', practiceScope: 'pte' });
+        cachedAttempts = Array.isArray(data?.attempts) ? data.attempts : [];
+        return cachedAttempts;
+      } catch (err) {
+        console.warn('[PTE Archive] Failed to load history attempts:', err);
+        return [];
+      } finally {
+        fetchingAttemptsPromise = null;
+      }
+    })();
+    return fetchingAttemptsPromise;
+  }
+
+  async function updateHistoryUI(mode, questionId) {
+    const panels = {
+      essay: { startBtnId: 'start-essay-btn', panelId: 'mode-essay', skill: 'writing' },
+      swt: { startBtnId: 'start-swt-btn', panelId: 'mode-swt', skill: 'writing' }
+    };
+    const config = panels[mode];
+    if (!config) return;
+
+    injectModalStyles();
+
+    const startBtn = document.getElementById(config.startBtnId);
+    if (!startBtn) return;
+
+    let toggleBtn = document.getElementById(`${mode}-history-toggle`);
+    let historyContainer = document.getElementById(`${mode}-history-container`);
+
+    if (!toggleBtn) {
+      toggleBtn = document.createElement('button');
+      toggleBtn.id = `${mode}-history-toggle`;
+      toggleBtn.type = 'button';
+      toggleBtn.className = 'modern-btn modern-btn--history';
+      toggleBtn.style.cssText = 'margin-left: 8px; vertical-align: middle;';
+      toggleBtn.textContent = '🕒 Previous Attempts';
+      startBtn.insertAdjacentElement('afterend', toggleBtn);
+
+      historyContainer = document.createElement('div');
+      historyContainer.id = `${mode}-history-container`;
+      historyContainer.className = 'history-attempts-section';
+      historyContainer.style.display = 'none';
+      
+      const parentControls = startBtn.closest('.controls') || startBtn.parentElement;
+      parentControls.insertAdjacentElement('afterend', historyContainer);
+
+      toggleBtn.addEventListener('click', async () => {
+        const isCollapsed = historyContainer.style.display === 'none';
+        if (isCollapsed) {
+          historyContainer.style.display = 'block';
+          await refreshHistoryList(mode, questionId, historyContainer);
+        } else {
+          historyContainer.style.display = 'none';
+        }
+      });
+    }
+
+    if (historyContainer.style.display !== 'none') {
+      await refreshHistoryList(mode, questionId, historyContainer);
+    }
+  }
+
+  async function refreshHistoryList(mode, questionId, historyContainer) {
+    if (!historyContainer) return;
+    historyContainer.innerHTML = '<div style="font-size:0.85rem;color:#6b7280;">Loading history attempts...</div>';
+
+    const user = getCurrentUser();
+    if (!user) {
+      historyContainer.innerHTML = '<div style="font-size:0.85rem;color:#ef4444;">Please log in to view previous attempts.</div>';
+      return;
+    }
+
+    const attempts = await fetchUserAttemptsCached();
+    if (!attempts || attempts.length === 0) {
+      historyContainer.innerHTML = '<div style="font-size:0.85rem;color:#6b7280;">No previous attempts.</div>';
+      return;
+    }
+
+    // Filter attempts by mode and prompt/question ID
+    const modeAliases = {
+      essay: ['essay', 'write_essay'],
+      swt: ['swt', 'summarize_written_text']
+    };
+    const validModes = modeAliases[mode] || [mode];
+
+    const filtered = attempts.filter(a => {
+      const isModeMatch = validModes.includes(a.practiceMode) || validModes.includes(a.canonicalMode);
+      const isQuestionMatch = String(a.promptId) === String(questionId);
+      return isModeMatch && isQuestionMatch;
+    });
+
+    if (filtered.length === 0) {
+      historyContainer.innerHTML = '<div style="font-size:0.85rem;color:#6b7280;">No previous attempts on this question.</div>';
+      return;
+    }
+
+    historyContainer.innerHTML = '';
+    const title = document.createElement('h5');
+    title.className = 'history-attempts-title';
+    title.textContent = 'Previous Attempts';
+    historyContainer.appendChild(title);
+
+    filtered.forEach(attempt => {
+      const item = document.createElement('div');
+      item.className = 'history-attempt-item';
+
+      const meta = document.createElement('div');
+      meta.className = 'history-attempt-meta';
+      const date = formatAttemptDate(attempt.submittedAt || attempt.createdAt);
+      meta.innerHTML = `<span class="history-attempt-date">${escapeHtml(date)}</span>`;
+      if (attempt.score !== null) {
+        meta.innerHTML += `<span style="font-weight:600;color:#4f46e5;">Score: ${attempt.score}</span>`;
+      }
+
+      const content = document.createElement('div');
+      content.className = 'history-attempt-content';
+
+      const isSpeaking = ['read_aloud', 'read-aloud', 'speak', 'describe_image', 'describe-image', 'notes', 'sgd', 'rts'].includes(attempt.practiceMode)
+        || ['read_aloud', 'repeat_sentence', 'describe_image', 'retell_lecture', 'summarize_group_discussion', 'respond_to_situation'].includes(attempt.canonicalMode);
+
+      if (isSpeaking && attempt.audio?.studentUrl) {
+        const audio = document.createElement('audio');
+        audio.src = attempt.audio.studentUrl;
+        audio.controls = true;
+        audio.className = 'history-attempt-audio';
+        content.appendChild(audio);
+      } else {
+        content.textContent = attempt.responseSummary || 'No text response available.';
+      }
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'history-details-btn';
+      btn.textContent = 'Click for details';
+      btn.addEventListener('click', () => {
+        window.dispatchEvent(new CustomEvent('pte-attempt-archive:open', { detail: { attemptId: attempt.attemptId } }));
+      });
+
+      item.append(meta, content, btn);
+      historyContainer.appendChild(item);
+    });
+  }
+
+  // Clear cache on auth change
+  window.addEventListener('auth-state-changed', () => {
+    cachedAttempts = null;
+    // Find active history containers and refresh them if they are visible
+    ['essay', 'swt'].forEach(mode => {
+      const historyContainer = document.getElementById(`${mode}-history-container`);
+      if (historyContainer && historyContainer.style.display !== 'none') {
+        // Find questionId from DOM
+        let questionId = null;
+        if (mode === 'essay') {
+          const elId = document.getElementById('current-question-id-essay');
+          questionId = elId ? elId.textContent : null;
+        } else if (mode === 'swt') {
+          // For SWT, let's get the active question ID
+          const pill = document.getElementById('swt-v7-question-pill');
+          if (pill && pill.textContent) {
+            const match = pill.textContent.match(/^#(\S+)/);
+            questionId = match ? match[1] : null;
+          }
+        }
+        if (questionId) {
+          refreshHistoryList(mode, questionId, historyContainer);
+        }
+      }
+    });
+  });
+
   window.PTEAttemptArchive = {
     isPteScope,
     prepareAttempt,
@@ -1033,7 +1287,9 @@
     saveChoiceAttempt: saveStateAttempt,
     saveTextAttempt,
     normalizeMediaInput,
-    isPlainObject
+    isPlainObject,
+    updateHistoryUI,
+    fetchUserAttemptsCached
   };
 
   installHistoryAutoRender();

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const fs = require('fs');
 const path = require('path');
 
@@ -26,9 +27,13 @@ console.log(`Syncing version V${version} (CRM Version: ${crmVersion}, Next Versi
 const indexHtmlPath = path.join(__dirname, '..', 'public', 'index.html');
 if (fs.existsSync(indexHtmlPath)) {
   let content = fs.readFileSync(indexHtmlPath, 'utf8');
-  const updated = content.replace(
+  let updated = content.replace(
     /(<div id="version-indicator" class="version-indicator">)V\d+\.\d+\.\d+(?:-[a-zA-Z0-9.]+)?(<\/div>)/,
     `$1V${version}$2`
+  );
+  updated = updated.replace(
+    /(<script\s+src="\/read-aloud-mode\.js\?v=)[^"]+("><\/script>)/,
+    `$1${version}$2`
   );
   fs.writeFileSync(indexHtmlPath, updated, 'utf8');
   console.log('Updated public/index.html version indicator.');

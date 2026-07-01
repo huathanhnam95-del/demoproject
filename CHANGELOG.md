@@ -1,3 +1,20 @@
+## [V1.8.13] - 2026-07-01
+
+### Added
+
+- **PTE Practice Attempts History Toggle & Details Review Modal**:
+  - Implemented collapsible attempts history panel under a toggle button for Write Essay and Summarize Written Text (SWT) modes.
+  - Centralized state management and rendering logic into `pte-attempt-archive.js` supporting dynamic updates across active question IDs.
+  - Implemented high-fidelity detailed attempts review modal displaying user response snapshots, prompt snapshots, overall scores, and rubric score breakdowns.
+  - Integrated automated E2E browser verification testing using Playwright.
+
+## [V1.8.12] - 2026-07-01
+
+### Added
+
+- **Production Speaking Assessment Integration**:
+  - Integrated and verified production speaking assessment routes for Read Aloud mode.
+
 ## [V1.8.11] - 2026-06-26
 
 ### Removed

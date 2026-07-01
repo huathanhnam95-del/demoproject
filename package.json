@@ -1,6 +1,6 @@
 {
   "name": "dictation-practice",
-  "version": "1.8.12",
+  "version": "1.8.13",
   "description": "Dictation practice app",
   "scripts": {
     "start": "node server.js",
@@ -63,6 +63,7 @@
     "@google/generative-ai": "^0.24.1",
     "@huggingface/inference": "^4.13.10",
     "axios": "^1.13.4",
+    "busboy": "^1.6.0",
     "chart.js": "^4.5.1",
     "cheerio": "^1.2.0",
     "compression": "^1.8.1",

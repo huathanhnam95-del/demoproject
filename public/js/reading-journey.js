@@ -337,8 +337,13 @@ import {
       document.getElementById('rj-dark-toggle').textContent = isDark ? '☀️' : '🌙';
     });
 
-    document.getElementById('rj-exit-btn')?.addEventListener('click', () => {
-      if (confirm('Exit Reading Journey? Progress will be lost.')) location.reload();
+    document.getElementById('rj-exit-btn')?.addEventListener('click', async () => {
+      const confirmed = await window.showCustomConfirm(
+        'Exit Reading Journey?',
+        'Exit Reading Journey? Progress will be lost.',
+        true
+      );
+      if (confirmed) location.reload();
     });
 
     document.getElementById('rj-suggest-btn')?.addEventListener('click', async () => {

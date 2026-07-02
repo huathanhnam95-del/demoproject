@@ -1,5 +1,52 @@
 (() => {
   const log = Logger.create('App');
+
+  window.showCustomConfirm = function(title, message, isDestructive = false) {
+    return new Promise((resolve) => {
+      const modalId = 'custom-confirm-modal';
+      let confirmModal = document.getElementById(modalId);
+      if (confirmModal) confirmModal.remove();
+
+      confirmModal = document.createElement('div');
+      confirmModal.id = modalId;
+      confirmModal.className = 'shop-modal active';
+      confirmModal.style.zIndex = '30000';
+
+      confirmModal.innerHTML = `
+        <div class="shop-modal-content" style="max-width: 420px; text-align: center; padding: 32px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.4); background: rgba(255,255,255,0.98); box-shadow: 0 20px 40px rgba(0,0,0,0.15);">
+          <div style="font-size: 2.5rem; margin-bottom: 16px;">⚠️</div>
+          <h3 style="margin-top: 0; color: #0f172a; font-family: 'Outfit', sans-serif; font-size: 1.4rem; font-weight: 600; margin-bottom: 12px;">${title}</h3>
+          <p style="color: #475569; font-family: 'Outfit', sans-serif; font-size: 0.95rem; margin-bottom: 24px; line-height: 1.5; padding: 0 10px;">${message}</p>
+          <div style="display: flex; gap: 12px; justify-content: center;">
+            <button id="${modalId}-cancel" style="flex: 1; padding: 12px 20px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; border-radius: 10px; cursor: pointer; font-family: 'Outfit', sans-serif; font-weight: 500; font-size: 0.95rem; transition: background 0.2s;">Cancel</button>
+            <button id="${modalId}-confirm" style="flex: 1; padding: 12px 20px; border: none; background: ${isDestructive ? '#ef4444' : '#3b82f6'}; color: #ffffff; border-radius: 10px; cursor: pointer; font-family: 'Outfit', sans-serif; font-weight: 500; font-size: 0.95rem; transition: background 0.2s;">Confirm</button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(confirmModal);
+
+      const confirmBtn = document.getElementById(`${modalId}-confirm`);
+      const cancelBtn = document.getElementById(`${modalId}-cancel`);
+
+      confirmBtn.onmouseenter = () => confirmBtn.style.background = isDestructive ? '#dc2626' : '#2563eb';
+      confirmBtn.onmouseleave = () => confirmBtn.style.background = isDestructive ? '#ef4444' : '#3b82f6';
+      cancelBtn.onmouseenter = () => cancelBtn.style.background = '#f1f5f9';
+      cancelBtn.onmouseleave = () => cancelBtn.style.background = '#ffffff';
+
+      function cleanup(result) {
+        confirmModal.remove();
+        resolve(result);
+      }
+
+      confirmBtn.onclick = () => cleanup(true);
+      cancelBtn.onclick = () => cleanup(false);
+      confirmModal.onclick = (e) => {
+        if (e.target === confirmModal) cleanup(false);
+      };
+    });
+  };
+
   // Database and question management
   let typeDatabase = [];
   let speakDatabase = [];
@@ -1058,12 +1105,25 @@
     let _isPopstateNavigation = false;
     let _lastPopstateAt = 0;
     let _initialized = false;
+    let _lastActivePath = window.location.pathname;
+    let _lastActiveState = null;
     const POPSTATE_GRACE_MS = 600;
 
     function isPopstateNavigationWindow() {
       if (_isPopstateNavigation) return true;
       if (!_lastPopstateAt) return false;
       return Date.now() - _lastPopstateAt < POPSTATE_GRACE_MS;
+    }
+
+    function saveActiveState() {
+      _lastActivePath = window.location.pathname;
+      _lastActiveState = window.history.state;
+    }
+
+    function revertState() {
+      try {
+        window.history.replaceState(_lastActiveState, '', _lastActivePath);
+      } catch (_) {}
     }
 
     /**
@@ -1125,6 +1185,7 @@
           '',
           path
         );
+        saveActiveState();
       } catch (_) { /* pushState may fail in some contexts */ }
     }
 
@@ -1153,6 +1214,7 @@
           '',
           path
         );
+        saveActiveState();
       } catch (_) { /* replaceState may fail in some contexts */ }
     }
 
@@ -1175,6 +1237,7 @@
       const meta = PRACTICE_LAUNCHER.modes[route.mode];
       if (!meta) return null;
 
+      saveActiveState();
       return { mode: route.mode, questionId: route.questionId };
     }
 
@@ -1198,8 +1261,13 @@
           if (!route.isPractice || !route.mode) {
             // Back to dashboard
             if (typeof window.exitCurrentMode === 'function') {
-              window.exitCurrentMode();
+              const exited = await window.exitCurrentMode();
+              if (exited === false) {
+                revertState();
+                return;
+              }
             }
+            saveActiveState();
             return;
           }
 
@@ -1207,20 +1275,30 @@
           const meta = PRACTICE_LAUNCHER.modes[route.mode];
           if (!meta) {
             if (typeof window.exitCurrentMode === 'function') {
-              window.exitCurrentMode();
+              const exited = await window.exitCurrentMode();
+              if (exited === false) {
+                revertState();
+                return;
+              }
             }
+            saveActiveState();
             return;
           }
 
           // Switch to the mode from the URL
           if (typeof window.switchToMode === 'function') {
-            await window.switchToMode(route.mode);
+            const switched = await window.switchToMode(route.mode);
+            if (switched === false) {
+              revertState();
+              return;
+            }
           }
 
           // If a specific question ID is in the URL, try to navigate to it
           if (route.questionId) {
             _navigateToQuestion(route.mode, route.questionId);
           }
+          saveActiveState();
         } finally {
           _isPopstateNavigation = false;
         }
@@ -1715,28 +1793,48 @@
     }
   }
 
-  window.exitCurrentMode = function() {
+  window.exitCurrentMode = async function() {
     const leavingMode = currentActiveMode;
     if (leavingMode === 'essay') {
-      if (window.WriteEssayMode?.shouldConfirmExit?.() && !window.confirm('Leaving Write Essay will discard your current draft. Continue?')) {
-        return;
+      if (window.WriteEssayMode?.shouldConfirmExit?.()) {
+        const confirmed = await window.showCustomConfirm(
+          'Leave Write Essay?',
+          'Leaving Write Essay will discard your current draft. Continue?',
+          true
+        );
+        if (!confirmed) return false;
       }
     }
     if (leavingMode === 'swt') {
-      if (window.SWTMode?.shouldConfirmExit?.() && !window.confirm('Leaving Summarize Written Text will discard your current draft. Continue?')) {
-        return;
+      if (window.SWTMode?.shouldConfirmExit?.()) {
+        const confirmed = await window.showCustomConfirm(
+          'Leave Summarize Written Text?',
+          'Leaving Summarize Written Text will discard your current draft. Continue?',
+          true
+        );
+        if (!confirmed) return false;
       }
       window.SWTMode?.onExit?.();
     }
     if (leavingMode === 'sst') {
-      if (window.SSTMode?.shouldConfirmExit?.() && !window.confirm('Leaving Summarize Spoken Text will discard your current attempt. Continue?')) {
-        return;
+      if (window.SSTMode?.shouldConfirmExit?.()) {
+        const confirmed = await window.showCustomConfirm(
+          'Leave Summarize Spoken Text?',
+          'Leaving Summarize Spoken Text will discard your current attempt. Continue?',
+          true
+        );
+        if (!confirmed) return false;
       }
       window.SSTMode?.onExit?.();
     }
     if (leavingMode === 'dd') {
-      if (window.DDMode?.shouldConfirmExit?.() && !window.confirm('Leaving Drag & Drop will discard your current attempt. Continue?')) {
-        return;
+      if (window.DDMode?.shouldConfirmExit?.()) {
+        const confirmed = await window.showCustomConfirm(
+          'Leave Drag & Drop?',
+          'Leaving Drag & Drop will discard your current attempt. Continue?',
+          true
+        );
+        if (!confirmed) return false;
       }
       window.DDMode?.onExit?.();
     }
@@ -1784,6 +1882,7 @@
 
     // Update URL for browser back/forward navigation
     PracticeRouter.pushRoute(null);
+    return true;
   };
 
   /**
@@ -1796,8 +1895,13 @@
 
     const leavingMode = currentActiveMode;
     if (leavingMode === 'essay' && mode !== 'essay') {
-      if (window.WriteEssayMode?.shouldConfirmExit?.() && !window.confirm('Leaving Write Essay will discard your current draft. Continue?')) {
-        return;
+      if (window.WriteEssayMode?.shouldConfirmExit?.()) {
+        const confirmed = await window.showCustomConfirm(
+          'Leave Write Essay?',
+          'Leaving Write Essay will discard your current draft. Continue?',
+          true
+        );
+        if (!confirmed) return false;
       }
     }
     if (leavingMode === 'collo-dictate' && mode !== 'collo-dictate') {
@@ -1813,14 +1917,24 @@
       window.DescribeImageMode?.onExit?.();
     }
     if (leavingMode === 'swt' && mode !== 'swt') {
-      if (window.SWTMode?.shouldConfirmExit?.() && !window.confirm('Leaving Summarize Written Text will discard your current draft. Continue?')) {
-        return;
+      if (window.SWTMode?.shouldConfirmExit?.()) {
+        const confirmed = await window.showCustomConfirm(
+          'Leave Summarize Written Text?',
+          'Leaving Summarize Written Text will discard your current draft. Continue?',
+          true
+        );
+        if (!confirmed) return false;
       }
       window.SWTMode?.onExit?.();
     }
     if (leavingMode === 'sst' && mode !== 'sst') {
-      if (window.SSTMode?.shouldConfirmExit?.() && !window.confirm('Leaving Summarize Spoken Text will discard your current attempt. Continue?')) {
-        return;
+      if (window.SSTMode?.shouldConfirmExit?.()) {
+        const confirmed = await window.showCustomConfirm(
+          'Leave Summarize Spoken Text?',
+          'Leaving Summarize Spoken Text will discard your current attempt. Continue?',
+          true
+        );
+        if (!confirmed) return false;
       }
       window.SSTMode?.onExit?.();
     }
@@ -1852,8 +1966,13 @@
       window.ROPMode?.onExit?.();
     }
     if (leavingMode === 'dd' && mode !== 'dd') {
-      if (window.DDMode?.shouldConfirmExit?.() && !window.confirm('Leaving Drag & Drop will discard your current attempt. Continue?')) {
-        return;
+      if (window.DDMode?.shouldConfirmExit?.()) {
+        const confirmed = await window.showCustomConfirm(
+          'Leave Drag & Drop?',
+          'Leaving Drag & Drop will discard your current attempt. Continue?',
+          true
+        );
+        if (!confirmed) return false;
       }
       window.DDMode?.onExit?.();
     }
@@ -3366,7 +3485,12 @@
 
     // Confirm action
     const modeName = mode === 'type' ? 'Type' : 'Speak';
-    if (!confirm(`Are you sure you want to remove the mastered status for this question in ${modeName} mode?`)) {
+    const confirmed = await window.showCustomConfirm(
+      'Remove Mastered Status?',
+      `Are you sure you want to remove the mastered status for this question in ${modeName} mode?`,
+      true
+    );
+    if (!confirmed) {
       return;
     }
 
@@ -9027,7 +9151,12 @@
     resetBtn.addEventListener('click', async () => {
       const questionId = mode === 'type' ? currentTypeQuestionId : currentSpeakQuestionId;
 
-      if (!confirm(`Reset progress for Question ${questionId} in ${mode === 'type' ? 'Type' : 'Speak'} mode?`)) {
+      const confirmed = await window.showCustomConfirm(
+        'Reset Progress?',
+        `Reset progress for Question ${questionId} in ${mode === 'type' ? 'Type' : 'Speak'} mode?`,
+        true
+      );
+      if (!confirmed) {
         return;
       }
 

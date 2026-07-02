@@ -246,6 +246,12 @@ async function checkSkillFilter(page, skill, expectedVisibleIds, expectedModeId)
     await page.goto(`${origin}/index.html`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(2000);
 
+    // Set scope to english to match subsequent assertions
+    await page.evaluate(() => {
+      window.setPracticeScope('english');
+    });
+    await page.waitForTimeout(300);
+
     assert.deepStrictEqual(pageErrors, [], `Expected no page errors, got: ${pageErrors.join(' | ')}`);
     assert.strictEqual(
       consoleWarnings.some((warning) => warning.includes('Difficulty filter elements not found')),

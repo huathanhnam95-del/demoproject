@@ -360,6 +360,8 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 367,2026-07-01,Fix attempts detail modal to render basic feedback metrics when AI scores are missing,Done,2026-07-01
 368,2026-07-02,Change default mode to PTE Practice instead of English practice,Done,2026-07-02
 369,2026-07-02,Push V1.8.15 to production,Done,2026-07-02
+370,2026-07-02,Replace browser navigation confirmations with in-web modals,Done,2026-07-02
+371,2026-07-02,Fix practice-modes browser check scope mismatch,Done,2026-07-02
 
 
 

@@ -6526,7 +6526,12 @@
         showToast('Sync tools are unavailable until the backend capability check succeeds.', 'error');
         return;
       }
-      if (!confirm(`Are you sure you want to run a ${type} sync? This will replace local emulator data for the selected collections.`)) return;
+      const confirmed = await window.showCustomConfirm(
+        'Trigger Sync?',
+        `Are you sure you want to run a ${type} sync? This will replace local emulator data for the selected collections.`,
+        true
+      );
+      if (!confirmed) return;
 
       updateSyncButtons(true);
       if (progressContainer) progressContainer.style.display = 'block';

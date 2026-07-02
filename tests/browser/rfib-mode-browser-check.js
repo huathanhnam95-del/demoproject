@@ -269,10 +269,14 @@ async function setupFirebaseMocks(context) {
   });
   const errors = [];
 
-  page.on('pageerror', (error) => errors.push(error.message));
+  page.on('pageerror', (error) => {
+    console.error('BROWSER PAGEERROR:', error.message, error.stack);
+    errors.push(error.message);
+  });
   page.on('console', (msg) => {
+    const text = msg.text();
+    console.log(`BROWSER ${msg.type().toUpperCase()}:`, text);
     if (msg.type() === 'error') {
-      const text = msg.text();
       if (!text.includes('Failed to load resource')) {
         errors.push(text);
       }

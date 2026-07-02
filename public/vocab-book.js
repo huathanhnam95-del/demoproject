@@ -828,8 +828,13 @@ const VocabularyBook = (function () {
     /**
      * Remove word via Modal
      */
-    function removeViaModal(lemma) {
-        if (confirm('Remove this word from bookmarks?')) {
+    async function removeViaModal(lemma) {
+        const confirmed = await window.showCustomConfirm(
+            'Remove Bookmark?',
+            'Remove this word from bookmarks?',
+            true
+        );
+        if (confirmed) {
             removeBookmarkedWord(lemma);
             renderListTable('bookmarks'); // Re-render table
         }
@@ -1884,8 +1889,13 @@ const VocabularyBook = (function () {
         // Reset Cache handler (Admin only)
         const resetBtn = vocabBookmarkedList.querySelector('#vocab-reset-cache-btn');
         if (resetBtn) {
-            resetBtn.addEventListener('click', () => {
-                if (confirm('Clear all dictionary caches? This will force a refresh of all translations.')) {
+            resetBtn.addEventListener('click', async () => {
+                const confirmed = await window.showCustomConfirm(
+                    'Clear Cache?',
+                    'Clear all dictionary caches? This will force a refresh of all translations.',
+                    true
+                );
+                if (confirmed) {
                     if (window.DictionaryService && typeof window.DictionaryService.clearCache === 'function') {
                         window.DictionaryService.clearCache();
                         alert('Cache cleared!');

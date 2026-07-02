@@ -424,7 +424,12 @@
     async function selectVideo(videoId) {
         if (hasUnsavedChanges) {
             // Show unsaved warning
-            if (!confirm('You have unsaved changes. Continue anyway?')) {
+            const confirmed = await window.showCustomConfirm(
+                'Unsaved Changes',
+                'You have unsaved changes. Continue anyway?',
+                true
+            );
+            if (!confirmed) {
                 return;
             }
         }
@@ -626,7 +631,12 @@
      */
     async function selectQuestion(questionId) {
         if (hasUnsavedChanges) {
-            if (!confirm('You have unsaved changes. Continue anyway?')) {
+            const confirmed = await window.showCustomConfirm(
+                'Unsaved Changes',
+                'You have unsaved changes. Continue anyway?',
+                true
+            );
+            if (!confirmed) {
                 return;
             }
         }
@@ -906,9 +916,14 @@
     /**
      * Cancel editing
      */
-    function cancelEdit() {
+    async function cancelEdit() {
         if (hasUnsavedChanges) {
-            if (!confirm('You have unsaved changes. Discard them?')) {
+            const confirmed = await window.showCustomConfirm(
+                'Unsaved Changes',
+                'You have unsaved changes. Discard them?',
+                true
+            );
+            if (!confirmed) {
                 return;
             }
         }

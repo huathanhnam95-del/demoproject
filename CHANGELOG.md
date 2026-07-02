@@ -1,3 +1,17 @@
+## [V1.8.16] - 2026-07-03
+
+### Fixed
+
+- **Practice scope E2E browser tests**:
+  - Explicitly set practice scope to English on startup inside `tests/browser/practice-modes-browser-check.js` to align with the test's assertions and restore the build pipeline.
+- **Service Worker Cache-Busting**:
+  - Incremented `CACHE_VERSION` in `sw.js` and updated the `script.js` cache-busting token to force browsers to load the updated Javascript code featuring the PTE default scope.
+
+### Changed
+
+- **Browser Confirmations**:
+  - Replaced native browser navigation confirmation alerts with custom in-web confirmation modals across essay, dictation, and scheduling workflows.
+
 ## [V1.8.15] - 2026-07-02
 
 ### Changed

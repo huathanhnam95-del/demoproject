@@ -220,12 +220,16 @@
         return Boolean(el.stepWrite && getComputedStyle(el.stepWrite).display !== 'none');
     }
 
-    function onQuestionSelectChange() {
+    async function onQuestionSelectChange() {
         const i = parseInt(el.questionSelect.value, 10);
         if (isNaN(i)) return;
 
         if (shouldConfirmExit()) {
-            const confirmLeave = window.confirm("Are you sure you want to navigate to another question? Your current essay draft and progress will be lost.");
+            const confirmLeave = await window.showCustomConfirm(
+                "Navigate to another question?",
+                "Are you sure you want to navigate to another question? Your current essay draft and progress will be lost.",
+                true
+            );
             if (!confirmLeave) {
                 if (el.questionSelect) el.questionSelect.value = currentEntryIndex;
                 return;
@@ -234,19 +238,27 @@
         selectEntry(i);
     }
 
-    function goToPrevious() {
+    async function goToPrevious() {
         if (currentEntryIndex <= 0) return;
         if (shouldConfirmExit()) {
-            const confirmLeave = window.confirm("Are you sure you want to navigate to another question? Your current essay draft and progress will be lost.");
+            const confirmLeave = await window.showCustomConfirm(
+                "Navigate to another question?",
+                "Are you sure you want to navigate to another question? Your current essay draft and progress will be lost.",
+                true
+            );
             if (!confirmLeave) return;
         }
         selectEntry(currentEntryIndex - 1);
     }
 
-    function goToNext() {
+    async function goToNext() {
         if (currentEntryIndex >= filteredEntries.length - 1) return;
         if (shouldConfirmExit()) {
-            const confirmLeave = window.confirm("Are you sure you want to navigate to another question? Your current essay draft and progress will be lost.");
+            const confirmLeave = await window.showCustomConfirm(
+                "Navigate to another question?",
+                "Are you sure you want to navigate to another question? Your current essay draft and progress will be lost.",
+                true
+            );
             if (!confirmLeave) return;
         }
         selectEntry(currentEntryIndex + 1);

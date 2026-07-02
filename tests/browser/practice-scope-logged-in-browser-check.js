@@ -317,15 +317,28 @@ async function assertAuthenticated(page, expectedEmail, label) {
         // ── Step 6: Assert authenticated state ──
         await assertAuthenticated(page, email, 'after-login');
 
-        // ── Step 7: Toggle to PTE and verify ──
-        console.log(TAG, 'Toggling to PTE Practice...');
+        // ── Step 7: Verify PTE default, toggle to English, and back to PTE ──
+        console.log(TAG, 'Verifying PTE active by default and toggling...');
+        const initialPteActive = await page.evaluate(() =>
+            document.querySelector('[data-practice-scope="pte"]')?.getAttribute('aria-pressed')
+        );
+        assert.strictEqual(initialPteActive, 'true', 'PTE should be active by default while logged in');
+
+        console.log(TAG, 'Toggling to English Practice...');
+        await page.click('[data-practice-scope="english"]');
+        await page.waitForTimeout(500);
+        const englishActive = await page.evaluate(() =>
+            document.querySelector('[data-practice-scope="english"]')?.getAttribute('aria-pressed')
+        );
+        assert.strictEqual(englishActive, 'true', 'English should be active after toggle while logged in');
+
+        console.log(TAG, 'Toggling back to PTE Practice...');
         await page.click('[data-practice-scope="pte"]');
         await page.waitForTimeout(500);
-
         const pteActive = await page.evaluate(() =>
             document.querySelector('[data-practice-scope="pte"]')?.getAttribute('aria-pressed')
         );
-        assert.strictEqual(pteActive, 'true', 'PTE should be active after toggle while logged in');
+        assert.strictEqual(pteActive, 'true', 'PTE should be active after toggle back while logged in');
 
         // ── Step 8: Verify persistence across reload ──
         console.log(TAG, 'Reloading to verify persistence...');

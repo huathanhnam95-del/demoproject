@@ -116,19 +116,23 @@ function startHarnessServer() {
     // ─────────────────────────────────────────────────────
     const defaultState = await page.evaluate(() => {
       const englishScopeBtn = document.querySelector('#practice-scope-filter .practice-scope-btn[data-practice-scope="english"]');
+      const pteScopeBtn = document.querySelector('#practice-scope-filter .practice-scope-btn[data-practice-scope="pte"]');
       const speakingBtn = document.querySelector('#practice-skill-filter .practice-skill-btn[data-practice-skill="speaking"]');
       return {
         englishPressed: englishScopeBtn ? englishScopeBtn.getAttribute('aria-pressed') : null,
+        ptePressed: pteScopeBtn ? pteScopeBtn.getAttribute('aria-pressed') : null,
         speakingPressed: speakingBtn ? speakingBtn.getAttribute('aria-pressed') : null
       };
     });
 
-    assert.strictEqual(defaultState.englishPressed, 'true', 'English Practice should be selected by default');
+    assert.strictEqual(defaultState.ptePressed, 'true', 'PTE Practice should be selected by default');
+    assert.strictEqual(defaultState.englishPressed, 'false', 'English Practice should not be selected by default');
     assert.strictEqual(defaultState.speakingPressed, 'true', 'Speaking should be selected by default');
 
     // ─────────────────────────────────────────────────────
     // 2. English + Speaking: Notes should be hidden (it's under Listening)
     // ─────────────────────────────────────────────────────
+    await page.click('#practice-scope-filter .practice-scope-btn[data-practice-scope="english"]');
     await page.click('#practice-skill-filter .practice-skill-btn[data-practice-skill="speaking"]');
 
     const englishSpeakingState = await page.evaluate(() => {

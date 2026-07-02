@@ -118,20 +118,20 @@ async function dismissBlockingOverlays(page) {
                 ptePressed: pte ? pte.getAttribute('aria-pressed') : null
             };
         });
-        assert.strictEqual(ariaState.engPressed, 'true', 'English should be aria-pressed=true by default');
-        assert.strictEqual(ariaState.ptePressed, 'false', 'PTE should be aria-pressed=false by default');
+        assert.strictEqual(ariaState.engPressed, 'false', 'English should be aria-pressed=false by default');
+        assert.strictEqual(ariaState.ptePressed, 'true', 'PTE should be aria-pressed=true by default');
 
-        // ── SECTION 2: Click toggle to PTE ──
-        console.log('[Guest] Toggling to PTE via click...');
-        await page.click('[data-practice-scope="pte"]');
+        // ── SECTION 2: Click toggle to English ──
+        console.log('[Guest] Toggling to English via click...');
+        await page.click('[data-practice-scope="english"]');
         await page.waitForTimeout(300);
 
         const afterToggle = await page.evaluate(() => ({
             eng: document.querySelector('[data-practice-scope="english"]').getAttribute('aria-pressed'),
             pte: document.querySelector('[data-practice-scope="pte"]').getAttribute('aria-pressed')
         }));
-        assert.strictEqual(afterToggle.eng, 'false', 'English aria-pressed should be false after PTE click');
-        assert.strictEqual(afterToggle.pte, 'true', 'PTE aria-pressed should be true after PTE click');
+        assert.strictEqual(afterToggle.eng, 'true', 'English aria-pressed should be true after English click');
+        assert.strictEqual(afterToggle.pte, 'false', 'PTE aria-pressed should be false after English click');
 
         // ── SECTION 3: Keyboard activation ──
         console.log('[Guest] Testing keyboard activation (Tab → Enter → Space)...');

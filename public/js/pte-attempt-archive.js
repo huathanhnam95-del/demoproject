@@ -17,7 +17,9 @@
   }
 
   function isPteScope() {
-    if (!window.PracticeScopeManager || PracticeScopeManager.getScope() !== 'pte') return false;
+    const path = String(window.location?.pathname || '').toLowerCase();
+    const isLegacyPteWritingRoute = /^\/practice\/writing\/(essay|swt)(\/|$)/.test(path);
+    if ((!window.PracticeScopeManager || PracticeScopeManager.getScope() !== 'pte') && !isLegacyPteWritingRoute) return false;
     return true;
   }
 

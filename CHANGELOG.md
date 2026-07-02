@@ -1,3 +1,12 @@
+## [V1.8.15] - 2026-07-02
+
+### Changed
+
+- **Default Practice Scope to PTE Practice**:
+  - Configured `PracticeScopeManager` to load PTE Practice (`pte`) as the default practice scope on initial visit when no saved preferences exist.
+  - Set the PTE Practice tab button in `index.html` as active by default.
+  - Updated all guest and logged-in browser E2E test suites to align with and verify the new default behavior.
+
 ## [V1.8.14] - 2026-07-01
 
 ### Fixed

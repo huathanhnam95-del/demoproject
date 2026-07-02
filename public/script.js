@@ -982,7 +982,7 @@
   }
 
   const PracticeScopeManager = (() => {
-    let scope = SCOPE_ENGLISH;
+    let scope = SCOPE_PTE;
     const subscribers = new Set();
 
     function readStoredScope() {
@@ -1033,7 +1033,7 @@
       return () => subscribers.delete(fn);
     }
 
-    scope = readStoredScope() || SCOPE_ENGLISH;
+    scope = readStoredScope() || SCOPE_PTE;
     syncMirror();
 
     return Object.freeze({

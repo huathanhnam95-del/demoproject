@@ -362,6 +362,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 369,2026-07-02,Push V1.8.15 to production,Done,2026-07-02
 370,2026-07-02,Replace browser navigation confirmations with in-web modals,Done,2026-07-02
 371,2026-07-02,Fix practice-modes browser check scope mismatch,Done,2026-07-02
+372,2026-07-03,Fix root URL router scope reset bug in script.js,Done,2026-07-03
 
 
 

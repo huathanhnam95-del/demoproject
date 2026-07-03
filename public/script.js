@@ -1157,8 +1157,8 @@
       const isPte = segments[0] === 'pte-practice';
       const isEnglish = segments[0] === 'practice';
 
-      if (!isPte && !isEnglish && segments.length > 0) {
-        return { skill: null, mode: null, questionId: null, isPractice: false };
+      if (!isPte && !isEnglish) {
+        return { skill: null, mode: null, questionId: null, isPractice: false, scope: null };
       }
 
       return {

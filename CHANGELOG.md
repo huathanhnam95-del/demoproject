@@ -1,3 +1,10 @@
+## [V1.8.17] - 2026-07-03
+
+### Fixed
+
+- **Root URL Router Scope Reset Bug**:
+  - Modified `parseRoute` inside `script.js` to correctly return `isPractice: false` and `scope: null` when accessing the root URL path (`/`). This prevents the application from incorrectly treating the home dashboard as a practice route and resetting the user's practice scope default to English.
+
 ## [V1.8.16] - 2026-07-03
 
 ### Fixed

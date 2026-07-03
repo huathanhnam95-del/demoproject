@@ -363,6 +363,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 370,2026-07-02,Replace browser navigation confirmations with in-web modals,Done,2026-07-02
 371,2026-07-02,Fix practice-modes browser check scope mismatch,Done,2026-07-02
 372,2026-07-03,Fix root URL router scope reset bug in script.js,Done,2026-07-03
+373,2026-07-03,Swap the position of PTE Practice and English Practice tabs,Done,2026-07-03
 
 
 

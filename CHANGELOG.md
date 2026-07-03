@@ -1,3 +1,11 @@
+## [V1.8.18] - 2026-07-03
+
+### Changed
+
+- **Practice Tabs Order Swapped**:
+  - Swapped the visual position of "PTE Practice" and "English Practice" scope buttons on the dashboard. "PTE Practice" now appears first, followed by "English Practice", aligned with the default startup configuration.
+  - Adjusted automated E2E keyboard navigation focus tests (`tests/browser/practice-phase789-check.js`) to follow the new PTE-first DOM sequence.
+
 ## [V1.8.17] - 2026-07-03
 
 ### Fixed

@@ -136,43 +136,43 @@ async function dismissBlockingOverlays(page) {
         // ── SECTION 3: Keyboard activation ──
         console.log('[Guest] Testing keyboard activation (Tab → Enter → Space)...');
 
-        // Switch back to English first so we can test keyboard toggling
-        await page.click('[data-practice-scope="english"]');
+        // Switch back to PTE first so we can test keyboard toggling
+        await page.click('[data-practice-scope="pte"]');
         await page.waitForTimeout(200);
 
-        // Focus the English button and Tab to PTE
-        await page.focus('[data-practice-scope="english"]');
+        // Focus the PTE button and Tab to English
+        await page.focus('[data-practice-scope="pte"]');
         await page.keyboard.press('Tab');
         await page.waitForTimeout(100);
 
-        // Verify PTE button has focus
+        // Verify English button has focus
         const focusedId = await page.evaluate(() => {
             const el = document.activeElement;
             return el ? el.getAttribute('data-practice-scope') : null;
         });
-        assert.strictEqual(focusedId, 'pte', 'Tab from English should focus PTE button');
+        assert.strictEqual(focusedId, 'english', 'Tab from PTE should focus English button');
 
-        // Press Enter to activate PTE
+        // Press Enter to activate English
         await page.keyboard.press('Enter');
         await page.waitForTimeout(300);
 
         const afterEnter = await page.evaluate(() => ({
-            pte: document.querySelector('[data-practice-scope="pte"]').getAttribute('aria-pressed'),
+            english: document.querySelector('[data-practice-scope="english"]').getAttribute('aria-pressed'),
             focusScope: document.activeElement ? document.activeElement.getAttribute('data-practice-scope') : null
         }));
-        assert.strictEqual(afterEnter.pte, 'true', 'Enter on PTE button should activate it');
+        assert.strictEqual(afterEnter.english, 'true', 'Enter on English button should activate it');
         assert.ok(afterEnter.focusScope !== null, 'Focus should remain on a scope button after Enter re-render');
 
-        // Tab back to English and press Space to activate
-        await page.focus('[data-practice-scope="english"]');
+        // Tab back to PTE and press Space to activate
+        await page.focus('[data-practice-scope="pte"]');
         await page.keyboard.press('Space');
         await page.waitForTimeout(300);
 
         const afterSpace = await page.evaluate(() => ({
-            eng: document.querySelector('[data-practice-scope="english"]').getAttribute('aria-pressed'),
+            pte: document.querySelector('[data-practice-scope="pte"]').getAttribute('aria-pressed'),
             focusScope: document.activeElement ? document.activeElement.getAttribute('data-practice-scope') : null
         }));
-        assert.strictEqual(afterSpace.eng, 'true', 'Space on English button should activate it');
+        assert.strictEqual(afterSpace.pte, 'true', 'Space on PTE button should activate it');
         assert.ok(afterSpace.focusScope !== null, 'Focus should remain on a scope button after Space re-render');
 
         // ── SECTION 4: Accessible label smoke check on PTE card ──

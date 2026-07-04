@@ -19118,6 +19118,54 @@ body.readingjourney-active #readingjourney-root {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
+/* ── Word-level hover highlights & playback button styles ── */
+.sc-token--hovered {
+  box-shadow: 0 0 0 2.5px #3b82f6, 0 1px 3px rgba(0,0,0,0.1);
+  background-color: #dbeafe !important;
+  color: #1e3a8a !important;
+  border-radius: 4px;
+}
+
+.sc-card--hovered {
+  background-color: #f3f8ff !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.12) !important;
+}
+
+.sc-play-word-btn {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: 8px;
+  padding: 0;
+  vertical-align: middle;
+}
+
+.sc-play-word-btn:hover {
+  background: #e5e7eb;
+  color: #111827;
+  transform: scale(1.1);
+}
+
+.sc-play-word-btn svg {
+  width: 12px;
+  height: 12px;
+  display: block;
+}
+
+.sc-play-word-btn--single {
+  margin-left: 0;
+  margin-right: 4px;
+}
+
 /* ── Issue Cards ── */
 .sc-issue-card {
   display: flex;

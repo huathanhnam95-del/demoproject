@@ -2257,6 +2257,10 @@ class ReadAloudMode {
   }
 
   clearConnectedSpeechResults() {
+    if (this._segmentInterval) {
+      clearInterval(this._segmentInterval);
+      this._segmentInterval = null;
+    }
     this.hideConnectedSpeechPanel();
   }
 
@@ -2556,13 +2560,13 @@ class ReadAloudMode {
     rightCol.className = 'sc-grid-right';
 
     if (groupedReduced.size > 0) {
-      leftCol.appendChild(this._buildReducedWordsSection(groupedReduced));
+      leftCol.appendChild(this._buildReducedWordsSection(groupedReduced, events));
     }
     if (linkingIssues.length > 0) {
-      rightCol.appendChild(this._buildLinkingIssuesSection(linkingIssues));
+      rightCol.appendChild(this._buildLinkingIssuesSection(linkingIssues, events));
     }
     if (linkingSuccesses.length > 0) {
-      rightCol.appendChild(this._buildSuccessPillsSection(linkingSuccesses));
+      rightCol.appendChild(this._buildSuccessPillsSection(linkingSuccesses, events));
     }
 
     fragment.appendChild(leftCol);
@@ -2570,6 +2574,7 @@ class ReadAloudMode {
     list.appendChild(fragment);
 
     this.bindSpeechCoachAccordions(list);
+    this.bindSpeechCoachInteractions(list);
   }
 
 
@@ -2590,6 +2595,160 @@ class ReadAloudMode {
         chevron.classList.toggle('sc-chevron--open', !isExpanded);
       }
     });
+  }
+
+  bindSpeechCoachInteractions(container) {
+    if (!container) return;
+
+    // Hover Highlight Delegation
+    container.addEventListener('mouseover', (e) => {
+      // Find the closest element that represents a speech event instance or card
+      const target = e.target.closest('[data-event-index]');
+      if (target) {
+        const evIdx = target.dataset.eventIndex;
+        // Highlight corresponding spans
+        document.querySelectorAll(`#ra-transcript-feedback [data-event-index]`).forEach(span => {
+          const indexes = String(span.dataset.eventIndex || '').split(/\s+/);
+          if (indexes.includes(evIdx)) {
+            span.classList.add('sc-token--hovered');
+          }
+        });
+        return;
+      }
+
+      // If hovering over an accordion group header, highlight all child instances
+      const groupHeader = e.target.closest('.sc-accordion-card');
+      if (groupHeader) {
+        // Find all event indexes inside the card
+        const childInstances = groupHeader.querySelectorAll('[data-event-index]');
+        childInstances.forEach(inst => {
+          const evIdx = inst.dataset.eventIndex;
+          document.querySelectorAll(`#ra-transcript-feedback [data-event-index]`).forEach(span => {
+            const indexes = String(span.dataset.eventIndex || '').split(/\s+/);
+            if (indexes.includes(evIdx)) {
+              span.classList.add('sc-token--hovered');
+            }
+          });
+        });
+      }
+    });
+
+    container.addEventListener('mouseout', (e) => {
+      // Remove all hovered highlights
+      document.querySelectorAll('#ra-transcript-feedback .sc-token--hovered').forEach(span => {
+        span.classList.remove('sc-token--hovered');
+      });
+    });
+
+    // Play Word segment Delegation
+    container.addEventListener('click', (e) => {
+      const playBtn = e.target.closest('.sc-play-word-btn');
+      if (!playBtn) return;
+      
+      e.stopPropagation(); // prevent accordion toggle if inside card header
+      
+      const startMs = Number(playBtn.dataset.start);
+      const endMs = Number(playBtn.dataset.end);
+      const audioEl = document.getElementById('ra-user-recording-audio');
+      
+      if (!audioEl || isNaN(startMs) || isNaN(endMs)) return;
+      
+      const startSec = startMs / 1000;
+      const endSec = endMs / 1000;
+      
+      this.playAudioSegment(audioEl, startSec, endSec);
+    });
+
+    // Bidirectional Hover (hovering over word spans highlights cards)
+    const feedbackWrapper = document.getElementById('ra-transcript-feedback');
+    if (feedbackWrapper && !feedbackWrapper.dataset.scBidirectionalBound) {
+      feedbackWrapper.dataset.scBidirectionalBound = 'true';
+      
+      feedbackWrapper.addEventListener('mouseover', (e) => {
+        const target = e.target.closest('[data-event-index]');
+        if (target) {
+          const indexes = String(target.dataset.eventIndex || '').split(/\s+/);
+          indexes.forEach(evIdx => {
+            if (!evIdx) return;
+            // Find card elements with this eventIndex and highlight them
+            container.querySelectorAll(`[data-event-index="${evIdx}"]`).forEach(card => {
+              card.classList.add('sc-card--hovered');
+              // Proactively scroll the parent accordion/content into view if collapsed
+              const parent = card.closest('.sc-accordion-content');
+              if (parent && parent.hidden) {
+                const toggle = parent.parentNode.querySelector('[data-sc-accordion-toggle]');
+                if (toggle && toggle.getAttribute('aria-expanded') === 'false') {
+                  toggle.setAttribute('aria-expanded', 'true');
+                  parent.hidden = false;
+                  const chevron = toggle.querySelector('.sc-chevron');
+                  if (chevron) chevron.classList.add('sc-chevron--open');
+                }
+              }
+              card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            });
+          });
+        }
+      });
+      
+      feedbackWrapper.addEventListener('mouseout', (e) => {
+        container.querySelectorAll('.sc-card--hovered').forEach(card => {
+          card.classList.remove('sc-card--hovered');
+        });
+      });
+    }
+  }
+
+  playAudioSegment(audioEl, startSec, endSec) {
+    if (this._segmentInterval) {
+      clearInterval(this._segmentInterval);
+      this._segmentInterval = null;
+    }
+    
+    // Stop reference audio
+    this.stopReferenceAudioPlayback();
+    
+    // Safety check - make sure the user recording is loaded
+    if (!audioEl.src && this.userRecordingUrl) {
+      audioEl.src = this.userRecordingUrl;
+      audioEl.load();
+    }
+    
+    if (!audioEl.src) return;
+    
+    // Hijack main play button text if active
+    const recPlayBtn = document.getElementById('ra-play-recording-btn');
+    if (recPlayBtn) {
+      recPlayBtn.textContent = 'Play your recording';
+    }
+    
+    // Seek and play
+    audioEl.currentTime = startSec;
+    const playPromise = audioEl.play();
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.catch((err) => {
+        console.warn('Word segment audio playback failed:', err);
+      });
+    }
+    
+    // High-resolution interval check (every 10ms)
+    this._segmentInterval = setInterval(() => {
+      if (audioEl.currentTime >= endSec) {
+        audioEl.pause();
+        clearInterval(this._segmentInterval);
+        this._segmentInterval = null;
+      }
+    }, 10);
+    
+    const cleanup = () => {
+      if (this._segmentInterval) {
+        clearInterval(this._segmentInterval);
+        this._segmentInterval = null;
+      }
+      audioEl.removeEventListener('pause', cleanup);
+      audioEl.removeEventListener('ended', cleanup);
+    };
+    audioEl.addEventListener('pause', cleanup);
+    audioEl.addEventListener('ended', cleanup);
   }
 
   /** Aggregate connected speech events into reduced-word groups, linking issues, and linking successes */
@@ -2644,13 +2803,20 @@ class ReadAloudMode {
           const wordMap = window.ReadAloudLinking.renderLinkingLayer(annotatedContainer, { tokens, boundaries: [], tokenAnnotations: [] });
 
           // Apply status-based CSS classes to matching word spans
-          events.forEach((ev) => {
+          events.forEach((ev, evIndex) => {
             if (!ev.phrase) return;
             const phraseLower = ev.phrase.toLowerCase().trim();
+            let matched = false;
             wordMap.forEach((span) => {
+              if (matched) return;
               const spanText = (span.textContent || '').toLowerCase().trim();
               if (spanText === phraseLower && !span.dataset.scHighlighted) {
                 span.dataset.scHighlighted = 'true';
+                
+                // Add event index (supporting multiple space-separated indices)
+                const existing = span.dataset.eventIndex;
+                span.dataset.eventIndex = existing ? `${existing} ${evIndex}` : String(evIndex);
+
                 span.classList.add('sc-token-highlight');
                 const isEvReduced = ev.category === 'weak_forms' || String(ev.family).includes('reduced') || ev.category === 'reduced_words';
                 if (ev.status === 'detected') {
@@ -2665,8 +2831,39 @@ class ReadAloudMode {
                 }
                 span.title = ev.feedbackText || '';
                 span.style.cursor = 'pointer';
+                matched = true;
               }
             });
+          });
+
+          // Tag linking events on adjacent word spans in wordMap
+          events.forEach((ev, evIndex) => {
+            if (!ev.phrase) return;
+            const isLinking = ev.category === 'linking' || ev.category === 'sound_changes' || ev.layer === 'assimilation' || ev.layer === 'linking' || this.normalizeConnectedSpeechMode(ev.family) === 'linking' || ev.category === 'consonant_to_vowel';
+            if (isLinking) {
+              const phraseParts = ev.phrase.toLowerCase().split(/\s+/);
+              if (phraseParts.length === 2) {
+                let matched = false;
+                wordMap.forEach((leftSpan, index) => {
+                  if (matched) return;
+                  const rightSpan = wordMap.get(index + 1);
+                  if (rightSpan) {
+                    const leftText = (leftSpan.textContent || '').toLowerCase().trim();
+                    const rightText = (rightSpan.textContent || '').toLowerCase().trim();
+                    if (leftText === phraseParts[0] && rightText === phraseParts[1] && !leftSpan.dataset.scLinkingHighlighted) {
+                      const existingLeft = leftSpan.dataset.eventIndex;
+                      leftSpan.dataset.eventIndex = existingLeft ? `${existingLeft} ${evIndex}` : String(evIndex);
+                      
+                      const existingRight = rightSpan.dataset.eventIndex;
+                      rightSpan.dataset.eventIndex = existingRight ? `${existingRight} ${evIndex}` : String(evIndex);
+                      
+                      leftSpan.dataset.scLinkingHighlighted = 'true';
+                      matched = true;
+                    }
+                  }
+                });
+              }
+            }
           });
 
           // SVG linking overlay
@@ -2712,7 +2909,7 @@ class ReadAloudMode {
   }
 
   /** Build "Reduced Words" section with accordion cards and single-occurrence grid */
-  _buildReducedWordsSection(groupedReduced) {
+  _buildReducedWordsSection(groupedReduced, events) {
     const escapeHtml = ReadAloudMode.escapeHtml;
     const section = document.createElement('div');
     section.className = 'sc-section';
@@ -2774,10 +2971,29 @@ class ReadAloudMode {
         cardContent.hidden = true;
 
         group.items.forEach((i, idx) => {
+          const evIndex = events ? events.indexOf(i) : -1;
           const instance = document.createElement('div');
           instance.className = `sc-instance${idx > 0 ? ' sc-instance--bordered' : ''}`;
+          if (evIndex !== -1) {
+            instance.dataset.eventIndex = String(evIndex);
+          }
           const statusCls = i.status === 'detected' ? 'sc-badge--success' : i.status === 'not_detected' ? 'sc-badge--error' : 'sc-badge--uncertain';
-          instance.innerHTML = `<div class="sc-instance-header"><span class="sc-status-badge ${statusCls}">${escapeHtml(i.status || 'uncertain')}</span><span class="sc-instance-label">Instance ${idx + 1}</span></div><div class="sc-instance-feedback">${escapeHtml(i.feedbackText || 'No detailed coaching tips provided for this instance.')}</div>`;
+          
+          const hasTimestamps = typeof i.startMs === 'number' && typeof i.endMs === 'number';
+          const timeText = hasTimestamps ? ` [${(i.startMs / 1000).toFixed(2)}s]` : '';
+          
+          let playButtonHtml = '';
+          if (hasTimestamps) {
+            playButtonHtml = `
+              <button class="sc-play-word-btn" type="button" data-event-index="${evIndex}" data-start="${i.startMs}" data-end="${i.endMs}" title="Play this word only">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              </button>
+            `;
+          }
+
+          instance.innerHTML = `<div class="sc-instance-header"><span class="sc-status-badge ${statusCls}">${escapeHtml(i.status || 'uncertain')}</span><span class="sc-instance-label">Instance ${idx + 1}${timeText}</span>${playButtonHtml}</div><div class="sc-instance-feedback">${escapeHtml(i.feedbackText || 'No detailed coaching tips provided for this instance.')}</div>`;
           cardContent.appendChild(instance);
         });
         card.appendChild(cardContent);
@@ -2791,12 +3007,43 @@ class ReadAloudMode {
       gridContainer.className = singles.length >= 2 ? 'sc-singles-grid' : 'sc-accordion-stack';
       singles.forEach((group) => {
         const item = group.items[0];
+        const evIndex = events ? events.indexOf(item) : -1;
         const statusClass = item.status === 'detected' ? 'sc-border--success' : item.status === 'not_detected' ? 'sc-border--error' : 'sc-border--mixed';
         const dotCls = item.status === 'detected' ? 'sc-status-dot--success' : item.status === 'not_detected' ? 'sc-status-dot--error' : 'sc-status-dot--uncertain';
+        
         const card = document.createElement('div');
         card.className = `sc-single-card ${statusClass}`;
+        if (evIndex !== -1) {
+          card.dataset.eventIndex = String(evIndex);
+        }
         card.title = item.feedbackText || '';
-        card.innerHTML = `<strong class="sc-word-title">${escapeHtml(group.phrase)}</strong><span class="sc-status-dot ${dotCls}"></span>`;
+        
+        const hasTimestamps = typeof item.startMs === 'number' && typeof item.endMs === 'number';
+        const timeText = hasTimestamps ? ` [${(item.startMs / 1000).toFixed(2)}s]` : '';
+        
+        let playButtonHtml = '';
+        if (hasTimestamps) {
+          playButtonHtml = `
+            <button class="sc-play-word-btn sc-play-word-btn--single" type="button" data-event-index="${evIndex}" data-start="${item.startMs}" data-end="${item.endMs}" title="Play this word only">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            </button>
+          `;
+        }
+
+        card.innerHTML = `
+          <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 4px;">
+            <div style="display: flex; align-items: center; min-width: 0; flex-shrink: 1;">
+              <strong class="sc-word-title" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px;">${escapeHtml(group.phrase)}</strong>
+              <span style="font-size: 0.72rem; color: #9ca3af; margin-left: 4px; white-space: nowrap;">${timeText}</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+              ${playButtonHtml}
+              <span class="sc-status-dot ${dotCls}"></span>
+            </div>
+          </div>
+        `;
         gridContainer.appendChild(card);
       });
       section.appendChild(gridContainer);
@@ -2806,7 +3053,7 @@ class ReadAloudMode {
   }
 
   /** Build "Needs Attention" section with issue cards */
-  _buildLinkingIssuesSection(linkingIssues) {
+  _buildLinkingIssuesSection(linkingIssues, events) {
     const escapeHtml = ReadAloudMode.escapeHtml;
     const section = document.createElement('div');
     section.className = 'sc-section';
@@ -2831,12 +3078,41 @@ class ReadAloudMode {
     };
 
     linkingIssues.forEach((event) => {
+      const evIndex = events ? events.indexOf(event) : -1;
       const { categoryLabel } = resolveCategory(event);
       const borderCls = event.status === 'not_detected' ? 'sc-border--error' : 'sc-border--mixed';
       const card = document.createElement('div');
       card.className = `sc-issue-card ${borderCls}`;
+      if (evIndex !== -1) {
+        card.dataset.eventIndex = String(evIndex);
+      }
+      
+      const hasTimestamps = typeof event.startMs === 'number' && typeof event.endMs === 'number';
+      const timeText = hasTimestamps ? ` [${(event.startMs / 1000).toFixed(2)}s]` : '';
+      let playButtonHtml = '';
+      if (hasTimestamps) {
+        playButtonHtml = `
+          <button class="sc-play-word-btn" type="button" data-event-index="${evIndex}" data-start="${event.startMs}" data-end="${event.endMs}" title="Play this segment only">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+          </button>
+        `;
+      }
+      
       const badgeCls = event.status === 'not_detected' ? 'sc-badge--error' : 'sc-badge--uncertain';
-      card.innerHTML = `<div class="sc-issue-header"><strong class="sc-issue-phrase">${escapeHtml(event.phrase || event.eventId || 'Event')}</strong><span class="sc-status-badge ${badgeCls}">${escapeHtml(event.status || 'uncertain')}</span></div><div class="sc-issue-category">${escapeHtml(categoryLabel)}</div><div class="sc-issue-feedback">${escapeHtml(event.feedbackText || '')}</div>`;
+      card.innerHTML = `
+        <div class="sc-issue-header">
+          <strong class="sc-issue-phrase">${escapeHtml(event.phrase || event.eventId || 'Event')}</strong>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-size: 0.72rem; color: #9ca3af; white-space: nowrap;">${timeText}</span>
+            ${playButtonHtml}
+            <span class="sc-status-badge ${badgeCls}">${escapeHtml(event.status || 'uncertain')}</span>
+          </div>
+        </div>
+        <div class="sc-issue-category">${escapeHtml(categoryLabel)}</div>
+        <div class="sc-issue-feedback">${escapeHtml(event.feedbackText || '')}</div>
+      `;
       issueStack.appendChild(card);
     });
 
@@ -2845,7 +3121,7 @@ class ReadAloudMode {
   }
 
   /** Build "Successful Links" section with green pill tags */
-  _buildSuccessPillsSection(linkingSuccesses) {
+  _buildSuccessPillsSection(linkingSuccesses, events) {
     const escapeHtml = ReadAloudMode.escapeHtml;
     const section = document.createElement('div');
     section.className = 'sc-section';
@@ -2859,10 +3135,35 @@ class ReadAloudMode {
     pillWrap.className = 'sc-pill-wrap';
 
     linkingSuccesses.forEach((event) => {
+      const evIndex = events ? events.indexOf(event) : -1;
       const pill = document.createElement('span');
       pill.className = 'sc-success-pill';
+      if (evIndex !== -1) {
+        pill.dataset.eventIndex = String(evIndex);
+      }
+      
+      const hasTimestamps = typeof event.startMs === 'number' && typeof event.endMs === 'number';
+      const timeText = hasTimestamps ? ` [${(event.startMs / 1000).toFixed(2)}s]` : '';
+      let playButtonHtml = '';
+      if (hasTimestamps) {
+        playButtonHtml = `
+          <button class="sc-play-word-btn" type="button" data-event-index="${evIndex}" data-start="${event.startMs}" data-end="${event.endMs}" title="Play this segment only" style="width: 18px; height: 18px; margin-left: 4px; margin-right: 0;">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style="width: 10px; height: 10px;">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+          </button>
+        `;
+      }
+      
       pill.title = event.feedbackText || '';
-      pill.innerHTML = `<svg class="sc-check-icon" width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>${escapeHtml(event.phrase || 'Word')}`;
+      pill.innerHTML = `
+        <svg class="sc-check-icon" width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+        </svg>
+        ${escapeHtml(event.phrase || 'Word')}
+        <span style="font-size: 0.68rem; opacity: 0.7; margin-left: 4px; white-space: nowrap;">${timeText}</span>
+        ${playButtonHtml}
+      `;
       pillWrap.appendChild(pill);
     });
 

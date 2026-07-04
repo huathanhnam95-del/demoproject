@@ -364,6 +364,6 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 371,2026-07-02,Fix practice-modes browser check scope mismatch,Done,2026-07-02
 372,2026-07-03,Fix root URL router scope reset bug in script.js,Done,2026-07-03
 373,2026-07-03,Swap the position of PTE Practice and English Practice tabs,Done,2026-07-03
-
-
-
+374,2026-07-04,Review tutorials for font errors and other modes,Done,2026-07-04
+375,2026-07-04,Implement Read Aloud audio player and restore attempts list,Done,2026-07-04
+376,2026-07-04,Write implementation plan for Speech Coach word hover highlight and audio playback,Done,2026-07-04

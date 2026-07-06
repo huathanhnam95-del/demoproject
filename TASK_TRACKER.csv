@@ -326,7 +326,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 333,2026-06-03,Locate Kokoro AI audio file storage directories,Done,2026-06-03
 334,2026-06-03,Check commit and push status of Kokoro AI audio files,Done,2026-06-03
 335,2026-06-03,Check for historical versions of RA audio in Git,Done,2026-06-03
-336,2026-06-03,Investigate C drive space reduction,In Progress,
+336,2026-06-03,Investigate C drive space reduction,Done,2026-06-03
 337,2026-06-06,Check if all RFIB audio files are pushed to production,Done,2026-06-06
 338,2026-06-06,Generate missing RFIB beginner audio files using Kokoro AI,Done,2026-06-06
 339,2026-06-09,Change 8.0 IELTS to 8.5 IELTS in Downloaded PDF,Done,2026-06-09
@@ -367,3 +367,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 374,2026-07-04,Review tutorials for font errors and other modes,Done,2026-07-04
 375,2026-07-04,Implement Read Aloud audio player and restore attempts list,Done,2026-07-04
 376,2026-07-04,Write implementation plan for Speech Coach word hover highlight and audio playback,Done,2026-07-04
+377,2026-07-04,Investigate why male and female audio for Read Aloud question cannot be played,Done,2026-07-04
+378,2026-07-04,Implement Azure quota protection guardrails,Done,2026-07-04
+379,2026-07-04,Review debug and refactor Azure guardrail changes,Done,2026-07-04
+380,2026-07-06,Generate 10 profile picture variations for Better English Learning,Done,2026-07-06

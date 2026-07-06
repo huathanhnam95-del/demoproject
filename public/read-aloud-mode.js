@@ -32,8 +32,10 @@ class ReadAloudMode {
     this.currentPromptReady = false;
     this.prepSeconds = 0;
     this.recordSeconds = 0;
-    this.state = 'IDLE'; // IDLE, PREP, RECORDING, RESULTS
+    this.state = 'IDLE'; // IDLE, PREP, REQUESTING_MIC, RECORDING, STOPPING_RECORDING, RECORDED, RESULTS
     this.timerInterval = null;
+    this.pendingBlob = null;
+    this.pendingSession = null;
     this.database = [];
     this.currentTranscript = '';
     this.hasLoadedDatabase = false;
@@ -92,6 +94,7 @@ class ReadAloudMode {
     this.promptLifecycleToken = 0;
     this.recordingRequestId = 0;
     this.hasAssessmentResult = false;
+    this.isSubmitInFlight = false;
     this.userRecordingUrl = null;
 
     // Question Picker v7 (Read Aloud only)
@@ -494,7 +497,10 @@ class ReadAloudMode {
 
     const playRecording = document.getElementById('header-ra-play-recording-btn');
     if (playRecording) {
-      const canPlay = !!this.userRecordingUrl && this.state !== 'RECORDING' && this.state !== 'REQUESTING_MIC';
+      const canPlay = !!this.userRecordingUrl
+        && this.state !== 'RECORDING'
+        && this.state !== 'REQUESTING_MIC'
+        && this.state !== 'STOPPING_RECORDING';
       playRecording.disabled = !canPlay;
       playRecording.setAttribute('aria-disabled', canPlay ? 'false' : 'true');
     }
@@ -503,7 +509,7 @@ class ReadAloudMode {
   refreshQuestionPickerV7NavState() {
     const nextBtn = document.getElementById('ra-v7-next-btn');
     if (nextBtn) {
-      const allowNext = this.state !== 'RECORDING';
+      const allowNext = this.state !== 'RECORDING' && this.state !== 'STOPPING_RECORDING';
       nextBtn.disabled = !allowNext;
       nextBtn.setAttribute('aria-disabled', allowNext ? 'false' : 'true');
       nextBtn.style.display = allowNext ? '' : 'none';
@@ -1057,6 +1063,10 @@ class ReadAloudMode {
     // Update URL with current question ID (replaceState — no history entry per question)
     if (window.PracticeRouter && this.currentQuestionId) {
       window.PracticeRouter.replaceRoute('read-aloud', this.currentQuestionId);
+    }
+
+    if (window.PTEAttemptArchive && typeof window.PTEAttemptArchive.updateHistoryUI === 'function') {
+      window.PTEAttemptArchive.updateHistoryUI('read-aloud', this.currentQuestionId);
     }
 
     if (this.getRecordingSupportState().supported) {
@@ -2021,13 +2031,15 @@ class ReadAloudMode {
   }
 
   async submitToAzure(rawBlob, recordingSession) {
+    if (this.isSubmitInFlight) return false;
+    this.isSubmitInFlight = true;
     const statusMsg = document.getElementById('ra-status-message');
     try {
-      if (!this.shouldApplyAssessment(recordingSession)) return;
+      if (!this.shouldApplyAssessment(recordingSession)) return false;
       if (statusMsg) statusMsg.textContent = 'Formatting audio...';
       const wavBlob = await this.prepareWavBlob(rawBlob);
       recordingSession.wavBlob = wavBlob;
-      if (!this.shouldApplyAssessment(recordingSession)) return;
+      if (!this.shouldApplyAssessment(recordingSession)) return false;
 
       if (statusMsg) statusMsg.textContent = 'Analyzing pronunciation...';
       const formData = new FormData();
@@ -2048,7 +2060,7 @@ class ReadAloudMode {
       });
 
       const payload = await response.json().catch(() => null);
-      if (!this.shouldApplyAssessment(recordingSession)) return;
+      if (!this.shouldApplyAssessment(recordingSession)) return false;
       if (!response.ok || !payload?.success) {
         const error = new Error(payload?.message || 'Assessment failed.');
         error.code = payload?.error || null;
@@ -2065,15 +2077,22 @@ class ReadAloudMode {
       }
 
       this.processAzureResults(payload, recordingSession);
+      return true;
     } catch (err) {
       console.error('Azure assessment error:', err);
-      if (!this.shouldApplyAssessment(recordingSession)) return;
+      if (!this.shouldApplyAssessment(recordingSession)) return false;
       const accuracyElement = document.getElementById('ra-accuracy-value');
       const feedbackElement = document.getElementById('ra-transcript-feedback');
       this.showAssessmentDisplay();
       if (statusMsg) {
         if (err?.code === 'INVALID_AUDIO' && err?.reason === 'too_long') {
           statusMsg.textContent = 'That recording was too long to score. Keep it under 40 seconds and try again.';
+        } else if (err?.code === 'INVALID_AUDIO' && err?.reason === 'no_speech') {
+          statusMsg.textContent = 'No speech was detected. Please check your microphone and try again.';
+        } else if (err?.code === 'INVALID_AUDIO' && err?.reason === 'too_short') {
+          statusMsg.textContent = 'That recording was too short. Please try again.';
+        } else if (err?.code === 'INVALID_AUDIO' && err?.reason === 'clipped') {
+          statusMsg.textContent = 'Your audio is too loud or clipped. Please adjust your microphone volume.';
         } else if (err?.code === 'AZURE_ASSESSMENT_FAILED' && err?.reason === 'scores_unavailable') {
           statusMsg.textContent = 'We captured the transcript, but pronunciation scoring was unavailable. Keep it under 40 seconds and try again.';
         } else if (err?.code === 'INVALID_AUDIO') {
@@ -2086,17 +2105,25 @@ class ReadAloudMode {
       if (feedbackElement) {
         const fallbackText = err?.code === 'INVALID_AUDIO' && err?.reason === 'too_long'
           ? 'That recording was too long for the current scorer. Try keeping it under 40 seconds.'
-          : err?.code === 'AZURE_ASSESSMENT_FAILED' && err?.reason === 'scores_unavailable'
-            ? 'Your speech was transcribed, but pronunciation scores were not returned for this attempt.'
-            : 'We could not score this attempt.';
+          : err?.code === 'INVALID_AUDIO' && err?.reason === 'no_speech'
+            ? 'We did not detect any speech in your recording. Please ensure your microphone is working.'
+            : err?.code === 'INVALID_AUDIO' && err?.reason === 'too_short'
+              ? 'Your recording was too short. Please try to speak clearly and fully.'
+              : err?.code === 'INVALID_AUDIO' && err?.reason === 'clipped'
+                ? 'Your audio signal was clipped or too loud. Try adjusting your input volume.'
+                : err?.code === 'AZURE_ASSESSMENT_FAILED' && err?.reason === 'scores_unavailable'
+                  ? 'Your speech was transcribed, but pronunciation scores were not returned for this attempt.'
+                  : 'We could not score this attempt.';
         feedbackElement.innerHTML = `<p style="line-height: 1.6; font-size: 1rem; padding: 10px; border: 1px solid #f3d1d1; border-radius: 8px; background: #fff7f7; color: #b42318;">${fallbackText}</p>`;
       }
       this.clearConnectedSpeechResults();
+      return false;
+    } finally {
+      this.isSubmitInFlight = false;
     }
   }
 
   async prepareWavBlob(blob) {
-    if (blob.type === 'audio/wav' || blob.type === 'audio/wave') return blob;
     const arrayBuffer = await blob.arrayBuffer();
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const decoded = await audioContext.decodeAudioData(arrayBuffer.slice(0));
@@ -2107,7 +2134,93 @@ class ReadAloudMode {
     source.start(0);
     const rendered = await offline.startRendering();
     if (typeof audioContext.close === 'function') await audioContext.close().catch(() => { });
+
+    const quality = this.validateAudioBufferQuality(rendered);
+    if (!quality.passed) {
+      const error = new Error('Audio quality validation failed');
+      error.code = 'INVALID_AUDIO';
+      error.reason = quality.reason;
+      throw error;
+    }
+
     return this.audioBufferToWav(rendered);
+  }
+
+  validateAudioBufferQuality(audioBuffer) {
+    const sampleRate = audioBuffer.sampleRate;
+    const channelData = audioBuffer.getChannelData(0);
+    const totalSamples = channelData.length;
+
+    const minimumPeakAmplitude = 320 / 32768;
+    let maxAbs = 0;
+    let clippedSamples = 0;
+
+    for (let i = 0; i < totalSamples; i++) {
+      const absVal = Math.abs(channelData[i]);
+      if (absVal >= 32760 / 32768) clippedSamples++;
+      if (absVal > maxAbs) maxAbs = absVal;
+    }
+
+    if (maxAbs < minimumPeakAmplitude) {
+      return { passed: false, reason: 'no_speech' };
+    }
+
+    const frameSize = Math.max(1, Math.round(sampleRate * 0.01));
+    const frameDurationMs = (frameSize / sampleRate) * 1000;
+    const frameRms = [];
+
+    for (let offset = 0; offset < totalSamples; offset += frameSize) {
+      const end = Math.min(totalSamples, offset + frameSize);
+      let energy = 0;
+      for (let i = offset; i < end; i++) {
+        const val = channelData[i];
+        energy += val * val;
+      }
+      frameRms.push(Math.sqrt(energy / Math.max(1, end - offset)));
+    }
+
+    const maxRms = frameRms.reduce((highest, val) => Math.max(highest, val), 0);
+    const minimumFrameRms = 0.01;
+    if (maxRms < minimumFrameRms) {
+      return { passed: false, reason: 'no_speech' };
+    }
+
+    const minimumFrameThreshold = 0.008;
+    const frameRmsFraction = 0.18;
+    const threshold = Math.max(minimumFrameThreshold, maxRms * frameRmsFraction);
+    
+    let firstSpeechFrame = -1;
+    let lastSpeechFrame = -1;
+    let speechFrameCount = 0;
+
+    for (let i = 0; i < frameRms.length; i++) {
+      if (frameRms[i] >= threshold) {
+        speechFrameCount++;
+        if (firstSpeechFrame === -1) firstSpeechFrame = i;
+        lastSpeechFrame = i;
+      }
+    }
+
+    if (firstSpeechFrame === -1 || lastSpeechFrame === -1) {
+      return { passed: false, reason: 'no_speech' };
+    }
+
+    const speechDurationMs = Math.round((lastSpeechFrame - firstSpeechFrame + 1) * frameDurationMs);
+    const clippedRatio = clippedSamples / totalSamples;
+
+    if (speechDurationMs < 250) {
+      return { passed: false, reason: 'too_short' };
+    }
+
+    if (speechDurationMs > 40000) {
+      return { passed: false, reason: 'too_long' };
+    }
+
+    if (clippedRatio >= 0.005) {
+      return { passed: false, reason: 'clipped' };
+    }
+
+    return { passed: true };
   }
 
   audioBufferToWav(buffer) {

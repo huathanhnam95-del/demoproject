@@ -73,6 +73,14 @@ assert.equal(canShowDetailedFeedback({
     targetCount: 2,
     observedCount: 2,
     nativeQuality: { rateable: true, confidence: 0.8 },
+    learnerQuality: { rateable: true, confidence: 0.8 },
+    nativeStressEvidence: { rateable: true, confidence: 0.8 },
+    learnerStressEvidence: { rateable: false, confidence: 0.2 }
+}), false);
+assert.equal(canShowDetailedFeedback({
+    targetCount: 2,
+    observedCount: 2,
+    nativeQuality: { rateable: true, confidence: 0.8 },
     learnerQuality: { rateable: true, confidence: 0.4 }
 }), false);
 

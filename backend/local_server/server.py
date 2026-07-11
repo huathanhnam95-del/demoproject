@@ -1639,9 +1639,6 @@ def build_analysis_v2_response(raw_analysis, expected_syllable_count=None, nativ
     selected_syllables = [item['syllable'] for item in segmentation['selected']]
     reasons = list(segmentation['conflicts'])
     stress = score_lexical_stress_v2(selected_syllables)
-    if selected_syllables and not stress['rateable']:
-        reasons.extend(stress['reasons'])
-    reasons = list(dict.fromkeys(reasons))
     rateable = bool(selected_syllables) and not reasons
     primary_stress = stress['primaryStress']
     public_segmentation = {

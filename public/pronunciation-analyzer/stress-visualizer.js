@@ -787,7 +787,9 @@ class StressVisualizer {
             targetCount: referenceSyllables.length || nativeSyllables.length,
             observedCount: learnerSyllables.length,
             nativeQuality: nativeAnalysis.quality,
-            learnerQuality: userAnalysis.quality
+            learnerQuality: userAnalysis.quality,
+            nativeStressEvidence: nativeAnalysis?.observed?.stressEvidence,
+            learnerStressEvidence: userAnalysis?.observed?.stressEvidence
         });
         if (detailed) {
             this.generateFeedback(targetDurations, learnerSyllables, nativeSyllables);

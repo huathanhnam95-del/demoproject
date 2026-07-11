@@ -129,15 +129,26 @@ export function canShowDetailedFeedback({
     observedCount,
     nativeQuality,
     learnerQuality,
+    nativeStressEvidence = null,
+    learnerStressEvidence = null,
     threshold = ANALYSIS_CONFIDENCE_THRESHOLD
 }) {
+    const stressIsRateable = (evidence) => (
+        evidence === null ||
+        (
+            evidence?.rateable === true &&
+            Number(evidence.confidence) >= threshold
+        )
+    );
     return (
         targetCount === observedCount &&
         targetCount > 0 &&
         nativeQuality?.rateable === true &&
         learnerQuality?.rateable === true &&
         Number(nativeQuality.confidence) >= threshold &&
-        Number(learnerQuality.confidence) >= threshold
+        Number(learnerQuality.confidence) >= threshold &&
+        stressIsRateable(nativeStressEvidence) &&
+        stressIsRateable(learnerStressEvidence)
     );
 }
 

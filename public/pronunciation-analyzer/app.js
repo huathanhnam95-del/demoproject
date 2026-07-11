@@ -328,7 +328,8 @@ export class PronunciationApp {
                         audioBlob,
                         analysis?.syllables || [],
                         0,
-                        analysis?.quality
+                        analysis?.quality,
+                        analysis?.observed?.stressEvidence
                     );
                 } else {
                     const analysisData = result.analysisData || { times: [], pitches: [], energies: [] };
@@ -354,7 +355,13 @@ export class PronunciationApp {
                         this.currentWordRef?.nativeAnalysis,
                         this.currentWordRef?.syllables || []
                     );
-                    this.renderSyllableFeedback(audioBlob, syllables, noiseCount, result.quality);
+                    this.renderSyllableFeedback(
+                        audioBlob,
+                        syllables,
+                        noiseCount,
+                        result.quality,
+                        { rateable: false, confidence: 0 }
+                    );
                 }
 
                 this._finishAnalysis('Idle');
@@ -467,14 +474,22 @@ export class PronunciationApp {
         ));
     }
 
-    renderSyllableFeedback(audioBlob, syllables, noiseCount = 0, learnerQuality = null) {
+    renderSyllableFeedback(
+        audioBlob,
+        syllables,
+        noiseCount = 0,
+        learnerQuality = null,
+        learnerStressEvidence = null
+    ) {
         const targetCount = this.expectedData?.syllables || 0;
         const countsMatch = targetCount === syllables.length;
         const detailed = canShowDetailedFeedback({
             targetCount,
             observedCount: syllables.length,
             nativeQuality: this.currentWordRef?.nativeAnalysis?.quality,
-            learnerQuality
+            learnerQuality,
+            nativeStressEvidence: this.currentWordRef?.nativeAnalysis?.observed?.stressEvidence,
+            learnerStressEvidence
         });
 
         if (!countsMatch) {

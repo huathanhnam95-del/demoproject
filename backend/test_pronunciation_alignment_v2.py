@@ -117,6 +117,34 @@ class PronunciationAlignmentV2Test(unittest.TestCase):
         self.assertFalse(result["capabilities"]["showNativeGraphs"])
         self.assertEqual(result["segmentation"]["rawCandidateCount"], 2)
 
+    def test_native_graphs_remain_available_when_count_is_valid_but_stress_is_uncertain(self):
+        raw = {
+            "duration": 0.6,
+            "sampleRate": 16000,
+            "pitch": {"times": [0.1, 0.3], "values": [150.0, 151.0]},
+            "intensity": {"times": [0.1, 0.3], "values": [70.0, 70.1]},
+            "syllables": [
+                {
+                    "startTime": 0.0, "endTime": 0.2, "duration": 0.2,
+                    "vowelDuration": 0.15, "avgPitch": 150.0, "maxPitch": 155.0,
+                    "intensity": 70.0,
+                },
+                {
+                    "startTime": 0.2, "endTime": 0.4, "duration": 0.2,
+                    "vowelDuration": 0.15, "avgPitch": 151.0, "maxPitch": 156.0,
+                    "intensity": 70.1,
+                },
+            ],
+        }
+        result = server.build_analysis_v2_response(
+            raw,
+            expected_syllable_count=2,
+            native=True,
+        )
+        self.assertTrue(result["quality"]["rateable"])
+        self.assertTrue(result["capabilities"]["showNativeGraphs"])
+        self.assertFalse(result["observed"]["stressEvidence"]["rateable"])
+
     def test_stress_prominence_penalizes_final_lengthening(self):
         syllables = [
             {"avgPitch": 185, "vowelDuration": 0.16, "duration": 0.20, "intensity": 74},

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {
     buildComparisonChartData,
     buildDurationLanes,
+    buildLexicalFallbackFeedback,
     buildNativeOnlyChartData,
     canShowDetailedFeedback,
     hzToRelativeSemitones
@@ -69,6 +70,40 @@ assert.equal(canShowDetailedFeedback({
     nativeQuality: { rateable: true, confidence: 0.8 },
     learnerQuality: { rateable: true, confidence: 0.75 }
 }), false);
+
+const fallbackMatch = buildLexicalFallbackFeedback({
+    provider: 'cmu-pronouncing-dictionary',
+    targetCount: 3,
+    observedCount: 3,
+    targetPrimaryStress: 1,
+    observedPrimaryStress: 1,
+    learnerQuality: { rateable: true, confidence: 0.9 },
+    learnerStressEvidence: { rateable: true, confidence: 0.85 }
+});
+assert.equal(fallbackMatch.matches, true);
+assert.match(fallbackMatch.message, /count and primary stress match/i);
+
+const fallbackMismatch = buildLexicalFallbackFeedback({
+    provider: 'cmu-pronouncing-dictionary',
+    targetCount: 3,
+    observedCount: 3,
+    targetPrimaryStress: 1,
+    observedPrimaryStress: 2,
+    learnerQuality: { rateable: true, confidence: 0.9 },
+    learnerStressEvidence: { rateable: true, confidence: 0.85 }
+});
+assert.equal(fallbackMismatch.matches, false);
+assert.match(fallbackMismatch.message, /target.*2.*observed.*3/i);
+
+assert.equal(buildLexicalFallbackFeedback({
+    provider: 'merriam-webster',
+    targetCount: 3,
+    observedCount: 3,
+    targetPrimaryStress: 1,
+    observedPrimaryStress: 1,
+    learnerQuality: { rateable: true, confidence: 0.9 },
+    learnerStressEvidence: { rateable: true, confidence: 0.85 }
+}), null);
 assert.equal(canShowDetailedFeedback({
     targetCount: 2,
     observedCount: 2,

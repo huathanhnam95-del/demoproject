@@ -15,7 +15,7 @@ from typing import Any, Iterable, Optional
 
 
 SCHEMA_VERSION = 9
-ALGORITHM_VERSION = "pronunciation-reference-v1"
+ALGORITHM_VERSION = "pronunciation-reference-v2"
 DIALECT = "en-US"
 
 CONFLICT_ORDER = (
@@ -455,6 +455,8 @@ def build_pronunciation_variant(
     audio_filename: Optional[str],
     audio_url: Optional[str],
     acoustic_conflict: bool = False,
+    source_provider: str = "merriam-webster",
+    source_transcription: Optional[str] = None,
 ) -> dict[str, Any]:
     normalized_raw = _nfc(raw_ipa)
     conflicts: list[str] = []
@@ -486,14 +488,24 @@ def build_pronunciation_variant(
     can_score = status == "valid"
     can_show_graphs = can_score and can_play_audio
 
+    provider = _nfc(source_provider) or "merriam-webster"
+    if provider not in {"merriam-webster", "cmu-pronouncing-dictionary"}:
+        raise ValueError(f"Unsupported pronunciation source provider: {provider}")
+    transcription = _nfc(source_transcription) or (
+        "cmu-arpabet-converted"
+        if provider == "cmu-pronouncing-dictionary"
+        else "merriam-webster-ipa"
+    )
+
     return {
         "id": stable_variant_id(word, part_of_speech, normalized_raw, audio_filename),
         "partOfSpeech": _nfc(part_of_speech) or None,
         "definition": _nfc(definition) or None,
         "source": {
-            "provider": "merriam-webster",
+            "provider": provider,
             "entryId": _nfc(entry_id) or None,
             "exactMatch": bool(exact_match),
+            "transcription": transcription,
         },
         "rawIpa": normalized_raw or None,
         "displayIpa": parsed.display_ipa if normalized_raw else None,

@@ -54,7 +54,7 @@ Invoke-RestMethod "$candidateUrl/health" | ConvertTo-Json -Depth 5
 ```
 
 `schemaVersion` must be `9`, `algorithmVersion` must be
-`pronunciation-reference-v1`, `analysisVersion` must be
+`pronunciation-reference-v2`, `analysisVersion` must be
 `pronunciation-analysis-v2`, and `deploymentVersion` must equal the candidate
 Git SHA.
 
@@ -84,6 +84,20 @@ Production promotion requires explicit authorization. After authorization:
 4. Run the production Chrome smoke and a focused audit.
 
 Never deploy the frontend first because it requires schema version 9.
+
+## CMU lexical fallback policy
+
+Merriam-Webster remains primary. When it has no valid exact pronunciation, the
+backend may look up the exact normalized word in the bundled CMU Pronouncing
+Dictionary and convert its ARPAbet phonemes deterministically to American IPA.
+
+CMU fallback variants are explicitly labeled with provider
+`cmu-pronouncing-dictionary` and transcription `cmu-arpabet-converted`. They
+never inherit a Merriam-Webster definition or audio file, and they always set
+`playAudio: false` and `showNativeGraphs: false`. They may support lexical
+syllable-count and stress practice, but never native contour comparisons or
+native stress calibration. Audit reports expose `runtimeFallbackValidated`
+separately and exclude these variants from `cmuCorroborated`.
 
 ## Rollback
 

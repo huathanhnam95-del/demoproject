@@ -17,6 +17,7 @@ RUN mkdir -p ./local_server
 COPY backend/local_server/__init__.py ./local_server/__init__.py
 COPY backend/local_server/server.py ./local_server/server.py
 COPY backend/local_server/pronunciation_reference.py ./local_server/pronunciation_reference.py
+COPY public/cmudict.json ./local_server/cmudict.json
 
 # Cloud Run uses PORT env variable
 ENV PORT=8080

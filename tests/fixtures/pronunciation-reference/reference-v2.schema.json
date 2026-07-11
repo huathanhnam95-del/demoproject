@@ -15,7 +15,7 @@
   ],
   "properties": {
     "schemaVersion": { "const": 9 },
-    "algorithmVersion": { "const": "pronunciation-reference-v1" },
+    "algorithmVersion": { "const": "pronunciation-reference-v2" },
     "deploymentVersion": { "type": "string", "minLength": 1 },
     "word": { "type": "string", "minLength": 1 },
     "dialect": { "const": "en-US" },
@@ -68,11 +68,16 @@
         "source": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["provider", "entryId", "exactMatch"],
+          "required": ["provider", "entryId", "exactMatch", "transcription"],
           "properties": {
-            "provider": { "const": "merriam-webster" },
+            "provider": {
+              "enum": ["merriam-webster", "cmu-pronouncing-dictionary"]
+            },
             "entryId": { "type": ["string", "null"] },
-            "exactMatch": { "type": "boolean" }
+            "exactMatch": { "type": "boolean" },
+            "transcription": {
+              "enum": ["merriam-webster-ipa", "cmu-arpabet-converted"]
+            }
           }
         },
         "rawIpa": { "type": ["string", "null"] },

@@ -1,5 +1,5 @@
 export const SCHEMA_VERSION = 9;
-export const ALGORITHM_VERSION = 'pronunciation-reference-v1';
+export const ALGORITHM_VERSION = 'pronunciation-reference-v2';
 export const ANALYSIS_VERSION = 'pronunciation-analysis-v2';
 export const DIALECT = 'en-US';
 
@@ -14,6 +14,28 @@ function isStressIndex(value, count) {
 function validateVariant(variant) {
     invariant(variant && typeof variant === 'object', 'variant must be an object');
     invariant(/^[0-9a-f]{16}$/.test(variant.id || ''), 'invalid variant id');
+    invariant(
+        ['merriam-webster', 'cmu-pronouncing-dictionary'].includes(variant.source?.provider),
+        'unknown source provider'
+    );
+    if (variant.source.provider === 'merriam-webster') {
+        invariant(
+            variant.source.transcription === 'merriam-webster-ipa',
+            'Merriam-Webster transcription provenance must be explicit'
+        );
+    }
+    if (variant.source.provider === 'cmu-pronouncing-dictionary') {
+        invariant(
+            variant.source.transcription === 'cmu-arpabet-converted',
+            'CMU fallback transcription must be explicit'
+        );
+        invariant(!variant.audioUrl, 'CMU fallback must not expose native audio');
+        invariant(
+            variant.capabilities?.playAudio === false &&
+                variant.capabilities?.showNativeGraphs === false,
+            'CMU fallback must disable native audio and graphs'
+        );
+    }
     invariant(Array.isArray(variant.syllables), 'syllables must be an array');
     invariant(
         Number.isInteger(variant.syllableCount) &&

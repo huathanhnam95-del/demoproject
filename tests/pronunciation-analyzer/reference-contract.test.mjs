@@ -14,7 +14,12 @@ function validVariant(overrides = {}) {
         id: '0123456789abcdef',
         partOfSpeech: 'noun',
         definition: 'fixture',
-        source: { provider: 'merriam-webster', entryId: 'car:1', exactMatch: true },
+        source: {
+            provider: 'merriam-webster',
+            entryId: 'car:1',
+            exactMatch: true,
+            transcription: 'merriam-webster-ipa'
+        },
         rawIpa: 'ˈkɑɚ',
         displayIpa: '/kɑr/',
         syllableCount: 1,
@@ -38,7 +43,7 @@ function validReference(overrides = {}) {
     const variant = validVariant();
     return {
         schemaVersion: 9,
-        algorithmVersion: 'pronunciation-reference-v1',
+        algorithmVersion: 'pronunciation-reference-v2',
         deploymentVersion: 'deadbeef',
         word: 'car',
         dialect: 'en-US',
@@ -49,15 +54,47 @@ function validReference(overrides = {}) {
 }
 
 assert.equal(SCHEMA_VERSION, 9);
-assert.equal(ALGORITHM_VERSION, 'pronunciation-reference-v1');
+assert.equal(ALGORITHM_VERSION, 'pronunciation-reference-v2');
 assert.equal(
     buildReferenceCacheKey(' Car '),
-    'pronunciation-reference-v1|9|en-US|car'
+    'pronunciation-reference-v2|9|en-US|car'
 );
 
 const reference = validateReferenceV2(validReference(), { expectedWord: 'car' });
 assert.equal(reference.word, 'car');
 assert.equal(selectReferenceVariant(reference).id, reference.defaultVariantId);
+
+const cmuFallback = validVariant({
+    source: {
+        provider: 'cmu-pronouncing-dictionary',
+        entryId: 'cmudict:car',
+        exactMatch: true,
+        transcription: 'cmu-arpabet-converted'
+    },
+    definition: null,
+    audioUrl: null,
+    capabilities: { playAudio: false, scoreCountStress: true, showNativeGraphs: false }
+});
+assert.equal(validateReferenceV2(validReference({
+    defaultVariantId: cmuFallback.id,
+    variants: [cmuFallback]
+})).variants[0].source.provider, 'cmu-pronouncing-dictionary');
+assert.throws(
+    () => validateReferenceV2(validReference({
+        variants: [validVariant({
+            source: { provider: 'untrusted', entryId: 'x', exactMatch: true }
+        })]
+    })),
+    /source provider/i
+);
+assert.throws(
+    () => validateReferenceV2(validReference({
+        variants: [validVariant({
+            source: { provider: 'merriam-webster', entryId: 'car:1', exactMatch: true }
+        })]
+    })),
+    /transcription/i
+);
 
 assert.throws(
     () => validateReferenceV2(validReference({ schemaVersion: 8 })),

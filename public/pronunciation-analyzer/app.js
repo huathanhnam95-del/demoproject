@@ -8,7 +8,7 @@ import { NativeAudioPlayer } from './native-audio-player.js';
 import { config } from './config.js';
 import { analyzeRecordedAttempt } from './analysis-pipeline.js';
 import { selectReferenceVariant } from './reference-contract.js';
-import { canShowDetailedFeedback } from './chart-data.js';
+import { buildLexicalFallbackFeedback, canShowDetailedFeedback } from './chart-data.js';
 
 export class PronunciationApp {
     constructor() {
@@ -491,6 +491,15 @@ export class PronunciationApp {
             nativeStressEvidence: this.currentWordRef?.nativeAnalysis?.observed?.stressEvidence,
             learnerStressEvidence
         });
+        const lexicalFallback = buildLexicalFallbackFeedback({
+            provider: this.currentWordRef?.source?.provider,
+            targetCount,
+            observedCount: syllables.length,
+            targetPrimaryStress: this.expectedData?.primaryStress,
+            observedPrimaryStress: learnerStressEvidence?.primaryStress,
+            learnerQuality,
+            learnerStressEvidence
+        });
 
         if (!countsMatch) {
             this.visualizer.drawDurationChart(
@@ -500,6 +509,9 @@ export class PronunciationApp {
             this.resultsSummary.textContent =
                 `Target: ${targetCount} syllables. Observed: ${syllables.length}. ` +
                 'A phoneme alignment is required to identify which syllable differs.';
+        } else if (lexicalFallback && syllables.length > 0) {
+            this.visualizer.drawDurationChart([], syllables);
+            this.resultsSummary.textContent = lexicalFallback.message;
         } else if (detailed && this.nativePattern && syllables.length > 0) {
             const comparison = this.wordRefService.compareWithNative(
                 syllables,
@@ -826,6 +838,7 @@ export class PronunciationApp {
 
         this.currentWordRef = wordRef;
         const isValid = wordRef.validation?.status === 'valid';
+        const isCmuFallback = wordRef.source?.provider === 'cmu-pronouncing-dictionary';
         const canScore = isValid && wordRef.capabilities.scoreCountStress;
         const canShowGraphs = (
             isValid &&
@@ -855,9 +868,11 @@ export class PronunciationApp {
             }
         }
         if (this.referenceStatus) {
-            this.referenceStatus.textContent = isValid
-                ? ''
-                : 'Pronunciation reference under review.';
+            this.referenceStatus.textContent = !isValid
+                ? 'Pronunciation reference under review.'
+                : isCmuFallback
+                    ? 'CMU pronunciation fallback · native audio and contour unavailable.'
+                    : '';
             this.referenceStatus.classList.toggle('pa-reference-status--conflict', !isValid);
         }
         this.recordBtn.disabled = !canScore;

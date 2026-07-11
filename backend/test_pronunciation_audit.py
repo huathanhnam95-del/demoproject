@@ -32,16 +32,23 @@ WORDS = {
 
 def reference_for(word):
     raw_ipa, headword, _, _ = WORDS[word]
+    is_fallback = word == "media"
     variant = build_pronunciation_variant(
         word=word,
         part_of_speech="noun",
-        definition="fixture",
+        definition=None if is_fallback else "fixture",
         entry_id=word,
         exact_match=True,
         raw_ipa=raw_ipa,
         headword=headword,
-        audio_filename=f"{word}.mp3",
-        audio_url=f"https://media.merriam-webster.com/{word}.mp3",
+        audio_filename=None if is_fallback else f"{word}.mp3",
+        audio_url=None if is_fallback else f"https://media.merriam-webster.com/{word}.mp3",
+        source_provider=(
+            "cmu-pronouncing-dictionary" if is_fallback else "merriam-webster"
+        ),
+        source_transcription=(
+            "cmu-arpabet-converted" if is_fallback else "merriam-webster-ipa"
+        ),
     )
     return build_pronunciation_reference(
         word=word,
@@ -153,9 +160,16 @@ class PronunciationReferenceAuditTest(unittest.TestCase):
                 self.assertEqual(report["summary"]["incorrectScoreable"], 0)
                 self.assertEqual(report["summary"]["validated"], len(WORDS))
                 self.assertEqual(report["summary"]["graphCountMismatches"], 0)
+                self.assertEqual(report["summary"]["runtimeFallbackValidated"], 1)
+                media_row = next(row for row in report["rows"] if row["word"] == "media")
+                self.assertFalse(media_row["cmuCorroborated"])
                 self.assertTrue(report["gates"]["passed"])
                 self.assertEqual(len(report["rows"]), len(WORDS))
-                self.assertEqual(len(report["calibrationRecords"]), 4)
+                self.assertEqual(len(report["calibrationRecords"]), 3)
+                self.assertNotIn(
+                    "media",
+                    {item["word"] for item in report["calibrationRecords"]},
+                )
                 self.assertTrue(all(
                     item["source"] == "validated-native-recording-audit"
                     for item in report["calibrationRecords"]

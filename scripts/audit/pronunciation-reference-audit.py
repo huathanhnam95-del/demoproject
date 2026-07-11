@@ -175,10 +175,22 @@ def audit_word(base_url, word, cmu, source_mode):
     any_cmu_match = False
     for variant in reference.get("variants", []):
         variant["auditStyleViolations"] = style_violations(variant)
+        if variant.get("source", {}).get("provider") == "cmu-pronouncing-dictionary":
+            fallback_is_honest = (
+                variant.get("source", {}).get("transcription") == "cmu-arpabet-converted"
+                and variant.get("definition") is None
+                and variant.get("audioUrl") is None
+                and variant.get("capabilities", {}).get("playAudio") is False
+                and variant.get("capabilities", {}).get("showNativeGraphs") is False
+            )
+            if not fallback_is_honest:
+                row["errors"].append("FALLBACK_PROVENANCE_VIOLATION")
         scoreable = variant.get("capabilities", {}).get("scoreCountStress") is True
         if scoreable and variant["auditStyleViolations"]:
             row["errors"].extend(variant["auditStyleViolations"])
         if (
+            variant.get("source", {}).get("provider") != "cmu-pronouncing-dictionary"
+            and
             variant.get("syllableCount") == cmu_count
             and variant.get("primaryStress") == cmu_stress
         ):
@@ -281,11 +293,25 @@ def summarize(rows, requested_size, source_mode):
         "INVALID_DISPLAY_WRAPPERS",
         "NON_OXFORD_AMERICAN_SYMBOL",
         "MONOSYLLABLE_STRESS_MARK",
+        "FALLBACK_PROVENANCE_VIOLATION",
     }
     incorrect_scoreable = sum(
         1 for row in rows if incorrect_scoreable_codes.intersection(row.get("errors", []))
     )
     corroborated = sum(1 for row in rows if row.get("cmuCorroborated"))
+    fallback_validated = 0
+    for row in rows:
+        reference = row.get("reference") or {}
+        selected_id = reference.get("defaultVariantId")
+        selected = next(
+            (
+                variant for variant in reference.get("variants", [])
+                if variant.get("id") == selected_id
+            ),
+            None,
+        )
+        if selected and selected.get("source", {}).get("provider") == "cmu-pronouncing-dictionary":
+            fallback_validated += 1
     coverage = validated / requested_size if requested_size else 0.0
     required_coverage = 0.95 if requested_size <= 100 else 0.98
     summary = {
@@ -296,6 +322,7 @@ def summarize(rows, requested_size, source_mode):
         "validated": validated,
         "validatedCoverage": round(coverage, 6),
         "cmuCorroborated": corroborated,
+        "runtimeFallbackValidated": fallback_validated,
         "graphCountMismatches": graph_mismatches,
         "quarantinedNativeAnalyses": quarantined_graphs,
         "incorrectScoreable": incorrect_scoreable,
@@ -359,7 +386,10 @@ def main():
             "samplingFrame": "unique alphabetic Oxford 5000 entries present in local CMU data",
             "samplingFrameSize": len(frame),
             "sample": requested_words,
-            "cmuRole": "offline corroboration only, not runtime truth",
+            "cmuRole": (
+                "runtime lexical fallback only when Merriam-Webster has no valid exact variant; "
+                "fallback variants are excluded from CMU corroboration counts"
+            ),
         },
         "summary": summary,
         "gates": gates,

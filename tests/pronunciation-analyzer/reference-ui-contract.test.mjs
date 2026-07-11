@@ -21,6 +21,7 @@ assert.match(htmlSource, /id="pa-feedback-section"/);
 assert.ok(!appSource.includes('window.Phonetics'), 'legacy IPA fallback must not enter scoring paths');
 assert.match(appSource, /selectReferenceVariant/);
 assert.match(appSource, /Pronunciation reference under review\./);
+assert.match(appSource, /CMU pronunciation fallback/);
 assert.match(appSource, /single-syllable word/);
 assert.match(appSource, /capabilities\.scoreCountStress/);
 assert.match(appSource, /capabilities\.showNativeGraphs/);

@@ -1,5 +1,7 @@
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
+import json
+from pathlib import Path
 import sys
 try:
     import parselmouth  # type: ignore
@@ -584,6 +586,85 @@ if not MW_API_KEY:
 
 MW_REFERENCES = ('collegiate', 'learners', 'sd4')
 
+_CMU_VOWELS = {
+    'AA': 'ɑ', 'AE': 'æ', 'AO': 'ɔ', 'AW': 'aʊ', 'AY': 'aɪ',
+    'EH': 'ɛ', 'EY': 'eɪ', 'IH': 'ɪ', 'IY': 'i', 'OW': 'oʊ',
+    'OY': 'ɔɪ', 'UH': 'ʊ', 'UW': 'u', 'AX': 'ə', 'AXR': 'ɚ',
+    'IX': 'ɨ', 'UX': 'ʉ',
+}
+_CMU_CONSONANTS = {
+    'B': 'b', 'CH': 'tʃ', 'D': 'd', 'DH': 'ð', 'F': 'f', 'G': 'g',
+    'HH': 'h', 'JH': 'dʒ', 'K': 'k', 'L': 'l', 'M': 'm', 'N': 'n',
+    'NG': 'ŋ', 'P': 'p', 'R': 'r', 'S': 's', 'SH': 'ʃ', 'T': 't',
+    'TH': 'θ', 'V': 'v', 'W': 'w', 'Y': 'j', 'Z': 'z', 'ZH': 'ʒ',
+}
+_CMU_FALLBACK_CACHE = None
+
+
+def arpabet_to_ipa(pronunciation):
+    """Convert one exact CMU ARPAbet pronunciation to phonemic American IPA."""
+    ipa = []
+    for raw_token in str(pronunciation or '').split('#', 1)[0].split():
+        match = re.fullmatch(r'([A-Z]+)([012]?)', raw_token)
+        if not match:
+            return None
+        phoneme, stress = match.groups()
+        if phoneme == 'AH':
+            symbol = 'ə' if stress == '0' else 'ʌ'
+        elif phoneme == 'ER':
+            symbol = 'ɚ' if stress == '0' else 'ɝ'
+        elif phoneme in _CMU_VOWELS:
+            symbol = _CMU_VOWELS[phoneme]
+        elif phoneme in _CMU_CONSONANTS and not stress:
+            ipa.append(_CMU_CONSONANTS[phoneme])
+            continue
+        else:
+            return None
+        if stress == '1':
+            ipa.append('ˈ')
+        elif stress == '2':
+            ipa.append('ˌ')
+        ipa.append(symbol)
+    return ''.join(ipa) or None
+
+
+def get_cmu_pronunciation(word):
+    """Load the bundled exact-word CMU dictionary lazily."""
+    global _CMU_FALLBACK_CACHE
+    if _CMU_FALLBACK_CACHE is None:
+        candidates = (
+            Path(__file__).with_name('cmudict.json'),
+            Path(__file__).resolve().parents[2] / 'public' / 'cmudict.json',
+        )
+        path = next((candidate for candidate in candidates if candidate.is_file()), None)
+        if path is None:
+            _CMU_FALLBACK_CACHE = {}
+        else:
+            with path.open(encoding='utf-8') as source:
+                _CMU_FALLBACK_CACHE = json.load(source)
+    pronunciation = _CMU_FALLBACK_CACHE.get(str(word or '').strip().casefold())
+    return str(pronunciation).strip() if pronunciation else None
+
+
+def build_cmu_fallback_variant(word, pronunciation):
+    raw_ipa = arpabet_to_ipa(pronunciation)
+    if not raw_ipa:
+        return None
+    variant = build_pronunciation_variant(
+        word=word,
+        part_of_speech=None,
+        definition=None,
+        entry_id=f'cmudict:{word}',
+        exact_match=True,
+        raw_ipa=raw_ipa,
+        headword=None,
+        audio_filename=None,
+        audio_url=None,
+        source_provider='cmu-pronouncing-dictionary',
+        source_transcription='cmu-arpabet-converted',
+    )
+    return variant if variant['validation']['status'] == 'valid' else None
+
 
 def get_deployment_version():
     return (
@@ -808,6 +889,17 @@ def get_dictionary_word_v2(word):
     try:
         entries, suggestions, fetch_error = fetch_mw_entries_v2(normalized_word)
         reference = build_dictionary_v2_reference(normalized_word, entries)
+        if reference['defaultVariantId'] is None:
+            fallback = build_cmu_fallback_variant(
+                normalized_word,
+                get_cmu_pronunciation(normalized_word),
+            )
+            if fallback:
+                reference = build_pronunciation_reference(
+                    word=normalized_word,
+                    variants=[*reference['variants'], fallback],
+                    deployment_version=get_deployment_version(),
+                )
         if suggestions:
             reference['suggestions'] = suggestions
         elif not entries:

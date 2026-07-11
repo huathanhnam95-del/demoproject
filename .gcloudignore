@@ -10,3 +10,6 @@ backend/local_server/*
 !backend/local_server/__init__.py
 !backend/local_server/server.py
 !backend/local_server/pronunciation_reference.py
+!public
+public/*
+!public/cmudict.json

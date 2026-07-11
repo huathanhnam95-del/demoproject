@@ -54,7 +54,7 @@ class PronunciationReferenceContractTest(unittest.TestCase):
         self.assertEqual(self.schema["properties"]["schemaVersion"]["const"], 9)
         self.assertEqual(
             self.schema["properties"]["algorithmVersion"]["const"],
-            "pronunciation-reference-v1",
+            "pronunciation-reference-v2",
         )
         conflict_codes = set(
             self.schema["$defs"]["variant"]["properties"]["validation"]

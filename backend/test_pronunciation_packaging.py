@@ -11,6 +11,7 @@ class PronunciationPackagingTests(unittest.TestCase):
         self.assertIn("COPY backend/requirements.txt", dockerfile)
         self.assertIn("COPY backend/local_server/server.py", dockerfile)
         self.assertIn("COPY backend/local_server/pronunciation_reference.py", dockerfile)
+        self.assertIn("COPY public/cmudict.json", dockerfile)
         self.assertIn("local_server.server:app", dockerfile)
         self.assertNotIn("COPY server.py", dockerfile)
 
@@ -38,6 +39,7 @@ class PronunciationPackagingTests(unittest.TestCase):
         self.assertIn("!backend/requirements.txt", patterns)
         self.assertIn("!backend/local_server/server.py", patterns)
         self.assertIn("!backend/local_server/pronunciation_reference.py", patterns)
+        self.assertIn("!public/cmudict.json", patterns)
         self.assertNotIn("!Admin account", patterns)
         self.assertFalse(any("test-results" in pattern for pattern in patterns))
 

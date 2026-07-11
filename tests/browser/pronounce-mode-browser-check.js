@@ -96,12 +96,20 @@ async function run() {
       stress,
       secondary = [],
       status = 'valid',
-      audio = true
+      audio = true,
+      provider = 'merriam-webster'
     }) => ({
       id,
       partOfSpeech: pos,
       definition: 'fixture',
-      source: { provider: 'merriam-webster', entryId: id, exactMatch: true },
+      source: {
+        provider,
+        entryId: provider === 'cmu-pronouncing-dictionary' ? `cmudict:${id}` : id,
+        exactMatch: true,
+        transcription: provider === 'cmu-pronouncing-dictionary'
+          ? 'cmu-arpabet-converted'
+          : 'merriam-webster-ipa'
+      },
       rawIpa,
       displayIpa,
       syllableCount: count,
@@ -151,6 +159,10 @@ async function run() {
       silent: [variant({
         id: '6666666666666666', rawIpa: 'ˈsaɪlənt', displayIpa: '/ˈsaɪlənt/',
         count: 2, stress: 0, audio: false
+      })],
+      fallback: [variant({
+        id: '7777777777777777', rawIpa: 'kɚˈɛktli', displayIpa: '/kərˈɛktli/',
+        count: 3, stress: 1, audio: false, provider: 'cmu-pronouncing-dictionary'
       })]
     };
 
@@ -168,7 +180,7 @@ async function run() {
         const defaultVariant = variants.find((item) => item.validation.status === 'valid');
         return jsonResponse({
           schemaVersion: 9,
-          algorithmVersion: 'pronunciation-reference-v1',
+          algorithmVersion: 'pronunciation-reference-v2',
           deploymentVersion: 'browser-fixture',
           word,
           dialect: 'en-US',
@@ -262,6 +274,13 @@ async function run() {
     await page.click('#pa-search-btn');
     await page.waitForFunction(() => document.querySelector('#pa-ipa-display')?.textContent.includes('saɪlənt'));
     assert.equal(await page.locator('#pa-record-btn').isDisabled(), false);
+    assert.equal(await page.locator('#pa-charts-container').evaluate((node) => node.classList.contains('hidden')), true);
+
+    await page.fill('#pa-word-input', 'fallback');
+    await page.click('#pa-search-btn');
+    await page.waitForFunction(() => document.querySelector('#pa-reference-status')?.textContent.includes('CMU pronunciation fallback'));
+    assert.equal(await page.locator('#pa-record-btn').isDisabled(), false);
+    assert.equal(await page.locator('#pa-native-audio-container').evaluate((node) => node.style.display), 'none');
     assert.equal(await page.locator('#pa-charts-container').evaluate((node) => node.classList.contains('hidden')), true);
 
     await page.fill('#pa-word-input', 'conflict');

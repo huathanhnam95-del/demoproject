@@ -66,7 +66,7 @@ class PronunciationDictionaryV2ApiTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200, response.get_data(as_text=True))
         payload = response.get_json()
         self.assertEqual(payload["schemaVersion"], 9)
-        self.assertEqual(payload["algorithmVersion"], "pronunciation-reference-v1")
+        self.assertEqual(payload["algorithmVersion"], "pronunciation-reference-v2")
         self.assertEqual(payload["word"], "car")
         self.assertEqual(len(payload["variants"]), 1)
         variant = payload["variants"][0]
@@ -100,9 +100,16 @@ class PronunciationDictionaryV2ApiTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200, response.get_data(as_text=True))
         payload = response.get_json()
         self.assertEqual(payload["word"], "correctly")
-        self.assertIsNone(payload["defaultVariantId"])
+        selected = next(
+            item for item in payload["variants"]
+            if item["id"] == payload["defaultVariantId"]
+        )
+        self.assertEqual(selected["source"]["provider"], "cmu-pronouncing-dictionary")
         self.assertGreaterEqual(len(payload["variants"]), 1)
-        variant = payload["variants"][0]
+        variant = next(
+            item for item in payload["variants"]
+            if item["source"]["entryId"] == "correct:1"
+        )
         self.assertEqual(variant["source"]["entryId"], "correct:1")
         self.assertFalse(variant["source"]["exactMatch"])
         self.assertIn("NON_EXACT_ENTRY", variant["validation"]["conflicts"])
@@ -205,7 +212,11 @@ class PronunciationDictionaryV2ApiTest(unittest.TestCase):
             response = self.client.get("/dictionary/v2/correctly")
 
         payload = response.get_json()
-        self.assertIsNone(payload["defaultVariantId"])
+        selected = next(
+            item for item in payload["variants"]
+            if item["id"] == payload["defaultVariantId"]
+        )
+        self.assertEqual(selected["source"]["provider"], "cmu-pronouncing-dictionary")
         exact_run_on = next(
             item for item in payload["variants"]
             if item["source"]["entryId"] == "correct:1#uro:0"
@@ -232,9 +243,15 @@ class PronunciationDictionaryV2ApiTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200, response.get_data(as_text=True))
         payload = response.get_json()
-        self.assertIsNone(payload["defaultVariantId"])
-        self.assertEqual(len(payload["variants"]), 1)
-        variant = payload["variants"][0]
+        selected = next(
+            item for item in payload["variants"]
+            if item["id"] == payload["defaultVariantId"]
+        )
+        self.assertEqual(selected["source"]["provider"], "cmu-pronouncing-dictionary")
+        variant = next(
+            item for item in payload["variants"]
+            if item["source"]["provider"] == "merriam-webster"
+        )
         self.assertIsNone(variant["definition"])
         self.assertIsNone(variant["rawIpa"])
         self.assertIn("MISSING_IPA", variant["validation"]["conflicts"])
@@ -279,12 +296,94 @@ class PronunciationDictionaryV2ApiTest(unittest.TestCase):
         self.assertIsNone(payload["defaultVariantId"])
         self.assertEqual(payload["suggestions"], ["medium", "medial"])
 
+    def test_cmu_fallback_converts_arpabet_to_canonical_ipa(self):
+        variant = server.build_cmu_fallback_variant(
+            "correctly",
+            "K ER0 EH1 K T L IY0",
+        )
+        self.assertIsNotNone(variant)
+        self.assertEqual(variant["source"]["provider"], "cmu-pronouncing-dictionary")
+        self.assertEqual(variant["source"]["transcription"], "cmu-arpabet-converted")
+        self.assertEqual(variant["source"]["entryId"], "cmudict:correctly")
+        self.assertEqual(variant["displayIpa"], "/kərˈɛktli/")
+        self.assertEqual(variant["syllableCount"], 3)
+        self.assertEqual(variant["primaryStress"], 1)
+        self.assertIsNone(variant["definition"])
+        self.assertIsNone(variant["audioUrl"])
+        self.assertTrue(variant["capabilities"]["scoreCountStress"])
+        self.assertFalse(variant["capabilities"]["showNativeGraphs"])
+
+    def test_cmu_fallback_rejects_unknown_arpabet_tokens(self):
+        self.assertIsNone(server.build_cmu_fallback_variant("invalid", "IH1 N QX"))
+
+    def test_cmu_loader_finds_repository_dictionary_in_local_development(self):
+        original_cache = server._CMU_FALLBACK_CACHE
+        try:
+            server._CMU_FALLBACK_CACHE = None
+            self.assertEqual(server.get_cmu_pronunciation("car"), "K AA1 R")
+        finally:
+            server._CMU_FALLBACK_CACHE = original_cache
+
+    def test_dictionary_uses_cmu_only_when_mw_has_no_valid_variant(self):
+        loose = mw_entry(
+            "correct:1",
+            headword="cor*rect",
+            part_of_speech="adjective",
+            ipa="kəˈrɛkt",
+            audio="correct01",
+        )
+        with (
+            patch.object(
+                server.http_requests,
+                "get",
+                side_effect=[
+                    FakeResponse([loose]),
+                    FakeResponse([loose]),
+                    FakeResponse([loose]),
+                ],
+            ),
+            patch.object(
+                server,
+                "get_cmu_pronunciation",
+                return_value="K ER0 EH1 K T L IY0",
+            ),
+        ):
+            response = self.client.get("/dictionary/v2/correctly")
+
+        payload = response.get_json()
+        selected = next(
+            item for item in payload["variants"]
+            if item["id"] == payload["defaultVariantId"]
+        )
+        self.assertEqual(selected["source"]["provider"], "cmu-pronouncing-dictionary")
+        self.assertEqual(selected["validation"]["status"], "valid")
+
+    def test_dictionary_does_not_add_cmu_when_mw_is_valid(self):
+        with (
+            patch.object(
+                server.http_requests,
+                "get",
+                return_value=FakeResponse([mw_entry("car:1")]),
+            ),
+            patch.object(
+                server,
+                "get_cmu_pronunciation",
+                return_value="K AA1 R",
+            ) as get_cmu,
+        ):
+            response = self.client.get("/dictionary/v2/car")
+
+        payload = response.get_json()
+        self.assertEqual(len(payload["variants"]), 1)
+        self.assertEqual(payload["variants"][0]["source"]["provider"], "merriam-webster")
+        get_cmu.assert_not_called()
+
     def test_health_exposes_contract_and_deployment_versions(self):
         response = self.client.get("/health")
         self.assertEqual(response.status_code, 200)
         payload = response.get_json()
         self.assertEqual(payload["schemaVersion"], 9)
-        self.assertEqual(payload["algorithmVersion"], "pronunciation-reference-v1")
+        self.assertEqual(payload["algorithmVersion"], "pronunciation-reference-v2")
         self.assertEqual(payload["analysisVersion"], "pronunciation-analysis-v2")
         self.assertTrue(payload["deploymentVersion"])
 

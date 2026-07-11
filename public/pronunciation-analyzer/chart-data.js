@@ -152,6 +152,39 @@ export function canShowDetailedFeedback({
     );
 }
 
+export function buildLexicalFallbackFeedback({
+    provider,
+    targetCount,
+    observedCount,
+    targetPrimaryStress,
+    observedPrimaryStress,
+    learnerQuality,
+    learnerStressEvidence,
+    threshold = ANALYSIS_CONFIDENCE_THRESHOLD
+}) {
+    if (
+        provider !== 'cmu-pronouncing-dictionary' ||
+        targetCount !== observedCount ||
+        targetCount < 1 ||
+        learnerQuality?.rateable !== true ||
+        Number(learnerQuality.confidence) < threshold ||
+        learnerStressEvidence?.rateable !== true ||
+        Number(learnerStressEvidence.confidence) < threshold ||
+        !Number.isInteger(targetPrimaryStress) ||
+        !Number.isInteger(observedPrimaryStress)
+    ) {
+        return null;
+    }
+    const matches = targetPrimaryStress === observedPrimaryStress;
+    return {
+        matches,
+        message: matches
+            ? 'Syllable count and primary stress match the CMU lexical fallback.'
+            : `Syllable count matches. Target primary stress: syllable ${targetPrimaryStress + 1}; ` +
+                `observed: syllable ${observedPrimaryStress + 1}.`
+    };
+}
+
 export function formatRelativePitchTooltip(point) {
     if (!point || point.y === null) return 'No voiced pitch';
     return `${Number(point.y).toFixed(1)} semitones · ${Math.round(point.rawHz)} Hz`;

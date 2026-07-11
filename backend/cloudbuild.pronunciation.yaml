@@ -1,0 +1,19 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --file
+      - backend/Dockerfile
+      - --tag
+      - us-central1-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/praat-api:${_GIT_SHA}
+      - .
+
+images:
+  - us-central1-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/praat-api:${_GIT_SHA}
+
+substitutions:
+  _GIT_SHA: local
+  _REPOSITORY: cloud-run-source-deploy
+
+options:
+  logging: CLOUD_LOGGING_ONLY

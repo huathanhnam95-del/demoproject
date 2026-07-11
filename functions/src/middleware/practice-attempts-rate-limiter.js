@@ -1,9 +1,10 @@
 const rateLimit = require('express-rate-limit');
 
 function buildLimiter({ windowMs, max, keyGenerator }) {
+    const isTest = process.env.NODE_ENV === 'test';
     return rateLimit({
         windowMs,
-        max,
+        max: isTest ? 10000 : max,
         ...(typeof keyGenerator === 'function' ? { keyGenerator } : {}),
         message: {
             success: false,
@@ -35,8 +36,16 @@ const sharedPracticeAttemptsLimiter = buildLimiter({
     max: 30
 });
 
+// Azure Speech API assessment rate limiter. Capped at 15 attempts per minute.
+const azureAssessmentRateLimiter = buildLimiter({
+    windowMs: 60 * 1000,
+    max: 15,
+    keyGenerator: keyByUid
+});
+
 module.exports = {
     practiceAttemptsLimiterByUid,
     practiceAttemptsLimiter: practiceAttemptsLimiterByUid,
-    sharedPracticeAttemptsLimiter
+    sharedPracticeAttemptsLimiter,
+    azureAssessmentRateLimiter
 };

@@ -28,6 +28,13 @@ let connectedSpeechIndexCache = null;
 let connectedSpeechIndexPromise = null;
 const READ_ALOUD_MAX_ASSESSMENT_DURATION_MS = 45000;
 const READ_ALOUD_UPLOAD_LIMIT_BYTES = 20 * 1024 * 1024;
+const AZURE_BLOCKING_AUDIO_QUALITY_REASONS = new Set(['decode_failed', 'no_speech', 'too_short', 'too_long']);
+
+function shouldRejectBeforeAzure(audioQuality) {
+  return audioQuality?.passed === false
+    && AZURE_BLOCKING_AUDIO_QUALITY_REASONS.has(String(audioQuality.reason || ''));
+}
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: READ_ALOUD_UPLOAD_LIMIT_BYTES } // 20MB limit for longer audio
@@ -668,6 +675,13 @@ router.post('/read-aloud/assess', parseReadAloudUpload, async (req, res) => {
     const audioQuality = analyzeAudioQuality(req.file.buffer, {
       maximumSpeechDurationMs: READ_ALOUD_MAX_ASSESSMENT_DURATION_MS
     });
+    if (shouldRejectBeforeAzure(audioQuality)) {
+      return sendError(res, 422, 'INVALID_AUDIO', 'Audio quality did not pass validation.', {
+        reason: audioQuality.reason,
+        durationMs: Number.isFinite(Number(audioQuality.speechDurationMs)) ? Number(audioQuality.speechDurationMs) : null,
+        maxDurationMs: READ_ALOUD_MAX_ASSESSMENT_DURATION_MS
+      });
+    }
 
     const azurePayload = await callAzurePronunciationAssessment(req.file.buffer, referenceText, audioValidation.sampleRate);
 

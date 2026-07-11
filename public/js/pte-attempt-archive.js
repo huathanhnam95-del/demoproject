@@ -257,10 +257,12 @@
     };
     if (mediaSlots.length) body.mediaSlots = mediaSlots;
 
-    return apiFetch('/save', {
+    const savedAttempt = await apiFetch('/save', {
       method: 'POST',
       body: JSON.stringify(body)
     });
+    invalidateHistoryCache();
+    return savedAttempt;
   }
 
   async function patchAttempt(attemptId, patch = {}) {
@@ -1159,10 +1161,53 @@
   let cachedAttempts = null;
   let fetchingAttemptsPromise = null;
 
+  function invalidateHistoryCache() {
+    cachedAttempts = null;
+  }
+
+  function resolveHistoryQuestionId(mode, fallbackQuestionId = null) {
+    if (mode === 'essay') {
+      const elId = document.getElementById('current-question-id-essay');
+      return elId ? String(elId.textContent || '').trim() || fallbackQuestionId : fallbackQuestionId;
+    }
+
+    if (mode === 'swt') {
+      const pill = document.getElementById('swt-v7-question-pill');
+      const match = pill && pill.textContent ? pill.textContent.match(/^#(\S+)/) : null;
+      return match ? match[1] : fallbackQuestionId;
+    }
+
+    if (mode === 'read-aloud') {
+      const activeQuestionId = window.ReadAloudMode?.currentQuestionId;
+      if (activeQuestionId) return String(activeQuestionId);
+      const pill = document.getElementById('ra-v7-question-pill');
+      const match = pill && pill.textContent ? pill.textContent.match(/^[Q#]?(\d+)/) : null;
+      return match ? match[1] : fallbackQuestionId;
+    }
+
+    return fallbackQuestionId;
+  }
+
+  function getAttemptPromptId(attempt) {
+    return attempt?.promptId
+      ?? attempt?.promptSnapshot?.promptId
+      ?? attempt?.promptSnapshot?.id
+      ?? attempt?.promptSnapshot?.questionId
+      ?? null;
+  }
+
+  function getAttemptScoreText(attempt) {
+    const score = attempt?.score
+      ?? attempt?.resultSnapshot?.score
+      ?? attempt?.resultSnapshot?.overall?.total
+      ?? null;
+    return score === null || score === undefined || score === '' ? null : String(score);
+  }
+
   async function fetchUserAttemptsCached() {
     const user = getCurrentUser();
     if (!user) {
-      cachedAttempts = null;
+      invalidateHistoryCache();
       return null;
     }
     if (fetchingAttemptsPromise) return fetchingAttemptsPromise;
@@ -1184,7 +1229,8 @@
   async function updateHistoryUI(mode, questionId) {
     const panels = {
       essay: { startBtnId: 'start-essay-btn', panelId: 'mode-essay', skill: 'writing' },
-      swt: { startBtnId: 'start-swt-btn', panelId: 'mode-swt', skill: 'writing' }
+      swt: { startBtnId: 'start-swt-btn', panelId: 'mode-swt', skill: 'writing' },
+      'read-aloud': { startBtnId: 'ra-next-btn', panelId: 'mode-read-aloud', skill: 'speaking' }
     };
     const config = panels[mode];
     if (!config) return;
@@ -1193,6 +1239,7 @@
 
     const startBtn = document.getElementById(config.startBtnId);
     if (!startBtn) return;
+    const currentQuestionId = resolveHistoryQuestionId(mode, questionId);
 
     let toggleBtn = document.getElementById(`${mode}-history-toggle`);
     let historyContainer = document.getElementById(`${mode}-history-container`);
@@ -1215,18 +1262,22 @@
       parentControls.insertAdjacentElement('afterend', historyContainer);
 
       toggleBtn.addEventListener('click', async () => {
+        const latestQuestionId = resolveHistoryQuestionId(mode, toggleBtn.dataset.questionId || questionId);
         const isCollapsed = historyContainer.style.display === 'none';
         if (isCollapsed) {
           historyContainer.style.display = 'block';
-          await refreshHistoryList(mode, questionId, historyContainer);
+          await refreshHistoryList(mode, latestQuestionId, historyContainer);
         } else {
           historyContainer.style.display = 'none';
         }
       });
     }
 
-    if (historyContainer.style.display !== 'none') {
-      await refreshHistoryList(mode, questionId, historyContainer);
+    if (toggleBtn) toggleBtn.dataset.questionId = currentQuestionId || '';
+    if (historyContainer) historyContainer.dataset.questionId = currentQuestionId || '';
+
+    if (historyContainer && historyContainer.style.display !== 'none') {
+      await refreshHistoryList(mode, currentQuestionId, historyContainer);
     }
   }
 
@@ -1249,13 +1300,14 @@
     // Filter attempts by mode and prompt/question ID
     const modeAliases = {
       essay: ['essay', 'write_essay'],
-      swt: ['swt', 'summarize_written_text']
+      swt: ['swt', 'summarize_written_text'],
+      'read-aloud': ['read-aloud', 'read_aloud']
     };
     const validModes = modeAliases[mode] || [mode];
 
     const filtered = attempts.filter(a => {
       const isModeMatch = validModes.includes(a.practiceMode) || validModes.includes(a.canonicalMode);
-      const isQuestionMatch = String(a.promptId) === String(questionId);
+      const isQuestionMatch = String(getAttemptPromptId(a)) === String(questionId);
       return isModeMatch && isQuestionMatch;
     });
 
@@ -1278,8 +1330,9 @@
       meta.className = 'history-attempt-meta';
       const date = formatAttemptDate(attempt.submittedAt || attempt.createdAt);
       meta.innerHTML = `<span class="history-attempt-date">${escapeHtml(date)}</span>`;
-      if (attempt.score !== null) {
-        meta.innerHTML += `<span style="font-weight:600;color:#4f46e5;">Score: ${attempt.score}</span>`;
+      const scoreText = getAttemptScoreText(attempt);
+      if (scoreText !== null) {
+        meta.innerHTML += `<span style="font-weight:600;color:#4f46e5;">Score: ${escapeHtml(scoreText)}</span>`;
       }
 
       const content = document.createElement('div');
@@ -1313,24 +1366,12 @@
 
   // Clear cache on auth change
   window.addEventListener('auth-state-changed', () => {
-    cachedAttempts = null;
+    invalidateHistoryCache();
     // Find active history containers and refresh them if they are visible
-    ['essay', 'swt'].forEach(mode => {
+    ['essay', 'swt', 'read-aloud'].forEach(mode => {
       const historyContainer = document.getElementById(`${mode}-history-container`);
       if (historyContainer && historyContainer.style.display !== 'none') {
-        // Find questionId from DOM
-        let questionId = null;
-        if (mode === 'essay') {
-          const elId = document.getElementById('current-question-id-essay');
-          questionId = elId ? elId.textContent : null;
-        } else if (mode === 'swt') {
-          // For SWT, let's get the active question ID
-          const pill = document.getElementById('swt-v7-question-pill');
-          if (pill && pill.textContent) {
-            const match = pill.textContent.match(/^#(\S+)/);
-            questionId = match ? match[1] : null;
-          }
-        }
+        const questionId = resolveHistoryQuestionId(mode, historyContainer.dataset.questionId || null);
         if (questionId) {
           refreshHistoryList(mode, questionId, historyContainer);
         }
@@ -1352,6 +1393,7 @@
     saveStateAttempt,
     saveChoiceAttempt: saveStateAttempt,
     saveTextAttempt,
+    invalidateHistoryCache,
     normalizeMediaInput,
     isPlainObject,
     updateHistoryUI,

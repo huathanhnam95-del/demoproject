@@ -1589,6 +1589,7 @@ class ReadAloudMode {
     this.stopReferenceAudioPlayback();
 
     this.state = 'IDLE';
+    this.isSubmitInFlight = false;
   }
 
   stopMediaStream() {
@@ -1653,8 +1654,15 @@ class ReadAloudMode {
     if (resultBox) resultBox.style.display = 'none';
     if (accuracyElement) accuracyElement.textContent = '--';
     if (feedbackElement) feedbackElement.innerHTML = '';
-    if (checkBtn) checkBtn.style.display = 'none';
-    if (retryBtn) retryBtn.style.display = 'none';
+    if (checkBtn) {
+      checkBtn.style.display = 'none';
+      checkBtn.textContent = 'Check';
+      checkBtn.disabled = false;
+    }
+    if (retryBtn) {
+      retryBtn.style.display = 'none';
+      retryBtn.disabled = false;
+    }
   }
 
   showAssessmentDisplay() {
@@ -1663,15 +1671,46 @@ class ReadAloudMode {
     const checkBtn = document.getElementById('ra-check-btn');
     const retryBtn = document.getElementById('ra-retry-btn');
     if (resultBox) resultBox.style.display = 'block';
-    if (checkBtn) checkBtn.style.display = 'inline-flex';
-    if (retryBtn) retryBtn.style.display = 'none';
-  }
-
-  handleCheckResult() {
-    const checkBtn = document.getElementById('ra-check-btn');
-    const retryBtn = document.getElementById('ra-retry-btn');
     if (checkBtn) checkBtn.style.display = 'none';
     if (retryBtn) retryBtn.style.display = 'inline-flex';
+  }
+
+  async handleCheckResult() {
+    const checkBtn = document.getElementById('ra-check-btn');
+    const retryBtn = document.getElementById('ra-retry-btn');
+    if (checkBtn) {
+      checkBtn.disabled = true;
+      checkBtn.textContent = 'Checking...';
+    }
+    if (retryBtn) {
+      retryBtn.disabled = true;
+    }
+    try {
+      const success = await this.submitToAzure(this.pendingBlob, this.pendingSession);
+      if (success) {
+        this.pendingBlob = null;
+        this.pendingSession = null;
+        this.state = 'RESULTS';
+        this.updateUIForState();
+      } else {
+        if (checkBtn) {
+          checkBtn.disabled = false;
+          checkBtn.textContent = 'Check';
+        }
+        if (retryBtn) {
+          retryBtn.disabled = false;
+        }
+      }
+    } catch (error) {
+      console.error('Check failed:', error);
+      if (checkBtn) {
+        checkBtn.disabled = false;
+        checkBtn.textContent = 'Check';
+      }
+      if (retryBtn) {
+        retryBtn.disabled = false;
+      }
+    }
   }
 
   retryCurrentPrompt() {
@@ -1688,12 +1727,38 @@ class ReadAloudMode {
 
   updateRecordedAudioControl() {
     const playBtn = document.getElementById('ra-play-recording-btn');
+    const audioEl = document.getElementById('ra-user-recording-audio');
     if (!playBtn) return;
     const shouldShow = !!this.userRecordingUrl && this.state !== 'RECORDING' && this.state !== 'REQUESTING_MIC';
-    playBtn.style.display = shouldShow ? '' : 'none';
-    playBtn.disabled = !this.userRecordingUrl;
-    if (!shouldShow) {
+    
+    if (shouldShow) {
+      playBtn.style.position = 'absolute';
+      playBtn.style.opacity = '0';
+      playBtn.style.width = '1px';
+      playBtn.style.height = '1px';
+      playBtn.style.overflow = 'hidden';
+      playBtn.style.display = '';
+      playBtn.disabled = false;
+      
+      if (audioEl) {
+        audioEl.style.display = 'inline-flex';
+        audioEl.style.height = '40px';
+        audioEl.style.width = '240px';
+        audioEl.style.borderRadius = '20px';
+      }
+    } else {
+      playBtn.style.position = '';
+      playBtn.style.opacity = '';
+      playBtn.style.width = '';
+      playBtn.style.height = '';
+      playBtn.style.overflow = '';
+      playBtn.style.display = 'none';
+      playBtn.disabled = true;
       playBtn.textContent = 'Play your recording';
+      
+      if (audioEl) {
+        audioEl.style.display = 'none';
+      }
     }
 
     this.refreshQuestionPickerV7AudioShortcuts();
@@ -1794,6 +1859,8 @@ class ReadAloudMode {
     const statusMsg = document.getElementById('ra-status-message');
     const resultBox = document.getElementById('ra-result-box');
     const stopBtn = document.getElementById('ra-stop-btn');
+    const checkBtn = document.getElementById('ra-check-btn');
+    const retryBtn = document.getElementById('ra-retry-btn');
 
     if (this.state === 'PREP') {
       if (prepTimerBox) prepTimerBox.style.opacity = '1';
@@ -1811,6 +1878,8 @@ class ReadAloudMode {
       if (statusMsg) statusMsg.textContent = 'Read the text silently to prepare.';
       if (resultBox) resultBox.style.display = 'none';
       if (stopBtn) stopBtn.style.display = 'none';
+      if (checkBtn) checkBtn.style.display = 'none';
+      if (retryBtn) retryBtn.style.display = 'none';
       this.updateRecordedAudioControl();
       this.updateTimerDisplay('ra-prep-time', this.prepSeconds);
       this.updateTimerDisplay('ra-record-time', this.recordSeconds);
@@ -1825,6 +1894,8 @@ class ReadAloudMode {
       if (statusMsg) statusMsg.textContent = 'Recording... Please read aloud.';
       if (resultBox) resultBox.style.display = 'none';
       if (stopBtn) stopBtn.style.display = 'inline-flex';
+      if (checkBtn) checkBtn.style.display = 'none';
+      if (retryBtn) retryBtn.style.display = 'none';
       this.updateRecordedAudioControl();
       return;
     }
@@ -1845,6 +1916,67 @@ class ReadAloudMode {
       if (statusMsg) statusMsg.textContent = 'Requesting microphone access...';
       if (resultBox) resultBox.style.display = 'none';
       if (stopBtn) stopBtn.style.display = 'none';
+      if (checkBtn) checkBtn.style.display = 'none';
+      if (retryBtn) retryBtn.style.display = 'none';
+      this.updateRecordedAudioControl();
+      return;
+    }
+
+    if (this.state === 'STOPPING_RECORDING') {
+      if (prepTimerBox) prepTimerBox.style.opacity = '0.4';
+      if (recordTimerBox) recordTimerBox.style.opacity = '0.4';
+      if (nextBtn) nextBtn.style.display = 'none';
+      if (recordBtn) recordBtn.style.display = 'none';
+      if (statusMsg) statusMsg.textContent = 'Finishing recording...';
+      if (resultBox) resultBox.style.display = 'none';
+      if (stopBtn) stopBtn.style.display = 'none';
+      if (checkBtn) checkBtn.style.display = 'none';
+      if (retryBtn) retryBtn.style.display = 'none';
+      this.updateRecordedAudioControl();
+      return;
+    }
+
+    if (this.state === 'RECORDED') {
+      if (prepTimerBox) prepTimerBox.style.opacity = '0.4';
+      if (recordTimerBox) recordTimerBox.style.opacity = '0.4';
+      if (nextBtn) {
+        nextBtn.style.display = '';
+        nextBtn.disabled = false;
+        nextBtn.textContent = 'Next prompt';
+      }
+      if (recordBtn) recordBtn.style.display = 'none';
+      if (statusMsg) statusMsg.textContent = 'Recording captured. Click Check to submit or Retry to record again.';
+      if (resultBox) resultBox.style.display = 'none';
+      if (stopBtn) stopBtn.style.display = 'none';
+      if (checkBtn) {
+        checkBtn.style.display = 'inline-flex';
+        checkBtn.disabled = false;
+        checkBtn.textContent = 'Check';
+      }
+      if (retryBtn) {
+        retryBtn.style.display = 'inline-flex';
+        retryBtn.disabled = false;
+      }
+      this.updateRecordedAudioControl();
+      return;
+    }
+
+    if (this.state === 'RESULTS') {
+      if (prepTimerBox) prepTimerBox.style.opacity = '0.4';
+      if (recordTimerBox) recordTimerBox.style.opacity = '0.4';
+      if (nextBtn) nextBtn.style.display = 'none';
+      if (recordBtn) {
+        recordBtn.textContent = 'Next prompt';
+        recordBtn.disabled = false;
+        recordBtn.style.display = '';
+      }
+      if (statusMsg) {
+        statusMsg.textContent = this.hasAssessmentResult ? 'Analysis complete.' : 'Analysis failed.';
+      }
+      if (resultBox) resultBox.style.display = this.hasAssessmentResult ? 'block' : 'none';
+      if (stopBtn) stopBtn.style.display = 'none';
+      if (checkBtn) checkBtn.style.display = 'none';
+      if (retryBtn) retryBtn.style.display = 'inline-flex';
       this.updateRecordedAudioControl();
       return;
     }
@@ -1860,6 +1992,8 @@ class ReadAloudMode {
     if (statusMsg) statusMsg.textContent = 'Processing...';
     if (resultBox) resultBox.style.display = this.hasAssessmentResult ? 'block' : 'none';
     if (stopBtn) stopBtn.style.display = 'none';
+    if (checkBtn) checkBtn.style.display = 'none';
+    if (retryBtn) retryBtn.style.display = 'inline-flex';
     this.updateRecordedAudioControl();
   }
 
@@ -1930,7 +2064,11 @@ class ReadAloudMode {
         const rawBlob = new Blob(recordedChunks, { type: activeRecorder.mimeType || 'audio/webm' });
         recordingSession.rawBlob = rawBlob;
         this.setRecordedAudio(rawBlob);
-        await this.submitToAzure(rawBlob, recordingSession);
+
+        this.pendingBlob = rawBlob;
+        this.pendingSession = recordingSession;
+        this.state = 'RECORDED';
+        this.updateUIForState();
       });
       activeRecorder.start();
       if (!this.isSameRecordingSession(recordingSession)) {
@@ -2001,7 +2139,7 @@ class ReadAloudMode {
 
     if (this.state === 'RECORDING') {
       this.stopTimer();
-      this.state = 'RESULTS';
+      this.state = 'STOPPING_RECORDING';
       this.updateUIForState();
 
       if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
@@ -2019,7 +2157,7 @@ class ReadAloudMode {
   stopRecordingManually() {
     if (this.state !== 'RECORDING') return;
     this.stopTimer();
-    this.state = 'RESULTS';
+    this.state = 'STOPPING_RECORDING';
     this.updateUIForState();
 
     if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {

@@ -18,7 +18,8 @@ const readAloudRoutes = require('./routes/read-aloud');
 const pronunciationTestRoutes = require('./routes/pronunciation-test');
 const {
     practiceAttemptsLimiterByUid,
-    sharedPracticeAttemptsLimiter
+    sharedPracticeAttemptsLimiter,
+    azureAssessmentRateLimiter
 } = require('./middleware/practice-attempts-rate-limiter');
 const { TEST_VERSION } = require('./entrance-test/test36plus');
 const {
@@ -56,6 +57,20 @@ const authMiddleware = async (req, res, next) => {
     } catch (error) {
         return sendError(res, 401, 'UNAUTHORIZED', 'Authentication failed.', error?.message || error);
     }
+};
+
+const optionalAuthMiddleware = async (req, res, next) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            const idToken = authHeader.slice('Bearer '.length).trim();
+            const decodedToken = await getAuth().verifyIdToken(idToken);
+            req.user = decodedToken;
+        }
+    } catch (error) {
+        console.warn('[RateLimiter] Optional auth token verification failed:', error?.message || error);
+    }
+    return next();
 };
 
 const adminMiddleware = async (req, res, next) => {
@@ -311,8 +326,8 @@ app.use('/api/teacher', teacherSchedulerRouter);
 app.use('/api/entrance-tests', entranceTestRoutes);
 app.use('/api/practice-attempts', authMiddleware, practiceAttemptsLimiterByUid, practiceAttemptsRouter);
 app.use('/api/shared/practice-attempts', sharedPracticeAttemptsLimiter, sharedPracticeAttemptsRouter);
-app.use('/api', readAloudRoutes);
-app.use('/api', pronunciationTestRoutes);
+app.use('/api', optionalAuthMiddleware, azureAssessmentRateLimiter, readAloudRoutes);
+app.use('/api', optionalAuthMiddleware, azureAssessmentRateLimiter, pronunciationTestRoutes);
 
 app.get(['/config', '/api/config'], (req, res) => {
     return res.json({

@@ -1046,7 +1046,7 @@
             },
             {
                 target: '#ra-prompt-guides-group',
-                icon: 'ðŸ”—',
+                icon: '🔗',
                 title: 'Use Prompt Guides',
                 text: 'Use <strong>Chunking</strong> to preview pause groups and the <strong>connected speech</strong> levels to preview how fluent speech links or reduces words. Level 1 is linking only, and level 2 adds reduced words. Both guides are optional and can be enabled together.',
                 position: 'bottom'

@@ -3,6 +3,8 @@ const net = require('net');
 const path = require('path');
 const { chromium } = require('playwright');
 
+let consoleLines = [];
+
 function getFreePort() {
   return new Promise((resolve, reject) => {
     const server = net.createServer();
@@ -215,11 +217,44 @@ async function assertV7ButtonStructure(page, label) {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
     viewport: { width: 1440, height: 1000 },
-    serviceWorkers: 'block'
+    serviceWorkers: 'block',
+    permissions: ['microphone']
   });
   await setupFirebaseMocks(context);
 
   await context.addInitScript(() => {
+    function createMonoPcmWavBytes({ sampleRate = 16000, durationMs = 300, amplitude = 1200 } = {}) {
+      const sampleCount = Math.max(1, Math.round(sampleRate * (durationMs / 1000)));
+      const dataLength = sampleCount * 2;
+      const buffer = new ArrayBuffer(44 + dataLength);
+      const view = new DataView(buffer);
+      const writeAscii = (offset, text) => {
+        for (let index = 0; index < text.length; index += 1) {
+          view.setUint8(offset + index, text.charCodeAt(index));
+        }
+      };
+
+      writeAscii(0, 'RIFF');
+      view.setUint32(4, 36 + dataLength, true);
+      writeAscii(8, 'WAVE');
+      writeAscii(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, 1, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      writeAscii(36, 'data');
+      view.setUint32(40, dataLength, true);
+
+      for (let index = 0; index < sampleCount; index += 1) {
+        view.setInt16(44 + (index * 2), amplitude, true);
+      }
+
+      return new Uint8Array(buffer);
+    }
+
     class FakeMediaRecorder {
       constructor(stream) {
         this.stream = stream;
@@ -240,9 +275,17 @@ async function assertV7ButtonStructure(page, label) {
       stop() {
         if (this.state !== 'recording') return;
         this.state = 'inactive';
-        const blob = new Blob([new Uint8Array([1, 2, 3, 4])], { type: this.mimeType });
-        (this.listeners.dataavailable || []).forEach((handler) => handler({ data: blob }));
-        (this.listeners.stop || []).forEach((handler) => handler());
+        const emitFinalEvents = () => {
+          const blob = new Blob([createMonoPcmWavBytes()], { type: this.mimeType });
+          (this.listeners.dataavailable || []).forEach((handler) => handler({ data: blob }));
+          (this.listeners.stop || []).forEach((handler) => handler());
+        };
+        const delayMs = Number(window.__raFakeRecorderStopDelayMs || 0);
+        if (delayMs > 0) {
+          setTimeout(emitFinalEvents, delayMs);
+        } else {
+          emitFinalEvents();
+        }
       }
     }
 
@@ -336,7 +379,7 @@ async function assertV7ButtonStructure(page, label) {
   });
 
   const page = await context.newPage();
-  const consoleLines = [];
+  consoleLines = [];
   page.on('console', (msg) => consoleLines.push(`${msg.type()}: ${msg.text()}`));
 
   try {
@@ -379,7 +422,39 @@ async function assertV7ButtonStructure(page, label) {
 
     await assertV7ButtonStructure(page, 'recording');
 
-    await page.evaluate(() => document.getElementById('ra-stop-btn')?.click());
+    await page.evaluate(() => {
+      window.__raFakeRecorderStopDelayMs = 50;
+      document.getElementById('ra-stop-btn')?.click();
+    });
+    const stoppingState = await page.evaluate(() => {
+      const status = document.getElementById('ra-status-message');
+      const checkBtn = document.getElementById('ra-check-btn');
+      const audio = document.getElementById('ra-user-recording-audio');
+      return {
+        modeState: window.ReadAloudMode?.state || '',
+        statusText: String(status?.textContent || ''),
+        checkVisible: !!checkBtn && getComputedStyle(checkBtn).display !== 'none',
+        audioVisible: !!audio && getComputedStyle(audio).display !== 'none'
+      };
+    });
+    assert.equal(stoppingState.modeState, 'STOPPING_RECORDING', 'stop should enter a finalizing state until recorder data is ready');
+    assert.match(stoppingState.statusText, /finishing recording/i, 'stop should tell the user the recording is finalizing');
+    assert.equal(stoppingState.checkVisible, false, 'Check should stay hidden until the recorded blob is ready');
+    assert.equal(stoppingState.audioVisible, false, 'Audio player should stay hidden until a recorded blob URL exists');
+
+    await page.waitForFunction(() => {
+      const status = document.getElementById('ra-status-message');
+      const checkBtn = document.getElementById('ra-check-btn');
+      const audio = document.getElementById('ra-user-recording-audio');
+      return !!status
+        && /recording captured/i.test(String(status.textContent || ''))
+        && !!checkBtn
+        && getComputedStyle(checkBtn).display !== 'none'
+        && !!audio
+        && getComputedStyle(audio).display !== 'none';
+    }, { timeout: 30000 });
+
+    await page.evaluate(() => document.getElementById('ra-check-btn')?.click());
     await page.waitForFunction(() => {
       const status = document.getElementById('ra-status-message');
       return !!status && /analysis complete/i.test(String(status.textContent || ''));
@@ -405,7 +480,12 @@ async function assertV7ButtonStructure(page, label) {
     }
   }
 })().catch((error) => {
-  console.error(error.stack || error.message);
+  console.error('Test failed:', error.stack || error.message);
+  if (typeof consoleLines !== 'undefined') {
+    console.error('--- BROWSER CONSOLE LOGS ---');
+    consoleLines.forEach(line => console.error(line));
+    console.error('----------------------------');
+  }
   process.exit(1);
 });
 

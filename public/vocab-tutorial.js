@@ -95,35 +95,35 @@
             steps: [
                 {
                     target: '#vocab-add-modal',
-                    icon: 'ðŸ“–',
+                    icon: '📖',
                     title: 'Vocabulary Book is Ready',
                     text: 'You missed some key words. This panel lets you save them for review.',
                     position: 'center',
-                    nextLabel: 'Next â†’',
+                    nextLabel: 'Next →',
                     interactive: false
                 },
                 {
                     target: '#vocab-add-words .vocab-add-word-item:first-child input',
-                    icon: 'âœ…',
+                    icon: '✅',
                     title: 'Select Words',
                     text: 'Tick the words you want to keep. You can open examples before deciding.',
                     position: 'bottom',
-                    nextLabel: 'Next â†’',
+                    nextLabel: 'Next →',
                     interactive: false,
                     skipIfMissing: true
                 },
                 {
                     target: '#vocab-add-btn',
-                    icon: 'ðŸ’¾',
+                    icon: '💾',
                     title: 'Save to Vocabulary Book',
                     text: 'Press Add Selected to store these words for later practice.',
                     position: 'top',
-                    nextLabel: 'Next â†’',
+                    nextLabel: 'Next →',
                     interactive: false
                 },
                 {
                     target: '#vocab-panel-toggle',
-                    icon: 'ðŸ“š',
+                    icon: '📚',
                     title: 'Review Later',
                     text: 'Open your Vocabulary Book from this button any time to review saved words.',
                     position: 'right',

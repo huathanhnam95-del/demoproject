@@ -232,13 +232,47 @@ function createApp(options = {}) {
   app.use('/api', routes.classroomsRoutes);
   app.use('/api/entrance-tests', routes.entranceTestRoutes);
   app.use('/api', routes.readingJourneyRoutes);
-  app.use('/api', routes.pronunciationTestRoutes);
-  app.use('/api', routes.readAloudRoutes);
 
   // To simulate Firebase Functions authentication in local dev server:
   // Normally Firebase passes a decoded token. In local dev, we need the authMiddleware.
   const functionsAuthMiddleware = require('../middleware/auth-user');
-  const { practiceAttemptsLimiterByUid, sharedPracticeAttemptsLimiter } = require('../../functions/src/middleware/practice-attempts-rate-limiter');
+  const {
+    practiceAttemptsLimiterByUid,
+    sharedPracticeAttemptsLimiter,
+    azureAssessmentRateLimiter
+  } = require('../../functions/src/middleware/practice-attempts-rate-limiter');
+
+  const optionalAuthUserMiddleware = async (req, res, next) => {
+    const authHeader = req.headers.authorization || '';
+    if (authHeader.startsWith('Bearer ')) {
+      const idToken = authHeader.slice('Bearer '.length).trim();
+      if (idToken) {
+        try {
+          let decodedToken;
+          if (!!process.env.FIREBASE_AUTH_EMULATOR_HOST) {
+            const parts = idToken.split('.');
+            if (parts.length >= 2) {
+              const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+              payload.uid = payload.sub || payload.user_id;
+              decodedToken = payload;
+            }
+          } else {
+            decodedToken = await firebase.admin.auth().verifyIdToken(idToken);
+          }
+          if (decodedToken) {
+            req.user = decodedToken;
+          }
+        } catch (error) {
+          console.warn('[AUTH] Optional token verification failed:', error.message);
+        }
+      }
+    }
+    next();
+  };
+
+  app.use('/api', optionalAuthUserMiddleware, azureAssessmentRateLimiter, routes.pronunciationTestRoutes);
+  app.use('/api', optionalAuthUserMiddleware, azureAssessmentRateLimiter, routes.readAloudRoutes);
+
   const { sendSuccess: fnsSendSuccess, sendError: fnsSendError } = require('../../functions/src/utils/response-helper');
   const createPracticeAttemptsRouter = require('../../functions/src/routes/practice-attempts');
   const createSharedPracticeAttemptsRouter = require('../../functions/src/routes/shared-practice-attempts');

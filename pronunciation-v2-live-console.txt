@@ -1,0 +1,4 @@
+Total messages: 2 (Errors: 0, Warnings: 1)
+Returning 1 messages for level "warning"
+
+[WARNING] [DatabaseService] Firebase Firestore not initialized. Word caching disabled. @ http://127.0.0.1:4178/pronunciation-analyzer/database-service.js:24

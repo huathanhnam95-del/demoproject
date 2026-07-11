@@ -1217,6 +1217,26 @@ async function assertSupportedFlow(browser, baseUrl) {
   });
 
   await page.waitForFunction(() => {
+    const status = document.getElementById('ra-status-message');
+    const checkBtn = document.getElementById('ra-check-btn');
+    const retryBtn = document.getElementById('ra-retry-btn');
+    const audio = document.getElementById('ra-user-recording-audio');
+    return Number(window.__raAssessCount || 0) === 0
+      && !!status
+      && /recording captured/i.test(String(status.textContent || ''))
+      && !!checkBtn
+      && getComputedStyle(checkBtn).display !== 'none'
+      && !!retryBtn
+      && getComputedStyle(retryBtn).display !== 'none'
+      && !!audio
+      && getComputedStyle(audio).display !== 'none';
+  }, { timeout: 30000 });
+
+  await page.evaluate(() => {
+    document.getElementById('ra-check-btn')?.click();
+  });
+
+  await page.waitForFunction(() => {
     const resultBox = document.getElementById('ra-result-box');
     const connectedBox = document.getElementById('ra-connected-speech-box');
     const connectedLabel = document.getElementById('ra-connected-speech-label');
@@ -1247,7 +1267,7 @@ async function assertSupportedFlow(browser, baseUrl) {
       !!status &&
       /analysis complete/i.test(String(status.textContent || '')) &&
       !!checkBtn &&
-      getComputedStyle(checkBtn).display !== 'none'
+      getComputedStyle(checkBtn).display === 'none'
     );
   }, { timeout: 30000 });
 
@@ -1307,8 +1327,8 @@ async function assertSupportedFlow(browser, baseUrl) {
   assert.match(supportedAssessmentState.startHereText, /Needs Attention|Successful Links/i, 'results view should render the refactored sc-section headers');
   assert.doesNotMatch(supportedAssessmentState.connectedListText, /gap|confidence|phoneme|duration ratio/i, 'connected speech result should hide raw evidence details');
   assert.match(supportedAssessmentState.statusText, /analysis complete/i, 'status message should update after assessment');
-  assert.equal(supportedAssessmentState.checkVisible, true, 'results state should expose the Check action before retry');
-  assert.equal(supportedAssessmentState.retryVisible, false, 'retry should stay hidden until the learner checks the attempt');
+  assert.equal(supportedAssessmentState.checkVisible, false, 'results state should hide the Check action after assessment');
+  assert.equal(supportedAssessmentState.retryVisible, true, 'retry should be visible after assessment');
 
   // Verify refactored sc-* DOM structure (T1-T4 from browser test plan)
   const scDomState = await page.evaluate(() => {
@@ -1339,10 +1359,6 @@ async function assertSupportedFlow(browser, baseUrl) {
   assert.ok(scDomState.hasCheckIcon, 'success pill should contain sc-check-icon');
   assert.equal(scDomState.injectedStyleCount, 0, 'no <style> tags should be injected into annotated paragraph');
   assert.match(scDomState.feedbackText, /Keep "it up" closer together/i, 'issue card should expose the action-focused feedback text');
-
-  await page.evaluate(() => {
-    document.getElementById('ra-check-btn')?.click();
-  });
 
   await page.waitForFunction(() => {
     const retryBtn = document.getElementById('ra-retry-btn');
@@ -1513,6 +1529,20 @@ async function assertSupportedFlow(browser, baseUrl) {
   }, { timeout: 30000 });
   await page.evaluate(() => {
     document.getElementById('ra-stop-btn')?.click();
+  });
+
+  await page.waitForFunction(() => {
+    const status = document.getElementById('ra-status-message');
+    const checkBtn = document.getElementById('ra-check-btn');
+    return Number(window.__raAssessCount || 0) === 1
+      && !!status
+      && /recording captured/i.test(String(status.textContent || ''))
+      && !!checkBtn
+      && getComputedStyle(checkBtn).display !== 'none';
+  }, { timeout: 30000 });
+
+  await page.evaluate(() => {
+    document.getElementById('ra-check-btn')?.click();
   });
 
   await page.waitForFunction(() => {
@@ -1782,6 +1812,20 @@ async function assertAssessmentGuards(browser, baseUrl) {
   await page.evaluate(() => {
     document.getElementById('ra-stop-btn')?.click();
   });
+
+  await page.waitForFunction(() => {
+    const status = document.getElementById('ra-status-message');
+    const checkBtn = document.getElementById('ra-check-btn');
+    return !!status
+      && /recording captured/i.test(String(status.textContent || ''))
+      && !!checkBtn
+      && getComputedStyle(checkBtn).display !== 'none';
+  }, { timeout: 30000 });
+
+  await page.evaluate(() => {
+    document.getElementById('ra-check-btn')?.click();
+  });
+
   await page.waitForFunction(() => Number(window.__raAssessCount || 0) === 1 && window.__raAssessQueue.length === 1, { timeout: 30000 });
 
   await page.evaluate(async () => {
@@ -2343,6 +2387,14 @@ async function assertAssessmentFailureFeedback(browser, baseUrl) {
   });
 
   await page.waitForFunction(() => {
+    const checkBtn = document.getElementById('ra-check-btn');
+    return !!checkBtn && getComputedStyle(checkBtn).display !== 'none';
+  }, { timeout: 30000 });
+  await page.evaluate(() => {
+    document.getElementById('ra-check-btn')?.click();
+  });
+
+  await page.waitForFunction(() => {
     const status = document.getElementById('ra-status-message');
     const accuracy = document.getElementById('ra-accuracy-value');
     const feedback = document.getElementById('ra-transcript-feedback');
@@ -2477,6 +2529,14 @@ async function assertZeroScoreAssessmentPayloadShowsFailure(browser, baseUrl) {
   await page.waitForFunction(() => Number(window.__raRecorderStarts || 0) === 1, { timeout: 30000 });
   await page.evaluate(() => {
     document.getElementById('ra-stop-btn')?.click();
+  });
+
+  await page.waitForFunction(() => {
+    const checkBtn = document.getElementById('ra-check-btn');
+    return !!checkBtn && getComputedStyle(checkBtn).display !== 'none';
+  }, { timeout: 30000 });
+  await page.evaluate(() => {
+    document.getElementById('ra-check-btn')?.click();
   });
 
   await page.waitForFunction(() => {
@@ -2622,6 +2682,14 @@ async function assertDirectAccuracyPayloadShowsScoredResult(browser, baseUrl) {
   await page.waitForFunction(() => Number(window.__raRecorderStarts || 0) === 1, { timeout: 30000 });
   await page.evaluate(() => {
     document.getElementById('ra-stop-btn')?.click();
+  });
+
+  await page.waitForFunction(() => {
+    const checkBtn = document.getElementById('ra-check-btn');
+    return !!checkBtn && getComputedStyle(checkBtn).display !== 'none';
+  }, { timeout: 30000 });
+  await page.evaluate(() => {
+    document.getElementById('ra-check-btn')?.click();
   });
 
   await page.waitForFunction(() => {

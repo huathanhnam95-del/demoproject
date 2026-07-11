@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+process.env.NODE_ENV = 'test';
 const assert = require('assert');
 const express = require('express');
 const http = require('http');
@@ -286,7 +287,7 @@ async function postAssessment(baseUrl, { audioBuffer, referenceText, questionId,
 
     azureFetchCalls = 0;
     result = await postAssessment(baseUrl, {
-      audioBuffer: createMonoPcmWavBuffer({ durationMs: 240 }),
+      audioBuffer: createMonoPcmWavBuffer({ durationMs: 300 }),
       referenceText: 'Pick it up now'
     });
     assert.strictEqual(result.response.status, 200, 'mocked Azure success should return 200');
@@ -310,7 +311,7 @@ async function postAssessment(baseUrl, { audioBuffer, referenceText, questionId,
     assert.deepStrictEqual(persistedAttempts[0].eventFamilyCounts, {}, 'persistence should store empty family counts when no connected speech is applicable');
 
     result = await postAssessment(rawBodyBaseUrl, {
-      audioBuffer: createMonoPcmWavBuffer({ durationMs: 240 }),
+      audioBuffer: createMonoPcmWavBuffer({ durationMs: 300 }),
       referenceText: 'Pick it up now',
       questionId: '1'
     });
@@ -333,7 +334,7 @@ async function postAssessment(baseUrl, { audioBuffer, referenceText, questionId,
     });
 
     result = await postAssessment(baseUrl, {
-      audioBuffer: createMonoPcmWavBuffer({ durationMs: 240 }),
+      audioBuffer: createMonoPcmWavBuffer({ durationMs: 300 }),
       referenceText: 'Pick it up now'
     });
     assert.strictEqual(result.response.status, 200, 'direct Azure score fields should still return 200');
@@ -373,7 +374,7 @@ async function postAssessment(baseUrl, { audioBuffer, referenceText, questionId,
       }]
     });
     result = await postAssessment(baseUrl, {
-      audioBuffer: createMonoPcmWavBuffer({ durationMs: 240 }),
+      audioBuffer: createMonoPcmWavBuffer({ durationMs: 300 }),
       referenceText: 'Pick it up now'
     });
     assert.strictEqual(result.response.status, 502, 'missing pronunciation scores should surface as an assessment failure');
@@ -400,7 +401,7 @@ async function postAssessment(baseUrl, { audioBuffer, referenceText, questionId,
       }]
     });
     result = await postAssessment(baseUrl, {
-      audioBuffer: createMonoPcmWavBuffer({ durationMs: 240 }),
+      audioBuffer: createMonoPcmWavBuffer({ durationMs: 300 }),
       referenceText: 'Pick it up now'
     });
     assert.strictEqual(result.response.status, 502, 'all-zero pronunciation scores should surface as an assessment failure');

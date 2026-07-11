@@ -163,6 +163,23 @@ class PronunciationReferenceContractTest(unittest.TestCase):
         self.assertTrue(flower["validation"]["evidence"]["headwordCountExplicit"])
         self.assertEqual([part["label"] for part in flower["syllables"]], ["flow", "er"])
 
+    def test_learners_star_breaks_are_not_authoritative_syllable_evidence(self):
+        variant = build_pronunciation_variant(
+            word="overseas",
+            part_of_speech="adverb",
+            definition="fixture",
+            entry_id="overseas",
+            exact_match=True,
+            raw_ipa="ˌoʊvɚˈsiːz",
+            headword="over*seas",
+            audio_filename="overse02",
+            audio_url="https://media.merriam-webster.com/overse02.mp3",
+        )
+        self.assertEqual(variant["syllableCount"], 3)
+        self.assertEqual(variant["validation"]["status"], "valid")
+        self.assertFalse(variant["validation"]["evidence"]["headwordCountExplicit"])
+        self.assertIsNone(variant["validation"]["evidence"]["headwordCount"])
+
     def test_unicode_is_nfc_normalized_without_losing_diacritics(self):
         fixture = next(item for item in self.fixtures["valid"] if item["word"] == "cafe")
         self.assertNotEqual(fixture["rawIpa"], unicodedata.normalize("NFC", fixture["rawIpa"]))

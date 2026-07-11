@@ -28,7 +28,8 @@ CONFLICT_ORDER = (
 
 _STRESS_MARKS = {"ˈ": "primary", "'": "primary", "ˌ": "secondary"}
 _WRAPPER_CHARS = set("/[]() \\")
-_HEADWORD_SEPARATORS = re.compile(r"[·•‧*]")
+_HEADWORD_CHUNK_SEPARATORS = re.compile(r"[·•‧*]")
+_AUTHORITATIVE_HEADWORD_SEPARATORS = re.compile(r"[·•‧]")
 _SYLLABIC_NUCLEI = ("n̩", "l̩", "m̩", "ŋ̩")
 
 # Longest matches are deliberate. A diphthong or a rhotic sequence is one
@@ -321,10 +322,13 @@ def _parse_headword(headword: Optional[str]) -> tuple[list[str], Optional[int], 
     normalized = _nfc(headword)
     if not normalized:
         return [], None, False
-    explicit = bool(_HEADWORD_SEPARATORS.search(normalized))
+    explicit = bool(_AUTHORITATIVE_HEADWORD_SEPARATORS.search(normalized))
     if explicit:
-        chunks = [chunk for chunk in _HEADWORD_SEPARATORS.split(normalized) if chunk]
+        chunks = [chunk for chunk in _HEADWORD_CHUNK_SEPARATORS.split(normalized) if chunk]
         return chunks, len(chunks), True
+    if _HEADWORD_CHUNK_SEPARATORS.search(normalized):
+        chunks = [chunk for chunk in _HEADWORD_CHUNK_SEPARATORS.split(normalized) if chunk]
+        return chunks, None, False
     return [normalized], None, False
 
 

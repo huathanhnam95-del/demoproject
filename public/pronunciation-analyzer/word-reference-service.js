@@ -7,10 +7,16 @@
 import { config } from './config.js';
 import { DatabaseService } from './database-service.js';
 import { STRESS_WEIGHTS, calculateStressScore, findStressedSyllable } from './stress-utils.js';
+import {
+    ALGORITHM_VERSION,
+    SCHEMA_VERSION,
+    attachValidatedNativeAnalyses,
+    buildReferenceCacheKey,
+    compressAnalysisV2,
+    validateReferenceV2
+} from './reference-contract.js';
 
-// Cache version - increment when backend algorithm changes
-// v8: Force re-fetch for syllable inheritance fix (2026-01-29)
-const CACHE_VERSION = 8;
+const CACHE_VERSION = SCHEMA_VERSION;
 
 export class WordReferenceService {
     constructor() {
@@ -32,11 +38,13 @@ export class WordReferenceService {
             throw new Error('Please enter a word');
         }
 
+        const cacheKey = buildReferenceCacheKey(normalizedWord);
+
         // 1. Check session cache (fastest)
-        if (config.sessionCacheEnabled && this.sessionCache.has(normalizedWord)) {
+        if (config.sessionCacheEnabled && this.sessionCache.has(cacheKey)) {
             console.log('🚀 Session cache hit:', normalizedWord);
             return {
-                ...this.sessionCache.get(normalizedWord),
+                ...this.sessionCache.get(cacheKey),
                 fromCache: true,
                 cacheSource: 'session'
             };
@@ -46,34 +54,23 @@ export class WordReferenceService {
         if (config.features.saveToDatabase && this.db.isAvailable()) {
             const dbData = await this.db.getWord(normalizedWord);
 
-            if (dbData) {
-                console.log('=== DATABASE DATA ===');
-                console.log('Word:', dbData.word);
-                console.log('Cache version:', dbData.cacheVersion || 'none');
-                // VALIDATION:
-                // - Version must be current
-                // - Analysis must exist
-                // - Alternatives must exist (new version requirement)
-                const isValidVersion = dbData.cacheVersion && dbData.cacheVersion >= CACHE_VERSION;
-                const hasValidAnalysis = dbData.nativeAnalysis && dbData.nativeAnalysis.pitch?.values?.length > 0;
-                const hasAlternatives = Array.isArray(dbData.alternatives);
-
-                if (isValidVersion && hasValidAnalysis && hasAlternatives) {
-                    console.log('📚 Firestore hit with complete data:', normalizedWord);
-                    this.sessionCache.set(normalizedWord, dbData);
+            if (dbData?.referenceV2) {
+                try {
+                    const reference = validateReferenceV2(dbData.referenceV2, {
+                        expectedWord: normalizedWord
+                    });
+                    console.log('📚 Firestore v2 hit:', normalizedWord);
+                    this.sessionCache.set(cacheKey, reference);
                     return {
-                        ...dbData,
+                        ...reference,
                         fromCache: true,
                         cacheSource: 'database'
                     };
-                } else {
-                    let reason = '';
-                    if (!isValidVersion) reason = 'outdated cache version';
-                    else if (!hasValidAnalysis) reason = 'missing/empty analysis';
-                    else if (!hasAlternatives) reason = 'missing multi-form data';
-
-                    console.log(`⚠️ Database entry exists but ${reason}, re-fetching...`);
+                } catch (error) {
+                    console.warn('Cached reference rejected; refetching:', error.message);
                 }
+            } else if (dbData) {
+                console.log('Legacy pronunciation cache found; lazily refetching:', normalizedWord);
             }
         }
 
@@ -81,36 +78,22 @@ export class WordReferenceService {
         console.log('🌐 Fetching from backend:', normalizedWord);
         const wordData = await this.fetchFromBackend(normalizedWord);
 
-        // Debug: Log what we got from backend
-        console.log('=== BACKEND RESPONSE ===');
-        console.log('Alternatives found:', wordData.alternatives?.length || 0);
-        console.log('Has nativeAnalysis:', !!wordData.nativeAnalysis);
-        if (wordData.nativeAnalysis) {
-            console.log('Pitch values:', wordData.nativeAnalysis.pitch?.values?.length);
-            console.log('Syllables:', wordData.nativeAnalysis.syllables?.length);
-        }
-
-        // 4. Compress analysis data before saving (Firestore has size limits)
-        // This step is now handled within fetchFromBackend for each alternative
-        // if (wordData.nativeAnalysis) {
-        //     wordData.nativeAnalysis = this.compressAnalysis(wordData.nativeAnalysis);
-        // }
-
-        // 5. Save to database for future use (with cache version)
+        // 4. Save under the additive v2 field. Legacy fields remain ignored.
         if (config.features.saveToDatabase && this.db.isAvailable()) {
-            wordData.cacheVersion = CACHE_VERSION;
-
-            // SANITIZATION: Firestore does not allow 'undefined' fields.
-            // We must traverse the object and convert all undefined to null.
-            const sanitizedData = this.sanitizeForFirestore(wordData);
+            const sanitizedData = this.sanitizeForFirestore({
+                word: normalizedWord,
+                cacheVersion: CACHE_VERSION,
+                referenceAlgorithmVersion: ALGORITHM_VERSION,
+                referenceV2: wordData
+            });
 
             this.db.saveWord(sanitizedData).catch(err => {
                 console.error('Error saving to database:', err);
             });
         }
 
-        // 6. Cache in session
-        this.sessionCache.set(normalizedWord, wordData);
+        // 5. Cache in session with the full contract identity.
+        this.sessionCache.set(cacheKey, wordData);
 
         return {
             ...wordData,
@@ -123,8 +106,7 @@ export class WordReferenceService {
      * Fetch word data from backend (MW API + Praat analysis)
      */
     async fetchFromBackend(word) {
-        // Step 1: Get dictionary data
-        const dictResponse = await fetch(`${this.backendUrl}/dictionary/${encodeURIComponent(word)}`);
+        const dictResponse = await fetch(`${this.backendUrl}/dictionary/v2/${encodeURIComponent(word)}`);
 
         if (!dictResponse.ok) {
             const error = await dictResponse.json().catch(() => ({}));
@@ -133,102 +115,31 @@ export class WordReferenceService {
             throw new Error(error.error || 'Dictionary lookup failed');
         }
 
-        const dictResult = await dictResponse.json();
-
-        if (!dictResult.found) {
-            if (dictResult.suggestions && dictResult.suggestions.length > 0) {
+        const dictResult = validateReferenceV2(await dictResponse.json(), {
+            expectedWord: word
+        });
+        if (dictResult.variants.length === 0) {
+            if (dictResult.suggestions?.length) {
                 throw new Error(`Word not found. Did you mean: ${dictResult.suggestions.join(', ')}?`);
             }
-            throw new Error('Word not found in dictionary');
+            throw new Error('No pronunciation reference is available for this word');
         }
 
-        const alternatives = this.extractAlternatives(dictResult);
-
-        if (alternatives.length === 0) {
-            throw new Error('No pronunciation data found for this word');
-        }
-
-        // The primary result is now the first valid alternative
-        const mwData = alternatives[0];
-
-        // Step 2: Analyze ALL valid alternatives concurrently
-        console.log(`🎵 Analyzing ${alternatives.length} valid word forms...`);
-
-        // OPTIMIZATION: Track analysis by audio URL to avoid redundant processing
-        const analysisCache = new Map();
-
-        const analysisPromises = alternatives.map(async (alt) => {
-            if (alt.audioUrl) {
-                // If we already have analysis for this specific audio URL, reuse it
-                if (analysisCache.has(alt.audioUrl)) {
-                    console.log(`♻️ Reusing analysis for inherited audio: ${alt.partOfSpeech}`);
-                    alt.nativeAnalysis = await analysisCache.get(alt.audioUrl);
-                    return alt;
-                }
-
-                // Create the promise for this analysis and cache it
-                const analysisPromise = (async () => {
-                    try {
-                        const analyzeResponse = await fetch(`${this.backendUrl}/analyze-url`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                audioUrl: alt.audioUrl,
-                                expectedSyllables: alt.syllableCount
-                            })
-                        });
-
-                        if (analyzeResponse.ok) {
-                            const analysis = await analyzeResponse.json();
-                            return this.compressAnalysis(analysis);
-                        }
-                    } catch (error) {
-                        console.warn(`Could not analyze audio for form ${alt.partOfSpeech}:`, error);
-                    }
-                    return null;
-                })();
-
-                analysisCache.set(alt.audioUrl, analysisPromise);
-                alt.nativeAnalysis = await analysisPromise;
+        return attachValidatedNativeAnalyses(dictResult, async (variant) => {
+            const analyzeResponse = await fetch(`${this.backendUrl}/analyze-url/v2`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    audioUrl: variant.audioUrl,
+                    variantId: variant.id,
+                    expectedSyllableCount: variant.syllableCount
+                })
+            });
+            if (!analyzeResponse.ok) {
+                throw new Error('Native pronunciation analysis failed');
             }
-            return alt;
+            return this.compressAnalysis(await analyzeResponse.json());
         });
-
-        await Promise.all(analysisPromises);
-
-        // DEDUPLICATION: Collapse identical word forms to keep the UI clean
-        const seen = new Set();
-        const uniqueAlternatives = (alternatives || []).filter(alt => {
-            const pos = (alt.partOfSpeech || 'default').toLowerCase().trim();
-            const ipa = (alt.pronunciation || '').toLowerCase().trim();
-            const key = `${pos}:${ipa || word.toLowerCase()}`;
-            if (seen.has(key)) return false;
-            seen.add(key);
-            return true;
-        });
-
-        return {
-            ...mwData,
-            alternatives: uniqueAlternatives,
-            nativeAnalysis: mwData.nativeAnalysis,
-            source: mwData.source || 'merriam-webster'
-        };
-    }
-
-    extractAlternatives(dictResult) {
-        if (Array.isArray(dictResult?.alternatives) && dictResult.alternatives.length > 0) {
-            return dictResult.alternatives.filter(Boolean);
-        }
-
-        if (Array.isArray(dictResult?.data) && dictResult.data.length > 0) {
-            return dictResult.data.filter(Boolean);
-        }
-
-        if (dictResult?.data && typeof dictResult.data === 'object') {
-            return [dictResult.data];
-        }
-
-        return [];
     }
 
     /**
@@ -513,55 +424,7 @@ export class WordReferenceService {
      * Uses Adaptive Sampling: Keeps ~100 points or max 30ms resolution
      */
     compressAnalysis(analysis) {
-        if (!analysis) return null;
-
-        // Adaptive sampling: aim for 100 points total
-        const currentPoints = analysis.pitch?.values?.length || 0;
-        const targetPoints = 100;
-
-        let sampleRate = Math.floor(currentPoints / targetPoints);
-        if (sampleRate < 1) sampleRate = 1;
-        // Cap at 3 to prevent losing too much resolution (30ms max gap)
-        if (sampleRate > 3) sampleRate = 3;
-
-        // Preserve critical points (syllable start/end times)
-        // Convert syllable times to set for O(1) lookup (approximate matching)
-        const criticalTimes = new Set();
-        (analysis.syllables || []).forEach(s => {
-            // Add start, end, and mid points
-            criticalTimes.add(Math.round(s.startTime * 100));
-            criticalTimes.add(Math.round(s.endTime * 100));
-        });
-
-        const filterWithCritical = (times, values) => {
-            // Zip times and values to prevent index mismatch
-            const zipped = times.map((t, i) => ({ t, v: values[i] }));
-
-            const filtered = zipped.filter((item, i) => {
-                const tCentis = Math.round(item.t * 100);
-                // Keep if modulo matches OR if it's near a critical time (epsilon check)
-                const isCritical = Array.from(criticalTimes).some(ct => Math.abs(ct - tCentis) <= 1);
-                return (i % sampleRate === 0) || isCritical;
-            });
-
-            return {
-                times: filtered.map(item => item.t),
-                values: filtered.map(item => item.v)
-            };
-        };
-
-        const pitchCompressed = filterWithCritical(analysis.pitch?.times || [], analysis.pitch?.values || []);
-        const intensityCompressed = filterWithCritical(analysis.intensity?.times || [], analysis.intensity?.values || []);
-
-        const compressed = {
-            duration: analysis.duration,
-            syllables: analysis.syllables,
-            pitch: pitchCompressed,
-            intensity: intensityCompressed
-        };
-
-        console.log(`📦 Compressed analysis: ${currentPoints} → ${compressed.pitch.values.length} points (rate: 1/${sampleRate})`);
-        return compressed;
+        return compressAnalysisV2(analysis);
     }
 
     /**

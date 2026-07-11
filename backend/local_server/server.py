@@ -95,10 +95,10 @@ class AnalysisConfig:
     PITCH_TRANSITION_THRESHOLD = 15  # Hz - significant change
     PITCH_SMOOTHING_WINDOW = 5       # frames
     
-    # Empirically frozen on 435 validated native recordings (seed 20260711).
-    STRESS_CALIBRATION_VERSION = 'audit-20260711-435'
-    STRESS_WEIGHT_PITCH = 0.20
-    STRESS_WEIGHT_DURATION = 0.70
+    # Empirically frozen on 433 canonical-v2 native recordings (seed 20260711).
+    STRESS_CALIBRATION_VERSION = 'candidate-audit-20260711-433'
+    STRESS_WEIGHT_PITCH = 0.30
+    STRESS_WEIGHT_DURATION = 0.60
     STRESS_WEIGHT_INTENSITY = 0.10
     STRESS_FINAL_LENGTHENING_PENALTY = 0.0
     STRESS_CONFIDENCE_THRESHOLD = 0.65

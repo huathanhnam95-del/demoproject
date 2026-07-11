@@ -25,9 +25,9 @@ def candidate(time, intensity, confidence, *, voiced=True):
 
 class PronunciationAlignmentV2Test(unittest.TestCase):
     def test_stress_runtime_uses_empirical_calibration(self):
-        self.assertEqual(server.AnalysisConfig.STRESS_CALIBRATION_VERSION, "audit-20260711-435")
-        self.assertEqual(server.AnalysisConfig.STRESS_WEIGHT_PITCH, 0.20)
-        self.assertEqual(server.AnalysisConfig.STRESS_WEIGHT_DURATION, 0.70)
+        self.assertEqual(server.AnalysisConfig.STRESS_CALIBRATION_VERSION, "candidate-audit-20260711-433")
+        self.assertEqual(server.AnalysisConfig.STRESS_WEIGHT_PITCH, 0.30)
+        self.assertEqual(server.AnalysisConfig.STRESS_WEIGHT_DURATION, 0.60)
         self.assertEqual(server.AnalysisConfig.STRESS_WEIGHT_INTENSITY, 0.10)
         self.assertEqual(server.AnalysisConfig.STRESS_FINAL_LENGTHENING_PENALTY, 0.0)
         self.assertEqual(server.AnalysisConfig.STRESS_CONFIDENCE_THRESHOLD, 0.65)

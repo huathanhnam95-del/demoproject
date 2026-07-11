@@ -2088,6 +2088,7 @@
               <!-- Word Form Selector (hidden by default) -->
               <div id="pa-word-forms" class="pa-word-forms hidden"
                 style="margin-bottom: 15px; gap: 8px; flex-wrap: wrap;"></div>
+              <div id="pa-reference-status" class="pa-reference-status" aria-live="polite"></div>
               <div class="pa-merged-info-box">
                 <div id="pa-word-info" class="pa-word-info">
                   <div class="pa-info-row">
@@ -2124,7 +2125,7 @@
             Record and speak a word to analyze stress.
           </div>
 
-          <div class="pa-charts-grid">
+          <div id="pa-charts-container" class="pa-charts-grid">
             <div class="pa-chart-card">
               <div class="pa-chart-title">Pitch & Volume</div>
               <canvas id="pa-pitch-chart"></canvas>

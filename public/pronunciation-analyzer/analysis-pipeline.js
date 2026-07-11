@@ -245,6 +245,22 @@ function collapseTrailingConsonantTail(analysis, config = PRAAT_TRAILING_TAIL_CO
     };
 }
 
+function normalizePraatAnalysis(analysis) {
+    if (!analysis?.observed || !Array.isArray(analysis.observed.syllables)) {
+        return analysis;
+    }
+    const reasons = Array.isArray(analysis.quality?.reasons) ? analysis.quality.reasons : [];
+    return {
+        ...analysis,
+        syllables: analysis.observed.syllables,
+        quality: {
+            ...analysis.quality,
+            reason: reasons[0] ? String(reasons[0]).toLowerCase() : null,
+            metrics: analysis.quality?.metrics || {}
+        }
+    };
+}
+
 export async function analyzeRecordedAttempt({
     audioBlob,
     expectedSyllables = null,
@@ -278,7 +294,7 @@ export async function analyzeRecordedAttempt({
 
     if (preferPraat && typeof praatAnalyze === 'function') {
         try {
-            const praatAnalysis = await praatAnalyze(audioBlob);
+            const praatAnalysis = normalizePraatAnalysis(await praatAnalyze(audioBlob));
             const repairedAnalysis = repairPraatSyllableBoundaries(praatAnalysis);
             const analysis = collapseTrailingConsonantTail(repairedAnalysis);
             const syllables = Array.isArray(analysis?.syllables) ? analysis.syllables : [];

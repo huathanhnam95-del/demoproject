@@ -157,15 +157,15 @@ export class WordReferenceService {
     getExpectedPattern(wordReference) {
         if (!wordReference) return null;
 
-        const { syllableCount, stressedSyllable, nativeAnalysis } = wordReference;
+        const { syllableCount, primaryStress, nativeAnalysis } = wordReference;
+        const nativeSyllables = nativeAnalysis?.observed?.syllables;
 
         // If we have native analysis, use actual values
-        if (nativeAnalysis && nativeAnalysis.syllables && nativeAnalysis.syllables.length > 0) {
-            return this.normalizePattern(nativeAnalysis.syllables, stressedSyllable);
+        if (Array.isArray(nativeSyllables) && nativeSyllables.length === syllableCount) {
+            return this.normalizePattern(nativeSyllables, primaryStress);
         }
 
-        // Otherwise, generate theoretical pattern
-        return this.generateTheoreticalPattern(syllableCount, stressedSyllable);
+        return null;
     }
 
     /**

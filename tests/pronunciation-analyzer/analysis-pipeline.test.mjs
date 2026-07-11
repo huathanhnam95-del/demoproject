@@ -296,6 +296,31 @@ async function testLocalOnlyAnalysis() {
     assert.equal(result.quality.rateable, true);
 }
 
+async function testPraatV2ResponseUsesIndependentObservedSyllables() {
+    const result = await analyzeRecordedAttempt({
+        audioBlob: blob,
+        expectedSyllables: 9,
+        preferPraat: true,
+        praatAnalyze: async () => ({
+            analysisVersion: 'pronunciation-analysis-v2',
+            quality: { rateable: true, confidence: 0.91, reasons: [] },
+            observed: {
+                syllableCount: 2,
+                primaryStress: 1,
+                syllables: [
+                    { startTime: 0, endTime: 0.2, duration: 0.2 },
+                    { startTime: 0.2, endTime: 0.5, duration: 0.3 }
+                ]
+            },
+            pitch: { times: [], values: [] },
+            intensity: { times: [], values: [] }
+        })
+    });
+    assert.equal(result.engine, 'praat');
+    assert.equal(result.syllables.length, 2);
+    assert.equal(result.analysis.observed.primaryStress, 1);
+}
+
 async function testLearnerExtraSyllablesAreNotForcedToExpectedCount() {
     const result = await analyzeRecordedAttempt({
         audioBlob: blob,
@@ -330,4 +355,5 @@ await testPraatFailureFallsBackToLocalAnalysis();
 await testPraatBoundaryRepairPullsLateBoundaryBackToVoicingBreak();
 await testPraatTrailingConsonantTailMergesIntoPreviousSyllable();
 await testLocalOnlyAnalysis();
+await testPraatV2ResponseUsesIndependentObservedSyllables();
 await testLearnerExtraSyllablesAreNotForcedToExpectedCount();

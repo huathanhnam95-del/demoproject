@@ -191,6 +191,23 @@
     display: none !important;
 }
 
+.pa-reference-status {
+    width: 100%;
+    min-height: 1.25rem;
+    color: #475569;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.pa-reference-status--conflict {
+    color: #9a3412;
+    font-weight: 600;
+}
+
+.pa-charts-grid.hidden {
+    display: none;
+}
+
 /* Enhanced Word Data Display */
 .pa-word-info {
     transition: opacity 0.3s ease;

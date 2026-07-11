@@ -604,6 +604,14 @@ def _mw_entry_base(entry):
     return _mw_entry_id(entry).split(':', 1)[0].casefold()
 
 
+def _normalize_mw_surface(value):
+    """Normalize MW headword markup without performing morphological matching."""
+    normalized = str(value or '').strip().casefold()
+    normalized = re.sub(r'[\*·•‧]', '', normalized)
+    normalized = re.sub(r'\s+', ' ', normalized)
+    return normalized
+
+
 def _deduplicate_mw_items(items):
     unique = []
     seen = set()
@@ -680,27 +688,75 @@ def _mw_pronunciation_records(entries, requested_word):
             if isinstance(definitions, list) and definitions and definitions[0]
             else None
         )
-        pronunciations = hwi.get('prs')
-        if not isinstance(pronunciations, list) or not pronunciations:
-            pronunciations = [{}]
 
-        for pronunciation in pronunciations:
-            pronunciation = pronunciation if isinstance(pronunciation, dict) else {}
-            raw_ipa = pronunciation.get('ipa') or pronunciation.get('mw') or None
-            sound = pronunciation.get('sound')
-            sound = sound if isinstance(sound, dict) else {}
-            audio_filename = str(sound.get('audio') or '').strip() or None
-            records.append({
-                'word': requested_word,
-                'entry_id': entry_id or None,
-                'exact_match': exact_match,
-                'headword': headword,
-                'part_of_speech': part_of_speech,
-                'definition': definition,
-                'raw_ipa': str(raw_ipa).strip() if raw_ipa else None,
-                'audio_filename': audio_filename,
-                'audio_url': build_audio_url(audio_filename) if audio_filename else None,
-            })
+        def append_pronunciations(
+            pronunciations,
+            *,
+            record_entry_id,
+            record_exact_match,
+            record_headword,
+            record_part_of_speech,
+            record_definition,
+        ):
+            if not isinstance(pronunciations, list) or not pronunciations:
+                pronunciations = [{}]
+            for pronunciation in pronunciations:
+                pronunciation = pronunciation if isinstance(pronunciation, dict) else {}
+                raw_ipa = pronunciation.get('ipa') or pronunciation.get('mw') or None
+                sound = pronunciation.get('sound')
+                sound = sound if isinstance(sound, dict) else {}
+                audio_filename = str(sound.get('audio') or '').strip() or None
+                records.append({
+                    'word': requested_word,
+                    'entry_id': record_entry_id or None,
+                    'exact_match': record_exact_match,
+                    'headword': record_headword,
+                    'part_of_speech': record_part_of_speech,
+                    'definition': record_definition,
+                    'raw_ipa': str(raw_ipa).strip() if raw_ipa else None,
+                    'audio_filename': audio_filename,
+                    'audio_url': build_audio_url(audio_filename) if audio_filename else None,
+                })
+
+        append_pronunciations(
+            hwi.get('prs'),
+            record_entry_id=entry_id,
+            record_exact_match=exact_match,
+            record_headword=headword,
+            record_part_of_speech=part_of_speech,
+            record_definition=definition,
+        )
+
+        for index, run_on in enumerate(entry.get('uros') or []):
+            if not isinstance(run_on, dict):
+                continue
+            run_on_headword = str(run_on.get('ure') or '').strip() or None
+            if _normalize_mw_surface(run_on_headword) != requested_word:
+                continue
+            append_pronunciations(
+                run_on.get('prs'),
+                record_entry_id=f'{entry_id}#uro:{index}' if entry_id else f'uro:{index}',
+                record_exact_match=True,
+                record_headword=run_on_headword,
+                record_part_of_speech=str(run_on.get('fl') or '').strip() or None,
+                record_definition=None,
+            )
+
+        variants = [*(entry.get('vrs') or []), *(hwi.get('vrs') or [])]
+        for index, variant in enumerate(variants):
+            if not isinstance(variant, dict):
+                continue
+            variant_headword = str(variant.get('va') or '').strip() or None
+            if _normalize_mw_surface(variant_headword) != requested_word:
+                continue
+            append_pronunciations(
+                variant.get('prs'),
+                record_entry_id=f'{entry_id}#vr:{index}' if entry_id else f'vr:{index}',
+                record_exact_match=True,
+                record_headword=variant_headword,
+                record_part_of_speech=part_of_speech,
+                record_definition=definition if exact_match else None,
+            )
     return records
 
 

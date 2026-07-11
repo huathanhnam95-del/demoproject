@@ -109,6 +109,113 @@ class PronunciationDictionaryV2ApiTest(unittest.TestCase):
         self.assertFalse(variant["capabilities"]["scoreCountStress"])
         self.assertFalse(variant["capabilities"]["showNativeGraphs"])
 
+    def test_exact_run_on_with_own_pronunciation_becomes_valid_variant(self):
+        loose_parent = mw_entry(
+            "architecture",
+            headword="ar*chi*tec*ture",
+            part_of_speech="noun",
+            ipa="ˈɑɚkəˌtɛktʃɚ",
+            audio="archit01",
+        )
+        loose_parent["uros"] = [{
+            "ure": "ar*chi*tec*tur*al",
+            "fl": "adjective",
+            "prs": [{
+                "ipa": "ˌɑɚkəˈtɛktʃərəl",
+                "sound": {"audio": "archit05"},
+            }],
+        }]
+        with patch.object(
+            server.http_requests,
+            "get",
+            side_effect=[
+                FakeResponse([loose_parent]),
+                FakeResponse([loose_parent]),
+                FakeResponse([loose_parent]),
+            ],
+        ):
+            response = self.client.get("/dictionary/v2/architectural")
+
+        payload = response.get_json()
+        selected = next(
+            item for item in payload["variants"]
+            if item["id"] == payload["defaultVariantId"]
+        )
+        self.assertEqual(selected["partOfSpeech"], "adjective")
+        self.assertEqual(selected["rawIpa"], "ˌɑɚkəˈtɛktʃərəl")
+        self.assertEqual(selected["source"]["entryId"], "architecture#uro:0")
+        self.assertTrue(selected["source"]["exactMatch"])
+        self.assertIsNone(selected["definition"])
+        self.assertIn("archit05", selected["audioUrl"])
+        self.assertEqual(selected["validation"]["status"], "valid")
+
+    def test_exact_capitalization_variant_with_own_pronunciation_is_valid(self):
+        exact = mw_entry(
+            "communist",
+            headword="com*mu*nist",
+            part_of_speech="noun",
+            ipa=None,
+            audio=None,
+        )
+        exact["vrs"] = [{
+            "va": "Communist",
+            "prs": [{
+                "ipa": "ˈkɑːmjənɪst",
+                "sound": {"audio": "commun25"},
+            }],
+        }]
+        with patch.object(
+            server.http_requests,
+            "get",
+            return_value=FakeResponse([exact]),
+        ):
+            response = self.client.get("/dictionary/v2/communist")
+
+        payload = response.get_json()
+        selected = next(
+            item for item in payload["variants"]
+            if item["id"] == payload["defaultVariantId"]
+        )
+        self.assertEqual(selected["source"]["entryId"], "communist#vr:0")
+        self.assertTrue(selected["source"]["exactMatch"])
+        self.assertEqual(selected["rawIpa"], "ˈkɑːmjənɪst")
+
+    def test_exact_run_on_without_pronunciation_does_not_inherit_parent_data(self):
+        loose_parent = mw_entry(
+            "correct:1",
+            headword="cor*rect",
+            part_of_speech="adjective",
+            ipa="kəˈrɛkt",
+            audio="correct01",
+        )
+        loose_parent["uros"] = [{
+            "ure": "cor*rect*ly",
+            "fl": "adverb",
+            "prs": None,
+        }]
+        with patch.object(
+            server.http_requests,
+            "get",
+            side_effect=[
+                FakeResponse([loose_parent]),
+                FakeResponse([loose_parent]),
+                FakeResponse([loose_parent]),
+            ],
+        ):
+            response = self.client.get("/dictionary/v2/correctly")
+
+        payload = response.get_json()
+        self.assertIsNone(payload["defaultVariantId"])
+        exact_run_on = next(
+            item for item in payload["variants"]
+            if item["source"]["entryId"] == "correct:1#uro:0"
+        )
+        self.assertTrue(exact_run_on["source"]["exactMatch"])
+        self.assertIsNone(exact_run_on["rawIpa"])
+        self.assertIsNone(exact_run_on["audioUrl"])
+        self.assertIsNone(exact_run_on["definition"])
+        self.assertIn("MISSING_IPA", exact_run_on["validation"]["conflicts"])
+
     def test_empty_exact_media_entry_returns_structured_conflict(self):
         malformed = {
             "meta": {"id": "media:1"},

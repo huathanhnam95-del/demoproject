@@ -128,6 +128,8 @@ _DISPLAY_REPLACEMENTS = (
     ("ȯ", "ɔ"),
     ("ü", "u"),
     ("ᵊ", "ə"),
+    ("ɹ", "r"),
+    ("ɫ", "l"),
     ("g", "ɡ"),
     ("ː", ""),
     (":", ""),
@@ -199,7 +201,7 @@ def _match_nucleus(value: str, index: int) -> Optional[str]:
     return None
 
 
-def _scan_maximal(raw_ipa: str) -> tuple[str, list[Nucleus]]:
+def _scan_maximal(raw_ipa: str) -> tuple[str, list[Nucleus], Optional[str]]:
     clean_parts: list[str] = []
     nuclei: list[Nucleus] = []
     pending_stress: Optional[str] = None
@@ -238,7 +240,7 @@ def _scan_maximal(raw_ipa: str) -> tuple[str, list[Nucleus]]:
         clean_length += len(character)
         index += 1
 
-    return "".join(clean_parts), nuclei
+    return "".join(clean_parts), nuclei, pending_stress
 
 
 def _split_composite_rhotics(nuclei: list[Nucleus], target_count: int) -> list[Nucleus]:
@@ -358,9 +360,11 @@ def _to_oxford_american(value: str) -> str:
 def parse_pronunciation(raw_ipa: str, headword: Optional[str] = None) -> ParsedPronunciation:
     normalized_raw = _nfc(raw_ipa)
     headword_chunks, headword_count, headword_explicit = _parse_headword(headword)
-    clean, maximal_nuclei = _scan_maximal(normalized_raw)
+    clean, maximal_nuclei, dangling_stress = _scan_maximal(normalized_raw)
     nuclei = maximal_nuclei
     conflicts: list[str] = []
+    if dangling_stress is not None:
+        conflicts.append("STRESS_CONFLICT")
 
     if headword_explicit and headword_count is not None and headword_count != len(nuclei):
         nuclei = _split_composite_rhotics(nuclei, headword_count)

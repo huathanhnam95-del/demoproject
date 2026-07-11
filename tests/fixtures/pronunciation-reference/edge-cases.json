@@ -28,12 +28,18 @@
     { "word": "button", "headword": "but·ton", "rawIpa": "ˈbʌtn", "partOfSpeech": "noun", "expectedDisplayIpa": "/ˈbʌtn/", "expectedCount": 2, "expectedPrimaryStress": 0, "expectedSecondaryStress": [] },
     { "word": "bottle", "headword": "bot·tle", "rawIpa": "ˈbɑtl", "partOfSpeech": "noun", "expectedDisplayIpa": "/ˈbɑtl/", "expectedCount": 2, "expectedPrimaryStress": 0, "expectedSecondaryStress": [] },
     { "word": "rhythm", "headword": "rhyth·m", "rawIpa": "ˈrɪðm", "partOfSpeech": "noun", "expectedDisplayIpa": "/ˈrɪðm/", "expectedCount": 2, "expectedPrimaryStress": 0, "expectedSecondaryStress": [] },
+    { "word": "bird", "headword": "bird", "rawIpa": "ˈbɝd", "partOfSpeech": "noun", "expectedDisplayIpa": "/bɜrd/", "expectedCount": 1, "expectedPrimaryStress": 0, "expectedSecondaryStress": [] },
+    { "word": "right", "headword": "right", "rawIpa": "ˈɹaɪt", "partOfSpeech": "adjective", "expectedDisplayIpa": "/raɪt/", "expectedCount": 1, "expectedPrimaryStress": 0, "expectedSecondaryStress": [] },
+    { "word": "water", "headword": "wa·ter", "rawIpa": "ˈwɔɾɚ", "partOfSpeech": "noun", "expectedDisplayIpa": "/ˈwɔɾər/", "expectedCount": 2, "expectedPrimaryStress": 0, "expectedSecondaryStress": [] },
     { "word": "cafe", "headword": "ca·fé", "rawIpa": "kæˈfé", "partOfSpeech": "noun", "expectedDisplayIpa": "/kæˈfé/", "expectedCount": 2, "expectedPrimaryStress": 1, "expectedSecondaryStress": [] }
   ],
   "conflicts": [
     { "word": "missing", "headword": "miss·ing", "rawIpa": null, "partOfSpeech": "adjective", "exactMatch": true, "expectedConflicts": ["MISSING_IPA"] },
     { "word": "correctly", "headword": "cor·rect", "rawIpa": "kəˈrɛkt", "partOfSpeech": "adverb", "entryId": "correct", "exactMatch": false, "expectedConflicts": ["NON_EXACT_ENTRY"] },
     { "word": "mismatch", "headword": "mis·match·ed", "rawIpa": "ˈmɪsmætʃ", "partOfSpeech": "verb", "exactMatch": true, "expectedConflicts": ["COUNT_CONFLICT"] },
-    { "word": "nostress", "headword": "no·stress", "rawIpa": "noʊstrɛs", "partOfSpeech": "noun", "exactMatch": true, "expectedConflicts": ["STRESS_CONFLICT"] }
+    { "word": "nostress", "headword": "no·stress", "rawIpa": "noʊstrɛs", "partOfSpeech": "noun", "exactMatch": true, "expectedConflicts": ["STRESS_CONFLICT"] },
+    { "word": "secondaryonly", "headword": "sec·ond", "rawIpa": "ˌsɛkənd", "partOfSpeech": "noun", "exactMatch": true, "expectedConflicts": ["STRESS_CONFLICT"] },
+    { "word": "twoprimary", "headword": "two·primary", "rawIpa": "ˈtuˈpraɪmɛri", "partOfSpeech": "noun", "exactMatch": true, "expectedConflicts": ["COUNT_CONFLICT", "STRESS_CONFLICT"] },
+    { "word": "danglingstress", "headword": "bad", "rawIpa": "ˈbædˈ", "partOfSpeech": "adjective", "exactMatch": true, "expectedConflicts": ["STRESS_CONFLICT"] }
   ]
 }

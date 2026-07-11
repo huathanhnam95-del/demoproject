@@ -127,6 +127,32 @@ class PronunciationReferenceContractTest(unittest.TestCase):
         self.assertEqual(judge["displayIpa"], "/dʒʌdʒ/")
         self.assertEqual(judge["syllableCount"], 1)
 
+    def test_oxford_display_maps_phonemes_without_inventing_allophones(self):
+        by_word = {fixture["word"]: fixture for fixture in self.fixtures["valid"]}
+        right = self.build_fixture_variant(by_word["right"])
+        water = self.build_fixture_variant(by_word["water"])
+        self.assertEqual(right["displayIpa"], "/raɪt/")
+        self.assertEqual(water["displayIpa"], "/ˈwɔɾər/")
+        self.assertIn("ɾ", water["displayIpa"])
+
+    def test_structured_syllables_own_stress_and_display_labels(self):
+        by_word = {fixture["word"]: fixture for fixture in self.fixtures["valid"]}
+        expire = self.build_fixture_variant(by_word["expire"])
+        self.assertEqual(
+            [(item["index"], item["ipa"], item["label"], item["stress"]) for item in expire["syllables"]],
+            [
+                (0, "ɪk", "ex", "unstressed"),
+                (1, "spaɪr", "pire", "primary"),
+            ],
+        )
+        fundamental = self.build_fixture_variant(by_word["fundamental"])
+        self.assertEqual([item["stress"] for item in fundamental["syllables"]], [
+            "secondary",
+            "unstressed",
+            "primary",
+            "unstressed",
+        ])
+
     def test_explicit_headword_break_resolves_hour_flower_ambiguity(self):
         fixtures = {fixture["word"]: fixture for fixture in self.fixtures["valid"]}
         hour = self.build_fixture_variant(fixtures["hour"])

@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bel.example/schemas/pronunciation-reference-v2.schema.json",
+  "title": "Pronunciation Reference v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "algorithmVersion",
+    "deploymentVersion",
+    "word",
+    "dialect",
+    "defaultVariantId",
+    "variants"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 9 },
+    "algorithmVersion": { "const": "pronunciation-reference-v2" },
+    "deploymentVersion": { "type": "string", "minLength": 1 },
+    "word": { "type": "string", "minLength": 1 },
+    "dialect": { "const": "en-US" },
+    "defaultVariantId": {
+      "oneOf": [
+        { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+        { "type": "null" }
+      ]
+    },
+    "variants": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/variant" }
+    }
+  },
+  "$defs": {
+    "syllable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "ipa", "label", "stress", "syllabicConsonant"],
+      "properties": {
+        "index": { "type": "integer", "minimum": 0 },
+        "ipa": { "type": "string", "minLength": 1 },
+        "label": { "type": ["string", "null"] },
+        "stress": { "enum": ["primary", "secondary", "unstressed"] },
+        "syllabicConsonant": { "type": "boolean" }
+      }
+    },
+    "variant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "partOfSpeech",
+        "definition",
+        "source",
+        "rawIpa",
+        "displayIpa",
+        "syllableCount",
+        "primaryStress",
+        "secondaryStress",
+        "syllables",
+        "audioUrl",
+        "validation",
+        "capabilities"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+        "partOfSpeech": { "type": ["string", "null"] },
+        "definition": { "type": ["string", "null"] },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["provider", "entryId", "exactMatch", "transcription"],
+          "properties": {
+            "provider": {
+              "enum": ["merriam-webster", "cmu-pronouncing-dictionary"]
+            },
+            "entryId": { "type": ["string", "null"] },
+            "exactMatch": { "type": "boolean" },
+            "transcription": {
+              "enum": ["merriam-webster-ipa", "cmu-arpabet-converted"]
+            }
+          }
+        },
+        "rawIpa": { "type": ["string", "null"] },
+        "displayIpa": { "type": ["string", "null"] },
+        "syllableCount": { "type": "integer", "minimum": 0 },
+        "primaryStress": { "type": ["integer", "null"], "minimum": 0 },
+        "secondaryStress": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "integer", "minimum": 0 }
+        },
+        "syllables": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/syllable" }
+        },
+        "audioUrl": { "type": ["string", "null"] },
+        "validation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "conflicts", "evidence"],
+          "properties": {
+            "status": { "enum": ["valid", "conflict"] },
+            "conflicts": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "NON_EXACT_ENTRY",
+                  "COUNT_CONFLICT",
+                  "STRESS_CONFLICT",
+                  "MISSING_IPA",
+                  "ACOUSTIC_CONFLICT"
+                ]
+              }
+            },
+            "evidence": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["phonologicalCount", "headwordCount", "headwordCountExplicit"],
+              "properties": {
+                "phonologicalCount": { "type": "integer", "minimum": 0 },
+                "headwordCount": { "type": ["integer", "null"], "minimum": 1 },
+                "headwordCountExplicit": { "type": "boolean" }
+              }
+            }
+          }
+        },
+        "capabilities": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["playAudio", "scoreCountStress", "showNativeGraphs"],
+          "properties": {
+            "playAudio": { "type": "boolean" },
+            "scoreCountStress": { "type": "boolean" },
+            "showNativeGraphs": { "type": "boolean" }
+          }
+        }
+      }
+    }
+  }
+}

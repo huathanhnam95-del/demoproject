@@ -1,5 +1,7 @@
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
+import json
+from pathlib import Path
 import sys
 try:
     import parselmouth  # type: ignore
@@ -10,6 +12,20 @@ import tempfile
 import os
 import requests as http_requests  # Renamed to avoid conflict with flask.request
 import re
+try:
+    from .pronunciation_reference import (
+        ALGORITHM_VERSION as PRONUNCIATION_ALGORITHM_VERSION,
+        SCHEMA_VERSION as PRONUNCIATION_SCHEMA_VERSION,
+        build_pronunciation_reference,
+        build_pronunciation_variant,
+    )
+except ImportError:
+    from pronunciation_reference import (  # type: ignore
+        ALGORITHM_VERSION as PRONUNCIATION_ALGORITHM_VERSION,
+        SCHEMA_VERSION as PRONUNCIATION_SCHEMA_VERSION,
+        build_pronunciation_reference,
+        build_pronunciation_variant,
+    )
 try:
     from scipy.ndimage import uniform_filter1d  # type: ignore
 except ImportError:
@@ -81,10 +97,13 @@ class AnalysisConfig:
     PITCH_TRANSITION_THRESHOLD = 15  # Hz - significant change
     PITCH_SMOOTHING_WINDOW = 5       # frames
     
-    # Stress detection weights (Kochanski et al. 2005)
-    STRESS_WEIGHT_PITCH = 0.50
-    STRESS_WEIGHT_DURATION = 0.30
-    STRESS_WEIGHT_INTENSITY = 0.20
+    # Empirically frozen on 447 canonical-v2 native recordings (seed 20260711).
+    STRESS_CALIBRATION_VERSION = 'candidate-audit-20260711-447'
+    STRESS_WEIGHT_PITCH = 0.30
+    STRESS_WEIGHT_DURATION = 0.60
+    STRESS_WEIGHT_INTENSITY = 0.10
+    STRESS_FINAL_LENGTHENING_PENALTY = 0.0
+    STRESS_CONFIDENCE_THRESHOLD = 0.65
     
     # Pattern matching
     PATTERN_MATCH_THRESHOLD = 0.70   # Pearson correlation threshold
@@ -544,7 +563,13 @@ def home():
 
 @app.route('/health', methods=['GET'])
 def health():
-    return jsonify({'status': 'ok'})
+    return jsonify({
+        'status': 'ok',
+        'schemaVersion': PRONUNCIATION_SCHEMA_VERSION,
+        'algorithmVersion': PRONUNCIATION_ALGORITHM_VERSION,
+        'analysisVersion': 'pronunciation-analysis-v2',
+        'deploymentVersion': get_deployment_version()
+    })
 
 # ============================================
 # MERRIAM-WEBSTER DICTIONARY ENDPOINTS
@@ -558,6 +583,336 @@ load_dotenv()
 MW_API_KEY = os.environ.get('MW_API_KEY')
 if not MW_API_KEY:
     print("WARNING: MW_API_KEY environment variable not set. Dictionary features will not work.")
+
+MW_REFERENCES = ('collegiate', 'learners', 'sd4')
+
+_CMU_VOWELS = {
+    'AA': 'ɑ', 'AE': 'æ', 'AO': 'ɔ', 'AW': 'aʊ', 'AY': 'aɪ',
+    'EH': 'ɛ', 'EY': 'eɪ', 'IH': 'ɪ', 'IY': 'i', 'OW': 'oʊ',
+    'OY': 'ɔɪ', 'UH': 'ʊ', 'UW': 'u', 'AX': 'ə', 'AXR': 'ɚ',
+    'IX': 'ɨ', 'UX': 'ʉ',
+}
+_CMU_CONSONANTS = {
+    'B': 'b', 'CH': 'tʃ', 'D': 'd', 'DH': 'ð', 'F': 'f', 'G': 'g',
+    'HH': 'h', 'JH': 'dʒ', 'K': 'k', 'L': 'l', 'M': 'm', 'N': 'n',
+    'NG': 'ŋ', 'P': 'p', 'R': 'r', 'S': 's', 'SH': 'ʃ', 'T': 't',
+    'TH': 'θ', 'V': 'v', 'W': 'w', 'Y': 'j', 'Z': 'z', 'ZH': 'ʒ',
+}
+_CMU_FALLBACK_CACHE = None
+
+
+def arpabet_to_ipa(pronunciation):
+    """Convert one exact CMU ARPAbet pronunciation to phonemic American IPA."""
+    ipa = []
+    for raw_token in str(pronunciation or '').split('#', 1)[0].split():
+        match = re.fullmatch(r'([A-Z]+)([012]?)', raw_token)
+        if not match:
+            return None
+        phoneme, stress = match.groups()
+        if phoneme == 'AH':
+            symbol = 'ə' if stress == '0' else 'ʌ'
+        elif phoneme == 'ER':
+            symbol = 'ɚ' if stress == '0' else 'ɝ'
+        elif phoneme in _CMU_VOWELS:
+            symbol = _CMU_VOWELS[phoneme]
+        elif phoneme in _CMU_CONSONANTS and not stress:
+            ipa.append(_CMU_CONSONANTS[phoneme])
+            continue
+        else:
+            return None
+        if stress == '1':
+            ipa.append('ˈ')
+        elif stress == '2':
+            ipa.append('ˌ')
+        ipa.append(symbol)
+    return ''.join(ipa) or None
+
+
+def get_cmu_pronunciation(word):
+    """Load the bundled exact-word CMU dictionary lazily."""
+    global _CMU_FALLBACK_CACHE
+    if _CMU_FALLBACK_CACHE is None:
+        candidates = (
+            Path(__file__).with_name('cmudict.json'),
+            Path(__file__).resolve().parents[2] / 'public' / 'cmudict.json',
+        )
+        path = next((candidate for candidate in candidates if candidate.is_file()), None)
+        if path is None:
+            _CMU_FALLBACK_CACHE = {}
+        else:
+            with path.open(encoding='utf-8') as source:
+                _CMU_FALLBACK_CACHE = json.load(source)
+    pronunciation = _CMU_FALLBACK_CACHE.get(str(word or '').strip().casefold())
+    return str(pronunciation).strip() if pronunciation else None
+
+
+def build_cmu_fallback_variant(word, pronunciation):
+    raw_ipa = arpabet_to_ipa(pronunciation)
+    if not raw_ipa:
+        return None
+    variant = build_pronunciation_variant(
+        word=word,
+        part_of_speech=None,
+        definition=None,
+        entry_id=f'cmudict:{word}',
+        exact_match=True,
+        raw_ipa=raw_ipa,
+        headword=None,
+        audio_filename=None,
+        audio_url=None,
+        source_provider='cmu-pronouncing-dictionary',
+        source_transcription='cmu-arpabet-converted',
+    )
+    return variant if variant['validation']['status'] == 'valid' else None
+
+
+def get_deployment_version():
+    return (
+        str(os.environ.get('GIT_SHA', '')).strip()
+        or str(os.environ.get('DEPLOYMENT_VERSION', '')).strip()
+        or str(os.environ.get('K_REVISION', '')).strip()
+        or 'local-development'
+    )
+
+
+def _mw_entry_id(entry):
+    if not isinstance(entry, dict):
+        return ''
+    return str(entry.get('meta', {}).get('id') or '').strip()
+
+
+def _mw_entry_base(entry):
+    return _mw_entry_id(entry).split(':', 1)[0].casefold()
+
+
+def _normalize_mw_surface(value):
+    """Normalize MW headword markup without performing morphological matching."""
+    normalized = str(value or '').strip().casefold()
+    normalized = re.sub(r'[\*·•‧]', '', normalized)
+    normalized = re.sub(r'\s+', ' ', normalized)
+    return normalized
+
+
+def _deduplicate_mw_items(items):
+    unique = []
+    seen = set()
+    for item in items:
+        if isinstance(item, dict):
+            key = _mw_entry_id(item) or repr(item)
+        else:
+            key = str(item)
+        if key not in seen:
+            seen.add(key)
+            unique.append(item)
+    return unique
+
+
+def fetch_mw_entries_v2(word):
+    """Fetch exact entries first; retain loose results only as conflict evidence."""
+    headers = {
+        'User-Agent': 'BEL-Pronunciation-Reference/1.0'
+    }
+    loose_entries = []
+    suggestions = []
+    last_error = None
+
+    for reference in MW_REFERENCES:
+        url = (
+            f'https://www.dictionaryapi.com/api/v3/references/{reference}/json/'
+            f'{word}?key={MW_API_KEY}'
+        )
+        response = http_requests.get(url, headers=headers, timeout=10)
+        if not response.ok:
+            last_error = {
+                'status': response.status_code,
+                'message': f'Merriam-Webster {reference} request failed'
+            }
+            continue
+        try:
+            payload = response.json()
+        except Exception:
+            last_error = {
+                'status': 502,
+                'message': f'Merriam-Webster {reference} returned invalid JSON'
+            }
+            continue
+        if not isinstance(payload, list):
+            continue
+
+        exact = [
+            entry for entry in payload
+            if isinstance(entry, dict) and _mw_entry_base(entry) == word
+        ]
+        if exact:
+            return _deduplicate_mw_items(exact), [], None
+        loose_entries.extend(entry for entry in payload if isinstance(entry, dict))
+        suggestions.extend(str(item) for item in payload if isinstance(item, str))
+
+    return (
+        _deduplicate_mw_items(loose_entries),
+        _deduplicate_mw_items(suggestions)[:10],
+        last_error,
+    )
+
+
+def _mw_pronunciation_records(entries, requested_word):
+    records = []
+    for entry in entries:
+        entry_id = _mw_entry_id(entry)
+        exact_match = _mw_entry_base(entry) == requested_word
+        hwi = entry.get('hwi') if isinstance(entry.get('hwi'), dict) else {}
+        headword = str(hwi.get('hw') or '').strip() or None
+        part_of_speech = str(entry.get('fl') or '').strip() or None
+        definitions = entry.get('shortdef')
+        definition = (
+            str(definitions[0]).strip()
+            if isinstance(definitions, list) and definitions and definitions[0]
+            else None
+        )
+
+        def append_pronunciations(
+            pronunciations,
+            *,
+            record_entry_id,
+            record_exact_match,
+            record_headword,
+            record_part_of_speech,
+            record_definition,
+        ):
+            if not isinstance(pronunciations, list) or not pronunciations:
+                pronunciations = [{}]
+            for pronunciation in pronunciations:
+                pronunciation = pronunciation if isinstance(pronunciation, dict) else {}
+                raw_ipa = pronunciation.get('ipa') or pronunciation.get('mw') or None
+                sound = pronunciation.get('sound')
+                sound = sound if isinstance(sound, dict) else {}
+                audio_filename = str(sound.get('audio') or '').strip() or None
+                records.append({
+                    'word': requested_word,
+                    'entry_id': record_entry_id or None,
+                    'exact_match': record_exact_match,
+                    'headword': record_headword,
+                    'part_of_speech': record_part_of_speech,
+                    'definition': record_definition,
+                    'raw_ipa': str(raw_ipa).strip() if raw_ipa else None,
+                    'audio_filename': audio_filename,
+                    'audio_url': build_audio_url(audio_filename) if audio_filename else None,
+                })
+
+        append_pronunciations(
+            hwi.get('prs'),
+            record_entry_id=entry_id,
+            record_exact_match=exact_match,
+            record_headword=headword,
+            record_part_of_speech=part_of_speech,
+            record_definition=definition,
+        )
+
+        for index, run_on in enumerate(entry.get('uros') or []):
+            if not isinstance(run_on, dict):
+                continue
+            run_on_headword = str(run_on.get('ure') or '').strip() or None
+            if _normalize_mw_surface(run_on_headword) != requested_word:
+                continue
+            append_pronunciations(
+                run_on.get('prs'),
+                record_entry_id=f'{entry_id}#uro:{index}' if entry_id else f'uro:{index}',
+                record_exact_match=True,
+                record_headword=run_on_headword,
+                record_part_of_speech=str(run_on.get('fl') or '').strip() or None,
+                record_definition=None,
+            )
+
+        variants = [*(entry.get('vrs') or []), *(hwi.get('vrs') or [])]
+        for index, variant in enumerate(variants):
+            if not isinstance(variant, dict):
+                continue
+            variant_headword = str(variant.get('va') or '').strip() or None
+            if _normalize_mw_surface(variant_headword) != requested_word:
+                continue
+            append_pronunciations(
+                variant.get('prs'),
+                record_entry_id=f'{entry_id}#vr:{index}' if entry_id else f'vr:{index}',
+                record_exact_match=True,
+                record_headword=variant_headword,
+                record_part_of_speech=part_of_speech,
+                record_definition=definition if exact_match else None,
+            )
+    return records
+
+
+def build_dictionary_v2_reference(word, entries):
+    records = _mw_pronunciation_records(entries, word)
+    audio_by_pronunciation = {}
+    for record in records:
+        if not record['exact_match'] or not record['audio_url'] or not record['raw_ipa']:
+            continue
+        key = (
+            normalize_ipa(record['raw_ipa']),
+            str(record['part_of_speech'] or '').casefold(),
+        )
+        audio_by_pronunciation.setdefault(
+            key,
+            (record['audio_filename'], record['audio_url']),
+        )
+
+    variants = []
+    for record in records:
+        if record['exact_match'] and not record['audio_url'] and record['raw_ipa']:
+            key = (
+                normalize_ipa(record['raw_ipa']),
+                str(record['part_of_speech'] or '').casefold(),
+            )
+            inherited = audio_by_pronunciation.get(key)
+            if inherited:
+                record = dict(record)
+                record['audio_filename'], record['audio_url'] = inherited
+        variants.append(build_pronunciation_variant(**record))
+
+    return build_pronunciation_reference(
+        word=word,
+        variants=variants,
+        deployment_version=get_deployment_version(),
+    )
+
+
+@app.route('/dictionary/v2/<word>', methods=['GET'])
+def get_dictionary_word_v2(word):
+    normalized_word = str(word or '').strip().casefold()
+    if not normalized_word:
+        return jsonify({'error': 'Word is required'}), 400
+    if not MW_API_KEY:
+        return jsonify({
+            'error': 'Dictionary API not configured',
+            'code': 'DICTIONARY_NOT_CONFIGURED'
+        }), 503
+    try:
+        entries, suggestions, fetch_error = fetch_mw_entries_v2(normalized_word)
+        reference = build_dictionary_v2_reference(normalized_word, entries)
+        if reference['defaultVariantId'] is None:
+            fallback = build_cmu_fallback_variant(
+                normalized_word,
+                get_cmu_pronunciation(normalized_word),
+            )
+            if fallback:
+                reference = build_pronunciation_reference(
+                    word=normalized_word,
+                    variants=[*reference['variants'], fallback],
+                    deployment_version=get_deployment_version(),
+                )
+        if suggestions:
+            reference['suggestions'] = suggestions
+        elif not entries:
+            reference['suggestions'] = []
+        if fetch_error and not entries and not suggestions:
+            reference['upstreamError'] = fetch_error
+        return jsonify(reference)
+    except Exception as error:
+        print(f'Dictionary v2 error: {error}')
+        return jsonify({
+            'error': 'Pronunciation reference unavailable',
+            'code': 'DICTIONARY_UPSTREAM_ERROR'
+        }), 502
 
 @app.route('/dictionary/<word>', methods=['GET'])
 def get_dictionary_word(word):
@@ -1235,6 +1590,314 @@ def analyze_from_url():
     except Exception as e:
         print(f"Analyze URL error: {e}")
         return jsonify({'error': str(e)}), 500
+
+
+def _finite_number(value):
+    try:
+        return bool(np.isfinite(float(value)))
+    except (TypeError, ValueError):
+        return False
+
+
+def _candidate_from_syllable(syllable):
+    start = float(syllable.get('startTime', 0) or 0)
+    end = float(syllable.get('endTime', start) or start)
+    duration = max(0.0, end - start)
+    pitch_value = syllable.get('avgPitch') or syllable.get('maxPitch') or 0
+    intensity_value = syllable.get('intensity')
+    voiced = _finite_number(pitch_value) and float(pitch_value) > 0
+    has_intensity = _finite_number(intensity_value)
+    confidence = 0.0
+    if voiced:
+        confidence += 0.45
+    if has_intensity and float(intensity_value) > 0:
+        confidence += 0.20
+    if 0.05 <= duration <= 0.65:
+        confidence += 0.20
+    vowel_duration = syllable.get('vowelDuration')
+    if _finite_number(vowel_duration) and float(vowel_duration) >= 0.03:
+        confidence += 0.15
+    return {
+        'time': round((start + end) / 2.0, 4),
+        'intensity': float(intensity_value) if has_intensity else None,
+        'confidence': round(min(1.0, confidence), 3),
+        'voiced': voiced,
+        'syllable': dict(syllable),
+    }
+
+
+def select_native_acoustic_candidates(candidates, target_count, noise_threshold=0.45):
+    """Select only acoustically supported nuclei; never synthesize a candidate."""
+    raw_candidates = list(candidates or [])
+    evidence = [
+        candidate for candidate in raw_candidates
+        if candidate.get('voiced') is True
+        and _finite_number(candidate.get('time'))
+        and _finite_number(candidate.get('intensity'))
+    ]
+    result = {
+        'rawCandidateCount': len(raw_candidates),
+        'evidenceCandidateCount': len(evidence),
+        'selectedCount': 0,
+        'method': 'acoustic-candidate-selection',
+        'confidence': 0.0,
+        'conflicts': [],
+        'selected': [],
+    }
+    if not isinstance(target_count, int) or target_count < 1:
+        result['method'] = 'invalid-target-count'
+        result['conflicts'] = ['ACOUSTIC_COUNT_MISMATCH']
+        return result
+
+    if len(evidence) < target_count:
+        result['method'] = 'insufficient-acoustic-candidates'
+        result['conflicts'] = ['ACOUSTIC_COUNT_MISMATCH']
+        return result
+
+    selected = list(evidence)
+    if len(evidence) > target_count:
+        ranked = sorted(
+            evidence,
+            key=lambda item: (
+                float(item.get('confidence', 0) or 0),
+                float(item.get('intensity', 0) or 0),
+            ),
+            reverse=True,
+        )
+        kept = ranked[:target_count]
+        discarded = ranked[target_count:]
+        quietest_kept = min(float(item['intensity']) for item in kept)
+        discard_is_noise = all(
+            float(item.get('confidence', 0) or 0) < noise_threshold
+            and float(item['intensity']) <= quietest_kept - 3.0
+            for item in discarded
+        )
+        if not discard_is_noise:
+            result['method'] = 'unresolved-extra-candidates'
+            result['conflicts'] = ['ACOUSTIC_COUNT_MISMATCH']
+            return result
+        selected = kept
+
+    selected.sort(key=lambda item: float(item['time']))
+    result['selected'] = selected
+    result['selectedCount'] = len(selected)
+    result['confidence'] = round(
+        float(np.mean([float(item.get('confidence', 0) or 0) for item in selected])),
+        3,
+    )
+    return result
+
+
+def score_lexical_stress_v2(syllables, confidence_threshold=None):
+    """Score stress from within-recording relative pitch, duration, and intensity."""
+    if confidence_threshold is None:
+        confidence_threshold = AnalysisConfig.STRESS_CONFIDENCE_THRESHOLD
+    syllables = list(syllables or [])
+    if not syllables:
+        return {
+            'primaryStress': None,
+            'confidence': 0.0,
+            'rateable': False,
+            'reasons': ['NO_SPEECH'],
+            'scores': [],
+        }
+    if len(syllables) == 1:
+        return {
+            'primaryStress': 0,
+            'confidence': 1.0,
+            'rateable': True,
+            'reasons': [],
+            'scores': [1.0],
+        }
+
+    pitches = np.array([
+        float(item.get('avgPitch') or item.get('maxPitch') or 0)
+        for item in syllables
+    ], dtype=float)
+    durations = np.array([
+        float(item.get('vowelDuration') or item.get('duration') or 0)
+        for item in syllables
+    ], dtype=float)
+    intensities = np.array([
+        float(item.get('intensity') or 0)
+        for item in syllables
+    ], dtype=float)
+    if np.any(pitches <= 0) or np.any(durations <= 0) or np.any(~np.isfinite(intensities)):
+        return {
+            'primaryStress': None,
+            'confidence': 0.0,
+            'rateable': False,
+            'reasons': ['INSUFFICIENT_STRESS_EVIDENCE'],
+            'scores': [],
+        }
+
+    pitch_median = float(np.median(pitches))
+    duration_median = float(np.median(durations))
+    intensity_median = float(np.median(intensities))
+    pitch_semitones = 12.0 * np.log2(pitches / pitch_median)
+    duration_prominence = np.log2(durations / duration_median)
+    intensity_prominence = intensities - intensity_median
+    scores = (
+        pitch_semitones * AnalysisConfig.STRESS_WEIGHT_PITCH
+        + duration_prominence * AnalysisConfig.STRESS_WEIGHT_DURATION
+        + intensity_prominence * AnalysisConfig.STRESS_WEIGHT_INTENSITY
+    )
+    # Phrase-final lengthening is not lexical stress evidence.
+    scores[-1] -= AnalysisConfig.STRESS_FINAL_LENGTHENING_PENALTY
+    ranking = np.argsort(scores)[::-1]
+    best_index = int(ranking[0])
+    margin = float(scores[ranking[0]] - scores[ranking[1]])
+    confidence = round(float(1.0 - np.exp(-max(0.0, margin) / 2.0)), 3)
+    rateable = confidence >= confidence_threshold
+    return {
+        'primaryStress': best_index if rateable else None,
+        'confidence': confidence,
+        'rateable': rateable,
+        'reasons': [] if rateable else ['LOW_STRESS_CONFIDENCE'],
+        'scores': [round(float(value), 4) for value in scores],
+        'features': {
+            'pitchSemitones': [round(float(value), 4) for value in pitch_semitones],
+            'relativeDuration': [round(float(value), 4) for value in duration_prominence],
+            'relativeIntensityDb': [round(float(value), 4) for value in intensity_prominence],
+        },
+    }
+
+
+def build_analysis_v2_response(raw_analysis, expected_syllable_count=None, native=False):
+    syllables = list(raw_analysis.get('syllables') or [])
+    candidates = [_candidate_from_syllable(syllable) for syllable in syllables]
+    if native:
+        segmentation = select_native_acoustic_candidates(
+            candidates,
+            expected_syllable_count,
+        )
+    else:
+        evidence = [
+            item for item in candidates
+            if item['voiced'] and _finite_number(item['intensity'])
+        ]
+        segmentation = {
+            'rawCandidateCount': len(candidates),
+            'evidenceCandidateCount': len(evidence),
+            'selectedCount': len(evidence),
+            'method': 'independent-acoustic-detection',
+            'confidence': round(
+                float(np.mean([item['confidence'] for item in evidence])),
+                3,
+            ) if evidence else 0.0,
+            'conflicts': [] if evidence else ['NO_SPEECH'],
+            'selected': evidence,
+        }
+
+    selected_syllables = [item['syllable'] for item in segmentation['selected']]
+    reasons = list(segmentation['conflicts'])
+    stress = score_lexical_stress_v2(selected_syllables)
+    rateable = bool(selected_syllables) and not reasons
+    primary_stress = stress['primaryStress']
+    public_segmentation = {
+        key: value
+        for key, value in segmentation.items()
+        if key != 'selected'
+    }
+    return {
+        'analysisVersion': 'pronunciation-analysis-v2',
+        'quality': {
+            'rateable': rateable,
+            'confidence': segmentation['confidence'],
+            'reasons': reasons,
+        },
+        'segmentation': public_segmentation,
+        'observed': {
+            'syllableCount': len(selected_syllables),
+            'primaryStress': primary_stress,
+            'syllables': selected_syllables,
+            'stressEvidence': stress,
+        },
+        'pitch': raw_analysis.get('pitch') or {'times': [], 'values': []},
+        'intensity': raw_analysis.get('intensity') or {'times': [], 'values': []},
+        'duration': raw_analysis.get('duration', 0),
+        'sampleRate': raw_analysis.get('sampleRate'),
+        'capabilities': {
+            'showNativeGraphs': bool(native and rateable),
+        },
+    }
+
+
+def analyze_audio_v2(audio_path, expected_syllable_count=None, native=False):
+    # Passing no expected count is the critical v2 invariant: candidate
+    # generation must be independent of the lexical target.
+    raw_analysis = analyze_audio(audio_path, expected_syllables=None)
+    return build_analysis_v2_response(
+        raw_analysis,
+        expected_syllable_count=expected_syllable_count,
+        native=native,
+    )
+
+
+@app.route('/analyze/v2', methods=['POST'])
+def analyze_v2():
+    if 'audio' not in request.files:
+        return jsonify({'error': 'No audio file provided'}), 400
+    audio_file = request.files['audio']
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp:
+        audio_file.save(tmp.name)
+        tmp_path = tmp.name
+    try:
+        result = analyze_audio_v2(
+            tmp_path,
+            expected_syllable_count=None,
+            native=False,
+        )
+        return jsonify(result)
+    except Exception as error:
+        print(f'Learner analysis v2 error: {error}')
+        return jsonify({
+            'error': 'Learner pronunciation analysis unavailable',
+            'code': 'ANALYSIS_FAILED',
+        }), 500
+    finally:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
+
+@app.route('/analyze-url/v2', methods=['POST'])
+def analyze_from_url_v2():
+    data = request.get_json(silent=True) or {}
+    audio_url = str(data.get('audioUrl') or '').strip()
+    variant_id = str(data.get('variantId') or '').strip()
+    expected_count = data.get('expectedSyllableCount')
+    if not audio_url.startswith('https://media.merriam-webster.com/'):
+        return jsonify({'error': 'Invalid audio URL'}), 400
+    if not re.fullmatch(r'[0-9a-f]{16}', variant_id):
+        return jsonify({'error': 'Valid variantId is required'}), 400
+    if not isinstance(expected_count, int) or expected_count < 1:
+        return jsonify({'error': 'Valid expectedSyllableCount is required'}), 400
+
+    try:
+        response = http_requests.get(audio_url, timeout=15)
+        if not response.ok:
+            return jsonify({'error': 'Failed to fetch native audio'}), response.status_code
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as tmp:
+            tmp.write(response.content)
+            tmp_path = tmp.name
+        try:
+            result = analyze_audio_v2(
+                tmp_path,
+                expected_syllable_count=expected_count,
+                native=True,
+            )
+            result['variantId'] = variant_id
+            result['canonicalSyllableCount'] = expected_count
+            return jsonify(result)
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+    except Exception as error:
+        print(f'Analyze URL v2 error: {error}')
+        return jsonify({
+            'error': 'Native pronunciation analysis unavailable',
+            'code': 'ANALYSIS_FAILED',
+        }), 500
 
 @app.route('/debug/syllables/<word>', methods=['GET'])
 def debug_syllables_endpoint(word):

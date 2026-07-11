@@ -11,19 +11,15 @@ export class PraatAPI {
 
     // detectBackendUrl removed - using config.js source of truth
 
-    async analyze(audioBlob, expectedSyllables = null) {
+    async analyze(audioBlob) {
         // Convert to WAV if needed
         const wavBlob = await this.ensureWav(audioBlob);
 
         // Prepare form data
         const formData = new FormData();
         formData.append('audio', wavBlob, 'recording.wav');
-        if (expectedSyllables) {
-            formData.append('expected_syllables', expectedSyllables.toString());
-        }
-
         // Send to backend
-        const response = await fetch(`${this.backendUrl}/analyze`, {
+        const response = await fetch(`${this.backendUrl}/analyze/v2`, {
             method: 'POST',
             body: formData
         });
@@ -73,13 +69,14 @@ export class PraatAPI {
      * Analyze audio from URL (for native reference)
      * Used by WordReferenceService for MW audio analysis
      */
-    async analyzeFromUrl(audioUrl, expectedSyllables = null) {
-        const response = await fetch(`${this.backendUrl}/analyze-url`, {
+    async analyzeFromUrl(audioUrl, variantId, expectedSyllableCount) {
+        const response = await fetch(`${this.backendUrl}/analyze-url/v2`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                audioUrl: audioUrl,
-                expectedSyllables: expectedSyllables
+                audioUrl,
+                variantId,
+                expectedSyllableCount
             })
         });
 

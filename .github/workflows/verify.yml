@@ -23,6 +23,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Run pronunciation lexical contract tests
+        run: python -m unittest backend.test_pronunciation_reference -v
+
+      - name: Run pronunciation frontend contract tests
+        run: npm run test:pronounce:logic
+
       - name: Run entrance test scoring stability
         run: node tests/entrance-test-scoring-stability.test.js
 
@@ -52,3 +63,6 @@ jobs:
 
       - name: Run practice mode browser matrix
         run: node tests/browser/practice-modes-browser-check.js
+
+      - name: Run pronunciation Chrome checks
+        run: npm run test:pronounce:browser

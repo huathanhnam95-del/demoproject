@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 9,
+  "algorithmVersion": "pronunciation-reference-v2",
+  "analysisVersion": "pronunciation-analysis-v2",
+  "seed": 20260711,
+  "samplingFrame": "unique alphabetic Oxford 5000 entries present in local CMU data",
+  "acceptance": {
+    "sample100": {
+      "minimumValidatedCoverage": 0.95,
+      "maximumHttp500s": 0,
+      "maximumIncorrectScoreable": 0,
+      "maximumGraphCountMismatches": 0
+    },
+    "sample1000": {
+      "minimumValidatedCoverage": 0.98,
+      "maximumHttp500s": 0,
+      "maximumIncorrectScoreable": 0,
+      "maximumGraphCountMismatches": 0
+    }
+  },
+  "knownRegressions": {
+    "car": { "displayIpa": "/kɑr/", "syllableCount": 1, "primaryStress": 0 },
+    "expire": { "syllableCount": 2, "primaryStress": 1 },
+    "weird": { "syllableCount": 1 },
+    "floor": { "syllableCount": 1 },
+    "prayer": { "syllableCount": 1 },
+    "therefore": { "syllableCount": 2, "primaryStress": 0 },
+    "portray": { "syllableCount": 2, "primaryStress": 1 },
+    "here": { "syllableCount": 1 },
+    "tunnel": { "syllableCount": 2 },
+    "fundamental": { "syllableCount": 4, "primaryStress": 2 }
+  }
+}

@@ -29,7 +29,7 @@ async function testPraatSuccessShortCircuitsLocalAnalysis() {
         praatAnalyze: async (attemptBlob, expectedSyllables) => {
             praatCalls += 1;
             assert.equal(attemptBlob, blob);
-            assert.equal(expectedSyllables, 2);
+            assert.equal(expectedSyllables, undefined, 'learner Praat calls must not receive the lexical count');
             return {
                 syllables: [{ startTime: 0, endTime: 0.4 }],
                 noiseCount: 1,
@@ -97,7 +97,7 @@ async function testPraatFailureFallsBackToLocalAnalysis() {
         },
         detectSyllables: (analysisData, expectedSyllables) => {
             detectCalls += 1;
-            assert.equal(expectedSyllables, 3);
+            assert.equal(expectedSyllables, undefined, 'local detection must be independent of the lexical count');
             assert.equal(analysisData.pitches.length, 3);
             return {
                 syllables: [
@@ -296,9 +296,64 @@ async function testLocalOnlyAnalysis() {
     assert.equal(result.quality.rateable, true);
 }
 
+async function testPraatV2ResponseUsesIndependentObservedSyllables() {
+    const result = await analyzeRecordedAttempt({
+        audioBlob: blob,
+        expectedSyllables: 9,
+        preferPraat: true,
+        praatAnalyze: async () => ({
+            analysisVersion: 'pronunciation-analysis-v2',
+            quality: { rateable: true, confidence: 0.91, reasons: [] },
+            observed: {
+                syllableCount: 2,
+                primaryStress: 1,
+                syllables: [
+                    { startTime: 0, endTime: 0.2, duration: 0.2 },
+                    { startTime: 0.2, endTime: 0.5, duration: 0.3 }
+                ]
+            },
+            pitch: { times: [], values: [] },
+            intensity: { times: [], values: [] }
+        })
+    });
+    assert.equal(result.engine, 'praat');
+    assert.equal(result.syllables.length, 2);
+    assert.equal(result.analysis.observed.primaryStress, 1);
+}
+
+async function testLearnerExtraSyllablesAreNotForcedToExpectedCount() {
+    const result = await analyzeRecordedAttempt({
+        audioBlob: blob,
+        expectedSyllables: 2,
+        preferPraat: false,
+        decodeBlob: async () => ({ id: 'independent-count' }),
+        pitchAnalyze: () => ({
+            times: [0, 0.1, 0.2, 0.3],
+            pitches: [110, 120, 125, 115],
+            energies: [0.15, 0.18, 0.17, 0.16]
+        }),
+        detectSyllables: (analysisData, expectedSyllables) => {
+            assert.equal(expectedSyllables, undefined);
+            return {
+                syllables: [
+                    { startTime: 0, endTime: 0.1 },
+                    { startTime: 0.1, endTime: 0.2 },
+                    { startTime: 0.2, endTime: 0.3 },
+                    { startTime: 0.3, endTime: 0.4 }
+                ],
+                quality: { rateable: true, reason: null, metrics: {} }
+            };
+        }
+    });
+
+    assert.equal(result.syllables.length, 4);
+}
+
 await testNoAudioReturnsUnrateable();
 await testPraatSuccessShortCircuitsLocalAnalysis();
 await testPraatFailureFallsBackToLocalAnalysis();
 await testPraatBoundaryRepairPullsLateBoundaryBackToVoicingBreak();
 await testPraatTrailingConsonantTailMergesIntoPreviousSyllable();
 await testLocalOnlyAnalysis();
+await testPraatV2ResponseUsesIndependentObservedSyllables();
+await testLearnerExtraSyllablesAreNotForcedToExpectedCount();

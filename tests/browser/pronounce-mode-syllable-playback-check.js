@@ -27,7 +27,7 @@ async function run() {
       Object.defineProperty(audioElement, 'currentTime', {
         configurable: true,
         get: () => 0,
-        set: (value) => window.__elementSeeks.push(value)
+        set(value) { window.__elementSeeks.push(value); }
       });
       audioElement.pause = () => {};
       audioElement.play = () => Promise.resolve();
@@ -73,7 +73,7 @@ async function run() {
   }
 }
 
-run().then(() => console.log('pronounce-mode syllable playback check passed')).catch((error) => {
-  console.error(error);
+run().then(() => process.stdout.write('pronounce-mode syllable playback check passed\n')).catch((error) => {
+  process.stderr.write(`${error.stack || error}\n`);
   process.exitCode = 1;
 });

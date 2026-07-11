@@ -322,10 +322,10 @@ async function run() {
 }
 
 if (process.argv.includes('--serve-only')) {
-  startServer().then(({ origin }) => console.log(`Pronunciation harness listening at ${origin}`));
+  startServer().then(({ origin }) => process.stdout.write(`Pronunciation harness listening at ${origin}\n`));
 } else {
-  run().then(() => console.log('pronounce-mode browser check passed')).catch((error) => {
-    console.error(error);
+  run().then(() => process.stdout.write('pronounce-mode browser check passed\n')).catch((error) => {
+    process.stderr.write(`${error.stack || error}\n`);
     process.exitCode = 1;
   });
 }

@@ -1,3 +1,4 @@
+import os
 import unittest
 from unittest.mock import patch
 
@@ -179,6 +180,14 @@ class PronunciationDictionaryV2ApiTest(unittest.TestCase):
         self.assertEqual(payload["algorithmVersion"], "pronunciation-reference-v1")
         self.assertEqual(payload["analysisVersion"], "pronunciation-analysis-v2")
         self.assertTrue(payload["deploymentVersion"])
+
+    def test_health_prefers_git_sha_over_cloud_run_revision_name(self):
+        with patch.dict(
+            os.environ,
+            {"GIT_SHA": "", "DEPLOYMENT_VERSION": "git-sha-fixture", "K_REVISION": "revision-fixture"},
+            clear=False,
+        ):
+            self.assertEqual(server.get_deployment_version(), "git-sha-fixture")
 
 
 if __name__ == "__main__":

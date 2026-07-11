@@ -588,8 +588,8 @@ MW_REFERENCES = ('collegiate', 'learners', 'sd4')
 def get_deployment_version():
     return (
         str(os.environ.get('GIT_SHA', '')).strip()
-        or str(os.environ.get('K_REVISION', '')).strip()
         or str(os.environ.get('DEPLOYMENT_VERSION', '')).strip()
+        or str(os.environ.get('K_REVISION', '')).strip()
         or 'local-development'
     )
 

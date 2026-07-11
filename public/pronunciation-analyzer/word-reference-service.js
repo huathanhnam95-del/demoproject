@@ -162,7 +162,11 @@ export class WordReferenceService {
 
         // If we have native analysis, use actual values
         if (Array.isArray(nativeSyllables) && nativeSyllables.length === syllableCount) {
-            return this.normalizePattern(nativeSyllables, primaryStress);
+            return this.normalizePattern(
+                nativeSyllables,
+                primaryStress,
+                wordReference.syllables || []
+            );
         }
 
         return null;
@@ -171,7 +175,7 @@ export class WordReferenceService {
     /**
      * Normalize native analysis to relative percentages
      */
-    normalizePattern(syllables, stressedSyllable) {
+    normalizePattern(syllables, stressedSyllable, referenceSyllables = []) {
         const maxPitch = Math.max(...syllables.map(s => s.maxPitch || s.avgPitch || 1));
         // Prefer vowelDuration (voiced portion) if available for better stress cue accuracy
         const maxDuration = Math.max(...syllables.map(s => s.vowelDuration || s.duration || 1));
@@ -179,6 +183,7 @@ export class WordReferenceService {
 
         return syllables.map((syl, index) => ({
             syllable: index + 1,
+            ipa: referenceSyllables[index]?.ipa || null,
             isStressed: index === stressedSyllable,
 
             // Actual values

@@ -8,6 +8,7 @@ import { NativeAudioPlayer } from './native-audio-player.js';
 import { config } from './config.js';
 import { analyzeRecordedAttempt } from './analysis-pipeline.js';
 import { selectReferenceVariant } from './reference-contract.js';
+import { canShowDetailedFeedback } from './chart-data.js';
 
 export class PronunciationApp {
     constructor() {
@@ -320,16 +321,40 @@ export class PronunciationApp {
                     const analysis = result.analysis;
                     this.visualizer.drawComparisonPitchContour(
                         analysis,
-                        this.currentWordRef?.nativeAnalysis
+                        this.currentWordRef?.nativeAnalysis,
+                        this.currentWordRef?.syllables || []
                     );
-                    this.renderSyllableFeedback(audioBlob, analysis?.syllables || [], 0);
+                    this.renderSyllableFeedback(
+                        audioBlob,
+                        analysis?.syllables || [],
+                        0,
+                        analysis?.quality
+                    );
                 } else {
                     const analysisData = result.analysisData || { times: [], pitches: [], energies: [] };
                     const syllables = result.syllables || [];
                     const noiseCount = result.noiseCount || 0;
 
-                    this.visualizer.drawPitchContour(analysisData.times, analysisData.pitches, analysisData.energies, syllables);
-                    this.renderSyllableFeedback(audioBlob, syllables, noiseCount);
+                    const learnerAnalysis = {
+                        quality: result.quality,
+                        observed: { syllableCount: syllables.length, syllables },
+                        pitch: { times: analysisData.times, values: analysisData.pitches },
+                        intensity: {
+                            times: analysisData.times,
+                            values: analysisData.energies.map((energy) => (
+                                Number.isFinite(energy) && energy > 0
+                                    ? 20 * Math.log10(energy)
+                                    : null
+                            ))
+                        },
+                        syllables
+                    };
+                    this.visualizer.drawComparisonPitchContour(
+                        learnerAnalysis,
+                        this.currentWordRef?.nativeAnalysis,
+                        this.currentWordRef?.syllables || []
+                    );
+                    this.renderSyllableFeedback(audioBlob, syllables, noiseCount, result.quality);
                 }
 
                 this._finishAnalysis('Idle');
@@ -442,16 +467,36 @@ export class PronunciationApp {
         ));
     }
 
-    renderSyllableFeedback(audioBlob, syllables, noiseCount = 0) {
-        if (this.nativePattern && syllables.length > 0) {
+    renderSyllableFeedback(audioBlob, syllables, noiseCount = 0, learnerQuality = null) {
+        const targetCount = this.expectedData?.syllables || 0;
+        const countsMatch = targetCount === syllables.length;
+        const detailed = canShowDetailedFeedback({
+            targetCount,
+            observedCount: syllables.length,
+            nativeQuality: this.currentWordRef?.nativeAnalysis?.quality,
+            learnerQuality
+        });
+
+        if (!countsMatch) {
+            this.visualizer.drawDurationChart(
+                this.nativePattern || this.currentWordRef?.syllables || [],
+                syllables
+            );
+            this.resultsSummary.textContent =
+                `Target: ${targetCount} syllables. Observed: ${syllables.length}. ` +
+                'A phoneme alignment is required to identify which syllable differs.';
+        } else if (detailed && this.nativePattern && syllables.length > 0) {
             const comparison = this.wordRefService.compareWithNative(
                 syllables,
                 this.nativePattern
             );
             this.visualizer.drawDurationChart(this.nativePattern, syllables);
             this.generateComparisonSummary(syllables, comparison);
-        } else {
+        } else if (syllables.length > 0) {
             this.visualizer.drawDurationChart([], syllables);
+            this.resultsSummary.textContent =
+                'The recording was detected, but confidence is too low for detailed stress feedback. Please try again.';
+        } else {
             this.generateSummary(syllables, noiseCount);
         }
 
@@ -464,22 +509,11 @@ export class PronunciationApp {
      * Get syllable labels from IPA string
      */
     getSyllableLabels() {
-        if (!this.expectedData || !this.expectedData.ipa) {
-            return null; // Will default to "Syl 1", "Syl 2", etc.
+        const syllables = this.currentWordRef?.syllables;
+        if (!Array.isArray(syllables) || syllables.length !== this.expectedData?.syllables) {
+            return null;
         }
-
-        // Try to parse syllables from IPA
-        // Common separators: . ˈ ˌ
-        const ipa = this.expectedData.ipa
-            .replaceAll('/', '')       // Remove slashes/brackets
-            .replaceAll('[', '')
-            .replaceAll(']', '')
-            .replace(/ˈ|ˌ/g, '.')      // Replace stress marks with dots
-            .split('.')
-            .filter(s => s.trim().length > 0);
-
-        // Only use if count matches
-        return ipa.length === this.expectedData.syllables ? ipa : null;
+        return syllables.map((syllable) => syllable.label || syllable.ipa);
     }
 
     generateSummary(syllables, noiseCount = 0) {
@@ -838,12 +872,10 @@ export class PronunciationApp {
             if (canShowGraphs && wordRef.nativeAnalysis.pitch?.values?.length > 0) {
                 this.visualizer.drawNativePitchContour(
                     wordRef.nativeAnalysis,
-                    wordRef.nativeAnalysis?.observed?.syllables || []
+                    wordRef.nativeAnalysis?.observed?.syllables || [],
+                    wordRef.syllables || []
                 );
                 this.nativePattern = this.wordRefService.getExpectedPattern(wordRef);
-                if (this.nativePattern?.length) {
-                    this.visualizer.drawDurationChart(this.nativePattern, []);
-                }
                 this.chartsContainer?.classList.remove('hidden');
             } else {
                 this.nativePattern = null;

@@ -1,4 +1,11 @@
 import { STRESS_WEIGHTS, calculateStressScore } from './stress-utils.js';
+import {
+    buildComparisonChartData,
+    buildDurationLanes,
+    buildNativeOnlyChartData,
+    canShowDetailedFeedback,
+    formatRelativePitchTooltip
+} from './chart-data.js';
 
 const ALIGNMENT_CONFIG = {
     PITCH_THRESHOLD: 75,        // Minimum Hz to consider as "speech" (Praat Standard)
@@ -248,6 +255,73 @@ class StressVisualizer {
      * Matches the reference image style: Native (Green border), User (Blue solid)
      */
     drawDurationChart(nativeSyllables, userSyllables) {
+        if (this.stressChart) this.stressChart.destroy();
+        const lanes = buildDurationLanes(nativeSyllables, userSyllables);
+        const labels = [
+            ...lanes.target.labels.map((label) => 'Target: ' + label),
+            ...lanes.observed.labels
+        ];
+        if (!labels.length) return;
+        const targetData = [
+            ...lanes.target.durations,
+            ...lanes.observed.durations.map(() => null)
+        ];
+        const observedData = [
+            ...lanes.target.durations.map(() => null),
+            ...lanes.observed.durations
+        ];
+        this.stressChart = new Chart(this.stressCanvas, {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [
+                    {
+                        label: 'Target duration',
+                        data: targetData,
+                        backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                        borderColor: 'rgb(34, 197, 94)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Observed duration',
+                        data: observedData,
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                        borderColor: 'rgb(59, 130, 246)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: lanes.countsMatch
+                            ? 'Target and observed duration'
+                            : 'Target and observed counts differ'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => (
+                                context.dataset.label + ': ' +
+                                Number(context.parsed.x).toFixed(3) + ' s'
+                            )
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Duration (seconds)' }
+                    }
+                }
+            }
+        });
+    }
+
+    drawDurationChartLegacy(nativeSyllables, userSyllables) {
         if (this.stressChart) {
             this.stressChart.destroy();
             this.stressChart = null;
@@ -445,7 +519,72 @@ class StressVisualizer {
      * Draw native pitch contour only (before user records)
      * Also normalized to start at 0
      */
-    drawNativePitchContour(nativeAnalysis, syllables = []) {
+    drawNativePitchContour(nativeAnalysis, acousticSyllables = [], referenceSyllables = []) {
+        if (!nativeAnalysis?.pitch) return;
+        this.nativeAnalysis = nativeAnalysis;
+        if (this.pitchChart) this.pitchChart.destroy();
+        const chartData = buildNativeOnlyChartData(nativeAnalysis);
+        this.pitchChart = new Chart(this.pitchCanvas, {
+            type: 'scatter',
+            data: {
+                datasets: [
+                    {
+                        label: 'Native pitch (Hz)',
+                        data: chartData.pitch,
+                        borderColor: 'rgb(34, 197, 94)',
+                        pointRadius: 0,
+                        showLine: true,
+                        spanGaps: true,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Native intensity (dB)',
+                        data: chartData.intensity,
+                        borderColor: 'rgba(244, 114, 182, 0.8)',
+                        pointRadius: 0,
+                        showLine: true,
+                        spanGaps: true,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: { display: true, text: 'Native pronunciation acoustics' },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => (
+                                context.dataset.yAxisID === 'y'
+                                    ? context.dataset.label + ': ' + Math.round(context.parsed.y) + ' Hz'
+                                    : context.dataset.label + ': ' + Number(context.parsed.y).toFixed(1) + ' dB'
+                            )
+                        }
+                    }
+                },
+                scales: {
+                    x: { title: { display: true, text: 'Time (s)' } },
+                    y: {
+                        position: 'left',
+                        title: { display: true, text: chartData.pitchAxisLabel }
+                    },
+                    y1: {
+                        position: 'right',
+                        title: { display: true, text: chartData.intensityAxisLabel },
+                        grid: { drawOnChartArea: false }
+                    }
+                }
+            }
+        });
+        const targetDurations = acousticSyllables.map((syllable, index) => ({
+            ...syllable,
+            ipa: referenceSyllables[index]?.ipa || null
+        }));
+        this.drawDurationChart(targetDurations, []);
+    }
+
+    drawNativePitchContourLegacy(nativeAnalysis, syllables = []) {
         if (!nativeAnalysis || !nativeAnalysis.pitch) {
             return;
         }
@@ -562,7 +701,102 @@ class StressVisualizer {
      * Draw comparison pitch contour with both native and user normalized to start at 0
      * Replaces previous alignAnalysisData logic with normalizeToZero + scatter chart
      */
-    drawComparisonPitchContour(userAnalysis, nativeAnalysis = null) {
+    drawComparisonPitchContour(
+        userAnalysis,
+        nativeAnalysis = null,
+        referenceSyllables = []
+    ) {
+        if (!nativeAnalysis || !userAnalysis) {
+            this.drawPitchContour(
+                userAnalysis?.pitch?.times || [],
+                userAnalysis?.pitch?.values || [],
+                userAnalysis?.intensity?.values || [],
+                userAnalysis?.observed?.syllables || userAnalysis?.syllables || []
+            );
+            return;
+        }
+        if (this.pitchChart) this.pitchChart.destroy();
+        const chartData = buildComparisonChartData(nativeAnalysis, userAnalysis);
+        const dataset = (label, data, color, axis, dashed = false) => ({
+            label,
+            data,
+            borderColor: color,
+            borderDash: dashed ? [6, 4] : [],
+            pointRadius: 0,
+            showLine: true,
+            spanGaps: true,
+            yAxisID: axis
+        });
+        this.pitchChart = new Chart(this.pitchCanvas, {
+            type: 'scatter',
+            data: {
+                datasets: [
+                    dataset('Native relative pitch', chartData.native.pitch, 'rgb(34, 197, 94)', 'y', true),
+                    dataset('Your relative pitch', chartData.learner.pitch, 'rgb(59, 130, 246)', 'y'),
+                    dataset('Native relative intensity', chartData.native.intensity, 'rgba(34, 197, 94, 0.45)', 'y1', true),
+                    dataset('Your relative intensity', chartData.learner.intensity, 'rgba(244, 114, 182, 0.7)', 'y1')
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: { display: true, text: 'Your recording compared with the native pattern' },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => {
+                                const point = context.raw;
+                                if (context.dataset.yAxisID === 'y') {
+                                    return context.dataset.label + ': ' + formatRelativePitchTooltip(point);
+                                }
+                                if (point?.y === null) return context.dataset.label + ': no voiced intensity';
+                                return (
+                                    context.dataset.label + ': ' +
+                                    Number(point.y).toFixed(1) + ' dB relative · ' +
+                                    Number(point.rawDb).toFixed(1) + ' dB'
+                                );
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { title: { display: true, text: 'Time (s)' } },
+                    y: {
+                        position: 'left',
+                        title: { display: true, text: chartData.pitchAxisLabel }
+                    },
+                    y1: {
+                        position: 'right',
+                        title: { display: true, text: chartData.intensityAxisLabel },
+                        grid: { drawOnChartArea: false }
+                    }
+                }
+            }
+        });
+
+        const nativeSyllables = nativeAnalysis?.observed?.syllables || [];
+        const learnerSyllables = userAnalysis?.observed?.syllables || userAnalysis?.syllables || [];
+        const targetDurations = nativeSyllables.map((syllable, index) => ({
+            ...syllable,
+            ipa: referenceSyllables[index]?.ipa || null,
+            isStressed: referenceSyllables[index]?.stress === 'primary'
+        }));
+        this.drawDurationChart(targetDurations, learnerSyllables);
+
+        const detailed = canShowDetailedFeedback({
+            targetCount: referenceSyllables.length || nativeSyllables.length,
+            observedCount: learnerSyllables.length,
+            nativeQuality: nativeAnalysis.quality,
+            learnerQuality: userAnalysis.quality
+        });
+        if (detailed) {
+            this.generateFeedback(targetDurations, learnerSyllables, nativeSyllables);
+        } else {
+            this.toggleFeedbackSection(false);
+        }
+    }
+
+    drawComparisonPitchContourLegacy(userAnalysis, nativeAnalysis = null) {
         const native = nativeAnalysis || this.nativeAnalysis;
 
         if (this.pitchChart) {

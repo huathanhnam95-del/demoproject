@@ -11,6 +11,20 @@ import os
 import requests as http_requests  # Renamed to avoid conflict with flask.request
 import re
 try:
+    from .pronunciation_reference import (
+        ALGORITHM_VERSION as PRONUNCIATION_ALGORITHM_VERSION,
+        SCHEMA_VERSION as PRONUNCIATION_SCHEMA_VERSION,
+        build_pronunciation_reference,
+        build_pronunciation_variant,
+    )
+except ImportError:
+    from pronunciation_reference import (  # type: ignore
+        ALGORITHM_VERSION as PRONUNCIATION_ALGORITHM_VERSION,
+        SCHEMA_VERSION as PRONUNCIATION_SCHEMA_VERSION,
+        build_pronunciation_reference,
+        build_pronunciation_variant,
+    )
+try:
     from scipy.ndimage import uniform_filter1d  # type: ignore
 except ImportError:
     try:
@@ -544,7 +558,13 @@ def home():
 
 @app.route('/health', methods=['GET'])
 def health():
-    return jsonify({'status': 'ok'})
+    return jsonify({
+        'status': 'ok',
+        'schemaVersion': PRONUNCIATION_SCHEMA_VERSION,
+        'algorithmVersion': PRONUNCIATION_ALGORITHM_VERSION,
+        'analysisVersion': 'pronunciation-analysis-v2',
+        'deploymentVersion': get_deployment_version()
+    })
 
 # ============================================
 # MERRIAM-WEBSTER DICTIONARY ENDPOINTS
@@ -558,6 +578,190 @@ load_dotenv()
 MW_API_KEY = os.environ.get('MW_API_KEY')
 if not MW_API_KEY:
     print("WARNING: MW_API_KEY environment variable not set. Dictionary features will not work.")
+
+MW_REFERENCES = ('collegiate', 'learners', 'sd4')
+
+
+def get_deployment_version():
+    return (
+        str(os.environ.get('GIT_SHA', '')).strip()
+        or str(os.environ.get('K_REVISION', '')).strip()
+        or str(os.environ.get('DEPLOYMENT_VERSION', '')).strip()
+        or 'local-development'
+    )
+
+
+def _mw_entry_id(entry):
+    if not isinstance(entry, dict):
+        return ''
+    return str(entry.get('meta', {}).get('id') or '').strip()
+
+
+def _mw_entry_base(entry):
+    return _mw_entry_id(entry).split(':', 1)[0].casefold()
+
+
+def _deduplicate_mw_items(items):
+    unique = []
+    seen = set()
+    for item in items:
+        if isinstance(item, dict):
+            key = _mw_entry_id(item) or repr(item)
+        else:
+            key = str(item)
+        if key not in seen:
+            seen.add(key)
+            unique.append(item)
+    return unique
+
+
+def fetch_mw_entries_v2(word):
+    """Fetch exact entries first; retain loose results only as conflict evidence."""
+    headers = {
+        'User-Agent': 'BEL-Pronunciation-Reference/1.0'
+    }
+    loose_entries = []
+    suggestions = []
+    last_error = None
+
+    for reference in MW_REFERENCES:
+        url = (
+            f'https://www.dictionaryapi.com/api/v3/references/{reference}/json/'
+            f'{word}?key={MW_API_KEY}'
+        )
+        response = http_requests.get(url, headers=headers, timeout=10)
+        if not response.ok:
+            last_error = {
+                'status': response.status_code,
+                'message': f'Merriam-Webster {reference} request failed'
+            }
+            continue
+        try:
+            payload = response.json()
+        except Exception:
+            last_error = {
+                'status': 502,
+                'message': f'Merriam-Webster {reference} returned invalid JSON'
+            }
+            continue
+        if not isinstance(payload, list):
+            continue
+
+        exact = [
+            entry for entry in payload
+            if isinstance(entry, dict) and _mw_entry_base(entry) == word
+        ]
+        if exact:
+            return _deduplicate_mw_items(exact), [], None
+        loose_entries.extend(entry for entry in payload if isinstance(entry, dict))
+        suggestions.extend(str(item) for item in payload if isinstance(item, str))
+
+    return (
+        _deduplicate_mw_items(loose_entries),
+        _deduplicate_mw_items(suggestions)[:10],
+        last_error,
+    )
+
+
+def _mw_pronunciation_records(entries, requested_word):
+    records = []
+    for entry in entries:
+        entry_id = _mw_entry_id(entry)
+        exact_match = _mw_entry_base(entry) == requested_word
+        hwi = entry.get('hwi') if isinstance(entry.get('hwi'), dict) else {}
+        headword = str(hwi.get('hw') or '').strip() or None
+        part_of_speech = str(entry.get('fl') or '').strip() or None
+        definitions = entry.get('shortdef')
+        definition = (
+            str(definitions[0]).strip()
+            if isinstance(definitions, list) and definitions and definitions[0]
+            else None
+        )
+        pronunciations = hwi.get('prs')
+        if not isinstance(pronunciations, list) or not pronunciations:
+            pronunciations = [{}]
+
+        for pronunciation in pronunciations:
+            pronunciation = pronunciation if isinstance(pronunciation, dict) else {}
+            raw_ipa = pronunciation.get('ipa') or pronunciation.get('mw') or None
+            sound = pronunciation.get('sound')
+            sound = sound if isinstance(sound, dict) else {}
+            audio_filename = str(sound.get('audio') or '').strip() or None
+            records.append({
+                'word': requested_word,
+                'entry_id': entry_id or None,
+                'exact_match': exact_match,
+                'headword': headword,
+                'part_of_speech': part_of_speech,
+                'definition': definition,
+                'raw_ipa': str(raw_ipa).strip() if raw_ipa else None,
+                'audio_filename': audio_filename,
+                'audio_url': build_audio_url(audio_filename) if audio_filename else None,
+            })
+    return records
+
+
+def build_dictionary_v2_reference(word, entries):
+    records = _mw_pronunciation_records(entries, word)
+    audio_by_pronunciation = {}
+    for record in records:
+        if not record['exact_match'] or not record['audio_url'] or not record['raw_ipa']:
+            continue
+        key = (
+            normalize_ipa(record['raw_ipa']),
+            str(record['part_of_speech'] or '').casefold(),
+        )
+        audio_by_pronunciation.setdefault(
+            key,
+            (record['audio_filename'], record['audio_url']),
+        )
+
+    variants = []
+    for record in records:
+        if record['exact_match'] and not record['audio_url'] and record['raw_ipa']:
+            key = (
+                normalize_ipa(record['raw_ipa']),
+                str(record['part_of_speech'] or '').casefold(),
+            )
+            inherited = audio_by_pronunciation.get(key)
+            if inherited:
+                record = dict(record)
+                record['audio_filename'], record['audio_url'] = inherited
+        variants.append(build_pronunciation_variant(**record))
+
+    return build_pronunciation_reference(
+        word=word,
+        variants=variants,
+        deployment_version=get_deployment_version(),
+    )
+
+
+@app.route('/dictionary/v2/<word>', methods=['GET'])
+def get_dictionary_word_v2(word):
+    normalized_word = str(word or '').strip().casefold()
+    if not normalized_word:
+        return jsonify({'error': 'Word is required'}), 400
+    if not MW_API_KEY:
+        return jsonify({
+            'error': 'Dictionary API not configured',
+            'code': 'DICTIONARY_NOT_CONFIGURED'
+        }), 503
+    try:
+        entries, suggestions, fetch_error = fetch_mw_entries_v2(normalized_word)
+        reference = build_dictionary_v2_reference(normalized_word, entries)
+        if suggestions:
+            reference['suggestions'] = suggestions
+        elif not entries:
+            reference['suggestions'] = []
+        if fetch_error and not entries and not suggestions:
+            reference['upstreamError'] = fetch_error
+        return jsonify(reference)
+    except Exception as error:
+        print(f'Dictionary v2 error: {error}')
+        return jsonify({
+            'error': 'Pronunciation reference unavailable',
+            'code': 'DICTIONARY_UPSTREAM_ERROR'
+        }), 502
 
 @app.route('/dictionary/<word>', methods=['GET'])
 def get_dictionary_word(word):

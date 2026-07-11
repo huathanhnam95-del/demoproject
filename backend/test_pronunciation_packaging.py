@@ -14,6 +14,13 @@ class PronunciationPackagingTests(unittest.TestCase):
         self.assertIn("local_server.server:app", dockerfile)
         self.assertNotIn("COPY server.py", dockerfile)
 
+    def test_native_numeric_dependencies_support_python_310(self):
+        requirements = (ROOT / "backend" / "requirements.txt").read_text(
+            encoding="utf-8"
+        ).splitlines()
+        self.assertIn("scipy==1.15.3", requirements)
+        self.assertIn("numpy==2.2.6", requirements)
+
     def test_cloud_build_is_sha_tagged_and_does_not_deploy(self):
         config = (ROOT / "backend" / "cloudbuild.pronunciation.yaml").read_text(
             encoding="utf-8"

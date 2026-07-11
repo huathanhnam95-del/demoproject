@@ -1,13 +1,13 @@
 # Pronunciation backend release runbook
 
 This runbook builds and verifies the versioned pronunciation backend for project
-`listening-tasks-3ae34`, region `us-central1`, and Cloud Run service `praat-api`.
+`parselmouth`, region `us-central1`, and Cloud Run service `praat-api`.
 Building a candidate does not authorize production traffic or Firebase Hosting
 deployment. Promotion requires separate explicit authorization from the user.
 
 ## Prerequisites
 
-- Authenticate `gcloud` with access to project `listening-tasks-3ae34`.
+- Authenticate `gcloud` with access to project `parselmouth`.
 - Ensure the Artifact Registry repository `cloud-run-source-deploy` exists in
   `us-central1`.
 - Store `MW_API_KEY` in Secret Manager and expose it to the Cloud Run service;
@@ -21,13 +21,13 @@ From the repository root:
 ```powershell
 $sha = git rev-parse HEAD
 gcloud builds submit . `
-  --project listening-tasks-3ae34 `
+  --project parselmouth `
   --config backend/cloudbuild.pronunciation.yaml `
   --substitutions "_GIT_SHA=$sha"
 ```
 
 The build publishes
-`us-central1-docker.pkg.dev/listening-tasks-3ae34/cloud-run-source-deploy/praat-api:<sha>`.
+`us-central1-docker.pkg.dev/parselmouth/cloud-run-source-deploy/praat-api:<sha>`.
 The build configuration does not deploy or change traffic.
 
 ## Deploy a no-traffic candidate
@@ -37,9 +37,9 @@ non-production, no-traffic revision:
 
 ```powershell
 $sha = git rev-parse HEAD
-$image = "us-central1-docker.pkg.dev/listening-tasks-3ae34/cloud-run-source-deploy/praat-api:$sha"
+$image = "us-central1-docker.pkg.dev/parselmouth/cloud-run-source-deploy/praat-api:$sha"
 gcloud run deploy praat-api `
-  --project listening-tasks-3ae34 `
+  --project parselmouth `
   --region us-central1 `
   --image $image `
   --set-secrets "MW_API_KEY=MW_API_KEY:latest" `

@@ -46,7 +46,7 @@ class PronunciationPackagingTests(unittest.TestCase):
             encoding="utf-8"
         )
         for required in (
-            "listening-tasks-3ae34",
+            "parselmouth",
             "us-central1",
             "praat-api",
             "MW_API_KEY",

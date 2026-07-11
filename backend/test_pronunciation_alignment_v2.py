@@ -1,4 +1,6 @@
+import io
 import unittest
+from unittest.mock import patch
 
 from backend.local_server import server
 
@@ -114,6 +116,50 @@ class PronunciationAlignmentV2Test(unittest.TestCase):
         self.assertIn("ACOUSTIC_COUNT_MISMATCH", result["quality"]["reasons"])
         self.assertFalse(result["capabilities"]["showNativeGraphs"])
         self.assertEqual(result["segmentation"]["rawCandidateCount"], 2)
+
+    def test_stress_prominence_penalizes_final_lengthening(self):
+        syllables = [
+            {"avgPitch": 185, "vowelDuration": 0.16, "duration": 0.20, "intensity": 74},
+            {"avgPitch": 140, "vowelDuration": 0.15, "duration": 0.33, "intensity": 69},
+        ]
+        result = server.score_lexical_stress_v2(syllables)
+        self.assertEqual(result["primaryStress"], 0)
+        self.assertTrue(result["rateable"])
+
+    def test_low_prominence_margin_is_unrateable(self):
+        syllables = [
+            {"avgPitch": 150, "vowelDuration": 0.18, "duration": 0.20, "intensity": 70},
+            {"avgPitch": 151, "vowelDuration": 0.18, "duration": 0.20, "intensity": 70.1},
+        ]
+        result = server.score_lexical_stress_v2(syllables)
+        self.assertIsNone(result["primaryStress"])
+        self.assertFalse(result["rateable"])
+        self.assertIn("LOW_STRESS_CONFIDENCE", result["reasons"])
+
+    def test_learner_v2_endpoint_rejects_expected_count_forcing(self):
+        server.app.testing = True
+        client = server.app.test_client()
+        fake_result = {
+            "analysisVersion": "pronunciation-analysis-v2",
+            "quality": {"rateable": False, "confidence": 0, "reasons": ["NO_SPEECH"]},
+            "segmentation": {"rawCandidateCount": 0, "selectedCount": 0},
+            "observed": {"syllableCount": 0, "primaryStress": None, "syllables": []},
+            "pitch": {"times": [], "values": []},
+            "intensity": {"times": [], "values": []},
+        }
+        with patch.object(server, "analyze_audio_v2", return_value=fake_result) as analyze:
+            response = client.post(
+                "/analyze/v2",
+                data={
+                    "audio": (io.BytesIO(b"RIFFfixture"), "attempt.wav"),
+                    "expected_syllables": "7",
+                },
+                content_type="multipart/form-data",
+            )
+        self.assertEqual(response.status_code, 200, response.get_data(as_text=True))
+        analyze.assert_called_once()
+        self.assertIsNone(analyze.call_args.kwargs["expected_syllable_count"])
+        self.assertFalse(analyze.call_args.kwargs["native"])
 
 
 if __name__ == "__main__":

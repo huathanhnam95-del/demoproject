@@ -1537,6 +1537,79 @@ def select_native_acoustic_candidates(candidates, target_count, noise_threshold=
     return result
 
 
+def score_lexical_stress_v2(syllables, confidence_threshold=0.65):
+    """Score stress from within-recording relative pitch, duration, and intensity."""
+    syllables = list(syllables or [])
+    if not syllables:
+        return {
+            'primaryStress': None,
+            'confidence': 0.0,
+            'rateable': False,
+            'reasons': ['NO_SPEECH'],
+            'scores': [],
+        }
+    if len(syllables) == 1:
+        return {
+            'primaryStress': 0,
+            'confidence': 1.0,
+            'rateable': True,
+            'reasons': [],
+            'scores': [1.0],
+        }
+
+    pitches = np.array([
+        float(item.get('avgPitch') or item.get('maxPitch') or 0)
+        for item in syllables
+    ], dtype=float)
+    durations = np.array([
+        float(item.get('vowelDuration') or item.get('duration') or 0)
+        for item in syllables
+    ], dtype=float)
+    intensities = np.array([
+        float(item.get('intensity') or 0)
+        for item in syllables
+    ], dtype=float)
+    if np.any(pitches <= 0) or np.any(durations <= 0) or np.any(~np.isfinite(intensities)):
+        return {
+            'primaryStress': None,
+            'confidence': 0.0,
+            'rateable': False,
+            'reasons': ['INSUFFICIENT_STRESS_EVIDENCE'],
+            'scores': [],
+        }
+
+    pitch_median = float(np.median(pitches))
+    duration_median = float(np.median(durations))
+    intensity_median = float(np.median(intensities))
+    pitch_semitones = 12.0 * np.log2(pitches / pitch_median)
+    duration_prominence = np.log2(durations / duration_median)
+    intensity_prominence = intensities - intensity_median
+    scores = (
+        pitch_semitones * 0.50
+        + duration_prominence * 0.30
+        + intensity_prominence * 0.20
+    )
+    # Phrase-final lengthening is not lexical stress evidence.
+    scores[-1] -= 0.35
+    ranking = np.argsort(scores)[::-1]
+    best_index = int(ranking[0])
+    margin = float(scores[ranking[0]] - scores[ranking[1]])
+    confidence = round(float(1.0 - np.exp(-max(0.0, margin) / 2.0)), 3)
+    rateable = confidence >= confidence_threshold
+    return {
+        'primaryStress': best_index if rateable else None,
+        'confidence': confidence,
+        'rateable': rateable,
+        'reasons': [] if rateable else ['LOW_STRESS_CONFIDENCE'],
+        'scores': [round(float(value), 4) for value in scores],
+        'features': {
+            'pitchSemitones': [round(float(value), 4) for value in pitch_semitones],
+            'relativeDuration': [round(float(value), 4) for value in duration_prominence],
+            'relativeIntensityDb': [round(float(value), 4) for value in intensity_prominence],
+        },
+    }
+
+
 def build_analysis_v2_response(raw_analysis, expected_syllable_count=None, native=False):
     syllables = list(raw_analysis.get('syllables') or [])
     candidates = [_candidate_from_syllable(syllable) for syllable in syllables]
@@ -1565,12 +1638,12 @@ def build_analysis_v2_response(raw_analysis, expected_syllable_count=None, nativ
 
     selected_syllables = [item['syllable'] for item in segmentation['selected']]
     reasons = list(segmentation['conflicts'])
+    stress = score_lexical_stress_v2(selected_syllables)
+    if selected_syllables and not stress['rateable']:
+        reasons.extend(stress['reasons'])
+    reasons = list(dict.fromkeys(reasons))
     rateable = bool(selected_syllables) and not reasons
-    primary_stress = (
-        determine_stressed_syllable(selected_syllables)
-        if selected_syllables
-        else None
-    )
+    primary_stress = stress['primaryStress']
     public_segmentation = {
         key: value
         for key, value in segmentation.items()
@@ -1588,6 +1661,7 @@ def build_analysis_v2_response(raw_analysis, expected_syllable_count=None, nativ
             'syllableCount': len(selected_syllables),
             'primaryStress': primary_stress,
             'syllables': selected_syllables,
+            'stressEvidence': stress,
         },
         'pitch': raw_analysis.get('pitch') or {'times': [], 'values': []},
         'intensity': raw_analysis.get('intensity') or {'times': [], 'values': []},
@@ -1608,6 +1682,32 @@ def analyze_audio_v2(audio_path, expected_syllable_count=None, native=False):
         expected_syllable_count=expected_syllable_count,
         native=native,
     )
+
+
+@app.route('/analyze/v2', methods=['POST'])
+def analyze_v2():
+    if 'audio' not in request.files:
+        return jsonify({'error': 'No audio file provided'}), 400
+    audio_file = request.files['audio']
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp:
+        audio_file.save(tmp.name)
+        tmp_path = tmp.name
+    try:
+        result = analyze_audio_v2(
+            tmp_path,
+            expected_syllable_count=None,
+            native=False,
+        )
+        return jsonify(result)
+    except Exception as error:
+        print(f'Learner analysis v2 error: {error}')
+        return jsonify({
+            'error': 'Learner pronunciation analysis unavailable',
+            'code': 'ANALYSIS_FAILED',
+        }), 500
+    finally:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
 
 
 @app.route('/analyze-url/v2', methods=['POST'])

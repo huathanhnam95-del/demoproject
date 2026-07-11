@@ -219,25 +219,19 @@ function shouldMergeTrailingTail(analysis, previousSyllable, trailingSyllable, c
     return trailingMostlyUnvoiced && trailingPitchWeak && (trailingShort || trailingShortRelative);
 }
 
-function collapseTrailingConsonantTail(analysis, expectedSyllables, config = PRAAT_TRAILING_TAIL_CONFIG) {
-    if (!analysis || typeof analysis !== 'object' || !Array.isArray(analysis.syllables) || !Number.isFinite(expectedSyllables)) {
+function collapseTrailingConsonantTail(analysis, config = PRAAT_TRAILING_TAIL_CONFIG) {
+    if (!analysis || typeof analysis !== 'object' || !Array.isArray(analysis.syllables)) {
         return analysis;
     }
 
-    if (analysis.syllables.length <= expectedSyllables || expectedSyllables < 1) {
+    if (analysis.syllables.length < 2) {
         return analysis;
     }
 
     const repairedSyllables = analysis.syllables.map((syllable) => ({ ...syllable }));
-
-    while (repairedSyllables.length > expectedSyllables) {
-        const trailingSyllable = repairedSyllables[repairedSyllables.length - 1];
-        const previousSyllable = repairedSyllables[repairedSyllables.length - 2];
-
-        if (!shouldMergeTrailingTail(analysis, previousSyllable, trailingSyllable, config)) {
-            break;
-        }
-
+    const trailingSyllable = repairedSyllables[repairedSyllables.length - 1];
+    const previousSyllable = repairedSyllables[repairedSyllables.length - 2];
+    if (shouldMergeTrailingTail(analysis, previousSyllable, trailingSyllable, config)) {
         repairedSyllables.splice(
             repairedSyllables.length - 2,
             2,
@@ -284,9 +278,9 @@ export async function analyzeRecordedAttempt({
 
     if (preferPraat && typeof praatAnalyze === 'function') {
         try {
-            const praatAnalysis = await praatAnalyze(audioBlob, expectedSyllables);
+            const praatAnalysis = await praatAnalyze(audioBlob);
             const repairedAnalysis = repairPraatSyllableBoundaries(praatAnalysis);
-            const analysis = collapseTrailingConsonantTail(repairedAnalysis, expectedSyllables);
+            const analysis = collapseTrailingConsonantTail(repairedAnalysis);
             const syllables = Array.isArray(analysis?.syllables) ? analysis.syllables : [];
             const quality = analysis?.quality || {
                 rateable: syllables.length > 0,
@@ -312,7 +306,6 @@ export async function analyzeRecordedAttempt({
         } catch (error) {
             const localResult = await analyzeLocalAttempt({
                 audioBlob,
-                expectedSyllables,
                 decodeBlob,
                 pitchAnalyze,
                 detectSyllables
@@ -329,7 +322,6 @@ export async function analyzeRecordedAttempt({
 
     return analyzeLocalAttempt({
         audioBlob,
-        expectedSyllables,
         decodeBlob,
         pitchAnalyze,
         detectSyllables
@@ -338,7 +330,6 @@ export async function analyzeRecordedAttempt({
 
 async function analyzeLocalAttempt({
     audioBlob,
-    expectedSyllables,
     decodeBlob,
     pitchAnalyze,
     detectSyllables
@@ -368,7 +359,7 @@ async function analyzeLocalAttempt({
     }
 
     const analysisData = pitchAnalyze(audioBuffer);
-    const detected = detectSyllables(analysisData, expectedSyllables);
+    const detected = detectSyllables(analysisData);
     const syllables = Array.isArray(detected?.syllables) ? detected.syllables : [];
     const noiseCount = detected?.noiseCount || 0;
     const quality = detected?.quality || {

@@ -9,7 +9,8 @@ class PronunciationPackagingTests(unittest.TestCase):
     def test_dockerfile_packages_the_canonical_server(self):
         dockerfile = (ROOT / "backend" / "Dockerfile").read_text(encoding="utf-8")
         self.assertIn("COPY backend/requirements.txt", dockerfile)
-        self.assertIn("COPY backend/local_server", dockerfile)
+        self.assertIn("COPY backend/local_server/server.py", dockerfile)
+        self.assertIn("COPY backend/local_server/pronunciation_reference.py", dockerfile)
         self.assertIn("local_server.server:app", dockerfile)
         self.assertNotIn("COPY server.py", dockerfile)
 
@@ -21,6 +22,17 @@ class PronunciationPackagingTests(unittest.TestCase):
         self.assertIn("${_GIT_SHA}", config)
         self.assertIn("us-central1-docker.pkg.dev", config)
         self.assertNotIn("gcloud run deploy", config)
+
+    def test_cloud_build_upload_is_deny_by_default(self):
+        ignore_file = (ROOT / ".gcloudignore").read_text(encoding="utf-8")
+        patterns = ignore_file.splitlines()
+        self.assertEqual(patterns[0], "*")
+        self.assertIn("!backend/Dockerfile", patterns)
+        self.assertIn("!backend/requirements.txt", patterns)
+        self.assertIn("!backend/local_server/server.py", patterns)
+        self.assertIn("!backend/local_server/pronunciation_reference.py", patterns)
+        self.assertNotIn("!Admin account", patterns)
+        self.assertFalse(any("test-results" in pattern for pattern in patterns))
 
     def test_runbook_documents_candidate_audit_promotion_and_rollback(self):
         runbook = (ROOT / "docs" / "runbooks" / "pronunciation-backend.md").read_text(

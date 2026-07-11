@@ -12,8 +12,11 @@ RUN apt-get update && apt-get install -y \
 COPY backend/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Package the canonical pronunciation backend, including the versioned reference module.
-COPY backend/local_server ./local_server
+# Package only the canonical pronunciation runtime modules.
+RUN mkdir -p ./local_server
+COPY backend/local_server/__init__.py ./local_server/__init__.py
+COPY backend/local_server/server.py ./local_server/server.py
+COPY backend/local_server/pronunciation_reference.py ./local_server/pronunciation_reference.py
 
 # Cloud Run uses PORT env variable
 ENV PORT=8080

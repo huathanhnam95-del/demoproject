@@ -1,0 +1,12 @@
+*
+!.gcloudignore
+!backend
+backend/*
+!backend/Dockerfile
+!backend/requirements.txt
+!backend/cloudbuild.pronunciation.yaml
+!backend/local_server
+backend/local_server/*
+!backend/local_server/__init__.py
+!backend/local_server/server.py
+!backend/local_server/pronunciation_reference.py

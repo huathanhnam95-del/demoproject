@@ -1440,6 +1440,215 @@ def analyze_from_url():
         print(f"Analyze URL error: {e}")
         return jsonify({'error': str(e)}), 500
 
+
+def _finite_number(value):
+    try:
+        return bool(np.isfinite(float(value)))
+    except (TypeError, ValueError):
+        return False
+
+
+def _candidate_from_syllable(syllable):
+    start = float(syllable.get('startTime', 0) or 0)
+    end = float(syllable.get('endTime', start) or start)
+    duration = max(0.0, end - start)
+    pitch_value = syllable.get('avgPitch') or syllable.get('maxPitch') or 0
+    intensity_value = syllable.get('intensity')
+    voiced = _finite_number(pitch_value) and float(pitch_value) > 0
+    has_intensity = _finite_number(intensity_value)
+    confidence = 0.0
+    if voiced:
+        confidence += 0.45
+    if has_intensity and float(intensity_value) > 0:
+        confidence += 0.20
+    if 0.05 <= duration <= 0.65:
+        confidence += 0.20
+    vowel_duration = syllable.get('vowelDuration')
+    if _finite_number(vowel_duration) and float(vowel_duration) >= 0.03:
+        confidence += 0.15
+    return {
+        'time': round((start + end) / 2.0, 4),
+        'intensity': float(intensity_value) if has_intensity else None,
+        'confidence': round(min(1.0, confidence), 3),
+        'voiced': voiced,
+        'syllable': dict(syllable),
+    }
+
+
+def select_native_acoustic_candidates(candidates, target_count, noise_threshold=0.45):
+    """Select only acoustically supported nuclei; never synthesize a candidate."""
+    raw_candidates = list(candidates or [])
+    evidence = [
+        candidate for candidate in raw_candidates
+        if candidate.get('voiced') is True
+        and _finite_number(candidate.get('time'))
+        and _finite_number(candidate.get('intensity'))
+    ]
+    result = {
+        'rawCandidateCount': len(raw_candidates),
+        'evidenceCandidateCount': len(evidence),
+        'selectedCount': 0,
+        'method': 'acoustic-candidate-selection',
+        'confidence': 0.0,
+        'conflicts': [],
+        'selected': [],
+    }
+    if not isinstance(target_count, int) or target_count < 1:
+        result['method'] = 'invalid-target-count'
+        result['conflicts'] = ['ACOUSTIC_COUNT_MISMATCH']
+        return result
+
+    if len(evidence) < target_count:
+        result['method'] = 'insufficient-acoustic-candidates'
+        result['conflicts'] = ['ACOUSTIC_COUNT_MISMATCH']
+        return result
+
+    selected = list(evidence)
+    if len(evidence) > target_count:
+        ranked = sorted(
+            evidence,
+            key=lambda item: (
+                float(item.get('confidence', 0) or 0),
+                float(item.get('intensity', 0) or 0),
+            ),
+            reverse=True,
+        )
+        kept = ranked[:target_count]
+        discarded = ranked[target_count:]
+        quietest_kept = min(float(item['intensity']) for item in kept)
+        discard_is_noise = all(
+            float(item.get('confidence', 0) or 0) < noise_threshold
+            and float(item['intensity']) <= quietest_kept - 3.0
+            for item in discarded
+        )
+        if not discard_is_noise:
+            result['method'] = 'unresolved-extra-candidates'
+            result['conflicts'] = ['ACOUSTIC_COUNT_MISMATCH']
+            return result
+        selected = kept
+
+    selected.sort(key=lambda item: float(item['time']))
+    result['selected'] = selected
+    result['selectedCount'] = len(selected)
+    result['confidence'] = round(
+        float(np.mean([float(item.get('confidence', 0) or 0) for item in selected])),
+        3,
+    )
+    return result
+
+
+def build_analysis_v2_response(raw_analysis, expected_syllable_count=None, native=False):
+    syllables = list(raw_analysis.get('syllables') or [])
+    candidates = [_candidate_from_syllable(syllable) for syllable in syllables]
+    if native:
+        segmentation = select_native_acoustic_candidates(
+            candidates,
+            expected_syllable_count,
+        )
+    else:
+        evidence = [
+            item for item in candidates
+            if item['voiced'] and _finite_number(item['intensity'])
+        ]
+        segmentation = {
+            'rawCandidateCount': len(candidates),
+            'evidenceCandidateCount': len(evidence),
+            'selectedCount': len(evidence),
+            'method': 'independent-acoustic-detection',
+            'confidence': round(
+                float(np.mean([item['confidence'] for item in evidence])),
+                3,
+            ) if evidence else 0.0,
+            'conflicts': [] if evidence else ['NO_SPEECH'],
+            'selected': evidence,
+        }
+
+    selected_syllables = [item['syllable'] for item in segmentation['selected']]
+    reasons = list(segmentation['conflicts'])
+    rateable = bool(selected_syllables) and not reasons
+    primary_stress = (
+        determine_stressed_syllable(selected_syllables)
+        if selected_syllables
+        else None
+    )
+    public_segmentation = {
+        key: value
+        for key, value in segmentation.items()
+        if key != 'selected'
+    }
+    return {
+        'analysisVersion': 'pronunciation-analysis-v2',
+        'quality': {
+            'rateable': rateable,
+            'confidence': segmentation['confidence'],
+            'reasons': reasons,
+        },
+        'segmentation': public_segmentation,
+        'observed': {
+            'syllableCount': len(selected_syllables),
+            'primaryStress': primary_stress,
+            'syllables': selected_syllables,
+        },
+        'pitch': raw_analysis.get('pitch') or {'times': [], 'values': []},
+        'intensity': raw_analysis.get('intensity') or {'times': [], 'values': []},
+        'duration': raw_analysis.get('duration', 0),
+        'sampleRate': raw_analysis.get('sampleRate'),
+        'capabilities': {
+            'showNativeGraphs': bool(native and rateable),
+        },
+    }
+
+
+def analyze_audio_v2(audio_path, expected_syllable_count=None, native=False):
+    # Passing no expected count is the critical v2 invariant: candidate
+    # generation must be independent of the lexical target.
+    raw_analysis = analyze_audio(audio_path, expected_syllables=None)
+    return build_analysis_v2_response(
+        raw_analysis,
+        expected_syllable_count=expected_syllable_count,
+        native=native,
+    )
+
+
+@app.route('/analyze-url/v2', methods=['POST'])
+def analyze_from_url_v2():
+    data = request.get_json(silent=True) or {}
+    audio_url = str(data.get('audioUrl') or '').strip()
+    variant_id = str(data.get('variantId') or '').strip()
+    expected_count = data.get('expectedSyllableCount')
+    if not audio_url.startswith('https://media.merriam-webster.com/'):
+        return jsonify({'error': 'Invalid audio URL'}), 400
+    if not re.fullmatch(r'[0-9a-f]{16}', variant_id):
+        return jsonify({'error': 'Valid variantId is required'}), 400
+    if not isinstance(expected_count, int) or expected_count < 1:
+        return jsonify({'error': 'Valid expectedSyllableCount is required'}), 400
+
+    try:
+        response = http_requests.get(audio_url, timeout=15)
+        if not response.ok:
+            return jsonify({'error': 'Failed to fetch native audio'}), response.status_code
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as tmp:
+            tmp.write(response.content)
+            tmp_path = tmp.name
+        try:
+            result = analyze_audio_v2(
+                tmp_path,
+                expected_syllable_count=expected_count,
+                native=True,
+            )
+            result['variantId'] = variant_id
+            result['canonicalSyllableCount'] = expected_count
+            return jsonify(result)
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+    except Exception as error:
+        print(f'Analyze URL v2 error: {error}')
+        return jsonify({
+            'error': 'Native pronunciation analysis unavailable',
+            'code': 'ANALYSIS_FAILED',
+        }), 500
+
 @app.route('/debug/syllables/<word>', methods=['GET'])
 def debug_syllables_endpoint(word):
     """Debug endpoint to see syllable counting in detail."""

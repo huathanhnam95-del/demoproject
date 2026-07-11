@@ -24,6 +24,14 @@ def candidate(time, intensity, confidence, *, voiced=True):
 
 
 class PronunciationAlignmentV2Test(unittest.TestCase):
+    def test_stress_runtime_uses_empirical_calibration(self):
+        self.assertEqual(server.AnalysisConfig.STRESS_CALIBRATION_VERSION, "audit-20260711-435")
+        self.assertEqual(server.AnalysisConfig.STRESS_WEIGHT_PITCH, 0.20)
+        self.assertEqual(server.AnalysisConfig.STRESS_WEIGHT_DURATION, 0.70)
+        self.assertEqual(server.AnalysisConfig.STRESS_WEIGHT_INTENSITY, 0.10)
+        self.assertEqual(server.AnalysisConfig.STRESS_FINAL_LENGTHENING_PENALTY, 0.0)
+        self.assertEqual(server.AnalysisConfig.STRESS_CONFIDENCE_THRESHOLD, 0.65)
+
     def test_one_syllable_rhotic_is_never_split(self):
         result = server.select_native_acoustic_candidates(
             [candidate(0.22, 74.0, 0.96)],
@@ -145,9 +153,9 @@ class PronunciationAlignmentV2Test(unittest.TestCase):
         self.assertTrue(result["capabilities"]["showNativeGraphs"])
         self.assertFalse(result["observed"]["stressEvidence"]["rateable"])
 
-    def test_stress_prominence_penalizes_final_lengthening(self):
+    def test_final_lengthening_alone_does_not_override_other_prominence(self):
         syllables = [
-            {"avgPitch": 185, "vowelDuration": 0.16, "duration": 0.20, "intensity": 74},
+            {"avgPitch": 220, "vowelDuration": 0.24, "duration": 0.27, "intensity": 78},
             {"avgPitch": 140, "vowelDuration": 0.15, "duration": 0.33, "intensity": 69},
         ]
         result = server.score_lexical_stress_v2(syllables)

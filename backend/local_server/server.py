@@ -95,10 +95,13 @@ class AnalysisConfig:
     PITCH_TRANSITION_THRESHOLD = 15  # Hz - significant change
     PITCH_SMOOTHING_WINDOW = 5       # frames
     
-    # Stress detection weights (Kochanski et al. 2005)
-    STRESS_WEIGHT_PITCH = 0.50
-    STRESS_WEIGHT_DURATION = 0.30
-    STRESS_WEIGHT_INTENSITY = 0.20
+    # Empirically frozen on 435 validated native recordings (seed 20260711).
+    STRESS_CALIBRATION_VERSION = 'audit-20260711-435'
+    STRESS_WEIGHT_PITCH = 0.20
+    STRESS_WEIGHT_DURATION = 0.70
+    STRESS_WEIGHT_INTENSITY = 0.10
+    STRESS_FINAL_LENGTHENING_PENALTY = 0.0
+    STRESS_CONFIDENCE_THRESHOLD = 0.65
     
     # Pattern matching
     PATTERN_MATCH_THRESHOLD = 0.70   # Pearson correlation threshold
@@ -1537,8 +1540,10 @@ def select_native_acoustic_candidates(candidates, target_count, noise_threshold=
     return result
 
 
-def score_lexical_stress_v2(syllables, confidence_threshold=0.65):
+def score_lexical_stress_v2(syllables, confidence_threshold=None):
     """Score stress from within-recording relative pitch, duration, and intensity."""
+    if confidence_threshold is None:
+        confidence_threshold = AnalysisConfig.STRESS_CONFIDENCE_THRESHOLD
     syllables = list(syllables or [])
     if not syllables:
         return {
@@ -1585,12 +1590,12 @@ def score_lexical_stress_v2(syllables, confidence_threshold=0.65):
     duration_prominence = np.log2(durations / duration_median)
     intensity_prominence = intensities - intensity_median
     scores = (
-        pitch_semitones * 0.50
-        + duration_prominence * 0.30
-        + intensity_prominence * 0.20
+        pitch_semitones * AnalysisConfig.STRESS_WEIGHT_PITCH
+        + duration_prominence * AnalysisConfig.STRESS_WEIGHT_DURATION
+        + intensity_prominence * AnalysisConfig.STRESS_WEIGHT_INTENSITY
     )
     # Phrase-final lengthening is not lexical stress evidence.
-    scores[-1] -= 0.35
+    scores[-1] -= AnalysisConfig.STRESS_FINAL_LENGTHENING_PENALTY
     ranking = np.argsort(scores)[::-1]
     best_index = int(ranking[0])
     margin = float(scores[ranking[0]] - scores[ranking[1]])

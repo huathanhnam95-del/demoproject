@@ -200,8 +200,11 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--input",
-        required=True,
-        help="JSON array of validated native-recording acoustic feature records",
+        default="test-results/pronunciation-audit-1000.json",
+        help=(
+            "JSON array of validated native-recording feature records, or a "
+            "pronunciation audit report containing calibrationRecords"
+        ),
     )
     parser.add_argument("--seed", type=int, default=20260711)
     parser.add_argument("--output", default="test-results/pronunciation-stress-calibration.json")
@@ -211,7 +214,13 @@ def parse_args():
 def main():
     args = parse_args()
     with open(args.input, encoding="utf-8") as input_file:
-        records = validate_records(json.load(input_file))
+        payload = json.load(input_file)
+    raw_records = (
+        payload.get("calibrationRecords", [])
+        if isinstance(payload, dict)
+        else payload
+    )
+    records = validate_records(raw_records)
     report = calibrate(records, args.seed)
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)

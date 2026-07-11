@@ -94,7 +94,15 @@ class AuditHandler(BaseHTTPRequestHandler):
             "observed": {
                 "syllableCount": count,
                 "primaryStress": 0,
-                "syllables": [{} for _ in range(count)],
+                "syllables": [
+                    {
+                        "avgPitch": 180 if index == 0 else 130,
+                        "vowelDuration": 0.2 if index == 0 else 0.12,
+                        "duration": 0.24 if index == 0 else 0.15,
+                        "intensity": 74 if index == 0 else 67,
+                    }
+                    for index in range(count)
+                ],
             },
             "pitch": {"times": [], "values": []},
             "intensity": {"times": [], "values": []},
@@ -147,6 +155,11 @@ class PronunciationReferenceAuditTest(unittest.TestCase):
                 self.assertEqual(report["summary"]["graphCountMismatches"], 0)
                 self.assertTrue(report["gates"]["passed"])
                 self.assertEqual(len(report["rows"]), len(WORDS))
+                self.assertEqual(len(report["calibrationRecords"]), 4)
+                self.assertTrue(all(
+                    item["source"] == "validated-native-recording-audit"
+                    for item in report["calibrationRecords"]
+                ))
         finally:
             server.shutdown()
             server.server_close()

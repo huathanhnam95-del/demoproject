@@ -76,6 +76,35 @@ class PronunciationStressCalibrationScriptTest(unittest.TestCase):
             )
             self.assertEqual(report["configuration"]["confidenceThreshold"], 0.65)
 
+    def test_default_command_consumes_audit_evidence_without_input_flag(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            audit_dir = os.path.join(temp_dir, "test-results")
+            os.makedirs(audit_dir)
+            with open(
+                os.path.join(audit_dir, "pronunciation-audit-1000.json"),
+                "w",
+                encoding="utf-8",
+            ) as output:
+                json.dump({"calibrationRecords": build_calibration_records()}, output)
+
+            completed = subprocess.run(
+                [sys.executable, SCRIPT_PATH, "--seed", "20260711"],
+                cwd=temp_dir,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                check=False,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+            report_path = os.path.join(
+                audit_dir, "pronunciation-stress-calibration.json"
+            )
+            with open(report_path, encoding="utf-8") as report_file:
+                report = json.load(report_file)
+            self.assertEqual(report["sampleSize"], 240)
+            self.assertTrue(report["gates"]["passed"])
+
 
 if __name__ == "__main__":
     unittest.main()

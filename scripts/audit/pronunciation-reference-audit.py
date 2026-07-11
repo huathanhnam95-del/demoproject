@@ -149,6 +149,7 @@ def audit_word(base_url, word, cmu, source_mode):
         "httpStatus": None,
         "reference": None,
         "graphChecks": [],
+        "calibrationRecords": [],
         "errors": [],
     }
     try:
@@ -221,6 +222,24 @@ def audit_word(base_url, word, cmu, source_mode):
                 graph_check["matches"] = (
                     counts_match if graph_check["showNativeGraphs"] else True
                 )
+                observed_syllables = analysis.get("observed", {}).get("syllables", [])
+                lexical_stress = variant.get("primaryStress")
+                if (
+                    counts_match
+                    and graph_check["rateable"]
+                    and isinstance(lexical_stress, int)
+                    and variant.get("syllableCount", 0) >= 2
+                    and len(observed_syllables) == variant.get("syllableCount")
+                ):
+                    row["calibrationRecords"].append({
+                        "word": word,
+                        "variantId": variant.get("id"),
+                        "partOfSpeech": variant.get("partOfSpeech"),
+                        "primaryStress": lexical_stress,
+                        "syllables": observed_syllables,
+                        "analysisConfidence": analysis.get("quality", {}).get("confidence"),
+                        "source": "validated-native-recording-audit",
+                    })
                 row["graphChecks"].append(graph_check)
                 if not graph_check["matches"]:
                     row["errors"].append("GRAPH_COUNT_MISMATCH")
@@ -344,6 +363,11 @@ def main():
         },
         "summary": summary,
         "gates": gates,
+        "calibrationRecords": [
+            record
+            for row in rows
+            for record in row.get("calibrationRecords", [])
+        ],
         "rows": rows,
     }
     output = Path(args.output)

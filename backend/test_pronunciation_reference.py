@@ -109,6 +109,24 @@ class PronunciationReferenceContractTest(unittest.TestCase):
             ["syllabicConsonant"]
         )
 
+    def test_explicit_breaks_can_support_implicit_syllabic_sonorants(self):
+        by_word = {fixture["word"]: fixture for fixture in self.fixtures["valid"]}
+        for word in ("button", "bottle", "rhythm"):
+            with self.subTest(word=word):
+                variant = self.build_fixture_variant(by_word[word])
+                self.assertEqual(variant["validation"]["status"], "valid", variant)
+                self.assertEqual(variant["syllableCount"], 2)
+                self.assertTrue(variant["syllables"][1]["syllabicConsonant"])
+
+    def test_mw_glides_and_tied_affricates_are_normalized_as_phonemes(self):
+        by_word = {fixture["word"]: fixture for fixture in self.fixtures["valid"]}
+        time = self.build_fixture_variant(by_word["time"])
+        judge = self.build_fixture_variant(by_word["judge"])
+        self.assertEqual(time["displayIpa"], "/taɪm/")
+        self.assertEqual(time["syllableCount"], 1)
+        self.assertEqual(judge["displayIpa"], "/dʒʌdʒ/")
+        self.assertEqual(judge["syllableCount"], 1)
+
     def test_explicit_headword_break_resolves_hour_flower_ambiguity(self):
         fixtures = {fixture["word"]: fixture for fixture in self.fixtures["valid"]}
         hour = self.build_fixture_variant(fixtures["hour"])
@@ -147,7 +165,12 @@ class PronunciationReferenceContractTest(unittest.TestCase):
 
     def test_reference_selects_first_valid_exact_variant_and_deduplicates(self):
         car_fixture = next(item for item in self.fixtures["valid"] if item["word"] == "car")
-        invalid = self.build_fixture_variant(car_fixture, exact_match=False, entry_id="automobile")
+        invalid = self.build_fixture_variant(
+            car_fixture,
+            exact_match=False,
+            entry_id="automobile",
+            audio_filename="automobile.mp3",
+        )
         valid = self.build_fixture_variant(car_fixture)
         reference = build_pronunciation_reference(
             word="car",

@@ -15,7 +15,7 @@
     { "word": "tunnel", "headword": "tun·nel", "rawIpa": "ˈtʌnl̩", "partOfSpeech": "noun", "expectedDisplayIpa": "/ˈtʌnl̩/", "expectedCount": 2, "expectedPrimaryStress": 0, "expectedSecondaryStress": [] },
     { "word": "fundamental", "headword": "fun·da·men·tal", "rawIpa": "ˌfʌndəˈmɛntl̩", "partOfSpeech": "adjective", "expectedDisplayIpa": "/ˌfʌndəˈmɛntl̩/", "expectedCount": 4, "expectedPrimaryStress": 2, "expectedSecondaryStress": [0] },
     { "word": "correctly", "headword": "cor·rect·ly", "rawIpa": "kəˈrɛktli", "partOfSpeech": "adverb", "expectedDisplayIpa": "/kəˈrɛktli/", "expectedCount": 3, "expectedPrimaryStress": 1, "expectedSecondaryStress": [] },
-    { "word": "architectural", "headword": "ar·chi·tec·tur·al", "rawIpa": "ˌɑɚkəˈtɛktʃɚəl", "partOfSpeech": "adjective", "expectedDisplayIpa": "/ˌɑrkəˈtɛktʃrəl/", "expectedCount": 5, "expectedPrimaryStress": 2, "expectedSecondaryStress": [0] },
+    { "word": "architectural", "headword": "ar·chi·tec·tur·al", "rawIpa": "ˌɑɚkəˈtɛktʃɚəl", "partOfSpeech": "adjective", "expectedDisplayIpa": "/ˌɑrkəˈtɛktʃərəl/", "expectedCount": 5, "expectedPrimaryStress": 2, "expectedSecondaryStress": [0] },
     { "word": "media", "headword": "me·di·a", "rawIpa": "ˈmidiə", "partOfSpeech": "noun", "expectedDisplayIpa": "/ˈmidiə/", "expectedCount": 3, "expectedPrimaryStress": 0, "expectedSecondaryStress": [] },
     { "word": "record", "headword": "rec·ord", "rawIpa": "ˈrɛkɚd", "partOfSpeech": "noun", "expectedDisplayIpa": "/ˈrɛkərd/", "expectedCount": 2, "expectedPrimaryStress": 0, "expectedSecondaryStress": [] },
     { "word": "record", "headword": "re·cord", "rawIpa": "rɪˈkɔɚd", "partOfSpeech": "verb", "expectedDisplayIpa": "/rɪˈkɔrd/", "expectedCount": 2, "expectedPrimaryStress": 1, "expectedSecondaryStress": [] },
@@ -23,6 +23,11 @@
     { "word": "present", "headword": "pre·sent", "rawIpa": "prɪˈzɛnt", "partOfSpeech": "verb", "expectedDisplayIpa": "/prɪˈzɛnt/", "expectedCount": 2, "expectedPrimaryStress": 1, "expectedSecondaryStress": [] },
     { "word": "hour", "headword": "hour", "rawIpa": "ˈaʊɚ", "partOfSpeech": "noun", "expectedDisplayIpa": "/aʊr/", "expectedCount": 1, "expectedPrimaryStress": 0, "expectedSecondaryStress": [] },
     { "word": "flower", "headword": "flow·er", "rawIpa": "ˈflaʊɚ", "partOfSpeech": "noun", "expectedDisplayIpa": "/ˈflaʊər/", "expectedCount": 2, "expectedPrimaryStress": 0, "expectedSecondaryStress": [] },
+    { "word": "time", "headword": "time", "rawIpa": "ˈtajm", "partOfSpeech": "noun", "expectedDisplayIpa": "/taɪm/", "expectedCount": 1, "expectedPrimaryStress": 0, "expectedSecondaryStress": [] },
+    { "word": "judge", "headword": "judge", "rawIpa": "ˈd͡ʒʌd͡ʒ", "partOfSpeech": "noun", "expectedDisplayIpa": "/dʒʌdʒ/", "expectedCount": 1, "expectedPrimaryStress": 0, "expectedSecondaryStress": [] },
+    { "word": "button", "headword": "but·ton", "rawIpa": "ˈbʌtn", "partOfSpeech": "noun", "expectedDisplayIpa": "/ˈbʌtn/", "expectedCount": 2, "expectedPrimaryStress": 0, "expectedSecondaryStress": [] },
+    { "word": "bottle", "headword": "bot·tle", "rawIpa": "ˈbɑtl", "partOfSpeech": "noun", "expectedDisplayIpa": "/ˈbɑtl/", "expectedCount": 2, "expectedPrimaryStress": 0, "expectedSecondaryStress": [] },
+    { "word": "rhythm", "headword": "rhyth·m", "rawIpa": "ˈrɪðm", "partOfSpeech": "noun", "expectedDisplayIpa": "/ˈrɪðm/", "expectedCount": 2, "expectedPrimaryStress": 0, "expectedSecondaryStress": [] },
     { "word": "cafe", "headword": "ca·fé", "rawIpa": "kæˈfé", "partOfSpeech": "noun", "expectedDisplayIpa": "/kæˈfé/", "expectedCount": 2, "expectedPrimaryStress": 1, "expectedSecondaryStress": [] }
   ],
   "conflicts": [

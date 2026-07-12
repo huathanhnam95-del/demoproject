@@ -196,5 +196,68 @@ class PronunciationReferenceAuditTest(unittest.TestCase):
             server.server_close()
 
 
+class PronunciationAuditLogicTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("audit_script", SCRIPT_PATH)
+        cls.audit = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(cls.audit)
+
+    def test_manifest_determinism_and_hashing(self):
+        frame = [f"word{i}" for i in range(100)]
+        seed = 20260712
+        size = 30
+        
+        # Test generation
+        manifest1, hash1 = self.audit.generate_manifest(frame, seed, size)
+        manifest2, hash2 = self.audit.generate_manifest(frame, seed, size)
+        
+        self.assertEqual(manifest1["words"], manifest2["words"])
+        self.assertEqual(hash1, hash2)
+        self.assertEqual(len(manifest1["words"]), size)
+        self.assertEqual(len(set(manifest1["words"])), size)
+        self.assertEqual(manifest1["manifest_hash"], hash1)
+        self.assertEqual(manifest1["seed"], seed)
+        
+        # Test hash stability
+        expected_hash = self.audit.calculate_stable_hash(manifest1["words"])
+        self.assertEqual(hash1, expected_hash)
+        
+        # Test validation helper
+        self.assertTrue(self.audit.validate_manifest_hash(manifest1))
+        
+        # Tampering detection
+        tampered = json.loads(json.dumps(manifest1))
+        tampered["words"][0] = "tampered"
+        self.assertFalse(self.audit.validate_manifest_hash(tampered))
+
+    def test_cohort_splitting_disjointness(self):
+        frame = [f"word{i}" for i in range(100)]
+        seed = 20260712
+        size = 30
+        manifest, _ = self.audit.generate_manifest(frame, seed, size)
+        
+        cohorts = self.audit.split_into_cohorts(manifest["words"], 3)
+        self.assertEqual(len(cohorts), 3)
+        self.assertEqual(len(cohorts[0]), 10)
+        self.assertEqual(len(cohorts[1]), 10)
+        self.assertEqual(len(cohorts[2]), 10)
+        
+        # Assert disjoint
+        c1 = set(cohorts[0])
+        c2 = set(cohorts[1])
+        c3 = set(cohorts[2])
+        self.assertTrue(c1.isdisjoint(c2))
+        self.assertTrue(c1.isdisjoint(c3))
+        self.assertTrue(c2.isdisjoint(c3))
+        self.assertEqual(c1 | c2 | c3, set(manifest["words"]))
+
+    def test_reject_insufficient_sampling_frame(self):
+        frame = ["word1", "word2"]
+        with self.assertRaises(ValueError):
+            self.audit.generate_manifest(frame, seed=123, manifest_size=10)
+
+
 if __name__ == "__main__":
     unittest.main()

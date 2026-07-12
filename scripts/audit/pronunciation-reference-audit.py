@@ -39,6 +39,39 @@ NON_US_SOURCE_REGIONS = (
 )
 
 
+def calculate_stable_hash(words: list[str]) -> str:
+    import hashlib
+    words_str = "\n".join(words)
+    return hashlib.sha256(words_str.encode("utf-8")).hexdigest()
+
+
+def generate_manifest(frame: list[str], seed: int, manifest_size: int) -> tuple[dict, str]:
+    normalized_frame = sorted(list(set(w.strip().casefold() for w in frame)))
+    if len(normalized_frame) < manifest_size:
+        raise ValueError(f"Insufficient sampling frame: have {len(normalized_frame)}, need {manifest_size}")
+    rng = random.Random(seed)
+    selected = rng.sample(normalized_frame, manifest_size)
+    manifest_hash = calculate_stable_hash(selected)
+    manifest_data = {
+        "seed": seed,
+        "manifest_hash": manifest_hash,
+        "words": selected
+    }
+    return manifest_data, manifest_hash
+
+
+def split_into_cohorts(words: list[str], num_cohorts: int) -> list[list[str]]:
+    cohort_size = len(words) // num_cohorts
+    return [words[i * cohort_size : (i + 1) * cohort_size] for i in range(num_cohorts)]
+
+
+def validate_manifest_hash(manifest_data: dict) -> bool:
+    words = manifest_data.get("words", [])
+    stored_hash = manifest_data.get("manifest_hash")
+    calculated_hash = calculate_stable_hash(words)
+    return stored_hash == calculated_hash
+
+
 def cmu_metrics(pronunciation):
     vowels = []
     for token in str(pronunciation or "").split():

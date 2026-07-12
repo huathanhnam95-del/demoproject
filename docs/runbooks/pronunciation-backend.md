@@ -54,7 +54,7 @@ Invoke-RestMethod "$candidateUrl/health" | ConvertTo-Json -Depth 5
 ```
 
 `schemaVersion` must be `9`, `algorithmVersion` must be
-`pronunciation-reference-v2`, `analysisVersion` must be
+`pronunciation-reference-v3`, `analysisVersion` must be
 `pronunciation-analysis-v2`, and `deploymentVersion` must equal the candidate
 Git SHA.
 

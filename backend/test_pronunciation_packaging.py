@@ -55,6 +55,7 @@ class PronunciationPackagingTests(unittest.TestCase):
             "--no-traffic",
             "pronunciation-audit-100.json",
             "pronunciation-audit-1000.json",
+            "pronunciation-reference-v3",
             "rollback",
             "explicit authorization",
         ):

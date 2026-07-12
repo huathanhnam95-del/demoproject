@@ -1,0 +1,48 @@
+{
+  "manifest_hash": "62dbfab18fd823d4c9c7ed6a43f59686c989a61a750059e41e29401583b23e7b",
+  "cohorts_aggregated": [
+    1,
+    2
+  ],
+  "summary": {
+    "sampleSize": 2000,
+    "httpFailures": 0,
+    "http500s": 0,
+    "upstreamSourceHttp500s": 0,
+    "validated": 1996,
+    "validatedCoverage": 0.998,
+    "cmuCorroborated": 1813,
+    "runtimeFallbackValidated": 97,
+    "selectableConflictVariants": 0,
+    "evidenceOnlyConflictVariants": 1172,
+    "sourceDialectViolations": 3368,
+    "nonUsSourceLabelViolations": 3368,
+    "graphCountMismatches": 0,
+    "quarantinedNativeAnalyses": 579,
+    "incorrectScoreable": 2000
+  },
+  "gates": {
+    "zeroHttp500s": true,
+    "zeroIncorrectScoreable": false,
+    "coverageAtLeastRequired": true,
+    "zeroGraphCountMismatches": true,
+    "zeroSelectableConflictVariants": true,
+    "zeroSourceDialectViolations": false,
+    "zeroNonUsSourceLabelViolations": false,
+    "passed": false
+  },
+  "provenance": {
+    "base_url": "https://127.0.0.1:8081",
+    "deployment_version": "unknown",
+    "algorithm_version": "unknown",
+    "git_shas": [
+      "aae866129a55525e6ac909f58e6e6cc5018fa8b6"
+    ],
+    "timestamp": "2026-07-12T13:31:25Z"
+  },
+  "review_queue_ref": "review-queue.json",
+  "rows_files": [
+    "cohort-1-rows.jsonl",
+    "cohort-2-rows.jsonl"
+  ]
+}

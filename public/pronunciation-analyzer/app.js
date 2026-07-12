@@ -200,11 +200,23 @@ export class PronunciationApp {
 
         } catch (err) {
             Logger.error("Error fetching word data:", err);
+            if (this.loadingPlaceholder) this.loadingPlaceholder.style.display = 'none';
+            if (this.wordInfo) this.wordInfo.classList.remove('hidden');
+            if (this.wordForms) this.wordForms.classList.add('hidden');
             this.ipaDisplay.textContent = "Error";
             this.patternDisplay.textContent = err.message || "Failed to load";
             this.statusIndicator.textContent = "Error";
             this.nativePattern = null;
             this.nativeAudioPlayer.clearSource();
+            if (this.nativeAudioContainer) this.nativeAudioContainer.style.display = 'none';
+            if (this.referenceStatus) {
+                this.referenceStatus.textContent = 'Pronunciation reference could not be loaded. Please try again.';
+                this.referenceStatus.classList.add('pa-reference-status--conflict');
+            }
+            if (this.chartsContainer) this.chartsContainer.classList.add('hidden');
+            if (this.feedbackSection) this.feedbackSection.style.display = 'none';
+            this.recordBtn.disabled = true;
+            this.stopBtn.disabled = true;
         } finally {
             this.spinner.style.display = 'none';
         }

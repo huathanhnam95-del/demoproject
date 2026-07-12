@@ -55,6 +55,18 @@ class PronunciationDictionaryV2ApiTest(unittest.TestCase):
     def tearDown(self):
         server.MW_API_KEY = self.original_api_key
 
+    def test_production_frontend_origin_is_cors_allowed(self):
+        response = self.client.get(
+            "/health",
+            headers={"Origin": "https://betterenglishlearning.com"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.headers.get("Access-Control-Allow-Origin"),
+            "https://betterenglishlearning.com",
+        )
+
     def test_car_returns_one_valid_canonical_variant(self):
         with patch.object(
             server.http_requests,

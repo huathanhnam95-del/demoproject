@@ -29,6 +29,19 @@ assert.match(appSource, /primaryStress/);
 assert.match(appSource, /secondaryStress/);
 assert.match(appSource, /nativeAnalysis\?\.observed\?\.syllables/);
 
+const updateWordDataCatch = appSource.match(/} catch \(err\) \{[\s\S]*?\n        } finally \{/);
+assert.ok(updateWordDataCatch, 'updateWordData must have an explicit error path');
+assert.match(
+    updateWordDataCatch[0],
+    /loadingPlaceholder\)\s+this\.loadingPlaceholder\.style\.display = 'none'/,
+    'failed reference lookups must clear the loading placeholder'
+);
+assert.match(
+    updateWordDataCatch[0],
+    /wordInfo\)\s+this\.wordInfo\.classList\.remove\('hidden'\)/,
+    'failed reference lookups must reveal the word info error panel'
+);
+
 assert.match(styleSource, /\.pa-reference-status/);
 assert.match(styleSource, /\.pa-reference-status--conflict/);
 assert.match(styleSource, /\.pa-charts-grid\.hidden/);

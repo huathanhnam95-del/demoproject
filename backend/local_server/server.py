@@ -534,11 +534,13 @@ def clamp_boundary_to_vowel_end(candidate_boundary, peak_time, start_time,
 app: Flask = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = int(os.environ.get('MAX_UPLOAD_BYTES', 10 * 1024 * 1024))
 
-# CORS configuration - default to local origins unless explicitly overridden
+# CORS configuration - default to production BEL and local origins unless explicitly overridden
 # Using late initialization pattern to avoid type mismatch in some IDEs
 cors = CORS()
 cors_origins_env = str(os.environ.get('CORS_ORIGINS', '')).strip()
 cors_origins = [origin.strip() for origin in cors_origins_env.split(',') if origin.strip()] if cors_origins_env else [
+    'https://betterenglishlearning.com',
+    'https://www.betterenglishlearning.com',
     'http://localhost:8443',
     'https://localhost:8443',
     'http://127.0.0.1:8443',

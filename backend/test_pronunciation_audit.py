@@ -4,6 +4,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import unquote
@@ -258,6 +259,182 @@ class PronunciationAuditLogicTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.audit.generate_manifest(frame, seed=123, manifest_size=10)
 
+    def test_file_lock_mutual_exclusion(self):
+        import tempfile
+        import threading
+        with tempfile.TemporaryDirectory() as temp_dir:
+            lock_path = os.path.join(temp_dir, "test.lock")
+            lock = self.audit.FileLock(lock_path)
+            
+            shared_list = []
+            def worker():
+                with lock:
+                    shared_list.append("start")
+                    time.sleep(0.1)
+                    shared_list.append("end")
+
+            t1 = threading.Thread(target=worker)
+            t2 = threading.Thread(target=worker)
+            
+            t1.start()
+            time.sleep(0.02)
+            t2.start()
+            t1.join()
+            t2.join()
+            
+            # If mutual exclusion works, t2 must wait until t1 finishes,
+            # so the list should be ['start', 'end', 'start', 'end']
+            self.assertEqual(shared_list, ["start", "end", "start", "end"])
+
+    def test_ledger_resume_and_validation(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as temp_dir:
+            ledger_path = os.path.join(temp_dir, "ledger.jsonl")
+            
+            manifest_hash = "hash123"
+            deployment = "v1"
+            algorithm = "algo1"
+            
+            # 1. Test empty ledger
+            completed = self.audit.get_completed_words_from_ledger(
+                ledger_path, manifest_hash, deployment, algorithm
+            )
+            self.assertEqual(len(completed), 0)
+            
+            # 2. Test writing events
+            self.audit.write_ledger_event(ledger_path, {
+                "manifest_hash": manifest_hash,
+                "deployment_version": deployment,
+                "algorithm_version": algorithm,
+                "word": "word1",
+                "status": "in_progress",
+                "timestamp": "2026-07-12T12:00:00Z"
+            })
+            
+            completed = self.audit.get_completed_words_from_ledger(
+                ledger_path, manifest_hash, deployment, algorithm
+            )
+            self.assertNotIn("word1", completed)  # only in_progress, not completed
+            
+            # Write complete
+            self.audit.write_ledger_event(ledger_path, {
+                "manifest_hash": manifest_hash,
+                "deployment_version": deployment,
+                "algorithm_version": algorithm,
+                "word": "word1",
+                "status": "complete",
+                "timestamp": "2026-07-12T12:01:00Z"
+            })
+            
+            completed = self.audit.get_completed_words_from_ledger(
+                ledger_path, manifest_hash, deployment, algorithm
+            )
+            self.assertIn("word1", completed)
+            
+            # 3. Test that ledger from another deployment/algorithm is ignored
+            completed_other = self.audit.get_completed_words_from_ledger(
+                ledger_path, manifest_hash, "v2", algorithm
+            )
+            self.assertEqual(len(completed_other), 0)
+            
+            # 4. Test terminal failure is counted as completed (skips rerunning)
+            self.audit.write_ledger_event(ledger_path, {
+                "manifest_hash": manifest_hash,
+                "deployment_version": deployment,
+                "algorithm_version": algorithm,
+                "word": "word2",
+                "status": "terminal_failure",
+                "timestamp": "2026-07-12T12:02:00Z"
+            })
+            completed = self.audit.get_completed_words_from_ledger(
+                ledger_path, manifest_hash, deployment, algorithm
+            )
+            self.assertIn("word2", completed)
+
+    def test_aggregate_reports_correctness(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as temp_dir:
+            manifest_path = os.path.join(temp_dir, "manifest.json")
+            report_path = os.path.join(temp_dir, "report-2000.json")
+            
+            words = [f"word{i}" for i in range(30)]
+            manifest_data = {
+                "seed": 20260712,
+                "manifest_hash": self.audit.calculate_stable_hash(words),
+                "words": words
+            }
+            with open(manifest_path, "w", encoding="utf-8") as f:
+                json.dump(manifest_data, f)
+                
+            # Create cohort-1-rows.jsonl (first 10 words)
+            cohort_1_path = os.path.join(temp_dir, "cohort-1-rows.jsonl")
+            with open(cohort_1_path, "w", encoding="utf-8") as f:
+                for idx in range(10):
+                    row = {
+                        "word": words[idx],
+                        "validated": True,
+                        "cmuCorroborated": True,
+                        "httpStatus": 200,
+                        "errors": [],
+                        "provenance": {
+                            "base_url": "http://127.0.0.1",
+                            "git_sha": "gitsha1",
+                            "deployment_version": "v1",
+                            "algorithm_version": "algo1"
+                        }
+                    }
+                    f.write(json.dumps(row) + "\n")
+                    
+            # Create cohort-2-rows.jsonl (next 10 words)
+            cohort_2_path = os.path.join(temp_dir, "cohort-2-rows.jsonl")
+            with open(cohort_2_path, "w", encoding="utf-8") as f:
+                for idx in range(10, 20):
+                    row = {
+                        "word": words[idx],
+                        "validated": True,
+                        "cmuCorroborated": True,
+                        "httpStatus": 200,
+                        "errors": ["SOURCE_DIALECT_MISMATCH"] if idx == 15 else [],
+                        "provenance": {
+                            "base_url": "http://127.0.0.1",
+                            "git_sha": "gitsha1",
+                            "deployment_version": "v1",
+                            "algorithm_version": "algo1"
+                        }
+                    }
+                    f.write(json.dumps(row) + "\n")
+                    
+            # Run aggregation through cohort 2
+            # Should fail the gates because word 15 has an error
+            exit_code = self.audit.aggregate_reports(manifest_path, 2, report_path)
+            self.assertEqual(exit_code, 1)  # failed gates
+            
+            # Verify report file exists
+            self.assertTrue(os.path.exists(report_path))
+            with open(report_path, encoding="utf-8") as f:
+                report = json.load(f)
+            self.assertEqual(report["summary"]["sampleSize"], 20)
+            self.assertEqual(report["summary"]["incorrectScoreable"], 1)
+            self.assertFalse(report["gates"]["passed"])
+            
+            # Verify review queue contains the failing word
+            review_queue_path = os.path.join(temp_dir, "review-queue.json")
+            self.assertTrue(os.path.exists(review_queue_path))
+            with open(review_queue_path, encoding="utf-8") as f:
+                review_queue = json.load(f)
+            self.assertEqual(len(review_queue), 1)
+            self.assertEqual(review_queue[0]["word"], "word15")
+            self.assertIn("SOURCE_DIALECT_MISMATCH", review_queue[0]["reasons"])
+            
+            # Verify summary.md exists
+            summary_md_path = os.path.join(temp_dir, "summary.md")
+            self.assertTrue(os.path.exists(summary_md_path))
+            with open(summary_md_path, encoding="utf-8") as f:
+                summary_md = f.read()
+            self.assertIn("Cohort 1", summary_md)
+            self.assertIn("Cohort 2", summary_md)
+
 
 if __name__ == "__main__":
     unittest.main()
+

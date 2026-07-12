@@ -8,6 +8,7 @@ import csv
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
 from pathlib import Path
+import os
 import random
 import re
 import sys
@@ -70,6 +71,61 @@ def validate_manifest_hash(manifest_data: dict) -> bool:
     stored_hash = manifest_data.get("manifest_hash")
     calculated_hash = calculate_stable_hash(words)
     return stored_hash == calculated_hash
+
+
+class FileLock:
+    def __init__(self, lock_path: str):
+        self.lock_path = lock_path
+
+    def __enter__(self):
+        while True:
+            try:
+                os.mkdir(self.lock_path)
+                break
+            except FileExistsError:
+                time.sleep(0.05)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        try:
+            os.rmdir(self.lock_path)
+        except OSError:
+            pass
+
+
+def write_ledger_event(ledger_path: str, event: dict):
+    Path(ledger_path).parent.mkdir(parents=True, exist_ok=True)
+    lock_path = ledger_path + ".lock"
+    with FileLock(lock_path):
+        with open(ledger_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(event, ensure_ascii=False) + "\n")
+
+
+def get_completed_words_from_ledger(ledger_path: str, manifest_hash: str, deployment_version: str, algorithm_version: str) -> set[str]:
+    completed = set()
+    path = Path(ledger_path)
+    if not path.exists():
+        return completed
+    lock_path = ledger_path + ".lock"
+    with FileLock(lock_path):
+        with path.open("r", encoding="utf-8") as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                try:
+                    event = json.loads(line)
+                    if (
+                        event.get("manifest_hash") == manifest_hash
+                        and event.get("deployment_version") == deployment_version
+                        and event.get("algorithm_version") == algorithm_version
+                    ):
+                        word = event.get("word")
+                        status = event.get("status")
+                        if status in ("complete", "terminal_failure"):
+                            completed.add(word)
+                except Exception:
+                    pass
+    return completed
 
 
 def cmu_metrics(pronunciation):
@@ -460,9 +516,306 @@ def summarize(rows, requested_size, source_mode):
     return summary, gates
 
 
+def get_local_git_sha():
+    import subprocess
+    try:
+        completed = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        return completed.stdout.strip()
+    except Exception:
+        return "unknown"
+
+
+def get_health_info(base_url: str) -> dict:
+    try:
+        response = requests.get(base_url.rstrip("/") + "/health", timeout=10)
+        if response.ok:
+            return response.json()
+    except Exception:
+        pass
+    return {}
+
+
+def aggregate_reports(manifest_path: str, aggregate_through: int, output_report_path: str) -> int:
+    manifest_path = Path(manifest_path)
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if not validate_manifest_hash(manifest):
+        raise ValueError("Manifest integrity check failed: calculated hash does not match stored hash")
+    
+    manifest_hash = manifest["manifest_hash"]
+    cohorts_to_load = list(range(1, aggregate_through + 1))
+    parent_dir = Path(output_report_path).parent
+    
+    combined_rows = []
+    seen_words = set()
+    git_shas = set()
+    deployment_versions = set()
+    algorithm_versions = set()
+    base_urls = set()
+    
+    for c in cohorts_to_load:
+        cohort_file = parent_dir / f"cohort-{c}-rows.jsonl"
+        if not cohort_file.exists():
+            raise FileNotFoundError(f"Missing required cohort row file: {cohort_file}")
+        
+        with cohort_file.open("r", encoding="utf-8") as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                row = json.loads(line)
+                word = row.get("word")
+                if not word:
+                    continue
+                if word in seen_words:
+                    raise ValueError(f"Duplicate word found in cohort files: {word}")
+                seen_words.add(word)
+                combined_rows.append(row)
+                
+                meta = row.get("provenance", {})
+                if meta.get("git_sha"):
+                    git_shas.add(meta["git_sha"])
+                if meta.get("deployment_version"):
+                    deployment_versions.add(meta["deployment_version"])
+                if meta.get("algorithm_version"):
+                    algorithm_versions.add(meta["algorithm_version"])
+                if meta.get("base_url"):
+                    base_urls.add(meta["base_url"])
+    
+    if len(deployment_versions) > 1:
+        raise ValueError(f"Mixed deployment versions found: {deployment_versions}")
+    if len(algorithm_versions) > 1:
+        raise ValueError(f"Mixed algorithm versions found: {algorithm_versions}")
+    
+    word_to_index = {word: idx for idx, word in enumerate(manifest["words"])}
+    combined_rows.sort(key=lambda r: word_to_index.get(r["word"], 999999))
+    
+    total_manifest_words = len(manifest["words"])
+    cohort_size = total_manifest_words // 3
+    sample_size = aggregate_through * cohort_size
+    if len(combined_rows) != sample_size:
+        raise ValueError(f"Combined rows count {len(combined_rows)} does not match expected aggregate size {sample_size}")
+        
+    summary, gates = summarize(combined_rows, sample_size, "v2")
+    
+    review_queue = []
+    incorrect_scoreable_codes = {
+        "SYLLABLE_LENGTH_MISMATCH",
+        "PRIMARY_STRESS_OUT_OF_RANGE",
+        "SECONDARY_STRESS_OUT_OF_RANGE",
+        "CONFLICT_NOT_FAIL_CLOSED",
+        "CONFLICT_CAPABILITY_VIOLATION",
+        "CONFLICT_SELECTABLE",
+        "INVALID_DISPLAY_WRAPPERS",
+        "NON_OXFORD_AMERICAN_SYMBOL",
+        "MONOSYLLABLE_STRESS_MARK",
+        "FALLBACK_PROVENANCE_VIOLATION",
+        "SOURCE_DIALECT_MISMATCH",
+        "NON_US_SOURCE_LABEL",
+    }
+    for row in combined_rows:
+        has_error = False
+        reasons = []
+        if row.get("httpStatus") != 200:
+            has_error = True
+            reasons.append(f"HTTP_STATUS_{row.get('httpStatus')}")
+        for err in row.get("errors", []):
+            has_error = True
+            reasons.append(err)
+        for check in row.get("graphChecks", []):
+            if not check.get("matches"):
+                has_error = True
+                reasons.append("GRAPH_COUNT_MISMATCH")
+        reference = row.get("reference") or {}
+        for variant in reference.get("variants", []):
+            if variant.get("validation", {}).get("status") == "conflict":
+                has_error = True
+                reasons.append("CONFLICT_VARIANT")
+        
+        if has_error:
+            review_queue.append({
+                "word": row["word"],
+                "reasons": list(set(reasons)),
+                "errors": row.get("errors", []),
+                "httpStatus": row.get("httpStatus"),
+                "reference": row.get("reference")
+            })
+            
+    review_path = parent_dir / "review-queue.json"
+    review_path.write_text(json.dumps(review_queue, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    
+    report = {
+        "manifest_hash": manifest_hash,
+        "cohorts_aggregated": cohorts_to_load,
+        "summary": summary,
+        "gates": gates,
+        "provenance": {
+            "base_url": list(base_urls)[0] if base_urls else "unknown",
+            "deployment_version": list(deployment_versions)[0] if deployment_versions else "unknown",
+            "algorithm_version": list(algorithm_versions)[0] if algorithm_versions else "unknown",
+            "git_shas": list(git_shas),
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        },
+        "review_queue_ref": "review-queue.json",
+        "rows_files": [f"cohort-{c}-rows.jsonl" for c in cohorts_to_load]
+    }
+    Path(output_report_path).parent.mkdir(parents=True, exist_ok=True)
+    Path(output_report_path).write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    
+    summary_md_path = parent_dir / "summary.md"
+    table_rows = []
+    for c_idx in range(1, 4):
+        c_file = parent_dir / f"cohort-{c_idx}-rows.jsonl"
+        if c_file.exists():
+            c_rows = []
+            with c_file.open("r", encoding="utf-8") as f:
+                for line in f:
+                    if line.strip():
+                        c_rows.append(json.loads(line))
+            if c_rows:
+                c_sum, c_gates = summarize(c_rows, len(c_rows), "v2")
+                coverage = c_sum["validatedCoverage"]
+                fallback_rate = round(c_sum["runtimeFallbackValidated"] / len(c_rows), 4) if len(c_rows) else 0.0
+                conflict_rate = round(c_sum["evidenceOnlyConflictVariants"] / len(c_rows), 4) if len(c_rows) else 0.0
+                quarantine_rate = round(c_sum["quarantinedNativeAnalyses"] / len(c_rows), 4) if len(c_rows) else 0.0
+                corroboration_rate = round(c_sum["cmuCorroborated"] / len(c_rows), 4) if len(c_rows) else 0.0
+                table_rows.append(
+                    f"| Cohort {c_idx} | {len(c_rows)} | {coverage*100:.2f}% | {fallback_rate*100:.2f}% | {conflict_rate*100:.2f}% | {quarantine_rate*100:.2f}% | {corroboration_rate*100:.2f}% |"
+                )
+                
+    summary_md_content = f"""# Pronunciation Audit Campaign Summary
+
+**Manifest Hash:** `{manifest_hash}`
+
+## Cohort Comparison
+
+| Cohort | Sample Size | Coverage | Fallback Rate | Conflict Rate | Graph Quarantine Rate | CMU Corroboration Rate |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+{"\n".join(table_rows)}
+
+*Generated at: {time.strftime("%Y-%m-%d %H:%M:%S GMT", time.gmtime())}*
+"""
+    summary_md_path.write_text(summary_md_content, encoding="utf-8")
+    print(f"Aggregated report written to {output_report_path}")
+    print(json.dumps({"summary": summary, "gates": gates}, indent=2))
+    return 0 if gates["passed"] else 1
+
+
+def run_cohort_audit(args, cmu):
+    if not args.base_url:
+        raise ValueError("--base-url is required to run cohort audit")
+    
+    manifest_path = Path(args.manifest)
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if not validate_manifest_hash(manifest):
+        raise ValueError("Manifest integrity check failed: calculated hash does not match stored hash")
+    
+    manifest_hash = manifest["manifest_hash"]
+    words = manifest["words"]
+    cohorts = split_into_cohorts(words, 3)
+    cohort_idx = args.cohort - 1
+    cohort_words = cohorts[cohort_idx]
+    
+    git_sha = get_local_git_sha()
+    health_info = get_health_info(args.base_url)
+    deployment_version = health_info.get("deploymentVersion", "unknown")
+    algorithm_version = health_info.get("algorithmVersion", "unknown")
+    schema_version = health_info.get("schemaVersion", "unknown")
+    analysis_version = health_info.get("analysisVersion", "unknown")
+    
+    print(f"Audit campaign execution for Cohort {args.cohort}")
+    print(f"Base URL: {args.base_url}")
+    print(f"Git SHA: {git_sha}")
+    print(f"Server deploymentVersion: {deployment_version}")
+    print(f"Server algorithmVersion: {algorithm_version}")
+    
+    ledger_path = args.ledger
+    if not ledger_path:
+        ledger_path = str(Path(args.output).parent / "ledger.jsonl")
+        
+    completed_words = get_completed_words_from_ledger(
+        ledger_path, manifest_hash, deployment_version, algorithm_version
+    )
+    print(f"Already completed in ledger: {len(completed_words)} words out of {len(cohort_words)}")
+    
+    pending_words = [w for w in cohort_words if w not in completed_words]
+    print(f"Pending execution: {len(pending_words)} words")
+    
+    if not pending_words:
+        print("All words in this cohort are already completed. Done.")
+        return 0
+        
+    rows_by_word = {}
+    output_path = Path(args.output)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    def process_and_log_word(word):
+        write_ledger_event(ledger_path, {
+            "manifest_hash": manifest_hash,
+            "deployment_version": deployment_version,
+            "algorithm_version": algorithm_version,
+            "word": word,
+            "status": "in_progress",
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        })
+        
+        row = audit_word(args.base_url, word, cmu, args.source_mode)
+        row["provenance"] = {
+            "base_url": args.base_url,
+            "git_sha": git_sha,
+            "deployment_version": deployment_version,
+            "algorithm_version": algorithm_version,
+            "schema_version": schema_version,
+            "analysis_version": analysis_version,
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        }
+        
+        is_failed = row.get("httpStatus") != 200 or len(row.get("errors", [])) > 0
+        status = "terminal_failure" if is_failed else "complete"
+        
+        lock_path = str(output_path) + ".lock"
+        with FileLock(lock_path):
+            with output_path.open("a", encoding="utf-8") as f:
+                f.write(json.dumps(row, ensure_ascii=False) + "\n")
+                
+        write_ledger_event(ledger_path, {
+            "manifest_hash": manifest_hash,
+            "deployment_version": deployment_version,
+            "algorithm_version": algorithm_version,
+            "word": word,
+            "status": status,
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "result": {"errors": row.get("errors", []), "httpStatus": row.get("httpStatus")}
+        })
+        return row
+
+    completed_count = 0
+    with ThreadPoolExecutor(max_workers=max(1, args.workers)) as executor:
+        futures = {
+            executor.submit(process_and_log_word, word): word
+            for word in pending_words
+        }
+        for future in as_completed(futures):
+            word = futures[future]
+            try:
+                row = future.result()
+                rows_by_word[word] = row
+                completed_count += 1
+                if completed_count % 100 == 0:
+                    print(f"Progress: completed {completed_count}/{len(pending_words)} words...")
+            except Exception as e:
+                print(f"Error auditing word {word}: {e}")
+                
+    print(f"Cohort {args.cohort} audit execution completed. {completed_count} words processed.")
+    return 0
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--base-url", required=True)
+    parser.add_argument("--base-url", required=False)
     parser.add_argument(
         "--source-mode",
         choices=("v2", "legacy-canonical"),
@@ -474,11 +827,45 @@ def parse_args():
     parser.add_argument("--output", default="test-results/pronunciation-audit.json")
     parser.add_argument("--words", help="Optional comma-separated deterministic word list")
     parser.add_argument("--workers", type=int, default=6)
+    
+    # Non-repeating campaign options
+    parser.add_argument("--create-manifest", help="Create manifest JSON file with words using seed")
+    parser.add_argument("--manifest", help="Use an existing manifest JSON file")
+    parser.add_argument("--cohort", type=int, choices=(1, 2, 3), help="Select cohort index (1, 2, or 3)")
+    parser.add_argument("--aggregate-through", type=int, choices=(1, 2, 3), help="Aggregate reports through cohort index")
+    parser.add_argument("--ledger", help="Path to resume ledger.jsonl file")
+    
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
+    
+    # Create manifest mode
+    if args.create_manifest:
+        frame, cmu = load_sampling_frame()
+        manifest_data, manifest_hash = generate_manifest(frame, args.seed, args.sample_size)
+        output_path = Path(args.create_manifest)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(json.dumps(manifest_data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        print(f"Created manifest at {output_path.resolve()} with hash {manifest_hash}")
+        return 0
+        
+    # Aggregate mode
+    if args.aggregate_through:
+        if not args.manifest:
+            raise ValueError("--manifest is required for aggregation mode")
+        return aggregate_reports(args.manifest, args.aggregate_through, args.output)
+        
+    # Cohort audit mode
+    if args.manifest and args.cohort:
+        frame, cmu = load_sampling_frame()
+        return run_cohort_audit(args, cmu)
+        
+    # Legacy default mode
+    if not args.base_url:
+        raise ValueError("--base-url is required when running audits")
+        
     frame, cmu = load_sampling_frame()
     if args.words:
         requested_words = [

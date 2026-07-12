@@ -78,7 +78,7 @@ class PronunciationDictionaryV2ApiTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200, response.get_data(as_text=True))
         payload = response.get_json()
         self.assertEqual(payload["schemaVersion"], 9)
-        self.assertEqual(payload["algorithmVersion"], "pronunciation-reference-v2")
+        self.assertEqual(payload["algorithmVersion"], "pronunciation-reference-v3")
         self.assertEqual(payload["word"], "car")
         self.assertEqual(len(payload["variants"]), 1)
         variant = payload["variants"][0]
@@ -89,6 +89,92 @@ class PronunciationDictionaryV2ApiTest(unittest.TestCase):
         self.assertEqual(payload["defaultVariantId"], variant["id"])
         self.assertTrue(variant["capabilities"]["scoreCountStress"])
         self.assertEqual(get.call_count, 1)
+
+    def test_en_us_reference_excludes_british_pronunciation_but_keeps_missing_ipa_evidence(self):
+        entries = [
+            {
+                "meta": {"id": "photograph:1"},
+                "hwi": {
+                    "hw": "pho*to*graph",
+                    "prs": [
+                        {
+                            "ipa": "ˈfoʊtəˌgræf",
+                            "sound": {"audio": "photog13"},
+                        },
+                        {
+                            "ipa": "ˈfəʊtəˌgrɑːf",
+                            "l": "British",
+                        },
+                    ],
+                },
+                "fl": "noun",
+                "shortdef": ["a picture made by a camera"],
+            },
+            {
+                "meta": {"id": "photograph:2"},
+                "hwi": {"hw": "photograph", "prs": []},
+                "fl": "verb",
+                "shortdef": ["to take a photograph of something"],
+            },
+        ]
+        with patch.object(
+            server.http_requests,
+            "get",
+            return_value=FakeResponse(entries),
+        ):
+            response = self.client.get("/dictionary/v2/photograph")
+
+        self.assertEqual(response.status_code, 200, response.get_data(as_text=True))
+        payload = response.get_json()
+        self.assertEqual(len(payload["variants"]), 2)
+        selected = next(
+            item for item in payload["variants"]
+            if item["id"] == payload["defaultVariantId"]
+        )
+        self.assertEqual(selected["rawIpa"], "ˈfoʊtəˌgræf")
+        self.assertEqual(selected["displayIpa"], "/ˈfoʊtəˌɡræf/")
+        self.assertEqual(selected["primaryStress"], 0)
+        self.assertEqual(selected["secondaryStress"], [2])
+        self.assertEqual(selected["source"]["dialect"], "en-US")
+        self.assertEqual(selected["source"]["labels"], [])
+        self.assertNotIn(
+            "ˈfəʊtəˌgrɑːf",
+            [variant["rawIpa"] for variant in payload["variants"]],
+        )
+        unavailable_verb = next(
+            item for item in payload["variants"]
+            if item["source"]["entryId"] == "photograph:2"
+        )
+        self.assertEqual(unavailable_verb["validation"]["status"], "conflict")
+        self.assertIn("MISSING_IPA", unavailable_verb["validation"]["conflicts"])
+
+    def test_en_us_reference_rejects_explicit_non_us_regions_and_retains_source_labels(self):
+        pronunciations = [
+            {"ipa": "ˈteɪst", "sound": {"audio": "default-us"}},
+            {"ipa": "ˈtɛst", "l": "US", "sound": {"audio": "explicit-us"}},
+            {"ipa": "ˈtɑst", "l": "Australian", "sound": {"audio": "australian"}},
+            {"ipa": "ˈtɪst", "l": "Canadian", "sound": {"audio": "canadian"}},
+            {"ipa": "ˈtɔst", "l": "South African", "sound": {"audio": "south-african"}},
+        ]
+        entry = {
+            "meta": {"id": "test:1"},
+            "hwi": {"hw": "test", "prs": pronunciations},
+            "fl": "noun",
+            "shortdef": ["fixture"],
+        }
+        with patch.object(
+            server.http_requests,
+            "get",
+            return_value=FakeResponse([entry]),
+        ):
+            response = self.client.get("/dictionary/v2/test")
+
+        self.assertEqual(response.status_code, 200, response.get_data(as_text=True))
+        variants = response.get_json()["variants"]
+        self.assertEqual({variant["rawIpa"] for variant in variants}, {"ˈteɪst", "ˈtɛst"})
+        explicit_us = next(variant for variant in variants if variant["rawIpa"] == "ˈtɛst")
+        self.assertEqual(explicit_us["source"]["dialect"], "en-US")
+        self.assertEqual(explicit_us["source"]["labels"], ["US"])
 
     def test_loose_root_entry_is_quarantined_and_never_relabelled(self):
         loose = mw_entry(
@@ -395,7 +481,7 @@ class PronunciationDictionaryV2ApiTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.get_json()
         self.assertEqual(payload["schemaVersion"], 9)
-        self.assertEqual(payload["algorithmVersion"], "pronunciation-reference-v2")
+        self.assertEqual(payload["algorithmVersion"], "pronunciation-reference-v3")
         self.assertEqual(payload["analysisVersion"], "pronunciation-analysis-v2")
         self.assertTrue(payload["deploymentVersion"])
 

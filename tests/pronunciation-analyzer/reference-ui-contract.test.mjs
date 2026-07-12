@@ -17,17 +17,24 @@ const styleSource = fs.readFileSync(
 assert.match(htmlSource, /id="pa-reference-status"[^>]*aria-live="polite"/);
 assert.match(htmlSource, /id="pa-charts-container"/);
 assert.match(htmlSource, /id="pa-feedback-section"/);
+assert.match(htmlSource, /id="pa-syllable-count"/);
+assert.match(htmlSource, /id="pa-primary-stress"/);
+assert.match(htmlSource, /id="pa-secondary-stress"/);
+assert.match(htmlSource, /id="pa-syllable-strip"/);
+assert.match(htmlSource, /id="pa-pattern-display"[^>]*class="pa-sr-only"/);
 
 assert.ok(!appSource.includes('window.Phonetics'), 'legacy IPA fallback must not enter scoring paths');
 assert.match(appSource, /selectReferenceVariant/);
+assert.match(appSource, /getSelectableReferenceVariants/);
+assert.match(appSource, /buildPronunciationSummary/);
 assert.match(appSource, /Pronunciation reference under review\./);
 assert.match(appSource, /CMU pronunciation fallback/);
-assert.match(appSource, /single-syllable word/);
 assert.match(appSource, /capabilities\.scoreCountStress/);
 assert.match(appSource, /capabilities\.showNativeGraphs/);
 assert.match(appSource, /primaryStress/);
 assert.match(appSource, /secondaryStress/);
 assert.match(appSource, /nativeAnalysis\?\.observed\?\.syllables/);
+assert.match(appSource, /setAttribute\('aria-pressed'/);
 
 const updateWordDataCatch = appSource.match(/} catch \(err\) \{[\s\S]*?\n        } finally \{/);
 assert.ok(updateWordDataCatch, 'updateWordData must have an explicit error path');
@@ -41,9 +48,18 @@ assert.match(
     /wordInfo\)\s+this\.wordInfo\.classList\.remove\('hidden'\)/,
     'failed reference lookups must reveal the word info error panel'
 );
+assert.match(
+    updateWordDataCatch[0],
+    /clearPronunciationSummary/,
+    'failed reference lookups must clear every visual stress field from the previous word'
+);
 
 assert.match(styleSource, /\.pa-reference-status/);
 assert.match(styleSource, /\.pa-reference-status--conflict/);
 assert.match(styleSource, /\.pa-charts-grid\.hidden/);
+assert.match(styleSource, /\.pa-pattern-facts/);
+assert.match(styleSource, /\.pa-syllable--primary/);
+assert.match(styleSource, /\.pa-syllable--secondary/);
+assert.match(styleSource, /\.pa-sr-only/);
 
 console.log('reference-ui-contract tests passed');

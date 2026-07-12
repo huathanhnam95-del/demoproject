@@ -15,6 +15,8 @@ Prevent dictionary senses without pronunciation evidence from becoming selectabl
 
 The v2 `variants` array remains evidence-preserving: conflict records may remain in the API for diagnostics and audits. The learner-facing selectable set is narrower and contains only variants whose validation status is `valid`, whose source is an exact entry, and whose dialect is compatible with en-US.
 
+Because dialect filtering changes cached reference semantics, the algorithm version advances to `pronunciation-reference-v3`. Existing `referenceV2` records remain stored but fail version validation and are lazily refetched.
+
 The backend will retain the source pronunciation label while extracting Merriam-Webster records. Pronunciations explicitly labeled `British` are excluded from the en-US reference. Metadata-only entries remain conflict evidence and are never used to infer IPA, audio, count, or stress across parts of speech.
 
 This means `photograph` exposes one selectable en-US noun pronunciation. Its metadata-only verb sense is not shown as a pronunciation choice. The validated pronunciation remains usable for practising the word; the UI does not imply that a dictionary sense is itself a separate sound.
@@ -48,4 +50,3 @@ If no valid variant exists, the existing fail-closed unavailable state remains. 
 - Frontend logic tests cover selectable-variant filtering and stress-summary modeling.
 - DOM/browser checks cover `photograph`, one-variant selector hiding, semantic stress rendering, keyboard state, and narrow layouts.
 - The fixed 100-word audit must have zero incorrect scoreable results and zero selectable conflicted variants.
-

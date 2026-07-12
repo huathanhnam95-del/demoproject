@@ -695,6 +695,42 @@ def _normalize_mw_surface(value):
     return normalized
 
 
+_MW_NON_US_REGIONS = (
+    'australian',
+    'british',
+    'canadian',
+    'irish',
+    'new zealand',
+    'scottish',
+    'south african',
+)
+
+
+def _mw_pronunciation_labels(pronunciation):
+    labels = []
+    if not isinstance(pronunciation, dict):
+        return labels
+    for value in (pronunciation.get('l'), pronunciation.get('l2')):
+        values = value if isinstance(value, list) else [value]
+        labels.extend(str(item).strip() for item in values if str(item or '').strip())
+    return labels
+
+
+def _mw_pronunciation_is_en_us(pronunciation):
+    """Apply the explicit region policy for the en-US pronunciation contract."""
+    label_text = ' '.join(_mw_pronunciation_labels(pronunciation)).casefold()
+    if not label_text:
+        return True
+    explicitly_us = (
+        re.search(r'\bu\.?s\.?(?:a\.?)?\b', label_text) is not None
+        or 'united states' in label_text
+        or 'american' in label_text
+    )
+    if explicitly_us:
+        return True
+    return not any(region in label_text for region in _MW_NON_US_REGIONS)
+
+
 def _deduplicate_mw_items(items):
     unique = []
     seen = set()
@@ -785,6 +821,8 @@ def _mw_pronunciation_records(entries, requested_word):
                 pronunciations = [{}]
             for pronunciation in pronunciations:
                 pronunciation = pronunciation if isinstance(pronunciation, dict) else {}
+                if not _mw_pronunciation_is_en_us(pronunciation):
+                    continue
                 raw_ipa = pronunciation.get('ipa') or pronunciation.get('mw') or None
                 sound = pronunciation.get('sound')
                 sound = sound if isinstance(sound, dict) else {}
@@ -799,6 +837,7 @@ def _mw_pronunciation_records(entries, requested_word):
                     'raw_ipa': str(raw_ipa).strip() if raw_ipa else None,
                     'audio_filename': audio_filename,
                     'audio_url': build_audio_url(audio_filename) if audio_filename else None,
+                    'source_labels': _mw_pronunciation_labels(pronunciation),
                 })
 
         append_pronunciations(

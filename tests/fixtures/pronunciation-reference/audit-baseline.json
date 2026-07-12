@@ -1,6 +1,6 @@
 {
   "schemaVersion": 9,
-  "algorithmVersion": "pronunciation-reference-v2",
+  "algorithmVersion": "pronunciation-reference-v3",
   "analysisVersion": "pronunciation-analysis-v2",
   "seed": 20260711,
   "samplingFrame": "unique alphabetic Oxford 5000 entries present in local CMU data",

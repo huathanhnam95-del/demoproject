@@ -15,7 +15,7 @@ from typing import Any, Iterable, Optional
 
 
 SCHEMA_VERSION = 9
-ALGORITHM_VERSION = "pronunciation-reference-v2"
+ALGORITHM_VERSION = "pronunciation-reference-v3"
 DIALECT = "en-US"
 
 CONFLICT_ORDER = (
@@ -457,6 +457,8 @@ def build_pronunciation_variant(
     acoustic_conflict: bool = False,
     source_provider: str = "merriam-webster",
     source_transcription: Optional[str] = None,
+    source_dialect: str = DIALECT,
+    source_labels: Optional[Iterable[str]] = None,
 ) -> dict[str, Any]:
     normalized_raw = _nfc(raw_ipa)
     conflicts: list[str] = []
@@ -496,6 +498,12 @@ def build_pronunciation_variant(
         if provider == "cmu-pronouncing-dictionary"
         else "merriam-webster-ipa"
     )
+    dialect = _nfc(source_dialect) or DIALECT
+    labels = [
+        normalized
+        for label in (source_labels or [])
+        if (normalized := _nfc(label))
+    ]
 
     return {
         "id": stable_variant_id(word, part_of_speech, normalized_raw, audio_filename),
@@ -506,6 +514,8 @@ def build_pronunciation_variant(
             "entryId": _nfc(entry_id) or None,
             "exactMatch": bool(exact_match),
             "transcription": transcription,
+            "dialect": dialect,
+            "labels": labels,
         },
         "rawIpa": normalized_raw or None,
         "displayIpa": parsed.display_ipa if normalized_raw else None,

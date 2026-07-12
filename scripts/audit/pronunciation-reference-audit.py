@@ -28,6 +28,15 @@ from backend.local_server.pronunciation_reference import (  # noqa: E402
 
 PLAIN_WORD = re.compile(r"^[a-z]+$")
 CMU_VOWEL = re.compile(r"^[A-Z]+([012])$")
+NON_US_SOURCE_REGIONS = (
+    "australian",
+    "british",
+    "canadian",
+    "irish",
+    "new zealand",
+    "scottish",
+    "south african",
+)
 
 
 def cmu_metrics(pronunciation):
@@ -84,6 +93,34 @@ def style_violations(variant):
     if variant.get("syllableCount") == 1 and display and "ˈ" in display:
         violations.append("MONOSYLLABLE_STRESS_MARK")
     return violations
+
+
+def is_learner_selectable(variant):
+    return (
+        variant.get("validation", {}).get("status") == "valid"
+        and variant.get("source", {}).get("exactMatch") is True
+        and variant.get("capabilities", {}).get("scoreCountStress") is True
+        and isinstance(variant.get("displayIpa"), str)
+        and bool(variant.get("displayIpa"))
+        and isinstance(variant.get("syllableCount"), int)
+        and variant.get("syllableCount") > 0
+    )
+
+
+def source_labels_are_en_us_compatible(labels):
+    if not isinstance(labels, list) or not all(
+        isinstance(label, str) and label for label in labels
+    ):
+        return False
+    label_text = " ".join(labels).casefold()
+    explicitly_us = (
+        re.search(r"\bu\.?s\.?(?:a\.?)?\b", label_text) is not None
+        or "united states" in label_text
+        or "american" in label_text
+    )
+    return explicitly_us or not any(
+        region in label_text for region in NON_US_SOURCE_REGIONS
+    )
 
 
 def legacy_reference(base_url, word):
@@ -175,6 +212,12 @@ def audit_word(base_url, word, cmu, source_mode):
     any_cmu_match = False
     for variant in reference.get("variants", []):
         variant["auditStyleViolations"] = style_violations(variant)
+        variant["auditLearnerSelectable"] = is_learner_selectable(variant)
+        source = variant.get("source", {})
+        if source.get("dialect") != "en-US":
+            row["errors"].append("SOURCE_DIALECT_MISMATCH")
+        if not source_labels_are_en_us_compatible(source.get("labels")):
+            row["errors"].append("NON_US_SOURCE_LABEL")
         if variant.get("source", {}).get("provider") == "cmu-pronouncing-dictionary":
             fallback_is_honest = (
                 variant.get("source", {}).get("transcription") == "cmu-arpabet-converted"
@@ -200,6 +243,11 @@ def audit_word(base_url, word, cmu, source_mode):
             or variant.get("capabilities", {}).get("showNativeGraphs")
         ):
             row["errors"].append("CONFLICT_CAPABILITY_VIOLATION")
+        if (
+            variant.get("validation", {}).get("status") == "conflict"
+            and variant["auditLearnerSelectable"]
+        ):
+            row["errors"].append("CONFLICT_SELECTABLE")
 
         if variant.get("capabilities", {}).get("showNativeGraphs"):
             try:
@@ -290,15 +338,50 @@ def summarize(rows, requested_size, source_mode):
         "SECONDARY_STRESS_OUT_OF_RANGE",
         "CONFLICT_NOT_FAIL_CLOSED",
         "CONFLICT_CAPABILITY_VIOLATION",
+        "CONFLICT_SELECTABLE",
         "INVALID_DISPLAY_WRAPPERS",
         "NON_OXFORD_AMERICAN_SYMBOL",
         "MONOSYLLABLE_STRESS_MARK",
         "FALLBACK_PROVENANCE_VIOLATION",
+        "SOURCE_DIALECT_MISMATCH",
+        "NON_US_SOURCE_LABEL",
     }
     incorrect_scoreable = sum(
         1 for row in rows if incorrect_scoreable_codes.intersection(row.get("errors", []))
     )
     corroborated = sum(1 for row in rows if row.get("cmuCorroborated"))
+    selectable_conflicts = sum(
+        1
+        for row in rows
+        for variant in (row.get("reference") or {}).get("variants", [])
+        if (
+            variant.get("validation", {}).get("status") == "conflict"
+            and variant.get("auditLearnerSelectable") is True
+        )
+    )
+    evidence_only_conflicts = sum(
+        1
+        for row in rows
+        for variant in (row.get("reference") or {}).get("variants", [])
+        if (
+            variant.get("validation", {}).get("status") == "conflict"
+            and variant.get("auditLearnerSelectable") is not True
+        )
+    )
+    source_dialect_violations = sum(
+        1
+        for row in rows
+        for variant in (row.get("reference") or {}).get("variants", [])
+        if variant.get("source", {}).get("dialect") != "en-US"
+    )
+    non_us_source_label_violations = sum(
+        1
+        for row in rows
+        for variant in (row.get("reference") or {}).get("variants", [])
+        if not source_labels_are_en_us_compatible(
+            variant.get("source", {}).get("labels")
+        )
+    )
     fallback_validated = 0
     for row in rows:
         reference = row.get("reference") or {}
@@ -323,6 +406,10 @@ def summarize(rows, requested_size, source_mode):
         "validatedCoverage": round(coverage, 6),
         "cmuCorroborated": corroborated,
         "runtimeFallbackValidated": fallback_validated,
+        "selectableConflictVariants": selectable_conflicts,
+        "evidenceOnlyConflictVariants": evidence_only_conflicts,
+        "sourceDialectViolations": source_dialect_violations,
+        "nonUsSourceLabelViolations": non_us_source_label_violations,
         "graphCountMismatches": graph_mismatches,
         "quarantinedNativeAnalyses": quarantined_graphs,
         "incorrectScoreable": incorrect_scoreable,
@@ -332,6 +419,9 @@ def summarize(rows, requested_size, source_mode):
         "zeroIncorrectScoreable": incorrect_scoreable == 0,
         "coverageAtLeastRequired": coverage >= required_coverage,
         "zeroGraphCountMismatches": graph_mismatches == 0,
+        "zeroSelectableConflictVariants": selectable_conflicts == 0,
+        "zeroSourceDialectViolations": source_dialect_violations == 0,
+        "zeroNonUsSourceLabelViolations": non_us_source_label_violations == 0,
     }
     gates["passed"] = all(gates.values())
     return summary, gates

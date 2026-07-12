@@ -7,8 +7,12 @@ import { WordReferenceService } from './word-reference-service.js';
 import { NativeAudioPlayer } from './native-audio-player.js';
 import { config } from './config.js';
 import { analyzeRecordedAttempt } from './analysis-pipeline.js';
-import { selectReferenceVariant } from './reference-contract.js';
+import {
+    getSelectableReferenceVariants,
+    selectReferenceVariant
+} from './reference-contract.js';
 import { buildLexicalFallbackFeedback, canShowDetailedFeedback } from './chart-data.js';
+import { buildPronunciationSummary } from './pronunciation-summary.js';
 
 export class PronunciationApp {
     constructor() {
@@ -40,6 +44,12 @@ export class PronunciationApp {
         this.wordInput = document.getElementById('pa-word-input');
         this.ipaDisplay = document.getElementById('pa-ipa-display');
         this.patternDisplay = document.getElementById('pa-pattern-display');
+        this.syllableCountDisplay = document.getElementById('pa-syllable-count');
+        this.primaryStressDisplay = document.getElementById('pa-primary-stress');
+        this.secondaryStressDisplay = document.getElementById('pa-secondary-stress');
+        this.primaryStressFact = document.getElementById('pa-primary-stress-fact');
+        this.secondaryStressFact = document.getElementById('pa-secondary-stress-fact');
+        this.syllableStrip = document.getElementById('pa-syllable-strip');
         this.wordInfo = document.getElementById('pa-word-info');
         this.wordForms = document.getElementById('pa-word-forms');
         this.loadingPlaceholder = document.getElementById('pa-loading-placeholder');
@@ -184,15 +194,20 @@ export class PronunciationApp {
 
             if (this.loadingPlaceholder) this.loadingPlaceholder.style.display = 'none';
 
-            if (wordRef?.variants?.length) {
+            const selectableVariants = wordRef?.variants?.length
+                ? getSelectableReferenceVariants(wordRef)
+                : [];
+
+            if (selectableVariants.length) {
                 // Show containers
                 if (this.wordInfo) this.wordInfo.classList.remove('hidden');
-                if (this.wordForms) this.wordForms.classList.remove('hidden');
 
-                this.renderWordFormSelector(wordRef.variants, wordRef.defaultVariantId);
-                const initialVariant = wordRef.defaultVariantId
+                this.renderWordFormSelector(selectableVariants, wordRef.defaultVariantId);
+                const initialVariant = selectableVariants.some(
+                    (variant) => variant.id === wordRef.defaultVariantId
+                )
                     ? selectReferenceVariant(wordRef)
-                    : wordRef.variants[0];
+                    : selectableVariants[0];
                 this.displayWordData(initialVariant);
             } else {
                 this.showReferenceUnavailable('Pronunciation reference under review.');
@@ -203,8 +218,10 @@ export class PronunciationApp {
             if (this.loadingPlaceholder) this.loadingPlaceholder.style.display = 'none';
             if (this.wordInfo) this.wordInfo.classList.remove('hidden');
             if (this.wordForms) this.wordForms.classList.add('hidden');
-            this.ipaDisplay.textContent = "Error";
-            this.patternDisplay.textContent = err.message || "Failed to load";
+            this.clearPronunciationSummary({
+                ipa: 'Error',
+                message: err.message || 'Failed to load'
+            });
             this.statusIndicator.textContent = "Error";
             this.nativePattern = null;
             this.nativeAudioPlayer.clearSource();
@@ -246,9 +263,32 @@ export class PronunciationApp {
         this.stopBtn.disabled = true;
     }
 
+    clearPronunciationSummary({
+        ipa = 'Unavailable',
+        message = 'Pronunciation reference unavailable.'
+    } = {}) {
+        if (this.ipaDisplay) this.ipaDisplay.textContent = ipa;
+        if (this.patternDisplay) this.patternDisplay.textContent = message;
+        if (this.syllableCountDisplay) this.syllableCountDisplay.textContent = 'Unavailable';
+        if (this.primaryStressFact) this.primaryStressFact.hidden = true;
+        if (this.secondaryStressFact) this.secondaryStressFact.hidden = true;
+        if (this.syllableStrip) this.syllableStrip.replaceChildren();
+    }
+
+    clearLearnerAttemptState() {
+        this.userAudioBlob = null;
+        if (this.syllableVerifier) {
+            this.syllableVerifier.destroy();
+            this.syllableVerifier = null;
+        }
+        const verifierContainer = document.getElementById('syllable-verifier-container');
+        if (verifierContainer) verifierContainer.replaceChildren();
+        if (this.resultsSummary) this.resultsSummary.replaceChildren();
+        if (this.feedbackSection) this.feedbackSection.style.display = 'none';
+    }
+
     showReferenceUnavailable(message) {
-        if (this.ipaDisplay) this.ipaDisplay.textContent = 'Unavailable';
-        if (this.patternDisplay) this.patternDisplay.textContent = '—';
+        this.clearPronunciationSummary();
         if (this.referenceStatus) {
             this.referenceStatus.textContent = message;
             this.referenceStatus.classList.add('pa-reference-status--conflict');
@@ -845,6 +885,47 @@ export class PronunciationApp {
      * Display word data (IPA, charts, audio)
      * Extracted from updateWordData to allow switching between forms
      */
+    renderPronunciationSummary(wordRef) {
+        const summary = buildPronunciationSummary(wordRef);
+        if (this.ipaDisplay) this.ipaDisplay.textContent = summary.ipa;
+        if (this.patternDisplay) this.patternDisplay.textContent = summary.accessibleText;
+        if (this.syllableCountDisplay) this.syllableCountDisplay.textContent = summary.countLabel;
+
+        if (this.primaryStressFact) {
+            this.primaryStressFact.hidden = !summary.primaryLabel;
+        }
+        if (this.primaryStressDisplay) {
+            this.primaryStressDisplay.textContent = summary.primaryLabel || '';
+        }
+        if (this.secondaryStressFact) {
+            this.secondaryStressFact.hidden = summary.secondaryLabels.length === 0;
+        }
+        if (this.secondaryStressDisplay) {
+            this.secondaryStressDisplay.textContent = summary.secondaryLabels.join(', ');
+        }
+
+        if (this.syllableStrip) {
+            const elements = summary.syllables.map((syllable) => {
+                const element = document.createElement('span');
+                element.className = `pa-syllable pa-syllable--${syllable.stress}`;
+
+                const label = document.createElement('span');
+                label.className = 'pa-syllable-label';
+                label.textContent = syllable.label;
+                element.appendChild(label);
+
+                if (syllable.stress === 'primary' || syllable.stress === 'secondary') {
+                    const role = document.createElement('small');
+                    role.className = 'pa-syllable-role';
+                    role.textContent = syllable.stress === 'primary' ? 'Primary' : 'Secondary';
+                    element.appendChild(role);
+                }
+                return element;
+            });
+            this.syllableStrip.replaceChildren(...elements);
+        }
+    }
+
     displayWordData(wordRef) {
         if (!wordRef) return;
 
@@ -866,19 +947,7 @@ export class PronunciationApp {
             variantId: wordRef.id
         };
 
-        if (this.ipaDisplay) this.ipaDisplay.textContent = wordRef.displayIpa || 'Unavailable';
-        if (this.patternDisplay) {
-            if (wordRef.syllableCount === 1) {
-                this.patternDisplay.textContent = '1 syllable · single-syllable word';
-            } else if (Number.isInteger(wordRef.primaryStress)) {
-                const secondary = wordRef.secondaryStress?.length
-                    ? ` · secondary stress on ${wordRef.secondaryStress.map((index) => index + 1).join(', ')}`
-                    : '';
-                this.patternDisplay.textContent = `${wordRef.syllableCount} syllables · primary stress on ${wordRef.primaryStress + 1}${secondary}`;
-            } else {
-                this.patternDisplay.textContent = `${wordRef.syllableCount} syllables · stress unavailable`;
-            }
-        }
+        this.renderPronunciationSummary(wordRef);
         if (this.referenceStatus) {
             this.referenceStatus.textContent = !isValid
                 ? 'Pronunciation reference under review.'
@@ -944,7 +1013,13 @@ export class PronunciationApp {
         this.wordForms.innerHTML = '';
         this.wordForms.classList.add('hidden');
 
-        const validAlts = (alternatives || []).filter(Boolean);
+        const validAlts = (alternatives || []).filter((variant) => (
+            variant?.validation?.status === 'valid' &&
+            variant?.source?.exactMatch === true &&
+            variant?.capabilities?.scoreCountStress === true &&
+            variant?.displayIpa &&
+            variant?.syllableCount > 0
+        ));
 
         if (validAlts.length <= 1) {
             return;
@@ -954,6 +1029,7 @@ export class PronunciationApp {
 
         validAlts.forEach((alt, index) => {
             const btn = document.createElement('button');
+            btn.type = 'button';
 
             // Get POS and normalize for class name
             const pos = (alt.partOfSpeech || 'default').toLowerCase().replace(/[^a-z]/g, '');
@@ -967,11 +1043,16 @@ export class PronunciationApp {
             btn.dataset.variantId = alt.id;
             btn.disabled = false;
 
-            if (alt.id === selectedVariantId || (!selectedVariantId && index === 0)) {
+            const isSelected = alt.id === selectedVariantId || (!selectedVariantId && index === 0);
+            btn.setAttribute('aria-pressed', String(isSelected));
+            if (isSelected) {
                 btn.classList.add('active');
             }
 
             btn.onclick = () => {
+                if (this.currentWordRef?.id !== alt.id) {
+                    this.clearLearnerAttemptState();
+                }
                 this.displayWordData(alt);
                 this.highlightSelectedForm(btn);
             };
@@ -985,8 +1066,10 @@ export class PronunciationApp {
         const buttons = this.wordForms.querySelectorAll('button');
         buttons.forEach(btn => {
             btn.classList.remove('active');
+            btn.setAttribute('aria-pressed', 'false');
         });
         selectedBtn.classList.add('active');
+        selectedBtn.setAttribute('aria-pressed', 'true');
     }
 }
 

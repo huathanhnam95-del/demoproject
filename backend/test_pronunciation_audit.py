@@ -50,9 +50,22 @@ def reference_for(word):
             "cmu-arpabet-converted" if is_fallback else "merriam-webster-ipa"
         ),
     )
+    variants = [variant]
+    if word == "car":
+        variants.append(build_pronunciation_variant(
+            word=word,
+            part_of_speech="verb",
+            definition="metadata-only fixture",
+            entry_id="car:2",
+            exact_match=True,
+            raw_ipa=None,
+            headword="car",
+            audio_filename=None,
+            audio_url=None,
+        ))
     return build_pronunciation_reference(
         word=word,
-        variants=[variant],
+        variants=variants,
         deployment_version="fixture-sha",
     )
 
@@ -161,6 +174,10 @@ class PronunciationReferenceAuditTest(unittest.TestCase):
                 self.assertEqual(report["summary"]["validated"], len(WORDS))
                 self.assertEqual(report["summary"]["graphCountMismatches"], 0)
                 self.assertEqual(report["summary"]["runtimeFallbackValidated"], 1)
+                self.assertEqual(report["summary"]["selectableConflictVariants"], 0)
+                self.assertEqual(report["summary"]["evidenceOnlyConflictVariants"], 1)
+                self.assertEqual(report["summary"]["sourceDialectViolations"], 0)
+                self.assertEqual(report["summary"]["nonUsSourceLabelViolations"], 0)
                 media_row = next(row for row in report["rows"] if row["word"] == "media")
                 self.assertFalse(media_row["cmuCorroborated"])
                 self.assertTrue(report["gates"]["passed"])

@@ -1,5 +1,5 @@
 export const SCHEMA_VERSION = 9;
-export const ALGORITHM_VERSION = 'pronunciation-reference-v2';
+export const ALGORITHM_VERSION = 'pronunciation-reference-v3';
 export const ANALYSIS_VERSION = 'pronunciation-analysis-v2';
 export const DIALECT = 'en-US';
 
@@ -11,12 +11,42 @@ function isStressIndex(value, count) {
     return Number.isInteger(value) && value >= 0 && value < count;
 }
 
+const NON_US_SOURCE_REGIONS = [
+    'australian',
+    'british',
+    'canadian',
+    'irish',
+    'new zealand',
+    'scottish',
+    'south african'
+];
+
+function sourceLabelsAreEnUsCompatible(labels) {
+    const labelText = labels.join(' ').toLowerCase();
+    const explicitlyUs = (
+        /\bu\.?s\.?(?:a\.?)?\b/.test(labelText) ||
+        labelText.includes('united states') ||
+        labelText.includes('american')
+    );
+    return explicitlyUs || !NON_US_SOURCE_REGIONS.some((region) => labelText.includes(region));
+}
+
 function validateVariant(variant) {
     invariant(variant && typeof variant === 'object', 'variant must be an object');
     invariant(/^[0-9a-f]{16}$/.test(variant.id || ''), 'invalid variant id');
     invariant(
         ['merriam-webster', 'cmu-pronouncing-dictionary'].includes(variant.source?.provider),
         'unknown source provider'
+    );
+    invariant(variant.source.dialect === DIALECT, 'source dialect mismatch');
+    invariant(Array.isArray(variant.source.labels), 'source labels must be an array');
+    invariant(
+        variant.source.labels.every((label) => typeof label === 'string' && label.length > 0),
+        'source labels must be non-empty strings'
+    );
+    invariant(
+        sourceLabelsAreEnUsCompatible(variant.source.labels),
+        'non-US source label is incompatible with en-US'
     );
     if (variant.source.provider === 'merriam-webster') {
         invariant(
@@ -106,12 +136,30 @@ export function buildReferenceCacheKey(word) {
     return [ALGORITHM_VERSION, SCHEMA_VERSION, DIALECT, normalizedWord].join('|');
 }
 
+function isSelectableVariant(variant) {
+    return (
+        variant?.validation?.status === 'valid' &&
+        variant?.source?.exactMatch === true &&
+        variant?.capabilities?.scoreCountStress === true &&
+        typeof variant?.displayIpa === 'string' &&
+        variant.displayIpa.length > 0 &&
+        Number.isInteger(variant?.syllableCount) &&
+        variant.syllableCount > 0
+    );
+}
+
+export function getSelectableReferenceVariants(reference) {
+    const validated = validateReferenceV2(reference);
+    return validated.variants.filter(isSelectableVariant);
+}
+
 export function selectReferenceVariant(reference, variantId = null) {
-    validateReferenceV2(reference);
-    const selectedId = variantId || reference.defaultVariantId;
+    const validated = validateReferenceV2(reference);
+    const selectedId = variantId || validated.defaultVariantId;
     invariant(selectedId, 'no valid default variant');
-    const variant = reference.variants.find((item) => item.id === selectedId);
+    const variant = validated.variants.find((item) => item.id === selectedId);
     invariant(variant, 'unknown variant');
+    invariant(isSelectableVariant(variant), 'variant is not selectable');
     return variant;
 }
 

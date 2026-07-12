@@ -1,22 +1,49 @@
 // eslint-disable-next-line
 const assert = require('assert');
 const express = require('express');
+const fs = require('fs');
 const http = require('http');
+const path = require('path');
 const { chromium } = require('playwright');
 
 function harnessHtml() {
   return `<!doctype html>
-  <html><body>
+  <html><head>
+    <link rel="stylesheet" href="/pronunciation-analyzer/style.css">
+  </head><body>
     <button id="tab-pronounce" class="tab-btn">Pronounce</button>
     <div id="mode-pronounce" class="mode-panel" style="display:block">
       <button id="pa-record-btn">Record</button>
       <button id="pa-stop-btn" disabled>Stop</button>
       <div id="pa-status"></div><div id="pa-spinner"></div>
-      <input id="pa-word-input" value="car"><button id="pa-search-btn">Search</button>
-      <div id="pa-word-forms" class="hidden"></div>
-      <div id="pa-reference-status" aria-live="polite"></div>
-      <div id="pa-word-info">
-        <span id="pa-ipa-display"></span><span id="pa-pattern-display"></span>
+      <div class="pa-word-input-container">
+        <input id="pa-word-input" value="car"><button id="pa-search-btn">Search</button>
+        <div id="pa-word-forms" class="hidden"></div>
+        <div id="pa-reference-status" aria-live="polite"></div>
+        <div class="pa-merged-info-box">
+          <div id="pa-word-info" class="pa-word-info">
+            <div class="pa-ipa-summary">
+              <span class="pa-info-label">American IPA</span>
+              <span id="pa-ipa-display" class="pa-ipa-text"></span>
+            </div>
+            <div class="pa-pattern-summary">
+              <span class="pa-info-label">Stress pattern</span>
+              <div class="pa-pattern-facts" aria-hidden="true">
+                <span class="pa-pattern-fact pa-pattern-fact--count">
+                  <strong id="pa-syllable-count"></strong>
+                </span>
+                <span id="pa-primary-stress-fact" class="pa-pattern-fact pa-pattern-fact--primary">
+                  <span class="pa-pattern-fact-label">Primary stress</span><strong id="pa-primary-stress"></strong>
+                </span>
+                <span id="pa-secondary-stress-fact" class="pa-pattern-fact pa-pattern-fact--secondary">
+                  <span class="pa-pattern-fact-label">Secondary</span><strong id="pa-secondary-stress"></strong>
+                </span>
+              </div>
+              <div id="pa-syllable-strip" class="pa-syllable-strip" aria-hidden="true"></div>
+              <span id="pa-pattern-display" class="pa-sr-only"></span>
+            </div>
+          </div>
+        </div>
       </div>
       <div id="pa-loading-placeholder"></div>
       <div id="pa-native-audio-container"><audio id="pa-native-audio"></audio></div>
@@ -95,6 +122,7 @@ async function run() {
       count,
       stress,
       secondary = [],
+      labels = null,
       status = 'valid',
       audio = true,
       provider = 'merriam-webster'
@@ -108,7 +136,9 @@ async function run() {
         exactMatch: true,
         transcription: provider === 'cmu-pronouncing-dictionary'
           ? 'cmu-arpabet-converted'
-          : 'merriam-webster-ipa'
+          : 'merriam-webster-ipa',
+        dialect: 'en-US',
+        labels: []
       },
       rawIpa,
       displayIpa,
@@ -118,7 +148,7 @@ async function run() {
       syllables: Array.from({ length: count }, (_, index) => ({
         index,
         ipa: count === 1 ? displayIpa.replaceAll('/', '') : `s${index + 1}`,
-        label: null,
+        label: labels?.[index] || null,
         stress: index === stress ? 'primary' : (secondary.includes(index) ? 'secondary' : 'unstressed'),
         syllabicConsonant: false
       })),
@@ -139,6 +169,16 @@ async function run() {
       car: [variant({
         id: '1111111111111111', rawIpa: 'ˈkɑɚ', displayIpa: '/kɑr/', count: 1, stress: 0
       })],
+      photograph: [
+        variant({
+          id: '8888888888888888', rawIpa: 'ˈfoʊtəˌgræf', displayIpa: '/ˈfoʊtəˌɡræf/',
+          count: 3, stress: 0, secondary: [2], labels: ['pho', 'to', 'graph']
+        }),
+        variant({
+          id: '9999999999999999', pos: 'verb', rawIpa: null, displayIpa: null,
+          count: 0, stress: null, status: 'conflict', audio: false
+        })
+      ],
       conflict: [variant({
         id: '2222222222222222', rawIpa: 'ˈflaʊɚ', displayIpa: '/flaʊr/',
         count: 1, stress: 0, status: 'conflict'
@@ -180,7 +220,7 @@ async function run() {
         const defaultVariant = variants.find((item) => item.validation.status === 'valid');
         return jsonResponse({
           schemaVersion: 9,
-          algorithmVersion: 'pronunciation-reference-v2',
+          algorithmVersion: 'pronunciation-reference-v3',
           deploymentVersion: 'browser-fixture',
           word,
           dialect: 'en-US',
@@ -243,7 +283,7 @@ async function run() {
   try {
     await page.goto(`${origin}/pronounce-v2-harness`, { waitUntil: 'networkidle' });
     try {
-      await page.waitForFunction(() => document.querySelector('#pa-pattern-display')?.textContent.includes('single-syllable'));
+      await page.waitForFunction(() => document.querySelector('#pa-pattern-display')?.textContent.includes('Single-syllable'));
     } catch (error) {
       console.error('pronunciation harness boot diagnostics', {
         pageErrors,
@@ -255,6 +295,50 @@ async function run() {
     }
     assert.equal(await page.locator('#pa-ipa-display').textContent(), '/kɑr/');
     assert.equal(await page.locator('#pa-record-btn').isDisabled(), false);
+
+    await page.fill('#pa-word-input', 'photograph');
+    await page.click('#pa-search-btn');
+    await page.waitForFunction(() => document.querySelector('#pa-ipa-display')?.textContent === '/ˈfoʊtəˌɡræf/');
+    assert.equal(await page.locator('#pa-word-forms button').count(), 0);
+    assert.equal(await page.locator('#pa-word-forms').evaluate((node) => node.classList.contains('hidden')), true);
+    assert.equal(await page.locator('#pa-syllable-count').textContent(), '3 syllables');
+    assert.equal(await page.locator('#pa-primary-stress').textContent(), 'PHO');
+    assert.equal(await page.locator('#pa-secondary-stress').textContent(), 'GRAPH');
+    assert.deepEqual(
+      await page.locator('#pa-syllable-strip .pa-syllable').evaluateAll((nodes) => nodes.map((node) => ({
+        text: node.querySelector('.pa-syllable-label')?.textContent,
+        className: node.className
+      }))),
+      [
+        { text: 'PHO', className: 'pa-syllable pa-syllable--primary' },
+        { text: 'to', className: 'pa-syllable pa-syllable--unstressed' },
+        { text: 'GRAPH', className: 'pa-syllable pa-syllable--secondary' }
+      ]
+    );
+    assert.equal(
+      await page.locator('#pa-pattern-display').textContent(),
+      '3 syllables. Primary stress on PHO, syllable 1. Secondary stress on GRAPH, syllable 3.'
+    );
+    const screenshotDir = process.env.PRONOUNCE_SCREENSHOT_DIR;
+    if (screenshotDir) {
+      fs.mkdirSync(screenshotDir, { recursive: true });
+      await page.screenshot({
+        path: path.join(screenshotDir, 'pronunciation-reference-ux-desktop.png'),
+        fullPage: true
+      });
+    }
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(
+      await page.locator('#pa-word-info').evaluate((node) => node.scrollWidth <= node.clientWidth),
+      true
+    );
+    if (screenshotDir) {
+      await page.screenshot({
+        path: path.join(screenshotDir, 'pronunciation-reference-ux-mobile.png'),
+        fullPage: true
+      });
+    }
+    await page.setViewportSize({ width: 1280, height: 900 });
 
     const nativeAxes = await page.evaluate(() => {
       const chart = window.__charts.find((item) => item?.options?.scales?.y1);
@@ -292,9 +376,40 @@ async function run() {
     await page.fill('#pa-word-input', 'import');
     await page.click('#pa-search-btn');
     await page.waitForFunction(() => document.querySelectorAll('#pa-word-forms button').length === 2);
+    await page.evaluate(async () => {
+      const { bootPronunciationApp } = await import('/pronunciation-analyzer/main.js');
+      const app = bootPronunciationApp();
+      app.userAudioBlob = new Blob(['old attempt'], { type: 'audio/webm' });
+      app.syllableVerifier = {
+        destroy() { window.__oldVerifierDestroyed = true; }
+      };
+      document.querySelector('#syllable-verifier-container').textContent = 'Old learner attempt';
+    });
     await page.click('#pa-word-forms button[data-variant-id="4444444444444444"]');
     assert.equal(await page.locator('#pa-ipa-display').textContent(), '/ɪmˈpɔrt/');
-    assert.match(await page.locator('#pa-pattern-display').textContent(), /primary stress on 2/);
+    assert.match(await page.locator('#pa-pattern-display').textContent(), /Primary stress on s2, syllable 2/);
+    assert.equal(
+      await page.locator('#pa-word-forms button[data-variant-id="4444444444444444"]').getAttribute('aria-pressed'),
+      'true'
+    );
+    assert.deepEqual(
+      await page.evaluate(async () => {
+        const { bootPronunciationApp } = await import('/pronunciation-analyzer/main.js');
+        const app = bootPronunciationApp();
+        return {
+          verifierDestroyed: window.__oldVerifierDestroyed === true,
+          verifierCleared: app.syllableVerifier === null,
+          recordingCleared: app.userAudioBlob === null,
+          verifierDom: document.querySelector('#syllable-verifier-container').textContent
+        };
+      }),
+      {
+        verifierDestroyed: true,
+        verifierCleared: true,
+        recordingCleared: true,
+        verifierDom: ''
+      }
+    );
 
     const comparisonAxes = await page.evaluate(async () => {
       const { bootPronunciationApp } = await import('/pronunciation-analyzer/main.js');

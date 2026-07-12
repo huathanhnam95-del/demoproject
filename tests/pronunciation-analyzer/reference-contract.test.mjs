@@ -4,6 +4,7 @@ import {
     SCHEMA_VERSION,
     buildReferenceCacheKey,
     compressAnalysisV2,
+    getSelectableReferenceVariants,
     selectReferenceVariant,
     validateNativeAnalysisForVariant,
     validateReferenceV2
@@ -18,7 +19,9 @@ function validVariant(overrides = {}) {
             provider: 'merriam-webster',
             entryId: 'car:1',
             exactMatch: true,
-            transcription: 'merriam-webster-ipa'
+            transcription: 'merriam-webster-ipa',
+            dialect: 'en-US',
+            labels: []
         },
         rawIpa: 'ˈkɑɚ',
         displayIpa: '/kɑr/',
@@ -43,7 +46,7 @@ function validReference(overrides = {}) {
     const variant = validVariant();
     return {
         schemaVersion: 9,
-        algorithmVersion: 'pronunciation-reference-v2',
+        algorithmVersion: 'pronunciation-reference-v3',
         deploymentVersion: 'deadbeef',
         word: 'car',
         dialect: 'en-US',
@@ -54,10 +57,10 @@ function validReference(overrides = {}) {
 }
 
 assert.equal(SCHEMA_VERSION, 9);
-assert.equal(ALGORITHM_VERSION, 'pronunciation-reference-v2');
+assert.equal(ALGORITHM_VERSION, 'pronunciation-reference-v3');
 assert.equal(
     buildReferenceCacheKey(' Car '),
-    'pronunciation-reference-v2|9|en-US|car'
+    'pronunciation-reference-v3|9|en-US|car'
 );
 
 const reference = validateReferenceV2(validReference(), { expectedWord: 'car' });
@@ -69,7 +72,9 @@ const cmuFallback = validVariant({
         provider: 'cmu-pronouncing-dictionary',
         entryId: 'cmudict:car',
         exactMatch: true,
-        transcription: 'cmu-arpabet-converted'
+        transcription: 'cmu-arpabet-converted',
+        dialect: 'en-US',
+        labels: []
     },
     definition: null,
     audioUrl: null,
@@ -90,10 +95,47 @@ assert.throws(
 assert.throws(
     () => validateReferenceV2(validReference({
         variants: [validVariant({
-            source: { provider: 'merriam-webster', entryId: 'car:1', exactMatch: true }
+            source: {
+                provider: 'merriam-webster',
+                entryId: 'car:1',
+                exactMatch: true,
+                dialect: 'en-US',
+                labels: []
+            }
         })]
     })),
     /transcription/i
+);
+
+assert.throws(
+    () => validateReferenceV2(validReference({
+        variants: [validVariant({
+            source: {
+                provider: 'merriam-webster',
+                entryId: 'car:1',
+                exactMatch: true,
+                transcription: 'merriam-webster-ipa',
+                dialect: 'en-GB',
+                labels: ['British']
+            }
+        })]
+    })),
+    /source dialect/i
+);
+assert.throws(
+    () => validateReferenceV2(validReference({
+        variants: [validVariant({
+            source: {
+                provider: 'merriam-webster',
+                entryId: 'car:1',
+                exactMatch: true,
+                transcription: 'merriam-webster-ipa',
+                dialect: 'en-US',
+                labels: ['Australian']
+            }
+        })]
+    })),
+    /non-US source label/i
 );
 
 assert.throws(
@@ -204,5 +246,34 @@ const multi = validateReferenceV2(validReference({
 }), { expectedWord: 'import' });
 assert.equal(selectReferenceVariant(multi, secondVariant.id), secondVariant);
 assert.throws(() => selectReferenceVariant(multi, 'missing'), /unknown variant/i);
+
+const missingIpaVariant = validVariant({
+    id: 'aaaaaaaaaaaaaaaa',
+    partOfSpeech: 'verb',
+    rawIpa: null,
+    displayIpa: null,
+    syllableCount: 0,
+    primaryStress: null,
+    secondaryStress: [],
+    syllables: [],
+    audioUrl: null,
+    validation: {
+        status: 'conflict',
+        conflicts: ['MISSING_IPA'],
+        evidence: { phonologicalCount: 0, headwordCount: null, headwordCountExplicit: false }
+    },
+    capabilities: { playAudio: false, scoreCountStress: false, showNativeGraphs: false }
+});
+const referenceWithEvidenceOnlyVariant = validateReferenceV2(validReference({
+    variants: [variant, missingIpaVariant]
+}));
+assert.deepEqual(
+    getSelectableReferenceVariants(referenceWithEvidenceOnlyVariant).map((item) => item.id),
+    [variant.id]
+);
+assert.throws(
+    () => selectReferenceVariant(referenceWithEvidenceOnlyVariant, missingIpaVariant.id),
+    /not selectable/i
+);
 
 console.log('reference-contract tests passed');

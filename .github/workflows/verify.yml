@@ -31,6 +31,9 @@ jobs:
       - name: Run pronunciation lexical contract tests
         run: python -m unittest backend.test_pronunciation_reference -v
 
+      - name: Run pronunciation campaign validation logic tests
+        run: python -m unittest backend.test_pronunciation_audit -v
+
       - name: Run pronunciation frontend contract tests
         run: npm run test:pronounce:logic
 

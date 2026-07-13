@@ -23,8 +23,14 @@ function harnessHtml() {
         <div class="pa-merged-info-box">
           <div id="pa-word-info" class="pa-word-info">
             <div class="pa-ipa-summary">
-              <span class="pa-info-label">American IPA</span>
-              <span id="pa-ipa-display" class="pa-ipa-text"></span>
+              <div class="pa-ipa-label-val">
+                <span class="pa-info-label">American IPA</span>
+                <span id="pa-ipa-display" class="pa-ipa-text"></span>
+              </div>
+              <div id="pa-native-audio-container" class="pa-reference-audio" style="display: none;">
+                <button id="pa-play-native-btn" class="pa-btn-play-native" type="button">🔊 Listen</button>
+                <audio id="pa-native-audio" preload="none"></audio>
+              </div>
             </div>
             <div class="pa-pattern-summary">
               <span class="pa-info-label">Stress pattern</span>
@@ -46,10 +52,22 @@ function harnessHtml() {
         </div>
       </div>
       <div id="pa-loading-placeholder"></div>
-      <div id="pa-native-audio-container"><audio id="pa-native-audio"></audio></div>
       <div id="pa-results-summary"></div>
       <div id="pa-charts-container" class="pa-charts-grid">
-        <canvas id="pa-pitch-chart"></canvas><canvas id="pa-stress-chart"></canvas>
+        <div class="pa-chart-card">
+          <div class="pa-chart-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div class="pa-chart-title" style="margin: 0; text-align: left;">Prosody Comparison</div>
+            <div class="pa-chart-toggle-group" id="pa-chart-mode-toggle">
+              <button type="button" class="pa-chart-toggle-btn active" data-mode="pitch">Pitch</button>
+              <button type="button" class="pa-chart-toggle-btn" data-mode="intensity">Volume</button>
+            </div>
+          </div>
+          <canvas id="pa-pitch-chart"></canvas>
+        </div>
+        <div class="pa-chart-card">
+          <div class="pa-chart-title">Syllable Duration Comparison</div>
+          <canvas id="pa-stress-chart"></canvas>
+        </div>
       </div>
       <div id="pa-timeline-container"></div>
       <div id="syllable-verifier-container"></div>
@@ -420,13 +438,22 @@ async function run() {
       learner.pitch.values = [220, 240, 210];
       app.visualizer.drawComparisonPitchContour(learner, native, app.currentWordRef.syllables);
       const chart = window.__charts.at(-2);
+      const pitchTitle = chart.options.scales.y.title.text;
+      const pitchTooltip = chart.options.plugins.tooltip.callbacks.label({
+        dataset: chart.data.datasets[0],
+        raw: chart.data.datasets[0].data[0]
+      });
+
+      // Toggle to volume/intensity to get intensity title
+      const toggleGroup = document.getElementById('pa-chart-mode-toggle');
+      const volumeBtn = toggleGroup.querySelector('[data-mode="intensity"]');
+      volumeBtn.click();
+      const intensityTitle = window.__charts.at(-2).options.scales.y.title.text;
+
       return {
-        pitch: chart.options.scales.y.title.text,
-        intensity: chart.options.scales.y1.title.text,
-        tooltip: chart.options.plugins.tooltip.callbacks.label({
-          dataset: chart.data.datasets[0],
-          raw: chart.data.datasets[0].data[0]
-        })
+        pitch: pitchTitle,
+        intensity: intensityTitle,
+        tooltip: pitchTooltip
       };
     });
     assert.equal(comparisonAxes.pitch, 'Relative pitch (semitones from speaker median)');

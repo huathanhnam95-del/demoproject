@@ -63,23 +63,83 @@ function relativeIntensitySeries(analysis) {
     };
 }
 
+function alignAndTrimSeries(pitchPoints, intensityPoints) {
+    let firstVoicedTime = null;
+    let lastVoicedTime = null;
+
+    // Find first and last voiced timestamps in pitch
+    for (const pt of pitchPoints) {
+        if (pt.y !== null) {
+            if (firstVoicedTime === null) firstVoicedTime = pt.x;
+            lastVoicedTime = pt.x;
+        }
+    }
+
+    // Fallback to intensity if no voiced pitch detected
+    if (firstVoicedTime === null) {
+        for (const pt of intensityPoints) {
+            if (pt.y !== null) {
+                if (firstVoicedTime === null) firstVoicedTime = pt.x;
+                lastVoicedTime = pt.x;
+            }
+        }
+    }
+
+    // If still no voiced frames at all, fall back to first and last points
+    if (firstVoicedTime === null && pitchPoints.length > 0) {
+        firstVoicedTime = pitchPoints[0].x;
+        lastVoicedTime = pitchPoints[pitchPoints.length - 1].x;
+    } else if (firstVoicedTime === null && intensityPoints.length > 0) {
+        firstVoicedTime = intensityPoints[0].x;
+        lastVoicedTime = intensityPoints[intensityPoints.length - 1].x;
+    }
+
+    if (firstVoicedTime === null) return { pitch: [], intensity: [] };
+
+    // Define window with 0.1s padding
+    const startWindow = firstVoicedTime - 0.1;
+    const endWindow = lastVoicedTime + 0.1;
+
+    // Shift and filter pitch points
+    const trimmedPitch = pitchPoints
+        .filter(pt => pt.x >= startWindow && pt.x <= endWindow)
+        .map(pt => ({
+            ...pt,
+            x: Number((pt.x - firstVoicedTime).toFixed(4))
+        }));
+
+    // Shift and filter intensity points
+    const trimmedIntensity = intensityPoints
+        .filter(pt => pt.x >= startWindow && pt.x <= endWindow)
+        .map(pt => ({
+            ...pt,
+            x: Number((pt.x - firstVoicedTime).toFixed(4))
+        }));
+
+    return { pitch: trimmedPitch, intensity: trimmedIntensity };
+}
+
 export function buildComparisonChartData(nativeAnalysis, learnerAnalysis) {
     const nativePitch = relativePitchSeries(nativeAnalysis);
     const learnerPitch = relativePitchSeries(learnerAnalysis);
     const nativeIntensity = relativeIntensitySeries(nativeAnalysis);
     const learnerIntensity = relativeIntensitySeries(learnerAnalysis);
+
+    const nativeAligned = alignAndTrimSeries(nativePitch.points, nativeIntensity.points);
+    const learnerAligned = alignAndTrimSeries(learnerPitch.points, learnerIntensity.points);
+
     return {
         pitchAxisLabel: 'Relative pitch (semitones from speaker median)',
         intensityAxisLabel: 'Relative intensity (dB from voiced median)',
         native: {
-            pitch: nativePitch.points,
-            intensity: nativeIntensity.points,
+            pitch: nativeAligned.pitch,
+            intensity: nativeAligned.intensity,
             medianHz: nativePitch.medianHz,
             medianDb: nativeIntensity.medianDb
         },
         learner: {
-            pitch: learnerPitch.points,
-            intensity: learnerIntensity.points,
+            pitch: learnerAligned.pitch,
+            intensity: learnerAligned.intensity,
             medianHz: learnerPitch.medianHz,
             medianDb: learnerIntensity.medianDb
         }

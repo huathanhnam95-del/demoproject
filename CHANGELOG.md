@@ -1,3 +1,25 @@
+## [V1.8.22] - 2026-07-13
+
+### Added
+- **Pronunciation Reference Audit Campaign Tools**:
+  - Implemented deterministic pronunciation audit manifests with customizable cohort slicing.
+  - Added support for resumable pronunciation cohort auditing and aggregated metrics reporting.
+  - Added a Python-based CI verification script for reference audits.
+  - Documented audit results for a 3000-word campaign under `test-results/`.
+
+### Changed
+- **Pronunciation Analyzer UI Redesign**:
+  - Redesigned the Pronunciation Analyzer layout to be compact and streamlined.
+  - Combined American IPA display and the native audio listen button into a single line to save vertical space.
+  - Restructured the comparison graph cards: placed Prosody Comparison (Pitch/Volume toggle) and Syllable Duration Comparison into a clean side-by-side grid layout.
+  - Shifted chart toggle logic to support toggling between Pitch and Volume/Intensity dynamically on the same canvas.
+  - Adjusted the layout elements to align with the main container boundaries on the page without nested borders.
+
+### Fixed
+- **Read Aloud Check and Recorded State Transitions**:
+  - Remediated state transition bugs for Read Aloud modes.
+  - Rebuilt Read Aloud connected speech indices and updated database files.
+
 ## [V1.8.18] - 2026-07-03
 
 ### Changed

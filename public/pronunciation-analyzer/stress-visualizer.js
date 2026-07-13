@@ -122,6 +122,32 @@ class StressVisualizer {
         this.nativeAnalysis = null;
         this.timelineContainer = document.getElementById('pa-timeline-container');
         this.onPlaySyllable = onPlaySyllable;
+
+        this.comparisonChartMode = 'pitch'; // 'pitch' or 'intensity'
+        this.lastUserAnalysis = null;
+        this.lastNativeAnalysis = null;
+        this.lastReferenceSyllables = null;
+        this.initChartModeToggle();
+    }
+
+    initChartModeToggle() {
+        const container = document.getElementById('pa-chart-mode-toggle');
+        if (!container) return;
+        const buttons = container.querySelectorAll('.pa-chart-toggle-btn');
+        buttons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                buttons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.comparisonChartMode = btn.dataset.mode;
+                if (this.lastUserAnalysis && this.lastNativeAnalysis) {
+                    this.drawComparisonPitchContour(
+                        this.lastUserAnalysis,
+                        this.lastNativeAnalysis,
+                        this.lastReferenceSyllables
+                    );
+                }
+            });
+        });
     }
 
     clear() {
@@ -706,6 +732,10 @@ class StressVisualizer {
         nativeAnalysis = null,
         referenceSyllables = []
     ) {
+        this.lastUserAnalysis = userAnalysis;
+        this.lastNativeAnalysis = nativeAnalysis;
+        this.lastReferenceSyllables = referenceSyllables;
+
         if (!nativeAnalysis || !userAnalysis) {
             this.drawPitchContour(
                 userAnalysis?.pitch?.times || [],
@@ -727,16 +757,39 @@ class StressVisualizer {
             spanGaps: true,
             yAxisID: axis
         });
+
+        let datasets = [];
+        let yScales = {};
+
+        if (this.comparisonChartMode === 'pitch') {
+            datasets = [
+                dataset('Native relative pitch', chartData.native.pitch, 'rgb(34, 197, 94)', 'y', true),
+                dataset('Your relative pitch', chartData.learner.pitch, 'rgb(21, 128, 61)', 'y')
+            ];
+            yScales = {
+                x: { title: { display: true, text: 'Time (s)' } },
+                y: {
+                    position: 'left',
+                    title: { display: true, text: chartData.pitchAxisLabel }
+                }
+            };
+        } else {
+            datasets = [
+                dataset('Native relative intensity', chartData.native.intensity, 'rgb(244, 114, 182)', 'y', true),
+                dataset('Your relative intensity', chartData.learner.intensity, 'rgb(219, 39, 119)', 'y')
+            ];
+            yScales = {
+                x: { title: { display: true, text: 'Time (s)' } },
+                y: {
+                    position: 'left',
+                    title: { display: true, text: chartData.intensityAxisLabel }
+                }
+            };
+        }
+
         this.pitchChart = new Chart(this.pitchCanvas, {
             type: 'scatter',
-            data: {
-                datasets: [
-                    dataset('Native relative pitch', chartData.native.pitch, 'rgb(34, 197, 94)', 'y', true),
-                    dataset('Your relative pitch', chartData.learner.pitch, 'rgb(59, 130, 246)', 'y'),
-                    dataset('Native relative intensity', chartData.native.intensity, 'rgba(34, 197, 94, 0.45)', 'y1', true),
-                    dataset('Your relative intensity', chartData.learner.intensity, 'rgba(244, 114, 182, 0.7)', 'y1')
-                ]
-            },
+            data: { datasets },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
@@ -746,7 +799,7 @@ class StressVisualizer {
                         callbacks: {
                             label: (context) => {
                                 const point = context.raw;
-                                if (context.dataset.yAxisID === 'y') {
+                                if (this.comparisonChartMode === 'pitch') {
                                     return context.dataset.label + ': ' + formatRelativePitchTooltip(point);
                                 }
                                 if (point?.y === null) return context.dataset.label + ': no voiced intensity';
@@ -759,18 +812,7 @@ class StressVisualizer {
                         }
                     }
                 },
-                scales: {
-                    x: { title: { display: true, text: 'Time (s)' } },
-                    y: {
-                        position: 'left',
-                        title: { display: true, text: chartData.pitchAxisLabel }
-                    },
-                    y1: {
-                        position: 'right',
-                        title: { display: true, text: chartData.intensityAxisLabel },
-                        grid: { drawOnChartArea: false }
-                    }
-                }
+                scales: yScales
             }
         });
 

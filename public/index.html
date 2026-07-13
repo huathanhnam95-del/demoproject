@@ -201,7 +201,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.21</div>
+  <div id="version-indicator" class="version-indicator">V1.8.22</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -2092,8 +2092,17 @@
               <div class="pa-merged-info-box">
                 <div id="pa-word-info" class="pa-word-info">
                   <div class="pa-ipa-summary">
-                    <span class="pa-info-label">American IPA</span>
-                    <span id="pa-ipa-display" class="pa-ipa-text">/ˈfoʊtəˌɡræf/</span>
+                    <div class="pa-ipa-label-val">
+                      <span class="pa-info-label">American IPA</span>
+                      <span id="pa-ipa-display" class="pa-ipa-text">/ˈfoʊtəˌɡræf/</span>
+                    </div>
+                    <!-- Native Audio Player -->
+                    <div id="pa-native-audio-container" class="pa-reference-audio" style="display: none;">
+                      <button id="pa-play-native-btn" class="pa-btn-play-native" type="button" title="Listen to native speaker">
+                        🔊 Listen
+                      </button>
+                      <audio id="pa-native-audio" preload="none"></audio>
+                    </div>
                   </div>
                   <div class="pa-pattern-summary" aria-labelledby="pa-pattern-heading">
                     <span id="pa-pattern-heading" class="pa-info-label">Stress pattern</span>
@@ -2116,15 +2125,6 @@
                     </span>
                   </div>
                 </div>
-
-                <!-- Native Audio Player -->
-                <div id="pa-native-audio-container" class="pa-reference-audio" style="display: none;">
-                  <div class="pa-audio-info">
-                    <span class="pa-audio-icon">🔊</span>
-                    <span>Native Pronunciation:</span>
-                  </div>
-                  <audio id="pa-native-audio" controls preload="none"></audio>
-                </div>
               </div>
 
               <!-- Loading Placeholder -->
@@ -2143,7 +2143,13 @@
 
           <div id="pa-charts-container" class="pa-charts-grid">
             <div class="pa-chart-card">
-              <div class="pa-chart-title">Pitch & Volume</div>
+              <div class="pa-chart-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div class="pa-chart-title" style="margin: 0; text-align: left;">Prosody Comparison</div>
+                <div class="pa-chart-toggle-group" id="pa-chart-mode-toggle">
+                  <button type="button" class="pa-chart-toggle-btn active" data-mode="pitch">Pitch</button>
+                  <button type="button" class="pa-chart-toggle-btn" data-mode="intensity">Volume</button>
+                </div>
+              </div>
               <canvas id="pa-pitch-chart"></canvas>
             </div>
             <div class="pa-chart-card">
@@ -6186,7 +6192,7 @@
   <script src="/js/read-aloud-spoken-forms.js"></script>
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
-  <script src="/read-aloud-mode.js?v=1.8.21"></script>
+  <script src="/read-aloud-mode.js?v=1.8.22"></script>
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>

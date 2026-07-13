@@ -15,6 +15,8 @@ import sys
 import time
 
 import requests
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -156,6 +158,8 @@ def load_sampling_frame():
 
 
 def request_json(method, url, **kwargs):
+    if "verify" not in kwargs:
+        kwargs["verify"] = False
     last_error = None
     last_status = None
     for attempt in range(3):
@@ -249,7 +253,7 @@ def local_native_analysis(variant):
     import tempfile
     from backend.local_server.server import analyze_audio_v2
 
-    response = requests.get(variant["audioUrl"], timeout=45)
+    response = requests.get(variant["audioUrl"], timeout=45, verify=False)
     response.raise_for_status()
     suffix = Path(str(variant["audioUrl"])).suffix or ".mp3"
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as audio_file:
@@ -815,7 +819,7 @@ def run_cohort_audit(args, cmu):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--base-url", required=False)
+    parser.add_argument("--base-url", default=os.environ.get("PRONUNCIATION_AUDIT_BASE_URL"), required=False)
     parser.add_argument(
         "--source-mode",
         choices=("v2", "legacy-canonical"),

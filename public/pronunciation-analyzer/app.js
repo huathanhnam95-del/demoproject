@@ -160,6 +160,19 @@ export class PronunciationApp {
                 if (e.key === 'Enter') this.updateWordData();
             });
         }
+
+        // Native play button click
+        const playNativeBtn = document.getElementById('pa-play-native-btn');
+        if (playNativeBtn) {
+            playNativeBtn.addEventListener('click', () => {
+                if (this.nativeAudio) {
+                    this.nativeAudio.currentTime = 0;
+                    this.nativeAudio.play().catch((err) => {
+                        console.error('Error playing native audio:', err);
+                    });
+                }
+            });
+        }
     }
 
     async updateWordData() {
@@ -802,31 +815,31 @@ export class PronunciationApp {
 
         let html = `
             <div class="pa-comparison-result">
-                <div style="text-align: center; margin-bottom: 16px;">
-                    <div style="font-size: 2rem; font-weight: bold; color: ${scoreColor};">
+                <div class="pa-results-header">
+                    <div class="pa-results-score" style="color: ${scoreColor};">
                         ${scoreEmoji} ${comparison.overallScore}%
                     </div>
-                    <div style="color: #6b7280; font-size: 0.9rem;">Prosody Match Score</div>
+                    <div class="pa-results-score-label">Prosody Match Score</div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
-                    <div style="text-align: center; padding: 12px; background: #f1f5f9; border-radius: 8px;">
-                        <div style="font-weight: 600; color: #3b82f6;">${comparison.pitchScore}%</div>
-                        <div style="font-size: 0.8rem; color: #6b7280;">Pitch</div>
+                <div class="pa-results-metrics">
+                    <div class="pa-results-metric-card">
+                        <div class="pa-results-metric-val" style="color: #3b82f6;">${comparison.pitchScore}%</div>
+                        <div class="pa-results-metric-label">Pitch</div>
                     </div>
-                    <div style="text-align: center; padding: 12px; background: #f1f5f9; border-radius: 8px;">
-                        <div style="font-weight: 600; color: #8b5cf6;">${comparison.durationScore}%</div>
-                        <div style="font-size: 0.8rem; color: #6b7280;">Duration</div>
+                    <div class="pa-results-metric-card">
+                        <div class="pa-results-metric-val" style="color: #8b5cf6;">${comparison.durationScore}%</div>
+                        <div class="pa-results-metric-label">Duration</div>
                     </div>
-                    <div style="text-align: center; padding: 12px; background: #f1f5f9; border-radius: 8px;">
-                        <div style="font-weight: 600; color: #10b981;">${comparison.intensityScore}%</div>
-                        <div style="font-size: 0.8rem; color: #6b7280;">Volume</div>
+                    <div class="pa-results-metric-card">
+                        <div class="pa-results-metric-val" style="color: #10b981;">${comparison.intensityScore}%</div>
+                        <div class="pa-results-metric-label">Volume</div>
                     </div>
                 </div>
 
-                <div style="margin-bottom: 20px; padding: 16px; background: #f8fafc; border-radius: 12px; border: 1px solid #dbeafe;">
-                    <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 10px; color: #1e3a8a;">Quick Feedback</div>
-                    <div style="color: #334155; font-size: 0.92rem; line-height: 1.55;">
+                <div class="pa-results-callout pa-results-callout--feedback">
+                    <div class="pa-results-callout-title">Quick Feedback</div>
+                    <div class="pa-results-callout-body">
                         <div style="margin-bottom: 6px;">${quickFeedback.overview}</div>
                         ${quickFeedback.strongestLine ? `<div style="margin-bottom: 6px;"><strong>Keep:</strong> ${quickFeedback.strongestLine}</div>` : ''}
                         <div style="margin-bottom: 6px;"><strong>${comparison.stressMatches ? 'Stress:' : 'Stress check:'}</strong> ${quickFeedback.stressLine.replace(/^Stress:\s*/, '')}</div>
@@ -834,24 +847,24 @@ export class PronunciationApp {
                     </div>
                 </div>
 
-                <div style="margin-bottom: 20px; padding: 16px; background: #fff8e8; border-radius: 12px; border: 1px solid #fde68a;">
-                    <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 10px; color: #92400e;">Coach's Note</div>
-                    <div style="color: #7c2d12; font-size: 0.92rem; line-height: 1.6;">
+                <div class="pa-results-callout pa-results-callout--coach">
+                    <div class="pa-results-callout-title">Coach's Note</div>
+                    <div class="pa-results-callout-body">
                         ${quickFeedback.coachNote}
                     </div>
                 </div>
 
-                <div style="margin-bottom: 20px; padding: 16px; background: #f0f9ff; border-radius: 12px; border: 1px solid #bae6fd;">
-                    <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 12px; color: #0c4a6e;">🎤 Your Syllable Breakdown:</div>
+                <div class="pa-results-callout pa-results-callout--breakdown" style="padding-bottom: 20px;">
+                    <div class="pa-results-callout-title">🎤 Your Syllable Breakdown:</div>
                     <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                        <table class="pa-breakdown-table">
                             <thead>
-                                <tr style="background: #e0f2fe; color: #075985;">
-                                    <th style="padding: 8px 10px; text-align: left; border-bottom: 2px solid #7dd3fc;">Syllable</th>
-                                    <th style="padding: 8px 10px; text-align: center; border-bottom: 2px solid #7dd3fc;">Start</th>
-                                    <th style="padding: 8px 10px; text-align: center; border-bottom: 2px solid #7dd3fc;">Duration</th>
-                                    <th style="padding: 8px 10px; text-align: center; border-bottom: 2px solid #7dd3fc;">Pitch</th>
-                                    <th style="padding: 8px 10px; text-align: center; border-bottom: 2px solid #7dd3fc;">Energy</th>
+                                <tr>
+                                    <th>Syllable</th>
+                                    <th style="text-align: center;">Start</th>
+                                    <th style="text-align: center;">Duration</th>
+                                    <th style="text-align: center;">Pitch</th>
+                                    <th style="text-align: center;">Energy</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -863,12 +876,12 @@ export class PronunciationApp {
                                     const pitch = s.maxPitch > 0 ? Math.round(s.maxPitch) + ' Hz' : '<span style="color:#9ca3af">—</span>';
                                     const energy = (s.intensity || s.maxEnergy) > 0 ? (s.intensity || s.maxEnergy).toFixed(1) : '<span style="color:#9ca3af">—</span>';
                                     const stressBadge = isStressed ? ' <span style="background:#fbbf24;color:#78350f;font-size:0.7rem;padding:1px 5px;border-radius:4px;font-weight:600;">STRESS</span>' : '';
-                                    return `<tr style="border-bottom: 1px solid #e0f2fe;">
-                                        <td style="padding: 6px 10px; font-weight: 600; color: #1e40af;">${label}${stressBadge}</td>
-                                        <td style="padding: 6px 10px; text-align: center; color: #475569;">${startTime}</td>
-                                        <td style="padding: 6px 10px; text-align: center; color: #475569; font-weight: 500;">${duration}</td>
-                                        <td style="padding: 6px 10px; text-align: center; color: #3b82f6;">${pitch}</td>
-                                        <td style="padding: 6px 10px; text-align: center; color: #10b981;">${energy}</td>
+                                    return `<tr>
+                                        <td style="font-weight: 600;">${label}${stressBadge}</td>
+                                        <td style="text-align: center;">${startTime}</td>
+                                        <td style="text-align: center; font-weight: 500;">${duration}</td>
+                                        <td style="text-align: center;">${pitch}</td>
+                                        <td style="text-align: center;">${energy}</td>
                                     </tr>`;
                                 }).join('')}
                             </tbody>

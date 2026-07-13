@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {
     ALGORITHM_VERSION,
     SCHEMA_VERSION,
+    attachValidatedNativeAnalyses,
     buildReferenceCacheKey,
     compressAnalysisV2,
     getSelectableReferenceVariants,
@@ -226,6 +227,52 @@ assert.throws(
     }, variant),
     /count mismatch/i
 );
+
+const contourOnlyAnalysis = {
+    ...nativeAnalysis,
+    canonicalSyllableCount: 2,
+    quality: { rateable: false, confidence: 0, reasons: ['ACOUSTIC_COUNT_MISMATCH'] },
+    segmentation: {
+        rawCandidateCount: 1,
+        evidenceCandidateCount: 1,
+        selectedCount: 0,
+        method: 'insufficient-acoustic-candidates',
+        confidence: 0,
+        conflicts: ['ACOUSTIC_COUNT_MISMATCH']
+    },
+    observed: { syllableCount: 0, primaryStress: null, syllables: [] },
+    capabilities: { showNativeGraphs: true }
+};
+const contourVariant = validVariant({
+    syllableCount: 2,
+    primaryStress: 0,
+    syllables: [
+        { index: 0, ipa: 'foʊ', label: 'pho', stress: 'primary', syllabicConsonant: false },
+        { index: 1, ipa: 'toʊ', label: 'to', stress: 'unstressed', syllabicConsonant: false }
+    ]
+});
+assert.equal(
+    validateNativeAnalysisForVariant(contourOnlyAnalysis, contourVariant),
+    contourOnlyAnalysis
+);
+const contourReference = validReference({
+    word: 'photo',
+    defaultVariantId: contourVariant.id,
+    variants: [contourVariant]
+});
+const referenceWithContours = await attachValidatedNativeAnalyses(
+    contourReference,
+    async () => ({
+        ...contourOnlyAnalysis,
+        capabilities: { showNativeGraphs: false }
+    })
+);
+assert.deepEqual(
+    referenceWithContours.variants[0].nativeAnalysis.pitch,
+    contourOnlyAnalysis.pitch
+);
+assert.equal(referenceWithContours.variants[0].nativeAnalysis.capabilities.showNativeGraphs, true);
+assert.equal(referenceWithContours.variants[0].capabilities.showNativeGraphs, true);
 
 const secondVariant = validVariant({
     id: 'fedcba9876543210',

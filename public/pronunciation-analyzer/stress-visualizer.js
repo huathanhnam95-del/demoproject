@@ -145,6 +145,12 @@ class StressVisualizer {
                         this.lastNativeAnalysis,
                         this.lastReferenceSyllables
                     );
+                } else if (this.lastNativeAnalysis) {
+                    this.drawNativePitchContour(
+                        this.lastNativeAnalysis,
+                        this.lastAcousticSyllables || [],
+                        this.lastReferenceSyllables || []
+                    );
                 }
             });
         });
@@ -208,33 +214,67 @@ class StressVisualizer {
         // Determine if we are using dB scale (Praat) or RMS (0-1)
         const isDbScale = maxEnergy > 10;
 
+        const showPitch = this.comparisonChartMode === 'pitch';
+        const showIntensity = this.comparisonChartMode === 'intensity';
+
+        const datasets = [];
+        if (showPitch) {
+            datasets.push({
+                label: 'Pitch (Hz)',
+                data: slicedTimes.map((t, i) => ({ x: t, y: slicedPitches[i] })),
+                borderColor: 'rgb(54, 162, 235)',
+                yAxisID: 'y',
+                spanGaps: true,
+                tension: 0.4,
+                pointRadius: 0,
+                showLine: true
+            });
+        }
+        if (showIntensity) {
+            datasets.push({
+                label: isDbScale ? 'Intensity (dB)' : 'Energy (RMS)',
+                data: slicedTimes.map((t, i) => ({ x: t, y: slicedEnergies[i] })),
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgba(255, 99, 132, 0.5)',
+                fill: true,
+                yAxisID: 'y1',
+                pointRadius: 0,
+                borderWidth: 1,
+                showLine: true
+            });
+        }
+
+        const scales = {
+            x: {
+                title: { display: true, text: 'Time (s)' },
+                ticks: { maxTicksLimit: 8 }
+            }
+        };
+
+        if (showPitch) {
+            scales.y = {
+                type: 'linear',
+                display: true,
+                position: 'left',
+                beginAtZero: true,
+                suggestedMax: 350,
+                title: { display: true, text: 'Pitch (Hz)' }
+            };
+        }
+        if (showIntensity) {
+            scales.y1 = {
+                type: 'linear',
+                display: true,
+                position: 'left',
+                min: isDbScale ? 40 : 0,
+                max: isDbScale ? 100 : 1,
+                title: { display: true, text: isDbScale ? 'Intensity (dB)' : 'Energy' }
+            };
+        }
+
         this.pitchChart = new Chart(this.pitchCanvas, {
             type: 'scatter',
-            data: {
-                datasets: [
-                    {
-                        label: 'Pitch (Hz)',
-                        data: slicedTimes.map((t, i) => ({ x: t, y: slicedPitches[i] })),
-                        borderColor: 'rgb(54, 162, 235)',
-                        yAxisID: 'y',
-                        spanGaps: true,
-                        tension: 0.4,
-                        pointRadius: 0,
-                        showLine: true
-                    },
-                    {
-                        label: isDbScale ? 'Intensity (dB)' : 'Energy (RMS)',
-                        data: slicedTimes.map((t, i) => ({ x: t, y: slicedEnergies[i] })),
-                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                        borderColor: 'rgba(255, 99, 132, 0.5)',
-                        fill: true,
-                        yAxisID: 'y1', // Use secondary axis
-                        pointRadius: 0,
-                        borderWidth: 1,
-                        showLine: true
-                    }
-                ]
-            },
+            data: { datasets },
             plugins: [],
             options: {
                 responsive: true,
@@ -244,34 +284,10 @@ class StressVisualizer {
                     intersect: false,
                 },
                 plugins: {
-                    title: { display: true, text: 'Pitch & Intensity' },
+                    title: { display: true, text: showPitch ? 'Pitch Contour' : 'Intensity Contour' },
                     tooltip: { enabled: true }
                 },
-                scales: {
-                    x: {
-                        title: { display: true, text: 'Time (s)' },
-                        ticks: { maxTicksLimit: 8 }
-                    },
-                    y: {
-                        type: 'linear',
-                        display: true,
-                        position: 'left',
-                        beginAtZero: true,
-                        suggestedMax: 350,
-                        title: { display: true, text: 'Pitch (Hz)' }
-                    },
-                    y1: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        min: isDbScale ? 40 : 0,  // dB typically 40-100, RMS 0-1
-                        max: isDbScale ? 100 : 1,
-                        grid: {
-                            drawOnChartArea: false, // only want the grid lines for one axis to show up
-                        },
-                        title: { display: true, text: isDbScale ? 'Intensity (dB)' : 'Energy' }
-                    }
-                }
+                scales
             }
         });
     }
@@ -282,40 +298,61 @@ class StressVisualizer {
      */
     drawDurationChart(nativeSyllables, userSyllables) {
         if (this.stressChart) this.stressChart.destroy();
+        const durationCard = this.stressCanvas?.closest('.pa-chart-card');
+        if (durationCard) durationCard.hidden = false;
+        const hasUserSyllables = Array.isArray(userSyllables) && userSyllables.length > 0;
         const lanes = buildDurationLanes(nativeSyllables, userSyllables);
-        const labels = [
-            ...lanes.target.labels.map((label) => 'Target: ' + label),
-            ...lanes.observed.labels
-        ];
-        if (!labels.length) return;
-        const targetData = [
-            ...lanes.target.durations,
-            ...lanes.observed.durations.map(() => null)
-        ];
-        const observedData = [
-            ...lanes.target.durations.map(() => null),
-            ...lanes.observed.durations
-        ];
+
+        let labels = [];
+        let datasets = [];
+
+        if (hasUserSyllables) {
+            labels = [
+                ...lanes.target.labels.map((label) => 'Target: ' + label),
+                ...lanes.observed.labels
+            ];
+            const targetData = [
+                ...lanes.target.durations,
+                ...lanes.observed.durations.map(() => null)
+            ];
+            const observedData = [
+                ...lanes.target.durations.map(() => null),
+                ...lanes.observed.durations
+            ];
+            datasets = [
+                {
+                    label: 'Target duration',
+                    data: targetData,
+                    backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                    borderColor: 'rgb(34, 197, 94)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Observed duration',
+                    data: observedData,
+                    backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                    borderColor: 'rgb(59, 130, 246)',
+                    borderWidth: 1
+                }
+            ];
+        } else {
+            labels = lanes.target.labels;
+            datasets = [
+                {
+                    label: 'Target duration',
+                    data: lanes.target.durations,
+                    backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                    borderColor: 'rgb(34, 197, 94)',
+                    borderWidth: 1
+                }
+            ];
+        }
+
         this.stressChart = new Chart(this.stressCanvas, {
             type: 'bar',
             data: {
                 labels,
-                datasets: [
-                    {
-                        label: 'Target duration',
-                        data: targetData,
-                        backgroundColor: 'rgba(34, 197, 94, 0.8)',
-                        borderColor: 'rgb(34, 197, 94)',
-                        borderWidth: 1
-                    },
-                    {
-                        label: 'Observed duration',
-                        data: observedData,
-                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
-                        borderColor: 'rgb(59, 130, 246)',
-                        borderWidth: 1
-                    }
-                ]
+                datasets
             },
             options: {
                 indexAxis: 'y',
@@ -324,9 +361,9 @@ class StressVisualizer {
                 plugins: {
                     title: {
                         display: true,
-                        text: lanes.countsMatch
-                            ? 'Target and observed duration'
-                            : 'Target and observed counts differ'
+                        text: hasUserSyllables
+                            ? (lanes.countsMatch ? 'Target and observed duration' : 'Target and observed counts differ')
+                            : 'Target Syllable Durations'
                     },
                     tooltip: {
                         callbacks: {
@@ -547,38 +584,68 @@ class StressVisualizer {
      */
     drawNativePitchContour(nativeAnalysis, acousticSyllables = [], referenceSyllables = []) {
         if (!nativeAnalysis?.pitch) return;
-        this.nativeAnalysis = nativeAnalysis;
+        this.lastNativeAnalysis = nativeAnalysis;
+        this.lastAcousticSyllables = acousticSyllables;
+        this.lastReferenceSyllables = referenceSyllables;
+
         if (this.pitchChart) this.pitchChart.destroy();
         const chartData = buildNativeOnlyChartData(nativeAnalysis);
+
+        const showPitch = this.comparisonChartMode === 'pitch';
+        const showIntensity = this.comparisonChartMode === 'intensity';
+
+        const chartDatasets = [];
+        if (showPitch) {
+            chartDatasets.push({
+                label: 'Native pitch (Hz)',
+                data: chartData.pitch,
+                borderColor: 'rgb(34, 197, 94)',
+                pointRadius: 0,
+                showLine: true,
+                spanGaps: true,
+                yAxisID: 'y'
+            });
+        }
+        if (showIntensity) {
+            chartDatasets.push({
+                label: 'Native intensity (dB)',
+                data: chartData.intensity,
+                borderColor: 'rgba(244, 114, 182, 0.8)',
+                pointRadius: 0,
+                showLine: true,
+                spanGaps: true,
+                yAxisID: 'y1'
+            });
+        }
+
+        const chartScales = {
+            x: { title: { display: true, text: 'Time (s)' } }
+        };
+
+        if (showPitch) {
+            chartScales.y = {
+                position: 'left',
+                title: { display: true, text: chartData.pitchAxisLabel }
+            };
+        }
+        if (showIntensity) {
+            chartScales.y1 = {
+                position: 'left',
+                title: { display: true, text: chartData.intensityAxisLabel },
+                grid: { drawOnChartArea: true }
+            };
+        }
+
         this.pitchChart = new Chart(this.pitchCanvas, {
             type: 'scatter',
             data: {
-                datasets: [
-                    {
-                        label: 'Native pitch (Hz)',
-                        data: chartData.pitch,
-                        borderColor: 'rgb(34, 197, 94)',
-                        pointRadius: 0,
-                        showLine: true,
-                        spanGaps: true,
-                        yAxisID: 'y'
-                    },
-                    {
-                        label: 'Native intensity (dB)',
-                        data: chartData.intensity,
-                        borderColor: 'rgba(244, 114, 182, 0.8)',
-                        pointRadius: 0,
-                        showLine: true,
-                        spanGaps: true,
-                        yAxisID: 'y1'
-                    }
-                ]
+                datasets: chartDatasets
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    title: { display: true, text: 'Native pronunciation acoustics' },
+                    title: { display: true, text: showPitch ? 'Native pronunciation pitch contour' : 'Native pronunciation intensity contour' },
                     tooltip: {
                         callbacks: {
                             label: (context) => (
@@ -589,25 +656,24 @@ class StressVisualizer {
                         }
                     }
                 },
-                scales: {
-                    x: { title: { display: true, text: 'Time (s)' } },
-                    y: {
-                        position: 'left',
-                        title: { display: true, text: chartData.pitchAxisLabel }
-                    },
-                    y1: {
-                        position: 'right',
-                        title: { display: true, text: chartData.intensityAxisLabel },
-                        grid: { drawOnChartArea: false }
-                    }
-                }
+                scales: chartScales
             }
         });
+
         const targetDurations = acousticSyllables.map((syllable, index) => ({
             ...syllable,
             ipa: referenceSyllables[index]?.ipa || null
         }));
-        this.drawDurationChart(targetDurations, []);
+        if (targetDurations.length > 0) {
+            this.drawDurationChart(targetDurations, []);
+        } else {
+            if (this.stressChart) {
+                this.stressChart.destroy();
+                this.stressChart = null;
+            }
+            const durationCard = this.stressCanvas?.closest('.pa-chart-card');
+            if (durationCard) durationCard.hidden = true;
+        }
     }
 
     drawNativePitchContourLegacy(nativeAnalysis, syllables = []) {

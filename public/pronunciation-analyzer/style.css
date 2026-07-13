@@ -1,11 +1,11 @@
 /* Pronunciation Analyzer Styles */
 
 .pa-container {
-    background: white;
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    margin: 24px auto;
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    margin: 0 auto;
     max-width: 800px;
     width: 100%;
 }
@@ -112,10 +112,10 @@
 /* No longer split on larger screens - always full width */
 
 .pa-chart-card {
-    background: #f9fafb;
-    border-radius: 8px;
-    padding: 16px;
-    border: 1px solid #e5e7eb;
+    background: transparent;
+    border-radius: 0;
+    padding: 16px 0;
+    border: none;
     height: 400px;
     /* Increased height for better readability */
     position: relative;
@@ -143,6 +143,10 @@
     padding: 16px;
     border-radius: 8px;
     margin-top: 16px;
+}
+
+.pa-results:empty {
+    display: none !important;
 }
 
 .pa-spinner {
@@ -876,15 +880,15 @@
 /* Feedback Section Styles */
 .pa-feedback-section {
     margin-top: 24px;
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    overflow: hidden;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    overflow: visible;
 }
 
 .pa-feedback-header {
-    background: #f8fafc;
-    padding: 16px;
+    background: transparent;
+    padding: 16px 0;
     border-bottom: 1px solid #e5e7eb;
 }
 
@@ -925,7 +929,7 @@
 }
 
 .pa-feedback-content {
-    padding: 20px;
+    padding: 20px 0;
 }
 
 .pa-feedback-card {

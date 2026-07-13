@@ -1840,6 +1840,13 @@ def build_analysis_v2_response(raw_analysis, expected_syllable_count=None, nativ
         for key, value in segmentation.items()
         if key != 'selected'
     }
+    pitch_values = list((raw_analysis.get('pitch') or {}).get('values') or [])
+    intensity_values = list((raw_analysis.get('intensity') or {}).get('values') or [])
+    has_native_contours = bool(
+        native
+        and any(_finite_number(value) and float(value) > 0 for value in pitch_values)
+        and any(_finite_number(value) for value in intensity_values)
+    )
     return {
         'analysisVersion': 'pronunciation-analysis-v2',
         'quality': {
@@ -1859,15 +1866,20 @@ def build_analysis_v2_response(raw_analysis, expected_syllable_count=None, nativ
         'duration': raw_analysis.get('duration', 0),
         'sampleRate': raw_analysis.get('sampleRate'),
         'capabilities': {
-            'showNativeGraphs': bool(native and rateable),
+            'showNativeGraphs': has_native_contours,
         },
     }
 
 
 def analyze_audio_v2(audio_path, expected_syllable_count=None, native=False):
-    # Passing no expected count is the critical v2 invariant: candidate
-    # generation must be independent of the lexical target.
-    raw_analysis = analyze_audio(audio_path, expected_syllables=None)
+    # Native dictionary audio is aligned to its trusted canonical count so the
+    # reference can expose per-syllable timing. Learner analysis remains fully
+    # independent of the lexical target.
+    alignment_count = expected_syllable_count if native else None
+    raw_analysis = analyze_audio(
+        audio_path,
+        expected_syllables=alignment_count,
+    )
     return build_analysis_v2_response(
         raw_analysis,
         expected_syllable_count=expected_syllable_count,
@@ -2315,7 +2327,15 @@ def detect_syllables(sound, pitch, intensity, expected_syllables=None):
     
     # Adjust based on expected count (only if still needed)
     if expected_syllables and len(peaks) != expected_syllables:
-        peaks = adjust_peaks_to_expected(peaks, expected_syllables, int_times, int_values, speech_start, speech_end)
+        peaks = adjust_peaks_to_expected(
+            peaks,
+            expected_syllables,
+            int_times,
+            int_values,
+            speech_start,
+            speech_end,
+            pitch_obj=pitch,
+        )
     
     # Convert to syllables
     syllables = peaks_to_syllables(peaks, pitch, int_times, int_values, speech_start, speech_end, sound)
@@ -2442,8 +2462,17 @@ def find_intensity_peaks(times, values, threshold, start_idx, end_idx, pitch_obj
         
     return sorted(result, key=lambda x: x['time'])
 
-def adjust_peaks_to_expected(peaks, expected, times, values, speech_start, speech_end):
+def adjust_peaks_to_expected(
+    peaks,
+    expected,
+    times,
+    values,
+    speech_start,
+    speech_end,
+    pitch_obj=None,
+):
     """Adjust detected peaks to match expected syllable count."""
+    peaks = list(peaks)
     
     if len(peaks) == expected:
         return peaks
@@ -2465,31 +2494,74 @@ def adjust_peaks_to_expected(peaks, expected, times, values, speech_start, speec
         return sorted(selected, key=lambda p: p['time'])
     
     if len(peaks) < expected:
-        # Add evenly spaced points in gaps
+        speech_duration = max(0.0, speech_end - speech_start)
+        min_spacing = max(
+            AnalysisConfig.MIN_SYLLABLE_DURATION,
+            speech_duration / max(1, expected * 3),
+        )
+
+        # Add only acoustically supported nuclei. Prefer local intensity maxima
+        # near the center of the widest gap; if a reduced vowel has no local
+        # maximum, use the closest voiced positive-intensity frame.
         while len(peaks) < expected:
             all_times = [speech_start] + [p['time'] for p in peaks] + [speech_end]
             all_times.sort()
-            
-            max_gap = 0
-            gap_start, gap_end = speech_start, speech_end
-            
-            for i in range(len(all_times) - 1):
-                gap = all_times[i + 1] - all_times[i]
-                if gap > max_gap:
-                    max_gap = gap
-                    gap_start = all_times[i]
-                    gap_end = all_times[i + 1]
-            
-            mid_time = (gap_start + gap_end) / 2
-            mid_idx = int(np.argmin(np.abs(times - mid_time)))
-            
-            peaks.append({
-                'index': mid_idx,
-                'time': float(times[mid_idx]),
-                'intensity': float(values[mid_idx])
-            })
+            gaps = sorted(
+                (
+                    (all_times[index + 1] - all_times[index], all_times[index], all_times[index + 1])
+                    for index in range(len(all_times) - 1)
+                ),
+                reverse=True,
+            )
+            added_peak = None
+
+            for _, gap_start, gap_end in gaps:
+                candidate_indices = []
+                for index, time_value in enumerate(times):
+                    time_value = float(time_value)
+                    if not (gap_start + min_spacing <= time_value <= gap_end - min_spacing):
+                        continue
+                    if any(abs(time_value - float(peak['time'])) < min_spacing for peak in peaks):
+                        continue
+                    intensity_value = values[index]
+                    if not _finite_number(intensity_value) or float(intensity_value) <= 0:
+                        continue
+                    if pitch_obj is not None:
+                        pitch_value = pitch_obj.get_value_at_time(time_value)
+                        if not _finite_number(pitch_value) or float(pitch_value) <= 0:
+                            continue
+                    candidate_indices.append(index)
+
+                if not candidate_indices:
+                    continue
+
+                local_maxima = [
+                    index for index in candidate_indices
+                    if 0 < index < len(values) - 1
+                    and float(values[index]) >= float(values[index - 1])
+                    and float(values[index]) >= float(values[index + 1])
+                ]
+                pool = local_maxima or candidate_indices
+                midpoint = (gap_start + gap_end) / 2.0
+                selected_index = min(
+                    pool,
+                    key=lambda index: (
+                        abs(float(times[index]) - midpoint),
+                        -float(values[index]),
+                    ),
+                )
+                added_peak = {
+                    'index': selected_index,
+                    'time': float(times[selected_index]),
+                    'intensity': float(values[selected_index]),
+                }
+                peaks.append(added_peak)
+                break
+
+            if added_peak is None:
+                break
             peaks.sort(key=lambda p: p['time'])
-        
+
         return peaks
     
     return peaks

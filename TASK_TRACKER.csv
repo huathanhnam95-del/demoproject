@@ -376,4 +376,5 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 383,2026-07-12,Execute 3000-word pronunciation audit campaign,Done,2026-07-12
 384,2026-07-13,Redesign Pronunciation Analyzer UI layout to be compact and clean,Done,2026-07-13
 385,2026-07-13,Redesign Pronunciation Analyzer comparison graph alignment and colors,Done,2026-07-13
-386,2026-07-13,Merge and push all changes to production,In Progress,
+386,2026-07-13,Merge and push all changes to production,Done,2026-07-13
+387,2026-07-13,Fix Pronunciation Analyzer layout issues,Done,2026-07-13

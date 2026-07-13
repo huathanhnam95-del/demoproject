@@ -2,6 +2,8 @@ import io
 import unittest
 from unittest.mock import patch
 
+import numpy as np
+
 from backend.local_server import server
 
 
@@ -90,6 +92,84 @@ class PronunciationAlignmentV2Test(unittest.TestCase):
         self.assertEqual(result["selected"], [])
         self.assertIn("ACOUSTIC_COUNT_MISMATCH", result["conflicts"])
 
+    def test_native_v2_uses_canonical_count_for_acoustic_alignment(self):
+        def fake_analyze_audio(_path, expected_syllables=None):
+            count = expected_syllables or 3
+            syllables = [
+                candidate(0.12 + (index * 0.18), 72.0 + index, 0.9)["syllable"]
+                for index in range(count)
+            ]
+            return {
+                "duration": 0.9,
+                "sampleRate": 16000,
+                "pitch": {"times": [0.1, 0.3], "values": [150.0, 145.0]},
+                "intensity": {"times": [0.1, 0.3], "values": [70.0, 69.0]},
+                "syllables": syllables,
+            }
+
+        with patch.object(server, "analyze_audio", side_effect=fake_analyze_audio) as analyze:
+            result = server.analyze_audio_v2(
+                "native.mp3",
+                expected_syllable_count=4,
+                native=True,
+            )
+
+        analyze.assert_called_once_with("native.mp3", expected_syllables=4)
+        self.assertEqual(result["segmentation"]["selectedCount"], 4)
+        self.assertTrue(result["quality"]["rateable"])
+
+    def test_learner_v2_keeps_independent_detection(self):
+        raw = {
+            "duration": 0.4,
+            "sampleRate": 16000,
+            "pitch": {"times": [0.1], "values": [150.0]},
+            "intensity": {"times": [0.1], "values": [70.0]},
+            "syllables": [candidate(0.2, 72.0, 0.9)["syllable"]],
+        }
+        with patch.object(server, "analyze_audio", return_value=raw) as analyze:
+            server.analyze_audio_v2(
+                "learner.wav",
+                expected_syllable_count=4,
+                native=False,
+            )
+
+        analyze.assert_called_once_with("learner.wav", expected_syllables=None)
+
+    def test_expected_peak_alignment_uses_acoustic_maximum_in_gap(self):
+        times = np.arange(0.0, 1.01, 0.1)
+        values = np.array([0.0, 2.0, 8.0, 3.0, 1.0, 2.0, 9.0, 2.0, 7.0, 2.0, 0.0])
+        peaks = [
+            {"index": 2, "time": 0.2, "intensity": 8.0},
+            {"index": 8, "time": 0.8, "intensity": 7.0},
+        ]
+
+        aligned = server.adjust_peaks_to_expected(
+            peaks,
+            3,
+            times,
+            values,
+            speech_start=0.0,
+            speech_end=1.0,
+        )
+
+        self.assertEqual([round(item["time"], 1) for item in aligned], [0.2, 0.6, 0.8])
+
+    def test_expected_peak_alignment_does_not_invent_silence_peak(self):
+        times = np.arange(0.0, 1.01, 0.1)
+        peaks = [{"index": 2, "time": 0.2, "intensity": 8.0}]
+
+        aligned = server.adjust_peaks_to_expected(
+            peaks,
+            2,
+            times,
+            np.zeros_like(times),
+            speech_start=0.0,
+            speech_end=1.0,
+        )
+
+        self.assertEqual(len(aligned), 1)
+        self.assertEqual(aligned[0]["time"], 0.2)
+
     def test_candidates_require_voicing_and_finite_intensity_evidence(self):
         result = server.select_native_acoustic_candidates(
             [
@@ -103,7 +183,7 @@ class PronunciationAlignmentV2Test(unittest.TestCase):
         self.assertEqual(result["selectedCount"], 0)
         self.assertIn("ACOUSTIC_COUNT_MISMATCH", result["conflicts"])
 
-    def test_native_analysis_contract_hides_graphs_on_count_conflict(self):
+    def test_native_analysis_contract_keeps_raw_contours_on_count_conflict(self):
         raw = {
             "duration": 0.8,
             "sampleRate": 16000,
@@ -122,7 +202,7 @@ class PronunciationAlignmentV2Test(unittest.TestCase):
         self.assertEqual(result["analysisVersion"], "pronunciation-analysis-v2")
         self.assertFalse(result["quality"]["rateable"])
         self.assertIn("ACOUSTIC_COUNT_MISMATCH", result["quality"]["reasons"])
-        self.assertFalse(result["capabilities"]["showNativeGraphs"])
+        self.assertTrue(result["capabilities"]["showNativeGraphs"])
         self.assertEqual(result["segmentation"]["rawCandidateCount"], 2)
 
     def test_native_graphs_remain_available_when_count_is_valid_but_stress_is_uncertain(self):

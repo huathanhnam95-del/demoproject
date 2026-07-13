@@ -10,6 +10,19 @@ function harnessHtml() {
   return `<!doctype html>
   <html><head>
     <link rel="stylesheet" href="/pronunciation-analyzer/style.css">
+    <style>html, body { background: #fff; color: #111; }</style>
+    <script src="/vendor/chart.umd.js"></script>
+    <script>
+      window.__charts = window.__charts || [];
+      const BrowserHarnessChart = window.Chart;
+      window.Chart = class TrackedChart extends BrowserHarnessChart {
+        constructor(canvas, config) {
+          config.options = { ...config.options, animation: false };
+          super(canvas, config);
+          window.__charts.push(config);
+        }
+      };
+    </script>
   </head><body>
     <button id="tab-pronounce" class="tab-btn">Pronounce</button>
     <div id="mode-pronounce" class="mode-panel" style="display:block">
@@ -79,6 +92,9 @@ function harnessHtml() {
 
 function startServer() {
   const app = express();
+  app.get('/vendor/chart.umd.js', (_request, response) => {
+    response.sendFile(path.resolve('node_modules/chart.js/dist/chart.umd.js'));
+  });
   app.use(express.static('public'));
   app.get('/pronounce-v2-harness', (_request, response) => response.type('html').send(harnessHtml()));
   return new Promise((resolve) => {
@@ -97,16 +113,6 @@ async function run() {
 
   await context.addInitScript(() => {
     window.__charts = [];
-    window.Chart = class FakeChart {
-      constructor(_canvas, config) {
-        this.config = config;
-        this.data = config.data;
-        this.options = config.options;
-        window.__charts.push(config);
-      }
-      destroy() {}
-      update() {}
-    };
     window.Logger = { log() {}, warn() {}, error() {} };
     window.__FIREBASE_INTERNAL__ = { db: null };
 
@@ -197,6 +203,14 @@ async function run() {
           count: 0, stress: null, status: 'conflict', audio: false
         })
       ],
+      photography: [variant({
+        id: 'aaaaaaaaaaaaaaaa', rawIpa: 'fəˈtɑɡrəfi', displayIpa: '/fəˈtɑɡrəfi/',
+        count: 4, stress: 1, labels: ['pho', 'TOG', 'ra', 'phy']
+      })],
+      contouronly: [variant({
+        id: 'bbbbbbbbbbbbbbbb', rawIpa: 'kɑntʊr', displayIpa: '/kɑntʊr/',
+        count: 2, stress: 0, labels: ['CON', 'tour']
+      })],
       conflict: [variant({
         id: '2222222222222222', rawIpa: 'ˈflaʊɚ', displayIpa: '/flaʊr/',
         count: 1, stress: 0, status: 'conflict'
@@ -249,19 +263,27 @@ async function run() {
       if (url.includes('/analyze-url/v2')) {
         const request = JSON.parse(options.body);
         const count = request.expectedSyllableCount;
+        const contourOnly = request.variantId === 'bbbbbbbbbbbbbbbb';
+        const observedCount = contourOnly ? count - 1 : count;
         return jsonResponse({
           analysisVersion: 'pronunciation-analysis-v2',
           variantId: request.variantId,
           canonicalSyllableCount: count,
-          quality: { rateable: true, confidence: 0.92, reasons: [] },
+          quality: contourOnly
+            ? { rateable: false, confidence: 0, reasons: ['ACOUSTIC_COUNT_MISMATCH'] }
+            : { rateable: true, confidence: 0.92, reasons: [] },
           segmentation: {
-            rawCandidateCount: count, evidenceCandidateCount: count, selectedCount: count,
-            method: 'acoustic-candidate-selection', confidence: 0.92, conflicts: []
+            rawCandidateCount: observedCount,
+            evidenceCandidateCount: observedCount,
+            selectedCount: contourOnly ? 0 : observedCount,
+            method: contourOnly ? 'insufficient-acoustic-candidates' : 'acoustic-candidate-selection',
+            confidence: contourOnly ? 0 : 0.92,
+            conflicts: contourOnly ? ['ACOUSTIC_COUNT_MISMATCH'] : []
           },
           observed: {
-            syllableCount: count,
-            primaryStress: 0,
-            syllables: Array.from({ length: count }, (_, index) => ({
+            syllableCount: contourOnly ? 0 : observedCount,
+            primaryStress: contourOnly ? null : 0,
+            syllables: Array.from({ length: contourOnly ? 0 : observedCount }, (_, index) => ({
               startTime: index * 0.2,
               endTime: (index + 1) * 0.2,
               duration: 0.2,
@@ -275,7 +297,7 @@ async function run() {
           },
           pitch: { times: [0, 0.1, 0.2], values: [150, 160, 140] },
           intensity: { times: [0, 0.1, 0.2], values: [68, 72, 67] },
-          capabilities: { showNativeGraphs: true }
+          capabilities: { showNativeGraphs: !contourOnly }
         });
       }
       if (url.includes('/proxy-audio')) {
@@ -359,17 +381,69 @@ async function run() {
     await page.setViewportSize({ width: 1280, height: 900 });
 
     const nativeAxes = await page.evaluate(() => {
-      const chart = window.__charts.find((item) => item?.options?.scales?.y1);
+      // Find the chart from initial draw (pitch mode)
+      const chartPitch = window.__charts.find((item) => item?.options?.scales?.y && !item?.options?.scales?.y1);
+      if (!chartPitch) throw new Error('chartPitch not found');
+      const pitchTitle = chartPitch.options.scales.y.title.text;
+
+      // Click on Volume button
+      const toggleGroup = document.getElementById('pa-chart-mode-toggle');
+      const volumeBtn = toggleGroup.querySelector('[data-mode="intensity"]');
+      volumeBtn.click();
+
+      // Find the updated chart (intensity mode, which is second-to-last because duration is redrawn last)
+      const chartIntensity = window.__charts.at(-2);
+      if (!chartIntensity) throw new Error('chartIntensity not found');
+      const intensityTitle = chartIntensity.options.scales.y1.title.text;
+
+      // Click back to Pitch button
+      const pitchBtn = toggleGroup.querySelector('[data-mode="pitch"]');
+      pitchBtn.click();
+
       return {
-        pitch: chart.options.scales.y.title.text,
-        intensity: chart.options.scales.y1.title.text
+        pitch: pitchTitle,
+        intensity: intensityTitle
       };
     });
     assert.deepEqual(nativeAxes, { pitch: 'Pitch (Hz)', intensity: 'Intensity (dB)' });
 
+    await page.fill('#pa-word-input', 'photography');
+    await page.click('#pa-search-btn');
+    await page.waitForFunction(() => document.querySelector('#pa-ipa-display')?.textContent === '/fəˈtɑɡrəfi/');
+    assert.equal(
+      await page.locator('#pa-charts-container').evaluate((node) => node.classList.contains('hidden')),
+      false
+    );
+    assert.equal(
+      await page.locator('#pa-pitch-chart').evaluate((node) => node.closest('.pa-chart-card').hidden),
+      false
+    );
+    assert.equal(
+      await page.locator('#pa-stress-chart').evaluate((node) => node.closest('.pa-chart-card').hidden),
+      false
+    );
+    assert.deepEqual(
+      await page.evaluate(() => window.__charts.at(-1).data.datasets.map((dataset) => dataset.label)),
+      ['Target duration']
+    );
+    if (screenshotDir) {
+      await page.screenshot({
+        path: path.join(screenshotDir, 'pronunciation-fresh-word-duration.png'),
+        fullPage: true
+      });
+    }
+
+    await page.fill('#pa-word-input', 'contouronly');
+    await page.click('#pa-search-btn');
+    await page.waitForFunction(() => document.querySelector('#pa-ipa-display')?.textContent === '/kɑntʊr/');
+    assert.equal(
+      await page.locator('#pa-stress-chart').evaluate((node) => node.closest('.pa-chart-card').hidden),
+      true
+    );
+
     await page.fill('#pa-word-input', 'tunnel');
     await page.click('#pa-search-btn');
-    await page.waitForFunction(() => document.querySelector('#pa-pattern-display')?.textContent.includes('2 syllables'));
+    await page.waitForFunction(() => document.querySelector('#pa-ipa-display')?.textContent === '/ˈtʌnᵊl/');
     assert.equal(await page.locator('#pa-ipa-display').textContent(), '/ˈtʌnᵊl/');
 
     await page.fill('#pa-word-input', 'silent');

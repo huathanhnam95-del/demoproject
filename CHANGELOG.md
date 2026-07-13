@@ -1,6 +1,14 @@
-## [V1.8.22] - 2026-07-13
+## [V1.8.23] - 2026-07-13
 
-### Added
+### Fixed
+- **Pronunciation Analyzer UI Alignment & Bug Fixes**:
+  - Resolved native speaker chart toggle bug: Pitch/Volume selection toggles active datasets and axes instantly before recording.
+  - Hided the empty blue results summary container (`#pa-results-summary`) when empty to clean up the page.
+  - Handled target-only syllable durations gracefully when there is no user recording yet: displays target durations with simplified labels and hides count mismatch warnings.
+  - Eliminated "boxes inside boxes" styling, removing all gray/white borders, shadows, and paddings from intermediate layout containers.
+  - Resolved Playwright E2E browser checks regression and updated test assertions for toggles.
+
+## [V1.8.22] - 2026-07-13
 - **Pronunciation Reference Audit Campaign Tools**:
   - Implemented deterministic pronunciation audit manifests with customizable cohort slicing.
   - Added support for resumable pronunciation cohort auditing and aggregated metrics reporting.

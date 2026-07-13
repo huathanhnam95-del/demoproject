@@ -163,6 +163,24 @@ export function selectReferenceVariant(reference, variantId = null) {
     return variant;
 }
 
+export function hasUsableNativeContours(analysis) {
+    const hasUsableSeries = (series, isPitch = false) => {
+        const times = Array.isArray(series?.times) ? series.times : [];
+        const values = Array.isArray(series?.values) ? series.values : [];
+        return (
+            times.length > 0 &&
+            times.length === values.length &&
+            values.some((value) => (
+                Number.isFinite(value) && (!isPitch || value > 0)
+            ))
+        );
+    };
+    return (
+        hasUsableSeries(analysis?.pitch, true) &&
+        hasUsableSeries(analysis?.intensity)
+    );
+}
+
 export function validateNativeAnalysisForVariant(analysis, variant) {
     invariant(analysis && typeof analysis === 'object', 'native analysis is required');
     invariant(analysis.analysisVersion === ANALYSIS_VERSION, 'analysis version mismatch');
@@ -171,13 +189,16 @@ export function validateNativeAnalysisForVariant(analysis, variant) {
         analysis.canonicalSyllableCount === variant.syllableCount,
         'canonical count mismatch'
     );
-    invariant(
-        analysis.segmentation?.selectedCount === variant.syllableCount &&
-            analysis.observed?.syllableCount === variant.syllableCount &&
-            analysis.observed?.syllables?.length === variant.syllableCount,
-        'observed count mismatch'
-    );
-    invariant(analysis.quality?.rateable === true, 'native analysis is not rateable');
+    if (analysis.quality?.rateable === true) {
+        invariant(
+            analysis.segmentation?.selectedCount === variant.syllableCount &&
+                analysis.observed?.syllableCount === variant.syllableCount &&
+                analysis.observed?.syllables?.length === variant.syllableCount,
+            'observed count mismatch'
+        );
+    } else {
+        invariant(hasUsableNativeContours(analysis), 'native contours are unavailable');
+    }
     invariant(analysis.capabilities?.showNativeGraphs === true, 'native graphs are unavailable');
     return analysis;
 }
@@ -224,8 +245,21 @@ export async function attachValidatedNativeAnalyses(reference, analyzeVariant) {
             return variant;
         }
         try {
-            const analysis = await analyzeVariant(variant);
+            const sourceAnalysis = await analyzeVariant(variant);
+            const analysis = (
+                hasUsableNativeContours(sourceAnalysis) &&
+                sourceAnalysis?.capabilities?.showNativeGraphs !== true
+            )
+                ? {
+                    ...sourceAnalysis,
+                    capabilities: {
+                        ...sourceAnalysis.capabilities,
+                        showNativeGraphs: true
+                    }
+                }
+                : sourceAnalysis;
             variant.nativeAnalysis = validateNativeAnalysisForVariant(analysis, variant);
+            variant.capabilities.showNativeGraphs = analysis.capabilities.showNativeGraphs;
         } catch (error) {
             variant.nativeAnalysis = null;
             variant.capabilities.showNativeGraphs = false;

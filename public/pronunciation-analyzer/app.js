@@ -9,6 +9,7 @@ import { config } from './config.js';
 import { analyzeRecordedAttempt } from './analysis-pipeline.js';
 import {
     getSelectableReferenceVariants,
+    hasUsableNativeContours,
     selectReferenceVariant
 } from './reference-contract.js';
 import { buildLexicalFallbackFeedback, canShowDetailedFeedback } from './chart-data.js';
@@ -949,8 +950,9 @@ export class PronunciationApp {
         const canShowGraphs = (
             isValid &&
             wordRef.capabilities.showNativeGraphs &&
-            wordRef.nativeAnalysis?.quality?.rateable === true
+            hasUsableNativeContours(wordRef.nativeAnalysis)
         );
+        const contourOnly = canShowGraphs && wordRef.nativeAnalysis?.quality?.rateable !== true;
 
         this.expectedData = {
             ipa: wordRef.displayIpa || '',
@@ -966,7 +968,9 @@ export class PronunciationApp {
                 ? 'Pronunciation reference under review.'
                 : isCmuFallback
                     ? 'CMU pronunciation fallback · native audio and contour unavailable.'
-                    : '';
+                    : contourOnly
+                        ? 'Native pitch and volume shown. Syllable duration analysis is unavailable for this recording.'
+                        : '';
             this.referenceStatus.classList.toggle('pa-reference-status--conflict', !isValid);
         }
         this.recordBtn.disabled = !canScore;

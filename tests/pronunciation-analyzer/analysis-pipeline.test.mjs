@@ -357,3 +357,112 @@ await testPraatTrailingConsonantTailMergesIntoPreviousSyllable();
 await testLocalOnlyAnalysis();
 await testPraatV2ResponseUsesIndependentObservedSyllables();
 await testLearnerExtraSyllablesAreNotForcedToExpectedCount();
+
+// ═══════════════════════════════════════════════════════════════
+// Task 7: v3 integration and pending timer tests
+// ═══════════════════════════════════════════════════════════════
+
+async function testPendingTimerFiresAfterTwoSeconds() {
+    let pendingMessage = null;
+
+    // Use a real timer: the praatAnalyze takes 2500ms to resolve
+    const result = await analyzeRecordedAttempt({
+        audioBlob: blob,
+        preferPraat: true,
+        praatAnalyze: async () => {
+            await new Promise(resolve => setTimeout(resolve, 2500));
+            return {
+                syllables: [{ startTime: 0, endTime: 0.3 }],
+                quality: { rateable: true, reason: null, metrics: {} }
+            };
+        },
+        onPendingStatus: (msg) => {
+            pendingMessage = msg;
+        }
+    });
+
+    assert.equal(pendingMessage, 'Preparing speech analysis\u2026',
+        'pending timer should fire after 2 seconds');
+    assert.equal(result.engine, 'praat');
+}
+
+async function testPendingTimerClearedOnSuccess() {
+    let pendingMessage = null;
+
+    // praatAnalyze resolves instantly (< 2s), so timer should NOT fire
+    const result = await analyzeRecordedAttempt({
+        audioBlob: blob,
+        preferPraat: true,
+        praatAnalyze: async () => ({
+            syllables: [{ startTime: 0, endTime: 0.4 }],
+            quality: { rateable: true, reason: null, metrics: {} }
+        }),
+        onPendingStatus: (msg) => {
+            pendingMessage = msg;
+        }
+    });
+
+    // Wait a bit to ensure timer doesn't fire after success
+    await new Promise(resolve => setTimeout(resolve, 100));
+    assert.equal(pendingMessage, null,
+        'pending timer should not fire when analysis completes quickly');
+    assert.equal(result.engine, 'praat');
+}
+
+async function testPendingTimerClearedOnFailure() {
+    let pendingMessage = null;
+
+    const result = await analyzeRecordedAttempt({
+        audioBlob: blob,
+        preferPraat: true,
+        praatAnalyze: async () => {
+            throw new Error('backend exploded');
+        },
+        decodeBlob: async () => ({ id: 'buffer' }),
+        pitchAnalyze: () => ({ times: [0], pitches: [100], energies: [0.1] }),
+        detectSyllables: () => ({
+            syllables: [{ startTime: 0, endTime: 0.2 }],
+            quality: { rateable: true, reason: null, metrics: {} }
+        }),
+        onPendingStatus: (msg) => {
+            pendingMessage = msg;
+        }
+    });
+
+    // Wait a bit to ensure timer doesn't fire after failure
+    await new Promise(resolve => setTimeout(resolve, 100));
+    assert.equal(pendingMessage, null,
+        'pending timer should be cleared on failure path');
+    assert.equal(result.usedPraatFallback, true);
+}
+
+async function testV3ResponseShapeIsNormalized() {
+    const result = await analyzeRecordedAttempt({
+        audioBlob: blob,
+        preferPraat: true,
+        praatAnalyze: async () => ({
+            // V3 response shape
+            observed_syllables: [
+                { startTime: 0, endTime: 0.25, duration: 0.25 },
+                { startTime: 0.25, endTime: 0.5, duration: 0.25 }
+            ],
+            syllable_count: 2,
+            is_rateable: true,
+            quality_reason: null,
+            pitch: { times: [0, 0.1], values: [150, 160] },
+            intensity: { times: [0, 0.1], values: [70, 72] }
+        })
+    });
+
+    assert.equal(result.engine, 'praat');
+    assert.equal(result.syllables.length, 2, 'v3 observed_syllables should become syllables');
+    assert.equal(result.quality.rateable, true, 'v3 is_rateable should map to quality.rateable');
+    assert.equal(result.analysis.observed.syllableCount, 2, 'v3 syllable_count should be in observed');
+}
+
+await testPendingTimerFiresAfterTwoSeconds();
+await testPendingTimerClearedOnSuccess();
+await testPendingTimerClearedOnFailure();
+await testV3ResponseShapeIsNormalized();
+
+console.log('analysis-pipeline tests passed');

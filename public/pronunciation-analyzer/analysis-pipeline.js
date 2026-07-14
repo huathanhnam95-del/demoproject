@@ -261,6 +261,40 @@ function normalizePraatAnalysis(analysis) {
     };
 }
 
+/**
+ * Normalize a v3 analysis response into the internal v2-compatible shape.
+ * The v3 backend returns observed_syllables, syllable_count, is_rateable,
+ * and quality_reason at the top level.
+ */
+function normalizeV3Response(v3) {
+    if (!v3 || typeof v3 !== 'object') return v3;
+
+    // Detect v3 shape by presence of observed_syllables
+    if (!Array.isArray(v3.observed_syllables)) return v3;
+
+    const syllables = v3.observed_syllables;
+    const syllableCount = v3.syllable_count ?? syllables.length;
+    const isRateable = v3.is_rateable !== false;
+    const qualityReason = v3.quality_reason || null;
+
+    return {
+        ...v3,
+        observed: {
+            syllableCount,
+            syllables,
+            ...(v3.observed || {})
+        },
+        syllables,
+        quality: {
+            rateable: isRateable,
+            reason: isRateable ? null : (qualityReason || 'no_speech'),
+            reasons: qualityReason ? [qualityReason] : [],
+            metrics: v3.quality?.metrics || {},
+            ...(v3.quality || {})
+        }
+    };
+}
+
 export async function analyzeRecordedAttempt({
     audioBlob,
     expectedSyllables = null,
@@ -268,7 +302,8 @@ export async function analyzeRecordedAttempt({
     praatAnalyze,
     decodeBlob,
     pitchAnalyze,
-    detectSyllables
+    detectSyllables,
+    onPendingStatus
 }) {
     if (!audioBlob) {
         return {
@@ -292,9 +327,19 @@ export async function analyzeRecordedAttempt({
         };
     }
 
+    // Start a 2-second pending timer if callback provided
+    let pendingTimer = null;
+    if (typeof onPendingStatus === 'function') {
+        pendingTimer = setTimeout(() => {
+            onPendingStatus('Preparing speech analysis\u2026');
+        }, 2000);
+    }
+
     if (preferPraat && typeof praatAnalyze === 'function') {
         try {
-            const praatAnalysis = normalizePraatAnalysis(await praatAnalyze(audioBlob));
+            const rawPraatAnalysis = await praatAnalyze(audioBlob);
+            const v3Normalized = normalizeV3Response(rawPraatAnalysis);
+            const praatAnalysis = normalizePraatAnalysis(v3Normalized);
             const repairedAnalysis = repairPraatSyllableBoundaries(praatAnalysis);
             const analysis = collapseTrailingConsonantTail(repairedAnalysis);
             const syllables = Array.isArray(analysis?.syllables) ? analysis.syllables : [];
@@ -309,6 +354,7 @@ export async function analyzeRecordedAttempt({
                 }
             };
 
+            if (pendingTimer) clearTimeout(pendingTimer);
             return {
                 engine: 'praat',
                 usedPraatFallback: false,
@@ -320,6 +366,7 @@ export async function analyzeRecordedAttempt({
                 quality
             };
         } catch (error) {
+            if (pendingTimer) clearTimeout(pendingTimer);
             const localResult = await analyzeLocalAttempt({
                 audioBlob,
                 decodeBlob,
@@ -336,6 +383,7 @@ export async function analyzeRecordedAttempt({
         }
     }
 
+    if (pendingTimer) clearTimeout(pendingTimer);
     return analyzeLocalAttempt({
         audioBlob,
         decodeBlob,

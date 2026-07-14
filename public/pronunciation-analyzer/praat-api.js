@@ -7,18 +7,86 @@ import { config } from './config.js';
 export class PraatAPI {
     constructor(backendUrl = null) {
         this.backendUrl = backendUrl || config.backendUrl;
+        /** @type {Promise<string|null>|null} Cached v3 support check */
+        this._v3SupportPromise = null;
     }
 
     // detectBackendUrl removed - using config.js source of truth
 
-    async analyze(audioBlob) {
-        // Convert to WAV if needed
-        const wavBlob = await this.ensureWav(audioBlob);
+    /**
+     * Check whether the backend supports v3 pronunciation analysis.
+     * The result is cached for the lifetime of this PraatAPI instance.
+     * @returns {Promise<string|null>} The v3 mode string ('active', 'shadow', 'off') or null on error.
+     */
+    async checkV3Support() {
+        if (this._v3SupportPromise) return this._v3SupportPromise;
+        this._v3SupportPromise = (async () => {
+            try {
+                const response = await fetch(`${this.backendUrl}/health`, {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                if (!response.ok) return null;
+                const data = await response.json();
+                return data.pronunciationV3Mode || null;
+            } catch {
+                return null;
+            }
+        })();
+        return this._v3SupportPromise;
+    }
 
-        // Prepare form data
+    /**
+     * Call the v3 analysis endpoint.
+     * @param {Blob} audioBlob
+     * @param {{ referenceIpa?: string, expectedSyllables?: number }} options
+     * @returns {Promise<object>} v3 analysis response
+     */
+    async analyzeV3(audioBlob, { referenceIpa, expectedSyllables } = {}) {
+        const wavBlob = await this.ensureWav(audioBlob);
         const formData = new FormData();
         formData.append('audio', wavBlob, 'recording.wav');
-        // Send to backend
+        if (referenceIpa) {
+            formData.append('reference_ipa', String(referenceIpa));
+        }
+        if (Number.isInteger(expectedSyllables) && expectedSyllables > 0) {
+            formData.append('expected_syllables', String(expectedSyllables));
+        }
+
+        const response = await fetch(`${this.backendUrl}/analyze/v3`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({ error: 'Analysis failed' }));
+            throw new Error(error.error || 'Analysis failed');
+        }
+
+        return response.json();
+    }
+
+    async analyze(audioBlob, expectedSyllableCount = null) {
+        // Check v3 support; delegate if active
+        try {
+            const v3Mode = await this.checkV3Support();
+            if (v3Mode === 'active') {
+                return this.analyzeV3(audioBlob, {
+                    expectedSyllables: expectedSyllableCount
+                });
+            }
+        } catch {
+            // Fall through to v2
+        }
+
+        // V2 path (original)
+        const wavBlob = await this.ensureWav(audioBlob);
+
+        const formData = new FormData();
+        formData.append('audio', wavBlob, 'recording.wav');
+        if (Number.isInteger(expectedSyllableCount) && expectedSyllableCount > 0) {
+            formData.append('expected_syllables', String(expectedSyllableCount));
+        }
         const response = await fetch(`${this.backendUrl}/analyze/v2`, {
             method: 'POST',
             body: formData

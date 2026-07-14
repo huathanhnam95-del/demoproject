@@ -163,7 +163,7 @@ class SyllableVerifier {
             return `Play ${ordinal} Syl`;
         });
         // Generate ordinal labels: "Play 1st Syl", "Play 2nd Syl", etc.
-        this.syllableLabels = Array.isArray(labels)
+        this.syllableLabels = Array.isArray(labels) && labels.length === syllables.length
             ? syllables.map((_, i) => labels[i] || fallbackLabels[i])
             : fallbackLabels;
 
@@ -253,6 +253,37 @@ class SyllableVerifier {
         });
     }
 
+    /**
+     * Format the display duration for a syllable.
+     * Shows total duration when finite, otherwise vowel duration, or '—'.
+     */
+    formatSyllableDuration(syl) {
+        const total = Number(syl?.duration);
+        if (Number.isFinite(total) && total > 0) return `${total.toFixed(2)}s`;
+        const totalCalc = Number(syl?.endTime) - Number(syl?.startTime);
+        if (Number.isFinite(totalCalc) && totalCalc > 0) return `${totalCalc.toFixed(2)}s`;
+        const vowel = Number(syl?.vowelDuration);
+        if (Number.isFinite(vowel) && vowel > 0) return `${vowel.toFixed(2)}s`;
+        return '\u2014';
+    }
+
+    /**
+     * Resolve the display label for a syllable.
+     * Uses target labels for aligned matches; labels inserted or unresolved
+     * regions as 'Observed 1', 'Observed 2', etc.
+     */
+    resolveSyllableLabel(syl, index) {
+        // If the syllable has an alignment type indicating insertion or unresolved,
+        // use 'Observed N' numbering.
+        const alignType = syl?.alignmentType || syl?.alignment_type;
+        if (alignType === 'insertion' || alignType === 'unresolved') {
+            const observedIndex = (syl?.observedIndex ?? index) + 1;
+            return `Observed ${observedIndex}`;
+        }
+        // Use the provided label array for aligned (matched) syllables
+        return this.syllableLabels[index] || `Observed ${index + 1}`;
+    }
+
     createSyllableBar() {
         const bar = document.getElementById('sv-syllable-bar');
         if (!bar || !this.wavesurfer) return;
@@ -269,12 +300,17 @@ class SyllableVerifier {
             const label = document.createElement('div');
             label.className = 'sv-syllable-label';
             label.style.left = `${startPct}%`;
-            label.style.width = `${Math.max(widthPct, 5)}%`; // Minimum 5% width for visibility
+            label.style.width = `${Math.max(widthPct, 5)}%`;
+            label.style.maxWidth = `${Math.max(widthPct, 5)}%`;
+            label.style.overflow = 'hidden';
             label.dataset.index = index;
 
+            const displayLabel = this.resolveSyllableLabel(syl, index);
+            const displayDuration = this.formatSyllableDuration(syl);
+
             label.innerHTML = `
-                <span class="sv-syl-text">${this.syllableLabels[index]}</span>
-                <span class="sv-syl-duration">${syl.duration.toFixed(2)}s</span>
+                <span class="sv-syl-text" style="max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${displayLabel}</span>
+                <span class="sv-syl-duration">${displayDuration}</span>
             `;
 
             label.addEventListener('click', () => {
@@ -588,6 +624,40 @@ class SyllableVerifier {
         const s = ['th', 'st', 'nd', 'rd'];
         const v = n % 100;
         return n + (s[(v - 20) % 10] || s[v] || s[0]);
+    }
+
+    // ============================================
+    // V3 FEEDBACK MESSAGES
+    // ============================================
+
+    /**
+     * Build a human-readable feedback message for v3 alignment issues.
+     * @param {{ type: string, syllableIndex?: number, confidence?: number }} issue
+     * @returns {string}
+     */
+    static buildV3FeedbackMessage(issue) {
+        if (!issue || typeof issue !== 'object') {
+            return 'Speech analysis is temporarily unavailable; try again.';
+        }
+
+        switch (issue.type) {
+            case 'deletion': {
+                const ordinal = SyllableVerifier.prototype.getOrdinal(
+                    (issue.syllableIndex ?? 1) + 1
+                );
+                return `The ${ordinal} target syllable was not detected.`;
+            }
+            case 'insertion': {
+                const afterIndex = issue.syllableIndex ?? 1;
+                return `An extra vowel beat was detected after syllable ${afterIndex + 1}.`;
+            }
+            case 'low_confidence':
+                return 'The syllable count is uncertain; try again more clearly.';
+            case 'service_error':
+                return 'Speech analysis is temporarily unavailable; try again.';
+            default:
+                return 'Speech analysis is temporarily unavailable; try again.';
+        }
     }
 
     destroy() {

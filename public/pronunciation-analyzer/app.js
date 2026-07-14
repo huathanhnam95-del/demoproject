@@ -81,6 +81,9 @@ export class PronunciationApp {
         // Check if Praat backend is available
         this.checkPraatBackend();
 
+        // Initialize v3 support check (fire-and-forget, caches the result)
+        this.praatAPI.checkV3Support().catch(() => {});
+
         // Initial fetch for default word
         this.updateWordData();
     }
@@ -366,10 +369,15 @@ export class PronunciationApp {
                     audioBlob,
                     expectedSyllables: expectedCount,
                     preferPraat: this.usePraatBackend,
-                    praatAnalyze: (blob) => this.praatAPI.analyze(blob),
+                    praatAnalyze: (blob) => this.praatAPI.analyze(blob, expectedCount),
                     decodeBlob: (blob) => this.audioCapture.blobToAudioBuffer(blob),
                     pitchAnalyze: (audioBuffer) => this.pitchAnalyzer.analyze(audioBuffer),
-                    detectSyllables: (analysisData) => this.syllableDetector.detect(analysisData)
+                    detectSyllables: (analysisData) => this.syllableDetector.detect(analysisData),
+                    onPendingStatus: (message) => {
+                        if (this.statusIndicator) {
+                            this.statusIndicator.textContent = message;
+                        }
+                    }
                 });
 
                 if (!result.quality?.rateable) {

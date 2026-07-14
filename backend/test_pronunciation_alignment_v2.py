@@ -118,7 +118,7 @@ class PronunciationAlignmentV2Test(unittest.TestCase):
         self.assertEqual(result["segmentation"]["selectedCount"], 4)
         self.assertTrue(result["quality"]["rateable"])
 
-    def test_learner_v2_keeps_independent_detection(self):
+    def test_learner_v2_uses_target_as_non_forcing_acoustic_hint(self):
         raw = {
             "duration": 0.4,
             "sampleRate": 16000,
@@ -133,7 +133,213 @@ class PronunciationAlignmentV2Test(unittest.TestCase):
                 native=False,
             )
 
-        analyze.assert_called_once_with("learner.wav", expected_syllables=None)
+        analyze.assert_called_once_with(
+            "learner.wav",
+            expected_syllables=4,
+            allow_expected_adjustment=False,
+        )
+
+    def test_independent_detection_retries_weak_syllable_thresholds(self):
+        times = np.arange(0.0, 0.61, 0.01)
+        values = np.full(times.shape, 65.0)
+
+        class FakeIntensity:
+            def xs(self):
+                return times
+
+            def get_value(self, time_value):
+                index = int(np.argmin(np.abs(times - time_value)))
+                return values[index]
+
+        class FakePitch:
+            @staticmethod
+            def get_value_at_time(_time_value):
+                return 150.0
+
+        one_peak = [{"index": 20, "time": 0.20, "intensity": 72.0}]
+        two_peaks = [
+            {"index": 20, "time": 0.20, "intensity": 72.0},
+            {"index": 42, "time": 0.42, "intensity": 68.0},
+        ]
+
+        with patch.object(
+            server,
+            "find_intensity_peaks",
+            side_effect=[one_peak, two_peaks, two_peaks],
+        ) as find_peaks, patch.object(
+            server,
+            "peaks_to_syllables",
+            side_effect=lambda peaks, *_args: list(peaks),
+        ):
+            result = server.detect_syllables(
+                object(),
+                FakePitch(),
+                FakeIntensity(),
+                expected_syllables=None,
+            )
+
+        self.assertEqual(find_peaks.call_count, 3)
+        self.assertEqual(len(result), 2)
+
+    def test_learner_hint_uses_shallow_dip_pass_for_smooth_second_vowel(self):
+        times = np.arange(0.0, 0.61, 0.01)
+        values = np.full(times.shape, 65.0)
+
+        class FakeIntensity:
+            def xs(self):
+                return times
+
+            def get_value(self, time_value):
+                return values[int(np.argmin(np.abs(times - time_value)))]
+
+        class FakePitch:
+            @staticmethod
+            def get_value_at_time(_time_value):
+                return 150.0
+
+        one_peak = [{"index": 20, "time": 0.20, "intensity": 72.0}]
+        two_peaks = [
+            {"index": 20, "time": 0.20, "intensity": 72.0},
+            {"index": 42, "time": 0.42, "intensity": 69.0},
+        ]
+        with patch.object(
+            server,
+            "find_intensity_peaks",
+            side_effect=[one_peak, one_peak, one_peak, two_peaks],
+        ) as find_peaks, patch.object(
+            server,
+            "peaks_to_syllables",
+            side_effect=lambda peaks, *_args: list(peaks),
+        ):
+            result = server.detect_syllables(
+                object(),
+                FakePitch(),
+                FakeIntensity(),
+                expected_syllables=2,
+                allow_expected_adjustment=False,
+            )
+
+        self.assertEqual(find_peaks.call_count, 4)
+        self.assertEqual(len(result), 2)
+
+    def test_weak_onset_noise_is_removed_without_a_target_count(self):
+        times = np.arange(0.0, 0.61, 0.01)
+        values = np.full(times.shape, 55.0)
+        for center, height in ((0.13, 64.0), (0.23, 80.0), (0.42, 76.0)):
+            index = int(round(center / 0.01))
+            values[index - 2:index + 3] = [56.0, height - 3.0, height, height - 3.0, 56.0]
+
+        class FakePitch:
+            @staticmethod
+            def get_value_at_time(_time_value):
+                return 150.0
+
+        peaks = server.find_intensity_peaks(
+            times,
+            values,
+            threshold=60.0,
+            start_idx=10,
+            end_idx=55,
+            pitch_obj=FakePitch(),
+            min_dip=1.5,
+        )
+
+        self.assertEqual(
+            [round(item["time"], 2) for item in peaks],
+            [0.23, 0.42],
+        )
+
+    def test_weak_edge_nucleus_far_from_neighbor_is_preserved(self):
+        times = np.arange(0.0, 0.61, 0.01)
+        values = np.full(times.shape, 55.0)
+        for center, height in ((0.20, 80.0), (0.50, 70.0)):
+            index = int(round(center / 0.01))
+            values[index - 2:index + 3] = [56.0, height - 3.0, height, height - 3.0, 56.0]
+
+        class FakePitch:
+            @staticmethod
+            def get_value_at_time(_time_value):
+                return 150.0
+
+        peaks = server.find_intensity_peaks(
+            times,
+            values,
+            threshold=60.0,
+            start_idx=10,
+            end_idx=55,
+            pitch_obj=FakePitch(),
+            min_dip=1.5,
+        )
+
+        self.assertEqual(
+            [round(item["time"], 2) for item in peaks],
+            [0.20, 0.50],
+        )
+
+    def test_learner_hint_preserves_weaker_interior_extra_nucleus(self):
+        peaks = [
+            {"index": 15, "time": 0.15, "intensity": 80.0},
+            {"index": 35, "time": 0.35, "intensity": 65.0},
+            {"index": 58, "time": 0.58, "intensity": 76.0},
+        ]
+
+        times = np.arange(0.0, 0.61, 0.01)
+        values = np.full(times.shape, 65.0)
+
+        class FakeIntensity:
+            def xs(self):
+                return times
+
+            def get_value(self, time_value):
+                return values[int(np.argmin(np.abs(times - time_value)))]
+
+        class FakePitch:
+            @staticmethod
+            def get_value_at_time(_time_value):
+                return 150.0
+
+        with patch.object(
+            server,
+            "find_intensity_peaks",
+            side_effect=[peaks, peaks, peaks, peaks],
+        ), patch.object(
+            server,
+            "peaks_to_syllables",
+            side_effect=lambda selected, *_args: list(selected),
+        ):
+            selected = server.detect_syllables(
+                object(),
+                FakePitch(),
+                FakeIntensity(),
+                expected_syllables=2,
+                allow_expected_adjustment=False,
+            )
+
+        self.assertEqual(selected, peaks)
+
+    def test_close_acoustic_nuclei_are_consolidated_before_counting(self):
+        times = np.arange(0.0, 0.81, 0.01)
+        values = np.full(times.shape, 60.0)
+        for center, height in ((0.15, 70.0), (0.38, 69.0), (0.44, 67.0), (0.68, 71.0)):
+            index = int(round(center / 0.01))
+            values[index - 2:index + 3] = [61.0, height - 3.0, height, height - 3.0, 61.0]
+
+        class FakePitch:
+            @staticmethod
+            def get_value_at_time(_time_value):
+                return 150.0
+
+        peaks = server.find_intensity_peaks(
+            times,
+            values,
+            threshold=62.0,
+            start_idx=0,
+            end_idx=len(times) - 1,
+            pitch_obj=FakePitch(),
+            min_dip=1.5,
+        )
+
+        self.assertEqual([round(item["time"], 2) for item in peaks], [0.15, 0.38, 0.68])
 
     def test_expected_peak_alignment_uses_acoustic_maximum_in_gap(self):
         times = np.arange(0.0, 1.01, 0.1)
@@ -252,7 +458,7 @@ class PronunciationAlignmentV2Test(unittest.TestCase):
         self.assertFalse(result["rateable"])
         self.assertIn("LOW_STRESS_CONFIDENCE", result["reasons"])
 
-    def test_learner_v2_endpoint_rejects_expected_count_forcing(self):
+    def test_learner_v2_endpoint_forwards_expected_count_as_hint(self):
         server.app.testing = True
         client = server.app.test_client()
         fake_result = {
@@ -274,8 +480,123 @@ class PronunciationAlignmentV2Test(unittest.TestCase):
             )
         self.assertEqual(response.status_code, 200, response.get_data(as_text=True))
         analyze.assert_called_once()
-        self.assertIsNone(analyze.call_args.kwargs["expected_syllable_count"])
+        self.assertEqual(analyze.call_args.kwargs["expected_syllable_count"], 7)
         self.assertFalse(analyze.call_args.kwargs["native"])
+
+
+# ============================================================================
+# V3 PHONEME ALIGNMENT / COMPARISON TESTS
+# ============================================================================
+
+
+class PronunciationAlignmentV3EditOpsTest(unittest.TestCase):
+    """Tests for _phoneme_align_edit_ops and _build_v3_comparison."""
+
+    def test_perfect_match_all_ops_are_match(self):
+        ops = server._phoneme_align_edit_ops(['h', 'ɛ', 'l'], ['h', 'ɛ', 'l'])
+        self.assertEqual(len(ops), 3)
+        for op in ops:
+            self.assertEqual(op['op'], 'match')
+
+    def test_substitution_detected(self):
+        ops = server._phoneme_align_edit_ops(['h', 'ɛ', 'l'], ['h', 'æ', 'l'])
+        op_types = [o['op'] for o in ops]
+        self.assertIn('substitution', op_types)
+        sub = [o for o in ops if o['op'] == 'substitution'][0]
+        self.assertEqual(sub['ref'], 'ɛ')
+        self.assertEqual(sub['obs'], 'æ')
+
+    def test_deletion_when_observed_shorter(self):
+        ops = server._phoneme_align_edit_ops(['h', 'ɛ', 'l', 'oʊ'], ['h', 'ɛ', 'l'])
+        op_types = [o['op'] for o in ops]
+        self.assertIn('deletion', op_types)
+        deleted = [o for o in ops if o['op'] == 'deletion']
+        self.assertEqual(len(deleted), 1)
+        self.assertEqual(deleted[0]['ref'], 'oʊ')
+        self.assertIsNone(deleted[0]['obs'])
+
+    def test_insertion_when_observed_longer(self):
+        ops = server._phoneme_align_edit_ops(['h', 'ɛ'], ['h', 'ɛ', 'l'])
+        op_types = [o['op'] for o in ops]
+        self.assertIn('insertion', op_types)
+        inserted = [o for o in ops if o['op'] == 'insertion']
+        self.assertEqual(len(inserted), 1)
+        self.assertIsNone(inserted[0]['ref'])
+        self.assertEqual(inserted[0]['obs'], 'l')
+
+    def test_mixed_operations(self):
+        # Reference: h ɛ l oʊ
+        # Observed:  h æ l oʊ z
+        ops = server._phoneme_align_edit_ops(
+            ['h', 'ɛ', 'l', 'oʊ'],
+            ['h', 'æ', 'l', 'oʊ', 'z'],
+        )
+        op_types = [o['op'] for o in ops]
+        self.assertIn('match', op_types)
+        self.assertIn('substitution', op_types)
+        self.assertIn('insertion', op_types)
+
+    def test_count_delta_positive_when_more_observed(self):
+        comparison = server._build_v3_comparison('hɛl', ['h', 'ɛ', 'l'], 3, 2)
+        self.assertIsNotNone(comparison)
+        self.assertEqual(comparison['count_delta'], 1)  # 3 - 2
+
+    def test_count_delta_negative_when_fewer_observed(self):
+        comparison = server._build_v3_comparison('hɛl', ['h', 'ɛ', 'l'], 1, 2)
+        self.assertIsNotNone(comparison)
+        self.assertEqual(comparison['count_delta'], -1)  # 1 - 2
+
+    def test_count_delta_zero_when_equal(self):
+        comparison = server._build_v3_comparison('hɛl', ['h', 'ɛ', 'l'], 2, 2)
+        self.assertIsNotNone(comparison)
+        self.assertEqual(comparison['count_delta'], 0)
+
+    def test_count_delta_none_when_no_expected(self):
+        comparison = server._build_v3_comparison('hɛl', ['h', 'ɛ', 'l'], 2, None)
+        self.assertIsNotNone(comparison)
+        self.assertIsNone(comparison['count_delta'])
+
+    def test_comparison_none_when_no_reference(self):
+        comparison = server._build_v3_comparison(None, ['h', 'ɛ', 'l'], 2, 2)
+        self.assertIsNone(comparison)
+
+    def test_comparison_none_when_empty_reference(self):
+        comparison = server._build_v3_comparison('', ['h', 'ɛ', 'l'], 2, 2)
+        self.assertIsNone(comparison)
+
+    def test_empty_observed_all_deletions(self):
+        ops = server._phoneme_align_edit_ops(['h', 'ɛ', 'l'], [])
+        self.assertEqual(len(ops), 3)
+        for op in ops:
+            self.assertEqual(op['op'], 'deletion')
+
+    def test_empty_reference_all_insertions(self):
+        ops = server._phoneme_align_edit_ops([], ['h', 'ɛ', 'l'])
+        self.assertEqual(len(ops), 3)
+        for op in ops:
+            self.assertEqual(op['op'], 'insertion')
+
+    def test_both_empty_no_ops(self):
+        ops = server._phoneme_align_edit_ops([], [])
+        self.assertEqual(len(ops), 0)
+
+    def test_tie_breaking_prefers_match_over_substitution(self):
+        # When a match is possible on diagonal, it should be taken
+        ops = server._phoneme_align_edit_ops(['a', 'b'], ['a', 'b'])
+        self.assertEqual(ops[0]['op'], 'match')
+        self.assertEqual(ops[1]['op'], 'match')
+
+    def test_single_phoneme_match(self):
+        ops = server._phoneme_align_edit_ops(['ɛ'], ['ɛ'])
+        self.assertEqual(len(ops), 1)
+        self.assertEqual(ops[0]['op'], 'match')
+
+    def test_single_phoneme_substitution(self):
+        ops = server._phoneme_align_edit_ops(['ɛ'], ['æ'])
+        self.assertEqual(len(ops), 1)
+        self.assertEqual(ops[0]['op'], 'substitution')
+        self.assertEqual(ops[0]['ref'], 'ɛ')
+        self.assertEqual(ops[0]['obs'], 'æ')
 
 
 if __name__ == "__main__":

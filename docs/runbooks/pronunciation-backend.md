@@ -99,6 +99,89 @@ syllable-count and stress practice, but never native contour comparisons or
 native stress calibration. Audit reports expose `runtimeFallbackValidated`
 separately and exclude these variants from `cmuCorroborated`.
 
+## IAM configuration for private Cloud Run authentication
+
+The `praat-api` service calls the `phoneme-recognizer` service over private
+Cloud Run.  The recognizer must reject unauthenticated traffic; `praat-api`
+authenticates with a Google-managed identity token derived from its runtime
+service account.
+
+### Runtime identity
+
+```
+praat-api-runtime@parselmouth.iam.gserviceaccount.com
+```
+
+### Setup checklist
+
+Each step below is a **deployment-gated command** — run it only when
+authorised.  Never create or download service-account keys.
+
+- [ ] **Create the runtime service account** (skip if it already exists):
+
+  ```powershell
+  gcloud iam service-accounts create praat-api-runtime `
+    --project parselmouth `
+    --display-name "praat-api Cloud Run runtime identity"
+  ```
+
+- [ ] **Attach the runtime identity to praat-api**:
+
+  ```powershell
+  gcloud run services update praat-api `
+    --project parselmouth `
+    --region us-central1 `
+    --service-account praat-api-runtime@parselmouth.iam.gserviceaccount.com
+  ```
+
+- [ ] **Disable unauthenticated access to phoneme-recognizer**:
+
+  ```powershell
+  gcloud run services remove-iam-policy-binding phoneme-recognizer `
+    --project parselmouth `
+    --region us-central1 `
+    --member "allUsers" `
+    --role "roles/run.invoker"
+  ```
+
+- [ ] **Grant invoker role to the runtime identity on phoneme-recognizer**:
+
+  ```powershell
+  gcloud run services add-iam-policy-binding phoneme-recognizer `
+    --project parselmouth `
+    --region us-central1 `
+    --member "serviceAccount:praat-api-runtime@parselmouth.iam.gserviceaccount.com" `
+    --role "roles/run.invoker"
+  ```
+
+> **Note:** These are deployment-gated commands.  Do not automate them in CI
+> pipelines.  Do NOT create or download service-account JSON keys.
+
+### Verification
+
+After applying the IAM changes, confirm with:
+
+```powershell
+gcloud run services get-iam-policy phoneme-recognizer `
+  --project parselmouth `
+  --region us-central1 `
+  --format json
+```
+
+The output should include the runtime service account with
+`roles/run.invoker` and should **not** include `allUsers`.
+
+## Environment variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `PHONEME_SERVICE_URL` | Yes | Full URL of the phoneme-recognizer Cloud Run service (e.g. `https://phoneme-recognizer-abc123-uc.a.run.app`) |
+| `PHONEME_SERVICE_AUTH` | No (default `google`) | `"google"` for production (uses IAM identity token). `"disabled"` for local dev only (localhost/127.0.0.1, and `K_SERVICE` must be absent). |
+| `K_SERVICE` | Auto | Automatically set by Cloud Run. The phoneme client uses this to prevent `auth=disabled` from running in production. |
+| `BUILD_SHA` | Yes | Git commit hash for version tracking. Set via `--set-env-vars` during deploy. |
+| `PRONUNCIATION_V3_MODE` | Yes | Controls v3 segmentation pipeline: `off` (disabled), `shadow` (run but don't serve), `active` (serve results). |
+| `MW_API_KEY` | Yes | Merriam-Webster API key (mounted from Secret Manager). |
+
 ## Rollback
 
 If errors, conflict rate, or contract violations exceed the candidate baseline,

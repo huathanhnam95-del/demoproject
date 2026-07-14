@@ -156,6 +156,9 @@ public/database/speak/audio/*.xlsx
 # Playwright browser cache
 .playwright-mcp/
 
+# Test results (local corpus downloads, benchmark output)
+test-results/
+
 # Test screenshots
 tests/screenshots/
 

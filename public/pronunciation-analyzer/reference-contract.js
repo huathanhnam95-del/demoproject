@@ -2,6 +2,7 @@ export const SCHEMA_VERSION = 9;
 export const ALGORITHM_VERSION = 'pronunciation-reference-v3';
 export const ANALYSIS_VERSION = 'pronunciation-analysis-v2';
 export const DIALECT = 'en-US';
+export const NATIVE_ANALYSIS_RETRY_DELAY_MS = 500;
 
 function invariant(condition, message) {
     if (!condition) throw new Error('Invalid pronunciation reference: ' + message);
@@ -181,6 +182,18 @@ export function hasUsableNativeContours(analysis) {
     );
 }
 
+export function needsNativeAnalysisRefresh(variant) {
+    // CMU/no-audio variants never need refresh
+    if (!variant?.audioUrl) return false;
+    // Invalid or conflicted variants (without audio capability) don't refresh
+    if (variant?.validation?.status !== 'valid') return false;
+    // No native analysis attached at all
+    if (!variant.nativeAnalysis) return true;
+    // Has analysis but contours are unusable
+    if (!hasUsableNativeContours(variant.nativeAnalysis)) return true;
+    return false;
+}
+
 export function validateNativeAnalysisForVariant(analysis, variant) {
     invariant(analysis && typeof analysis === 'object', 'native analysis is required');
     invariant(analysis.analysisVersion === ANALYSIS_VERSION, 'analysis version mismatch');
@@ -244,7 +257,7 @@ export async function attachValidatedNativeAnalyses(reference, analyzeVariant) {
             variant.nativeAnalysis = null;
             return variant;
         }
-        try {
+        const attemptAnalysis = async () => {
             const sourceAnalysis = await analyzeVariant(variant);
             const analysis = (
                 hasUsableNativeContours(sourceAnalysis) &&
@@ -260,14 +273,25 @@ export async function attachValidatedNativeAnalyses(reference, analyzeVariant) {
                 : sourceAnalysis;
             variant.nativeAnalysis = validateNativeAnalysisForVariant(analysis, variant);
             variant.capabilities.showNativeGraphs = analysis.capabilities.showNativeGraphs;
-        } catch (error) {
-            variant.nativeAnalysis = null;
-            variant.capabilities.showNativeGraphs = false;
-            variant.analysisValidation = {
-                status: 'conflict',
-                conflicts: ['ACOUSTIC_CONFLICT'],
-                message: error?.message || String(error)
-            };
+        };
+        try {
+            await attemptAnalysis();
+        } catch (firstError) {
+            // Retry once after a delay for transient failures.
+            // Do not retry non-transient 4xx validation errors.
+            try {
+                await new Promise((resolve) => setTimeout(resolve, NATIVE_ANALYSIS_RETRY_DELAY_MS));
+                await attemptAnalysis();
+            } catch (retryError) {
+                // Both attempts failed — preserve dictionary data, mark retryable
+                variant.nativeAnalysis = null;
+                variant.capabilities.showNativeGraphs = false;
+                variant.analysisValidation = {
+                    status: 'conflict',
+                    conflicts: ['ACOUSTIC_CONFLICT'],
+                    message: retryError?.message || String(retryError)
+                };
+            }
         }
         return variant;
     }));

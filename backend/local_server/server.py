@@ -2234,10 +2234,17 @@ def analyze_v3():
                 phoneme_syllable_count = len(phoneme_result.get('syllables', []))
                 v2_syllable_count = praat_result.get('observed', {}).get('syllableCount', 0)
                 if phoneme_syllable_count != v2_syllable_count:
-                    print(
-                        f'V3 shadow disagreement: praat={v2_syllable_count} '
-                        f'phoneme={phoneme_syllable_count}'
-                    )
+                    disagreement_log = {
+                        'v2_count': v2_syllable_count,
+                        'v3_count': phoneme_syllable_count,
+                        'disagreement_category': 'omission' if phoneme_syllable_count < v2_syllable_count else 'insertion' if phoneme_syllable_count > v2_syllable_count else 'count-mismatch',
+                        'confidence': phoneme_result.get('confidence'),
+                        'latency_seconds': elapsed,
+                        'quality_reason': phoneme_result.get('quality_reason'),
+                        'model_revision': phoneme_result.get('model_revision'),
+                        'reference_ipa': reference_ipa,
+                    }
+                    print(f'V3 shadow disagreement: {json.dumps(disagreement_log)}')
             return jsonify(_adapt_v2_to_v3_response(
                 praat_result, mode,
                 reference_ipa=reference_ipa,

@@ -2423,9 +2423,9 @@ body {
 }
 
 #btn-corpus-save:disabled {
-  background: #6b7280 !important;
+  background: #d1d5db !important;
   border-color: #4b5563 !important;
-  color: #ffffff !important;
+  color: #111827 !important;
   opacity: 0.9;
 }
 

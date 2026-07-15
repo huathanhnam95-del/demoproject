@@ -6886,6 +6886,10 @@
     const btnStop = document.getElementById('btn-corpus-stop');
     const btnRedo = document.getElementById('btn-corpus-redo');
     const btnSave = document.getElementById('btn-corpus-save');
+    const btnNextWord = document.getElementById('btn-corpus-next-word');
+    const btnPagePrev = document.getElementById('btn-corpus-page-prev');
+    const btnPageNext = document.getElementById('btn-corpus-page-next');
+    const pageStatus = document.getElementById('corpus-page-status');
     const btnRefresh = document.getElementById('btn-corpus-refresh');
     const savedSamplesContainer = document.getElementById('corpus-saved-samples');
     const playbackContainer = document.getElementById('corpus-playback-container');
@@ -6907,6 +6911,8 @@
     let scriptProcessor = null;
     let rawSamples = [];
     let savedWordSet = new Set();
+    const PAGE_SIZE = 10;
+    let currentPage = 1;
 
     function setSaveButtonState(enabled, label) {
       if (!btnSave) return;
@@ -6955,12 +6961,22 @@
 
     function applyWordFilter() {
       const filter = sampleFilter?.value || 'all';
-      wordBtns.forEach((button) => {
+      const filtered = wordBtns.filter((button) => {
         const hasSample = savedWordSet.has(String(button.dataset.word || '').toLowerCase());
-        const visible = filter === 'all' || (filter === 'recorded' && hasSample) || (filter === 'missing' && !hasSample);
+        return filter === 'all' || (filter === 'recorded' && hasSample) || (filter === 'missing' && !hasSample);
+      });
+      const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+      currentPage = Math.min(currentPage, pageCount);
+      const firstVisible = (currentPage - 1) * PAGE_SIZE;
+      const visibleSet = new Set(filtered.slice(firstVisible, firstVisible + PAGE_SIZE));
+      wordBtns.forEach((button) => {
+        const visible = visibleSet.has(button);
         const item = button.closest('li');
         if (item) item.style.display = visible ? '' : 'none';
       });
+      if (pageStatus) pageStatus.textContent = `Page ${currentPage} of ${pageCount}`;
+      if (btnPagePrev) btnPagePrev.disabled = currentPage <= 1;
+      if (btnPageNext) btnPageNext.disabled = currentPage >= pageCount;
     }
 
     function parseOxfordCsv(text) {
@@ -7121,7 +7137,33 @@
 
     bindWordButtons();
     updateWordBadges();
-    if (sampleFilter) sampleFilter.addEventListener('change', applyWordFilter);
+    if (sampleFilter) sampleFilter.addEventListener('change', () => {
+      currentPage = 1;
+      applyWordFilter();
+    });
+    if (btnPagePrev) btnPagePrev.addEventListener('click', () => {
+      currentPage = Math.max(1, currentPage - 1);
+      applyWordFilter();
+    });
+    if (btnPageNext) btnPageNext.addEventListener('click', () => {
+      currentPage += 1;
+      applyWordFilter();
+    });
+    if (btnNextWord) btnNextWord.addEventListener('click', () => {
+      const filter = sampleFilter?.value || 'all';
+      const filtered = wordBtns.filter((button) => {
+        const hasSample = savedWordSet.has(String(button.dataset.word || '').toLowerCase());
+        return filter === 'all' || (filter === 'recorded' && hasSample) || (filter === 'missing' && !hasSample);
+      });
+      const currentIndex = filtered.findIndex((button) => button.classList.contains('active'));
+      const nextButton = filtered[(currentIndex + 1) % filtered.length];
+      if (!nextButton) return;
+      nextButton.click();
+      currentPage = Math.floor(filtered.indexOf(nextButton) / PAGE_SIZE) + 1;
+      applyWordFilter();
+      redoRecording();
+      nextButton.scrollIntoView({ block: 'nearest' });
+    });
     loadOxfordWordTests();
     if (btnUseCustom) {
       btnUseCustom.addEventListener('click', () => {
@@ -7180,6 +7222,7 @@
       rawSamples = [];
       audioBlob = null;
       setSaveButtonState(false);
+      if (btnNextWord) btnNextWord.disabled = true;
       try {
         mediaStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -7255,6 +7298,7 @@
         if (btnRecord) btnRecord.disabled = true;
         if (btnStop) btnStop.disabled = true;
         if (btnRedo) btnRedo.disabled = false;
+        if (btnNextWord) btnNextWord.disabled = true;
         setSaveButtonState(false);
         showToast('No speech detected. Please redo the recording and say the target word clearly.', 'error');
         return;
@@ -7268,6 +7312,7 @@
       if (btnStop) btnStop.disabled = true;
       if (btnRedo) btnRedo.disabled = false;
       setSaveButtonState(true);
+      if (btnNextWord) btnNextWord.disabled = false;
       showToast('Audio captured successfully.', 'success');
     }
     function encodeWAV(samples, sampleRate) {
@@ -7311,6 +7356,7 @@
       if (btnStop) btnStop.disabled = true;
       if (btnRedo) btnRedo.disabled = true;
       setSaveButtonState(false);
+      if (btnNextWord) btnNextWord.disabled = true;
       if (consoleOutput) consoleOutput.textContent = "No changes pending.";
     }
     async function saveToCorpus() {

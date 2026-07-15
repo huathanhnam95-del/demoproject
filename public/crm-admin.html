@@ -191,6 +191,17 @@
           <!-- Left Column: Word navigation and metadata -->
           <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px;">
             <h3 style="margin-bottom: 12px; font-size: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; color: var(--accent-color);">Select Target Word</h3>
+            <label for="corpus-sample-filter" style="display: block; font-size: 12px; font-weight: 600;">Show tests:</label>
+            <select id="corpus-sample-filter" class="crm-input" style="width: 100%; margin: 5px 0 10px;">
+              <option value="all">All words</option>
+              <option value="missing">Words without samples</option>
+              <option value="recorded">Words with samples</option>
+            </select>
+            <div class="corpus-pagination" style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 10px;">
+              <button id="btn-corpus-page-prev" class="crm-btn crm-btn-secondary" type="button">Previous</button>
+              <span id="corpus-page-status" class="crm-muted" style="font-size: 12px; text-align: center;">Page 1</span>
+              <button id="btn-corpus-page-next" class="crm-btn crm-btn-secondary" type="button">Next</button>
+            </div>
             <ul id="corpus-word-list" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">
               <!-- Mandatories: busy, photograph, photography, banana, camera, university -->
               <li><button class="crm-btn crm-btn-secondary corpus-word-btn active" data-word="busy" data-ipa="ˈbɪz.i" data-count="2" style="width: 100%; text-align: left;">busy (2)</button></li>
@@ -201,12 +212,6 @@
               <li><button class="crm-btn crm-btn-secondary corpus-word-btn" data-word="university" data-ipa="ˌjuː.nɪˈvɜːr.sə.t̬i" data-count="5" style="width: 100%; text-align: left;">university (5)</button></li>
             </ul>
             <p id="corpus-word-list-status" class="crm-muted" style="margin: 10px 0 0; font-size: 12px;">Loading the Oxford 5000 test list…</p>
-            <label for="corpus-sample-filter" style="display: block; margin-top: 14px; font-size: 12px; font-weight: 600;">Show tests:</label>
-            <select id="corpus-sample-filter" class="crm-input" style="width: 100%; margin-top: 5px;">
-              <option value="all">All words</option>
-              <option value="missing">Words without samples</option>
-              <option value="recorded">Words with samples</option>
-            </select>
             
             <div style="display: none; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color);">
               <label for="corpus-custom-word" style="display: block; font-weight: 500; margin-bottom: 6px; font-size: 13px;">Or Custom Word:</label>
@@ -285,7 +290,8 @@
 
               <div style="border-top: 1px solid var(--border-color); padding-top: 16px; display: flex; justify-content: flex-end; gap: 12px;">
                 <span id="corpus-console-output" class="crm-muted" style="margin-right: auto; align-self: center; font-size: 13px; font-family: monospace;">No changes pending.</span>
-                <button id="btn-corpus-save" class="crm-btn" disabled style="min-width: 160px; font-weight: 600; background: var(--status-success) !important; color: white !important;">💾 Save Attempt</button>
+                <button id="btn-corpus-save" class="crm-btn" disabled style="min-width: 160px; font-weight: 700;">💾 Save Attempt</button>
+                <button id="btn-corpus-next-word" class="crm-btn crm-btn-primary" type="button" disabled style="min-width: 140px; font-weight: 700;">Next Word →</button>
               </div>
             </div>
           </div>

@@ -7128,7 +7128,7 @@
       if (!savedSamplesContainer) return;
       try {
         const json = await apiFetchJson('/api/admin/dev/corpus-samples?limit=100', { method: 'GET' });
-        const samples = json.data?.samples || [];
+        const samples = json.samples || json.data?.samples || [];
         savedWordSet = new Set(samples.map((sample) => String(sample.targetWord || '').trim().toLowerCase()).filter(Boolean));
         renderSavedSamples(samples);
         updateWordBadges();
@@ -7395,7 +7395,7 @@
           body: formData
         });
         if (consoleOutput) {
-          const hash = String(json.data?.sample?.sourceHash || json.data?.hash || '');
+          const hash = String(json.sample?.sourceHash || json.data?.sample?.sourceHash || json.data?.hash || '');
           consoleOutput.textContent = `Saved to cloud: ${sampleId}.wav${hash ? ` (hash: ${hash.substring(0, 10)}...)` : ''}`;
         }
         showToast('Successfully saved to cloud storage.', 'success');

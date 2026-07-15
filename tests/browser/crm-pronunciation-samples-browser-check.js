@@ -169,11 +169,26 @@ async function main() {
               contentType: 'application/json; charset=utf-8',
               body: JSON.stringify({
                 success: true,
-                data: {
-                  sampleId: 'photograph-clean-l1-vn-01-temp',
-                  hash: 'a1b2c3d4e5f6g7h8i9j0',
-                  manifestCount: 15
-                }
+                sampleId: 'photograph-clean-l1-vn-01-temp',
+                sample: { sourceHash: 'a1b2c3d4e5f6g7h8i9j0' }
+              })
+            });
+          }
+
+          if (pathname === '/api/admin/dev/corpus-samples' && method === 'GET') {
+            return route.fulfill({
+              status: 200,
+              contentType: 'application/json; charset=utf-8',
+              body: JSON.stringify({
+                success: true,
+                samples: [{
+                  id: 'busy-clean-l1-vn-01-saved',
+                  sampleId: 'busy-clean-l1-vn-01-saved',
+                  targetWord: 'busy',
+                  category: 'clean',
+                  durationSeconds: 2.65,
+                  audioUrl: 'https://storage.test/busy.wav'
+                }]
               })
             });
           }
@@ -220,6 +235,10 @@ async function main() {
 
     // 3. Click the sidebar nav button to navigate to the pronunciation-samples panel
     await page.click('#nav-pronunciation-samples-container button');
+
+    await page.waitForSelector('#corpus-saved-samples .crm-stack-item', { state: 'visible', timeout: 5000 });
+    const savedSamplesText = await page.textContent('#corpus-saved-samples');
+    assert.match(savedSamplesText, /busy.*clean.*2\.65s/i, 'Production-shaped corpus list response should render the saved sample.');
     
     // 4. Select target word 'photograph'
     await page.waitForSelector('.corpus-word-btn[data-word="photograph"]', { state: 'visible' });

@@ -201,6 +201,12 @@
               <li><button class="crm-btn crm-btn-secondary corpus-word-btn" data-word="university" data-ipa="ˌjuː.nɪˈvɜːr.sə.t̬i" data-count="5" style="width: 100%; text-align: left;">university (5)</button></li>
             </ul>
             <p id="corpus-word-list-status" class="crm-muted" style="margin: 10px 0 0; font-size: 12px;">Loading the Oxford 5000 test list…</p>
+            <label for="corpus-sample-filter" style="display: block; margin-top: 14px; font-size: 12px; font-weight: 600;">Show tests:</label>
+            <select id="corpus-sample-filter" class="crm-input" style="width: 100%; margin-top: 5px;">
+              <option value="all">All words</option>
+              <option value="missing">Words without samples</option>
+              <option value="recorded">Words with samples</option>
+            </select>
             
             <div style="display: none; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color);">
               <label for="corpus-custom-word" style="display: block; font-weight: 500; margin-bottom: 6px; font-size: 13px;">Or Custom Word:</label>

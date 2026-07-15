@@ -102,6 +102,7 @@ async function main() {
       locale: 'en-US',
       permissions: ['microphone']
     });
+    await context.addInitScript(() => { window.__CRM_BROWSER_TEST__ = true; });
 
     await context.route('**/*', async (route) => {
       const url = new URL(route.request().url());

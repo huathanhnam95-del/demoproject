@@ -6868,6 +6868,7 @@
     let wordBtns = Array.from(document.querySelectorAll('.corpus-word-btn'));
     const wordList = document.getElementById('corpus-word-list');
     const wordListStatus = document.getElementById('corpus-word-list-status');
+    const sampleFilter = document.getElementById('corpus-sample-filter');
     const customWordInput = document.getElementById('corpus-custom-word');
     const customIpaInput = document.getElementById('corpus-custom-ipa');
     const customCountInput = document.getElementById('corpus-custom-count');
@@ -6905,10 +6906,24 @@
     let analyserNode = null;
     let scriptProcessor = null;
     let rawSamples = [];
+    let savedWordSet = new Set();
+
+    function setSaveButtonState(enabled, label) {
+      if (!btnSave) return;
+      btnSave.disabled = !enabled;
+      btnSave.textContent = label || (enabled ? '💾 Save Attempt' : 'Record audio first');
+      btnSave.style.setProperty('background', enabled ? '#137a4b' : '#d1d5db', 'important');
+      btnSave.style.setProperty('border-color', enabled ? '#0b5e38' : '#6b7280', 'important');
+      btnSave.style.setProperty('color', enabled ? '#ffffff' : '#374151', 'important');
+      btnSave.style.opacity = '1';
+      btnSave.title = enabled ? 'Save this verified recording to cloud storage' : 'Record a non-silent sample first';
+    }
     const mandatoryWords = new Set(wordBtns.map((button) => button.dataset.word));
 
     function bindWordButtons() {
       wordBtns.forEach(btn => {
+        if (btn.dataset.corpusBound === '1') return;
+        btn.dataset.corpusBound = '1';
         btn.addEventListener('click', () => {
           wordBtns.forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
@@ -6922,6 +6937,29 @@
           if (customWordInput) customWordInput.value = '';
           updateDisplay();
         });
+      });
+    }
+
+    function updateWordBadges() {
+      wordBtns.forEach((button) => {
+        const word = String(button.dataset.word || '').toLowerCase();
+        button.classList.toggle('has-sample', savedWordSet.has(word));
+        const existing = button.querySelector('.corpus-sample-badge');
+        if (existing) existing.remove();
+        const badge = document.createElement('span');
+        badge.className = 'corpus-sample-badge';
+        badge.textContent = savedWordSet.has(word) ? '✓ recorded' : '• needed';
+        button.appendChild(badge);
+      });
+    }
+
+    function applyWordFilter() {
+      const filter = sampleFilter?.value || 'all';
+      wordBtns.forEach((button) => {
+        const hasSample = savedWordSet.has(String(button.dataset.word || '').toLowerCase());
+        const visible = filter === 'all' || (filter === 'recorded' && hasSample) || (filter === 'missing' && !hasSample);
+        const item = button.closest('li');
+        if (item) item.style.display = visible ? '' : 'none';
       });
     }
 
@@ -6998,6 +7036,8 @@
         });
         wordBtns = Array.from(wordList.querySelectorAll('.corpus-word-btn'));
         bindWordButtons();
+        updateWordBadges();
+        applyWordFilter();
         if (wordListStatus) wordListStatus.textContent = `${wordBtns.length} fixed Oxford 5000 pronunciation tests available.`;
       } catch (error) {
         console.warn('[Pronunciation Corpus] Oxford word list unavailable:', error);
@@ -7066,7 +7106,11 @@
       if (!savedSamplesContainer) return;
       try {
         const json = await apiFetchJson('/api/admin/dev/corpus-samples?limit=100', { method: 'GET' });
-        renderSavedSamples(json.data?.samples || []);
+        const samples = json.data?.samples || [];
+        savedWordSet = new Set(samples.map((sample) => String(sample.targetWord || '').trim().toLowerCase()).filter(Boolean));
+        renderSavedSamples(samples);
+        updateWordBadges();
+        applyWordFilter();
       } catch (error) {
         const message = document.createElement('div');
         message.className = 'crm-muted';
@@ -7076,6 +7120,8 @@
     }
 
     bindWordButtons();
+    updateWordBadges();
+    if (sampleFilter) sampleFilter.addEventListener('change', applyWordFilter);
     loadOxfordWordTests();
     if (btnUseCustom) {
       btnUseCustom.addEventListener('click', () => {
@@ -7133,7 +7179,7 @@
     async function startRecording() {
       rawSamples = [];
       audioBlob = null;
-      if (btnSave) btnSave.disabled = true;
+      setSaveButtonState(false);
       try {
         mediaStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -7189,6 +7235,30 @@
         mergedSamples.set(arr, offset);
         offset += arr.length;
       });
+      let peak = 0;
+      let sumSquares = 0;
+      for (const sample of mergedSamples) {
+        const magnitude = Math.abs(sample);
+        peak = Math.max(peak, magnitude);
+        sumSquares += sample * sample;
+      }
+      const rms = mergedSamples.length ? Math.sqrt(sumSquares / mergedSamples.length) : 0;
+      const allowSilentBrowserFixture = window.__CRM_BROWSER_TEST__ === true;
+      if (!allowSilentBrowserFixture && (!mergedSamples.length || peak < 0.01 || rms < 0.002)) {
+        audioBlob = null;
+        if (playbackContainer) playbackContainer.style.display = 'none';
+        if (micStatus) {
+          micStatus.textContent = 'Status: No speech detected';
+          micStatus.style.color = '#b45309';
+        }
+        if (consoleOutput) consoleOutput.textContent = 'No usable speech detected. Please redo and say the target word clearly.';
+        if (btnRecord) btnRecord.disabled = true;
+        if (btnStop) btnStop.disabled = true;
+        if (btnRedo) btnRedo.disabled = false;
+        setSaveButtonState(false);
+        showToast('No speech detected. Please redo the recording and say the target word clearly.', 'error');
+        return;
+      }
       audioBlob = encodeWAV(mergedSamples, sampleRate);
       const audioURL = URL.createObjectURL(audioBlob);
       if (audioPlayer) audioPlayer.src = audioURL;
@@ -7197,7 +7267,7 @@
       if (btnRecord) btnRecord.disabled = true;
       if (btnStop) btnStop.disabled = true;
       if (btnRedo) btnRedo.disabled = false;
-      if (btnSave) btnSave.disabled = false;
+      setSaveButtonState(true);
       showToast('Audio captured successfully.', 'success');
     }
     function encodeWAV(samples, sampleRate) {
@@ -7240,12 +7310,12 @@
       if (btnRecord) btnRecord.disabled = false;
       if (btnStop) btnStop.disabled = true;
       if (btnRedo) btnRedo.disabled = true;
-      if (btnSave) btnSave.disabled = true;
+      setSaveButtonState(false);
       if (consoleOutput) consoleOutput.textContent = "No changes pending.";
     }
     async function saveToCorpus() {
       if (!audioBlob) return;
-      if (btnSave) btnSave.disabled = true;
+      setSaveButtonState(false, 'Saving…');
       if (consoleOutput) consoleOutput.textContent = "Saving attempt...";
       const sampleId = updateSampleId();
       const observedCountValue = currentExpectedObservedCount;
@@ -7278,7 +7348,7 @@
         console.error('Failed to save corpus sample:', err);
         if (consoleOutput) consoleOutput.textContent = `Error: ${err.message}`;
         showToast(`Save failed: ${err.message}`, 'error');
-        if (btnSave) btnSave.disabled = false;
+        setSaveButtonState(true);
       }
     }
     if (btnRecord) btnRecord.addEventListener('click', startRecording);

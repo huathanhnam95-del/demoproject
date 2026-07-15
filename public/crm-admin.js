@@ -6869,6 +6869,7 @@
     const wordList = document.getElementById('corpus-word-list');
     const wordListStatus = document.getElementById('corpus-word-list-status');
     const sampleFilter = document.getElementById('corpus-sample-filter');
+    const stepGuidance = document.getElementById('corpus-step-guidance');
     const customWordInput = document.getElementById('corpus-custom-word');
     const customIpaInput = document.getElementById('corpus-custom-ipa');
     const customCountInput = document.getElementById('corpus-custom-count');
@@ -6924,6 +6925,10 @@
       btnSave.style.opacity = '1';
       btnSave.title = enabled ? 'Save this verified recording to cloud storage' : 'Record a non-silent sample first';
     }
+
+    function setStepGuidance(message) {
+      if (stepGuidance) stepGuidance.textContent = message;
+    }
     const mandatoryWords = new Set(wordBtns.map((button) => button.dataset.word));
 
     function bindWordButtons() {
@@ -6942,6 +6947,7 @@
           currentInstruction = btn.dataset.instruction || `Say “${currentWord}” once, naturally and clearly. Do not repeat it or add another word.`;
           if (customWordInput) customWordInput.value = '';
           updateDisplay();
+          setStepGuidance(`Step 2: Review the fixed instruction, then click Record and say “${currentWord}” once.`);
         });
       });
     }
@@ -7223,6 +7229,7 @@
       audioBlob = null;
       setSaveButtonState(false);
       if (btnNextWord) btnNextWord.disabled = true;
+      setStepGuidance(`Step 3: Say “${currentWord}” clearly now. Click Stop when you finish.`);
       try {
         mediaStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -7300,6 +7307,7 @@
         if (btnRedo) btnRedo.disabled = false;
         if (btnNextWord) btnNextWord.disabled = true;
         setSaveButtonState(false);
+        setStepGuidance(`Step 3: No speech detected. Click Redo, say “${currentWord}” clearly, and click Stop.`);
         showToast('No speech detected. Please redo the recording and say the target word clearly.', 'error');
         return;
       }
@@ -7313,6 +7321,7 @@
       if (btnRedo) btnRedo.disabled = false;
       setSaveButtonState(true);
       if (btnNextWord) btnNextWord.disabled = false;
+      setStepGuidance('Step 4: Play the audio to verify it, then click Save Attempt.');
       showToast('Audio captured successfully.', 'success');
     }
     function encodeWAV(samples, sampleRate) {
@@ -7357,11 +7366,13 @@
       if (btnRedo) btnRedo.disabled = true;
       setSaveButtonState(false);
       if (btnNextWord) btnNextWord.disabled = true;
+      setStepGuidance(`Step 3: Ready to record “${currentWord}”. Click Record to begin.`);
       if (consoleOutput) consoleOutput.textContent = "No changes pending.";
     }
     async function saveToCorpus() {
       if (!audioBlob) return;
       setSaveButtonState(false, 'Saving…');
+      setStepGuidance('Saving: Uploading the verified recording to cloud storage…');
       if (consoleOutput) consoleOutput.textContent = "Saving attempt...";
       const sampleId = updateSampleId();
       const observedCountValue = currentExpectedObservedCount;
@@ -7388,6 +7399,7 @@
           consoleOutput.textContent = `Saved to cloud: ${sampleId}.wav${hash ? ` (hash: ${hash.substring(0, 10)}...)` : ''}`;
         }
         showToast('Successfully saved to cloud storage.', 'success');
+        setStepGuidance('Complete: Sample saved. Click Next Word to continue or choose another page.');
         await loadSavedSamples();
         redoRecording();
       } catch (err) {

@@ -118,7 +118,7 @@ class PronunciationAlignmentV2Test(unittest.TestCase):
         self.assertEqual(result["segmentation"]["selectedCount"], 4)
         self.assertTrue(result["quality"]["rateable"])
 
-    def test_learner_v2_uses_target_as_non_forcing_acoustic_hint(self):
+    def test_learner_v2_uses_target_aligned_acoustic_feedback(self):
         raw = {
             "duration": 0.4,
             "sampleRate": 16000,
@@ -136,8 +136,31 @@ class PronunciationAlignmentV2Test(unittest.TestCase):
         analyze.assert_called_once_with(
             "learner.wav",
             expected_syllables=4,
-            allow_expected_adjustment=False,
         )
+
+    def test_learner_v2_labels_target_aligned_feedback(self):
+        raw = {
+            "duration": 0.5,
+            "sampleRate": 16000,
+            "pitch": {"times": [0.1, 0.3], "values": [150.0, 140.0]},
+            "intensity": {"times": [0.1, 0.3], "values": [72.0, 68.0]},
+            "syllables": [
+                candidate(0.15, 72.0, 0.9)["syllable"],
+                candidate(0.35, 68.0, 0.8)["syllable"],
+            ],
+        }
+
+        result = server.build_analysis_v2_response(
+            raw,
+            expected_syllable_count=2,
+            native=False,
+        )
+
+        self.assertEqual(
+            result["segmentation"]["method"],
+            "target-aligned-acoustic-feedback",
+        )
+        self.assertEqual(result["observed"]["syllableCount"], 2)
 
     def test_independent_detection_retries_weak_syllable_thresholds(self):
         times = np.arange(0.0, 0.61, 0.01)

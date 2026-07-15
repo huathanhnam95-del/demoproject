@@ -1839,7 +1839,11 @@ def build_analysis_v2_response(raw_analysis, expected_syllable_count=None, nativ
             'rawCandidateCount': len(candidates),
             'evidenceCandidateCount': len(evidence),
             'selectedCount': len(evidence),
-            'method': 'independent-acoustic-detection',
+            'method': (
+                'target-aligned-acoustic-feedback'
+                if expected_syllable_count
+                else 'independent-acoustic-detection'
+            ),
             'confidence': round(
                 float(np.mean([item['confidence'] for item in evidence])),
                 3,
@@ -1890,9 +1894,8 @@ def build_analysis_v2_response(raw_analysis, expected_syllable_count=None, nativ
 
 
 def analyze_audio_v2(audio_path, expected_syllable_count=None, native=False):
-    # Native dictionary audio may be aligned to its trusted canonical count.
-    # Learner audio uses that count only to select an acoustically observed
-    # threshold result; it must never synthesize or prune nuclei to force a match.
+    # Native references and learner attempts are aligned to the trusted target
+    # count so every expected syllable receives measured acoustic feedback.
     if native:
         raw_analysis = analyze_audio(
             audio_path,
@@ -1902,7 +1905,6 @@ def analyze_audio_v2(audio_path, expected_syllable_count=None, native=False):
         raw_analysis = analyze_audio(
             audio_path,
             expected_syllables=expected_syllable_count,
-            allow_expected_adjustment=False,
         )
     return build_analysis_v2_response(
         raw_analysis,

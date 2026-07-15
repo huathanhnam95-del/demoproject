@@ -61,6 +61,9 @@
     },
     shouldShowDevToolsNav({ devToolsAvailable }) {
       return !!devToolsAvailable;
+    },
+    shouldShowPronunciationSamplesNav({ accessMode, pronunciationSamplesAvailable }) {
+      return accessMode === 'admin' && !!pronunciationSamplesAvailable;
     }
   };
 
@@ -724,6 +727,15 @@
     return adminCapabilities;
   }
 
+  function updateAdminCapabilityNav() {
+    if (!elements.pronunciationSamplesContainer) return;
+    const showSamples = devToolsAccess.shouldShowPronunciationSamplesNav({
+      accessMode: state.accessMode,
+      pronunciationSamplesAvailable: adminCapabilities.pronunciationSamples !== false
+    });
+    elements.pronunciationSamplesContainer.style.display = showSamples ? 'block' : 'none';
+  }
+
   function setupScoreDecorations() {
     if (!window.CrmStudents || typeof window.CrmStudents.syncScoreDecorations !== 'function') return;
     const scoreInputs = [
@@ -1092,6 +1104,7 @@
       return;
     }
     state.accessMode = adminOk ? 'admin' : 'teacher';
+    updateAdminCapabilityNav();
 
     // Ready
     hideGate();
@@ -6356,10 +6369,7 @@
       if (devToolsContainer) {
         devToolsContainer.style.display = show ? 'block' : 'none';
       }
-      if (elements.pronunciationSamplesContainer) {
-        const showSamples = state.accessMode === 'admin' && adminCapabilities.pronunciationSamples !== false;
-        elements.pronunciationSamplesContainer.style.display = showSamples ? 'block' : 'none';
-      }
+      updateAdminCapabilityNav();
     }
 
     function updateSyncButtons(isBusy) {

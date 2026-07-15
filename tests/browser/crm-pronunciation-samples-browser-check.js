@@ -5,7 +5,9 @@ const path = require('path');
 const { chromium } = require('playwright');
 
 const PUBLIC_DIR = path.join(process.cwd(), 'public');
-const BASE_ORIGIN = 'http://localhost:8080';
+// Use a non-local hostname so the browser exercises the same capability-nav
+// initialization path as production instead of the local Dev Tools path.
+const BASE_ORIGIN = 'https://betterenglishlearning.test';
 const PRONUNCIATION_SAMPLES_URL = `${BASE_ORIGIN}/crm-admin.html#pronunciation-samples`;
 
 function contentTypeFor(filePath) {
@@ -108,7 +110,7 @@ async function main() {
       const url = new URL(route.request().url());
       console.log('INTERCEPTED REQUEST:', route.request().method(), route.request().url());
 
-      if (url.hostname === 'localhost') {
+      if (url.hostname === 'betterenglishlearning.test') {
         const method = route.request().method();
         const pathname = url.pathname;
 

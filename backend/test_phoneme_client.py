@@ -265,6 +265,7 @@ class TestPhonemeClient(unittest.TestCase):
         # Verify the correct URL was called.
         call_url = session.post.call_args[0][0]
         self.assertTrue(call_url.endswith("/recognize/v1"))
+        self.assertLessEqual(session.post.call_args.kwargs["timeout"], 15)
 
     # -- 10. 503 busy handling -----------------------------------------------
 

@@ -369,7 +369,10 @@ export class PronunciationApp {
                     audioBlob,
                     expectedSyllables: expectedCount,
                     preferPraat: this.usePraatBackend,
-                    praatAnalyze: (blob) => this.praatAPI.analyze(blob, expectedCount),
+                    praatAnalyze: (blob) => this.praatAPI.analyze(blob, expectedCount, {
+                        referenceIpa: this.currentWordRef?.displayIpa || this.currentWordRef?.rawIpa,
+                        targetWord: this.currentReference?.word
+                    }),
                     decodeBlob: (blob) => this.audioCapture.blobToAudioBuffer(blob),
                     pitchAnalyze: (audioBuffer) => this.pitchAnalyzer.analyze(audioBuffer),
                     detectSyllables: (analysisData) => this.syllableDetector.detect(analysisData),
@@ -978,6 +981,8 @@ export class PronunciationApp {
                     ? 'CMU pronunciation fallback · native audio and contour unavailable.'
                     : contourOnly
                         ? 'Native pitch and volume shown. Syllable duration analysis is unavailable for this recording.'
+                        : wordRef.audioUrl && !canShowGraphs
+                            ? 'Native contour temporarily unavailable. It will be retried automatically.'
                         : '';
             this.referenceStatus.classList.toggle('pa-reference-status--conflict', !isValid);
         }

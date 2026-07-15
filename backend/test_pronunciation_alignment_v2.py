@@ -541,6 +541,20 @@ class PronunciationAlignmentV3EditOpsTest(unittest.TestCase):
         self.assertIsNotNone(comparison)
         self.assertEqual(comparison['count_delta'], 1)  # 3 - 2
 
+    def test_reference_ipa_is_tokenized_into_phonemes_not_characters(self):
+        comparison = server._build_v3_comparison(
+            '/foʊˈtæɡrəf/',
+            ['f', 'oʊ', 't', 'æ', 'ɡ', 'r', 'ə', 'f'],
+            3,
+            3,
+        )
+        self.assertEqual(
+            [operation['op'] for operation in comparison['edit_operations']],
+            ['match'] * 8,
+        )
+        self.assertNotIn('/', [operation['ref'] for operation in comparison['edit_operations']])
+        self.assertNotIn('ˈ', [operation['ref'] for operation in comparison['edit_operations']])
+
     def test_count_delta_negative_when_fewer_observed(self):
         comparison = server._build_v3_comparison('hɛl', ['h', 'ɛ', 'l'], 1, 2)
         self.assertIsNotNone(comparison)

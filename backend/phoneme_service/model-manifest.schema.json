@@ -13,9 +13,24 @@
     "modelChecksum",
     "quality",
     "benchmark",
+    "evidenceStatus",
     "verdict"
   ],
   "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": { "evidenceStatus": { "const": "pending" } },
+        "required": ["evidenceStatus"]
+      },
+      "then": {
+        "properties": {
+          "selectedEngine": { "const": "provider-evaluation-required" },
+          "verdict": { "const": "provider-evaluation-required" }
+        }
+      }
+    }
+  ],
   "properties": {
     "schemaVersion": {
       "type": "string",
@@ -92,7 +107,7 @@
       "additionalProperties": false,
       "properties": {
         "peakRssGiB": {
-          "type": "number",
+          "type": ["number", "null"],
           "description": "Peak resident set size during loading + inference, in GiB."
         },
         "warmMedianMs": {
@@ -129,6 +144,11 @@
           "pattern": "^[0-9a-f]{64}$"
         }
       }
+    },
+    "evidenceStatus": {
+      "type": "string",
+      "enum": ["pending", "verified"],
+      "description": "Whether corpus-backed benchmark and calibration evidence has been verified."
     },
     "createdAt": {
       "type": "string",

@@ -26,6 +26,7 @@ import statistics
 import sys
 import time
 import tracemalloc
+import wave
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -59,6 +60,10 @@ MANDATORY_WORDS = ["busy", "photograph", "photography", "banana", "camera", "uni
 
 # Manifest output path (relative to workspace root)
 MANIFEST_OUTPUT_REL = os.path.join("backend", "phoneme_service", "model-manifest.json")
+
+
+class BenchmarkEvidenceError(RuntimeError):
+    """Raised when model-selection evidence is missing or incomplete."""
 
 
 # ---------------------------------------------------------------------------
@@ -183,10 +188,13 @@ def compute_checksums(model_id: str, processor, cache_dir: Path) -> dict[str, st
             weight_files.extend(cand.glob("*.bin"))
             weight_files.extend(cand.glob("*.safetensors"))
 
-    if weight_files:
+    if len(weight_files) == 1:
+        model_checksum = sha256_file(weight_files[0])
+    elif weight_files:
         h = hashlib.sha256()
         for wf in sorted(weight_files):
-            h.update(sha256_file(wf).encode())
+            h.update(wf.name.encode("utf-8"))
+            h.update(sha256_file(wf).encode("ascii"))
         model_checksum = h.hexdigest()
 
     return {
@@ -270,44 +278,204 @@ def load_corpus_manifest(manifest_path: str | None) -> list[dict[str, Any]]:
         return []
 
 
-def test_mandatory_words(model, processor) -> dict[str, Any]:
+def require_benchmark_evidence(
+    corpus: list[dict[str, Any]],
+    audio_dir: Path,
+) -> None:
+    """Reject incomplete corpora before loading or selecting a model."""
+    if not corpus:
+        raise BenchmarkEvidenceError("The benchmark corpus is empty.")
+    if len(corpus) < 120:
+        raise BenchmarkEvidenceError(
+            f"Benchmark evidence requires at least 120 samples; found {len(corpus)}."
+        )
+
+    missing_target_counts = [
+        entry.get("sampleId", "unknown") for entry in corpus
+        if not isinstance(entry.get("targetSyllableCount"), int)
+        or entry.get("targetSyllableCount") < 1
+    ]
+    if missing_target_counts:
+        raise BenchmarkEvidenceError(
+            "Every sample must provide an independent positive "
+            f"targetSyllableCount; invalid entries include {missing_target_counts[:5]}."
+        )
+
+    clean_count = sum(entry.get("category") == "clean" for entry in corpus)
+    accented_entries = [entry for entry in corpus if entry.get("category") == "accented"]
+    adversarial_count = sum(
+        entry.get("category") in {"omission", "insertion"} for entry in corpus
+    )
+    if clean_count < 60 or len(accented_entries) < 30 or adversarial_count < 30:
+        raise BenchmarkEvidenceError(
+            "Corpus composition must include at least 60 clean, 30 accented, "
+            f"and 30 adversarial samples; found {clean_count}, "
+            f"{len(accented_entries)}, and {adversarial_count}."
+        )
+    accented_speakers = {
+        entry.get("speakerCohort") for entry in accented_entries
+        if entry.get("speakerCohort") and entry.get("speakerCohort") != "unknown"
+    }
+    if len(accented_speakers) < 5:
+        raise BenchmarkEvidenceError(
+            "Accented-speech evidence must cover at least five deidentified speaker cohorts."
+        )
+
+    clean_words = {
+        str(entry.get("targetWord", "")).lower()
+        for entry in corpus
+        if entry.get("category") == "clean"
+    }
+    missing_words = sorted(set(MANDATORY_WORDS) - clean_words)
+    if missing_words:
+        raise BenchmarkEvidenceError(
+            f"Mandatory clean-word evidence is missing: {', '.join(missing_words)}"
+        )
+
+    missing_audio = [
+        str(entry.get("sampleId", ""))
+        for entry in corpus
+        if not (audio_dir / f"{entry.get('sampleId', '')}.wav").is_file()
+    ]
+    if missing_audio:
+        raise BenchmarkEvidenceError(
+            f"Audio is missing for {len(missing_audio)} corpus entries: "
+            f"{', '.join(missing_audio[:5])}"
+        )
+
+
+def _load_wav_for_model(path: Path) -> tuple[Any, int]:
+    """Load a WAV as mono float32 at 16 kHz."""
+    import numpy as np
+    from scipy.io import wavfile
+    from scipy.signal import resample_poly
+
+    sample_rate, samples = wavfile.read(path)
+    if samples.ndim > 1:
+        samples = samples.astype(np.float32).mean(axis=1)
+    if np.issubdtype(samples.dtype, np.integer):
+        limit = max(abs(np.iinfo(samples.dtype).min), np.iinfo(samples.dtype).max)
+        samples = samples.astype(np.float32) / float(limit)
+    else:
+        samples = samples.astype(np.float32)
+    if sample_rate != 16_000:
+        from math import gcd
+        divisor = gcd(sample_rate, 16_000)
+        samples = resample_poly(samples, 16_000 // divisor, sample_rate // divisor).astype(np.float32)
+        sample_rate = 16_000
+    return samples, sample_rate
+
+
+def _decode_phoneme_frames(model, processor, samples, sample_rate: int) -> list[dict[str, Any]]:
+    """Run CTC decoding and retain observed timing/confidence evidence."""
+    import numpy as np
+    import torch
+
+    inputs = processor(samples, sampling_rate=sample_rate, return_tensors="pt")
+    with torch.no_grad():
+        logits = model(inputs.input_values).logits[0]
+    probabilities = torch.softmax(logits, dim=-1)
+    token_ids = torch.argmax(probabilities, dim=-1).cpu().numpy()
+    frame_confidences = probabilities.max(dim=-1).values.cpu().numpy()
+    blank_id = processor.tokenizer.pad_token_id
+    if blank_id is None:
+        blank_id = 0
+    seconds_per_frame = (len(samples) / sample_rate) / max(1, len(token_ids))
+
+    phonemes: list[dict[str, Any]] = []
+    index = 0
+    while index < len(token_ids):
+        token_id = int(token_ids[index])
+        end = index + 1
+        while end < len(token_ids) and int(token_ids[end]) == token_id:
+            end += 1
+        token = processor.tokenizer.convert_ids_to_tokens(token_id)
+        if token_id != blank_id and token not in {
+            processor.tokenizer.unk_token,
+            processor.tokenizer.pad_token,
+            processor.tokenizer.word_delimiter_token,
+            None,
+            "",
+        }:
+            phonemes.append({
+                "symbol": str(token),
+                "start_time": round(index * seconds_per_frame, 6),
+                "end_time": round(end * seconds_per_frame, 6),
+                "confidence": round(float(np.mean(frame_confidences[index:end])), 6),
+            })
+        index = end
+    return phonemes
+
+
+def evaluate_corpus_audio(
+    model,
+    processor,
+    corpus: list[dict[str, Any]],
+    audio_dir: Path,
+) -> list[dict[str, Any]]:
+    """Evaluate actual corpus audio and retain per-sample observations."""
+    from backend.phoneme_service.syllabifier import IndependentSyllabifier
+
+    syllabifier = IndependentSyllabifier(
+        mean_confidence_threshold=0.0,
+        nucleus_confidence_threshold=0.0,
+    )
+    evaluations = []
+    for entry in corpus:
+        wav_path = audio_dir / f"{entry['sampleId']}.wav"
+        expected_hash = entry.get("sourceHash")
+        actual_hash = sha256_file(wav_path)
+        if expected_hash and actual_hash != expected_hash:
+            raise BenchmarkEvidenceError(
+                f"Source hash mismatch for {entry['sampleId']}"
+            )
+        samples, sample_rate = _load_wav_for_model(wav_path)
+        phonemes = _decode_phoneme_frames(model, processor, samples, sample_rate)
+        segmentation = syllabifier.syllabify(phonemes)
+        mean_confidence = (
+            sum(item["confidence"] for item in phonemes) / len(phonemes)
+            if phonemes else 0.0
+        )
+        nucleus_confidences = [
+            item.get("confidence", 0.0)
+            for item in segmentation.get("syllables", [])
+        ]
+        evaluations.append({
+            **entry,
+            "observedCount": segmentation.get("syllable_count"),
+            "phonemes": phonemes,
+            "meanPhonemeConfidence": round(mean_confidence, 6),
+            "minNucleusConfidence": min(nucleus_confidences) if nucleus_confidences else 0.0,
+        })
+    return evaluations
+
+
+def test_mandatory_words(evaluations: list[dict[str, Any]]) -> dict[str, Any]:
     """
     Test the model against the mandatory calibration words.
     Returns counts and per-word results.
     """
-    import torch
-    import numpy as np
-
     results: list[dict[str, Any]] = []
     correct = 0
 
     for word in MANDATORY_WORDS:
-        # Use the processor to get phoneme output for a clean word
-        # We synthesise a short waveform and check that the model emits *something*
-        sample_rate = 16_000
-        t_arr = np.linspace(0, 0.8, int(sample_rate * 0.8), dtype=np.float32)
-        waveform = 0.02 * np.sin(2 * np.pi * 300 * t_arr)
-
-        input_values = processor(
-            waveform, sampling_rate=sample_rate, return_tensors="pt"
-        ).input_values
-
-        with torch.no_grad():
-            logits = model(input_values).logits
-
-        predicted_ids = torch.argmax(logits, dim=-1)
-        output = processor.batch_decode(predicted_ids)[0].strip()
-
-        # In a real benchmark, we'd compare against expected IPA from the corpus.
-        # For now, mark as correct if the model produces any non-empty phoneme output.
-        is_correct = len(output) > 0
+        samples = [
+            result for result in evaluations
+            if result.get("category") == "clean"
+            and str(result.get("targetWord", "")).lower() == word
+        ]
+        is_correct = bool(samples) and all(
+            result.get("observedCount") == result.get("expectedObservedCount")
+            for result in samples
+        )
         if is_correct:
             correct += 1
 
         results.append({
             "word": word,
-            "expected": f"(from corpus)",
-            "output": output,
+            "sampleCount": len(samples),
+            "observedCounts": [result.get("observedCount") for result in samples],
+            "expectedCounts": [result.get("expectedObservedCount") for result in samples],
             "correct": is_correct,
         })
 
@@ -318,30 +486,16 @@ def test_mandatory_words(model, processor) -> dict[str, Any]:
     }
 
 
-def test_corpus_accuracy(
-    model, processor, corpus: list[dict[str, Any]]
-) -> dict[str, Any]:
-    """
-    Test clean-word accuracy against corpus entries.
-    Expects each entry to have at least 'word' and optionally 'ipa'.
-    """
-    if not corpus:
-        return {"cleanAccuracy": None, "testedWords": 0}
-
-    correct = 0
-    total = 0
-
-    for entry in corpus:
-        word = entry.get("word") or entry.get("text", "")
-        if not word:
-            continue
-        total += 1
-        # Placeholder: real accuracy test would use actual audio
-        # and compare phoneme-level alignment
-        correct += 1  # assume pass for structural completeness
-
-    accuracy = correct / total if total else 0.0
-    return {"cleanAccuracy": round(accuracy, 4), "testedWords": total}
+def score_evaluated_corpus(evaluations: list[dict[str, Any]]) -> dict[str, Any]:
+    """Calculate clean count accuracy from observed model results."""
+    clean = [item for item in evaluations if item.get("category") == "clean"]
+    correct = sum(
+        1 for item in clean
+        if item.get("observedCount") is not None
+        and item.get("observedCount") == item.get("expectedObservedCount")
+    )
+    accuracy = correct / len(clean) if clean else 0.0
+    return {"cleanAccuracy": round(accuracy, 4), "testedWords": len(clean)}
 
 
 # ---------------------------------------------------------------------------
@@ -358,18 +512,12 @@ def calibrate_thresholds(corpus: list[dict[str, Any]]) -> dict[str, Any]:
     Returns the selected thresholds and sweep metadata.
     """
     if not corpus:
-        print("[INFO] No corpus available — using default thresholds.")
-        return {
-            "meanPhonemeConfidence": DEFAULT_MEAN_CONFIDENCE,
-            "minNucleusConfidence": DEFAULT_NUCLEUS_CONFIDENCE,
-            "method": "default (no corpus)",
-            "rateableCoverage": None,
-        }
+        raise BenchmarkEvidenceError("Confidence calibration requires evaluated corpus results.")
 
     # Split by speaker
     speakers: dict[str, list[dict]] = {}
     for entry in corpus:
-        spk = entry.get("speaker", entry.get("speaker_id", "unknown"))
+        spk = entry.get("speakerCohort", "unknown")
         speakers.setdefault(spk, []).append(entry)
 
     speaker_ids = sorted(speakers.keys())
@@ -380,21 +528,60 @@ def calibrate_thresholds(corpus: list[dict[str, Any]]) -> dict[str, Any]:
     cal_entries = [e for sid in cal_speakers for e in speakers[sid]]
     holdout_entries = [e for sid in holdout_speakers for e in speakers[sid]]
 
-    # Grid search
-    best_coverage = -1.0
-    best_mean = DEFAULT_MEAN_CONFIDENCE
-    best_nucleus = DEFAULT_NUCLEUS_CONFIDENCE
+    def event_metrics(entries, category, direction):
+        tp = fp = fn = 0
+        for entry in entries:
+            target = entry.get("targetSyllableCount")
+            observed = entry.get("observedCount")
+            predicted = False
+            if target is not None and observed is not None:
+                predicted = observed > target if direction == "higher" else observed < target
+            actual = entry.get("category") == category
+            tp += int(predicted and actual)
+            fp += int(predicted and not actual)
+            fn += int(not predicted and actual)
+        return (
+            tp / (tp + fp) if tp + fp else 0.0,
+            tp / (tp + fn) if tp + fn else 0.0,
+        )
+
+    best = None
 
     for mean_t in MEAN_CONF_RANGE:
         for nuc_t in NUCLEUS_CONF_RANGE:
-            # Simulate coverage: fraction of entries whose confidence would
-            # exceed both thresholds.  Real implementation reads actual
-            # model confidences per entry.
-            coverage = _simulate_coverage(cal_entries, mean_t, nuc_t)
-            if coverage > best_coverage:
-                best_coverage = coverage
-                best_mean = mean_t
-                best_nucleus = nuc_t
+            rated = [
+                entry for entry in cal_entries
+                if entry.get("meanPhonemeConfidence", 0.0) >= mean_t
+                and entry.get("minNucleusConfidence", 0.0) >= nuc_t
+            ]
+            coverage = len(rated) / len(cal_entries) if cal_entries else 0.0
+            rated_clean = [entry for entry in rated if entry.get("category") == "clean"]
+            clean_accuracy = (
+                sum(
+                    entry.get("observedCount") == entry.get("expectedObservedCount")
+                    for entry in rated_clean
+                ) / len(rated_clean)
+                if rated_clean else 0.0
+            )
+            insertion_precision, insertion_recall = event_metrics(rated, "insertion", "higher")
+            omission_precision, omission_recall = event_metrics(rated, "omission", "lower")
+            gates_pass = (
+                clean_accuracy >= 0.95
+                and insertion_precision >= 0.90
+                and insertion_recall >= 0.90
+                and omission_precision >= 0.90
+                and omission_recall >= 0.90
+            )
+            rank = (coverage, mean_t, nuc_t)
+            if gates_pass and (best is None or rank > best[0]):
+                best = (rank, mean_t, nuc_t)
+
+    if best is None:
+        raise BenchmarkEvidenceError(
+            "No confidence-threshold pair satisfied the calibration accuracy gates."
+        )
+
+    best_coverage, best_mean, best_nucleus = best[0][0], best[1], best[2]
 
     # Validate on holdout
     holdout_coverage = _simulate_coverage(holdout_entries, best_mean, best_nucleus)
@@ -413,17 +600,15 @@ def calibrate_thresholds(corpus: list[dict[str, Any]]) -> dict[str, Any]:
 def _simulate_coverage(
     entries: list[dict[str, Any]], mean_t: float, nuc_t: float
 ) -> float:
-    """
-    Placeholder coverage simulation.
-    In a real run, this would apply the thresholds against actual model
-    confidence outputs stored in each entry.
-    """
+    """Return coverage using actual recorded model confidences."""
     if not entries:
         return 0.0
-    # Simple heuristic: higher thresholds → lower coverage
-    base = 1.0
-    penalty = (mean_t - 0.50) * 0.8 + (nuc_t - 0.35) * 0.6
-    return max(0.0, min(1.0, base - penalty))
+    accepted = sum(
+        1 for entry in entries
+        if entry.get("meanPhonemeConfidence", 0.0) >= mean_t
+        and entry.get("minNucleusConfidence", 0.0) >= nuc_t
+    )
+    return accepted / len(entries)
 
 
 # ---------------------------------------------------------------------------
@@ -556,6 +741,7 @@ def write_manifest(
             "minNucleusConfidence": quality["minNucleusConfidence"],
         },
         "benchmark": benchmark_data,
+        "evidenceStatus": "verified",
         "createdAt": datetime.now(timezone.utc).isoformat(),
         "verdict": verdict,
     }
@@ -663,7 +849,13 @@ def parse_args() -> argparse.Namespace:
         "--revision",
         type=str,
         default=None,
-        help="Optional pinned git revision of the model.",
+        help="Required immutable git revision of the model.",
+    )
+    parser.add_argument(
+        "--audio-dir",
+        type=str,
+        default="test-results/pronunciation-segmentation-corpus",
+        help="Directory containing <sampleId>.wav corpus files.",
     )
     return parser.parse_args()
 
@@ -682,6 +874,18 @@ def main() -> None:
     print(f"  Manifest : {args.manifest or '(none)'}")
     print(f"  Output   : {output_dir}")
     print()
+
+    if not args.revision:
+        print("[FATAL] --revision must pin an immutable model commit.", file=sys.stderr)
+        sys.exit(2)
+
+    corpus = load_corpus_manifest(args.manifest)
+    audio_dir = Path(args.audio_dir)
+    try:
+        require_benchmark_evidence(corpus, audio_dir)
+    except BenchmarkEvidenceError as exc:
+        print(f"[FATAL] {exc}", file=sys.stderr)
+        sys.exit(2)
 
     # --- Gather system info ---
     sys_info = gather_system_info()
@@ -747,9 +951,9 @@ def main() -> None:
 
     # --- Accuracy ---
     print("[6/7] Running accuracy tests …")
-    corpus = load_corpus_manifest(args.manifest)
-    mandatory_results = test_mandatory_words(model, processor)
-    corpus_accuracy = test_corpus_accuracy(model, processor, corpus)
+    evaluations = evaluate_corpus_audio(model, processor, corpus, audio_dir)
+    mandatory_results = test_mandatory_words(evaluations)
+    corpus_accuracy = score_evaluated_corpus(evaluations)
 
     corpus_hash = None
     if args.manifest and Path(args.manifest).exists():
@@ -761,7 +965,7 @@ def main() -> None:
 
     # --- Calibration ---
     print("[7/7] Calibrating thresholds …")
-    cal_result = calibrate_thresholds(corpus)
+    cal_result = calibrate_thresholds(evaluations)
     print(f"       Mean conf: {cal_result['meanPhonemeConfidence']}, "
           f"Nucleus: {cal_result['minNucleusConfidence']}")
 
@@ -820,6 +1024,7 @@ def main() -> None:
         "corpusAccuracy": corpus_accuracy,
         "calibration": cal_result,
         "symbolTable": symbol_table,
+        "evaluations": evaluations,
     }
     raw_path = write_raw_json(output_dir, full_data, "probe-results.json")
     print(f"  📄 Raw JSON written to {raw_path}")

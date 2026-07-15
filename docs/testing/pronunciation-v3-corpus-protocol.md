@@ -14,6 +14,7 @@ Each row in the corpus manifest (`manifest.json`) contains:
 | `targetWord`        | string        | The word the speaker was prompted to say.                         |
 | `referenceIpa`      | string        | Canonical IPA transcription for the target word.                  |
 | `expectedObservedCount` | integer   | Expected number of syllables observed in the recording.           |
+| `targetSyllableCount` | integer     | Independently verified canonical syllable count for the prompt.   |
 | `category`          | enum          | One of: `clean`, `omission`, `insertion`, `accented`, `unrateable`. |
 | `speakerCohort`     | string        | Speaker group descriptor (never a name or account ID).            |
 | `sourceHash`        | string        | SHA-256 hash of the source audio file for provenance.             |

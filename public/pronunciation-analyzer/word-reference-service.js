@@ -13,6 +13,7 @@ import {
     attachValidatedNativeAnalyses,
     buildReferenceCacheKey,
     compressAnalysisV2,
+    referenceNeedsNativeAnalysisRefresh,
     validateReferenceV2
 } from './reference-contract.js';
 
@@ -43,8 +44,11 @@ export class WordReferenceService {
         // 1. Check session cache (fastest)
         if (config.sessionCacheEnabled && this.sessionCache.has(cacheKey)) {
             console.log('🚀 Session cache hit:', normalizedWord);
+            const cachedReference = this.sessionCache.get(cacheKey);
+            const reference = await this.refreshCachedReference(cachedReference);
+            this.sessionCache.set(cacheKey, reference);
             return {
-                ...this.sessionCache.get(cacheKey),
+                ...reference,
                 fromCache: true,
                 cacheSource: 'session'
             };
@@ -59,10 +63,14 @@ export class WordReferenceService {
                     const reference = validateReferenceV2(dbData.referenceV2, {
                         expectedWord: normalizedWord
                     });
+                    const refreshedReference = await this.refreshCachedReference(reference);
                     console.log('📚 Firestore v2 hit:', normalizedWord);
-                    this.sessionCache.set(cacheKey, reference);
+                    this.sessionCache.set(cacheKey, refreshedReference);
+                    if (refreshedReference !== reference) {
+                        this.saveReference(normalizedWord, refreshedReference);
+                    }
                     return {
-                        ...reference,
+                        ...refreshedReference,
                         fromCache: true,
                         cacheSource: 'database'
                     };
@@ -80,16 +88,7 @@ export class WordReferenceService {
 
         // 4. Save under the additive v2 field. Legacy fields remain ignored.
         if (config.features.saveToDatabase && this.db.isAvailable()) {
-            const sanitizedData = this.sanitizeForFirestore({
-                word: normalizedWord,
-                cacheVersion: CACHE_VERSION,
-                referenceAlgorithmVersion: ALGORITHM_VERSION,
-                referenceV2: wordData
-            });
-
-            this.db.saveWord(sanitizedData).catch(err => {
-                console.error('Error saving to database:', err);
-            });
+            this.saveReference(normalizedWord, wordData);
         }
 
         // 5. Cache in session with the full contract identity.
@@ -125,20 +124,48 @@ export class WordReferenceService {
             throw new Error('No pronunciation reference is available for this word');
         }
 
-        return attachValidatedNativeAnalyses(dictResult, async (variant) => {
-            const analyzeResponse = await fetch(`${this.backendUrl}/analyze-url/v2`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    audioUrl: variant.audioUrl,
-                    variantId: variant.id,
-                    expectedSyllableCount: variant.syllableCount
-                })
-            });
-            if (!analyzeResponse.ok) {
-                throw new Error('Native pronunciation analysis failed');
-            }
-            return this.compressAnalysis(await analyzeResponse.json());
+        return attachValidatedNativeAnalyses(
+            dictResult,
+            (variant) => this.analyzeNativeVariant(variant)
+        );
+    }
+
+    async refreshCachedReference(reference) {
+        if (!referenceNeedsNativeAnalysisRefresh(reference)) return reference;
+        return attachValidatedNativeAnalyses(
+            reference,
+            (variant) => this.analyzeNativeVariant(variant),
+            { refreshOnly: true }
+        );
+    }
+
+    async analyzeNativeVariant(variant) {
+        const analyzeResponse = await fetch(`${this.backendUrl}/analyze-url/v2`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                audioUrl: variant.audioUrl,
+                variantId: variant.id,
+                expectedSyllableCount: variant.syllableCount
+            })
+        });
+        if (!analyzeResponse.ok) {
+            const error = new Error('Native pronunciation analysis failed');
+            error.status = analyzeResponse.status;
+            throw error;
+        }
+        return this.compressAnalysis(await analyzeResponse.json());
+    }
+
+    saveReference(word, referenceV2) {
+        const sanitizedData = this.sanitizeForFirestore({
+            word,
+            cacheVersion: CACHE_VERSION,
+            referenceAlgorithmVersion: ALGORITHM_VERSION,
+            referenceV2
+        });
+        this.db.saveWord(sanitizedData).catch(err => {
+            console.error('Error saving to database:', err);
         });
     }
 

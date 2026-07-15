@@ -11,7 +11,7 @@ options:
 
 substitutions:
   _GIT_SHA: "unknown"
-  _MODEL_REVISION: "main"
+  _MODEL_REVISION: "ae45363bf3413b374fecd9dc8bc1df0e24c3b7f4"
   _INFERENCE_ENGINE: "torch"
   _REPOSITORY: "gcr.io/${PROJECT_ID}"
 

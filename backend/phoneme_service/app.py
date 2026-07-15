@@ -110,6 +110,15 @@ def create_app(
                 manifest = json.load(fh)
             _state["manifest"] = manifest
 
+            if manifest.get("evidenceStatus") != "verified":
+                raise RuntimeError(
+                    "Model benchmark evidence is not verified; recognizer cannot become ready."
+                )
+            if manifest.get("selectedEngine") != manifest.get("verdict"):
+                raise RuntimeError(
+                    "Model manifest selectedEngine does not match the benchmark verdict."
+                )
+
             # Compute checksum
             raw_bytes = mp.read_bytes()
             _state["manifest_checksum"] = hashlib.sha256(raw_bytes).hexdigest()
@@ -117,6 +126,7 @@ def create_app(
             # Create backend (or use override)
             if _state["backend"] is None:
                 _state["backend"] = create_backend(str(mp))
+            _state["backend"].load()
 
             # Create recognizer
             _state["recognizer"] = PhonemeRecognizer(_state["backend"])
@@ -298,6 +308,15 @@ def create_app(
         total_ms = round((t_total_end - t_total_start) * 1000, 2)
 
         manifest = _state.get("manifest") or {}
+        phoneme_confidences = [
+            float(item.get("confidence"))
+            for item in phonemes
+            if isinstance(item.get("confidence"), (int, float))
+        ]
+        confidence = (
+            sum(phoneme_confidences) / len(phoneme_confidences)
+            if phoneme_confidences else 0.0
+        )
 
         return jsonify({
             "syllable_count": syl_result["syllable_count"],
@@ -305,6 +324,7 @@ def create_app(
             "nuclei": syl_result.get("nuclei_detected", []),
             "is_rateable": syl_result["is_rateable"],
             "quality_reason": syl_result.get("quality_reason"),
+            "confidence": round(confidence, 6),
             "phonemes": phonemes,
             "engine_version": ENGINE_VERSION,
             "model_revision": manifest.get("modelRevision", "unknown"),

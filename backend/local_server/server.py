@@ -66,6 +66,7 @@ except Exception as e:
 
 import concurrent.futures
 import time
+import unicodedata
 
 # V3 mode: off | shadow | active
 _PRONUNCIATION_V3_MODE = os.environ.get('PRONUNCIATION_V3_MODE', 'off').strip().lower()
@@ -1984,6 +1985,40 @@ def analyze_from_url_v2():
 
 _V3_HARD_TIMEOUT_SECONDS = 18
 
+_IPA_IGNORED_MARKS = frozenset('/[]ˈˌ.·| ‿')
+_IPA_MULTI_SYMBOL_UNITS = tuple(sorted({
+    'tʃ', 'dʒ', 'aɪ', 'aʊ', 'eɪ', 'oʊ', 'ɔɪ',
+    'ɪə', 'ɛə', 'ʊə', 'ɝ', 'ɚ',
+    'ɑr', 'ɔr', 'ɛr', 'ɪr', 'ʊr', 'ər',
+    'l̩', 'm̩', 'n̩', 'ŋ̩',
+}, key=len, reverse=True))
+
+
+def _tokenize_reference_ipa(reference_ipa):
+    """Tokenize display IPA into phoneme units for edit alignment."""
+    normalized = unicodedata.normalize('NFC', str(reference_ipa or ''))
+    tokens = []
+    index = 0
+    while index < len(normalized):
+        char = normalized[index]
+        if char in _IPA_IGNORED_MARKS or char.isspace():
+            index += 1
+            continue
+        matched = next(
+            (unit for unit in _IPA_MULTI_SYMBOL_UNITS if normalized.startswith(unit, index)),
+            None,
+        )
+        if matched:
+            tokens.append(matched)
+            index += len(matched)
+            continue
+        if char in ('ː', 'ˑ') and tokens:
+            tokens[-1] += char
+        else:
+            tokens.append(char)
+        index += 1
+    return tokens
+
 
 def _phoneme_align_edit_ops(reference_phonemes, observed_phonemes):
     """Compute edit operations between reference and observed phoneme lists.
@@ -2060,7 +2095,11 @@ def _build_v3_comparison(reference_ipa, observed_phonemes, observed_syllable_cou
     """Build the comparison block for v3 response when reference_ipa is provided."""
     if not reference_ipa:
         return None
-    ref_phonemes = list(reference_ipa) if isinstance(reference_ipa, str) else list(reference_ipa or [])
+    ref_phonemes = (
+        _tokenize_reference_ipa(reference_ipa)
+        if isinstance(reference_ipa, str)
+        else list(reference_ipa or [])
+    )
     edit_ops = _phoneme_align_edit_ops(ref_phonemes, observed_phonemes)
     count_delta = observed_syllable_count - (expected_syllables or 0) if expected_syllables else None
     return {
@@ -2090,8 +2129,8 @@ def _adapt_v2_to_v3_response(v2_result, mode, reference_ipa=None, expected_sylla
         'degraded': mode == 'active',
         'observed_phonemes': [],
         'observed_syllables': [{
-            'start': s.get('startTime', 0),
-            'end': s.get('endTime', 0),
+            'startTime': s.get('startTime', s.get('start', 0)),
+            'endTime': s.get('endTime', s.get('end', 0)),
             'duration': s.get('duration', 0),
         } for s in syllables],
         'syllable_count': syllable_count,
@@ -2117,7 +2156,10 @@ def _build_v3_active_response(praat_result, phoneme_result, reference_ipa=None, 
     quality_reason = phoneme_result.get('quality_reason')
     syllable_count = len(syllables_from_recognizer)
 
-    observed_phoneme_labels = [p.get('label', '') for p in phonemes]
+    observed_phoneme_labels = [
+        p.get('symbol') or p.get('label', '')
+        for p in phonemes
+    ]
     comparison = _build_v3_comparison(
         reference_ipa, observed_phoneme_labels, syllable_count, expected_syllables,
     )
@@ -2132,9 +2174,14 @@ def _build_v3_active_response(praat_result, phoneme_result, reference_ipa=None, 
         'degraded': False,
         'observed_phonemes': phonemes,
         'observed_syllables': [{
-            'start': s.get('start', 0),
-            'end': s.get('end', 0),
-            'duration': s.get('end', 0) - s.get('start', 0),
+            'startTime': s.get('start_time', s.get('start', 0)),
+            'endTime': s.get('end_time', s.get('end', 0)),
+            'duration': s.get(
+                'duration',
+                s.get('end_time', s.get('end', 0)) - s.get('start_time', s.get('start', 0)),
+            ),
+            'confidence': s.get('confidence'),
+            'nucleus': s.get('nucleus'),
         } for s in syllables_from_recognizer],
         'syllable_count': syllable_count,
         'comparison': comparison,
@@ -2150,6 +2197,32 @@ def _build_v3_active_response(praat_result, phoneme_result, reference_ipa=None, 
     }
 
 
+def _build_v3_degraded_response(praat_result, reason, confidence=0.0):
+    """Return contours without presenting a target-guided V2 learner count."""
+    return {
+        'analysisVersion': 'pronunciation-analysis-v3',
+        'mode': 'active',
+        'engine': 'ctc-praat',
+        'is_rateable': False,
+        'confidence': confidence if isinstance(confidence, (int, float)) else 0.0,
+        'quality_reason': reason or 'MODEL_INFERENCE_FAILED',
+        'degraded': True,
+        'observed_phonemes': [],
+        'observed_syllables': [],
+        'syllable_count': None,
+        'comparison': None,
+        'pitch': praat_result.get('pitch', {'times': [], 'values': []}),
+        'intensity': praat_result.get('intensity', {'times': [], 'values': []}),
+        'total_duration': praat_result.get('duration', 0),
+        'sample_rate': praat_result.get('sampleRate'),
+        'capabilities': {
+            'graphs': True,
+            'syllable_duration': False,
+            'phoneme_alignment': False,
+        },
+    }
+
+
 @app.route('/analyze/v3', methods=['POST'])
 def analyze_v3():
     """V3 pronunciation analysis with optional phoneme recognition."""
@@ -2159,6 +2232,7 @@ def analyze_v3():
     audio_file = request.files['audio']
     reference_ipa = request.form.get('reference_ipa')
     expected_syllables = request.form.get('expected_syllables', type=int)
+    target_word = request.form.get('target_word')
 
     mode = _PRONUNCIATION_V3_MODE
 
@@ -2192,9 +2266,10 @@ def analyze_v3():
         phoneme_result = None
         phoneme_error = None
 
-        remaining = max(1, _V3_HARD_TIMEOUT_SECONDS - (time.time() - start_time))
+        remaining = max(0.001, _V3_HARD_TIMEOUT_SECONDS - (time.time() - start_time))
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
+        try:
             praat_future = executor.submit(
                 analyze_audio_v2, tmp_path, native=False,
             )
@@ -2211,40 +2286,49 @@ def analyze_v3():
                     'code': 'V3_PRAAT_FAILED',
                 }), 500
 
-            phoneme_remaining = max(1, _V3_HARD_TIMEOUT_SECONDS - (time.time() - start_time))
+            phoneme_remaining = max(0.001, _V3_HARD_TIMEOUT_SECONDS - (time.time() - start_time))
             try:
                 phoneme_result = phoneme_future.result(timeout=phoneme_remaining)
             except concurrent.futures.TimeoutError:
                 phoneme_error = 'TIMEOUT'
                 print('V3 phoneme recognition timed out')
             except Exception as e:
-                phoneme_error = str(e)
+                phoneme_error = getattr(e, 'reason', None) or 'MODEL_INFERENCE_FAILED'
                 print(f'V3 phoneme recognition error: {e}')
+        finally:
+            executor.shutdown(wait=False, cancel_futures=True)
 
         elapsed = time.time() - start_time
-        if elapsed > _V3_HARD_TIMEOUT_SECONDS:
-            return jsonify({
-                'error': 'Analysis exceeded time limit',
-                'code': 'V3_TIMEOUT',
-            }), 504
 
         if mode == 'shadow':
             # Log phoneme results for comparison, but always return v2-adapted
-            if phoneme_result and not phoneme_error:
-                phoneme_syllable_count = len(phoneme_result.get('syllables', []))
-                v2_syllable_count = praat_result.get('observed', {}).get('syllableCount', 0)
-                if phoneme_syllable_count != v2_syllable_count:
-                    disagreement_log = {
-                        'v2_count': v2_syllable_count,
-                        'v3_count': phoneme_syllable_count,
-                        'disagreement_category': 'omission' if phoneme_syllable_count < v2_syllable_count else 'insertion' if phoneme_syllable_count > v2_syllable_count else 'count-mismatch',
-                        'confidence': phoneme_result.get('confidence'),
-                        'latency_seconds': elapsed,
-                        'quality_reason': phoneme_result.get('quality_reason'),
-                        'model_revision': phoneme_result.get('model_revision'),
-                        'reference_ipa': reference_ipa,
-                    }
-                    print(f'V3 shadow disagreement: {json.dumps(disagreement_log)}')
+            v2_syllable_count = praat_result.get('observed', {}).get('syllableCount', 0)
+            phoneme_syllable_count = (
+                len(phoneme_result.get('syllables', []))
+                if phoneme_result and not phoneme_error else None
+            )
+            disagreement_category = 'unavailable'
+            if phoneme_syllable_count is not None:
+                if phoneme_syllable_count == v2_syllable_count:
+                    disagreement_category = 'agreement'
+                elif phoneme_syllable_count < v2_syllable_count:
+                    disagreement_category = 'omission'
+                else:
+                    disagreement_category = 'insertion'
+            shadow_log = {
+                'event': 'pronunciation_v3_shadow',
+                'v2_count': v2_syllable_count,
+                'v3_count': phoneme_syllable_count,
+                'disagreement_category': disagreement_category,
+                'confidence': phoneme_result.get('confidence') if phoneme_result else None,
+                'latency_seconds': round(elapsed, 4),
+                'quality_reason': (
+                    phoneme_result.get('quality_reason') if phoneme_result else phoneme_error
+                ),
+                'model_revision': phoneme_result.get('model_revision') if phoneme_result else None,
+                'target_word': target_word,
+            }
+            print(f'V3 shadow result: {json.dumps(shadow_log, sort_keys=True)}')
             return jsonify(_adapt_v2_to_v3_response(
                 praat_result, mode,
                 reference_ipa=reference_ipa,
@@ -2253,19 +2337,17 @@ def analyze_v3():
 
         # mode == 'active'
         if phoneme_error or not phoneme_result:
-            # Degrade to v2 contours
-            return jsonify(_adapt_v2_to_v3_response(
-                praat_result, mode,
-                reference_ipa=reference_ipa,
-                expected_syllables=expected_syllables,
+            return jsonify(_build_v3_degraded_response(
+                praat_result,
+                phoneme_error or 'MODEL_INFERENCE_FAILED',
             ))
 
         # Check if phoneme recognition is rateable
         if not phoneme_result.get('is_rateable', True):
-            return jsonify(_adapt_v2_to_v3_response(
-                praat_result, mode,
-                reference_ipa=reference_ipa,
-                expected_syllables=expected_syllables,
+            return jsonify(_build_v3_degraded_response(
+                praat_result,
+                phoneme_result.get('quality_reason') or 'LOW_PHONEME_CONFIDENCE',
+                phoneme_result.get('confidence', 0.0),
             ))
 
         return jsonify(_build_v3_active_response(

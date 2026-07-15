@@ -8,6 +8,7 @@ import {
     compressAnalysisV2,
     getSelectableReferenceVariants,
     needsNativeAnalysisRefresh,
+    referenceNeedsNativeAnalysisRefresh,
     selectReferenceVariant,
     validateNativeAnalysisForVariant,
     validateReferenceV2
@@ -333,6 +334,14 @@ assert.throws(
 assert.equal(typeof NATIVE_ANALYSIS_RETRY_DELAY_MS, 'number');
 assert.equal(NATIVE_ANALYSIS_RETRY_DELAY_MS, 500);
 
+assert.equal(
+    referenceNeedsNativeAnalysisRefresh(validReference({
+        variants: [{ ...validVariant(), nativeAnalysis: null }]
+    })),
+    true,
+    'a cached reference with a graphless audio-backed variant must be refreshed'
+);
+
 // Test 1: Valid audio-backed cached variant with no nativeAnalysis is flagged for refresh
 {
     const audioVariant = validVariant();
@@ -412,7 +421,7 @@ assert.equal(NATIVE_ANALYSIS_RETRY_DELAY_MS, 500);
     // nativeAnalysis should be null (failed)
     assert.equal(result.variants[0].nativeAnalysis, null);
     // The variant must be marked as retryable, not as a final successful cache entry
-    assert.equal(result.variants[0].analysisValidation?.status, 'conflict');
+    assert.equal(result.variants[0].analysisValidation?.status, 'retryable');
     // Should have been called twice (initial + one retry)
     assert.equal(callCount, 2, 'should have retried exactly once before giving up');
 }
@@ -455,4 +464,35 @@ assert.equal(NATIVE_ANALYSIS_RETRY_DELAY_MS, 500);
     assert.equal(result, false, 'variant with usable contours should NOT need refresh');
 }
 
-console.log('reference-contract tests passed');
+// Test 7: Refreshing one graphless variant preserves graphs on sibling variants
+{
+    const first = validVariant();
+    const second = validVariant({ id: 'eeeeeeeeeeeeeeee', partOfSpeech: 'verb' });
+    const analysisFor = (candidate) => ({
+        analysisVersion: 'pronunciation-analysis-v2',
+        variantId: candidate.id,
+        canonicalSyllableCount: candidate.syllableCount,
+        quality: { rateable: true, confidence: 0.91, reasons: [] },
+        segmentation: { rawCandidateCount: 1, evidenceCandidateCount: 1, selectedCount: 1, method: 'acoustic-candidate-selection', confidence: 0.91, conflicts: [] },
+        observed: { syllableCount: 1, primaryStress: 0, syllables: [{}] },
+        pitch: { times: [0, 0.01], values: [150, 155] },
+        intensity: { times: [0, 0.01], values: [70, 72] },
+        capabilities: { showNativeGraphs: true }
+    });
+    const firstAnalysis = analysisFor(first);
+    const reference = validReference({
+        variants: [
+            { ...first, nativeAnalysis: firstAnalysis },
+            { ...second, nativeAnalysis: null }
+        ]
+    });
+    const refreshed = await attachValidatedNativeAnalyses(
+        reference,
+        async (candidate) => analysisFor(candidate),
+        { refreshOnly: true }
+    );
+    assert.deepEqual(refreshed.variants[0].nativeAnalysis, firstAnalysis);
+    assert.equal(refreshed.variants[1].nativeAnalysis.variantId, second.id);
+}
+
+process.stdout.write('reference-contract tests passed\n');

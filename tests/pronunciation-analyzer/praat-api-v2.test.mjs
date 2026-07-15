@@ -96,6 +96,38 @@ describe('PraatAPI v3 integration', () => {
         assert.equal(result.syllable_count, 1);
     });
 
+    it('analyze() delegates to v3 when mode is shadow and sends comparison metadata', async () => {
+        const fetchCalls = [];
+        let postedBody = null;
+        globalThis.fetch = async (url, options) => {
+            fetchCalls.push(url);
+            if (url.includes('/health')) {
+                return { ok: true, json: async () => ({ pronunciationV3Mode: 'shadow' }) };
+            }
+            postedBody = options.body;
+            return {
+                ok: true,
+                json: async () => ({
+                    mode: 'shadow',
+                    observed_syllables: [{ startTime: 0, endTime: 0.5, duration: 0.5 }],
+                    syllable_count: 1,
+                    is_rateable: true
+                })
+            };
+        };
+
+        const result = await api.analyze(
+            new Blob(['audio'], { type: 'audio/wav' }),
+            1,
+            { referenceIpa: '/bɪzi/', targetWord: 'busy' }
+        );
+
+        assert.ok(fetchCalls.some(u => u.includes('/analyze/v3')));
+        assert.equal(postedBody.get('reference_ipa'), '/bɪzi/');
+        assert.equal(postedBody.get('target_word'), 'busy');
+        assert.equal(result.mode, 'shadow');
+    });
+
     it('analyze() uses v2 when mode is off', async () => {
         let fetchCalls = [];
 

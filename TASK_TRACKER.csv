@@ -378,3 +378,10 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 385,2026-07-13,Redesign Pronunciation Analyzer comparison graph alignment and colors,Done,2026-07-13
 386,2026-07-13,Merge and push all changes to production,Done,2026-07-13
 387,2026-07-13,Fix Pronunciation Analyzer layout issues,Done,2026-07-13
+388,2026-07-13,Review independent phoneme segmentation and fresh-word graphs plan,Done,2026-07-13
+389,2026-07-13,Review revised pronunciation segmentation v3 plan,Done,2026-07-13
+390,2026-07-13,Review final pronunciation segmentation v3 plan (10-section revision),Done,2026-07-13
+391,2026-07-14,Execute pronunciation segmentation v3 implementation plan,Done,2026-07-14
+392,2026-07-14,Explain pronunciation v3 rollout execution plan,Done,2026-07-14
+393,2026-07-14,Plan and design Pronunciation Samples recording page,Done,2026-07-14
+394,2026-07-14,Implement Pronunciation Samples recording page,Done,2026-07-14

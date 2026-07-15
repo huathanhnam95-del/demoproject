@@ -39,10 +39,10 @@ export class PraatAPI {
     /**
      * Call the v3 analysis endpoint.
      * @param {Blob} audioBlob
-     * @param {{ referenceIpa?: string, expectedSyllables?: number }} options
+     * @param {{ referenceIpa?: string, expectedSyllables?: number, targetWord?: string }} options
      * @returns {Promise<object>} v3 analysis response
      */
-    async analyzeV3(audioBlob, { referenceIpa, expectedSyllables } = {}) {
+    async analyzeV3(audioBlob, { referenceIpa, expectedSyllables, targetWord } = {}) {
         const wavBlob = await this.ensureWav(audioBlob);
         const formData = new FormData();
         formData.append('audio', wavBlob, 'recording.wav');
@@ -51,6 +51,9 @@ export class PraatAPI {
         }
         if (Number.isInteger(expectedSyllables) && expectedSyllables > 0) {
             formData.append('expected_syllables', String(expectedSyllables));
+        }
+        if (targetWord) {
+            formData.append('target_word', String(targetWord));
         }
 
         const response = await fetch(`${this.backendUrl}/analyze/v3`, {
@@ -66,12 +69,13 @@ export class PraatAPI {
         return response.json();
     }
 
-    async analyze(audioBlob, expectedSyllableCount = null) {
-        // Check v3 support; delegate if active
+    async analyze(audioBlob, expectedSyllableCount = null, options = {}) {
+        // Check v3 support; shadow must also traverse the v3 orchestrator.
         try {
             const v3Mode = await this.checkV3Support();
-            if (v3Mode === 'active') {
+            if (v3Mode === 'active' || v3Mode === 'shadow') {
                 return this.analyzeV3(audioBlob, {
+                    ...options,
                     expectedSyllables: expectedSyllableCount
                 });
             }

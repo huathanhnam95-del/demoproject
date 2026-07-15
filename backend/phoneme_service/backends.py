@@ -45,6 +45,11 @@ class RecognizerBackend(abc.ABC):
     """Abstract interface every phoneme-recognition backend must satisfy."""
 
     @abc.abstractmethod
+    def load(self) -> None:
+        """Load and validate model dependencies and artifacts."""
+        ...
+
+    @abc.abstractmethod
     def recognize(
         self, samples: np.ndarray, sample_rate: int
     ) -> Dict[str, Any]:
@@ -123,6 +128,9 @@ class TorchRecognizerBackend(RecognizerBackend):
 
     # -- public API ---------------------------------------------------------
 
+    def load(self) -> None:
+        self._ensure_loaded()
+
     def recognize(
         self, samples: np.ndarray, sample_rate: int
     ) -> Dict[str, Any]:
@@ -184,6 +192,11 @@ class OnnxRecognizerBackend(RecognizerBackend):
             f"ONNX backend is not yet implemented for model "
             f"'{self._model_id}' (revision {self._model_revision}). "
             f"Use the 'torch' engine instead."
+        )
+
+    def load(self) -> None:
+        raise NotImplementedError(
+            f"ONNX backend is not yet implemented for model '{self._model_id}'."
         )
 
 

@@ -65,6 +65,7 @@ class RecognizerError(Exception):
 # Refresh the token 5 minutes before its actual expiry so that in-flight
 # requests are unlikely to hit an expired credential.
 _TOKEN_REFRESH_MARGIN_SEC = 5 * 60
+_RECOGNIZER_HTTP_TIMEOUT_SEC = 15
 
 _LOCALHOST_HOSTS = frozenset({"localhost", "127.0.0.1"})
 
@@ -206,7 +207,7 @@ class PhonemeClient:
             url,
             files=files,
             headers=self._auth_headers(),
-            timeout=60,
+            timeout=_RECOGNIZER_HTTP_TIMEOUT_SEC,
         )
 
         # --- happy path ------------------------------------------------------
@@ -231,7 +232,7 @@ class PhonemeClient:
                 url,
                 files={"audio": ("audio.wav", wav_bytes, "audio/wav")},
                 headers=self._auth_headers(force_refresh=True),
-                timeout=60,
+                timeout=_RECOGNIZER_HTTP_TIMEOUT_SEC,
             )
             if retry_resp.status_code == 200:
                 return retry_resp.json()

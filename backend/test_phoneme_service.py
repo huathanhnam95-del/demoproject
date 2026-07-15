@@ -98,6 +98,7 @@ MOCK_MANIFEST = {
         "minNucleusConfidence": 0.45,
     },
     "benchmark": {"peakRssGiB": 1.2},
+    "evidenceStatus": "verified",
     "verdict": "torch",
 }
 
@@ -210,6 +211,50 @@ class TestReadyz(unittest.TestCase):
             data = resp.get_json()
             self.assertEqual(data["status"], "ready")
 
+    def test_readyz_returns_503_when_backend_model_load_fails(self):
+        failing_backend = mock.MagicMock()
+        failing_backend.load.side_effect = RuntimeError("model dependency unavailable")
+
+        import tempfile
+        import os
+        from backend.phoneme_service.app import create_app
+
+        tmpdir = tempfile.mkdtemp()
+        manifest_path = os.path.join(tmpdir, "model-manifest.json")
+        with open(manifest_path, "w", encoding="utf-8") as fh:
+            json.dump(MOCK_MANIFEST, fh)
+
+        app = create_app(manifest_path=manifest_path, backend_override=failing_backend)
+        app.config["TESTING"] = True
+        with app.test_client() as client:
+            resp = client.get("/readyz")
+            self.assertEqual(resp.status_code, 503)
+            self.assertEqual(resp.get_json()["status"], "not_ready")
+        failing_backend.load.assert_called_once()
+
+    def test_readyz_rejects_pending_benchmark_evidence(self):
+        import tempfile
+        import os
+        from backend.phoneme_service.app import create_app
+
+        pending_manifest = dict(MOCK_MANIFEST)
+        pending_manifest["evidenceStatus"] = "pending"
+        pending_manifest["selectedEngine"] = "provider-evaluation-required"
+        pending_manifest["verdict"] = "provider-evaluation-required"
+        tmpdir = tempfile.mkdtemp()
+        manifest_path = os.path.join(tmpdir, "model-manifest.json")
+        with open(manifest_path, "w", encoding="utf-8") as fh:
+            json.dump(pending_manifest, fh)
+
+        backend = mock.MagicMock()
+        app = create_app(manifest_path=manifest_path, backend_override=backend)
+        app.config["TESTING"] = True
+        with app.test_client() as client:
+            resp = client.get("/readyz")
+            self.assertEqual(resp.status_code, 503)
+            self.assertIn("not verified", resp.get_json()["reason"])
+        backend.load.assert_not_called()
+
 
 class TestRecognizeV1(unittest.TestCase):
     """POST /recognize/v1 — inference endpoint."""
@@ -244,8 +289,10 @@ class TestRecognizeV1(unittest.TestCase):
             self.assertIn("phonemes", data)
             self.assertIn("engine_version", data)
             self.assertIn("model_revision", data)
+            self.assertIn("confidence", data)
             self.assertEqual(data["syllable_count"], 2)
             self.assertTrue(data["is_rateable"])
+            self.assertAlmostEqual(data["confidence"], 0.9175, places=4)
 
     def test_recognize_no_audio(self):
         with self.app.test_client() as client:

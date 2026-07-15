@@ -19,6 +19,7 @@ public/*
 !backend/cloudbuild.phoneme.yaml
 !backend/requirements.phoneme-torch.txt
 !backend/requirements.phoneme-onnx.txt
+!backend/__init__.py
 !backend/phoneme_service/
 !backend/phoneme_service/*.py
 !backend/phoneme_service/model-manifest.json

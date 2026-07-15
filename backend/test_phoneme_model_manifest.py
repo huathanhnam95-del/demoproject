@@ -110,12 +110,10 @@ class TestPhonemeModelManifest(unittest.TestCase):
 
     @_skip_if_no_manifest
     def test_verdict_matches_selected_engine(self):
-        """verdict and selectedEngine should agree."""
-        self.assertEqual(
-            self.manifest.get("verdict"),
-            self.manifest.get("selectedEngine"),
-            "verdict and selectedEngine must match.",
-        )
+        """The deployable engine must always match the benchmark verdict."""
+        self.assertEqual(self.manifest.get("verdict"), self.manifest.get("selectedEngine"))
+        if self.manifest.get("evidenceStatus") != "verified":
+            self.assertEqual(self.manifest.get("verdict"), "provider-evaluation-required")
 
     # ------------------------------------------------------------------
     # Quality thresholds
@@ -155,11 +153,20 @@ class TestPhonemeModelManifest(unittest.TestCase):
 
     @_skip_if_no_manifest
     def test_peak_rss_is_present(self):
-        """peakRssGiB must be present and positive."""
+        """peakRssGiB is positive only after a verified benchmark."""
         bm = self.manifest.get("benchmark", {})
         val = bm.get("peakRssGiB")
-        self.assertIsNotNone(val, "peakRssGiB is required.")
-        self.assertGreater(val, 0, "peakRssGiB must be positive.")
+        if self.manifest.get("evidenceStatus") == "verified":
+            self.assertIsNotNone(val, "peakRssGiB is required.")
+            self.assertGreater(val, 0, "peakRssGiB must be positive.")
+        else:
+            self.assertIsNone(val, "Unverified benchmark metrics must not contain invented values.")
+
+    @_skip_if_no_manifest
+    def test_candidate_uses_verified_upstream_artifact_identity(self):
+        self.assertEqual(self.manifest.get("modelRevision"), "ae45363bf3413b374fecd9dc8bc1df0e24c3b7f4")
+        self.assertEqual(self.manifest.get("tokenizerChecksum"), "d732ab2456c0c017930001dc9af0b41b3b93d25b2eb9740bf9d925508d7d87d0")
+        self.assertEqual(self.manifest.get("modelChecksum"), "3173bde9e9ce490fa0f989e413c42f25bc1820c020adc1e6b9b87025b3cfcc5e")
 
     @_skip_if_no_manifest
     def test_mandatory_words_total_is_six(self):

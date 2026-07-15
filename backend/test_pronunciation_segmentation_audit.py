@@ -53,6 +53,15 @@ class TestPronunciationSegmentationAudit(unittest.TestCase):
         self.assertIsNotNone(mae)
         self.assertAlmostEqual(mae, 0.025, places=5)
 
+    def test_align_and_compute_mae_accepts_schema_span_keys(self):
+        observed = [{"startTime": 0.10, "endTime": 0.50}]
+        verified = [{"start": 0.12, "end": 0.48}]
+        self.assertAlmostEqual(
+            audit.align_and_compute_mae(observed, verified),
+            0.02,
+            places=5,
+        )
+
     def test_align_and_compute_mae_mismatched_length(self):
         """align_and_compute_mae aligns up to the shorter list length."""
         observed = [
@@ -78,6 +87,45 @@ class TestPronunciationSegmentationAudit(unittest.TestCase):
         self.assertEqual(prec, 1.0)
         self.assertEqual(rec, 1.0)
 
+    def test_native_graph_payload_requires_both_real_contours_and_capability(self):
+        complete = {
+            "pitch": {"times": [0.0, 0.1], "values": [150.0, 155.0]},
+            "intensity": {"times": [0.0, 0.1], "values": [68.0, 70.0]},
+            "capabilities": {"showNativeGraphs": True},
+        }
+        self.assertTrue(audit.native_graph_payload_available(complete))
+        self.assertFalse(audit.native_graph_payload_available({
+            **complete,
+            "pitch": {"times": [], "values": []},
+        }))
+        self.assertFalse(audit.native_graph_payload_available({
+            **complete,
+            "capabilities": {"showNativeGraphs": False},
+        }))
+
+    def test_target_forcing_probe_requires_same_observed_count(self):
+        primary = {"syllable_count": 2, "is_rateable": True}
+        same_observation = {"syllable_count": 2, "is_rateable": True}
+        target_forced = {"syllable_count": 3, "is_rateable": True}
+        self.assertTrue(audit.target_forcing_probe_passed(primary, same_observation))
+        self.assertFalse(audit.target_forcing_probe_passed(primary, target_forced))
+        self.assertFalse(audit.target_forcing_probe_passed(primary, {"syllable_count": None}))
+
+    def test_manifest_target_count_must_be_explicit(self):
+        entry = {
+            "targetWord": "busy",
+            "referenceIpa": "/bɪzi/",
+            "expectedObservedCount": 1,
+            "targetSyllableCount": 2,
+        }
+        self.assertEqual(audit.manifest_target_syllable_count(entry), 2)
+        with self.assertRaises(ValueError):
+            audit.manifest_target_syllable_count({
+                "targetWord": "busy",
+                "referenceIpa": "/bɪzi/",
+                "expectedObservedCount": 1,
+            })
+
     def test_evaluate_promotion_gates_passing(self):
         """evaluate_promotion_gates should pass when all metrics meet the criteria."""
         # Setup results that meet all gates
@@ -94,6 +142,7 @@ class TestPronunciationSegmentationAudit(unittest.TestCase):
                 "category": "clean",
                 "is_rateable": True,
                 "total_duration": 1.2,
+                "syllable_durations_available": True,
                 "has_pitch": True,
                 "has_intensity": True,
                 "boundary_mae": 0.015,
@@ -109,10 +158,42 @@ class TestPronunciationSegmentationAudit(unittest.TestCase):
             "category": "accented",
             "is_rateable": True,
             "total_duration": 1.2,
+            "syllable_durations_available": True,
             "has_pitch": True,
             "has_intensity": True,
             "boundary_mae": 0.020,
         })
+
+        results.extend([
+            {
+                "sampleId": "sample-omission",
+                "targetWord": "banana",
+                "expectedObservedCount": 2,
+                "syllable_count": 2,
+                "expected_syllables_target": 3,
+                "category": "omission",
+                "is_rateable": True,
+                "total_duration": 1.0,
+                "syllable_durations_available": True,
+                "has_pitch": True,
+                "has_intensity": True,
+                "boundary_mae": 0.020,
+            },
+            {
+                "sampleId": "sample-insertion",
+                "targetWord": "busy",
+                "expectedObservedCount": 3,
+                "syllable_count": 3,
+                "expected_syllables_target": 2,
+                "category": "insertion",
+                "is_rateable": True,
+                "total_duration": 1.0,
+                "syllable_durations_available": True,
+                "has_pitch": True,
+                "has_intensity": True,
+                "boundary_mae": 0.020,
+            },
+        ])
 
         model_manifest = {
             "benchmark": {
@@ -121,7 +202,13 @@ class TestPronunciationSegmentationAudit(unittest.TestCase):
         }
         latencies = [0.5, 0.6, 0.7, 0.8]  # all warm, well under 2.0s
 
-        gates, all_pass = audit.evaluate_promotion_gates(results, model_manifest, latencies)
+        gates, all_pass = audit.evaluate_promotion_gates(
+            results,
+            model_manifest,
+            latencies,
+            native_graph_results=[True] * 100,
+            target_forcing_verified=True,
+        )
         self.assertTrue(all_pass)
         self.assertTrue(gates["mandatory_clean_words"]["passed"])
         self.assertTrue(gates["overall_clean_accuracy"]["passed"])
@@ -146,6 +233,7 @@ class TestPronunciationSegmentationAudit(unittest.TestCase):
                 "category": "clean",
                 "is_rateable": True,
                 "total_duration": 1.2,
+                "syllable_durations_available": True,
                 "has_pitch": True,
                 "has_intensity": True,
                 "boundary_mae": 0.015,
@@ -155,6 +243,96 @@ class TestPronunciationSegmentationAudit(unittest.TestCase):
         gates, all_pass = audit.evaluate_promotion_gates(results, model_manifest, [0.5])
         self.assertFalse(all_pass)
         self.assertFalse(gates["mandatory_clean_words"]["passed"])
+
+    def test_empty_results_fail_every_data_dependent_gate(self):
+        gates, all_pass = audit.evaluate_promotion_gates([], {}, [])
+        self.assertFalse(all_pass)
+        for name in (
+            "overall_clean_accuracy",
+            "omission_precision",
+            "omission_recall",
+            "insertion_precision",
+            "insertion_recall",
+            "accented_accuracy",
+            "boundary_mae",
+            "duration_availability",
+            "warm_p95_latency",
+            "peak_rss",
+            "graph_availability",
+            "zero_target_forced_counts",
+        ):
+            self.assertFalse(gates[name]["passed"], name)
+
+    def test_duration_gate_requires_per_syllable_timings(self):
+        results = [{
+            "sampleId": "busy-1",
+            "targetWord": "busy",
+            "expectedObservedCount": 2,
+            "expected_syllables_target": 2,
+            "syllable_count": 2,
+            "category": "clean",
+            "is_rateable": True,
+            "total_duration": 0.5,
+            "syllable_durations_available": False,
+        }]
+        gates, _ = audit.evaluate_promotion_gates(results, {}, [])
+        self.assertFalse(gates["duration_availability"]["passed"])
+
+    def test_main_empty_manifest_exits_nonzero_even_in_dry_run(self):
+        import sys
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            manifest_path = Path(tmpdir) / "manifest.json"
+            output_path = Path(tmpdir) / "output"
+            manifest_path.write_text(
+                json.dumps({"version": "1.0.0", "entries": []}),
+                encoding="utf-8",
+            )
+            argv = [
+                "pronunciation-segmentation-audit.py",
+                "--dry-run",
+                "--manifest",
+                str(manifest_path),
+                "--output",
+                str(output_path),
+            ]
+            with mock.patch.object(sys, "argv", argv):
+                with self.assertRaises(SystemExit) as raised:
+                    audit.main()
+            self.assertNotEqual(raised.exception.code, 0)
+
+    def test_main_missing_audio_never_synthesizes_a_pass(self):
+        import sys
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            manifest_path = Path(tmpdir) / "manifest.json"
+            output_path = Path(tmpdir) / "output"
+            manifest_path.write_text(json.dumps({
+                "version": "1.0.0",
+                "entries": [{
+                    "sampleId": "clean-busy-001",
+                    "targetWord": "busy",
+                    "referenceIpa": "/bɪzi/",
+                    "expectedObservedCount": 2,
+                    "targetSyllableCount": 2,
+                    "category": "clean",
+                }],
+            }), encoding="utf-8")
+            argv = [
+                "pronunciation-segmentation-audit.py",
+                "--dry-run",
+                "--manifest",
+                str(manifest_path),
+                "--output",
+                str(output_path),
+            ]
+            with mock.patch.object(sys, "argv", argv):
+                with self.assertRaises(SystemExit) as raised:
+                    audit.main()
+            self.assertNotEqual(raised.exception.code, 0)
+            report = json.loads((output_path / "audit-results.json").read_text(encoding="utf-8"))
+            self.assertEqual(report["results"][0]["status"], "missing_audio")
+            self.assertIsNone(report["results"][0]["syllable_count"])
 
     def test_evaluate_promotion_gates_failing_rss(self):
         """evaluate_promotion_gates should fail if peak RSS is too high."""
@@ -169,6 +347,7 @@ class TestPronunciationSegmentationAudit(unittest.TestCase):
                 "category": "clean",
                 "is_rateable": True,
                 "total_duration": 1.2,
+                "syllable_durations_available": True,
                 "has_pitch": True,
                 "has_intensity": True,
                 "boundary_mae": 0.015,

@@ -57,8 +57,8 @@ def build_entry(filepath: Path, index: int) -> dict:
     """Build a single manifest entry for a WAV file.
 
     The entry uses placeholder values for fields that require manual
-    annotation (targetWord, referenceIpa, expectedObservedCount, category,
-    speakerCohort, labelProvenance). These should be filled in during
+    annotation (targetWord, referenceIpa, expectedObservedCount,
+    targetSyllableCount, category, speakerCohort, labelProvenance). These should be filled in during
     the manual labelling phase.
     """
     return {
@@ -66,6 +66,7 @@ def build_entry(filepath: Path, index: int) -> dict:
         "targetWord": filepath.stem.lower(),
         "referenceIpa": "",
         "expectedObservedCount": 0,
+        "targetSyllableCount": 1,
         "category": "clean",
         "speakerCohort": "unknown",
         "sourceHash": sha256_file(filepath),

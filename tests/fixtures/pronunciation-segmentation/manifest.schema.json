@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "pronunciation-segmentation-manifest-v1",
+  "$id": "pronunciation-segmentation-manifest-v2",
   "title": "Pronunciation Segmentation Corpus Manifest",
   "description": "Schema for the evaluation corpus manifest used by phoneme-based syllable segmentation v3.",
   "type": "object",
@@ -27,6 +27,7 @@
           "targetWord",
           "referenceIpa",
           "expectedObservedCount",
+          "targetSyllableCount",
           "category",
           "speakerCohort",
           "sourceHash",
@@ -52,6 +53,11 @@
             "type": "integer",
             "minimum": 0,
             "description": "Expected number of syllables observed in the recording."
+          },
+          "targetSyllableCount": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Independently verified canonical syllable count for the prompted target word."
           },
           "category": {
             "type": "string",

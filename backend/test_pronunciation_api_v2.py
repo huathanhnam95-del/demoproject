@@ -520,14 +520,14 @@ _V2_FAKE_RESULT = {
 
 _PHONEME_FAKE_RESULT = {
     'phonemes': [
-        {'label': 'h', 'start': 0.05, 'end': 0.10},
-        {'label': 'ɛ', 'start': 0.10, 'end': 0.25},
-        {'label': 'l', 'start': 0.25, 'end': 0.35},
-        {'label': 'oʊ', 'start': 0.35, 'end': 0.55},
+        {'symbol': 'h', 'start_time': 0.05, 'end_time': 0.10, 'confidence': 0.94},
+        {'symbol': 'ɛ', 'start_time': 0.10, 'end_time': 0.25, 'confidence': 0.93},
+        {'symbol': 'l', 'start_time': 0.25, 'end_time': 0.35, 'confidence': 0.91},
+        {'symbol': 'oʊ', 'start_time': 0.35, 'end_time': 0.55, 'confidence': 0.90},
     ],
     'syllables': [
-        {'start': 0.05, 'end': 0.30},
-        {'start': 0.30, 'end': 0.55},
+        {'start_time': 0.05, 'end_time': 0.30, 'duration': 0.25, 'confidence': 0.935},
+        {'start_time': 0.30, 'end_time': 0.55, 'duration': 0.25, 'confidence': 0.905},
     ],
     'confidence': 0.92,
     'is_rateable': True,
@@ -574,6 +574,8 @@ class PronunciationV3ApiTest(unittest.TestCase):
         self.assertEqual(payload['observed_phonemes'], [])
         self.assertEqual(payload['syllable_count'], 2)
         self.assertEqual(len(payload['observed_syllables']), 2)
+        self.assertEqual(payload['observed_syllables'][0]['startTime'], 0.10)
+        self.assertEqual(payload['observed_syllables'][0]['endTime'], 0.30)
         self.assertIsNone(payload['comparison'])
         self.assertIn('pitch', payload)
         self.assertIn('intensity', payload)
@@ -591,7 +593,11 @@ class PronunciationV3ApiTest(unittest.TestCase):
              patch('backend.local_server.phoneme_client.create_phoneme_client', return_value=mock_client):
             response = self.client.post(
                 "/analyze/v3",
-                data={"audio": (io.BytesIO(b"RIFFfixture"), "attempt.wav")},
+                data={
+                    "audio": (io.BytesIO(b"RIFFfixture"), "attempt.wav"),
+                    "reference_ipa": "/hɛloʊ/",
+                    "expected_syllables": "2",
+                },
                 content_type="multipart/form-data",
             )
         self.assertEqual(response.status_code, 200)
@@ -610,7 +616,11 @@ class PronunciationV3ApiTest(unittest.TestCase):
              patch('backend.local_server.phoneme_client.create_phoneme_client', return_value=mock_client):
             response = self.client.post(
                 "/analyze/v3",
-                data={"audio": (io.BytesIO(b"RIFFfixture"), "attempt.wav")},
+                data={
+                    "audio": (io.BytesIO(b"RIFFfixture"), "attempt.wav"),
+                    "reference_ipa": "/hɛloʊ/",
+                    "expected_syllables": "2",
+                },
                 content_type="multipart/form-data",
             )
         self.assertEqual(response.status_code, 200)
@@ -623,14 +633,21 @@ class PronunciationV3ApiTest(unittest.TestCase):
         self.assertEqual(payload['confidence'], 0.92)
         self.assertEqual(len(payload['observed_phonemes']), 4)
         self.assertEqual(payload['syllable_count'], 2)
+        self.assertEqual(payload['observed_syllables'][0]['startTime'], 0.05)
+        self.assertEqual(payload['observed_syllables'][0]['endTime'], 0.30)
+        self.assertEqual(payload['observed_syllables'][0]['duration'], 0.25)
+        self.assertTrue(any(
+            operation['op'] == 'match' and operation['obs'] == 'h'
+            for operation in payload['comparison']['edit_operations']
+        ))
         self.assertTrue(payload['capabilities']['phoneme_alignment'])
 
     # -- timeout --
 
-    def test_v3_timeout_returns_504(self):
-        def slow_recognize(wav_bytes):
+    def test_v3_timeout_returns_fail_closed_contours(self):
+        def slow_recognize(_self, wav_bytes):
             import time as _t
-            _t.sleep(20)
+            _t.sleep(0.5)
             return {}
 
         mock_client = type('MockClient', (), {'recognize': slow_recognize})()
@@ -643,15 +660,16 @@ class PronunciationV3ApiTest(unittest.TestCase):
                 data={"audio": (io.BytesIO(b"RIFFfixture"), "attempt.wav")},
                 content_type="multipart/form-data",
             )
-        # Should either timeout (504) or degrade gracefully (200 with degraded=True)
-        self.assertIn(response.status_code, (200, 504))
-        if response.status_code == 200:
-            payload = response.get_json()
-            self.assertTrue(payload.get('degraded', False))
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertTrue(payload['degraded'])
+        self.assertFalse(payload['is_rateable'])
+        self.assertIsNone(payload['syllable_count'])
+        self.assertEqual(payload['quality_reason'], 'TIMEOUT')
 
     # -- active mode with unrateable recognition degrades --
 
-    def test_v3_active_unrateable_degrades_to_v2(self):
+    def test_v3_active_unrateable_hides_target_guided_count(self):
         unrateable_result = dict(_PHONEME_FAKE_RESULT)
         unrateable_result['is_rateable'] = False
         unrateable_result['quality_reason'] = 'LOW_CONFIDENCE'
@@ -667,13 +685,16 @@ class PronunciationV3ApiTest(unittest.TestCase):
             )
         self.assertEqual(response.status_code, 200)
         payload = response.get_json()
-        self.assertEqual(payload['engine'], 'praat-v2')
+        self.assertEqual(payload['engine'], 'ctc-praat')
         self.assertTrue(payload['degraded'])
+        self.assertFalse(payload['is_rateable'])
+        self.assertIsNone(payload['syllable_count'])
+        self.assertFalse(payload['capabilities']['syllable_duration'])
 
     # -- active with phoneme error degrades --
 
-    def test_v3_active_phoneme_error_degrades_to_v2(self):
-        def failing_recognize(wav_bytes):
+    def test_v3_active_phoneme_error_hides_target_guided_count(self):
+        def failing_recognize(_self, wav_bytes):
             raise RuntimeError("Recognizer crashed")
 
         mock_client = type('MockClient', (), {'recognize': failing_recognize})()
@@ -687,8 +708,11 @@ class PronunciationV3ApiTest(unittest.TestCase):
             )
         self.assertEqual(response.status_code, 200)
         payload = response.get_json()
-        self.assertEqual(payload['engine'], 'praat-v2')
+        self.assertEqual(payload['engine'], 'ctc-praat')
         self.assertTrue(payload['degraded'])
+        self.assertFalse(payload['is_rateable'])
+        self.assertIsNone(payload['syllable_count'])
+        self.assertEqual(payload['quality_reason'], 'MODEL_INFERENCE_FAILED')
 
     # -- existing v2 endpoints remain unaffected --
 

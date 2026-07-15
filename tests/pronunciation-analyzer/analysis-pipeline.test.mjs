@@ -458,6 +458,8 @@ async function testV3ResponseShapeIsNormalized() {
     assert.equal(result.syllables.length, 2, 'v3 observed_syllables should become syllables');
     assert.equal(result.quality.rateable, true, 'v3 is_rateable should map to quality.rateable');
     assert.equal(result.analysis.observed.syllableCount, 2, 'v3 syllable_count should be in observed');
+    assert.equal(result.syllables[0].startTime, 0);
+    assert.equal(result.syllables[0].endTime, 0.25);
 }
 
 await testPendingTimerFiresAfterTwoSeconds();
@@ -465,4 +467,4 @@ await testPendingTimerClearedOnSuccess();
 await testPendingTimerClearedOnFailure();
 await testV3ResponseShapeIsNormalized();
 
-console.log('analysis-pipeline tests passed');
+process.stdout.write('analysis-pipeline tests passed\n');

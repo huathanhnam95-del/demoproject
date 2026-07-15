@@ -61,6 +61,16 @@ class TestDockerfilePhoneme(unittest.TestCase):
         """Model is pre-downloaded during build."""
         self.assertIn("from_pretrained", self.content)
 
+    def test_container_package_layout_matches_imports(self):
+        self.assertIn("COPY backend/__init__.py backend/__init__.py", self.content)
+        self.assertIn("COPY backend/phoneme_service/ backend/phoneme_service/", self.content)
+        self.assertIn('"backend.phoneme_service.app:create_app()"', self.content)
+
+    def test_runtime_is_offline_and_revision_matches_manifest(self):
+        self.assertIn("TRANSFORMERS_OFFLINE=1", self.content)
+        self.assertIn("HF_HUB_OFFLINE=1", self.content)
+        self.assertIn("modelRevision", self.content)
+
 
 class TestCloudBuildPhoneme(unittest.TestCase):
     """cloudbuild.phoneme.yaml exists and has correct settings."""

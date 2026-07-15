@@ -51,6 +51,14 @@ class TestPronunciationSegmentationCorpus(unittest.TestCase):
         except jsonschema.ValidationError as e:
             self.fail(f"Manifest failed schema validation: {e.message}")
 
+    def test_schema_requires_independent_target_syllable_count(self):
+        entry_schema = self.schema["properties"]["entries"]["items"]
+        self.assertIn("targetSyllableCount", entry_schema["required"])
+        self.assertEqual(
+            entry_schema["properties"]["targetSyllableCount"]["minimum"],
+            1,
+        )
+
     def test_unique_sample_ids(self):
         """All sample IDs must be unique."""
         if not self.entries:

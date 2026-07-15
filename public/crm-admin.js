@@ -6875,6 +6875,7 @@
     const categorySelect = document.getElementById('corpus-category');
     const expectedObservedCountInput = document.getElementById('corpus-expected-observed-count');
     const speakerCohortInput = document.getElementById('corpus-speaker-cohort');
+    const instructionText = document.getElementById('corpus-test-instruction-text');
     const sampleIdDisplay = document.getElementById('corpus-sample-id');
     const visualizer = document.getElementById('corpus-visualizer');
     const micStatus = document.getElementById('corpus-mic-status');
@@ -6891,6 +6892,10 @@
     let currentWord = 'busy';
     let currentIpa = 'ˈbɪz.i';
     let currentSyllableCount = 2;
+    let currentCategory = 'clean';
+    let currentExpectedObservedCount = 2;
+    let currentSpeakerCohort = 'l1-vn-01';
+    let currentInstruction = 'Say “busy” once, naturally and clearly. Do not repeat it or add another word.';
     let audioBlob = null;
     let audioContext = null;
     let mediaStream = null;
@@ -6903,14 +6908,17 @@
       displayWord.textContent = currentWord;
       displayIpaCount.textContent = `/${currentIpa}/ (${currentSyllableCount} syllables)`;
       if (expectedObservedCountInput) {
-        expectedObservedCountInput.value = currentSyllableCount;
+        expectedObservedCountInput.value = currentExpectedObservedCount;
       }
+      if (categorySelect) categorySelect.value = currentCategory;
+      if (speakerCohortInput) speakerCohortInput.value = currentSpeakerCohort;
+      if (instructionText) instructionText.textContent = currentInstruction;
       updateSampleId();
     }
     function updateSampleId() {
       if (!categorySelect || !speakerCohortInput || !sampleIdDisplay) return '';
-      const category = categorySelect.value;
-      const cohort = speakerCohortInput.value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-') || 'unknown';
+      const category = currentCategory;
+      const cohort = currentSpeakerCohort;
       const wordSlug = currentWord.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-');
       const now = new Date();
       const pad = (n) => String(n).padStart(2, '0');
@@ -6966,8 +6974,6 @@
       }
     }
 
-    if (categorySelect) categorySelect.addEventListener('change', updateSampleId);
-    if (speakerCohortInput) speakerCohortInput.addEventListener('input', updateSampleId);
     wordBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         wordBtns.forEach(b => b.classList.remove('active'));
@@ -6975,6 +6981,10 @@
         currentWord = btn.dataset.word;
         currentIpa = btn.dataset.ipa;
         currentSyllableCount = parseInt(btn.dataset.count, 10);
+        currentCategory = btn.dataset.category || 'clean';
+        currentExpectedObservedCount = Number.isInteger(parseInt(btn.dataset.observed, 10)) ? parseInt(btn.dataset.observed, 10) : currentSyllableCount;
+        currentSpeakerCohort = btn.dataset.cohort || 'l1-vn-01';
+        currentInstruction = btn.dataset.instruction || `Say “${currentWord}” once, naturally and clearly. Do not repeat it or add another word.`;
         if (customWordInput) customWordInput.value = '';
         updateDisplay();
       });
@@ -7150,9 +7160,8 @@
       if (btnSave) btnSave.disabled = true;
       if (consoleOutput) consoleOutput.textContent = "Saving attempt...";
       const sampleId = updateSampleId();
-      const cohortValue = (speakerCohortInput ? speakerCohortInput.value.trim() : 'unknown') || 'unknown';
-      const observedCountValue = expectedObservedCountInput ? parseInt(expectedObservedCountInput.value, 10) : currentSyllableCount;
-      const categoryValue = categorySelect ? categorySelect.value : 'clean';
+      const observedCountValue = currentExpectedObservedCount;
+      const categoryValue = currentCategory;
       const metadata = {
         sampleId,
         targetWord: currentWord,
@@ -7160,7 +7169,7 @@
         expectedObservedCount: observedCountValue,
         targetSyllableCount: currentSyllableCount,
         category: categoryValue,
-        speakerCohort: cohortValue
+        speakerCohort: currentSpeakerCohort
       };
       const formData = new FormData();
       formData.append('audio', audioBlob, `${sampleId}.wav`);

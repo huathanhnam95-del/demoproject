@@ -201,7 +201,7 @@
               <li><button class="crm-btn crm-btn-secondary corpus-word-btn" data-word="university" data-ipa="ˌjuː.nɪˈvɜːr.sə.t̬i" data-count="5" style="width: 100%; text-align: left;">university (5)</button></li>
             </ul>
             
-            <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+            <div style="display: none; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color);">
               <label for="corpus-custom-word" style="display: block; font-weight: 500; margin-bottom: 6px; font-size: 13px;">Or Custom Word:</label>
               <input type="text" id="corpus-custom-word" placeholder="e.g. photography" class="crm-input" style="width: 100%; box-sizing: border-box; margin-bottom: 8px;" />
               <div style="display: flex; gap: 8px;">
@@ -228,7 +228,7 @@
                 </div>
                 <div>
                   <label for="corpus-category" style="display: block; font-weight: 500; margin-bottom: 6px; font-size: 13px;">Category:</label>
-                  <select id="corpus-category" class="crm-input" style="width: 100%;">
+                    <select id="corpus-category" class="crm-input" style="width: 100%;" disabled aria-describedby="corpus-test-instruction">
                     <option value="clean">clean (correct pronunciation)</option>
                     <option value="omission">omission (missed syllables)</option>
                     <option value="insertion">insertion (extra syllables)</option>
@@ -238,16 +238,20 @@
                 </div>
                 <div>
                   <label for="corpus-expected-observed-count" style="display: block; font-weight: 500; margin-bottom: 6px; font-size: 13px;">Expected Observed Count:</label>
-                  <input type="number" id="corpus-expected-observed-count" value="2" class="crm-input" style="width: 100%;" min="0" />
+                  <input type="number" id="corpus-expected-observed-count" value="2" class="crm-input" style="width: 100%;" min="0" readonly aria-describedby="corpus-test-instruction" />
                 </div>
                 <div>
                   <label for="corpus-speaker-cohort" style="display: block; font-weight: 500; margin-bottom: 6px; font-size: 13px;">Deidentified Speaker Cohort:</label>
-                  <input type="text" id="corpus-speaker-cohort" value="l1-vn-01" placeholder="e.g. l1-vn-01, native-us" class="crm-input" style="width: 100%;" />
+                  <input type="text" id="corpus-speaker-cohort" value="l1-vn-01" class="crm-input" style="width: 100%;" readonly aria-describedby="corpus-test-instruction" />
                 </div>
                 <div>
                   <label style="display: block; font-weight: 500; margin-bottom: 6px; font-size: 13px;">Generated Sample ID:</label>
                   <span id="corpus-sample-id" style="font-family: monospace; font-size: 13px; word-break: break-all; color: var(--text-color); font-weight: 600;">busy-clean-l1-vn-01-...</span>
                 </div>
+              </div>
+              <div id="corpus-test-instruction" role="note" style="margin-top: 16px; padding: 14px 16px; border-left: 4px solid #137a4b; border-radius: 6px; background: #ecfdf3; color: #14532d; line-height: 1.55;">
+                <strong>Fixed test instruction</strong>
+                <div id="corpus-test-instruction-text" style="margin-top: 4px;">Say “busy” once, naturally and clearly. Do not repeat it or add another word.</div>
               </div>
             </div>
 

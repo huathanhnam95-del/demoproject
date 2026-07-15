@@ -729,10 +729,13 @@
 
   function updateAdminCapabilityNav() {
     if (!elements.pronunciationSamplesContainer) return;
-    const showSamples = devToolsAccess.shouldShowPronunciationSamplesNav({
-      accessMode: state.accessMode,
-      pronunciationSamplesAvailable: adminCapabilities.pronunciationSamples !== false
-    });
+    const pronunciationSamplesAvailable = adminCapabilities.pronunciationSamples !== false;
+    const showSamples = typeof devToolsAccess.shouldShowPronunciationSamplesNav === 'function'
+      ? devToolsAccess.shouldShowPronunciationSamplesNav({
+        accessMode: state.accessMode,
+        pronunciationSamplesAvailable
+      })
+      : state.accessMode === 'admin' && pronunciationSamplesAvailable;
     elements.pronunciationSamplesContainer.style.display = showSamples ? 'block' : 'none';
   }
 

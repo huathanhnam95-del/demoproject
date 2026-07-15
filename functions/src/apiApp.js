@@ -145,6 +145,7 @@ const crmRouter = createCrmRouter({
     adminMiddleware,
     sendSuccess,
     sendError,
+    getStorageBucket,
     serverTimestamp: () => FieldValue.serverTimestamp(),
     resolveAdminStatus,
     identity: {

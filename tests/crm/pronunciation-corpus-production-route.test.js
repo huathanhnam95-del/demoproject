@@ -1,0 +1,177 @@
+/* eslint-disable no-console */
+const assert = require('assert');
+
+const createCrmRouter = require('../../functions/src/routes/admin/create-crm-router');
+
+function collectRoutes(router, prefix = '') {
+  const routes = [];
+  for (const layer of router?.stack || []) {
+    if (layer.route) {
+      const methods = Object.keys(layer.route.methods || {})
+        .filter((method) => layer.route.methods[method])
+        .map((method) => method.toUpperCase());
+      for (const routePath of (Array.isArray(layer.route.path) ? layer.route.path : [layer.route.path])) {
+        for (const method of methods) routes.push(`${method} ${prefix}${routePath}`);
+      }
+    } else if (layer.handle?.stack) {
+      routes.push(...collectRoutes(layer.handle, prefix));
+    }
+  }
+  return routes;
+}
+
+function buildRes() {
+  return {
+    _status: 200,
+    _json: null,
+    status(code) { this._status = code; return this; },
+    json(payload) { this._json = payload; return this; }
+  };
+}
+
+function getRouteHandlers(router, path, method) {
+  const layer = (router.stack || []).find((entry) => entry.route?.path === path);
+  assert(layer, `Route ${path} not found.`);
+  return layer.route.stack.filter((entry) => entry.method === method).map((entry) => entry.handle);
+}
+
+function makeWavBuffer() {
+  const dataSize = 32000;
+  const buffer = Buffer.alloc(44 + dataSize);
+  buffer.write('RIFF', 0);
+  buffer.writeUInt32LE(36 + dataSize, 4);
+  buffer.write('WAVEfmt ', 8);
+  buffer.writeUInt32LE(16, 16);
+  buffer.writeUInt16LE(1, 20);
+  buffer.writeUInt16LE(1, 22);
+  buffer.writeUInt32LE(16000, 24);
+  buffer.writeUInt32LE(32000, 28);
+  buffer.writeUInt16LE(2, 32);
+  buffer.writeUInt16LE(16, 34);
+  buffer.write('data', 36);
+  buffer.writeUInt32LE(dataSize, 40);
+  return buffer;
+}
+
+const router = createCrmRouter({
+  db: {},
+  admin: {},
+  authMiddleware: (req, _res, next) => next(),
+  adminMiddleware: (req, _res, next) => next(),
+  sendSuccess: () => null,
+  sendError: () => null,
+  getStorageBucket: async () => null,
+  identity: {
+    generateClassCode: async () => 'ABC123',
+    lookupUserByEmail: async () => ({ uid: 'u1' }),
+    forceLinkProfile: async () => ({ success: true })
+  }
+});
+
+const routes = collectRoutes(router);
+for (const signature of [
+  'POST /dev/save-corpus-sample',
+  'GET /dev/corpus-samples',
+  'GET /dev/corpus-samples/:sampleId'
+]) {
+  assert(routes.includes(signature), `Expected production corpus route ${signature}.`);
+}
+
+const { validateCorpusMetadata, validateWavBuffer } = require('../../functions/src/routes/admin/pronunciation-corpus');
+
+assert.throws(
+  () => validateCorpusMetadata({ sampleId: '../escape' }),
+  /sampleId/
+);
+assert.throws(
+  () => validateCorpusMetadata({
+    sampleId: 'busy-clean-1',
+    targetWord: 'busy',
+    referenceIpa: '',
+    expectedObservedCount: 2,
+    targetSyllableCount: 2,
+    category: 'clean',
+    speakerCohort: 'l1-vn-01'
+  }),
+  /referenceIpa/
+);
+
+console.log('production pronunciation corpus route contract passed');
+
+(async () => {
+  const records = new Map();
+  const savedFiles = new Map();
+  const db = {
+    collection(name) {
+      assert.strictEqual(name, 'pronunciationCorpusSamples');
+      return {
+        doc(id) {
+          return {
+            async set(data) { records.set(id, data); },
+            async get() {
+              const data = records.get(id);
+              return { exists: !!data, id, data: () => data };
+            }
+          };
+        },
+        orderBy() {
+          return {
+            limit() {
+              return {
+                async get() {
+                  return { docs: Array.from(records, ([id, data]) => ({ id, data: () => data })) };
+                }
+              };
+            }
+          };
+        }
+      };
+    }
+  };
+  const bucket = {
+    name: 'test-bucket',
+    file(storagePath) {
+      return {
+        async save(buffer) { savedFiles.set(storagePath, buffer); },
+        async getSignedUrl() { return [`https://storage.test/${encodeURIComponent(storagePath)}`]; }
+      };
+    }
+  };
+  const productionRouter = createCrmRouter({
+    db,
+    admin: {},
+    authMiddleware: (req, _res, next) => { req.user = { uid: 'admin-1', email: 'admin@example.com' }; next(); },
+    adminMiddleware: (_req, _res, next) => next(),
+    sendSuccess: (res, data) => res.status(200).json({ success: true, data }),
+    sendError: (res, status, error, message) => res.status(status).json({ success: false, error, message }),
+    getStorageBucket: async () => bucket,
+    serverTimestamp: () => new Date('2026-07-15T00:00:00Z'),
+    identity: {
+      generateClassCode: async () => 'ABC123',
+      lookupUserByEmail: async () => ({ uid: 'u1' }),
+      forceLinkProfile: async () => ({ success: true })
+    }
+  });
+  const saveHandlers = getRouteHandlers(productionRouter, '/dev/save-corpus-sample', 'post');
+  const saveRes = buildRes();
+  await saveHandlers[saveHandlers.length - 1]({
+    user: { uid: 'admin-1', email: 'admin@example.com' },
+    body: { metadata: JSON.stringify({
+      sampleId: 'busy-clean-l1-vn-01',
+      targetWord: 'busy',
+      referenceIpa: 'ˈbɪz.i',
+      expectedObservedCount: 2,
+      targetSyllableCount: 2,
+      category: 'clean',
+      speakerCohort: 'l1-vn-01'
+    }) },
+    file: { buffer: makeWavBuffer() }
+  }, saveRes);
+  assert.strictEqual(saveRes._status, 200);
+  assert.strictEqual(records.get('busy-clean-l1-vn-01').storagePath, 'pronunciation-segmentation-corpus/busy-clean-l1-vn-01.wav');
+  assert.strictEqual(savedFiles.size, 1);
+  console.log('production pronunciation corpus upload behavior passed');
+})().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

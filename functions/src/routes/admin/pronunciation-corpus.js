@@ -134,7 +134,12 @@ function registerPronunciationCorpusRoutes(router, deps) {
     limits: { fileSize: MAX_AUDIO_BYTES, files: 1 }
   });
   const uploadAudio = (req, res, next) => upload.single('audio')(req, res, (error) => {
-    if (error) return sendError(res, 400, 'INVALID_AUDIO', error.code === 'LIMIT_FILE_SIZE' ? 'Audio file size exceeds the maximum allowed limit of 5 MB.' : 'Invalid audio upload.');
+    if (error) {
+      const message = error.code === 'LIMIT_FILE_SIZE'
+        ? 'Audio file size exceeds the maximum allowed limit of 5 MB.'
+        : `Invalid audio upload${error.message ? `: ${error.message}` : '.'}`;
+      return sendError(res, 400, 'INVALID_AUDIO', message);
+    }
     return next(error);
   });
 

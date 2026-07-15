@@ -2410,3 +2410,21 @@ body {
 .crm-weekday-btn.active:hover {
   background: #156a3d;
 }
+
+/* Pronunciation corpus primary action: keep the label readable in every theme. */
+#btn-corpus-save {
+  min-width: 160px;
+  min-height: 42px;
+  font-weight: 700;
+  background: #137a4b !important;
+  border: 2px solid #0b5e38 !important;
+  color: #ffffff !important;
+  text-shadow: none;
+}
+
+#btn-corpus-save:disabled {
+  background: #6b7280 !important;
+  border-color: #4b5563 !important;
+  color: #ffffff !important;
+  opacity: 0.9;
+}

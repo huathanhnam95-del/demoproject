@@ -16,7 +16,7 @@
 
   <!-- Reuse main app design tokens -->
   <link rel="stylesheet" href="style.css?v=20260713-v1.8.23" />
-  <link rel="stylesheet" href="crm-admin.css?v=20260713-v1.8.23" />
+  <link rel="stylesheet" href="crm-admin.css?v=20260715-v1.8.24" />
 </head>
 
 <body>
@@ -176,6 +176,14 @@
           <div>
             <h2>🎙️ Pronunciation Verification</h2>
             <p>Record deidentified WAV attempts, save them securely to cloud storage, and retrieve them for the pronunciation verification corpus.</p>
+            <ol class="crm-instruction-list" style="margin: 12px 0 0; padding-left: 20px; line-height: 1.6; font-size: 13px; color: var(--text-muted, #52606d);">
+              <li>Select the target word (or enter a custom word, IPA, and syllable count).</li>
+              <li>Choose the sample category and confirm the expected observed syllable count.</li>
+              <li>Enter a deidentified speaker cohort only (for example, <code>l1-vn-01</code>); do not enter a name or email.</li>
+              <li>Click <strong>Record</strong>, say the word once clearly, then click <strong>Stop</strong>.</li>
+              <li>Play the captured audio to check it, then click <strong>Save Attempt</strong>.</li>
+              <li>Wait for the “Saved to cloud” confirmation. Use <strong>Saved Samples → Refresh</strong> to retrieve recordings later.</li>
+            </ol>
           </div>
         </div>
         

@@ -1685,6 +1685,48 @@ def _candidate_from_syllable(syllable):
     }
 
 
+def _target_aligned_duration_segmentation(candidates, target_count, method):
+    """Keep measured duration regions even when an individual region lacks F0."""
+    candidates = list(candidates or [])
+    if (
+        not isinstance(target_count, int)
+        or target_count < 1
+        or len(candidates) != target_count
+    ):
+        return None
+
+    for candidate in candidates:
+        syllable = candidate.get('syllable') or {}
+        start = syllable.get('startTime')
+        end = syllable.get('endTime')
+        if (
+            not _finite_number(candidate.get('time'))
+            or not _finite_number(candidate.get('intensity'))
+            or not _finite_number(start)
+            or not _finite_number(end)
+            or float(end) <= float(start)
+        ):
+            return None
+
+    return {
+        'rawCandidateCount': len(candidates),
+        'evidenceCandidateCount': sum(
+            1 for candidate in candidates if candidate.get('voiced') is True
+        ),
+        'selectedCount': len(candidates),
+        'method': method,
+        'confidence': round(
+            float(np.mean([
+                float(candidate.get('confidence', 0) or 0)
+                for candidate in candidates
+            ])),
+            3,
+        ),
+        'conflicts': [],
+        'selected': candidates,
+    }
+
+
 def select_native_acoustic_candidates(candidates, target_count, noise_threshold=0.45):
     """Select only acoustically supported nuclei; never synthesize a candidate."""
     raw_candidates = list(candidates or [])
@@ -1830,27 +1872,44 @@ def build_analysis_v2_response(raw_analysis, expected_syllable_count=None, nativ
             candidates,
             expected_syllable_count,
         )
+        if (
+            segmentation['method'] == 'insufficient-acoustic-candidates'
+            and (
+                aligned_segmentation := _target_aligned_duration_segmentation(
+                    candidates,
+                    expected_syllable_count,
+                    'target-aligned-native-duration-regions',
+                )
+            ) is not None
+        ):
+            segmentation = aligned_segmentation
     else:
-        evidence = [
-            item for item in candidates
-            if item['voiced'] and _finite_number(item['intensity'])
-        ]
-        segmentation = {
-            'rawCandidateCount': len(candidates),
-            'evidenceCandidateCount': len(evidence),
-            'selectedCount': len(evidence),
-            'method': (
-                'target-aligned-acoustic-feedback'
-                if expected_syllable_count
-                else 'independent-acoustic-detection'
-            ),
-            'confidence': round(
-                float(np.mean([item['confidence'] for item in evidence])),
-                3,
-            ) if evidence else 0.0,
-            'conflicts': [] if evidence else ['NO_SPEECH'],
-            'selected': evidence,
-        }
+        segmentation = _target_aligned_duration_segmentation(
+            candidates,
+            expected_syllable_count,
+            'target-aligned-acoustic-feedback',
+        )
+        if segmentation is None:
+            evidence = [
+                item for item in candidates
+                if item['voiced'] and _finite_number(item['intensity'])
+            ]
+            segmentation = {
+                'rawCandidateCount': len(candidates),
+                'evidenceCandidateCount': len(evidence),
+                'selectedCount': len(evidence),
+                'method': (
+                    'target-aligned-acoustic-feedback'
+                    if expected_syllable_count
+                    else 'independent-acoustic-detection'
+                ),
+                'confidence': round(
+                    float(np.mean([item['confidence'] for item in evidence])),
+                    3,
+                ) if evidence else 0.0,
+                'conflicts': [] if evidence else ['NO_SPEECH'],
+                'selected': evidence,
+            }
 
     selected_syllables = [item['syllable'] for item in segmentation['selected']]
     reasons = list(segmentation['conflicts'])

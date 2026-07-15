@@ -162,6 +162,71 @@ class PronunciationAlignmentV2Test(unittest.TestCase):
         )
         self.assertEqual(result["observed"]["syllableCount"], 2)
 
+    def test_learner_target_alignment_keeps_unvoiced_duration_region(self):
+        raw = {
+            "duration": 0.7,
+            "sampleRate": 16000,
+            "pitch": {"times": [0.1, 0.3, 0.5], "values": [145.0, None, 130.0]},
+            "intensity": {"times": [0.1, 0.3, 0.5], "values": [72.0, 64.0, 69.0]},
+            "syllables": [
+                candidate(0.12, 72.0, 0.9)["syllable"],
+                {
+                    "startTime": 0.22,
+                    "endTime": 0.38,
+                    "duration": 0.16,
+                    "avgPitch": 0,
+                    "maxPitch": 0,
+                    "intensity": 64.0,
+                },
+                candidate(0.52, 69.0, 0.8)["syllable"],
+            ],
+        }
+
+        result = server.build_analysis_v2_response(
+            raw,
+            expected_syllable_count=3,
+            native=False,
+        )
+
+        self.assertEqual(result["segmentation"]["selectedCount"], 3)
+        self.assertEqual(result["observed"]["syllableCount"], 3)
+        self.assertEqual(len(result["observed"]["syllables"]), 3)
+        self.assertTrue(result["quality"]["rateable"])
+        self.assertFalse(result["observed"]["stressEvidence"]["rateable"])
+
+    def test_native_target_alignment_keeps_unvoiced_duration_region(self):
+        raw = {
+            "duration": 0.7,
+            "sampleRate": 16000,
+            "pitch": {"times": [0.1, 0.3, 0.5], "values": [145.0, None, 130.0]},
+            "intensity": {"times": [0.1, 0.3, 0.5], "values": [72.0, 64.0, 69.0]},
+            "syllables": [
+                candidate(0.12, 72.0, 0.9)["syllable"],
+                {
+                    "startTime": 0.22,
+                    "endTime": 0.38,
+                    "duration": 0.16,
+                    "avgPitch": 0,
+                    "maxPitch": 0,
+                    "intensity": 64.0,
+                },
+                candidate(0.52, 69.0, 0.8)["syllable"],
+            ],
+        }
+
+        result = server.build_analysis_v2_response(
+            raw,
+            expected_syllable_count=3,
+            native=True,
+        )
+
+        self.assertEqual(result["segmentation"]["selectedCount"], 3)
+        self.assertEqual(result["observed"]["syllableCount"], 3)
+        self.assertEqual(len(result["observed"]["syllables"]), 3)
+        self.assertTrue(result["quality"]["rateable"])
+        self.assertFalse(result["observed"]["stressEvidence"]["rateable"])
+        self.assertTrue(result["capabilities"]["showNativeGraphs"])
+
     def test_independent_detection_retries_weak_syllable_thresholds(self):
         times = np.arange(0.0, 0.61, 0.01)
         values = np.full(times.shape, 65.0)

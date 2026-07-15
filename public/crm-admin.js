@@ -6865,7 +6865,9 @@
   });
 
   function initCorpusTool() {
-    const wordBtns = document.querySelectorAll('.corpus-word-btn');
+    let wordBtns = Array.from(document.querySelectorAll('.corpus-word-btn'));
+    const wordList = document.getElementById('corpus-word-list');
+    const wordListStatus = document.getElementById('corpus-word-list-status');
     const customWordInput = document.getElementById('corpus-custom-word');
     const customIpaInput = document.getElementById('corpus-custom-ipa');
     const customCountInput = document.getElementById('corpus-custom-count');
@@ -6903,6 +6905,105 @@
     let analyserNode = null;
     let scriptProcessor = null;
     let rawSamples = [];
+    const mandatoryWords = new Set(wordBtns.map((button) => button.dataset.word));
+
+    function bindWordButtons() {
+      wordBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          wordBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentWord = btn.dataset.word;
+          currentIpa = btn.dataset.ipa;
+          currentSyllableCount = parseInt(btn.dataset.count, 10);
+          currentCategory = btn.dataset.category || 'clean';
+          currentExpectedObservedCount = Number.isInteger(parseInt(btn.dataset.observed, 10)) ? parseInt(btn.dataset.observed, 10) : currentSyllableCount;
+          currentSpeakerCohort = btn.dataset.cohort || 'l1-vn-01';
+          currentInstruction = btn.dataset.instruction || `Say “${currentWord}” once, naturally and clearly. Do not repeat it or add another word.`;
+          if (customWordInput) customWordInput.value = '';
+          updateDisplay();
+        });
+      });
+    }
+
+    function parseOxfordCsv(text) {
+      const lines = String(text || '').split(/\r?\n/).filter(Boolean);
+      if (!lines.length) return [];
+      const header = lines[0].split(',').map((value) => value.trim());
+      const wordIndex = header.indexOf('word');
+      const sourceIndex = header.indexOf('source');
+      const levelIndex = header.indexOf('level');
+      if (wordIndex < 0 || sourceIndex < 0) return [];
+      return lines.slice(1).map((line) => {
+        const cells = [];
+        let cell = '';
+        let quoted = false;
+        for (const character of line) {
+          if (character === '"') quoted = !quoted;
+          else if (character === ',' && !quoted) { cells.push(cell); cell = ''; }
+          else cell += character;
+        }
+        cells.push(cell);
+        return {
+          word: String(cells[wordIndex] || '').trim().toLowerCase(),
+          source: String(cells[sourceIndex] || '').trim(),
+          level: levelIndex >= 0 ? String(cells[levelIndex] || '').trim() : ''
+        };
+      });
+    }
+
+    async function loadOxfordWordTests() {
+      if (!wordList || !window.Phonetics) return;
+      // The local CRM browser harness intentionally mocks the API surface and
+      // does not serve the production Oxford source file. Keep that harness
+      // deterministic; production Hosting serves the full list.
+      if (isLikelyLocalEnvironment()) {
+        if (wordListStatus) wordListStatus.textContent = `${wordBtns.length} built-in mandatory tests available in local preview.`;
+        return;
+      }
+      try {
+        const response = await fetch('vowel_word_bank.csv', { cache: 'no-store' });
+        if (!response.ok) throw new Error(`Oxford word list request failed (${response.status})`);
+        const csvText = new TextDecoder('windows-1252').decode(await response.arrayBuffer());
+        const rows = parseOxfordCsv(csvText);
+        await window.Phonetics.preload();
+        const entries = [];
+        const seen = new Set(mandatoryWords);
+        for (const row of rows) {
+          if (entries.length >= 114) break;
+          if (row.source !== 'Oxford5000' || !/^[a-z][a-z'-]{1,29}$/.test(row.word) || seen.has(row.word)) continue;
+          const arpabet = await window.Phonetics._lookupCMU(row.word);
+          if (!arpabet) continue;
+          const tokens = arpabet.split(/\s+/).filter(Boolean);
+          const syllables = tokens.filter((token) => /^[AEIOU][A-Z]*[012]$/.test(token)).length;
+          const pronunciation = await window.Phonetics.getIPAWithSource(row.word);
+          if (!pronunciation?.ipa || !syllables) continue;
+          seen.add(row.word);
+          entries.push({ word: row.word, ipa: pronunciation.ipa, count: syllables, level: row.level });
+        }
+        if (entries.length < 114) throw new Error(`Only ${entries.length} Oxford words have usable pronunciation data.`);
+        entries.forEach((entry) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'crm-btn crm-btn-secondary corpus-word-btn';
+          button.dataset.word = entry.word;
+          button.dataset.ipa = entry.ipa;
+          button.dataset.count = String(entry.count);
+          button.dataset.category = 'clean';
+          button.dataset.observed = String(entry.count);
+          button.dataset.cohort = 'l1-vn-01';
+          button.dataset.instruction = `Say “${entry.word}” once in American English. Say it naturally and clearly, without repeating it or adding another word.`;
+          button.style.cssText = 'width: 100%; text-align: left;';
+          button.textContent = `${entry.word} (${entry.count})`;
+          wordList.appendChild(document.createElement('li')).appendChild(button);
+        });
+        wordBtns = Array.from(wordList.querySelectorAll('.corpus-word-btn'));
+        bindWordButtons();
+        if (wordListStatus) wordListStatus.textContent = `${wordBtns.length} fixed Oxford 5000 pronunciation tests available.`;
+      } catch (error) {
+        console.warn('[Pronunciation Corpus] Oxford word list unavailable:', error);
+        if (wordListStatus) wordListStatus.textContent = 'Showing the built-in mandatory tests; Oxford list unavailable.';
+      }
+    }
     function updateDisplay() {
       if (!displayWord || !displayIpaCount) return;
       displayWord.textContent = currentWord;
@@ -6974,21 +7075,8 @@
       }
     }
 
-    wordBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        wordBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentWord = btn.dataset.word;
-        currentIpa = btn.dataset.ipa;
-        currentSyllableCount = parseInt(btn.dataset.count, 10);
-        currentCategory = btn.dataset.category || 'clean';
-        currentExpectedObservedCount = Number.isInteger(parseInt(btn.dataset.observed, 10)) ? parseInt(btn.dataset.observed, 10) : currentSyllableCount;
-        currentSpeakerCohort = btn.dataset.cohort || 'l1-vn-01';
-        currentInstruction = btn.dataset.instruction || `Say “${currentWord}” once, naturally and clearly. Do not repeat it or add another word.`;
-        if (customWordInput) customWordInput.value = '';
-        updateDisplay();
-      });
-    });
+    bindWordButtons();
+    loadOxfordWordTests();
     if (btnUseCustom) {
       btnUseCustom.addEventListener('click', () => {
         if (!customWordInput || !customIpaInput || !customCountInput) return;

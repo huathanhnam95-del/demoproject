@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const Busboy = require('busboy');
 const multer = require('multer');
 
 const COLLECTION = 'pronunciationCorpusSamples';
@@ -125,6 +126,98 @@ function serializeSample(snapshot) {
   return { id: snapshot.id, ...data, createdAt: timestamp };
 }
 
+function isMultipartRequest(req) {
+  return String(req.headers?.['content-type'] || '').toLowerCase().startsWith('multipart/form-data');
+}
+
+function appendMultipartField(body, fieldName, value) {
+  if (Object.prototype.hasOwnProperty.call(body, fieldName)) {
+    const existing = body[fieldName];
+    body[fieldName] = Array.isArray(existing) ? existing.concat(value) : [existing, value];
+    return;
+  }
+  body[fieldName] = value;
+}
+
+function parseRawMultipartRequest(req) {
+  return new Promise((resolve, reject) => {
+    const body = {};
+    let audioFile = null;
+    let audioFileTooLarge = false;
+    let settled = false;
+
+    function fail(error) {
+      if (settled) return;
+      settled = true;
+      reject(error);
+    }
+
+    let busboy;
+    try {
+      busboy = Busboy({
+        headers: req.headers,
+        limits: { fileSize: MAX_AUDIO_BYTES, files: 1 }
+      });
+    } catch (error) {
+      fail(error);
+      return;
+    }
+
+    busboy.on('field', (fieldName, value) => {
+      appendMultipartField(body, fieldName, value);
+    });
+    busboy.on('file', (fieldName, stream, info = {}) => {
+      if (fieldName !== 'audio' || audioFile) {
+        stream.resume();
+        return;
+      }
+
+      const chunks = [];
+      let size = 0;
+      stream.on('data', (chunk) => {
+        const buffer = Buffer.from(chunk);
+        size += buffer.length;
+        chunks.push(buffer);
+      });
+      stream.on('limit', () => {
+        audioFileTooLarge = true;
+      });
+      stream.on('error', fail);
+      stream.on('end', () => {
+        if (audioFileTooLarge) return;
+        audioFile = {
+          fieldname: fieldName,
+          originalname: info.filename || '',
+          encoding: info.encoding || '7bit',
+          mimetype: info.mimeType || 'application/octet-stream',
+          buffer: Buffer.concat(chunks),
+          size
+        };
+      });
+    });
+    busboy.on('error', fail);
+    busboy.on('finish', () => {
+      if (settled) return;
+      if (audioFileTooLarge) {
+        const error = new Error('Audio file size exceeds the maximum allowed limit of 5 MB.');
+        error.code = 'LIMIT_FILE_SIZE';
+        fail(error);
+        return;
+      }
+      settled = true;
+      req.body = body;
+      if (audioFile) req.file = audioFile;
+      resolve();
+    });
+
+    try {
+      busboy.end(req.rawBody);
+    } catch (error) {
+      fail(error);
+    }
+  });
+}
+
 function registerPronunciationCorpusRoutes(router, deps) {
   const sendSuccess = deps.sendSuccess;
   const sendError = deps.sendError;
@@ -133,15 +226,25 @@ function registerPronunciationCorpusRoutes(router, deps) {
     storage: multer.memoryStorage(),
     limits: { fileSize: MAX_AUDIO_BYTES, files: 1 }
   });
-  const uploadAudio = (req, res, next) => upload.single('audio')(req, res, (error) => {
-    if (error) {
-      const message = error.code === 'LIMIT_FILE_SIZE'
-        ? 'Audio file size exceeds the maximum allowed limit of 5 MB.'
-        : `Invalid audio upload${error.message ? `: ${error.message}` : '.'}`;
-      return sendError(res, 400, 'INVALID_AUDIO', message);
+  const handleUploadError = (res, error) => {
+    const message = error.code === 'LIMIT_FILE_SIZE'
+      ? 'Audio file size exceeds the maximum allowed limit of 5 MB.'
+      : `Invalid audio upload${error.message ? `: ${error.message}` : '.'}`;
+    return sendError(res, 400, 'INVALID_AUDIO', message);
+  };
+  const uploadAudio = (req, res, next) => {
+    if (isMultipartRequest(req) && Buffer.isBuffer(req.rawBody)) {
+      parseRawMultipartRequest(req)
+        .then(() => next())
+        .catch((error) => handleUploadError(res, error));
+      return;
     }
-    return next(error);
-  });
+
+    upload.single('audio')(req, res, (error) => {
+      if (error) return handleUploadError(res, error);
+      return next();
+    });
+  };
 
   router.post('/dev/save-corpus-sample', ...requireAdminHandlers, uploadAudio, async (req, res) => {
     try {

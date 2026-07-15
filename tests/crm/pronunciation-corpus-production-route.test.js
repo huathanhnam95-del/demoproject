@@ -1,5 +1,7 @@
 /* eslint-disable no-console */
 const assert = require('assert');
+const express = require('express');
+const http = require('http');
 
 const createCrmRouter = require('../../functions/src/routes/admin/create-crm-router');
 
@@ -51,6 +53,38 @@ function makeWavBuffer() {
   buffer.write('data', 36);
   buffer.writeUInt32LE(dataSize, 40);
   return buffer;
+}
+
+function captureRawBodyForMultipart(req, _res, next) {
+  const contentType = String(req.headers['content-type'] || '').toLowerCase();
+  if (!contentType.startsWith('multipart/form-data')) {
+    next();
+    return;
+  }
+
+  const chunks = [];
+  req.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
+  req.on('end', () => {
+    req.rawBody = Buffer.concat(chunks);
+    next();
+  });
+  req.on('error', next);
+}
+
+async function startServer(app) {
+  return new Promise((resolve) => {
+    const server = http.createServer(app);
+    server.listen(0, '127.0.0.1', () => {
+      const address = server.address();
+      resolve({ server, baseUrl: `http://127.0.0.1:${address.port}` });
+    });
+  });
+}
+
+async function stopServer(server) {
+  await new Promise((resolve, reject) => {
+    server.close((error) => (error ? reject(error) : resolve()));
+  });
 }
 
 const router = createCrmRouter({
@@ -171,6 +205,39 @@ console.log('production pronunciation corpus route contract passed');
   assert.strictEqual(records.get('busy-clean-l1-vn-01').storagePath, 'pronunciation-segmentation-corpus/busy-clean-l1-vn-01.wav');
   assert.strictEqual(savedFiles.size, 1);
   console.log('production pronunciation corpus upload behavior passed');
+
+  const app = express();
+  app.use('/api/admin', captureRawBodyForMultipart, productionRouter);
+  const { server, baseUrl } = await startServer(app);
+  try {
+    const metadata = {
+      sampleId: 'busy-clean-firebase-raw-body',
+      targetWord: 'busy',
+      referenceIpa: 'ˈbɪz.i',
+      expectedObservedCount: 2,
+      targetSyllableCount: 2,
+      category: 'clean',
+      speakerCohort: 'l1-vn-01'
+    };
+    const formData = new FormData();
+    formData.append('metadata', JSON.stringify(metadata));
+    formData.append('audio', new Blob([makeWavBuffer()], { type: 'audio/wav' }), 'recording.wav');
+
+    const response = await fetch(`${baseUrl}/api/admin/dev/save-corpus-sample`, {
+      method: 'POST',
+      body: formData
+    });
+    const payload = await response.json();
+    assert.strictEqual(
+      response.status,
+      200,
+      `Firebase rawBody multipart upload should succeed, received ${response.status}: ${payload.message || ''}`
+    );
+    assert.strictEqual(records.get(metadata.sampleId).storagePath, `pronunciation-segmentation-corpus/${metadata.sampleId}.wav`);
+    console.log('production pronunciation corpus Firebase rawBody upload passed');
+  } finally {
+    await stopServer(server);
+  }
 })().catch((error) => {
   console.error(error);
   process.exit(1);

@@ -70,17 +70,20 @@ export class PraatAPI {
     }
 
     async analyze(audioBlob, expectedSyllableCount = null, options = {}) {
-        // Check v3 support; shadow must also traverse the v3 orchestrator.
-        try {
-            const v3Mode = await this.checkV3Support();
-            if (v3Mode === 'active' || v3Mode === 'shadow') {
-                return this.analyzeV3(audioBlob, {
-                    ...options,
-                    expectedSyllables: expectedSyllableCount
-                });
+        // Production learner feedback stays on target-aligned V2 unless a
+        // future rollout explicitly opts into V3 analysis.
+        if (config.features?.usePronunciationV3LearnerAnalysis === true) {
+            try {
+                const v3Mode = await this.checkV3Support();
+                if (v3Mode === 'active' || v3Mode === 'shadow') {
+                    return this.analyzeV3(audioBlob, {
+                        ...options,
+                        expectedSyllables: expectedSyllableCount
+                    });
+                }
+            } catch {
+                // Fall through to v2
             }
-        } catch {
-            // Fall through to v2
         }
 
         // V2 path (original)

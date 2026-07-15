@@ -35,7 +35,8 @@ export const config = {
         useNativeReference: true,
         showComparison: true,
         saveToDatabase: true,
-        usePraatBackend: true
+        usePraatBackend: true,
+        usePronunciationV3LearnerAnalysis: false
     },
 
     // Cache Settings

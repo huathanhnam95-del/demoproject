@@ -9,12 +9,14 @@ globalThis.window = {
 // We need to control fetch globally
 const originalFetch = globalThis.fetch;
 
+const { config } = await import('../../public/pronunciation-analyzer/config.js');
 const { PraatAPI } = await import('../../public/pronunciation-analyzer/praat-api.js');
 
 describe('PraatAPI v3 integration', () => {
     let api;
 
     beforeEach(() => {
+        config.features.usePronunciationV3LearnerAnalysis = false;
         api = new PraatAPI('https://backend.example');
         // Bypass WAV conversion in tests
         api.ensureWav = async (blob) => blob;
@@ -22,6 +24,7 @@ describe('PraatAPI v3 integration', () => {
 
     afterEach(() => {
         globalThis.fetch = originalFetch;
+        config.features.usePronunciationV3LearnerAnalysis = false;
         api._v3SupportPromise = null;
     });
 
@@ -68,6 +71,7 @@ describe('PraatAPI v3 integration', () => {
     });
 
     it('analyze() delegates to v3 when mode is active', async () => {
+        config.features.usePronunciationV3LearnerAnalysis = true;
         let fetchCalls = [];
 
         globalThis.fetch = async (url, options) => {
@@ -97,6 +101,7 @@ describe('PraatAPI v3 integration', () => {
     });
 
     it('analyze() delegates to v3 when mode is shadow and sends comparison metadata', async () => {
+        config.features.usePronunciationV3LearnerAnalysis = true;
         const fetchCalls = [];
         let postedBody = null;
         globalThis.fetch = async (url, options) => {
@@ -126,6 +131,38 @@ describe('PraatAPI v3 integration', () => {
         assert.equal(postedBody.get('reference_ipa'), '/bɪzi/');
         assert.equal(postedBody.get('target_word'), 'busy');
         assert.equal(result.mode, 'shadow');
+    });
+
+    it('analyze() stays on v2 when production v3 learner analysis is disabled', async () => {
+        const fetchCalls = [];
+
+        globalThis.fetch = async (url) => {
+            fetchCalls.push(url);
+            if (url.includes('/health')) {
+                return {
+                    ok: true,
+                    json: async () => ({ pronunciationV3Mode: 'active' })
+                };
+            }
+            return {
+                ok: true,
+                json: async () => ({
+                    analysisVersion: 'pronunciation-analysis-v2',
+                    observed: { syllableCount: 2, syllables: [{}, {}] },
+                    quality: { rateable: true }
+                })
+            };
+        };
+
+        const result = await api.analyze(
+            new Blob(['audio'], { type: 'audio/wav' }),
+            2
+        );
+
+        assert.ok(fetchCalls.some((url) => url.includes('/analyze/v2')));
+        assert.ok(!fetchCalls.some((url) => url.includes('/analyze/v3')));
+        assert.ok(!fetchCalls.some((url) => url.includes('/health')));
+        assert.equal(result.observed.syllableCount, 2);
     });
 
     it('analyze() uses v2 when mode is off', async () => {

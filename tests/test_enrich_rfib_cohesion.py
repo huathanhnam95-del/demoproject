@@ -383,5 +383,116 @@ class TestCheckpointAndRecovery(unittest.TestCase):
             mock_remove.assert_called_once_with("sidecar.jsonl")
 
 
+class TestValidationAndPreservation(unittest.TestCase):
+
+    def test_preflight_check_unsupported(self):
+        # Create a mock sheet that has conditional formatting
+        mock_ws = MagicMock()
+        mock_ws.conditional_formatting = ["dummy"]
+        mock_ws.data_validations = []
+        mock_ws.tables = []
+        mock_ws._images = []
+        mock_ws._charts = []
+        mock_wb = MagicMock()
+        mock_wb.defined_names = []
+        mock_wb._external_links = []
+        
+        with self.assertRaises(ValueError) as cm:
+            script.run_preflight_check(mock_wb, mock_ws)
+        self.assertIn("Unsupported advanced features detected", str(cm.exception))
+
+    def test_preflight_check_supported(self):
+        mock_ws = MagicMock()
+        mock_ws.conditional_formatting = []
+        mock_ws.data_validations = []
+        mock_ws.tables = []
+        mock_ws._images = []
+        mock_ws._charts = []
+        mock_wb = MagicMock()
+        mock_wb.defined_names = []
+        mock_wb._external_links = []
+        
+        # Should not raise any error
+        script.run_preflight_check(mock_wb, mock_ws)
+
+    def test_semantic_comparison_mismatch(self):
+        # Create mock cell styles and values that mismatch
+        cell_a = MagicMock(value="A", font=MagicMock(name="Arial"), fill=MagicMock(fill_type="solid"), border=MagicMock(), alignment=MagicMock(), number_format="General", protection=MagicMock())
+        cell_b = MagicMock(value="B", font=MagicMock(name="Arial"), fill=MagicMock(fill_type="solid"), border=MagicMock(), alignment=MagicMock(), number_format="General", protection=MagicMock())
+        
+        # Test values mismatch in column 1 (ID)
+        self.assertFalse(script.compare_cell_style_and_value(cell_a, cell_b, col_idx=1))
+        # Appended columns (e.g. index 13 Detailed Cohesion Explanation) are allowed to differ
+        self.assertTrue(script.compare_cell_style_and_value(cell_a, cell_b, col_idx=13))
+
+    @patch('scripts.enrich_rfib_cohesion.load_sidecar_to_dict')
+    @patch('openpyxl.load_workbook')
+    def test_validation_logic(self, mock_load, mock_load_sidecar):
+        mock_wb = MagicMock()
+        mock_ws = MagicMock()
+        mock_load.return_value = mock_wb
+        mock_wb.active = mock_ws
+        
+        mock_ws.max_row = 3
+        mock_ws.max_column = 14
+        
+        hmap = {
+            "ID": 1,
+            "TITLE": 2,
+            "ANSWER": 3,
+            "Full Text": 4,
+            "Cohesion Feature": 5,
+            "Cohesion Feature Details": 6,
+            "Detailed Cohesion Explanation": 13,
+            "Cohesion Verification": 14
+        }
+        
+        def cell_val(row, column):
+            cell = MagicMock()
+            if row == 1:
+                for k, v in hmap.items():
+                    if v == column:
+                        cell.value = k
+                        return cell
+            
+            rid = row - 1
+            if column == hmap["ID"]:
+                cell.value = rid
+            elif column == hmap["ANSWER"]:
+                cell.value = "__ans1/ans2__"
+            elif column == hmap["Detailed Cohesion Explanation"]:
+                cell.value = "Blank 1 ('ans1'): Explanation text"
+            elif column == hmap["Cohesion Verification"]:
+                cell.value = "[Correct] Notes here"
+            else:
+                cell.value = "dummy"
+            return cell
+            
+        mock_ws.cell.side_effect = cell_val
+
+        # Sidecar records with mismatched status in ID 2
+        sidecar_records = {
+            1: {
+                "id": 1,
+                "status": "Correct",
+                "notes": "Notes here",
+                "explanations": [{"blank_index": 1, "correct_answer": "ans1", "detailed_student_explanation": "Explanation text"}]
+            },
+            2: {
+                "id": 2,
+                "status": "Incorrect", # Mismatched with Excel [Correct] status
+                "notes": "Notes here",
+                "explanations": [{"blank_index": 1, "correct_answer": "ans1", "detailed_student_explanation": "Explanation text"}]
+            }
+        }
+        mock_load_sidecar.return_value = sidecar_records
+
+        args = MagicMock(input="dummy.xlsx", sidecar="dummy.jsonl", ids="", validate_only=True, baseline="")
+        
+        with self.assertRaises(SystemExit) as cm:
+            script.run_validate_only(args)
+        self.assertEqual(cm.exception.code, 1)
+
+
 if __name__ == '__main__':
     unittest.main()

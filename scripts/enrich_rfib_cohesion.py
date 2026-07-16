@@ -319,8 +319,32 @@ def backup_suffix() -> str:
     return f"{t.tm_year}{t.tm_mon:02d}{t.tm_mday:02d}_{t.tm_hour:02d}{t.tm_min:02d}{t.tm_sec:02d}"
 
 
+def run_preflight_check(wb, ws):
+    unsupported = []
+    if getattr(ws, "conditional_formatting", None):
+        unsupported.append("conditional_formatting")
+    if getattr(ws, "data_validations", None) and len(ws.data_validations) > 0:
+        unsupported.append("data_validations")
+    if getattr(ws, "tables", None) and len(ws.tables) > 0:
+        unsupported.append("tables")
+    if getattr(ws, "_images", None) and len(ws._images) > 0:
+        unsupported.append("images")
+    if getattr(ws, "_charts", None) and len(ws._charts) > 0:
+        unsupported.append("charts")
+    if getattr(wb, "defined_names", None) and len(wb.defined_names) > 0:
+        unsupported.append("defined_names")
+    if getattr(wb, "_external_links", None) and len(wb._external_links) > 0:
+        unsupported.append("external_links")
+        
+    if unsupported:
+        raise ValueError(f"Unsupported advanced features detected: {unsupported}")
+
+
 def save_workbook_safe(wb, target_path: str) -> str:
     """Save via temp file + atomic rename. Returns actual path used."""
+    ws = wb.active
+    run_preflight_check(wb, ws)
+
     tmp_path = target_path + ".tmp"
     try:
         wb.save(tmp_path)
@@ -473,18 +497,147 @@ def reset_sidecar_if_requested(sidecar_path: str, reset: bool):
 # ---------------------------------------------------------------------------
 
 
+def compare_cell_style_and_value(cell_a, cell_b, col_idx: int) -> bool:
+    """Compare styling and value/type/formula. Appended columns (13, 14) are allowed to differ."""
+    # Column 13 (Detailed Cohesion Explanation) and 14 (Cohesion Verification)
+    if col_idx in [13, 14]:
+        return True
+
+    # Values
+    if cell_a.value != cell_b.value:
+        return False
+    if type(cell_a.value) != type(cell_b.value):
+        return False
+
+    # Font
+    f_a, f_b = cell_a.font, cell_b.font
+    if bool(f_a) != bool(f_b):
+        return False
+    if f_a and f_b:
+        col_a = getattr(f_a.color, "value", None) if f_a.color else None
+        col_b = getattr(f_b.color, "value", None) if f_b.color else None
+        if (f_a.name, f_a.size, f_a.bold, f_a.italic, col_a) != (f_b.name, f_b.size, f_b.bold, f_b.italic, col_b):
+            return False
+
+    # Fill
+    fl_a, fl_b = cell_a.fill, cell_b.fill
+    if bool(fl_a) != bool(fl_b):
+        return False
+    if fl_a and fl_b:
+        c_a = getattr(fl_a.start_color, "value", None) if fl_a.start_color else None
+        c_b = getattr(fl_b.start_color, "value", None) if fl_b.start_color else None
+        if (fl_a.fill_type, c_a) != (fl_b.fill_type, c_b):
+            return False
+
+    # Border
+    b_a, b_b = cell_a.border, cell_b.border
+    if bool(b_a) != bool(b_b):
+        return False
+    if b_a and b_b:
+        def get_side(s):
+            if not s: return None
+            col = getattr(s.color, "value", None) if s.color else None
+            return (s.style, col)
+        if (get_side(b_a.left), get_side(b_a.right), get_side(b_a.top), get_side(b_a.bottom)) != \
+           (get_side(b_b.left), get_side(b_b.right), get_side(b_b.top), get_side(b_b.bottom)):
+            return False
+
+    # Alignment
+    al_a, al_b = cell_a.alignment, cell_b.alignment
+    if bool(al_a) != bool(al_b):
+        return False
+    if al_a and al_b:
+        if (al_a.horizontal, al_a.vertical, al_a.wrap_text, al_a.indent) != \
+           (al_b.horizontal, al_b.vertical, al_b.wrap_text, al_b.indent):
+            return False
+
+    # Number Format
+    if cell_a.number_format != cell_b.number_format:
+        return False
+
+    # Protection
+    pr_a, pr_b = cell_a.protection, cell_b.protection
+    if bool(pr_a) != bool(pr_b):
+        return False
+    if pr_a and pr_b:
+        if (pr_a.locked, pr_a.hidden) != (pr_b.locked, pr_b.hidden):
+            return False
+
+    return True
+
+
+def semantic_compare_workbooks(wb_a, wb_b):
+    """Semantically compare workbook structures and elements."""
+    if wb_a.sheetnames != wb_b.sheetnames:
+        raise ValueError(f"Sheet names or order mismatch: {wb_a.sheetnames} vs {wb_b.sheetnames}")
+        
+    for name in wb_a.sheetnames:
+        ws_a = wb_a[name]
+        ws_b = wb_b[name]
+        
+        # Visibility
+        if ws_a.sheet_state != ws_b.sheet_state:
+            raise ValueError(f"Sheet '{name}' visibility mismatch: {ws_a.sheet_state} vs {ws_b.sheet_state}")
+            
+        # Row count
+        if ws_a.max_row != ws_b.max_row:
+            raise ValueError(f"Sheet '{name}' row count mismatch: {ws_a.max_row} vs {ws_b.max_row}")
+            
+        # Column widths
+        for col_idx in range(1, ws_a.max_column + 1):
+            col_letter = openpyxl.utils.get_column_letter(col_idx)
+            dim_a = ws_a.column_dimensions.get(col_letter)
+            dim_b = ws_b.column_dimensions.get(col_letter)
+            width_a = dim_a.width if dim_a else None
+            width_b = dim_b.width if dim_b else None
+            if width_a != width_b and col_idx not in [13, 14]:
+                raise ValueError(f"Column '{col_letter}' width mismatch: {width_a} vs {width_b}")
+                
+        # Row heights
+        for r in range(1, ws_a.max_row + 1):
+            dim_a = ws_a.row_dimensions.get(r)
+            dim_b = ws_b.row_dimensions.get(r)
+            h_a = dim_a.height if dim_a else None
+            h_b = dim_b.height if dim_b else None
+            if h_a != h_b:
+                raise ValueError(f"Row {r} height mismatch: {h_a} vs {h_b}")
+                
+        # Merged ranges
+        ranges_a = sorted([str(rng) for rng in ws_a.merged_cells.ranges])
+        ranges_b = sorted([str(rng) for rng in ws_b.merged_cells.ranges])
+        if ranges_a != ranges_b:
+            raise ValueError(f"Merged cells ranges mismatch in sheet '{name}'")
+            
+        # Freeze panes
+        if ws_a.freeze_panes != ws_b.freeze_panes:
+            raise ValueError(f"Freeze panes mismatch in sheet '{name}': {ws_a.freeze_panes} vs {ws_b.freeze_panes}")
+            
+        # Autofilter
+        if str(ws_a.auto_filter) != str(ws_b.auto_filter):
+            raise ValueError(f"Autofilter mismatch in sheet '{name}'")
+            
+        # Compare cells (columns 1 to 12)
+        for r in range(1, ws_a.max_row + 1):
+            for c in range(1, ws_a.max_column + 1):
+                cell_a = ws_a.cell(row=r, column=c)
+                cell_b = ws_b.cell(row=r, column=c)
+                if not compare_cell_style_and_value(cell_a, cell_b, col_idx=c):
+                    raise ValueError(f"Cell style or value mismatch in sheet '{name}' at row {r}, column {c}")
+
+
 def run_validate_only(args):
     """Read sidecar JSONL and cross-check against workbook."""
     sidecar_path = args.sidecar or SIDECAR_FILE
     logging.info(f"Validation mode: reading sidecar {sidecar_path}")
 
-    records = load_sidecar(sidecar_path)
-    if not records:
-        logging.error("No records found in sidecar file.")
+    try:
+        sidecar_records = load_sidecar_to_dict(sidecar_path)
+    except ValueError as e:
+        logging.error(f"Failed to load sidecar: {e}")
         sys.exit(1)
 
-    logging.info(f"Loading workbook: {INPUT_FILE}")
-    wb = openpyxl.load_workbook(INPUT_FILE, read_only=True)
+    logging.info(f"Loading workbook: {args.input}")
+    wb = openpyxl.load_workbook(args.input, data_only=False)
     ws = wb.active
     hmap = build_header_map(ws)
 
@@ -503,58 +656,88 @@ def run_validate_only(args):
         if rid is not None:
             id_to_row[int(rid)] = r
 
+    # Determine expected ID set
+    if args.ids:
+        expected_ids = set(int(x.strip()) for x in args.ids.split(",") if x.strip())
+        missing_ids = expected_ids - set(id_to_row.keys())
+        if missing_ids:
+            logging.error(f"Error: Selected IDs {missing_ids} not found in workbook.")
+            sys.exit(1)
+    else:
+        expected_ids = set(id_to_row.keys())
+
+    # Coverage checks
+    sidecar_ids = set(sidecar_records.keys())
+    missing_sidecar_ids = expected_ids - sidecar_ids
+    extra_sidecar_ids = sidecar_ids - expected_ids if args.ids else set()
+    
     passed = 0
     failed = 0
     failed_ids = []
 
-    for rec in records:
-        rec_id = rec.get("id")
+    if missing_sidecar_ids:
+        logging.error(f"Validation failed: Expected IDs missing from sidecar: {missing_sidecar_ids}")
+        failed += len(missing_sidecar_ids)
+        failed_ids.extend(list(missing_sidecar_ids))
+        
+    if extra_sidecar_ids:
+        logging.error(f"Validation failed: Extra IDs found in sidecar under selected validation: {extra_sidecar_ids}")
+        failed += len(extra_sidecar_ids)
+        failed_ids.extend(list(extra_sidecar_ids))
+
+    for rec_id in sorted(expected_ids):
+        if rec_id not in sidecar_records:
+            continue
+            
+        rec = sidecar_records[rec_id]
         errors = []
+        row_num = id_to_row[rec_id]
 
-        if rec_id not in id_to_row:
-            errors.append(f"ID {rec_id} not found in workbook")
-        else:
-            row_num = id_to_row[rec_id]
-            answer_text = str(ws.cell(row=row_num, column=col_answer).value or "")
-            blanks = extract_blanks(answer_text)
+        answer_text = str(ws.cell(row=row_num, column=col_answer).value or "")
+        blanks = extract_blanks(answer_text)
 
-            # Check status
-            status = rec.get("status")
-            if status not in VALID_STATUSES:
-                errors.append(f"Invalid status '{status}'")
+        # Check status
+        status = rec.get("status")
+        if status not in VALID_STATUSES:
+            errors.append(f"Invalid status '{status}'")
 
-            # Check explanations
-            explanations = rec.get("explanations", [])
-            if len(explanations) != len(blanks):
-                errors.append(f"Explanation count {len(explanations)} != blank count {len(blanks)}")
+        # Check explanations
+        explanations = rec.get("explanations", [])
+        if len(explanations) != len(blanks):
+            errors.append(f"Explanation count {len(explanations)} != blank count {len(blanks)}")
 
-            seen_idx = set()
-            for i, exp in enumerate(explanations):
-                idx = exp.get("blank_index")
-                if idx != i + 1:
-                    errors.append(f"blank_index={idx}, expected {i+1}")
-                if idx in seen_idx:
-                    errors.append(f"Duplicate blank_index={idx}")
-                seen_idx.add(idx)
+        seen_idx = set()
+        for i, exp in enumerate(explanations):
+            idx = exp.get("blank_index")
+            if idx != i + 1:
+                errors.append(f"blank_index={idx}, expected {i+1}")
+            if idx in seen_idx:
+                errors.append(f"Duplicate blank_index={idx}")
+            seen_idx.add(idx)
 
-                if i < len(blanks):
-                    expected = blanks[i]["correct"]
-                    actual = exp.get("correct_answer", "")
-                    if actual.strip().lower() != expected.strip().lower():
-                        errors.append(f"Blank {idx}: answer '{actual}' != '{expected}'")
+            if i < len(blanks):
+                expected = blanks[i]["correct"]
+                actual = exp.get("correct_answer", "")
+                if actual.strip().lower() != expected.strip().lower():
+                    errors.append(f"Blank {idx}: answer '{actual}' != '{expected}'")
 
-                if not exp.get("detailed_student_explanation", "").strip():
-                    errors.append(f"Blank {idx}: empty explanation")
+            if not exp.get("detailed_student_explanation", "").strip():
+                errors.append(f"Blank {idx}: empty explanation")
 
-            # Check Excel cells exist
-            if col_detailed:
-                cell_val = ws.cell(row=row_num, column=col_detailed).value
-                if not cell_val or not str(cell_val).strip():
-                    errors.append("Excel Detailed Cohesion Explanation cell is empty")
-            if col_verification:
-                cell_val = ws.cell(row=row_num, column=col_verification).value
-                if not cell_val or not str(cell_val).strip():
-                    errors.append("Excel Cohesion Verification cell is empty")
+        # Check Excel cells exist
+        if col_detailed:
+            cell_val = ws.cell(row=row_num, column=col_detailed).value
+            if not cell_val or not str(cell_val).strip():
+                errors.append("Excel Detailed Cohesion Explanation cell is empty")
+        if col_verification:
+            cell_val = ws.cell(row=row_num, column=col_verification).value
+            if not cell_val or not str(cell_val).strip():
+                errors.append("Excel Cohesion Verification cell is empty")
+            else:
+                ver_str = str(cell_val).strip()
+                expected_prefix = f"[{status}]"
+                if not ver_str.startswith(expected_prefix):
+                    errors.append(f"Excel Cohesion Verification prefix does not match status '{status}'")
 
         if errors:
             failed += 1
@@ -564,13 +747,25 @@ def run_validate_only(args):
             passed += 1
             logging.info(f"PASS ID {rec_id}")
 
+    # Baseline comparison
+    if args.baseline:
+        logging.info(f"Semantic baseline comparison with: {args.baseline}")
+        try:
+            baseline_wb = openpyxl.load_workbook(args.baseline, data_only=False)
+            semantic_compare_workbooks(baseline_wb, wb)
+            logging.info("Baseline preservation semantic comparison: PASSED")
+            baseline_wb.close()
+        except Exception as e:
+            logging.error(f"Baseline preservation semantic comparison: FAILED - {e}")
+            failed += 1
+
     # Print sample if requested
     if args.print_sample:
-        _print_stratified_sample(records, ws, hmap, id_to_row)
+        _print_stratified_sample(list(sidecar_records.values()), ws, hmap, id_to_row)
 
     logging.info("=" * 60)
     logging.info("VALIDATION REPORT")
-    logging.info(f"  Records checked: {len(records)}")
+    logging.info(f"  Records checked: {len(expected_ids)}")
     logging.info(f"  Passed:          {passed}")
     logging.info(f"  Failed:          {failed}")
     if failed_ids:

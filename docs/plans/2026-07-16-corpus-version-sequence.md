@@ -8,9 +8,13 @@
 
 **Tech Stack:** Vanilla browser JavaScript, static CRM HTML, existing Firebase-authenticated API, Playwright Chrome regression tests.
 
+**Status:** Complete and production-verified in commit `d10acf65`.
+
 ---
 
 ### Task 1: Add failing browser coverage for the version sequence
+
+**Status:** Complete
 
 **Files:**
 - Modify: `tests/browser/crm-pronunciation-samples-browser-check.js`
@@ -22,6 +26,8 @@
 4. Run `node tests/browser/crm-pronunciation-samples-browser-check.js`; the new assertions must fail before implementation.
 
 ### Task 2: Implement the deterministic version model and inline guidance
+
+**Status:** Complete
 
 **Files:**
 - Modify: `public/crm-admin.js`
@@ -37,6 +43,8 @@
 
 ### Task 3: Run focused validation and fix regressions
 
+**Status:** Complete — focused Chrome test and full CRM verification suite passed.
+
 **Files:**
 - Modify: `tests/browser/crm-pronunciation-samples-browser-check.js` (only if test fixtures need synchronization)
 
@@ -48,6 +56,8 @@
 
 ### Task 4: Production Chrome verification and deployment
 
+**Status:** Complete — Hosting deployed and live Chrome verification passed on `betterenglishlearning.com`.
+
 **Files:**
 - No new product files; use the existing production deployment workflow.
 
@@ -56,4 +66,3 @@
 2. Verify a production word can move clean → omission → insertion → accented → unrateable and back with Previous Version, with instructions visible in the inline green panel.
 3. Deploy Functions and Hosting from clean deployment worktrees only after focused tests pass.
 4. Re-run the production Chrome smoke check and record the deployed commit and URLs.
-

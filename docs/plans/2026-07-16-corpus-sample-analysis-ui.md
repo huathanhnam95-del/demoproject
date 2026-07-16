@@ -8,9 +8,13 @@
 
 **Tech Stack:** Express/Firebase Functions CRM router, Firebase Storage, vanilla CRM JavaScript/HTML, existing `public/pronunciation-analyzer/praat-api.js`, Playwright Chrome tests, Node route-contract tests.
 
+**Status:** Complete and production-verified in commit `40c8fb6f`.
+
 ---
 
 ### Task 1: Define the protected audio retrieval contract
+
+**Status:** Complete
 
 **Files:**
 - Modify: `functions/src/routes/admin/pronunciation-corpus.js`
@@ -24,6 +28,8 @@
 4. Run the route test and confirm it passes.
 
 ### Task 2: Add per-sample analysis controls and result rendering
+
+**Status:** Complete
 
 **Files:**
 - Modify: `public/crm-admin.js`
@@ -39,6 +45,8 @@
 
 ### Task 3: Add regression coverage for the complete UI flow
 
+**Status:** Complete
+
 **Files:**
 - Modify: `tests/browser/crm-pronunciation-samples-browser-check.js`
 
@@ -50,6 +58,8 @@
 
 ### Task 4: Verify production readiness
 
+**Status:** Complete — CRM suite passed, live Chrome verification passed, Functions and Hosting deployed.
+
 **Files:**
 - No production files beyond the implementation above.
 
@@ -60,4 +70,3 @@
 3. Run `node scripts/crm/verify-crm-suite.js`.
 4. Run the live Chrome production check against `https://betterenglishlearning.com/crm-admin.html#pronunciation-samples`, using the local credentials file and a real saved sample, and verify the result is rendered per attempt.
 5. Deploy the Functions/Hosting changes only after all checks pass; record the deployed backend revision and keep the existing rollback revision.
-

@@ -385,3 +385,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 392,2026-07-14,Explain pronunciation v3 rollout execution plan,Done,2026-07-14
 393,2026-07-14,Plan and design Pronunciation Samples recording page,Done,2026-07-14
 394,2026-07-14,Implement Pronunciation Samples recording page,Done,2026-07-14
+395,2026-07-16,Re-audit RFIB cohesion features and generate student-facing explanations using local Gemma AI,In Progress,

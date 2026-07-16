@@ -372,7 +372,6 @@ function registerLocalOnlyRoutes(router, deps) {
                     action: 'read',
                     expires: Date.now() + 10 * 60 * 1000
                 });
-
                 return localSendSuccess(res, { url });
             } catch (error) {
                 console.error('[CRM] Audio URL failed:', error);
@@ -380,6 +379,235 @@ function registerLocalOnlyRoutes(router, deps) {
             }
         });
     }
+
+    const multer = require('multer');
+    const upload = multer({
+        storage: multer.memoryStorage(),
+        limits: { fileSize: 10 * 1024 * 1024 }
+    });
+
+    let manifestQueue = Promise.resolve();
+    // Ensure queue never stays permanently rejected: each write is isolated
+    function enqueueManifestWrite(fn) {
+        manifestQueue = manifestQueue.catch(() => {}).then(fn);
+        return manifestQueue;
+    }
+
+    router.post('/dev/save-corpus-sample', localAuthMiddleware, upload.single('audio'), async (req, res) => {
+        try {
+            if (!process.env.FIRESTORE_EMULATOR_HOST) {
+                return localSendError(res, 403, 'FORBIDDEN', 'This dev endpoint is only available in local emulator mode.');
+            }
+
+            const metadataStr = req.body.metadata;
+            if (!metadataStr) {
+                return localSendError(res, 400, 'VALIDATION_ERROR', 'Missing metadata payload.');
+            }
+
+            let metadata;
+            try {
+                metadata = JSON.parse(metadataStr);
+            } catch (e) {
+                return localSendError(res, 400, 'VALIDATION_ERROR', 'Invalid JSON metadata.');
+            }
+
+            const {
+                sampleId,
+                targetWord,
+                referenceIpa,
+                expectedObservedCount,
+                targetSyllableCount,
+                category,
+                speakerCohort
+            } = metadata;
+
+            // Strict metadata validations
+            if (!sampleId || typeof sampleId !== 'string' || !/^[a-z0-9-]+$/.test(sampleId)) {
+                return localSendError(res, 400, 'VALIDATION_ERROR', 'sampleId must match ^[a-z0-9-]+$.');
+            }
+
+            if (!targetWord || typeof targetWord !== 'string' || targetWord.trim().length === 0) {
+                return localSendError(res, 400, 'VALIDATION_ERROR', 'targetWord must be a non-empty string.');
+            }
+
+            if (!referenceIpa || typeof referenceIpa !== 'string' || referenceIpa.trim().length === 0) {
+                return localSendError(res, 400, 'VALIDATION_ERROR', 'referenceIpa must be a non-empty string.');
+            }
+
+            const expectedObservedCountInt = parseInt(expectedObservedCount, 10);
+            if (isNaN(expectedObservedCountInt) || expectedObservedCountInt < 0 || String(expectedObservedCount) !== String(expectedObservedCountInt)) {
+                return localSendError(res, 400, 'VALIDATION_ERROR', 'expectedObservedCount must be a non-negative integer.');
+            }
+
+            const targetSyllableCountInt = parseInt(targetSyllableCount, 10);
+            if (isNaN(targetSyllableCountInt) || targetSyllableCountInt <= 0 || String(targetSyllableCount) !== String(targetSyllableCountInt)) {
+                return localSendError(res, 400, 'VALIDATION_ERROR', 'targetSyllableCount must be a positive integer.');
+            }
+
+            const allowedCategories = ["clean", "omission", "insertion", "accented", "unrateable"];
+            if (!allowedCategories.includes(category)) {
+                return localSendError(res, 400, 'VALIDATION_ERROR', `category must be one of: ${allowedCategories.join(', ')}`);
+            }
+
+            if (!speakerCohort || typeof speakerCohort !== 'string' || !/^[a-z0-9-]+$/.test(speakerCohort)) {
+                return localSendError(res, 400, 'VALIDATION_ERROR', 'speakerCohort must match ^[a-z0-9-]+$.');
+            }
+
+            // Audio validation
+            if (!req.file || !req.file.buffer) {
+                return localSendError(res, 400, 'VALIDATION_ERROR', 'Missing audio file buffer.');
+            }
+
+            if (req.file.buffer.length > 5 * 1024 * 1024) {
+                return localSendError(res, 400, 'VALIDATION_ERROR', 'Audio file size exceeds the maximum allowed limit of 5 MB.');
+            }
+
+            const buffer = req.file.buffer;
+            if (buffer.length < 44) {
+                return localSendError(res, 400, 'VALIDATION_ERROR', 'WAV file is too short.');
+            }
+
+            if (buffer.toString('ascii', 0, 4) !== 'RIFF' || buffer.toString('ascii', 8, 12) !== 'WAVE') {
+                return localSendError(res, 400, 'VALIDATION_ERROR', 'Invalid file format. Only WAV format is allowed.');
+            }
+
+            // Validate fmt chunk fields
+            const audioFormat = buffer.readUInt16LE(20);
+            if (audioFormat !== 1) {
+                return localSendError(res, 400, 'VALIDATION_ERROR', 'Only PCM WAV format (audioFormat=1) is accepted.');
+            }
+
+            const numChannels = buffer.readUInt16LE(22);
+            if (numChannels < 1 || numChannels > 2) {
+                return localSendError(res, 400, 'VALIDATION_ERROR', 'WAV channel count must be 1 (mono) or 2 (stereo).');
+            }
+
+            const sampleRate = buffer.readUInt32LE(24);
+            if (sampleRate <= 0 || sampleRate > 192000) {
+                return localSendError(res, 400, 'VALIDATION_ERROR', 'WAV sample rate must be between 1 and 192000 Hz.');
+            }
+
+            const bitsPerSample = buffer.readUInt16LE(34);
+            if (![8, 16, 24, 32].includes(bitsPerSample)) {
+                return localSendError(res, 400, 'VALIDATION_ERROR', 'WAV bits per sample must be 8, 16, 24, or 32.');
+            }
+
+            // Find 'data' chunk with boundary safety
+            let dataOffset = 12;
+            let dataSize = -1;
+            while (dataOffset + 8 <= buffer.length) {
+                const chunkId = buffer.toString('ascii', dataOffset, dataOffset + 4);
+                const chunkSize = buffer.readUInt32LE(dataOffset + 4);
+                if (chunkSize < 0 || dataOffset + 8 + chunkSize > buffer.length) {
+                    return localSendError(res, 400, 'VALIDATION_ERROR', 'WAV file has malformed chunk boundaries.');
+                }
+                if (chunkId === 'data') {
+                    dataSize = chunkSize;
+                    break;
+                }
+                dataOffset += 8 + chunkSize;
+                // Ensure word-aligned chunks (WAV spec)
+                if (dataOffset % 2 !== 0) dataOffset += 1;
+            }
+            if (dataSize < 0) {
+                return localSendError(res, 400, 'VALIDATION_ERROR', 'WAV file is missing the data chunk.');
+            }
+
+            const bytesPerSample = (bitsPerSample / 8) * numChannels;
+            if (dataSize % bytesPerSample !== 0) {
+                return localSendError(res, 400, 'VALIDATION_ERROR', 'WAV data chunk size is not aligned to the sample frame size.');
+            }
+            const numSamples = dataSize / bytesPerSample;
+            const duration = numSamples / sampleRate;
+
+            if (!isFinite(duration) || duration <= 0) {
+                return localSendError(res, 400, 'VALIDATION_ERROR', 'WAV file has zero or invalid duration.');
+            }
+
+            if (duration > 15) {
+                return localSendError(res, 400, 'VALIDATION_ERROR', `Audio duration (${duration.toFixed(2)}s) exceeds the maximum allowed limit of 15 seconds.`);
+            }
+
+            const fs = require('fs').promises;
+            const corpusDir = path.join(process.cwd(), 'test-results', 'pronunciation-segmentation-corpus');
+
+            // Ensure corpus directory exists
+            await fs.mkdir(corpusDir, { recursive: true });
+
+            // Constrain filename to sanitize path traversal
+            const safeFilename = path.basename(`${sampleId}.wav`);
+            if (safeFilename !== `${sampleId}.wav`) {
+                return localSendError(res, 400, 'VALIDATION_ERROR', 'Invalid sample ID filename.');
+            }
+            const wavPath = path.join(corpusDir, safeFilename);
+            await fs.writeFile(wavPath, req.file.buffer);
+
+            // Calculate SHA-256 hash
+            const sha256 = crypto.createHash('sha256').update(req.file.buffer).digest('hex');
+
+            // Atomic manifest update using the promise queue
+            const manifestPath = path.join(process.cwd(), 'tests', 'fixtures', 'pronunciation-segmentation', 'manifest.json');
+            let manifestCount = 0;
+
+            await new Promise((resolveUpdate, rejectUpdate) => {
+                enqueueManifestWrite(async () => {
+                    try {
+                        let manifest = { version: "1.0.0", createdAt: new Date().toISOString(), entries: [] };
+                        try {
+                            const manifestContent = await fs.readFile(manifestPath, 'utf8');
+                            manifest = JSON.parse(manifestContent);
+                        } catch (err) {
+                            await fs.mkdir(path.dirname(manifestPath), { recursive: true });
+                        }
+
+                        if (!Array.isArray(manifest.entries)) {
+                            manifest.entries = [];
+                        }
+
+                        const newEntry = {
+                            sampleId,
+                            targetWord,
+                            referenceIpa,
+                            expectedObservedCount: expectedObservedCountInt,
+                            targetSyllableCount: targetSyllableCountInt,
+                            category,
+                            speakerCohort,
+                            sourceHash: sha256,
+                            labelProvenance: "manual",
+                            verifiedSpans: null
+                        };
+
+                        const existingIdx = manifest.entries.findIndex(entry => entry.sampleId === sampleId);
+                        if (existingIdx !== -1) {
+                            manifest.entries[existingIdx] = newEntry;
+                        } else {
+                            manifest.entries.push(newEntry);
+                        }
+
+                        // Atomic write: write to temp file then rename
+                        const tempPath = `${manifestPath}.tmp`;
+                        await fs.writeFile(tempPath, JSON.stringify(manifest, null, 2), 'utf8');
+                        await fs.rename(tempPath, manifestPath);
+
+                        manifestCount = manifest.entries.length;
+                        resolveUpdate();
+                    } catch (err) {
+                        rejectUpdate(err);
+                    }
+                });
+            });
+
+            return localSendSuccess(res, {
+                sampleId,
+                hash: sha256,
+                manifestCount
+            }, 'Corpus sample saved and manifest updated successfully.');
+
+        } catch (error) {
+            console.error('[DevCorpus] Failed to save sample:', error);
+            return localSendError(res, 500, 'SAVE_ERROR', 'Failed to save corpus sample.', error?.message || error);
+        }
+    });
 }
 
 const localAdminRouter = createCrmRouter({

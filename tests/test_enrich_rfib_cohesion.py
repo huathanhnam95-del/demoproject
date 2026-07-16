@@ -293,5 +293,95 @@ class TestOllamaRetries(unittest.TestCase):
         self.assertIsNone(response)
         self.assertEqual(mock_post.call_count, 3)
 
+
+class TestCheckpointAndRecovery(unittest.TestCase):
+
+    @patch('builtins.open')
+    @patch('os.path.exists')
+    def test_duplicate_sidecar_ids_rejected(self, mock_exists, mock_open):
+        mock_exists.return_value = True
+        mock_open.return_value.__enter__.return_value = [
+            '{"id": 13, "status": "Correct"}\n',
+            '{"id": 13, "status": "Incorrect"}\n' # Duplicate ID
+        ]
+        with self.assertRaises(ValueError) as cm:
+            script.load_sidecar_to_dict("dummy_sidecar.jsonl")
+        self.assertIn("Duplicate ID 13 detected in sidecar", str(cm.exception))
+
+    @patch('os.replace')
+    @patch('builtins.open')
+    def test_atomic_sidecar_rewrite(self, mock_open, mock_replace):
+        records = {
+            13: {"id": 13, "status": "Correct"},
+            14: {"id": 14, "status": "Incorrect"}
+        }
+        script.save_sidecar_atomic("dummy_sidecar.jsonl", records)
+        mock_replace.assert_called_once_with("dummy_sidecar.jsonl.tmp", "dummy_sidecar.jsonl")
+
+    @patch('scripts.enrich_rfib_cohesion.save_workbook_safe')
+    @patch('scripts.enrich_rfib_cohesion.save_sidecar_atomic')
+    def test_checkpoint_order(self, mock_save_sidecar, mock_save_wb):
+        # Verify sidecar is saved first, workbook second
+        call_order = []
+        mock_save_sidecar.side_effect = lambda *a, **kw: call_order.append("sidecar")
+        mock_save_wb.side_effect = lambda *a, **kw: call_order.append("workbook")
+
+        mock_wb = MagicMock()
+        script.checkpoint(mock_wb, "out.xlsx", "sidecar.jsonl", {})
+        self.assertEqual(call_order, ["sidecar", "workbook"])
+
+    def test_reconciliation_excel_ahead_and_mismatches(self):
+        # Mock workbook sheet cell access
+        mock_ws = MagicMock()
+        col_detailed = 1
+        col_verification = 2
+        
+        # Scenario 1: Valid matching sidecar, missing Excel -> render from sidecar
+        mock_ws.cell(row=5, column=col_detailed).value = ""
+        mock_ws.cell(row=5, column=col_verification).value = ""
+        
+        sidecar_records = {
+            13: {
+                "id": 13,
+                "status": "Correct",
+                "notes": "No issues",
+                "explanations": [{"blank_index": 1, "correct_answer": "a", "detailed_student_explanation": "exp"}]
+            }
+        }
+        
+        # Test sidecar-ahead (Excel missing)
+        action = script.reconcile_row(mock_ws, 5, 13, col_detailed, col_verification, sidecar_records)
+        self.assertEqual(action, "render")
+        
+        # Scenario 2: Valid Excel cells, missing/invalid sidecar -> reprocess from Ollama
+        mock_ws.cell(row=6, column=col_detailed).value = "Blank 1 ('a'):\n  Why this answer: x\n  Student explanation: exp"
+        mock_ws.cell(row=6, column=col_verification).value = "[Correct] Note"
+        
+        action = script.reconcile_row(mock_ws, 6, 14, col_detailed, col_verification, {})
+        self.assertEqual(action, "reprocess")
+
+        # Scenario 3: Valid matching both -> skip
+        mock_ws.cell(row=7, column=col_detailed).value = "Blank 1 ('a'):\n  Why this answer: x\n  Student explanation: exp"
+        mock_ws.cell(row=7, column=col_verification).value = "[Correct] Note"
+        sidecar_records[14] = {
+            "id": 14,
+            "status": "Correct",
+            "notes": "Note",
+            "explanations": [{"blank_index": 1, "correct_answer": "a", "detailed_student_explanation": "exp"}]
+        }
+        action = script.reconcile_row(mock_ws, 7, 14, col_detailed, col_verification, sidecar_records)
+        self.assertEqual(action, "skip")
+
+    @patch('shutil.copy2')
+    @patch('os.path.exists')
+    @patch('os.remove')
+    def test_reset_sidecar_logs_and_clears(self, mock_remove, mock_exists, mock_copy):
+        mock_exists.return_value = True
+        with patch('builtins.open') as mock_open:
+            mock_open.return_value.__enter__.return_value = ['{"id":1}\n']
+            script.reset_sidecar_if_requested("sidecar.jsonl", reset=True)
+            mock_remove.assert_called_once_with("sidecar.jsonl")
+
+
 if __name__ == '__main__':
     unittest.main()

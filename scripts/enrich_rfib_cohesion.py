@@ -349,26 +349,123 @@ def save_workbook_safe(wb, target_path: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def append_sidecar(sidecar_path: str, record: dict):
-    """Append one JSON record to the sidecar file."""
-    with open(sidecar_path, "a", encoding="utf-8") as f:
-        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+# ---------------------------------------------------------------------------
+# JSONL sidecar
+# ---------------------------------------------------------------------------
 
 
-def load_sidecar(sidecar_path: str) -> list[dict]:
-    """Load all records from the sidecar file."""
-    records = []
+def load_sidecar_to_dict(sidecar_path: str) -> dict[int, dict]:
+    """Load sidecar JSONL into a dict of id -> record, raising ValueError on duplicate IDs."""
+    records = {}
     if not os.path.exists(sidecar_path):
         return records
+        
     with open(sidecar_path, "r", encoding="utf-8") as f:
-        for line in f:
+        for line_num, line in enumerate(f, start=1):
             line = line.strip()
-            if line:
-                try:
-                    records.append(json.loads(line))
-                except json.JSONDecodeError:
-                    pass
+            if not line:
+                continue
+            try:
+                record = json.loads(line)
+            except json.JSONDecodeError as e:
+                logging.warning(f"Malfored JSON in sidecar line {line_num}: {e}")
+                continue
+                
+            rid = record.get("id")
+            if rid is None:
+                continue
+            rid = int(rid)
+            if rid in records:
+                raise ValueError(f"Duplicate ID {rid} detected in sidecar at line {line_num}")
+            records[rid] = record
+            
     return records
+
+
+def save_sidecar_atomic(sidecar_path: str, records: dict[int, dict]):
+    """Save in-memory sidecar dictionary atomically to file."""
+    tmp_path = sidecar_path + ".tmp"
+    try:
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            for rid in sorted(records.keys()):
+                f.write(json.dumps(records[rid], ensure_ascii=False) + "\n")
+        os.replace(tmp_path, sidecar_path)
+    except Exception:
+        if os.path.exists(tmp_path):
+            try:
+                os.remove(tmp_path)
+            except OSError:
+                pass
+        raise
+
+
+def checkpoint(wb, output_path: str, sidecar_path: str, records: dict[int, dict]) -> str:
+    """Perform sidecar-first then workbook-second checkpointing. Returns active workbook path."""
+    save_sidecar_atomic(sidecar_path, records)
+    active_path = save_workbook_safe(wb, output_path)
+    return active_path
+
+
+def reconcile_row(ws, row_num: int, row_id: int, col_detailed: int, col_verification: int, sidecar_records: dict[int, dict]) -> str:
+    """Reconcile row state. Returns 'skip', 'render', or 'reprocess'."""
+    # Check Excel validity
+    excel_detailed = ws.cell(row=row_num, column=col_detailed).value
+    excel_ver = ws.cell(row=row_num, column=col_verification).value
+    excel_valid = False
+    excel_status = None
+    if excel_detailed and str(excel_detailed).strip() and excel_ver:
+        ver_str = str(excel_ver).strip()
+        for prefix in VALID_STATUS_PREFIXES:
+            if ver_str.startswith(prefix):
+                excel_valid = True
+                excel_status = prefix[1:-1]
+                break
+
+    # Check sidecar validity
+    sidecar_valid = False
+    rec = sidecar_records.get(row_id)
+    if rec:
+        status = rec.get("status")
+        explanations = rec.get("explanations")
+        if status in VALID_STATUSES and isinstance(explanations, list):
+            sidecar_valid = True
+
+    # Reconciliation logic
+    if excel_valid and sidecar_valid:
+        # Check alignment
+        if excel_status == rec.get("status"):
+            logging.info(f"Row ID {row_id}: Excel and sidecar align. Skipping.")
+            return "skip"
+        else:
+            logging.info(f"Row ID {row_id}: Status mismatch (Excel={excel_status}, sidecar={rec.get('status')}). Reprocessing.")
+            return "reprocess"
+    elif sidecar_valid and not excel_valid:
+        logging.info(f"Row ID {row_id}: Valid sidecar but invalid Excel cells. Recovering cells from sidecar.")
+        return "render"
+    elif excel_valid and not sidecar_valid:
+        logging.info(f"Row ID {row_id}: Excel cells are filled but sidecar is missing/invalid. Reprocessing.")
+        return "reprocess"
+    else:
+        return "reprocess"
+
+
+def reset_sidecar_if_requested(sidecar_path: str, reset: bool):
+    """Log sidecar count/path and delete if reset is True."""
+    count = 0
+    exists = os.path.exists(sidecar_path)
+    if exists:
+        try:
+            records = load_sidecar_to_dict(sidecar_path)
+            count = len(records)
+        except Exception as e:
+            logging.warning(f"Could not parse sidecar to count records before reset: {e}")
+            
+    logging.info(f"Sidecar path: {sidecar_path}")
+    logging.info(f"Existing records count: {count} (exists={exists})")
+    
+    if reset and exists:
+        logging.info(f"Reset requested. Deleting sidecar file: {sidecar_path}")
+        os.remove(sidecar_path)
 
 
 # ---------------------------------------------------------------------------
@@ -645,6 +742,16 @@ def main():
 
     logging.info(f"Candidate rows: {len(candidate_rows)}")
 
+    # --- Reset sidecar if requested ---
+    reset_sidecar_if_requested(sidecar_path, args.reset_sidecar)
+
+    # --- Load sidecar dict ---
+    try:
+        sidecar_records = load_sidecar_to_dict(sidecar_path)
+    except ValueError as e:
+        logging.error(f"Failed to load sidecar: {e}")
+        sys.exit(1)
+
     # --- Process ---
     stats = {
         "attempted": 0,
@@ -660,11 +767,26 @@ def main():
             continue
         row_id = int(row_id_raw)
 
-        # Resume check
-        if not args.no_resume and is_row_already_processed(ws, row_num, col_detailed, col_verification):
+        # Reconciliation check on resume
+        action = "reprocess"
+        if not args.no_resume:
+            action = reconcile_row(ws, row_num, row_id, col_detailed, col_verification, sidecar_records)
+
+        if action == "skip":
             stats["skipped_resume"] += 1
             continue
+        elif action == "render":
+            rec = sidecar_records[row_id]
+            formatted = format_detailed_explanations(rec.get("explanations", []))
+            ws.cell(row=row_num, column=col_detailed, value=formatted)
+            ws.cell(row=row_num, column=col_verification, value=f"[{rec.get('status')}] {rec.get('notes', '')}")
+            stats["succeeded"] += 1
+            if rec.get("status") in stats["status_counts"]:
+                stats["status_counts"][rec.get("status")] += 1
+            logging.info(f"  [+] ID {row_id} rendered from sidecar.")
+            continue
 
+        # Otherwise action is "reprocess"
         answer_text = str(ws.cell(row=row_num, column=hmap["ANSWER"]).value or "")
         full_text = str(ws.cell(row=row_num, column=hmap["Full Text"]).value or "")
         existing_details = str(ws.cell(row=row_num, column=hmap["Cohesion Feature Details"]).value or "")
@@ -718,8 +840,8 @@ def main():
             ws.cell(row=row_num, column=col_detailed, value=formatted)
             ws.cell(row=row_num, column=col_verification, value=verification_str)
 
-            # Append to JSONL sidecar
-            sidecar_record = {
+            # Update sidecar dict
+            sidecar_records[row_id] = {
                 "id": row_id,
                 "status": status,
                 "notes": notes,
@@ -727,7 +849,6 @@ def main():
                 "model": MODEL_NAME,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
-            append_sidecar(sidecar_path, sidecar_record)
 
             stats["succeeded"] += 1
             if status in stats["status_counts"]:
@@ -741,14 +862,14 @@ def main():
 
         # Periodic save
         if stats["attempted"] % args.save_every == 0 and stats["attempted"] > 0:
-            output_path = save_workbook_safe(wb, output_path)
+            output_path = checkpoint(wb, output_path, sidecar_path, sidecar_records)
             logging.info(f"  💾 Saved progress -> {output_path}")
 
         # Pacing
         time.sleep(0.5)
 
     # --- Final save ---
-    output_path = save_workbook_safe(wb, output_path)
+    output_path = checkpoint(wb, output_path, sidecar_path, sidecar_records)
 
     # --- Workbook-wide enrichment count ---
     workbook_enriched = 0
@@ -772,7 +893,21 @@ def main():
     logging.info(f"  Status breakdown:    {stats['status_counts']}")
     logging.info(f"  Output file:         {output_path}")
     logging.info(f"  JSONL sidecar:       {sidecar_path}")
+    
+    if stats["failed_ids"]:
+        rerun_cmd = (
+            f".\\.venv\\Scripts\\python.exe scripts\\enrich_rfib_cohesion.py "
+            f"--input {args.input} --out {output_path} --sidecar {sidecar_path} "
+            f"--ids {','.join(map(str, stats['failed_ids']))}"
+        )
+        logging.info(f"  Rerun command:       {rerun_cmd}")
     logging.info("=" * 60)
+
+    # Exit with code 1 if any failed
+    if stats["failed_ids"]:
+        sys.exit(1)
+    else:
+        sys.exit(0)
 
 
 # ---------------------------------------------------------------------------

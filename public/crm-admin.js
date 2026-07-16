@@ -6889,6 +6889,7 @@
     const btnUseCustom = document.getElementById('btn-corpus-use-custom');
     const displayWord = document.getElementById('corpus-display-word');
     const displayIpaCount = document.getElementById('corpus-display-ipa-count');
+    const versionStatus = document.getElementById('corpus-version-status');
     const categorySelect = document.getElementById('corpus-category');
     const expectedObservedCountInput = document.getElementById('corpus-expected-observed-count');
     const speakerCohortInput = document.getElementById('corpus-speaker-cohort');
@@ -6900,6 +6901,8 @@
     const btnStop = document.getElementById('btn-corpus-stop');
     const btnRedo = document.getElementById('btn-corpus-redo');
     const btnSave = document.getElementById('btn-corpus-save');
+    const btnPrevVersion = document.getElementById('btn-corpus-prev-version');
+    const btnNextVersion = document.getElementById('btn-corpus-next-version');
     const btnNextWord = document.getElementById('btn-corpus-next-word');
     const btnPagePrev = document.getElementById('btn-corpus-page-prev');
     const btnPageNext = document.getElementById('btn-corpus-page-next');
@@ -6917,6 +6920,8 @@
     let currentExpectedObservedCount = 2;
     let currentSpeakerCohort = 'l1-vn-01';
     let currentInstruction = 'Say “busy” once, naturally and clearly. Do not repeat it or add another word.';
+    let currentVersionIndex = 0;
+    let currentVersionSaved = false;
     let audioBlob = null;
     let audioContext = null;
     let mediaStream = null;
@@ -6928,6 +6933,39 @@
     const analysisBySampleId = new Map();
     const PAGE_SIZE = 10;
     let currentPage = 1;
+
+    const CORPUS_VERSIONS = [
+      {
+        label: 'Clean',
+        category: 'clean',
+        expectedCount: (target) => target,
+        instruction: (word) => `Say “${word}” once naturally and clearly in American English. Produce every target syllable with normal stress. Do not repeat it or add another word.`
+      },
+      {
+        label: 'Omission',
+        category: 'omission',
+        expectedCount: (target) => Math.max(0, target - 1),
+        instruction: (word) => `Say “${word}” once, but intentionally omit exactly one syllable: the final target syllable. Keep the remaining sound clear, and do not add another word.`
+      },
+      {
+        label: 'Insertion',
+        category: 'insertion',
+        expectedCount: (target) => target + 1,
+        instruction: (word) => `Say “${word}” once, but intentionally add exactly one extra syllable after the first target syllable. Make the extra syllable a short “uh”, and do not add another word.`
+      },
+      {
+        label: 'Accented',
+        category: 'accented',
+        expectedCount: (target) => target,
+        instruction: (word) => `Say “${word}” once with every target syllable present, but deliberately stress a different syllable from the normal pronunciation. Do not add another word.`
+      },
+      {
+        label: 'Unrateable',
+        category: 'unrateable',
+        expectedCount: () => 0,
+        instruction: (word) => `Record about two seconds of silence, heavy background noise, or unintelligible speech instead of a clear “${word}”. Do not say another recognizable word.`
+      }
+    ];
 
     function setSaveButtonState(enabled, label) {
       if (!btnSave) return;
@@ -6955,13 +6993,13 @@
           currentWord = btn.dataset.word;
           currentIpa = btn.dataset.ipa;
           currentSyllableCount = parseInt(btn.dataset.count, 10);
-          currentCategory = btn.dataset.category || 'clean';
-          currentExpectedObservedCount = Number.isInteger(parseInt(btn.dataset.observed, 10)) ? parseInt(btn.dataset.observed, 10) : currentSyllableCount;
           currentSpeakerCohort = btn.dataset.cohort || 'l1-vn-01';
-          currentInstruction = btn.dataset.instruction || `Say “${currentWord}” once, naturally and clearly. Do not repeat it or add another word.`;
+          currentVersionIndex = 0;
+          currentVersionSaved = false;
           if (customWordInput) customWordInput.value = '';
-          updateDisplay();
-          setStepGuidance(`Step 2: Review the fixed instruction, then click Record and say “${currentWord}” once.`);
+          redoRecording();
+          applyCurrentVersion();
+          setStepGuidance(`Version 1 of 5: Review the Clean instruction, then click Record.`);
         });
       });
     }
@@ -7080,6 +7118,38 @@
         if (wordListStatus) wordListStatus.textContent = 'Showing the built-in mandatory tests; Oxford list unavailable.';
       }
     }
+    function applyCurrentVersion() {
+      const version = CORPUS_VERSIONS[currentVersionIndex] || CORPUS_VERSIONS[0];
+      currentCategory = version.category;
+      currentExpectedObservedCount = version.expectedCount(currentSyllableCount);
+      currentInstruction = version.instruction(currentWord);
+      if (versionStatus) versionStatus.textContent = `Version ${currentVersionIndex + 1} of ${CORPUS_VERSIONS.length} · ${version.label}`;
+      updateDisplay();
+      updateVersionButtons();
+    }
+
+    function updateVersionButtons() {
+      const hasUncommittedAudio = Boolean(audioBlob) && !currentVersionSaved;
+      if (btnPrevVersion) btnPrevVersion.disabled = currentVersionIndex <= 0;
+      if (btnNextVersion) btnNextVersion.disabled = currentVersionIndex >= CORPUS_VERSIONS.length - 1;
+      if (btnNextWord) btnNextWord.title = hasUncommittedAudio ? 'Save this version before moving to another word' : 'Move to the next word';
+    }
+
+    function confirmVersionNavigation() {
+      if (!audioBlob || currentVersionSaved) return true;
+      return window.confirm('This recording has not been saved. Leave this version and discard it?');
+    }
+
+    function moveToVersion(nextIndex) {
+      if (nextIndex < 0 || nextIndex >= CORPUS_VERSIONS.length || nextIndex === currentVersionIndex) return;
+      if (!confirmVersionNavigation()) return;
+      currentVersionIndex = nextIndex;
+      currentVersionSaved = false;
+      redoRecording();
+      applyCurrentVersion();
+      setStepGuidance(`Version ${currentVersionIndex + 1} of ${CORPUS_VERSIONS.length}: Review the ${CORPUS_VERSIONS[currentVersionIndex].label} instruction, then click Record.`);
+    }
+
     function updateDisplay() {
       if (!displayWord || !displayIpaCount) return;
       displayWord.textContent = currentWord;
@@ -7091,6 +7161,7 @@
       if (speakerCohortInput) speakerCohortInput.value = currentSpeakerCohort;
       if (instructionText) instructionText.textContent = currentInstruction;
       updateSampleId();
+      updateVersionButtons();
     }
     function updateSampleId() {
       if (!categorySelect || !speakerCohortInput || !sampleIdDisplay) return '';
@@ -7289,7 +7360,10 @@
       currentPage += 1;
       applyWordFilter();
     });
+    if (btnPrevVersion) btnPrevVersion.addEventListener('click', () => moveToVersion(currentVersionIndex - 1));
+    if (btnNextVersion) btnNextVersion.addEventListener('click', () => moveToVersion(currentVersionIndex + 1));
     if (btnNextWord) btnNextWord.addEventListener('click', () => {
+      if (!confirmVersionNavigation()) return;
       const filter = sampleFilter?.value || 'all';
       const filtered = wordBtns.filter((button) => {
         const hasSample = savedWordSet.has(String(button.dataset.word || '').toLowerCase());
@@ -7301,7 +7375,6 @@
       nextButton.click();
       currentPage = Math.floor(filtered.indexOf(nextButton) / PAGE_SIZE) + 1;
       applyWordFilter();
-      redoRecording();
       nextButton.scrollIntoView({ block: 'nearest' });
     });
     loadOxfordWordTests();
@@ -7319,6 +7392,10 @@
         currentWord = customW;
         currentIpa = customI;
         currentSyllableCount = customC;
+        currentVersionIndex = 0;
+        currentVersionSaved = false;
+        redoRecording();
+        applyCurrentVersion();
         updateDisplay();
         showToast(`Using custom word: ${customW}`, 'success');
       });
@@ -7361,8 +7438,10 @@
     async function startRecording() {
       rawSamples = [];
       audioBlob = null;
+      currentVersionSaved = false;
       setSaveButtonState(false);
       if (btnNextWord) btnNextWord.disabled = true;
+      updateVersionButtons();
       setStepGuidance(`Step 3: Say “${currentWord}” clearly now. Click Stop when you finish.`);
       try {
         mediaStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
@@ -7428,7 +7507,8 @@
       }
       const rms = mergedSamples.length ? Math.sqrt(sumSquares / mergedSamples.length) : 0;
       const allowSilentBrowserFixture = window.__CRM_BROWSER_TEST__ === true;
-      if (!allowSilentBrowserFixture && (!mergedSamples.length || peak < 0.01 || rms < 0.002)) {
+      const allowUnrateableRecording = currentCategory === 'unrateable';
+      if (!allowSilentBrowserFixture && !allowUnrateableRecording && (!mergedSamples.length || peak < 0.01 || rms < 0.002)) {
         audioBlob = null;
         if (playbackContainer) playbackContainer.style.display = 'none';
         if (micStatus) {
@@ -7449,13 +7529,14 @@
       const audioURL = URL.createObjectURL(audioBlob);
       if (audioPlayer) audioPlayer.src = audioURL;
       if (playbackContainer) playbackContainer.style.display = 'flex';
-      if (micStatus) micStatus.textContent = "Status: Audio Captured";
+      if (micStatus) micStatus.textContent = allowUnrateableRecording ? "Status: Unrateable audio captured" : "Status: Audio Captured";
       if (btnRecord) btnRecord.disabled = true;
       if (btnStop) btnStop.disabled = true;
       if (btnRedo) btnRedo.disabled = false;
       setSaveButtonState(true);
       if (btnNextWord) btnNextWord.disabled = false;
-      setStepGuidance('Step 4: Play the audio to verify it, then click Save Attempt.');
+      updateVersionButtons();
+      setStepGuidance(`Step 4: Play the ${CORPUS_VERSIONS[currentVersionIndex].label} recording to verify it, then click Save Attempt.`);
       showToast('Audio captured successfully.', 'success');
     }
     function encodeWAV(samples, sampleRate) {
@@ -7489,6 +7570,7 @@
     function redoRecording() {
       rawSamples = [];
       audioBlob = null;
+      currentVersionSaved = false;
       if (audioPlayer) audioPlayer.src = '';
       if (playbackContainer) playbackContainer.style.display = 'none';
       if (micStatus) {
@@ -7500,6 +7582,7 @@
       if (btnRedo) btnRedo.disabled = true;
       setSaveButtonState(false);
       if (btnNextWord) btnNextWord.disabled = true;
+      updateVersionButtons();
       setStepGuidance(`Step 3: Ready to record “${currentWord}”. Click Record to begin.`);
       if (consoleOutput) consoleOutput.textContent = "No changes pending.";
     }
@@ -7533,9 +7616,12 @@
           consoleOutput.textContent = `Saved to cloud: ${sampleId}.wav${hash ? ` (hash: ${hash.substring(0, 10)}...)` : ''}`;
         }
         showToast('Successfully saved to cloud storage.', 'success');
-        setStepGuidance('Complete: Sample saved. Click Next Word to continue or choose another page.');
+        currentVersionSaved = true;
+        setStepGuidance(`Saved Version ${currentVersionIndex + 1} of ${CORPUS_VERSIONS.length}. Click Next Version to continue, or Next Word when all versions are complete.`);
         await loadSavedSamples();
         redoRecording();
+        currentVersionSaved = true;
+        updateVersionButtons();
       } catch (err) {
         console.error('Failed to save corpus sample:', err);
         if (consoleOutput) consoleOutput.textContent = `Error: ${err.message}`;

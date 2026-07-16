@@ -316,6 +316,41 @@ async function main() {
     // Verify Display updates
     const displayWordText = await page.textContent('#corpus-display-word');
     assert.strictEqual(displayWordText.trim(), 'photograph');
+    await expectText(page.locator('#corpus-version-status'), /Version 1 of 5.*Clean/i);
+    await expectText(page.locator('#corpus-test-instruction-text'), /Say .*photograph.*naturally and clearly/i);
+    assert.strictEqual(await page.locator('#corpus-category').isDisabled(), true);
+    assert.strictEqual(await page.locator('#corpus-expected-observed-count').getAttribute('readonly'), '');
+
+    await page.click('#btn-corpus-next-version');
+    await expectText(page.locator('#corpus-version-status'), /Version 2 of 5.*Omission/i);
+    await expectText(page.locator('#corpus-test-instruction-text'), /omit exactly one syllable/i);
+    assert.strictEqual(await page.inputValue('#corpus-category'), 'omission');
+    assert.strictEqual(await page.inputValue('#corpus-expected-observed-count'), '2');
+
+    await page.click('#btn-corpus-next-version');
+    await expectText(page.locator('#corpus-version-status'), /Version 3 of 5.*Insertion/i);
+    await expectText(page.locator('#corpus-test-instruction-text'), /add exactly one extra syllable/i);
+    assert.strictEqual(await page.inputValue('#corpus-category'), 'insertion');
+    assert.strictEqual(await page.inputValue('#corpus-expected-observed-count'), '4');
+
+    await page.click('#btn-corpus-next-version');
+    await expectText(page.locator('#corpus-version-status'), /Version 4 of 5.*Accented/i);
+    await expectText(page.locator('#corpus-test-instruction-text'), /stress a different syllable/i);
+    assert.strictEqual(await page.inputValue('#corpus-category'), 'accented');
+    assert.strictEqual(await page.inputValue('#corpus-expected-observed-count'), '3');
+
+    await page.click('#btn-corpus-next-version');
+    await expectText(page.locator('#corpus-version-status'), /Version 5 of 5.*Unrateable/i);
+    await expectText(page.locator('#corpus-test-instruction-text'), /silence, heavy background noise, or unintelligible/i);
+    assert.strictEqual(await page.inputValue('#corpus-category'), 'unrateable');
+    assert.strictEqual(await page.inputValue('#corpus-expected-observed-count'), '0');
+
+    await page.click('#btn-corpus-prev-version');
+    await expectText(page.locator('#corpus-version-status'), /Version 4 of 5.*Accented/i);
+    await page.click('#btn-corpus-prev-version');
+    await page.click('#btn-corpus-prev-version');
+    await page.click('#btn-corpus-prev-version');
+    await expectText(page.locator('#corpus-version-status'), /Version 1 of 5.*Clean/i);
 
     // 5. Start Recording
     await page.click('#btn-corpus-record');
@@ -337,6 +372,15 @@ async function main() {
       const saveBtn = document.getElementById('btn-corpus-save');
       return saveBtn && !saveBtn.disabled;
     });
+
+    let navigationPrompted = false;
+    page.once('dialog', async (dialog) => {
+      navigationPrompted = true;
+      await dialog.dismiss();
+    });
+    await page.click('#btn-corpus-next-version');
+    assert.strictEqual(navigationPrompted, true, 'Moving versions with an unsaved recording should require confirmation.');
+    await expectText(page.locator('#corpus-version-status'), /Version 1 of 5.*Clean/i);
 
     // 7. Save the attempt
     await page.click('#btn-corpus-save');

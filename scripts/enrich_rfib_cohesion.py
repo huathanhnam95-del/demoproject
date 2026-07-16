@@ -109,8 +109,10 @@ def build_prompt(
 
     return f"""You are an expert ESL teacher and linguistic analyst specialising in textual cohesion.
 
-TASK: Analyse a Reading Fill-in-the-Blanks (RFIB) passage. For each blank, explain
-why the correct answer is the only logical choice. Separate two concerns:
+TASK: Analyse a Reading Fill-in-the-Blanks (RFIB) passage. For each blank:
+1. Explain why the correct answer is the only logical choice.
+2. In the student-facing explanation, you MUST explain the correct answer AND address every other option (distractor) for that blank, explaining why they are grammatically incorrect (e.g., wrong part of speech, wrong verb tense/form) or semantically/contextually incorrect.
+Separate two concerns:
   (a) selection_reason — grammar, collocation, or semantic fit that makes this word correct.
   (b) cohesion_tie (optional) — a genuine lexical or grammatical cohesion link
       to other words/clauses in the passage (reference pronoun, synonym/antonym,
@@ -124,7 +126,7 @@ The existing analysis may be correct, partially correct, incorrect, or irrelevan
 Audit it carefully:
  - Does it reference the correct blank position? (e.g. if a blank is "all" in
    "all around Tokyo", but the existing analysis says "'all' functions as a
-   reference pronoun in 'all of which'" in a DIFFERENT sentence, that is INCORRECT
+   reference pronoun in 'all of which' in a DIFFERENT sentence, that is INCORRECT
    because 'all of which' is not a blank — 'all around' is the blank.)
  - Are the claimed cohesion features accurate and actually helpful to a student?
  - Is it complete for cohesion-bearing blanks? (Blanks with no cohesion tie don't
@@ -162,7 +164,7 @@ RESPONSE FORMAT — return ONLY valid JSON, no markdown fences:
       "correct_answer": "word",
       "selection_reason": "Why this word is the only correct choice (grammar, collocation, meaning).",
       "cohesion_tie": "Lexical/grammatical cohesion link to other text, or empty string if none.",
-      "detailed_student_explanation": "Full student-facing explanation combining selection_reason and cohesion_tie. Write as if explaining to a B1-B2 learner why this answer is correct and how they can figure it out from the surrounding text."
+      "detailed_student_explanation": "Full student-facing explanation combining selection_reason and cohesion_tie. Write as if explaining to a B1-B2 learner why this answer is correct, how they can figure it out from the surrounding text, and explicitly explain for each of the other incorrect options why they are grammatically incorrect (e.g., wrong part of speech, wrong form) or semantically/contextually incorrect."
     }}
   ]
 }}

@@ -1065,7 +1065,7 @@ def main():
         # Periodic save
         if stats["attempted"] % args.save_every == 0 and stats["attempted"] > 0:
             output_path = checkpoint(wb, output_path, sidecar_path, sidecar_records)
-            logging.info(f"  💾 Saved progress -> {output_path}")
+            logging.info(f"  [Save] Saved progress -> {output_path}")
 
         # Pacing
         time.sleep(0.5)

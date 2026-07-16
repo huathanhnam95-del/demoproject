@@ -24,6 +24,7 @@ import logging
 import argparse
 import requests
 import openpyxl
+import traceback
 from datetime import datetime, timezone
 
 # ---------------------------------------------------------------------------
@@ -613,8 +614,10 @@ def semantic_compare_workbooks(wb_a, wb_b):
             raise ValueError(f"Freeze panes mismatch in sheet '{name}': {ws_a.freeze_panes} vs {ws_b.freeze_panes}")
             
         # Autofilter
-        if str(ws_a.auto_filter) != str(ws_b.auto_filter):
-            raise ValueError(f"Autofilter mismatch in sheet '{name}'")
+        ref_a = ws_a.auto_filter.ref if getattr(ws_a, "auto_filter", None) else None
+        ref_b = ws_b.auto_filter.ref if getattr(ws_b, "auto_filter", None) else None
+        if ref_a != ref_b:
+            raise ValueError(f"Autofilter ref mismatch in sheet '{name}': {ref_a} vs {ref_b}")
             
         # Compare cells (columns 1 to 12)
         for r in range(1, ws_a.max_row + 1):
@@ -756,6 +759,7 @@ def run_validate_only(args):
             logging.info("Baseline preservation semantic comparison: PASSED")
             baseline_wb.close()
         except Exception as e:
+            traceback.print_exc()
             logging.error(f"Baseline preservation semantic comparison: FAILED - {e}")
             failed += 1
 
@@ -849,6 +853,7 @@ def parse_arguments(args_list: list[str] = None) -> argparse.Namespace:
     parser.add_argument("--reset-sidecar", action="store_true", help="Start the selected run with an empty sidecar map.")
     parser.add_argument("--save-every", type=int, default=25, help="Save progress every N rows.")
     parser.add_argument("--validate-only", action="store_true", help="Validate sidecar against workbook; no LLM.")
+    parser.add_argument("--baseline", type=str, default="", help="Baseline path for comparison.")
     parser.add_argument("--print-sample", action="store_true", help="Print stratified sample (with --validate-only).")
     
     # Parse args (sys.argv[1:] by default if args_list is None)

@@ -106,7 +106,8 @@ const routes = collectRoutes(router);
 for (const signature of [
   'POST /dev/save-corpus-sample',
   'GET /dev/corpus-samples',
-  'GET /dev/corpus-samples/:sampleId'
+  'GET /dev/corpus-samples/:sampleId',
+  'GET /dev/corpus-samples/:sampleId/audio'
 ]) {
   assert(routes.includes(signature), `Expected production corpus route ${signature}.`);
 }
@@ -167,6 +168,7 @@ console.log('production pronunciation corpus route contract passed');
     file(storagePath) {
       return {
         async save(buffer) { savedFiles.set(storagePath, buffer); },
+        async download() { return [savedFiles.get(storagePath) || makeWavBuffer()]; },
         async getSignedUrl() { return [`https://storage.test/${encodeURIComponent(storagePath)}`]; }
       };
     }
@@ -235,6 +237,21 @@ console.log('production pronunciation corpus route contract passed');
     );
     assert.strictEqual(records.get(metadata.sampleId).storagePath, `pronunciation-segmentation-corpus/${metadata.sampleId}.wav`);
     console.log('production pronunciation corpus Firebase rawBody upload passed');
+
+    const invalidAudioResponse = await fetch(`${baseUrl}/api/admin/dev/corpus-samples/invalid_id/audio`);
+    assert.strictEqual(invalidAudioResponse.status, 400);
+
+    const missingAudioResponse = await fetch(`${baseUrl}/api/admin/dev/corpus-samples/missing-sample/audio`);
+    assert.strictEqual(missingAudioResponse.status, 404);
+
+    const audioResponse = await fetch(`${baseUrl}/api/admin/dev/corpus-samples/${metadata.sampleId}/audio`);
+    assert.strictEqual(audioResponse.status, 200);
+    assert.match(audioResponse.headers.get('content-type') || '', /audio\/wav/i);
+    assert.strictEqual(audioResponse.headers.get('cache-control'), 'no-store');
+    const audioBytes = Buffer.from(await audioResponse.arrayBuffer());
+    assert.strictEqual(audioBytes.toString('ascii', 0, 4), 'RIFF');
+    assert.strictEqual(audioBytes.toString('ascii', 8, 12), 'WAVE');
+    console.log('production pronunciation corpus audio proxy passed');
   } finally {
     await stopServer(server);
   }

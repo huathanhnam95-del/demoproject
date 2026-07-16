@@ -317,6 +317,30 @@ function registerPronunciationCorpusRoutes(router, deps) {
     }
   });
 
+  router.get('/dev/corpus-samples/:sampleId/audio', ...requireAdminHandlers, async (req, res) => {
+    try {
+      const sampleId = String(req.params.sampleId || '').trim();
+      if (!SAMPLE_ID_RE.test(sampleId)) return sendError(res, 400, 'VALIDATION_ERROR', 'Invalid sampleId.');
+      const snapshot = await deps.db.collection(COLLECTION).doc(sampleId).get();
+      if (!snapshot.exists) return sendError(res, 404, 'NOT_FOUND', 'Corpus sample not found.');
+
+      const sample = serializeSample(snapshot);
+      const expectedStoragePath = `pronunciation-segmentation-corpus/${sampleId}.wav`;
+      if (sample.storagePath !== expectedStoragePath) {
+        return sendError(res, 404, 'AUDIO_NOT_FOUND', 'Corpus sample audio not found.');
+      }
+
+      const bucket = await deps.getStorageBucket();
+      if (!bucket) return sendError(res, 500, 'SERVER_CONFIG_ERROR', 'Firebase Storage is not initialized.');
+      const [audioBuffer] = await bucket.file(expectedStoragePath).download();
+      res.set('Content-Type', sample.contentType || 'audio/wav');
+      res.set('Cache-Control', 'no-store');
+      return res.status(200).send(audioBuffer);
+    } catch (error) {
+      return sendError(res, 500, 'CORPUS_AUDIO_ERROR', 'Failed to retrieve corpus sample audio.');
+    }
+  });
+
   router.get('/dev/corpus-samples/:sampleId', ...requireAdminHandlers, async (req, res) => {
     try {
       const sampleId = String(req.params.sampleId || '').trim();

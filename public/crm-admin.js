@@ -6925,6 +6925,7 @@
     let scriptProcessor = null;
     let rawSamples = [];
     let savedWordSet = new Set();
+    const analysisBySampleId = new Map();
     const PAGE_SIZE = 10;
     let currentPage = 1;
 
@@ -7104,6 +7105,109 @@
       return sampleId;
     }
 
+    function getSampleVerification(sample, analysis) {
+      const targetCount = Number(sample.targetSyllableCount || 0);
+      const expectedCount = Number(sample.expectedObservedCount ?? targetCount);
+      const observedCount = Number(analysis?.observed?.syllableCount || 0);
+      const rateable = analysis?.quality?.rateable !== false && analysis?.observed?.stressEvidence?.rateable !== false;
+      const category = String(sample.category || 'clean').toLowerCase();
+
+      if (category === 'unrateable') {
+        return rateable
+          ? { label: 'Needs review · audio was rateable', color: '#991b1b' }
+          : { label: 'Verified · unrateable condition matched', color: '#166534' };
+      }
+      if (!rateable) return { label: 'Needs review · unrateable audio', color: '#92400e' };
+      if (category === 'clean' && observedCount === targetCount) return { label: 'Verified · clean target matched', color: '#166534' };
+      if (category === 'omission' && observedCount === expectedCount && observedCount < targetCount) return { label: 'Verified · omission target matched', color: '#166534' };
+      if (category === 'insertion' && observedCount === expectedCount && observedCount > targetCount) return { label: 'Verified · insertion target matched', color: '#166534' };
+      if (category === 'accented' && observedCount === expectedCount) return { label: 'Count verified · review stress/accent', color: '#92400e' };
+      return { label: `Needs review · observed ${observedCount}, expected ${expectedCount}`, color: '#991b1b' };
+    }
+
+    function appendAnalysisLine(container, label, value) {
+      const line = document.createElement('div');
+      const strong = document.createElement('strong');
+      strong.textContent = `${label}: `;
+      line.appendChild(strong);
+      line.appendChild(document.createTextNode(String(value)));
+      container.appendChild(line);
+    }
+
+    function renderSampleAnalysis(sample, resultContainer, state) {
+      resultContainer.replaceChildren();
+      if (state?.error) {
+        resultContainer.style.color = '#991b1b';
+        resultContainer.textContent = `Analysis failed: ${state.error} Click Analyze & Verify to retry.`;
+        return;
+      }
+      const analysis = state?.analysis;
+      if (!analysis) {
+        resultContainer.textContent = 'Click Analyze & Verify to run the pronunciation analysis for this sample.';
+        return;
+      }
+
+      resultContainer.style.color = '#123';
+      const verification = getSampleVerification(sample, analysis);
+      const status = document.createElement('div');
+      status.style.cssText = `font-weight:700; color:${verification.color}; margin-bottom:6px;`;
+      status.textContent = verification.label;
+      resultContainer.appendChild(status);
+
+      const observedCount = Number(analysis.observed?.syllableCount || 0);
+      appendAnalysisLine(resultContainer, 'Counts', `${Number(sample.targetSyllableCount || 0)} target · ${Number(sample.expectedObservedCount ?? sample.targetSyllableCount ?? 0)} expected observed`);
+      appendAnalysisLine(resultContainer, 'Observed', `${observedCount} syllables`);
+      appendAnalysisLine(resultContainer, 'Quality', `${analysis.quality?.rateable === false ? 'unrateable' : 'rateable'} · confidence ${Number(analysis.quality?.confidence ?? 0).toFixed(2)}`);
+      appendAnalysisLine(resultContainer, 'Segmentation', `${analysis.segmentation?.method || 'unknown'} · confidence ${Number(analysis.segmentation?.confidence ?? 0).toFixed(2)}`);
+      appendAnalysisLine(resultContainer, 'Primary stress', `syllable ${Number(analysis.observed?.primaryStress ?? -1) + 1} · confidence ${Number(analysis.observed?.stressEvidence?.confidence ?? 0).toFixed(2)}`);
+
+      const syllables = document.createElement('div');
+      syllables.style.marginTop = '6px';
+      syllables.textContent = 'Syllables: ';
+      (analysis.observed?.syllables || []).forEach((item, index) => {
+        if (index > 0) syllables.appendChild(document.createTextNode(' · '));
+        syllables.appendChild(document.createTextNode(
+          `#${Number(item.syllable || index + 1)} ${Number(item.startTime || 0).toFixed(2)}–${Number(item.endTime || 0).toFixed(2)}s, ${Number(item.duration || 0).toFixed(2)}s, ${Number(item.avgPitch || 0).toFixed(0)}Hz${item.isStressed ? ', stressed' : ''}`
+        ));
+      });
+      resultContainer.appendChild(syllables);
+    }
+
+    async function analyzeSavedSample(sample, resultContainer, button) {
+      const sampleId = String(sample.id || sample.sampleId || '').trim();
+      if (!sampleId) return;
+      button.disabled = true;
+      button.textContent = 'Analyzing…';
+      resultContainer.style.color = '#123';
+      resultContainer.textContent = 'Downloading audio and running V2 pronunciation analysis…';
+      try {
+        const user = firebase.auth().currentUser;
+        if (!user) throw new Error('Admin session expired. Please sign in again.');
+        const token = await user.getIdToken();
+        const audioResponse = await fetch(`/api/admin/dev/corpus-samples/${encodeURIComponent(sampleId)}/audio`, {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: 'no-store'
+        });
+        if (!audioResponse.ok) throw new Error(`Audio request failed (${audioResponse.status})`);
+        const audioBlob = await audioResponse.blob();
+        const { PraatAPI } = await import(`/pronunciation-analyzer/praat-api.js?corpus-analysis=${encodeURIComponent(sampleId)}`);
+        const api = new PraatAPI();
+        const analysis = await api.analyze(audioBlob, Number(sample.targetSyllableCount || sample.expectedObservedCount || 0), {
+          targetWord: sample.targetWord || ''
+        });
+        analysisBySampleId.set(sampleId, { analysis });
+        renderSampleAnalysis(sample, resultContainer, { analysis });
+        button.textContent = 'Re-analyze';
+      } catch (error) {
+        const message = error?.message || 'Unknown analysis error';
+        analysisBySampleId.set(sampleId, { error: message });
+        renderSampleAnalysis(sample, resultContainer, { error: message });
+        button.textContent = 'Retry analysis';
+      } finally {
+        button.disabled = false;
+      }
+    }
+
     function renderSavedSamples(samples) {
       if (!savedSamplesContainer) return;
       savedSamplesContainer.replaceChildren();
@@ -7117,12 +7221,23 @@
       samples.forEach((sample) => {
         const row = document.createElement('div');
         row.className = 'crm-stack-item';
+        row.dataset.corpusSampleId = String(sample.id || sample.sampleId || '');
         row.style.cssText = 'display:flex; align-items:center; gap:12px; padding:10px 12px; border-bottom:1px solid var(--border-color);';
 
         const label = document.createElement('span');
         label.style.flex = '1';
         label.textContent = `${sample.targetWord || sample.sampleId} · ${sample.category || 'unknown'} · ${sample.durationSeconds ? `${Number(sample.durationSeconds).toFixed(2)}s` : 'duration unavailable'}`;
         row.appendChild(label);
+
+        const sampleId = String(sample.id || sample.sampleId || '').trim();
+        const analyzeButton = document.createElement('button');
+        analyzeButton.type = 'button';
+        analyzeButton.className = 'crm-btn crm-btn-primary btn-corpus-analyze';
+        analyzeButton.textContent = analysisBySampleId.get(sampleId)?.analysis ? 'Re-analyze' : 'Analyze & Verify';
+        analyzeButton.addEventListener('click', () => {
+          analyzeSavedSample(sample, resultContainer, analyzeButton);
+        });
+        row.appendChild(analyzeButton);
 
         if (sample.audioUrl) {
           const link = document.createElement('a');
@@ -7133,6 +7248,12 @@
           link.textContent = 'Open audio';
           row.appendChild(link);
         }
+        const resultContainer = document.createElement('div');
+        resultContainer.className = 'corpus-analysis-result';
+        resultContainer.dataset.corpusSampleId = sampleId;
+        resultContainer.style.cssText = 'width:100%; margin-top:4px; padding:8px 0; font-size:13px; line-height:1.5;';
+        row.appendChild(resultContainer);
+        renderSampleAnalysis(sample, resultContainer, analysisBySampleId.get(sampleId));
         savedSamplesContainer.appendChild(row);
       });
     }

@@ -10,6 +10,24 @@ const PUBLIC_DIR = path.join(process.cwd(), 'public');
 const BASE_ORIGIN = 'https://betterenglishlearning.test';
 const PRONUNCIATION_SAMPLES_URL = `${BASE_ORIGIN}/crm-admin.html#pronunciation-samples`;
 
+function makeWavBuffer() {
+  const dataSize = 32000;
+  const buffer = Buffer.alloc(44 + dataSize);
+  buffer.write('RIFF', 0);
+  buffer.writeUInt32LE(36 + dataSize, 4);
+  buffer.write('WAVEfmt ', 8);
+  buffer.writeUInt32LE(16, 16);
+  buffer.writeUInt16LE(1, 20);
+  buffer.writeUInt16LE(1, 22);
+  buffer.writeUInt32LE(16000, 24);
+  buffer.writeUInt32LE(32000, 28);
+  buffer.writeUInt16LE(2, 32);
+  buffer.writeUInt16LE(16, 34);
+  buffer.write('data', 36);
+  buffer.writeUInt32LE(dataSize, 40);
+  return buffer;
+}
+
 function contentTypeFor(filePath) {
   switch (path.extname(filePath).toLowerCase()) {
     case '.html': return 'text/html; charset=utf-8';
@@ -188,10 +206,21 @@ async function main() {
                   sampleId: 'busy-clean-l1-vn-01-saved',
                   targetWord: 'busy',
                   category: 'clean',
+                  targetSyllableCount: 2,
+                  expectedObservedCount: 2,
                   durationSeconds: 2.65,
                   audioUrl: 'https://storage.test/busy.wav'
                 }]
               })
+            });
+          }
+
+          if (/^\/api\/admin\/dev\/corpus-samples\/[^/]+\/audio$/.test(pathname) && method === 'GET') {
+            return route.fulfill({
+              status: 200,
+              contentType: 'audio/wav',
+              headers: { 'Cache-Control': 'no-store' },
+              body: makeWavBuffer()
             });
           }
 
@@ -211,6 +240,28 @@ async function main() {
           status: 200,
           contentType: 'application/javascript; charset=utf-8',
           body: buildFirebaseStubScript()
+        });
+      }
+
+      if (url.hostname.includes('praat-api-') && url.pathname === '/analyze/v2') {
+        requestLog.push({ method: route.request().method(), path: url.pathname, url: url.toString() });
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json; charset=utf-8',
+          body: JSON.stringify({
+            analysisVersion: 'pronunciation-analysis-v2',
+            observed: {
+              syllableCount: 2,
+              primaryStress: 0,
+              syllables: [
+                { syllable: 1, startTime: 0.2, endTime: 0.4, duration: 0.2, avgPitch: 120, intensity: 80, isStressed: true },
+                { syllable: 2, startTime: 0.4, endTime: 0.6, duration: 0.2, avgPitch: 90, intensity: 70, isStressed: false }
+              ],
+              stressEvidence: { confidence: 0.88, rateable: true }
+            },
+            quality: { confidence: 1, rateable: true, reasons: [] },
+            segmentation: { method: 'target-aligned-acoustic-feedback', confidence: 1, selectedCount: 2 }
+          })
         });
       }
 
@@ -241,6 +292,22 @@ async function main() {
     await page.waitForSelector('#corpus-saved-samples .crm-stack-item', { state: 'visible', timeout: 5000 });
     const savedSamplesText = await page.textContent('#corpus-saved-samples');
     assert.match(savedSamplesText, /busy.*clean.*2\.65s/i, 'Production-shaped corpus list response should render the saved sample.');
+
+    const analyzeButton = page.locator('[data-corpus-sample-id="busy-clean-l1-vn-01-saved"] .btn-corpus-analyze');
+    await analyzeButton.waitFor({ state: 'visible', timeout: 5000 });
+    await analyzeButton.click();
+    const analysisResult = page.locator('[data-corpus-sample-id="busy-clean-l1-vn-01-saved"] .corpus-analysis-result');
+    await analysisResult.waitFor({ state: 'visible', timeout: 15_000 });
+    try {
+      await page.waitForFunction(() => /2 syllables/i.test(document.querySelector('[data-corpus-sample-id="busy-clean-l1-vn-01-saved"] .corpus-analysis-result')?.textContent || ''), null, { timeout: 20_000 });
+    } catch (error) {
+      console.error('Analysis result text:', await analysisResult.textContent());
+      throw error;
+    }
+    await expectText(analysisResult, /2 syllables/i);
+    await expectText(analysisResult, /verified/i);
+    assert.ok(requestLog.some((r) => r.path === '/api/admin/dev/corpus-samples/busy-clean-l1-vn-01-saved/audio' && r.method === 'GET'));
+    assert.ok(requestLog.some((r) => r.path === '/analyze/v2' && r.method === 'POST'));
     
     // 4. Select target word 'photograph'
     await page.waitForSelector('.corpus-word-btn[data-word="photograph"]', { state: 'visible' });
@@ -288,6 +355,11 @@ async function main() {
   } finally {
     await browser.close();
   }
+}
+
+async function expectText(locator, pattern) {
+  const text = await locator.textContent();
+  assert.match(text || '', pattern);
 }
 
 main().catch((error) => {

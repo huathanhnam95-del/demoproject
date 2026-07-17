@@ -386,3 +386,6 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 393,2026-07-14,Plan and design Pronunciation Samples recording page,Done,2026-07-14
 394,2026-07-14,Implement Pronunciation Samples recording page,Done,2026-07-14
 395,2026-07-16,Re-audit RFIB cohesion features and generate student-facing explanations using local Gemma AI,In Progress,
+396,2026-07-17,CRM Enquiry hide other sections and match lead basic info to student,Done,2026-07-17
+397,2026-07-17,Relocate PTE Attempts history list to modal inside Track Progress,Done,2026-07-17
+398,2026-07-17,Unified Speaking Practice Controller — Revised Implementation Plan,In Progress,

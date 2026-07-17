@@ -3031,7 +3031,7 @@
     // Only show for logged-in users
     const isLoggedIn = window.authUI && !window.authUI.isGuestMode?.() && window.authUI.getCurrentUserId?.();
     const guestNotice = document.getElementById('progress-guest-notice');
-    const progressPanelContent = document.getElementById('progress-panel-content');
+    const progressPanelContent = document.getElementById('progress-panel-content') || document.getElementById('progress-tab-content-vocab');
 
     // Toggle guest mode class for blur effect
     if (progressPanelContent) {
@@ -9101,11 +9101,13 @@
    * Open the progress panel
    */
   function openProgressPanel() {
-    if (progressPanelSide) {
+    if (window.PTEAttemptArchive?.openProgressModal) {
+      window.PTEAttemptArchive.openProgressModal('vocab-progress');
+    } else if (progressPanelSide) {
       progressPanelSide.classList.add('expanded');
-    }
-    if (progressPanelOverlay) {
-      progressPanelOverlay.classList.add('active');
+      if (progressPanelOverlay) {
+        progressPanelOverlay.classList.add('active');
+      }
     }
   }
 
@@ -9113,11 +9115,13 @@
    * Close the progress panel
    */
   function closeProgressPanel() {
-    if (progressPanelSide) {
+    if (window.PTEAttemptArchive?.closeProgressModal) {
+      window.PTEAttemptArchive.closeProgressModal();
+    } else if (progressPanelSide) {
       progressPanelSide.classList.remove('expanded');
-    }
-    if (progressPanelOverlay) {
-      progressPanelOverlay.classList.remove('active');
+      if (progressPanelOverlay) {
+        progressPanelOverlay.classList.remove('active');
+      }
     }
   }
 

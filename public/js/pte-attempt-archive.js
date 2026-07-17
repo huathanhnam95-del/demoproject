@@ -307,64 +307,144 @@
     }
   }
 
-  function ensureHistoryMount() {
-    let mount = document.getElementById('pte-attempt-history');
-    if (mount) return mount;
-    const grid = document.querySelector('#panel-tutorials .tutorial-grid');
-    if (!grid || !isPteScope()) return null;
-    mount = document.createElement('section');
-    mount.id = 'pte-attempt-history';
-    mount.className = 'pte-attempt-history';
-    mount.innerHTML = `
-      <div class="pte-attempt-history__bar">
-        <h3>My PTE Attempts</h3>
-        <button type="button" class="pte-attempt-history__refresh" aria-label="Refresh attempts">Refresh</button>
-      </div>
-      <div class="pte-attempt-history__list" role="list"></div>
-    `;
-    mount.style.cssText = 'margin:18px 0 4px;padding:0;';
-    const bar = mount.querySelector('.pte-attempt-history__bar');
-    if (bar) bar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;';
-    const title = mount.querySelector('h3');
-    if (title) title.style.cssText = 'font-size:1rem;margin:0;color:#111827;';
-    const refresh = mount.querySelector('button');
-    if (refresh) {
-      refresh.style.cssText = 'border:1px solid #d1d5db;background:#fff;border-radius:6px;padding:6px 10px;cursor:pointer;';
-      refresh.addEventListener('click', () => renderLearnerHistory());
+  let boundProgressModalKeyDown = null;
+  let isProgressModalListenersInitialized = false;
+
+  function initProgressModalListeners(modal) {
+    if (isProgressModalListenersInitialized) return;
+
+    // Close button
+    const closeBtn = document.getElementById('progress-attempts-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeProgressModal);
     }
-    grid.insertAdjacentElement('afterend', mount);
-    return mount;
+
+    // Modal background overlay close
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeProgressModal();
+    });
+
+    // Wire refresh button on attempts tab
+    const refreshBtn = document.getElementById('pte-attempts-modal-refresh');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', renderLearnerHistory);
+    }
+
+    // Bind progress tab buttons
+    const tabButtons = modal.querySelectorAll('.progress-tab-btn');
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const tab = e.target.getAttribute('data-tab');
+        switchProgressTab(tab);
+      });
+    });
+
+    isProgressModalListenersInitialized = true;
+  }
+
+  function switchProgressTab(tab) {
+    const modal = document.getElementById('progress-attempts-modal');
+    if (!modal) return;
+
+    const tabButtons = modal.querySelectorAll('.progress-tab-btn');
+    const tabContents = modal.querySelectorAll('.progress-tab-content');
+
+    tabButtons.forEach(btn => {
+      if (btn.getAttribute('data-tab') === tab) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+
+    tabContents.forEach(content => {
+      if (content.id === `progress-tab-content-${tab === 'vocab-progress' ? 'vocab' : 'attempts'}`) {
+        content.classList.add('active');
+        content.style.display = 'block';
+      } else {
+        content.classList.remove('active');
+        content.style.display = 'none';
+      }
+    });
+
+    // Trigger reload when tab changes
+    if (tab === 'vocab-progress') {
+      if (window.updateProgressPanel) {
+        const isSpeakActive = document.getElementById('tab-speak')?.classList.contains('active');
+        window.updateProgressPanel(isSpeakActive ? 'speak' : 'type');
+      }
+    } else {
+      renderLearnerHistory();
+    }
+  }
+
+  function closeProgressModal() {
+    const modal = document.getElementById('progress-attempts-modal');
+    if (!modal) return;
+
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+
+    // Remove window keydown listener
+    if (boundProgressModalKeyDown) {
+      window.removeEventListener('keydown', boundProgressModalKeyDown);
+    }
+  }
+
+  function openProgressModal(defaultTab = 'vocab-progress') {
+    const modal = document.getElementById('progress-attempts-modal');
+    if (!modal) return;
+
+    // Initialize static listeners once
+    initProgressModalListeners(modal);
+
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+
+    // Highlight correct tab and show correct content
+    switchProgressTab(defaultTab);
+
+    // Bind window-level Escape key listener (cleaned up on close)
+    if (boundProgressModalKeyDown) {
+      window.removeEventListener('keydown', boundProgressModalKeyDown);
+    }
+    boundProgressModalKeyDown = (e) => {
+      if (e.key === 'Escape') closeProgressModal();
+    };
+    window.addEventListener('keydown', boundProgressModalKeyDown);
   }
 
   async function renderLearnerHistory() {
-    const mount = ensureHistoryMount();
-    if (!mount || !isPteScope()) return;
-    const list = mount.querySelector('.pte-attempt-history__list');
+    const list = document.getElementById('pte-attempts-modal-list');
     if (!list) return;
-    list.textContent = 'Loading...';
+    list.innerHTML = '<div class="pte-attempt-history__loading">Loading...</div>';
     try {
       const data = await listAttempts({ scope: 'mine' });
       if (data?.skipped) {
-        list.textContent = '';
+        list.innerHTML = '';
         return;
       }
       const attempts = (data.attempts || [])
         .filter((attempt) => attempt.practiceScope === 'pte' || Number(attempt.schemaVersion) >= 2)
         .slice(0, 8);
       if (!attempts.length) {
-        list.textContent = 'No saved PTE attempts yet.';
+        list.innerHTML = '<div class="pte-attempt-history__empty">No saved PTE attempts yet.</div>';
         return;
       }
       list.replaceChildren(...attempts.map((attempt) => {
         const row = document.createElement('button');
         row.type = 'button';
         row.className = 'pte-attempt-history__item';
-        row.style.cssText = 'width:100%;display:grid;grid-template-columns:1fr auto;gap:8px;text-align:left;border:1px solid #e5e7eb;background:#fff;border-radius:6px;padding:10px 12px;margin-bottom:8px;cursor:pointer;';
+        
         const label = document.createElement('span');
         label.textContent = attempt.modeLabel || attempt.practiceMode || 'PTE attempt';
+        
         const meta = document.createElement('span');
+        meta.className = 'pte-attempt-history__item-meta';
         meta.textContent = formatAttemptDate(attempt.submittedAt || attempt.createdAt);
-        meta.style.cssText = 'color:#6b7280;font-size:0.85rem;';
+        
         row.append(label, meta);
         row.addEventListener('click', () => {
           window.dispatchEvent(new CustomEvent('pte-attempt-archive:open', { detail: { attemptId: attempt.attemptId } }));
@@ -373,17 +453,25 @@
       }));
     } catch (error) {
       console.warn('[PTE Archive] History load failed:', error);
-      list.textContent = '';
+      list.innerHTML = '<div class="pte-attempt-history__empty">Failed to load attempts history.</div>';
     }
   }
 
   function installHistoryAutoRender() {
-    const schedule = () => setTimeout(() => renderLearnerHistory(), 250);
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', schedule, { once: true });
-    } else {
-      schedule();
-    }
+    const schedule = () => {
+      const modal = document.getElementById('progress-attempts-modal');
+      if (modal && modal.style.display !== 'none') {
+        const activeTab = modal.querySelector('.progress-tab-btn.active')?.getAttribute('data-tab');
+        if (activeTab === 'vocab-progress') {
+          if (window.updateProgressPanel) {
+            const isSpeakActive = document.getElementById('tab-speak')?.classList.contains('active');
+            window.updateProgressPanel(isSpeakActive ? 'speak' : 'type');
+          }
+        } else if (activeTab === 'pte-attempts') {
+          renderLearnerHistory();
+        }
+      }
+    };
     window.PracticeScopeManager?.subscribe?.(() => schedule());
     window.addEventListener('auth-state-changed', schedule);
   }
@@ -1397,7 +1485,9 @@
     normalizeMediaInput,
     isPlainObject,
     updateHistoryUI,
-    fetchUserAttemptsCached
+    fetchUserAttemptsCached,
+    openProgressModal,
+    closeProgressModal
   };
 
   installHistoryAutoRender();

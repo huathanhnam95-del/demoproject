@@ -390,3 +390,6 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 397,2026-07-17,Relocate PTE Attempts history list to modal inside Track Progress,Done,2026-07-17
 398,2026-07-17,Unified Speaking Practice Controller — Revised Implementation Plan,In Progress,
 399,2026-07-17,Speaking Controller Wave 0 — Core infrastructure + 65/65 browser tests,Done,2026-07-17
+400,2026-07-17,Review and audit RFIB student explanations using local Gemma AI,Done,2026-07-17
+401,2026-07-18,Investigate wrong transcription on Speaking Question 3,Done,2026-07-18
+402,2026-07-20,Update RFIB workbook Cohesion Feature and Details based on new analysis,Done,2026-07-20

@@ -1,0 +1,530 @@
+/* ==========================================================================
+   Unified Speaking Practice Controller — CSS
+   Namespace: spc-*
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Design Tokens
+   -------------------------------------------------------------------------- */
+:root {
+  --spc-z-sticky: 500;
+  --spc-z-backdrop: 8000;
+  --spc-z-sheet: 8010;
+  --spc-radius: 10px;
+  --spc-gap: 8px;
+  --spc-control-h: 44px;
+  --spc-transition: 200ms ease;
+}
+
+/* --------------------------------------------------------------------------
+   2. Controller Container
+   -------------------------------------------------------------------------- */
+.spc-controller {
+  position: sticky;
+  top: 0;
+  z-index: var(--spc-z-sticky);
+  background: inherit;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spc-gap);
+}
+
+/* --------------------------------------------------------------------------
+   3. Rows
+   -------------------------------------------------------------------------- */
+.spc-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spc-gap);
+  flex-wrap: wrap;
+}
+
+/* Primary row: picker fills space, toggle sits on the right */
+.spc-row--primary {
+  flex-wrap: nowrap;
+}
+
+.spc-row--primary .spc-picker-nav {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Actions row: media left, attempt right */
+.spc-row--actions {
+  justify-content: space-between;
+}
+
+/* Advanced row: visibility controlled via data attribute (see §8) */
+.spc-row--advanced {
+  /* No additional layout overrides — inherits .spc-row */
+}
+
+/* --------------------------------------------------------------------------
+   4. Picker Navigation
+   -------------------------------------------------------------------------- */
+.spc-picker-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.spc-picker-prev,
+.spc-picker-next {
+  flex-shrink: 0;
+  width: var(--spc-control-h);
+  height: var(--spc-control-h);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  border-radius: var(--spc-radius);
+  cursor: pointer;
+  color: inherit;
+  font-size: 18px;
+  transition: background var(--spc-transition);
+}
+
+.spc-picker-prev:hover,
+.spc-picker-next:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.spc-picker-prev:disabled,
+.spc-picker-next:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Pill — the tappable label between arrows */
+.spc-picker-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  height: var(--spc-control-h);
+  padding: 0 14px;
+  border: none;
+  border-radius: 22px;
+  background: #f5f5f7;
+  font-size: 14px;
+  line-height: 1.3;
+  cursor: pointer;
+  transition: background var(--spc-transition);
+  color: inherit;
+  text-align: left;
+}
+
+.spc-picker-pill:hover {
+  background: #ededf0;
+}
+
+.spc-picker-pill-id {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.spc-picker-pill-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spc-picker-pill-arrow {
+  flex-shrink: 0;
+  transition: transform var(--spc-transition);
+}
+
+/* Rotate arrow when the sheet is expanded */
+.spc-picker-pill[aria-expanded="true"] .spc-picker-pill-arrow {
+  transform: rotate(180deg);
+}
+
+/* --------------------------------------------------------------------------
+   5. View Toggle (Segmented Control)
+   -------------------------------------------------------------------------- */
+.spc-view-toggle {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 8px;
+  background: #f5f5f7;
+  padding: 3px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.spc-view-toggle-btn {
+  height: 36px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 400;
+  color: inherit;
+  cursor: pointer;
+  transition:
+    background var(--spc-transition),
+    box-shadow var(--spc-transition),
+    font-weight var(--spc-transition);
+  white-space: nowrap;
+}
+
+.spc-view-toggle-btn[aria-pressed="true"],
+.spc-view-toggle-btn[aria-checked="true"] {
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  font-weight: 600;
+}
+
+.spc-view-toggle-btn:hover:not([aria-pressed="true"]):not([aria-checked="true"]) {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* --------------------------------------------------------------------------
+   6. Active Chip
+   -------------------------------------------------------------------------- */
+.spc-active-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--spc-transition);
+  white-space: nowrap;
+}
+
+.spc-active-chip:hover {
+  background: rgba(37, 99, 235, 0.14);
+}
+
+.spc-active-chip[data-count="0"] {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   7. Sheet (Side-panel / Bottom-sheet)
+   -------------------------------------------------------------------------- */
+
+/* Backdrop */
+.spc-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--spc-z-backdrop);
+  background: rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+}
+
+.spc-sheet-backdrop.is-active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Sheet container */
+.spc-sheet {
+  position: fixed;
+  z-index: var(--spc-z-sheet);
+  background: #fff;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Desktop (>640px): right-side panel */
+@media (min-width: 641px) {
+  .spc-sheet {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(420px, 85vw);
+    border-radius: var(--spc-radius) 0 0 var(--spc-radius);
+    transform: translateX(100%);
+    transition: transform 300ms ease;
+  }
+
+  .spc-sheet.is-active {
+    transform: translateX(0);
+  }
+}
+
+/* Mobile (≤640px): bottom sheet */
+@media (max-width: 640px) {
+  .spc-sheet {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-height: 85vh;
+    border-radius: var(--spc-radius) var(--spc-radius) 0 0;
+    transform: translateY(100%);
+    transition: transform 300ms ease;
+  }
+
+  .spc-sheet.is-active {
+    transform: translateY(0);
+  }
+}
+
+/* Sheet header */
+.spc-sheet-header {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: #fff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  z-index: 1;
+}
+
+.spc-sheet-header h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Close button */
+.spc-sheet-close {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: #f5f5f7;
+  cursor: pointer;
+  font-size: 18px;
+  color: inherit;
+  transition: background var(--spc-transition);
+}
+
+.spc-sheet-close:hover {
+  background: #e8e8ec;
+}
+
+/* Search input */
+.spc-sheet-search {
+  display: block;
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  margin: 12px 0 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  font-size: 14px;
+  background: #fff;
+  color: inherit;
+  outline: none;
+  transition:
+    border-color var(--spc-transition),
+    box-shadow var(--spc-transition);
+}
+
+.spc-sheet-search:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* Sheet body (scrollable list area) */
+.spc-sheet-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 16px 16px;
+}
+
+/* List */
+.spc-sheet-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* List item */
+.spc-sheet-item {
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background var(--spc-transition);
+}
+
+.spc-sheet-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.spc-sheet-item.is-current {
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+  font-weight: 500;
+}
+
+.spc-sheet-item[aria-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: default;
+}
+
+/* Empty state */
+.spc-sheet-empty {
+  padding: 32px 16px;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.4);
+  font-size: 14px;
+}
+
+/* --------------------------------------------------------------------------
+   8. Slots (Media · Attempt · Advanced)
+   -------------------------------------------------------------------------- */
+.spc-slot-media,
+.spc-slot-attempt,
+.spc-slot-advanced-action,
+.spc-slot-advanced-setting {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.spc-slot-media:empty,
+.spc-slot-attempt:empty,
+.spc-slot-advanced-action:empty,
+.spc-slot-advanced-setting:empty {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   9. Visibility Rules
+   -------------------------------------------------------------------------- */
+
+/* Hide advanced row when NOT in advanced view */
+.spc-controller:not([data-spc-view="advanced"]) .spc-row--advanced {
+  display: none;
+}
+
+/* Hide any element marked as advanced-level when NOT in advanced view */
+.spc-controller:not([data-spc-view="advanced"]) [data-spc-level="advanced"] {
+  display: none;
+}
+
+/* Also hide advanced in-place controls at the panel level.
+   applyView() sets data-spc-view on the panel element for this rule. */
+[data-spc-view]:not([data-spc-view="advanced"]) [data-spc-level="advanced"] {
+  display: none;
+}
+
+/* Hide toggle when controller declares no toggle needed */
+.spc-controller[data-spc-no-toggle] .spc-view-toggle {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   10. Responsive — Tablet / Small screens
+   -------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  .spc-row--primary {
+    flex-wrap: wrap;
+  }
+
+  .spc-row--primary .spc-picker-nav {
+    width: 100%;
+    flex: unset;
+  }
+
+  .spc-row--primary .spc-view-toggle {
+    margin-left: auto;
+  }
+}
+
+/* Extra-small screens */
+@media (max-width: 390px) {
+  .spc-picker-pill {
+    font-size: 13px;
+    padding: 0 10px;
+    min-height: 44px;
+  }
+
+  .spc-picker-prev,
+  .spc-picker-next {
+    width: 44px;
+    height: 44px;
+    font-size: 16px;
+  }
+
+  .spc-view-toggle-btn {
+    height: 32px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
+  .spc-sheet-header {
+    padding: 12px 14px;
+  }
+
+  .spc-sheet-body {
+    padding: 6px 14px 14px;
+  }
+
+  .spc-sheet-item {
+    padding: 8px 10px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   11. Accessibility
+   -------------------------------------------------------------------------- */
+
+/* Focus-visible ring on all interactive elements */
+.spc-picker-prev:focus-visible,
+.spc-picker-next:focus-visible,
+.spc-picker-pill:focus-visible,
+.spc-view-toggle-btn:focus-visible,
+.spc-active-chip:focus-visible,
+.spc-sheet-close:focus-visible,
+.spc-sheet-search:focus-visible,
+.spc-sheet-item:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .spc-controller,
+  .spc-controller *,
+  .spc-sheet,
+  .spc-sheet-backdrop,
+  .spc-picker-pill-arrow {
+    transition-duration: 0ms !important;
+    animation: none !important;
+  }
+}
+
+/* Screen-reader only utility */
+.spc-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

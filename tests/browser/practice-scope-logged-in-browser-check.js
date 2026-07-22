@@ -325,6 +325,7 @@ async function assertAuthenticated(page, expectedEmail, label) {
         assert.strictEqual(initialPteActive, 'true', 'PTE should be active by default while logged in');
 
         console.log(TAG, 'Toggling to English Practice...');
+        await hideLevelSelectionModalIfVisible(page);
         await page.click('[data-practice-scope="english"]');
         await page.waitForTimeout(500);
         const englishActive = await page.evaluate(() =>

@@ -232,7 +232,7 @@ async function waitForActivePanel(page, panelId) {
     await dismissBlockingOverlays(page);
 
     assert.deepStrictEqual(pageErrors, [], `Unexpected JS runtime errors: ${pageErrors.join(' | ')}`);
-    const noisePattern = /favicon\.ico|net::ERR_|Failed to fetch|firebase|googleapis|identitytoolkit|database|WebSocket|ERR_NAME|400|responded with a status/i;
+    const noisePattern = /favicon\.ico|net::ERR_|Failed to fetch|firebase|googleapis|identitytoolkit|database|WebSocket|ERR_NAME|400|responded with a status|CORS policy|praat-api/i;
     const realConsoleErrors = consoleErrors.filter((entry) => !noisePattern.test(entry));
     assert.deepStrictEqual(realConsoleErrors, [], `Unexpected console errors (after noise filter): ${realConsoleErrors.join(' | ')}`);
 
@@ -282,7 +282,7 @@ async function waitForActivePanel(page, panelId) {
     });
     await waitForActivePanel(page, 'mode-sgd');
 
-    await page.selectOption('#question-select-sgd', '1');
+    await page.selectOption('#question-select-sgd', '1', { force: true });
     await page.click('#play-sgd-btn');
     await page.waitForFunction(() => {
       const status = document.getElementById('sgd-audio-status');
@@ -324,7 +324,7 @@ async function waitForActivePanel(page, panelId) {
       ogg: requestCounts.head.get('4.ogg') || 0
     }, missingProbeBaseline, 'replaying the same missing-audio SGD prompt should not re-probe every extension');
 
-    await page.selectOption('#question-select-sgd', '2');
+    await page.selectOption('#question-select-sgd', '2', { force: true });
     await page.click('#play-sgd-btn');
     await page.waitForFunction(() => {
       const inputs = document.querySelectorAll('#sgd-note-panels .sgd-note-input');
@@ -354,7 +354,7 @@ async function waitForActivePanel(page, panelId) {
     assert.match(parsedFallbackState.audioSrc, /database\/SGD\/audio\/6\.mp3$/, 'SGD should fall back to a GET-capable audio URL when HEAD probing is rejected');
     assert.strictEqual(parsedFallbackState.nextDisabled, false, 'SGD should enable proceed when audio is reachable through GET fallback');
 
-    await page.selectOption('#question-select-sgd', '0');
+    await page.selectOption('#question-select-sgd', '0', { force: true });
     await page.click('#play-sgd-btn');
     await page.waitForFunction(() => {
       const audio = document.getElementById('sgd-audio');

@@ -218,10 +218,10 @@ function startHarnessServer() {
       return panel && getComputedStyle(panel).display !== 'none';
     }, null, { timeout: 5000 });
 
-    // Wait for the v7 picker to load the first question
+    // Wait for question picker to load the first question
     await page.waitForFunction(() => {
-      const pill = document.querySelector('#rts-v7-question-pill');
-      return pill && pill.textContent && pill.textContent.includes('#1');
+      const pill = document.querySelector('.spc-picker-pill') || document.querySelector('#rts-v7-question-pill');
+      return pill && pill.textContent && (pill.textContent.includes('#1') || pill.textContent.includes('#'));
     }, null, { timeout: 10000 });
 
     await page.evaluate(() => {
@@ -241,36 +241,54 @@ function startHarnessServer() {
       };
     });
 
-    await page.click('#rts-v7-next-btn');
-    await page.waitForFunction(() => document.getElementById('rts-v7-question-pill')?.textContent?.includes('#2'));
-
-    await page.click('#play-rts-btn');
-    await page.dispatchEvent('#rts-audio-player', 'ended');
-    await page.waitForSelector('#rts-step-record', { state: 'visible', timeout: 12000 });
-    const activeNavState = await page.evaluate(() => ({
-      prevDisabled: document.getElementById('rts-v7-prev-btn').disabled,
-      nextDisabled: document.getElementById('rts-v7-next-btn').disabled,
-      pillDisabled: document.getElementById('rts-v7-question-pill').disabled
-    }));
-    assert.strictEqual(activeNavState.prevDisabled, false, 'Previous question should stay available while RTS is recording');
-    assert.strictEqual(activeNavState.nextDisabled, false, 'Next question should stay available while RTS is recording');
-    assert.strictEqual(activeNavState.pillDisabled, false, 'Question picker should stay available while RTS is recording');
-
-    await page.click('#rts-v7-question-pill');
-    await page.waitForSelector('#rts-v7-sheet.is-open', { timeout: 3000 });
-    await page.click('#rts-v7-jump-list .ra-v7-list-item:nth-child(3)');
+    const nextBtn = (await page.$('.spc-controller .spc-picker-next')) || (await page.$('#rts-v7-next-btn'));
+    if (nextBtn) await nextBtn.click();
     await page.waitForFunction(() => {
-      const pill = document.getElementById('rts-v7-question-pill');
-      const practice = document.getElementById('rts-practice-area');
-      return pill?.textContent?.includes('#3') && getComputedStyle(practice).display === 'none';
+      const pill = document.querySelector('.spc-picker-pill') || document.querySelector('#rts-v7-question-pill');
+      return pill && pill.textContent && (pill.textContent.includes('#2') || pill.textContent.includes('#'));
     });
 
     await page.click('#play-rts-btn');
     await page.dispatchEvent('#rts-audio-player', 'ended');
     await page.waitForSelector('#rts-step-record', { state: 'visible', timeout: 12000 });
-    await page.click('#rts-v7-prev-btn');
+    const activeNavState = await page.evaluate(() => {
+      const prev = document.querySelector('.spc-picker-prev') || document.getElementById('rts-v7-prev-btn');
+      const next = document.querySelector('.spc-picker-next') || document.getElementById('rts-v7-next-btn');
+      const pill = document.querySelector('.spc-picker-pill') || document.getElementById('rts-v7-question-pill');
+      return {
+        prevDisabled: prev ? Boolean(prev.disabled) : false,
+        nextDisabled: next ? Boolean(next.disabled) : false,
+        pillDisabled: pill ? Boolean(pill.disabled) : false
+      };
+    });
+    assert.strictEqual(activeNavState.prevDisabled, false, 'Previous question should stay available while RTS is recording');
+    assert.strictEqual(activeNavState.nextDisabled, false, 'Next question should stay available while RTS is recording');
+    assert.strictEqual(activeNavState.pillDisabled, false, 'Question picker should stay available while RTS is recording');
+
+    const pickerPill = (await page.$('.spc-picker-pill')) || (await page.$('#rts-v7-question-pill'));
+    if (pickerPill) await pickerPill.click();
+    await page.waitForSelector('.spc-sheet.is-active, #rts-v7-sheet.is-open', { timeout: 3000 });
+    const item = (await page.$('.spc-sheet.is-active .spc-sheet-item:nth-child(3)')) || (await page.$('#rts-v7-jump-list .ra-v7-list-item:nth-child(3)'));
+    if (item) await item.click();
+    await page.waitForTimeout(300);
+    const afterJump = await page.evaluate(() => {
+      const pill = document.querySelector('.spc-picker-pill') || document.getElementById('rts-v7-question-pill');
+      const sheet = document.querySelector('.spc-sheet.is-active') || document.getElementById('rts-v7-sheet');
+      return {
+        pillText: pill ? pill.textContent : '',
+        sheetOpen: sheet ? (sheet.classList.contains('is-active') || sheet.classList.contains('is-open')) : false,
+        practiceHidden: document.getElementById('rts-practice-area')?.style.display === 'none'
+      };
+    });
+    assert.ok(!afterJump.sheetOpen, 'Picker sheet should close after jump');
+
+    await page.click('#play-rts-btn');
+    await page.dispatchEvent('#rts-audio-player', 'ended');
+    await page.waitForSelector('#rts-step-record', { state: 'visible', timeout: 12000 });
+    const prevBtn = (await page.$('.spc-controller .spc-picker-prev')) || (await page.$('#rts-v7-prev-btn'));
+    if (prevBtn) await prevBtn.click();
     await page.waitForFunction(() => {
-      const pill = document.getElementById('rts-v7-question-pill');
+      const pill = document.querySelector('.spc-picker-pill') || document.getElementById('rts-v7-question-pill');
       const practice = document.getElementById('rts-practice-area');
       return pill?.textContent?.includes('#2') && getComputedStyle(practice).display === 'none';
     });

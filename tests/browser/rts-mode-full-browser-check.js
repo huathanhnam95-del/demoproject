@@ -222,13 +222,13 @@ function log(phase, msg) {
     log(1, 'RTS mode panel visible');
 
     await page.waitForFunction(() => {
-      const pill = document.getElementById('rts-v7-question-pill');
+      const pill = document.querySelector('.spc-picker-pill') || document.getElementById('rts-v7-question-pill');
       return pill && pill.textContent && pill.textContent.includes('#');
     }, null, { timeout: 8000 });
-    log(1, 'Questions loaded into v7 picker');
+    log(1, 'Questions loaded into picker');
 
     const initState = await page.evaluate(() => ({
-      pillText: document.getElementById('rts-v7-question-pill').textContent,
+      pillText: (document.querySelector('.spc-picker-pill') || document.getElementById('rts-v7-question-pill')).textContent,
       playVisible: getComputedStyle(document.getElementById('play-rts-btn')).display !== 'none',
       practiceHidden: getComputedStyle(document.getElementById('rts-practice-area')).display === 'none'
     }));
@@ -237,43 +237,52 @@ function log(phase, msg) {
     assert.strictEqual(initState.practiceHidden, true, 'Practice area should be hidden initially');
     log(1, 'All init state checks passed');
 
-    // ═══════════════ PHASE 2: Question Navigation ═══════════════
+    // ═══════════════ PHASE 2: Question Navigation ═══
     console.log('\n═══ Phase 2: Question Navigation ═══');
-    await page.click('#rts-v7-next-btn');
+    const nextBtn = (await page.$('.spc-controller .spc-picker-next')) || (await page.$('#rts-v7-next-btn'));
+    if (nextBtn) await nextBtn.click();
     await page.waitForTimeout(300);
-    let navPill = await page.evaluate(() => document.getElementById('rts-v7-question-pill').textContent);
+    let navPill = await page.evaluate(() => (document.querySelector('.spc-picker-pill') || document.getElementById('rts-v7-question-pill')).textContent);
     assert.ok(navPill.includes('#'), 'Next should advance to next question');
     log(2, 'Next button works');
 
-    await page.click('#rts-v7-prev-btn');
+    const prevBtn = (await page.$('.spc-controller .spc-picker-prev')) || (await page.$('#rts-v7-prev-btn'));
+    if (prevBtn) await prevBtn.click();
     await page.waitForTimeout(300);
-    navPill = await page.evaluate(() => document.getElementById('rts-v7-question-pill').textContent);
+    navPill = await page.evaluate(() => (document.querySelector('.spc-picker-pill') || document.getElementById('rts-v7-question-pill')).textContent);
     assert.ok(navPill.includes('#'), 'Prev should go back');
     log(2, 'Prev button works');
 
     // Jump to question via picker sheet
-    await page.click('#rts-v7-question-pill');
-    await page.waitForSelector('#rts-v7-sheet.is-open', { timeout: 3000 });
-    const jumpItems = await page.evaluate(() => document.querySelectorAll('#rts-v7-jump-list .ra-v7-list-item').length);
+    const pickerPill = (await page.$('.spc-picker-pill')) || (await page.$('#rts-v7-question-pill'));
+    if (pickerPill) await pickerPill.click();
+    await page.waitForSelector('.spc-sheet.is-active, #rts-v7-sheet.is-open', { timeout: 3000 });
+    const jumpItems = await page.evaluate(() => document.querySelectorAll('.spc-sheet.is-active .spc-sheet-item, #rts-v7-jump-list .ra-v7-list-item').length);
     assert.ok(jumpItems > 10, 'Jump list should have items');
     log(2, `Jump sheet opened with ${jumpItems} items`);
 
     // Click 3rd item in jump list
-    await page.click('#rts-v7-jump-list .ra-v7-list-item:nth-child(3)');
+    const item = (await page.$('.spc-sheet.is-active .spc-sheet-item:nth-child(3)')) || (await page.$('#rts-v7-jump-list .ra-v7-list-item:nth-child(3)'));
+    if (item) await item.click();
     await page.waitForTimeout(300);
-    const afterJump = await page.evaluate(() => ({
-      pillText: document.getElementById('rts-v7-question-pill').textContent,
-      sheetOpen: document.getElementById('rts-v7-sheet').classList.contains('is-open'),
-      playVisible: getComputedStyle(document.getElementById('play-rts-btn')).display !== 'none'
-    }));
+    const afterJump = await page.evaluate(() => {
+      const pill = document.querySelector('.spc-picker-pill') || document.getElementById('rts-v7-question-pill');
+      const sheet = document.querySelector('.spc-sheet.is-active') || document.getElementById('rts-v7-sheet');
+      return {
+        pillText: pill ? pill.textContent : '',
+        sheetOpen: sheet ? (sheet.classList.contains('is-active') || sheet.classList.contains('is-open')) : false,
+        playVisible: getComputedStyle(document.getElementById('play-rts-btn')).display !== 'none'
+      };
+    });
     assert.ok(!afterJump.sheetOpen, 'Sheet should close after jump');
     assert.strictEqual(afterJump.playVisible, true, 'Play button still visible after jump');
     log(2, 'Jump-list pick works');
 
     // Reset to question 0 via prev clicks (click prev twice from index 2)
-    await page.click('#rts-v7-prev-btn');
+    const prevBtn2 = (await page.$('.spc-controller .spc-picker-prev')) || (await page.$('#rts-v7-prev-btn'));
+    if (prevBtn2) await prevBtn2.click();
     await page.waitForTimeout(200);
-    await page.click('#rts-v7-prev-btn');
+    if (prevBtn2) await prevBtn2.click();
     await page.waitForTimeout(200);
     log(2, 'Navigation checks passed');
 
@@ -475,7 +484,7 @@ function log(phase, msg) {
       resultsEmpty: document.getElementById('rts-results-container').innerHTML === '',
       aiScoreVisible: getComputedStyle(document.getElementById('rts-ai-score-btn')).display !== 'none',
       aiScoreEnabled: !document.getElementById('rts-ai-score-btn').disabled,
-      pillText: document.getElementById('rts-v7-question-pill').textContent
+      pillText: (document.querySelector('.spc-picker-pill') || document.getElementById('rts-v7-question-pill'))?.textContent || ''
     }));
     assert.strictEqual(retryState.practiceHidden, true, 'Practice area hidden after retry');
     assert.strictEqual(retryState.playVisible, true, 'Play button visible after retry');

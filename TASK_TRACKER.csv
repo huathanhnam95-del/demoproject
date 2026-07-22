@@ -388,7 +388,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 395,2026-07-16,Re-audit RFIB cohesion features and generate student-facing explanations using local Gemma AI,Done,2026-07-17
 396,2026-07-17,CRM Enquiry hide other sections and match lead basic info to student,Done,2026-07-17
 397,2026-07-17,Relocate PTE Attempts history list to modal inside Track Progress,Done,2026-07-17
-398,2026-07-17,Unified Speaking Practice Controller — Revised Implementation Plan,In Progress,
+398,2026-07-17,Unified Speaking Practice Controller — Revised Implementation Plan,Done,2026-07-22
 399,2026-07-17,Speaking Controller Wave 0 — Core infrastructure + 65/65 browser tests,Done,2026-07-17
 400,2026-07-17,Review and audit RFIB student explanations using local Gemma AI,Done,2026-07-17
 401,2026-07-18,Investigate wrong transcription on Speaking Question 3,Done,2026-07-18
@@ -397,3 +397,8 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 404,2026-07-20,Fix CRM Enquiry page — hide non-test sections + align lead form + clean ghost refs,Done,2026-07-20
 405,2026-07-21,Optimize Pronunciation Samples recording tool UX for efficient corpus collection,Done,2026-07-21
 406,2026-07-22,Production Push V1.8.24 - Pronunciation UX optimization and Speaking Controller Wave 0 updates,Done,2026-07-22
+407,2026-07-22,Investigate HIW audio folders count and missing audio files,Done,2026-07-22
+408,2026-07-22,Batch generate Kokoro audio files for remaining HIW questions,In Progress,
+409,2026-07-22,Execute remaining Unified Speaking Practice Controller migration (Waves 1-6),Done,2026-07-22
+
+

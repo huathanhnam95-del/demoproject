@@ -20,16 +20,9 @@
   const VALID_VIEWS = new Set(['basic', 'advanced']);
   const FALLBACK_VIEW = 'basic';
 
-  // All valid scope:mode combinations
+  // All valid scope:mode combinations.
+  // DEFAULT_ENABLED_TARGETS was merged into TARGETS since all production adapters are now integrated.
   const TARGETS = new Set([
-    'pte:speak', 'pte:read-aloud', 'pte:notes', 'pte:asq',
-    'pte:sgd', 'pte:describe-image', 'pte:rts',
-    'english:speak', 'english:read-aloud'
-  ]);
-
-  // All production adapters have now reached the integrated gate. The
-  // controller is enabled from the production target list by default.
-  const DEFAULT_ENABLED_TARGETS = new Set([
     'pte:speak', 'pte:read-aloud', 'pte:notes', 'pte:asq',
     'pte:sgd', 'pte:describe-image', 'pte:rts',
     'english:speak', 'english:read-aloud'
@@ -63,8 +56,8 @@
     if (resolvedTargets) return resolvedTargets;
     resolvedTargets = new Set();
 
-    for (const t of DEFAULT_ENABLED_TARGETS) {
-      if (TARGETS.has(t) && !EXCLUDED_TARGETS.has(t)) resolvedTargets.add(t);
+    for (const t of TARGETS) {
+      if (!EXCLUDED_TARGETS.has(t)) resolvedTargets.add(t);
     }
 
     return resolvedTargets;
@@ -139,7 +132,13 @@
     const sel = 'a[href], button:not([disabled]), input:not([disabled]), ' +
       'select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
     return Array.from(container.querySelectorAll(sel)).filter(
-      el => el.offsetParent !== null
+      el => {
+        if (el.hidden) return false;
+        if (el.offsetParent !== null) return true;
+        // offsetParent is null for fixed-position elements
+        const style = getComputedStyle(el);
+        return style.position === 'fixed' && style.display !== 'none';
+      }
     );
   }
 
@@ -289,6 +288,8 @@
 
     function destroy() {
       if (openState) close();
+      backdrop.removeEventListener('click', close);
+      closeBtn.removeEventListener('click', close);
       backdrop.remove();
       sheet.remove();
     }
@@ -301,6 +302,29 @@
 
   /* ═══════════════════════════ PICKER ═══════════════════════════ */
 
+  function wireNavButton(btn, picker, buttonIdKey, callbackKey, controllerState, srcBtnKey, srcDisplayKey) {
+    if (picker[buttonIdKey]) {
+      const srcBtn = document.getElementById(picker[buttonIdKey]);
+      if (srcBtn) {
+        controllerState[srcDisplayKey] = srcBtn.style.display;
+        srcBtn.style.display = 'none';
+        controllerState[srcBtnKey] = srcBtn;
+        btn.addEventListener('click', () => srcBtn.click());
+        btn.style.display = '';
+      } else if (typeof picker[callbackKey] === 'function') {
+        btn.addEventListener('click', () => { try { picker[callbackKey](); } catch (e) { console.error('[SPC] picker.' + callbackKey + '() error:', e); } });
+        btn.style.display = '';
+      } else {
+        btn.style.display = 'none';
+      }
+    } else if (typeof picker[callbackKey] === 'function') {
+      btn.addEventListener('click', () => { try { picker[callbackKey](); } catch (e) { console.error('[SPC] picker.' + callbackKey + '() error:', e); } });
+      btn.style.display = '';
+    } else {
+      btn.style.display = 'none';
+    }
+  }
+
   /**
    * Build picker infrastructure for an adapter config.
    * @param {Object} config - adapter config
@@ -311,8 +335,6 @@
     if (!picker) return;
 
     const pillEl = controllerState.dom.pill;
-    const pillId = controllerState.dom.pillId;
-    const pillLabel = controllerState.dom.pillLabel;
     const prevBtn = controllerState.dom.prevBtn;
     const nextBtn = controllerState.dom.nextBtn;
 
@@ -330,47 +352,8 @@
     }
 
     // Wire navigation buttons
-    if (picker.previousButtonId) {
-      const srcPrev = document.getElementById(picker.previousButtonId);
-      if (srcPrev) {
-        controllerState.srcPrevOriginalDisplay = srcPrev.style.display;
-        srcPrev.style.display = 'none';
-        controllerState.srcPrevBtn = srcPrev;
-        prevBtn.addEventListener('click', () => srcPrev.click());
-        prevBtn.style.display = '';
-      } else if (typeof picker.previous === 'function') {
-        prevBtn.addEventListener('click', () => { try { picker.previous(); } catch (e) { console.error('[SPC] picker.previous() error:', e); } });
-        prevBtn.style.display = '';
-      } else {
-        prevBtn.style.display = 'none';
-      }
-    } else if (typeof picker.previous === 'function') {
-      prevBtn.addEventListener('click', () => { try { picker.previous(); } catch (e) { console.error('[SPC] picker.previous() error:', e); } });
-      prevBtn.style.display = '';
-    } else {
-      prevBtn.style.display = 'none';
-    }
-
-    if (picker.nextButtonId) {
-      const srcNext = document.getElementById(picker.nextButtonId);
-      if (srcNext) {
-        controllerState.srcNextOriginalDisplay = srcNext.style.display;
-        srcNext.style.display = 'none';
-        controllerState.srcNextBtn = srcNext;
-        nextBtn.addEventListener('click', () => srcNext.click());
-        nextBtn.style.display = '';
-      } else if (typeof picker.next === 'function') {
-        nextBtn.addEventListener('click', () => { try { picker.next(); } catch (e) { console.error('[SPC] picker.next() error:', e); } });
-        nextBtn.style.display = '';
-      } else {
-        nextBtn.style.display = 'none';
-      }
-    } else if (typeof picker.next === 'function') {
-      nextBtn.addEventListener('click', () => { try { picker.next(); } catch (e) { console.error('[SPC] picker.next() error:', e); } });
-      nextBtn.style.display = '';
-    } else {
-      nextBtn.style.display = 'none';
-    }
+    wireNavButton(prevBtn, picker, 'previousButtonId', 'previous', controllerState, 'srcPrevBtn', 'srcPrevOriginalDisplay');
+    wireNavButton(nextBtn, picker, 'nextButtonId', 'next', controllerState, 'srcNextBtn', 'srcNextOriginalDisplay');
 
     if (picker.randomButtonId) {
       const srcRandom = document.getElementById(picker.randomButtonId);
@@ -408,6 +391,31 @@
     listEl.className = 'spc-sheet-list';
     listEl.setAttribute('role', 'listbox');
 
+    listEl.addEventListener('keydown', function (e) {
+      if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return;
+      e.preventDefault();
+      const items = Array.from(listEl.querySelectorAll('.spc-sheet-item:not([style*="display: none"])')); 
+      if (items.length === 0) return;
+      const currentIdx = items.indexOf(document.activeElement);
+      let nextIdx;
+      switch (e.key) {
+        case 'ArrowDown': nextIdx = currentIdx < items.length - 1 ? currentIdx + 1 : 0; break;
+        case 'ArrowUp': nextIdx = currentIdx > 0 ? currentIdx - 1 : items.length - 1; break;
+        case 'Home': nextIdx = 0; break;
+        case 'End': nextIdx = items.length - 1; break;
+      }
+      if (nextIdx !== undefined) items[nextIdx].focus();
+    });
+
+    listEl.addEventListener('click', function (e) {
+      const li = e.target.closest('.spc-sheet-item');
+      if (!li || li.getAttribute('aria-disabled') === 'true') return;
+      const id = li.dataset.id;
+      selectPickerItem(config, controllerState, id);
+      controllerState.pickerSheet.close();
+      updatePillDisplay(config, controllerState);
+    });
+
     const emptyEl = document.createElement('div');
     emptyEl.className = 'spc-sheet-empty';
     emptyEl.textContent = 'No questions found';
@@ -428,8 +436,12 @@
     });
 
     // Search filtering
+    let searchTimer = null;
     searchInput.addEventListener('input', () => {
-      filterPickerSheet(controllerState, searchInput.value);
+      if (searchTimer) cancelAnimationFrame(searchTimer);
+      searchTimer = requestAnimationFrame(() => {
+        filterPickerSheet(controllerState, searchInput.value);
+      });
     });
 
     // Listen to source select changes
@@ -552,13 +564,6 @@
 
       li.appendChild(idSpan);
       li.appendChild(labelSpan);
-
-      li.addEventListener('click', () => {
-        if (item.disabled) return;
-        selectPickerItem(config, controllerState, item.id);
-        controllerState.pickerSheet.close();
-        updatePillDisplay(config, controllerState);
-      });
 
       li.addEventListener('keydown', (event) => {
         if (item.disabled) return;
@@ -685,8 +690,7 @@
     const activeChip = document.createElement('span');
     activeChip.className = 'spc-active-chip';
     activeChip.dataset.count = '0';
-    activeChip.setAttribute('role', 'status');
-    activeChip.setAttribute('aria-live', 'polite');
+    activeChip.setAttribute('role', 'button');
     activeChip.tabIndex = 0;
     activeChip.textContent = 'Advanced settings active (0)';
 

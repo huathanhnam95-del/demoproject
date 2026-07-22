@@ -47,9 +47,7 @@
       { sourceId: 'asq-record-btn', slot: 'attempt', level: 'basic', order: 1 },
       { sourceId: 'asq-stop-btn', slot: 'attempt', level: 'basic', order: 2 },
       { sourceId: 'asq-redo-btn', slot: 'attempt', level: 'basic', order: 3 }
-    ],
-    inPlaceControls: [],
-    advancedSettings: []
+    ]
   });
 
   // Wave 1: Respond to a Situation. RTS exposes a small picker bridge while
@@ -61,18 +59,26 @@
     picker: {
       getItems: () => window.RTSMode?.getItems?.() ?? [],
       getCurrentId: () => window.RTSMode?.getCurrentId?.() ?? null,
-      select: (id) => window.RTSMode?.select?.(id),
+      select: (id) => { try { window.RTSMode?.select?.(id); } catch (e) { console.error('[SPC Adapters] select error:', e); } },
       previous: () => {
-        const items = window.RTSMode?.getItems?.() ?? [];
-        const currentId = String(window.RTSMode?.getCurrentId?.() ?? '');
-        const index = items.findIndex((item) => String(item.id) === currentId);
-        if (index > 0) window.RTSMode?.select?.(items[index - 1].id);
+        try {
+          const items = window.RTSMode?.getItems?.() ?? [];
+          const currentId = String(window.RTSMode?.getCurrentId?.() ?? '');
+          const index = items.findIndex((item) => String(item.id) === currentId);
+          if (index > 0) window.RTSMode?.select?.(items[index - 1].id);
+        } catch (e) {
+          console.error('[SPC Adapters] previous error:', e);
+        }
       },
       next: () => {
-        const items = window.RTSMode?.getItems?.() ?? [];
-        const currentId = String(window.RTSMode?.getCurrentId?.() ?? '');
-        const index = items.findIndex((item) => String(item.id) === currentId);
-        if (index >= 0 && index < items.length - 1) window.RTSMode?.select?.(items[index + 1].id);
+        try {
+          const items = window.RTSMode?.getItems?.() ?? [];
+          const currentId = String(window.RTSMode?.getCurrentId?.() ?? '');
+          const index = items.findIndex((item) => String(item.id) === currentId);
+          if (index >= 0 && index < items.length - 1) window.RTSMode?.select?.(items[index + 1].id);
+        } catch (e) {
+          console.error('[SPC Adapters] next error:', e);
+        }
       },
       legacyContainerId: 'rts-v7-picker-bar'
     },
@@ -82,9 +88,7 @@
       { sourceId: 'rts-retry-btn', slot: 'attempt', level: 'basic', order: 2 },
       { sourceId: 'rts-ai-score-btn', slot: 'attempt', level: 'basic', order: 3 },
       { sourceId: 'rts-next-question-btn', slot: 'attempt', level: 'basic', order: 4 }
-    ],
-    inPlaceControls: [],
-    advancedSettings: []
+    ]
   });
 
   // Wave 2: Describe Image. Filters and recommendations live in Advanced;
@@ -109,7 +113,6 @@
       { sourceId: 'recommended-btn-di', slot: 'advanced-action', level: 'advanced', order: 2 },
       { sourceId: 'difficulty-filter-container-di', slot: 'advanced-setting', level: 'advanced', order: 1 }
     ],
-    inPlaceControls: [],
     advancedSettings: [
       {
         key: 'difficulty',
@@ -139,7 +142,6 @@
       { sourceId: 'difficulty-filter-container-notes', slot: 'advanced-setting', level: 'advanced', order: 1 },
       { sourceId: 'status-filter-container-notes', slot: 'advanced-setting', level: 'advanced', order: 2 }
     ],
-    inPlaceControls: [],
     advancedSettings: [
       {
         key: 'difficulty',
@@ -175,9 +177,7 @@
       { sourceId: 'sgd-submit-btn', slot: 'attempt', level: 'basic', order: 3, visibilityScopeId: 'sgd-step-record' },
       { sourceId: 'sgd-retry-btn', slot: 'attempt', level: 'basic', order: 4, visibilityScopeId: 'sgd-step-results' },
       { sourceId: 'recommended-btn-sgd', slot: 'advanced-action', level: 'advanced', order: 1 }
-    ],
-    inPlaceControls: [],
-    advancedSettings: []
+    ]
   });
 
   // Wave 3B: Repeat Sentence (Speak). This mode remains implemented inline
@@ -241,8 +241,8 @@
     panelId: 'mode-read-aloud',
     picker: {
       sourceSelectId: 'ra-question-select',
-      previous: () => window.ReadAloudMode?.loadPreviousPrompt?.(),
-      next: () => window.ReadAloudMode?.loadNextPrompt?.()
+      previous: () => { try { window.ReadAloudMode?.loadPreviousPrompt?.(); } catch (e) { console.error('[SPC Adapters] previous error:', e); } },
+      next: () => { try { window.ReadAloudMode?.loadNextPrompt?.(); } catch (e) { console.error('[SPC Adapters] next error:', e); } }
     },
     controls: [
       { sourceId: 'header-ra-play-audio-btn', slot: 'media', level: 'basic', order: 1 },

@@ -240,11 +240,6 @@
         el.recommendedBtn = document.getElementById('recommended-btn-sgd');
         el.recommendationSummary = document.getElementById('recommendation-summary-sgd');
 
-        // Status filter
-        el.statusFilterBtn = document.getElementById('status-filter-btn-sgd');
-        el.statusFilterLabel = document.getElementById('status-filter-label-sgd');
-        el.statusFilterMenu = document.getElementById('status-filter-menu-sgd');
-
         // Practice area
         el.practiceArea = document.getElementById('sgd-practice-area');
 
@@ -283,22 +278,6 @@
         if (el.recommendedBtn) el.recommendedBtn.addEventListener('click', applyRecommendedEntry);
         if (el.playBtn) el.playBtn.addEventListener('click', startPractice);
         if (el.audio) el.audio.addEventListener('play', markAttemptStart);
-
-        // Status filter
-        if (el.statusFilterBtn) el.statusFilterBtn.addEventListener('click', toggleFilterMenu);
-        const filterOptions = document.querySelectorAll('#status-filter-menu-sgd .filter-option');
-        filterOptions.forEach(option => {
-            option.addEventListener('click', () => {
-                applyFilter(option.dataset.value);
-                if (el.statusFilterMenu) el.statusFilterMenu.style.display = 'none';
-            });
-        });
-        document.addEventListener('click', (e) => {
-            if (el.statusFilterMenu && el.statusFilterBtn &&
-                !el.statusFilterBtn.contains(e.target) && !el.statusFilterMenu.contains(e.target)) {
-                el.statusFilterMenu.style.display = 'none';
-            }
-        });
 
         // Practice controls
         if (el.nextStepBtn) el.nextStepBtn.addEventListener('click', goToRecordingStep);
@@ -640,8 +619,6 @@
 
     function applyFilter(filterValue = currentFilter) {
         currentFilter = filterValue;
-        const labels = { 'all': 'All Questions' };
-        if (el.statusFilterLabel) el.statusFilterLabel.textContent = labels[filterValue] || 'All Questions';
 
         let temp = [...entries];
         const cd = window.DifficultyFilter ? window.DifficultyFilter.getCurrentDifficulty('sgd') : 'all';
@@ -672,11 +649,6 @@
         currentEntryIndex = -1;
         reset();
         refreshRecommendationUI();
-    }
-
-    function toggleFilterMenu() {
-        if (!el.statusFilterMenu) return;
-        el.statusFilterMenu.style.display = el.statusFilterMenu.style.display !== 'none' ? 'none' : 'block';
     }
 
     function updateQuestionSelector() {

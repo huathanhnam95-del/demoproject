@@ -15,8 +15,8 @@
     content="default-src 'self'; media-src 'self' blob:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://*.firebaseapp.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' http://localhost:11434 https://localhost:8443 https://www.gstatic.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com wss://*.googleapis.com https://*.cloudfunctions.net https://*.firebaseapp.com https://praat-api-1071929245506.us-central1.run.app; frame-src 'self' https://*.firebaseapp.com;">
 
   <!-- Reuse main app design tokens -->
-  <link rel="stylesheet" href="style.css?v=20260713-v1.8.23" />
-  <link rel="stylesheet" href="crm-admin.css?v=20260713-v1.8.23" />
+  <link rel="stylesheet" href="style.css?v=20260722-v1.8.24" />
+  <link rel="stylesheet" href="crm-admin.css?v=20260722-v1.8.24" />
 </head>
 
 <body>
@@ -179,6 +179,28 @@
             <div id="corpus-step-guidance" role="status" aria-live="polite" style="margin-top: 10px; font-size: 13px; font-weight: 600; color: #14532d;">Step 1: Select a target word to begin.</div>
           </div>
         </div>
+
+        <div class="corpus-progress-dashboard" id="corpus-progress-dashboard">
+          <div class="corpus-stat">
+            <span class="corpus-stat-value" id="corpus-total-count">0</span>
+            <span class="corpus-stat-label">/ 120 total</span>
+          </div>
+          <div class="corpus-stat">
+            <span class="corpus-stat-value" id="corpus-clean-count">0</span>
+            <span class="corpus-stat-label">/ 60 clean</span>
+          </div>
+          <div class="corpus-stat">
+            <span class="corpus-stat-value" id="corpus-adversarial-count">0</span>
+            <span class="corpus-stat-label">/ 30 adversarial</span>
+          </div>
+          <div class="corpus-stat">
+            <span class="corpus-stat-value" id="corpus-accented-count">0</span>
+            <span class="corpus-stat-label">/ 30 accented</span>
+          </div>
+          <div class="corpus-progress-bar-track">
+            <div class="corpus-progress-bar-fill" id="corpus-progress-fill" style="width: 0%;"></div>
+          </div>
+        </div>
         
         <div class="crm-dashboard-layout" style="margin-top: 24px; display: grid; grid-template-columns: 280px 1fr; gap: 24px;">
           <!-- Left Column: Word navigation and metadata -->
@@ -190,6 +212,7 @@
               <option value="missing">Words without samples</option>
               <option value="recorded">Words with samples</option>
             </select>
+            <input type="text" id="corpus-word-search" class="crm-input" placeholder="Search words…" style="width: 100%; margin-bottom: 8px; box-sizing: border-box;" />
             <div class="corpus-pagination" style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 10px;">
               <button id="btn-corpus-page-prev" class="crm-btn crm-btn-secondary" type="button">Previous</button>
               <span id="corpus-page-status" class="crm-muted" style="font-size: 12px; text-align: center;">Page 1</span>
@@ -247,7 +270,18 @@
                 </div>
                 <div>
                   <label for="corpus-speaker-cohort" style="display: block; font-weight: 500; margin-bottom: 6px; font-size: 13px;">Deidentified Speaker Cohort:</label>
-                  <input type="text" id="corpus-speaker-cohort" value="l1-vn-01" class="crm-input" style="width: 100%;" readonly aria-describedby="corpus-test-instruction" />
+                  <select id="corpus-speaker-cohort" class="crm-input" style="width: 100%;" aria-describedby="corpus-test-instruction">
+                    <option value="native-us">native-us (American English)</option>
+                    <option value="l1-vn-01" selected>l1-vn-01 (Vietnamese L1)</option>
+                    <option value="l1-zh-01">l1-zh-01 (Chinese L1)</option>
+                    <option value="l1-ja-01">l1-ja-01 (Japanese L1)</option>
+                    <option value="l1-ko-01">l1-ko-01 (Korean L1)</option>
+                    <option value="l1-hi-01">l1-hi-01 (Hindi L1)</option>
+                    <option value="custom">Custom…</option>
+                  </select>
+                  <div id="corpus-cohort-custom-row">
+                    <input type="text" id="corpus-cohort-custom-input" class="crm-input" placeholder="e.g. l1-es-01" style="width: 100%; box-sizing: border-box;" />
+                  </div>
                 </div>
                 <div>
                   <label style="display: block; font-weight: 500; margin-bottom: 6px; font-size: 13px;">Generated Sample ID:</label>
@@ -269,12 +303,26 @@
                 <canvas id="corpus-visualizer" width="500" height="80" style="background: var(--hover-color); border-radius: 4px; width: 100%; height: 80px; max-width: 500px; border: 1px solid var(--border-color);"></canvas>
                 
                 <div style="font-size: 14px; font-weight: 500;" id="corpus-mic-status">Status: Microphone Ready</div>
+                <span class="corpus-recording-timer" id="corpus-recording-timer"><span class="corpus-recording-dot"></span> <span id="corpus-timer-value">0.0s</span></span>
 
                 <div style="display: flex; gap: 12px; width: 100%; max-width: 400px; justify-content: center;">
                   <button id="btn-corpus-record" class="crm-btn crm-btn-primary" style="min-width: 120px; font-weight: 600;">🎙️ Record</button>
                   <button id="btn-corpus-stop" class="crm-btn crm-btn-secondary" disabled style="min-width: 100px;">⏹️ Stop</button>
                   <button id="btn-corpus-redo" class="crm-btn crm-btn-secondary" disabled style="min-width: 100px;">🔄 Redo</button>
                 </div>
+
+                <div class="corpus-hotkey-legend" id="corpus-hotkey-legend">
+                  <span class="corpus-hotkey"><kbd>R</kbd> Record</span>
+                  <span class="corpus-hotkey"><kbd>Space</kbd> Stop</span>
+                  <span class="corpus-hotkey"><kbd>Enter</kbd> Save</span>
+                  <span class="corpus-hotkey"><kbd>Backspace</kbd> Redo</span>
+                  <span class="corpus-hotkey"><kbd>←</kbd><kbd>→</kbd> Version</span>
+                  <span class="corpus-hotkey"><kbd>N</kbd> Next Word</span>
+                </div>
+                <label class="corpus-auto-advance">
+                  <input type="checkbox" id="corpus-auto-advance-toggle" checked />
+                  Auto-advance after save
+                </label>
 
                 <div id="corpus-playback-container" style="display: none; flex-direction: column; align-items: center; gap: 8px; margin-top: 12px; width: 100%;">
                   <audio id="corpus-audio-player" controls style="width: 100%; max-width: 400px;"></audio>
@@ -664,12 +712,24 @@
               <input type="text" id="lead-name" class="crm-input" placeholder="Lead name">
             </div>
             <div class="crm-form-group">
+              <label for="lead-label">Label</label>
+              <input type="text" id="lead-label" class="crm-input" placeholder="e.g. High Priority">
+            </div>
+            <div class="crm-form-group">
+              <label for="lead-phone">Phone Number</label>
+              <input type="text" id="lead-phone" class="crm-input" placeholder="Phone number">
+            </div>
+            <div class="crm-form-group">
               <label for="lead-email">Email</label>
               <input type="email" id="lead-email" class="crm-input" placeholder="lead@example.com">
             </div>
             <div class="crm-form-group">
-              <label for="lead-phone">Phone</label>
-              <input type="text" id="lead-phone" class="crm-input" placeholder="Phone number">
+              <label for="lead-zalo">Zalo Number</label>
+              <input type="text" id="lead-zalo" class="crm-input" placeholder="Enter Zalo number">
+            </div>
+            <div class="crm-form-group">
+              <label for="lead-facebook">Facebook Name</label>
+              <input type="text" id="lead-facebook" class="crm-input" placeholder="Enter Facebook name">
             </div>
             <div class="crm-form-group">
               <label for="lead-source">Source</label>
@@ -707,7 +767,7 @@
         <div id="lead-stage-board" class="crm-lead-board"></div>
         <div id="lead-list-container" class="crm-placeholder-card">Leads will appear here.</div>
         <div id="lead-workspace" class="crm-workspace-grid" style="display: none;">
-          <section class="crm-workspace-card">
+          <section id="lead-task-section" class="crm-workspace-card">
             <div class="crm-section-header">
               <div>
                 <h3 id="lead-workspace-title">Lead Workspace</h3>
@@ -740,7 +800,7 @@
               <div class="crm-muted">Select a lead to view tasks.</div>
             </div>
           </section>
-          <section class="crm-workspace-card">
+          <section id="lead-activity-section" class="crm-workspace-card">
             <div class="crm-section-header">
               <div>
                 <h3>Activity Timeline</h3>
@@ -776,7 +836,7 @@
               <div class="crm-muted">Select a lead to view activity.</div>
             </div>
           </section>
-          <section class="crm-workspace-card">
+          <section id="lead-entrance-test-section" class="crm-workspace-card">
             <div class="crm-section-header">
               <div>
                 <h3>Entrance Tests</h3>
@@ -810,7 +870,7 @@
             </div>
           </section>
         </div>
-        <div class="crm-workspace-grid">
+        <div id="lead-templates-automations" class="crm-workspace-grid">
           <section class="crm-workspace-card">
             <div class="crm-section-header">
               <div>
@@ -2378,47 +2438,47 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
-  <script src="js/auth-session-guard.js?v=20260713-v1.8.23"></script>
-  <script src="js/classroom-api.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/utils.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/state.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/dom.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/courses.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/students.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/student-360.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/classrooms.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/leads.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/activities.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/enrollments.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/attendance.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/finance-workflow.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/finance.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/communications.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/scheduler-workspace.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/teacher-scheduler-workspace.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/staff-workspace.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/student-finance.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/live-delivery.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/classroom-modal.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/student-modal.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/course-modal.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/lead-workspace.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/classroom-workspace.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/task-activity-workspace.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/communications-workspace.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/dashboard-workspace.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/student-directory-workspace.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/agent-sources-workspace.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/activity-surfaces.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/dashboard.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/governance.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/index.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/entrance-test-link-state.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/devtools-access.js?v=20260713-v1.8.23&cb=pronunciation-samples-nav"></script>
-  <script src="js/crm/bel-assistant.js?v=20260713-v1.8.23"></script>
-  <script src="arpabet-ipa-map.js?v=20260713-v1.8.23"></script>
-  <script src="phonetics.js?v=20260713-v1.8.23"></script>
-  <script src="crm-admin.js?v=20260713-v1.8.23"></script>
+  <script src="js/auth-session-guard.js?v=20260722-v1.8.24"></script>
+  <script src="js/classroom-api.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/utils.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/state.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/dom.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/courses.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/students.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/student-360.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/classrooms.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/leads.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/activities.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/enrollments.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/attendance.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/finance-workflow.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/finance.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/communications.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/scheduler-workspace.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/teacher-scheduler-workspace.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/staff-workspace.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/student-finance.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/live-delivery.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/classroom-modal.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/student-modal.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/course-modal.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/lead-workspace.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/classroom-workspace.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/task-activity-workspace.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/communications-workspace.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/dashboard-workspace.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/student-directory-workspace.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/agent-sources-workspace.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/activity-surfaces.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/dashboard.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/governance.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/index.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/entrance-test-link-state.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/devtools-access.js?v=20260722-v1.8.24&cb=pronunciation-samples-nav"></script>
+  <script src="js/crm/bel-assistant.js?v=20260722-v1.8.24"></script>
+  <script src="arpabet-ipa-map.js?v=20260722-v1.8.24"></script>
+  <script src="phonetics.js?v=20260722-v1.8.24"></script>
+  <script src="crm-admin.js?v=20260722-v1.8.24"></script>
 </body>
 
 </html>

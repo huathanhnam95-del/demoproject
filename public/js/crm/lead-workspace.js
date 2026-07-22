@@ -53,29 +53,20 @@ window.CrmLeadWorkspace = (function () {
         function resetLeadComposer() {
             const inputs = [
                 elements.inputLeadName,
+                elements.inputLeadLabel,
                 elements.inputLeadEmail,
                 elements.inputLeadPhone,
-                elements.inputLeadFacebookDisplayName,
-                elements.inputLeadFacebookProfileUrl,
-                elements.inputLeadRealName,
-                elements.inputLeadDateOfBirth,
+                elements.inputLeadZalo,
+                elements.inputLeadFacebook,
                 elements.inputLeadSource,
                 elements.inputLeadAgentSource,
-                elements.inputLeadProbability,
-                elements.inputLeadLearningNeeds,
-                elements.inputLeadPreferredLearningDays,
-                elements.inputLeadPreferredLearningHours,
-                elements.inputLeadMessengerThreadUrl,
-                elements.inputLeadMessengerLastContactAt
+                elements.inputLeadProbability
             ];
             inputs.forEach((input) => {
                 if (input) input.value = '';
             });
             if (elements.inputLeadStage) {
                 elements.inputLeadStage.value = 'new';
-            }
-            if (elements.inputLeadMessengerStatus) {
-                elements.inputLeadMessengerStatus.value = '';
             }
             if (elements.btnSaveLead) {
                 elements.btnSaveLead.disabled = false;
@@ -416,6 +407,10 @@ window.CrmLeadWorkspace = (function () {
             ]);
 
             if (elements.leadWorkspace) elements.leadWorkspace.style.display = 'grid';
+            // Hide non-test sections — only show Entrance Tests
+            if (elements.leadTaskSection) elements.leadTaskSection.style.display = 'none';
+            if (elements.leadActivitySection) elements.leadActivitySection.style.display = 'none';
+            if (elements.leadTemplatesAutomations) elements.leadTemplatesAutomations.style.display = 'none';
             if (elements.leadWorkspaceTitle) {
                 elements.leadWorkspaceTitle.textContent = lead?.name || lead?.email || 'Lead Workspace';
             }

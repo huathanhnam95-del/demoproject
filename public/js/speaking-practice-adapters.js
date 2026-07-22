@@ -20,7 +20,257 @@
     return;
   }
 
-  // Adapters will be added here per wave.
-  // Each adapter calls: window.SpeakingPracticeController.register({ ... });
+  const controller = window.SpeakingPracticeController;
+
+  // Wave 1: Answer Short Question. The native select remains the state source;
+  // the controller only adopts the existing lifecycle controls.
+  controller.register({
+    modeId: 'asq',
+    enabledScopes: ['pte'],
+    panelId: 'mode-asq',
+    picker: {
+      sourceSelectId: 'asq-question-select'
+    },
+    controls: [
+      { sourceId: 'asq-play-prompt-btn', slot: 'media', level: 'basic', order: 1 },
+      { sourceId: 'asq-record-btn', slot: 'attempt', level: 'basic', order: 1 },
+      { sourceId: 'asq-stop-btn', slot: 'attempt', level: 'basic', order: 2 },
+      { sourceId: 'asq-redo-btn', slot: 'attempt', level: 'basic', order: 3 }
+    ],
+    inPlaceControls: [],
+    advancedSettings: []
+  });
+
+  // Wave 1: Respond to a Situation. RTS exposes a small picker bridge while
+  // retaining its mode-owned step flow, timers, scoring, and result controls.
+  controller.register({
+    modeId: 'rts',
+    enabledScopes: ['pte'],
+    panelId: 'mode-rts',
+    picker: {
+      getItems: () => window.RTSMode?.getItems?.() || [],
+      getCurrentId: () => window.RTSMode?.getCurrentId?.() || null,
+      select: (id) => window.RTSMode?.select?.(id),
+      previous: () => {
+        const items = window.RTSMode?.getItems?.() || [];
+        const currentId = String(window.RTSMode?.getCurrentId?.() || '');
+        const index = items.findIndex((item) => String(item.id) === currentId);
+        if (index > 0) window.RTSMode?.select?.(items[index - 1].id);
+      },
+      next: () => {
+        const items = window.RTSMode?.getItems?.() || [];
+        const currentId = String(window.RTSMode?.getCurrentId?.() || '');
+        const index = items.findIndex((item) => String(item.id) === currentId);
+        if (index >= 0 && index < items.length - 1) window.RTSMode?.select?.(items[index + 1].id);
+      },
+      legacyContainerId: 'rts-v7-picker-bar'
+    },
+    controls: [
+      { sourceId: 'play-rts-btn', slot: 'media', level: 'basic', order: 1 },
+      { sourceId: 'rts-stop-btn', slot: 'attempt', level: 'basic', order: 1 },
+      { sourceId: 'rts-retry-btn', slot: 'attempt', level: 'basic', order: 2 },
+      { sourceId: 'rts-ai-score-btn', slot: 'attempt', level: 'basic', order: 3 },
+      { sourceId: 'rts-next-question-btn', slot: 'attempt', level: 'basic', order: 4 }
+    ],
+    inPlaceControls: [],
+    advancedSettings: []
+  });
+
+  // Wave 2: Describe Image. Filters and recommendations live in Advanced;
+  // step/result actions remain lifecycle controls in the shared shell.
+  controller.register({
+    modeId: 'describe-image',
+    enabledScopes: ['pte'],
+    panelId: 'mode-describe-image',
+    picker: {
+      sourceSelectId: 'question-select-di',
+      previousButtonId: 'back-btn-di',
+      nextButtonId: 'next-btn-di'
+    },
+    controls: [
+      { sourceId: 'play-di-btn', slot: 'media', level: 'basic', order: 1 },
+      { sourceId: 'di-stop-btn', slot: 'attempt', level: 'basic', order: 1, visibilityScopeId: 'di-step-record' },
+      { sourceId: 'di-retry-btn', slot: 'attempt', level: 'basic', order: 2, visibilityScopeId: 'di-step-review' },
+      { sourceId: 'di-submit-btn', slot: 'attempt', level: 'basic', order: 3, visibilityScopeId: 'di-step-review' },
+      { sourceId: 'di-results-retry-btn', slot: 'attempt', level: 'basic', order: 4, visibilityScopeId: 'di-step-results' },
+      { sourceId: 'di-next-question-btn', slot: 'attempt', level: 'basic', order: 5, visibilityScopeId: 'di-step-results' },
+      { sourceId: 'di-ai-btn', slot: 'advanced-action', level: 'advanced', order: 1, visibilityScopeId: 'di-step-results' },
+      { sourceId: 'recommended-btn-di', slot: 'advanced-action', level: 'advanced', order: 2 },
+      { sourceId: 'difficulty-filter-container-di', slot: 'advanced-setting', level: 'advanced', order: 1 }
+    ],
+    inPlaceControls: [],
+    advancedSettings: [
+      {
+        key: 'difficulty',
+        sourceId: 'difficulty-filter-container-di',
+        isActive: () => document.getElementById('difficulty-filter-label-di')?.textContent?.trim() !== 'Recommended',
+        summaryLabel: 'Difficulty filter'
+      }
+    ]
+  });
+
+  // Wave 2: PTE Retell Lecture (the existing Take Notes implementation).
+  // English Take Notes stays legacy because enabledScopes intentionally omits it.
+  controller.register({
+    modeId: 'notes',
+    enabledScopes: ['pte'],
+    panelId: 'mode-notes',
+    picker: {
+      sourceSelectId: 'question-select-notes',
+      previousButtonId: 'back-btn-notes',
+      nextButtonId: 'next-btn-notes'
+    },
+    controls: [
+      { sourceId: 'play-notes-btn', slot: 'media', level: 'basic', order: 1 },
+      { sourceId: 'notes-submit-btn', slot: 'attempt', level: 'basic', order: 1, visibilityScopeId: 'notes-step-audio' },
+      { sourceId: 'notes-retry-btn', slot: 'attempt', level: 'basic', order: 2, visibilityScopeId: 'notes-step-results' },
+      { sourceId: 'recommended-btn-notes', slot: 'advanced-action', level: 'advanced', order: 1 },
+      { sourceId: 'difficulty-filter-container-notes', slot: 'advanced-setting', level: 'advanced', order: 1 },
+      { sourceId: 'status-filter-container-notes', slot: 'advanced-setting', level: 'advanced', order: 2 }
+    ],
+    inPlaceControls: [],
+    advancedSettings: [
+      {
+        key: 'difficulty',
+        sourceId: 'difficulty-filter-container-notes',
+        isActive: () => document.getElementById('difficulty-filter-label-notes')?.textContent?.trim() !== 'Recommended',
+        summaryLabel: 'Difficulty filter'
+      },
+      {
+        key: 'status',
+        sourceId: 'status-filter-container-notes',
+        isActive: () => document.getElementById('status-filter-label-notes')?.textContent?.trim() !== 'Filter by Status',
+        summaryLabel: 'Status filter'
+      }
+    ]
+  });
+
+  // Wave 3A: Summarize Group Discussion. The multi-step practice flow stays
+  // mode-owned; the shared shell adopts the question picker and lifecycle
+  // controls that are safe to surface across its recording/results steps.
+  controller.register({
+    modeId: 'sgd',
+    enabledScopes: ['pte'],
+    panelId: 'mode-sgd',
+    picker: {
+      sourceSelectId: 'question-select-sgd',
+      previousButtonId: 'back-btn-sgd',
+      nextButtonId: 'next-btn-sgd'
+    },
+    controls: [
+      { sourceId: 'play-sgd-btn', slot: 'media', level: 'basic', order: 1 },
+      { sourceId: 'sgd-record-btn', slot: 'attempt', level: 'basic', order: 1, visibilityScopeId: 'sgd-step-record' },
+      { sourceId: 'sgd-stop-btn', slot: 'attempt', level: 'basic', order: 2, visibilityScopeId: 'sgd-step-record' },
+      { sourceId: 'sgd-submit-btn', slot: 'attempt', level: 'basic', order: 3, visibilityScopeId: 'sgd-step-record' },
+      { sourceId: 'sgd-retry-btn', slot: 'attempt', level: 'basic', order: 4, visibilityScopeId: 'sgd-step-results' },
+      { sourceId: 'recommended-btn-sgd', slot: 'advanced-action', level: 'advanced', order: 1 }
+    ],
+    inPlaceControls: [],
+    advancedSettings: []
+  });
+
+  // Wave 3B: Repeat Sentence (Speak). This mode remains implemented inline
+  // in script.js; the adapter centralizes only the shared shell wiring.
+  controller.register({
+    modeId: 'speak',
+    enabledScopes: ['pte', 'english'],
+    panelId: 'mode-speak',
+    picker: {
+      sourceSelectId: 'question-select-speak',
+      previousButtonId: 'back-btn-speak',
+      nextButtonId: 'next-btn-speak'
+    },
+    controls: [
+      { sourceId: 'play-btn-speak', slot: 'media', level: 'basic', order: 1 },
+      { sourceId: 'record-btn', slot: 'attempt', level: 'basic', order: 1 },
+      { sourceId: 'check-btn-speak', slot: 'attempt', level: 'basic', order: 2 },
+      { sourceId: 'retry-btn-speak', slot: 'attempt', level: 'basic', order: 3 },
+      { sourceId: 'recommended-btn-speak', slot: 'advanced-action', level: 'advanced', order: 1 },
+      { sourceId: 'progress-bar-speak', slot: 'advanced-setting', level: 'advanced', order: 1 },
+      { sourceId: 'status-filter-container-speak', slot: 'advanced-setting', level: 'advanced', order: 2 },
+      { sourceId: 'length-filter-container-speak', slot: 'advanced-setting', level: 'advanced', order: 3 },
+      { sourceId: 'difficulty-filter-container-speak', slot: 'advanced-setting', level: 'advanced', order: 4 }
+    ],
+    inPlaceControls: [
+      { sourceId: 'adaptive-toggle-container-speak', level: 'advanced' }
+    ],
+    advancedSettings: [
+      {
+        key: 'adaptive-mode',
+        isActive: () => document.getElementById('manual-speak')?.checked === true,
+        summaryLabel: 'Manual selection'
+      },
+      {
+        key: 'status',
+        sourceId: 'status-filter-container-speak',
+        isActive: () => document.getElementById('status-filter-label-speak')?.textContent?.trim() !== 'Filter by Status',
+        summaryLabel: 'Status filter'
+      },
+      {
+        key: 'length',
+        sourceId: 'length-filter-container-speak',
+        isActive: () => document.getElementById('length-filter-label-speak')?.textContent?.trim() !== 'Filter by Length',
+        summaryLabel: 'Length filter'
+      },
+      {
+        key: 'difficulty',
+        sourceId: 'difficulty-filter-container-speak',
+        isActive: () => document.getElementById('difficulty-filter-label-speak')?.textContent?.trim() !== 'Recommended',
+        summaryLabel: 'Difficulty filter'
+      }
+    ]
+  });
+
+  // Wave 4A: Read Aloud picker/settings shell. Recording assessment and
+  // results remain owned by read-aloud-mode.js; the shared controller only
+  // adopts the stable navigation, audio, filter, and guide controls.
+  controller.register({
+    modeId: 'read-aloud',
+    enabledScopes: ['pte', 'english'],
+    panelId: 'mode-read-aloud',
+    picker: {
+      sourceSelectId: 'ra-question-select',
+      previous: () => window.ReadAloudMode?.loadPreviousPrompt?.(),
+      next: () => window.ReadAloudMode?.loadNextPrompt?.()
+    },
+    controls: [
+      { sourceId: 'header-ra-play-audio-btn', slot: 'media', level: 'basic', order: 1 },
+      { sourceId: 'header-ra-play-recording-btn', slot: 'media', level: 'basic', order: 2 },
+      { sourceId: 'ra-record-btn', slot: 'attempt', level: 'basic', order: 1 },
+      { sourceId: 'ra-stop-btn', slot: 'attempt', level: 'basic', order: 2 },
+      { sourceId: 'ra-play-recording-btn', slot: 'attempt', level: 'basic', order: 3 },
+      { sourceId: 'ra-check-btn', slot: 'attempt', level: 'basic', order: 4 },
+      { sourceId: 'ra-retry-btn', slot: 'attempt', level: 'basic', order: 5 },
+      { sourceId: 'ra-practice-target-toggle', slot: 'advanced-action', level: 'advanced', order: 1 },
+      { sourceId: 'ra-history-action-host', slot: 'advanced-action', level: 'advanced', order: 2 },
+      { sourceId: 'ra-practice-target-drawer', slot: 'advanced-setting', level: 'advanced', order: 1 },
+      { sourceId: 'ra-audio-player', slot: 'advanced-setting', level: 'advanced', order: 2 }
+    ],
+    inPlaceControls: [
+      { sourceId: 'ra-prompt-guides-group', level: 'advanced' }
+    ],
+    advancedSettings: [
+      {
+        key: 'sample-audio',
+        isActive: () => document.getElementById('ra-filter-all')?.classList.contains('active') === false,
+        summaryLabel: 'Sample audio filter'
+      },
+      {
+        key: 'prompt-feature',
+        isActive: () => document.getElementById('ra-filter-feature-all')?.classList.contains('active') === false,
+        summaryLabel: 'Prompt feature filter'
+      },
+      {
+        key: 'voice',
+        isActive: () => !!window.ReadAloudMode && (!!window.ReadAloudMode.selectedGender || !!window.ReadAloudMode.selectedVoiceId),
+        summaryLabel: 'Voice'
+      },
+      {
+        key: 'speed',
+        isActive: () => window.ReadAloudMode?.selectedSpeed !== '100',
+        summaryLabel: 'Playback speed'
+      }
+    ]
+  });
 
 })();

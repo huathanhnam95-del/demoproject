@@ -161,6 +161,17 @@ const path = require('path');
       throw new Error(`Transcript text mismatch for ID ${id}. Expected: "${expectedTranscript}", Got: "${uiText}"`);
     }
 
+    // Voice and playback settings are Advanced-only in the shared Speaking
+    // controller. Enter that view before exercising the legacy mode controls.
+    const advancedToggle = page.locator('#mode-read-aloud .spc-view-toggle-btn[data-view="advanced"]');
+    if (await advancedToggle.count()) {
+      await advancedToggle.click();
+      await page.waitForFunction(() => {
+        const button = document.querySelector('#mode-read-aloud .spc-view-toggle-btn[data-view="advanced"]');
+        return button?.getAttribute('aria-pressed') === 'true';
+      });
+    }
+
     // Settings combinations to test
     const combinations = [
       { gender: 'female', speed: '100', btnId: '#ra-voice-female', speedId: '#ra-speed-100' },
@@ -368,4 +379,3 @@ async function verifyUIUXFlow(page) {
 
   console.log('--- UI/UX Interactive Flow Verification Passed ---');
 }
-

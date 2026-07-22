@@ -27,10 +27,15 @@
     'english:speak', 'english:read-aloud'
   ]);
 
-  // Start empty — filled per migration wave
-  const DEFAULT_ENABLED_TARGETS = new Set([]);
+  // All production adapters have now reached the integrated gate. The
+  // controller is enabled from the production target list by default.
+  const DEFAULT_ENABLED_TARGETS = new Set([
+    'pte:speak', 'pte:read-aloud', 'pte:notes', 'pte:asq',
+    'pte:sgd', 'pte:describe-image', 'pte:rts',
+    'english:speak', 'english:read-aloud'
+  ]);
 
-  // Never enable even with query override
+  // Never enable these scope/mode combinations.
   const EXCLUDED_TARGETS = new Set([
     'pte:pronounce', 'english:notes', 'english:asq',
     'english:sgd', 'english:describe-image', 'english:rts'
@@ -54,31 +59,12 @@
   let scrollLockCount = 0;
   let savedBodyOverflow = '';
 
-  /** @type {string|null} resolved override mode ('v2' | 'legacy' | null) — captured eagerly */
-  let overrideMode = null;
-
-  // Capture override mode eagerly at module init time.
-  // The app's entry-modal/guest-mode flow may strip query params via
-  // history.replaceState before any adapter calls isV2Active.
-  try {
-    const params = new URLSearchParams(window.location.search);
-    overrideMode = params.get('speakingController') || null;
-  } catch (_) { /* ignore — private mode, sandboxed frame, etc. */ }
-
   function resolveTargets() {
     if (resolvedTargets) return resolvedTargets;
     resolvedTargets = new Set();
 
-    if (overrideMode === 'v2') {
-      for (const t of TARGETS) {
-        if (!EXCLUDED_TARGETS.has(t)) resolvedTargets.add(t);
-      }
-    } else if (overrideMode === 'legacy') {
-      // Everything disabled
-    } else {
-      for (const t of DEFAULT_ENABLED_TARGETS) {
-        if (TARGETS.has(t) && !EXCLUDED_TARGETS.has(t)) resolvedTargets.add(t);
-      }
+    for (const t of DEFAULT_ENABLED_TARGETS) {
+      if (TARGETS.has(t) && !EXCLUDED_TARGETS.has(t)) resolvedTargets.add(t);
     }
 
     return resolvedTargets;
@@ -98,9 +84,8 @@
     if (config && !isScopeEnabled(config, scope)) return false;
     const targets = resolveTargets();
     if (targets.has(key)) return true;
-    // When v2 override is active, also enable any registered adapter
-    // only for explicit test fixtures without polluting production targets.
-    if (overrideMode === 'v2' && !EXCLUDED_TARGETS.has(key) && config?.testOnly === true) {
+    // Test-only fixtures are opt-in and never part of production targets.
+    if (!EXCLUDED_TARGETS.has(key) && config?.testOnly === true) {
       return true;
     }
     return false;
@@ -348,9 +333,15 @@
         controllerState.srcPrevBtn = srcPrev;
         prevBtn.addEventListener('click', () => srcPrev.click());
         prevBtn.style.display = '';
+      } else if (typeof picker.previous === 'function') {
+        prevBtn.addEventListener('click', () => picker.previous());
+        prevBtn.style.display = '';
       } else {
         prevBtn.style.display = 'none';
       }
+    } else if (typeof picker.previous === 'function') {
+      prevBtn.addEventListener('click', () => picker.previous());
+      prevBtn.style.display = '';
     } else {
       prevBtn.style.display = 'none';
     }
@@ -363,9 +354,15 @@
         controllerState.srcNextBtn = srcNext;
         nextBtn.addEventListener('click', () => srcNext.click());
         nextBtn.style.display = '';
+      } else if (typeof picker.next === 'function') {
+        nextBtn.addEventListener('click', () => picker.next());
+        nextBtn.style.display = '';
       } else {
         nextBtn.style.display = 'none';
       }
+    } else if (typeof picker.next === 'function') {
+      nextBtn.addEventListener('click', () => picker.next());
+      nextBtn.style.display = '';
     } else {
       nextBtn.style.display = 'none';
     }
@@ -419,7 +416,6 @@
     controllerState.pickerEmptyEl = emptyEl;
     controllerState.pickerSearchInput = searchInput;
 
-    // Pill click opens sheet
     pillEl.addEventListener('click', () => {
       syncPickerSheet(config, controllerState);
       sheet.open();
@@ -635,8 +631,6 @@
     basicBtn.className = 'spc-view-toggle-btn';
     basicBtn.type = 'button';
     basicBtn.dataset.view = 'basic';
-    basicBtn.setAttribute('role', 'radio');
-    basicBtn.setAttribute('aria-checked', 'true');
     basicBtn.setAttribute('aria-pressed', 'true');
     basicBtn.textContent = 'Basic';
 
@@ -644,8 +638,6 @@
     advancedBtn.className = 'spc-view-toggle-btn';
     advancedBtn.type = 'button';
     advancedBtn.dataset.view = 'advanced';
-    advancedBtn.setAttribute('role', 'radio');
-    advancedBtn.setAttribute('aria-checked', 'false');
     advancedBtn.setAttribute('aria-pressed', 'false');
     advancedBtn.textContent = 'Advanced';
 
@@ -785,6 +777,16 @@
     controllerState.inPlaceNodes = inPlaceTracked;
   }
 
+  function hideLegacyPicker(config, controllerState) {
+    const legacyId = config?.picker?.legacyContainerId;
+    if (!legacyId) return;
+    const legacy = document.getElementById(legacyId);
+    if (!legacy) return;
+    controllerState.legacyPickerContainer = legacy;
+    controllerState.legacyPickerOriginalDisplay = legacy.style.display;
+    legacy.style.display = 'none';
+  }
+
   function restoreControls(controllerState) {
     // Restore adopted nodes
     const adopted = controllerState.adoptedNodes || [];
@@ -848,8 +850,6 @@
     }
 
     // Update toggle buttons
-    dom.basicBtn.setAttribute('aria-checked', view === 'basic' ? 'true' : 'false');
-    dom.advancedBtn.setAttribute('aria-checked', view === 'advanced' ? 'true' : 'false');
     dom.basicBtn.setAttribute('aria-pressed', view === 'basic' ? 'true' : 'false');
     dom.advancedBtn.setAttribute('aria-pressed', view === 'advanced' ? 'true' : 'false');
 
@@ -985,10 +985,14 @@
       pickerListEl: null,
       pickerEmptyEl: null,
       pickerSearchInput: null,
-      selectChangeHandler: null
+      selectChangeHandler: null,
+      legacyPickerContainer: null,
+      legacyPickerOriginalDisplay: ''
     };
 
     activeControllers.set(modeId, state);
+
+    hideLegacyPicker(config, state);
 
     // Insert controller as first child of panel
     panel.insertBefore(dom.controller, panel.firstChild);
@@ -1017,6 +1021,10 @@
 
     // Restore adopted controls
     restoreControls(state);
+
+    if (state.legacyPickerContainer) {
+      state.legacyPickerContainer.style.display = state.legacyPickerOriginalDisplay ?? '';
+    }
 
     // Remove select change listener
     if (state.sourceSelect && state.selectChangeHandler) {

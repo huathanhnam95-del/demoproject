@@ -393,3 +393,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 400,2026-07-17,Review and audit RFIB student explanations using local Gemma AI,Done,2026-07-17
 401,2026-07-18,Investigate wrong transcription on Speaking Question 3,Done,2026-07-18
 402,2026-07-20,Update RFIB workbook Cohesion Feature and Details based on new analysis,Done,2026-07-20
+403,2026-07-20,Fix Speaking Controller browser tests — test isolation + DI adapter + aria-pressed,Done,2026-07-20
+404,2026-07-20,Fix CRM Enquiry page — hide non-test sections + align lead form + clean ghost refs,Done,2026-07-20
+405,2026-07-21,Optimize Pronunciation Samples recording tool UX for efficient corpus collection,Done,2026-07-21
+406,2026-07-22,Production Push V1.8.24 - Pronunciation UX optimization and Speaking Controller Wave 0 updates,Done,2026-07-22

@@ -91,8 +91,8 @@ async function runTest() {
         assert('SpeakingPracticeController API is available', hasController);
         await context1.close();
 
-        // ===== Test 2: Feature flag — v2 override enables all targets =====
-        console.log('\n[Test 2] Feature flag resolution');
+        // ===== Test 2: Integrated target resolution =====
+        console.log('\n[Test 2] Integrated target resolution');
         const context2 = await browser.newContext({ viewport: { width: 1440, height: 1200 } });
         await context2.addInitScript(() => {
             window.localStorage.setItem('userStatus', 'guest');
@@ -116,14 +116,14 @@ async function runTest() {
                 englishAsq: SPC.isV2Active('asq', 'english')
             };
         });
-        assert('pte:speak enabled with v2 override', flagResults.pteSpeak);
-        assert('pte:read-aloud enabled with v2 override', flagResults.pteReadAloud);
-        assert('pte:asq enabled with v2 override', flagResults.pteAsq);
-        assert('english:speak enabled with v2 override', flagResults.englishSpeak);
-        assert('english:read-aloud enabled with v2 override', flagResults.englishReadAloud);
-        assert('pte:pronounce excluded despite override', !flagResults.ptePronounce);
-        assert('english:notes excluded despite override', !flagResults.englishNotes);
-        assert('english:asq excluded despite override', !flagResults.englishAsq);
+        assert('pte:speak enabled by integrated defaults', flagResults.pteSpeak);
+        assert('pte:read-aloud enabled by integrated defaults', flagResults.pteReadAloud);
+        assert('pte:asq enabled by integrated defaults', flagResults.pteAsq);
+        assert('english:speak enabled by integrated defaults', flagResults.englishSpeak);
+        assert('english:read-aloud enabled by integrated defaults', flagResults.englishReadAloud);
+        assert('pte:pronounce remains excluded', !flagResults.ptePronounce);
+        assert('english:notes remains excluded', !flagResults.englishNotes);
+        assert('english:asq remains excluded', !flagResults.englishAsq);
 
         // Test legacy override
         await page2.goto(`http://localhost:${server.address().port}/?speakingController=legacy`, { waitUntil: 'domcontentloaded' });
@@ -132,7 +132,7 @@ async function runTest() {
         const legacyResult = await page2.evaluate(() => {
             return window.SpeakingPracticeController.isV2Active('speak', 'pte');
         });
-        assert('pte:speak disabled with legacy override', !legacyResult);
+        assert('legacy query override no longer disables integrated targets', legacyResult);
         await context2.close();
 
         // ===== Test 3: Synthetic adapter — full contract =====
@@ -593,8 +593,296 @@ async function runTest() {
         assert('View forced to basic', noToggleResults.viewIsBasic);
         assert('Stored preference NOT overwritten', noToggleResults.storedPreferenceUnchanged);
 
-        // ===== Test 6: No console/page errors =====
-        console.log('\n[Test 6] Error checks');
+        // ===== Test 6: switchToMode lifecycle integration =====
+        console.log('\n[Test 6] switchToMode lifecycle integration');
+        const context6 = await browser.newContext({ viewport: { width: 1440, height: 1200 } });
+        await context6.addInitScript(() => {
+            window.localStorage.setItem('userStatus', 'guest');
+            window.localStorage.setItem('hasSeenScopeTutorial', 'true');
+        });
+        const page6 = await context6.newPage();
+        await page6.goto(`http://localhost:${server.address().port}/?speakingController=v2`, { waitUntil: 'domcontentloaded' });
+        await dismissBlockingOverlays(page6);
+
+        const lifecycleResults = await page6.evaluate(async () => {
+            const SPC = window.SpeakingPracticeController;
+            const panel = document.getElementById('mode-speak');
+            const sourceSelect = document.getElementById('question-select-speak');
+            if (!panel || !sourceSelect || typeof window.switchToMode !== 'function') {
+                return { available: false };
+            }
+
+            SPC.register({
+                modeId: 'speak',
+                testOnly: true,
+                enabledScopes: ['pte'],
+                panelId: 'mode-speak',
+                picker: { sourceSelectId: 'question-select-speak' },
+                controls: [],
+                inPlaceControls: [],
+                advancedSettings: []
+            });
+
+            await window.switchToMode('speak');
+            await new Promise(resolve => setTimeout(resolve, 200));
+            const results = {
+                available: true,
+                mountedAfterSwitch: !!panel.querySelector('.spc-controller')
+            };
+
+            window.PracticeScopeManager?.setScope('english', { persist: false });
+            await new Promise(resolve => setTimeout(resolve, 100));
+            results.unmountedAfterScopeChange = !panel.querySelector('.spc-controller');
+
+            window.PracticeScopeManager?.setScope('pte', { persist: false });
+            await new Promise(resolve => setTimeout(resolve, 100));
+            results.remountedAfterScopeChange = !!panel.querySelector('.spc-controller');
+
+            SPC.unmount('speak');
+            return results;
+        });
+
+        await context6.close();
+
+        assert('Lifecycle integration is available', lifecycleResults.available);
+        assert('Controller mounts after switchToMode', lifecycleResults.mountedAfterSwitch);
+        assert('Controller unmounts after scope change', lifecycleResults.unmountedAfterScopeChange);
+        assert('Controller remounts after returning to eligible scope', lifecycleResults.remountedAfterScopeChange);
+
+        // ===== Test 7: asynchronous notes activation =====
+        console.log('\n[Test 7] Asynchronous notes activation');
+        const notesTimingResults = await page3.evaluate(async () => {
+            const SPC = window.SpeakingPracticeController;
+            const panel = document.getElementById('mode-notes');
+            const sourceSelect = document.getElementById('question-select-notes');
+            const loader = window.BELLazyLoader;
+            const originalEnsure = loader?.ensureModeScripts;
+            const originalTakeNotes = window.TakeNotesMode;
+            if (!panel || !sourceSelect || !loader || typeof window.switchToMode !== 'function') {
+                return { available: false };
+            }
+
+            let entriesLoaded = false;
+            loader.ensureModeScripts = async () => true;
+            window.TakeNotesMode = {
+                loadEntries: () => new Promise(resolve => {
+                    setTimeout(() => {
+                        entriesLoaded = true;
+                        resolve();
+                    }, 100);
+                })
+            };
+
+            SPC.register({
+                modeId: 'notes',
+                testOnly: true,
+                enabledScopes: ['pte'],
+                panelId: 'mode-notes',
+                picker: { sourceSelectId: 'question-select-notes' },
+                controls: [],
+                inPlaceControls: [],
+                advancedSettings: []
+            });
+
+            const switchPromise = window.switchToMode('notes');
+            await new Promise(resolve => setTimeout(resolve, 30));
+            const results = {
+                available: true,
+                notMountedBeforeEntriesLoad: !panel.querySelector('.spc-controller'),
+                entriesLoadedBeforeSwitchResolves: false
+            };
+            await switchPromise;
+            results.entriesLoadedBeforeSwitchResolves = entriesLoaded;
+            results.mountedAfterEntriesLoad = !!panel.querySelector('.spc-controller');
+
+            SPC.unmount('notes');
+            window.TakeNotesMode = originalTakeNotes;
+            if (loader) loader.ensureModeScripts = originalEnsure;
+            return results;
+        });
+
+        assert('Notes timing fixture is available', notesTimingResults.available);
+        assert('Notes controller waits for entries before mounting', notesTimingResults.notMountedBeforeEntriesLoad);
+        assert('Entries finish before switch resolves', notesTimingResults.entriesLoadedBeforeSwitchResolves);
+        assert('Notes controller mounts after entries load', notesTimingResults.mountedAfterEntriesLoad);
+
+        // ===== Test 8: Production adapter registration =====
+        console.log('\n[Test 8] Production adapter registration');
+        const context8 = await browser.newContext({ viewport: { width: 1440, height: 1200 } });
+        await context8.addInitScript(() => {
+            window.localStorage.setItem('userStatus', 'guest');
+            window.localStorage.setItem('hasSeenScopeTutorial', 'true');
+        });
+        const page8 = await context8.newPage();
+        await page8.goto(`http://localhost:${server.address().port}/?speakingController=v2`, { waitUntil: 'domcontentloaded' });
+        await dismissBlockingOverlays(page8);
+        await page8.evaluate(async () => window.switchToMode('rts'));
+        await page8.waitForFunction(() => (window.RTSMode?.getItems?.() || []).length > 1, { timeout: 15000 });
+
+        const productionAdapterResults = await page8.evaluate(async () => {
+            const SPC = window.SpeakingPracticeController;
+            const results = {};
+            const asqPanel = document.getElementById('mode-asq');
+            const rtsPanel = document.getElementById('mode-rts');
+            const sgdPanel = document.getElementById('mode-sgd');
+
+            SPC.activate('asq', { scope: 'pte' });
+            const asqController = asqPanel?.querySelector('.spc-controller');
+            results.asqMounted = !!asqController;
+            results.asqPlayAdopted = !!asqController?.querySelector('#asq-play-prompt-btn');
+            results.asqNoToggle = asqController?.hasAttribute('data-spc-no-toggle') === true;
+            SPC.unmount('asq');
+
+            results.rtsApiAvailable = !!window.RTSMode &&
+                typeof window.RTSMode.getItems === 'function' &&
+                typeof window.RTSMode.getCurrentId === 'function' &&
+                typeof window.RTSMode.select === 'function';
+            SPC.activate('rts', { scope: 'pte' });
+            const rtsController = rtsPanel?.querySelector('.spc-controller');
+            results.rtsMounted = !!rtsController;
+            results.rtsNoToggle = rtsPanel?.querySelector('.spc-controller')?.hasAttribute('data-spc-no-toggle') === true;
+            const rtsLegacyPicker = document.getElementById('rts-v7-picker-bar');
+            results.rtsLegacyPickerHidden = !rtsLegacyPicker || rtsLegacyPicker.style.display === 'none';
+            const rtsBeforeId = window.RTSMode?.getCurrentId?.();
+            rtsController?.querySelector('.spc-picker-next')?.click();
+            await new Promise(resolve => setTimeout(resolve, 100));
+            results.rtsSharedNextNavigates = !!rtsBeforeId && window.RTSMode?.getCurrentId?.() !== rtsBeforeId;
+            SPC.unmount('rts');
+
+            const diPanel = document.getElementById('mode-describe-image');
+            SPC.activate('describe-image', { scope: 'pte' });
+            const diController = diPanel?.querySelector('.spc-controller');
+            results.diMounted = !!diController;
+            results.diPlayAdopted = !!diController?.querySelector('#play-di-btn');
+            results.diHasAdvanced = !!diController && !diController.hasAttribute('data-spc-no-toggle');
+            results.diDifficultyAdopted = !!diController?.querySelector('#difficulty-filter-container-di');
+            results.diDifficultyInPanel = !!diPanel?.querySelector('#difficulty-filter-container-di');
+            SPC.unmount('describe-image');
+
+            const notesPanel = document.getElementById('mode-notes');
+            SPC.activate('notes', { scope: 'pte' });
+            const notesController = notesPanel?.querySelector('.spc-controller');
+            results.notesMountedInPte = !!notesController;
+            results.notesPlayAdopted = !!notesController?.querySelector('#play-notes-btn');
+            results.notesHasAdvanced = !!notesController && !notesController.hasAttribute('data-spc-no-toggle');
+            SPC.activate('notes', { scope: 'english' });
+            results.notesUnmountedInEnglish = !notesPanel?.querySelector('.spc-controller');
+            SPC.unmount('notes');
+
+            results.sgdDeadDifficultyFilterRemoved = !document.getElementById('difficulty-filter-container-sgd');
+            results.sgdDeadStatusFilterRemoved = !document.getElementById('status-filter-container-sgd');
+            SPC.activate('sgd', { scope: 'pte' });
+            const sgdController = sgdPanel?.querySelector('.spc-controller');
+            results.sgdMounted = !!sgdController;
+            results.sgdPlayAdopted = !!sgdController?.querySelector('#play-sgd-btn');
+            results.sgdHasAdvanced = !!sgdController && !sgdController.hasAttribute('data-spc-no-toggle');
+            results.sgdNoDeadFiltersInPanel = !sgdPanel?.querySelector('#difficulty-filter-container-sgd, #status-filter-container-sgd');
+            SPC.unmount('sgd');
+
+            const speakPanel = document.getElementById('mode-speak');
+            SPC.activate('speak', { scope: 'pte' });
+            const speakController = speakPanel?.querySelector('.spc-controller');
+            results.speakMounted = !!speakController;
+            results.speakPlayAdopted = !!speakController?.querySelector('#play-btn-speak');
+            results.speakRecordAdopted = !!speakController?.querySelector('#record-btn');
+            results.speakCheckAdopted = !!speakController?.querySelector('#check-btn-speak');
+            results.speakRetryAdopted = !!speakController?.querySelector('#retry-btn-speak');
+            results.speakRecommendedAdopted = !!speakController?.querySelector('#recommended-btn-speak');
+            results.speakStatusFilterAdopted = !!speakController?.querySelector('#status-filter-container-speak');
+            results.speakLengthFilterAdopted = !!speakController?.querySelector('#length-filter-container-speak');
+            results.speakDifficultyFilterAdopted = !!speakController?.querySelector('#difficulty-filter-container-speak');
+            results.speakHasAdvanced = !!speakController && !speakController.hasAttribute('data-spc-no-toggle');
+            SPC.unmount('speak');
+
+            const raPanel = document.getElementById('mode-read-aloud');
+            SPC.activate('read-aloud', { scope: 'pte' });
+            const raController = raPanel?.querySelector('.spc-controller');
+            results.raMounted = !!raController;
+            results.raPickerAdopted = !!raController?.querySelector('#spc-picker-read-aloud');
+            results.raSampleListenAdopted = !!raController?.querySelector('#header-ra-play-audio-btn');
+            results.raRecordAdopted = !!raController?.querySelector('#ra-record-btn');
+            results.raStopAdopted = !!raController?.querySelector('#ra-stop-btn');
+            results.raPlaybackAdopted = !!raController?.querySelector('#ra-play-recording-btn');
+            results.raCheckAdopted = !!raController?.querySelector('#ra-check-btn');
+            results.raRetryAdopted = !!raController?.querySelector('#ra-retry-btn');
+            results.raFilterActionRemoved = !document.getElementById('ra-v7-filters-btn');
+            results.raFilterDrawerAdopted = !!raController?.querySelector('#ra-practice-target-drawer');
+            results.raAudioSettingsAdopted = !!raController?.querySelector('#ra-audio-player');
+            results.raGuidesRemainInPanel = !!raPanel?.querySelector('#ra-prompt-guides-group[data-spc-level="advanced"]');
+            const raLegacyPicker = document.getElementById('ra-v7-picker-bar');
+            results.raLegacyPickerHidden = !raLegacyPicker || raLegacyPicker.style.display === 'none';
+            results.raHasAdvanced = !!raController && !raController.hasAttribute('data-spc-no-toggle');
+            results.raArchiveApiAvailable = !!window.PTEAttemptArchive &&
+                typeof window.PTEAttemptArchive.updateHistoryUI === 'function';
+            if (results.raArchiveApiAvailable) {
+                await window.PTEAttemptArchive.updateHistoryUI('read-aloud', '1');
+            }
+            results.raHistoryActionHostAdopted = !!raController?.querySelector('#ra-history-action-host');
+            results.raHistoryToggleUsesDedicatedHost = !!document.querySelector('#ra-history-action-host #read-aloud-history-toggle');
+            results.raHistoryContentUsesDedicatedHost = !!document.querySelector('#ra-history-content-host #read-aloud-history-container');
+            SPC.unmount('read-aloud');
+            results.raLegacyPickerRestored = !raLegacyPicker || raLegacyPicker.style.display !== 'none';
+            results.raHistoryActionHostHiddenAfterUnmount = getComputedStyle(document.getElementById('ra-history-action-host')).display === 'none';
+            return results;
+        });
+
+        await context8.close();
+
+        assert('ASQ production adapter mounts', productionAdapterResults.asqMounted);
+        assert('ASQ Play control is adopted', productionAdapterResults.asqPlayAdopted);
+        assert('ASQ omits Advanced toggle', productionAdapterResults.asqNoToggle);
+        assert('RTS picker bridge API is available', productionAdapterResults.rtsApiAvailable);
+        assert('RTS production adapter mounts', productionAdapterResults.rtsMounted);
+        assert('RTS omits Advanced toggle', productionAdapterResults.rtsNoToggle);
+        assert('RTS legacy picker is hidden', productionAdapterResults.rtsLegacyPickerHidden);
+        assert('RTS shared Next navigates', productionAdapterResults.rtsSharedNextNavigates);
+        assert('Describe Image production adapter mounts', productionAdapterResults.diMounted);
+        assert('Describe Image Play control is adopted', productionAdapterResults.diPlayAdopted);
+        assert('Describe Image exposes Advanced view', productionAdapterResults.diHasAdvanced);
+        assert('Describe Image difficulty filter is adopted', productionAdapterResults.diDifficultyAdopted);
+        assert('Retell Lecture mounts in PTE', productionAdapterResults.notesMountedInPte);
+        assert('Retell Lecture Play control is adopted', productionAdapterResults.notesPlayAdopted);
+        assert('Retell Lecture exposes Advanced view', productionAdapterResults.notesHasAdvanced);
+        assert('English Take Notes remains unmounted', productionAdapterResults.notesUnmountedInEnglish);
+        assert('SGD dead difficulty filter is removed', productionAdapterResults.sgdDeadDifficultyFilterRemoved);
+        assert('SGD dead status filter is removed', productionAdapterResults.sgdDeadStatusFilterRemoved);
+        assert('SGD production adapter mounts', productionAdapterResults.sgdMounted);
+        assert('SGD Play control is adopted', productionAdapterResults.sgdPlayAdopted);
+        assert('SGD exposes Advanced view', productionAdapterResults.sgdHasAdvanced);
+        assert('SGD panel contains no dead filter markup', productionAdapterResults.sgdNoDeadFiltersInPanel);
+        assert('Speak production adapter mounts', productionAdapterResults.speakMounted);
+        assert('Speak Play control is adopted', productionAdapterResults.speakPlayAdopted);
+        assert('Speak Record control is adopted', productionAdapterResults.speakRecordAdopted);
+        assert('Speak Check control is adopted', productionAdapterResults.speakCheckAdopted);
+        assert('Speak Retry control is adopted', productionAdapterResults.speakRetryAdopted);
+        assert('Speak Recommended action is adopted', productionAdapterResults.speakRecommendedAdopted);
+        assert('Speak status filter is adopted', productionAdapterResults.speakStatusFilterAdopted);
+        assert('Speak length filter is adopted', productionAdapterResults.speakLengthFilterAdopted);
+        assert('Speak difficulty filter is adopted', productionAdapterResults.speakDifficultyFilterAdopted);
+        assert('Speak exposes Advanced view', productionAdapterResults.speakHasAdvanced);
+        assert('Read Aloud production adapter mounts', productionAdapterResults.raMounted);
+        assert('Read Aloud shared picker is present', productionAdapterResults.raPickerAdopted);
+        assert('Read Aloud sample Listen is adopted', productionAdapterResults.raSampleListenAdopted);
+        assert('Read Aloud Record control is adopted', productionAdapterResults.raRecordAdopted);
+        assert('Read Aloud Stop control is adopted', productionAdapterResults.raStopAdopted);
+        assert('Read Aloud playback control is adopted', productionAdapterResults.raPlaybackAdopted);
+        assert('Read Aloud Check control is adopted', productionAdapterResults.raCheckAdopted);
+        assert('Read Aloud Retry control is adopted', productionAdapterResults.raRetryAdopted);
+        assert('Read Aloud legacy filter action is removed', productionAdapterResults.raFilterActionRemoved);
+        assert('Read Aloud filter drawer is adopted', productionAdapterResults.raFilterDrawerAdopted);
+        assert('Read Aloud audio settings are adopted', productionAdapterResults.raAudioSettingsAdopted);
+        assert('Read Aloud guides remain in panel and are advanced-gated', productionAdapterResults.raGuidesRemainInPanel);
+        assert('Read Aloud legacy picker is hidden', productionAdapterResults.raLegacyPickerHidden);
+        assert('Read Aloud exposes Advanced view', productionAdapterResults.raHasAdvanced);
+        assert('Read Aloud legacy picker restores on unmount', productionAdapterResults.raLegacyPickerRestored);
+        assert('Read Aloud archive API is available', productionAdapterResults.raArchiveApiAvailable);
+        assert('Read Aloud history action host is adopted', productionAdapterResults.raHistoryActionHostAdopted);
+        assert('Read Aloud history toggle uses dedicated host', productionAdapterResults.raHistoryToggleUsesDedicatedHost);
+        assert('Read Aloud history content uses dedicated host', productionAdapterResults.raHistoryContentUsesDedicatedHost);
+        assert('Read Aloud history action hides after unmount', productionAdapterResults.raHistoryActionHostHiddenAfterUnmount);
+
+        // ===== Test 9: No console/page errors =====
+        console.log('\n[Test 9] Error checks');
         const spcErrors = consoleErrors.filter(e => e.includes('[SPC]'));
         assert('No SPC-specific console errors', spcErrors.length === 0);
         assert('No page errors', pageErrors.length === 0);
@@ -608,8 +896,8 @@ async function runTest() {
 
         await context3.close();
 
-        // ===== Test 7: View preference persistence across page reload =====
-        console.log('\n[Test 7] View preference persistence');
+        // ===== Test 10: View preference persistence across page reload =====
+        console.log('\n[Test 10] View preference persistence');
         const context7 = await browser.newContext({ viewport: { width: 1440, height: 1200 } });
         await context7.addInitScript(() => {
             window.localStorage.setItem('userStatus', 'guest');
@@ -625,8 +913,8 @@ async function runTest() {
         });
         assert('View preference persists across page load', persistedView === 'advanced');
 
-        // ===== Test 8: Wave 0 remediation contract =====
-        console.log('\n[Test 8] Wave 0 remediation contract');
+        // ===== Test 11: Wave 0 remediation contract =====
+        console.log('\n[Test 11] Wave 0 remediation contract');
         const remediationResults = await page7.evaluate(() => {
             const SPC = window.SpeakingPracticeController;
             const results = {};
@@ -723,6 +1011,46 @@ async function runTest() {
         assert('Original next-button display is restored exactly', remediationResults.nextDisplayRestored);
         assert('Ineligible scope unmounts active controller', remediationResults.ineligibleScopeUnmounts);
         await context7.close();
+
+        // ===== Test 12: Integrated default targets and scope switching =====
+        console.log('\n[Test 12] Integrated default targets and scope switching');
+        const context12 = await browser.newContext({ viewport: { width: 1440, height: 1200 } });
+        await context12.addInitScript(() => {
+            window.localStorage.setItem('userStatus', 'guest');
+            window.localStorage.setItem('hasSeenScopeTutorial', 'true');
+        });
+        const page12 = await context12.newPage();
+        await page12.goto(`http://localhost:${server.address().port}/`, { waitUntil: 'domcontentloaded' });
+        await dismissBlockingOverlays(page12);
+        const defaultResults = await page12.evaluate(async () => {
+            const SPC = window.SpeakingPracticeController;
+            const targets = [
+                ['speak', 'pte'], ['read-aloud', 'pte'], ['notes', 'pte'], ['asq', 'pte'],
+                ['sgd', 'pte'], ['describe-image', 'pte'], ['rts', 'pte'],
+                ['speak', 'english'], ['read-aloud', 'english']
+            ];
+            const defaultsEnabled = targets.every(([mode, scope]) => SPC.isV2Active(mode, scope));
+            const exclusionsRemainOff = !SPC.isV2Active('pronounce', 'pte')
+                && !SPC.isV2Active('notes', 'english')
+                && !SPC.isV2Active('asq', 'english');
+
+            await window.switchToMode('speak');
+            const pteMounted = !!document.querySelector('#mode-speak .spc-controller');
+            window.setPracticeScope('english', { persist: false });
+            await new Promise(resolve => setTimeout(resolve, 100));
+            const englishSpeakMounted = !!document.querySelector('#mode-speak .spc-controller');
+            await window.switchToMode('notes');
+            const englishNotesUnmounted = !document.querySelector('#mode-notes .spc-controller');
+            window.setPracticeScope('pte', { persist: false });
+            await new Promise(resolve => setTimeout(resolve, 100));
+            return { defaultsEnabled, exclusionsRemainOff, pteMounted, englishSpeakMounted, englishNotesUnmounted };
+        });
+        assert('All migrated targets enabled by default', defaultResults.defaultsEnabled);
+        assert('Excluded scope/mode combinations remain disabled', defaultResults.exclusionsRemainOff);
+        assert('PTE controller mounts without query override', defaultResults.pteMounted);
+        assert('English Speak remains mounted after scope switch', defaultResults.englishSpeakMounted);
+        assert('English Retell Lecture remains legacy/unmounted', defaultResults.englishNotesUnmounted);
+        await context12.close();
 
         // ===== Summary =====
         console.log('\n---');

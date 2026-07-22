@@ -295,7 +295,7 @@
   z-index: 1;
 }
 
-.spc-sheet-header h2 {
+.spc-sheet-header h3 {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
@@ -428,6 +428,21 @@
    applyView() sets data-spc-view on the panel element for this rule. */
 [data-spc-view]:not([data-spc-view="advanced"]) [data-spc-level="advanced"] {
   display: none;
+}
+
+/* Dedicated Read Aloud history action is only visible while its controller
+   owns the host; the expanded history content remains mode-owned below it. */
+#mode-read-aloud:not([data-spc-view]) #ra-history-action-host {
+  display: none;
+}
+
+.ra-history-action-host {
+  display: contents;
+}
+
+.ra-history-content-host {
+  width: 100%;
+  margin-top: 12px;
 }
 
 /* Hide toggle when controller declares no toggle needed */

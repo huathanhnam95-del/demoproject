@@ -133,8 +133,8 @@
     function init() {
         if (isInitialized) return;
         cacheElements();
-        if (!el.rtsV7QuestionPill) {
-            console.warn('[RTS] UI elements not found, skipping init');
+        if (!el.playRtsBtn) {
+            console.warn('[RTS] Practice UI elements not found, skipping init');
             return;
         }
         setupEventListeners();
@@ -224,6 +224,7 @@
                 hasLoadedEntries = true;
                 renderPicker();
                 if (entries.length > 0) loadQuestion(0);
+                window.SpeakingPracticeController?.sync?.('rts');
             })
             .catch(err => console.error('[RTS] Failed to load entries:', err));
         return loadEntriesPromise;
@@ -302,6 +303,25 @@
 
         // Show start button
         show(el.playRtsBtn);
+        window.SpeakingPracticeController?.sync?.('rts');
+    }
+
+    function getItems() {
+        return entries.map((entry) => ({
+            id: String(entry.id),
+            label: entry.title || `Question ${entry.id}`,
+            searchText: `${entry.title || ''} ${entry.id}`.trim(),
+            disabled: false
+        }));
+    }
+
+    function getCurrentId() {
+        return currentEntry ? String(currentEntry.id) : null;
+    }
+
+    function select(id) {
+        const index = entries.findIndex((entry) => String(entry.id) === String(id));
+        if (index >= 0) loadQuestion(index);
     }
 
     /* ──────────────────────────── EVENT LISTENERS ──────────────────────────── */
@@ -967,5 +987,5 @@
 
     /* ──────────────────────────── EXPORT ──────────────────────────── */
 
-    window.RTSMode = { onEnter, onExit };
+    window.RTSMode = { onEnter, onExit, getItems, getCurrentId, select };
 })();

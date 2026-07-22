@@ -309,13 +309,20 @@
     elements.leadStageBoard = document.getElementById('lead-stage-board');
     elements.leadListContainer = document.getElementById('lead-list-container');
     elements.inputLeadName = document.getElementById('lead-name');
+    elements.inputLeadLabel = document.getElementById('lead-label');
     elements.inputLeadEmail = document.getElementById('lead-email');
     elements.inputLeadPhone = document.getElementById('lead-phone');
+    elements.inputLeadZalo = document.getElementById('lead-zalo');
+    elements.inputLeadFacebook = document.getElementById('lead-facebook');
     elements.inputLeadSource = document.getElementById('lead-source');
     elements.inputLeadAgentSource = document.getElementById('lead-agent-source');
     elements.inputLeadStage = document.getElementById('lead-stage');
     elements.inputLeadProbability = document.getElementById('lead-probability');
     elements.leadWorkspace = document.getElementById('lead-workspace');
+    elements.leadTaskSection = document.getElementById('lead-task-section');
+    elements.leadActivitySection = document.getElementById('lead-activity-section');
+    elements.leadEntranceTestSection = document.getElementById('lead-entrance-test-section');
+    elements.leadTemplatesAutomations = document.getElementById('lead-templates-automations');
     elements.leadWorkspaceTitle = document.getElementById('lead-workspace-title');
     elements.leadWorkspaceMeta = document.getElementById('lead-workspace-meta');
     elements.leadWorkspaceBadge = document.getElementById('lead-workspace-badge');
@@ -2134,8 +2141,11 @@
   function resetLeadComposer() {
     const inputs = [
       elements.inputLeadName,
+      elements.inputLeadLabel,
       elements.inputLeadEmail,
       elements.inputLeadPhone,
+      elements.inputLeadZalo,
+      elements.inputLeadFacebook,
       elements.inputLeadSource,
       elements.inputLeadAgentSource,
       elements.inputLeadProbability
@@ -3145,6 +3155,10 @@
     ]);
 
     if (elements.leadWorkspace) elements.leadWorkspace.style.display = 'grid';
+    // Hide non-test sections — only show Entrance Tests
+    if (elements.leadTaskSection) elements.leadTaskSection.style.display = 'none';
+    if (elements.leadActivitySection) elements.leadActivitySection.style.display = 'none';
+    if (elements.leadTemplatesAutomations) elements.leadTemplatesAutomations.style.display = 'none';
     if (elements.leadWorkspaceTitle) {
       elements.leadWorkspaceTitle.textContent = lead?.name || lead?.email || 'Lead Workspace';
     }
@@ -6912,6 +6926,17 @@
     const playbackContainer = document.getElementById('corpus-playback-container');
     const audioPlayer = document.getElementById('corpus-audio-player');
     const consoleOutput = document.getElementById('corpus-console-output');
+    const wordSearchInput = document.getElementById('corpus-word-search');
+    const recordingTimerEl = document.getElementById('corpus-recording-timer');
+    const timerValueEl = document.getElementById('corpus-timer-value');
+    const autoAdvanceToggle = document.getElementById('corpus-auto-advance-toggle');
+    const cohortCustomRow = document.getElementById('corpus-cohort-custom-row');
+    const cohortCustomInput = document.getElementById('corpus-cohort-custom-input');
+    const progressTotalEl = document.getElementById('corpus-total-count');
+    const progressCleanEl = document.getElementById('corpus-clean-count');
+    const progressAdversarialEl = document.getElementById('corpus-adversarial-count');
+    const progressAccentedEl = document.getElementById('corpus-accented-count');
+    const progressFillEl = document.getElementById('corpus-progress-fill');
 
     let currentWord = 'busy';
     let currentIpa = 'ˈbɪz.i';
@@ -6933,6 +6958,10 @@
     const analysisBySampleId = new Map();
     const PAGE_SIZE = 10;
     let currentPage = 1;
+    let recordingTimerId = null;
+    let recordingStartTime = 0;
+    let allSavedSamples = [];
+    const savedVersionsByWord = new Map();
 
     const CORPUS_VERSIONS = [
       {
@@ -7007,21 +7036,27 @@
     function updateWordBadges() {
       wordBtns.forEach((button) => {
         const word = String(button.dataset.word || '').toLowerCase();
-        button.classList.toggle('has-sample', savedWordSet.has(word));
+        const versions = savedVersionsByWord.get(word) || new Set();
+        const count = versions.size;
+        button.classList.toggle('has-sample', count > 0);
         const existing = button.querySelector('.corpus-sample-badge');
         if (existing) existing.remove();
         const badge = document.createElement('span');
-        badge.className = 'corpus-sample-badge';
-        badge.textContent = savedWordSet.has(word) ? '✓ recorded' : '• needed';
+        badge.className = count >= 5 ? 'corpus-version-badge complete' : count > 0 ? 'corpus-version-badge' : 'corpus-sample-badge';
+        badge.textContent = count >= 5 ? '✓ 5/5' : count > 0 ? `${count}/5` : '• needed';
         button.appendChild(badge);
       });
     }
 
     function applyWordFilter() {
       const filter = sampleFilter?.value || 'all';
+      const searchTerm = (wordSearchInput?.value || '').trim().toLowerCase();
       const filtered = wordBtns.filter((button) => {
-        const hasSample = savedWordSet.has(String(button.dataset.word || '').toLowerCase());
-        return filter === 'all' || (filter === 'recorded' && hasSample) || (filter === 'missing' && !hasSample);
+        const word = String(button.dataset.word || '').toLowerCase();
+        const hasSample = savedWordSet.has(word);
+        const matchesFilter = filter === 'all' || (filter === 'recorded' && hasSample) || (filter === 'missing' && !hasSample);
+        const matchesSearch = !searchTerm || word.includes(searchTerm);
+        return matchesFilter && matchesSearch;
       });
       const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
       currentPage = Math.min(currentPage, pageCount);
@@ -7032,7 +7067,7 @@
         const item = button.closest('li');
         if (item) item.style.display = visible ? '' : 'none';
       });
-      if (pageStatus) pageStatus.textContent = `Page ${currentPage} of ${pageCount}`;
+      if (pageStatus) pageStatus.textContent = `Page ${currentPage} of ${pageCount} (${filtered.length} words)`;
       if (btnPagePrev) btnPagePrev.disabled = currentPage <= 1;
       if (btnPageNext) btnPageNext.disabled = currentPage >= pageCount;
     }
@@ -7158,7 +7193,18 @@
         expectedObservedCountInput.value = currentExpectedObservedCount;
       }
       if (categorySelect) categorySelect.value = currentCategory;
-      if (speakerCohortInput) speakerCohortInput.value = currentSpeakerCohort;
+      if (speakerCohortInput && speakerCohortInput.tagName === 'SELECT') {
+        const optionExists = Array.from(speakerCohortInput.options).some(o => o.value === currentSpeakerCohort);
+        if (optionExists) {
+          speakerCohortInput.value = currentSpeakerCohort;
+        } else {
+          speakerCohortInput.value = 'custom';
+          if (cohortCustomRow) cohortCustomRow.classList.add('active');
+          if (cohortCustomInput) cohortCustomInput.value = currentSpeakerCohort;
+        }
+      } else if (speakerCohortInput) {
+        speakerCohortInput.value = currentSpeakerCohort;
+      }
       if (instructionText) instructionText.textContent = currentInstruction;
       updateSampleId();
       updateVersionButtons();
@@ -7279,6 +7325,45 @@
       }
     }
 
+    function renderSampleRow(sample) {
+      const row = document.createElement('div');
+      row.className = 'crm-stack-item';
+      row.dataset.corpusSampleId = String(sample.id || sample.sampleId || '');
+      row.style.cssText = 'display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:10px 12px; border-bottom:1px solid var(--border-color);';
+
+      const label = document.createElement('span');
+      label.style.flex = '1';
+      label.textContent = `${sample.category || 'unknown'} · ${sample.durationSeconds ? `${Number(sample.durationSeconds).toFixed(2)}s` : 'duration unavailable'}`;
+      row.appendChild(label);
+
+      const sampleId = String(sample.id || sample.sampleId || '').trim();
+      const analyzeButton = document.createElement('button');
+      analyzeButton.type = 'button';
+      analyzeButton.className = 'crm-btn crm-btn-primary btn-corpus-analyze';
+      analyzeButton.textContent = analysisBySampleId.get(sampleId)?.analysis ? 'Re-analyze' : 'Analyze & Verify';
+      const resultContainer = document.createElement('div');
+      resultContainer.className = 'corpus-analysis-result';
+      resultContainer.dataset.corpusSampleId = sampleId;
+      resultContainer.style.cssText = 'width:100%; margin-top:4px; padding:8px 0; font-size:13px; line-height:1.5;';
+      analyzeButton.addEventListener('click', () => {
+        analyzeSavedSample(sample, resultContainer, analyzeButton);
+      });
+      row.appendChild(analyzeButton);
+
+      if (sample.audioUrl) {
+        const link = document.createElement('a');
+        link.href = sample.audioUrl;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.className = 'crm-btn crm-btn-secondary';
+        link.textContent = 'Open audio';
+        row.appendChild(link);
+      }
+      row.appendChild(resultContainer);
+      renderSampleAnalysis(sample, resultContainer, analysisBySampleId.get(sampleId));
+      return row;
+    }
+
     function renderSavedSamples(samples) {
       if (!savedSamplesContainer) return;
       savedSamplesContainer.replaceChildren();
@@ -7289,52 +7374,81 @@
         savedSamplesContainer.appendChild(empty);
         return;
       }
+      const groups = new Map();
       samples.forEach((sample) => {
-        const row = document.createElement('div');
-        row.className = 'crm-stack-item';
-        row.dataset.corpusSampleId = String(sample.id || sample.sampleId || '');
-        row.style.cssText = 'display:flex; align-items:center; gap:12px; padding:10px 12px; border-bottom:1px solid var(--border-color);';
-
-        const label = document.createElement('span');
-        label.style.flex = '1';
-        label.textContent = `${sample.targetWord || sample.sampleId} · ${sample.category || 'unknown'} · ${sample.durationSeconds ? `${Number(sample.durationSeconds).toFixed(2)}s` : 'duration unavailable'}`;
-        row.appendChild(label);
-
-        const sampleId = String(sample.id || sample.sampleId || '').trim();
-        const analyzeButton = document.createElement('button');
-        analyzeButton.type = 'button';
-        analyzeButton.className = 'crm-btn crm-btn-primary btn-corpus-analyze';
-        analyzeButton.textContent = analysisBySampleId.get(sampleId)?.analysis ? 'Re-analyze' : 'Analyze & Verify';
-        analyzeButton.addEventListener('click', () => {
-          analyzeSavedSample(sample, resultContainer, analyzeButton);
-        });
-        row.appendChild(analyzeButton);
-
-        if (sample.audioUrl) {
-          const link = document.createElement('a');
-          link.href = sample.audioUrl;
-          link.target = '_blank';
-          link.rel = 'noopener noreferrer';
-          link.className = 'crm-btn crm-btn-secondary';
-          link.textContent = 'Open audio';
-          row.appendChild(link);
-        }
-        const resultContainer = document.createElement('div');
-        resultContainer.className = 'corpus-analysis-result';
-        resultContainer.dataset.corpusSampleId = sampleId;
-        resultContainer.style.cssText = 'width:100%; margin-top:4px; padding:8px 0; font-size:13px; line-height:1.5;';
-        row.appendChild(resultContainer);
-        renderSampleAnalysis(sample, resultContainer, analysisBySampleId.get(sampleId));
-        savedSamplesContainer.appendChild(row);
+        const word = String(sample.targetWord || 'unknown').trim().toLowerCase();
+        if (!groups.has(word)) groups.set(word, []);
+        groups.get(word).push(sample);
       });
+      groups.forEach((groupSamples, word) => {
+        const categories = new Set(groupSamples.map(s => String(s.category || '').toLowerCase()));
+        const isComplete = categories.size >= 5;
+        const header = document.createElement('div');
+        header.className = 'corpus-group-header';
+        const headerLabel = document.createElement('span');
+        headerLabel.textContent = `${word} (${groupSamples.length} samples)`;
+        header.appendChild(headerLabel);
+        const badge = document.createElement('span');
+        badge.className = isComplete ? 'corpus-group-badge complete' : 'corpus-group-badge';
+        badge.textContent = `${categories.size}/5 versions`;
+        header.appendChild(badge);
+        const toggle = document.createElement('span');
+        toggle.className = 'corpus-group-toggle';
+        toggle.textContent = '▼';
+        header.appendChild(toggle);
+
+        const body = document.createElement('div');
+        body.className = 'corpus-group-body';
+        body.style.maxHeight = '500px';
+        groupSamples.forEach((sample) => body.appendChild(renderSampleRow(sample)));
+
+        header.addEventListener('click', () => {
+          header.classList.toggle('collapsed');
+          body.classList.toggle('collapsed');
+        });
+        savedSamplesContainer.appendChild(header);
+        savedSamplesContainer.appendChild(body);
+      });
+    }
+
+    function updateProgressDashboard(samples) {
+      if (!progressTotalEl) return;
+      const total = samples.length;
+      let clean = 0, adversarial = 0, accented = 0;
+      for (const s of samples) {
+        const cat = String(s.category || '').toLowerCase();
+        if (cat === 'clean') clean++;
+        else if (cat === 'accented') accented++;
+        else if (cat === 'omission' || cat === 'insertion' || cat === 'unrateable') adversarial++;
+      }
+      progressTotalEl.textContent = String(total);
+      progressTotalEl.classList.toggle('complete', total >= 120);
+      if (progressCleanEl) { progressCleanEl.textContent = String(clean); progressCleanEl.classList.toggle('complete', clean >= 60); }
+      if (progressAdversarialEl) { progressAdversarialEl.textContent = String(adversarial); progressAdversarialEl.classList.toggle('complete', adversarial >= 30); }
+      if (progressAccentedEl) { progressAccentedEl.textContent = String(accented); progressAccentedEl.classList.toggle('complete', accented >= 30); }
+      if (progressFillEl) progressFillEl.style.width = `${Math.min(100, Math.round((total / 120) * 100))}%`;
+    }
+
+    function buildVersionMap(samples) {
+      savedVersionsByWord.clear();
+      for (const s of samples) {
+        const word = String(s.targetWord || '').trim().toLowerCase();
+        const cat = String(s.category || '').toLowerCase();
+        if (!word) continue;
+        if (!savedVersionsByWord.has(word)) savedVersionsByWord.set(word, new Set());
+        savedVersionsByWord.get(word).add(cat);
+      }
     }
 
     async function loadSavedSamples() {
       if (!savedSamplesContainer) return;
       try {
-        const json = await apiFetchJson('/api/admin/dev/corpus-samples?limit=100', { method: 'GET' });
+        const json = await apiFetchJson('/api/admin/dev/corpus-samples?limit=500', { method: 'GET' });
         const samples = json.samples || json.data?.samples || [];
+        allSavedSamples = samples;
         savedWordSet = new Set(samples.map((sample) => String(sample.targetWord || '').trim().toLowerCase()).filter(Boolean));
+        buildVersionMap(samples);
+        updateProgressDashboard(samples);
         renderSavedSamples(samples);
         updateWordBadges();
         applyWordFilter();
@@ -7435,6 +7549,22 @@
       ctx.stroke();
     }
     drawVisualizer();
+
+    function startRecordingTimer() {
+      recordingStartTime = Date.now();
+      if (recordingTimerEl) recordingTimerEl.classList.add('active');
+      if (timerValueEl) timerValueEl.textContent = '0.0s';
+      recordingTimerId = setInterval(() => {
+        const elapsed = ((Date.now() - recordingStartTime) / 1000).toFixed(1);
+        if (timerValueEl) timerValueEl.textContent = `${elapsed}s`;
+      }, 100);
+    }
+
+    function stopRecordingTimer() {
+      if (recordingTimerId) { clearInterval(recordingTimerId); recordingTimerId = null; }
+      if (recordingTimerEl) recordingTimerEl.classList.remove('active');
+    }
+
     async function startRecording() {
       rawSamples = [];
       audioBlob = null;
@@ -7458,6 +7588,7 @@
           const inputBuffer = e.inputBuffer.getChannelData(0);
           rawSamples.push(new Float32Array(inputBuffer));
         };
+        startRecordingTimer();
         if (micStatus) {
           micStatus.textContent = "Status: Recording...";
           micStatus.style.color = "var(--status-danger)";
@@ -7473,6 +7604,7 @@
     }
     function stopRecording() {
       if (!mediaStream) return;
+      stopRecordingTimer();
       if (micStatus) {
         micStatus.textContent = "Status: Processing Audio...";
         micStatus.style.color = "var(--text-color)";
@@ -7617,11 +7749,28 @@
         }
         showToast('Successfully saved to cloud storage.', 'success');
         currentVersionSaved = true;
-        setStepGuidance(`Saved Version ${currentVersionIndex + 1} of ${CORPUS_VERSIONS.length}. Click Next Version to continue, or Next Word when all versions are complete.`);
         await loadSavedSamples();
         redoRecording();
         currentVersionSaved = true;
         updateVersionButtons();
+
+        // Auto-advance logic
+        const shouldAutoAdvance = autoAdvanceToggle ? autoAdvanceToggle.checked : true;
+        if (shouldAutoAdvance) {
+          if (currentVersionIndex < CORPUS_VERSIONS.length - 1) {
+            setStepGuidance(`Saved ✓ — Auto-advancing to ${CORPUS_VERSIONS[currentVersionIndex + 1].label} version…`);
+            setTimeout(() => moveToVersion(currentVersionIndex + 1), 800);
+          } else {
+            setStepGuidance(`All 5 versions complete for "${currentWord}"! Auto-advancing to next word…`);
+            showToast(`All versions complete for "${currentWord}"!`, 'success');
+            setTimeout(() => {
+              if (btnNextWord && !btnNextWord.disabled) btnNextWord.click();
+              else setStepGuidance('All versions complete. Select the next word from the list.');
+            }, 1000);
+          }
+        } else {
+          setStepGuidance(`Saved Version ${currentVersionIndex + 1} of ${CORPUS_VERSIONS.length}. Click Next Version to continue, or Next Word when all versions are complete.`);
+        }
       } catch (err) {
         console.error('Failed to save corpus sample:', err);
         if (consoleOutput) consoleOutput.textContent = `Error: ${err.message}`;
@@ -7634,6 +7783,54 @@
     if (btnRedo) btnRedo.addEventListener('click', redoRecording);
     if (btnSave) btnSave.addEventListener('click', saveToCorpus);
     if (btnRefresh) btnRefresh.addEventListener('click', () => loadSavedSamples());
+
+    // Word search filter
+    if (wordSearchInput) wordSearchInput.addEventListener('input', () => {
+      currentPage = 1;
+      applyWordFilter();
+    });
+
+    // Speaker cohort dropdown handler
+    if (speakerCohortInput && speakerCohortInput.tagName === 'SELECT') {
+      speakerCohortInput.addEventListener('change', () => {
+        if (speakerCohortInput.value === 'custom') {
+          if (cohortCustomRow) cohortCustomRow.classList.add('active');
+          if (cohortCustomInput) { cohortCustomInput.focus(); currentSpeakerCohort = cohortCustomInput.value || 'custom-01'; }
+        } else {
+          if (cohortCustomRow) cohortCustomRow.classList.remove('active');
+          currentSpeakerCohort = speakerCohortInput.value;
+        }
+        updateSampleId();
+      });
+    }
+    if (cohortCustomInput) cohortCustomInput.addEventListener('input', () => {
+      currentSpeakerCohort = cohortCustomInput.value.trim() || 'custom-01';
+      updateSampleId();
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      const panel = document.querySelector('[data-panel="pronunciation-samples"]');
+      if (!panel || panel.style.display === 'none') return;
+      if (e.target.matches('input, select, textarea')) return;
+      const key = e.key;
+      if (key === 'r' || key === 'R') {
+        if (btnRecord && !btnRecord.disabled) { e.preventDefault(); btnRecord.click(); }
+      } else if (key === ' ') {
+        if (btnStop && !btnStop.disabled) { e.preventDefault(); btnStop.click(); }
+      } else if (key === 'Enter') {
+        if (btnSave && !btnSave.disabled) { e.preventDefault(); btnSave.click(); }
+      } else if (key === 'Backspace') {
+        if (btnRedo && !btnRedo.disabled) { e.preventDefault(); btnRedo.click(); }
+      } else if (key === 'ArrowRight') {
+        if (btnNextVersion && !btnNextVersion.disabled) { e.preventDefault(); btnNextVersion.click(); }
+      } else if (key === 'ArrowLeft') {
+        if (btnPrevVersion && !btnPrevVersion.disabled) { e.preventDefault(); btnPrevVersion.click(); }
+      } else if (key === 'n' || key === 'N') {
+        if (btnNextWord && !btnNextWord.disabled) { e.preventDefault(); btnNextWord.click(); }
+      }
+    });
+
     updateDisplay();
     loadSavedSamples();
   }

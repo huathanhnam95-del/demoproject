@@ -872,12 +872,14 @@ class ReadAloudMode {
 
     if (!row || !Array.isArray(this.database)) {
       select.value = 'random';
+      window.SpeakingPracticeController?.sync?.('read-aloud');
       return;
     }
 
     const originalIndex = this.database.indexOf(row);
     if (originalIndex < 0) {
       select.value = 'random';
+      window.SpeakingPracticeController?.sync?.('read-aloud');
       return;
     }
 
@@ -886,6 +888,10 @@ class ReadAloudMode {
     select.value = hasOption ? optionValue : 'random';
 
     this.refreshQuestionPickerV7UI({ rebuildJumpList: this.isQuestionPickerV7Open() });
+    // The shared controller may mount before the async RA database finishes
+    // loading. Keep its pill and picker sheet synchronized with this silent
+    // state update (the native select remains the source of truth).
+    window.SpeakingPracticeController?.sync?.('read-aloud');
   }
 
   populateQuestionSelect(selectedRow = this.currentPromptRow) {
@@ -1672,7 +1678,10 @@ class ReadAloudMode {
     const retryBtn = document.getElementById('ra-retry-btn');
     if (resultBox) resultBox.style.display = 'block';
     if (checkBtn) checkBtn.style.display = 'none';
-    if (retryBtn) retryBtn.style.display = 'inline-flex';
+    if (retryBtn) {
+      retryBtn.style.display = 'inline-flex';
+      retryBtn.disabled = false;
+    }
   }
 
   async handleCheckResult() {
@@ -1737,6 +1746,10 @@ class ReadAloudMode {
       playBtn.style.width = '1px';
       playBtn.style.height = '1px';
       playBtn.style.overflow = 'hidden';
+      // The native audio element is the visible playback control. Keep this
+      // legacy proxy in the DOM for stable event wiring, but do not let its
+      // transparent 1px box intercept Check/Retry clicks in the shared shell.
+      playBtn.style.pointerEvents = 'none';
       playBtn.style.display = '';
       playBtn.disabled = false;
       
@@ -1752,6 +1765,7 @@ class ReadAloudMode {
       playBtn.style.width = '';
       playBtn.style.height = '';
       playBtn.style.overflow = '';
+      playBtn.style.pointerEvents = '';
       playBtn.style.display = 'none';
       playBtn.disabled = true;
       playBtn.textContent = 'Play your recording';

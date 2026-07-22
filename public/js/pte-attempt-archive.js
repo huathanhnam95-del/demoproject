@@ -1329,6 +1329,16 @@
     if (!startBtn) return;
     const currentQuestionId = resolveHistoryQuestionId(mode, questionId);
 
+    // Read Aloud has dedicated controller hosts. They keep the history action
+    // in Advanced without making the expanded attempt list sticky or part of
+    // the shared controller shell. Other modes retain the legacy placement.
+    const dedicatedActionHost = mode === 'read-aloud'
+      ? document.getElementById('ra-history-action-host')
+      : null;
+    const dedicatedContentHost = mode === 'read-aloud'
+      ? document.getElementById('ra-history-content-host')
+      : null;
+
     let toggleBtn = document.getElementById(`${mode}-history-toggle`);
     let historyContainer = document.getElementById(`${mode}-history-container`);
 
@@ -1339,15 +1349,20 @@
       toggleBtn.className = 'modern-btn modern-btn--history';
       toggleBtn.style.cssText = 'margin-left: 8px; vertical-align: middle;';
       toggleBtn.textContent = '🕒 Previous Attempts';
-      startBtn.insertAdjacentElement('afterend', toggleBtn);
+      if (dedicatedActionHost) dedicatedActionHost.appendChild(toggleBtn);
+      else startBtn.insertAdjacentElement('afterend', toggleBtn);
 
       historyContainer = document.createElement('div');
       historyContainer.id = `${mode}-history-container`;
       historyContainer.className = 'history-attempts-section';
       historyContainer.style.display = 'none';
-      
-      const parentControls = startBtn.closest('.controls') || startBtn.parentElement;
-      parentControls.insertAdjacentElement('afterend', historyContainer);
+
+      if (dedicatedContentHost) {
+        dedicatedContentHost.appendChild(historyContainer);
+      } else {
+        const parentControls = startBtn.closest('.controls') || startBtn.parentElement;
+        parentControls.insertAdjacentElement('afterend', historyContainer);
+      }
 
       toggleBtn.addEventListener('click', async () => {
         const latestQuestionId = resolveHistoryQuestionId(mode, toggleBtn.dataset.questionId || questionId);
@@ -1359,6 +1374,15 @@
           historyContainer.style.display = 'none';
         }
       });
+    }
+
+    // Migrate an already-created legacy node if the dedicated host becomes
+    // available after mode initialization.
+    if (dedicatedActionHost && toggleBtn && !dedicatedActionHost.contains(toggleBtn)) {
+      dedicatedActionHost.appendChild(toggleBtn);
+    }
+    if (dedicatedContentHost && historyContainer && !dedicatedContentHost.contains(historyContainer)) {
+      dedicatedContentHost.appendChild(historyContainer);
     }
 
     if (toggleBtn) toggleBtn.dataset.questionId = currentQuestionId || '';

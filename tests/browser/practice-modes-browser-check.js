@@ -106,7 +106,7 @@ async function checkMode(page, mode) {
     type: { difficulty: true, status: true },
     speak: { difficulty: true, status: true },
     extended: { difficulty: true, status: false },
-    sgd: { difficulty: true, status: true },
+    sgd: { difficulty: false, status: false },
     rfib: { difficulty: false, status: false },
     rmcsa: { difficulty: false, status: false },
     rmcma: { difficulty: false, status: false },

@@ -171,7 +171,12 @@
     scrollLockCount--;
     if (scrollLockCount <= 0) {
       scrollLockCount = 0;
-      document.body.style.overflow = savedBodyOverflow;
+      if (savedBodyOverflow) {
+        document.body.style.overflow = savedBodyOverflow;
+      } else {
+        document.body.style.removeProperty('overflow');
+      }
+      savedBodyOverflow = '';
     }
   }
 
@@ -334,13 +339,13 @@
         prevBtn.addEventListener('click', () => srcPrev.click());
         prevBtn.style.display = '';
       } else if (typeof picker.previous === 'function') {
-        prevBtn.addEventListener('click', () => picker.previous());
+        prevBtn.addEventListener('click', () => { try { picker.previous(); } catch (e) { console.error('[SPC] picker.previous() error:', e); } });
         prevBtn.style.display = '';
       } else {
         prevBtn.style.display = 'none';
       }
     } else if (typeof picker.previous === 'function') {
-      prevBtn.addEventListener('click', () => picker.previous());
+      prevBtn.addEventListener('click', () => { try { picker.previous(); } catch (e) { console.error('[SPC] picker.previous() error:', e); } });
       prevBtn.style.display = '';
     } else {
       prevBtn.style.display = 'none';
@@ -355,13 +360,13 @@
         nextBtn.addEventListener('click', () => srcNext.click());
         nextBtn.style.display = '';
       } else if (typeof picker.next === 'function') {
-        nextBtn.addEventListener('click', () => picker.next());
+        nextBtn.addEventListener('click', () => { try { picker.next(); } catch (e) { console.error('[SPC] picker.next() error:', e); } });
         nextBtn.style.display = '';
       } else {
         nextBtn.style.display = 'none';
       }
     } else if (typeof picker.next === 'function') {
-      nextBtn.addEventListener('click', () => picker.next());
+      nextBtn.addEventListener('click', () => { try { picker.next(); } catch (e) { console.error('[SPC] picker.next() error:', e); } });
       nextBtn.style.display = '';
     } else {
       nextBtn.style.display = 'none';
@@ -450,7 +455,12 @@
         selected: opt.selected
       }));
     } else if (picker.getItems) {
-      return picker.getItems();
+      try {
+        return picker.getItems();
+      } catch (e) {
+        console.error('[SPC] picker.getItems() error:', e);
+        return [];
+      }
     }
     return [];
   }
@@ -460,7 +470,12 @@
     if (picker.sourceSelectId && controllerState.sourceSelect) {
       return controllerState.sourceSelect.value;
     } else if (picker.getCurrentId) {
-      return picker.getCurrentId();
+      try {
+        return picker.getCurrentId();
+      } catch (e) {
+        console.error('[SPC] picker.getCurrentId() error:', e);
+        return null;
+      }
     }
     return null;
   }
@@ -471,7 +486,11 @@
       controllerState.sourceSelect.value = id;
       controllerState.sourceSelect.dispatchEvent(new Event('change', { bubbles: true }));
     } else if (picker.select) {
-      picker.select(id);
+      try {
+        picker.select(id);
+      } catch (e) {
+        console.error('[SPC] picker.select() error:', e);
+      }
     }
   }
 
@@ -709,72 +728,77 @@
     // Sort by order
     const sorted = controls.slice().sort((a, b) => (a.order || 0) - (b.order || 0));
 
-    sorted.forEach(ctrl => {
-      const el = document.getElementById(ctrl.sourceId);
-      if (!el) {
-        console.warn('[SPC] Control element not found:', ctrl.sourceId);
-        return;
-      }
+    try {
+      sorted.forEach(ctrl => {
+        const el = document.getElementById(ctrl.sourceId);
+        if (!el) {
+          console.warn('[SPC] Control element not found:', ctrl.sourceId);
+          return;
+        }
 
-      const slot = slotMap[ctrl.slot];
-      if (!slot) {
-        console.warn('[SPC] Unknown slot:', ctrl.slot);
-        return;
-      }
+        const slot = slotMap[ctrl.slot];
+        if (!slot) {
+          console.warn('[SPC] Unknown slot:', ctrl.slot);
+          return;
+        }
 
-      // Insert restoration anchor
-      const anchor = document.createComment('spc-anchor:' + ctrl.sourceId);
-      el.parentNode.insertBefore(anchor, el);
+        // Insert restoration anchor
+        const anchor = document.createComment('spc-anchor:' + ctrl.sourceId);
+        el.parentNode.insertBefore(anchor, el);
 
-      // Record original position
-      adoptedNodes.push({
-        sourceId: ctrl.sourceId,
-        element: el,
-        anchor: anchor,
-        originalDisplay: el.style.display
+        // Record original position
+        adoptedNodes.push({
+          sourceId: ctrl.sourceId,
+          element: el,
+          anchor: anchor,
+          originalDisplay: el.style.display
+        });
+
+        // Set level attribute for CSS visibility
+        if (ctrl.level === 'advanced') {
+          el.dataset.spcLevel = 'advanced';
+        }
+
+        // Move into slot
+        slot.appendChild(el);
+
+        // Visibility scope observer
+        if (ctrl.visibilityScopeId) {
+          const scopeEl = document.getElementById(ctrl.visibilityScopeId);
+          if (scopeEl) {
+            const observer = new MutationObserver(() => {
+              const scopeVisible = scopeEl.style.display !== 'none' &&
+                !scopeEl.hidden &&
+                scopeEl.offsetParent !== null;
+              el.style.display = scopeVisible ? '' : 'none';
+            });
+            observer.observe(scopeEl, {
+              attributes: true,
+              attributeFilter: ['style', 'hidden', 'class']
+            });
+            adoptedNodes[adoptedNodes.length - 1].observer = observer;
+          }
+        }
       });
 
-      // Set level attribute for CSS visibility
-      if (ctrl.level === 'advanced') {
-        el.dataset.spcLevel = 'advanced';
-      }
+      controllerState.adoptedNodes = adoptedNodes;
 
-      // Move into slot
-      slot.appendChild(el);
+      // In-place controls (stay in mode panel, get visibility gating)
+      const inPlaceControls = config.inPlaceControls || [];
+      const inPlaceTracked = [];
 
-      // Visibility scope observer
-      if (ctrl.visibilityScopeId) {
-        const scopeEl = document.getElementById(ctrl.visibilityScopeId);
-        if (scopeEl) {
-          const observer = new MutationObserver(() => {
-            const scopeVisible = scopeEl.style.display !== 'none' &&
-              !scopeEl.hidden &&
-              scopeEl.offsetParent !== null;
-            el.style.display = scopeVisible ? '' : 'none';
-          });
-          observer.observe(scopeEl, {
-            attributes: true,
-            attributeFilter: ['style', 'hidden', 'class']
-          });
-          adoptedNodes[adoptedNodes.length - 1].observer = observer;
-        }
-      }
-    });
+      inPlaceControls.forEach(ctrl => {
+        const el = document.getElementById(ctrl.sourceId);
+        if (!el) return;
+        el.dataset.spcLevel = ctrl.level;
+        inPlaceTracked.push({ sourceId: ctrl.sourceId, element: el });
+      });
 
-    controllerState.adoptedNodes = adoptedNodes;
-
-    // In-place controls (stay in mode panel, get visibility gating)
-    const inPlaceControls = config.inPlaceControls || [];
-    const inPlaceTracked = [];
-
-    inPlaceControls.forEach(ctrl => {
-      const el = document.getElementById(ctrl.sourceId);
-      if (!el) return;
-      el.dataset.spcLevel = ctrl.level;
-      inPlaceTracked.push({ sourceId: ctrl.sourceId, element: el });
-    });
-
-    controllerState.inPlaceNodes = inPlaceTracked;
+      controllerState.inPlaceNodes = inPlaceTracked;
+    } catch (e) {
+      console.error('[SPC] Error adopting controls:', e);
+      restoreControls(controllerState);
+    }
   }
 
   function hideLegacyPicker(config, controllerState) {

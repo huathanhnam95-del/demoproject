@@ -70,7 +70,9 @@ const path = require('path');
     }
 
     await browser.close();
+    if (server) server.close();
     console.log('Adaptive difficulty browser check passed.');
+    process.exit(0);
 })().catch((err) => {
     console.error(err);
     process.exit(1);

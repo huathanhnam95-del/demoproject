@@ -1558,9 +1558,16 @@
     }
   }
 
-  function syncSpeakingPracticeController(mode = currentActiveMode, scope = PracticeScopeManager.getScope()) {
+  function syncSpeakingPracticeController(mode = currentActiveMode, scope = PracticeScopeManager.getScope(), leavingMode = null) {
     const controller = window.SpeakingPracticeController;
     if (!controller || !mode || typeof controller.activate !== 'function') return;
+
+    const speakingModes = ['asq', 'rts', 'describe-image', 'notes', 'sgd', 'speak', 'read-aloud'];
+    if (leavingMode && leavingMode !== mode && speakingModes.includes(leavingMode)) {
+      if (typeof controller.unmount === 'function') {
+        controller.unmount(leavingMode);
+      }
+    }
 
     if (typeof controller.isV2Active === 'function' && controller.isV2Active(mode, scope)) {
       controller.activate(mode, { scope });
@@ -1855,6 +1862,9 @@
       }
       window.DDMode?.onExit?.();
     }
+    if (leavingMode === 'read-aloud') window.ReadAloudMode?.onExit?.();
+    if (leavingMode === 'notes') window.TakeNotesMode?.onExit?.();
+    // TODO: if (leavingMode === 'speak') window.SpeakMode?.onExit?.();
     if (leavingMode === 'collo-dictate') window.ColloDictateMode?.onExit?.();
     if (leavingMode === 'asq') window.ASQMode?.onExit?.();
     if (leavingMode === 'sgd') window.SGDMode?.onExit?.();
@@ -1993,6 +2003,15 @@
       }
       window.DDMode?.onExit?.();
     }
+    if (leavingMode === 'read-aloud' && mode !== 'read-aloud') {
+      window.ReadAloudMode?.onExit?.();
+    }
+    if (leavingMode === 'notes' && mode !== 'notes') {
+      window.TakeNotesMode?.onExit?.();
+    }
+    // TODO: if (leavingMode === 'speak' && mode !== 'speak') {
+    //   window.SpeakMode?.onExit?.();
+    // }
 
     // Sync Adaptive UI state upon switching
     if (typeof window.updateAdaptiveUI === 'function') {
@@ -2189,7 +2208,7 @@
         }
       }
 
-      syncSpeakingPracticeController(mode, PracticeScopeManager.getScope());
+      syncSpeakingPracticeController(mode, PracticeScopeManager.getScope(), leavingMode);
 
       // 5. Check if this is the first time using this mode - trigger tutorial
       const firstTimeKey = `${mode}ModeFirstUse`;

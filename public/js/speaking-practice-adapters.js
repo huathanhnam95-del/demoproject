@@ -22,6 +22,17 @@
 
   const controller = window.SpeakingPracticeController;
 
+  /**
+   * Safely checks if a filter label element differs from its default value.
+   * Returns false if the element does not exist in the DOM.
+   */
+  function isFilterActive(elementId, defaultText) {
+    const el = document.getElementById(elementId);
+    if (!el) return false;
+    const text = el.textContent?.trim();
+    return text !== undefined && text !== defaultText;
+  }
+
   // Wave 1: Answer Short Question. The native select remains the state source;
   // the controller only adopts the existing lifecycle controls.
   controller.register({
@@ -48,18 +59,18 @@
     enabledScopes: ['pte'],
     panelId: 'mode-rts',
     picker: {
-      getItems: () => window.RTSMode?.getItems?.() || [],
-      getCurrentId: () => window.RTSMode?.getCurrentId?.() || null,
+      getItems: () => window.RTSMode?.getItems?.() ?? [],
+      getCurrentId: () => window.RTSMode?.getCurrentId?.() ?? null,
       select: (id) => window.RTSMode?.select?.(id),
       previous: () => {
-        const items = window.RTSMode?.getItems?.() || [];
-        const currentId = String(window.RTSMode?.getCurrentId?.() || '');
+        const items = window.RTSMode?.getItems?.() ?? [];
+        const currentId = String(window.RTSMode?.getCurrentId?.() ?? '');
         const index = items.findIndex((item) => String(item.id) === currentId);
         if (index > 0) window.RTSMode?.select?.(items[index - 1].id);
       },
       next: () => {
-        const items = window.RTSMode?.getItems?.() || [];
-        const currentId = String(window.RTSMode?.getCurrentId?.() || '');
+        const items = window.RTSMode?.getItems?.() ?? [];
+        const currentId = String(window.RTSMode?.getCurrentId?.() ?? '');
         const index = items.findIndex((item) => String(item.id) === currentId);
         if (index >= 0 && index < items.length - 1) window.RTSMode?.select?.(items[index + 1].id);
       },
@@ -103,7 +114,7 @@
       {
         key: 'difficulty',
         sourceId: 'difficulty-filter-container-di',
-        isActive: () => document.getElementById('difficulty-filter-label-di')?.textContent?.trim() !== 'Recommended',
+        isActive: () => isFilterActive('difficulty-filter-label-di', 'Recommended'),
         summaryLabel: 'Difficulty filter'
       }
     ]
@@ -133,13 +144,13 @@
       {
         key: 'difficulty',
         sourceId: 'difficulty-filter-container-notes',
-        isActive: () => document.getElementById('difficulty-filter-label-notes')?.textContent?.trim() !== 'Recommended',
+        isActive: () => isFilterActive('difficulty-filter-label-notes', 'Recommended'),
         summaryLabel: 'Difficulty filter'
       },
       {
         key: 'status',
         sourceId: 'status-filter-container-notes',
-        isActive: () => document.getElementById('status-filter-label-notes')?.textContent?.trim() !== 'Filter by Status',
+        isActive: () => isFilterActive('status-filter-label-notes', 'Filter by Status'),
         summaryLabel: 'Status filter'
       }
     ]
@@ -203,19 +214,19 @@
       {
         key: 'status',
         sourceId: 'status-filter-container-speak',
-        isActive: () => document.getElementById('status-filter-label-speak')?.textContent?.trim() !== 'Filter by Status',
+        isActive: () => isFilterActive('status-filter-label-speak', 'Filter by Status'),
         summaryLabel: 'Status filter'
       },
       {
         key: 'length',
         sourceId: 'length-filter-container-speak',
-        isActive: () => document.getElementById('length-filter-label-speak')?.textContent?.trim() !== 'Filter by Length',
+        isActive: () => isFilterActive('length-filter-label-speak', 'Filter by Length'),
         summaryLabel: 'Length filter'
       },
       {
         key: 'difficulty',
         sourceId: 'difficulty-filter-container-speak',
-        isActive: () => document.getElementById('difficulty-filter-label-speak')?.textContent?.trim() !== 'Recommended',
+        isActive: () => isFilterActive('difficulty-filter-label-speak', 'Recommended'),
         summaryLabel: 'Difficulty filter'
       }
     ]
@@ -267,7 +278,7 @@
       },
       {
         key: 'speed',
-        isActive: () => window.ReadAloudMode?.selectedSpeed !== '100',
+        isActive: () => !!window.ReadAloudMode && window.ReadAloudMode.selectedSpeed !== '100',
         summaryLabel: 'Playback speed'
       }
     ]

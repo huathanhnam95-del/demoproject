@@ -161,13 +161,22 @@ let consoleErrors = [];
     console.log('✅ Vocab Book list modal successfully closed!');
 
     console.log('Verifying Track Progress dashboard card functionality...');
-    // Click on Track Progress card, which should open the Progress panel
+    // Click on Track Progress card, which should open the Progress & Attempts modal
     await page.click('.stats-card-modern');
     await page.waitForFunction(() => {
-      const panel = document.getElementById('progress-panel-side');
-      return !!panel && panel.classList.contains('expanded');
+      const modal = document.getElementById('progress-attempts-modal');
+      return !!modal && modal.classList.contains('active') && getComputedStyle(modal).display !== 'none';
     }, { timeout: 5000 });
-    console.log('✅ Track Progress card correctly triggers the Progress side panel!');
+    console.log('✅ Track Progress card correctly triggers the Progress & Attempts modal!');
+
+    // Close the Progress & Attempts modal by clicking close button
+    await page.click('#progress-attempts-close');
+    console.log('Close button clicked! Waiting for collapse...');
+    await page.waitForFunction(() => {
+      const modal = document.getElementById('progress-attempts-modal');
+      return !!modal && !modal.classList.contains('active');
+    }, { timeout: 10000 });
+    console.log('✅ Progress & Attempts modal successfully closed!');
 
     console.log('🎉 All UI refactoring checks passed successfully!');
 

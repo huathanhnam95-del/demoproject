@@ -29,6 +29,7 @@ const registerFinanceRoutes = require('./finance');
 const registerAutomationRoutes = require('./automations');
 const registerReportingRoutes = require('./reporting');
 const registerReadAloudReportingRoutes = require('./read-aloud-reporting');
+const registerPronunciationCorpusRoutes = require('./pronunciation-corpus');
 const registerGovernanceRoutes = require('./governance');
 const registerLiveSessionRoutes = require('./live-sessions');
 const { buildAuditLogEntry } = require('../../crm/governance-service');
@@ -157,7 +158,8 @@ function buildAdminCapabilities(status) {
 
     return {
         classroomMatches: overrides.classroomMatches !== false,
-        readAloudReporting: overrides.readAloudReporting !== false
+        readAloudReporting: overrides.readAloudReporting !== false,
+        pronunciationSamples: overrides.pronunciationSamples !== false
     };
 }
 
@@ -271,6 +273,12 @@ module.exports = function createCrmRouter(rawDeps) {
     registerAutomationRoutes(router, routeDeps);
     registerReportingRoutes(router, routeDeps);
     registerReadAloudReportingRoutes(router, routeDeps);
+    // The local admin router uses this same factory but does not have a
+    // production Storage bucket dependency. Keep the cloud corpus API
+    // production-only so local development routes remain isolated.
+    if (typeof deps.getStorageBucket === 'function') {
+        registerPronunciationCorpusRoutes(router, routeDeps);
+    }
     registerGovernanceRoutes(router, routeDeps);
     registerLiveSessionRoutes(router, routeDeps);
 

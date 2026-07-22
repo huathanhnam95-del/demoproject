@@ -2410,3 +2410,245 @@ body {
 .crm-weekday-btn.active:hover {
   background: #156a3d;
 }
+
+/* Pronunciation corpus primary action: keep the label readable in every theme. */
+#btn-corpus-save {
+  min-width: 160px;
+  min-height: 42px;
+  font-weight: 700;
+  background: #137a4b !important;
+  border: 2px solid #0b5e38 !important;
+  color: #ffffff !important;
+  text-shadow: none;
+}
+
+#btn-corpus-save:disabled {
+  background: #d1d5db !important;
+  border-color: #4b5563 !important;
+  color: #111827 !important;
+  opacity: 0.9;
+}
+
+.corpus-word-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.corpus-sample-badge {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 700;
+  color: #166534;
+}
+
+.corpus-word-btn:not(.has-sample) .corpus-sample-badge {
+  color: #92400e;
+}
+
+/* ── Corpus Progress Dashboard ── */
+.corpus-progress-dashboard {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 14px 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.corpus-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.corpus-stat-value {
+  font-size: 22px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-color);
+}
+
+.corpus-stat-value.complete {
+  color: #166534;
+}
+
+.corpus-stat-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.corpus-progress-bar-track {
+  flex: 1;
+  min-width: 120px;
+  height: 8px;
+  background: var(--hover-color);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.corpus-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #137a4b, #22c55e);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+/* ── Recording Timer ── */
+.corpus-recording-timer {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  font-family: monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: #dc2626;
+  font-variant-numeric: tabular-nums;
+}
+
+.corpus-recording-timer.active {
+  display: inline-flex;
+}
+
+.corpus-recording-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #dc2626;
+  animation: corpus-pulse 1s ease-in-out infinite;
+}
+
+@keyframes corpus-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* ── Hotkey Legend ── */
+.corpus-hotkey-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: var(--hover-color);
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.corpus-hotkey {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.corpus-hotkey kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  font-size: 11px;
+  font-family: monospace;
+  font-weight: 700;
+  color: var(--text-color);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+  line-height: 1.4;
+}
+
+/* ── Grouped Saved Samples ── */
+.corpus-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--hover-color);
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  user-select: none;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.corpus-group-header:hover {
+  background: color-mix(in srgb, var(--hover-color) 70%, var(--accent-color) 30%);
+}
+
+.corpus-group-header .corpus-group-toggle {
+  font-size: 12px;
+  transition: transform 0.2s ease;
+}
+
+.corpus-group-header.collapsed .corpus-group-toggle {
+  transform: rotate(-90deg);
+}
+
+.corpus-group-body {
+  overflow: hidden;
+  transition: max-height 0.25s ease;
+}
+
+.corpus-group-body.collapsed {
+  max-height: 0 !important;
+}
+
+.corpus-group-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.corpus-group-badge.complete {
+  background: #dcfce7;
+  color: #166534;
+}
+
+/* ── Version Badge Enhancement ── */
+.corpus-version-badge {
+  flex: 0 0 auto;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.corpus-version-badge.complete {
+  background: #dcfce7;
+  color: #166534;
+}
+
+/* ── Speaker Cohort Custom Input ── */
+#corpus-cohort-custom-row {
+  display: none;
+  margin-top: 6px;
+}
+
+#corpus-cohort-custom-row.active {
+  display: block;
+}
+
+/* ── Auto-advance Toggle ── */
+.corpus-auto-advance {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 8px;
+  cursor: pointer;
+}
+
+.corpus-auto-advance input[type="checkbox"] {
+  accent-color: #137a4b;
+}

@@ -33,6 +33,7 @@
   <link rel="stylesheet" href="hiw-mode.css">
   <link rel="stylesheet" href="sst-mode.css">
   <link rel="stylesheet" href="read-aloud-question-picker-v7.css?v=20260507_ra_v7">
+  <link rel="stylesheet" href="speaking-practice-controller.css">
   <link rel="stylesheet" href="style-scaffolding.css?v=20260123_mode_fix">
   <link rel="stylesheet" href="/site-header.css">
   <script src="/js/site-header.js" defer></script>
@@ -201,7 +202,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.23</div>
+  <div id="version-indicator" class="version-indicator">V1.8.24</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -449,127 +450,6 @@
     <button id="toast-close" class="toast-close">×</button>
   </div>
 
-  <!-- Progress Panel Overlay (click to close) -->
-  <div id="progress-panel-overlay" class="progress-panel-overlay"></div>
-
-  <!-- Left-Side Collapsible Progress Panel -->
-  <div id="progress-panel-side" class="progress-panel-side">
-    <!-- Toggle Button (always visible) -->
-    <button id="progress-panel-toggle" class="progress-panel-toggle" title="Progress">
-      <span class="toggle-icon">📊</span>
-    </button>
-
-    <!-- Panel Content (shown when expanded) -->
-    <div id="progress-panel-content" class="progress-panel-content">
-      <!-- Header -->
-      <div class="panel-header">
-        <h3>Progress</h3>
-        <button id="progress-panel-close-btn" class="panel-close-btn" title="Close">×</button>
-      </div>
-
-      <!-- Guest Notice Overlay (shown for guests, positioned over blurred content) -->
-      <div id="progress-guest-notice" class="progress-guest-notice" style="display: none;">
-        <div class="guest-notice-content">
-          <span class="guest-notice-icon">🔒</span>
-          <p>Log in to save and track your progress across sessions.</p>
-        </div>
-      </div>
-
-      <!-- Progress Content Wrapper (will be blurred for guests) -->
-      <div id="progress-content-wrapper" class="progress-content-wrapper">
-        <!-- Mode Indicator -->
-        <div class="progress-mode-indicator">
-          <span id="progress-mode-label">Type Mode</span>
-        </div>
-
-        <!-- Progress Summary -->
-        <div class="progress-summary">
-          <h4>Stats</h4>
-          <div class="tier-counts">
-            <div class="tier-count completed-count">
-              <span class="tier-count-number" id="completed-count">0</span>
-              <span class="tier-count-label">Completed</span>
-            </div>
-            <div class="tier-count consolidated-count">
-              <span class="tier-count-number" id="consolidated-count">0</span>
-              <span class="tier-count-label">Consolidated</span>
-            </div>
-            <div class="tier-count mastered-count">
-              <span class="tier-count-number" id="mastered-count">0</span>
-              <span class="tier-count-label">Mastered</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Distribution Bar -->
-        <div class="tier-distribution">
-          <h4>Distribution</h4>
-          <div class="tier-bar">
-            <div id="tier-bar-not-started" class="tier-bar-segment not-started" style="width: 0%;"></div>
-            <div id="tier-bar-in-progress" class="tier-bar-segment in-progress" style="width: 0%;"></div>
-            <div id="tier-bar-completed" class="tier-bar-segment completed" style="width: 0%;"></div>
-            <div id="tier-bar-consolidated" class="tier-bar-segment consolidated" style="width: 0%;"></div>
-            <div id="tier-bar-mastered" class="tier-bar-segment mastered" style="width: 0%;"></div>
-          </div>
-
-          <!-- Pie Chart -->
-          <div class="distribution-pie-chart">
-            <div class="pie-chart-container">
-              <svg id="distribution-pie" viewBox="0 0 100 100" class="pie-chart-svg">
-                <!-- Pie segments will be rendered by JavaScript -->
-                <circle cx="50" cy="50" r="40" fill="#e5e7eb" />
-              </svg>
-              <div class="pie-chart-center">
-                <span id="pie-total-count" class="pie-total-number">0</span>
-                <span class="pie-total-label">Total</span>
-              </div>
-            </div>
-            <div class="pie-chart-legend">
-              <div class="pie-legend-item">
-                <span class="pie-legend-dot not-started"></span>
-                <span class="pie-legend-label">Not Started</span>
-                <span id="pie-legend-not-started" class="pie-legend-value">0% (0)</span>
-              </div>
-              <div class="pie-legend-item">
-                <span class="pie-legend-dot in-progress"></span>
-                <span class="pie-legend-label">In Progress</span>
-                <span id="pie-legend-in-progress" class="pie-legend-value">0% (0)</span>
-              </div>
-              <div class="pie-legend-item">
-                <span class="pie-legend-dot completed"></span>
-                <span class="pie-legend-label">Completed</span>
-                <span id="pie-legend-completed" class="pie-legend-value">0% (0)</span>
-              </div>
-              <div class="pie-legend-item">
-                <span class="pie-legend-dot consolidated"></span>
-                <span class="pie-legend-label">Consolidated</span>
-                <span id="pie-legend-consolidated" class="pie-legend-value">0% (0)</span>
-              </div>
-              <div class="pie-legend-item">
-                <span class="pie-legend-dot mastered"></span>
-                <span class="pie-legend-label">Mastered</span>
-                <span id="pie-legend-mastered" class="pie-legend-value">0% (0)</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Next Goal -->
-        <div class="next-goal">
-          <h4>Next Goal</h4>
-          <p id="next-goal-text" class="next-goal-text">Complete a question to start tracking!</p>
-        </div>
-
-        <!-- Recent Progress -->
-        <div class="recent-progress">
-          <h4>Recent</h4>
-          <ul id="recent-progress-list" class="recent-progress-list">
-            <li class="no-progress">No recent progress</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- Vocabulary Book Panel (unlockable) -->
   <div id="vocab-panel-side" class="vocab-panel-side">
@@ -1922,7 +1802,7 @@
               </div>
 
               <div class="modern-card stats-card-modern"
-                onclick="document.getElementById('progress-panel-toggle').click()" tabindex="0" role="button"
+                onclick="if(window.PTEAttemptArchive?.openProgressModal) { window.PTEAttemptArchive.openProgressModal('vocab-progress'); }" tabindex="0" role="button"
                 aria-label="View Progress Statistics">
                 <div class="card-visual visual-stats">
                   <div class="anim-container">
@@ -1945,7 +1825,16 @@
                 <div class="card-body">
                   <h3>Track Progress</h3>
                   <p>Visualize your vocabulary growth and mastery tiers.</p>
-                  <button class="card-cta secondary">Practice Now</button>
+                  <div class="card-ctas" style="display: flex; gap: 8px; margin-top: 12px; width: 100%;">
+                    <button class="card-cta primary" style="flex: 1; margin: 0; padding: 6px 12px; font-size: 0.85rem;"
+                      onclick="event.stopPropagation(); if(window.PTEAttemptArchive?.openProgressModal) { window.PTEAttemptArchive.openProgressModal('vocab-progress'); }">
+                      View Stats
+                    </button>
+                    <button class="card-cta secondary" style="flex: 1; margin: 0; padding: 6px 12px; font-size: 0.85rem;"
+                      onclick="event.stopPropagation(); if(window.PTEAttemptArchive?.openProgressModal) { window.PTEAttemptArchive.openProgressModal('pte-attempts'); }">
+                      PTE Attempts
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2504,7 +2393,7 @@
           </div>
 
           <!-- Adaptive vs Manual Toggle -->
-          <div class="adaptive-toggle-container">
+          <div id="adaptive-toggle-container-speak" class="adaptive-toggle-container">
             <div class="segmented-control mode-picker-toggle">
               <input type="radio" name="mode-toggle-speak" id="adaptive-speak" value="adaptive" checked>
               <label for="adaptive-speak">🤖 Adaptive</label>
@@ -4383,44 +4272,6 @@
             <button id="recommended-btn-sgd" class="recommended-jump-btn" type="button" disabled>Recommended</button>
             <span id="recommendation-summary-sgd" class="recommendation-summary is-hidden"></span>
           </div>
-          <div class="question-filters-row">
-            <div id="difficulty-filter-container-sgd" class="difficulty-filter-dropdown" style="display: none;">
-              <button id="difficulty-filter-btn-sgd" class="difficulty-filter-btn" type="button">
-                <span id="difficulty-filter-label-sgd">Recommended</span>
-                <span class="filter-arrow">▼</span>
-              </button>
-              <div id="difficulty-filter-menu-sgd" class="difficulty-filter-menu" style="display: none;">
-                <div class="filter-option selected" data-value="all">
-                  <span class="filter-option-icon">📋</span>
-                  <span class="filter-option-text">Recommended</span>
-                </div>
-                <div class="filter-option" data-value="1">
-                  <span class="filter-option-icon">🟢</span>
-                  <span class="filter-option-text">Level 1 <span class="difficulty-tag easy">Easy</span></span>
-                </div>
-                <div class="filter-option" data-value="2">
-                  <span class="filter-option-icon">🟡</span>
-                  <span class="filter-option-text">Level 2 <span class="difficulty-tag medium">Medium</span></span>
-                </div>
-                <div class="filter-option" data-value="3">
-                  <span class="filter-option-icon">🔴</span>
-                  <span class="filter-option-text">Level 3 <span class="difficulty-tag hard">Hard</span></span>
-                </div>
-              </div>
-            </div>
-            <div class="status-filter-dropdown" id="status-filter-container-sgd">
-              <button id="status-filter-btn-sgd" class="status-filter-btn" type="button">
-                <span id="status-filter-label-sgd">All Questions</span>
-                <span class="filter-arrow">▼</span>
-              </button>
-              <div id="status-filter-menu-sgd" class="status-filter-menu" style="display: none;">
-                <div class="filter-option selected" data-value="all">
-                  <span class="filter-option-icon">📋</span>
-                  <span class="filter-option-text">All Questions</span>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
         <div class="question-total">
           <span>Total number of questions: <span id="total-questions-sgd">0</span></span>
@@ -4682,41 +4533,6 @@
 
       <!-- Respond To Situation Mode Panel -->
       <div id="mode-rts" class="mode-panel" style="display: none;">
-
-        <!-- v7 Question Picker Bar -->
-        <div class="ra-v7-picker-bar" id="rts-v7-picker-bar">
-          <div class="ra-v7-picker-inner">
-            <div class="ra-v7-nav" role="group" aria-label="RTS navigation">
-              <button id="rts-v7-prev-btn" class="ra-v7-icon-btn" type="button" disabled title="Previous question">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
-              </button>
-              <button id="rts-v7-question-pill" class="ra-v7-question-pill" type="button" aria-haspopup="dialog" title="Jump to a question">Select a question…</button>
-              <button id="rts-v7-next-btn" class="ra-v7-icon-btn" type="button" title="Next question">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- v7 Bottom Sheet (question search / jump list) -->
-        <div id="rts-v7-backdrop" class="ra-v7-backdrop" aria-hidden="true"></div>
-        <div id="rts-v7-sheet" class="ra-v7-sheet" role="dialog" aria-modal="true" tabindex="-1">
-          <span class="ra-v7-grabber" aria-hidden="true"></span>
-          <div class="ra-v7-sheet-header">
-            <div class="ra-v7-sheet-title">Question Picker</div>
-            <button id="rts-v7-sheet-close" class="ra-v7-sheet-close" type="button" aria-label="Close">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-          </div>
-          <div class="ra-v7-sheet-body">
-            <div id="rts-v7-panel-jump" role="tabpanel">
-              <label class="ra-v7-sr-only" for="rts-v7-jump-search">Search</label>
-              <input id="rts-v7-jump-search" class="ra-v7-search" type="search" autocomplete="off" placeholder="Search questions…">
-              <div class="ra-v7-section-title">Questions</div>
-              <div id="rts-v7-jump-list" class="ra-v7-list" role="listbox" aria-label="Questions"></div>
-            </div>
-          </div>
-        </div>
 
         <!-- Play Button -->
         <div style="max-width: 900px; margin: 16px auto; text-align: center;">
@@ -5081,157 +4897,16 @@
 
       <!-- Read Aloud Mode Panel -->
       <div id="mode-read-aloud" class="mode-panel" style="display: none;">
-        <!-- Question Picker v7 (Read Aloud only) -->
-        <div class="ra-v7-picker-bar" id="ra-v7-picker-bar">
-          <div class="ra-v7-picker-inner">
-            <div class="ra-v7-nav" role="group" aria-label="Read Aloud navigation">
-              <button id="ra-v7-prev-btn" class="ra-v7-icon-btn" type="button" disabled aria-disabled="true"
-                title="Previous prompt">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke="currentColor"
-                  stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
-                </svg>
-                <span class="ra-v7-sr-only" data-label>Previous</span>
-              </button>
-
-              <button id="ra-v7-question-pill" class="ra-v7-question-pill" type="button" aria-haspopup="dialog"
-                aria-controls="ra-v7-sheet" title="Jump to a question">
-                Select a question…
-              </button>
-
-              <button id="ra-v7-next-btn" class="ra-v7-icon-btn" type="button" title="Next prompt">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke="currentColor"
-                  stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
-                </svg>
-                <span class="ra-v7-sr-only" data-label>Next</span>
-              </button>
-            </div>
-
-            <div class="ra-v7-actions">
-              <button id="ra-v7-filters-btn" class="ra-v7-filters-btn" type="button" aria-haspopup="dialog"
-                aria-controls="ra-v7-sheet" title="Filters">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke="currentColor"
-                  stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
-                  </path>
-                </svg>
-                <span data-label>Filters</span>
-                <span id="ra-v7-filters-count" class="ra-v7-count-badge" style="display:none;">0</span>
-              </button>
-
-              <div class="ra-v7-audio-group" aria-label="Read Aloud audio shortcuts">
-                <button id="header-ra-play-audio-btn" class="ra-v7-audio-btn" type="button" title="Play sample audio">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke="currentColor"
-                    stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 18V6l12 6-12 6z"></path>
-                  </svg>
-                  <span class="ra-v7-sr-only" data-label>Play sample</span>
-                </button>
-                <button id="header-ra-play-recording-btn" class="ra-v7-audio-btn" type="button"
-                  title="Play your recording" disabled aria-disabled="true">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke="currentColor"
-                    stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 1a3 3 0 013 3v6a3 3 0 01-6 0V4a3 3 0 013-3z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 10v1a7 7 0 01-14 0v-1"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 18v4m-4 0h8"></path>
-                  </svg>
-                  <span class="ra-v7-sr-only" data-label>Play recording</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="ra-v7-backdrop" class="ra-v7-backdrop" aria-hidden="true"></div>
-        <div id="ra-v7-sheet" class="ra-v7-sheet" role="dialog" aria-modal="true" aria-labelledby="ra-v7-sheet-title"
-          tabindex="-1">
-          <span class="ra-v7-grabber" aria-hidden="true"></span>
-          <div class="ra-v7-sheet-header">
-            <div class="ra-v7-sheet-title" id="ra-v7-sheet-title">Question Picker</div>
-            <button id="ra-v7-sheet-close" class="ra-v7-sheet-close" type="button" aria-label="Close">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke="currentColor"
-                stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
-            </button>
-          </div>
-
-          <div class="ra-v7-tabs" role="tablist" aria-label="Question Picker tabs">
-            <button id="ra-v7-tab-jump" class="ra-v7-tab" type="button" role="tab" aria-selected="true"
-              aria-controls="ra-v7-panel-jump">Jump</button>
-            <button id="ra-v7-tab-filters" class="ra-v7-tab" type="button" role="tab" aria-selected="false"
-              aria-controls="ra-v7-panel-filters">Filters</button>
-          </div>
-
-          <div class="ra-v7-sheet-body">
-            <div id="ra-v7-panel-jump" role="tabpanel" aria-labelledby="ra-v7-tab-jump">
-              <label class="ra-v7-sr-only" for="ra-v7-jump-search">Search</label>
-              <input id="ra-v7-jump-search" class="ra-v7-search" type="search" autocomplete="off"
-                placeholder="Search questions…">
-
-              <div class="ra-v7-section-title">Questions</div>
-              <div id="ra-v7-jump-list" class="ra-v7-list" role="listbox" aria-label="Questions">
-                <!-- JS injects list items -->
-              </div>
-            </div>
-
-            <div id="ra-v7-panel-filters" role="tabpanel" aria-labelledby="ra-v7-tab-filters" style="display:none;">
-              <div class="ra-v7-section-title">Sample Audio</div>
-              <div class="ra-v7-list" role="radiogroup" aria-label="Sample audio">
-                <button class="ra-v7-list-item" type="button" role="radio" aria-checked="true"
-                  data-filter-kind="sample-audio" data-filter="all">
-                  <span class="ra-v7-list-primary">All</span>
-                  <span class="ra-v7-list-secondary">Include questions with or without audio</span>
-                </button>
-                <button class="ra-v7-list-item" type="button" role="radio" aria-checked="false"
-                  data-filter-kind="sample-audio" data-filter="available">
-                  <span class="ra-v7-list-primary">Audio available</span>
-                  <span class="ra-v7-list-secondary">Only prompts with sample audio</span>
-                </button>
-                <button class="ra-v7-list-item" type="button" role="radio" aria-checked="false"
-                  data-filter-kind="sample-audio" data-filter="unavailable">
-                  <span class="ra-v7-list-primary">No audio</span>
-                  <span class="ra-v7-list-secondary">Only prompts without sample audio</span>
-                </button>
-              </div>
-
-              <div class="ra-v7-section-title">Prompt Feature</div>
-              <div class="ra-v7-list" role="radiogroup" aria-label="Prompt feature">
-                <button class="ra-v7-list-item" type="button" role="radio" aria-checked="true"
-                  data-filter-kind="prompt-feature" data-filter="all">
-                  <span class="ra-v7-list-primary">All prompts</span>
-                  <span class="ra-v7-list-secondary">No feature filter</span>
-                </button>
-                <button class="ra-v7-list-item" type="button" role="radio" aria-checked="false"
-                  data-filter-kind="prompt-feature" data-filter="any_connected">
-                  <span class="ra-v7-list-primary">Any connected speech</span>
-                  <span class="ra-v7-list-secondary">Prompt contains any connected speech feature</span>
-                </button>
-                <button class="ra-v7-list-item" type="button" role="radio" aria-checked="false"
-                  data-filter-kind="prompt-feature" data-filter="linking">
-                  <span class="ra-v7-list-primary">Linking</span>
-                  <span class="ra-v7-list-secondary">Prompt contains linking opportunities</span>
-                </button>
-                <button class="ra-v7-list-item" type="button" role="radio" aria-checked="false"
-                  data-filter-kind="prompt-feature" data-filter="reduced_words">
-                  <span class="ra-v7-list-primary">Reduced words</span>
-                  <span class="ra-v7-list-secondary">Prompt contains reduced word phrases</span>
-                </button>
-                <button class="ra-v7-list-item" type="button" role="radio" aria-checked="false"
-                  data-filter-kind="prompt-feature" data-filter="sound_changes">
-                  <span class="ra-v7-list-primary">Sound changes</span>
-                  <span class="ra-v7-list-secondary">Prompt contains sound change patterns</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div class="ra-v7-footer">
-            <button id="ra-v7-done-btn" class="ra-v7-done-btn" type="button">Done</button>
-          </div>
-        </div>
+      <!-- Shared controller audio shortcuts -->
+      <div class="ra-audio-shortcuts" aria-label="Read Aloud audio shortcuts">
+        <button id="header-ra-play-audio-btn" class="ra-v7-audio-btn" type="button" title="Play sample audio">
+          <span data-label>Play sample</span>
+        </button>
+        <button id="header-ra-play-recording-btn" class="ra-v7-audio-btn" type="button"
+          title="Play your recording" disabled aria-disabled="true">
+          <span data-label>Play recording</span>
+        </button>
+      </div>
 
         <!-- Filter/Config Bar -->
         <div class="question-selector"
@@ -5457,6 +5132,8 @@
               </div>
             </div>
           </div>
+          <div id="ra-history-action-host" class="ra-history-action-host"></div>
+          <div id="ra-history-content-host" class="ra-history-content-host" aria-live="polite"></div>
         </div>
       </div>
   </div>
@@ -6187,12 +5864,14 @@
 
   </script>
   <script src="js/sw-register.js"></script>
+  <script src="/js/speaking-practice-controller.js"></script>
+  <script src="/js/speaking-practice-adapters.js"></script>
   <script src="/js/read-aloud-prompt-grammar.js"></script>
   <script src="/js/read-aloud-prompt-renderer.js"></script>
   <script src="/js/read-aloud-spoken-forms.js"></script>
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
-  <script src="/read-aloud-mode.js?v=1.8.23"></script>
+  <script src="/read-aloud-mode.js?v=1.8.24"></script>
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>

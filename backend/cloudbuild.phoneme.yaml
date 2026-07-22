@@ -1,0 +1,39 @@
+# ─────────────────────────────────────────────────────────────
+# Cloud Build – Phoneme Recognizer Service
+# Builds and pushes the Docker image. Does NOT deploy or
+# change traffic; deployment is handled separately.
+# ─────────────────────────────────────────────────────────────
+timeout: 1800s
+
+options:
+  machineType: E2_HIGHCPU_8
+  logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  _GIT_SHA: "unknown"
+  _MODEL_REVISION: "ae45363bf3413b374fecd9dc8bc1df0e24c3b7f4"
+  _INFERENCE_ENGINE: "torch"
+  _REPOSITORY: "gcr.io/${PROJECT_ID}"
+
+steps:
+  # ── Build ──────────────────────────────────────────────────
+  - name: "gcr.io/cloud-builders/docker"
+    id: build
+    args:
+      - "build"
+      - "--file=backend/Dockerfile.phoneme"
+      - "--build-arg=GIT_SHA=${_GIT_SHA}"
+      - "--build-arg=MODEL_REVISION=${_MODEL_REVISION}"
+      - "--build-arg=INFERENCE_ENGINE=${_INFERENCE_ENGINE}"
+      - "--tag=${_REPOSITORY}/phoneme-recognizer:${_GIT_SHA}"
+      - "."
+
+  # ── Push ───────────────────────────────────────────────────
+  - name: "gcr.io/cloud-builders/docker"
+    id: push
+    args:
+      - "push"
+      - "${_REPOSITORY}/phoneme-recognizer:${_GIT_SHA}"
+
+images:
+  - "${_REPOSITORY}/phoneme-recognizer:${_GIT_SHA}"

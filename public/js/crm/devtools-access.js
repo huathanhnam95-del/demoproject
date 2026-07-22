@@ -21,6 +21,9 @@
     if (route.main === 'devtools' && !settings.devToolsAvailable) {
       return fallbackRoute;
     }
+    if (route.main === 'pronunciation-samples' && !settings.pronunciationSamplesAvailable) {
+      return fallbackRoute;
+    }
     return route;
   }
 
@@ -28,9 +31,18 @@
     return !!(options && options.devToolsAvailable);
   }
 
+  function shouldShowPronunciationSamplesNav(options) {
+    return !!(
+      options
+      && options.accessMode === 'admin'
+      && options.pronunciationSamplesAvailable
+    );
+  }
+
   const api = {
     resolveDevToolsRoute: resolveDevToolsRoute,
-    shouldShowDevToolsNav: shouldShowDevToolsNav
+    shouldShowDevToolsNav: shouldShowDevToolsNav,
+    shouldShowPronunciationSamplesNav: shouldShowPronunciationSamplesNav
   };
 
   if (typeof module === 'object' && module.exports) {

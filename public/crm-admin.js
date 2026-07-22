@@ -39,12 +39,19 @@
     agents: { label: 'Agent Management', subTabs: [] },
     settings: { label: 'Settings', subTabs: [] },
     chatbot: { label: 'Chatbot Management', subTabs: [] },
-    devtools: { label: '🔧 Dev Tools', subTabs: [], localOnly: true }
+    devtools: { label: '🔧 Dev Tools', subTabs: [], localOnly: true },
+    "pronunciation-samples": { label: '🎙️ Pronunciation Verification', subTabs: [] }
   };
 
   const devToolsAccess = window.CrmDevToolsAccess || {
-    resolveDevToolsRoute({ main, sub, fallbackRoute, devToolsAvailable }) {
+    resolveDevToolsRoute({ main, sub, fallbackRoute, devToolsAvailable, pronunciationSamplesAvailable = false }) {
       if (main === 'devtools' && !devToolsAvailable) {
+        return {
+          main: fallbackRoute.main,
+          sub: fallbackRoute.sub
+        };
+      }
+      if (main === 'pronunciation-samples' && !pronunciationSamplesAvailable) {
         return {
           main: fallbackRoute.main,
           sub: fallbackRoute.sub
@@ -54,6 +61,9 @@
     },
     shouldShowDevToolsNav({ devToolsAvailable }) {
       return !!devToolsAvailable;
+    },
+    shouldShowPronunciationSamplesNav({ accessMode, pronunciationSamplesAvailable }) {
+      return accessMode === 'admin' && !!pronunciationSamplesAvailable;
     }
   };
 
@@ -281,6 +291,7 @@
     elements.gate = document.getElementById('crm-loading');
     elements.gateText = document.getElementById('crm-loading-text');
     elements.gateSubtext = document.getElementById('crm-loading-subtext');
+    elements.pronunciationSamplesContainer = document.getElementById('nav-pronunciation-samples-container');
     // elements.userEmail = document.getElementById('crm-user-email'); // Old
 
     elements.navItems = Array.from(document.querySelectorAll('.crm-nav-item[data-main]'));
@@ -298,13 +309,20 @@
     elements.leadStageBoard = document.getElementById('lead-stage-board');
     elements.leadListContainer = document.getElementById('lead-list-container');
     elements.inputLeadName = document.getElementById('lead-name');
+    elements.inputLeadLabel = document.getElementById('lead-label');
     elements.inputLeadEmail = document.getElementById('lead-email');
     elements.inputLeadPhone = document.getElementById('lead-phone');
+    elements.inputLeadZalo = document.getElementById('lead-zalo');
+    elements.inputLeadFacebook = document.getElementById('lead-facebook');
     elements.inputLeadSource = document.getElementById('lead-source');
     elements.inputLeadAgentSource = document.getElementById('lead-agent-source');
     elements.inputLeadStage = document.getElementById('lead-stage');
     elements.inputLeadProbability = document.getElementById('lead-probability');
     elements.leadWorkspace = document.getElementById('lead-workspace');
+    elements.leadTaskSection = document.getElementById('lead-task-section');
+    elements.leadActivitySection = document.getElementById('lead-activity-section');
+    elements.leadEntranceTestSection = document.getElementById('lead-entrance-test-section');
+    elements.leadTemplatesAutomations = document.getElementById('lead-templates-automations');
     elements.leadWorkspaceTitle = document.getElementById('lead-workspace-title');
     elements.leadWorkspaceMeta = document.getElementById('lead-workspace-meta');
     elements.leadWorkspaceBadge = document.getElementById('lead-workspace-badge');
@@ -707,12 +725,25 @@
     const next = source && typeof source === 'object' ? source : {};
     return {
       classroomMatches: next.classroomMatches === true,
-      readAloudReporting: next.readAloudReporting === true
+      readAloudReporting: next.readAloudReporting === true,
+      pronunciationSamples: next.pronunciationSamples !== false
     };
   }
 
   function getAdminCapabilities() {
     return adminCapabilities;
+  }
+
+  function updateAdminCapabilityNav() {
+    if (!elements.pronunciationSamplesContainer) return;
+    const pronunciationSamplesAvailable = adminCapabilities.pronunciationSamples !== false;
+    const showSamples = typeof devToolsAccess.shouldShowPronunciationSamplesNav === 'function'
+      ? devToolsAccess.shouldShowPronunciationSamplesNav({
+        accessMode: state.accessMode,
+        pronunciationSamplesAvailable
+      })
+      : state.accessMode === 'admin' && pronunciationSamplesAvailable;
+    elements.pronunciationSamplesContainer.style.display = showSamples ? 'block' : 'none';
   }
 
   function setupScoreDecorations() {
@@ -1083,6 +1114,7 @@
       return;
     }
     state.accessMode = adminOk ? 'admin' : 'teacher';
+    updateAdminCapabilityNav();
 
     // Ready
     hideGate();
@@ -1090,6 +1122,7 @@
     setupMoneyInputs();
 
     if (state.accessMode === 'admin') {
+      initCorpusTool();
       if (isLikelyLocalEnvironment()) {
         await initDevTools();
       }
@@ -2108,8 +2141,11 @@
   function resetLeadComposer() {
     const inputs = [
       elements.inputLeadName,
+      elements.inputLeadLabel,
       elements.inputLeadEmail,
       elements.inputLeadPhone,
+      elements.inputLeadZalo,
+      elements.inputLeadFacebook,
       elements.inputLeadSource,
       elements.inputLeadAgentSource,
       elements.inputLeadProbability
@@ -3119,6 +3155,10 @@
     ]);
 
     if (elements.leadWorkspace) elements.leadWorkspace.style.display = 'grid';
+    // Hide non-test sections — only show Entrance Tests
+    if (elements.leadTaskSection) elements.leadTaskSection.style.display = 'none';
+    if (elements.leadActivitySection) elements.leadActivitySection.style.display = 'none';
+    if (elements.leadTemplatesAutomations) elements.leadTemplatesAutomations.style.display = 'none';
     if (elements.leadWorkspaceTitle) {
       elements.leadWorkspaceTitle.textContent = lead?.name || lead?.email || 'Lead Workspace';
     }
@@ -4473,7 +4513,8 @@
       main,
       sub,
       fallbackRoute: DEFAULT_ROUTE,
-      devToolsAvailable: state.devToolsAvailable
+      devToolsAvailable: state.devToolsAvailable,
+      pronunciationSamplesAvailable: state.accessMode === 'admin' && adminCapabilities.pronunciationSamples !== false
     });
 
     if (gatedRoute.main !== main || gatedRoute.sub !== sub) {
@@ -4599,6 +4640,11 @@
 
   function render() {
     if (state.main === 'devtools' && !state.devToolsAvailable) {
+      state.main = DEFAULT_ROUTE.main;
+      state.sub = DEFAULT_ROUTE.sub;
+      updateHash();
+    }
+    if (state.main === 'pronunciation-samples' && (state.accessMode !== 'admin' || adminCapabilities.pronunciationSamples === false)) {
       state.main = DEFAULT_ROUTE.main;
       state.sub = DEFAULT_ROUTE.sub;
       updateHash();
@@ -6336,8 +6382,11 @@
     }
 
     function updateDevToolsNav() {
-      if (!devToolsContainer) return;
-      devToolsContainer.style.display = devToolsAccess.shouldShowDevToolsNav({ devToolsAvailable: state.devToolsAvailable }) ? 'block' : 'none';
+      const show = devToolsAccess.shouldShowDevToolsNav({ devToolsAvailable: state.devToolsAvailable });
+      if (devToolsContainer) {
+        devToolsContainer.style.display = show ? 'block' : 'none';
+      }
+      updateAdminCapabilityNav();
     }
 
     function updateSyncButtons(isBusy) {
@@ -6757,16 +6806,10 @@
 
   function initWeekdaySelector() {
     const selectors = [
-      { 
-        id: 'classroom-seed-weekdays-selector', 
-        hiddenId: 'classroom-seed-weekdays',
-        type: 'seed' 
-      },
-      { 
-        id: 'classroom-regenerate-weekdays-selector', 
-        hiddenId: 'classroom-regenerate-weekdays',
-        type: 'regenerate' 
-      }
+      {        id: 'classroom-seed-weekdays-selector',        hiddenId: 'classroom-seed-weekdays',
+        type: 'seed'      },
+      {        id: 'classroom-regenerate-weekdays-selector',        hiddenId: 'classroom-regenerate-weekdays',
+        type: 'regenerate'      }
     ];
 
     selectors.forEach(({ id, hiddenId, type }) => {
@@ -6784,11 +6827,9 @@
           e.preventDefault();
           e.stopPropagation();
           newBtn.classList.toggle('active');
-          
           const activeDays = Array.from(container.querySelectorAll('.crm-weekday-btn.active'))
             .map(b => b.dataset.day);
           hidden.value = activeDays.join(',');
-          
           // Trigger change so any other listeners know
           hidden.dispatchEvent(new Event('change', { bubbles: true }));
         });
@@ -6849,4 +6890,948 @@
       }
     }
   });
+
+  function initCorpusTool() {
+    let wordBtns = Array.from(document.querySelectorAll('.corpus-word-btn'));
+    const wordList = document.getElementById('corpus-word-list');
+    const wordListStatus = document.getElementById('corpus-word-list-status');
+    const sampleFilter = document.getElementById('corpus-sample-filter');
+    const stepGuidance = document.getElementById('corpus-step-guidance');
+    const customWordInput = document.getElementById('corpus-custom-word');
+    const customIpaInput = document.getElementById('corpus-custom-ipa');
+    const customCountInput = document.getElementById('corpus-custom-count');
+    const btnUseCustom = document.getElementById('btn-corpus-use-custom');
+    const displayWord = document.getElementById('corpus-display-word');
+    const displayIpaCount = document.getElementById('corpus-display-ipa-count');
+    const versionStatus = document.getElementById('corpus-version-status');
+    const categorySelect = document.getElementById('corpus-category');
+    const expectedObservedCountInput = document.getElementById('corpus-expected-observed-count');
+    const speakerCohortInput = document.getElementById('corpus-speaker-cohort');
+    const instructionText = document.getElementById('corpus-test-instruction-text');
+    const sampleIdDisplay = document.getElementById('corpus-sample-id');
+    const visualizer = document.getElementById('corpus-visualizer');
+    const micStatus = document.getElementById('corpus-mic-status');
+    const btnRecord = document.getElementById('btn-corpus-record');
+    const btnStop = document.getElementById('btn-corpus-stop');
+    const btnRedo = document.getElementById('btn-corpus-redo');
+    const btnSave = document.getElementById('btn-corpus-save');
+    const btnPrevVersion = document.getElementById('btn-corpus-prev-version');
+    const btnNextVersion = document.getElementById('btn-corpus-next-version');
+    const btnNextWord = document.getElementById('btn-corpus-next-word');
+    const btnPagePrev = document.getElementById('btn-corpus-page-prev');
+    const btnPageNext = document.getElementById('btn-corpus-page-next');
+    const pageStatus = document.getElementById('corpus-page-status');
+    const btnRefresh = document.getElementById('btn-corpus-refresh');
+    const savedSamplesContainer = document.getElementById('corpus-saved-samples');
+    const playbackContainer = document.getElementById('corpus-playback-container');
+    const audioPlayer = document.getElementById('corpus-audio-player');
+    const consoleOutput = document.getElementById('corpus-console-output');
+    const wordSearchInput = document.getElementById('corpus-word-search');
+    const recordingTimerEl = document.getElementById('corpus-recording-timer');
+    const timerValueEl = document.getElementById('corpus-timer-value');
+    const autoAdvanceToggle = document.getElementById('corpus-auto-advance-toggle');
+    const cohortCustomRow = document.getElementById('corpus-cohort-custom-row');
+    const cohortCustomInput = document.getElementById('corpus-cohort-custom-input');
+    const progressTotalEl = document.getElementById('corpus-total-count');
+    const progressCleanEl = document.getElementById('corpus-clean-count');
+    const progressAdversarialEl = document.getElementById('corpus-adversarial-count');
+    const progressAccentedEl = document.getElementById('corpus-accented-count');
+    const progressFillEl = document.getElementById('corpus-progress-fill');
+
+    let currentWord = 'busy';
+    let currentIpa = 'ˈbɪz.i';
+    let currentSyllableCount = 2;
+    let currentCategory = 'clean';
+    let currentExpectedObservedCount = 2;
+    let currentSpeakerCohort = 'l1-vn-01';
+    let currentInstruction = 'Say “busy” once, naturally and clearly. Do not repeat it or add another word.';
+    let currentVersionIndex = 0;
+    let currentVersionSaved = false;
+    let audioBlob = null;
+    let audioContext = null;
+    let mediaStream = null;
+    let animationFrameId = null;
+    let analyserNode = null;
+    let scriptProcessor = null;
+    let rawSamples = [];
+    let savedWordSet = new Set();
+    const analysisBySampleId = new Map();
+    const PAGE_SIZE = 10;
+    let currentPage = 1;
+    let recordingTimerId = null;
+    let recordingStartTime = 0;
+    let allSavedSamples = [];
+    const savedVersionsByWord = new Map();
+
+    const CORPUS_VERSIONS = [
+      {
+        label: 'Clean',
+        category: 'clean',
+        expectedCount: (target) => target,
+        instruction: (word) => `Say “${word}” once naturally and clearly in American English. Produce every target syllable with normal stress. Do not repeat it or add another word.`
+      },
+      {
+        label: 'Omission',
+        category: 'omission',
+        expectedCount: (target) => Math.max(0, target - 1),
+        instruction: (word) => `Say “${word}” once, but intentionally omit exactly one syllable: the final target syllable. Keep the remaining sound clear, and do not add another word.`
+      },
+      {
+        label: 'Insertion',
+        category: 'insertion',
+        expectedCount: (target) => target + 1,
+        instruction: (word) => `Say “${word}” once, but intentionally add exactly one extra syllable after the first target syllable. Make the extra syllable a short “uh”, and do not add another word.`
+      },
+      {
+        label: 'Accented',
+        category: 'accented',
+        expectedCount: (target) => target,
+        instruction: (word) => `Say “${word}” once with every target syllable present, but deliberately stress a different syllable from the normal pronunciation. Do not add another word.`
+      },
+      {
+        label: 'Unrateable',
+        category: 'unrateable',
+        expectedCount: () => 0,
+        instruction: (word) => `Record about two seconds of silence, heavy background noise, or unintelligible speech instead of a clear “${word}”. Do not say another recognizable word.`
+      }
+    ];
+
+    function setSaveButtonState(enabled, label) {
+      if (!btnSave) return;
+      btnSave.disabled = !enabled;
+      btnSave.textContent = label || (enabled ? '💾 Save Attempt' : 'Record audio first');
+      btnSave.style.setProperty('background', enabled ? '#137a4b' : '#d1d5db', 'important');
+      btnSave.style.setProperty('border-color', enabled ? '#0b5e38' : '#6b7280', 'important');
+      btnSave.style.setProperty('color', enabled ? '#ffffff' : '#374151', 'important');
+      btnSave.style.opacity = '1';
+      btnSave.title = enabled ? 'Save this verified recording to cloud storage' : 'Record a non-silent sample first';
+    }
+
+    function setStepGuidance(message) {
+      if (stepGuidance) stepGuidance.textContent = message;
+    }
+    const mandatoryWords = new Set(wordBtns.map((button) => button.dataset.word));
+
+    function bindWordButtons() {
+      wordBtns.forEach(btn => {
+        if (btn.dataset.corpusBound === '1') return;
+        btn.dataset.corpusBound = '1';
+        btn.addEventListener('click', () => {
+          wordBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentWord = btn.dataset.word;
+          currentIpa = btn.dataset.ipa;
+          currentSyllableCount = parseInt(btn.dataset.count, 10);
+          currentSpeakerCohort = btn.dataset.cohort || 'l1-vn-01';
+          currentVersionIndex = 0;
+          currentVersionSaved = false;
+          if (customWordInput) customWordInput.value = '';
+          redoRecording();
+          applyCurrentVersion();
+          setStepGuidance(`Version 1 of 5: Review the Clean instruction, then click Record.`);
+        });
+      });
+    }
+
+    function updateWordBadges() {
+      wordBtns.forEach((button) => {
+        const word = String(button.dataset.word || '').toLowerCase();
+        const versions = savedVersionsByWord.get(word) || new Set();
+        const count = versions.size;
+        button.classList.toggle('has-sample', count > 0);
+        const existing = button.querySelector('.corpus-sample-badge');
+        if (existing) existing.remove();
+        const badge = document.createElement('span');
+        badge.className = count >= 5 ? 'corpus-version-badge complete' : count > 0 ? 'corpus-version-badge' : 'corpus-sample-badge';
+        badge.textContent = count >= 5 ? '✓ 5/5' : count > 0 ? `${count}/5` : '• needed';
+        button.appendChild(badge);
+      });
+    }
+
+    function applyWordFilter() {
+      const filter = sampleFilter?.value || 'all';
+      const searchTerm = (wordSearchInput?.value || '').trim().toLowerCase();
+      const filtered = wordBtns.filter((button) => {
+        const word = String(button.dataset.word || '').toLowerCase();
+        const hasSample = savedWordSet.has(word);
+        const matchesFilter = filter === 'all' || (filter === 'recorded' && hasSample) || (filter === 'missing' && !hasSample);
+        const matchesSearch = !searchTerm || word.includes(searchTerm);
+        return matchesFilter && matchesSearch;
+      });
+      const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+      currentPage = Math.min(currentPage, pageCount);
+      const firstVisible = (currentPage - 1) * PAGE_SIZE;
+      const visibleSet = new Set(filtered.slice(firstVisible, firstVisible + PAGE_SIZE));
+      wordBtns.forEach((button) => {
+        const visible = visibleSet.has(button);
+        const item = button.closest('li');
+        if (item) item.style.display = visible ? '' : 'none';
+      });
+      if (pageStatus) pageStatus.textContent = `Page ${currentPage} of ${pageCount} (${filtered.length} words)`;
+      if (btnPagePrev) btnPagePrev.disabled = currentPage <= 1;
+      if (btnPageNext) btnPageNext.disabled = currentPage >= pageCount;
+    }
+
+    function parseOxfordCsv(text) {
+      const lines = String(text || '').split(/\r?\n/).filter(Boolean);
+      if (!lines.length) return [];
+      const header = lines[0].split(',').map((value) => value.trim());
+      const wordIndex = header.indexOf('word');
+      const sourceIndex = header.indexOf('source');
+      const levelIndex = header.indexOf('level');
+      if (wordIndex < 0 || sourceIndex < 0) return [];
+      return lines.slice(1).map((line) => {
+        const cells = [];
+        let cell = '';
+        let quoted = false;
+        for (const character of line) {
+          if (character === '"') quoted = !quoted;
+          else if (character === ',' && !quoted) { cells.push(cell); cell = ''; }
+          else cell += character;
+        }
+        cells.push(cell);
+        return {
+          word: String(cells[wordIndex] || '').trim().toLowerCase(),
+          source: String(cells[sourceIndex] || '').trim(),
+          level: levelIndex >= 0 ? String(cells[levelIndex] || '').trim() : ''
+        };
+      });
+    }
+
+    async function loadOxfordWordTests() {
+      if (!wordList || !window.Phonetics) return;
+      // The local CRM browser harness intentionally mocks the API surface and
+      // does not serve the production Oxford source file. Keep that harness
+      // deterministic; production Hosting serves the full list.
+      if (isLikelyLocalEnvironment()) {
+        if (wordListStatus) wordListStatus.textContent = `${wordBtns.length} built-in mandatory tests available in local preview.`;
+        return;
+      }
+      try {
+        const response = await fetch('vowel_word_bank.csv', { cache: 'no-store' });
+        if (!response.ok) throw new Error(`Oxford word list request failed (${response.status})`);
+        const csvText = new TextDecoder('windows-1252').decode(await response.arrayBuffer());
+        const rows = parseOxfordCsv(csvText);
+        await window.Phonetics.preload();
+        const entries = [];
+        const seen = new Set(mandatoryWords);
+        for (const row of rows) {
+          if (entries.length >= 114) break;
+          if (row.source !== 'Oxford5000' || !/^[a-z][a-z'-]{1,29}$/.test(row.word) || seen.has(row.word)) continue;
+          const arpabet = await window.Phonetics._lookupCMU(row.word);
+          if (!arpabet) continue;
+          const tokens = arpabet.split(/\s+/).filter(Boolean);
+          const syllables = tokens.filter((token) => /^[AEIOU][A-Z]*[012]$/.test(token)).length;
+          const pronunciation = await window.Phonetics.getIPAWithSource(row.word);
+          if (!pronunciation?.ipa || !syllables) continue;
+          seen.add(row.word);
+          entries.push({ word: row.word, ipa: pronunciation.ipa, count: syllables, level: row.level });
+        }
+        if (entries.length < 114) throw new Error(`Only ${entries.length} Oxford words have usable pronunciation data.`);
+        entries.forEach((entry) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'crm-btn crm-btn-secondary corpus-word-btn';
+          button.dataset.word = entry.word;
+          button.dataset.ipa = entry.ipa;
+          button.dataset.count = String(entry.count);
+          button.dataset.category = 'clean';
+          button.dataset.observed = String(entry.count);
+          button.dataset.cohort = 'l1-vn-01';
+          button.dataset.instruction = `Say “${entry.word}” once in American English. Say it naturally and clearly, without repeating it or adding another word.`;
+          button.style.cssText = 'width: 100%; text-align: left;';
+          button.textContent = `${entry.word} (${entry.count})`;
+          wordList.appendChild(document.createElement('li')).appendChild(button);
+        });
+        wordBtns = Array.from(wordList.querySelectorAll('.corpus-word-btn'));
+        bindWordButtons();
+        updateWordBadges();
+        applyWordFilter();
+        if (wordListStatus) wordListStatus.textContent = `${wordBtns.length} fixed Oxford 5000 pronunciation tests available.`;
+      } catch (error) {
+        console.warn('[Pronunciation Corpus] Oxford word list unavailable:', error);
+        if (wordListStatus) wordListStatus.textContent = 'Showing the built-in mandatory tests; Oxford list unavailable.';
+      }
+    }
+    function applyCurrentVersion() {
+      const version = CORPUS_VERSIONS[currentVersionIndex] || CORPUS_VERSIONS[0];
+      currentCategory = version.category;
+      currentExpectedObservedCount = version.expectedCount(currentSyllableCount);
+      currentInstruction = version.instruction(currentWord);
+      if (versionStatus) versionStatus.textContent = `Version ${currentVersionIndex + 1} of ${CORPUS_VERSIONS.length} · ${version.label}`;
+      updateDisplay();
+      updateVersionButtons();
+    }
+
+    function updateVersionButtons() {
+      const hasUncommittedAudio = Boolean(audioBlob) && !currentVersionSaved;
+      if (btnPrevVersion) btnPrevVersion.disabled = currentVersionIndex <= 0;
+      if (btnNextVersion) btnNextVersion.disabled = currentVersionIndex >= CORPUS_VERSIONS.length - 1;
+      if (btnNextWord) btnNextWord.title = hasUncommittedAudio ? 'Save this version before moving to another word' : 'Move to the next word';
+    }
+
+    function confirmVersionNavigation() {
+      if (!audioBlob || currentVersionSaved) return true;
+      return window.confirm('This recording has not been saved. Leave this version and discard it?');
+    }
+
+    function moveToVersion(nextIndex) {
+      if (nextIndex < 0 || nextIndex >= CORPUS_VERSIONS.length || nextIndex === currentVersionIndex) return;
+      if (!confirmVersionNavigation()) return;
+      currentVersionIndex = nextIndex;
+      currentVersionSaved = false;
+      redoRecording();
+      applyCurrentVersion();
+      setStepGuidance(`Version ${currentVersionIndex + 1} of ${CORPUS_VERSIONS.length}: Review the ${CORPUS_VERSIONS[currentVersionIndex].label} instruction, then click Record.`);
+    }
+
+    function updateDisplay() {
+      if (!displayWord || !displayIpaCount) return;
+      displayWord.textContent = currentWord;
+      displayIpaCount.textContent = `/${currentIpa}/ (${currentSyllableCount} syllables)`;
+      if (expectedObservedCountInput) {
+        expectedObservedCountInput.value = currentExpectedObservedCount;
+      }
+      if (categorySelect) categorySelect.value = currentCategory;
+      if (speakerCohortInput && speakerCohortInput.tagName === 'SELECT') {
+        const optionExists = Array.from(speakerCohortInput.options).some(o => o.value === currentSpeakerCohort);
+        if (optionExists) {
+          speakerCohortInput.value = currentSpeakerCohort;
+        } else {
+          speakerCohortInput.value = 'custom';
+          if (cohortCustomRow) cohortCustomRow.classList.add('active');
+          if (cohortCustomInput) cohortCustomInput.value = currentSpeakerCohort;
+        }
+      } else if (speakerCohortInput) {
+        speakerCohortInput.value = currentSpeakerCohort;
+      }
+      if (instructionText) instructionText.textContent = currentInstruction;
+      updateSampleId();
+      updateVersionButtons();
+    }
+    function updateSampleId() {
+      if (!categorySelect || !speakerCohortInput || !sampleIdDisplay) return '';
+      const category = currentCategory;
+      const cohort = currentSpeakerCohort;
+      const wordSlug = currentWord.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-');
+      const now = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      const timestamp = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}${String(now.getMilliseconds()).padStart(3, '0')}`;
+      const sampleId = `${wordSlug}-${category}-${cohort}-${timestamp}`;
+      sampleIdDisplay.textContent = sampleId;
+      return sampleId;
+    }
+
+    function getSampleVerification(sample, analysis) {
+      const targetCount = Number(sample.targetSyllableCount || 0);
+      const expectedCount = Number(sample.expectedObservedCount ?? targetCount);
+      const observedCount = Number(analysis?.observed?.syllableCount || 0);
+      const rateable = analysis?.quality?.rateable !== false && analysis?.observed?.stressEvidence?.rateable !== false;
+      const category = String(sample.category || 'clean').toLowerCase();
+
+      if (category === 'unrateable') {
+        return rateable
+          ? { label: 'Needs review · audio was rateable', color: '#991b1b' }
+          : { label: 'Verified · unrateable condition matched', color: '#166534' };
+      }
+      if (!rateable) return { label: 'Needs review · unrateable audio', color: '#92400e' };
+      if (category === 'clean' && observedCount === targetCount) return { label: 'Verified · clean target matched', color: '#166534' };
+      if (category === 'omission' && observedCount === expectedCount && observedCount < targetCount) return { label: 'Verified · omission target matched', color: '#166534' };
+      if (category === 'insertion' && observedCount === expectedCount && observedCount > targetCount) return { label: 'Verified · insertion target matched', color: '#166534' };
+      if (category === 'accented' && observedCount === expectedCount) return { label: 'Count verified · review stress/accent', color: '#92400e' };
+      return { label: `Needs review · observed ${observedCount}, expected ${expectedCount}`, color: '#991b1b' };
+    }
+
+    function appendAnalysisLine(container, label, value) {
+      const line = document.createElement('div');
+      const strong = document.createElement('strong');
+      strong.textContent = `${label}: `;
+      line.appendChild(strong);
+      line.appendChild(document.createTextNode(String(value)));
+      container.appendChild(line);
+    }
+
+    function renderSampleAnalysis(sample, resultContainer, state) {
+      resultContainer.replaceChildren();
+      if (state?.error) {
+        resultContainer.style.color = '#991b1b';
+        resultContainer.textContent = `Analysis failed: ${state.error} Click Analyze & Verify to retry.`;
+        return;
+      }
+      const analysis = state?.analysis;
+      if (!analysis) {
+        resultContainer.textContent = 'Click Analyze & Verify to run the pronunciation analysis for this sample.';
+        return;
+      }
+
+      resultContainer.style.color = '#123';
+      const verification = getSampleVerification(sample, analysis);
+      const status = document.createElement('div');
+      status.style.cssText = `font-weight:700; color:${verification.color}; margin-bottom:6px;`;
+      status.textContent = verification.label;
+      resultContainer.appendChild(status);
+
+      const observedCount = Number(analysis.observed?.syllableCount || 0);
+      appendAnalysisLine(resultContainer, 'Counts', `${Number(sample.targetSyllableCount || 0)} target · ${Number(sample.expectedObservedCount ?? sample.targetSyllableCount ?? 0)} expected observed`);
+      appendAnalysisLine(resultContainer, 'Observed', `${observedCount} syllables`);
+      appendAnalysisLine(resultContainer, 'Quality', `${analysis.quality?.rateable === false ? 'unrateable' : 'rateable'} · confidence ${Number(analysis.quality?.confidence ?? 0).toFixed(2)}`);
+      appendAnalysisLine(resultContainer, 'Segmentation', `${analysis.segmentation?.method || 'unknown'} · confidence ${Number(analysis.segmentation?.confidence ?? 0).toFixed(2)}`);
+      appendAnalysisLine(resultContainer, 'Primary stress', `syllable ${Number(analysis.observed?.primaryStress ?? -1) + 1} · confidence ${Number(analysis.observed?.stressEvidence?.confidence ?? 0).toFixed(2)}`);
+
+      const syllables = document.createElement('div');
+      syllables.style.marginTop = '6px';
+      syllables.textContent = 'Syllables: ';
+      (analysis.observed?.syllables || []).forEach((item, index) => {
+        if (index > 0) syllables.appendChild(document.createTextNode(' · '));
+        syllables.appendChild(document.createTextNode(
+          `#${Number(item.syllable || index + 1)} ${Number(item.startTime || 0).toFixed(2)}–${Number(item.endTime || 0).toFixed(2)}s, ${Number(item.duration || 0).toFixed(2)}s, ${Number(item.avgPitch || 0).toFixed(0)}Hz${item.isStressed ? ', stressed' : ''}`
+        ));
+      });
+      resultContainer.appendChild(syllables);
+    }
+
+    async function analyzeSavedSample(sample, resultContainer, button) {
+      const sampleId = String(sample.id || sample.sampleId || '').trim();
+      if (!sampleId) return;
+      button.disabled = true;
+      button.textContent = 'Analyzing…';
+      resultContainer.style.color = '#123';
+      resultContainer.textContent = 'Downloading audio and running V2 pronunciation analysis…';
+      try {
+        const user = firebase.auth().currentUser;
+        if (!user) throw new Error('Admin session expired. Please sign in again.');
+        const token = await user.getIdToken();
+        const audioResponse = await fetch(`/api/admin/dev/corpus-samples/${encodeURIComponent(sampleId)}/audio`, {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: 'no-store'
+        });
+        if (!audioResponse.ok) throw new Error(`Audio request failed (${audioResponse.status})`);
+        const audioBlob = await audioResponse.blob();
+        const { PraatAPI } = await import(`/pronunciation-analyzer/praat-api.js?corpus-analysis=${encodeURIComponent(sampleId)}`);
+        const api = new PraatAPI();
+        const analysis = await api.analyze(audioBlob, Number(sample.targetSyllableCount || sample.expectedObservedCount || 0), {
+          targetWord: sample.targetWord || ''
+        });
+        analysisBySampleId.set(sampleId, { analysis });
+        renderSampleAnalysis(sample, resultContainer, { analysis });
+        button.textContent = 'Re-analyze';
+      } catch (error) {
+        const message = error?.message || 'Unknown analysis error';
+        analysisBySampleId.set(sampleId, { error: message });
+        renderSampleAnalysis(sample, resultContainer, { error: message });
+        button.textContent = 'Retry analysis';
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    function renderSampleRow(sample) {
+      const row = document.createElement('div');
+      row.className = 'crm-stack-item';
+      row.dataset.corpusSampleId = String(sample.id || sample.sampleId || '');
+      row.style.cssText = 'display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:10px 12px; border-bottom:1px solid var(--border-color);';
+
+      const label = document.createElement('span');
+      label.style.flex = '1';
+      label.textContent = `${sample.category || 'unknown'} · ${sample.durationSeconds ? `${Number(sample.durationSeconds).toFixed(2)}s` : 'duration unavailable'}`;
+      row.appendChild(label);
+
+      const sampleId = String(sample.id || sample.sampleId || '').trim();
+      const analyzeButton = document.createElement('button');
+      analyzeButton.type = 'button';
+      analyzeButton.className = 'crm-btn crm-btn-primary btn-corpus-analyze';
+      analyzeButton.textContent = analysisBySampleId.get(sampleId)?.analysis ? 'Re-analyze' : 'Analyze & Verify';
+      const resultContainer = document.createElement('div');
+      resultContainer.className = 'corpus-analysis-result';
+      resultContainer.dataset.corpusSampleId = sampleId;
+      resultContainer.style.cssText = 'width:100%; margin-top:4px; padding:8px 0; font-size:13px; line-height:1.5;';
+      analyzeButton.addEventListener('click', () => {
+        analyzeSavedSample(sample, resultContainer, analyzeButton);
+      });
+      row.appendChild(analyzeButton);
+
+      if (sample.audioUrl) {
+        const link = document.createElement('a');
+        link.href = sample.audioUrl;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.className = 'crm-btn crm-btn-secondary';
+        link.textContent = 'Open audio';
+        row.appendChild(link);
+      }
+      row.appendChild(resultContainer);
+      renderSampleAnalysis(sample, resultContainer, analysisBySampleId.get(sampleId));
+      return row;
+    }
+
+    function renderSavedSamples(samples) {
+      if (!savedSamplesContainer) return;
+      savedSamplesContainer.replaceChildren();
+      if (!Array.isArray(samples) || samples.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'crm-muted';
+        empty.textContent = 'No cloud samples saved yet.';
+        savedSamplesContainer.appendChild(empty);
+        return;
+      }
+      const groups = new Map();
+      samples.forEach((sample) => {
+        const word = String(sample.targetWord || 'unknown').trim().toLowerCase();
+        if (!groups.has(word)) groups.set(word, []);
+        groups.get(word).push(sample);
+      });
+      groups.forEach((groupSamples, word) => {
+        const categories = new Set(groupSamples.map(s => String(s.category || '').toLowerCase()));
+        const isComplete = categories.size >= 5;
+        const header = document.createElement('div');
+        header.className = 'corpus-group-header';
+        const headerLabel = document.createElement('span');
+        headerLabel.textContent = `${word} (${groupSamples.length} samples)`;
+        header.appendChild(headerLabel);
+        const badge = document.createElement('span');
+        badge.className = isComplete ? 'corpus-group-badge complete' : 'corpus-group-badge';
+        badge.textContent = `${categories.size}/5 versions`;
+        header.appendChild(badge);
+        const toggle = document.createElement('span');
+        toggle.className = 'corpus-group-toggle';
+        toggle.textContent = '▼';
+        header.appendChild(toggle);
+
+        const body = document.createElement('div');
+        body.className = 'corpus-group-body';
+        body.style.maxHeight = '500px';
+        groupSamples.forEach((sample) => body.appendChild(renderSampleRow(sample)));
+
+        header.addEventListener('click', () => {
+          header.classList.toggle('collapsed');
+          body.classList.toggle('collapsed');
+        });
+        savedSamplesContainer.appendChild(header);
+        savedSamplesContainer.appendChild(body);
+      });
+    }
+
+    function updateProgressDashboard(samples) {
+      if (!progressTotalEl) return;
+      const total = samples.length;
+      let clean = 0, adversarial = 0, accented = 0;
+      for (const s of samples) {
+        const cat = String(s.category || '').toLowerCase();
+        if (cat === 'clean') clean++;
+        else if (cat === 'accented') accented++;
+        else if (cat === 'omission' || cat === 'insertion' || cat === 'unrateable') adversarial++;
+      }
+      progressTotalEl.textContent = String(total);
+      progressTotalEl.classList.toggle('complete', total >= 120);
+      if (progressCleanEl) { progressCleanEl.textContent = String(clean); progressCleanEl.classList.toggle('complete', clean >= 60); }
+      if (progressAdversarialEl) { progressAdversarialEl.textContent = String(adversarial); progressAdversarialEl.classList.toggle('complete', adversarial >= 30); }
+      if (progressAccentedEl) { progressAccentedEl.textContent = String(accented); progressAccentedEl.classList.toggle('complete', accented >= 30); }
+      if (progressFillEl) progressFillEl.style.width = `${Math.min(100, Math.round((total / 120) * 100))}%`;
+    }
+
+    function buildVersionMap(samples) {
+      savedVersionsByWord.clear();
+      for (const s of samples) {
+        const word = String(s.targetWord || '').trim().toLowerCase();
+        const cat = String(s.category || '').toLowerCase();
+        if (!word) continue;
+        if (!savedVersionsByWord.has(word)) savedVersionsByWord.set(word, new Set());
+        savedVersionsByWord.get(word).add(cat);
+      }
+    }
+
+    async function loadSavedSamples() {
+      if (!savedSamplesContainer) return;
+      try {
+        const json = await apiFetchJson('/api/admin/dev/corpus-samples?limit=500', { method: 'GET' });
+        const samples = json.samples || json.data?.samples || [];
+        allSavedSamples = samples;
+        savedWordSet = new Set(samples.map((sample) => String(sample.targetWord || '').trim().toLowerCase()).filter(Boolean));
+        buildVersionMap(samples);
+        updateProgressDashboard(samples);
+        renderSavedSamples(samples);
+        updateWordBadges();
+        applyWordFilter();
+      } catch (error) {
+        const message = document.createElement('div');
+        message.className = 'crm-muted';
+        message.textContent = `Cloud sample list unavailable: ${error?.message || 'request failed'}`;
+        savedSamplesContainer.replaceChildren(message);
+      }
+    }
+
+    bindWordButtons();
+    updateWordBadges();
+    if (sampleFilter) sampleFilter.addEventListener('change', () => {
+      currentPage = 1;
+      applyWordFilter();
+    });
+    if (btnPagePrev) btnPagePrev.addEventListener('click', () => {
+      currentPage = Math.max(1, currentPage - 1);
+      applyWordFilter();
+    });
+    if (btnPageNext) btnPageNext.addEventListener('click', () => {
+      currentPage += 1;
+      applyWordFilter();
+    });
+    if (btnPrevVersion) btnPrevVersion.addEventListener('click', () => moveToVersion(currentVersionIndex - 1));
+    if (btnNextVersion) btnNextVersion.addEventListener('click', () => moveToVersion(currentVersionIndex + 1));
+    if (btnNextWord) btnNextWord.addEventListener('click', () => {
+      if (!confirmVersionNavigation()) return;
+      const filter = sampleFilter?.value || 'all';
+      const filtered = wordBtns.filter((button) => {
+        const hasSample = savedWordSet.has(String(button.dataset.word || '').toLowerCase());
+        return filter === 'all' || (filter === 'recorded' && hasSample) || (filter === 'missing' && !hasSample);
+      });
+      const currentIndex = filtered.findIndex((button) => button.classList.contains('active'));
+      const nextButton = filtered[(currentIndex + 1) % filtered.length];
+      if (!nextButton) return;
+      nextButton.click();
+      currentPage = Math.floor(filtered.indexOf(nextButton) / PAGE_SIZE) + 1;
+      applyWordFilter();
+      nextButton.scrollIntoView({ block: 'nearest' });
+    });
+    loadOxfordWordTests();
+    if (btnUseCustom) {
+      btnUseCustom.addEventListener('click', () => {
+        if (!customWordInput || !customIpaInput || !customCountInput) return;
+        const customW = customWordInput.value.trim();
+        const customI = customIpaInput.value.trim();
+        const customC = parseInt(customCountInput.value, 10);
+        if (!customW || !customI || isNaN(customC) || customC <= 0) {
+          showToast('Please enter a valid word, IPA, and syllable count.', 'error');
+          return;
+        }
+        wordBtns.forEach(b => b.classList.remove('active'));
+        currentWord = customW;
+        currentIpa = customI;
+        currentSyllableCount = customC;
+        currentVersionIndex = 0;
+        currentVersionSaved = false;
+        redoRecording();
+        applyCurrentVersion();
+        updateDisplay();
+        showToast(`Using custom word: ${customW}`, 'success');
+      });
+    }
+    function drawVisualizer() {
+      if (!visualizer) return;
+      const ctx = visualizer.getContext('2d');
+      const width = visualizer.width;
+      const height = visualizer.height;
+      animationFrameId = requestAnimationFrame(drawVisualizer);
+      if (!analyserNode) {
+        ctx.fillStyle = '#1e1e2e';
+        ctx.fillRect(0, 0, width, height);
+        return;
+      }
+      const bufferLength = analyserNode.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      analyserNode.getByteTimeDomainData(dataArray);
+      ctx.fillStyle = '#1e1e2e';
+      ctx.fillRect(0, 0, width, height);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#a6e3a1';
+      ctx.beginPath();
+      const sliceWidth = width / bufferLength;
+      let x = 0;
+      for (let i = 0; i < bufferLength; i++) {
+        const v = dataArray[i] / 128.0;
+        const y = (v * height) / 2;
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+        x += sliceWidth;
+      }
+      ctx.lineTo(width, height / 2);
+      ctx.stroke();
+    }
+    drawVisualizer();
+
+    function startRecordingTimer() {
+      recordingStartTime = Date.now();
+      if (recordingTimerEl) recordingTimerEl.classList.add('active');
+      if (timerValueEl) timerValueEl.textContent = '0.0s';
+      recordingTimerId = setInterval(() => {
+        const elapsed = ((Date.now() - recordingStartTime) / 1000).toFixed(1);
+        if (timerValueEl) timerValueEl.textContent = `${elapsed}s`;
+      }, 100);
+    }
+
+    function stopRecordingTimer() {
+      if (recordingTimerId) { clearInterval(recordingTimerId); recordingTimerId = null; }
+      if (recordingTimerEl) recordingTimerEl.classList.remove('active');
+    }
+
+    async function startRecording() {
+      rawSamples = [];
+      audioBlob = null;
+      currentVersionSaved = false;
+      setSaveButtonState(false);
+      if (btnNextWord) btnNextWord.disabled = true;
+      updateVersionButtons();
+      setStepGuidance(`Step 3: Say “${currentWord}” clearly now. Click Stop when you finish.`);
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const sourceNode = audioContext.createMediaStreamSource(mediaStream);
+        analyserNode = audioContext.createAnalyser();
+        analyserNode.fftSize = 256;
+        sourceNode.connect(analyserNode);
+        const bufferSize = 4096;
+        scriptProcessor = audioContext.createScriptProcessor(bufferSize, 1, 1);
+        sourceNode.connect(scriptProcessor);
+        scriptProcessor.connect(audioContext.destination);
+        scriptProcessor.onaudioprocess = (e) => {
+          const inputBuffer = e.inputBuffer.getChannelData(0);
+          rawSamples.push(new Float32Array(inputBuffer));
+        };
+        startRecordingTimer();
+        if (micStatus) {
+          micStatus.textContent = "Status: Recording...";
+          micStatus.style.color = "var(--status-danger)";
+        }
+        if (btnRecord) btnRecord.disabled = true;
+        if (btnStop) btnStop.disabled = false;
+        if (btnRedo) btnRedo.disabled = true;
+      } catch (err) {
+        console.error('Failed to start recording:', err);
+        showToast('Could not access microphone.', 'error');
+        if (micStatus) micStatus.textContent = "Status: Mic Error";
+      }
+    }
+    function stopRecording() {
+      if (!mediaStream) return;
+      stopRecordingTimer();
+      if (micStatus) {
+        micStatus.textContent = "Status: Processing Audio...";
+        micStatus.style.color = "var(--text-color)";
+      }
+      if (scriptProcessor) {
+        scriptProcessor.disconnect();
+        scriptProcessor.onaudioprocess = null;
+        scriptProcessor = null;
+      }
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+      }
+      const sampleRate = audioContext ? audioContext.sampleRate : 44100;
+      if (audioContext) {
+        audioContext.close();
+      }
+      analyserNode = null;
+      let totalLength = 0;
+      rawSamples.forEach(arr => { totalLength += arr.length; });
+      const mergedSamples = new Float32Array(totalLength);
+      let offset = 0;
+      rawSamples.forEach(arr => {
+        mergedSamples.set(arr, offset);
+        offset += arr.length;
+      });
+      let peak = 0;
+      let sumSquares = 0;
+      for (const sample of mergedSamples) {
+        const magnitude = Math.abs(sample);
+        peak = Math.max(peak, magnitude);
+        sumSquares += sample * sample;
+      }
+      const rms = mergedSamples.length ? Math.sqrt(sumSquares / mergedSamples.length) : 0;
+      const allowSilentBrowserFixture = window.__CRM_BROWSER_TEST__ === true;
+      const allowUnrateableRecording = currentCategory === 'unrateable';
+      if (!allowSilentBrowserFixture && !allowUnrateableRecording && (!mergedSamples.length || peak < 0.01 || rms < 0.002)) {
+        audioBlob = null;
+        if (playbackContainer) playbackContainer.style.display = 'none';
+        if (micStatus) {
+          micStatus.textContent = 'Status: No speech detected';
+          micStatus.style.color = '#b45309';
+        }
+        if (consoleOutput) consoleOutput.textContent = 'No usable speech detected. Please redo and say the target word clearly.';
+        if (btnRecord) btnRecord.disabled = true;
+        if (btnStop) btnStop.disabled = true;
+        if (btnRedo) btnRedo.disabled = false;
+        if (btnNextWord) btnNextWord.disabled = true;
+        setSaveButtonState(false);
+        setStepGuidance(`Step 3: No speech detected. Click Redo, say “${currentWord}” clearly, and click Stop.`);
+        showToast('No speech detected. Please redo the recording and say the target word clearly.', 'error');
+        return;
+      }
+      audioBlob = encodeWAV(mergedSamples, sampleRate);
+      const audioURL = URL.createObjectURL(audioBlob);
+      if (audioPlayer) audioPlayer.src = audioURL;
+      if (playbackContainer) playbackContainer.style.display = 'flex';
+      if (micStatus) micStatus.textContent = allowUnrateableRecording ? "Status: Unrateable audio captured" : "Status: Audio Captured";
+      if (btnRecord) btnRecord.disabled = true;
+      if (btnStop) btnStop.disabled = true;
+      if (btnRedo) btnRedo.disabled = false;
+      setSaveButtonState(true);
+      if (btnNextWord) btnNextWord.disabled = false;
+      updateVersionButtons();
+      setStepGuidance(`Step 4: Play the ${CORPUS_VERSIONS[currentVersionIndex].label} recording to verify it, then click Save Attempt.`);
+      showToast('Audio captured successfully.', 'success');
+    }
+    function encodeWAV(samples, sampleRate) {
+      const buffer = new ArrayBuffer(44 + samples.length * 2);
+      const view = new DataView(buffer);
+      writeString(view, 0, 'RIFF');
+      view.setUint32(4, 36 + samples.length * 2, true);
+      writeString(view, 8, 'WAVE');
+      writeString(view, 12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, 1, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      writeString(view, 36, 'data');
+      view.setUint32(40, samples.length * 2, true);
+      let offset = 44;
+      for (let i = 0; i < samples.length; i++, offset += 2) {
+        let s = Math.max(-1, Math.min(1, samples[i]));
+        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+      }
+      return new Blob([view], { type: 'audio/wav' });
+    }
+    function writeString(view, offset, string) {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    }
+    function redoRecording() {
+      rawSamples = [];
+      audioBlob = null;
+      currentVersionSaved = false;
+      if (audioPlayer) audioPlayer.src = '';
+      if (playbackContainer) playbackContainer.style.display = 'none';
+      if (micStatus) {
+        micStatus.textContent = "Status: Microphone Ready";
+        micStatus.style.color = "var(--text-color)";
+      }
+      if (btnRecord) btnRecord.disabled = false;
+      if (btnStop) btnStop.disabled = true;
+      if (btnRedo) btnRedo.disabled = true;
+      setSaveButtonState(false);
+      if (btnNextWord) btnNextWord.disabled = true;
+      updateVersionButtons();
+      setStepGuidance(`Step 3: Ready to record “${currentWord}”. Click Record to begin.`);
+      if (consoleOutput) consoleOutput.textContent = "No changes pending.";
+    }
+    async function saveToCorpus() {
+      if (!audioBlob) return;
+      setSaveButtonState(false, 'Saving…');
+      setStepGuidance('Saving: Uploading the verified recording to cloud storage…');
+      if (consoleOutput) consoleOutput.textContent = "Saving attempt...";
+      const sampleId = updateSampleId();
+      const observedCountValue = currentExpectedObservedCount;
+      const categoryValue = currentCategory;
+      const metadata = {
+        sampleId,
+        targetWord: currentWord,
+        referenceIpa: currentIpa,
+        expectedObservedCount: observedCountValue,
+        targetSyllableCount: currentSyllableCount,
+        category: categoryValue,
+        speakerCohort: currentSpeakerCohort
+      };
+      const formData = new FormData();
+      formData.append('audio', audioBlob, `${sampleId}.wav`);
+      formData.append('metadata', JSON.stringify(metadata));
+      try {
+        const json = await apiFetchJson('/api/admin/dev/save-corpus-sample', {
+          method: 'POST',
+          body: formData
+        });
+        if (consoleOutput) {
+          const hash = String(json.sample?.sourceHash || json.data?.sample?.sourceHash || json.data?.hash || '');
+          consoleOutput.textContent = `Saved to cloud: ${sampleId}.wav${hash ? ` (hash: ${hash.substring(0, 10)}...)` : ''}`;
+        }
+        showToast('Successfully saved to cloud storage.', 'success');
+        currentVersionSaved = true;
+        await loadSavedSamples();
+        redoRecording();
+        currentVersionSaved = true;
+        updateVersionButtons();
+
+        // Auto-advance logic
+        const shouldAutoAdvance = autoAdvanceToggle ? autoAdvanceToggle.checked : true;
+        if (shouldAutoAdvance) {
+          if (currentVersionIndex < CORPUS_VERSIONS.length - 1) {
+            setStepGuidance(`Saved ✓ — Auto-advancing to ${CORPUS_VERSIONS[currentVersionIndex + 1].label} version…`);
+            setTimeout(() => moveToVersion(currentVersionIndex + 1), 800);
+          } else {
+            setStepGuidance(`All 5 versions complete for "${currentWord}"! Auto-advancing to next word…`);
+            showToast(`All versions complete for "${currentWord}"!`, 'success');
+            setTimeout(() => {
+              if (btnNextWord && !btnNextWord.disabled) btnNextWord.click();
+              else setStepGuidance('All versions complete. Select the next word from the list.');
+            }, 1000);
+          }
+        } else {
+          setStepGuidance(`Saved Version ${currentVersionIndex + 1} of ${CORPUS_VERSIONS.length}. Click Next Version to continue, or Next Word when all versions are complete.`);
+        }
+      } catch (err) {
+        console.error('Failed to save corpus sample:', err);
+        if (consoleOutput) consoleOutput.textContent = `Error: ${err.message}`;
+        showToast(`Save failed: ${err.message}`, 'error');
+        setSaveButtonState(true);
+      }
+    }
+    if (btnRecord) btnRecord.addEventListener('click', startRecording);
+    if (btnStop) btnStop.addEventListener('click', stopRecording);
+    if (btnRedo) btnRedo.addEventListener('click', redoRecording);
+    if (btnSave) btnSave.addEventListener('click', saveToCorpus);
+    if (btnRefresh) btnRefresh.addEventListener('click', () => loadSavedSamples());
+
+    // Word search filter
+    if (wordSearchInput) wordSearchInput.addEventListener('input', () => {
+      currentPage = 1;
+      applyWordFilter();
+    });
+
+    // Speaker cohort dropdown handler
+    if (speakerCohortInput && speakerCohortInput.tagName === 'SELECT') {
+      speakerCohortInput.addEventListener('change', () => {
+        if (speakerCohortInput.value === 'custom') {
+          if (cohortCustomRow) cohortCustomRow.classList.add('active');
+          if (cohortCustomInput) { cohortCustomInput.focus(); currentSpeakerCohort = cohortCustomInput.value || 'custom-01'; }
+        } else {
+          if (cohortCustomRow) cohortCustomRow.classList.remove('active');
+          currentSpeakerCohort = speakerCohortInput.value;
+        }
+        updateSampleId();
+      });
+    }
+    if (cohortCustomInput) cohortCustomInput.addEventListener('input', () => {
+      currentSpeakerCohort = cohortCustomInput.value.trim() || 'custom-01';
+      updateSampleId();
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      const panel = document.querySelector('[data-panel="pronunciation-samples"]');
+      if (!panel || panel.style.display === 'none') return;
+      if (e.target.matches('input, select, textarea')) return;
+      const key = e.key;
+      if (key === 'r' || key === 'R') {
+        if (btnRecord && !btnRecord.disabled) { e.preventDefault(); btnRecord.click(); }
+      } else if (key === ' ') {
+        if (btnStop && !btnStop.disabled) { e.preventDefault(); btnStop.click(); }
+      } else if (key === 'Enter') {
+        if (btnSave && !btnSave.disabled) { e.preventDefault(); btnSave.click(); }
+      } else if (key === 'Backspace') {
+        if (btnRedo && !btnRedo.disabled) { e.preventDefault(); btnRedo.click(); }
+      } else if (key === 'ArrowRight') {
+        if (btnNextVersion && !btnNextVersion.disabled) { e.preventDefault(); btnNextVersion.click(); }
+      } else if (key === 'ArrowLeft') {
+        if (btnPrevVersion && !btnPrevVersion.disabled) { e.preventDefault(); btnPrevVersion.click(); }
+      } else if (key === 'n' || key === 'N') {
+        if (btnNextWord && !btnNextWord.disabled) { e.preventDefault(); btnNextWord.click(); }
+      }
+    });
+
+    updateDisplay();
+    loadSavedSamples();
+  }
 })();

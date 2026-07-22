@@ -1,11 +1,14 @@
 import assert from 'node:assert/strict';
 import {
     ALGORITHM_VERSION,
+    NATIVE_ANALYSIS_RETRY_DELAY_MS,
     SCHEMA_VERSION,
     attachValidatedNativeAnalyses,
     buildReferenceCacheKey,
     compressAnalysisV2,
     getSelectableReferenceVariants,
+    needsNativeAnalysisRefresh,
+    referenceNeedsNativeAnalysisRefresh,
     selectReferenceVariant,
     validateNativeAnalysisForVariant,
     validateReferenceV2
@@ -323,4 +326,173 @@ assert.throws(
     /not selectable/i
 );
 
-console.log('reference-contract tests passed');
+// ═══════════════════════════════════════════════════════════════
+// Task 1: needsNativeAnalysisRefresh tests
+// ═══════════════════════════════════════════════════════════════
+
+// Test: NATIVE_ANALYSIS_RETRY_DELAY_MS is a named constant
+assert.equal(typeof NATIVE_ANALYSIS_RETRY_DELAY_MS, 'number');
+assert.equal(NATIVE_ANALYSIS_RETRY_DELAY_MS, 500);
+
+assert.equal(
+    referenceNeedsNativeAnalysisRefresh(validReference({
+        variants: [{ ...validVariant(), nativeAnalysis: null }]
+    })),
+    true,
+    'a cached reference with a graphless audio-backed variant must be refreshed'
+);
+
+// Test 1: Valid audio-backed cached variant with no nativeAnalysis is flagged for refresh
+{
+    const audioVariant = validVariant();
+    // Simulate a cached reference where the variant has audio but nativeAnalysis was never attached
+    const cachedRef = validReference({ variants: [{ ...audioVariant, nativeAnalysis: undefined }] });
+    const result = needsNativeAnalysisRefresh(cachedRef.variants[0]);
+    assert.equal(result, true, 'audio-backed variant missing nativeAnalysis should need refresh');
+}
+
+// Test 2: Variant with unusable native contours is flagged for refresh
+{
+    const audioVariant = validVariant();
+    const brokenAnalysis = {
+        analysisVersion: 'pronunciation-analysis-v2',
+        variantId: audioVariant.id,
+        canonicalSyllableCount: 1,
+        quality: { rateable: true, confidence: 0.91, reasons: [] },
+        segmentation: { rawCandidateCount: 1, evidenceCandidateCount: 1, selectedCount: 1, method: 'acoustic-candidate-selection', confidence: 0.91, conflicts: [] },
+        observed: { syllableCount: 1, primaryStress: 0, syllables: [{}] },
+        pitch: { times: [], values: [] },
+        intensity: { times: [], values: [] },
+        capabilities: { showNativeGraphs: true }
+    };
+    const variantWithBroken = { ...audioVariant, nativeAnalysis: brokenAnalysis };
+    const result = needsNativeAnalysisRefresh(variantWithBroken);
+    assert.equal(result, true, 'variant with empty contour arrays should need refresh');
+}
+
+// Test 3: First /analyze-url/v2 failure and second success produces graphs
+{
+    let callCount = 0;
+    const audioVariant = validVariant();
+    const goodAnalysis = {
+        analysisVersion: 'pronunciation-analysis-v2',
+        variantId: audioVariant.id,
+        canonicalSyllableCount: 1,
+        quality: { rateable: true, confidence: 0.91, reasons: [] },
+        segmentation: { rawCandidateCount: 1, evidenceCandidateCount: 1, selectedCount: 1, method: 'acoustic-candidate-selection', confidence: 0.91, conflicts: [] },
+        observed: { syllableCount: 1, primaryStress: 0, syllables: [{}] },
+        pitch: { times: [0, 0.01], values: [150, 155] },
+        intensity: { times: [0, 0.01], values: [70, 72] },
+        capabilities: { showNativeGraphs: true }
+    };
+    const analyzeWithRetry = async () => {
+        callCount++;
+        if (callCount === 1) throw new Error('Transient failure');
+        return goodAnalysis;
+    };
+    const ref = validReference({ variants: [audioVariant] });
+    // attachValidatedNativeAnalyses should internally retry once on failure
+    // This test documents the EXPECTED behavior after Task 1.2 implementation
+    // For now, the first failure causes the variant to get null nativeAnalysis
+    const result = await attachValidatedNativeAnalyses(ref, analyzeWithRetry);
+    // After implementation: callCount should be 2 (one failure + one retry success)
+    // and the variant should have valid nativeAnalysis
+    assert.equal(callCount >= 1, true, 'analyzeVariant should have been called');
+    // This assertion will fail until retry logic is implemented:
+    assert.equal(result.variants[0].nativeAnalysis !== null, true,
+        'retry should have recovered the analysis');
+    assert.equal(callCount, 2, 'should have retried exactly once after first failure');
+}
+
+// Test 4: Two failures preserve dictionary data but do not create a permanent successful graphless cache hit
+{
+    let callCount = 0;
+    const audioVariant = validVariant();
+    const alwaysFail = async () => {
+        callCount++;
+        throw new Error('Persistent failure');
+    };
+    const ref = validReference({ variants: [audioVariant] });
+    const result = await attachValidatedNativeAnalyses(ref, alwaysFail);
+    // Dictionary metadata (word, syllables, IPA) must survive
+    assert.equal(result.word, 'car');
+    assert.equal(result.variants[0].syllableCount, 1);
+    assert.equal(result.variants[0].displayIpa, '/kɑr/');
+    // nativeAnalysis should be null (failed)
+    assert.equal(result.variants[0].nativeAnalysis, null);
+    // The variant must be marked as retryable, not as a final successful cache entry
+    assert.equal(result.variants[0].analysisValidation?.status, 'retryable');
+    // Should have been called twice (initial + one retry)
+    assert.equal(callCount, 2, 'should have retried exactly once before giving up');
+}
+
+// Test 5: A legitimate CMU/no-audio variant does not retry
+{
+    const cmuVariant = validVariant({
+        source: {
+            provider: 'cmu-pronouncing-dictionary',
+            entryId: 'cmudict:car',
+            exactMatch: true,
+            transcription: 'cmu-arpabet-converted',
+            dialect: 'en-US',
+            labels: []
+        },
+        definition: null,
+        audioUrl: null,
+        capabilities: { playAudio: false, scoreCountStress: true, showNativeGraphs: false }
+    });
+    const result = needsNativeAnalysisRefresh(cmuVariant);
+    assert.equal(result, false, 'CMU/no-audio variant should never need refresh');
+}
+
+// Test 6: A variant with valid usable contours does NOT need refresh
+{
+    const audioVariant = validVariant();
+    const goodAnalysis = {
+        analysisVersion: 'pronunciation-analysis-v2',
+        variantId: audioVariant.id,
+        canonicalSyllableCount: 1,
+        quality: { rateable: true, confidence: 0.91, reasons: [] },
+        segmentation: { rawCandidateCount: 1, evidenceCandidateCount: 1, selectedCount: 1, method: 'acoustic-candidate-selection', confidence: 0.91, conflicts: [] },
+        observed: { syllableCount: 1, primaryStress: 0, syllables: [{}] },
+        pitch: { times: [0, 0.01], values: [150, 155] },
+        intensity: { times: [0, 0.01], values: [70, 72] },
+        capabilities: { showNativeGraphs: true }
+    };
+    const variantWithGood = { ...audioVariant, nativeAnalysis: goodAnalysis };
+    const result = needsNativeAnalysisRefresh(variantWithGood);
+    assert.equal(result, false, 'variant with usable contours should NOT need refresh');
+}
+
+// Test 7: Refreshing one graphless variant preserves graphs on sibling variants
+{
+    const first = validVariant();
+    const second = validVariant({ id: 'eeeeeeeeeeeeeeee', partOfSpeech: 'verb' });
+    const analysisFor = (candidate) => ({
+        analysisVersion: 'pronunciation-analysis-v2',
+        variantId: candidate.id,
+        canonicalSyllableCount: candidate.syllableCount,
+        quality: { rateable: true, confidence: 0.91, reasons: [] },
+        segmentation: { rawCandidateCount: 1, evidenceCandidateCount: 1, selectedCount: 1, method: 'acoustic-candidate-selection', confidence: 0.91, conflicts: [] },
+        observed: { syllableCount: 1, primaryStress: 0, syllables: [{}] },
+        pitch: { times: [0, 0.01], values: [150, 155] },
+        intensity: { times: [0, 0.01], values: [70, 72] },
+        capabilities: { showNativeGraphs: true }
+    });
+    const firstAnalysis = analysisFor(first);
+    const reference = validReference({
+        variants: [
+            { ...first, nativeAnalysis: firstAnalysis },
+            { ...second, nativeAnalysis: null }
+        ]
+    });
+    const refreshed = await attachValidatedNativeAnalyses(
+        reference,
+        async (candidate) => analysisFor(candidate),
+        { refreshOnly: true }
+    );
+    assert.deepEqual(refreshed.variants[0].nativeAnalysis, firstAnalysis);
+    assert.equal(refreshed.variants[1].nativeAnalysis.variantId, second.id);
+}
+
+process.stdout.write('reference-contract tests passed\n');

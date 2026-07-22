@@ -1558,6 +1558,23 @@
     }
   }
 
+  function syncSpeakingPracticeController(mode = currentActiveMode, scope = PracticeScopeManager.getScope()) {
+    const controller = window.SpeakingPracticeController;
+    if (!controller || !mode || typeof controller.activate !== 'function') return;
+
+    if (typeof controller.isV2Active === 'function' && controller.isV2Active(mode, scope)) {
+      controller.activate(mode, { scope });
+    } else if (typeof controller.unmount === 'function') {
+      controller.unmount(mode);
+    }
+  }
+
+  PracticeScopeManager.subscribe((scope) => {
+    if (currentActiveMode) {
+      syncSpeakingPracticeController(currentActiveMode, scope);
+    }
+  });
+
   // Expose for external use
   window.updateCurrentModeIndicator = updateCurrentModeIndicator;
 
@@ -2123,7 +2140,7 @@
         log.log(`[switchToMode] Switching to Speak mode, reloading question ${currentSpeakQuestionId}`);
         await loadQuestion('speak', currentSpeakQuestionId);
       } else if (mode === 'notes' && window.TakeNotesMode && typeof window.TakeNotesMode.loadEntries === 'function') {
-        window.TakeNotesMode.loadEntries();
+        await window.TakeNotesMode.loadEntries();
       } else if (mode === 'rmcsa' && window.RMCSAMode && typeof window.RMCSAMode.activate === 'function') {
         await window.RMCSAMode.activate();
       } else if (mode === 'rmcma' && window.RMCMAMode && typeof window.RMCMAMode.activate === 'function') {
@@ -2171,6 +2188,8 @@
           window.RTSMode.onEnter();
         }
       }
+
+      syncSpeakingPracticeController(mode, PracticeScopeManager.getScope());
 
       // 5. Check if this is the first time using this mode - trigger tutorial
       const firstTimeKey = `${mode}ModeFirstUse`;
@@ -3031,7 +3050,7 @@
     // Only show for logged-in users
     const isLoggedIn = window.authUI && !window.authUI.isGuestMode?.() && window.authUI.getCurrentUserId?.();
     const guestNotice = document.getElementById('progress-guest-notice');
-    const progressPanelContent = document.getElementById('progress-panel-content');
+    const progressPanelContent = document.getElementById('progress-panel-content') || document.getElementById('progress-tab-content-vocab');
 
     // Toggle guest mode class for blur effect
     if (progressPanelContent) {
@@ -9101,11 +9120,13 @@
    * Open the progress panel
    */
   function openProgressPanel() {
-    if (progressPanelSide) {
+    if (window.PTEAttemptArchive?.openProgressModal) {
+      window.PTEAttemptArchive.openProgressModal('vocab-progress');
+    } else if (progressPanelSide) {
       progressPanelSide.classList.add('expanded');
-    }
-    if (progressPanelOverlay) {
-      progressPanelOverlay.classList.add('active');
+      if (progressPanelOverlay) {
+        progressPanelOverlay.classList.add('active');
+      }
     }
   }
 
@@ -9113,11 +9134,13 @@
    * Close the progress panel
    */
   function closeProgressPanel() {
-    if (progressPanelSide) {
+    if (window.PTEAttemptArchive?.closeProgressModal) {
+      window.PTEAttemptArchive.closeProgressModal();
+    } else if (progressPanelSide) {
       progressPanelSide.classList.remove('expanded');
-    }
-    if (progressPanelOverlay) {
-      progressPanelOverlay.classList.remove('active');
+      if (progressPanelOverlay) {
+        progressPanelOverlay.classList.remove('active');
+      }
     }
   }
 

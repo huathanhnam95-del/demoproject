@@ -1,0 +1,164 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://pte-practice.app/schemas/model-manifest.schema.json",
+  "title": "Phoneme Model Manifest",
+  "description": "Records the selected phoneme-segmentation model, its benchmark results, calibrated quality thresholds, and the deterministic engine verdict.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "selectedEngine",
+    "modelId",
+    "modelRevision",
+    "tokenizerChecksum",
+    "modelChecksum",
+    "quality",
+    "benchmark",
+    "evidenceStatus",
+    "verdict"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": { "evidenceStatus": { "const": "pending" } },
+        "required": ["evidenceStatus"]
+      },
+      "then": {
+        "properties": {
+          "selectedEngine": { "const": "provider-evaluation-required" },
+          "verdict": { "const": "provider-evaluation-required" }
+        }
+      }
+    }
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "description": "Semantic version of this manifest schema.",
+      "examples": ["1.0.0"]
+    },
+    "selectedEngine": {
+      "type": "string",
+      "enum": ["torch", "onnx", "provider-evaluation-required"],
+      "description": "The inference engine selected by the deterministic selection tree."
+    },
+    "modelId": {
+      "type": "string",
+      "description": "Hugging Face model identifier.",
+      "examples": ["facebook/wav2vec2-lv-60-espeak-cv-ft"]
+    },
+    "modelRevision": {
+      "type": "string",
+      "description": "Git revision hash pinning the exact model snapshot.",
+      "pattern": "^[0-9a-f]{7,40}$"
+    },
+    "tokenizerChecksum": {
+      "type": "string",
+      "description": "SHA-256 hex digest of the tokenizer vocabulary file.",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "modelChecksum": {
+      "type": "string",
+      "description": "SHA-256 hex digest of the model weights file.",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "quantization": {
+      "type": "object",
+      "description": "Quantization configuration applied to the model (if any).",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["none", "int8", "int4"],
+          "description": "Quantization bit-width."
+        },
+        "format": {
+          "type": "string",
+          "description": "Quantization format or toolkit used (e.g. 'onnxruntime', 'dynamic').",
+          "examples": ["onnxruntime", "dynamic"]
+        }
+      },
+      "required": ["type"],
+      "additionalProperties": false
+    },
+    "quality": {
+      "type": "object",
+      "description": "Calibrated quality thresholds frozen from the benchmark calibration sweep.",
+      "required": ["meanPhonemeConfidence", "minNucleusConfidence"],
+      "additionalProperties": false,
+      "properties": {
+        "meanPhonemeConfidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Calibrated mean phoneme confidence threshold."
+        },
+        "minNucleusConfidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Calibrated minimum nucleus (vowel) confidence threshold."
+        }
+      }
+    },
+    "benchmark": {
+      "type": "object",
+      "description": "Raw benchmark measurements from the probe run.",
+      "required": ["peakRssGiB"],
+      "additionalProperties": false,
+      "properties": {
+        "peakRssGiB": {
+          "type": ["number", "null"],
+          "description": "Peak resident set size during loading + inference, in GiB."
+        },
+        "warmMedianMs": {
+          "type": "number",
+          "description": "Median inference latency over warm runs, in milliseconds."
+        },
+        "warmP95Ms": {
+          "type": "number",
+          "description": "95th-percentile inference latency over warm runs, in milliseconds."
+        },
+        "coldLoadMs": {
+          "type": "number",
+          "description": "Time to load model from disk into memory, in milliseconds."
+        },
+        "cleanAccuracy": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Fraction of clean corpus words whose phoneme output matches expected."
+        },
+        "mandatoryWordsCorrect": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Count of mandatory calibration words correctly transcribed."
+        },
+        "mandatoryWordsTotal": {
+          "type": "integer",
+          "const": 6,
+          "description": "Total mandatory calibration words (always 6)."
+        },
+        "corpusManifestHash": {
+          "type": "string",
+          "description": "SHA-256 of the corpus manifest file used for accuracy testing.",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "evidenceStatus": {
+      "type": "string",
+      "enum": ["pending", "verified"],
+      "description": "Whether corpus-backed benchmark and calibration evidence has been verified."
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of when this manifest was generated."
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["torch", "onnx", "provider-evaluation-required"],
+      "description": "Final engine verdict from the deterministic selection tree."
+    }
+  }
+}

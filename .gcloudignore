@@ -13,3 +13,14 @@ backend/local_server/*
 !public
 public/*
 !public/cmudict.json
+
+# Phoneme recognizer service files (whitelisted)
+!backend/Dockerfile.phoneme
+!backend/cloudbuild.phoneme.yaml
+!backend/requirements.phoneme-torch.txt
+!backend/requirements.phoneme-onnx.txt
+!backend/__init__.py
+!backend/phoneme_service/
+!backend/phoneme_service/*.py
+!backend/phoneme_service/model-manifest.json
+!backend/phoneme_service/model-manifest.schema.json

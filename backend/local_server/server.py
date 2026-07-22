@@ -64,6 +64,18 @@ except Exception as e:
     print(f"⚠️ Error loading NLTK: {e}")
     lemmatizer = None
 
+import concurrent.futures
+import time
+import unicodedata
+
+# V3 mode: off | shadow | active
+_PRONUNCIATION_V3_MODE = os.environ.get('PRONUNCIATION_V3_MODE', 'off').strip().lower()
+if _PRONUNCIATION_V3_MODE not in ('off', 'shadow', 'active'):
+    raise ValueError(f"Invalid PRONUNCIATION_V3_MODE: {_PRONUNCIATION_V3_MODE!r} — must be off, shadow, or active")
+if _PRONUNCIATION_V3_MODE in ('shadow', 'active'):
+    if not os.environ.get('PHONEME_SERVICE_URL'):
+        raise ValueError("PHONEME_SERVICE_URL is required when PRONUNCIATION_V3_MODE is shadow or active")
+
 # ============================================================================
 # CONFIGURATION - Research-backed parameters
 # ============================================================================
@@ -87,8 +99,13 @@ class AnalysisConfig:
     # Syllable detection (de Jong & Wempe 2009)
     INITIAL_DIP_THRESHOLD = 2.0    # dB - standard threshold
     SENSITIVE_DIP_THRESHOLD = 1.5  # dB - for weak syllables
+    HINTED_DIP_THRESHOLD = 0.75    # dB - target-guided pass for smooth transitions
     MIN_SYLLABLE_DURATION = 0.04   # 40ms - minimum valid syllable
     MAX_SYLLABLE_DURATION = 0.45   # 450ms - based on TIMIT statistics
+    MIN_NUCLEUS_SEPARATION = 0.08  # Ignore release/transient peaks within 80ms
+    EDGE_NUCLEUS_WINDOW = 0.06     # Edge peaks inside 60ms may be onset/release noise
+    EDGE_NEIGHBOR_MAX_SEPARATION = 0.12
+    WEAK_EDGE_NUCLEUS_MARGIN_DB = 6.0
     
     # Threshold retry levels (dB below median)
     THRESHOLD_LEVELS = [2, 5, 8]
@@ -570,7 +587,8 @@ def health():
         'schemaVersion': PRONUNCIATION_SCHEMA_VERSION,
         'algorithmVersion': PRONUNCIATION_ALGORITHM_VERSION,
         'analysisVersion': 'pronunciation-analysis-v2',
-        'deploymentVersion': get_deployment_version()
+        'deploymentVersion': get_deployment_version(),
+        'pronunciationV3Mode': _PRONUNCIATION_V3_MODE,
     })
 
 # ============================================
@@ -1667,6 +1685,48 @@ def _candidate_from_syllable(syllable):
     }
 
 
+def _target_aligned_duration_segmentation(candidates, target_count, method):
+    """Keep measured duration regions even when an individual region lacks F0."""
+    candidates = list(candidates or [])
+    if (
+        not isinstance(target_count, int)
+        or target_count < 1
+        or len(candidates) != target_count
+    ):
+        return None
+
+    for candidate in candidates:
+        syllable = candidate.get('syllable') or {}
+        start = syllable.get('startTime')
+        end = syllable.get('endTime')
+        if (
+            not _finite_number(candidate.get('time'))
+            or not _finite_number(candidate.get('intensity'))
+            or not _finite_number(start)
+            or not _finite_number(end)
+            or float(end) <= float(start)
+        ):
+            return None
+
+    return {
+        'rawCandidateCount': len(candidates),
+        'evidenceCandidateCount': sum(
+            1 for candidate in candidates if candidate.get('voiced') is True
+        ),
+        'selectedCount': len(candidates),
+        'method': method,
+        'confidence': round(
+            float(np.mean([
+                float(candidate.get('confidence', 0) or 0)
+                for candidate in candidates
+            ])),
+            3,
+        ),
+        'conflicts': [],
+        'selected': candidates,
+    }
+
+
 def select_native_acoustic_candidates(candidates, target_count, noise_threshold=0.45):
     """Select only acoustically supported nuclei; never synthesize a candidate."""
     raw_candidates = list(candidates or [])
@@ -1812,23 +1872,44 @@ def build_analysis_v2_response(raw_analysis, expected_syllable_count=None, nativ
             candidates,
             expected_syllable_count,
         )
+        if (
+            segmentation['method'] == 'insufficient-acoustic-candidates'
+            and (
+                aligned_segmentation := _target_aligned_duration_segmentation(
+                    candidates,
+                    expected_syllable_count,
+                    'target-aligned-native-duration-regions',
+                )
+            ) is not None
+        ):
+            segmentation = aligned_segmentation
     else:
-        evidence = [
-            item for item in candidates
-            if item['voiced'] and _finite_number(item['intensity'])
-        ]
-        segmentation = {
-            'rawCandidateCount': len(candidates),
-            'evidenceCandidateCount': len(evidence),
-            'selectedCount': len(evidence),
-            'method': 'independent-acoustic-detection',
-            'confidence': round(
-                float(np.mean([item['confidence'] for item in evidence])),
-                3,
-            ) if evidence else 0.0,
-            'conflicts': [] if evidence else ['NO_SPEECH'],
-            'selected': evidence,
-        }
+        segmentation = _target_aligned_duration_segmentation(
+            candidates,
+            expected_syllable_count,
+            'target-aligned-acoustic-feedback',
+        )
+        if segmentation is None:
+            evidence = [
+                item for item in candidates
+                if item['voiced'] and _finite_number(item['intensity'])
+            ]
+            segmentation = {
+                'rawCandidateCount': len(candidates),
+                'evidenceCandidateCount': len(evidence),
+                'selectedCount': len(evidence),
+                'method': (
+                    'target-aligned-acoustic-feedback'
+                    if expected_syllable_count
+                    else 'independent-acoustic-detection'
+                ),
+                'confidence': round(
+                    float(np.mean([item['confidence'] for item in evidence])),
+                    3,
+                ) if evidence else 0.0,
+                'conflicts': [] if evidence else ['NO_SPEECH'],
+                'selected': evidence,
+            }
 
     selected_syllables = [item['syllable'] for item in segmentation['selected']]
     reasons = list(segmentation['conflicts'])
@@ -1872,14 +1953,18 @@ def build_analysis_v2_response(raw_analysis, expected_syllable_count=None, nativ
 
 
 def analyze_audio_v2(audio_path, expected_syllable_count=None, native=False):
-    # Native dictionary audio is aligned to its trusted canonical count so the
-    # reference can expose per-syllable timing. Learner analysis remains fully
-    # independent of the lexical target.
-    alignment_count = expected_syllable_count if native else None
-    raw_analysis = analyze_audio(
-        audio_path,
-        expected_syllables=alignment_count,
-    )
+    # Native references and learner attempts are aligned to the trusted target
+    # count so every expected syllable receives measured acoustic feedback.
+    if native:
+        raw_analysis = analyze_audio(
+            audio_path,
+            expected_syllables=expected_syllable_count,
+        )
+    else:
+        raw_analysis = analyze_audio(
+            audio_path,
+            expected_syllables=expected_syllable_count,
+        )
     return build_analysis_v2_response(
         raw_analysis,
         expected_syllable_count=expected_syllable_count,
@@ -1892,13 +1977,16 @@ def analyze_v2():
     if 'audio' not in request.files:
         return jsonify({'error': 'No audio file provided'}), 400
     audio_file = request.files['audio']
+    expected_syllable_count = request.form.get('expected_syllables', type=int)
+    if not expected_syllable_count or not 1 <= expected_syllable_count <= 20:
+        expected_syllable_count = None
     with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp:
         audio_file.save(tmp.name)
         tmp_path = tmp.name
     try:
         result = analyze_audio_v2(
             tmp_path,
-            expected_syllable_count=None,
+            expected_syllable_count=expected_syllable_count,
             native=False,
         )
         return jsonify(result)
@@ -1951,6 +2039,394 @@ def analyze_from_url_v2():
             'error': 'Native pronunciation analysis unavailable',
             'code': 'ANALYSIS_FAILED',
         }), 500
+
+# ============================================
+# V3 PRONUNCIATION ANALYSIS ENDPOINT
+# ============================================
+
+_V3_HARD_TIMEOUT_SECONDS = 18
+
+_IPA_IGNORED_MARKS = frozenset('/[]ˈˌ.·| ‿')
+_IPA_MULTI_SYMBOL_UNITS = tuple(sorted({
+    'tʃ', 'dʒ', 'aɪ', 'aʊ', 'eɪ', 'oʊ', 'ɔɪ',
+    'ɪə', 'ɛə', 'ʊə', 'ɝ', 'ɚ',
+    'ɑr', 'ɔr', 'ɛr', 'ɪr', 'ʊr', 'ər',
+    'l̩', 'm̩', 'n̩', 'ŋ̩',
+}, key=len, reverse=True))
+
+
+def _tokenize_reference_ipa(reference_ipa):
+    """Tokenize display IPA into phoneme units for edit alignment."""
+    normalized = unicodedata.normalize('NFC', str(reference_ipa or ''))
+    tokens = []
+    index = 0
+    while index < len(normalized):
+        char = normalized[index]
+        if char in _IPA_IGNORED_MARKS or char.isspace():
+            index += 1
+            continue
+        matched = next(
+            (unit for unit in _IPA_MULTI_SYMBOL_UNITS if normalized.startswith(unit, index)),
+            None,
+        )
+        if matched:
+            tokens.append(matched)
+            index += len(matched)
+            continue
+        if char in ('ː', 'ˑ') and tokens:
+            tokens[-1] += char
+        else:
+            tokens.append(char)
+        index += 1
+    return tokens
+
+
+def _phoneme_align_edit_ops(reference_phonemes, observed_phonemes):
+    """Compute edit operations between reference and observed phoneme lists.
+
+    Uses Needleman-Wunsch (global alignment) with tie-breaking order:
+    match > substitution > deletion > insertion.
+
+    Returns a list of dicts with keys: op, ref, obs.
+    """
+    ref = list(reference_phonemes or [])
+    obs = list(observed_phonemes or [])
+    n, m = len(ref), len(obs)
+
+    MATCH_SCORE = 1
+    MISMATCH_SCORE = -1
+    GAP_SCORE = -2
+
+    # Build DP table
+    dp = [[0] * (m + 1) for _ in range(n + 1)]
+    for i in range(1, n + 1):
+        dp[i][0] = dp[i - 1][0] + GAP_SCORE
+    for j in range(1, m + 1):
+        dp[0][j] = dp[0][j - 1] + GAP_SCORE
+
+    for i in range(1, n + 1):
+        for j in range(1, m + 1):
+            if ref[i - 1] == obs[j - 1]:
+                diag = dp[i - 1][j - 1] + MATCH_SCORE
+            else:
+                diag = dp[i - 1][j - 1] + MISMATCH_SCORE
+            up = dp[i - 1][j] + GAP_SCORE      # deletion
+            left = dp[i][j - 1] + GAP_SCORE     # insertion
+            dp[i][j] = max(diag, up, left)
+
+    # Traceback with tie-breaking: match > substitution > deletion > insertion
+    ops = []
+    i, j = n, m
+    while i > 0 or j > 0:
+        if i > 0 and j > 0:
+            if ref[i - 1] == obs[j - 1]:
+                diag = dp[i - 1][j - 1] + MATCH_SCORE
+            else:
+                diag = dp[i - 1][j - 1] + MISMATCH_SCORE
+            up = dp[i - 1][j] + GAP_SCORE if i > 0 else float('-inf')
+            left = dp[i][j - 1] + GAP_SCORE if j > 0 else float('-inf')
+
+            current = dp[i][j]
+            # Tie-breaking: prefer match/substitution (diagonal), then deletion, then insertion
+            if current == diag:
+                if ref[i - 1] == obs[j - 1]:
+                    ops.append({'op': 'match', 'ref': ref[i - 1], 'obs': obs[j - 1]})
+                else:
+                    ops.append({'op': 'substitution', 'ref': ref[i - 1], 'obs': obs[j - 1]})
+                i -= 1
+                j -= 1
+            elif i > 0 and current == up:
+                ops.append({'op': 'deletion', 'ref': ref[i - 1], 'obs': None})
+                i -= 1
+            else:
+                ops.append({'op': 'insertion', 'ref': None, 'obs': obs[j - 1]})
+                j -= 1
+        elif i > 0:
+            ops.append({'op': 'deletion', 'ref': ref[i - 1], 'obs': None})
+            i -= 1
+        else:
+            ops.append({'op': 'insertion', 'ref': None, 'obs': obs[j - 1]})
+            j -= 1
+
+    ops.reverse()
+    return ops
+
+
+def _build_v3_comparison(reference_ipa, observed_phonemes, observed_syllable_count, expected_syllables):
+    """Build the comparison block for v3 response when reference_ipa is provided."""
+    if not reference_ipa:
+        return None
+    ref_phonemes = (
+        _tokenize_reference_ipa(reference_ipa)
+        if isinstance(reference_ipa, str)
+        else list(reference_ipa or [])
+    )
+    edit_ops = _phoneme_align_edit_ops(ref_phonemes, observed_phonemes)
+    count_delta = observed_syllable_count - (expected_syllables or 0) if expected_syllables else None
+    return {
+        'count_delta': count_delta,
+        'edit_operations': edit_ops,
+    }
+
+
+def _adapt_v2_to_v3_response(v2_result, mode, reference_ipa=None, expected_syllables=None):
+    """Convert a v2 analysis result into v3 response shape."""
+    quality = v2_result.get('quality', {})
+    observed = v2_result.get('observed', {})
+    syllables = observed.get('syllables', [])
+    syllable_count = observed.get('syllableCount', 0)
+
+    comparison = _build_v3_comparison(
+        reference_ipa, [], syllable_count, expected_syllables,
+    )
+
+    return {
+        'analysisVersion': 'pronunciation-analysis-v3',
+        'mode': mode,
+        'engine': 'praat-v2',
+        'is_rateable': quality.get('rateable', False),
+        'confidence': quality.get('confidence', 0.0),
+        'quality_reason': quality.get('reasons', [None])[0] if quality.get('reasons') else None,
+        'degraded': mode == 'active',
+        'observed_phonemes': [],
+        'observed_syllables': [{
+            'startTime': s.get('startTime', s.get('start', 0)),
+            'endTime': s.get('endTime', s.get('end', 0)),
+            'duration': s.get('duration', 0),
+        } for s in syllables],
+        'syllable_count': syllable_count,
+        'comparison': comparison,
+        'pitch': v2_result.get('pitch', {'times': [], 'values': []}),
+        'intensity': v2_result.get('intensity', {'times': [], 'values': []}),
+        'total_duration': v2_result.get('duration', 0),
+        'sample_rate': v2_result.get('sampleRate'),
+        'capabilities': {
+            'graphs': True,
+            'syllable_duration': True,
+            'phoneme_alignment': False,
+        },
+    }
+
+
+def _build_v3_active_response(praat_result, phoneme_result, reference_ipa=None, expected_syllables=None):
+    """Build v3 response from phoneme recognition + Praat contours."""
+    phonemes = phoneme_result.get('phonemes', [])
+    syllables_from_recognizer = phoneme_result.get('syllables', [])
+    confidence = phoneme_result.get('confidence', 0.0)
+    is_rateable = phoneme_result.get('is_rateable', True)
+    quality_reason = phoneme_result.get('quality_reason')
+    syllable_count = len(syllables_from_recognizer)
+
+    observed_phoneme_labels = [
+        p.get('symbol') or p.get('label', '')
+        for p in phonemes
+    ]
+    comparison = _build_v3_comparison(
+        reference_ipa, observed_phoneme_labels, syllable_count, expected_syllables,
+    )
+
+    return {
+        'analysisVersion': 'pronunciation-analysis-v3',
+        'mode': 'active',
+        'engine': 'ctc-praat',
+        'is_rateable': is_rateable,
+        'confidence': confidence,
+        'quality_reason': quality_reason,
+        'degraded': False,
+        'observed_phonemes': phonemes,
+        'observed_syllables': [{
+            'startTime': s.get('start_time', s.get('start', 0)),
+            'endTime': s.get('end_time', s.get('end', 0)),
+            'duration': s.get(
+                'duration',
+                s.get('end_time', s.get('end', 0)) - s.get('start_time', s.get('start', 0)),
+            ),
+            'confidence': s.get('confidence'),
+            'nucleus': s.get('nucleus'),
+        } for s in syllables_from_recognizer],
+        'syllable_count': syllable_count,
+        'comparison': comparison,
+        'pitch': praat_result.get('pitch', {'times': [], 'values': []}),
+        'intensity': praat_result.get('intensity', {'times': [], 'values': []}),
+        'total_duration': praat_result.get('duration', 0),
+        'sample_rate': praat_result.get('sampleRate'),
+        'capabilities': {
+            'graphs': True,
+            'syllable_duration': True,
+            'phoneme_alignment': True,
+        },
+    }
+
+
+def _build_v3_degraded_response(praat_result, reason, confidence=0.0):
+    """Return contours without presenting a target-guided V2 learner count."""
+    return {
+        'analysisVersion': 'pronunciation-analysis-v3',
+        'mode': 'active',
+        'engine': 'ctc-praat',
+        'is_rateable': False,
+        'confidence': confidence if isinstance(confidence, (int, float)) else 0.0,
+        'quality_reason': reason or 'MODEL_INFERENCE_FAILED',
+        'degraded': True,
+        'observed_phonemes': [],
+        'observed_syllables': [],
+        'syllable_count': None,
+        'comparison': None,
+        'pitch': praat_result.get('pitch', {'times': [], 'values': []}),
+        'intensity': praat_result.get('intensity', {'times': [], 'values': []}),
+        'total_duration': praat_result.get('duration', 0),
+        'sample_rate': praat_result.get('sampleRate'),
+        'capabilities': {
+            'graphs': True,
+            'syllable_duration': False,
+            'phoneme_alignment': False,
+        },
+    }
+
+
+@app.route('/analyze/v3', methods=['POST'])
+def analyze_v3():
+    """V3 pronunciation analysis with optional phoneme recognition."""
+    if 'audio' not in request.files:
+        return jsonify({'error': 'No audio file provided'}), 400
+
+    audio_file = request.files['audio']
+    reference_ipa = request.form.get('reference_ipa')
+    expected_syllables = request.form.get('expected_syllables', type=int)
+    target_word = request.form.get('target_word')
+
+    mode = _PRONUNCIATION_V3_MODE
+
+    # Save audio to temp file
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp:
+        audio_file.save(tmp.name)
+        tmp_path = tmp.name
+
+    try:
+        start_time = time.time()
+
+        if mode == 'off':
+            # Pure v2: run Praat only, adapt output to v3 shape
+            v2_result = analyze_audio_v2(tmp_path, native=False)
+            return jsonify(_adapt_v2_to_v3_response(
+                v2_result, mode,
+                reference_ipa=reference_ipa,
+                expected_syllables=expected_syllables,
+            ))
+
+        # shadow or active: run Praat + phoneme recognition concurrently
+        try:
+            from .phoneme_client import create_phoneme_client
+        except ImportError:
+            from phoneme_client import create_phoneme_client  # type: ignore
+
+        with open(tmp_path, 'rb') as f:
+            wav_bytes = f.read()
+
+        praat_result = None
+        phoneme_result = None
+        phoneme_error = None
+
+        remaining = max(0.001, _V3_HARD_TIMEOUT_SECONDS - (time.time() - start_time))
+
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
+        try:
+            praat_future = executor.submit(
+                analyze_audio_v2, tmp_path, native=False,
+            )
+            phoneme_future = executor.submit(
+                create_phoneme_client().recognize, wav_bytes,
+            )
+
+            try:
+                praat_result = praat_future.result(timeout=remaining)
+            except Exception as e:
+                print(f'V3 Praat analysis error: {e}')
+                return jsonify({
+                    'error': 'Pronunciation analysis failed',
+                    'code': 'V3_PRAAT_FAILED',
+                }), 500
+
+            phoneme_remaining = max(0.001, _V3_HARD_TIMEOUT_SECONDS - (time.time() - start_time))
+            try:
+                phoneme_result = phoneme_future.result(timeout=phoneme_remaining)
+            except concurrent.futures.TimeoutError:
+                phoneme_error = 'TIMEOUT'
+                print('V3 phoneme recognition timed out')
+            except Exception as e:
+                phoneme_error = getattr(e, 'reason', None) or 'MODEL_INFERENCE_FAILED'
+                print(f'V3 phoneme recognition error: {e}')
+        finally:
+            executor.shutdown(wait=False, cancel_futures=True)
+
+        elapsed = time.time() - start_time
+
+        if mode == 'shadow':
+            # Log phoneme results for comparison, but always return v2-adapted
+            v2_syllable_count = praat_result.get('observed', {}).get('syllableCount', 0)
+            phoneme_syllable_count = (
+                len(phoneme_result.get('syllables', []))
+                if phoneme_result and not phoneme_error else None
+            )
+            disagreement_category = 'unavailable'
+            if phoneme_syllable_count is not None:
+                if phoneme_syllable_count == v2_syllable_count:
+                    disagreement_category = 'agreement'
+                elif phoneme_syllable_count < v2_syllable_count:
+                    disagreement_category = 'omission'
+                else:
+                    disagreement_category = 'insertion'
+            shadow_log = {
+                'event': 'pronunciation_v3_shadow',
+                'v2_count': v2_syllable_count,
+                'v3_count': phoneme_syllable_count,
+                'disagreement_category': disagreement_category,
+                'confidence': phoneme_result.get('confidence') if phoneme_result else None,
+                'latency_seconds': round(elapsed, 4),
+                'quality_reason': (
+                    phoneme_result.get('quality_reason') if phoneme_result else phoneme_error
+                ),
+                'model_revision': phoneme_result.get('model_revision') if phoneme_result else None,
+                'target_word': target_word,
+            }
+            print(f'V3 shadow result: {json.dumps(shadow_log, sort_keys=True)}')
+            return jsonify(_adapt_v2_to_v3_response(
+                praat_result, mode,
+                reference_ipa=reference_ipa,
+                expected_syllables=expected_syllables,
+            ))
+
+        # mode == 'active'
+        if phoneme_error or not phoneme_result:
+            return jsonify(_build_v3_degraded_response(
+                praat_result,
+                phoneme_error or 'MODEL_INFERENCE_FAILED',
+            ))
+
+        # Check if phoneme recognition is rateable
+        if not phoneme_result.get('is_rateable', True):
+            return jsonify(_build_v3_degraded_response(
+                praat_result,
+                phoneme_result.get('quality_reason') or 'LOW_PHONEME_CONFIDENCE',
+                phoneme_result.get('confidence', 0.0),
+            ))
+
+        return jsonify(_build_v3_active_response(
+            praat_result, phoneme_result,
+            reference_ipa=reference_ipa,
+            expected_syllables=expected_syllables,
+        ))
+
+    except Exception as error:
+        print(f'V3 analysis error: {error}')
+        return jsonify({
+            'error': 'Pronunciation analysis v3 unavailable',
+            'code': 'V3_ANALYSIS_FAILED',
+        }), 500
+    finally:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
 
 @app.route('/debug/syllables/<word>', methods=['GET'])
 def debug_syllables_endpoint(word):
@@ -2094,7 +2570,7 @@ def analyze_vowel():
         if os.path.exists(tmp_path):
             os.unlink(tmp_path)
 
-def analyze_audio(audio_path, expected_syllables=None):
+def analyze_audio(audio_path, expected_syllables=None, allow_expected_adjustment=True):
     """Main analysis using Parselmouth/Praat"""
     
     # Load sound
@@ -2126,7 +2602,13 @@ def analyze_audio(audio_path, expected_syllables=None):
         intensity_values.append(round(float(val), 2) if not np.isnan(val) else 0.0)
     
     # Detect syllables using the pitch and intensity objects (they handle their own grids internally)
-    syllables = detect_syllables(sound, pitch, intensity, expected_syllables)
+    syllables = detect_syllables(
+        sound,
+        pitch,
+        intensity,
+        expected_syllables,
+        allow_expected_adjustment=allow_expected_adjustment,
+    )
     
     return {
         'duration': round(duration, 3),
@@ -2259,7 +2741,13 @@ def analyze_vowel_hint(audio_path):
         'midPitch': round(mid_pitch, 1)
     }
 
-def detect_syllables(sound, pitch, intensity, expected_syllables=None):
+def detect_syllables(
+    sound,
+    pitch,
+    intensity,
+    expected_syllables=None,
+    allow_expected_adjustment=True,
+):
     """
     Detect syllables using multi-cue adaptive approach.
     
@@ -2304,6 +2792,7 @@ def detect_syllables(sound, pitch, intensity, expected_syllables=None):
     # === ADAPTIVE THRESHOLD RETRY ===
     # Try progressively lower thresholds to find weak syllables
     best_peaks = []
+    peak_attempts = []
     
     for threshold_offset in config.THRESHOLD_LEVELS:
         current_threshold = max(median_intensity - threshold_offset, min_safe_threshold)
@@ -2313,20 +2802,58 @@ def detect_syllables(sound, pitch, intensity, expected_syllables=None):
             speech_start_idx, speech_end_idx, pitch,
             min_dip=config.SENSITIVE_DIP_THRESHOLD if threshold_offset > 2 else config.INITIAL_DIP_THRESHOLD
         )
-        
-        # If we found enough peaks, use them
-        if expected_syllables is None or len(peaks) >= expected_syllables:
+        peak_attempts.append(peaks)
+
+        # Trusted native references can stop once there is enough evidence for
+        # canonical alignment. Independent learner analysis must inspect every
+        # threshold before choosing a stable result.
+        if (
+            allow_expected_adjustment
+            and expected_syllables is not None
+            and len(peaks) >= expected_syllables
+        ):
             best_peaks = peaks
             break
         
         # Keep the best attempt
         if len(peaks) > len(best_peaks):
             best_peaks = peaks
+
+    if not allow_expected_adjustment and expected_syllables is not None:
+        hinted_peaks = find_intensity_peaks(
+            int_times,
+            int_values,
+            max(median_intensity - config.THRESHOLD_LEVELS[-1], min_safe_threshold),
+            speech_start_idx,
+            speech_end_idx,
+            pitch,
+            min_dip=config.HINTED_DIP_THRESHOLD,
+        )
+        peak_attempts.append(hinted_peaks)
     
-    peaks = best_peaks
-    
+    if allow_expected_adjustment and expected_syllables is not None:
+        peaks = best_peaks
+    else:
+        non_empty_attempts = [attempt for attempt in peak_attempts if attempt]
+        exact_attempts = [
+            attempt for attempt in non_empty_attempts
+            if expected_syllables is not None and len(attempt) == expected_syllables
+        ]
+        if exact_attempts:
+            peaks = exact_attempts[-1]
+        elif non_empty_attempts:
+            consensus_count = int(np.median([len(attempt) for attempt in non_empty_attempts]))
+            matching_attempts = [
+                attempt for attempt in non_empty_attempts
+                if len(attempt) == consensus_count
+            ]
+            peaks = matching_attempts[-1] if matching_attempts else non_empty_attempts[-1]
+        else:
+            peaks = []
+
+
     # Adjust based on expected count (only if still needed)
-    if expected_syllables and len(peaks) != expected_syllables:
+    if allow_expected_adjustment and expected_syllables and len(peaks) != expected_syllables:
         peaks = adjust_peaks_to_expected(
             peaks,
             expected_syllables,
@@ -2342,11 +2869,19 @@ def detect_syllables(sound, pitch, intensity, expected_syllables=None):
     
     # === SPLIT OVERSIZED SYLLABLES ===
     # === SPLIT OVERSIZED SYLLABLES ===
-    syllables = split_oversized_syllables(syllables, expected_syllables, pitch, intensity, int_times, int_values)
+    alignment_count = expected_syllables if allow_expected_adjustment else None
+    syllables = split_oversized_syllables(
+        syllables,
+        alignment_count,
+        pitch,
+        intensity,
+        int_times,
+        int_values,
+    )
     
     # === PRUNE TO EXPECTED COUNT ===
     # Splitting might have created too many syllables (or noise was detected)
-    if expected_syllables and len(syllables) > expected_syllables:
+    if allow_expected_adjustment and expected_syllables and len(syllables) > expected_syllables:
         syllables = prune_syllables_to_expected(syllables, expected_syllables)
         
     return syllables
@@ -2460,7 +2995,53 @@ def find_intensity_peaks(times, values, threshold, start_idx, end_idx, pitch_obj
             'intensity': float(p[1])
         })
         
-    return sorted(result, key=lambda x: x['time'])
+    time_sorted = sorted(result, key=lambda x: x['time'])
+    consolidated = []
+    for peak in time_sorted:
+        if (
+            consolidated
+            and peak['time'] - consolidated[-1]['time'] < AnalysisConfig.MIN_NUCLEUS_SEPARATION
+        ):
+            if peak['intensity'] > consolidated[-1]['intensity']:
+                consolidated[-1] = peak
+            continue
+        consolidated.append(peak)
+
+    speech_start = float(times[start_idx])
+    speech_end = float(times[end_idx])
+    return filter_weak_edge_peaks(consolidated, speech_start, speech_end)
+
+
+def filter_weak_edge_peaks(peaks, speech_start, speech_end):
+    """Remove only low-energy onset/release peaks, independent of lexical count."""
+    filtered = list(peaks)
+    if len(filtered) < 2:
+        return filtered
+
+    first, second = filtered[0], filtered[1]
+    if (
+        first['time'] - speech_start <= AnalysisConfig.EDGE_NUCLEUS_WINDOW
+        and second['time'] - first['time']
+        <= AnalysisConfig.EDGE_NEIGHBOR_MAX_SEPARATION
+        and second['intensity'] - first['intensity']
+        >= AnalysisConfig.WEAK_EDGE_NUCLEUS_MARGIN_DB
+    ):
+        filtered.pop(0)
+
+    if len(filtered) < 2:
+        return filtered
+
+    penultimate, last = filtered[-2], filtered[-1]
+    if (
+        speech_end - last['time'] <= AnalysisConfig.EDGE_NUCLEUS_WINDOW
+        and last['time'] - penultimate['time']
+        <= AnalysisConfig.EDGE_NEIGHBOR_MAX_SEPARATION
+        and penultimate['intensity'] - last['intensity']
+        >= AnalysisConfig.WEAK_EDGE_NUCLEUS_MARGIN_DB
+    ):
+        filtered.pop()
+
+    return filtered
 
 def adjust_peaks_to_expected(
     peaks,

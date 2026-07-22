@@ -12,7 +12,7 @@ async function run() {
   const server = http.createServer(app);
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   const origin = `http://127.0.0.1:${server.address().port}`;
-  const browser = await chromium.launch({ headless: true, channel: 'chromium' });
+  const browser = await chromium.launch({ headless: true, channel: 'chrome' });
   const page = await browser.newPage();
 
   await page.addInitScript(() => {

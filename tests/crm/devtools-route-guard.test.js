@@ -45,6 +45,55 @@ const { pathToFileURL } = require('url');
         'nav should show when backend capability is available'
     );
 
+    const pronunciationFallback = helper.resolveDevToolsRoute({
+        main: 'pronunciation-samples',
+        sub: '',
+        fallbackRoute: { main: 'dashboard', sub: '' },
+        pronunciationSamplesAvailable: false
+    });
+    assert.deepStrictEqual(
+        pronunciationFallback,
+        { main: 'dashboard', sub: '' },
+        'pronunciation samples route should fall back when the admin capability is unavailable'
+    );
+
+    const pronunciationAccessible = helper.resolveDevToolsRoute({
+        main: 'pronunciation-samples',
+        sub: '',
+        fallbackRoute: { main: 'dashboard', sub: '' },
+        pronunciationSamplesAvailable: true
+    });
+    assert.deepStrictEqual(
+        pronunciationAccessible,
+        { main: 'pronunciation-samples', sub: '' },
+        'pronunciation samples route should remain accessible for a capable admin'
+    );
+
+    assert.strictEqual(
+        helper.shouldShowPronunciationSamplesNav({
+            accessMode: 'admin',
+            pronunciationSamplesAvailable: true
+        }),
+        true,
+        'pronunciation samples nav should show for a capable admin in production'
+    );
+    assert.strictEqual(
+        helper.shouldShowPronunciationSamplesNav({
+            accessMode: 'teacher',
+            pronunciationSamplesAvailable: true
+        }),
+        false,
+        'pronunciation samples nav should remain hidden for teachers'
+    );
+    assert.strictEqual(
+        helper.shouldShowPronunciationSamplesNav({
+            accessMode: 'admin',
+            pronunciationSamplesAvailable: false
+        }),
+        false,
+        'pronunciation samples nav should remain hidden when the capability is disabled'
+    );
+
     console.log('devtools route guard passed');
 })().catch((error) => {
     console.error(error);

@@ -11,13 +11,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
-  <!-- Addendum A.1: Restrictive CSP -->
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://*.firebaseapp.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' http://localhost:11434 https://localhost:8443 https://www.gstatic.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com wss://*.googleapis.com https://*.cloudfunctions.net https://*.firebaseapp.com; frame-src 'self' https://*.firebaseapp.com;">
+    content="default-src 'self'; media-src 'self' blob:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://*.firebaseapp.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' http://localhost:11434 https://localhost:8443 https://www.gstatic.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com wss://*.googleapis.com https://*.cloudfunctions.net https://*.firebaseapp.com https://praat-api-1071929245506.us-central1.run.app; frame-src 'self' https://*.firebaseapp.com;">
 
   <!-- Reuse main app design tokens -->
-  <link rel="stylesheet" href="style.css?v=20260713-v1.8.23" />
-  <link rel="stylesheet" href="crm-admin.css?v=20260713-v1.8.23" />
+  <link rel="stylesheet" href="style.css?v=20260722-v1.8.24" />
+  <link rel="stylesheet" href="crm-admin.css?v=20260722-v1.8.24" />
 </head>
 
 <body>
@@ -58,6 +57,11 @@
               style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color);">
               <button class="crm-nav-item" data-main="devtools" data-label="🔧 Dev Tools"
                 style="color: var(--accent-color);">🔧 Dev Tools</button>
+            </li>
+            <li id="nav-pronunciation-samples-container"
+              style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color);">
+              <button class="crm-nav-item" data-main="pronunciation-samples" data-label="🎙️ Pronunciation Samples"
+                style="color: var(--accent-color);">🎙️ Pronunciation Samples</button>
             </li>
           </ul>
         </nav>
@@ -162,6 +166,189 @@
                 </div>
               </div>
             </section>
+          </div>
+        </div>
+      </section>
+
+      <!-- Pronunciation Samples Recording Tool (Admin Only) -->
+      <section class="crm-panel" data-panel="pronunciation-samples" style="display: none;">
+        <div class="crm-panel-header">
+          <div>
+            <h2>🎙️ Pronunciation Verification</h2>
+            <p>Record deidentified WAV attempts, save them securely to cloud storage, and retrieve them for the pronunciation verification corpus.</p>
+            <div id="corpus-step-guidance" role="status" aria-live="polite" style="margin-top: 10px; font-size: 13px; font-weight: 600; color: #14532d;">Step 1: Select a target word to begin.</div>
+          </div>
+        </div>
+
+        <div class="corpus-progress-dashboard" id="corpus-progress-dashboard">
+          <div class="corpus-stat">
+            <span class="corpus-stat-value" id="corpus-total-count">0</span>
+            <span class="corpus-stat-label">/ 120 total</span>
+          </div>
+          <div class="corpus-stat">
+            <span class="corpus-stat-value" id="corpus-clean-count">0</span>
+            <span class="corpus-stat-label">/ 60 clean</span>
+          </div>
+          <div class="corpus-stat">
+            <span class="corpus-stat-value" id="corpus-adversarial-count">0</span>
+            <span class="corpus-stat-label">/ 30 adversarial</span>
+          </div>
+          <div class="corpus-stat">
+            <span class="corpus-stat-value" id="corpus-accented-count">0</span>
+            <span class="corpus-stat-label">/ 30 accented</span>
+          </div>
+          <div class="corpus-progress-bar-track">
+            <div class="corpus-progress-bar-fill" id="corpus-progress-fill" style="width: 0%;"></div>
+          </div>
+        </div>
+        
+        <div class="crm-dashboard-layout" style="margin-top: 24px; display: grid; grid-template-columns: 280px 1fr; gap: 24px;">
+          <!-- Left Column: Word navigation and metadata -->
+          <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px;">
+            <h3 style="margin-bottom: 12px; font-size: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; color: var(--accent-color);">Select Target Word</h3>
+            <label for="corpus-sample-filter" style="display: block; font-size: 12px; font-weight: 600;">Show tests:</label>
+            <select id="corpus-sample-filter" class="crm-input" style="width: 100%; margin: 5px 0 10px;">
+              <option value="all">All words</option>
+              <option value="missing">Words without samples</option>
+              <option value="recorded">Words with samples</option>
+            </select>
+            <input type="text" id="corpus-word-search" class="crm-input" placeholder="Search words…" style="width: 100%; margin-bottom: 8px; box-sizing: border-box;" />
+            <div class="corpus-pagination" style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 10px;">
+              <button id="btn-corpus-page-prev" class="crm-btn crm-btn-secondary" type="button">Previous</button>
+              <span id="corpus-page-status" class="crm-muted" style="font-size: 12px; text-align: center;">Page 1</span>
+              <button id="btn-corpus-page-next" class="crm-btn crm-btn-secondary" type="button">Next</button>
+            </div>
+            <ul id="corpus-word-list" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">
+              <!-- Mandatories: busy, photograph, photography, banana, camera, university -->
+              <li><button class="crm-btn crm-btn-secondary corpus-word-btn active" data-word="busy" data-ipa="ˈbɪz.i" data-count="2" style="width: 100%; text-align: left;">busy (2)</button></li>
+              <li><button class="crm-btn crm-btn-secondary corpus-word-btn" data-word="photograph" data-ipa="ˈfoʊ.tə.ɡræf" data-count="3" style="width: 100%; text-align: left;">photograph (3)</button></li>
+              <li><button class="crm-btn crm-btn-secondary corpus-word-btn" data-word="photography" data-ipa="fəˈtɑː.ɡrə.fi" data-count="4" style="width: 100%; text-align: left;">photography (4)</button></li>
+              <li><button class="crm-btn crm-btn-secondary corpus-word-btn" data-word="banana" data-ipa="bəˈnæn.ə" data-count="3" style="width: 100%; text-align: left;">banana (3)</button></li>
+              <li><button class="crm-btn crm-btn-secondary corpus-word-btn" data-word="camera" data-ipa="ˈkæm.rə" data-count="2" style="width: 100%; text-align: left;">camera (2)</button></li>
+              <li><button class="crm-btn crm-btn-secondary corpus-word-btn" data-word="university" data-ipa="ˌjuː.nɪˈvɜːr.sə.t̬i" data-count="5" style="width: 100%; text-align: left;">university (5)</button></li>
+            </ul>
+            <p id="corpus-word-list-status" class="crm-muted" style="margin: 10px 0 0; font-size: 12px;">Loading the Oxford 5000 test list…</p>
+            
+            <div style="display: none; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+              <label for="corpus-custom-word" style="display: block; font-weight: 500; margin-bottom: 6px; font-size: 13px;">Or Custom Word:</label>
+              <input type="text" id="corpus-custom-word" placeholder="e.g. photography" class="crm-input" style="width: 100%; box-sizing: border-box; margin-bottom: 8px;" />
+              <div style="display: flex; gap: 8px;">
+                <input type="text" id="corpus-custom-ipa" placeholder="IPA" class="crm-input" style="flex: 1;" />
+                <input type="number" id="corpus-custom-count" placeholder="Syllables" class="crm-input" style="width: 70px;" min="1" />
+              </div>
+              <button id="btn-corpus-use-custom" class="crm-btn crm-btn-secondary" style="width: 100%; margin-top: 8px; font-size: 12px;">Use Custom Word</button>
+            </div>
+          </div>
+
+          <!-- Right Column: Recording Console and Metadata -->
+          <div style="display: flex; flex-direction: column; gap: 24px;">
+            <!-- Metadata form -->
+            <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px;">
+              <h3 style="margin-bottom: 16px; font-size: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; color: var(--accent-color);">Attempt Metadata</h3>
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                <div>
+                  <label style="display: block; font-weight: 500; margin-bottom: 6px; font-size: 13px;">Target Word:</label>
+                  <span id="corpus-display-word" style="font-weight: 600; font-size: 16px; color: var(--accent-color);">busy</span>
+                </div>
+                <div>
+                  <label style="display: block; font-weight: 500; margin-bottom: 6px; font-size: 13px;">Target IPA & Syllables:</label>
+                  <span id="corpus-display-ipa-count" style="font-family: monospace; font-size: 14px;">/ˈbɪz.i/ (2 syllables)</span>
+                </div>
+                <div>
+                  <label for="corpus-category" style="display: block; font-weight: 500; margin-bottom: 6px; font-size: 13px;">Category:</label>
+                    <select id="corpus-category" class="crm-input" style="width: 100%;" disabled aria-describedby="corpus-test-instruction">
+                    <option value="clean">clean (correct pronunciation)</option>
+                    <option value="omission">omission (missed syllables)</option>
+                    <option value="insertion">insertion (extra syllables)</option>
+                    <option value="accented">accented (accented pronunciation)</option>
+                    <option value="unrateable">unrateable (unclear/noise)</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="corpus-expected-observed-count" style="display: block; font-weight: 500; margin-bottom: 6px; font-size: 13px;">Expected Observed Count:</label>
+                  <input type="number" id="corpus-expected-observed-count" value="2" class="crm-input" style="width: 100%;" min="0" readonly aria-describedby="corpus-test-instruction" />
+                </div>
+                <div>
+                  <label for="corpus-speaker-cohort" style="display: block; font-weight: 500; margin-bottom: 6px; font-size: 13px;">Deidentified Speaker Cohort:</label>
+                  <select id="corpus-speaker-cohort" class="crm-input" style="width: 100%;" aria-describedby="corpus-test-instruction">
+                    <option value="native-us">native-us (American English)</option>
+                    <option value="l1-vn-01" selected>l1-vn-01 (Vietnamese L1)</option>
+                    <option value="l1-zh-01">l1-zh-01 (Chinese L1)</option>
+                    <option value="l1-ja-01">l1-ja-01 (Japanese L1)</option>
+                    <option value="l1-ko-01">l1-ko-01 (Korean L1)</option>
+                    <option value="l1-hi-01">l1-hi-01 (Hindi L1)</option>
+                    <option value="custom">Custom…</option>
+                  </select>
+                  <div id="corpus-cohort-custom-row">
+                    <input type="text" id="corpus-cohort-custom-input" class="crm-input" placeholder="e.g. l1-es-01" style="width: 100%; box-sizing: border-box;" />
+                  </div>
+                </div>
+                <div>
+                  <label style="display: block; font-weight: 500; margin-bottom: 6px; font-size: 13px;">Generated Sample ID:</label>
+                  <span id="corpus-sample-id" style="font-family: monospace; font-size: 13px; word-break: break-all; color: var(--text-color); font-weight: 600;">busy-clean-l1-vn-01-...</span>
+                </div>
+              </div>
+              <div id="corpus-test-instruction" role="note" style="margin-top: 16px; padding: 14px 16px; border-left: 4px solid #137a4b; border-radius: 6px; background: #ecfdf3; color: #14532d; line-height: 1.55;">
+                <strong id="corpus-version-status">Version 1 of 5 · Clean</strong>
+                <div id="corpus-test-instruction-text" style="margin-top: 4px;">Say “busy” once, naturally and clearly. Do not repeat it or add another word.</div>
+              </div>
+            </div>
+
+            <!-- Recording panel -->
+            <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px;">
+              <h3 style="margin-bottom: 16px; font-size: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; color: var(--accent-color);">Audio Capture</h3>
+              
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 20px 0;">
+                <!-- Simple Analyser Visualizer Canvas -->
+                <canvas id="corpus-visualizer" width="500" height="80" style="background: var(--hover-color); border-radius: 4px; width: 100%; height: 80px; max-width: 500px; border: 1px solid var(--border-color);"></canvas>
+                
+                <div style="font-size: 14px; font-weight: 500;" id="corpus-mic-status">Status: Microphone Ready</div>
+                <span class="corpus-recording-timer" id="corpus-recording-timer"><span class="corpus-recording-dot"></span> <span id="corpus-timer-value">0.0s</span></span>
+
+                <div style="display: flex; gap: 12px; width: 100%; max-width: 400px; justify-content: center;">
+                  <button id="btn-corpus-record" class="crm-btn crm-btn-primary" style="min-width: 120px; font-weight: 600;">🎙️ Record</button>
+                  <button id="btn-corpus-stop" class="crm-btn crm-btn-secondary" disabled style="min-width: 100px;">⏹️ Stop</button>
+                  <button id="btn-corpus-redo" class="crm-btn crm-btn-secondary" disabled style="min-width: 100px;">🔄 Redo</button>
+                </div>
+
+                <div class="corpus-hotkey-legend" id="corpus-hotkey-legend">
+                  <span class="corpus-hotkey"><kbd>R</kbd> Record</span>
+                  <span class="corpus-hotkey"><kbd>Space</kbd> Stop</span>
+                  <span class="corpus-hotkey"><kbd>Enter</kbd> Save</span>
+                  <span class="corpus-hotkey"><kbd>Backspace</kbd> Redo</span>
+                  <span class="corpus-hotkey"><kbd>←</kbd><kbd>→</kbd> Version</span>
+                  <span class="corpus-hotkey"><kbd>N</kbd> Next Word</span>
+                </div>
+                <label class="corpus-auto-advance">
+                  <input type="checkbox" id="corpus-auto-advance-toggle" checked />
+                  Auto-advance after save
+                </label>
+
+                <div id="corpus-playback-container" style="display: none; flex-direction: column; align-items: center; gap: 8px; margin-top: 12px; width: 100%;">
+                  <audio id="corpus-audio-player" controls style="width: 100%; max-width: 400px;"></audio>
+                </div>
+              </div>
+
+              <div style="border-top: 1px solid var(--border-color); padding-top: 16px; display: flex; justify-content: flex-end; gap: 12px;">
+                <span id="corpus-console-output" class="crm-muted" style="margin-right: auto; align-self: center; font-size: 13px; font-family: monospace;">No changes pending.</span>
+                <button id="btn-corpus-save" class="crm-btn" disabled style="min-width: 160px; font-weight: 700;">💾 Save Attempt</button>
+                <button id="btn-corpus-prev-version" class="crm-btn crm-btn-secondary" type="button" disabled style="min-width: 150px; font-weight: 700;">← Previous Version</button>
+                <button id="btn-corpus-next-version" class="crm-btn crm-btn-primary" type="button" disabled style="min-width: 150px; font-weight: 700;">Next Version →</button>
+                <button id="btn-corpus-next-word" class="crm-btn crm-btn-primary" type="button" disabled style="min-width: 140px; font-weight: 700;">Next Word →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="crm-workspace-card" style="margin-top: 24px; padding: 20px;">
+          <div class="crm-section-header" style="display:flex; align-items:center; gap:12px;">
+            <div>
+              <h3>Saved Samples</h3>
+              <p class="crm-muted">Cloud-stored recordings available for later verification.</p>
+            </div>
+            <button id="btn-corpus-refresh" class="crm-btn crm-btn-secondary" type="button">Refresh</button>
+          </div>
+          <div id="corpus-saved-samples" class="crm-stack-list" style="margin-top: 12px;">
+            <div class="crm-muted">No samples loaded yet.</div>
           </div>
         </div>
       </section>
@@ -525,12 +712,24 @@
               <input type="text" id="lead-name" class="crm-input" placeholder="Lead name">
             </div>
             <div class="crm-form-group">
+              <label for="lead-label">Label</label>
+              <input type="text" id="lead-label" class="crm-input" placeholder="e.g. High Priority">
+            </div>
+            <div class="crm-form-group">
+              <label for="lead-phone">Phone Number</label>
+              <input type="text" id="lead-phone" class="crm-input" placeholder="Phone number">
+            </div>
+            <div class="crm-form-group">
               <label for="lead-email">Email</label>
               <input type="email" id="lead-email" class="crm-input" placeholder="lead@example.com">
             </div>
             <div class="crm-form-group">
-              <label for="lead-phone">Phone</label>
-              <input type="text" id="lead-phone" class="crm-input" placeholder="Phone number">
+              <label for="lead-zalo">Zalo Number</label>
+              <input type="text" id="lead-zalo" class="crm-input" placeholder="Enter Zalo number">
+            </div>
+            <div class="crm-form-group">
+              <label for="lead-facebook">Facebook Name</label>
+              <input type="text" id="lead-facebook" class="crm-input" placeholder="Enter Facebook name">
             </div>
             <div class="crm-form-group">
               <label for="lead-source">Source</label>
@@ -568,7 +767,7 @@
         <div id="lead-stage-board" class="crm-lead-board"></div>
         <div id="lead-list-container" class="crm-placeholder-card">Leads will appear here.</div>
         <div id="lead-workspace" class="crm-workspace-grid" style="display: none;">
-          <section class="crm-workspace-card">
+          <section id="lead-task-section" class="crm-workspace-card">
             <div class="crm-section-header">
               <div>
                 <h3 id="lead-workspace-title">Lead Workspace</h3>
@@ -601,7 +800,7 @@
               <div class="crm-muted">Select a lead to view tasks.</div>
             </div>
           </section>
-          <section class="crm-workspace-card">
+          <section id="lead-activity-section" class="crm-workspace-card">
             <div class="crm-section-header">
               <div>
                 <h3>Activity Timeline</h3>
@@ -637,7 +836,7 @@
               <div class="crm-muted">Select a lead to view activity.</div>
             </div>
           </section>
-          <section class="crm-workspace-card">
+          <section id="lead-entrance-test-section" class="crm-workspace-card">
             <div class="crm-section-header">
               <div>
                 <h3>Entrance Tests</h3>
@@ -671,7 +870,7 @@
             </div>
           </section>
         </div>
-        <div class="crm-workspace-grid">
+        <div id="lead-templates-automations" class="crm-workspace-grid">
           <section class="crm-workspace-card">
             <div class="crm-section-header">
               <div>
@@ -2239,45 +2438,47 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
-  <script src="js/auth-session-guard.js?v=20260713-v1.8.23"></script>
-  <script src="js/classroom-api.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/utils.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/state.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/dom.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/courses.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/students.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/student-360.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/classrooms.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/leads.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/activities.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/enrollments.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/attendance.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/finance-workflow.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/finance.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/communications.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/scheduler-workspace.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/teacher-scheduler-workspace.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/staff-workspace.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/student-finance.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/live-delivery.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/classroom-modal.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/student-modal.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/course-modal.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/lead-workspace.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/classroom-workspace.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/task-activity-workspace.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/communications-workspace.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/dashboard-workspace.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/student-directory-workspace.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/agent-sources-workspace.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/activity-surfaces.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/dashboard.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/governance.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/index.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/entrance-test-link-state.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/devtools-access.js?v=20260713-v1.8.23"></script>
-  <script src="js/crm/bel-assistant.js?v=20260713-v1.8.23"></script>
-  <script src="crm-admin.js?v=20260713-v1.8.23"></script>
+  <script src="js/auth-session-guard.js?v=20260722-v1.8.24"></script>
+  <script src="js/classroom-api.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/utils.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/state.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/dom.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/courses.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/students.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/student-360.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/classrooms.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/leads.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/activities.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/enrollments.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/attendance.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/finance-workflow.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/finance.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/communications.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/scheduler-workspace.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/teacher-scheduler-workspace.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/staff-workspace.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/student-finance.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/live-delivery.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/classroom-modal.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/student-modal.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/course-modal.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/lead-workspace.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/classroom-workspace.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/task-activity-workspace.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/communications-workspace.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/dashboard-workspace.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/student-directory-workspace.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/agent-sources-workspace.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/activity-surfaces.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/dashboard.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/governance.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/index.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/entrance-test-link-state.js?v=20260722-v1.8.24"></script>
+  <script src="js/crm/devtools-access.js?v=20260722-v1.8.24&cb=pronunciation-samples-nav"></script>
+  <script src="js/crm/bel-assistant.js?v=20260722-v1.8.24"></script>
+  <script src="arpabet-ipa-map.js?v=20260722-v1.8.24"></script>
+  <script src="phonetics.js?v=20260722-v1.8.24"></script>
+  <script src="crm-admin.js?v=20260722-v1.8.24"></script>
 </body>
 
 </html>

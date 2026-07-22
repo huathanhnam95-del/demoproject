@@ -1,0 +1,65 @@
+# ─────────────────────────────────────────────────────────────
+# Phoneme Recognizer Service – Docker image
+# Base: python:3.11-slim (pinned for reproducibility)
+# ─────────────────────────────────────────────────────────────
+FROM python:3.11-slim
+
+# ── Build-time arguments ────────────────────────────────────
+ARG GIT_SHA="unknown"
+ARG MODEL_REVISION
+ARG INFERENCE_ENGINE="torch"
+
+# ── Persisted metadata ──────────────────────────────────────
+ENV BUILD_SHA=${GIT_SHA}
+ENV PORT=8081
+
+# ── System dependencies ─────────────────────────────────────
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       libsndfile1 \
+       ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# ── Python dependencies (layer-cached) ──────────────────────
+COPY backend/requirements.phoneme-${INFERENCE_ENGINE}.txt requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# ── Application code ────────────────────────────────────────
+COPY backend/__init__.py backend/__init__.py
+COPY backend/phoneme_service/ backend/phoneme_service/
+
+# ── Pre-download model into the image ───────────────────────
+# Baking the model avoids cold-start downloads at runtime.
+RUN python -c "\
+import json; \
+from transformers import Wav2Vec2Processor, Wav2Vec2ForCTC; \
+manifest=json.load(open('backend/phoneme_service/model-manifest.json', encoding='utf-8')); \
+assert '${MODEL_REVISION}', 'MODEL_REVISION is required'; \
+assert manifest['modelRevision'] == '${MODEL_REVISION}', 'build/model manifest revision mismatch'; \
+Wav2Vec2Processor.from_pretrained( \
+    manifest['modelId'], revision='${MODEL_REVISION}'); \
+Wav2Vec2ForCTC.from_pretrained( \
+    manifest['modelId'], revision='${MODEL_REVISION}')"
+
+ENV TRANSFORMERS_OFFLINE=1
+ENV HF_HUB_OFFLINE=1
+
+# ── Networking ──────────────────────────────────────────────
+EXPOSE ${PORT}
+
+# ── Health / readiness probes ───────────────────────────────
+# GET /healthz  → 200 OK   (liveness)
+# GET /readyz   → 200 OK   (readiness – model loaded)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:${PORT}/readyz')"
+
+# ── Runtime ─────────────────────────────────────────────────
+# 1 worker, 2 threads – matches Cloud Run 2-vCPU / 4 GiB shape
+CMD gunicorn \
+    --bind 0.0.0.0:${PORT} \
+    --workers 1 \
+    --threads 2 \
+    --timeout 30 \
+    "backend.phoneme_service.app:create_app()"

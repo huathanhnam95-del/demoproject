@@ -108,11 +108,14 @@ function startServer() {
 
 async function run() {
   const { server, origin } = await startServer();
-  const browser = await chromium.launch({ headless: true, channel: 'chromium' });
+  const browser = await chromium.launch({ headless: true, channel: 'chrome' });
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
 
   await context.addInitScript(() => {
     window.__charts = [];
+    window.__dictionaryCalls = {};
+    window.__nativeAnalysisAttempts = {};
+    window.__lastV3Form = null;
     window.Logger = { log() {}, warn() {}, error() {} };
     window.__FIREBASE_INTERNAL__ = { db: null };
 
@@ -207,6 +210,14 @@ async function run() {
         id: 'aaaaaaaaaaaaaaaa', rawIpa: 'fəˈtɑɡrəfi', displayIpa: '/fəˈtɑɡrəfi/',
         count: 4, stress: 1, labels: ['pho', 'TOG', 'ra', 'phy']
       })],
+      busy: [variant({
+        id: 'dddddddddddddddd', rawIpa: 'ˈbɪzi', displayIpa: '/ˈbɪzi/',
+        count: 2, stress: 0, labels: ['BU', 'sy']
+      })],
+      retrygraph: [variant({
+        id: 'cccccccccccccccc', rawIpa: 'ˈriːtraɪ', displayIpa: '/ˈriːtraɪ/',
+        count: 2, stress: 0, labels: ['RE', 'try']
+      })],
       contouronly: [variant({
         id: 'bbbbbbbbbbbbbbbb', rawIpa: 'kɑntʊr', displayIpa: '/kɑntʊr/',
         count: 2, stress: 0, labels: ['CON', 'tour']
@@ -248,6 +259,7 @@ async function run() {
       if (url.endsWith('/health')) return jsonResponse({ status: 'ok' });
       if (url.includes('/dictionary/v2/')) {
         const word = decodeURIComponent(url.split('/').pop());
+        window.__dictionaryCalls[word] = (window.__dictionaryCalls[word] || 0) + 1;
         const variants = references[word] || [];
         const defaultVariant = variants.find((item) => item.validation.status === 'valid');
         return jsonResponse({
@@ -262,6 +274,14 @@ async function run() {
       }
       if (url.includes('/analyze-url/v2')) {
         const request = JSON.parse(options.body);
+        window.__nativeAnalysisAttempts[request.variantId] =
+          (window.__nativeAnalysisAttempts[request.variantId] || 0) + 1;
+        if (
+          request.variantId === 'cccccccccccccccc' &&
+          window.__nativeAnalysisAttempts[request.variantId] <= 2
+        ) {
+          return jsonResponse({ error: 'Temporary analysis outage' }, 503);
+        }
         const count = request.expectedSyllableCount;
         const contourOnly = request.variantId === 'bbbbbbbbbbbbbbbb';
         const observedCount = contourOnly ? count - 1 : count;
@@ -298,6 +318,24 @@ async function run() {
           pitch: { times: [0, 0.1, 0.2], values: [150, 160, 140] },
           intensity: { times: [0, 0.1, 0.2], values: [68, 72, 67] },
           capabilities: { showNativeGraphs: !contourOnly }
+        });
+      }
+      if (url.includes('/analyze/v3')) {
+        window.__lastV3Form = Object.fromEntries(options.body.entries());
+        return jsonResponse({
+          analysisVersion: 'pronunciation-analysis-v3',
+          mode: 'active',
+          engine: 'ctc-praat',
+          is_rateable: true,
+          confidence: 0.94,
+          syllable_count: 2,
+          observed_syllables: [
+            { startTime: 0.05, endTime: 0.24, duration: 0.19, confidence: 0.95, nucleus: 'ɪ' },
+            { startTime: 0.24, endTime: 0.43, duration: 0.19, confidence: 0.93, nucleus: 'i' }
+          ],
+          pitch: { times: [0.05, 0.1], values: [150, 155] },
+          intensity: { times: [0.05, 0.1], values: [68, 70] },
+          capabilities: { graphs: true, syllable_duration: true, phoneme_alignment: true }
         });
       }
       if (url.includes('/proxy-audio')) {
@@ -426,6 +464,75 @@ async function run() {
       await page.evaluate(() => window.__charts.at(-1).data.datasets.map((dataset) => dataset.label)),
       ['Target duration']
     );
+
+    await page.fill('#pa-word-input', 'busy');
+    await page.click('#pa-search-btn');
+    await page.waitForFunction(() => document.querySelector('#pa-syllable-count')?.textContent === '2 syllables');
+    assert.equal(await page.locator('#pa-primary-stress').textContent(), 'BU');
+    assert.deepEqual(
+      await page.evaluate(() => window.__charts.at(-1).data.datasets[0].data),
+      [0.15, 0.15]
+    );
+
+    // A transient native-analysis failure must not poison the session cache.
+    await page.fill('#pa-word-input', 'retrygraph');
+    await page.click('#pa-search-btn');
+    await page.waitForFunction(() => document.querySelector('#pa-reference-status')?.textContent.includes('retried automatically'));
+    assert.equal(
+      await page.locator('#pa-charts-container').evaluate((node) => node.classList.contains('hidden')),
+      true
+    );
+    assert.deepEqual(
+      await page.evaluate(() => ({
+        dictionaryCalls: window.__dictionaryCalls.retrygraph,
+        analysisAttempts: window.__nativeAnalysisAttempts.cccccccccccccccc
+      })),
+      { dictionaryCalls: 1, analysisAttempts: 2 }
+    );
+
+    await page.click('#pa-search-btn');
+    await page.waitForFunction(() => (
+      document.querySelector('#pa-reference-status')?.textContent === '' &&
+      !document.querySelector('#pa-charts-container')?.classList.contains('hidden')
+    ));
+    assert.deepEqual(
+      await page.evaluate(() => ({
+        dictionaryCalls: window.__dictionaryCalls.retrygraph,
+        analysisAttempts: window.__nativeAnalysisAttempts.cccccccccccccccc
+      })),
+      { dictionaryCalls: 1, analysisAttempts: 3 }
+    );
+
+    const v3ClientContract = await page.evaluate(async () => {
+      const { PraatAPI } = await import('/pronunciation-analyzer/praat-api.js');
+      const api = new PraatAPI();
+      api._v3SupportPromise = Promise.resolve('active');
+      const result = await api.analyze(
+        new Blob([new Uint8Array([1, 2, 3])], { type: 'audio/wav' }),
+        2,
+        { referenceIpa: '/ˈbɪzi/', targetWord: 'busy' }
+      );
+      return {
+        form: {
+          referenceIpa: window.__lastV3Form.reference_ipa,
+          expectedSyllables: window.__lastV3Form.expected_syllables,
+          targetWord: window.__lastV3Form.target_word
+        },
+        count: result.syllable_count,
+        timings: result.observed_syllables.map((syllable) => [
+          syllable.startTime,
+          syllable.endTime,
+          syllable.duration
+        ]),
+        durationAvailable: result.capabilities.syllable_duration
+      };
+    });
+    assert.deepEqual(v3ClientContract, {
+      form: { referenceIpa: '/ˈbɪzi/', expectedSyllables: '2', targetWord: 'busy' },
+      count: 2,
+      timings: [[0.05, 0.24, 0.19], [0.24, 0.43, 0.19]],
+      durationAvailable: true
+    });
     if (screenshotDir) {
       await page.screenshot({
         path: path.join(screenshotDir, 'pronunciation-fresh-word-duration.png'),

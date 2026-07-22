@@ -146,10 +146,12 @@ async function mockWorkbookRows(page, rows) {
   }, rows);
 }
 
-async function assertV7ButtonStructure(page, label) {
+async function assertSharedControllerStructure(page, label) {
   const state = await page.evaluate(() => {
-    function describeButton(id) {
-      const el = document.getElementById(id);
+    function describeButton(selector) {
+      const el = selector.startsWith('#') || !selector.includes('.')
+        ? document.getElementById(selector.replace(/^#/, ''))
+        : document.querySelector(selector);
       if (!el) return { exists: false, hasSvg: false, hasDataLabel: false };
       return {
         exists: true,
@@ -157,42 +159,46 @@ async function assertV7ButtonStructure(page, label) {
         hasDataLabel: !!el.querySelector('[data-label]')
       };
     }
-    const pill = document.getElementById('ra-v7-question-pill');
+    const pill = document.getElementById('spc-picker-read-aloud');
     const select = document.getElementById('ra-question-select');
     const selected = select?.selectedOptions?.length
       ? select.selectedOptions[0]
       : Array.from(select?.options || []).find((opt) => opt.value === select?.value);
     return {
-      pickerBarExists: !!document.getElementById('ra-v7-picker-bar'),
+      legacyPickerBarExists: !!document.getElementById('ra-v7-picker-bar'),
       pillExists: !!pill,
       pillText: String(pill?.textContent || '').trim(),
       selectedLabel: String(selected?.textContent || '').trim(),
-      prev: describeButton('ra-v7-prev-btn'),
-      next: describeButton('ra-v7-next-btn'),
-      filters: describeButton('ra-v7-filters-btn'),
+      prev: describeButton('.spc-picker-prev'),
+      next: describeButton('.spc-picker-next'),
+      filters: { exists: !!document.getElementById('ra-v7-filters-btn') },
       playSample: describeButton('header-ra-play-audio-btn'),
       playRecording: describeButton('header-ra-play-recording-btn')
     };
   });
 
-  assert.equal(state.pickerBarExists, true, `[${label}] Expected v7 picker bar to exist.`);
-  assert.equal(state.pillExists, true, `[${label}] Expected v7 question pill to exist.`);
-  assert.ok(state.pillText.length > 0, `[${label}] Expected pill text to be non-empty.`);
+  assert.equal(state.legacyPickerBarExists, false, `[${label}] Expected the legacy picker bar to be removed.`);
+  assert.equal(state.pillExists, true, `[${label}] Expected the shared controller picker pill to exist.`);
+  assert.ok(state.pillText.length > 0, `[${label}] Expected the shared picker pill text to be non-empty.`);
   if (state.selectedLabel) {
-    assert.equal(state.pillText, state.selectedLabel, `[${label}] Expected pill text to match selected option.`);
+    assert.ok(
+      state.pillText.includes(state.selectedLabel) || state.selectedLabel.includes(state.pillText),
+      `[${label}] Expected pill text to identify the selected option.`
+    );
   }
 
   for (const [key, value] of Object.entries({
     'prev button': state.prev,
     'next button': state.next,
-    'filters button': state.filters,
     'header sample-audio button': state.playSample,
     'header recording button': state.playRecording
   })) {
     assert.equal(value.exists, true, `[${label}] Missing ${key}.`);
-    assert.equal(value.hasSvg, true, `[${label}] Expected ${key} to contain an <svg>.`);
-    assert.equal(value.hasDataLabel, true, `[${label}] Expected ${key} to contain a [data-label] span.`);
+    if (key.startsWith('header')) {
+      assert.equal(value.hasDataLabel, true, `[${label}] Expected ${key} to contain a [data-label] span.`);
+    }
   }
+  assert.equal(state.filters.exists, false, `[${label}] Expected the legacy filter action to be removed.`);
 }
 
 (async () => {
@@ -412,7 +418,7 @@ async function assertV7ButtonStructure(page, label) {
       return !!panel && panel.classList.contains('active');
     }, { timeout: 30000 });
 
-    await assertV7ButtonStructure(page, 'initial');
+    await assertSharedControllerStructure(page, 'initial');
 
     await page.evaluate(() => document.getElementById('ra-record-btn')?.click());
     await page.waitForFunction(() => {
@@ -420,7 +426,7 @@ async function assertV7ButtonStructure(page, label) {
       return !!stopBtn && getComputedStyle(stopBtn).display !== 'none';
     }, { timeout: 30000 });
 
-    await assertV7ButtonStructure(page, 'recording');
+    await assertSharedControllerStructure(page, 'recording');
 
     await page.evaluate(() => {
       window.__raFakeRecorderStopDelayMs = 50;
@@ -460,19 +466,19 @@ async function assertV7ButtonStructure(page, label) {
       return !!status && /analysis complete/i.test(String(status.textContent || ''));
     }, { timeout: 30000 });
 
-    await assertV7ButtonStructure(page, 'after-results');
+    await assertSharedControllerStructure(page, 'after-results');
 
     // Move to next prompt deterministically and re-check structure.
     await page.evaluate(async () => {
       await window.ReadAloudMode.loadSpecificPrompt(1);
     });
     await page.waitForFunction(() => window.ReadAloudMode?.currentPromptReady && String(window.ReadAloudMode.currentQuestionId || '') === '2', { timeout: 30000 });
-    await assertV7ButtonStructure(page, 'after-next');
+    await assertSharedControllerStructure(page, 'after-next');
 
     const throttleWarning = consoleLines.find((line) => line.toLowerCase().includes('throttling navigation to prevent the browser from hanging'));
     assert(!throttleWarning, `Unexpected navigation throttling warning: ${throttleWarning}`);
 
-    console.log('Read Aloud Question Picker v7 DOM contract check passed.');
+    process.stdout.write('Read Aloud shared controller DOM contract check passed.\n');
   } finally {
     await browser.close();
     if (server) {

@@ -1,3 +1,13 @@
+## [V1.8.25] - 2026-07-23
+
+### Added & Refactored
+- **Unified Speaking Practice Controller Migration & Refactor**:
+  - Completed Waves 1–6 migration across all 7 PTE Speaking practice modes (RTS, ASQ, Describe Image, Retell Lecture/Notes, SGD, Repeat Sentence/Speak, Read Aloud).
+  - Executed 28-fix refactor across Phase 1 (critical bugs), Phase 2 (accessibility & performance), and Phase 3 (code cleanup & CSS design tokens).
+  - Added ArrowUp/ArrowDown/Home/End keyboard navigation for picker sheet listbox, fixed focus trap for fixed-position elements, and enforced WCAG AA contrast ratios.
+  - Performed edge-case audit & hardening: replaced fragile CSS attribute selectors, fixed ID type coercion in search/pill sync, extracted shared element visibility helpers, and secured body scroll locking with null sentinels.
+  - Verified stability across 8 automated Playwright browser test suites (140+ assertions, 100% pass rate).
+
 ## [V1.8.23] - 2026-07-13
 
 ### Fixed

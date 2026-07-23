@@ -400,5 +400,8 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 407,2026-07-22,Investigate HIW audio folders count and missing audio files,Done,2026-07-22
 408,2026-07-22,Batch generate Kokoro audio files for remaining HIW questions,In Progress,
 409,2026-07-22,Execute remaining Unified Speaking Practice Controller migration (Waves 1-6),Done,2026-07-22
+410,2026-07-22,Review debug and refactor plan for Speaking Practice Controller UI,Done,2026-07-22
+411,2026-07-22,Execute Phase 2 & 3 refactor: a11y + perf + CSS tokens + code cleanup (28 fixes),Done,2026-07-22
+412,2026-07-23,Edge-case audit and fix: fragile selector + ID coercion + visibility helper + scroll sentinel,Done,2026-07-23
 
 

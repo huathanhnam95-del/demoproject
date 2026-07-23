@@ -250,6 +250,7 @@
       { sourceId: 'ra-record-btn', slot: 'attempt', level: 'basic', order: 1 },
       { sourceId: 'ra-stop-btn', slot: 'attempt', level: 'basic', order: 2 },
       { sourceId: 'ra-play-recording-btn', slot: 'attempt', level: 'basic', order: 3 },
+      { sourceId: 'ra-user-recording-audio', slot: 'attempt', level: 'basic', order: 3.5 },
       { sourceId: 'ra-check-btn', slot: 'attempt', level: 'basic', order: 4 },
       { sourceId: 'ra-retry-btn', slot: 'attempt', level: 'basic', order: 5 },
       { sourceId: 'ra-practice-target-toggle', slot: 'advanced-action', level: 'advanced', order: 1 },

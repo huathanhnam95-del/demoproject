@@ -7455,6 +7455,123 @@ textarea:focus {
 }
 
 /* ============================================
+   Read Aloud — Toggle Groups & Controls
+   ============================================ */
+
+.ra-listen-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ra-toggle-group {
+  display: flex;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid #e5e7eb;
+  background: #e5e7eb;
+}
+
+.ra-toggle-btn {
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  color: #4b5563;
+  font-weight: 500;
+  transition: all 0.2s;
+  border-radius: 6px;
+}
+
+.ra-toggle-btn.ra-toggle-active {
+  background: #3b82f6;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* ── Filter Pills ── */
+.ra-filter-pill {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border-light, #e5e7eb);
+  background: transparent;
+  color: var(--text-muted, #6b7280);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.ra-filter-pill.active {
+  border-color: var(--brand-primary, #2563eb);
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--brand-primary, #2563eb);
+}
+
+.ra-filter-pill:hover:not(.active) {
+  border-color: #9ca3af;
+  color: #374151;
+}
+
+/* ── Voice Picker Split Button ── */
+.ra-voice-picker-btn {
+  padding: 7px 14px;
+  font-size: 0.85rem;
+  border: 2px solid #e5e7eb;
+  border-right: none;
+  cursor: pointer;
+  background: var(--bg-primary, #fff);
+  color: var(--text-primary, #1f2937);
+  font-weight: 500;
+  transition: all 0.2s;
+  border-radius: 8px 0 0 8px;
+  min-width: 160px;
+  text-align: left;
+}
+
+.ra-voice-picker-btn:hover {
+  border-color: #9ca3af;
+}
+
+.ra-voice-dropdown-toggle {
+  padding: 7px 10px;
+  font-size: 0.85rem;
+  border: 2px solid #e5e7eb;
+  cursor: pointer;
+  background: var(--bg-primary, #fff);
+  color: var(--text-primary, #1f2937);
+  font-weight: 500;
+  transition: all 0.2s;
+  border-radius: 0 8px 8px 0;
+}
+
+.ra-voice-dropdown-toggle:hover {
+  border-color: #9ca3af;
+}
+
+.ra-voice-dropdown-list {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 4px;
+  min-width: 240px;
+  max-height: 280px;
+  overflow-y: auto;
+  background: var(--bg-primary, #fff);
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: var(--spc-z-sticky, 500);
+  padding: 6px;
+}
+
+/* ============================================
    Grammar Warning Modal
    ============================================ */
 

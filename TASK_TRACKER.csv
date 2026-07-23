@@ -398,10 +398,13 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 405,2026-07-21,Optimize Pronunciation Samples recording tool UX for efficient corpus collection,Done,2026-07-21
 406,2026-07-22,Production Push V1.8.24 - Pronunciation UX optimization and Speaking Controller Wave 0 updates,Done,2026-07-22
 407,2026-07-22,Investigate HIW audio folders count and missing audio files,Done,2026-07-22
-408,2026-07-22,Batch generate Kokoro audio files for remaining HIW questions,In Progress,
+408,2026-07-22,Batch generate Kokoro audio files for remaining HIW questions,Done,2026-07-23
 409,2026-07-22,Execute remaining Unified Speaking Practice Controller migration (Waves 1-6),Done,2026-07-22
 410,2026-07-22,Review debug and refactor plan for Speaking Practice Controller UI,Done,2026-07-22
 411,2026-07-22,Execute Phase 2 & 3 refactor: a11y + perf + CSS tokens + code cleanup (28 fixes),Done,2026-07-22
 412,2026-07-23,Edge-case audit and fix: fragile selector + ID coercion + visibility helper + scroll sentinel,Done,2026-07-23
+413,2026-07-23,Deploy release V1.8.25 to Firebase Hosting production & run live browser verification,Done,2026-07-23
+414,2026-07-23,Re-architect and clean up Speaking Practice button layout visual hierarchy,Done,2026-07-23\r
+415,2026-07-23,Deploy release V1.8.26 to Firebase Hosting production & run live browser verification,In Progress,\r
 
 

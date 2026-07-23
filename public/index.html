@@ -202,7 +202,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.25</div>
+  <div id="version-indicator" class="version-indicator">V1.8.26</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -4900,17 +4900,19 @@
       <!-- Shared controller audio shortcuts -->
       <div class="ra-audio-shortcuts" aria-label="Read Aloud audio shortcuts">
         <button id="header-ra-play-audio-btn" class="ra-v7-audio-btn" type="button" title="Play sample audio">
-          <span data-label>Play sample</span>
+          <span aria-hidden="true">🔊</span>
+          <span class="spc-sr-only">Play sample</span>
         </button>
         <button id="header-ra-play-recording-btn" class="ra-v7-audio-btn" type="button"
           title="Play your recording" disabled aria-disabled="true">
-          <span data-label>Play recording</span>
+          <span aria-hidden="true">🎙️</span>
+          <span class="spc-sr-only">Play recording</span>
         </button>
       </div>
 
         <!-- Filter/Config Bar -->
         <div class="question-selector"
-          style="display:none; border-bottom: none; padding: 10px 20px 0; align-items: center; flex-direction: column; gap: 12px; margin: 0 auto; max-width: 900px;">
+          style="display:none !important;">
           <div
             style="display:flex; align-items:center; justify-content:space-between; gap: 12px; width:100%; max-width:900px; margin: 0 auto; flex-wrap:wrap;">
             <select id="ra-question-select"
@@ -4925,29 +4927,21 @@
           <div id="ra-practice-target-drawer" hidden
             style="width:100%; max-width:900px; margin: 0 auto; display:flex; flex-direction:column; gap: 10px; padding: 12px 14px; border: 1px solid var(--border-light, #e5e7eb); border-radius: 14px; background: rgba(255,255,255,0.9); box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);">
             <div class="read-aloud-filters" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-              <button class="ra-filter-pill active" id="ra-filter-all" type="button"
-                style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--brand-primary, #2563eb); background: rgba(37, 99, 235, 0.1); color: var(--brand-primary, #2563eb); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">All</button>
-              <button class="ra-filter-pill" id="ra-filter-available" type="button"
-                style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">🎵
+              <button class="ra-filter-pill active" id="ra-filter-all" type="button">All</button>
+              <button class="ra-filter-pill" id="ra-filter-available" type="button">🎵
                 Sample Audio: Available</button>
-              <button class="ra-filter-pill" id="ra-filter-unavailable" type="button"
-                style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">No
+              <button class="ra-filter-pill" id="ra-filter-unavailable" type="button">No
                 Audio</button>
             </div>
             <div class="read-aloud-filters" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-              <button class="ra-filter-pill active" id="ra-filter-feature-all" type="button" aria-pressed="true"
-                style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--brand-primary, #2563eb); background: rgba(37, 99, 235, 0.1); color: var(--brand-primary, #2563eb); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">All
+              <button class="ra-filter-pill active" id="ra-filter-feature-all" type="button" aria-pressed="true">All
                 prompts</button>
-              <button class="ra-filter-pill" id="ra-filter-any-connected" type="button" aria-pressed="false"
-                style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">Any
+              <button class="ra-filter-pill" id="ra-filter-any-connected" type="button" aria-pressed="false">Any
                 connected speech</button>
-              <button class="ra-filter-pill" id="ra-filter-linking" type="button" aria-pressed="false"
-                style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">Linking</button>
-              <button class="ra-filter-pill" id="ra-filter-reduced-words" type="button" aria-pressed="false"
-                style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">Reduced
+              <button class="ra-filter-pill" id="ra-filter-linking" type="button" aria-pressed="false">Linking</button>
+              <button class="ra-filter-pill" id="ra-filter-reduced-words" type="button" aria-pressed="false">Reduced
                 words</button>
-              <button class="ra-filter-pill" id="ra-filter-sound-changes" type="button" aria-pressed="false"
-                style="padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-light, #e5e7eb); background: transparent; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;">Sound
+              <button class="ra-filter-pill" id="ra-filter-sound-changes" type="button" aria-pressed="false">Sound
                 changes</button>
               <div id="ra-filter-feature-status"
                 style="font-size: 0.82rem; color: var(--text-muted, #6b7280); padding: 4px 2px;"></div>
@@ -5034,31 +5028,32 @@
 
           <!-- Audio Player (Kokoro TTS) -->
           <div id="ra-audio-player" class="ra-audio-player"
-            style="display: none; margin-bottom: 20px; padding: 15px; background: var(--bg-secondary); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+            style="display: none; margin-bottom: 16px; padding: 8px 0;">
             <div style="display: flex; flex-direction: column; gap: 10px;">
-              <!-- Row 1: Label + Gender Toggle + Play -->
+              <!-- Row 1: Label + Gender Toggle + Speed + Play -->
               <div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;">
-                <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">🔊 Listen</span>
-                <div class="ra-toggle-group" style="display: flex; border-radius: 8px; overflow: hidden; border: 2px solid #e5e7eb; background: #e5e7eb;">
-                  <button id="ra-voice-male" class="ra-toggle-btn" type="button" style="padding: 6px 14px; font-size: 0.85rem; border: none; cursor: pointer; background: transparent; color: #4b5563; font-weight: 500; transition: all 0.2s; border-radius: 6px;">♂ Male</button>
-                  <button id="ra-voice-female" class="ra-toggle-btn" type="button" style="padding: 6px 14px; font-size: 0.85rem; border: none; cursor: pointer; background: transparent; color: #4b5563; font-weight: 500; transition: all 0.2s; border-radius: 6px;">♀ Female</button>
+                <span class="ra-listen-label">🔊 Listen</span>
+                <div class="ra-toggle-group">
+                  <button id="ra-voice-male" class="ra-toggle-btn" type="button">♂ Male</button>
+                  <button id="ra-voice-female" class="ra-toggle-btn" type="button">♀ Female</button>
                 </div>
-                              <div class="ra-toggle-group" style="display: flex; border-radius: 8px; overflow: hidden; border: 2px solid #e5e7eb; background: #e5e7eb;">
-                  <button id="ra-speed-100" class="ra-toggle-btn ra-toggle-active" type="button" style="padding: 6px 14px; font-size: 0.85rem; border: none; cursor: pointer; background: #3b82f6; color: #ffffff; font-weight: 600; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 6px;">Normal</button>
-                  <button id="ra-speed-80" class="ra-toggle-btn" type="button" style="padding: 6px 14px; font-size: 0.85rem; border: none; cursor: pointer; background: transparent; color: #4b5563; font-weight: 500; transition: all 0.2s; border-radius: 6px;">Slow</button>
+                <div class="ra-toggle-group">
+                  <button id="ra-speed-100" class="ra-toggle-btn ra-toggle-active" type="button">Normal</button>
+                  <button id="ra-speed-80" class="ra-toggle-btn" type="button">Slow</button>
                 </div>
                 <button id="ra-play-audio-btn" class="modern-btn modern-btn--play" type="button" style="min-width: 80px; padding: 6px 16px; font-size: 0.9rem;" disabled>Pick a voice</button>
               </div>
               <!-- Row 2: Voice Picker + Dropdown -->
               <div style="position: relative; display: flex; align-items: center; justify-content: center; gap: 0;">
-                <button id="ra-voice-picker-btn" type="button" style="padding: 7px 14px; font-size: 0.85rem; border: 2px solid #e5e7eb; border-right: none; cursor: pointer; background: var(--bg-primary, #fff); color: var(--text-primary, #1f2937); font-weight: 500; transition: all 0.2s; border-radius: 8px 0 0 8px; min-width: 160px; text-align: left;" title="Click to randomize voice">🎲 Pick a voice</button>
-                <button id="ra-voice-dropdown-toggle" type="button" style="padding: 7px 10px; font-size: 0.85rem; border: 2px solid #e5e7eb; cursor: pointer; background: var(--bg-primary, #fff); color: var(--text-primary, #1f2937); font-weight: 500; transition: all 0.2s; border-radius: 0 8px 8px 0;" title="Open voice list">▾</button>
-                <div id="ra-voice-dropdown-list" style="display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 4px; min-width: 240px; max-height: 280px; overflow-y: auto; background: var(--bg-primary, #fff); border: 2px solid #e5e7eb; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 50; padding: 6px;">
+                <button id="ra-voice-picker-btn" class="ra-voice-picker-btn" type="button" title="Click to randomize voice">🎲 Pick a voice</button>
+                <button id="ra-voice-dropdown-toggle" class="ra-voice-dropdown-toggle" type="button" title="Open voice list">▾</button>
+                <div id="ra-voice-dropdown-list" class="ra-voice-dropdown-list">
                 </div>
               </div>
             </div>
             <audio id="ra-elevenlabs-audio" preload="auto"></audio>
           </div>
+
 
           <!-- Results -->
           <div id="ra-result-box" class="ra-result"
@@ -5871,7 +5866,7 @@
   <script src="/js/read-aloud-spoken-forms.js"></script>
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
-  <script src="/read-aloud-mode.js?v=1.8.25"></script>
+  <script src="/read-aloud-mode.js?v=1.8.26"></script>
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>

@@ -675,11 +675,9 @@ class ReadAloudMode {
       btn.disabled = disabled;
       btn.setAttribute('aria-pressed', active ? 'true' : 'false');
       btn.classList.toggle('active', active);
-      btn.style.background = active ? 'rgba(37, 99, 235, 0.1)' : 'transparent';
-      btn.style.border = active ? '1px solid var(--brand-primary, #2563eb)' : '1px solid var(--border-light, #e5e7eb)';
-      btn.style.color = active ? 'var(--brand-primary, #2563eb)' : 'var(--text-muted, #6b7280)';
-      btn.style.opacity = disabled ? '0.55' : '1';
-      btn.style.cursor = disabled ? 'not-allowed' : 'pointer';
+      // Visual states handled by .ra-filter-pill / .ra-filter-pill.active CSS classes
+      btn.style.opacity = disabled ? '0.55' : '';
+      btn.style.cursor = disabled ? 'not-allowed' : '';
       btn.title = disabled ? 'Prompt index unavailable.' : '';
     });
 
@@ -1294,6 +1292,15 @@ class ReadAloudMode {
     const chunkAvailable = !!this.currentPromptChunkedText && this.currentPromptRenderState?.chunkingAvailable !== false;
     const level = this.normalizeConnectedSpeechMode(this.connectedSpeechLevel);
 
+    // Color map: each guide button has a unique active color
+    const colorMap = new Map([
+      [chunkBtn, { bg: '#2563eb', shadow: 'rgba(37, 99, 235, 0.25)' }],
+      [offBtn, { bg: '#6b7280', shadow: 'rgba(107, 114, 128, 0.25)' }],
+      [linkingBtn, { bg: '#2563eb', shadow: 'rgba(37, 99, 235, 0.25)' }],
+      [reducedWordsBtn, { bg: '#d97706', shadow: 'rgba(217, 119, 6, 0.25)' }],
+      [soundChangesBtn, { bg: '#b45309', shadow: 'rgba(180, 83, 9, 0.25)' }]
+    ]);
+
     [
       [chunkBtn, this.chunkingEnabled, chunkAvailable],
       [offBtn, level === 'off', true],
@@ -1308,23 +1315,15 @@ class ReadAloudMode {
         button.setAttribute('aria-checked', displayActive ? 'true' : 'false');
       }
       button.disabled = !available;
-      const isConnectedSpeechButton = button !== chunkBtn;
-      if (isConnectedSpeechButton && button === offBtn) {
-        button.style.background = displayActive ? '#6b7280' : 'transparent';
-        button.style.color = displayActive ? '#ffffff' : '#1f2937';
-        button.style.boxShadow = displayActive ? '0 1px 3px rgba(107, 114, 128, 0.25)' : 'none';
-      } else if (isConnectedSpeechButton && button === reducedWordsBtn) {
-        button.style.background = displayActive ? '#d97706' : 'transparent';
-        button.style.color = displayActive ? '#ffffff' : '#1f2937';
-        button.style.boxShadow = displayActive ? '0 1px 3px rgba(217, 119, 6, 0.25)' : 'none';
-      } else if (isConnectedSpeechButton && button === soundChangesBtn) {
-        button.style.background = displayActive ? '#b45309' : 'transparent';
-        button.style.color = displayActive ? '#ffffff' : '#1f2937';
-        button.style.boxShadow = displayActive ? '0 1px 3px rgba(180, 83, 9, 0.25)' : 'none';
+      const colors = colorMap.get(button);
+      if (displayActive && colors) {
+        button.style.background = colors.bg;
+        button.style.color = '#ffffff';
+        button.style.boxShadow = '0 1px 3px ' + colors.shadow;
       } else {
-        button.style.background = displayActive ? '#2563eb' : 'transparent';
-        button.style.color = displayActive ? '#ffffff' : '#1f2937';
-        button.style.boxShadow = displayActive ? '0 1px 3px rgba(37, 99, 235, 0.25)' : 'none';
+        button.style.background = 'transparent';
+        button.style.color = '#1f2937';
+        button.style.boxShadow = 'none';
       }
       button.style.opacity = available ? '1' : '0.45';
       if (button === chunkBtn) {
@@ -3617,31 +3616,11 @@ class ReadAloudMode {
     const maleBtn = document.getElementById('ra-voice-male');
     const femaleBtn = document.getElementById('ra-voice-female');
     if (gender === 'male') {
-      if (maleBtn) {
-        maleBtn.style.background = '#3b82f6';
-        maleBtn.style.color = '#ffffff';
-        maleBtn.style.fontWeight = '600';
-        maleBtn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-      }
-      if (femaleBtn) {
-        femaleBtn.style.background = 'transparent';
-        femaleBtn.style.color = '#4b5563';
-        femaleBtn.style.fontWeight = '500';
-        femaleBtn.style.boxShadow = 'none';
-      }
+      if (maleBtn) maleBtn.classList.add('ra-toggle-active');
+      if (femaleBtn) femaleBtn.classList.remove('ra-toggle-active');
     } else {
-      if (femaleBtn) {
-        femaleBtn.style.background = '#3b82f6';
-        femaleBtn.style.color = '#ffffff';
-        femaleBtn.style.fontWeight = '600';
-        femaleBtn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-      }
-      if (maleBtn) {
-        maleBtn.style.background = 'transparent';
-        maleBtn.style.color = '#4b5563';
-        maleBtn.style.fontWeight = '500';
-        maleBtn.style.boxShadow = 'none';
-      }
+      if (femaleBtn) femaleBtn.classList.add('ra-toggle-active');
+      if (maleBtn) maleBtn.classList.remove('ra-toggle-active');
     }
     this.randomizeVoice();
     this.renderVoiceDropdown();
@@ -3738,31 +3717,11 @@ class ReadAloudMode {
     const normalBtn = document.getElementById('ra-speed-100');
     const slowBtn = document.getElementById('ra-speed-80');
     if (speed === '100') {
-      if (normalBtn) {
-        normalBtn.style.background = '#3b82f6';
-        normalBtn.style.color = '#ffffff';
-        normalBtn.style.fontWeight = '600';
-        normalBtn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-      }
-      if (slowBtn) {
-        slowBtn.style.background = 'transparent';
-        slowBtn.style.color = '#4b5563';
-        slowBtn.style.fontWeight = '500';
-        slowBtn.style.boxShadow = 'none';
-      }
+      if (normalBtn) normalBtn.classList.add('ra-toggle-active');
+      if (slowBtn) slowBtn.classList.remove('ra-toggle-active');
     } else {
-      if (slowBtn) {
-        slowBtn.style.background = '#3b82f6';
-        slowBtn.style.color = '#ffffff';
-        slowBtn.style.fontWeight = '600';
-        slowBtn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-      }
-      if (normalBtn) {
-        normalBtn.style.background = 'transparent';
-        normalBtn.style.color = '#4b5563';
-        normalBtn.style.fontWeight = '500';
-        normalBtn.style.boxShadow = 'none';
-      }
+      if (slowBtn) slowBtn.classList.add('ra-toggle-active');
+      if (normalBtn) normalBtn.classList.remove('ra-toggle-active');
     }
     this.updateAudioSrc();
   }

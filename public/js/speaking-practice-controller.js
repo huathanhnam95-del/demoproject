@@ -50,7 +50,7 @@
 
   /** @type {number} scroll-lock counter */
   let scrollLockCount = 0;
-  let savedBodyOverflow = '';
+  let savedBodyOverflow = null;
 
   function resolveTargets() {
     if (resolvedTargets) return resolvedTargets;
@@ -128,18 +128,19 @@
 
   /* ═══════════════════════════ FOCUS TRAP ═══════════════════════════ */
 
+  /** Check if a DOM element is currently visible (handles position: fixed). */
+  function isElementVisible(el) {
+    if (el.hidden || el.style.display === 'none') return false;
+    if (el.offsetParent !== null) return true;
+    // offsetParent is null for fixed-position elements
+    const style = getComputedStyle(el);
+    return style.position === 'fixed' && style.display !== 'none';
+  }
+
   function getFocusableElements(container) {
     const sel = 'a[href], button:not([disabled]), input:not([disabled]), ' +
       'select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
-    return Array.from(container.querySelectorAll(sel)).filter(
-      el => {
-        if (el.hidden) return false;
-        if (el.offsetParent !== null) return true;
-        // offsetParent is null for fixed-position elements
-        const style = getComputedStyle(el);
-        return style.position === 'fixed' && style.display !== 'none';
-      }
-    );
+    return Array.from(container.querySelectorAll(sel)).filter(isElementVisible);
   }
 
   function trapFocus(container, e) {
@@ -170,12 +171,14 @@
     scrollLockCount--;
     if (scrollLockCount <= 0) {
       scrollLockCount = 0;
-      if (savedBodyOverflow) {
-        document.body.style.overflow = savedBodyOverflow;
-      } else {
-        document.body.style.removeProperty('overflow');
+      if (savedBodyOverflow !== null) {
+        if (savedBodyOverflow) {
+          document.body.style.overflow = savedBodyOverflow;
+        } else {
+          document.body.style.removeProperty('overflow');
+        }
       }
-      savedBodyOverflow = '';
+      savedBodyOverflow = null;
     }
   }
 
@@ -394,7 +397,7 @@
     listEl.addEventListener('keydown', function (e) {
       if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return;
       e.preventDefault();
-      const items = Array.from(listEl.querySelectorAll('.spc-sheet-item:not([style*="display: none"])')); 
+      const items = Array.from(listEl.querySelectorAll('.spc-sheet-item')).filter(el => el.style.display !== 'none');
       if (items.length === 0) return;
       const currentIdx = items.indexOf(document.activeElement);
       let nextIdx;
@@ -410,6 +413,13 @@
     listEl.addEventListener('click', function (e) {
       const li = e.target.closest('.spc-sheet-item');
       if (!li || li.getAttribute('aria-disabled') === 'true') return;
+      // Update visual state before closing
+      listEl.querySelectorAll('.spc-sheet-item.is-current').forEach(function (el) {
+        el.classList.remove('is-current');
+        el.setAttribute('aria-selected', 'false');
+      });
+      li.classList.add('is-current');
+      li.setAttribute('aria-selected', 'true');
       const id = li.dataset.id;
       selectPickerItem(config, controllerState, id);
       controllerState.pickerSheet.close();
@@ -509,7 +519,7 @@
   function updatePillDisplay(config, controllerState) {
     const currentId = getCurrentPickerId(config, controllerState);
     const items = getPickerItems(config, controllerState);
-    const current = items.find(i => i.id === currentId);
+    const current = items.find(i => String(i.id) === String(currentId));
 
     const pillId = controllerState.dom.pillId;
     const pillLabel = controllerState.dom.pillLabel;
@@ -546,10 +556,11 @@
 
     items.forEach(item => {
       const li = document.createElement('li');
-      li.className = 'spc-sheet-item' + (item.id === currentId ? ' is-current' : '');
+      const isCurrent = String(item.id) === String(currentId);
+      li.className = 'spc-sheet-item' + (isCurrent ? ' is-current' : '');
       li.setAttribute('role', 'option');
       li.tabIndex = 0;
-      li.setAttribute('aria-selected', item.id === currentId ? 'true' : 'false');
+      li.setAttribute('aria-selected', isCurrent ? 'true' : 'false');
       if (item.disabled) li.setAttribute('aria-disabled', 'true');
       li.dataset.id = item.id;
       li.dataset.search = (item.id + ' ' + item.label + ' ' + (item.searchText || '')).toLowerCase();
@@ -771,10 +782,7 @@
           const scopeEl = document.getElementById(ctrl.visibilityScopeId);
           if (scopeEl) {
             const observer = new MutationObserver(() => {
-              const scopeVisible = scopeEl.style.display !== 'none' &&
-                !scopeEl.hidden &&
-                scopeEl.offsetParent !== null;
-              el.style.display = scopeVisible ? '' : 'none';
+              el.style.display = isElementVisible(scopeEl) ? '' : 'none';
             });
             observer.observe(scopeEl, {
               attributes: true,

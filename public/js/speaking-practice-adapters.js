@@ -9,6 +9,7 @@
  * Wave 2: Describe Image, Retell Lecture
  * Wave 3A: SGD
  * Wave 3B: Repeat Sentence (Speak)
+ * Wave 3C: Write From Dictation (Type)
  * Wave 4: Read Aloud (3 sub-gates)
  */
 (function () {
@@ -227,6 +228,58 @@
         key: 'difficulty',
         sourceId: 'difficulty-filter-container-speak',
         isActive: () => isFilterActive('difficulty-filter-label-speak', 'Recommended'),
+        summaryLabel: 'Difficulty filter'
+      }
+    ]
+  });
+
+  // Wave 3C: Write From Dictation (Type). Mirrors the Speak adapter pattern —
+  // basic view shows only the question picker and core action buttons, while
+  // advanced view reveals progress, adaptive toggle, and filter dropdowns.
+  controller.register({
+    modeId: 'type',
+    enabledScopes: ['pte', 'english'],
+    panelId: 'mode-type',
+    picker: {
+      sourceSelectId: 'question-select-type',
+      previousButtonId: 'back-btn-type',
+      nextButtonId: 'next-btn-type'
+    },
+    controls: [
+      { sourceId: 'play-btn', slot: 'media', level: 'basic', order: 1 },
+      { sourceId: 'check-btn', slot: 'attempt', level: 'basic', order: 1 },
+      { sourceId: 'retry-btn', slot: 'attempt', level: 'basic', order: 2 },
+      { sourceId: 'recommended-btn-type', slot: 'advanced-action', level: 'advanced', order: 1 },
+      { sourceId: 'progress-bar-type', slot: 'advanced-setting', level: 'advanced', order: 1 },
+      { sourceId: 'status-filter-container-type', slot: 'advanced-setting', level: 'advanced', order: 2 },
+      { sourceId: 'length-filter-container-type', slot: 'advanced-setting', level: 'advanced', order: 3 },
+      { sourceId: 'difficulty-filter-container-type', slot: 'advanced-setting', level: 'advanced', order: 4 }
+    ],
+    inPlaceControls: [
+      { sourceId: 'adaptive-toggle-container-type', level: 'advanced' }
+    ],
+    advancedSettings: [
+      {
+        key: 'adaptive-mode',
+        isActive: () => document.getElementById('manual-type')?.checked === true,
+        summaryLabel: 'Manual selection'
+      },
+      {
+        key: 'status',
+        sourceId: 'status-filter-container-type',
+        isActive: () => isFilterActive('status-filter-label-type', 'Filter by Status'),
+        summaryLabel: 'Status filter'
+      },
+      {
+        key: 'length',
+        sourceId: 'length-filter-container-type',
+        isActive: () => isFilterActive('length-filter-label-type', 'Filter by Length'),
+        summaryLabel: 'Length filter'
+      },
+      {
+        key: 'difficulty',
+        sourceId: 'difficulty-filter-container-type',
+        isActive: () => isFilterActive('difficulty-filter-label-type', 'Recommended'),
         summaryLabel: 'Difficulty filter'
       }
     ]

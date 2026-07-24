@@ -2962,18 +2962,17 @@ h1 {
 }
 
 .question-selector {
-  margin-bottom: 24px;
-  padding: 20px;
-  background: var(--bg-main);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-lg);
-  transition: var(--transition-base);
+  margin-bottom: 8px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
 }
 
 .question-selector:hover {
-  border-color: var(--primary);
-  background: white;
-  box-shadow: var(--shadow-sm);
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
 }
 
 .question-selector label {
@@ -3024,7 +3023,7 @@ h1 {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 2px;
 }
 
 .question-id-display label {
@@ -3041,9 +3040,10 @@ h1 {
 }
 
 .question-total {
-  margin-top: 8px;
-  font-size: 0.875rem;
-  color: #6b7280;
+  margin-top: 2px;
+  margin-bottom: 4px;
+  font-size: 0.78rem;
+  color: #9ca3af;
 }
 
 .controls {
@@ -5343,7 +5343,7 @@ textarea:focus {
   gap: 10px;
   width: 100%;
   max-width: 480px;
-  margin: 0 auto 12px;
+  margin: 0 auto 6px;
 }
 
 .question-select.question-select-narrow {
@@ -5356,9 +5356,9 @@ textarea:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
-  margin: 0 auto 12px;
+  margin: 0 auto 6px;
   max-width: 560px;
 }
 
@@ -5435,8 +5435,8 @@ textarea:focus {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 15px;
+  gap: 8px;
+  margin-bottom: 8px;
   flex-wrap: wrap;
 }
 
@@ -6006,10 +6006,10 @@ textarea:focus {
    ============================================ */
 
 .progress-bar-container {
-  margin: 12px 0;
-  padding: 12px;
-  background: #f0f9ff;
-  border: 1px solid #bae6fd;
+  margin: 6px 0;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
 }
 
@@ -6201,22 +6201,22 @@ textarea:focus {
 .status-filter-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-  color: white;
-  border: none;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.25);
+  box-shadow: none;
 }
 
 .status-filter-btn:hover {
-  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
+  background: #e2e8f0;
+  box-shadow: none;
 }
 
 .status-filter-dropdown.open .filter-arrow {
@@ -7633,22 +7633,22 @@ textarea:focus {
 .length-filter-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-  color: white;
-  border: none;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.25);
+  box-shadow: none;
 }
 
 .length-filter-btn:hover {
-  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
+  background: #e2e8f0;
+  box-shadow: none;
 }
 
 .length-filter-btn .filter-arrow {
@@ -7754,22 +7754,22 @@ textarea:focus {
 .difficulty-filter-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-  color: white;
-  border: none;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(6, 182, 212, 0.25);
+  box-shadow: none;
 }
 
 .difficulty-filter-btn:hover {
-  background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
-  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.35);
+  background: #e2e8f0;
+  box-shadow: none;
 }
 
 .difficulty-filter-btn .filter-arrow {
@@ -18898,8 +18898,8 @@ body.readingjourney-active #readingjourney-root {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  margin-bottom: 15px;
-  gap: 15px;
+  margin-bottom: 6px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 

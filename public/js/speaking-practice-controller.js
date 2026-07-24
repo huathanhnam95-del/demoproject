@@ -24,8 +24,8 @@
   // DEFAULT_ENABLED_TARGETS was merged into TARGETS since all production adapters are now integrated.
   const TARGETS = new Set([
     'pte:speak', 'pte:read-aloud', 'pte:notes', 'pte:asq',
-    'pte:sgd', 'pte:describe-image', 'pte:rts',
-    'english:speak', 'english:read-aloud'
+    'pte:sgd', 'pte:describe-image', 'pte:rts', 'pte:type',
+    'english:speak', 'english:read-aloud', 'english:type'
   ]);
 
   // Never enable these scope/mode combinations.

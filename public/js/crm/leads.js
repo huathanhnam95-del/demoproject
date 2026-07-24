@@ -31,7 +31,7 @@ window.CrmLeads = (function () {
     }
 
     function buildPayload(elements) {
-        const facebook = getValue(elements.inputLeadFacebook);
+        const facebook = getValue(elements.inputLeadFacebook || elements.inputLeadFacebookDisplayName);
         return {
             name: getValue(elements.inputLeadName),
             label: getValue(elements.inputLeadLabel),
@@ -39,7 +39,16 @@ window.CrmLeads = (function () {
             phone: getValue(elements.inputLeadPhone),
             zalo: getValue(elements.inputLeadZalo),
             facebook: facebook || null,
-            facebookDisplayName: facebook,
+            facebookDisplayName: facebook || null,
+            facebookProfileUrl: getValue(elements.inputLeadFacebookProfileUrl) || null,
+            realName: getValue(elements.inputLeadRealName) || null,
+            dateOfBirth: getValue(elements.inputLeadDateOfBirth) || null,
+            learningNeeds: getValue(elements.inputLeadLearningNeeds) || null,
+            preferredLearningDays: getListValue(elements.inputLeadPreferredLearningDays),
+            preferredLearningHours: getListValue(elements.inputLeadPreferredLearningHours),
+            messengerThreadUrl: getValue(elements.inputLeadMessengerThreadUrl) || null,
+            messengerLastContactAt: getValue(elements.inputLeadMessengerLastContactAt) || null,
+            messengerStatus: getValue(elements.inputLeadMessengerStatus) || null,
             source: getValue(elements.inputLeadSource),
             agentSourceId: getValue(elements.inputLeadAgentSource),
             stage: getValue(elements.inputLeadStage) || 'new',

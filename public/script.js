@@ -1562,7 +1562,7 @@
     const controller = window.SpeakingPracticeController;
     if (!controller || !mode || typeof controller.activate !== 'function') return;
 
-    const speakingModes = ['asq', 'rts', 'describe-image', 'notes', 'sgd', 'speak', 'read-aloud'];
+    const speakingModes = ['asq', 'rts', 'describe-image', 'notes', 'sgd', 'speak', 'read-aloud', 'type'];
     if (leavingMode && leavingMode !== mode && speakingModes.includes(leavingMode)) {
       if (typeof controller.unmount === 'function') {
         controller.unmount(leavingMode);

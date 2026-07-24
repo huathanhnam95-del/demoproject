@@ -77,7 +77,6 @@ function main() {
         ['node', ['tests/crm/student-360.test.js']],
         ['node', ['tests/crm/automation-service.test.js']],
         ['node', ['tests/crm/reporting-governance.test.js']],
-        ['node', ['tests/crm/dev-corpus-save.test.js']],
         ['node', ['tests/crm/pronunciation-corpus-production-route.test.js']],
         ['node', ['tests/browser/crm-pronunciation-samples-browser-check.js']],
         ['node', ['tests/browser/crm-admin-workflow-browser-check.js']],

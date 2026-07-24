@@ -202,7 +202,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.26</div>
+  <div id="version-indicator" class="version-indicator">V1.8.27</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -2068,7 +2068,7 @@
 
       <div id="mode-type" class="mode-panel" style="display: none;">
         <div class="question-selector">
-          <div class="question-id-display">
+          <div class="question-id-display" data-spc-level="advanced">
             <label for="question-select-type">Question ID:</label>
             <span id="current-question-id-type" class="current-question-id">1</span>
           </div>
@@ -2109,7 +2109,7 @@
           </div>
 
           <!-- Adaptive vs Manual Toggle -->
-          <div class="adaptive-toggle-container">
+          <div id="adaptive-toggle-container-type" class="adaptive-toggle-container">
             <div class="segmented-control mode-picker-toggle">
               <input type="radio" name="mode-toggle-type" id="adaptive-type" value="adaptive" checked>
               <label for="adaptive-type">🤖 Adaptive</label>
@@ -2213,7 +2213,7 @@
             </div>
           </div>
         </div>
-        <div class="question-total">
+        <div class="question-total" data-spc-level="advanced">
           <span>Total number of questions: <span id="total-questions-type">1</span></span>
         </div>
         <div class="unified-controls">
@@ -2268,7 +2268,7 @@
           </div>
           <div id="auto-hints-type" class="auto-hints-type-drawer" style="display: none;"></div>
         </div>
-        <div id="score" class="score">Points: 0</div>
+        <div id="score" class="score" data-spc-level="advanced">Points: 0</div>
 
 
 
@@ -2352,7 +2352,7 @@
 
       <div id="mode-speak" class="mode-panel" style="display: none;">
         <div class="question-selector">
-          <div class="question-id-display">
+          <div class="question-id-display" data-spc-level="advanced">
             <label for="question-select-speak">Question ID:</label>
             <span id="current-question-id-speak" class="current-question-id">1</span>
           </div>
@@ -2494,7 +2494,7 @@
             </div>
           </div>
         </div>
-        <div class="question-total">
+        <div class="question-total" data-spc-level="advanced">
           <span>Total number of questions: <span id="total-questions-speak">1</span></span>
         </div>
         <div class="unified-controls">
@@ -2516,7 +2516,7 @@
             </div>
           </div>
         </div>
-        <div id="score-speak" class="score">Points: 0</div>
+        <div id="score-speak" class="score" data-spc-level="advanced">Points: 0</div>
 
 
 
@@ -5866,7 +5866,7 @@
   <script src="/js/read-aloud-spoken-forms.js"></script>
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
-  <script src="/read-aloud-mode.js?v=1.8.26"></script>
+  <script src="/read-aloud-mode.js?v=1.8.27"></script>
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>

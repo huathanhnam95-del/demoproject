@@ -129,15 +129,19 @@ class ReadAloudMode {
   }
 
   getEffectiveViewMode() {
+    const modePanel = document.getElementById('mode-read-aloud');
+    const controller = modePanel?.querySelector('.spc-controller');
+    const domView = modePanel?.dataset?.spcView || controller?.dataset?.spcView;
+    if (domView === 'basic' || domView === 'advanced') {
+      return domView;
+    }
     if (window.SpeakingPracticeController?.getPreferredView) {
       const preferred = window.SpeakingPracticeController.getPreferredView();
       if (preferred === 'basic' || preferred === 'advanced') {
         return preferred;
       }
     }
-    const modePanel = document.getElementById('mode-read-aloud');
-    const controller = modePanel?.querySelector('.spc-controller');
-    return modePanel?.dataset?.spcView || controller?.dataset?.spcView || 'basic';
+    return 'basic';
   }
 
   getLegacyConnectedSpeechLevel(mode = this.connectedSpeechLevel) {
@@ -228,9 +232,14 @@ class ReadAloudMode {
         }
         const viewMode = this.getEffectiveViewMode();
         if (this.state === 'RESULTS') {
+          const showAdvContainer = document.getElementById('ra-show-advanced-container');
+          const showAdvBtn = document.getElementById('ra-show-advanced-btn');
           if (viewMode === 'basic') {
+            if (showAdvContainer) showAdvContainer.style.display = 'block';
+            if (showAdvBtn) showAdvBtn.textContent = '✨ Show Advanced Analysis';
             this.hideConnectedSpeechPanel();
           } else if (this.lastAssessmentPayload?.connectedSpeech) {
+            if (showAdvContainer) showAdvContainer.style.display = 'none';
             this.renderConnectedSpeechResults(this.lastAssessmentPayload.connectedSpeech, {
               transcriptText: this.lastAssessmentPayload.recognizedText || this.currentPromptPlainText,
               sessionViewMode: viewMode,
@@ -2812,8 +2821,19 @@ class ReadAloudMode {
     if (accuracyElement) accuracyElement.textContent = payload.accuracyScore.toString();
 
     if (feedbackElement) {
+      const recognizedText = String(payload.recognizedText || '').trim();
+      let html = '';
+      if (recognizedText) {
+        html += `<div style="margin-bottom: 14px; padding: 12px 16px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; color: #1e293b; text-align: left;">`;
+        html += `<strong style="color: #475569; margin-right: 6px;">Recognized Speech:</strong>`;
+        html += `<span style="font-style: italic; font-weight: 500;">"${recognizedText}"</span>`;
+        html += `</div>`;
+      }
+
       if (!payload.words || payload.words.length === 0) {
-        feedbackElement.innerHTML = `You said: <i>"${payload.recognizedText || 'Nothing detected'}"</i>`;
+        if (!recognizedText) {
+          html += `<p style="line-height: 1.6; font-size: 1.05rem; padding: 10px; color: #6b7280; text-align: center;">No speech detected.</p>`;
+        }
       } else {
         const hasFiniteMetricValue = (value) => value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value));
         const supplementalMetrics = [
@@ -2821,7 +2841,9 @@ class ReadAloudMode {
           { label: 'Completeness', value: payload.completenessScore },
           { label: 'Overall', value: payload.pronScore }
         ].filter((metric) => hasFiniteMetricValue(metric.value));
-        let html = '<p style="line-height: 1.6; font-size: 1.1rem; padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px; background: #f9fafb;">';
+
+        html += '<div style="text-align: left; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 6px; font-weight: 600;">Word Accuracy Breakdown</div>';
+        html += '<p style="line-height: 1.6; font-size: 1.05rem; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: #ffffff; text-align: left;">';
         payload.words.forEach(w => {
           let color = 'inherit';
           if (w.errorType === 'Omission') {
@@ -2843,10 +2865,10 @@ class ReadAloudMode {
         });
         html += '</p>';
         if (supplementalMetrics.length > 0) {
-          html += `<p style="margin-top: 10px; font-size: 0.95em; color: #4b5563;">${supplementalMetrics.map((metric) => `<strong>${metric.label}:</strong> ${metric.value}%`).join(' &nbsp;|&nbsp; ')}</p>`;
+          html += `<p style="margin-top: 10px; font-size: 0.95em; color: #4b5563; text-align: center;">${supplementalMetrics.map((metric) => `<strong>${metric.label}:</strong> ${metric.value}%`).join(' &nbsp;|&nbsp; ')}</p>`;
         }
-        feedbackElement.innerHTML = html;
       }
+      feedbackElement.innerHTML = html;
     }
 
     this.lastAssessmentPayload = payload;
@@ -3494,16 +3516,19 @@ class ReadAloudMode {
         if (tokens && tokens.length > 0) {
           const wordMap = window.ReadAloudLinking.renderLinkingLayer(annotatedContainer, { tokens, boundaries: [], tokenAnnotations: [] });
 
+          const cleanWord = (s) => String(s || '').toLowerCase().replace(/[^\w]/g, '').trim();
+
           // Apply status-based CSS classes to matching word spans
           events.forEach((ev, evIndex) => {
             if (!ev.phrase) return;
-            const phraseLower = ev.phrase.toLowerCase().trim();
+            const targetWord = cleanWord(ev.phrase);
+            if (!targetWord) return;
             let matched = false;
             wordMap.forEach((span) => {
               if (matched) return;
-              const spanText = (span.textContent || '').toLowerCase().trim();
-              if (spanText === phraseLower && !span.dataset.scHighlighted) {
-                span.dataset.scHighlighted = 'true';
+              const spanText = cleanWord(span.textContent);
+              if (spanText === targetWord && !span.dataset.scSingleHighlighted) {
+                span.dataset.scSingleHighlighted = 'true';
                 
                 // Add event index (supporting multiple space-separated indices)
                 const existing = span.dataset.eventIndex;
@@ -3531,31 +3556,33 @@ class ReadAloudMode {
           // Tag linking events on adjacent word spans in wordMap
           events.forEach((ev, evIndex) => {
             if (!ev.phrase) return;
-            const isLinking = ev.category === 'linking' || ev.category === 'sound_changes' || ev.layer === 'assimilation' || ev.layer === 'linking' || this.normalizeConnectedSpeechMode(ev.family) === 'linking' || ev.category === 'consonant_to_vowel';
-            if (isLinking) {
-              const phraseParts = ev.phrase.toLowerCase().split(/\s+/);
-              if (phraseParts.length === 2) {
-                let matched = false;
-                wordMap.forEach((leftSpan, index) => {
-                  if (matched) return;
-                  const rightSpan = wordMap.get(index + 1);
-                  if (rightSpan) {
-                    const leftText = (leftSpan.textContent || '').toLowerCase().trim();
-                    const rightText = (rightSpan.textContent || '').toLowerCase().trim();
-                    if (leftText === phraseParts[0] && rightText === phraseParts[1] && !leftSpan.dataset.scLinkingHighlighted) {
-                      const existingLeft = leftSpan.dataset.eventIndex;
-                      leftSpan.dataset.eventIndex = existingLeft ? `${existingLeft} ${evIndex}` : String(evIndex);
-                      
-                      const existingRight = rightSpan.dataset.eventIndex;
-                      rightSpan.dataset.eventIndex = existingRight ? `${existingRight} ${evIndex}` : String(evIndex);
-                      
-                      leftSpan.dataset.scLinkingHighlighted = 'true';
-                      matched = true;
-                    }
-                  }
-                });
+            const phraseParts = String(ev.phrase).split(/\s+/).map(cleanWord).filter(Boolean);
+            if (phraseParts.length < 2) return;
+
+            let matched = false;
+            wordMap.forEach((leftSpan, index) => {
+              if (matched) return;
+              let allMatch = true;
+              const matchingSpans = [];
+              for (let i = 0; i < phraseParts.length; i++) {
+                const targetSpan = wordMap.get(index + i);
+                if (!targetSpan || cleanWord(targetSpan.textContent) !== phraseParts[i]) {
+                  allMatch = false;
+                  break;
+                }
+                matchingSpans.push(targetSpan);
               }
-            }
+
+              const matchKey = `scLinking_${evIndex}`;
+              if (allMatch && matchingSpans.length === phraseParts.length && !leftSpan.dataset[matchKey]) {
+                matchingSpans.forEach((span) => {
+                  const existing = span.dataset.eventIndex;
+                  span.dataset.eventIndex = existing ? `${existing} ${evIndex}` : String(evIndex);
+                });
+                leftSpan.dataset[matchKey] = 'true';
+                matched = true;
+              }
+            });
           });
 
           // SVG linking overlay

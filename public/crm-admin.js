@@ -7229,6 +7229,8 @@
       const audioRateable = analysis?.quality?.rateable !== false;
       const stressRateable = analysis?.observed?.stressEvidence?.rateable !== false;
       const category = String(sample.category || 'clean').toLowerCase();
+      const primaryStressIdx = analysis?.observed?.primaryStress;
+      const hasPrimaryStress = primaryStressIdx !== null && primaryStressIdx !== undefined && Number(primaryStressIdx) >= 0;
 
       if (category === 'unrateable') {
         return audioRateable
@@ -7239,7 +7241,13 @@
       if (category === 'clean' && observedCount === targetCount) return { label: 'Verified · clean target matched', color: '#166534' };
       if (category === 'omission' && observedCount === expectedCount && observedCount < targetCount) return { label: 'Verified · omission target matched', color: '#166534' };
       if (category === 'insertion' && observedCount === expectedCount && observedCount > targetCount) return { label: 'Verified · insertion target matched', color: '#166534' };
-      if (category === 'accented' && observedCount === expectedCount) return { label: 'Count verified · review stress/accent', color: '#92400e' };
+      if (category === 'accented' && observedCount === expectedCount) {
+        if (stressRateable && hasPrimaryStress) {
+          const stressSyllableNum = Number(primaryStressIdx) + 1;
+          return { label: `Verified · accented stress detected (syllable ${stressSyllableNum})`, color: '#166534' };
+        }
+        return { label: 'Count verified · review stress/accent', color: '#92400e' };
+      }
       if (observedCount !== expectedCount) return { label: `Needs review · observed ${observedCount}, expected ${expectedCount}`, color: '#991b1b' };
       if (!stressRateable) return { label: 'Needs review · stress evidence unrateable', color: '#92400e' };
       return { label: `Needs review · observed ${observedCount}, expected ${expectedCount}`, color: '#991b1b' };

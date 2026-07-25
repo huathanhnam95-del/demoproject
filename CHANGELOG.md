@@ -1,3 +1,10 @@
+## [V1.8.29] - 2026-07-25
+
+### Fixed & Enhanced
+- **CRM Pronunciation Corpus Accented Stress Verification**:
+  - Enhanced `getSampleVerification` for `accented` corpus samples: when rateable primary stress is detected, it now verifies and reports `Verified · accented stress detected (syllable X)` in green (`#166534`).
+  - Bumped CRM admin asset version token to `v=20260725-v1.8.29`.
+
 ## [V1.8.28] - 2026-07-25
 
 ### Fixed & Added

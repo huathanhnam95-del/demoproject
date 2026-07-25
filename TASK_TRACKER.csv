@@ -433,7 +433,11 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 440,2026-07-25,Add Show Advanced Analysis button to reveal Speech Coach results when practicing in Basic mode,Done,2026-07-25
 441,2026-07-25,Display clear IPA style pronunciation in Speech Coach feedback explanation cards,Done,2026-07-25
 442,2026-07-25,Bump crm-admin.js asset cache buster in crm-admin.html and structure sample row action buttons,Done,2026-07-25
-443,2026-07-25,Deploy release V1.8.28 to Firebase Hosting and Cloud Functions,In Progress,
+443,2026-07-25,Deploy release V1.8.28 to Firebase Hosting and Cloud Functions,Done,2026-07-25
+444,2026-07-25,Enable hover position highlighting for successful links and linking issue cards in Speech Coach,Done,2026-07-25
+445,2026-07-25,Make preloader only show on cold start or homepage - skip for returning logged-in users,Done,2026-07-25
+446,2026-07-25,Update CRM sample verification for accented category to report detected non-standard stress,Done,2026-07-25
+447,2026-07-25,Deploy release V1.8.29 to Firebase Hosting and Cloud Functions,In Progress,
 
 
 
